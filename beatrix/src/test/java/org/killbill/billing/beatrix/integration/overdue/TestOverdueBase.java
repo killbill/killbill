@@ -21,26 +21,18 @@ package org.killbill.billing.beatrix.integration.overdue;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.util.UUID;
-import java.util.concurrent.Callable;
 
 import org.killbill.billing.account.api.Account;
 import org.killbill.billing.beatrix.integration.BeatrixIntegrationModule;
 import org.killbill.billing.beatrix.integration.TestIntegrationBase;
 import org.killbill.billing.catalog.api.BillingPeriod;
-import org.killbill.billing.entitlement.api.BlockingState;
-import org.killbill.billing.entitlement.api.BlockingStateType;
 import org.killbill.billing.entitlement.api.SubscriptionBundle;
-import org.killbill.billing.overdue.OverdueService;
 import org.killbill.billing.overdue.config.DefaultOverdueConfig;
-import org.killbill.billing.overdue.wrapper.OverdueWrapper;
 import org.killbill.billing.payment.api.PaymentMethodPlugin;
 import org.killbill.billing.payment.api.TestPaymentMethodPluginBase;
 import org.killbill.xmlloader.XMLLoader;
-import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
 
-import static com.jayway.awaitility.Awaitility.await;
-import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.testng.Assert.assertNotNull;
 
 public abstract class TestOverdueBase extends TestIntegrationBase {
@@ -77,27 +69,5 @@ public abstract class TestOverdueBase extends TestIntegrationBase {
 
     protected void checkODState(final String expected) {
         checkODState(expected, account.getId());
-    }
-
-    protected void checkODState(final String expected, final UUID accountId) {
-        try {
-            // This will test the overdue notification queue: when we move the clock, the overdue system
-            // should get notified to refresh its state.
-            // Calling explicitly refresh here (overdueApi.refreshOverdueStateFor(account)) would not fully
-            // test overdue.
-            // Since we're relying on the notification queue, we may need to wait a bit (hence await()).
-            await().atMost(10, SECONDS).until(new Callable<Boolean>() {
-                @Override
-                public Boolean call() throws Exception {
-                    final BlockingState blockingStateForService = blockingApi.getBlockingStateForService(accountId, BlockingStateType.ACCOUNT, OverdueService.OVERDUE_SERVICE_NAME, internalCallContext);
-                    final String stateName = blockingStateForService != null ? blockingStateForService.getStateName() : OverdueWrapper.CLEAR_STATE_NAME;
-                    return expected.equals(stateName);
-                }
-            });
-        } catch (final Exception e) {
-            final BlockingState blockingStateForService = blockingApi.getBlockingStateForService(accountId, BlockingStateType.ACCOUNT, OverdueService.OVERDUE_SERVICE_NAME, internalCallContext);
-            final String stateName = blockingStateForService != null ? blockingStateForService.getStateName() : OverdueWrapper.CLEAR_STATE_NAME;
-            Assert.assertEquals(stateName, expected, "Got exception: " + e.toString());
-        }
     }
 }

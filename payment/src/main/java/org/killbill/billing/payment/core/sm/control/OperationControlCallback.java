@@ -91,12 +91,15 @@ public abstract class OperationControlCallback extends OperationCallbackBase<Pay
                                                                                                      paymentStateControlContext.getAttemptId(),
                                                                                                      paymentStateContext.getPaymentId(),
                                                                                                      paymentStateContext.getPaymentExternalKey(),
+                                                                                                     paymentStateContext.getTransactionId(),
                                                                                                      paymentStateContext.getPaymentTransactionExternalKey(),
                                                                                                      PaymentApiType.PAYMENT_TRANSACTION,
                                                                                                      paymentStateContext.getTransactionType(),
                                                                                                      null,
                                                                                                      paymentStateContext.getAmount(),
                                                                                                      paymentStateContext.getCurrency(),
+                                                                                                     paymentStateControlContext.getProcessedAmount(),
+                                                                                                     paymentStateControlContext.getProcessedCurrency(),
                                                                                                      paymentStateControlContext.isApiPayment(),
                                                                                                      paymentStateContext.getCallContext());
 
@@ -173,12 +176,15 @@ public abstract class OperationControlCallback extends OperationCallbackBase<Pay
                                                                                              paymentStateControlContext.getAttemptId(),
                                                                                              paymentStateContext.getPaymentId(),
                                                                                              paymentStateContext.getPaymentExternalKey(),
+                                                                                             paymentStateContext.getTransactionId(),
                                                                                              paymentStateContext.getPaymentTransactionExternalKey(),
                                                                                              PaymentApiType.PAYMENT_TRANSACTION,
                                                                                              paymentStateContext.getTransactionType(),
                                                                                              null,
                                                                                              paymentControlContextArg.getAmount(),
                                                                                              paymentControlContextArg.getCurrency(),
+                                                                                             paymentControlContextArg.getProcessedAmount(),
+                                                                                             paymentControlContextArg.getProcessedCurrency(),
                                                                                              paymentStateControlContext.isApiPayment(),
                                                                                              paymentControlPluginNames,
                                                                                              paymentStateContext.getProperties(),
@@ -212,7 +218,7 @@ public abstract class OperationControlCallback extends OperationCallbackBase<Pay
         adjustStateContextPluginProperties(paymentStateContext, result.getAdjustedPluginProperties());
     }
 
-    private OperationResult executePluginOnFailureCallsAndSetRetryDate(final PaymentControlContext paymentControlContext) {
+    protected OperationResult executePluginOnFailureCallsAndSetRetryDate(final PaymentControlContext paymentControlContext) {
         final DateTime retryDate = executePluginOnFailureCalls(paymentStateControlContext.getPaymentControlPluginNames(), paymentControlContext);
         if (retryDate != null) {
             ((PaymentStateControlContext) paymentStateContext).setRetryDate(retryDate);
@@ -227,12 +233,15 @@ public abstract class OperationControlCallback extends OperationCallbackBase<Pay
                                                                                                      paymentStateControlContext.getAttemptId(),
                                                                                                      paymentControlContext.getPaymentId(),
                                                                                                      paymentControlContext.getPaymentExternalKey(),
+                                                                                                     paymentControlContext.getTransactionId(),
                                                                                                      paymentControlContext.getTransactionExternalKey(),
                                                                                                      PaymentApiType.PAYMENT_TRANSACTION,
                                                                                                      paymentControlContext.getTransactionType(),
                                                                                                      null,
                                                                                                      paymentControlContext.getAmount(),
                                                                                                      paymentControlContext.getCurrency(),
+                                                                                                     paymentControlContext.getProcessedAmount(),
+                                                                                                     paymentControlContext.getProcessedCurrency(),
                                                                                                      paymentStateControlContext.isApiPayment(),
                                                                                                      paymentControlPluginNames,
                                                                                                      paymentStateContext.getProperties(),

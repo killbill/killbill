@@ -65,7 +65,7 @@ public class TestPluginOperation extends PaymentTestSuiteNoDB {
     @BeforeMethod(groups = "fast")
     public void beforeMethod() throws Exception {
         super.beforeMethod();
-        Mockito.when(account.getExternalKey()).thenReturn(UUID.randomUUID().toString());
+        Mockito.when(account.getId()).thenReturn(UUID.randomUUID());
     }
 
     @Test(groups = "fast")

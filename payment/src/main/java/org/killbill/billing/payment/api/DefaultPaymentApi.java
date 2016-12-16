@@ -722,7 +722,50 @@ public class DefaultPaymentApi extends DefaultApiBase implements PaymentApi {
 
     @Override
     public Payment notifyPendingTransactionOfStateChangedWithPaymentControl(final Account account, final UUID paymentTransactionId, final boolean isSuccess, final PaymentOptions paymentOptions, final CallContext callContext) throws PaymentApiException {
-        throw new IllegalStateException("Not implemented");
+        final List<String> paymentControlPluginNames = toPaymentControlPluginNames(paymentOptions, callContext);
+        if (paymentControlPluginNames.isEmpty()) {
+            return notifyPendingTransactionOfStateChanged(account, paymentTransactionId, isSuccess, callContext);
+        }
+
+        checkNotNullParameter(account, "account");
+        checkNotNullParameter(paymentTransactionId, "paymentTransactionId");
+
+        final String transactionType = "NOTIFY_STATE_CHANGE";
+        Payment payment = null;
+        PaymentTransaction paymentTransaction = null;
+        PaymentApiException exception = null;
+        try {
+            logEnterAPICall(log, transactionType, account, null, null, paymentTransactionId, null, null, null, null, null, paymentControlPluginNames);
+
+            final InternalCallContext internalCallContext = internalCallContextFactory.createInternalCallContext(account.getId(), callContext);
+            payment = pluginControlPaymentProcessor.notifyPendingPaymentOfStateChanged(IS_API_PAYMENT, account, paymentTransactionId, isSuccess, paymentControlPluginNames, callContext, internalCallContext);
+
+            paymentTransaction = Iterables.<PaymentTransaction>tryFind(payment.getTransactions(),
+                                                                       new Predicate<PaymentTransaction>() {
+                                                                           @Override
+                                                                           public boolean apply(final PaymentTransaction transaction) {
+                                                                               return transaction.getId().equals(paymentTransactionId);
+                                                                           }
+                                                                       }).orNull();
+            return payment;
+        } catch (final PaymentApiException e) {
+            exception = e;
+            throw e;
+        } finally {
+            logExitAPICall(log,
+                           transactionType,
+                           account,
+                           payment != null ? payment.getPaymentMethodId() : null,
+                           payment != null ? payment.getId() : null,
+                           paymentTransaction != null ? paymentTransaction.getId() : null,
+                           paymentTransaction != null ? paymentTransaction.getProcessedAmount() : null,
+                           paymentTransaction != null ? paymentTransaction.getProcessedCurrency() : null,
+                           payment != null ? payment.getExternalKey() : null,
+                           paymentTransaction != null ? paymentTransaction.getExternalKey() : null,
+                           paymentTransaction != null ? paymentTransaction.getTransactionStatus() : null,
+                           paymentControlPluginNames,
+                           exception);
+        }
     }
 
     @Override

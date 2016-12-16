@@ -270,6 +270,9 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
 
             @Override
             public Iterable<Invoice> prepareInvoices() throws InvoiceApiException {
+                final InternalTenantContext internalTenantContext = internalCallContextFactory.createInternalTenantContext(accountId, context);
+                final LocalDate invoiceDate = internalTenantContext.toLocalDate(context.getCreatedDate());
+
                 // Group all new external charges on the same invoice (per currency)
                 final Map<Currency, Invoice> newInvoicesForExternalCharges = new HashMap<Currency, Invoice>();
                 final Map<UUID, Invoice> existingInvoicesForExternalCharges = new HashMap<UUID, Invoice>();
@@ -282,7 +285,7 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
                         final Currency currency = charge.getCurrency();
                         if (newInvoicesForExternalCharges.get(currency) == null) {
                             final InvoiceStatus status = autoCommit ? InvoiceStatus.COMMITTED : InvoiceStatus.DRAFT;
-                            final Invoice newInvoiceForExternalCharge = new DefaultInvoice(accountId, effectiveDate, effectiveDate, currency, status);
+                            final Invoice newInvoiceForExternalCharge = new DefaultInvoice(accountId, invoiceDate, effectiveDate, currency, status);
                             newInvoicesForExternalCharges.put(currency, newInvoiceForExternalCharge);
                         }
                         invoiceForExternalCharge = newInvoicesForExternalCharges.get(currency);
@@ -348,11 +351,14 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
 
             @Override
             public List<Invoice> prepareInvoices() throws InvoiceApiException {
+                final InternalTenantContext internalTenantContext = internalCallContextFactory.createInternalTenantContext(accountId, context);
+                final LocalDate invoiceDate = internalTenantContext.toLocalDate(context.getCreatedDate());
+
                 // Create an invoice for that credit if it doesn't exist
                 final Invoice invoiceForCredit;
                 if (invoiceId == null) {
                     final InvoiceStatus status = autoCommit ? InvoiceStatus.COMMITTED : InvoiceStatus.DRAFT;
-                    invoiceForCredit = new DefaultInvoice(accountId, effectiveDate, effectiveDate, currency, status);
+                    invoiceForCredit = new DefaultInvoice(accountId, invoiceDate, effectiveDate, currency, status);
                 } else {
                     invoiceForCredit = getInvoiceAndCheckCurrency(invoiceId, currency, context);
                     if (InvoiceStatus.COMMITTED.equals(invoiceForCredit.getStatus())) {
@@ -468,9 +474,8 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
     @Override
     public UUID createMigrationInvoice(final UUID accountId, final LocalDate targetDate, final Iterable<InvoiceItem> items, final CallContext context) {
         final InternalCallContext internalCallContext = internalCallContextFactory.createInternalCallContext(accountId, context);
-        final LocalDate createdDate = internalCallContext.toLocalDate(internalCallContext.getCreatedDate());
-        final InvoiceModelDao migrationInvoice = new InvoiceModelDao(accountId, createdDate, targetDate, items.iterator().next().getCurrency(), true);
-
+        final LocalDate invoiceDate = internalCallContext.toLocalDate(internalCallContext.getCreatedDate());
+        final InvoiceModelDao migrationInvoice = new InvoiceModelDao(accountId, invoiceDate, targetDate, items.iterator().next().getCurrency(), true);
 
         final List<InvoiceItemModelDao> itemModelDaos = ImmutableList.copyOf(Iterables.transform(items, new Function<InvoiceItem, InvoiceItemModelDao>() {
             @Override

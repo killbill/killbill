@@ -62,12 +62,15 @@ public class ControlPluginRunner {
                                                              final UUID paymentAttemptId,
                                                              final UUID paymentId,
                                                              final String paymentExternalKey,
+                                                             final UUID paymentTransactionId,
                                                              final String paymentTransactionExternalKey,
                                                              final PaymentApiType paymentApiType,
                                                              final TransactionType transactionType,
                                                              final HPPType hppType,
                                                              final BigDecimal amount,
                                                              final Currency currency,
+                                                             final BigDecimal processedAmount,
+                                                             final Currency processedCurrency,
                                                              final boolean isApiPayment,
                                                              final List<String> paymentControlPluginNames,
                                                              final Iterable<PluginProperty> pluginProperties,
@@ -85,12 +88,15 @@ public class ControlPluginRunner {
                                                                                             paymentAttemptId,
                                                                                             paymentId,
                                                                                             paymentExternalKey,
+                                                                                            paymentTransactionId,
                                                                                             paymentTransactionExternalKey,
                                                                                             paymentApiType,
                                                                                             transactionType,
                                                                                             hppType,
                                                                                             amount,
                                                                                             currency,
+                                                                                            processedAmount,
+                                                                                            processedCurrency,
                                                                                             isApiPayment,
                                                                                             callContext);
 
@@ -124,12 +130,15 @@ public class ControlPluginRunner {
                                                                           paymentAttemptId,
                                                                           paymentId,
                                                                           paymentExternalKey,
+                                                                          paymentTransactionId,
                                                                           paymentTransactionExternalKey,
                                                                           paymentApiType,
                                                                           transactionType,
                                                                           hppType,
                                                                           inputAmount,
                                                                           inputCurrency,
+                                                                          processedAmount,
+                                                                          processedCurrency,
                                                                           isApiPayment,
                                                                           callContext);
         }
@@ -143,7 +152,7 @@ public class ControlPluginRunner {
                                                                      final UUID paymentAttemptId,
                                                                      final UUID paymentId,
                                                                      final String paymentExternalKey,
-                                                                     final UUID transactionId,
+                                                                     final UUID paymentTransactionId,
                                                                      final String paymentTransactionExternalKey,
                                                                      final PaymentApiType paymentApiType,
                                                                      final TransactionType transactionType,
@@ -162,7 +171,7 @@ public class ControlPluginRunner {
                                                                                                   paymentAttemptId,
                                                                                                   paymentId,
                                                                                                   paymentExternalKey,
-                                                                                                  transactionId,
+                                                                                                  paymentTransactionId,
                                                                                                   paymentTransactionExternalKey,
                                                                                                   paymentApiType,
                                                                                                   transactionType,
@@ -201,12 +210,15 @@ public class ControlPluginRunner {
                                                                      final UUID paymentAttemptId,
                                                                      final UUID paymentId,
                                                                      final String paymentExternalKey,
+                                                                     final UUID transactionId,
                                                                      final String paymentTransactionExternalKey,
                                                                      final PaymentApiType paymentApiType,
                                                                      final TransactionType transactionType,
                                                                      final HPPType hppType,
                                                                      final BigDecimal amount,
                                                                      final Currency currency,
+                                                                     final BigDecimal processedAmount,
+                                                                     final Currency processedCurrency,
                                                                      final boolean isApiPayment,
                                                                      final List<String> paymentControlPluginNames,
                                                                      final Iterable<PluginProperty> pluginProperties,
@@ -217,12 +229,15 @@ public class ControlPluginRunner {
                                                                                                   paymentAttemptId,
                                                                                                   paymentId,
                                                                                                   paymentExternalKey,
+                                                                                                  transactionId,
                                                                                                   paymentTransactionExternalKey,
                                                                                                   paymentApiType,
                                                                                                   transactionType,
                                                                                                   hppType,
                                                                                                   amount,
                                                                                                   currency,
+                                                                                                  processedAmount,
+                                                                                                  processedCurrency,
                                                                                                   isApiPayment,
                                                                                                   callContext);
 
@@ -273,15 +288,22 @@ public class ControlPluginRunner {
         private final Currency processedCurrency;
         private final boolean isApiPayment;
 
-        public DefaultPaymentControlContext(final Account account, final UUID paymentMethodId, final UUID attemptId, @Nullable final UUID paymentId, final String paymentExternalKey, final String transactionExternalKey,
-                                            final PaymentApiType paymentApiType, final TransactionType transactionType, final HPPType hppType, final BigDecimal amount, final Currency currency,
-                                            final boolean isApiPayment, final CallContext callContext) {
-            this(account, paymentMethodId, attemptId, paymentId, paymentExternalKey, null, transactionExternalKey, paymentApiType, transactionType, hppType, amount, currency, null, null, isApiPayment, callContext);
-        }
-
-        public DefaultPaymentControlContext(final Account account, final UUID paymentMethodId, final UUID attemptId, @Nullable final UUID paymentId, final String paymentExternalKey, @Nullable final UUID transactionId, final String transactionExternalKey,
-                                            final PaymentApiType paymentApiType, final TransactionType transactionType, final HPPType hppType,
-                                            final BigDecimal amount, final Currency currency, @Nullable final BigDecimal processedAmount, @Nullable final Currency processedCurrency, final boolean isApiPayment, final CallContext callContext) {
+        public DefaultPaymentControlContext(final Account account,
+                                            final UUID paymentMethodId,
+                                            final UUID attemptId,
+                                            @Nullable final UUID paymentId,
+                                            final String paymentExternalKey,
+                                            @Nullable final UUID transactionId,
+                                            final String transactionExternalKey,
+                                            final PaymentApiType paymentApiType,
+                                            final TransactionType transactionType,
+                                            final HPPType hppType,
+                                            final BigDecimal amount,
+                                            final Currency currency,
+                                            @Nullable final BigDecimal processedAmount,
+                                            @Nullable final Currency processedCurrency,
+                                            final boolean isApiPayment,
+                                            final CallContext callContext) {
             super(callContext.getTenantId(), callContext.getUserName(), callContext.getCallOrigin(), callContext.getUserType(), callContext.getReasonCode(), callContext.getComments(), callContext.getUserToken(), callContext.getCreatedDate(), callContext.getUpdatedDate());
             this.account = account;
             this.paymentMethodId = paymentMethodId;

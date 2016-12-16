@@ -30,16 +30,20 @@ import org.killbill.billing.payment.caching.StateMachineConfigCache;
 import org.killbill.billing.payment.core.PaymentExecutors;
 import org.killbill.billing.payment.core.PaymentMethodProcessor;
 import org.killbill.billing.payment.core.PaymentProcessor;
+import org.killbill.billing.payment.core.janitor.IncompletePaymentTransactionTask;
+import org.killbill.billing.payment.core.janitor.Janitor;
 import org.killbill.billing.payment.core.sm.PaymentStateMachineHelper;
 import org.killbill.billing.payment.dao.PaymentDao;
 import org.killbill.billing.payment.glue.PaymentModule;
 import org.killbill.billing.payment.glue.TestPaymentModuleWithEmbeddedDB;
 import org.killbill.billing.payment.plugin.api.PaymentPluginApi;
 import org.killbill.billing.payment.provider.MockPaymentProviderPlugin;
+import org.killbill.billing.payment.retry.DefaultRetryService;
 import org.killbill.billing.platform.api.KillbillConfigSource;
 import org.killbill.billing.util.config.definition.PaymentConfig;
 import org.killbill.billing.util.dao.NonEntityDao;
 import org.killbill.bus.api.PersistentBus;
+import org.killbill.commons.locker.GlobalLocker;
 import org.killbill.commons.profiling.Profiling;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeClass;
@@ -60,6 +64,8 @@ public abstract class PaymentTestSuiteWithEmbeddedDB extends GuicyKillbillTestSu
     protected PaymentMethodProcessor paymentMethodProcessor;
     @Inject
     protected PaymentProcessor paymentProcessor;
+    @Inject
+    protected DefaultRetryService retryService;
     @Inject
     protected InvoiceInternalApi invoiceApi;
     @Inject
@@ -88,6 +94,12 @@ public abstract class PaymentTestSuiteWithEmbeddedDB extends GuicyKillbillTestSu
     protected NonEntityDao nonEntityDao;
     @Inject
     protected StateMachineConfigCache stateMachineConfigCache;
+    @Inject
+    protected Janitor janitor;
+    @Inject
+    protected IncompletePaymentTransactionTask incompletePaymentTransactionTask;
+    @Inject
+    protected GlobalLocker locker;
 
     @Override
     protected KillbillConfigSource getConfigSource() {
@@ -113,10 +125,14 @@ public abstract class PaymentTestSuiteWithEmbeddedDB extends GuicyKillbillTestSu
         eventBus.start();
         Profiling.resetPerThreadProfilingData();
         clock.resetDeltaFromReality();
+
+        janitor.initialize();
+        janitor.start();
     }
 
     @AfterMethod(groups = "slow")
     public void afterMethod() throws Exception {
+        janitor.stop();
         eventBus.stop();
         paymentExecutors.stop();
     }

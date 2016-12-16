@@ -16,16 +16,29 @@
 
 package org.killbill.billing.catalog;
 
+import org.killbill.billing.catalog.api.CatalogApiException;
+import org.killbill.billing.catalog.api.PhaseType;
 import org.killbill.billing.catalog.api.Plan;
+import org.killbill.xmlloader.ValidationException;
+import org.killbill.xmlloader.XMLLoader;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
-import org.killbill.billing.catalog.api.CatalogApiException;
-import org.killbill.billing.catalog.api.PhaseType;
-
 import com.google.common.collect.ImmutableList;
+import com.google.common.io.Resources;
 
 public class TestStandaloneCatalog extends CatalogTestSuiteNoDB {
+
+    @Test(groups = "fast")
+    public void testLoadCatalogWithPlanInvalidProduct() throws Exception {
+        try {
+            XMLLoader.getObjectFromString(Resources.getResource("CatalogWithPlanInvalidProduct.xml").toExternalForm(), StandaloneCatalog.class);
+            Assert.fail();
+        } catch (final ValidationException e) {
+            Assert.assertEquals(e.getErrors().size(), 1);
+            Assert.assertEquals(e.getErrors().get(0).getDescription(), "Invalid product for plan 'standard'");
+        }
+    }
 
     @Test(groups = "fast")
     public void testFindPhase() throws CatalogApiException {

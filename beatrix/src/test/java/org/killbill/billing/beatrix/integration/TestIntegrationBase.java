@@ -24,6 +24,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.Callable;
 
 import javax.annotation.Nullable;
 import javax.inject.Inject;
@@ -56,6 +57,8 @@ import org.killbill.billing.catalog.api.PlanPhaseSpecifier;
 import org.killbill.billing.catalog.api.PlanSpecifier;
 import org.killbill.billing.catalog.api.PriceListSet;
 import org.killbill.billing.catalog.api.ProductCategory;
+import org.killbill.billing.entitlement.api.BlockingState;
+import org.killbill.billing.entitlement.api.BlockingStateType;
 import org.killbill.billing.entitlement.api.DefaultEntitlement;
 import org.killbill.billing.entitlement.api.Entitlement;
 import org.killbill.billing.entitlement.api.EntitlementApi;
@@ -76,11 +79,14 @@ import org.killbill.billing.lifecycle.api.Lifecycle;
 import org.killbill.billing.lifecycle.glue.BusModule;
 import org.killbill.billing.mock.MockAccountBuilder;
 import org.killbill.billing.osgi.config.OSGIConfig;
+import org.killbill.billing.overdue.OverdueService;
 import org.killbill.billing.overdue.api.OverdueApi;
 import org.killbill.billing.overdue.api.OverdueConfig;
 import org.killbill.billing.overdue.caching.OverdueConfigCache;
 import org.killbill.billing.overdue.listener.OverdueListener;
+import org.killbill.billing.overdue.wrapper.OverdueWrapper;
 import org.killbill.billing.overdue.wrapper.OverdueWrapperFactory;
+import org.killbill.billing.payment.api.AdminPaymentApi;
 import org.killbill.billing.payment.api.Payment;
 import org.killbill.billing.payment.api.PaymentApi;
 import org.killbill.billing.payment.api.PaymentApiException;
@@ -112,6 +118,7 @@ import org.killbill.billing.util.tag.Tag;
 import org.killbill.bus.api.PersistentBus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.testng.Assert;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
@@ -126,6 +133,8 @@ import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Stage;
 
+import static com.jayway.awaitility.Awaitility.await;
+import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.assertTrue;
@@ -198,6 +207,9 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB {
 
     @Inject
     protected PaymentApi paymentApi;
+
+    @Inject
+    protected AdminPaymentApi adminPaymentApi;
 
     @Inject
     protected EntitlementApi entitlementApi;
@@ -347,6 +359,28 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB {
         // Either the ctd is today (start of the trial) or the clock is strictly before the CTD
         assertTrue(clock.getUTCToday().compareTo(new LocalDate(ctd)) == 0 || clock.getUTCNow().isBefore(ctd));
         assertTrue(ctd.toDateTime(testTimeZone).toLocalDate().compareTo(new LocalDate(chargeThroughDate.getYear(), chargeThroughDate.getMonthOfYear(), chargeThroughDate.getDayOfMonth())) == 0);
+    }
+
+    protected void checkODState(final String expected, final UUID accountId) {
+        try {
+            // This will test the overdue notification queue: when we move the clock, the overdue system
+            // should get notified to refresh its state.
+            // Calling explicitly refresh here (overdueApi.refreshOverdueStateFor(account)) would not fully
+            // test overdue.
+            // Since we're relying on the notification queue, we may need to wait a bit (hence await()).
+            await().atMost(10, SECONDS).until(new Callable<Boolean>() {
+                @Override
+                public Boolean call() throws Exception {
+                    final BlockingState blockingStateForService = blockingApi.getBlockingStateForService(accountId, BlockingStateType.ACCOUNT, OverdueService.OVERDUE_SERVICE_NAME, internalCallContext);
+                    final String stateName = blockingStateForService != null ? blockingStateForService.getStateName() : OverdueWrapper.CLEAR_STATE_NAME;
+                    return expected.equals(stateName);
+                }
+            });
+        } catch (final Exception e) {
+            final BlockingState blockingStateForService = blockingApi.getBlockingStateForService(accountId, BlockingStateType.ACCOUNT, OverdueService.OVERDUE_SERVICE_NAME, internalCallContext);
+            final String stateName = blockingStateForService != null ? blockingStateForService.getStateName() : OverdueWrapper.CLEAR_STATE_NAME;
+            Assert.assertEquals(stateName, expected, "Got exception: " + e.toString());
+        }
     }
 
     protected DefaultSubscriptionBase subscriptionDataFromSubscription(final SubscriptionBase sub) {

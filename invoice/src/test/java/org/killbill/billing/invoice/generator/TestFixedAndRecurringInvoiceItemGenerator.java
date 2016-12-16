@@ -19,6 +19,7 @@ package org.killbill.billing.invoice.generator;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -55,6 +56,9 @@ import org.killbill.billing.subscription.api.SubscriptionBaseTransitionType;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
+import com.google.common.collect.LinkedListMultimap;
+import com.google.common.collect.Multimap;
+
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertFalse;
 import static org.testng.Assert.assertTrue;
@@ -77,7 +81,6 @@ public class TestFixedAndRecurringInvoiceItemGenerator extends InvoiceTestSuiteN
             fail(e.getMessage());
         }
     }
-
 
     @Test(groups = "fast")
     public void testIsSameDayAndSameSubscriptionWithNullPrevEvent() {
@@ -286,7 +289,7 @@ public class TestFixedAndRecurringInvoiceItemGenerator extends InvoiceTestSuiteN
     }
 
     @Test(groups = "fast")
-    public void testSafetyBounds() throws InvoiceApiException {
+    public void testSafetyBoundsTooManyInvoiceItemsForGivenSubscriptionAndInvoiceDate() throws InvoiceApiException {
         final int threshold = 15;
         final LocalDate startDate = new LocalDate("2016-01-01");
 
@@ -368,6 +371,234 @@ public class TestFixedAndRecurringInvoiceItemGenerator extends InvoiceTestSuiteN
                                                                                                          account.getCurrency(),
                                                                                                          new HashMap<UUID, SubscriptionFutureNotificationDates>(),
                                                                                                          internalCallContext);
+            fail();
+        } catch (final InvoiceApiException e) {
+            assertEquals(e.getCode(), ErrorCode.UNEXPECTED_ERROR.getCode());
+        }
+    }
+
+    @Test(groups = "fast", description = "https://github.com/killbill/killbill/issues/664")
+    public void testTooManyFixedInvoiceItemsForGivenSubscriptionAndStartDate() throws InvoiceApiException {
+        final LocalDate startDate = new LocalDate("2016-01-01");
+
+        final BillingEventSet events = new MockBillingEventSet();
+        final BigDecimal amount = BigDecimal.TEN;
+        final MockInternationalPrice price = new MockInternationalPrice(new DefaultPrice(amount, account.getCurrency()));
+        final Plan plan = new MockPlan("my-plan");
+        final PlanPhase planPhase = new MockPlanPhase(null, price, BillingPeriod.NO_BILLING_PERIOD, PhaseType.TRIAL);
+        final BillingEvent event = invoiceUtil.createMockBillingEvent(account,
+                                                                      subscription,
+                                                                      startDate.toDateTimeAtStartOfDay(),
+                                                                      plan,
+                                                                      planPhase,
+                                                                      amount,
+                                                                      null,
+                                                                      account.getCurrency(),
+                                                                      BillingPeriod.NO_BILLING_PERIOD,
+                                                                      1,
+                                                                      BillingMode.IN_ADVANCE,
+                                                                      "Billing Event Desc",
+                                                                      1L,
+                                                                      SubscriptionBaseTransitionType.CREATE);
+        events.add(event);
+
+        // Simulate a bunch of fixed items for that subscription and start date (simulate bad data on disk)
+        final List<Invoice> existingInvoices = new LinkedList<Invoice>();
+        for (int i = 0; i < 20; i++) {
+            final Invoice invoice = new DefaultInvoice(account.getId(), clock.getUTCToday(), startDate, account.getCurrency());
+            invoice.addInvoiceItem(new FixedPriceInvoiceItem(UUID.randomUUID(),
+                                                             clock.getUTCNow(),
+                                                             invoice.getId(),
+                                                             account.getId(),
+                                                             subscription.getBundleId(),
+                                                             subscription.getId(),
+                                                             event.getPlan().getName(),
+                                                             event.getPlanPhase().getName(),
+                                                             "Buggy fixed item",
+                                                             startDate,
+                                                             amount,
+                                                             account.getCurrency()));
+            existingInvoices.add(invoice);
+        }
+
+        final List<InvoiceItem> generatedItems = fixedAndRecurringInvoiceItemGenerator.generateItems(account,
+                                                                                                     UUID.randomUUID(),
+                                                                                                     events,
+                                                                                                     existingInvoices,
+                                                                                                     startDate,
+                                                                                                     account.getCurrency(),
+                                                                                                     new HashMap<UUID, SubscriptionFutureNotificationDates>(),
+                                                                                                     internalCallContext);
+        // There will be one proposed, but because it will match one of ones in the existing list and we don't repair, it won't be returned
+        assertEquals(generatedItems.size(), 0);
+    }
+
+    @Test(groups = "fast", description = "https://github.com/killbill/killbill/issues/664")
+    public void testSubscriptionAlreadyDoubleBilledForServicePeriod() throws InvoiceApiException {
+        final LocalDate startDate = new LocalDate("2016-01-01");
+
+        final BillingEventSet events = new MockBillingEventSet();
+        final BigDecimal amount = BigDecimal.TEN;
+        final MockInternationalPrice price = new MockInternationalPrice(new DefaultPrice(amount, account.getCurrency()));
+        final Plan plan = new MockPlan("my-plan");
+        final PlanPhase planPhase = new MockPlanPhase(price, null, BillingPeriod.MONTHLY, PhaseType.EVERGREEN);
+        final BillingEvent event = invoiceUtil.createMockBillingEvent(account,
+                                                                      subscription,
+                                                                      startDate.toDateTimeAtStartOfDay(),
+                                                                      plan,
+                                                                      planPhase,
+                                                                      null,
+                                                                      amount,
+                                                                      account.getCurrency(),
+                                                                      BillingPeriod.MONTHLY,
+                                                                      1,
+                                                                      BillingMode.IN_ADVANCE,
+                                                                      "Billing Event Desc",
+                                                                      1L,
+                                                                      SubscriptionBaseTransitionType.CREATE);
+        events.add(event);
+
+        // Simulate a bunch of recurring items for that subscription and service period (bad data on disk leading to double billing)
+        final List<Invoice> existingInvoices = new LinkedList<Invoice>();
+        for (int i = 0; i < 20; i++) {
+            final Invoice invoice = new DefaultInvoice(account.getId(), clock.getUTCToday(), startDate.plusMonths(i), account.getCurrency());
+            invoice.addInvoiceItem(new RecurringInvoiceItem(UUID.randomUUID(),
+                                                            // Set random dates to verify it doesn't impact double billing detection
+                                                            startDate.plusMonths(i).toDateTimeAtStartOfDay(),
+                                                            invoice.getId(),
+                                                            account.getId(),
+                                                            subscription.getBundleId(),
+                                                            subscription.getId(),
+                                                            event.getPlan().getName(),
+                                                            event.getPlanPhase().getName(),
+                                                            startDate,
+                                                            startDate.plusMonths(1),
+                                                            amount,
+                                                            amount,
+                                                            account.getCurrency()));
+            existingInvoices.add(invoice);
+        }
+
+        try {
+            // There will be one proposed item but the tree will refuse the merge because of the bad state on disk
+            final List<InvoiceItem> generatedItems = fixedAndRecurringInvoiceItemGenerator.generateItems(account,
+                                                                                                         UUID.randomUUID(),
+                                                                                                         events,
+                                                                                                         existingInvoices,
+                                                                                                         startDate,
+                                                                                                         account.getCurrency(),
+                                                                                                         new HashMap<UUID, SubscriptionFutureNotificationDates>(),
+                                                                                                         internalCallContext);
+            fail();
+        } catch (final IllegalStateException e) {
+            assertTrue(e.getMessage().startsWith("Double billing detected"));
+        }
+    }
+
+    // Simulate a bug in the generator where two fixed items for the same day and subscription end up in the resulting items
+    @Test(groups = "fast", description = "https://github.com/killbill/killbill/issues/664")
+    public void testTooManyFixedInvoiceItemsForGivenSubscriptionAndStartDatePostMerge() throws InvoiceApiException {
+        final Multimap<UUID, LocalDate> createdItemsPerDayPerSubscription = LinkedListMultimap.<UUID, LocalDate>create();
+        final LocalDate startDate = new LocalDate("2016-01-01");
+
+        final Collection<InvoiceItem> resultingItems = new LinkedList<InvoiceItem>();
+        final InvoiceItem fixedPriceInvoiceItem = new FixedPriceInvoiceItem(UUID.randomUUID(),
+                                                                            clock.getUTCNow(),
+                                                                            null,
+                                                                            account.getId(),
+                                                                            subscription.getBundleId(),
+                                                                            subscription.getId(),
+                                                                            "planName",
+                                                                            "phaseName",
+                                                                            "description",
+                                                                            startDate,
+                                                                            BigDecimal.ONE,
+                                                                            account.getCurrency());
+        resultingItems.add(fixedPriceInvoiceItem);
+        resultingItems.add(fixedPriceInvoiceItem);
+
+        try {
+            fixedAndRecurringInvoiceItemGenerator.safetyBounds(resultingItems, createdItemsPerDayPerSubscription, internalCallContext);
+            fail();
+        } catch (final InvoiceApiException e) {
+            assertEquals(e.getCode(), ErrorCode.UNEXPECTED_ERROR.getCode());
+        }
+
+        resultingItems.clear();
+        for (int i = 0; i < 2; i++) {
+            resultingItems.add(new FixedPriceInvoiceItem(UUID.randomUUID(),
+                                                         clock.getUTCNow(),
+                                                         null,
+                                                         account.getId(),
+                                                         subscription.getBundleId(),
+                                                         subscription.getId(),
+                                                         "planName",
+                                                         "phaseName",
+                                                         "description",
+                                                         startDate,
+                                                         // Amount shouldn't have any effect
+                                                         BigDecimal.ONE.add(new BigDecimal(i)),
+                                                         account.getCurrency()));
+        }
+
+        try {
+            fixedAndRecurringInvoiceItemGenerator.safetyBounds(resultingItems, createdItemsPerDayPerSubscription, internalCallContext);
+            fail();
+        } catch (final InvoiceApiException e) {
+            assertEquals(e.getCode(), ErrorCode.UNEXPECTED_ERROR.getCode());
+        }
+    }
+
+    // Simulate a bug in the generator where two recurring items for the same service period and subscription end up in the resulting items
+    @Test(groups = "fast", description = "https://github.com/killbill/killbill/issues/664")
+    public void testTooManyRecurringInvoiceItemsForGivenSubscriptionAndServicePeriodPostMerge() throws InvoiceApiException {
+        final Multimap<UUID, LocalDate> createdItemsPerDayPerSubscription = LinkedListMultimap.<UUID, LocalDate>create();
+        final LocalDate startDate = new LocalDate("2016-01-01");
+
+        final Collection<InvoiceItem> resultingItems = new LinkedList<InvoiceItem>();
+        final InvoiceItem recurringInvoiceItem = new RecurringInvoiceItem(UUID.randomUUID(),
+                                                                          clock.getUTCNow(),
+                                                                          null,
+                                                                          account.getId(),
+                                                                          subscription.getBundleId(),
+                                                                          subscription.getId(),
+                                                                          "planName",
+                                                                          "phaseName",
+                                                                          startDate,
+                                                                          startDate.plusMonths(1),
+                                                                          BigDecimal.ONE,
+                                                                          BigDecimal.ONE,
+                                                                          account.getCurrency());
+        resultingItems.add(recurringInvoiceItem);
+        resultingItems.add(recurringInvoiceItem);
+
+        try {
+            fixedAndRecurringInvoiceItemGenerator.safetyBounds(resultingItems, createdItemsPerDayPerSubscription, internalCallContext);
+            fail();
+        } catch (final InvoiceApiException e) {
+            assertEquals(e.getCode(), ErrorCode.UNEXPECTED_ERROR.getCode());
+        }
+
+        resultingItems.clear();
+        for (int i = 0; i < 2; i++) {
+            resultingItems.add(new RecurringInvoiceItem(UUID.randomUUID(),
+                                                        clock.getUTCNow(),
+                                                        null,
+                                                        account.getId(),
+                                                        subscription.getBundleId(),
+                                                        subscription.getId(),
+                                                        "planName",
+                                                        "phaseName",
+                                                        startDate,
+                                                        startDate.plusMonths(1),
+                                                        // Amount shouldn't have any effect
+                                                        BigDecimal.TEN,
+                                                        BigDecimal.ONE,
+                                                        account.getCurrency()));
+        }
+
+        try {
+            fixedAndRecurringInvoiceItemGenerator.safetyBounds(resultingItems, createdItemsPerDayPerSubscription, internalCallContext);
             fail();
         } catch (final InvoiceApiException e) {
             assertEquals(e.getCode(), ErrorCode.UNEXPECTED_ERROR.getCode());

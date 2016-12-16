@@ -64,7 +64,7 @@ public abstract class OperationCallbackBase<CallbackOperationResult, CallbackOpe
 
         try {
             final Callable<PluginDispatcherReturnType<OperationResult>> task = new CallableWithAccountLock<OperationResult, ExceptionType>(locker,
-                                                                                                                                           account.getExternalKey(),
+                                                                                                                                           account.getId(),
                                                                                                                                            paymentConfig,
                                                                                                                                            callback);
             final OperationResult operationResult = PaymentPluginDispatcher.dispatchWithExceptionHandling(account, pluginNames, task, paymentPluginDispatcher);

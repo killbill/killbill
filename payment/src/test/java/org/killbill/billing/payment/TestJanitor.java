@@ -101,8 +101,6 @@ public class TestJanitor extends PaymentTestSuiteWithEmbeddedDB {
     @Inject
     protected NotificationQueueService notificationQueueService;
     @Inject
-    private Janitor janitor;
-    @Inject
     private PaymentBusEventHandler handler;
     private MockPaymentProviderPlugin mockPaymentProviderPlugin;
 
@@ -123,15 +121,13 @@ public class TestJanitor extends PaymentTestSuiteWithEmbeddedDB {
         mockPaymentProviderPlugin = (MockPaymentProviderPlugin) registry.getServiceForName(MockPaymentProviderPlugin.PLUGIN_NAME);
     }
 
-    @AfterClass(groups = "slow")
-    protected void afterClass() throws Exception {
-    }
-
     @BeforeMethod(groups = "slow")
     public void beforeMethod() throws Exception {
         super.beforeMethod();
-        janitor.initialize();
-        janitor.start();
+
+        retryService.initialize();
+        retryService.start();
+
         eventBus.register(handler);
         testListener.reset();
         eventBus.register(testListener);
@@ -143,9 +139,10 @@ public class TestJanitor extends PaymentTestSuiteWithEmbeddedDB {
 
     @AfterMethod(groups = "slow")
     public void afterMethod() throws Exception {
+        retryService.stop();
+
         testListener.assertListenerStatus();
 
-        janitor.stop();
         eventBus.unregister(handler);
         eventBus.unregister(testListener);
         super.afterMethod();

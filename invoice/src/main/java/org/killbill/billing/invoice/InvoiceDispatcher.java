@@ -723,7 +723,6 @@ public class InvoiceDispatcher {
         BigDecimal childInvoiceAmount = InvoiceCalculatorUtils.computeChildInvoiceAmount(childInvoice.getCurrency(), childInvoice.getInvoiceItems());
         InvoiceModelDao draftParentInvoice = invoiceDao.getParentDraftInvoice(account.getParentAccountId(), parentContext);
 
-        final DateTime today = clock.getNow(account.getTimeZone());
         final String description = account.getExternalKey().concat(" summary");
         if (draftParentInvoice != null) {
 
@@ -737,7 +736,7 @@ public class InvoiceDispatcher {
             }
 
             // new item when the parent invoices does not have this child item yet
-            final ParentInvoiceItem newParentInvoiceItem = new ParentInvoiceItem(UUID.randomUUID(), today, draftParentInvoice.getId(), account.getParentAccountId(), account.getId(), childInvoiceAmount, account.getCurrency(), description);
+            final ParentInvoiceItem newParentInvoiceItem = new ParentInvoiceItem(UUID.randomUUID(), context.getCreatedDate(), draftParentInvoice.getId(), account.getParentAccountId(), account.getId(), childInvoiceAmount, account.getCurrency(), description);
             draftParentInvoice.addInvoiceItem(new InvoiceItemModelDao(newParentInvoiceItem));
 
             List<InvoiceModelDao> invoices = new ArrayList<InvoiceModelDao>();
@@ -748,8 +747,9 @@ public class InvoiceDispatcher {
                 return;
             }
 
-            draftParentInvoice = new InvoiceModelDao(account.getParentAccountId(), today.toLocalDate(), account.getCurrency(), InvoiceStatus.DRAFT, true);
-            InvoiceItem parentInvoiceItem = new ParentInvoiceItem(UUID.randomUUID(), today, draftParentInvoice.getId(), account.getParentAccountId(), account.getId(), childInvoiceAmount, account.getCurrency(), description);
+            final LocalDate invoiceDate = context.toLocalDate(context.getCreatedDate());
+            draftParentInvoice = new InvoiceModelDao(account.getParentAccountId(), invoiceDate, account.getCurrency(), InvoiceStatus.DRAFT, true);
+            final InvoiceItem parentInvoiceItem = new ParentInvoiceItem(UUID.randomUUID(), context.getCreatedDate(), draftParentInvoice.getId(), account.getParentAccountId(), account.getId(), childInvoiceAmount, account.getCurrency(), description);
             draftParentInvoice.addInvoiceItem(new InvoiceItemModelDao(parentInvoiceItem));
 
             // build account date time zone

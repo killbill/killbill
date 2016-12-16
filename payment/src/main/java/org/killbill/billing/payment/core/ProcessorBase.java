@@ -163,23 +163,23 @@ public abstract class ProcessorBase {
     public static class CallableWithAccountLock<ReturnType, ExceptionType extends Exception> implements Callable<PluginDispatcherReturnType<ReturnType>> {
 
         private final GlobalLocker locker;
-        private final String accountExternalKey;
+        private final UUID accountId;
         private final DispatcherCallback<PluginDispatcherReturnType<ReturnType>, ExceptionType> callback;
         private final PaymentConfig paymentConfig;
 
         public CallableWithAccountLock(final GlobalLocker locker,
-                                       final String accountExternalKey,
+                                       final UUID accountId,
                                        final PaymentConfig paymentConfig,
                                        final DispatcherCallback<PluginDispatcherReturnType<ReturnType>, ExceptionType> callback) {
             this.locker = locker;
-            this.accountExternalKey = accountExternalKey;
+            this.accountId = accountId;
             this.callback = callback;
             this.paymentConfig = paymentConfig;
         }
 
         @Override
         public PluginDispatcherReturnType<ReturnType> call() throws ExceptionType, LockFailedException {
-            return new WithAccountLock<ReturnType, ExceptionType>(paymentConfig).processAccountWithLock(locker, accountExternalKey, callback);
+            return new WithAccountLock<ReturnType, ExceptionType>(paymentConfig).processAccountWithLock(locker, accountId, callback);
         }
     }
 
@@ -191,11 +191,11 @@ public abstract class ProcessorBase {
             this.paymentConfig = paymentConfig;
         }
 
-        public PluginDispatcherReturnType<ReturnType> processAccountWithLock(final GlobalLocker locker, final String accountExternalKey, final DispatcherCallback<PluginDispatcherReturnType<ReturnType>, ExceptionType> callback)
+        public PluginDispatcherReturnType<ReturnType> processAccountWithLock(final GlobalLocker locker, final UUID accountId, final DispatcherCallback<PluginDispatcherReturnType<ReturnType>, ExceptionType> callback)
                 throws ExceptionType, LockFailedException {
             GlobalLock lock = null;
             try {
-                lock = locker.lockWithNumberOfTries(LockerType.ACCNT_INV_PAY.toString(), accountExternalKey, paymentConfig.getMaxGlobalLockRetries());
+                lock = locker.lockWithNumberOfTries(LockerType.ACCNT_INV_PAY.toString(), accountId.toString(), paymentConfig.getMaxGlobalLockRetries());
                 return callback.doOperation();
             } finally {
                 if (lock != null) {

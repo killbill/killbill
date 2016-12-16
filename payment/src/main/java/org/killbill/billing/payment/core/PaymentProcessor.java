@@ -369,16 +369,20 @@ public class PaymentProcessor extends ProcessorBase {
             return;
         }
 
-        final PaymentAttemptModelDao lastPaymentAttempt =  attempts.get(attempts.size() - 1);
+        final PaymentAttemptModelDao lastPaymentAttempt = attempts.get(attempts.size() - 1);
         final InternalCallContext internalCallContext = internalCallContextFactory.createInternalCallContext(lastPaymentAttempt.getAccountId(), callContext);
 
+        cancelScheduledPaymentTransaction(lastPaymentAttempt.getId(), internalCallContext);
+    }
+
+    public void cancelScheduledPaymentTransaction(final UUID lastPaymentAttemptId, final InternalCallContext internalCallContext) throws PaymentApiException {
         try {
             final NotificationQueue retryQueue = notificationQueueService.getNotificationQueue(DefaultPaymentService.SERVICE_NAME, DefaultRetryService.QUEUE_NAME);
             final List<NotificationEventWithMetadata<NotificationEvent>> notificationEventWithMetadatas =
                     retryQueue.getFutureNotificationForSearchKeys(internalCallContext.getAccountRecordId(), internalCallContext.getTenantRecordId());
 
             for (final NotificationEventWithMetadata<NotificationEvent> notificationEvent : notificationEventWithMetadatas) {
-                if (((PaymentRetryNotificationKey) notificationEvent.getEvent()).getAttemptId().equals(lastPaymentAttempt.getId())) {
+                if (((PaymentRetryNotificationKey) notificationEvent.getEvent()).getAttemptId().equals(lastPaymentAttemptId)) {
                     retryQueue.removeNotification(notificationEvent.getRecordId());
                     break;
                 }

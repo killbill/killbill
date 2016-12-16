@@ -46,6 +46,7 @@ import org.killbill.billing.payment.core.sm.PluginControlPaymentAutomatonRunner.
 import org.killbill.billing.payment.dao.PaymentAttemptModelDao;
 import org.killbill.billing.payment.dao.PaymentDao;
 import org.killbill.billing.payment.dao.PaymentModelDao;
+import org.killbill.billing.payment.dao.PaymentTransactionModelDao;
 import org.killbill.billing.payment.dao.PluginPropertySerializer;
 import org.killbill.billing.payment.dao.PluginPropertySerializer.PluginPropertySerializerException;
 import org.killbill.billing.payment.invoice.InvoicePaymentControlPluginApi;
@@ -196,6 +197,42 @@ public class PluginControlPaymentProcessor extends ProcessorBase {
                                                           properties,
                                                           paymentControlPluginNames,
                                                           callContext, internalCallContext);
+    }
+
+    public Payment notifyPendingPaymentOfStateChanged(final boolean isApiPayment, final Account account, final UUID paymentTransactionId, final boolean isSuccess, final List<String> paymentControlPluginNames, final CallContext callContext, final InternalCallContext internalCallContext) throws PaymentApiException {
+        final PaymentTransactionModelDao paymentTransactionModelDao = paymentDao.getPaymentTransaction(paymentTransactionId, internalCallContext);
+        final List<PaymentAttemptModelDao> attempts = paymentDao.getPaymentAttemptByTransactionExternalKey(paymentTransactionModelDao.getTransactionExternalKey(), internalCallContext);
+        final PaymentAttemptModelDao attempt = Iterables.find(attempts,
+                                                              new Predicate<PaymentAttemptModelDao>() {
+                                                                  @Override
+                                                                  public boolean apply(final PaymentAttemptModelDao input) {
+                                                                      return input.getTransactionId().equals(paymentTransactionId);
+                                                                  }
+                                                              });
+
+        final Iterable<PluginProperty> pluginProperties;
+        try {
+            pluginProperties = PluginPropertySerializer.deserialize(attempt.getPluginProperties());
+        } catch (final PluginPropertySerializerException e) {
+            throw new PaymentApiException(e, ErrorCode.PAYMENT_INTERNAL_ERROR, String.format("Unable to deserialize payment attemptId='%s' properties", attempt.getId()));
+        }
+
+        return pluginControlledPaymentAutomatonRunner.run(isApiPayment,
+                                                          isSuccess,
+                                                          paymentTransactionModelDao.getTransactionType(),
+                                                          ControlOperation.NOTIFICATION_OF_STATE_CHANGE,
+                                                          account,
+                                                          attempt.getPaymentMethodId(),
+                                                          paymentTransactionModelDao.getPaymentId(),
+                                                          attempt.getPaymentExternalKey(),
+                                                          paymentTransactionId,
+                                                          paymentTransactionModelDao.getTransactionExternalKey(),
+                                                          paymentTransactionModelDao.getAmount(),
+                                                          paymentTransactionModelDao.getCurrency(),
+                                                          pluginProperties,
+                                                          paymentControlPluginNames,
+                                                          callContext,
+                                                          internalCallContext);
     }
 
     public Payment createChargeback(final boolean isApiPayment, final Account account, final UUID paymentId, final String transactionExternalKey, final BigDecimal amount, final Currency currency,

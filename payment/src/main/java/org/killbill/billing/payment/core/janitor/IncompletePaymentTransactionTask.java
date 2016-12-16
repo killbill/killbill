@@ -51,6 +51,7 @@ import org.killbill.billing.util.callcontext.TenantContext;
 import org.killbill.billing.util.config.definition.PaymentConfig;
 import org.killbill.clock.Clock;
 import org.killbill.commons.locker.GlobalLocker;
+import org.killbill.commons.locker.LockFailedException;
 import org.killbill.notificationq.api.NotificationEvent;
 import org.killbill.notificationq.api.NotificationQueue;
 import org.skife.config.TimeSpan;
@@ -93,12 +94,19 @@ public class IncompletePaymentTransactionTask extends CompletionTaskBase<Payment
     }
 
     public void processNotification(final JanitorNotificationKey notificationKey, final UUID userToken, final Long accountRecordId, final long tenantRecordId) {
+        try {
+            tryToProcessNotification(notificationKey, userToken, accountRecordId, tenantRecordId);
+        } catch (final LockFailedException e) {
+            log.warn("Error locking accountRecordId='{}', will attempt to retry later", accountRecordId, e);
+            insertNewNotificationForUnresolvedTransactionIfNeeded(notificationKey.getUuidKey(), notificationKey.getAttemptNumber(), userToken, accountRecordId, tenantRecordId);
+        }
+    }
 
+    public void tryToProcessNotification(final JanitorNotificationKey notificationKey, final UUID userToken, final Long accountRecordId, final long tenantRecordId) throws LockFailedException {
         final InternalTenantContext internalTenantContext = internalCallContextFactory.createInternalTenantContext(tenantRecordId, accountRecordId);
-        doJanitorOperationWithAccountLock(new JanitorIterationCallback() {
+        tryToDoJanitorOperationWithAccountLock(new JanitorIterationCallback() {
             @Override
             public Void doIteration() {
-
                 // State may have changed since we originally retrieved with no lock
                 final PaymentTransactionModelDao rehydratedPaymentTransaction = paymentDao.getPaymentTransaction(notificationKey.getUuidKey(), internalTenantContext);
 
@@ -139,7 +147,6 @@ public class IncompletePaymentTransactionTask extends CompletionTaskBase<Payment
                 return null;
             }
         }, internalTenantContext);
-
     }
 
     @Override
