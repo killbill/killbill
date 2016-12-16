@@ -18,6 +18,8 @@
 
 package org.killbill.billing.catalog;
 
+import java.net.URI;
+
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
@@ -75,6 +77,13 @@ public class DefaultLimit extends ValidatingConfig<StandaloneCatalog> implements
 
         return errors;
     }
+
+    @Override
+    public void initialize(final StandaloneCatalog catalog, final URI sourceURI) {
+        super.initialize(catalog, sourceURI);
+        CatalogSafetyInitializer.initializeNonRequiredArrayFields(this);
+    }
+
 
     @Override
     public boolean compliesWith(double value) {

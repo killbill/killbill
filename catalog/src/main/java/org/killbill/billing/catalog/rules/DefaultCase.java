@@ -17,6 +17,9 @@
 package org.killbill.billing.catalog.rules;
 
 
+import java.net.URI;
+
+import org.killbill.billing.catalog.CatalogSafetyInitializer;
 import org.killbill.billing.catalog.DefaultPrice;
 import org.killbill.billing.catalog.DefaultPriceList;
 import org.killbill.billing.catalog.DefaultProduct;
@@ -90,6 +93,12 @@ public abstract class DefaultCase<T> extends ValidatingConfig<StandaloneCatalog>
     @Override
     public ValidationErrors validate(final StandaloneCatalog catalog, final ValidationErrors errors) {
         return errors;
+    }
+
+    @Override
+    public void initialize(final StandaloneCatalog catalog, final URI sourceURI) {
+        super.initialize(catalog, sourceURI);
+        CatalogSafetyInitializer.initializeNonRequiredArrayFields(this);
     }
 
     protected abstract DefaultCase<T> setProduct(Product product);

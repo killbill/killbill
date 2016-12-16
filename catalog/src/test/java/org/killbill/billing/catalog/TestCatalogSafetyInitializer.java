@@ -1,0 +1,95 @@
+/*
+ * Copyright 2014-2016 Groupon, Inc
+ * Copyright 2014-2016 The Billing Project, LLC
+ *
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
+ * (the "License"); you may not use this file except in compliance with the
+ * License.  You may obtain a copy of the License at:
+ *
+ *    http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the
+ * License for the specific language governing permissions and limitations
+ * under the License.
+ */
+
+package org.killbill.billing.catalog;
+
+import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlElementWrapper;
+import javax.xml.bind.annotation.XmlIDREF;
+
+import org.killbill.billing.catalog.api.Product;
+import org.testng.Assert;
+import org.testng.annotations.Test;
+
+public class TestCatalogSafetyInitializer {
+
+    @XmlElementWrapper(name = "initialPhasesWrapperAllRequired", required = true)
+    @XmlElement(name = "phase", required = true)
+    private DefaultPlanPhase[] initialPhasesWrapperAllRequired;
+
+    @XmlElementWrapper(name = "initialPhasesWrapperNotRequired", required = false)
+    @XmlElement(name = "phase", required = false)
+    private DefaultPlanPhase[] initialPhasesWrapperNotRequired;
+
+    @XmlElementWrapper(name = "initialPhasesWrapper", required = true)
+    @XmlElement(name = "phase", required = false)
+    private DefaultPlanPhase[] initialPhasesWrapper;
+
+    @XmlElement(name = "pricesNotRequired", required = false)
+    private DefaultPrice[] pricesNotRequired;
+
+    @XmlElement(name = "prices", required = true)
+    private DefaultPrice[] prices;
+
+    @XmlElementWrapper(name = "available", required = false)
+    @XmlIDREF
+    @XmlElement(type = DefaultProduct.class, name = "addonProduct", required = false)
+    private CatalogEntityCollection<Product> available;
+
+    @Test(groups = "fast")
+    public void testNonRequiredArrayFields() {
+
+        final TestCatalogSafetyInitializer test = new TestCatalogSafetyInitializer();
+        Assert.assertNull(test.getInitialPhasesWrapperAllRequired());
+        Assert.assertNull(test.getInitialPhasesWrapperNotRequired());
+        Assert.assertNull(test.getInitialPhasesWrapper());
+        Assert.assertNull(test.getPricesNotRequired());
+        Assert.assertNull(test.getPrices());
+
+        CatalogSafetyInitializer.initializeNonRequiredArrayFields(test);
+
+        Assert.assertNull(test.getInitialPhasesWrapperAllRequired());
+        Assert.assertNotNull(test.getInitialPhasesWrapperNotRequired());
+        Assert.assertEquals(test.getInitialPhasesWrapperNotRequired().length, 0);
+        Assert.assertNull(test.getInitialPhasesWrapper());
+        Assert.assertNotNull(test.getPricesNotRequired());
+        Assert.assertEquals(test.getPricesNotRequired().length, 0);
+        Assert.assertNull(test.getPrices());
+
+    }
+
+    public DefaultPlanPhase[] getInitialPhasesWrapperAllRequired() {
+        return initialPhasesWrapperAllRequired;
+    }
+
+    public DefaultPlanPhase[] getInitialPhasesWrapperNotRequired() {
+        return initialPhasesWrapperNotRequired;
+    }
+
+    public DefaultPlanPhase[] getInitialPhasesWrapper() {
+        return initialPhasesWrapper;
+    }
+
+    public DefaultPrice[] getPricesNotRequired() {
+        return pricesNotRequired;
+    }
+
+    public DefaultPrice[] getPrices() {
+        return prices;
+    }
+
+}

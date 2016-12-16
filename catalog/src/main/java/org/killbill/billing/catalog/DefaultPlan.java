@@ -56,7 +56,6 @@ public class DefaultPlan extends ValidatingConfig<StandaloneCatalog> implements 
     @XmlID
     private String name;
 
-    //TODO MDW Validation - effectiveDateForExistingSubscriptions > catalog effectiveDate
     @XmlElement(required = false)
     private Date effectiveDateForExistingSubscriptions;
 
@@ -129,7 +128,7 @@ public class DefaultPlan extends ValidatingConfig<StandaloneCatalog> implements 
 
     @Override
     public PlanPhase[] getAllPhases() {
-        final int length = (initialPhases == null || initialPhases.length == 0) ? 1 : (initialPhases.length + 1);
+        final int length = initialPhases.length + 1;
         final PlanPhase[] allPhases = new DefaultPlanPhase[length];
         int cnt = 0;
         if (length > 1) {
@@ -175,18 +174,19 @@ public class DefaultPlan extends ValidatingConfig<StandaloneCatalog> implements 
     @Override
     public void initialize(final StandaloneCatalog catalog, final URI sourceURI) {
         super.initialize(catalog, sourceURI);
+        CatalogSafetyInitializer.initializeNonRequiredArrayFields(this);
+
         if (finalPhase != null) {
             finalPhase.setPlan(this);
             finalPhase.initialize(catalog, sourceURI);
         }
-        if (initialPhases != null) {
-            for (final DefaultPlanPhase p : initialPhases) {
-                p.setPlan(this);
-                p.initialize(catalog, sourceURI);
-            }
+        for (final DefaultPlanPhase p : initialPhases) {
+            p.setPlan(this);
+            p.initialize(catalog, sourceURI);
         }
         this.priceListName = this.priceListName  != null ? this.priceListName : findPriceListForPlan(catalog);
     }
+
 
     @Override
     public ValidationErrors validate(final StandaloneCatalog catalog, final ValidationErrors errors) {

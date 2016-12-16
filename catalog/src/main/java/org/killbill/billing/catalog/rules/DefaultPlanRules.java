@@ -16,6 +16,7 @@
 
 package org.killbill.billing.catalog.rules;
 
+import java.net.URI;
 import java.util.Arrays;
 
 import javax.xml.bind.annotation.XmlAccessType;
@@ -23,6 +24,7 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElementWrapper;
 
+import org.killbill.billing.catalog.CatalogSafetyInitializer;
 import org.killbill.billing.catalog.DefaultPriceList;
 import org.killbill.billing.catalog.StandaloneCatalog;
 import org.killbill.billing.catalog.api.BillingActionPolicy;
@@ -172,6 +174,33 @@ public class DefaultPlanRules extends ValidatingConfig<StandaloneCatalog> implem
 
         return errors;
     }
+
+
+    @Override
+    public void initialize(final StandaloneCatalog catalog, final URI sourceURI) {
+        super.initialize(catalog, sourceURI);
+        CatalogSafetyInitializer.initializeNonRequiredArrayFields(this);
+
+        for (final DefaultCaseChangePlanPolicy cur : changeCase) {
+            cur.initialize(catalog, sourceURI);
+        }
+        for (final DefaultCaseChangePlanAlignment cur : changeAlignmentCase) {
+            cur.initialize(catalog, sourceURI);
+        }
+        for (final DefaultCaseCancelPolicy cur : cancelCase) {
+            cur.initialize(catalog, sourceURI);
+        }
+        for (final DefaultCaseCreateAlignment cur : createAlignmentCase) {
+            cur.initialize(catalog, sourceURI);
+        }
+        for (final DefaultCaseBillingAlignment cur : billingAlignmentCase) {
+            cur.initialize(catalog, sourceURI);
+        }
+        for (final DefaultCasePriceList cur : priceListCase) {
+            cur.initialize(catalog, sourceURI);
+        }
+    }
+
 
     /////////////////////////////////////////////////////////////////////////////////////
     // Setters for testing

@@ -62,18 +62,11 @@ public class DefaultFixed extends ValidatingConfig<StandaloneCatalog> implements
 
     @Override
     public void initialize(final StandaloneCatalog root, final URI uri) {
+        super.initialize(root, uri);
+        CatalogSafetyInitializer.initializeNonRequiredArrayFields(this);
+
         if (fixedPrice != null) {
             fixedPrice.initialize(root, uri);
-        } else if (root.getCurrentSupportedCurrencies() != null && root.getCurrentSupportedCurrencies().length > 0){
-            fixedPrice = new DefaultInternationalPrice();
-
-            final DefaultPrice [] tmp = new DefaultPrice[root.getCurrentSupportedCurrencies().length];
-            int i = 0;
-            for (Currency cur : root.getCurrentSupportedCurrencies()) {
-                tmp[i] = new DefaultPrice(BigDecimal.ZERO, cur);
-                i++;
-            }
-            fixedPrice.setPrices(tmp);
         }
     }
 

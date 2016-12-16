@@ -129,7 +129,7 @@ public class DefaultProduct extends ValidatingConfig<StandaloneCatalog> implemen
     
     
     protected Limit findLimit(String unit) {
-        for(Limit limit: limits) {
+        for (Limit limit: limits) {
             if(limit.getUnit().getName().equals(unit) ) {
                     return limit;
             }
@@ -147,9 +147,14 @@ public class DefaultProduct extends ValidatingConfig<StandaloneCatalog> implemen
     }
 
 
-    
+
     @Override
     public void initialize(final StandaloneCatalog catalog, final URI sourceURI) {
+        super.initialize(catalog, sourceURI);
+        CatalogSafetyInitializer.initializeNonRequiredArrayFields(this);
+        for (DefaultLimit cur : limits) {
+            cur.initialize(catalog, sourceURI);
+        }
         catalogName = catalog.getCatalogName();
     }
 

@@ -28,6 +28,7 @@ import org.killbill.billing.catalog.api.BillingAlignment;
 import org.killbill.billing.catalog.api.BillingMode;
 import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.catalog.api.Currency;
+import org.killbill.billing.catalog.api.InternationalPrice;
 import org.killbill.billing.catalog.api.PhaseType;
 import org.killbill.billing.catalog.api.Plan;
 import org.killbill.billing.catalog.api.PlanAlignmentChange;
@@ -80,6 +81,8 @@ public class CatalogUpdater {
                 .setPlanRules(getSaneDefaultPlanRules(defaultPriceList));
         if (currencies != null && currencies.length > 0) {
             tmp.setSupportedCurrencies(currencies);
+        } else {
+            tmp.setSupportedCurrencies(new Currency[0]);
         }
         tmp.initialize(tmp, DUMMY_URI);
 
@@ -168,9 +171,7 @@ public class CatalogUpdater {
             evergreenPhase.setRecurring(recurring);
         }
 
-        try {
-            recurring.getRecurringPrice().getPrice(desc.getCurrency());
-        } catch (CatalogApiException ignore) {
+        if (!isPriceForCurrencyExists(recurring.getRecurringPrice(), desc.getCurrency())) {
             catalog.addRecurringPriceToPlan(recurring.getRecurringPrice(), new DefaultPrice().setCurrency(desc.getCurrency()).setValue(desc.getAmount()));
         }
 
@@ -192,6 +193,18 @@ public class CatalogUpdater {
 
         // Reinit catalog
         catalog.initialize(catalog, DUMMY_URI);
+    }
+
+    private boolean isPriceForCurrencyExists(final InternationalPrice price, final Currency currency) {
+        if (price.getPrices().length == 0) {
+            return false;
+        }
+        try {
+            price.getPrice(currency);
+        } catch (CatalogApiException ignore) {
+            return false;
+        }
+        return true;
     }
 
     private void validateExistingPlan(final DefaultPlan plan, final SimplePlanDescriptor desc) throws CatalogApiException {

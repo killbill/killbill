@@ -26,6 +26,8 @@ import java.util.Comparator;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
+import java.util.TreeSet;
 
 import javax.annotation.Nullable;
 import javax.xml.bind.annotation.XmlAccessType;
@@ -69,7 +71,11 @@ public class VersionedCatalog extends ValidatingConfig<VersionedCatalog> impleme
     @XmlElementWrapper(name = "versions", required = true)
     @XmlElement(name = "version", required = true)
     private final List<StandaloneCatalog> versions;
+
+    @XmlElement(required = true)
     private String catalogName;
+
+    @XmlElement(required = true)
     private BillingMode recurringBillingMode;
 
     // Required for JAXB deserialization
@@ -400,6 +406,8 @@ public class VersionedCatalog extends ValidatingConfig<VersionedCatalog> impleme
     //
     @Override
     public void initialize(final VersionedCatalog catalog, final URI sourceURI) {
+        super.initialize(catalog, sourceURI);
+        CatalogSafetyInitializer.initializeNonRequiredArrayFields(this);
         for (final StandaloneCatalog c : versions) {
             c.initialize(c, sourceURI);
         }

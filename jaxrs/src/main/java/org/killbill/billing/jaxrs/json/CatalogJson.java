@@ -137,10 +137,8 @@ public class CatalogJson {
 
     private List<UsageJson> buildUsagesJson(final Usage[] usages) throws CurrencyValueNull {
         List<UsageJson> usagesJson = new ArrayList<UsageJson>();
-        if (usages != null && usages.length > 0) {
-            for (int i=0; i < usages.length; i++) {
-                usagesJson.add(new UsageJson(usages[i].getBillingPeriod().toString(), buildTiers(usages[i].getTiers())));
-            }
+        for (int i = 0; i < usages.length; i++) {
+            usagesJson.add(new UsageJson(usages[i].getBillingPeriod().toString(), buildTiers(usages[i].getTiers())));
         }
         return usagesJson;
     }

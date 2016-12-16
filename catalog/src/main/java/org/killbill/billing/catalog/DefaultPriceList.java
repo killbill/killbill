@@ -16,6 +16,7 @@
 
 package org.killbill.billing.catalog;
 
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -42,7 +43,7 @@ public class DefaultPriceList extends ValidatingConfig<StandaloneCatalog> implem
     @XmlID
     private String name;
 
-    @XmlElementWrapper(name = "plans", required = false)
+    @XmlElementWrapper(name = "plans", required = true)
     @XmlIDREF
     @XmlElement(type=DefaultPlan.class, name = "plan", required = false)
     private CatalogEntityCollection<Plan> plans;
@@ -95,6 +96,13 @@ public class DefaultPriceList extends ValidatingConfig<StandaloneCatalog> implem
     @Override
     public ValidationErrors validate(final StandaloneCatalog catalog, final ValidationErrors errors) {
         return errors;
+    }
+
+
+    @Override
+    public void initialize(final StandaloneCatalog catalog, final URI sourceURI) {
+        super.initialize(catalog, sourceURI);
+        CatalogSafetyInitializer.initializeNonRequiredArrayFields(this);
     }
 
     public DefaultPriceList setName(final String name) {

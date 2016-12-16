@@ -165,17 +165,25 @@ public class TestDefaultPriceOverride extends CatalogTestSuiteWithEmbeddedDB {
         }
     }
 
-    private void assertInternationalPrice(final InternationalPrice newInternationalPrice, final InternationalPrice initInternationalPrice, final PlanPhasePriceOverride override, final boolean isFixed) throws CurrencyValueNull {
-        assertEquals(newInternationalPrice.getPrices().length, initInternationalPrice.getPrices().length);
-        for (int i = 0; i < newInternationalPrice.getPrices().length; i++) {
-            final Price initPrice = initInternationalPrice.getPrices()[i];
-            final Price newPrice = newInternationalPrice.getPrices()[i];
-            if (override != null && override.getCurrency() == initPrice.getCurrency() &&
-                ((isFixed && override.getFixedPrice() != null) || (!isFixed && override.getRecurringPrice() != null))) {
-                assertEquals(newPrice.getValue().compareTo(isFixed ? override.getFixedPrice() : override.getRecurringPrice()), 0);
-            } else {
-                if (initPrice != null && initPrice.getValue() != null) {
-                    assertEquals(newPrice.getValue().compareTo(initPrice.getValue()), 0);
+    private void assertInternationalPrice(final InternationalPrice newInternationalPrice, final InternationalPrice initInternationalPrice, final PlanPhasePriceOverride override, final boolean isFixed) throws CatalogApiException {
+
+        if (initInternationalPrice.getPrices().length == 0) {
+            if (override != null) {
+                assertEquals(newInternationalPrice.getPrices().length, 1);
+                assertEquals(newInternationalPrice.getPrice(override.getCurrency()).compareTo(isFixed ? override.getFixedPrice() : override.getRecurringPrice()), 0);
+            }
+        } else {
+            assertEquals(newInternationalPrice.getPrices().length, initInternationalPrice.getPrices().length);
+            for (int i = 0; i < newInternationalPrice.getPrices().length; i++) {
+                final Price initPrice = initInternationalPrice.getPrices()[i];
+                final Price newPrice = newInternationalPrice.getPrices()[i];
+                if (override != null && override.getCurrency() == initPrice.getCurrency() &&
+                    ((isFixed && override.getFixedPrice() != null) || (!isFixed && override.getRecurringPrice() != null))) {
+                    assertEquals(newPrice.getValue().compareTo(isFixed ? override.getFixedPrice() : override.getRecurringPrice()), 0);
+                } else {
+                    if (initPrice != null && initPrice.getValue() != null) {
+                        assertEquals(newPrice.getValue().compareTo(initPrice.getValue()), 0);
+                    }
                 }
             }
         }

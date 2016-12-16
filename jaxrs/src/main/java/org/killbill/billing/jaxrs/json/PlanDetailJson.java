@@ -67,7 +67,7 @@ public class PlanDetailJson {
             if (plan.getFinalPhase() == null ||
                 plan.getFinalPhase().getRecurring() == null ||
                 plan.getFinalPhase().getRecurring().getRecurringPrice() == null ||
-                plan.getFinalPhase().getRecurring().getRecurringPrice().getPrices() == null) {
+                plan.getFinalPhase().getRecurring().getRecurringPrice().getPrices().length == 0) {
                 this.finalPhaseRecurringPrice = ImmutableList.<PriceJson>of();
             } else {
                 this.finalPhaseRecurringPrice = Lists.transform(ImmutableList.<Price>copyOf(plan.getFinalPhase().getRecurring().getRecurringPrice().getPrices()),
