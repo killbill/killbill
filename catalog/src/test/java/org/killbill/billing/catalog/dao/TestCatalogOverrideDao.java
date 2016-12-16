@@ -111,7 +111,7 @@ public class TestCatalogOverrideDao extends CatalogTestSuiteWithEmbeddedDB {
         final PlanPhasePriceOverride[] resolvedOverrides = new PlanPhasePriceOverride[plan.getAllPhases().length];
 
         List<TieredBlockPriceOverride> tieredBlockPriceOverrides = new ArrayList<TieredBlockPriceOverride>();
-        DefaultTieredBlockPriceOverride tieredBlockPriceOverride = new DefaultTieredBlockPriceOverride("gallons",new Double("1"), new BigDecimal(4), new Double("100"));
+        DefaultTieredBlockPriceOverride tieredBlockPriceOverride = new DefaultTieredBlockPriceOverride("gallons", new Double("1"), new BigDecimal(4), Currency.USD, new Double("100"));
         tieredBlockPriceOverrides.add(tieredBlockPriceOverride);
 
         List<TierPriceOverride> tierPriceOverrides = new ArrayList<TierPriceOverride>();
@@ -122,6 +122,7 @@ public class TestCatalogOverrideDao extends CatalogTestSuiteWithEmbeddedDB {
         DefaultUsagePriceOverride usagePriceOverride = new DefaultUsagePriceOverride("gas-monthly-in-arrear", UsageType.CONSUMABLE, tierPriceOverrides);
         usagePriceOverrides.add(usagePriceOverride);
 
+       //Override the gallons price from $3.95 to $4 and also the recurring price from  $0 to $348.64
         resolvedOverrides[0]  = new DefaultPlanPhasePriceOverride(plan.getFinalPhase().getName(), Currency.USD, BigDecimal.ZERO, new BigDecimal("348.64"), usagePriceOverrides);
 
         final CatalogOverridePlanDefinitionModelDao newPlan = catalogOverrideDao.getOrCreateOverridePlanDefinition(plan, new DateTime(catalog.getEffectiveDate()), resolvedOverrides, internalCallContext);

@@ -28,8 +28,6 @@ import org.skife.jdbi.v2.TransactionStatus;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
-
-
 import static org.testng.Assert.assertEquals;
 
 public class TestCatalogOverrideUsageTierSqlDao extends CatalogTestSuiteWithEmbeddedDB {

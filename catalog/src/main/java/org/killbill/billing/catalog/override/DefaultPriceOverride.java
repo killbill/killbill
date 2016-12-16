@@ -211,7 +211,7 @@ public class DefaultPriceOverride implements PriceOverride {
             }).orNull();
 
             if(curOverride != null) {
-                resolvedTieredBlockPriceOverrides.add(new DefaultTieredBlockPriceOverride(curTieredBlock.getUnit().getName(), curOverride.getSize(), curOverride.getPrice(), curOverride.getMax())) ;
+                resolvedTieredBlockPriceOverrides.add(new DefaultTieredBlockPriceOverride(curTieredBlock.getUnit().getName(), curOverride.getSize(), curOverride.getPrice(), curOverride.getCurrency(), curOverride.getMax())) ;
             }
             else {
                 resolvedTieredBlockPriceOverrides.add(null);
