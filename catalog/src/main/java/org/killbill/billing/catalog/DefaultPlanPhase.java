@@ -138,6 +138,10 @@ public class DefaultPlanPhase extends ValidatingConfig<StandaloneCatalog> implem
     @Override
     public ValidationErrors validate(final StandaloneCatalog catalog, final ValidationErrors errors) {
 
+        if (plan == null) {
+            errors.add(new ValidationError(String.format("Invalid plan for phase '%s'", type), catalog.getCatalogURI(), DefaultPlanPhase.class, ""));
+        }
+
         if (fixed == null && recurring == null && usages.length == 0) {
             errors.add(new ValidationError(String.format("Phase %s of plan %s need to define at least either a fixed or recurrring or usage section.",
                                                          type.toString(), plan.getName()),
@@ -149,6 +153,8 @@ public class DefaultPlanPhase extends ValidatingConfig<StandaloneCatalog> implem
         if (recurring != null) {
             recurring.validate(catalog, errors);
         }
+        duration.validate(catalog, errors);
+
         validateCollection(catalog, errors, usages);
         return errors;
     }

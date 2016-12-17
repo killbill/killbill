@@ -60,6 +60,7 @@ import org.killbill.billing.catalog.api.StaticCatalog;
 import org.killbill.billing.catalog.api.Unit;
 import org.killbill.clock.Clock;
 import org.killbill.xmlloader.ValidatingConfig;
+import org.killbill.xmlloader.ValidationError;
 import org.killbill.xmlloader.ValidationErrors;
 
 @XmlRootElement(name = "catalogs")
@@ -415,15 +416,22 @@ public class VersionedCatalog extends ValidatingConfig<VersionedCatalog> impleme
 
     @Override
     public ValidationErrors validate(final VersionedCatalog catalog, final ValidationErrors errors) {
+
+        final Set<Date> effectiveDates = new TreeSet<Date>();
+
         for (final StandaloneCatalog c : versions) {
+            if (effectiveDates.contains(c.getEffectiveDate())) {
+                errors.add(new ValidationError(String.format("Catalog effective date '%s' already exists for a previous version", c.getEffectiveDate()),
+                        c.getCatalogURI(), VersionedCatalog.class, ""));
+            } else {
+                effectiveDates.add(c.getEffectiveDate());
+            }
+            if (!c.getCatalogName().equals(catalogName)) {
+                errors.add(new ValidationError(String.format("Catalog name '%s' is not consistent across versions ", c.getCatalogName()),
+                        c.getCatalogURI(), VersionedCatalog.class, ""));
+            }
             errors.addAll(c.validate(c, errors));
         }
-        //TODO MDW validation - ensure all catalog versions have a single name
-        //TODO MDW validation - ensure effective dates are different (actually do we want this?)
-        //TODO MDW validation - check that all products are there
-        //TODO MDW validation - check that all plans are there
-        //TODO MDW validation - check that all currencies are there
-        //TODO MDW validation - check that all pricelists are there
         return errors;
     }
 

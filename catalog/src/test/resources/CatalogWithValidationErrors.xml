@@ -43,6 +43,34 @@
             <finalPhase type="EVERGREEN">
                 <duration>
                     <unit>UNLIMITED</unit>
+                    <!-- Note UNLIMITED should only support number -1 or undefined -->
+                    <number>1</number>
+                </duration>
+                <recurring>
+                    <billingPeriod>NO_BILLING_PERIOD</billingPeriod>
+                </recurring>
+            </finalPhase>
+        </plan>
+        <plan name="standard-trial">
+            <product>Standard</product>
+            <initialPhases>
+                <!-- Note we should not have an EVERGREEN phase to start -->
+                <phase type="EVERGREEN">
+                    <duration>
+                        <unit>DAYS</unit>
+                        <!-- Note we did not specify the number -->
+                    </duration>
+                    <fixed>
+                        <fixedPrice> <!-- empty price implies $0 -->
+                        </fixedPrice>
+
+                    </fixed>
+                </phase>
+            </initialPhases>
+            <!-- Note we should not have an TRIAL phase to finish -->
+            <finalPhase type="TRIAL">
+                <duration>
+                    <unit>UNLIMITED</unit>
                 </duration>
                 <recurring>
                     <billingPeriod>NO_BILLING_PERIOD</billingPeriod>
@@ -51,10 +79,15 @@
         </plan>
     </plans>
 
+
+
+
+
     <priceLists>
         <defaultPriceList name="DEFAULT">
             <plans>
                 <plan>standard</plan>
+                <plan>standard-trial</plan>
             </plans>
         </defaultPriceList>
     </priceLists>

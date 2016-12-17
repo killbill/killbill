@@ -32,11 +32,15 @@ public class TestStandaloneCatalog extends CatalogTestSuiteNoDB {
     @Test(groups = "fast")
     public void testLoadCatalogWithPlanInvalidProduct() throws Exception {
         try {
-            XMLLoader.getObjectFromString(Resources.getResource("CatalogWithPlanInvalidProduct.xml").toExternalForm(), StandaloneCatalog.class);
+            XMLLoader.getObjectFromString(Resources.getResource("CatalogWithValidationErrors.xml").toExternalForm(), StandaloneCatalog.class);
             Assert.fail();
         } catch (final ValidationException e) {
-            Assert.assertEquals(e.getErrors().size(), 1);
+            Assert.assertEquals(e.getErrors().size(), 5);
             Assert.assertEquals(e.getErrors().get(0).getDescription(), "Invalid product for plan 'standard'");
+            Assert.assertEquals(e.getErrors().get(1).getDescription(), "Duration can only have 'UNLIMITED' unit if the number is omitted");
+            Assert.assertEquals(e.getErrors().get(2).getDescription(), "Finite Duration must have a well defined length");
+            Assert.assertEquals(e.getErrors().get(3).getDescription(), "Initial Phase standard-trial-evergreen of plan standard-trial cannot be of type EVERGREEN");
+            Assert.assertEquals(e.getErrors().get(4).getDescription(), "Final Phase standard-trial-trial of plan standard-trial cannot be of type TRIAL");
         }
     }
 

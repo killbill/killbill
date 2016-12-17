@@ -187,24 +187,36 @@ public class DefaultPlan extends ValidatingConfig<StandaloneCatalog> implements 
         this.priceListName = this.priceListName  != null ? this.priceListName : findPriceListForPlan(catalog);
     }
 
-
     @Override
     public ValidationErrors validate(final StandaloneCatalog catalog, final ValidationErrors errors) {
         if (effectiveDateForExistingSubscriptions != null &&
             catalog.getEffectiveDate().getTime() > effectiveDateForExistingSubscriptions.getTime()) {
             errors.add(new ValidationError(String.format("Price effective date %s is before catalog effective date '%s'",
                                                          effectiveDateForExistingSubscriptions,
-                                                         catalog.getEffectiveDate().getTime()),
-                                           catalog.getCatalogURI(), DefaultInternationalPrice.class, ""));
+                                                         catalog.getEffectiveDate()),
+                                           catalog.getCatalogURI(), DefaultPlan.class, ""));
         }
-
-        validateCollection(catalog, errors, initialPhases);
-        finalPhase.validate(catalog, errors);
 
         if (product == null) {
-            errors.add(new ValidationError(String.format("Invalid product for plan '%s'", name), catalog.getCatalogURI(), DefaultProduct.class, ""));
+            errors.add(new ValidationError(String.format("Invalid product for plan '%s'", name), catalog.getCatalogURI(), DefaultPlan.class, ""));
         }
 
+        for (DefaultPlanPhase cur  : initialPhases) {
+            cur.validate(catalog, errors);
+            if (cur.getPhaseType() == PhaseType.EVERGREEN || cur.getPhaseType() == PhaseType.FIXEDTERM) {
+                errors.add(new ValidationError(String.format("Initial Phase %s of plan %s cannot be of type %s",
+                                                             cur.getName(), name, cur.getPhaseType()),
+                                               catalog.getCatalogURI(), DefaultPlan.class, ""));
+            }
+        }
+
+        finalPhase.validate(catalog, errors);
+
+        if (finalPhase.getPhaseType() == PhaseType.TRIAL || finalPhase.getPhaseType() == PhaseType.DISCOUNT) {
+            errors.add(new ValidationError(String.format("Final Phase %s of plan %s cannot be of type %s",
+                                                         finalPhase.getName(), name, finalPhase.getPhaseType()),
+                                           catalog.getCatalogURI(), DefaultPlan.class, ""));
+        }
         return errors;
     }
 

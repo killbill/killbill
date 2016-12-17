@@ -102,13 +102,14 @@ public class DefaultDuration extends ValidatingConfig<StandaloneCatalog> impleme
 
     @Override
     public ValidationErrors validate(final StandaloneCatalog catalog, final ValidationErrors errors) {
-        //Validation: TimeUnit UNLIMITED iff number == -1
-        if ((unit == TimeUnit.UNLIMITED && number != -1)) {
-            errors.add(new ValidationError("Duration can only have 'UNLIMITED' unit if the number is omitted.",
-                                           catalog.getCatalogURI(), DefaultPlanPhase.class, ""));
+        //Validation: TimeUnit UNLIMITED if number == -1
+        if ((unit == TimeUnit.UNLIMITED && number != DEFAULT_DURATION_NUMBER)) {
+            errors.add(new ValidationError("Duration can only have 'UNLIMITED' unit if the number is omitted",
+                                           catalog.getCatalogURI(), DefaultDuration.class, ""));
+        } else if ((unit != TimeUnit.UNLIMITED) && number == DEFAULT_DURATION_NUMBER) {
+            errors.add(new ValidationError("Finite Duration must have a well defined length",
+                                           catalog.getCatalogURI(), DefaultDuration.class, ""));
         }
-
-        //TODO MDW - Validation TimeUnit UNLIMITED iff number == -1
         return errors;
     }
 
