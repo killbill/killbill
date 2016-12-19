@@ -407,11 +407,13 @@ public class VersionedCatalog extends ValidatingConfig<VersionedCatalog> impleme
     //
     @Override
     public void initialize(final VersionedCatalog catalog, final URI sourceURI) {
+        //
+        // Initialization is performed first on each StandaloneCatalog (XMLLoader#initializeAndValidate)
+        // and then later on the VersionedCatalog, so we only initialize and validate VersionedCatalog
+        // *without** recursively through each StandaloneCatalog
+        //
         super.initialize(catalog, sourceURI);
         CatalogSafetyInitializer.initializeNonRequiredArrayFields(this);
-        for (final StandaloneCatalog c : versions) {
-            c.initialize(c, sourceURI);
-        }
     }
 
     @Override

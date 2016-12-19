@@ -17,12 +17,17 @@
 package org.killbill.billing.catalog.api.user;
 
 import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
+import java.net.URISyntaxException;
 
 import javax.inject.Inject;
+import javax.xml.bind.JAXBException;
+import javax.xml.transform.TransformerException;
 
 import org.joda.time.DateTime;
+import org.killbill.billing.ErrorCode;
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.catalog.CatalogUpdater;
 import org.killbill.billing.catalog.StandaloneCatalog;
@@ -33,6 +38,7 @@ import org.killbill.billing.catalog.api.Catalog;
 import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.catalog.api.CatalogService;
 import org.killbill.billing.catalog.api.CatalogUserApi;
+import org.killbill.billing.catalog.api.InvalidConfigException;
 import org.killbill.billing.catalog.api.SimplePlanDescriptor;
 import org.killbill.billing.catalog.api.StaticCatalog;
 import org.killbill.billing.catalog.caching.CatalogCache;
@@ -42,7 +48,9 @@ import org.killbill.billing.tenant.api.TenantUserApi;
 import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.billing.util.callcontext.TenantContext;
+import org.killbill.xmlloader.ValidationException;
 import org.killbill.xmlloader.XMLLoader;
+import org.xml.sax.SAXException;
 
 public class DefaultCatalogUserApi implements CatalogUserApi {
 
@@ -77,19 +85,34 @@ public class DefaultCatalogUserApi implements CatalogUserApi {
 
     @Override
     public void uploadCatalog(final String catalogXML, final CallContext callContext) throws CatalogApiException {
+
+
+        final InternalTenantContext internalTenantContext = createInternalTenantContext(callContext);
         try {
             // Validation purpose:  Will throw if bad XML or catalog validation fails
             final InputStream stream = new ByteArrayInputStream(catalogXML.getBytes());
             XMLLoader.getObjectFromStream(new URI("dummy"), stream, StandaloneCatalog.class);
 
-            final InternalTenantContext internalTenantContext = createInternalTenantContext(callContext);
             catalogCache.clearCatalog(internalTenantContext);
             tenantApi.addTenantKeyValue(TenantKey.CATALOG.toString(), catalogXML, callContext);
-        } catch (TenantApiException e) {
+        } catch (final TenantApiException e) {
             throw new CatalogApiException(e);
-        } catch (final Exception e) {
+        } catch (final ValidationException e) {
+            throw new CatalogApiException(ErrorCode.CAT_INVALID_FOR_TENANT, internalTenantContext.getTenantRecordId());
+        } catch (final JAXBException e) {
+            throw new CatalogApiException(ErrorCode.CAT_INVALID_FOR_TENANT, internalTenantContext.getTenantRecordId());
+        } catch (final IOException e) {
+            throw new IllegalStateException(e);
+        } catch (final TransformerException e) {
+            throw new IllegalStateException(e);
+        } catch (final URISyntaxException e) {
+            throw new IllegalStateException(e);
+        } catch (final SAXException e) {
+            throw new IllegalStateException(e);
+        } catch (final InvalidConfigException e) {
             throw new IllegalStateException(e);
         }
+
     }
 
 
