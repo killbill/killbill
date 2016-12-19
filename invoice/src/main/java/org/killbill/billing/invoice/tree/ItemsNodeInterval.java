@@ -297,6 +297,7 @@ public class ItemsNodeInterval extends NodeInterval {
     // When we detect such nodes, we delete both the ADD in the parent interval and the CANCEL in the children (and cleanup the interval if it does not have items)
     //
     private void pruneTree() {
+        final NodeInterval root = this;
         walkTree(new WalkCallback() {
             @Override
             public void onCurrentNode(final int depth, final NodeInterval curNode, final NodeInterval parent) {
@@ -313,9 +314,9 @@ public class ItemsNodeInterval extends NodeInterval {
                     curNode.getParent().removeChild(curNode);
                 }
 
-                // Sanity: cancelled items should only be in the same node or parents
-                if (curNode.getLeftChild() != null) {
-                    for (final Item curCancelItem : curNodeItems.get_CANCEL_items()) {
+                for (final Item curCancelItem : curNodeItems.get_CANCEL_items()) {
+                    // Sanity: cancelled items should only be in the same node or parents
+                    if (curNode.getLeftChild() != null) {
                         curNode.getLeftChild()
                                .walkTree(new WalkCallback() {
                                    @Override
@@ -327,6 +328,19 @@ public class ItemsNodeInterval extends NodeInterval {
                                        }
                                    }
                                });
+                    }
+
+                    // Sanity: make sure the CANCEL item points to an ADD item
+                    final NodeInterval nodeIntervalForCancelledItem = root.findNode(new SearchCallback() {
+                        @Override
+                        public boolean isMatch(final NodeInterval curNode) {
+                            final ItemsInterval curChildItems = ((ItemsNodeInterval) curNode).getItemsInterval();
+                            final Item cancelledItem = curChildItems.getCancelledItemIfExists(curCancelItem.getLinkedId());
+                            return cancelledItem != null;
+                        }
+                    });
+                    if (nodeIntervalForCancelledItem == null) {
+                        throw new IllegalStateException(String.format("Missing cancelledItem for cancelItem=%s", curCancelItem));
                     }
                 }
 

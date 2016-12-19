@@ -48,6 +48,7 @@ import org.killbill.billing.invoice.api.InvoiceItemType;
 import org.killbill.billing.invoice.generator.InvoiceWithMetadata.SubscriptionFutureNotificationDates;
 import org.killbill.billing.invoice.model.DefaultInvoice;
 import org.killbill.billing.invoice.model.FixedPriceInvoiceItem;
+import org.killbill.billing.invoice.model.ItemAdjInvoiceItem;
 import org.killbill.billing.invoice.model.RecurringInvoiceItem;
 import org.killbill.billing.invoice.model.RepairAdjInvoiceItem;
 import org.killbill.billing.junction.BillingEvent;
@@ -773,6 +774,133 @@ public class TestFixedAndRecurringInvoiceItemGenerator extends InvoiceTestSuiteN
         } catch (final InvoiceApiException e) {
             assertEquals(e.getCode(), ErrorCode.UNEXPECTED_ERROR.getCode());
             assertTrue(e.getCause().getMessage().startsWith("Invalid cancelledItem"));
+        }
+    }
+
+    @Test(groups = "fast", description = "https://github.com/killbill/killbill/issues/664")
+    public void testInvalidRepair() throws InvoiceApiException {
+        final LocalDate startDate = new LocalDate("2016-01-01");
+
+        final BillingEventSet events = new MockBillingEventSet();
+
+        final List<Invoice> existingInvoices = new LinkedList<Invoice>();
+        final Invoice invoice = new DefaultInvoice(account.getId(), clock.getUTCToday(), startDate, account.getCurrency());
+        // Dangling repair
+        invoice.addInvoiceItem(new RepairAdjInvoiceItem(UUID.randomUUID(),
+                                                        startDate.toDateTimeAtStartOfDay(),
+                                                        invoice.getId(),
+                                                        account.getId(),
+                                                        startDate,
+                                                        startDate.plusMonths(1),
+                                                        BigDecimal.ONE.negate(),
+                                                        account.getCurrency(),
+                                                        UUID.randomUUID()));
+        existingInvoices.add(invoice);
+
+        try {
+            final List<InvoiceItem> generatedItems = fixedAndRecurringInvoiceItemGenerator.generateItems(account,
+                                                                                                         UUID.randomUUID(),
+                                                                                                         events,
+                                                                                                         existingInvoices,
+                                                                                                         startDate,
+                                                                                                         account.getCurrency(),
+                                                                                                         new HashMap<UUID, SubscriptionFutureNotificationDates>(),
+                                                                                                         internalCallContext);
+            fail();
+        } catch (final InvoiceApiException e) {
+            assertEquals(e.getCode(), ErrorCode.UNEXPECTED_ERROR.getCode());
+            assertTrue(e.getCause().getMessage().startsWith("Missing cancelledItem"));
+        }
+    }
+
+    @Test(groups = "fast", description = "https://github.com/killbill/killbill/issues/664")
+    public void testInvalidAdjustment() throws InvoiceApiException {
+        final LocalDate startDate = new LocalDate("2016-01-01");
+
+        final BillingEventSet events = new MockBillingEventSet();
+
+        final List<Invoice> existingInvoices = new LinkedList<Invoice>();
+        final Invoice invoice = new DefaultInvoice(account.getId(), clock.getUTCToday(), startDate, account.getCurrency());
+        // Dangling adjustment
+        invoice.addInvoiceItem(new ItemAdjInvoiceItem(UUID.randomUUID(),
+                                                      startDate.toDateTimeAtStartOfDay(),
+                                                      invoice.getId(),
+                                                      account.getId(),
+                                                      startDate,
+                                                      "Dangling adjustment",
+                                                      BigDecimal.ONE.negate(),
+                                                      account.getCurrency(),
+                                                      UUID.randomUUID()));
+        existingInvoices.add(invoice);
+
+        try {
+            final List<InvoiceItem> generatedItems = fixedAndRecurringInvoiceItemGenerator.generateItems(account,
+                                                                                                         UUID.randomUUID(),
+                                                                                                         events,
+                                                                                                         existingInvoices,
+                                                                                                         startDate,
+                                                                                                         account.getCurrency(),
+                                                                                                         new HashMap<UUID, SubscriptionFutureNotificationDates>(),
+                                                                                                         internalCallContext);
+            fail();
+        } catch (final InvoiceApiException e) {
+            assertEquals(e.getCode(), ErrorCode.UNEXPECTED_ERROR.getCode());
+            assertTrue(e.getCause().getMessage().startsWith("Missing subscription id"));
+        }
+    }
+
+    @Test(groups = "fast", description = "https://github.com/killbill/killbill/issues/664")
+    public void testItemFullyRepairedAndFullyAdjusted() throws InvoiceApiException {
+        final LocalDate startDate = new LocalDate("2016-01-01");
+
+        final BillingEventSet events = new MockBillingEventSet();
+        final BigDecimal amount = BigDecimal.TEN;
+
+        // Subscription incorrectly invoiced
+        final List<Invoice> existingInvoices = new LinkedList<Invoice>();
+        final Invoice invoice = new DefaultInvoice(account.getId(), clock.getUTCToday(), startDate, account.getCurrency());
+        invoice.addInvoiceItem(new RecurringInvoiceItem(UUID.randomUUID(),
+                                                        startDate.toDateTimeAtStartOfDay(),
+                                                        invoice.getId(),
+                                                        account.getId(),
+                                                        subscription.getBundleId(),
+                                                        subscription.getId(),
+                                                        "my-plan",
+                                                        "my-plan-monthly",
+                                                        startDate,
+                                                        startDate.plusMonths(1),
+                                                        amount,
+                                                        amount,
+                                                        account.getCurrency()));
+        // Repaired by the system
+        invoice.addInvoiceItem(new RepairAdjInvoiceItem(UUID.randomUUID(),
+                                                        startDate.toDateTimeAtStartOfDay(),
+                                                        invoice.getId(),
+                                                        account.getId(),
+                                                        startDate,
+                                                        startDate.plusMonths(1),
+                                                        BigDecimal.ONE.negate(),
+                                                        account.getCurrency(),
+                                                        invoice.getInvoiceItems().get(0).getId()));
+        invoice.addInvoiceItem(new ItemAdjInvoiceItem(invoice.getInvoiceItems().get(0),
+                                                      startDate,
+                                                      amount.negate(), // Note! The amount will matter
+                                                      account.getCurrency()));
+        existingInvoices.add(invoice);
+
+        try {
+            final List<InvoiceItem> generatedItems = fixedAndRecurringInvoiceItemGenerator.generateItems(account,
+                                                                                                         UUID.randomUUID(),
+                                                                                                         events,
+                                                                                                         existingInvoices,
+                                                                                                         startDate,
+                                                                                                         account.getCurrency(),
+                                                                                                         new HashMap<UUID, SubscriptionFutureNotificationDates>(),
+                                                                                                         internalCallContext);
+            fail();
+        } catch (final InvoiceApiException e) {
+            assertEquals(e.getCode(), ErrorCode.UNEXPECTED_ERROR.getCode());
+            assertTrue(e.getCause().getMessage().startsWith("Too many repairs"));
         }
     }
 

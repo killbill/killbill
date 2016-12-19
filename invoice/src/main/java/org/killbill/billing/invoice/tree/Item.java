@@ -143,12 +143,12 @@ public class Item {
     }
 
     public void incrementAdjustedAmount(final BigDecimal increment) {
-        Preconditions.checkState(increment.compareTo(BigDecimal.ZERO) > 0);
+        Preconditions.checkState(increment.compareTo(BigDecimal.ZERO) > 0, "Invalid adjustment increment='%s', item=%s", increment, this);
         adjustedAmount = adjustedAmount.add(increment);
     }
 
     public void incrementCurrentRepairedAmount(final BigDecimal increment) {
-        Preconditions.checkState(increment.compareTo(BigDecimal.ZERO) > 0);
+        Preconditions.checkState(increment.compareTo(BigDecimal.ZERO) > 0, "Invalid repair increment='%s', item=%s", increment, this);
         currentRepairedAmount = currentRepairedAmount.add(increment);
     }
 

@@ -194,6 +194,24 @@ public class TestSubscriptionItemTree extends InvoiceTestSuiteNoDB {
     }
 
     @Test(groups = "fast")
+    public void testDanglingRepair() {
+        final LocalDate startDate = new LocalDate(2014, 1, 1);
+        final LocalDate endDate = new LocalDate(2014, 2, 1);
+
+        final BigDecimal rate = new BigDecimal("12.00");
+
+        final InvoiceItem repair = new RepairAdjInvoiceItem(invoiceId, accountId, startDate.minusDays(1), endDate, rate.negate(), currency, UUID.randomUUID());
+
+        final SubscriptionItemTree tree = new SubscriptionItemTree(subscriptionId, invoiceId);
+        tree.addItem(repair);
+        try {
+            tree.build();
+            fail();
+        } catch (final IllegalStateException e) {
+        }
+    }
+
+    @Test(groups = "fast")
     public void testMultipleRepair() {
 
         final LocalDate startDate = new LocalDate(2014, 1, 1);
