@@ -303,4 +303,19 @@ public abstract class DefaultCaseChange<T> extends ValidatingConfig<StandaloneCa
     public PriceList getToPriceList() {
         return toPriceList;
     }
+
+    @Override
+    public String toString() {
+        return "DefaultCaseChange{" +
+               "phaseType=" + phaseType +
+               ", fromProduct=" + fromProduct +
+               ", fromProductCategory=" + fromProductCategory +
+               ", fromBillingPeriod=" + fromBillingPeriod +
+               ", fromPriceList=" + fromPriceList +
+               ", toProduct=" + toProduct +
+               ", toProductCategory=" + toProductCategory +
+               ", toBillingPeriod=" + toBillingPeriod +
+               ", toPriceList=" + toPriceList +
+               '}';
+    }
 }

@@ -92,13 +92,13 @@ public class VersionedCatalogLoader implements CatalogLoader {
             return result;
         } catch (final ValidationException e) {
             logger.warn("Failed to load default catalog", e);
-            throw new CatalogApiException(ErrorCode.CAT_INVALID_DEFAULT);
+            throw new CatalogApiException(ErrorCode.CAT_INVALID_DEFAULT, uriString);
         } catch (final JAXBException e) {
             logger.warn("Failed to load default catalog", e);
-            throw new CatalogApiException(ErrorCode.CAT_INVALID_DEFAULT, e);
+            throw new CatalogApiException(ErrorCode.CAT_INVALID_DEFAULT, uriString);
         } catch(IllegalArgumentException e) {
             logger.warn("Failed to load default catalog", e);
-            throw new CatalogApiException(ErrorCode.CAT_INVALID_DEFAULT, e);
+            throw new CatalogApiException(ErrorCode.CAT_INVALID_DEFAULT, uriString);
         } catch (Exception e) {
             logger.warn("Failed to load default catalog", e);
             throw new IllegalStateException(e);

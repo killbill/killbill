@@ -68,4 +68,16 @@ public class DefaultCaseCreateAlignment extends DefaultCaseStandardNaming<PlanAl
         result = 31 * result + (alignment != null ? alignment.hashCode() : 0);
         return result;
     }
+
+    @Override
+    public String toString() {
+        return "DefaultCaseCreateAlignment {" +
+               "alignment =" + alignment +
+               ", product=" + getProduct() +
+               ", productCategory=" + getProductCategory() +
+               ", billingPeriod=" + getBillingPeriod() +
+               ", priceList=" + getPriceList() +
+               '}';
+    }
+
 }

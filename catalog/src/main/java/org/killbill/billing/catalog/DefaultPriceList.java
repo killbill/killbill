@@ -141,4 +141,10 @@ public class DefaultPriceList extends ValidatingConfig<StandaloneCatalog> implem
         result = 31 * result + (plans != null ? plans.hashCode() : 0);
         return result;
     }
+
+    @Override
+    public String toString() {
+        return "DefaultPriceList{" +
+               "name='" + name + '}';
+    }
 }
