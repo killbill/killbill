@@ -49,6 +49,7 @@ import org.killbill.billing.invoice.generator.InvoiceWithMetadata.SubscriptionFu
 import org.killbill.billing.invoice.model.DefaultInvoice;
 import org.killbill.billing.invoice.model.FixedPriceInvoiceItem;
 import org.killbill.billing.invoice.model.RecurringInvoiceItem;
+import org.killbill.billing.invoice.model.RepairAdjInvoiceItem;
 import org.killbill.billing.junction.BillingEvent;
 import org.killbill.billing.junction.BillingEventSet;
 import org.killbill.billing.subscription.api.SubscriptionBase;
@@ -490,8 +491,288 @@ public class TestFixedAndRecurringInvoiceItemGenerator extends InvoiceTestSuiteN
                                                                                                          new HashMap<UUID, SubscriptionFutureNotificationDates>(),
                                                                                                          internalCallContext);
             fail();
-        } catch (final IllegalStateException e) {
-            assertTrue(e.getMessage().startsWith("Double billing detected"));
+        } catch (final InvoiceApiException e) {
+            assertEquals(e.getCode(), ErrorCode.UNEXPECTED_ERROR.getCode());
+            assertTrue(e.getCause().getMessage().startsWith("Double billing detected"));
+        }
+    }
+
+    @Test(groups = "fast", description = "https://github.com/killbill/killbill/issues/664")
+    public void testOverlappingItems() throws InvoiceApiException {
+        final LocalDate startDate = new LocalDate("2016-01-01");
+
+        final BillingEventSet events = new MockBillingEventSet();
+        final BigDecimal amount = BigDecimal.TEN;
+        final MockInternationalPrice price = new MockInternationalPrice(new DefaultPrice(amount, account.getCurrency()));
+        final Plan plan = new MockPlan("my-plan");
+        final PlanPhase planPhase = new MockPlanPhase(price, null, BillingPeriod.MONTHLY, PhaseType.EVERGREEN);
+        final BillingEvent event = invoiceUtil.createMockBillingEvent(account,
+                                                                      subscription,
+                                                                      startDate.toDateTimeAtStartOfDay(),
+                                                                      plan,
+                                                                      planPhase,
+                                                                      null,
+                                                                      amount,
+                                                                      account.getCurrency(),
+                                                                      BillingPeriod.MONTHLY,
+                                                                      1,
+                                                                      BillingMode.IN_ADVANCE,
+                                                                      "Billing Event Desc",
+                                                                      1L,
+                                                                      SubscriptionBaseTransitionType.CREATE);
+        events.add(event);
+
+        // Simulate a previous mis-bill: existing item is for [2016-01-01,2016-01-30], proposed will be for [2016-01-01,2016-02-01]
+        final List<Invoice> existingInvoices = new LinkedList<Invoice>();
+        final Invoice invoice = new DefaultInvoice(account.getId(), clock.getUTCToday(), startDate, account.getCurrency());
+        invoice.addInvoiceItem(new RecurringInvoiceItem(UUID.randomUUID(),
+                                                        startDate.toDateTimeAtStartOfDay(),
+                                                        invoice.getId(),
+                                                        account.getId(),
+                                                        subscription.getBundleId(),
+                                                        subscription.getId(),
+                                                        event.getPlan().getName(),
+                                                        event.getPlanPhase().getName(),
+                                                        startDate,
+                                                        startDate.plusDays(29),
+                                                        amount,
+                                                        amount,
+                                                        account.getCurrency()));
+        existingInvoices.add(invoice);
+
+        // We will repair the wrong item and generate the correct recurring item
+        final List<InvoiceItem> generatedItems = fixedAndRecurringInvoiceItemGenerator.generateItems(account,
+                                                                                                     UUID.randomUUID(),
+                                                                                                     events,
+                                                                                                     existingInvoices,
+                                                                                                     startDate,
+                                                                                                     account.getCurrency(),
+                                                                                                     new HashMap<UUID, SubscriptionFutureNotificationDates>(),
+                                                                                                     internalCallContext);
+        assertEquals(generatedItems.size(), 2);
+        assertTrue(generatedItems.get(0) instanceof RecurringInvoiceItem);
+        assertEquals(generatedItems.get(0).getStartDate(), new LocalDate("2016-01-01"));
+        assertEquals(generatedItems.get(0).getEndDate(), new LocalDate("2016-02-01"));
+        assertEquals(generatedItems.get(0).getAmount().compareTo(amount), 0);
+        assertTrue(generatedItems.get(1) instanceof RepairAdjInvoiceItem);
+        assertEquals(generatedItems.get(1).getAmount().compareTo(amount.negate()), 0);
+        assertEquals(generatedItems.get(1).getLinkedItemId(), invoice.getInvoiceItems().get(0).getId());
+    }
+
+    @Test(groups = "fast", description = "https://github.com/killbill/killbill/issues/664")
+    public void testOverlappingItemsWithRepair() throws InvoiceApiException {
+        final LocalDate startDate = new LocalDate("2016-01-01");
+
+        final BillingEventSet events = new MockBillingEventSet();
+        final BigDecimal amount = BigDecimal.TEN;
+        final MockInternationalPrice price = new MockInternationalPrice(new DefaultPrice(amount, account.getCurrency()));
+        final Plan plan = new MockPlan("my-plan");
+        final PlanPhase planPhase = new MockPlanPhase(price, null, BillingPeriod.MONTHLY, PhaseType.EVERGREEN);
+        final BillingEvent event = invoiceUtil.createMockBillingEvent(account,
+                                                                      subscription,
+                                                                      startDate.toDateTimeAtStartOfDay(),
+                                                                      plan,
+                                                                      planPhase,
+                                                                      null,
+                                                                      amount,
+                                                                      account.getCurrency(),
+                                                                      BillingPeriod.MONTHLY,
+                                                                      1,
+                                                                      BillingMode.IN_ADVANCE,
+                                                                      "Billing Event Desc",
+                                                                      1L,
+                                                                      SubscriptionBaseTransitionType.CREATE);
+        events.add(event);
+
+        // Simulate a previous mis-bill: existing item is for [2016-01-01,2016-01-30], proposed will be for [2016-01-01,2016-02-01]
+        final List<Invoice> existingInvoices = new LinkedList<Invoice>();
+        final Invoice invoice = new DefaultInvoice(account.getId(), clock.getUTCToday(), startDate, account.getCurrency());
+        invoice.addInvoiceItem(new RecurringInvoiceItem(UUID.randomUUID(),
+                                                        startDate.toDateTimeAtStartOfDay(),
+                                                        invoice.getId(),
+                                                        account.getId(),
+                                                        subscription.getBundleId(),
+                                                        subscription.getId(),
+                                                        event.getPlan().getName(),
+                                                        event.getPlanPhase().getName(),
+                                                        startDate,
+                                                        startDate.plusDays(29),
+                                                        amount,
+                                                        amount,
+                                                        account.getCurrency()));
+        // But the system has already repaired it
+        invoice.addInvoiceItem(new RepairAdjInvoiceItem(UUID.randomUUID(),
+                                                        startDate.toDateTimeAtStartOfDay(),
+                                                        invoice.getId(),
+                                                        account.getId(),
+                                                        startDate,
+                                                        startDate.plusDays(29),
+                                                        BigDecimal.ONE.negate(), // Note! The amount will not matter
+                                                        account.getCurrency(),
+                                                        invoice.getInvoiceItems().get(0).getId()));
+        existingInvoices.add(invoice);
+
+        // We will generate the correct recurring item
+        final List<InvoiceItem> generatedItems = fixedAndRecurringInvoiceItemGenerator.generateItems(account,
+                                                                                                     UUID.randomUUID(),
+                                                                                                     events,
+                                                                                                     existingInvoices,
+                                                                                                     startDate,
+                                                                                                     account.getCurrency(),
+                                                                                                     new HashMap<UUID, SubscriptionFutureNotificationDates>(),
+                                                                                                     internalCallContext);
+        assertEquals(generatedItems.size(), 1);
+        assertTrue(generatedItems.get(0) instanceof RecurringInvoiceItem);
+        assertEquals(generatedItems.get(0).getStartDate(), new LocalDate("2016-01-01"));
+        assertEquals(generatedItems.get(0).getEndDate(), new LocalDate("2016-02-01"));
+        assertEquals(generatedItems.get(0).getAmount().compareTo(amount), 0);
+    }
+
+    @Test(groups = "fast", description = "https://github.com/killbill/killbill/issues/664")
+    public void testOverlappingItemsWithTooManyRepairs() throws InvoiceApiException {
+        final LocalDate startDate = new LocalDate("2016-01-01");
+
+        final BillingEventSet events = new MockBillingEventSet();
+        final BigDecimal amount = BigDecimal.TEN;
+        final MockInternationalPrice price = new MockInternationalPrice(new DefaultPrice(amount, account.getCurrency()));
+        final Plan plan = new MockPlan("my-plan");
+        final PlanPhase planPhase = new MockPlanPhase(price, null, BillingPeriod.MONTHLY, PhaseType.EVERGREEN);
+        final BillingEvent event = invoiceUtil.createMockBillingEvent(account,
+                                                                      subscription,
+                                                                      startDate.toDateTimeAtStartOfDay(),
+                                                                      plan,
+                                                                      planPhase,
+                                                                      null,
+                                                                      amount,
+                                                                      account.getCurrency(),
+                                                                      BillingPeriod.MONTHLY,
+                                                                      1,
+                                                                      BillingMode.IN_ADVANCE,
+                                                                      "Billing Event Desc",
+                                                                      1L,
+                                                                      SubscriptionBaseTransitionType.CREATE);
+        events.add(event);
+
+        // Simulate a previous mis-bill: existing item is for [2016-01-01,2016-01-30], proposed will be for [2016-01-01,2016-02-01]
+        final List<Invoice> existingInvoices = new LinkedList<Invoice>();
+        final Invoice invoice = new DefaultInvoice(account.getId(), clock.getUTCToday(), startDate, account.getCurrency());
+        invoice.addInvoiceItem(new RecurringInvoiceItem(UUID.randomUUID(),
+                                                        startDate.toDateTimeAtStartOfDay(),
+                                                        invoice.getId(),
+                                                        account.getId(),
+                                                        subscription.getBundleId(),
+                                                        subscription.getId(),
+                                                        event.getPlan().getName(),
+                                                        event.getPlanPhase().getName(),
+                                                        startDate,
+                                                        startDate.plusDays(29),
+                                                        amount,
+                                                        amount,
+                                                        account.getCurrency()));
+        // But the system has already repaired it
+        invoice.addInvoiceItem(new RepairAdjInvoiceItem(UUID.randomUUID(),
+                                                        startDate.toDateTimeAtStartOfDay(),
+                                                        invoice.getId(),
+                                                        account.getId(),
+                                                        startDate,
+                                                        startDate.plusDays(29),
+                                                        BigDecimal.ONE.negate(), // Note! The amount will not matter
+                                                        account.getCurrency(),
+                                                        invoice.getInvoiceItems().get(0).getId()));
+        // Twice!
+        invoice.addInvoiceItem(new RepairAdjInvoiceItem(UUID.randomUUID(),
+                                                        startDate.toDateTimeAtStartOfDay(),
+                                                        invoice.getId(),
+                                                        account.getId(),
+                                                        startDate,
+                                                        startDate.plusDays(29),
+                                                        BigDecimal.ONE.negate(), // Note! The amount will not matter
+                                                        account.getCurrency(),
+                                                        invoice.getInvoiceItems().get(0).getId()));
+        existingInvoices.add(invoice);
+
+        try {
+            final List<InvoiceItem> generatedItems = fixedAndRecurringInvoiceItemGenerator.generateItems(account,
+                                                                                                         UUID.randomUUID(),
+                                                                                                         events,
+                                                                                                         existingInvoices,
+                                                                                                         startDate,
+                                                                                                         account.getCurrency(),
+                                                                                                         new HashMap<UUID, SubscriptionFutureNotificationDates>(),
+                                                                                                         internalCallContext);
+            fail();
+        } catch (final InvoiceApiException e) {
+            assertEquals(e.getCode(), ErrorCode.UNEXPECTED_ERROR.getCode());
+            assertTrue(e.getCause().getMessage().startsWith("Too many repairs"));
+        }
+    }
+
+    @Test(groups = "fast", description = "https://github.com/killbill/killbill/issues/664")
+    public void testOverlappingItemsWithInvalidRepair() throws InvoiceApiException {
+        final LocalDate startDate = new LocalDate("2016-01-01");
+
+        final BillingEventSet events = new MockBillingEventSet();
+        final BigDecimal amount = BigDecimal.TEN;
+        final MockInternationalPrice price = new MockInternationalPrice(new DefaultPrice(amount, account.getCurrency()));
+        final Plan plan = new MockPlan("my-plan");
+        final PlanPhase planPhase = new MockPlanPhase(price, null, BillingPeriod.MONTHLY, PhaseType.EVERGREEN);
+        final BillingEvent event = invoiceUtil.createMockBillingEvent(account,
+                                                                      subscription,
+                                                                      startDate.toDateTimeAtStartOfDay(),
+                                                                      plan,
+                                                                      planPhase,
+                                                                      null,
+                                                                      amount,
+                                                                      account.getCurrency(),
+                                                                      BillingPeriod.MONTHLY,
+                                                                      1,
+                                                                      BillingMode.IN_ADVANCE,
+                                                                      "Billing Event Desc",
+                                                                      1L,
+                                                                      SubscriptionBaseTransitionType.CREATE);
+        events.add(event);
+
+        // Simulate a previous mis-bill: existing item is for [2016-01-01,2016-01-30], proposed will be for [2016-01-01,2016-02-01]
+        final List<Invoice> existingInvoices = new LinkedList<Invoice>();
+        final Invoice invoice = new DefaultInvoice(account.getId(), clock.getUTCToday(), startDate, account.getCurrency());
+        invoice.addInvoiceItem(new RecurringInvoiceItem(UUID.randomUUID(),
+                                                        startDate.toDateTimeAtStartOfDay(),
+                                                        invoice.getId(),
+                                                        account.getId(),
+                                                        subscription.getBundleId(),
+                                                        subscription.getId(),
+                                                        event.getPlan().getName(),
+                                                        event.getPlanPhase().getName(),
+                                                        startDate,
+                                                        startDate.plusDays(29),
+                                                        amount,
+                                                        amount,
+                                                        account.getCurrency()));
+        // Also, the system has repaired a bigger period
+        invoice.addInvoiceItem(new RepairAdjInvoiceItem(UUID.randomUUID(),
+                                                        startDate.toDateTimeAtStartOfDay(),
+                                                        invoice.getId(),
+                                                        account.getId(),
+                                                        startDate,
+                                                        startDate.plusDays(30),
+                                                        BigDecimal.ONE.negate(), // Amount does not matter
+                                                        account.getCurrency(),
+                                                        invoice.getInvoiceItems().get(0).getId()));
+        existingInvoices.add(invoice);
+
+        try {
+            final List<InvoiceItem> generatedItems = fixedAndRecurringInvoiceItemGenerator.generateItems(account,
+                                                                                                         UUID.randomUUID(),
+                                                                                                         events,
+                                                                                                         existingInvoices,
+                                                                                                         startDate,
+                                                                                                         account.getCurrency(),
+                                                                                                         new HashMap<UUID, SubscriptionFutureNotificationDates>(),
+                                                                                                         internalCallContext);
+            fail();
+        } catch (final InvoiceApiException e) {
+            assertEquals(e.getCode(), ErrorCode.UNEXPECTED_ERROR.getCode());
+            assertTrue(e.getCause().getMessage().startsWith("Invalid cancelledItem"));
         }
     }
 

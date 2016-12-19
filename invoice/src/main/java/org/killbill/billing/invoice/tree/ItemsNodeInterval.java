@@ -24,7 +24,6 @@ import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -314,6 +313,23 @@ public class ItemsNodeInterval extends NodeInterval {
                     curNode.getParent().removeChild(curNode);
                 }
 
+                // Sanity: cancelled items should only be in the same node or parents
+                if (curNode.getLeftChild() != null) {
+                    for (final Item curCancelItem : curNodeItems.get_CANCEL_items()) {
+                        curNode.getLeftChild()
+                               .walkTree(new WalkCallback() {
+                                   @Override
+                                   public void onCurrentNode(final int depth, final NodeInterval curNode, final NodeInterval parent) {
+                                       final ItemsInterval curChildItems = ((ItemsNodeInterval) curNode).getItemsInterval();
+                                       final Item cancelledItem = curChildItems.getCancelledItemIfExists(curCancelItem.getLinkedId());
+                                       if (cancelledItem != null) {
+                                           throw new IllegalStateException(String.format("Invalid cancelledItem=%s for cancelItem=%s", cancelledItem, curCancelItem));
+                                       }
+                                   }
+                               });
+                    }
+                }
+
                 if (!curNode.isPartitionedByChildren()) {
                     return;
                 }
@@ -337,7 +353,7 @@ public class ItemsNodeInterval extends NodeInterval {
                     boolean foundFullRepairByParts = curChild != null;
                     while (curChild != null) {
                         final ItemsInterval curChildItems = ((ItemsNodeInterval) curChild).getItemsInterval();
-                        Item cancellingItem = curChildItems.getCancelledItemIfExists(curAddItem.getId());
+                        Item cancellingItem = curChildItems.getCancellingItemIfExists(curAddItem.getId());
                         if (cancellingItem == null) {
                             foundFullRepairByParts = false;
                             break;

@@ -106,7 +106,7 @@ public class ItemsInterval {
 
         for (final UUID invoiceItemId : cancellingPairPerInvoiceItemId.keySet()) {
             final Collection<Item> itemsToRemove = cancellingPairPerInvoiceItemId.get(invoiceItemId);
-            Preconditions.checkArgument(itemsToRemove.size() <= 2, "Too many repairs for invoiceItemId='%s': %s", invoiceItemId, itemsToRemove);
+            Preconditions.checkState(itemsToRemove.size() <= 2, "Too many repairs for invoiceItemId='%s': %s", invoiceItemId, itemsToRemove);
             if (itemsToRemove.size() == 2) {
                 for (final Item itemToRemove : itemsToRemove) {
                     items.remove(itemToRemove);
@@ -122,6 +122,15 @@ public class ItemsInterval {
             @Override
             public boolean apply(final Item input) {
                 return input.getAction() == ItemAction.ADD;
+            }
+        });
+    }
+
+    public Iterable<Item> get_CANCEL_items() {
+        return Iterables.filter(items, new Predicate<Item>() {
+            @Override
+            public boolean apply(final Item input) {
+                return input.getAction() == ItemAction.CANCEL;
             }
         });
     }
@@ -189,14 +198,24 @@ public class ItemsInterval {
         items.remove(item);
     }
 
-    public Item getCancelledItemIfExists(final UUID targetId) {
-        final Item item = Iterables.tryFind(items, new Predicate<Item>() {
-            @Override
-            public boolean apply(final Item input) {
-                return input.getAction() == ItemAction.CANCEL && input.getLinkedId().equals(targetId);
-            }
-        }).orNull();
-        return item;
+    public Item getCancellingItemIfExists(final UUID targetId) {
+        return Iterables.tryFind(items,
+                                 new Predicate<Item>() {
+                                     @Override
+                                     public boolean apply(final Item input) {
+                                         return input.getAction() == ItemAction.CANCEL && input.getLinkedId().equals(targetId);
+                                     }
+                                 }).orNull();
+    }
+
+    public Item getCancelledItemIfExists(final UUID linkedId) {
+        return Iterables.tryFind(items,
+                                 new Predicate<Item>() {
+                                     @Override
+                                     public boolean apply(final Item input) {
+                                         return input.getAction() == ItemAction.ADD && input.getId().equals(linkedId);
+                                     }
+                                 }).orNull();
     }
 
     public int size() {

@@ -107,7 +107,13 @@ public class FixedAndRecurringInvoiceItemGenerator extends InvoiceItemGenerator 
         final List<InvoiceItem> proposedItems = new ArrayList<InvoiceItem>();
         processRecurringBillingEvents(invoiceId, account.getId(), eventSet, targetDate, targetCurrency, proposedItems, perSubscriptionFutureNotificationDate, existingInvoices, internalCallContext);
         processFixedBillingEvents(invoiceId, account.getId(), eventSet, targetDate, targetCurrency, proposedItems, internalCallContext);
-        accountItemTree.mergeWithProposedItems(proposedItems);
+
+        try {
+            accountItemTree.mergeWithProposedItems(proposedItems);
+        } catch (final IllegalStateException e) {
+            // Proposed items have already been logged
+            throw new InvoiceApiException(e, ErrorCode.UNEXPECTED_ERROR, String.format("ILLEGAL INVOICING STATE accountItemTree=%s", accountItemTree.toString()));
+        }
 
         final List<InvoiceItem> resultingItems = accountItemTree.getResultingItemList();
         safetyBounds(resultingItems, createdItemsPerDayPerSubscription, internalCallContext);
