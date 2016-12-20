@@ -155,7 +155,7 @@ public abstract class DefaultCaseChange<T> extends ValidatingConfig<StandaloneCa
     @Override
     public void initialize(final StandaloneCatalog catalog, final URI sourceURI) {
         super.initialize(catalog, sourceURI);
-        CatalogSafetyInitializer.initializeNonRequiredArrayFields(this);
+        CatalogSafetyInitializer.initializeNonRequiredNullFieldsWithDefaultValue(this);
     }
 
     public DefaultCaseChange<T> setPhaseType(final PhaseType phaseType) {

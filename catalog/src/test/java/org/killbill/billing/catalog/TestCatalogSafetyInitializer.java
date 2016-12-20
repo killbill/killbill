@@ -17,11 +17,14 @@
 
 package org.killbill.billing.catalog;
 
+import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElementWrapper;
 import javax.xml.bind.annotation.XmlIDREF;
 
+import org.killbill.billing.catalog.api.FixedType;
 import org.killbill.billing.catalog.api.Product;
+import org.killbill.billing.catalog.api.TimeUnit;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
@@ -50,6 +53,20 @@ public class TestCatalogSafetyInitializer {
     @XmlElement(type = DefaultProduct.class, name = "addonProduct", required = false)
     private CatalogEntityCollection<Product> available;
 
+    @XmlElement(required = true)
+    private TimeUnit unit;
+
+    @XmlElement(required = false)
+    private Integer number;
+
+    @XmlElement(required = false)
+    private int smallNumber;
+
+    @XmlAttribute(required = false)
+    private FixedType type;
+
+
+
     @Test(groups = "fast")
     public void testNonRequiredArrayFields() {
 
@@ -60,7 +77,7 @@ public class TestCatalogSafetyInitializer {
         Assert.assertNull(test.getPricesNotRequired());
         Assert.assertNull(test.getPrices());
 
-        CatalogSafetyInitializer.initializeNonRequiredArrayFields(test);
+        CatalogSafetyInitializer.initializeNonRequiredNullFieldsWithDefaultValue(test);
 
         Assert.assertNull(test.getInitialPhasesWrapperAllRequired());
         Assert.assertNotNull(test.getInitialPhasesWrapperNotRequired());
@@ -70,6 +87,13 @@ public class TestCatalogSafetyInitializer {
         Assert.assertEquals(test.getPricesNotRequired().length, 0);
         Assert.assertNull(test.getPrices());
 
+        Assert.assertNotNull(test.getNumber());
+        Assert.assertEquals(test.getNumber(), CatalogSafetyInitializer.DEFAULT_NON_REQUIRED_INTEGER_FIELD_VALUE);
+
+        Assert.assertNotNull(test.getSmallNumber());
+
+        Assert.assertNotNull(test.getType());
+        Assert.assertEquals(test.getType(), FixedType.ONE_TIME);
     }
 
     public DefaultPlanPhase[] getInitialPhasesWrapperAllRequired() {
@@ -92,4 +116,23 @@ public class TestCatalogSafetyInitializer {
         return prices;
     }
 
+    public CatalogEntityCollection<Product> getAvailable() {
+        return available;
+    }
+
+    public TimeUnit getUnit() {
+        return unit;
+    }
+
+    public Integer getNumber() {
+        return number;
+    }
+
+    public int getSmallNumber() {
+        return smallNumber;
+    }
+
+    public FixedType getType() {
+        return type;
+    }
 }

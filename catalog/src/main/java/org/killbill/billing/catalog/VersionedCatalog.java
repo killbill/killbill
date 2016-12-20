@@ -413,7 +413,7 @@ public class VersionedCatalog extends ValidatingConfig<VersionedCatalog> impleme
         // *without** recursively through each StandaloneCatalog
         //
         super.initialize(catalog, sourceURI);
-        CatalogSafetyInitializer.initializeNonRequiredArrayFields(this);
+        CatalogSafetyInitializer.initializeNonRequiredNullFieldsWithDefaultValue(this);
     }
 
     @Override

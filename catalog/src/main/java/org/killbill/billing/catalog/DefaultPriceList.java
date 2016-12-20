@@ -102,7 +102,7 @@ public class DefaultPriceList extends ValidatingConfig<StandaloneCatalog> implem
     @Override
     public void initialize(final StandaloneCatalog catalog, final URI sourceURI) {
         super.initialize(catalog, sourceURI);
-        CatalogSafetyInitializer.initializeNonRequiredArrayFields(this);
+        CatalogSafetyInitializer.initializeNonRequiredNullFieldsWithDefaultValue(this);
     }
 
     public DefaultPriceList setName(final String name) {

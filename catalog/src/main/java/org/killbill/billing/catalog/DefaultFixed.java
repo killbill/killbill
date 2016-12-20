@@ -16,7 +16,6 @@
 
 package org.killbill.billing.catalog;
 
-import java.math.BigDecimal;
 import java.net.URI;
 
 import javax.xml.bind.annotation.XmlAccessType;
@@ -24,7 +23,6 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
 
-import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.catalog.api.Fixed;
 import org.killbill.billing.catalog.api.FixedType;
 import org.killbill.billing.catalog.api.InternationalPrice;
@@ -52,7 +50,6 @@ public class DefaultFixed extends ValidatingConfig<StandaloneCatalog> implements
     }
 
     public DefaultFixed() {
-        type = FixedType.ONE_TIME;
     }
 
     public DefaultFixed(final DefaultFixed in, final PlanPhasePriceOverride override) {
@@ -63,8 +60,7 @@ public class DefaultFixed extends ValidatingConfig<StandaloneCatalog> implements
     @Override
     public void initialize(final StandaloneCatalog root, final URI uri) {
         super.initialize(root, uri);
-        CatalogSafetyInitializer.initializeNonRequiredArrayFields(this);
-
+        CatalogSafetyInitializer.initializeNonRequiredNullFieldsWithDefaultValue(this);
         if (fixedPrice != null) {
             fixedPrice.initialize(root, uri);
         }
@@ -72,6 +68,10 @@ public class DefaultFixed extends ValidatingConfig<StandaloneCatalog> implements
 
     @Override
     public ValidationErrors validate(final StandaloneCatalog root, final ValidationErrors errors) {
+        // Safety check
+        if (type == null) {
+            throw new IllegalStateException("fixedPrice should have been automatically been initialized with ONE_TIME ");
+        }
         return errors;
     }
 

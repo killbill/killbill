@@ -30,6 +30,8 @@ import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.catalog.DefaultPlan;
 import org.killbill.billing.catalog.DefaultPlanPhase;
 import org.killbill.billing.catalog.DefaultPlanPhasePriceOverride;
+import org.killbill.billing.catalog.StandaloneCatalog;
+import org.killbill.billing.catalog.StandaloneCatalogWithPriceOverride;
 import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.catalog.api.Plan;
 import org.killbill.billing.catalog.api.PlanPhase;
@@ -60,7 +62,7 @@ public class DefaultPriceOverride implements PriceOverride {
     }
 
     @Override
-    public DefaultPlan getOrCreateOverriddenPlan(final Plan parentPlan, final DateTime catalogEffectiveDate, final List<PlanPhasePriceOverride> overrides, @Nullable final InternalCallContext context) throws CatalogApiException {
+    public DefaultPlan getOrCreateOverriddenPlan(final StandaloneCatalog standaloneCatalog, final Plan parentPlan, final DateTime catalogEffectiveDate, final List<PlanPhasePriceOverride> overrides, @Nullable final InternalCallContext context) throws CatalogApiException {
 
         final PlanPhasePriceOverride[] resolvedOverride = new PlanPhasePriceOverride[parentPlan.getAllPhases().length];
         int index = 0;
@@ -110,6 +112,7 @@ public class DefaultPriceOverride implements PriceOverride {
             planName = new StringBuffer(parentPlan.getName()).append("-dryrun-").append(DRY_RUN_PLAN_IDX.incrementAndGet()).toString();
         }
         final DefaultPlan result = new DefaultPlan(planName, (DefaultPlan) parentPlan, resolvedOverride);
+        result.initialize(standaloneCatalog, standaloneCatalog.getCatalogURI());
         if (context == null) {
             overriddenPlanCache.addDryRunPlan(planName, result);
         }

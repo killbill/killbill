@@ -56,7 +56,7 @@ public class DefaultCaseChangePlanPolicy extends DefaultCaseChange<BillingAction
     @Override
     public void initialize(final StandaloneCatalog catalog, final URI sourceURI) {
         super.initialize(catalog, sourceURI);
-        CatalogSafetyInitializer.initializeNonRequiredArrayFields(this);
+        CatalogSafetyInitializer.initializeNonRequiredNullFieldsWithDefaultValue(this);
     }
 
     @Override

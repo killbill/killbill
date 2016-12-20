@@ -65,7 +65,7 @@ public class DefaultRecurring extends ValidatingConfig<StandaloneCatalog> implem
     @Override
     public void initialize(final StandaloneCatalog root, final URI uri) {
         super.initialize(root, uri);
-        CatalogSafetyInitializer.initializeNonRequiredArrayFields(this);
+        CatalogSafetyInitializer.initializeNonRequiredNullFieldsWithDefaultValue(this);
         if (recurringPrice != null) {
             recurringPrice.initialize(root, uri);
         }

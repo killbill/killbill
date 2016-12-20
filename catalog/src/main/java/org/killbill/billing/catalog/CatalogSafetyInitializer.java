@@ -23,14 +23,18 @@ import java.lang.reflect.Field;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElementWrapper;
 
+import org.killbill.billing.catalog.api.BlockType;
+import org.killbill.billing.catalog.api.FixedType;
+
 public class CatalogSafetyInitializer {
 
+    public static final Integer DEFAULT_NON_REQUIRED_INTEGER_FIELD_VALUE = -1;
 
     //
     // Ensure that all uninitialized arrays for which there is neither a 'required' XmlElementWrapper or XmlElement annotation
     // end up initialized with a default zero length array (allowing to safely get the length and iterate over (0) element.
     //
-    public static void initializeNonRequiredArrayFields(final Object obj) {
+    public static void initializeNonRequiredNullFieldsWithDefaultValue(final Object obj) {
         try {
             final Field[] fields = obj.getClass().getDeclaredFields();
             for (final Field f : fields) {
@@ -46,6 +50,16 @@ public class CatalogSafetyInitializer {
                             initializeArrayIfNull(obj, f);
                         }
                     }
+                } else if (!f.getType().isPrimitive()) {
+                    if (f.getType().isEnum()) {
+                        if (FixedType.class.equals(f.getType())) {
+                            initializeFieldWithValue(obj, f, FixedType.ONE_TIME);
+                        } else if (BlockType.class.equals(f.getType())) {
+                            initializeFieldWithValue(obj, f, BlockType.VANILLA);
+                        }
+                    } else if (Integer.class.equals(f.getType())) {
+                        initializeFieldWithValue(obj, f, DEFAULT_NON_REQUIRED_INTEGER_FIELD_VALUE);
+                    }
                 }
             }
         } catch (final IllegalAccessException e) {
@@ -55,6 +69,14 @@ public class CatalogSafetyInitializer {
         }
     }
 
+    private static void initializeFieldWithValue(final Object obj, final Field f, final Object value) throws IllegalAccessException, ClassNotFoundException {
+        f.setAccessible(true);
+        if (f.get(obj) == null) {
+            f.set(obj, value);
+        }
+        f.setAccessible(false);
+    }
+
     private static void initializeArrayIfNull(final Object obj, final Field f) throws IllegalAccessException, ClassNotFoundException {
         f.setAccessible(true);
         if (f.get(obj) == null) {
@@ -62,6 +84,7 @@ public class CatalogSafetyInitializer {
         }
         f.setAccessible(false);
     }
+
 
     private static Object[] getZeroLengthArrayInitializer(final Field f) throws ClassNotFoundException {
         // Yack... type erasure, why?

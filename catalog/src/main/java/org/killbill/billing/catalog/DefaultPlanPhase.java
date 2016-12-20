@@ -163,7 +163,7 @@ public class DefaultPlanPhase extends ValidatingConfig<StandaloneCatalog> implem
     public void initialize(final StandaloneCatalog root, final URI uri) {
 
         super.initialize(root, uri);
-        CatalogSafetyInitializer.initializeNonRequiredArrayFields(this);
+        CatalogSafetyInitializer.initializeNonRequiredNullFieldsWithDefaultValue(this);
 
         if (fixed != null) {
             fixed.initialize(root, uri);
@@ -177,6 +177,7 @@ public class DefaultPlanPhase extends ValidatingConfig<StandaloneCatalog> implem
             usage.initialize(root, uri);
             usage.setPhase(this);
         }
+        duration.initialize(root, uri);
     }
 
     public DefaultPlanPhase setFixed(final DefaultFixed fixed) {

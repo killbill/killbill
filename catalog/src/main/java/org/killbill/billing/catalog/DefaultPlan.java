@@ -75,7 +75,7 @@ public class DefaultPlan extends ValidatingConfig<StandaloneCatalog> implements 
     //No other value is allowed for Tiered ADDONS
     //A value of -1 means unlimited
     @XmlElement(required = false)
-    private Integer plansAllowedInBundle = -1;
+    private Integer plansAllowedInBundle;
 
     private String priceListName;
 
@@ -174,7 +174,7 @@ public class DefaultPlan extends ValidatingConfig<StandaloneCatalog> implements 
     @Override
     public void initialize(final StandaloneCatalog catalog, final URI sourceURI) {
         super.initialize(catalog, sourceURI);
-        CatalogSafetyInitializer.initializeNonRequiredArrayFields(this);
+        CatalogSafetyInitializer.initializeNonRequiredNullFieldsWithDefaultValue(this);
 
         if (finalPhase != null) {
             finalPhase.setPlan(this);
@@ -216,6 +216,10 @@ public class DefaultPlan extends ValidatingConfig<StandaloneCatalog> implements 
             errors.add(new ValidationError(String.format("Final Phase %s of plan %s cannot be of type %s",
                                                          finalPhase.getName(), name, finalPhase.getPhaseType()),
                                            catalog.getCatalogURI(), DefaultPlan.class, ""));
+        }
+        // Safety check
+        if (plansAllowedInBundle == null) {
+            throw new IllegalStateException("plansAllowedInBundle should have been automatically been initialized with DEFAULT_NON_REQUIRED_INTEGER_FIELD_VALUE (-1)");
         }
         return errors;
     }

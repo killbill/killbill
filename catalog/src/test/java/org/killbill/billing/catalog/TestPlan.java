@@ -32,6 +32,7 @@ public class TestPlan extends CatalogTestSuiteNoDB {
         final StandaloneCatalog c = new MockCatalog();
         c.setSupportedCurrencies(new Currency[]{Currency.GBP, Currency.EUR, Currency.USD, Currency.BRL, Currency.MXN});
         final DefaultPlan p1 = MockPlan.createBicycleTrialEvergreen1USD();
+        p1.setPlansAllowedInBundle(-1);
         p1.setEffectiveDateForExistingSubscriptions(new Date((new Date().getTime()) - (1000 * 60 * 60 * 24)));
         final ValidationErrors errors = p1.validate(c, new ValidationErrors());
         Assert.assertEquals(errors.size(), 3);

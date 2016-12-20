@@ -79,7 +79,7 @@ public class StandaloneCatalogWithPriceOverride extends StandaloneCatalog implem
         }
 
         final InternalCallContext internalCallContext = overrides.getCallContext() != null ? internalCallContextFactory.createInternalCallContextWithoutAccountRecordId(overrides.getCallContext()) : null;
-        return priceOverride.getOrCreateOverriddenPlan(defaultPlan, CatalogDateHelper.toUTCDateTime(getEffectiveDate()), overrides.getOverrides(), internalCallContext);
+        return priceOverride.getOrCreateOverriddenPlan(this, defaultPlan, CatalogDateHelper.toUTCDateTime(getEffectiveDate()), overrides.getOverrides(), internalCallContext);
     }
 
     @Override

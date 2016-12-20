@@ -25,7 +25,6 @@ import java.util.regex.Matcher;
 import org.joda.time.DateTime;
 import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.catalog.api.Currency;
-import org.killbill.billing.catalog.api.CurrencyValueNull;
 import org.killbill.billing.catalog.api.InternationalPrice;
 import org.killbill.billing.catalog.api.Plan;
 import org.killbill.billing.catalog.api.PlanPhasePriceOverride;
@@ -48,6 +47,7 @@ public class TestDefaultPriceOverride extends CatalogTestSuiteWithEmbeddedDB {
     public void testBasic() throws Exception {
 
         final StandaloneCatalog catalog = XMLLoader.getObjectFromString(Resources.getResource("SpyCarAdvanced.xml").toExternalForm(), StandaloneCatalog.class);
+        catalog.initialize(catalog, null);
         final Plan plan = catalog.findCurrentPlan("discount-standard-monthly");
 
         final List<PlanPhasePriceOverride> overrides = new ArrayList<PlanPhasePriceOverride>();
@@ -56,7 +56,7 @@ public class TestDefaultPriceOverride extends CatalogTestSuiteWithEmbeddedDB {
         final PlanPhasePriceOverride phase3 = new DefaultPlanPhasePriceOverride(plan.getAllPhases()[2].getName(), Currency.USD, null, new BigDecimal("142.41"));
         overrides.add(phase3);
 
-        final DefaultPlan overriddenPlan = priceOverride.getOrCreateOverriddenPlan(plan, new DateTime(catalog.getEffectiveDate()), overrides, internalCallContext);
+        final DefaultPlan overriddenPlan = priceOverride.getOrCreateOverriddenPlan(catalog, plan, new DateTime(catalog.getEffectiveDate()), overrides, internalCallContext);
 
         final Matcher m = DefaultPriceOverride.CUSTOM_PLAN_NAME_PATTERN.matcher(overriddenPlan.getName());
         assertTrue(m.matches());
@@ -101,13 +101,15 @@ public class TestDefaultPriceOverride extends CatalogTestSuiteWithEmbeddedDB {
     public void testWithInvalidPriceOverride() throws Exception {
 
         final StandaloneCatalog catalog = XMLLoader.getObjectFromString(Resources.getResource("SpyCarAdvanced.xml").toExternalForm(), StandaloneCatalog.class);
+        catalog.initialize(catalog, null);
+
         final Plan plan = catalog.findCurrentPlan("discount-standard-monthly");
 
         final List<PlanPhasePriceOverride> overrides = new ArrayList<PlanPhasePriceOverride>();
         final PlanPhasePriceOverride phase1 = new DefaultPlanPhasePriceOverride(plan.getAllPhases()[0].getName(), Currency.USD, null, BigDecimal.ONE);
         overrides.add(phase1);
 
-        priceOverride.getOrCreateOverriddenPlan(plan, new DateTime(catalog.getEffectiveDate()), overrides, internalCallContext);
+        priceOverride.getOrCreateOverriddenPlan(catalog, plan, new DateTime(catalog.getEffectiveDate()), overrides, internalCallContext);
 
     }
 
@@ -115,6 +117,8 @@ public class TestDefaultPriceOverride extends CatalogTestSuiteWithEmbeddedDB {
     public void testGetOverriddenPlan() throws Exception {
 
         final StandaloneCatalog catalog = XMLLoader.getObjectFromString(Resources.getResource("SpyCarAdvanced.xml").toExternalForm(), StandaloneCatalog.class);
+        catalog.initialize(catalog, null);
+
         final Plan plan = catalog.findCurrentPlan("discount-standard-monthly");
 
         final List<PlanPhasePriceOverride> overrides = new ArrayList<PlanPhasePriceOverride>();
@@ -123,7 +127,7 @@ public class TestDefaultPriceOverride extends CatalogTestSuiteWithEmbeddedDB {
         final PlanPhasePriceOverride phase3 = new DefaultPlanPhasePriceOverride(plan.getAllPhases()[2].getName(), Currency.USD, null, new BigDecimal("142.41"));
         overrides.add(phase3);
 
-        final DefaultPlan overriddenPlanCreated = priceOverride.getOrCreateOverriddenPlan(plan, new DateTime(catalog.getEffectiveDate()), overrides, internalCallContext);
+        final DefaultPlan overriddenPlanCreated = priceOverride.getOrCreateOverriddenPlan(catalog, plan, new DateTime(catalog.getEffectiveDate()), overrides, internalCallContext);
 
         System.out.println("overriddenPlanCreated = " + overriddenPlanCreated.getName());
 
