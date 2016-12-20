@@ -52,7 +52,7 @@ import org.killbill.xmlloader.ValidationException;
 import org.killbill.xmlloader.XMLLoader;
 import org.xml.sax.SAXException;
 
-public class DefaultCatalogUserApi implements CatalogUserApi {
+public class  DefaultCatalogUserApi implements CatalogUserApi {
 
     private final CatalogService catalogService;
     private final InternalCallContextFactory internalCallContextFactory;
@@ -98,9 +98,9 @@ public class DefaultCatalogUserApi implements CatalogUserApi {
         } catch (final TenantApiException e) {
             throw new CatalogApiException(e);
         } catch (final ValidationException e) {
-            throw new CatalogApiException(ErrorCode.CAT_INVALID_FOR_TENANT, internalTenantContext.getTenantRecordId());
+            throw new CatalogApiException(e, ErrorCode.CAT_INVALID_FOR_TENANT, internalTenantContext.getTenantRecordId());
         } catch (final JAXBException e) {
-            throw new CatalogApiException(ErrorCode.CAT_INVALID_FOR_TENANT, internalTenantContext.getTenantRecordId());
+            throw new CatalogApiException(e, ErrorCode.CAT_INVALID_FOR_TENANT, internalTenantContext.getTenantRecordId());
         } catch (final IOException e) {
             throw new IllegalStateException(e);
         } catch (final TransformerException e) {

@@ -92,13 +92,13 @@ public class VersionedCatalogLoader implements CatalogLoader {
             return result;
         } catch (final ValidationException e) {
             logger.warn("Failed to load default catalog", e);
-            throw new CatalogApiException(ErrorCode.CAT_INVALID_DEFAULT, uriString);
+            throw new CatalogApiException(e, ErrorCode.CAT_INVALID_DEFAULT, uriString);
         } catch (final JAXBException e) {
             logger.warn("Failed to load default catalog", e);
-            throw new CatalogApiException(ErrorCode.CAT_INVALID_DEFAULT, uriString);
+            throw new CatalogApiException(e, ErrorCode.CAT_INVALID_DEFAULT, uriString);
         } catch(IllegalArgumentException e) {
             logger.warn("Failed to load default catalog", e);
-            throw new CatalogApiException(ErrorCode.CAT_INVALID_DEFAULT, uriString);
+            throw new CatalogApiException(e, ErrorCode.CAT_INVALID_DEFAULT, uriString);
         } catch (Exception e) {
             logger.warn("Failed to load default catalog", e);
             throw new IllegalStateException(e);
@@ -131,25 +131,25 @@ public class VersionedCatalogLoader implements CatalogLoader {
             XMLLoader.initializeAndValidate(uri, result);
             return result;
         } catch (final ValidationException e) {
-            logger.warn("Failed to load catalog for tenant='{}'",  tenantRecordId, e);
-            throw new CatalogApiException(ErrorCode.CAT_INVALID_FOR_TENANT, tenantRecordId);
+            logger.warn("Failed to load catalog for tenantRecordId='{}'",  tenantRecordId, e);
+            throw new CatalogApiException(e, ErrorCode.CAT_INVALID_FOR_TENANT, tenantRecordId);
         } catch (final JAXBException e) {
-            logger.warn("Failed to load catalog for tenant='{}'",  tenantRecordId, e);
-            throw new CatalogApiException(ErrorCode.CAT_INVALID_FOR_TENANT, tenantRecordId);
+            logger.warn("Failed to load catalog for tenantRecordId='{}'",  tenantRecordId, e);
+            throw new CatalogApiException(e, ErrorCode.CAT_INVALID_FOR_TENANT, tenantRecordId);
         } catch (final IOException e) {
-            logger.warn("Failed to load catalog for tenant='{}'",  tenantRecordId, e);
+            logger.warn("Failed to load catalog for tenantRecordId='{}'",  tenantRecordId, e);
             throw new IllegalStateException(e);
         } catch (final TransformerException e) {
-            logger.warn("Failed to load catalog for tenant='{}'",  tenantRecordId, e);
+            logger.warn("Failed to load catalog for tenantRecordId='{}'",  tenantRecordId, e);
             throw new IllegalStateException(e);
         } catch (final URISyntaxException e) {
-            logger.warn("Failed to load catalog for tenant='{}'",  tenantRecordId, e);
+            logger.warn("Failed to load catalog for tenantRecordId='{}'",  tenantRecordId, e);
             throw new IllegalStateException(e);
         } catch (final SAXException e) {
-            logger.warn("Failed to load catalog for tenant='{}'",  tenantRecordId, e);
+            logger.warn("Failed to load catalog for tenantRecordId='{}'",  tenantRecordId, e);
             throw new IllegalStateException(e);
         } catch (final InvalidConfigException e) {
-            logger.warn("Failed to load catalog for tenant='{}'",  tenantRecordId, e);
+            logger.warn("Failed to load catalog for tenantRecordId='{}'",  tenantRecordId, e);
             throw new IllegalStateException(e);
         }
     }
