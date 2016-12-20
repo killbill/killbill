@@ -226,17 +226,9 @@ public class VersionedCatalog extends ValidatingConfig<VersionedCatalog> impleme
     public void add(final StandaloneCatalog e) throws CatalogApiException {
         if (catalogName == null) {
             catalogName = e.getCatalogName();
-        } else {
-            if (!catalogName.equals(e.getCatalogName())) {
-                throw new CatalogApiException(ErrorCode.CAT_CATALOG_NAME_MISMATCH, catalogName, e.getCatalogName());
-            }
         }
         if (recurringBillingMode == null) {
             recurringBillingMode = e.getRecurringBillingMode();
-        } else {
-            if (!recurringBillingMode.equals(e.getRecurringBillingMode())) {
-                throw new CatalogApiException(ErrorCode.CAT_CATALOG_RECURRING_MODE_MISMATCH, recurringBillingMode, e.getRecurringBillingMode());
-            }
         }
         versions.add(e);
         Collections.sort(versions, new Comparator<StandaloneCatalog>() {
@@ -430,7 +422,11 @@ public class VersionedCatalog extends ValidatingConfig<VersionedCatalog> impleme
             }
             if (!c.getCatalogName().equals(catalogName)) {
                 errors.add(new ValidationError(String.format("Catalog name '%s' is not consistent across versions ", c.getCatalogName()),
-                        c.getCatalogURI(), VersionedCatalog.class, ""));
+                                               c.getCatalogURI(), VersionedCatalog.class, ""));
+            }
+            if (!c.getRecurringBillingMode().equals(recurringBillingMode)) {
+                errors.add(new ValidationError(String.format("Catalog recurringBillingMode '%s' is not consistent across versions ", c.getCatalogName()),
+                                               c.getCatalogURI(), VersionedCatalog.class, ""));
             }
             errors.addAll(c.validate(c, errors));
         }
