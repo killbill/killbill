@@ -248,8 +248,8 @@ public class TestDefaultPriceOverride extends CatalogTestSuiteWithEmbeddedDB {
                     }).orNull();
 
                     assertEquals(newTieredBlock.getUnit().getName(), initialTieredBlock.getUnit().getName());
-                    assertEquals(newTieredBlock.getMax(),newTieredBlock.getMax());
-                    assertEquals(newTieredBlock.getSize(), newTieredBlock.getSize());
+                    assertEquals(newTieredBlock.getMax(),initialTieredBlock.getMax());
+                    assertEquals(newTieredBlock.getSize(), initialTieredBlock.getSize());
                     assertTieredBlockInternationalPrice(newTieredBlock.getPrice(), initialTieredBlock.getPrice(), override);
                 }
             }
@@ -350,8 +350,8 @@ public class TestDefaultPriceOverride extends CatalogTestSuiteWithEmbeddedDB {
                     }).orNull();
 
                     assertEquals(newTieredBlock.getUnit().getName(), initialTieredBlock.getUnit().getName());
-                    assertEquals(newTieredBlock.getMax(),newTieredBlock.getMax());
-                    assertEquals(newTieredBlock.getSize(), newTieredBlock.getSize());
+                    assertEquals(newTieredBlock.getMax(),initialTieredBlock.getMax());
+                    assertEquals(newTieredBlock.getSize(), initialTieredBlock.getSize());
                     assertTieredBlockInternationalPrice(newTieredBlock.getPrice(), initialTieredBlock.getPrice(), tieredBlockPriceOverride);
                 }
             }
