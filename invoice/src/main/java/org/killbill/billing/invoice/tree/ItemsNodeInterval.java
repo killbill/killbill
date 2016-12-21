@@ -47,7 +47,7 @@ public class ItemsNodeInterval extends NodeInterval {
         this.targetInvoiceId = targetInvoiceId;
     }
 
-    public ItemsNodeInterval(final NodeInterval parent, final UUID targetInvoiceId, final Item item) {
+    public ItemsNodeInterval(final ItemsNodeInterval parent, final UUID targetInvoiceId, final Item item) {
         super(parent, item.getStartDate(), item.getEndDate());
         this.items = new ItemsInterval(this, targetInvoiceId, item);
         this.targetInvoiceId = targetInvoiceId;
