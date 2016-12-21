@@ -110,7 +110,7 @@ public class PaymentMethodProcessor extends ProcessorBase {
         return dispatchWithExceptionHandling(account,
                                              paymentPluginServiceName,
                                              new CallableWithAccountLock<UUID, PaymentApiException>(locker,
-                                                                                                    account.getExternalKey(),
+                                                                                                    account.getId(),
                                                                                                     paymentConfig,
                                                                                                     new DispatcherCallback<PluginDispatcherReturnType<UUID>, PaymentApiException>() {
 
@@ -403,7 +403,7 @@ public class PaymentMethodProcessor extends ProcessorBase {
                                      final Iterable<PluginProperty> properties, final CallContext callContext, final InternalCallContext context)
             throws PaymentApiException {
         try {
-            new WithAccountLock<Void, PaymentApiException>(paymentConfig).processAccountWithLock(locker, account.getExternalKey(), new DispatcherCallback<PluginDispatcherReturnType<Void>, PaymentApiException>() {
+            new WithAccountLock<Void, PaymentApiException>(paymentConfig).processAccountWithLock(locker, account.getId(), new DispatcherCallback<PluginDispatcherReturnType<Void>, PaymentApiException>() {
 
                 @Override
                 public PluginDispatcherReturnType<Void> doOperation() throws PaymentApiException {
@@ -444,7 +444,7 @@ public class PaymentMethodProcessor extends ProcessorBase {
     public void setDefaultPaymentMethod(final Account account, final UUID paymentMethodId, final Iterable<PluginProperty> properties, final CallContext callContext, final InternalCallContext context)
             throws PaymentApiException {
         try {
-            new WithAccountLock<Void, PaymentApiException>(paymentConfig).processAccountWithLock(locker, account.getExternalKey(), new DispatcherCallback<PluginDispatcherReturnType<Void>, PaymentApiException>() {
+            new WithAccountLock<Void, PaymentApiException>(paymentConfig).processAccountWithLock(locker, account.getId(), new DispatcherCallback<PluginDispatcherReturnType<Void>, PaymentApiException>() {
 
                 @Override
                 public PluginDispatcherReturnType<Void> doOperation() throws PaymentApiException {
@@ -511,7 +511,7 @@ public class PaymentMethodProcessor extends ProcessorBase {
         }
 
         try {
-            final PluginDispatcherReturnType<List<PaymentMethod>> result = new WithAccountLock<List<PaymentMethod>, PaymentApiException>(paymentConfig).processAccountWithLock(locker, account.getExternalKey(), new DispatcherCallback<PluginDispatcherReturnType<List<PaymentMethod>>, PaymentApiException>() {
+            final PluginDispatcherReturnType<List<PaymentMethod>> result = new WithAccountLock<List<PaymentMethod>, PaymentApiException>(paymentConfig).processAccountWithLock(locker, account.getId(), new DispatcherCallback<PluginDispatcherReturnType<List<PaymentMethod>>, PaymentApiException>() {
                 @Override
                 public PluginDispatcherReturnType<List<PaymentMethod>> doOperation() throws PaymentApiException {
 

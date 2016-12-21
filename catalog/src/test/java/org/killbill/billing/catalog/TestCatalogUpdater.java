@@ -205,7 +205,7 @@ public class TestCatalogUpdater extends CatalogTestSuiteNoDB {
 
         assertEquals(plan.getInitialPhases().length, 1);
         assertEquals(plan.getInitialPhases()[0].getPhaseType(), PhaseType.TRIAL);
-        assertEquals(plan.getInitialPhases()[0].getFixed().getPrice().getPrices().length, 3);
+        assertEquals(plan.getInitialPhases()[0].getFixed().getPrice().getPrices().length, 0);
         assertEquals(plan.getInitialPhases()[0].getFixed().getPrice().getPrice(Currency.EUR), BigDecimal.ZERO);
         assertEquals(plan.getInitialPhases()[0].getName(), "standard-monthly-trial");
 
@@ -279,6 +279,7 @@ public class TestCatalogUpdater extends CatalogTestSuiteNoDB {
                                    "        <currency>USD</currency>\n" +
                                    "        <currency>GBP</currency>\n" +
                                    "    </currencies>\n" +
+                                   "    <units/>\n" +
                                    "    <products>\n" +
                                    "        <product name=\"Dynamic\">\n" +
                                    "            <category>BASE</category>\n" +
@@ -384,16 +385,7 @@ public class TestCatalogUpdater extends CatalogTestSuiteNoDB {
                                    "                        <number>30</number>\n" +
                                    "                    </duration>\n" +
                                    "                    <fixed type=\"ONE_TIME\">\n" +
-                                   "                        <fixedPrice>\n" +
-                                   "                            <price>\n" +
-                                   "<currency>USD</currency>\n" +
-                                   "<value>0</value>\n" +
-                                   "                            </price>\n" +
-                                   "                            <price>\n" +
-                                   "<currency>GBP</currency>\n" +
-                                   "<value>0</value>\n" +
-                                   "                            </price>\n" +
-                                   "                        </fixedPrice>\n" +
+                                   "                        <fixedPrice/>\n" +
                                    "                    </fixed>\n" +
                                    "                    <usages/>\n" +
                                    "                </phase>\n" +
@@ -429,16 +421,7 @@ public class TestCatalogUpdater extends CatalogTestSuiteNoDB {
                                    "                        <number>30</number>\n" +
                                    "                    </duration>\n" +
                                    "                    <fixed type=\"ONE_TIME\">\n" +
-                                   "                        <fixedPrice>\n" +
-                                   "                            <price>\n" +
-                                   "<currency>USD</currency>\n" +
-                                   "<value>0</value>\n" +
-                                   "                            </price>\n" +
-                                   "                            <price>\n" +
-                                   "<currency>GBP</currency>\n" +
-                                   "<value>0</value>\n" +
-                                   "                            </price>\n" +
-                                   "                        </fixedPrice>\n" +
+                                   "                        <fixedPrice/>\n" +
                                    "                    </fixed>\n" +
                                    "                    <usages/>\n" +
                                    "                </phase>\n" +
@@ -474,16 +457,7 @@ public class TestCatalogUpdater extends CatalogTestSuiteNoDB {
                                    "                        <number>30</number>\n" +
                                    "                    </duration>\n" +
                                    "                    <fixed type=\"ONE_TIME\">\n" +
-                                   "                        <fixedPrice>\n" +
-                                   "                            <price>\n" +
-                                   "<currency>USD</currency>\n" +
-                                   "<value>0</value>\n" +
-                                   "                            </price>\n" +
-                                   "                            <price>\n" +
-                                   "<currency>GBP</currency>\n" +
-                                   "<value>0</value>\n" +
-                                   "                            </price>\n" +
-                                   "                        </fixedPrice>\n" +
+                                   "                        <fixedPrice/>\n" +
                                    "                    </fixed>\n" +
                                    "                    <usages/>\n" +
                                    "                </phase>\n" +

@@ -20,6 +20,7 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import java.math.BigDecimal;
+import java.net.URI;
 
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.catalog.api.CurrencyValueNull;
@@ -77,8 +78,14 @@ public class DefaultPrice extends ValidatingConfig<StandaloneCatalog> implements
     @Override
     public ValidationErrors validate(final StandaloneCatalog catalog, final ValidationErrors errors) {
         return errors;
-
     }
+
+    @Override
+    public void initialize(final StandaloneCatalog catalog, final URI sourceURI) {
+        super.initialize(catalog, sourceURI);
+        CatalogSafetyInitializer.initializeNonRequiredNullFieldsWithDefaultValue(this);
+    }
+
 
     @Override
     public boolean equals(final Object o) {

@@ -89,7 +89,9 @@ public class DefaultControlInitiated implements LeavingStateCallback {
         }
 
         if (paymentTransactionModelDao != null) {
-            stateContext.setPaymentTransactionExternalKey(paymentTransactionModelDao.getTransactionExternalKey());
+            stateContext.setPaymentTransactionModelDao(paymentTransactionModelDao);
+            stateContext.setProcessedAmount(paymentTransactionModelDao.getProcessedAmount());
+            stateContext.setProcessedCurrency(paymentTransactionModelDao.getProcessedCurrency());
         } else if (stateContext.getPaymentTransactionExternalKey() == null) {
             stateContext.setPaymentTransactionExternalKey(UUIDs.randomUUID().toString());
         }

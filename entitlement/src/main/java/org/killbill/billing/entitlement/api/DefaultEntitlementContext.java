@@ -1,6 +1,6 @@
 /*
- * Copyright 2014-2015 Groupon, Inc
- * Copyright 2014-2015 The Billing Project, LLC
+ * Copyright 2014-2016 Groupon, Inc
+ * Copyright 2014-2016 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -17,7 +17,6 @@
 
 package org.killbill.billing.entitlement.api;
 
-import java.util.List;
 import java.util.UUID;
 
 import javax.annotation.Nullable;
@@ -32,6 +31,7 @@ import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.CallOrigin;
 import org.killbill.billing.util.callcontext.UserType;
 
+import com.google.common.collect.Iterables;
 
 public class DefaultEntitlementContext implements EntitlementContext {
 
@@ -51,16 +51,25 @@ public class DefaultEntitlementContext implements EntitlementContext {
     private final DateTime updatedDate;
     private final UUID tenantId;
 
-
     public DefaultEntitlementContext(final EntitlementContext prev,
                                      @Nullable final PriorEntitlementResult pluginResult) {
         this(prev.getOperationType(),
              prev.getAccountId(),
              prev.getDestinationAccountId(),
-             pluginResult != null && pluginResult.getAdjustedBaseEntitlementWithAddOnsSpecifiers() != null ? pluginResult.getAdjustedBaseEntitlementWithAddOnsSpecifiers() : prev.getBaseEntitlementWithAddOnsSpecifiers(),
+             pluginResult != null ? merge(prev.getBaseEntitlementWithAddOnsSpecifiers(), pluginResult.getAdjustedBaseEntitlementWithAddOnsSpecifiers()) : prev.getBaseEntitlementWithAddOnsSpecifiers(),
              pluginResult != null && pluginResult.getAdjustedBillingActionPolicy() != null ? pluginResult.getAdjustedBillingActionPolicy() : prev.getBillingActionPolicy(),
-             pluginResult != null && pluginResult.getAdjustedPluginProperties() != null ? pluginResult.getAdjustedPluginProperties() : prev.getPluginProperties(),
+             pluginResult != null ? merge(prev.getPluginProperties(), pluginResult.getAdjustedPluginProperties()) : prev.getPluginProperties(),
              prev);
+    }
+
+    private static <T> Iterable<T> merge(final Iterable<T> prevValues, final Iterable<T> newValues) {
+        // Be lenient if a plugin returns an empty list (default behavior for Ruby plugins): at this point,
+        // we know the isAborted flag hasn't been set, so let's assume the user actually wants to use the previous list
+        if (newValues != null && !Iterables.<BaseEntitlementWithAddOnsSpecifier>isEmpty(newValues)) {
+            return newValues;
+        } else {
+            return prevValues;
+        }
     }
 
     public DefaultEntitlementContext(final OperationType operationType,

@@ -30,7 +30,6 @@ import org.killbill.billing.ObjectType;
 import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.catalog.api.Currency;
-import org.killbill.billing.catalog.api.Plan;
 import org.killbill.billing.catalog.api.PlanPhase;
 import org.killbill.billing.catalog.api.PriceList;
 import org.killbill.billing.catalog.api.Product;
@@ -377,21 +376,22 @@ public class SubscriptionJson extends JsonBase {
         this.subscriptionId = subscription.getId().toString();
         this.externalKey = subscription.getExternalKey();
         this.events = new LinkedList<EventSubscriptionJson>();
-        for (final SubscriptionEvent subscriptionEvent : subscription.getSubscriptionEvents()) {
-            this.events.add(new EventSubscriptionJson(subscriptionEvent, accountAuditLogs));
-        }
-
         // We fill the catalog info every time we get the currency from the account (even if this is not overridden Plan)
         this.priceOverrides = new ArrayList<PhasePriceOverrideJson>();
-        if (currency != null) {
-            final Plan plan = subscription.getLastActivePlan();
-            if (plan != null) {
-                for (final PlanPhase cur : plan.getAllPhases()) {
-                    final BigDecimal fixedPrice = cur.getFixed() != null ? cur.getFixed().getPrice().getPrice(currency) : null;
-                    final BigDecimal recurringPrice = cur.getRecurring() != null ? cur.getRecurring().getRecurringPrice().getPrice(currency) : null;
-                    final PhasePriceOverrideJson phase = new PhasePriceOverrideJson(cur.getName(), cur.getPhaseType().toString(), fixedPrice, recurringPrice, cur.getUsages(),currency);
-                    priceOverrides.add(phase);
+        String currentPhaseName = null;
+        for (final SubscriptionEvent subscriptionEvent : subscription.getSubscriptionEvents()) {
+            this.events.add(new EventSubscriptionJson(subscriptionEvent, accountAuditLogs));
+            if (currency != null) {
+                final PlanPhase cur = subscriptionEvent.getNextPhase();
+                if (cur == null || cur.getName().equals(currentPhaseName)) {
+                    continue;
                 }
+                currentPhaseName = cur.getName();
+
+                final BigDecimal fixedPrice = cur.getFixed() != null ? cur.getFixed().getPrice().getPrice(currency) : null;
+                final BigDecimal recurringPrice = cur.getRecurring() != null ? cur.getRecurring().getRecurringPrice().getPrice(currency) : null;
+                final PhasePriceOverrideJson phase = new PhasePriceOverrideJson(cur.getName(), cur.getPhaseType().toString(), fixedPrice, recurringPrice, cur.getUsages(),currency);
+                priceOverrides.add(phase);
             }
         }
     }

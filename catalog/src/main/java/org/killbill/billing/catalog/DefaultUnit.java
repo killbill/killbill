@@ -16,6 +16,8 @@
 
 package org.killbill.billing.catalog;
 
+import java.net.URI;
+
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
@@ -44,6 +46,14 @@ public class DefaultUnit extends ValidatingConfig<StandaloneCatalog> implements 
     public ValidationErrors validate(StandaloneCatalog root, ValidationErrors errors) {
         return errors;
     }
+
+
+    @Override
+    public void initialize(final StandaloneCatalog catalog, final URI sourceURI) {
+        super.initialize(catalog, sourceURI);
+        CatalogSafetyInitializer.initializeNonRequiredNullFieldsWithDefaultValue(this);
+    }
+
 
     public DefaultUnit setName(final String name) {
         this.name = name;

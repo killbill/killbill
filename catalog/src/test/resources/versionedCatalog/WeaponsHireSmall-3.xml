@@ -68,12 +68,20 @@
                 <phaseType>TRIAL</phaseType>
                 <policy>IMMEDIATE</policy>
             </changePolicyCase>
+            <changePolicyCase>
+                <policy>IMMEDIATE</policy>
+            </changePolicyCase>
         </changePolicy>
         <changeAlignment>
             <changeAlignmentCase>
                 <alignment>START_OF_SUBSCRIPTION</alignment>
             </changeAlignmentCase>
         </changeAlignment>
+        <cancelPolicy>
+            <cancelPolicyCase>
+                <policy>IMMEDIATE</policy>
+            </cancelPolicyCase>
+        </cancelPolicy>
         <createAlignment>
             <createAlignmentCase>
                 <product>Laser-Scope</product>

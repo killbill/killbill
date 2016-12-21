@@ -56,7 +56,6 @@ public class DefaultPlan extends ValidatingConfig<StandaloneCatalog> implements 
     @XmlID
     private String name;
 
-    //TODO MDW Validation - effectiveDateForExistingSubscriptions > catalog effectiveDate
     @XmlElement(required = false)
     private Date effectiveDateForExistingSubscriptions;
 
@@ -76,7 +75,7 @@ public class DefaultPlan extends ValidatingConfig<StandaloneCatalog> implements 
     //No other value is allowed for Tiered ADDONS
     //A value of -1 means unlimited
     @XmlElement(required = false)
-    private Integer plansAllowedInBundle = -1;
+    private Integer plansAllowedInBundle;
 
     private String priceListName;
 
@@ -129,7 +128,7 @@ public class DefaultPlan extends ValidatingConfig<StandaloneCatalog> implements 
 
     @Override
     public PlanPhase[] getAllPhases() {
-        final int length = (initialPhases == null || initialPhases.length == 0) ? 1 : (initialPhases.length + 1);
+        final int length = initialPhases.length + 1;
         final PlanPhase[] allPhases = new DefaultPlanPhase[length];
         int cnt = 0;
         if (length > 1) {
@@ -175,15 +174,15 @@ public class DefaultPlan extends ValidatingConfig<StandaloneCatalog> implements 
     @Override
     public void initialize(final StandaloneCatalog catalog, final URI sourceURI) {
         super.initialize(catalog, sourceURI);
+        CatalogSafetyInitializer.initializeNonRequiredNullFieldsWithDefaultValue(this);
+
         if (finalPhase != null) {
             finalPhase.setPlan(this);
             finalPhase.initialize(catalog, sourceURI);
         }
-        if (initialPhases != null) {
-            for (final DefaultPlanPhase p : initialPhases) {
-                p.setPlan(this);
-                p.initialize(catalog, sourceURI);
-            }
+        for (final DefaultPlanPhase p : initialPhases) {
+            p.setPlan(this);
+            p.initialize(catalog, sourceURI);
         }
         this.priceListName = this.priceListName  != null ? this.priceListName : findPriceListForPlan(catalog);
     }
@@ -194,12 +193,34 @@ public class DefaultPlan extends ValidatingConfig<StandaloneCatalog> implements 
             catalog.getEffectiveDate().getTime() > effectiveDateForExistingSubscriptions.getTime()) {
             errors.add(new ValidationError(String.format("Price effective date %s is before catalog effective date '%s'",
                                                          effectiveDateForExistingSubscriptions,
-                                                         catalog.getEffectiveDate().getTime()),
-                                           catalog.getCatalogURI(), DefaultInternationalPrice.class, ""));
+                                                         catalog.getEffectiveDate()),
+                                           catalog.getCatalogURI(), DefaultPlan.class, ""));
         }
 
-        validateCollection(catalog, errors, initialPhases);
+        if (product == null) {
+            errors.add(new ValidationError(String.format("Invalid product for plan '%s'", name), catalog.getCatalogURI(), DefaultPlan.class, ""));
+        }
+
+        for (DefaultPlanPhase cur  : initialPhases) {
+            cur.validate(catalog, errors);
+            if (cur.getPhaseType() == PhaseType.EVERGREEN || cur.getPhaseType() == PhaseType.FIXEDTERM) {
+                errors.add(new ValidationError(String.format("Initial Phase %s of plan %s cannot be of type %s",
+                                                             cur.getName(), name, cur.getPhaseType()),
+                                               catalog.getCatalogURI(), DefaultPlan.class, ""));
+            }
+        }
+
         finalPhase.validate(catalog, errors);
+
+        if (finalPhase.getPhaseType() == PhaseType.TRIAL || finalPhase.getPhaseType() == PhaseType.DISCOUNT) {
+            errors.add(new ValidationError(String.format("Final Phase %s of plan %s cannot be of type %s",
+                                                         finalPhase.getName(), name, finalPhase.getPhaseType()),
+                                           catalog.getCatalogURI(), DefaultPlan.class, ""));
+        }
+        // Safety check
+        if (plansAllowedInBundle == null) {
+            throw new IllegalStateException("plansAllowedInBundle should have been automatically been initialized with DEFAULT_NON_REQUIRED_INTEGER_FIELD_VALUE (-1)");
+        }
         return errors;
     }
 

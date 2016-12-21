@@ -154,6 +154,10 @@ public class DefaultPlanPhase extends ValidatingConfig<StandaloneCatalog> implem
     @Override
     public ValidationErrors validate(final StandaloneCatalog catalog, final ValidationErrors errors) {
 
+        if (plan == null) {
+            errors.add(new ValidationError(String.format("Invalid plan for phase '%s'", type), catalog.getCatalogURI(), DefaultPlanPhase.class, ""));
+        }
+
         if (fixed == null && recurring == null && usages.length == 0) {
             errors.add(new ValidationError(String.format("Phase %s of plan %s need to define at least either a fixed or recurrring or usage section.",
                                                          type.toString(), plan.getName()),
@@ -165,12 +169,18 @@ public class DefaultPlanPhase extends ValidatingConfig<StandaloneCatalog> implem
         if (recurring != null) {
             recurring.validate(catalog, errors);
         }
+        duration.validate(catalog, errors);
+
         validateCollection(catalog, errors, usages);
         return errors;
     }
 
     @Override
     public void initialize(final StandaloneCatalog root, final URI uri) {
+
+        super.initialize(root, uri);
+        CatalogSafetyInitializer.initializeNonRequiredNullFieldsWithDefaultValue(this);
+
         if (fixed != null) {
             fixed.initialize(root, uri);
         }
@@ -179,12 +189,11 @@ public class DefaultPlanPhase extends ValidatingConfig<StandaloneCatalog> implem
             recurring.setPlan(plan);
             recurring.setPhase(this);
         }
-        if (usages != null) {
-            for (DefaultUsage usage : usages) {
-                usage.initialize(root, uri);
-                usage.setPhase(this);
-            }
+        for (DefaultUsage usage : usages) {
+            usage.initialize(root, uri);
+            usage.setPhase(this);
         }
+        duration.initialize(root, uri);
     }
 
     public DefaultPlanPhase setFixed(final DefaultFixed fixed) {

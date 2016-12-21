@@ -22,19 +22,22 @@ import java.util.List;
 import org.killbill.automaton.OperationException;
 import org.killbill.automaton.OperationResult;
 import org.killbill.billing.control.plugin.api.PaymentApiType;
+import org.killbill.billing.control.plugin.api.PaymentControlContext;
 import org.killbill.billing.payment.api.Payment;
 import org.killbill.billing.payment.api.PaymentApiException;
+import org.killbill.billing.payment.api.PluginProperty;
+import org.killbill.billing.payment.api.TransactionStatus;
 import org.killbill.billing.payment.core.PaymentProcessor;
 import org.killbill.billing.payment.core.ProcessorBase.DispatcherCallback;
 import org.killbill.billing.payment.core.sm.control.ControlPluginRunner.DefaultPaymentControlContext;
 import org.killbill.billing.payment.dao.PaymentTransactionModelDao;
 import org.killbill.billing.payment.dispatcher.PluginDispatcher;
 import org.killbill.billing.payment.dispatcher.PluginDispatcher.PluginDispatcherReturnType;
-import org.killbill.billing.control.plugin.api.PaymentControlContext;
 import org.killbill.billing.util.config.definition.PaymentConfig;
 import org.killbill.commons.locker.GlobalLocker;
 
 import com.google.common.base.Joiner;
+import com.google.common.collect.ImmutableList;
 
 //
 // Used from AttemptCompletionTask to resume an incomplete payment that went through control API.
@@ -54,11 +57,11 @@ public class CompletionControlOperation extends OperationControlCallback {
 
     @Override
     public OperationResult doOperationCallback() throws OperationException {
-
         final List<String> controlPluginNameList = paymentStateControlContext.getPaymentControlPluginNames();
         final String controlPluginNames = JOINER.join(controlPluginNameList);
 
         return dispatchWithAccountLockAndTimeout(controlPluginNames, new DispatcherCallback<PluginDispatcherReturnType<OperationResult>, OperationException>() {
+
             @Override
             public PluginDispatcherReturnType<OperationResult> doOperation() throws OperationException {
                 final PaymentTransactionModelDao transaction = paymentStateContext.getPaymentTransactionModelDao();
@@ -78,15 +81,34 @@ public class CompletionControlOperation extends OperationControlCallback {
                                                                                                             transaction.getProcessedCurrency(),
                                                                                                             paymentStateControlContext.isApiPayment(),
                                                                                                             paymentStateContext.getCallContext());
+                try {
+                    final Payment result = doCallSpecificOperationCallback();
+                    ((PaymentStateControlContext) paymentStateContext).setResult(result);
 
-                executePluginOnSuccessCalls(paymentStateControlContext.getPaymentControlPluginNames(), updatedPaymentControlContext);
-                return PluginDispatcher.createPluginDispatcherReturnType(OperationResult.SUCCESS);
+                    final boolean success = transaction.getTransactionStatus() == TransactionStatus.SUCCESS || transaction.getTransactionStatus() == TransactionStatus.PENDING;
+                    if (success) {
+                        executePluginOnSuccessCalls(paymentStateControlContext.getPaymentControlPluginNames(), updatedPaymentControlContext);
+
+                        // Remove scheduled retry, if any
+                        paymentProcessor.cancelScheduledPaymentTransaction(paymentStateControlContext.getAttemptId(), paymentStateControlContext.getInternalCallContext());
+
+                        return PluginDispatcher.createPluginDispatcherReturnType(OperationResult.SUCCESS);
+                    } else {
+                        throw new OperationException(null, executePluginOnFailureCallsAndSetRetryDate(updatedPaymentControlContext));
+                    }
+                } catch (final PaymentApiException e) {
+                    // Wrap PaymentApiException, and throw a new OperationException with an ABORTED/FAILURE state based on the retry result.
+                    throw new OperationException(e, executePluginOnFailureCallsAndSetRetryDate(updatedPaymentControlContext));
+                } catch (final RuntimeException e) {
+                    // Attempts to set the retry date in context if needed.
+                    throw new OperationException(e, executePluginOnFailureCallsAndSetRetryDate(updatedPaymentControlContext));
+                }
             }
         });
     }
 
     @Override
     protected Payment doCallSpecificOperationCallback() throws PaymentApiException {
-        return null;
+        return paymentProcessor.getPayment(paymentStateContext.getPaymentId(), false, false, ImmutableList.<PluginProperty>of(), paymentStateContext.getCallContext(), paymentStateContext.getInternalCallContext());
     }
 }

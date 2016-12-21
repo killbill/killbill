@@ -64,6 +64,8 @@ public class DefaultRecurring extends ValidatingConfig<StandaloneCatalog> implem
 
     @Override
     public void initialize(final StandaloneCatalog root, final URI uri) {
+        super.initialize(root, uri);
+        CatalogSafetyInitializer.initializeNonRequiredNullFieldsWithDefaultValue(this);
         if (recurringPrice != null) {
             recurringPrice.initialize(root, uri);
         }
@@ -72,6 +74,16 @@ public class DefaultRecurring extends ValidatingConfig<StandaloneCatalog> implem
     @Override
     public ValidationErrors validate(final StandaloneCatalog catalog, final ValidationErrors errors) {
         // Validation: check for nulls
+
+        if (plan == null) {
+            errors.add(new ValidationError(String.format("Invalid plan for recurring section"), catalog.getCatalogURI(), DefaultRecurring.class, ""));
+        }
+
+        if (phase == null) {
+            errors.add(new ValidationError(String.format("Invalid phase for recurring section"), catalog.getCatalogURI(), DefaultPlan.class, plan.getName().toString()));
+        }
+
+
         if (billingPeriod == null) {
             errors.add(new ValidationError(String.format("Recurring section of Phase %s of plan %s has a recurring price but no billing period", phase.getPhaseType().toString(), plan.getName()),
                                            catalog.getCatalogURI(), DefaultPlanPhase.class, phase.getPhaseType().toString()));

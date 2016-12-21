@@ -53,6 +53,20 @@ public class MultiTenantInvoiceConfig extends MultiTenantConfigBase implements I
     }
 
     @Override
+    public boolean isSanitySafetyBoundEnabled() {
+        return staticConfig.isSanitySafetyBoundEnabled();
+    }
+
+    @Override
+    public boolean isSanitySafetyBoundEnabled(final InternalTenantContext tenantContext) {
+        final String result = getStringTenantConfig("isSanitySafetyBoundEnabled", tenantContext);
+        if (result != null) {
+            return Boolean.parseBoolean(result);
+        }
+        return isSanitySafetyBoundEnabled();
+    }
+
+    @Override
     public int getMaxDailyNumberOfItemsSafetyBound() {
         return staticConfig.getMaxDailyNumberOfItemsSafetyBound();
     }

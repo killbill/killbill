@@ -68,7 +68,7 @@ public class StandaloneCatalog extends ValidatingConfig<StandaloneCatalog> imple
     @XmlElement(required = true)
     private BillingMode recurringBillingMode;
 
-    @XmlElementWrapper(name = "currencies", required = false)
+    @XmlElementWrapper(name = "currencies", required = true)
     @XmlElement(name = "currency", required = false)
     private Currency[] supportedCurrencies;
 
@@ -76,14 +76,14 @@ public class StandaloneCatalog extends ValidatingConfig<StandaloneCatalog> imple
     @XmlElement(name = "unit", required = false)
     private DefaultUnit[] units;
 
-    @XmlElementWrapper(name = "products", required = false)
+    @XmlElementWrapper(name = "products", required = true)
     @XmlElement(type=DefaultProduct.class, name = "product", required = false)
     private CatalogEntityCollection<Product> products;
 
     @XmlElement(name = "rules", required = true)
     private DefaultPlanRules planRules;
 
-    @XmlElementWrapper(name = "plans", required = false)
+    @XmlElementWrapper(name = "plans", required = true)
     @XmlElement(type=DefaultPlan.class, name = "plan", required = false)
     private CatalogEntityCollection<Plan> plans;
 
@@ -298,10 +298,16 @@ public class StandaloneCatalog extends ValidatingConfig<StandaloneCatalog> imple
 
     @Override
     public void initialize(final StandaloneCatalog catalog, final URI sourceURI) {
-        catalogURI = sourceURI;
+
         super.initialize(catalog, sourceURI);
+        CatalogSafetyInitializer.initializeNonRequiredNullFieldsWithDefaultValue(this);
+
+        catalogURI = sourceURI;
         planRules.initialize(catalog, sourceURI);
         priceLists.initialize(catalog, sourceURI);
+        for (final DefaultUnit cur : units) {
+            cur.initialize(catalog, sourceURI);
+        }
         for (final Product p : products.getEntries()) {
             ((DefaultProduct)p).initialize(catalog, sourceURI);
         }

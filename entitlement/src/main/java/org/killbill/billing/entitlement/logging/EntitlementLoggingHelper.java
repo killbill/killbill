@@ -42,12 +42,12 @@ public abstract class EntitlementLoggingHelper {
                                             final LocalDate billingDate) {
 
         if (log.isInfoEnabled()) {
-            final StringBuilder logLine = new StringBuilder("Create ")
+            final StringBuilder logLine = new StringBuilder("Create")
                     .append(bundleId != null ? " AO " : " BP ")
                     .append("Entitlement: ");
 
             if (bundleId != null) {
-                logLine.append(", bundleId='")
+                logLine.append("bundleId='")
                        .append(bundleId)
                        .append("'");
             }

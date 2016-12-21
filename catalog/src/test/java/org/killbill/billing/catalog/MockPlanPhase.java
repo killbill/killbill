@@ -28,7 +28,7 @@ public class MockPlanPhase extends DefaultPlanPhase {
     public static MockPlanPhase create1USDMonthlyEvergreen() {
         return (MockPlanPhase) new MockPlanPhase(BillingPeriod.MONTHLY,
                                                  PhaseType.EVERGREEN,
-                                                 new DefaultDuration().setUnit(TimeUnit.UNLIMITED),
+                                                 new DefaultDuration().setUnit(TimeUnit.UNLIMITED).setNumber(-1),
                                                  MockInternationalPrice.create1USD(),
                                                  null).setPlan(MockPlan.createBicycleNoTrialEvergreen1USD());
     }
@@ -36,7 +36,7 @@ public class MockPlanPhase extends DefaultPlanPhase {
     public static MockPlanPhase createUSDMonthlyEvergreen(final String reccuringUSDPrice, final String fixedPrice) {
         return new MockPlanPhase(BillingPeriod.MONTHLY,
                                  PhaseType.EVERGREEN,
-                                 new DefaultDuration().setUnit(TimeUnit.UNLIMITED),
+                                 new DefaultDuration().setUnit(TimeUnit.UNLIMITED).setNumber(-1),
                                  (reccuringUSDPrice == null) ? null : MockInternationalPrice.createUSD(reccuringUSDPrice),
                                  (fixedPrice == null) ? null : MockInternationalPrice.createUSD(fixedPrice));
     }

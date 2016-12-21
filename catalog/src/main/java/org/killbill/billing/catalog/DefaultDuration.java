@@ -16,6 +16,8 @@
 
 package org.killbill.billing.catalog;
 
+import java.net.URI;
+
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
@@ -35,7 +37,6 @@ import org.killbill.xmlloader.ValidationErrors;
 @XmlAccessorType(XmlAccessType.NONE)
 public class DefaultDuration extends ValidatingConfig<StandaloneCatalog> implements Duration {
 
-    public static final int DEFAULT_DURATION_NUMBER  = -1;
     @XmlElement(required = true)
     private TimeUnit unit;
 
@@ -59,7 +60,6 @@ public class DefaultDuration extends ValidatingConfig<StandaloneCatalog> impleme
     }
 
     public DefaultDuration() {
-        number = DEFAULT_DURATION_NUMBER;
     }
 
     @Override
@@ -102,15 +102,29 @@ public class DefaultDuration extends ValidatingConfig<StandaloneCatalog> impleme
 
     @Override
     public ValidationErrors validate(final StandaloneCatalog catalog, final ValidationErrors errors) {
-        //Validation: TimeUnit UNLIMITED iff number == -1
-        if ((unit == TimeUnit.UNLIMITED && number != -1)) {
-            errors.add(new ValidationError("Duration can only have 'UNLIMITED' unit if the number is omitted.",
-                                           catalog.getCatalogURI(), DefaultPlanPhase.class, ""));
+
+        // Safety check
+        if (number == null) {
+            throw new IllegalStateException("number should have been automatically been initialized with DEFAULT_NON_REQUIRED_INTEGER_FIELD_VALUE ");
         }
 
-        //TODO MDW - Validation TimeUnit UNLIMITED iff number == -1
+        //Validation: TimeUnit UNLIMITED if number == -1
+        if ((unit == TimeUnit.UNLIMITED && number != CatalogSafetyInitializer.DEFAULT_NON_REQUIRED_INTEGER_FIELD_VALUE)) {
+            errors.add(new ValidationError("Duration can only have 'UNLIMITED' unit if the number is omitted",
+                                           catalog.getCatalogURI(), DefaultDuration.class, ""));
+        } else if ((unit != TimeUnit.UNLIMITED) && number == CatalogSafetyInitializer.DEFAULT_NON_REQUIRED_INTEGER_FIELD_VALUE) {
+            errors.add(new ValidationError("Finite Duration must have a well defined length",
+                                           catalog.getCatalogURI(), DefaultDuration.class, ""));
+        }
         return errors;
     }
+
+    @Override
+    public void initialize(final StandaloneCatalog root, final URI uri) {
+        super.initialize(root, uri);
+        CatalogSafetyInitializer.initializeNonRequiredNullFieldsWithDefaultValue(this);
+    }
+
 
     public DefaultDuration setUnit(final TimeUnit unit) {
         this.unit = unit;

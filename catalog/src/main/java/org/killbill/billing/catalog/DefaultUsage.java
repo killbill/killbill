@@ -217,6 +217,9 @@ public class DefaultUsage extends ValidatingConfig<StandaloneCatalog> implements
 
     @Override
     public void initialize(final StandaloneCatalog root, final URI uri) {
+        super.initialize(root, uri);
+        CatalogSafetyInitializer.initializeNonRequiredNullFieldsWithDefaultValue(this);
+
         for (DefaultLimit limit : limits) {
             limit.initialize(root, uri);
         }

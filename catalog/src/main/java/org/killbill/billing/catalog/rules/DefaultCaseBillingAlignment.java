@@ -74,4 +74,17 @@ public class DefaultCaseBillingAlignment extends DefaultCasePhase<BillingAlignme
         result = 31 * result + (alignment != null ? alignment.hashCode() : 0);
         return result;
     }
+
+    @Override
+    public String toString() {
+        return "DefaultCaseBillingAlignment {" +
+               "alignment=" + alignment +
+               ", phaseType=" + getPhaseType() +
+               ", product=" + getProduct() +
+               ", productCategory=" + getProductCategory() +
+               ", billingPeriod=" + getBillingPeriod() +
+               ", priceList=" + getPriceList() +
+               '}';
+    }
+
 }

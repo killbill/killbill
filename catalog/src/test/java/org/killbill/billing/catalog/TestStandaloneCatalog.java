@@ -16,16 +16,42 @@
 
 package org.killbill.billing.catalog;
 
+import org.killbill.billing.catalog.api.CatalogApiException;
+import org.killbill.billing.catalog.api.PhaseType;
 import org.killbill.billing.catalog.api.Plan;
+import org.killbill.xmlloader.ValidationException;
+import org.killbill.xmlloader.XMLLoader;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
-import org.killbill.billing.catalog.api.CatalogApiException;
-import org.killbill.billing.catalog.api.PhaseType;
-
 import com.google.common.collect.ImmutableList;
+import com.google.common.io.Resources;
 
 public class TestStandaloneCatalog extends CatalogTestSuiteNoDB {
+
+    @Test(groups = "fast")
+    public void testLoadCatalogWithValidationIssues() throws Exception {
+        try {
+            XMLLoader.getObjectFromString(Resources.getResource("CatalogWithValidationErrors.xml").toExternalForm(), StandaloneCatalog.class);
+            Assert.fail();
+        } catch (final ValidationException e) {
+            Assert.assertEquals(e.getErrors().size(), 13);
+            Assert.assertEquals(e.getErrors().get(0).getDescription(), "Invalid product for plan 'standard'");
+            Assert.assertEquals(e.getErrors().get(1).getDescription(), "Duration can only have 'UNLIMITED' unit if the number is omitted");
+            Assert.assertEquals(e.getErrors().get(2).getDescription(), "Finite Duration must have a well defined length");
+            Assert.assertEquals(e.getErrors().get(3).getDescription(), "Initial Phase standard-trial-evergreen of plan standard-trial cannot be of type EVERGREEN");
+            Assert.assertEquals(e.getErrors().get(4).getDescription(), "Final Phase standard-trial-trial of plan standard-trial cannot be of type TRIAL");
+            Assert.assertEquals(e.getErrors().get(5).getDescription(), "Duplicate rule for change plan DefaultCaseChangePlanPolicy {policy=IMMEDIATE, phaseType=null, fromProduct=DefaultProduct{name='Standard', category=BASE, included=org.killbill.billing.catalog.CatalogEntityCollection@0, available=org.killbill.billing.catalog.CatalogEntityCollection@0, limits=[], catalogName='CatalogWithValidationErrors'}, fromProductCategory=null, fromBillingPeriod=null, fromPriceList=null, toProduct=null, toProductCategory=null, toBillingPeriod=null, toPriceList=null}");
+            Assert.assertEquals(e.getErrors().get(6).getDescription(), "Missing default rule case for plan change");
+            Assert.assertEquals(e.getErrors().get(7).getDescription(), "Duplicate rule for plan cancellation DefaultCaseCancelPolicy{policy =IMMEDIATE, phaseType =null, product=DefaultProduct{name='Standard', category=BASE, included=org.killbill.billing.catalog.CatalogEntityCollection@0, available=org.killbill.billing.catalog.CatalogEntityCollection@0, limits=[], catalogName='CatalogWithValidationErrors'}, productCategory=null, billingPeriod=null, priceList=null}");
+            Assert.assertEquals(e.getErrors().get(8).getDescription(), "Missing default rule case for plan cancellation");
+            Assert.assertEquals(e.getErrors().get(9).getDescription(), "Duplicate rule for plan change alignment DefaultCaseChangePlanAlignment {alignment=START_OF_BUNDLE, phaseType=null, fromProduct=null, fromProductCategory=null, fromBillingPeriod=null, fromPriceList=null, toProduct=null, toProductCategory=null, toBillingPeriod=null, toPriceList=null}");
+            Assert.assertEquals(e.getErrors().get(10).getDescription(), "Duplicate rule for create plan alignment DefaultCaseCreateAlignment {alignment =START_OF_BUNDLE, product=null, productCategory=null, billingPeriod=null, priceList=null}");
+            Assert.assertEquals(e.getErrors().get(11).getDescription(), "Duplicate rule for billing alignment DefaultCaseBillingAlignment {alignment=ACCOUNT, phaseType=null, product=null, productCategory=null, billingPeriod=null, priceList=null}");
+            Assert.assertEquals(e.getErrors().get(12).getDescription(), "Duplicate rule for price list transition DefaultCasePriceList {fromProduct=null, fromProductCategory=null, fromBillingPeriod=null, fromPriceList=null, toPriceList=DefaultPriceList{name='DEFAULT}}");
+
+        }
+    }
 
     @Test(groups = "fast")
     public void testFindPhase() throws CatalogApiException {

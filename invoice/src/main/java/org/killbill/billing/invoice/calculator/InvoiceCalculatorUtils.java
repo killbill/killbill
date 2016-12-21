@@ -218,7 +218,7 @@ public abstract class InvoiceCalculatorUtils {
         }
 
         for (final InvoicePayment invoicePayment : invoicePayments) {
-            if (!invoicePayment.isSuccess()) {
+            if (invoicePayment.isSuccess() == null || !invoicePayment.isSuccess()) {
                 continue;
             }
             if (InvoicePaymentType.REFUND.equals(invoicePayment.getType()) ||

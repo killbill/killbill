@@ -32,6 +32,7 @@ import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDate;
 import org.killbill.billing.account.api.Account;
+import org.killbill.billing.catalog.DefaultUsage;
 import org.killbill.billing.catalog.MockPlan;
 import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.catalog.api.CatalogApiException;
@@ -552,6 +553,7 @@ public class TestBlockingCalculator extends JunctionTestSuiteNoDB {
             final Recurring recurring = Mockito.mock(Recurring.class);
             Mockito.when(recurring.getRecurringPrice()).thenReturn(recurringPrice);
             Mockito.when(planPhase.getRecurring()).thenReturn(recurring);
+            Mockito.when(planPhase.getUsages()).thenReturn(new DefaultUsage[0]);
 
             final BigDecimal fixedPrice = BigDecimal.TEN;
 

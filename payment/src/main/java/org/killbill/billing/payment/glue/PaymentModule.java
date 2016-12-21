@@ -41,6 +41,8 @@ import org.killbill.billing.payment.core.PaymentGatewayProcessor;
 import org.killbill.billing.payment.core.PaymentMethodProcessor;
 import org.killbill.billing.payment.core.PaymentProcessor;
 import org.killbill.billing.payment.core.PluginControlPaymentProcessor;
+import org.killbill.billing.payment.core.janitor.IncompletePaymentAttemptTask;
+import org.killbill.billing.payment.core.janitor.IncompletePaymentTransactionTask;
 import org.killbill.billing.payment.core.janitor.Janitor;
 import org.killbill.billing.payment.core.sm.PaymentControlStateMachineHelper;
 import org.killbill.billing.payment.core.sm.PaymentStateMachineHelper;
@@ -127,6 +129,8 @@ public class PaymentModule extends KillBillModule {
     }
 
     protected void installProcessors(final PaymentConfig paymentConfig) {
+        bind(IncompletePaymentAttemptTask.class).asEagerSingleton();
+        bind(IncompletePaymentTransactionTask.class).asEagerSingleton();
         bind(PaymentProcessor.class).asEagerSingleton();
         bind(PluginControlPaymentProcessor.class).asEagerSingleton();
         bind(PaymentGatewayProcessor.class).asEagerSingleton();

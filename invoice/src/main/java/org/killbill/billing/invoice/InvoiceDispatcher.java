@@ -484,18 +484,9 @@ public class InvoiceDispatcher {
                                                            final Iterable<InvoiceItemModelDao> invoiceItemModelDaos,
                                                            final FutureAccountNotifications futureAccountNotifications,
                                                            final boolean isRealInvoiceWithItems, final InternalCallContext context) throws SubscriptionBaseApiException, InvoiceApiException {
-        // We filter any zero amount for USAGE items prior we generate the invoice, which may leave us with an invoice with no items;
-        // we recompute the isRealInvoiceWithItems flag based on what is left (the call to invoice is still necessary to set the future notifications).
-        final Iterable<InvoiceItemModelDao> filteredInvoiceItemModelDaos = Iterables.filter(invoiceItemModelDaos, new Predicate<InvoiceItemModelDao>() {
-            @Override
-            public boolean apply(@Nullable final InvoiceItemModelDao input) {
-                return (input.getType() != InvoiceItemType.USAGE || input.getAmount().compareTo(BigDecimal.ZERO) != 0);
-            }
-        });
-
-        final boolean isThereAnyItemsLeft = filteredInvoiceItemModelDaos.iterator().hasNext();
+        final boolean isThereAnyItemsLeft = invoiceItemModelDaos.iterator().hasNext();
         if (isThereAnyItemsLeft) {
-            invoiceDao.createInvoice(invoiceModelDao, ImmutableList.copyOf(filteredInvoiceItemModelDaos), isRealInvoiceWithItems, futureAccountNotifications, context);
+            invoiceDao.createInvoice(invoiceModelDao, ImmutableList.copyOf(invoiceItemModelDaos), isRealInvoiceWithItems, futureAccountNotifications, context);
         } else {
             invoiceDao.setFutureAccountNotificationsForEmptyInvoice(account.getId(), futureAccountNotifications, context);
         }
@@ -732,7 +723,6 @@ public class InvoiceDispatcher {
         BigDecimal childInvoiceAmount = InvoiceCalculatorUtils.computeChildInvoiceAmount(childInvoice.getCurrency(), childInvoice.getInvoiceItems());
         InvoiceModelDao draftParentInvoice = invoiceDao.getParentDraftInvoice(account.getParentAccountId(), parentContext);
 
-        final DateTime today = clock.getNow(account.getTimeZone());
         final String description = account.getExternalKey().concat(" summary");
         if (draftParentInvoice != null) {
 
@@ -746,7 +736,7 @@ public class InvoiceDispatcher {
             }
 
             // new item when the parent invoices does not have this child item yet
-            final ParentInvoiceItem newParentInvoiceItem = new ParentInvoiceItem(UUID.randomUUID(), today, draftParentInvoice.getId(), account.getParentAccountId(), account.getId(), childInvoiceAmount, account.getCurrency(), description);
+            final ParentInvoiceItem newParentInvoiceItem = new ParentInvoiceItem(UUID.randomUUID(), context.getCreatedDate(), draftParentInvoice.getId(), account.getParentAccountId(), account.getId(), childInvoiceAmount, account.getCurrency(), description);
             draftParentInvoice.addInvoiceItem(new InvoiceItemModelDao(newParentInvoiceItem));
 
             List<InvoiceModelDao> invoices = new ArrayList<InvoiceModelDao>();
@@ -757,8 +747,9 @@ public class InvoiceDispatcher {
                 return;
             }
 
-            draftParentInvoice = new InvoiceModelDao(account.getParentAccountId(), today.toLocalDate(), account.getCurrency(), InvoiceStatus.DRAFT, true);
-            InvoiceItem parentInvoiceItem = new ParentInvoiceItem(UUID.randomUUID(), today, draftParentInvoice.getId(), account.getParentAccountId(), account.getId(), childInvoiceAmount, account.getCurrency(), description);
+            final LocalDate invoiceDate = context.toLocalDate(context.getCreatedDate());
+            draftParentInvoice = new InvoiceModelDao(account.getParentAccountId(), invoiceDate, account.getCurrency(), InvoiceStatus.DRAFT, true);
+            final InvoiceItem parentInvoiceItem = new ParentInvoiceItem(UUID.randomUUID(), context.getCreatedDate(), draftParentInvoice.getId(), account.getParentAccountId(), account.getId(), childInvoiceAmount, account.getCurrency(), description);
             draftParentInvoice.addInvoiceItem(new InvoiceItemModelDao(parentInvoiceItem));
 
             // build account date time zone

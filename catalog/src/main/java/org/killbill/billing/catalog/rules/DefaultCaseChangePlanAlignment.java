@@ -68,4 +68,21 @@ public class DefaultCaseChangePlanAlignment extends DefaultCaseChange<PlanAlignm
         result = 31 * result + (alignment != null ? alignment.hashCode() : 0);
         return result;
     }
+
+    @Override
+    public String toString() {
+        return "DefaultCaseChangePlanAlignment {" +
+               "alignment=" + alignment +
+               ", phaseType=" + getPhaseType() +
+               ", fromProduct=" + getFromProduct() +
+               ", fromProductCategory=" + getFromProductCategory() +
+               ", fromBillingPeriod=" + getFromBillingPeriod() +
+               ", fromPriceList=" + getFromPriceList() +
+               ", toProduct=" + getToProduct() +
+               ", toProductCategory=" + getToProductCategory() +
+               ", toBillingPeriod=" + getToBillingPeriod() +
+               ", toPriceList=" + getToPriceList() +
+               '}';
+    }
+
 }

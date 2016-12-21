@@ -16,6 +16,8 @@
 
 package org.killbill.billing.catalog;
 
+import java.net.URI;
+
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 
@@ -42,6 +44,12 @@ public class PriceListDefault extends DefaultPriceList {
 
         }
         return errors;
+    }
+
+    @Override
+    public void initialize(final StandaloneCatalog catalog, final URI sourceURI) {
+        super.initialize(catalog, sourceURI);
+        CatalogSafetyInitializer.initializeNonRequiredNullFieldsWithDefaultValue(this);
     }
 
     @Override

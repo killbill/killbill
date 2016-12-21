@@ -76,7 +76,6 @@ import org.killbill.billing.catalog.rules.DefaultPlanRules;
 import com.google.common.base.Function;
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 
 public class StandaloneCatalogMapper {
@@ -138,7 +137,7 @@ public class StandaloneCatalogMapper {
             public DefaultCaseChangePlanPolicy apply(final CaseChangePlanPolicy input) {
                 return toDefaultCaseChangePlanPolicy(input);
             }
-        }, true);
+        });
     }
 
     final DefaultCaseChangePlanAlignment[] toDefaultCaseChangePlanAlignments(final Iterable<CaseChangePlanAlignment> input) {
@@ -147,7 +146,7 @@ public class StandaloneCatalogMapper {
             public DefaultCaseChangePlanAlignment apply(final CaseChangePlanAlignment input) {
                 return toDefaultCaseChangePlanAlignment(input);
             }
-        }, true);
+        });
     }
 
     final DefaultCaseBillingAlignment[] toDefaultCaseBillingAlignments(final Iterable<CaseBillingAlignment> input) {
@@ -156,7 +155,7 @@ public class StandaloneCatalogMapper {
             public DefaultCaseBillingAlignment apply(final CaseBillingAlignment input) {
                 return toDefaultCaseBillingAlignment(input);
             }
-        }, true);
+        });
     }
 
     final DefaultCaseCancelPolicy[] toDefaultCaseCancelPolicys(final Iterable<CaseCancelPolicy> input) {
@@ -165,7 +164,7 @@ public class StandaloneCatalogMapper {
             public DefaultCaseCancelPolicy apply(final CaseCancelPolicy input) {
                 return toDefaultCaseCancelPolicy(input);
             }
-        }, true);
+        });
     }
 
     final DefaultCaseCreateAlignment[] toDefaultCaseCreateAlignments(final Iterable<CaseCreateAlignment> input) {
@@ -174,7 +173,7 @@ public class StandaloneCatalogMapper {
             public DefaultCaseCreateAlignment apply(final CaseCreateAlignment input) {
                 return toCaseCreateAlignment(input);
             }
-        }, true);
+        });
     }
 
     final DefaultCasePriceList[] toDefaultCasePriceLists(final Iterable<CasePriceList> input) {
@@ -183,7 +182,7 @@ public class StandaloneCatalogMapper {
             public DefaultCasePriceList apply(final CasePriceList input) {
                 return toDefaultCasePriceList(input);
             }
-        }, true);
+        });
     }
 
     final DefaultCasePriceList toDefaultCasePriceList(final CasePriceList input) {
@@ -318,7 +317,7 @@ public class StandaloneCatalogMapper {
             public DefaultPlanPhase apply(final PlanPhase input) {
                 return toDefaultPlanPhase(input);
             }
-        }, false);
+        });
     }
 
     private DefaultPriceList[] toDefaultPriceLists(final Iterable<PriceList> input) {
@@ -327,7 +326,7 @@ public class StandaloneCatalogMapper {
             public DefaultPriceList apply(final PriceList input) {
                 return toDefaultPriceList(input);
             }
-        }, true);
+        });
     }
 
     private DefaultPrice[] toDefaultPrices(final Iterable<Price> input) {
@@ -336,7 +335,7 @@ public class StandaloneCatalogMapper {
             public DefaultPrice apply(final Price input) {
                 return toDefaultPrice(input);
             }
-        }, false);
+        });
     }
 
     private DefaultUnit[] toDefaultUnits(final Iterable<Unit> input) {
@@ -345,7 +344,7 @@ public class StandaloneCatalogMapper {
             public DefaultUnit apply(final Unit inputTransform) {
                 return toDefaultUnit(inputTransform);
             }
-        }, true);
+        });
     }
 
     private DefaultUnit toDefaultUnit(final Unit input) {
@@ -458,8 +457,8 @@ public class StandaloneCatalogMapper {
         }
     }
 
-    private <I, C extends I> C[] toArrayWithTransform(final Iterable<I> input, final Function<I, C> transformer, boolean returnNullIfNothing) {
-        if (returnNullIfNothing && (input == null || !input.iterator().hasNext())) {
+    private <I, C extends I> C[] toArrayWithTransform(final Iterable<I> input, final Function<I, C> transformer) {
+        if (input == null || !input.iterator().hasNext()) {
             return null;
         }
         final Iterable<C> tmp = Iterables.transform(input, transformer);

@@ -40,16 +40,30 @@ import com.google.common.collect.Iterables;
 
 public class PaymentStateControlContext extends PaymentStateContext {
 
+    private final Boolean isSuccess;
+
     private DateTime retryDate;
     private List<String> paymentControlPluginNames;
     private Payment result;
+    private BigDecimal processedAmount;
+    private Currency processedCurrency;
 
-    public PaymentStateControlContext(@Nullable final List<String> paymentControlPluginNames, final boolean isApiPayment, @Nullable final UUID paymentId, final String paymentExternalKey,
-                                      @Nullable final String paymentTransactionExternalKey, final TransactionType transactionType,
-                                      final Account account, @Nullable final UUID paymentMethodId, final BigDecimal amount, final Currency currency,
+    public PaymentStateControlContext(@Nullable final List<String> paymentControlPluginNames,
+                                      final boolean isApiPayment,
+                                      final Boolean isSuccess,
+                                      @Nullable final UUID paymentId,
+                                      final String paymentExternalKey,
+                                      @Nullable final UUID transactionId,
+                                      @Nullable final String paymentTransactionExternalKey,
+                                      final TransactionType transactionType,
+                                      final Account account,
+                                      @Nullable final UUID paymentMethodId,
+                                      final BigDecimal amount,
+                                      final Currency currency,
                                       final Iterable<PluginProperty> properties, final InternalCallContext internalCallContext, final CallContext callContext) {
-        super(isApiPayment, paymentId, null, null, paymentExternalKey, paymentTransactionExternalKey, transactionType, account, paymentMethodId, amount, currency, true, null, properties, internalCallContext, callContext);
+        super(isApiPayment, paymentId, transactionId, null, paymentExternalKey, paymentTransactionExternalKey, transactionType, account, paymentMethodId, amount, currency, true, null, properties, internalCallContext, callContext);
         this.paymentControlPluginNames = paymentControlPluginNames;
+        this.isSuccess = isSuccess;
     }
 
     public DateTime getRetryDate() {
@@ -70,6 +84,26 @@ public class PaymentStateControlContext extends PaymentStateContext {
 
     public void setResult(final Payment result) {
         this.result = result;
+    }
+
+    public Boolean isSuccess() {
+        return isSuccess;
+    }
+
+    public BigDecimal getProcessedAmount() {
+        return processedAmount;
+    }
+
+    public void setProcessedAmount(final BigDecimal processedAmount) {
+        this.processedAmount = processedAmount;
+    }
+
+    public Currency getProcessedCurrency() {
+        return processedCurrency;
+    }
+
+    public void setProcessedCurrency(final Currency processedCurrency) {
+        this.processedCurrency = processedCurrency;
     }
 
     public PaymentTransaction getCurrentTransaction() {

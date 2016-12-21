@@ -209,4 +209,12 @@ public class AccountItemTree {
             }
         }).orNull();
     }
+
+    @Override
+    public String toString() {
+        final StringBuilder sb = new StringBuilder("AccountItemTree{");
+        sb.append("subscriptionItemTree=").append(subscriptionItemTree);
+        sb.append('}');
+        return sb.toString();
+    }
 }

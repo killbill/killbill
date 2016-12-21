@@ -90,7 +90,7 @@ function export_data() {
 function import_data() {
     local filename=$1
     local columns_names=$2
-    mysqlimport --local --ignore-lines=1 --fields-terminated-by=, --fields-enclosed-by=\" --columns=$columns_names --verbose -u$USERNAME -p$PASSWORD $DATABASE $TMP_DIR/$filename
+    mysql --local-infile --execute="LOAD DATA LOCAL INFILE '$TMP_DIR/$filename' INTO TABLE $filename FIELDS TERMINATED BY ',' OPTIONALLY ENCLOSED BY '\"' IGNORE 1 LINES ($columns_names); SHOW WARNINGS" -u$USERNAME -p$PASSWORD $DATABASE
 }
 
 function sanitize_and_import() {

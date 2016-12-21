@@ -86,6 +86,10 @@ public class CatalogJson {
         for (final Plan plan : plans) {
             // Build the product associated with this plan
             final Product product = plan.getProduct();
+            if (product == null) {
+                // TODO Should we import a logger here?
+                continue;
+            }
             ProductJson productJson = productMap.get(product.getName());
             if (productJson == null) {
                 productJson = new ProductJson(product.getCategory().toString(),
@@ -133,10 +137,8 @@ public class CatalogJson {
 
     private List<UsageJson> buildUsagesJson(final Usage[] usages) throws CurrencyValueNull {
         List<UsageJson> usagesJson = new ArrayList<UsageJson>();
-        if (usages != null && usages.length > 0) {
-            for (int i=0; i < usages.length; i++) {
-                usagesJson.add(new UsageJson(usages[i].getBillingPeriod().toString(), buildTiers(usages[i].getTiers())));
-            }
+        for (int i = 0; i < usages.length; i++) {
+            usagesJson.add(new UsageJson(usages[i].getBillingPeriod().toString(), buildTiers(usages[i].getTiers())));
         }
         return usagesJson;
     }

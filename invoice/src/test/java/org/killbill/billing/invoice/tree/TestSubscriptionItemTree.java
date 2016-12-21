@@ -45,6 +45,7 @@ import com.google.common.collect.Lists;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNull;
 import static org.testng.Assert.assertTrue;
+import static org.testng.Assert.fail;
 
 public class TestSubscriptionItemTree extends InvoiceTestSuiteNoDB {
 
@@ -61,8 +62,6 @@ public class TestSubscriptionItemTree extends InvoiceTestSuiteNoDB {
     private final String planName = "my-plan";
     private final String phaseName = "my-phase";
     private final Currency currency = Currency.USD;
-
-
 
     @Test(groups = "fast")
     public void testWithExistingSplitRecurring() {
@@ -118,7 +117,6 @@ public class TestSubscriptionItemTree extends InvoiceTestSuiteNoDB {
         Assert.assertTrue(tree.getView().isEmpty());
     }
 
-
     @Test(groups = "fast")
     public void testSimpleRepair() {
 
@@ -163,6 +161,54 @@ public class TestSubscriptionItemTree extends InvoiceTestSuiteNoDB {
         tree.addItem(newItem);
         tree.build();
         verifyResult(tree.getView(), expectedResult);
+    }
+
+    @Test(groups = "fast")
+    public void testInvalidRepair() {
+        final LocalDate startDate = new LocalDate(2014, 1, 1);
+        final LocalDate endDate = new LocalDate(2014, 2, 1);
+
+        final BigDecimal rate = new BigDecimal("12.00");
+
+        final InvoiceItem initial = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, startDate, endDate, rate, rate, currency);
+        final InvoiceItem tooEarlyRepair = new RepairAdjInvoiceItem(invoiceId, accountId, startDate.minusDays(1), endDate, rate.negate(), currency, initial.getId());
+        final InvoiceItem tooLateRepair = new RepairAdjInvoiceItem(invoiceId, accountId, startDate, endDate.plusDays(1), rate.negate(), currency, initial.getId());
+
+        SubscriptionItemTree tree = new SubscriptionItemTree(subscriptionId, invoiceId);
+        tree.addItem(initial);
+        tree.addItem(tooEarlyRepair);
+        try {
+            tree.build();
+            fail();
+        } catch (final IllegalStateException e) {
+        }
+
+        tree = new SubscriptionItemTree(subscriptionId, invoiceId);
+        tree.addItem(initial);
+        tree.addItem(tooLateRepair);
+        try {
+            tree.build();
+            fail();
+        } catch (final IllegalStateException e) {
+        }
+    }
+
+    @Test(groups = "fast")
+    public void testDanglingRepair() {
+        final LocalDate startDate = new LocalDate(2014, 1, 1);
+        final LocalDate endDate = new LocalDate(2014, 2, 1);
+
+        final BigDecimal rate = new BigDecimal("12.00");
+
+        final InvoiceItem repair = new RepairAdjInvoiceItem(invoiceId, accountId, startDate.minusDays(1), endDate, rate.negate(), currency, UUID.randomUUID());
+
+        final SubscriptionItemTree tree = new SubscriptionItemTree(subscriptionId, invoiceId);
+        tree.addItem(repair);
+        try {
+            tree.build();
+            fail();
+        } catch (final IllegalStateException e) {
+        }
     }
 
     @Test(groups = "fast")
@@ -498,7 +544,6 @@ public class TestSubscriptionItemTree extends InvoiceTestSuiteNoDB {
         verifyResult(tree.getView(), expectedResult);
     }
 
-
     // Will test the case A from ItemsNodeInterval#prune logic (an item is left on the interval)
     @Test(groups = "fast")
     public void testFullRepairPruneLogic2() {
@@ -543,7 +588,6 @@ public class TestSubscriptionItemTree extends InvoiceTestSuiteNoDB {
         verifyResult(tree.getView(), expectedResult);
 
     }
-
 
     // Will test the case B from ItemsNodeInterval#prune logic
     @Test(groups = "fast")
@@ -642,8 +686,6 @@ public class TestSubscriptionItemTree extends InvoiceTestSuiteNoDB {
         tree.build();
         verifyResult(tree.getView(), expectedResult);
     }
-
-
 
     @Test(groups = "fast")
     public void testMergeWithNoExisting() {

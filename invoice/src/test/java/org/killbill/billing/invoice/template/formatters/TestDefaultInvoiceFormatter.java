@@ -366,7 +366,7 @@ public class TestDefaultInvoiceFormatter extends InvoiceTestSuiteNoDB {
     public void testProcessedCurrencyExists() throws Exception {
 
         // Use InvoiceModelDao to build the invoice to be able to set the processedCurrency (No suitable CTOR for DefaultInvoice on purpose)
-        final InvoiceModelDao invoiceModelDao = new InvoiceModelDao(UUID.randomUUID(), new LocalDate(), new LocalDate(), Currency.BRL);
+        final InvoiceModelDao invoiceModelDao = new InvoiceModelDao(UUID.randomUUID(), new LocalDate(), new LocalDate(), Currency.BRL, false);
         invoiceModelDao.setProcessedCurrency(Currency.USD);
 
         final Invoice invoice = new DefaultInvoice(invoiceModelDao);

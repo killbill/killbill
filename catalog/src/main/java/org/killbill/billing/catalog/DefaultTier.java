@@ -17,6 +17,7 @@
 
 package org.killbill.billing.catalog;
 
+import java.net.URI;
 import java.util.Arrays;
 
 import javax.xml.bind.annotation.XmlAccessType;
@@ -162,6 +163,14 @@ public class DefaultTier extends ValidatingConfig<StandaloneCatalog> implements 
         validateCollection(catalog, errors, limits);
         return errors;
     }
+
+    @Override
+    public void initialize(final StandaloneCatalog catalog, final URI sourceURI) {
+        super.initialize(catalog, sourceURI);
+        CatalogSafetyInitializer.initializeNonRequiredNullFieldsWithDefaultValue(this);
+    }
+
+
 
     @Override
     public boolean equals(final Object o) {

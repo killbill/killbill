@@ -73,7 +73,6 @@ public class DefaultInvoice extends EntityBase implements Invoice, Cloneable {
         this(invoiceId, null, accountId, invoiceNumber, invoiceDate, targetDate, currency, currency, isMigrationInvoice, false, status, false, null);
     }
 
-
     // This CTOR is used to return an existing invoice and must include everything (items, payments, tags,..)
     public DefaultInvoice(final InvoiceModelDao invoiceModelDao) {
         this(invoiceModelDao.getId(), invoiceModelDao.getCreatedDate(), invoiceModelDao.getAccountId(),
@@ -95,7 +94,6 @@ public class DefaultInvoice extends EntityBase implements Invoice, Cloneable {
         }));
     }
 
-    // Used to create a new parent invoice
     public DefaultInvoice(final UUID accountId, final LocalDate invoiceDate, final Currency currency) {
         this(UUID.randomUUID(), null, accountId, null, invoiceDate, null, currency, currency, false, false, InvoiceStatus.DRAFT, true, null);
     }

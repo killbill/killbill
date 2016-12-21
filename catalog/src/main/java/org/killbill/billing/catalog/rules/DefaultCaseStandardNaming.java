@@ -115,4 +115,5 @@ public abstract class DefaultCaseStandardNaming<T> extends DefaultCase<T> implem
         result = 31 * result + (priceList != null ? priceList.hashCode() : 0);
         return result;
     }
+
 }

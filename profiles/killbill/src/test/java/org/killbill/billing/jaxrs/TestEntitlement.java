@@ -125,7 +125,15 @@ public class TestEntitlement extends TestJaxrsBase {
                                                                ProductCategory.BASE, term, true);
 
         // Retrieves with GET
-        Subscription objFromJson = killBillClient.getSubscription(entitlementJson.getSubscriptionId());
+        Subscription objFromJson = killBillClient.getSubscription(entitlementJson.getSubscriptionId(), requestOptions);
+        Assert.assertEquals(objFromJson.getPriceOverrides().size(), 2);
+        Assert.assertEquals(objFromJson.getPriceOverrides().get(0).getPhaseName(), "shotgun-monthly-trial");
+        Assert.assertEquals(objFromJson.getPriceOverrides().get(0).getFixedPrice(), BigDecimal.ZERO);
+        Assert.assertNull(objFromJson.getPriceOverrides().get(0).getRecurringPrice());
+        Assert.assertEquals(objFromJson.getPriceOverrides().get(1).getPhaseName(), "shotgun-monthly-evergreen");
+        Assert.assertNull(objFromJson.getPriceOverrides().get(1).getFixedPrice());
+        Assert.assertEquals(objFromJson.getPriceOverrides().get(1).getRecurringPrice(), new BigDecimal("249.95"));
+
         // Equality in java client is not correctly implemented so manually check PriceOverrides section and then reset before equality
         objFromJson.setPriceOverrides(null);
         entitlementJson.setPriceOverrides(null);
@@ -140,17 +148,31 @@ public class TestEntitlement extends TestJaxrsBase {
 
         // Cancel EOT
         killBillClient.cancelSubscription(entitlementJson.getSubscriptionId(), EntitlementActionPolicy.END_OF_TERM,
-                                          BillingActionPolicy.END_OF_TERM, CALL_COMPLETION_TIMEOUT_SEC, createdBy, reason, comment);
+                                          BillingActionPolicy.END_OF_TERM, CALL_COMPLETION_TIMEOUT_SEC, requestOptions);
 
         // Retrieves to check EndDate
-        objFromJson = killBillClient.getSubscription(entitlementJson.getSubscriptionId());
+        objFromJson = killBillClient.getSubscription(entitlementJson.getSubscriptionId(), requestOptions);
         assertNotNull(objFromJson.getCancelledDate());
+        Assert.assertEquals(objFromJson.getPriceOverrides().size(), 2);
+        Assert.assertEquals(objFromJson.getPriceOverrides().get(0).getPhaseName(), "shotgun-monthly-trial");
+        Assert.assertEquals(objFromJson.getPriceOverrides().get(0).getFixedPrice(), BigDecimal.ZERO);
+        Assert.assertNull(objFromJson.getPriceOverrides().get(0).getRecurringPrice());
+        Assert.assertEquals(objFromJson.getPriceOverrides().get(1).getPhaseName(), "shotgun-monthly-evergreen");
+        Assert.assertNull(objFromJson.getPriceOverrides().get(1).getFixedPrice());
+        Assert.assertEquals(objFromJson.getPriceOverrides().get(1).getRecurringPrice(), new BigDecimal("249.95"));
 
         // Uncancel
-        killBillClient.uncancelSubscription(entitlementJson.getSubscriptionId(), createdBy, reason, comment);
+        killBillClient.uncancelSubscription(entitlementJson.getSubscriptionId(), requestOptions);
 
         objFromJson = killBillClient.getSubscription(entitlementJson.getSubscriptionId());
         assertNull(objFromJson.getCancelledDate());
+        Assert.assertEquals(objFromJson.getPriceOverrides().size(), 2);
+        Assert.assertEquals(objFromJson.getPriceOverrides().get(0).getPhaseName(), "shotgun-monthly-trial");
+        Assert.assertEquals(objFromJson.getPriceOverrides().get(0).getFixedPrice(), BigDecimal.ZERO);
+        Assert.assertNull(objFromJson.getPriceOverrides().get(0).getRecurringPrice());
+        Assert.assertEquals(objFromJson.getPriceOverrides().get(1).getPhaseName(), "shotgun-monthly-evergreen");
+        Assert.assertNull(objFromJson.getPriceOverrides().get(1).getFixedPrice());
+        Assert.assertEquals(objFromJson.getPriceOverrides().get(1).getRecurringPrice(), new BigDecimal("249.95"));
     }
 
     @Test(groups = "slow", description = "Can handle non existent subscription")
@@ -227,9 +249,16 @@ public class TestEntitlement extends TestJaxrsBase {
         overrides.add(new PhasePriceOverride(null, PhaseType.TRIAL.toString(), BigDecimal.TEN, null, null));
         input.setPriceOverrides(overrides);
 
-        final Subscription subscription = killBillClient.createSubscription(input, null, DEFAULT_WAIT_COMPLETION_TIMEOUT_SEC, basicRequestOptions());
+        final Subscription subscription = killBillClient.createSubscription(input, null, DEFAULT_WAIT_COMPLETION_TIMEOUT_SEC, requestOptions);
+        Assert.assertEquals(subscription.getPriceOverrides().size(), 2);
+        Assert.assertEquals(subscription.getPriceOverrides().get(0).getPhaseName(), "shotgun-monthly-1-trial");
+        Assert.assertEquals(subscription.getPriceOverrides().get(0).getFixedPrice().compareTo(BigDecimal.TEN), 0);
+        Assert.assertNull(subscription.getPriceOverrides().get(0).getRecurringPrice());
+        Assert.assertEquals(subscription.getPriceOverrides().get(1).getPhaseName(), "shotgun-monthly-1-evergreen");
+        Assert.assertNull(subscription.getPriceOverrides().get(1).getFixedPrice());
+        Assert.assertEquals(subscription.getPriceOverrides().get(1).getRecurringPrice(), new BigDecimal("249.95"));
 
-        final List<Invoice> invoices = killBillClient.getInvoicesForAccount(accountJson.getAccountId(), true, false, false, AuditLevel.FULL);
+        final List<Invoice> invoices = killBillClient.getInvoicesForAccount(accountJson.getAccountId(), true, false, false, AuditLevel.FULL, requestOptions);
         assertEquals(invoices.size(), 1);
         assertEquals(invoices.get(0).getAmount().compareTo(BigDecimal.TEN), 0);
     }
@@ -363,7 +392,7 @@ public class TestEntitlement extends TestJaxrsBase {
         input.setProductCategory(ProductCategory.BASE);
         input.setBillingPeriod(BillingPeriod.MONTHLY);
         input.setPriceList(PriceListSet.DEFAULT_PRICELIST_NAME);
-        final Subscription entitlementJson = killBillClient.createSubscription(input, initialDate.toLocalDate().plusMonths(1), -1, createdBy, reason, comment);
+        final Subscription entitlementJson = killBillClient.createSubscription(input, initialDate.toLocalDate().plusMonths(1), -1, requestOptions);
 
         Assert.assertEquals(entitlementJson.getProductName(), input.getProductName());
         Assert.assertEquals(entitlementJson.getProductCategory(), input.getProductCategory());
@@ -371,8 +400,15 @@ public class TestEntitlement extends TestJaxrsBase {
         Assert.assertEquals(entitlementJson.getPriceList(), input.getPriceList());
 
         // Retrieves with GET
-        final Subscription objFromJson = killBillClient.getSubscription(entitlementJson.getSubscriptionId());
-        Assert.assertTrue(objFromJson.equals(entitlementJson));
+        final Subscription subscription = killBillClient.getSubscription(entitlementJson.getSubscriptionId(), requestOptions);
+        Assert.assertTrue(subscription.equals(entitlementJson));
+        Assert.assertEquals(subscription.getPriceOverrides().size(), 2);
+        Assert.assertEquals(subscription.getPriceOverrides().get(0).getPhaseName(), "shotgun-monthly-trial");
+        Assert.assertEquals(subscription.getPriceOverrides().get(0).getFixedPrice(), BigDecimal.ZERO);
+        Assert.assertNull(subscription.getPriceOverrides().get(0).getRecurringPrice());
+        Assert.assertEquals(subscription.getPriceOverrides().get(1).getPhaseName(), "shotgun-monthly-evergreen");
+        Assert.assertNull(subscription.getPriceOverrides().get(1).getFixedPrice());
+        Assert.assertEquals(subscription.getPriceOverrides().get(1).getRecurringPrice(), new BigDecimal("249.95"));
     }
 
     @Test(groups = "slow", description = "Can create an entitlement with an account with autoPayOff")

@@ -45,7 +45,7 @@ public class InvoiceWithMetadata {
         this.invoice = originalInvoice;
         this.perSubscriptionFutureNotificationDates = perSubscriptionFutureNotificationDates;
         build();
-        remove$0RecurringAndUsageItems();
+        remove$0UsageItems();
     }
 
     public Invoice getInvoice() {
@@ -79,12 +79,12 @@ public class InvoiceWithMetadata {
         });
     }
 
-    protected void remove$0RecurringAndUsageItems() {
+    protected void remove$0UsageItems() {
         if (invoice != null) {
             final Iterator<InvoiceItem> it = invoice.getInvoiceItems().iterator();
             while (it.hasNext()) {
                 final InvoiceItem item = it.next();
-                if ((item.getInvoiceItemType() == InvoiceItemType.RECURRING ||  item.getInvoiceItemType() == InvoiceItemType.USAGE) &&
+                if ((item.getInvoiceItemType() == InvoiceItemType.USAGE) &&
                     item.getAmount().compareTo(BigDecimal.ZERO) == 0) {
                     it.remove();
                 }

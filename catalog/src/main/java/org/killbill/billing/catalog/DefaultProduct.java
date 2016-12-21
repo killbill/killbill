@@ -32,6 +32,7 @@ import org.killbill.billing.catalog.api.Limit;
 import org.killbill.billing.catalog.api.Product;
 import org.killbill.billing.catalog.api.ProductCategory;
 import org.killbill.xmlloader.ValidatingConfig;
+import org.killbill.xmlloader.ValidationError;
 import org.killbill.xmlloader.ValidationErrors;
 
 @XmlAccessorType(XmlAccessType.NONE)
@@ -129,7 +130,7 @@ public class DefaultProduct extends ValidatingConfig<StandaloneCatalog> implemen
     
     
     protected Limit findLimit(String unit) {
-        for(Limit limit: limits) {
+        for (Limit limit: limits) {
             if(limit.getUnit().getName().equals(unit) ) {
                     return limit;
             }
@@ -147,14 +148,23 @@ public class DefaultProduct extends ValidatingConfig<StandaloneCatalog> implemen
     }
 
 
-    
+
     @Override
     public void initialize(final StandaloneCatalog catalog, final URI sourceURI) {
+        super.initialize(catalog, sourceURI);
+        CatalogSafetyInitializer.initializeNonRequiredNullFieldsWithDefaultValue(this);
+        for (DefaultLimit cur : limits) {
+            cur.initialize(catalog, sourceURI);
+        }
         catalogName = catalog.getCatalogName();
     }
 
     @Override
     public ValidationErrors validate(final StandaloneCatalog catalog, final ValidationErrors errors) {
+        if (catalogName == null || !catalogName.equals(catalog.getCatalogName())) {
+            errors.add(new ValidationError(String.format("Invalid catalogName for product '%s'", name), catalog.getCatalogURI(), DefaultProduct.class, ""));
+
+        }
         //TODO: MDW validation: inclusion and exclusion lists can only contain addon products
         //TODO: MDW validation: a given product can only be in, at most, one of inclusion and exclusion lists
         return errors;

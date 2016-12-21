@@ -31,6 +31,7 @@ import org.killbill.billing.catalog.DefaultPlanPhasePriceOverride;
 import org.killbill.billing.catalog.DefaultTierPriceOverride;
 import org.killbill.billing.catalog.DefaultTieredBlockPriceOverride;
 import org.killbill.billing.catalog.DefaultUsagePriceOverride;
+import org.killbill.billing.catalog.StandaloneCatalog;
 import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.catalog.api.Plan;
@@ -105,7 +106,9 @@ public class EhCacheOverriddenPlanCache implements OverriddenPlanCache {
         final List<CatalogOverridePhaseDefinitionModelDao> phaseDefs = overrideDao.getOverriddenPlanPhases(planDefRecordId, context);
         final DefaultPlan defaultPlan = (DefaultPlan) catalog.findCurrentPlan(parentPlanName);
         final PlanPhasePriceOverride[] overrides = createOverrides(defaultPlan, phaseDefs, context);
-        return new DefaultPlan(planName, defaultPlan, overrides);
+        final DefaultPlan result = new DefaultPlan(planName, defaultPlan, overrides);
+        result.initialize((StandaloneCatalog) catalog, ((StandaloneCatalog) catalog).getCatalogURI());
+        return result;
     }
 
     private PlanPhasePriceOverride[] createOverrides(final Plan defaultPlan, final List<CatalogOverridePhaseDefinitionModelDao> phaseDefs, final InternalTenantContext context) {

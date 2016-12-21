@@ -35,7 +35,7 @@ CREATE TABLE subscriptions (
     start_date datetime NOT NULL,
     bundle_start_date datetime NOT NULL,
     charged_through_date datetime DEFAULT NULL,
-    migrated bool NOT NULL,
+    migrated bool NOT NULL default FALSE,
     created_by varchar(50) NOT NULL,
     created_date datetime NOT NULL,
     updated_by varchar(50) NOT NULL,

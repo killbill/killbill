@@ -274,6 +274,23 @@ public class SubscriptionItemTree {
     }
 
     @Override
+    public String toString() {
+        final StringBuilder sb = new StringBuilder("SubscriptionItemTree{");
+        sb.append("targetInvoiceId=").append(targetInvoiceId);
+        sb.append(", subscriptionId=").append(subscriptionId);
+        sb.append(", root=").append(root);
+        sb.append(", isBuilt=").append(isBuilt);
+        sb.append(", isMerged=").append(isMerged);
+        sb.append(", items=").append(items);
+        sb.append(", existingFullyAdjustedItems=").append(existingFullyAdjustedItems);
+        sb.append(", existingFixedItems=").append(existingFixedItems);
+        sb.append(", remainingFixedItems=").append(remainingFixedItems);
+        sb.append(", pendingItemAdj=").append(pendingItemAdj);
+        sb.append('}');
+        return sb.toString();
+    }
+
+    @Override
     public boolean equals(final Object o) {
         if (this == o) {
             return true;

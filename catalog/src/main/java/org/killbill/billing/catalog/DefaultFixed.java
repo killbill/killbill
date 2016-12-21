@@ -50,7 +50,6 @@ public class DefaultFixed extends ValidatingConfig<StandaloneCatalog> implements
     }
 
     public DefaultFixed() {
-        type = FixedType.ONE_TIME;
     }
 
     public DefaultFixed(final DefaultFixed in, final PlanPhasePriceOverride override) {
@@ -60,6 +59,8 @@ public class DefaultFixed extends ValidatingConfig<StandaloneCatalog> implements
 
     @Override
     public void initialize(final StandaloneCatalog root, final URI uri) {
+        super.initialize(root, uri);
+        CatalogSafetyInitializer.initializeNonRequiredNullFieldsWithDefaultValue(this);
         if (fixedPrice != null) {
             fixedPrice.initialize(root, uri);
         }
@@ -67,6 +68,10 @@ public class DefaultFixed extends ValidatingConfig<StandaloneCatalog> implements
 
     @Override
     public ValidationErrors validate(final StandaloneCatalog root, final ValidationErrors errors) {
+        // Safety check
+        if (type == null) {
+            throw new IllegalStateException("fixedPrice should have been automatically been initialized with ONE_TIME ");
+        }
         return errors;
     }
 

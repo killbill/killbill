@@ -66,12 +66,20 @@
                 <phaseType>TRIAL</phaseType>
                 <policy>IMMEDIATE</policy>
             </changePolicyCase>
+            <changePolicyCase>
+                <policy>END_OF_TERM</policy>
+            </changePolicyCase>
         </changePolicy>
         <changeAlignment>
             <changeAlignmentCase>
                 <alignment>START_OF_SUBSCRIPTION</alignment>
             </changeAlignmentCase>
         </changeAlignment>
+        <cancelPolicy>
+            <cancelPolicyCase>
+                <policy>END_OF_TERM</policy>
+            </cancelPolicyCase>
+        </cancelPolicy>
         <createAlignment>
             <createAlignmentCase>
                 <product>Laser-Scope</product>

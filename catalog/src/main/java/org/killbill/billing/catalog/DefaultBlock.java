@@ -89,6 +89,11 @@ public class DefaultBlock extends ValidatingConfig<StandaloneCatalog> implements
 
     @Override
     public ValidationErrors validate(final StandaloneCatalog catalog, final ValidationErrors errors) {
+        // Safety check
+        if (type == null) {
+            throw new IllegalStateException("type should have been automatically been initialized with VANILLA ");
+        }
+
         if (type == BlockType.TOP_UP && minTopUpCredit == null) {
             errors.add(new ValidationError(String.format("TOP_UP block needs to define minTopUpCredit for phase %s",
                                                          phase.getName()), catalog.getCatalogURI(), DefaultUsage.class, ""));

@@ -1,0 +1,151 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!--
+  ~ Copyright 2014-2016 Groupon, Inc
+  ~ Copyright 2014-2016 The Billing Project, LLC
+  ~
+  ~ The Billing Project licenses this file to you under the Apache License, version 2.0
+  ~ (the "License"); you may not use this file except in compliance with the
+  ~ License.  You may obtain a copy of the License at:
+  ~
+  ~    http://www.apache.org/licenses/LICENSE-2.0
+  ~
+  ~ Unless required by applicable law or agreed to in writing, software
+  ~ distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+  ~ WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the
+  ~ License for the specific language governing permissions and limitations
+  ~ under the License.
+  -->
+
+<catalog xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:noNamespaceSchemaLocation="CatalogSchema.xsd ">
+
+    <effectiveDate>2013-02-08T00:00:00+00:00</effectiveDate>
+    <catalogName>CatalogWithValidationErrors</catalogName>
+
+    <recurringBillingMode>IN_ADVANCE</recurringBillingMode>
+
+    <currencies>
+        <currency>USD</currency>
+    </currencies>
+
+    <products>
+        <product name="Standard">
+            <category>BASE</category>
+        </product>
+    </products>
+
+
+
+    <!-- Note we defined twice the same rule for each case and also we miss default rules for plan cancellation and change of plan -->
+    <rules>
+        <changePolicy>
+            <changePolicyCase>
+                <fromProduct>Standard</fromProduct>
+                <policy>IMMEDIATE</policy>
+            </changePolicyCase>
+            <changePolicyCase>
+                <fromProduct>Standard</fromProduct>
+                <policy>IMMEDIATE</policy>
+            </changePolicyCase>
+        </changePolicy>
+        <changeAlignment>
+            <changeAlignmentCase>
+                <alignment>START_OF_BUNDLE</alignment>
+            </changeAlignmentCase>
+            <changeAlignmentCase>
+                <alignment>START_OF_BUNDLE</alignment>
+            </changeAlignmentCase>
+        </changeAlignment>
+        <cancelPolicy>
+            <cancelPolicyCase>
+                <product>Standard</product>
+                <policy>IMMEDIATE</policy>
+            </cancelPolicyCase>
+            <cancelPolicyCase>
+                <product>Standard</product>
+                <policy>IMMEDIATE</policy>
+            </cancelPolicyCase>
+        </cancelPolicy>
+        <createAlignment>
+            <createAlignmentCase>
+                <alignment>START_OF_BUNDLE</alignment>
+            </createAlignmentCase>
+            <createAlignmentCase>
+                <alignment>START_OF_BUNDLE</alignment>
+            </createAlignmentCase>
+        </createAlignment>
+        <billingAlignment>
+            <billingAlignmentCase>
+                <alignment>ACCOUNT</alignment>
+            </billingAlignmentCase>
+            <billingAlignmentCase>
+                <alignment>ACCOUNT</alignment>
+            </billingAlignmentCase>
+        </billingAlignment>
+        <priceList>
+            <priceListCase>
+                <toPriceList>DEFAULT</toPriceList>
+            </priceListCase>
+            <priceListCase>
+                <toPriceList>DEFAULT</toPriceList>
+            </priceListCase>
+        </priceList>
+    </rules>
+
+
+    <plans>
+        <plan name="standard">
+            <!-- Note the typo: the product name matches the plan name, so there is an XML ID - but it doesn't match the product name -->
+            <product>standard</product>
+            <finalPhase type="EVERGREEN">
+                <duration>
+                    <unit>UNLIMITED</unit>
+                    <!-- Note UNLIMITED should only support number -1 or undefined -->
+                    <number>1</number>
+                </duration>
+                <recurring>
+                    <billingPeriod>NO_BILLING_PERIOD</billingPeriod>
+                </recurring>
+            </finalPhase>
+        </plan>
+        <plan name="standard-trial">
+            <product>Standard</product>
+            <initialPhases>
+                <!-- Note we should not have an EVERGREEN phase to start -->
+                <phase type="EVERGREEN">
+                    <duration>
+                        <unit>DAYS</unit>
+                        <!-- Note we did not specify the number -->
+                    </duration>
+                    <fixed>
+                        <fixedPrice> <!-- empty price implies $0 -->
+                        </fixedPrice>
+
+                    </fixed>
+                </phase>
+            </initialPhases>
+            <!-- Note we should not have an TRIAL phase to finish -->
+            <finalPhase type="TRIAL">
+                <duration>
+                    <unit>UNLIMITED</unit>
+                </duration>
+                <recurring>
+                    <billingPeriod>NO_BILLING_PERIOD</billingPeriod>
+                </recurring>
+            </finalPhase>
+        </plan>
+    </plans>
+
+
+
+
+
+    <priceLists>
+        <defaultPriceList name="DEFAULT">
+            <plans>
+                <plan>standard</plan>
+                <plan>standard-trial</plan>
+            </plans>
+        </defaultPriceList>
+    </priceLists>
+</catalog>

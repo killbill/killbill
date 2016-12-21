@@ -119,10 +119,6 @@
                 <policy>IMMEDIATE</policy>
             </changePolicyCase>
             <changePolicyCase>
-                <toPriceList>rescue</toPriceList>
-                <policy>END_OF_TERM</policy>
-            </changePolicyCase>
-            <changePolicyCase>
                 <fromBillingPeriod>MONTHLY</fromBillingPeriod>
                 <toBillingPeriod>ANNUAL</toBillingPeriod>
                 <policy>IMMEDIATE</policy>

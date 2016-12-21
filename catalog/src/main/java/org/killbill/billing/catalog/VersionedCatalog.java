@@ -26,6 +26,8 @@ import java.util.Comparator;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
+import java.util.TreeSet;
 
 import javax.annotation.Nullable;
 import javax.xml.bind.annotation.XmlAccessType;
@@ -58,6 +60,7 @@ import org.killbill.billing.catalog.api.StaticCatalog;
 import org.killbill.billing.catalog.api.Unit;
 import org.killbill.clock.Clock;
 import org.killbill.xmlloader.ValidatingConfig;
+import org.killbill.xmlloader.ValidationError;
 import org.killbill.xmlloader.ValidationErrors;
 
 @XmlRootElement(name = "catalogs")
@@ -69,7 +72,11 @@ public class VersionedCatalog extends ValidatingConfig<VersionedCatalog> impleme
     @XmlElementWrapper(name = "versions", required = true)
     @XmlElement(name = "version", required = true)
     private final List<StandaloneCatalog> versions;
+
+    @XmlElement(required = true)
     private String catalogName;
+
+    @XmlElement(required = true)
     private BillingMode recurringBillingMode;
 
     // Required for JAXB deserialization
@@ -219,17 +226,9 @@ public class VersionedCatalog extends ValidatingConfig<VersionedCatalog> impleme
     public void add(final StandaloneCatalog e) throws CatalogApiException {
         if (catalogName == null) {
             catalogName = e.getCatalogName();
-        } else {
-            if (!catalogName.equals(e.getCatalogName())) {
-                throw new CatalogApiException(ErrorCode.CAT_CATALOG_NAME_MISMATCH, catalogName, e.getCatalogName());
-            }
         }
         if (recurringBillingMode == null) {
             recurringBillingMode = e.getRecurringBillingMode();
-        } else {
-            if (!recurringBillingMode.equals(e.getRecurringBillingMode())) {
-                throw new CatalogApiException(ErrorCode.CAT_CATALOG_RECURRING_MODE_MISMATCH, recurringBillingMode, e.getRecurringBillingMode());
-            }
         }
         versions.add(e);
         Collections.sort(versions, new Comparator<StandaloneCatalog>() {
@@ -400,22 +399,37 @@ public class VersionedCatalog extends ValidatingConfig<VersionedCatalog> impleme
     //
     @Override
     public void initialize(final VersionedCatalog catalog, final URI sourceURI) {
-        for (final StandaloneCatalog c : versions) {
-            c.initialize(c, sourceURI);
-        }
+        //
+        // Initialization is performed first on each StandaloneCatalog (XMLLoader#initializeAndValidate)
+        // and then later on the VersionedCatalog, so we only initialize and validate VersionedCatalog
+        // *without** recursively through each StandaloneCatalog
+        //
+        super.initialize(catalog, sourceURI);
+        CatalogSafetyInitializer.initializeNonRequiredNullFieldsWithDefaultValue(this);
     }
 
     @Override
     public ValidationErrors validate(final VersionedCatalog catalog, final ValidationErrors errors) {
+
+        final Set<Date> effectiveDates = new TreeSet<Date>();
+
         for (final StandaloneCatalog c : versions) {
+            if (effectiveDates.contains(c.getEffectiveDate())) {
+                errors.add(new ValidationError(String.format("Catalog effective date '%s' already exists for a previous version", c.getEffectiveDate()),
+                        c.getCatalogURI(), VersionedCatalog.class, ""));
+            } else {
+                effectiveDates.add(c.getEffectiveDate());
+            }
+            if (!c.getCatalogName().equals(catalogName)) {
+                errors.add(new ValidationError(String.format("Catalog name '%s' is not consistent across versions ", c.getCatalogName()),
+                                               c.getCatalogURI(), VersionedCatalog.class, ""));
+            }
+            if (!c.getRecurringBillingMode().equals(recurringBillingMode)) {
+                errors.add(new ValidationError(String.format("Catalog recurringBillingMode '%s' is not consistent across versions ", c.getCatalogName()),
+                                               c.getCatalogURI(), VersionedCatalog.class, ""));
+            }
             errors.addAll(c.validate(c, errors));
         }
-        //TODO MDW validation - ensure all catalog versions have a single name
-        //TODO MDW validation - ensure effective dates are different (actually do we want this?)
-        //TODO MDW validation - check that all products are there
-        //TODO MDW validation - check that all plans are there
-        //TODO MDW validation - check that all currencies are there
-        //TODO MDW validation - check that all pricelists are there
         return errors;
     }
 

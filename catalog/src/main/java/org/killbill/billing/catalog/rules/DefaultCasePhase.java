@@ -16,8 +16,11 @@
 
 package org.killbill.billing.catalog.rules;
 
+import java.net.URI;
+
 import javax.xml.bind.annotation.XmlElement;
 
+import org.killbill.billing.catalog.CatalogSafetyInitializer;
 import org.killbill.billing.catalog.StandaloneCatalog;
 import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.catalog.api.PhaseType;
@@ -56,6 +59,13 @@ public abstract class DefaultCasePhase<T> extends DefaultCaseStandardNaming<T> {
     public ValidationErrors validate(final StandaloneCatalog catalog, final ValidationErrors errors) {
         return errors;
     }
+
+    @Override
+    public void initialize(final StandaloneCatalog catalog, final URI sourceURI) {
+        super.initialize(catalog, sourceURI);
+        CatalogSafetyInitializer.initializeNonRequiredNullFieldsWithDefaultValue(this);
+    }
+
 
     public DefaultCasePhase<T> setPhaseType(final PhaseType phaseType) {
         this.phaseType = phaseType;
