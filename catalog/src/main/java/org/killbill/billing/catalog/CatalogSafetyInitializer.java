@@ -19,6 +19,9 @@ package org.killbill.billing.catalog;
 
 import java.lang.reflect.Array;
 import java.lang.reflect.Field;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.Map;
 
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElementWrapper;
@@ -28,28 +31,26 @@ import org.killbill.billing.catalog.api.FixedType;
 
 public class CatalogSafetyInitializer {
 
+
     public static final Integer DEFAULT_NON_REQUIRED_INTEGER_FIELD_VALUE = -1;
+
+    private static final Map<Class, LinkedList<Field>> perCatalogClassNonRequiredFields = new HashMap<Class, LinkedList<Field>>();
 
     //
     // Ensure that all uninitialized arrays for which there is neither a 'required' XmlElementWrapper or XmlElement annotation
     // end up initialized with a default zero length array (allowing to safely get the length and iterate over (0) element.
     //
     public static void initializeNonRequiredNullFieldsWithDefaultValue(final Object obj) {
+
+        LinkedList<Field> fields = perCatalogClassNonRequiredFields.get(obj.getClass());
+        if (fields == null) {
+            fields = initializeNonRequiredFields(obj.getClass());
+            perCatalogClassNonRequiredFields.put(obj.getClass(), fields);
+        }
         try {
-            final Field[] fields = obj.getClass().getDeclaredFields();
             for (final Field f : fields) {
                 if (f.getType().isArray()) {
-                    final XmlElementWrapper xmlElementWrapper = f.getAnnotation(XmlElementWrapper.class);
-                    if (xmlElementWrapper != null) {
-                        if (!xmlElementWrapper.required()) {
-                            initializeArrayIfNull(obj, f);
-                        }
-                    } else {
-                        final XmlElement xmlElement = f.getAnnotation(XmlElement.class);
-                        if (xmlElement != null && !xmlElement.required()) {
-                            initializeArrayIfNull(obj, f);
-                        }
-                    }
+                    initializeArrayIfNull(obj, f);
                 } else if (!f.getType().isPrimitive()) {
                     if (f.getType().isEnum()) {
                         if (FixedType.class.equals(f.getType())) {
@@ -67,6 +68,39 @@ public class CatalogSafetyInitializer {
         } catch (final ClassNotFoundException e) {
             throw new RuntimeException("Failed during catalog initialization : ", e);
         }
+    }
+
+    // For each type of catalog object we keep the 'Field' associated to non required attribute fields
+    private static LinkedList<Field> initializeNonRequiredFields(final Class<?> aClass) {
+
+        final LinkedList<Field> result = new LinkedList();
+        final Field[] fields = aClass.getDeclaredFields();
+        for (final Field f : fields) {
+            if (f.getType().isArray()) {
+                final XmlElementWrapper xmlElementWrapper = f.getAnnotation(XmlElementWrapper.class);
+                if (xmlElementWrapper != null) {
+                    if (!xmlElementWrapper.required()) {
+                        result.add(f);
+                    }
+                } else {
+                    final XmlElement xmlElement = f.getAnnotation(XmlElement.class);
+                    if (xmlElement != null && !xmlElement.required()) {
+                        result.add(f);
+                    }
+                }
+            } else if (!f.getType().isPrimitive()) {
+                if (f.getType().isEnum()) {
+                    if (FixedType.class.equals(f.getType())) {
+                        result.add(f);
+                    } else if (BlockType.class.equals(f.getType())) {
+                        result.add(f);
+                    }
+                } else if (Integer.class.equals(f.getType())) {
+                    result.add(f);
+                }
+            }
+        }
+        return result;
     }
 
     private static void initializeFieldWithValue(final Object obj, final Field f, final Object value) throws IllegalAccessException, ClassNotFoundException {
