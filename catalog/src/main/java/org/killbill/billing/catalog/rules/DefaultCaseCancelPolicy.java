@@ -74,4 +74,17 @@ public class DefaultCaseCancelPolicy extends DefaultCasePhase<BillingActionPolic
         result = 31 * result + (policy != null ? policy.hashCode() : 0);
         return result;
     }
+
+    @Override
+    public String toString() {
+        return "DefaultCaseCancelPolicy{" +
+               "policy =" + policy +
+               ", phaseType =" + getPhaseType() +
+               ", product=" + getProduct() +
+               ", productCategory=" + getProductCategory() +
+               ", billingPeriod=" + getBillingPeriod() +
+               ", priceList=" + getPriceList() +
+               '}';
+    }
+
 }

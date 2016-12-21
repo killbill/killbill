@@ -125,7 +125,7 @@ public class DefaultInternationalPrice extends ValidatingConfig<StandaloneCatalo
     @Override
     public void initialize(final StandaloneCatalog root, final URI uri) {
         super.initialize(root, uri);
-        CatalogSafetyInitializer.initializeNonRequiredArrayFields(this);
+        CatalogSafetyInitializer.initializeNonRequiredNullFieldsWithDefaultValue(this);
     }
 
 

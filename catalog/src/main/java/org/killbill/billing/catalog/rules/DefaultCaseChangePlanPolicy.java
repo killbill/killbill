@@ -16,16 +16,16 @@
 
 package org.killbill.billing.catalog.rules;
 
+import java.net.URI;
+
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlSeeAlso;
 
+import org.killbill.billing.catalog.CatalogSafetyInitializer;
+import org.killbill.billing.catalog.StandaloneCatalog;
 import org.killbill.billing.catalog.api.BillingActionPolicy;
-import org.killbill.billing.catalog.api.BillingPeriod;
-import org.killbill.billing.catalog.api.PhaseType;
-import org.killbill.billing.catalog.api.PriceList;
-import org.killbill.billing.catalog.api.Product;
-import org.killbill.billing.catalog.api.ProductCategory;
 import org.killbill.billing.catalog.api.rules.CaseChangePlanPolicy;
+import org.killbill.xmlloader.ValidationErrors;
 
 @XmlSeeAlso(DefaultCaseChange.class)
 public class DefaultCaseChangePlanPolicy extends DefaultCaseChange<BillingActionPolicy> implements CaseChangePlanPolicy {
@@ -46,6 +46,17 @@ public class DefaultCaseChangePlanPolicy extends DefaultCaseChange<BillingAction
     @Override
     public BillingActionPolicy getBillingActionPolicy() {
         return policy;
+    }
+
+    @Override
+    public ValidationErrors validate(final StandaloneCatalog catalog, final ValidationErrors errors) {
+        return errors;
+    }
+
+    @Override
+    public void initialize(final StandaloneCatalog catalog, final URI sourceURI) {
+        super.initialize(catalog, sourceURI);
+        CatalogSafetyInitializer.initializeNonRequiredNullFieldsWithDefaultValue(this);
     }
 
     @Override
@@ -74,5 +85,21 @@ public class DefaultCaseChangePlanPolicy extends DefaultCaseChange<BillingAction
         int result = super.hashCode();
         result = 31 * result + (policy != null ? policy.hashCode() : 0);
         return result;
+    }
+
+    @Override
+    public String toString() {
+        return "DefaultCaseChangePlanPolicy {" +
+               "policy=" + policy +
+               ", phaseType=" + phaseType +
+               ", fromProduct=" + getFromProduct() +
+               ", fromProductCategory=" + getFromProductCategory() +
+               ", fromBillingPeriod=" + getFromBillingPeriod() +
+               ", fromPriceList=" + getFromPriceList() +
+               ", toProduct=" + getToProduct() +
+               ", toProductCategory=" + getToProductCategory() +
+               ", toBillingPeriod=" + getToBillingPeriod() +
+               ", toPriceList=" + getToPriceList() +
+               '}';
     }
 }

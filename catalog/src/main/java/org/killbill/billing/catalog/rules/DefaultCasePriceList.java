@@ -143,4 +143,16 @@ public class DefaultCasePriceList extends DefaultCaseStandardNaming<DefaultPrice
         result = 31 * result + (toPriceList != null ? toPriceList.hashCode() : 0);
         return result;
     }
+
+
+    @Override
+    public String toString() {
+        return "DefaultCasePriceList {" +
+               "fromProduct=" + fromProduct +
+               ", fromProductCategory=" + fromProductCategory +
+               ", fromBillingPeriod=" + fromBillingPeriod +
+               ", fromPriceList=" + fromPriceList +
+               ", toPriceList=" + toPriceList +
+               '}';
+    }
 }
