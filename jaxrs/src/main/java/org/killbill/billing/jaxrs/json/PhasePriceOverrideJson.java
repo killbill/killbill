@@ -189,7 +189,7 @@ public class PhasePriceOverrideJson {
                         for (final TierPriceOverrideJson tierPriceOverrideJson : usageOverrideJson.getTierPriceOverrides()) {
                             List<TieredBlockPriceOverride> blockPriceOverrides = new LinkedList<TieredBlockPriceOverride>();
                             for (final BlockPriceOverrideJson block : tierPriceOverrideJson.getBlockPriceOverrides()) {
-                                DefaultTieredBlockPriceOverride tieredBlockPriceOverride = new DefaultTieredBlockPriceOverride( block.getUnitName(), block.getSize(), block.getPrice(), block.getMax());
+                                DefaultTieredBlockPriceOverride tieredBlockPriceOverride = new DefaultTieredBlockPriceOverride( block.getUnitName(), block.getSize(), block.getPrice(),currency, block.getMax());
                                 blockPriceOverrides.add(tieredBlockPriceOverride);
                             }
                             DefaultTierPriceOverride tierPriceOverride = new DefaultTierPriceOverride(blockPriceOverrides);

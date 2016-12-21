@@ -20,6 +20,7 @@ package org.killbill.billing.catalog;
 import java.math.BigDecimal;
 
 import org.killbill.billing.catalog.api.BlockPriceOverride;
+import org.killbill.billing.catalog.api.Currency;
 
 public class DefaultBlockPriceOverride implements BlockPriceOverride {
 
@@ -28,6 +29,8 @@ public class DefaultBlockPriceOverride implements BlockPriceOverride {
     private Double size;
 
     private BigDecimal price;
+
+    private Currency currency;
 
     @Override
     public String getUnitName() {
@@ -44,9 +47,15 @@ public class DefaultBlockPriceOverride implements BlockPriceOverride {
         return price;
     }
 
-    public DefaultBlockPriceOverride( String unitName, Double size, BigDecimal price) {
+    @Override
+    public Currency getCurrency() {
+        return currency;
+    }
+
+    public DefaultBlockPriceOverride( String unitName, Double size, BigDecimal price, Currency currency) {
         this.unitName = unitName;
         this.size = size;
         this.price = price;
+        this.currency = currency;
     }
 }

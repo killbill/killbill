@@ -211,7 +211,7 @@ public class EhCacheOverriddenPlanCache implements OverriddenPlanCache {
             }).orNull();
 
             if(overriddenTierBlock != null) {
-                blockPriceOverrides.add(new DefaultTieredBlockPriceOverride(overriddenTierBlock.getParentUnitName(), overriddenTierBlock.getSize(), overriddenTierBlock.getPrice(), overriddenTierBlock.getMax()));
+                blockPriceOverrides.add(new DefaultTieredBlockPriceOverride(overriddenTierBlock.getParentUnitName(), overriddenTierBlock.getSize(), overriddenTierBlock.getPrice(), Currency.valueOf(overriddenTierBlock.getCurrency()), overriddenTierBlock.getMax()));
             }
         }
         return blockPriceOverrides;

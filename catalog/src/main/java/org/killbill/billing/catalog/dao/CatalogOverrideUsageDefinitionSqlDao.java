@@ -45,7 +45,7 @@ public interface CatalogOverrideUsageDefinitionSqlDao extends Transactional<Cata
                                                                                 @SmartBindBean final InternalTenantContext context);
 
     @SqlQuery
-    public List<CatalogOverrideUsageDefinitionModelDao> getByAttributes(@Bind("parentUsageName") String parentPhaseName,
+    public List<CatalogOverrideUsageDefinitionModelDao> getByAttributes(@Bind("parentUsageName") String parentUsageName,
                                                                         @SmartBindBean final InternalTenantContext context);
 
     @SqlQuery

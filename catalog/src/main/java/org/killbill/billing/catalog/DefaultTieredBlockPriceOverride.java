@@ -19,6 +19,7 @@ package org.killbill.billing.catalog;
 
 import java.math.BigDecimal;
 
+import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.catalog.api.TieredBlockPriceOverride;
 
 public class DefaultTieredBlockPriceOverride extends DefaultBlockPriceOverride implements TieredBlockPriceOverride {
@@ -30,9 +31,8 @@ public class DefaultTieredBlockPriceOverride extends DefaultBlockPriceOverride i
         return max;
     }
 
-    public DefaultTieredBlockPriceOverride(String unitName, Double size, BigDecimal price, Double max) {
-        super(unitName, size, price);
+    public DefaultTieredBlockPriceOverride(String unitName, Double size, BigDecimal price, Currency currency, Double max) {
+        super(unitName, size, price, currency);
         this.max = max;
     }
-
 }

@@ -19,7 +19,7 @@ allTableFields(prefix) ::= <<
 tableValues() ::= <<
   :blockNumber
 , :blockDefRecordId
-, :targetTierRecordId
+, :targetTierDefRecordId
 , :createdDate
 , :createdBy
 , :tenantRecordId
