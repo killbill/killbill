@@ -235,7 +235,7 @@ public class TestSubscriptionItemTree extends InvoiceTestSuiteNoDB {
         final InvoiceItem repair1 = new RepairAdjInvoiceItem(invoiceId, accountId, repairDate1, endDate, amount1.negate(), currency, initial.getId());
 
         final InvoiceItem newItem2 = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, repairDate2, endDate, amount3, rate3, currency);
-        final InvoiceItem repair2 = new RepairAdjInvoiceItem(invoiceId, accountId, repairDate2, endDate, amount2.negate(), currency, initial.getId());
+        final InvoiceItem repair2 = new RepairAdjInvoiceItem(invoiceId, accountId, repairDate2, endDate, amount2.negate(), currency, newItem1.getId());
 
         final List<InvoiceItem> expectedResult = Lists.newLinkedList();
         final InvoiceItem expected1 = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, startDate, repairDate1, new BigDecimal("8.52"), rate1, currency);
@@ -463,6 +463,102 @@ public class TestSubscriptionItemTree extends InvoiceTestSuiteNoDB {
         tree.addItem(annual);
         tree.build();
         verifyResult(tree.getView(), expectedResult);
+    }
+
+    @Test(groups = "fast", description = "https://github.com/killbill/killbill/issues/664")
+    public void testOverlappingRecurring() {
+        final LocalDate startDate1 = new LocalDate(2012, 5, 1);
+        final LocalDate startDate2 = new LocalDate(2012, 5, 2);
+        final LocalDate endDate = new LocalDate(2012, 6, 1);
+
+        final BigDecimal rate = BigDecimal.TEN;
+        final BigDecimal amount = rate;
+
+        final InvoiceItem recurring1 = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, startDate1, endDate, amount, rate, currency);
+        final InvoiceItem recurring2 = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, startDate2, endDate, amount, rate, currency);
+
+        final SubscriptionItemTree tree = new SubscriptionItemTree(subscriptionId, invoiceId);
+        tree.addItem(recurring1);
+        tree.addItem(recurring2);
+
+        try {
+            tree.build();
+            fail();
+        } catch (final IllegalStateException e) {
+        }
+    }
+
+    @Test(groups = "fast")
+    public void testInvalidRepairCausingOverlappingRecurring() {
+        final LocalDate startDate = new LocalDate(2014, 1, 1);
+        final LocalDate endDate = new LocalDate(2014, 2, 1);
+
+        final LocalDate repairDate1 = new LocalDate(2014, 1, 23);
+
+        final LocalDate repairDate2 = new LocalDate(2014, 1, 26);
+
+        final BigDecimal rate1 = new BigDecimal("12.00");
+        final BigDecimal amount1 = rate1;
+
+        final BigDecimal rate2 = new BigDecimal("14.85");
+        final BigDecimal amount2 = rate2;
+
+        final BigDecimal rate3 = new BigDecimal("19.23");
+        final BigDecimal amount3 = rate3;
+
+        final InvoiceItem initial = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, startDate, endDate, amount1, rate1, currency);
+        final InvoiceItem newItem1 = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, repairDate1, endDate, amount2, rate2, currency);
+        final InvoiceItem repair1 = new RepairAdjInvoiceItem(invoiceId, accountId, repairDate1, endDate, amount1.negate(), currency, initial.getId());
+
+        final InvoiceItem newItem2 = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, repairDate2, endDate, amount3, rate3, currency);
+        // This repair should point to newItem1 instead
+        final InvoiceItem repair2 = new RepairAdjInvoiceItem(invoiceId, accountId, repairDate2, endDate, amount2.negate(), currency, initial.getId());
+
+        // Out-of-order insertion to show ordering doesn't matter
+        final SubscriptionItemTree tree = new SubscriptionItemTree(subscriptionId, invoiceId);
+        tree.addItem(repair1);
+        tree.addItem(repair2);
+        tree.addItem(initial);
+        tree.addItem(newItem1);
+        tree.addItem(newItem2);
+
+        try {
+            tree.build();
+            fail();
+        } catch (final IllegalStateException e) {
+        }
+    }
+
+    @Test(groups = "fast")
+    public void testInvalidRepairCausingOverlappingRecurringV2() {
+        final LocalDate startDate = new LocalDate(2014, 1, 1);
+        final LocalDate endDate = new LocalDate(2014, 2, 1);
+
+        final LocalDate repairDate1 = new LocalDate(2014, 1, 23);
+
+        final LocalDate repairDate2 = new LocalDate(2014, 1, 26);
+
+        final BigDecimal rate1 = new BigDecimal("12.00");
+        final BigDecimal amount1 = rate1;
+
+        final BigDecimal rate2 = new BigDecimal("14.85");
+        final BigDecimal amount2 = rate2;
+
+        final InvoiceItem initial = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, startDate, endDate, amount1, rate1, currency);
+        final InvoiceItem newItem1 = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, repairDate1, endDate, amount2, rate2, currency);
+        final InvoiceItem repair1 = new RepairAdjInvoiceItem(invoiceId, accountId, repairDate2, endDate, amount1.negate(), currency, initial.getId());
+
+        // Out-of-order insertion to show ordering doesn't matter
+        final SubscriptionItemTree tree = new SubscriptionItemTree(subscriptionId, invoiceId);
+        tree.addItem(repair1);
+        tree.addItem(initial);
+        tree.addItem(newItem1);
+
+        try {
+            tree.build();
+            fail();
+        } catch (final IllegalStateException e) {
+        }
     }
 
     // The test that first repair (repair1) and new Item (newItem1) end up being ignored.

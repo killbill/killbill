@@ -60,7 +60,6 @@ public class TestInvoiceModule extends DefaultInvoiceModule {
         install(new MockTenantModule(configSource));
 
 
-        install(new TagStoreModule(configSource));
         install(new CustomFieldModule(configSource));
         install(new UsageModule(configSource));
         installExternalApis();

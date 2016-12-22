@@ -24,14 +24,13 @@ import java.util.UUID;
 import org.joda.time.DateTime;
 import org.joda.time.Days;
 import org.joda.time.LocalDate;
-
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.invoice.api.InvoiceItem;
 import org.killbill.billing.invoice.generator.InvoiceDateUtils;
 import org.killbill.billing.invoice.model.RecurringInvoiceItem;
 import org.killbill.billing.invoice.model.RepairAdjInvoiceItem;
-import org.killbill.billing.util.currency.KillBillMoney;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
 
@@ -135,8 +134,7 @@ public class Item {
             return new RecurringInvoiceItem(id, createdDate, invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, newStartDate, newEndDate, positiveAmount, rate, currency);
         } else {
             // We first compute the maximum amount after adjustment and that sets the amount limit of how much can be repaired.
-            final BigDecimal maxAvailableAmountAfterAdj = amount.subtract(adjustedAmount);
-            final BigDecimal maxAvailableAmountForRepair = maxAvailableAmountAfterAdj.subtract(currentRepairedAmount);
+            final BigDecimal maxAvailableAmountForRepair = getNetAmount();
             final BigDecimal positiveAmountForRepair = positiveAmount.compareTo(maxAvailableAmountForRepair) <= 0 ? positiveAmount : maxAvailableAmountForRepair;
             return positiveAmountForRepair.compareTo(BigDecimal.ZERO) > 0 ? new RepairAdjInvoiceItem(targetInvoiceId, accountId, newStartDate, newEndDate, positiveAmountForRepair.negate(), currency, linkedId) : null;
         }
@@ -150,6 +148,11 @@ public class Item {
     public void incrementCurrentRepairedAmount(final BigDecimal increment) {
         Preconditions.checkState(increment.compareTo(BigDecimal.ZERO) > 0, "Invalid repair increment='%s', item=%s", increment, this);
         currentRepairedAmount = currentRepairedAmount.add(increment);
+    }
+
+    @JsonIgnore
+    public BigDecimal getNetAmount() {
+        return amount.subtract(adjustedAmount).subtract(currentRepairedAmount);
     }
 
     public ItemAction getAction() {

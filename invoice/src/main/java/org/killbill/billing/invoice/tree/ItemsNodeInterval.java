@@ -27,6 +27,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicReference;
 
 import org.joda.time.LocalDate;
 import org.killbill.billing.invoice.api.InvoiceItem;
@@ -47,7 +48,7 @@ public class ItemsNodeInterval extends NodeInterval {
         this.targetInvoiceId = targetInvoiceId;
     }
 
-    public ItemsNodeInterval(final NodeInterval parent, final UUID targetInvoiceId, final Item item) {
+    public ItemsNodeInterval(final ItemsNodeInterval parent, final UUID targetInvoiceId, final Item item) {
         super(parent, item.getStartDate(), item.getEndDate());
         this.items = new ItemsInterval(this, targetInvoiceId, item);
         this.targetInvoiceId = targetInvoiceId;
@@ -323,9 +324,7 @@ public class ItemsNodeInterval extends NodeInterval {
                                    public void onCurrentNode(final int depth, final NodeInterval curNode, final NodeInterval parent) {
                                        final ItemsInterval curChildItems = ((ItemsNodeInterval) curNode).getItemsInterval();
                                        final Item cancelledItem = curChildItems.getCancelledItemIfExists(curCancelItem.getLinkedId());
-                                       if (cancelledItem != null) {
-                                           throw new IllegalStateException(String.format("Invalid cancelledItem=%s for cancelItem=%s", cancelledItem, curCancelItem));
-                                       }
+                                       Preconditions.checkState(cancelledItem == null, "Invalid cancelledItem=%s for cancelItem=%s", cancelledItem, curCancelItem);
                                    }
                                });
                     }
@@ -339,8 +338,25 @@ public class ItemsNodeInterval extends NodeInterval {
                             return cancelledItem != null;
                         }
                     });
-                    if (nodeIntervalForCancelledItem == null) {
-                        throw new IllegalStateException(String.format("Missing cancelledItem for cancelItem=%s", curCancelItem));
+                    Preconditions.checkState(nodeIntervalForCancelledItem != null, "Missing cancelledItem for cancelItem=%s", curCancelItem);
+                }
+
+                for (final Item curAddItem : curNodeItems.get_ADD_items()) {
+                    // Sanity: verify the item hasn't been adjusted too much
+                    if (curNode.getLeftChild() != null) {
+                        final AtomicReference<BigDecimal> totalRepaired = new AtomicReference<BigDecimal>(BigDecimal.ZERO);
+                        curNode.getLeftChild()
+                               .walkTree(new WalkCallback() {
+                                   @Override
+                                   public void onCurrentNode(final int depth, final NodeInterval curNode, final NodeInterval parent) {
+                                       final ItemsInterval curChildItems = ((ItemsNodeInterval) curNode).getItemsInterval();
+                                       final Item cancelledItem = curChildItems.getCancellingItemIfExists(curAddItem.getId());
+                                       if (cancelledItem != null) {
+                                           totalRepaired.set(totalRepaired.get().add(cancelledItem.getAmount()));
+                                       }
+                                   }
+                               });
+                        Preconditions.checkState(curAddItem.getNetAmount().compareTo(totalRepaired.get()) >= 0, "Item %s overly repaired", curAddItem);
                     }
                 }
 

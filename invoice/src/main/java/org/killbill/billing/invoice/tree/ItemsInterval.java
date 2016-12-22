@@ -21,8 +21,10 @@ package org.killbill.billing.invoice.tree;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 import org.joda.time.LocalDate;
@@ -42,14 +44,14 @@ import com.google.common.collect.Multimap;
 public class ItemsInterval {
 
     private final UUID targetInvoiceId;
-    private final NodeInterval interval;
+    private final ItemsNodeInterval interval;
     private LinkedList<Item> items;
 
-    public ItemsInterval(final NodeInterval interval, final UUID targetInvoiceId) {
+    public ItemsInterval(final ItemsNodeInterval interval, final UUID targetInvoiceId) {
         this(interval, targetInvoiceId, null);
     }
 
-    public ItemsInterval(final NodeInterval interval, final UUID targetInvoiceId, final Item initialItem) {
+    public ItemsInterval(final ItemsNodeInterval interval, final UUID targetInvoiceId, final Item initialItem) {
         this.interval = interval;
         this.targetInvoiceId = targetInvoiceId;
         this.items = Lists.newLinkedList();
@@ -145,6 +147,10 @@ public class ItemsInterval {
 
     private Item getResulting_CANCEL_Item() {
         Preconditions.checkState(items.size() == 0 || items.size() == 1);
+        return getResulting_CANCEL_ItemNoChecks();
+    }
+
+    private Item getResulting_CANCEL_ItemNoChecks() {
         return Iterables.tryFind(items, new Predicate<Item>() {
             @Override
             public boolean apply(final Item input) {
@@ -167,7 +173,38 @@ public class ItemsInterval {
         Preconditions.checkState(items.size() <= 2, "Double billing detected: %s", items);
 
         final Item item = items.size() > 0 && items.get(0).getAction() == ItemAction.ADD ? items.get(0) : null;
+
+        if (item != null) {
+            final Set<UUID> addItemsCancelled = new HashSet<UUID>();
+            if (items.size() > 1) {
+                addItemsCancelled.add(items.get(1).getLinkedId());
+            }
+            final Set<UUID> addItemsToBeCancelled = new HashSet<UUID>();
+            checkDoubleBilling(addItemsCancelled, addItemsToBeCancelled);
+        }
+
         return item;
+    }
+
+    private void checkDoubleBilling(final Set<UUID> addItemsCancelled, final Set<UUID> addItemsToBeCancelled) {
+        final ItemsNodeInterval parentNodeInterval = (ItemsNodeInterval) interval.getParent();
+        if (parentNodeInterval == null) {
+            Preconditions.checkState(addItemsCancelled.equals(addItemsToBeCancelled), "Double billing detected: addItemsCancelled=%s, addItemsToBeCancelled=%s", addItemsCancelled, addItemsToBeCancelled);
+            return;
+        }
+        final ItemsInterval parentItemsInterval = parentNodeInterval.getItemsInterval();
+
+        final Item parentAddItem = parentItemsInterval.getResulting_ADD_Item();
+        if (parentAddItem != null) {
+            addItemsToBeCancelled.add(parentAddItem.getId());
+        }
+
+        final Item parentCancelItem = parentItemsInterval.getResulting_CANCEL_ItemNoChecks();
+        if (parentCancelItem != null) {
+            addItemsCancelled.add(parentCancelItem.getLinkedId());
+        }
+
+        parentItemsInterval.checkDoubleBilling(addItemsCancelled, addItemsToBeCancelled);
     }
 
     // Just ensure that ADD items precedes CANCEL items

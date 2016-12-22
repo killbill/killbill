@@ -162,6 +162,7 @@ public class TestInvoiceHelper {
     private final GlobalLocker locker;
     private final Clock clock;
     private final NonEntityDao nonEntityDao;
+    private final ParkedAccountsManager parkedAccountsManager;
     private final MutableInternalCallContext internalCallContext;
     private final InternalCallContextFactory internalCallContextFactory;
     private final InvoiceConfig invoiceConfig;
@@ -174,7 +175,7 @@ public class TestInvoiceHelper {
     public TestInvoiceHelper(final InvoiceGenerator generator, final IDBI dbi,
                              final BillingInternalApi billingApi, final AccountInternalApi accountApi, final ImmutableAccountInternalApi immutableAccountApi, final InvoicePluginDispatcher invoicePluginDispatcher, final AccountUserApi accountUserApi, final SubscriptionBaseInternalApi subscriptionApi, final BusService busService,
                              final InvoiceDao invoiceDao, final GlobalLocker locker, final Clock clock, final NonEntityDao nonEntityDao, final CacheControllerDispatcher cacheControllerDispatcher, final MutableInternalCallContext internalCallContext, final InvoiceConfig invoiceConfig,
-                             final InternalCallContextFactory internalCallContextFactory) {
+                             final ParkedAccountsManager parkedAccountsManager, final InternalCallContextFactory internalCallContextFactory) {
         this.generator = generator;
         this.billingApi = billingApi;
         this.accountApi = accountApi;
@@ -187,6 +188,7 @@ public class TestInvoiceHelper {
         this.locker = locker;
         this.clock = clock;
         this.nonEntityDao = nonEntityDao;
+        this.parkedAccountsManager = parkedAccountsManager;
         this.internalCallContext = internalCallContext;
         this.internalCallContextFactory = internalCallContextFactory;
         this.invoiceItemSqlDao = dbi.onDemand(InvoiceItemSqlDao.class);
@@ -213,7 +215,7 @@ public class TestInvoiceHelper {
         final InvoiceNotifier invoiceNotifier = new NullInvoiceNotifier();
         final InvoiceDispatcher dispatcher = new InvoiceDispatcher(generator, accountApi, billingApi, subscriptionApi,
                                                                    invoiceDao, internalCallContextFactory, invoiceNotifier, invoicePluginDispatcher, locker, busService.getBus(),
-                                                                   null, invoiceConfig, clock);
+                                                                   null, invoiceConfig, clock, parkedAccountsManager);
 
         Invoice invoice = dispatcher.processAccount(account.getId(), targetDate, new DryRunFutureDateArguments(), internalCallContext);
         Assert.assertNotNull(invoice);
