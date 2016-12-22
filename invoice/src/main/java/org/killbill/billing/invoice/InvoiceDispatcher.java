@@ -93,6 +93,7 @@ import org.killbill.billing.subscription.api.SubscriptionBaseInternalApi;
 import org.killbill.billing.subscription.api.SubscriptionBaseTransitionType;
 import org.killbill.billing.subscription.api.user.SubscriptionBaseApiException;
 import org.killbill.billing.util.UUIDs;
+import org.killbill.billing.util.api.TagApiException;
 import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.billing.util.callcontext.TenantContext;
@@ -144,6 +145,7 @@ public class InvoiceDispatcher {
     private final Clock clock;
     private final NotificationQueueService notificationQueueService;
     private final InvoiceConfig invoiceConfig;
+    private final ParkedAccountsManager parkedAccountsManager;
 
     @Inject
     public InvoiceDispatcher(final InvoiceGenerator generator,
@@ -158,7 +160,8 @@ public class InvoiceDispatcher {
                              final PersistentBus eventBus,
                              final NotificationQueueService notificationQueueService,
                              final InvoiceConfig invoiceConfig,
-                             final Clock clock) {
+                             final Clock clock,
+                             final ParkedAccountsManager parkedAccountsManager) {
         this.generator = generator;
         this.billingApi = billingApi;
         this.subscriptionApi = SubscriptionApi;
@@ -172,6 +175,7 @@ public class InvoiceDispatcher {
         this.clock = clock;
         this.notificationQueueService = notificationQueueService;
         this.invoiceConfig = invoiceConfig;
+        this.parkedAccountsManager = parkedAccountsManager;
     }
 
     public void processSubscriptionForInvoiceGeneration(final EffectiveSubscriptionInternalEvent transition,
@@ -215,13 +219,34 @@ public class InvoiceDispatcher {
         }
     }
 
-    public Invoice processAccount(final UUID accountId, @Nullable final LocalDate targetDate,
-                                  @Nullable final DryRunArguments dryRunArguments, final InternalCallContext context) throws InvoiceApiException {
+    public Invoice processAccount(final UUID accountId,
+                                  @Nullable final LocalDate targetDate,
+                                  @Nullable final DryRunArguments dryRunArguments,
+                                  final InternalCallContext context) throws InvoiceApiException {
+        return processAccount(false, accountId, targetDate, dryRunArguments, context);
+    }
+
+    public Invoice processAccount(final boolean isApiCall,
+                                  final UUID accountId,
+                                  @Nullable final LocalDate targetDate,
+                                  @Nullable final DryRunArguments dryRunArguments,
+                                  final InternalCallContext context) throws InvoiceApiException {
+        boolean parkedAccount = false;
+        try {
+            parkedAccount = parkedAccountsManager.isParked(accountId, context);
+            if (parkedAccount && !isApiCall) {
+                log.warn("Ignoring invoice generation process for accountId='{}', targetDate='{}', account is parked", accountId.toString(), targetDate);
+                return null;
+            }
+        } catch (final TagApiException e) {
+            log.warn("Unable to determine parking state for accountId='{}'", accountId);
+        }
+
         GlobalLock lock = null;
         try {
             lock = locker.lockWithNumberOfTries(LockerType.ACCNT_INV_PAY.toString(), accountId.toString(), invoiceConfig.getMaxGlobalLockRetries());
 
-            return processAccountWithLock(accountId, targetDate, dryRunArguments, context);
+            return processAccountWithLock(parkedAccount, accountId, targetDate, dryRunArguments, context);
         } catch (final LockFailedException e) {
             log.warn("Failed to process invoice for accountId='{}', targetDate='{}'", accountId.toString(), targetDate, e);
         } finally {
@@ -232,8 +257,11 @@ public class InvoiceDispatcher {
         return null;
     }
 
-    private Invoice processAccountWithLock(final UUID accountId, @Nullable final LocalDate inputTargetDateMaybeNull,
-                                           @Nullable final DryRunArguments dryRunArguments, final InternalCallContext context) throws InvoiceApiException {
+    private Invoice processAccountWithLock(final boolean parkedAccount,
+                                           final UUID accountId,
+                                           @Nullable final LocalDate inputTargetDateMaybeNull,
+                                           @Nullable final DryRunArguments dryRunArguments,
+                                           final InternalCallContext context) throws InvoiceApiException {
         final boolean isDryRun = dryRunArguments != null;
         final boolean upcomingInvoiceDryRun = isDryRun && DryRunType.UPCOMING_INVOICE.equals(dryRunArguments.getDryRunType());
 
@@ -258,6 +286,16 @@ public class InvoiceDispatcher {
                 final Invoice invoice = processAccountWithLockAndInputTargetDate(accountId, curTargetDate, billingEvents, isDryRun, context);
                 if (invoice != null) {
                     filterInvoiceItemsForDryRun(filteredSubscriptionIdsForDryRun, invoice);
+
+                    if (!isDryRun && parkedAccount) {
+                        try {
+                            log.info("Illegal invoicing state fixed for accountId='{}', unparking account", accountId);
+                            parkedAccountsManager.unparkAccount(accountId, context);
+                        } catch (final TagApiException ignored) {
+                            log.warn("Unable to unpark account", ignored);
+                        }
+                    }
+
                     return invoice;
                 }
             }
@@ -271,6 +309,16 @@ public class InvoiceDispatcher {
         } catch (final SubscriptionBaseApiException e) {
             log.warn("Failed to retrieve BillingEvents for accountId='{}', dryRunArguments='{}'", accountId, dryRunArguments, e);
             return null;
+        } catch (final InvoiceApiException e) {
+            if (e.getCode() == ErrorCode.UNEXPECTED_ERROR.getCode() && !isDryRun) {
+                log.warn("Illegal invoicing state detected for accountId='{}', dryRunArguments='{}', parking account", accountId, dryRunArguments, e);
+                try {
+                    parkedAccountsManager.parkAccount(accountId, context);
+                } catch (final TagApiException ignored) {
+                    log.warn("Unable to park account", ignored);
+                }
+            }
+            throw e;
         }
     }
 
