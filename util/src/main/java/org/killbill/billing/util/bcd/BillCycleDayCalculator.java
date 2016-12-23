@@ -20,9 +20,13 @@ package org.killbill.billing.util.bcd;
 import java.util.Map;
 import java.util.UUID;
 
+import javax.annotation.Nullable;
+
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
+import org.joda.time.LocalDate;
 import org.killbill.billing.catalog.api.BillingAlignment;
+import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.subscription.api.SubscriptionBase;
 import org.killbill.clock.ClockUtil;
 import org.slf4j.Logger;
@@ -32,7 +36,7 @@ public abstract class BillCycleDayCalculator {
 
     private static final Logger log = LoggerFactory.getLogger(BillCycleDayCalculator.class);
 
-    public static int calculateBcdForAlignment(final Map<UUID, Integer> bcdCache, final SubscriptionBase subscription, final SubscriptionBase baseSubscription, final BillingAlignment alignment, final DateTimeZone accountTimeZone, final int accountBillCycleDayLocal) {
+    public static int calculateBcdForAlignment(@Nullable final Map<UUID, Integer> bcdCache, final SubscriptionBase subscription, final SubscriptionBase baseSubscription, final BillingAlignment alignment, final DateTimeZone accountTimeZone, final int accountBillCycleDayLocal) {
         int result = 0;
         switch (alignment) {
             case ACCOUNT:
@@ -48,11 +52,33 @@ public abstract class BillCycleDayCalculator {
         return result;
     }
 
-    private static int calculateOrRetrieveBcdFromSubscription(final Map<UUID, Integer> bcdCache, final SubscriptionBase subscription, final DateTimeZone accountTimeZone) {
-        Integer result = bcdCache.get(subscription.getId());
+    public static LocalDate alignProposedBillCycleDate(final LocalDate proposedDate, final int billingCycleDay, final BillingPeriod billingPeriod) {
+        // billingCycleDay alignment only makes sense for month based BillingPeriod (MONTHLY, QUARTERLY, BIANNUAL, ANNUAL)
+        final boolean isMonthBased = (billingPeriod.getPeriod().getMonths() | billingPeriod.getPeriod().getYears()) > 0;
+        if (!isMonthBased) {
+            return proposedDate;
+        }
+        final int lastDayOfMonth = proposedDate.dayOfMonth().getMaximumValue();
+        int proposedBillCycleDate = proposedDate.getDayOfMonth();
+        if (proposedBillCycleDate < billingCycleDay && billingCycleDay <= lastDayOfMonth) {
+            proposedBillCycleDate = billingCycleDay;
+        }
+        return new LocalDate(proposedDate.getYear(), proposedDate.getMonthOfYear(), proposedBillCycleDate, proposedDate.getChronology());
+    }
+
+    public static LocalDate alignProposedBillCycleDate(final DateTime proposedDate, final int billingCycleDay, final BillingPeriod billingPeriod, final DateTimeZone accountTimeZone) {
+        final LocalDate proposedLocalDate = ClockUtil.toLocalDate(proposedDate, accountTimeZone);
+        final LocalDate resultingLocalDate = alignProposedBillCycleDate(proposedLocalDate, billingCycleDay, billingPeriod);
+        return resultingLocalDate;
+    }
+
+    private static int calculateOrRetrieveBcdFromSubscription(@Nullable final Map<UUID, Integer> bcdCache, final SubscriptionBase subscription, final DateTimeZone accountTimeZone) {
+        Integer result = bcdCache != null ? bcdCache.get(subscription.getId()) : null;
         if (result == null) {
             result = calculateBcdFromSubscription(subscription, accountTimeZone);
-            bcdCache.put(subscription.getId(), result);
+            if (bcdCache != null) {
+                bcdCache.put(subscription.getId(), result);
+            }
         }
         return result;
     }

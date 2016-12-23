@@ -192,6 +192,7 @@ public class DefaultPlanRules extends ValidatingConfig<StandaloneCatalog> implem
                 cur.getToPriceList() == null) {
                 foundDefaultCase = true;
             }
+            cur.validate(catalog, errors);
         }
         if (!foundDefaultCase) {
             errors.add(new ValidationError("Missing default rule case for plan change", catalog.getCatalogURI(), DefaultPlanRules.class, ""));
@@ -212,6 +213,7 @@ public class DefaultPlanRules extends ValidatingConfig<StandaloneCatalog> implem
                 cur.getPriceList() == null) {
                 foundDefaultCase = true;
             }
+            cur.validate(catalog, errors);
         }
         if (!foundDefaultCase) {
             errors.add(new ValidationError("Missing default rule case for plan cancellation", catalog.getCatalogURI(), DefaultPlanRules.class, ""));
@@ -225,6 +227,7 @@ public class DefaultPlanRules extends ValidatingConfig<StandaloneCatalog> implem
             } else {
                 caseChangePlanAlignmentsSet.add(cur);
             }
+            cur.validate(catalog, errors);
         }
 
         final HashSet<DefaultCaseCreateAlignment> caseCreateAlignmentsSet = new HashSet<DefaultCaseCreateAlignment>();
@@ -234,6 +237,7 @@ public class DefaultPlanRules extends ValidatingConfig<StandaloneCatalog> implem
             } else {
                 caseCreateAlignmentsSet.add(cur);
             }
+            cur.validate(catalog, errors);
         }
 
         final HashSet<DefaultCaseBillingAlignment> caseBillingAlignmentsSet = new HashSet<DefaultCaseBillingAlignment>();
@@ -243,6 +247,7 @@ public class DefaultPlanRules extends ValidatingConfig<StandaloneCatalog> implem
             } else {
                 caseBillingAlignmentsSet.add(cur);
             }
+            cur.validate(catalog, errors);
         }
 
         final HashSet<DefaultCasePriceList> casePriceListsSet = new HashSet<DefaultCasePriceList>();
@@ -252,6 +257,7 @@ public class DefaultPlanRules extends ValidatingConfig<StandaloneCatalog> implem
             } else {
                 casePriceListsSet.add(cur);
             }
+            cur.validate(catalog, errors);
         }
         return errors;
     }

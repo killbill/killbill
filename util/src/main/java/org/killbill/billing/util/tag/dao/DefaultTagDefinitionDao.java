@@ -24,30 +24,28 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.UUID;
 
-import org.killbill.billing.util.callcontext.InternalCallContextFactory;
-import org.skife.jdbi.v2.IDBI;
-import org.skife.jdbi.v2.exceptions.TransactionFailedException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import org.killbill.billing.BillingExceptionBase;
 import org.killbill.billing.ErrorCode;
-import org.killbill.bus.api.PersistentBus;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
-import org.killbill.clock.Clock;
 import org.killbill.billing.events.TagDefinitionInternalEvent;
 import org.killbill.billing.util.api.TagDefinitionApiException;
 import org.killbill.billing.util.audit.ChangeType;
 import org.killbill.billing.util.cache.CacheControllerDispatcher;
+import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.billing.util.dao.NonEntityDao;
 import org.killbill.billing.util.entity.dao.EntityDaoBase;
 import org.killbill.billing.util.entity.dao.EntitySqlDaoTransactionWrapper;
 import org.killbill.billing.util.entity.dao.EntitySqlDaoTransactionalJdbiWrapper;
 import org.killbill.billing.util.entity.dao.EntitySqlDaoWrapperFactory;
-import org.killbill.billing.util.tag.ControlTagType;
 import org.killbill.billing.util.tag.TagDefinition;
 import org.killbill.billing.util.tag.api.user.TagEventBuilder;
+import org.killbill.bus.api.PersistentBus;
+import org.killbill.clock.Clock;
+import org.skife.jdbi.v2.IDBI;
+import org.skife.jdbi.v2.exceptions.TransactionFailedException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Function;
 import com.google.common.collect.Collections2;
@@ -81,9 +79,7 @@ public class DefaultTagDefinitionDao extends EntityDaoBase<TagDefinitionModelDao
                 Iterators.addAll(definitionList, all);
 
                 // Add invoice tag definitions
-                for (final ControlTagType controlTag : ControlTagType.values()) {
-                    definitionList.add(new TagDefinitionModelDao(controlTag));
-                }
+                definitionList.addAll(SystemTags.all());
                 return definitionList;
             }
         });
@@ -94,12 +90,8 @@ public class DefaultTagDefinitionDao extends EntityDaoBase<TagDefinitionModelDao
         return transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<TagDefinitionModelDao>() {
             @Override
             public TagDefinitionModelDao inTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory) throws Exception {
-                for (final ControlTagType controlTag : ControlTagType.values()) {
-                    if (controlTag.name().equals(definitionName)) {
-                        return new TagDefinitionModelDao(controlTag);
-                    }
-                }
-                return entitySqlDaoWrapperFactory.become(TagDefinitionSqlDao.class).getByName(definitionName, context);
+                final TagDefinitionModelDao tagDefinitionModelDao = SystemTags.lookup(definitionName);
+                return tagDefinitionModelDao != null ? tagDefinitionModelDao : entitySqlDaoWrapperFactory.become(TagDefinitionSqlDao.class).getByName(definitionName, context);
             }
         });
     }
@@ -109,12 +101,8 @@ public class DefaultTagDefinitionDao extends EntityDaoBase<TagDefinitionModelDao
         return transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<TagDefinitionModelDao>() {
             @Override
             public TagDefinitionModelDao inTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory) throws Exception {
-                for (final ControlTagType controlTag : ControlTagType.values()) {
-                    if (controlTag.getId().equals(definitionId)) {
-                        return new TagDefinitionModelDao(controlTag);
-                    }
-                }
-                return entitySqlDaoWrapperFactory.become(TagDefinitionSqlDao.class).getById(definitionId.toString(), context);
+                final TagDefinitionModelDao tagDefinitionModelDao = SystemTags.lookup(definitionId);
+                return tagDefinitionModelDao != null ? tagDefinitionModelDao : entitySqlDaoWrapperFactory.become(TagDefinitionSqlDao.class).getById(definitionId.toString(), context);
             }
         });
     }
@@ -126,11 +114,9 @@ public class DefaultTagDefinitionDao extends EntityDaoBase<TagDefinitionModelDao
             public List<TagDefinitionModelDao> inTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory) throws Exception {
                 final List<TagDefinitionModelDao> result = new LinkedList<TagDefinitionModelDao>();
                 for (final UUID cur : definitionIds) {
-                    for (final ControlTagType controlTag : ControlTagType.values()) {
-                        if (controlTag.getId().equals(cur)) {
-                            result.add(new TagDefinitionModelDao(controlTag));
-                            break;
-                        }
+                    final TagDefinitionModelDao tagDefinitionModelDao = SystemTags.lookup(cur);
+                    if (tagDefinitionModelDao != null) {
+                        result.add(tagDefinitionModelDao);
                     }
                 }
                 if (definitionIds.size() > 0) {

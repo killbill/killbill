@@ -19,11 +19,13 @@
 package org.killbill.billing.invoice.tree;
 
 import java.util.Collection;
-import java.util.Collections;
-import java.util.Comparator;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
+
+import javax.annotation.Nullable;
 
 import org.joda.time.LocalDate;
 import org.killbill.billing.invoice.api.InvoiceItem;
@@ -31,65 +33,79 @@ import org.killbill.billing.invoice.tree.Item.ItemAction;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
+import com.google.common.collect.Collections2;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.LinkedListMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
 
 /**
- * Keeps track of all the items existing on a specified interval.
+ * Keeps track of all the items existing on a specified ItemsNodeInterval
  */
 public class ItemsInterval {
 
-    private final UUID targetInvoiceId;
-    private final NodeInterval interval;
-    private LinkedList<Item> items;
+    // Parent (enclosing) interval
+    private final ItemsNodeInterval interval;
+    private final LinkedList<Item> items;
 
-    public ItemsInterval(final NodeInterval interval, final UUID targetInvoiceId) {
-        this(interval, targetInvoiceId, null);
+    public ItemsInterval(final ItemsNodeInterval interval) {
+        this(interval, null);
     }
 
-    public ItemsInterval(final NodeInterval interval, final UUID targetInvoiceId, final Item initialItem) {
+    public ItemsInterval(final ItemsNodeInterval interval, final Item initialItem) {
         this.interval = interval;
-        this.targetInvoiceId = targetInvoiceId;
         this.items = Lists.newLinkedList();
         if (initialItem != null) {
             items.add(initialItem);
         }
     }
 
-    public Item findItem(final UUID targetId) {
-        return Iterables.tryFind(items, new Predicate<Item>() {
-            @Override
-            public boolean apply(final Item input) {
-                return input.getId().equals(targetId);
-            }
-        }).orNull();
-    }
-
     public List<Item> getItems() {
         return items;
     }
 
-    public void buildForMissingInterval(final LocalDate startDate, final LocalDate endDate, final List<Item> output, final boolean addRepair) {
-        final Item item = createNewItem(startDate, endDate, addRepair);
-        if (item != null) {
-            output.add(item);
-        }
+    public Iterable<Item> get_ADD_items() {
+        return findItems(ItemAction.ADD);
     }
 
-    /**
-     * Determines what is left based on the mergeMode and the action for each item.
-     *
-     * @param output
-     * @param mergeMode
-     * @return whether or not the parent should ignore the interval covered by the child interval
-     */
-    public void buildFromItems(final List<Item> output, final boolean mergeMode) {
-        final Item item = getResultingItem(mergeMode);
-        if (item != null) {
-            output.add(item);
-        }
+    public Iterable<Item> get_CANCEL_items() {
+        return findItems(ItemAction.CANCEL);
+    }
+
+    public Item getCancellingItemIfExists(final UUID targetId) {
+        return Iterables.tryFind(items,
+                                 new Predicate<Item>() {
+                                     @Override
+                                     public boolean apply(final Item input) {
+                                         return input.getAction() == ItemAction.CANCEL && input.getLinkedId().equals(targetId);
+                                     }
+                                 }).orNull();
+    }
+
+    public Item getCancelledItemIfExists(final UUID linkedId) {
+        return Iterables.tryFind(items,
+                                 new Predicate<Item>() {
+                                     @Override
+                                     public boolean apply(final Item input) {
+                                         return input.getAction() == ItemAction.ADD && input.getId().equals(linkedId);
+                                     }
+                                 }).orNull();
+    }
+
+    public NodeInterval getNodeInterval() {
+        return interval;
+    }
+
+    public Item findItem(final UUID targetId) {
+        final Collection<Item> matchingItems = Collections2.<Item>filter(items,
+                                                                         new Predicate<Item>() {
+                                                                             @Override
+                                                                             public boolean apply(final Item input) {
+                                                                                 return input.getId().equals(targetId);
+                                                                             }
+                                                                         });
+        Preconditions.checkState(matchingItems.size() < 2, "Too many items matching id='%s' among items='%s'", targetId, items);
+        return matchingItems.size() == 1 ? matchingItems.iterator().next() : null;
     }
 
     /**
@@ -117,74 +133,8 @@ public class ItemsInterval {
         return items.isEmpty();
     }
 
-    public Iterable<Item> get_ADD_items() {
-        return Iterables.filter(items, new Predicate<Item>() {
-            @Override
-            public boolean apply(final Item input) {
-                return input.getAction() == ItemAction.ADD;
-            }
-        });
-    }
-
-    public Iterable<Item> get_CANCEL_items() {
-        return Iterables.filter(items, new Predicate<Item>() {
-            @Override
-            public boolean apply(final Item input) {
-                return input.getAction() == ItemAction.CANCEL;
-            }
-        });
-    }
-
-    public NodeInterval getNodeInterval() {
-        return interval;
-    }
-
-    private Item getResultingItem(final boolean mergeMode) {
-        return mergeMode ? getResulting_CANCEL_Item() : getResulting_ADD_Item();
-    }
-
-    private Item getResulting_CANCEL_Item() {
-        Preconditions.checkState(items.size() == 0 || items.size() == 1);
-        return Iterables.tryFind(items, new Predicate<Item>() {
-            @Override
-            public boolean apply(final Item input) {
-                return input.getAction() == ItemAction.CANCEL;
-            }
-        }).orNull();
-    }
-
-    private Item getResulting_ADD_Item() {
-
-        //
-        // At this point we pruned the items so that we can have either:
-        // - 2 items (ADD + CANCEL, where CANCEL does NOT point to ADD item-- otherwise this is a cancelling pair that
-        //            would have been removed in mergeCancellingPairs logic)
-        // - 1 ADD item, simple enough we return it
-        // - 1 CANCEL, there is nothing to return but the period will be ignored by the parent
-        // - Nothing at all; this valid, this just means its original items got removed during mergeCancellingPairs logic,
-        //   but its NodeInterval has children so it could not be deleted.
-        //
-        Preconditions.checkState(items.size() <= 2, "Double billing detected: %s", items);
-
-        final Item item = items.size() > 0 && items.get(0).getAction() == ItemAction.ADD ? items.get(0) : null;
-        return item;
-    }
-
-    // Just ensure that ADD items precedes CANCEL items
-    public void insertSortedItem(final Item item) {
+    public void add(final Item item) {
         items.add(item);
-        Collections.sort(items, new Comparator<Item>() {
-            @Override
-            public int compare(final Item o1, final Item o2) {
-                if (o1.getAction() == ItemAction.ADD && o2.getAction() == ItemAction.CANCEL) {
-                    return -1;
-                } else if (o1.getAction() == ItemAction.CANCEL && o2.getAction() == ItemAction.ADD) {
-                    return 1;
-                } else {
-                    return 0;
-                }
-            }
-        });
     }
 
     public void cancelItems(final Item item) {
@@ -198,61 +148,139 @@ public class ItemsInterval {
         items.remove(item);
     }
 
-    public Item getCancellingItemIfExists(final UUID targetId) {
-        return Iterables.tryFind(items,
-                                 new Predicate<Item>() {
-                                     @Override
-                                     public boolean apply(final Item input) {
-                                         return input.getAction() == ItemAction.CANCEL && input.getLinkedId().equals(targetId);
-                                     }
-                                 }).orNull();
+    // Called for missing service periods
+    public void buildForMissingInterval(@Nullable final LocalDate startDate, @Nullable final LocalDate endDate, @Nullable final UUID targetInvoiceId, final Collection<Item> output, final boolean addRepair) {
+        final Item item = createNewItem(startDate, endDate, targetInvoiceId, addRepair);
+        if (item != null) {
+            output.add(item);
+        }
     }
 
-    public Item getCancelledItemIfExists(final UUID linkedId) {
-        return Iterables.tryFind(items,
-                                 new Predicate<Item>() {
-                                     @Override
-                                     public boolean apply(final Item input) {
-                                         return input.getAction() == ItemAction.ADD && input.getId().equals(linkedId);
-                                     }
-                                 }).orNull();
-    }
-
-    public int size() {
-        return items.size();
+    // Called on the last node
+    public void buildFromItems(final Collection<Item> output, final boolean mergeMode) {
+        buildForMissingInterval(null, null, null, output, mergeMode);
     }
 
     /**
-     * Creates a new item.
+     * Create a new item based on the existing items and new service period
      * <p/>
      * <ul>
-     * <li>In normal mode, we only consider ADD items. This happens when for instance an existing item was partially repaired
+     * <li>During the build phase, we only consider ADD items. This happens when for instance an existing item was partially repaired
      * and there is a need to create a new item which represents the part left -- that was not repaired.
-     * <li>In mergeMode, we allow to create new items that are the missing repaired items (CANCEL).
+     * <li>During the merge phase, we create new items that are the missing repaired items (CANCEL).
      * </ul>
      *
      * @param startDate start date of the new item to create
      * @param endDate   end date of the new item to create
      * @param mergeMode mode to consider.
-     * @return
+     * @return new item for this service period or null
      */
-    private Item createNewItem(final LocalDate startDate, final LocalDate endDate, final boolean mergeMode) {
-
+    private Item createNewItem(@Nullable final LocalDate startDate, @Nullable final LocalDate endDate, @Nullable final UUID targetInvoiceId, final boolean mergeMode) {
+        // Find the ADD (build phase) or CANCEL (merge phase) item of this interval
         final Item item = getResultingItem(mergeMode);
-        if (item == null) {
-            return null;
+        if (item == null || startDate == null || endDate == null || targetInvoiceId == null) {
+            return item;
         }
 
+        // Prorate (build phase) or repair (merge phase) this item, as needed
         final InvoiceItem proratedInvoiceItem = item.toProratedInvoiceItem(startDate, endDate);
         if (proratedInvoiceItem == null) {
             return null;
+        } else {
+            // Keep track of the repaired amount for this item
+            item.incrementCurrentRepairedAmount(proratedInvoiceItem.getAmount().abs());
+            return new Item(proratedInvoiceItem, targetInvoiceId, item.getAction());
         }
-
-        final Item result = new Item(proratedInvoiceItem, targetInvoiceId, item.getAction());
-        if (item.getAction() == ItemAction.CANCEL) {
-            item.incrementCurrentRepairedAmount(result.getAmount());
-        }
-        return result;
     }
 
+    private Item getResultingItem(final boolean mergeMode) {
+        return mergeMode ? getResulting_CANCEL_Item() : getResulting_ADD_Item();
+    }
+
+    private Item getResulting_CANCEL_Item() {
+        Preconditions.checkState(items.size() <= 1, "Too many items=%s", items);
+        return getResulting_CANCEL_ItemNoChecks();
+    }
+
+    private Item getResulting_CANCEL_ItemNoChecks() {
+        return findItem(ItemAction.CANCEL);
+    }
+
+    private Item getResulting_ADD_Item() {
+        //
+        // At this point we pruned the items so that we can have either:
+        // - 2 items (ADD + CANCEL, where CANCEL does NOT point to ADD item -- otherwise this is a cancelling pair that
+        //            would have been removed in mergeCancellingPairs logic)
+        // - 1 ADD item, simple enough we return it
+        // - 1 CANCEL, there is nothing to return but the period will be ignored by the parent
+        // - Nothing at all; this valid, this just means its original items got removed during mergeCancellingPairs logic,
+        //   but its NodeInterval has children so it could not be deleted.
+        //
+        Preconditions.checkState(items.size() <= 2, "Double billing detected: %s", items);
+
+        final Collection<Item> addItems = findItems(ItemAction.ADD);
+        Preconditions.checkState(addItems.size() <= 1, "Double billing detected: %s", items);
+
+        final Item item = findItem(ItemAction.ADD);
+
+        // Double billing sanity check across nodes
+        if (item != null) {
+            final Set<UUID> addItemsCancelled = new HashSet<UUID>();
+            final Item cancelItem = findItem(ItemAction.CANCEL);
+            if (cancelItem != null) {
+                Preconditions.checkState(cancelItem.getLinkedId() != null, "Invalid CANCEL item=%s", cancelItem);
+                addItemsCancelled.add(cancelItem.getLinkedId());
+            }
+            final Set<UUID> addItemsToBeCancelled = new HashSet<UUID>();
+            checkDoubleBilling(addItemsCancelled, addItemsToBeCancelled);
+        }
+
+        return item;
+    }
+
+    private void checkDoubleBilling(final Set<UUID> addItemsCancelled, final Set<UUID> addItemsToBeCancelled) {
+        final ItemsNodeInterval parentNodeInterval = (ItemsNodeInterval) interval.getParent();
+        if (parentNodeInterval == null) {
+            Preconditions.checkState(addItemsCancelled.equals(addItemsToBeCancelled), "Double billing detected: addItemsCancelled=%s, addItemsToBeCancelled=%s", addItemsCancelled, addItemsToBeCancelled);
+            return;
+        }
+        final ItemsInterval parentItemsInterval = parentNodeInterval.getItemsInterval();
+
+        final Item parentAddItem = parentItemsInterval.getResulting_ADD_Item();
+        if (parentAddItem != null) {
+            Preconditions.checkState(parentAddItem.getId() != null, "Invalid ADD item=%s", parentAddItem);
+            addItemsToBeCancelled.add(parentAddItem.getId());
+        }
+
+        final Item parentCancelItem = parentItemsInterval.getResulting_CANCEL_ItemNoChecks();
+        if (parentCancelItem != null) {
+            Preconditions.checkState(parentCancelItem.getLinkedId() != null, "Invalid CANCEL item=%s", parentCancelItem);
+            addItemsCancelled.add(parentCancelItem.getLinkedId());
+        }
+
+        parentItemsInterval.checkDoubleBilling(addItemsCancelled, addItemsToBeCancelled);
+    }
+
+    private Item findItem(final ItemAction itemAction) {
+        final Collection<Item> matchingItems = findItems(itemAction);
+        return matchingItems.size() == 1 ? matchingItems.iterator().next() : null;
+    }
+
+    private Collection<Item> findItems(final ItemAction itemAction) {
+        return Collections2.<Item>filter(items,
+                                         new Predicate<Item>() {
+                                             @Override
+                                             public boolean apply(final Item input) {
+                                                 return input.getAction() == itemAction;
+                                             }
+                                         });
+    }
+
+    @Override
+    public String toString() {
+        final StringBuilder sb = new StringBuilder("ItemsInterval{");
+        sb.append("items=").append(items);
+        sb.append('}');
+        return sb.toString();
+    }
 }

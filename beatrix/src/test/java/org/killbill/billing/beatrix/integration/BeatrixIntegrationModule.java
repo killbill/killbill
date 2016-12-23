@@ -18,6 +18,8 @@
 
 package org.killbill.billing.beatrix.integration;
 
+import javax.annotation.Nullable;
+
 import org.killbill.billing.GuicyKillbillTestWithEmbeddedDBModule;
 import org.killbill.billing.account.glue.DefaultAccountModule;
 import org.killbill.billing.api.TestApiListener;
@@ -42,6 +44,7 @@ import org.killbill.billing.platform.api.KillbillConfigSource;
 import org.killbill.billing.subscription.glue.DefaultSubscriptionModule;
 import org.killbill.billing.tenant.glue.DefaultTenantModule;
 import org.killbill.billing.usage.glue.UsageModule;
+import org.killbill.billing.util.config.definition.InvoiceConfig;
 import org.killbill.billing.util.config.definition.PaymentConfig;
 import org.killbill.billing.util.email.EmailModule;
 import org.killbill.billing.util.email.templates.TemplateModule;
@@ -68,8 +71,15 @@ public class BeatrixIntegrationModule extends KillBillModule {
     // Same name the osgi-payment-test plugin uses to register its service
     public static final String OSGI_PLUGIN_NAME = "osgi-payment-plugin";
 
+    private final InvoiceConfig invoiceConfig;
+
     public BeatrixIntegrationModule(final KillbillConfigSource configSource) {
+        this(configSource, null);
+    }
+
+    public BeatrixIntegrationModule(final KillbillConfigSource configSource, @Nullable final InvoiceConfig invoiceConfig) {
         super(configSource);
+        this.invoiceConfig = invoiceConfig;
     }
 
     @Override
@@ -113,7 +123,7 @@ public class BeatrixIntegrationModule extends KillBillModule {
         bind(TestApiListener.class).asEagerSingleton();
     }
 
-    private static final class DefaultInvoiceModuleWithSwitchRepairLogic extends DefaultInvoiceModule {
+    private final class DefaultInvoiceModuleWithSwitchRepairLogic extends DefaultInvoiceModule {
 
         private DefaultInvoiceModuleWithSwitchRepairLogic(final KillbillConfigSource configSource) {
             super(configSource);
@@ -121,6 +131,15 @@ public class BeatrixIntegrationModule extends KillBillModule {
 
         protected void installInvoiceGenerator() {
             bind(InvoiceGenerator.class).to(DefaultInvoiceGenerator.class).asEagerSingleton();
+        }
+
+        @Override
+        protected void installConfig() {
+            if (invoiceConfig != null) {
+                super.installConfig(invoiceConfig);
+            } else {
+                super.installConfig();
+            }
         }
     }
 

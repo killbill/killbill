@@ -20,6 +20,7 @@ import java.util.List;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
 import org.killbill.billing.catalog.api.PlanPhasePriceOverride;
 import org.killbill.billing.catalog.api.PlanSpecifier;
 import org.mockito.Mockito;
@@ -71,9 +72,9 @@ public class MockSubscription implements SubscriptionBase {
     }
 
     @Override
-    public boolean cancelWithPolicy(BillingActionPolicy policy, CallContext context)
+    public boolean cancelWithPolicy(BillingActionPolicy policy, final DateTimeZone accountTimeZone, int accountBillCycleDayLocal, CallContext context)
             throws SubscriptionBaseApiException {
-        return sub.cancelWithPolicy(policy, context);
+        return sub.cancelWithPolicy(policy, accountTimeZone, accountBillCycleDayLocal, context);
     }
 
     @Override

@@ -22,6 +22,7 @@ import org.killbill.billing.glue.InvoiceModule;
 import org.killbill.billing.invoice.InvoiceDispatcher;
 import org.killbill.billing.invoice.InvoiceListener;
 import org.killbill.billing.invoice.InvoiceTagHandler;
+import org.killbill.billing.invoice.ParkedAccountsManager;
 import org.killbill.billing.invoice.api.DefaultInvoiceService;
 import org.killbill.billing.invoice.api.InvoiceApiHelper;
 import org.killbill.billing.invoice.api.InvoiceInternalApi;
@@ -64,7 +65,6 @@ import com.google.inject.name.Names;
 
 public class DefaultInvoiceModule extends KillBillModule implements InvoiceModule {
 
-
     InvoiceConfig staticInvoiceConfig;
 
     public DefaultInvoiceModule(final KillbillConfigSource configSource) {
@@ -93,7 +93,11 @@ public class DefaultInvoiceModule extends KillBillModule implements InvoiceModul
     }
 
     protected void installConfig() {
-        staticInvoiceConfig = new ConfigurationObjectFactory(skifeConfigSource).build(InvoiceConfig.class);
+        installConfig(new ConfigurationObjectFactory(skifeConfigSource).build(InvoiceConfig.class));
+    }
+
+    protected void installConfig(final InvoiceConfig staticInvoiceConfig) {
+        this.staticInvoiceConfig = staticInvoiceConfig;
         bind(InvoiceConfig.class).annotatedWith(Names.named(STATIC_CONFIG)).toInstance(staticInvoiceConfig);
         bind(InvoiceConfig.class).to(MultiTenantInvoiceConfig.class).asEagerSingleton();
     }
@@ -164,5 +168,6 @@ public class DefaultInvoiceModule extends KillBillModule implements InvoiceModul
         installResourceBundleFactory();
         bind(RawUsageOptimizer.class).asEagerSingleton();
         bind(InvoiceApiHelper.class).asEagerSingleton();
+        bind(ParkedAccountsManager.class).asEagerSingleton();
     }
 }

@@ -42,6 +42,8 @@ import org.killbill.billing.payment.dispatcher.PluginDispatcher;
 import org.killbill.billing.payment.dispatcher.PluginDispatcher.PluginDispatcherReturnType;
 import org.killbill.billing.payment.plugin.api.PaymentPluginApiException;
 import org.killbill.billing.payment.plugin.api.PaymentTransactionInfoPlugin;
+import org.killbill.billing.payment.provider.MockPaymentProviderPlugin;
+import org.killbill.billing.platform.api.KillbillConfigSource;
 import org.killbill.billing.util.config.definition.PaymentConfig;
 import org.killbill.commons.locker.GlobalLocker;
 import org.killbill.commons.locker.memory.MemoryGlobalLocker;
@@ -51,6 +53,7 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.jayway.awaitility.Awaitility;
 
 public class TestPluginOperation extends PaymentTestSuiteNoDB {
@@ -61,6 +64,15 @@ public class TestPluginOperation extends PaymentTestSuiteNoDB {
 
     private final GlobalLocker locker = new MemoryGlobalLocker();
     private final Account account = Mockito.mock(Account.class);
+
+    @Override
+    protected KillbillConfigSource getConfigSource() {
+        return getConfigSource("/payment.properties",
+                               ImmutableMap.<String, String>of("org.killbill.payment.provider.default", MockPaymentProviderPlugin.PLUGIN_NAME,
+                                                               "killbill.payment.engine.events.off", "false",
+                                                               "org.killbill.payment.globalLock.retries", "1"));
+
+    }
 
     @BeforeMethod(groups = "fast")
     public void beforeMethod() throws Exception {

@@ -109,6 +109,8 @@ public abstract class InvoiceTestSuiteWithEmbeddedDB extends GuicyKillbillTestSu
     protected InvoicePluginDispatcher invoicePluginDispatcher;
     @Inject
     protected InvoiceConfig invoiceConfig;
+    @Inject
+    protected ParkedAccountsManager parkedAccountsManager;
 
     @Override
     protected KillbillConfigSource getConfigSource() {

@@ -21,6 +21,7 @@ import java.util.UUID;
 
 import org.joda.time.DateTime;
 
+import org.joda.time.DateTimeZone;
 import org.killbill.billing.catalog.api.BillingActionPolicy;
 import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.catalog.api.Plan;
@@ -46,7 +47,7 @@ public interface SubscriptionBase extends Entity, Blockable {
     public boolean cancelWithDate(final DateTime requestedDate, final CallContext context)
             throws SubscriptionBaseApiException;
 
-    public boolean cancelWithPolicy(final BillingActionPolicy policy, final CallContext context)
+    public boolean cancelWithPolicy(final BillingActionPolicy policy, final DateTimeZone accountTimeZone, int accountBillCycleDayLocal, final CallContext context)
             throws SubscriptionBaseApiException;
 
     public boolean uncancel(final CallContext context)

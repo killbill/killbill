@@ -50,7 +50,7 @@ public interface SubscriptionBaseInternalApi {
     public List<SubscriptionBaseWithAddOns> createBaseSubscriptionsWithAddOns(UUID accountId, Iterable<BaseEntitlementWithAddOnsSpecifier> baseEntitlementWithAddOnsSpecifier,
                                                                               InternalCallContext contextWithValidAccountRecordId) throws SubscriptionBaseApiException;
 
-    public void cancelBaseSubscriptions(Iterable<SubscriptionBase> subscriptions, BillingActionPolicy policy, InternalCallContext context) throws SubscriptionBaseApiException;
+    public void cancelBaseSubscriptions(Iterable<SubscriptionBase> subscriptions, BillingActionPolicy policy, DateTimeZone accountTimeZone, int accountBillCycleDayLocal, InternalCallContext context) throws SubscriptionBaseApiException;
 
     public SubscriptionBaseBundle createBundleForAccount(UUID accountId, String bundleName, InternalCallContext context)
             throws SubscriptionBaseApiException;

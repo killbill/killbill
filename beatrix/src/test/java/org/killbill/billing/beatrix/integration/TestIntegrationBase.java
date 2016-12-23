@@ -48,6 +48,7 @@ import org.killbill.billing.beatrix.util.InvoiceChecker;
 import org.killbill.billing.beatrix.util.PaymentChecker;
 import org.killbill.billing.beatrix.util.RefundChecker;
 import org.killbill.billing.beatrix.util.SubscriptionChecker;
+import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.catalog.api.BillingActionPolicy;
 import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.catalog.api.Currency;
@@ -65,6 +66,7 @@ import org.killbill.billing.entitlement.api.EntitlementApi;
 import org.killbill.billing.entitlement.api.EntitlementApiException;
 import org.killbill.billing.entitlement.api.SubscriptionApi;
 import org.killbill.billing.entitlement.api.SubscriptionEventType;
+import org.killbill.billing.invoice.ParkedAccountsManager;
 import org.killbill.billing.invoice.api.DryRunArguments;
 import org.killbill.billing.invoice.api.DryRunType;
 import org.killbill.billing.invoice.api.Invoice;
@@ -111,11 +113,14 @@ import org.killbill.billing.util.api.TagApiException;
 import org.killbill.billing.util.api.TagDefinitionApiException;
 import org.killbill.billing.util.api.TagUserApi;
 import org.killbill.billing.util.cache.CacheControllerDispatcher;
+import org.killbill.billing.util.config.definition.InvoiceConfig;
 import org.killbill.billing.util.dao.NonEntityDao;
 import org.killbill.billing.util.nodes.KillbillNodesApi;
 import org.killbill.billing.util.tag.ControlTagType;
 import org.killbill.billing.util.tag.Tag;
 import org.killbill.bus.api.PersistentBus;
+import org.skife.config.ConfigurationObjectFactory;
+import org.skife.config.TimeSpan;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
@@ -283,13 +288,20 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB {
     @Inject
     protected CacheControllerDispatcher controllerDispatcher;
 
+    @Inject
+    protected ParkedAccountsManager parkedAccountsManager;
+
+    protected ConfigurableInvoiceConfig invoiceConfig;
+
     protected void assertListenerStatus() {
         busHandler.assertListenerStatus();
     }
 
     @BeforeClass(groups = "slow")
     public void beforeClass() throws Exception {
-        final Injector g = Guice.createInjector(Stage.PRODUCTION, new BeatrixIntegrationModule(configSource));
+        final InvoiceConfig defaultInvoiceConfig = new ConfigurationObjectFactory(skifeConfigSource).build(InvoiceConfig.class);
+        invoiceConfig = new ConfigurableInvoiceConfig(defaultInvoiceConfig);
+        final Injector g = Guice.createInjector(Stage.PRODUCTION, new BeatrixIntegrationModule(configSource, invoiceConfig));
         g.injectMembers(this);
     }
 
@@ -900,6 +912,92 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB {
             final List<PluginProperty> res = new ArrayList<PluginProperty>();
             res.add(prop);
             return res;
+        }
+    }
+
+    static class ConfigurableInvoiceConfig implements InvoiceConfig {
+
+        private final InvoiceConfig defaultInvoiceConfig;
+
+        private boolean isInvoicingSystemEnabled;
+
+        public ConfigurableInvoiceConfig(final InvoiceConfig defaultInvoiceConfig) {
+            this.defaultInvoiceConfig = defaultInvoiceConfig;
+            isInvoicingSystemEnabled = defaultInvoiceConfig.isInvoicingSystemEnabled();
+        }
+
+        @Override
+        public int getNumberOfMonthsInFuture() {
+            return defaultInvoiceConfig.getNumberOfMonthsInFuture();
+        }
+
+        @Override
+        public int getNumberOfMonthsInFuture(final InternalTenantContext tenantContext) {
+            return defaultInvoiceConfig.getNumberOfMonthsInFuture();
+        }
+
+        @Override
+        public boolean isSanitySafetyBoundEnabled() {
+            return defaultInvoiceConfig.isSanitySafetyBoundEnabled();
+        }
+
+        @Override
+        public boolean isSanitySafetyBoundEnabled(final InternalTenantContext tenantContext) {
+            return defaultInvoiceConfig.isSanitySafetyBoundEnabled();
+        }
+
+        @Override
+        public int getMaxDailyNumberOfItemsSafetyBound() {
+            return defaultInvoiceConfig.getMaxDailyNumberOfItemsSafetyBound();
+        }
+
+        @Override
+        public int getMaxDailyNumberOfItemsSafetyBound(final InternalTenantContext tenantContext) {
+            return defaultInvoiceConfig.getMaxDailyNumberOfItemsSafetyBound();
+        }
+
+        @Override
+        public TimeSpan getDryRunNotificationSchedule() {
+            return defaultInvoiceConfig.getDryRunNotificationSchedule();
+        }
+
+        @Override
+        public TimeSpan getDryRunNotificationSchedule(final InternalTenantContext tenantContext) {
+            return defaultInvoiceConfig.getDryRunNotificationSchedule();
+        }
+
+        @Override
+        public int getMaxRawUsagePreviousPeriod() {
+            return defaultInvoiceConfig.getMaxRawUsagePreviousPeriod();
+        }
+
+        @Override
+        public int getMaxRawUsagePreviousPeriod(final InternalTenantContext tenantContext) {
+            return defaultInvoiceConfig.getMaxRawUsagePreviousPeriod();
+        }
+
+        @Override
+        public int getMaxGlobalLockRetries() {
+            return defaultInvoiceConfig.getMaxGlobalLockRetries();
+        }
+
+        @Override
+        public boolean isEmailNotificationsEnabled() {
+            return defaultInvoiceConfig.isEmailNotificationsEnabled();
+        }
+
+        @Override
+        public boolean isInvoicingSystemEnabled() {
+            return isInvoicingSystemEnabled;
+        }
+
+        @Override
+        public boolean isInvoicingSystemEnabled(final InternalTenantContext tenantContext) {
+            return isInvoicingSystemEnabled();
+        }
+
+        public void setInvoicingSystemEnabled(final boolean invoicingSystemEnabled) {
+            isInvoicingSystemEnabled = invoicingSystemEnabled;
         }
     }
 }
