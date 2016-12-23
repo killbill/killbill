@@ -1,0 +1,77 @@
+/*
+ * Copyright 2014-2016 Groupon, Inc
+ * Copyright 2014-2016 The Billing Project, LLC
+ *
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
+ * (the "License"); you may not use this file except in compliance with the
+ * License.  You may obtain a copy of the License at:
+ *
+ *    http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the
+ * License for the specific language governing permissions and limitations
+ * under the License.
+ */
+
+package org.killbill.billing.util.tag.dao;
+
+import java.util.Collection;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.UUID;
+
+import org.killbill.billing.util.tag.ControlTagType;
+
+import com.google.common.collect.ImmutableList;
+
+public class SystemTags {
+
+    // Invoice
+    public static final UUID PARK_TAG_DEFINITION_ID = new UUID(1, 1);
+    public static final String PARK_TAG_DEFINITION_NAME = "__PARK__";
+
+    // Note! TagSqlDao.sql.stg needs to be kept in sync (see userAndSystemTagDefinitions)
+    private static final List<TagDefinitionModelDao> SYSTEM_DEFINED_TAG_DEFINITIONS = ImmutableList.<TagDefinitionModelDao>of(new TagDefinitionModelDao(PARK_TAG_DEFINITION_ID, null, null, PARK_TAG_DEFINITION_NAME, "Accounts with invalid invoicing state"));
+
+    public static Collection<TagDefinitionModelDao> all() {
+        final Collection<TagDefinitionModelDao> all = new LinkedList<TagDefinitionModelDao>(SYSTEM_DEFINED_TAG_DEFINITIONS);
+        for (final ControlTagType controlTag : ControlTagType.values()) {
+            all.add(new TagDefinitionModelDao(controlTag));
+        }
+        return all;
+    }
+
+    public static TagDefinitionModelDao lookup(final String tagDefinitionName) {
+        for (final ControlTagType t : ControlTagType.values()) {
+            if (t.name().equals(tagDefinitionName)) {
+                return new TagDefinitionModelDao(t);
+            }
+        }
+
+        for (final TagDefinitionModelDao t : SYSTEM_DEFINED_TAG_DEFINITIONS) {
+            if (t.getName().equals(tagDefinitionName)) {
+                return t;
+            }
+        }
+
+        return null;
+    }
+
+    public static TagDefinitionModelDao lookup(final UUID tagDefinitionId) {
+        for (final ControlTagType t : ControlTagType.values()) {
+            if (t.getId().equals(tagDefinitionId)) {
+                return new TagDefinitionModelDao(t);
+            }
+        }
+
+        for (final TagDefinitionModelDao t : SYSTEM_DEFINED_TAG_DEFINITIONS) {
+            if (t.getId().equals(tagDefinitionId)) {
+                return t;
+            }
+        }
+
+        return null;
+    }
+}

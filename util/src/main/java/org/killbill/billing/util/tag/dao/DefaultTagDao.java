@@ -166,13 +166,7 @@ public class DefaultTagDao extends EntityDaoBase<TagModelDao, Tag, TagApiExcepti
     }
 
     private TagDefinitionModelDao getTagDefinitionFromTransaction(final UUID tagDefinitionId, final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory, final InternalTenantContext context) throws TagApiException {
-        TagDefinitionModelDao tagDefintion = null;
-        for (final ControlTagType t : ControlTagType.values()) {
-            if (t.getId().equals(tagDefinitionId)) {
-                tagDefintion = new TagDefinitionModelDao(t);
-                break;
-            }
-        }
+        TagDefinitionModelDao tagDefintion = SystemTags.lookup(tagDefinitionId);
         if (tagDefintion == null) {
             final TagDefinitionSqlDao transTagDefintionSqlDao = entitySqlDaoWrapperFactory.become(TagDefinitionSqlDao.class);
             tagDefintion = transTagDefintionSqlDao.getById(tagDefinitionId.toString(), context);

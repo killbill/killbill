@@ -110,68 +110,6 @@ public class TestDefaultInvoiceGenerator extends InvoiceTestSuiteNoDB {
     protected void beforeClass() throws Exception {
         super.beforeClass();
         final Clock clock = new DefaultClock();
-        final InvoiceConfig invoiceConfig = new InvoiceConfig() {
-
-            @Override
-            public int getNumberOfMonthsInFuture() {
-                return 36;
-            }
-
-            @Override
-            public int getNumberOfMonthsInFuture(final InternalTenantContext context) {
-                return getNumberOfMonthsInFuture();
-            }
-
-            @Override
-            public boolean isSanitySafetyBoundEnabled() {
-                return true;
-            }
-
-            @Override
-            public boolean isSanitySafetyBoundEnabled(final InternalTenantContext tenantContext) {
-                return true;
-            }
-
-            @Override
-            public int getMaxDailyNumberOfItemsSafetyBound() {
-                return 10;
-            }
-
-            @Override
-            public int getMaxDailyNumberOfItemsSafetyBound(final InternalTenantContext tenantContext) {
-                return 10;
-            }
-
-            @Override
-            public boolean isEmailNotificationsEnabled() {
-                return false;
-            }
-
-            @Override
-            public TimeSpan getDryRunNotificationSchedule() {
-                return new TimeSpan("0s");
-            }
-
-            @Override
-            public TimeSpan getDryRunNotificationSchedule(final InternalTenantContext context) {
-                return getDryRunNotificationSchedule();
-            }
-
-            @Override
-            public int getMaxRawUsagePreviousPeriod() {
-                return -1;
-            }
-
-            @Override
-            public int getMaxRawUsagePreviousPeriod(final InternalTenantContext context) {
-                return getMaxRawUsagePreviousPeriod();
-            }
-
-            @Override
-            public int getMaxGlobalLockRetries() {
-                return 10;
-            }
-        };
         this.account = new MockAccountBuilder().name(UUID.randomUUID().toString().substring(1, 8))
                                                .firstNameLength(6)
                                                .email(UUID.randomUUID().toString().substring(1, 8))

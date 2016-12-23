@@ -100,6 +100,7 @@ public class TestSubscriptionItemTree extends InvoiceTestSuiteNoDB {
         // Stage II: Try again.. with existing items
         existingItems.addAll(tree.getView());
 
+        assertEquals(existingItems.size(), 5);
         tree = new SubscriptionItemTree(subscriptionId, invoiceId);
         for (InvoiceItem e : existingItems) {
             tree.addItem(e);
@@ -476,6 +477,28 @@ public class TestSubscriptionItemTree extends InvoiceTestSuiteNoDB {
 
         final InvoiceItem recurring1 = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, startDate1, endDate, amount, rate, currency);
         final InvoiceItem recurring2 = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, startDate2, endDate, amount, rate, currency);
+
+        final SubscriptionItemTree tree = new SubscriptionItemTree(subscriptionId, invoiceId);
+        tree.addItem(recurring1);
+        tree.addItem(recurring2);
+
+        try {
+            tree.build();
+            fail();
+        } catch (final IllegalStateException e) {
+        }
+    }
+
+    @Test(groups = "fast", description = "https://github.com/killbill/killbill/issues/664")
+    public void testDoubleBillingOnDifferentInvoices() {
+        final LocalDate startDate1 = new LocalDate(2012, 5, 1);
+        final LocalDate endDate = new LocalDate(2012, 6, 1);
+
+        final BigDecimal rate = BigDecimal.TEN;
+        final BigDecimal amount = rate;
+
+        final InvoiceItem recurring1 = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, startDate1, endDate, amount, rate, currency);
+        final InvoiceItem recurring2 = new RecurringInvoiceItem(UUID.randomUUID(), accountId, bundleId, subscriptionId, planName, phaseName, startDate1, endDate, amount, rate, currency);
 
         final SubscriptionItemTree tree = new SubscriptionItemTree(subscriptionId, invoiceId);
         tree.addItem(recurring1);

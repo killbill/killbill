@@ -27,7 +27,6 @@ import org.joda.time.LocalDate;
 import org.killbill.billing.ErrorCode;
 import org.killbill.billing.account.api.Account;
 import org.killbill.billing.account.api.AccountApiException;
-import org.killbill.billing.callcontext.DefaultTenantContext;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.catalog.MockPlan;
 import org.killbill.billing.catalog.MockPlanPhase;
@@ -56,7 +55,7 @@ import org.killbill.billing.subscription.api.SubscriptionBaseTransitionType;
 import org.killbill.billing.subscription.api.user.SubscriptionBaseApiException;
 import org.killbill.billing.util.api.TagDefinitionApiException;
 import org.killbill.billing.util.tag.Tag;
-import org.killbill.billing.util.tag.TagDefinition;
+import org.killbill.billing.util.tag.dao.SystemTags;
 import org.mockito.Mockito;
 import org.skife.jdbi.v2.Handle;
 import org.skife.jdbi.v2.tweak.HandleCallback;
@@ -80,8 +79,6 @@ public class TestInvoiceDispatcher extends InvoiceTestSuiteWithEmbeddedDB {
         account = invoiceUtil.createAccount(callContext);
         subscription = invoiceUtil.createSubscription();
         context = internalCallContextFactory.createInternalCallContext(account.getId(), callContext);
-        // Tests will delete the database entries, yet ParkedAccountsManager is injected once
-        parkedAccountsManager.retrieveOrCreateParkTagDefinition(clock);
     }
 
     @Test(groups = "slow")
@@ -150,10 +147,6 @@ public class TestInvoiceDispatcher extends InvoiceTestSuiteWithEmbeddedDB {
         final InvoiceDispatcher dispatcher = new InvoiceDispatcher(generator, accountApi, billingApi, subscriptionApi, invoiceDao,
                                                                    internalCallContextFactory, invoiceNotifier, invoicePluginDispatcher, locker, busService.getBus(),
                                                                    null, invoiceConfig, clock, parkedAccountsManager);
-
-        // Verify the __PARK__ tag definition has been created
-        final TagDefinition tagDefinition = tagUserApi.getTagDefinitionForName(ParkedAccountsManager.PARK, new DefaultTenantContext(null));
-        Assert.assertNotNull(tagDefinition);
 
         // Verify initial tags state for account
         Assert.assertTrue(tagUserApi.getTagsForAccount(accountId, true, callContext).isEmpty());
@@ -224,7 +217,7 @@ public class TestInvoiceDispatcher extends InvoiceTestSuiteWithEmbeddedDB {
         // No dry-run: account is parked
         final List<Tag> tags = tagUserApi.getTagsForAccount(accountId, false, callContext);
         Assert.assertEquals(tags.size(), 1);
-        Assert.assertEquals(tags.get(0).getTagDefinitionId(), tagDefinition.getId());
+        Assert.assertEquals(tags.get(0).getTagDefinitionId(), SystemTags.PARK_TAG_DEFINITION_ID);
 
         // isApiCall=false
         final Invoice nullInvoice1 = dispatcher.processAccount(accountId, target, null, context);

@@ -223,6 +223,13 @@ public class InvoiceDispatcher {
                                   @Nullable final LocalDate targetDate,
                                   @Nullable final DryRunArguments dryRunArguments,
                                   final InternalCallContext context) throws InvoiceApiException {
+        // Note that all API calls (dryRun or not) will bypass this (see processAccount below)
+        if (!invoiceConfig.isInvoicingSystemEnabled(context)) {
+            log.warn("Invoicing system is off, parking accountId='{}'", accountId);
+            parkAccount(accountId, context);
+            return null;
+        }
+
         return processAccount(false, accountId, targetDate, dryRunArguments, context);
     }
 
@@ -233,7 +240,7 @@ public class InvoiceDispatcher {
                                   final InternalCallContext context) throws InvoiceApiException {
         boolean parkedAccount = false;
         try {
-            parkedAccount = parkedAccountsManager.isParked(accountId, context);
+            parkedAccount = parkedAccountsManager.isParked(context);
             if (parkedAccount && !isApiCall) {
                 log.warn("Ignoring invoice generation process for accountId='{}', targetDate='{}', account is parked", accountId.toString(), targetDate);
                 return null;
@@ -312,13 +319,17 @@ public class InvoiceDispatcher {
         } catch (final InvoiceApiException e) {
             if (e.getCode() == ErrorCode.UNEXPECTED_ERROR.getCode() && !isDryRun) {
                 log.warn("Illegal invoicing state detected for accountId='{}', dryRunArguments='{}', parking account", accountId, dryRunArguments, e);
-                try {
-                    parkedAccountsManager.parkAccount(accountId, context);
-                } catch (final TagApiException ignored) {
-                    log.warn("Unable to park account", ignored);
-                }
+                parkAccount(accountId, context);
             }
             throw e;
+        }
+    }
+
+    private void parkAccount(final UUID accountId, final InternalCallContext context) {
+        try {
+            parkedAccountsManager.parkAccount(accountId, context);
+        } catch (final TagApiException ignored) {
+            log.warn("Unable to park account", ignored);
         }
     }
 

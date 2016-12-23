@@ -17,13 +17,16 @@
 
 package org.killbill.billing.jaxrs.resources;
 
-import java.util.List;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.net.URI;
 import java.util.UUID;
 
 import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
+import javax.ws.rs.DefaultValue;
 import javax.ws.rs.HeaderParam;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
@@ -31,11 +34,16 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
+import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
+import javax.ws.rs.core.StreamingOutput;
 
+import org.killbill.billing.ErrorCode;
 import org.killbill.billing.ObjectType;
 import org.killbill.billing.account.api.AccountUserApi;
+import org.killbill.billing.invoice.api.InvoiceApiException;
+import org.killbill.billing.invoice.api.InvoiceUserApi;
 import org.killbill.billing.jaxrs.json.AdminPaymentJson;
 import org.killbill.billing.jaxrs.util.Context;
 import org.killbill.billing.jaxrs.util.JaxrsUriBuilder;
@@ -56,10 +64,15 @@ import org.killbill.billing.util.api.TagUserApi;
 import org.killbill.billing.util.cache.Cachable.CacheType;
 import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.TenantContext;
+import org.killbill.billing.util.entity.Pagination;
+import org.killbill.billing.util.tag.Tag;
+import org.killbill.billing.util.tag.dao.SystemTags;
 import org.killbill.clock.Clock;
 
+import com.fasterxml.jackson.core.JsonGenerator;
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 import com.google.inject.Singleton;
 import io.swagger.annotations.Api;
@@ -77,19 +90,20 @@ import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 public class AdminResource extends JaxRsResourceBase {
 
     private final AdminPaymentApi adminPaymentApi;
+    private final InvoiceUserApi invoiceUserApi;
     private final TenantUserApi tenantApi;
     private final CacheManager cacheManager;
     private final RecordIdApi recordIdApi;
 
     @Inject
-    public AdminResource(final JaxrsUriBuilder uriBuilder, final TagUserApi tagUserApi, final CustomFieldUserApi customFieldUserApi, final AuditUserApi auditUserApi, final AccountUserApi accountUserApi, final PaymentApi paymentApi, final AdminPaymentApi adminPaymentApi, final CacheManager cacheManager, final TenantUserApi tenantApi, final RecordIdApi recordIdApi, final Clock clock, final Context context) {
+    public AdminResource(final JaxrsUriBuilder uriBuilder, final TagUserApi tagUserApi, final CustomFieldUserApi customFieldUserApi, final AuditUserApi auditUserApi, final AccountUserApi accountUserApi, final PaymentApi paymentApi, final AdminPaymentApi adminPaymentApi, final InvoiceUserApi invoiceUserApi, final CacheManager cacheManager, final TenantUserApi tenantApi, final RecordIdApi recordIdApi, final Clock clock, final Context context) {
         super(uriBuilder, tagUserApi, customFieldUserApi, auditUserApi, accountUserApi, paymentApi, null, clock, context);
         this.adminPaymentApi = adminPaymentApi;
+        this.invoiceUserApi = invoiceUserApi;
         this.tenantApi = tenantApi;
         this.recordIdApi = recordIdApi;
         this.cacheManager = cacheManager;
     }
-
 
     @PUT
     @Consumes(APPLICATION_JSON)
@@ -123,13 +137,71 @@ public class AdminResource extends JaxRsResourceBase {
         return Response.status(Status.OK).build();
     }
 
+    @POST
+    @Consumes(APPLICATION_JSON)
+    @Produces(APPLICATION_JSON)
+    @Path("/invoices")
+    @ApiOperation(value = "Trigger an invoice generation for all parked accounts")
+    @ApiResponses(value = {})
+    public Response triggerInvoiceGenerationForParkedAccounts(@QueryParam(QUERY_SEARCH_OFFSET) @DefaultValue("0") final Long offset,
+                                                              @QueryParam(QUERY_SEARCH_LIMIT) @DefaultValue("100") final Long limit,
+                                                              @HeaderParam(HDR_CREATED_BY) final String createdBy,
+                                                              @HeaderParam(HDR_REASON) final String reason,
+                                                              @HeaderParam(HDR_COMMENT) final String comment,
+                                                              @javax.ws.rs.core.Context final HttpServletRequest request) {
+        final CallContext callContext = context.createContext(createdBy, reason, comment, request);
+
+        // TODO Consider adding a real invoice API post 0.18.x
+        final Pagination<Tag> tags = tagUserApi.searchTags(SystemTags.PARK_TAG_DEFINITION_NAME, offset, limit, callContext);
+
+        // Return the accounts still parked
+        final StreamingOutput json = new StreamingOutput() {
+            @Override
+            public void write(final OutputStream output) throws IOException, WebApplicationException {
+                final JsonGenerator generator = mapper.getFactory().createGenerator(output);
+                generator.configure(JsonGenerator.Feature.AUTO_CLOSE_TARGET, false);
+
+                generator.writeStartArray();
+                for (final Tag tag : tags) {
+                    final UUID accountId = tag.getObjectId();
+                    try {
+                        invoiceUserApi.triggerInvoiceGeneration(accountId, clock.getUTCToday(), null, callContext);
+                    } catch (final InvoiceApiException e) {
+                        if (e.getCode() == ErrorCode.UNEXPECTED_ERROR.getCode()) {
+                            generator.writeString(accountId.toString());
+                        }
+                        if (e.getCode() != ErrorCode.INVOICE_NOTHING_TO_DO.getCode()) {
+                            log.warn("Unable to trigger invoice generation for accountId='{}'", accountId);
+                        }
+                    }
+                }
+                generator.writeEndArray();
+                generator.close();
+            }
+        };
+
+        final URI nextPageUri = uriBuilder.nextPage(AdminResource.class,
+                                                    "triggerInvoiceGenerationForParkedAccounts",
+                                                    tags.getNextOffset(),
+                                                    limit,
+                                                    ImmutableMap.<String, String>of());
+        return Response.status(Status.OK)
+                       .entity(json)
+                       .header(HDR_PAGINATION_CURRENT_OFFSET, tags.getCurrentOffset())
+                       .header(HDR_PAGINATION_NEXT_OFFSET, tags.getNextOffset())
+                       .header(HDR_PAGINATION_TOTAL_NB_RECORDS, tags.getTotalNbRecords())
+                       .header(HDR_PAGINATION_MAX_NB_RECORDS, tags.getMaxNbRecords())
+                       .header(HDR_PAGINATION_NEXT_PAGE_URI, nextPageUri)
+                       .build();
+    }
+
     @DELETE
     @Path("/" + CACHE)
     @Produces(APPLICATION_JSON)
     @ApiOperation(value = "Invalidates the given Cache if specified, otherwise invalidates all caches")
     @ApiResponses(value = {@ApiResponse(code = 400, message = "Cache name does not exist or is not alive")})
     public Response invalidatesCache(@QueryParam("cacheName") final String cacheName,
-                                    @javax.ws.rs.core.Context final HttpServletRequest request) {
+                                     @javax.ws.rs.core.Context final HttpServletRequest request) {
         if (null != cacheName && !cacheName.isEmpty()) {
             final Ehcache cache = cacheManager.getEhcache(cacheName);
             // check if cache is null
@@ -139,8 +211,7 @@ public class AdminResource extends JaxRsResourceBase {
             }
             // Clear given cache
             cache.removeAll();
-        }
-        else {
+        } else {
             // if not given a specific cacheName, clear all
             cacheManager.clearAll();
         }
@@ -176,7 +247,7 @@ public class AdminResource extends JaxRsResourceBase {
     @ApiOperation(value = "Invalidates Caches per tenant level")
     @ApiResponses(value = {})
     public Response invalidatesCacheByTenant(@QueryParam("tenantApiKey") final String tenantApiKey,
-                                              @javax.ws.rs.core.Context final HttpServletRequest request) throws TenantApiException {
+                                             @javax.ws.rs.core.Context final HttpServletRequest request) throws TenantApiException {
 
         // creating Tenant Context from Request
         TenantContext tenantContext = context.createContext(request);

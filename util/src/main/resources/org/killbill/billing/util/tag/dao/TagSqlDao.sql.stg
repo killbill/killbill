@@ -100,6 +100,11 @@ userAndSystemTagDefinitions() ::= <<
     \'00000000-0000-0000-0000-000000000007\' id
   , \'PARTNER\' as name
   , \'Indicates that this is a partner account\' description
+  union
+  select
+    \'00000000-0000-0001-0000-000000000001\' id
+  , \'__PARK__\' as name
+  , \'Accounts with invalid invoicing state\' description
 >>
 
 searchQuery(tagAlias, tagDefinitionAlias) ::= <<

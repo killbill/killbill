@@ -85,4 +85,14 @@ public interface InvoiceConfig extends KillbillConfig {
     @Default("false")
     @Description("Whether to send email notifications on invoice creation (for configured accounts)")
     boolean isEmailNotificationsEnabled();
+
+    @Config("org.killbill.invoice.enabled")
+    @Default("true")
+    @Description("Whether the invoicing system is enabled")
+    boolean isInvoicingSystemEnabled();
+
+    @Config("org.killbill.invoice.enabled")
+    @Default("true")
+    @Description("Whether the invoicing system is enabled")
+    boolean isInvoicingSystemEnabled(@Param("dummy") final InternalTenantContext tenantContext);
 }
