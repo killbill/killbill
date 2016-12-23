@@ -351,7 +351,7 @@ public class ItemsNodeInterval extends NodeInterval {
                                    public void onCurrentNode(final int depth, final NodeInterval curNode, final NodeInterval parent) {
                                        final ItemsInterval curChildItems = ((ItemsNodeInterval) curNode).getItemsInterval();
                                        final Item cancelledItem = curChildItems.getCancellingItemIfExists(curAddItem.getId());
-                                       if (cancelledItem != null) {
+                                       if (cancelledItem != null && curAddItem.getId().equals(cancelledItem.getLinkedId())) {
                                            totalRepaired.set(totalRepaired.get().add(cancelledItem.getAmount()));
                                        }
                                    }
