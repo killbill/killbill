@@ -313,7 +313,7 @@ public class DefaultSubscriptionInternalApi extends SubscriptionApiBase implemen
     }
 
     @Override
-    public void cancelBaseSubscriptions(final Iterable<SubscriptionBase> subscriptions, final BillingActionPolicy policy, final InternalCallContext context) throws SubscriptionBaseApiException {
+    public void cancelBaseSubscriptions(final Iterable<SubscriptionBase> subscriptions, final BillingActionPolicy policy, final DateTimeZone accountTimeZone, int accountBillCycleDayLocal, final InternalCallContext context) throws SubscriptionBaseApiException {
         apiService.cancelWithPolicyNoValidation(Iterables.<SubscriptionBase, DefaultSubscriptionBase>transform(subscriptions,
                                                                                                                new Function<SubscriptionBase, DefaultSubscriptionBase>() {
                                                                                                                    @Override
@@ -326,6 +326,8 @@ public class DefaultSubscriptionInternalApi extends SubscriptionApiBase implemen
                                                                                                                    }
                                                                                                                }),
                                                 policy,
+                                                accountTimeZone,
+                                                accountBillCycleDayLocal,
                                                 context);
     }
 
@@ -656,7 +658,8 @@ public class DefaultSubscriptionInternalApi extends SubscriptionApiBase implemen
                             final PlanChangeResult planChangeResult = apiService.getPlanChangeResult(subscriptionForChange, inputSpec, utcNow, tenantContext);
                             policy = planChangeResult.getPolicy();
                         }
-                        changeEffectiveDate = subscriptionForChange.getPlanChangeEffectiveDate(policy);
+                        // We pass null for billingAlignment, accountTimezone, account BCD because this is not available which means that dryRun with START_OF_TERM BillingPolicy will fail
+                        changeEffectiveDate = subscriptionForChange.getPlanChangeEffectiveDate(policy, null, null, -1, context);
                     }
                     dryRunEvents = apiService.getEventsOnChangePlan(subscriptionForChange, plan, plan.getPriceListName(), changeEffectiveDate, utcNow, true, context);
                     break;
@@ -673,7 +676,8 @@ public class DefaultSubscriptionInternalApi extends SubscriptionApiBase implemen
                                                                                    subscriptionForCancellation.getCurrentPhase().getPhaseType());
                             policy = catalogService.getFullCatalog(true, true, context).planCancelPolicy(spec, utcNow);
                         }
-                        cancelEffectiveDate = subscriptionForCancellation.getPlanChangeEffectiveDate(policy);
+                        // We pass null for billingAlignment, accountTimezone, account BCD because this is not available which means that dryRun with START_OF_TERM BillingPolicy will fail
+                        cancelEffectiveDate = subscriptionForCancellation.getPlanChangeEffectiveDate(policy, null, null, -1, context);
                     }
                     dryRunEvents = apiService.getEventsOnCancelPlan(subscriptionForCancellation, cancelEffectiveDate, utcNow, true, context);
                     break;

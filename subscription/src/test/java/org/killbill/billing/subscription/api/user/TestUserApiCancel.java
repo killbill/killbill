@@ -20,16 +20,9 @@ import java.util.UUID;
 
 import org.joda.time.DateTime;
 import org.joda.time.Interval;
-import org.killbill.billing.entitlement.api.Entitlement.EntitlementState;
-import org.killbill.billing.entity.EntityPersistenceException;
-import org.killbill.billing.subscription.engine.dao.SubscriptionEventSqlDao;
-import org.killbill.billing.subscription.engine.dao.model.SubscriptionEventModelDao;
-import org.killbill.billing.subscription.events.SubscriptionBaseEvent;
-import org.skife.jdbi.v2.Handle;
-import org.testng.Assert;
-import org.testng.annotations.Test;
-
+import org.joda.time.LocalDate;
 import org.killbill.billing.api.TestApiListener.NextEvent;
+import org.killbill.billing.catalog.api.BillingActionPolicy;
 import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.catalog.api.Duration;
 import org.killbill.billing.catalog.api.PhaseType;
@@ -37,8 +30,17 @@ import org.killbill.billing.catalog.api.Plan;
 import org.killbill.billing.catalog.api.PlanPhase;
 import org.killbill.billing.catalog.api.PriceListSet;
 import org.killbill.billing.catalog.api.ProductCategory;
+import org.killbill.billing.entitlement.api.Entitlement.EntitlementState;
+import org.killbill.billing.entity.EntityPersistenceException;
 import org.killbill.billing.subscription.SubscriptionTestSuiteWithEmbeddedDB;
+import org.killbill.billing.subscription.api.SubscriptionBaseTransitionType;
 import org.killbill.billing.subscription.api.SubscriptionBillingApiException;
+import org.killbill.billing.subscription.engine.dao.SubscriptionEventSqlDao;
+import org.killbill.billing.subscription.engine.dao.model.SubscriptionEventModelDao;
+import org.killbill.billing.subscription.events.SubscriptionBaseEvent;
+import org.skife.jdbi.v2.Handle;
+import org.testng.Assert;
+import org.testng.annotations.Test;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNull;
@@ -344,6 +346,46 @@ public class TestUserApiCancel extends SubscriptionTestSuiteWithEmbeddedDB {
         final SubscriptionBaseTransition previousTransition = subscription.getPreviousTransition();
         Assert.assertEquals(previousTransition.getPreviousState(), EntitlementState.ACTIVE);
         Assert.assertNotNull(previousTransition.getPreviousPlan());
+    }
+
+    @Test(groups = "slow")
+    public void testCancelSubscription_START_OF_TERM() throws SubscriptionBaseApiException {
+
+        // Set date in such a way that Phase align with the first of the month (and so matches our hardcoded accountData account BCD)
+        final DateTime testStartDate = new DateTime(2016, 11, 1, 0, 3, 42, 0);
+        clock.setDeltaFromReality(testStartDate.getMillis() - clock.getUTCNow().getMillis());
+
+        final String prod = "Shotgun";
+        final BillingPeriod term = BillingPeriod.MONTHLY;
+        final String planSet = PriceListSet.DEFAULT_PRICELIST_NAME;
+
+        // CREATE
+        DefaultSubscriptionBase subscription = testUtil.createSubscription(bundle, prod, term, planSet);
+        PlanPhase currentPhase = subscription.getCurrentPhase();
+        assertEquals(currentPhase.getPhaseType(), PhaseType.TRIAL);
+
+        // Move out of TRIAL
+        testListener.pushExpectedEvent(NextEvent.PHASE);
+        clock.addDays(30);
+        assertListenerStatus();
+
+        // Artificially set the CTD
+        final Duration ctd = testUtil.getDurationMonth(1);
+        final DateTime newChargedThroughDate = TestSubscriptionHelper.addDuration(clock.getUTCNow(), ctd);
+        subscriptionInternalApi.setChargedThroughDate(subscription.getId(), newChargedThroughDate, internalCallContext);
+        subscription = (DefaultSubscriptionBase) subscriptionInternalApi.getSubscriptionFromId(subscription.getId(), internalCallContext);
+
+        // Move ahead a bit abd cancel START_OF_TERM
+        clock.addDays(5);
+        testListener.pushExpectedEvent(NextEvent.CANCEL);
+        subscription.cancelWithPolicy(BillingActionPolicy.START_OF_TERM, accountData.getTimeZone(), accountData.getBillCycleDayLocal(), callContext);
+        assertListenerStatus();
+
+        subscription = (DefaultSubscriptionBase) subscriptionInternalApi.getSubscriptionFromId(subscription.getId(), internalCallContext);
+        Assert.assertEquals(subscription.getAllTransitions().get(subscription.getAllTransitions().size() - 1).getTransitionType(), SubscriptionBaseTransitionType.CANCEL);
+        Assert.assertEquals(new LocalDate(subscription.getAllTransitions().get(subscription.getAllTransitions().size() - 1).getEffectiveTransitionTime(), accountData.getTimeZone()), new LocalDate(2016, 12, 1));
 
     }
+
+
 }

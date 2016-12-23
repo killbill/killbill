@@ -29,7 +29,12 @@ import java.util.UUID;
 import javax.annotation.Nullable;
 
 import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
+import org.joda.time.LocalDate;
+import org.killbill.billing.callcontext.InternalCallContext;
+import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.catalog.api.BillingActionPolicy;
+import org.killbill.billing.catalog.api.BillingAlignment;
 import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.catalog.api.Catalog;
 import org.killbill.billing.catalog.api.CatalogApiException;
@@ -57,11 +62,13 @@ import org.killbill.billing.subscription.events.phase.PhaseEvent;
 import org.killbill.billing.subscription.events.user.ApiEvent;
 import org.killbill.billing.subscription.events.user.ApiEventType;
 import org.killbill.billing.subscription.exceptions.SubscriptionBaseError;
+import org.killbill.billing.util.bcd.BillCycleDayCalculator;
 import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.clock.Clock;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.collect.Iterables;
 
@@ -235,8 +242,8 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
     }
 
     @Override
-    public boolean cancelWithPolicy(final BillingActionPolicy policy, final CallContext context) throws SubscriptionBaseApiException {
-        return apiService.cancelWithPolicy(this, policy, context);
+    public boolean cancelWithPolicy(final BillingActionPolicy policy, final DateTimeZone accountTimeZone, int accountBillCycleDayLocal, final CallContext context) throws SubscriptionBaseApiException {
+        return apiService.cancelWithPolicy(this, policy, accountTimeZone, accountBillCycleDayLocal, context);
     }
 
     @Override
@@ -526,13 +533,45 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
         return getFutureEndDate() != null;
     }
 
-    public DateTime getPlanChangeEffectiveDate(final BillingActionPolicy policy) {
+    public DateTime getPlanChangeEffectiveDate(final BillingActionPolicy policy, @Nullable final BillingAlignment alignment, @Nullable final DateTimeZone accountTimeZone, @Nullable final Integer accountBillCycleDayLocal, final InternalTenantContext context) {
 
         final DateTime candidateResult;
         switch (policy) {
             case IMMEDIATE:
                 candidateResult = clock.getUTCNow();
                 break;
+            case START_OF_TERM:
+                if (chargedThroughDate == null) {
+                    candidateResult = getStartDate();
+                // Will take care of billing IN_ARREAR or subscriptions that are not invoiced up to date
+                } else if (!chargedThroughDate.isAfter(clock.getUTCNow())) {
+                    candidateResult = chargedThroughDate;
+                } else {
+
+                    // In certain path (dryRun, or default catalog START_OF_TERM policy), the info is not easily available and as a result, such policy is not implemented
+                    Preconditions.checkState(alignment != null && accountTimeZone != null && accountBillCycleDayLocal != null, "START_OF_TERM not implemented in dryRun use case");
+
+                    Preconditions.checkState(alignment != BillingAlignment.BUNDLE || category != ProductCategory.ADD_ON,  "START_OF_TERM not implemented for AO configured with a BUNDLE billing alignment");
+
+                    // If BCD was overriden at the subscription level, we take its latest value (it should also be reflected in the chargedThroughDate) but still required for
+                    // alignment purpose
+                    Integer bcd = getBillCycleDayLocal();
+                    if (bcd == null) {
+                        bcd = BillCycleDayCalculator.calculateBcdForAlignment(null, this, this, alignment, accountTimeZone, accountBillCycleDayLocal);
+                    }
+
+                    final BillingPeriod billingPeriod = getLastActivePlan().getRecurringBillingPeriod();
+                    DateTime proposedDate = chargedThroughDate;
+                    while (proposedDate.isAfter(clock.getUTCNow())) {
+                        proposedDate = proposedDate.minus(billingPeriod.getPeriod());
+                    }
+
+                    final LocalDate resultingLocalDate  = BillCycleDayCalculator.alignProposedBillCycleDate(proposedDate, bcd, billingPeriod, accountTimeZone);
+                    candidateResult = context.toUTCDateTime(resultingLocalDate);
+                }
+
+                break;
+
             case END_OF_TERM:
                 //
                 // If we have a chargedThroughDate that is 'up to date' we use it, if not default to now

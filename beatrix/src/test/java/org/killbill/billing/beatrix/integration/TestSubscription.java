@@ -42,6 +42,7 @@ import org.killbill.billing.entitlement.api.Entitlement.EntitlementActionPolicy;
 import org.killbill.billing.entitlement.api.Entitlement.EntitlementState;
 import org.killbill.billing.entitlement.api.EntitlementApiException;
 import org.killbill.billing.entitlement.api.EntitlementSpecifier;
+import org.killbill.billing.entitlement.api.Subscription;
 import org.killbill.billing.entitlement.api.SubscriptionEventType;
 import org.killbill.billing.invoice.api.DryRunType;
 import org.killbill.billing.invoice.api.Invoice;
@@ -479,4 +480,74 @@ public class TestSubscription extends TestIntegrationBase {
         clock.addMonths(1);
         assertListenerStatus();
     }
+
+
+
+    @Test(groups = "slow")
+    public void testCancelSubscriptionInTrialWith_START_OF_TERM() throws Exception {
+        final LocalDate initialDate = new LocalDate(2015, 9, 1);
+        clock.setDay(initialDate);
+
+        final Account account = createAccountWithNonOsgiPaymentMethod(getAccountData(1));
+
+        final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("Shotgun", BillingPeriod.ANNUAL, PriceListSet.DEFAULT_PRICELIST_NAME, null);
+
+        busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE);
+        final Entitlement createdEntitlement = entitlementApi.createBaseEntitlement(account.getId(), spec, account.getExternalKey(), null, initialDate, initialDate, false, ImmutableList.<PluginProperty>of(), callContext);
+        assertEquals(createdEntitlement.getEffectiveStartDate().compareTo(initialDate), 0);
+        assertEquals(createdEntitlement.getEffectiveEndDate(), null);
+        assertListenerStatus();
+
+        // Move clock a bit to make sure START_OF_TERM brings us back to initialDate
+        clock.addDays(5);
+
+        busHandler.pushExpectedEvents(NextEvent.CANCEL, NextEvent.BLOCK, NextEvent.NULL_INVOICE);
+        final Entitlement cancelledEntitlement = createdEntitlement.cancelEntitlementWithPolicyOverrideBillingPolicy(EntitlementActionPolicy.IMMEDIATE, BillingActionPolicy.START_OF_TERM, null, callContext);
+        assertListenerStatus();
+
+        final Subscription subscription = subscriptionApi.getSubscriptionForEntitlementId(cancelledEntitlement.getId(), callContext);
+
+        assertEquals(subscription.getEffectiveEndDate().compareTo(new LocalDate(2015, 9, 6)), 0);
+        assertEquals(subscription.getBillingEndDate().compareTo(initialDate), 0);
+
+    }
+
+    @Test(groups = "slow")
+    public void testCancelSubscriptionAfterTrialWith_START_OF_TERM() throws Exception {
+        final LocalDate initialDate = new LocalDate(2015, 8, 1);
+        clock.setDay(initialDate);
+
+        Account account = createAccountWithNonOsgiPaymentMethod(getAccountData(0));
+
+        final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("Shotgun", BillingPeriod.ANNUAL, PriceListSet.DEFAULT_PRICELIST_NAME, null);
+
+        busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE);
+        final Entitlement createdEntitlement = entitlementApi.createBaseEntitlement(account.getId(), spec, account.getExternalKey(), null, initialDate, initialDate, false, ImmutableList.<PluginProperty>of(), callContext);
+        assertEquals(createdEntitlement.getEffectiveStartDate().compareTo(initialDate), 0);
+        assertEquals(createdEntitlement.getEffectiveEndDate(), null);
+        assertListenerStatus();
+
+        // Move out of trial : 2015-8-31
+        busHandler.pushExpectedEvents(NextEvent.PHASE, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
+        clock.addDays(30);
+        assertListenerStatus();
+
+        account = accountUserApi.getAccountById(account.getId(), callContext);
+        Assert.assertEquals(account.getBillCycleDayLocal().intValue(), 31);
+
+
+        // Move clock a bit to make sure START_OF_TERM brings us back to last Phase date : 2015-9-5
+        clock.addDays(5);
+
+        busHandler.pushExpectedEvents(NextEvent.CANCEL, NextEvent.BLOCK, NextEvent.INVOICE);
+        final Entitlement cancelledEntitlement = createdEntitlement.cancelEntitlementWithPolicyOverrideBillingPolicy(EntitlementActionPolicy.IMMEDIATE, BillingActionPolicy.START_OF_TERM, null, callContext);
+        assertListenerStatus();
+
+        final Subscription subscription = subscriptionApi.getSubscriptionForEntitlementId(cancelledEntitlement.getId(), callContext);
+
+        assertEquals(subscription.getEffectiveEndDate().compareTo(new LocalDate(2015, 9, 5)), 0);
+        assertEquals(subscription.getBillingEndDate().compareTo(new LocalDate(2015, 8, 31)), 0);
+
+    }
+
 }

@@ -18,9 +18,12 @@ package org.killbill.billing.catalog.rules;
 
 import javax.xml.bind.annotation.XmlElement;
 
+import org.killbill.billing.catalog.StandaloneCatalog;
 import org.killbill.billing.catalog.api.BillingActionPolicy;
 import org.killbill.billing.catalog.api.PhaseType;
 import org.killbill.billing.catalog.api.rules.CaseCancelPolicy;
+import org.killbill.xmlloader.ValidationError;
+import org.killbill.xmlloader.ValidationErrors;
 
 public class DefaultCaseCancelPolicy extends DefaultCasePhase<BillingActionPolicy> implements CaseCancelPolicy {
 
@@ -36,6 +39,16 @@ public class DefaultCaseCancelPolicy extends DefaultCasePhase<BillingActionPolic
         this.policy = policy;
         return this;
     }
+
+    @Override
+    public ValidationErrors validate(final StandaloneCatalog catalog, final ValidationErrors errors) {
+        if (policy ==  BillingActionPolicy.START_OF_TERM) {
+            errors.add(new ValidationError("Default catalog START_OF_TERM has not been implemented, such policy can be used during cancellation by overriding policy",
+                                           catalog.getCatalogURI(), DefaultCaseCancelPolicy.class, ""));
+        }
+        return errors;
+    }
+
 
     @Override
     public BillingActionPolicy getBillingActionPolicy() {

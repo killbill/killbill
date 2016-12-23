@@ -29,12 +29,17 @@ import java.util.UUID;
 import javax.annotation.Nullable;
 
 import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
 import org.joda.time.ReadableInstant;
 import org.killbill.billing.ErrorCode;
 import org.killbill.billing.ObjectType;
+import org.killbill.billing.account.api.AccountApiException;
+import org.killbill.billing.account.api.AccountInternalApi;
+import org.killbill.billing.account.api.ImmutableAccountInternalApi;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.catalog.api.BillingActionPolicy;
+import org.killbill.billing.catalog.api.BillingAlignment;
 import org.killbill.billing.catalog.api.Catalog;
 import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.catalog.api.CatalogEntity;
@@ -71,6 +76,7 @@ import org.killbill.billing.util.callcontext.TenantContext;
 import org.killbill.clock.Clock;
 import org.killbill.clock.DefaultClock;
 
+import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -204,7 +210,10 @@ public class DefaultSubscriptionBaseApiService implements SubscriptionBaseApiSer
         try {
             final InternalCallContext internalCallContext = createCallContextFromBundleId(subscription.getBundleId(), context);
             final BillingActionPolicy policy = catalogService.getFullCatalog(true, true, internalCallContext).planCancelPolicy(planPhase, now);
-            final DateTime effectiveDate = subscription.getPlanChangeEffectiveDate(policy);
+
+            Preconditions.checkState(policy != BillingActionPolicy.START_OF_TERM, "A default START_OF_TERM policy is not availaible");
+
+            final DateTime effectiveDate = subscription.getPlanChangeEffectiveDate(policy, null, null, -1, null);
 
             return doCancelPlan(ImmutableMap.<DefaultSubscriptionBase, DateTime>of(subscription, effectiveDate), now, internalCallContext);
         } catch (final CatalogApiException e) {
@@ -226,24 +235,30 @@ public class DefaultSubscriptionBaseApiService implements SubscriptionBaseApiSer
     }
 
     @Override
-    public boolean cancelWithPolicy(final DefaultSubscriptionBase subscription, final BillingActionPolicy policy, final CallContext context) throws SubscriptionBaseApiException {
+    public boolean cancelWithPolicy(final DefaultSubscriptionBase subscription, final BillingActionPolicy policy, final DateTimeZone accountTimeZone, int accountBillCycleDayLocal, final CallContext context) throws SubscriptionBaseApiException {
         final EntitlementState currentState = subscription.getState();
         if (currentState == EntitlementState.CANCELLED) {
             throw new SubscriptionBaseApiException(ErrorCode.SUB_CANCEL_BAD_STATE, subscription.getId(), currentState);
         }
 
         final InternalCallContext internalCallContext = createCallContextFromBundleId(subscription.getBundleId(), context);
-        return cancelWithPolicyNoValidation(ImmutableList.<DefaultSubscriptionBase>of(subscription), policy, internalCallContext);
+        return cancelWithPolicyNoValidation(ImmutableList.<DefaultSubscriptionBase>of(subscription), policy, accountTimeZone, accountBillCycleDayLocal, internalCallContext);
     }
 
     @Override
-    public boolean cancelWithPolicyNoValidation(final Iterable<DefaultSubscriptionBase> subscriptions, final BillingActionPolicy policy, final InternalCallContext context) throws SubscriptionBaseApiException {
+    public boolean cancelWithPolicyNoValidation(final Iterable<DefaultSubscriptionBase> subscriptions, final BillingActionPolicy policy, final DateTimeZone accountTimeZone, final int accountBillCycleDayLocal, final InternalCallContext context) throws SubscriptionBaseApiException {
         final Map<DefaultSubscriptionBase, DateTime> subscriptionsWithEffectiveDate = new HashMap<DefaultSubscriptionBase, DateTime>();
         final DateTime now = clock.getUTCNow();
 
-        for (final DefaultSubscriptionBase subscription : subscriptions) {
-            final DateTime effectiveDate = subscription.getPlanChangeEffectiveDate(policy);
-            subscriptionsWithEffectiveDate.put(subscription, effectiveDate);
+        try {
+
+            for (final DefaultSubscriptionBase subscription : subscriptions) {
+                final BillingAlignment billingAlignment = (subscription.getState() == EntitlementState.PENDING ? null : catalogService.getFullCatalog(true, true, context).billingAlignment(new PlanPhaseSpecifier(subscription.getLastActivePlan().getName(), subscription.getLastActivePhase().getPhaseType()), clock.getUTCNow()));
+                final DateTime effectiveDate = subscription.getPlanChangeEffectiveDate(policy, billingAlignment, accountTimeZone, accountBillCycleDayLocal, context);
+                subscriptionsWithEffectiveDate.put(subscription, effectiveDate);
+            }
+        } catch (final CatalogApiException e) {
+            throw new SubscriptionBaseApiException(e);
         }
 
         return doCancelPlan(subscriptionsWithEffectiveDate, now, context);
@@ -330,7 +345,7 @@ public class DefaultSubscriptionBaseApiService implements SubscriptionBaseApiSer
         }
 
         if (policyMaybeNull != null) {
-            return subscription.getPlanChangeEffectiveDate(policyMaybeNull);
+            return subscription.getPlanChangeEffectiveDate(policyMaybeNull, null, null, -1, null);
         } else if (requestedDateWithMs != null) {
             return DefaultClock.truncateMs(requestedDateWithMs);
         } else {

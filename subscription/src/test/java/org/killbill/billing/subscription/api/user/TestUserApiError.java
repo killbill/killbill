@@ -151,7 +151,7 @@ public class TestUserApiError extends SubscriptionTestSuiteNoDB {
 
         subscription = subscriptionInternalApi.getSubscriptionFromId(subscription.getId(), internalCallContext);
 
-        subscription.cancelWithPolicy(BillingActionPolicy.END_OF_TERM, callContext);
+        subscription.cancelWithPolicy(BillingActionPolicy.END_OF_TERM, null, -1, callContext);
         try {
             subscription.changePlanWithDate(new PlanSpecifier("Pistol", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME), null, clock.getUTCNow(), callContext);
         } catch (final SubscriptionBaseApiException e) {
