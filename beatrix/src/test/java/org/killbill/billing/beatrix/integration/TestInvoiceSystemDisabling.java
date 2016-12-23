@@ -32,7 +32,6 @@ import org.killbill.billing.invoice.api.DryRunType;
 import org.killbill.billing.invoice.api.Invoice;
 import org.killbill.billing.invoice.api.InvoiceItemType;
 import org.testng.Assert;
-import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import com.google.common.collect.ImmutableList;
@@ -40,16 +39,6 @@ import com.google.common.collect.ImmutableList;
 import static org.testng.Assert.assertEquals;
 
 public class TestInvoiceSystemDisabling extends TestIntegrationBase {
-
-    @Override
-    @BeforeMethod(groups = "slow")
-    public void beforeMethod() throws Exception {
-        super.beforeMethod();
-        // Tests will delete the database entries, yet ParkedAccountsManager is injected once
-        busHandler.pushExpectedEvent(NextEvent.TAG_DEFINITION);
-        parkedAccountsManager.retrieveOrCreateParkTagDefinition(clock);
-        assertListenerStatus();
-    }
 
     @Test(groups = "slow")
     public void testInvoiceSystemDisablingBasic() throws Exception {
@@ -61,7 +50,7 @@ public class TestInvoiceSystemDisabling extends TestIntegrationBase {
         final Account account = createAccountWithNonOsgiPaymentMethod(accountData);
         accountChecker.checkAccount(account.getId(), accountData, callContext);
 
-        Assert.assertFalse(parkedAccountsManager.isParked(account.getId(), internalCallContext));
+        Assert.assertFalse(parkedAccountsManager.isParked(internalCallContext));
 
         // Stop invoicing system
         invoiceConfig.setInvoicingSystemEnabled(false);
@@ -75,14 +64,14 @@ public class TestInvoiceSystemDisabling extends TestIntegrationBase {
                                                                                              NextEvent.BLOCK,
                                                                                              NextEvent.TAG);
 
-        Assert.assertTrue(parkedAccountsManager.isParked(account.getId(), internalCallContext));
+        Assert.assertTrue(parkedAccountsManager.isParked(internalCallContext));
         Collection<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), false, callContext);
         assertEquals(invoices.size(), 0);
 
         // Move to end of trial =>  2012, 5, 1
         addDaysAndCheckForCompletion(30, NextEvent.PHASE);
 
-        Assert.assertTrue(parkedAccountsManager.isParked(account.getId(), internalCallContext));
+        Assert.assertTrue(parkedAccountsManager.isParked(internalCallContext));
         invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), false, callContext);
         assertEquals(invoices.size(), 0);
 
@@ -94,7 +83,7 @@ public class TestInvoiceSystemDisabling extends TestIntegrationBase {
         invoiceChecker.checkInvoiceNoAudits(invoice, callContext, expected);
 
         // Still parked
-        Assert.assertTrue(parkedAccountsManager.isParked(account.getId(), internalCallContext));
+        Assert.assertTrue(parkedAccountsManager.isParked(internalCallContext));
         invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), false, callContext);
         assertEquals(invoices.size(), 0);
 
@@ -104,7 +93,7 @@ public class TestInvoiceSystemDisabling extends TestIntegrationBase {
         assertListenerStatus();
 
         // Now unparked
-        Assert.assertFalse(parkedAccountsManager.isParked(account.getId(), internalCallContext));
+        Assert.assertFalse(parkedAccountsManager.isParked(internalCallContext));
         invoiceChecker.checkInvoice(invoice, callContext, expected);
         invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), false, callContext);
         assertEquals(invoices.size(), 1);

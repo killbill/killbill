@@ -240,7 +240,7 @@ public class InvoiceDispatcher {
                                   final InternalCallContext context) throws InvoiceApiException {
         boolean parkedAccount = false;
         try {
-            parkedAccount = parkedAccountsManager.isParked(accountId, context);
+            parkedAccount = parkedAccountsManager.isParked(context);
             if (parkedAccount && !isApiCall) {
                 log.warn("Ignoring invoice generation process for accountId='{}', targetDate='{}', account is parked", accountId.toString(), targetDate);
                 return null;

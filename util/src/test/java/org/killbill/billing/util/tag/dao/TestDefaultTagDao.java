@@ -69,7 +69,7 @@ public class TestDefaultTagDao extends UtilTestSuiteWithEmbeddedDB {
         assertEquals(result.size(), 4);
 
         result = tagDefinitionDao.getTagDefinitions(internalCallContext);
-        assertEquals(result.size(), 3 + ControlTagType.values().length);
+        assertEquals(result.size(), 3 + SystemTags.all().size());
     }
 
     @Test(groups = "slow")
