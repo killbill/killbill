@@ -66,6 +66,7 @@ public class ParkedAccountsManager {
         retrieveOrCreateParkTagDefinition(clock);
     }
 
+    // Idempotent
     public void parkAccount(final UUID accountId, final InternalCallContext internalCallContext) throws TagApiException {
         final CallContext callContext = createCallContext(internalCallContext);
         tagUserApi.addTag(accountId, ObjectType.ACCOUNT, tagDefinitionId, callContext);
@@ -96,7 +97,7 @@ public class ParkedAccountsManager {
     }
 
     @VisibleForTesting
-    void retrieveOrCreateParkTagDefinition(final Clock clock) throws TagDefinitionApiException {
+    public void retrieveOrCreateParkTagDefinition(final Clock clock) throws TagDefinitionApiException {
         final InternalCallContext callContext = new InternalCallContext(InternalCallContextFactory.INTERNAL_TENANT_RECORD_ID,
                                                                         null,
                                                                         null,

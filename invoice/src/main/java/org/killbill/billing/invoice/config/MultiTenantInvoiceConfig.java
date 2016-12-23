@@ -119,6 +119,20 @@ public class MultiTenantInvoiceConfig extends MultiTenantConfigBase implements I
     }
 
     @Override
+    public boolean isInvoicingSystemEnabled() {
+        return staticConfig.isInvoicingSystemEnabled();
+    }
+
+    @Override
+    public boolean isInvoicingSystemEnabled(final InternalTenantContext tenantContext) {
+        final String result = getStringTenantConfig("isInvoicingSystemEnabled", tenantContext);
+        if (result != null) {
+            return Boolean.parseBoolean(result);
+        }
+        return isInvoicingSystemEnabled();
+    }
+
+    @Override
     protected Class<? extends KillbillConfig> getConfigClass() {
         return InvoiceConfig.class;
     }
