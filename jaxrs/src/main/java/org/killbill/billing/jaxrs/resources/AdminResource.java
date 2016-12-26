@@ -172,7 +172,7 @@ public class AdminResource extends JaxRsResourceBase {
                         if (e.getCode() != ErrorCode.INVOICE_NOTHING_TO_DO.getCode()) {
                             log.warn("Unable to trigger invoice generation for accountId='{}'", accountId);
                         }
-                        generator.writeStringField(accountId.toString(), ErrorCode.INVOICE_NOTHING_TO_DO.toString());
+                        generator.writeStringField(accountId.toString(), ErrorCode.fromCode(e.getCode()).toString());
                     }
                 }
                 generator.writeEndObject();
