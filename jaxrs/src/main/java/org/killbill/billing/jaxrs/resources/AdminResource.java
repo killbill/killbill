@@ -89,6 +89,8 @@ import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 @Api(value = JaxrsResource.ADMIN_PATH, description = "Admin operations (will require special privileges)")
 public class AdminResource extends JaxRsResourceBase {
 
+    private static final String OK = "OK";
+
     private final AdminPaymentApi adminPaymentApi;
     private final InvoiceUserApi invoiceUserApi;
     private final TenantUserApi tenantApi;
@@ -154,28 +156,26 @@ public class AdminResource extends JaxRsResourceBase {
         // TODO Consider adding a real invoice API post 0.18.x
         final Pagination<Tag> tags = tagUserApi.searchTags(SystemTags.PARK_TAG_DEFINITION_NAME, offset, limit, callContext);
 
-        // Return the accounts still parked
         final StreamingOutput json = new StreamingOutput() {
             @Override
             public void write(final OutputStream output) throws IOException, WebApplicationException {
                 final JsonGenerator generator = mapper.getFactory().createGenerator(output);
                 generator.configure(JsonGenerator.Feature.AUTO_CLOSE_TARGET, false);
 
-                generator.writeStartArray();
+                generator.writeStartObject();
                 for (final Tag tag : tags) {
                     final UUID accountId = tag.getObjectId();
                     try {
                         invoiceUserApi.triggerInvoiceGeneration(accountId, clock.getUTCToday(), null, callContext);
+                        generator.writeStringField(accountId.toString(), OK);
                     } catch (final InvoiceApiException e) {
-                        if (e.getCode() == ErrorCode.UNEXPECTED_ERROR.getCode()) {
-                            generator.writeString(accountId.toString());
-                        }
                         if (e.getCode() != ErrorCode.INVOICE_NOTHING_TO_DO.getCode()) {
                             log.warn("Unable to trigger invoice generation for accountId='{}'", accountId);
                         }
+                        generator.writeStringField(accountId.toString(), ErrorCode.INVOICE_NOTHING_TO_DO.toString());
                     }
                 }
-                generator.writeEndArray();
+                generator.writeEndObject();
                 generator.close();
             }
         };
