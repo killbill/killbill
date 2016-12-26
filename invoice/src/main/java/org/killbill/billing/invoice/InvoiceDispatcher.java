@@ -211,7 +211,7 @@ public class InvoiceDispatcher {
             final UUID accountId = subscriptionApi.getAccountIdFromSubscriptionId(subscriptionId, context);
             final DryRunArguments dryRunArguments = dryRunForNotification ? TARGET_DATE_DRY_RUN_ARGUMENTS : null;
 
-            return processAccount(accountId, targetDate, dryRunArguments, context);
+            return processAccountFromNotificationOrBusEvent(accountId, targetDate, dryRunArguments, context);
         } catch (final SubscriptionBaseApiException e) {
             log.warn("Failed handling SubscriptionBase change.",
                       new InvoiceApiException(ErrorCode.INVOICE_NO_ACCOUNT_ID_FOR_SUBSCRIPTION_ID, subscriptionId.toString()));
@@ -219,11 +219,10 @@ public class InvoiceDispatcher {
         }
     }
 
-    public Invoice processAccount(final UUID accountId,
-                                  @Nullable final LocalDate targetDate,
-                                  @Nullable final DryRunArguments dryRunArguments,
-                                  final InternalCallContext context) throws InvoiceApiException {
-        // Note that all API calls (dryRun or not) will bypass this (see processAccount below)
+    public Invoice processAccountFromNotificationOrBusEvent(final UUID accountId,
+                                                            @Nullable final LocalDate targetDate,
+                                                            @Nullable final DryRunArguments dryRunArguments,
+                                                            final InternalCallContext context) throws InvoiceApiException {
         if (!invoiceConfig.isInvoicingSystemEnabled(context)) {
             log.warn("Invoicing system is off, parking accountId='{}'", accountId);
             parkAccount(accountId, context);

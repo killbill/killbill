@@ -33,7 +33,6 @@ import org.killbill.billing.GuicyKillbillTestSuite;
 import org.killbill.billing.GuicyKillbillTestSuiteNoDB;
 import org.killbill.billing.account.api.Account;
 import org.killbill.billing.account.api.AccountApiException;
-import org.killbill.billing.account.api.AccountData;
 import org.killbill.billing.account.api.AccountInternalApi;
 import org.killbill.billing.account.api.AccountUserApi;
 import org.killbill.billing.account.api.ImmutableAccountInternalApi;
@@ -217,7 +216,7 @@ public class TestInvoiceHelper {
                                                                    invoiceDao, internalCallContextFactory, invoiceNotifier, invoicePluginDispatcher, locker, busService.getBus(),
                                                                    null, invoiceConfig, clock, parkedAccountsManager);
 
-        Invoice invoice = dispatcher.processAccount(account.getId(), targetDate, new DryRunFutureDateArguments(), internalCallContext);
+        Invoice invoice = dispatcher.processAccountFromNotificationOrBusEvent(account.getId(), targetDate, new DryRunFutureDateArguments(), internalCallContext);
         Assert.assertNotNull(invoice);
 
         final InternalCallContext context = internalCallContextFactory.createInternalCallContext(account.getId(), callContext);
@@ -225,7 +224,7 @@ public class TestInvoiceHelper {
         List<InvoiceModelDao> invoices = invoiceDao.getInvoicesByAccount(context);
         Assert.assertEquals(invoices.size(), 0);
 
-        invoice = dispatcher.processAccount(account.getId(), targetDate, null, context);
+        invoice = dispatcher.processAccountFromNotificationOrBusEvent(account.getId(), targetDate, null, context);
         Assert.assertNotNull(invoice);
 
         invoices = invoiceDao.getInvoicesByAccount(context);
