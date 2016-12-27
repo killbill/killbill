@@ -39,6 +39,7 @@ public class TestBundleTimelineJson extends JaxrsTestSuiteNoDB {
                                                                       UUID.randomUUID().toString(),
                                                                       UUID.randomUUID().toString(),
                                                                       UUID.randomUUID().toString(),
+                                                                      UUID.randomUUID().toString(),
                                                                       true,
                                                                       false,
                                                                       UUID.randomUUID().toString(),

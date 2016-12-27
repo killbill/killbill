@@ -160,6 +160,7 @@ public class SubscriptionItemTree {
 
         switch (invoiceItem.getInvoiceItemType()) {
             case RECURRING:
+                // merged means we've either matched the proposed to an existing, or triggered a repair
                 final boolean merged = root.addProposedItem(new ItemsNodeInterval(root, new Item(invoiceItem, targetInvoiceId, ItemAction.ADD)));
                 if (!merged) {
                     items.add(new Item(invoiceItem, targetInvoiceId, ItemAction.ADD));

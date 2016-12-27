@@ -63,6 +63,58 @@ public class TestSubscriptionItemTree extends InvoiceTestSuiteNoDB {
     private final String phaseName = "my-phase";
     private final Currency currency = Currency.USD;
 
+    @Test(groups = "fast", description = "Complex multi-level tree, mostly used to test the tree printer")
+    public void testMultipleLevels() throws Exception {
+        final LocalDate startDate = new LocalDate(2014, 1, 1);
+        final LocalDate endDate = new LocalDate(2014, 2, 1);
+
+        final LocalDate startRepairDate1 = new LocalDate(2014, 1, 10);
+        final LocalDate endRepairDate1 = new LocalDate(2014, 1, 15);
+
+        final LocalDate startRepairDate11 = new LocalDate(2014, 1, 10);
+        final LocalDate endRepairDate12 = new LocalDate(2014, 1, 12);
+
+        final LocalDate startRepairDate2 = new LocalDate(2014, 1, 20);
+        final LocalDate endRepairDate2 = new LocalDate(2014, 1, 25);
+
+        final LocalDate startRepairDate21 = new LocalDate(2014, 1, 22);
+        final LocalDate endRepairDate22 = new LocalDate(2014, 1, 23);
+
+        final BigDecimal rate = BigDecimal.TEN;
+        final BigDecimal amount = rate;
+
+        final InvoiceItem initial = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, startDate, endDate, amount, rate, currency);
+
+        final InvoiceItem newItem1 = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, startRepairDate1, endRepairDate1, amount, rate, currency);
+        final InvoiceItem repair1 = new RepairAdjInvoiceItem(invoiceId, accountId, startRepairDate1, endRepairDate1, amount.negate(), currency, initial.getId());
+
+        final InvoiceItem newItem11 = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, startRepairDate11, endRepairDate12, amount, rate, currency);
+        final InvoiceItem repair12 = new RepairAdjInvoiceItem(invoiceId, accountId, startRepairDate11, endRepairDate12, amount.negate(), currency, newItem1.getId());
+
+        final InvoiceItem newItem2 = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, startRepairDate2, endRepairDate2, amount, rate, currency);
+        final InvoiceItem repair2 = new RepairAdjInvoiceItem(invoiceId, accountId, startRepairDate2, endRepairDate2, amount.negate(), currency, initial.getId());
+
+        final InvoiceItem newItem21 = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, startRepairDate21, endRepairDate22, amount, rate, currency);
+        final InvoiceItem repair22 = new RepairAdjInvoiceItem(invoiceId, accountId, startRepairDate21, endRepairDate22, amount.negate(), currency, newItem2.getId());
+
+        final SubscriptionItemTree tree = new SubscriptionItemTree(subscriptionId, invoiceId);
+        tree.addItem(initial);
+        tree.addItem(newItem1);
+        tree.addItem(repair1);
+        tree.addItem(newItem11);
+        tree.addItem(repair12);
+        tree.addItem(newItem2);
+        tree.addItem(repair2);
+        tree.addItem(newItem21);
+        tree.addItem(repair22);
+
+        tree.build();
+        //printTree(tree);
+
+        tree.flatten(true);
+        //printTree(tree);
+    }
+
     @Test(groups = "fast")
     public void testWithExistingSplitRecurring() {
 
@@ -1441,9 +1493,13 @@ public class TestSubscriptionItemTree extends InvoiceTestSuiteNoDB {
         Assert.assertEquals(previousExistingSize, 3);
     }
 
-    private void printTree(final SubscriptionItemTree tree) throws IOException {
+    private void printTreeJSON(final SubscriptionItemTree tree) throws IOException {
         final ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
         tree.getRoot().jsonSerializeTree(OBJECT_MAPPER, outputStream);
         System.out.println(outputStream.toString("UTF-8"));
+    }
+
+    private void printTree(final SubscriptionItemTree tree) throws IOException {
+        System.out.println(TreePrinter.print(tree.getRoot()));
     }
 }

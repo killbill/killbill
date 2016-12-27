@@ -49,6 +49,8 @@ import com.google.common.collect.Iterables;
 
 public class PhasePriceOverrideJson {
 
+
+    private final String planName;
     private final String phaseName;
     private final String phaseType;
     private final BigDecimal fixedPrice;
@@ -56,11 +58,13 @@ public class PhasePriceOverrideJson {
     private final List<UsagePriceOverrideJson> usagePriceOverrides;
 
     @JsonCreator
-    public PhasePriceOverrideJson(@JsonProperty("phaseName") final String phaseName,
+    public PhasePriceOverrideJson(@JsonProperty("planName") final String planName,
+                                  @JsonProperty("phaseName") final String phaseName,
                                   @JsonProperty("phaseType") final String phaseType,
                                   @Nullable @JsonProperty("fixedPrice") final BigDecimal fixedPrice,
                                   @Nullable @JsonProperty("recurringPrice") final BigDecimal recurringPrice,
                                   @Nullable @JsonProperty("usageOverrides") final List<UsagePriceOverrideJson> usagePriceOverrides) {
+        this.planName = planName;
         this.phaseName = phaseName;
         this.phaseType = phaseType;
         this.fixedPrice = fixedPrice;
@@ -68,12 +72,14 @@ public class PhasePriceOverrideJson {
         this.usagePriceOverrides = usagePriceOverrides;
     }
 
-    public PhasePriceOverrideJson(final String phaseName,
+    public PhasePriceOverrideJson(final String planName,
+                                  final String phaseName,
                                   final String phaseType,
                                   final BigDecimal fixedPrice,
                                   final BigDecimal recurringPrice,
                                   final Usage[] usagePriceOverrides,
                                   final Currency currency) throws CatalogApiException {
+        this.planName = planName;
         this.phaseName = phaseName;
         this.phaseType = phaseType;
         this.fixedPrice = fixedPrice;
@@ -100,6 +106,10 @@ public class PhasePriceOverrideJson {
 
     }
 
+    public String getPlanName() {
+        return planName;
+    }
+
     public BigDecimal getFixedPrice() {
         return fixedPrice;
     }
@@ -124,6 +134,7 @@ public class PhasePriceOverrideJson {
     @Override
     public String toString() {
         return "PhasePriceOverrideJson{" +
+               "planName='" + planName + '\'' +
                "phaseName='" + phaseName + '\'' +
                "phaseType='" + phaseType + '\'' +
                ", fixedPrice=" + fixedPrice +
@@ -147,6 +158,9 @@ public class PhasePriceOverrideJson {
         if (fixedPrice != null ? fixedPrice.compareTo(that.fixedPrice) != 0 : that.fixedPrice != null) {
             return false;
         }
+        if (planName != null ? !planName.equals(that.planName) : that.planName != null) {
+            return false;
+        }
         if (phaseName != null ? !phaseName.equals(that.phaseName) : that.phaseName != null) {
             return false;
         }
@@ -164,7 +178,8 @@ public class PhasePriceOverrideJson {
 
     @Override
     public int hashCode() {
-        int result = phaseName != null ? phaseName.hashCode() : 0;
+        int result = planName != null ? planName.hashCode() : 0;
+        result = 31 * result + (phaseName != null ? phaseName.hashCode() : 0);
         result = 31 * result + (recurringPrice != null ? recurringPrice.hashCode() : 0);
         result = 31 * result + (phaseType != null ? phaseType.hashCode() : 0);
         result = 31 * result + (recurringPrice != null ? recurringPrice.hashCode() : 0);

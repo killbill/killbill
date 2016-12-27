@@ -56,6 +56,7 @@ public class TestEntitlementJsonWithEvents extends JaxrsTestSuiteNoDB {
                                                                          effectiveDate.toLocalDate(),
                                                                          UUID.randomUUID().toString(),
                                                                          UUID.randomUUID().toString(),
+                                                                         UUID.randomUUID().toString(),
                                                                          SubscriptionBaseTransitionType.CREATE.toString(),
                                                                          false,
                                                                          true,
@@ -64,7 +65,7 @@ public class TestEntitlementJsonWithEvents extends JaxrsTestSuiteNoDB {
                                                                          PhaseType.DISCOUNT.toString(),
                                                                          auditLogs);
 
-        final PhasePriceOverrideJson priceOverride = new PhasePriceOverrideJson("bar", null, BigDecimal.TEN, BigDecimal.ONE,null);
+        final PhasePriceOverrideJson priceOverride = new PhasePriceOverrideJson("foo", "bar", null, BigDecimal.TEN, BigDecimal.ONE,null);
 
         final SubscriptionJson entitlementJsonWithEvents = new SubscriptionJson(accountId,
                                                                                 bundleId,

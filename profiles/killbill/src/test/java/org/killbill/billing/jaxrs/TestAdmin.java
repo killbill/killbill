@@ -18,9 +18,8 @@
 package org.killbill.billing.jaxrs;
 
 import java.math.BigDecimal;
-import java.util.Collection;
 import java.util.HashMap;
-import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -45,6 +44,7 @@ import org.testng.annotations.Test;
 
 import com.ning.http.client.Response;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.Multimap;
@@ -101,7 +101,7 @@ public class TestAdmin extends TestJaxrsBase {
         final DateTime initialDate = new DateTime(2012, 4, 25, 0, 3, 42, 0);
         clock.setDeltaFromReality(initialDate.getMillis() - clock.getUTCNow().getMillis());
 
-        final Collection<UUID> accounts = new HashSet<UUID>();
+        final List<UUID> accounts = new LinkedList<UUID>();
         for (int i = 0; i < 5; i++) {
             final Account accountJson = createAccountWithDefaultPaymentMethod();
             assertNotNull(accountJson);
@@ -151,12 +151,17 @@ public class TestAdmin extends TestJaxrsBase {
 
         // Fix one account
         final Response response = triggerInvoiceGenerationForParkedAccounts(1);
-        Assert.assertEquals(response.getResponseBody(), "[]");
+        Assert.assertEquals(response.getResponseBody(), "{\"" + accounts.get(0) + "\":\"OK\"}");
         Assert.assertEquals(killBillClient.getInvoices(requestOptions).getPaginationMaxNbRecords(), 11);
 
         // Fix all accounts
         final Response response2 = triggerInvoiceGenerationForParkedAccounts(5);
-        Assert.assertEquals(response2.getResponseBody(), "[]");
+        final Map<String,String> fixedAccounts = mapper.readValue(response2.getResponseBody(), new TypeReference<Map<String,String>>() {});
+        Assert.assertEquals(fixedAccounts.size(), 4);
+        Assert.assertEquals(fixedAccounts.get(accounts.get(1).toString()), "OK");
+        Assert.assertEquals(fixedAccounts.get(accounts.get(2).toString()), "OK");
+        Assert.assertEquals(fixedAccounts.get(accounts.get(3).toString()), "OK");
+        Assert.assertEquals(fixedAccounts.get(accounts.get(4).toString()), "OK");
         Assert.assertEquals(killBillClient.getInvoices(requestOptions).getPaginationMaxNbRecords(), 15);
     }
 

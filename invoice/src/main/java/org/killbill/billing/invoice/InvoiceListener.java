@@ -95,7 +95,7 @@ public class InvoiceListener {
         try {
             final InternalCallContext context = internalCallContextFactory.createInternalCallContext(event.getSearchKey2(), event.getSearchKey1(), "SubscriptionBaseTransition", CallOrigin.INTERNAL, UserType.SYSTEM, event.getUserToken());
             final UUID accountId = accountApi.getByRecordId(event.getSearchKey1(), context);
-            dispatcher.processAccount(accountId, null, null, context);
+            dispatcher.processAccountFromNotificationOrBusEvent(accountId, null, null, context);
         } catch (InvoiceApiException e) {
             log.warn("Unable to process event {}", event, e);
         } catch (AccountApiException e) {
