@@ -41,7 +41,9 @@ import org.killbill.billing.client.model.Invoice;
 import org.killbill.billing.client.model.PhasePriceOverride;
 import org.killbill.billing.client.model.Subscription;
 import org.killbill.billing.client.model.Tags;
+import org.killbill.billing.entitlement.EntitlementTransitionType;
 import org.killbill.billing.entitlement.api.Entitlement.EntitlementActionPolicy;
+import org.killbill.billing.entitlement.api.SubscriptionEventType;
 import org.killbill.billing.util.api.AuditLevel;
 import org.testng.Assert;
 import org.testng.annotations.Test;
@@ -246,21 +248,75 @@ public class TestEntitlement extends TestJaxrsBase {
         input.setBillingPeriod(BillingPeriod.MONTHLY);
         input.setPriceList(PriceListSet.DEFAULT_PRICELIST_NAME);
         final List<PhasePriceOverride> overrides = new ArrayList<PhasePriceOverride>();
-        overrides.add(new PhasePriceOverride(null, PhaseType.TRIAL.toString(), BigDecimal.TEN, null));
+        overrides.add(new PhasePriceOverride(null, null, PhaseType.TRIAL.toString(), BigDecimal.TEN, null));
         input.setPriceOverrides(overrides);
 
         final Subscription subscription = killBillClient.createSubscription(input, null, DEFAULT_WAIT_COMPLETION_TIMEOUT_SEC, requestOptions);
         Assert.assertEquals(subscription.getPriceOverrides().size(), 2);
-        Assert.assertEquals(subscription.getPriceOverrides().get(0).getPhaseName(), "shotgun-monthly-1-trial");
-        Assert.assertEquals(subscription.getPriceOverrides().get(0).getFixedPrice().compareTo(BigDecimal.TEN), 0);
-        Assert.assertNull(subscription.getPriceOverrides().get(0).getRecurringPrice());
-        Assert.assertEquals(subscription.getPriceOverrides().get(1).getPhaseName(), "shotgun-monthly-1-evergreen");
-        Assert.assertNull(subscription.getPriceOverrides().get(1).getFixedPrice());
-        Assert.assertEquals(subscription.getPriceOverrides().get(1).getRecurringPrice(), new BigDecimal("249.95"));
+
+        Assert.assertEquals(subscription.getEvents().size(), 3);
+        Assert.assertEquals(subscription.getEvents().get(0).getEventType(), SubscriptionEventType.START_ENTITLEMENT.name());
+        Assert.assertEquals(subscription.getEvents().get(0).getPlan(), "shotgun-monthly-1");
+        Assert.assertEquals(subscription.getEvents().get(0).getPhase(), "shotgun-monthly-1-trial");
+        Assert.assertEquals(subscription.getEvents().get(0).getPriceList(), PriceListSet.DEFAULT_PRICELIST_NAME.toString());
+        Assert.assertEquals(subscription.getEvents().get(0).getProduct(), "Shotgun");
+
+        Assert.assertEquals(subscription.getEvents().get(1).getEventType(), SubscriptionEventType.START_BILLING.name());
+        Assert.assertEquals(subscription.getEvents().get(1).getPlan(), "shotgun-monthly-1");
+        Assert.assertEquals(subscription.getEvents().get(1).getPhase(), "shotgun-monthly-1-trial");
+        Assert.assertEquals(subscription.getEvents().get(1).getPriceList(), PriceListSet.DEFAULT_PRICELIST_NAME.toString());
+        Assert.assertEquals(subscription.getEvents().get(1).getProduct(), "Shotgun");
+
+        Assert.assertEquals(subscription.getEvents().get(2).getEventType(), SubscriptionEventType.PHASE.name());
+        Assert.assertEquals(subscription.getEvents().get(2).getPlan(), "shotgun-monthly-1");
+        Assert.assertEquals(subscription.getEvents().get(2).getPhase(), "shotgun-monthly-1-evergreen");
+        Assert.assertEquals(subscription.getEvents().get(2).getPriceList(), PriceListSet.DEFAULT_PRICELIST_NAME.toString());
+        Assert.assertEquals(subscription.getEvents().get(2).getProduct(), "Shotgun");
+
 
         final List<Invoice> invoices = killBillClient.getInvoicesForAccount(accountJson.getAccountId(), true, false, false, AuditLevel.FULL, requestOptions);
         assertEquals(invoices.size(), 1);
         assertEquals(invoices.get(0).getAmount().compareTo(BigDecimal.TEN), 0);
+
+        // Move clock after phase
+        clock.addDays(30);
+        crappyWaitForLackOfProperSynchonization();
+
+        final Subscription subscription2 = killBillClient.getSubscription(subscription.getSubscriptionId(), requestOptions);
+        Assert.assertEquals(subscription2.getEvents().size(), 3);
+
+        clock.addDays(3);
+
+        // Change Plan
+        final Subscription newInput = new Subscription();
+        newInput.setSubscriptionId(subscription2.getSubscriptionId());
+        newInput.setPlanName("pistol-monthly");
+        final Subscription subscription3 = killBillClient.updateSubscription(newInput, null, BillingActionPolicy.IMMEDIATE, DEFAULT_WAIT_COMPLETION_TIMEOUT_SEC, basicRequestOptions());
+
+        Assert.assertEquals(subscription3.getEvents().size(), 4);
+        Assert.assertEquals(subscription3.getEvents().get(0).getEventType(), SubscriptionEventType.START_ENTITLEMENT.name());
+        Assert.assertEquals(subscription3.getEvents().get(0).getPlan(), "shotgun-monthly-1");
+        Assert.assertEquals(subscription3.getEvents().get(0).getPhase(), "shotgun-monthly-1-trial");
+        Assert.assertEquals(subscription3.getEvents().get(0).getPriceList(), PriceListSet.DEFAULT_PRICELIST_NAME.toString());
+        Assert.assertEquals(subscription3.getEvents().get(0).getProduct(), "Shotgun");
+
+        Assert.assertEquals(subscription3.getEvents().get(1).getEventType(), SubscriptionEventType.START_BILLING.name());
+        Assert.assertEquals(subscription3.getEvents().get(1).getPlan(), "shotgun-monthly-1");
+        Assert.assertEquals(subscription3.getEvents().get(1).getPhase(), "shotgun-monthly-1-trial");
+        Assert.assertEquals(subscription3.getEvents().get(1).getPriceList(), PriceListSet.DEFAULT_PRICELIST_NAME.toString());
+        Assert.assertEquals(subscription3.getEvents().get(1).getProduct(), "Shotgun");
+
+        Assert.assertEquals(subscription3.getEvents().get(2).getEventType(), SubscriptionEventType.PHASE.name());
+        Assert.assertEquals(subscription3.getEvents().get(2).getPlan(), "shotgun-monthly-1");
+        Assert.assertEquals(subscription3.getEvents().get(2).getPhase(), "shotgun-monthly-1-evergreen");
+        Assert.assertEquals(subscription3.getEvents().get(2).getPriceList(), PriceListSet.DEFAULT_PRICELIST_NAME.toString());
+        Assert.assertEquals(subscription3.getEvents().get(2).getProduct(), "Shotgun");
+
+        Assert.assertEquals(subscription3.getEvents().get(3).getEventType(), SubscriptionEventType.CHANGE.name());
+        Assert.assertEquals(subscription3.getEvents().get(3).getPlan(), "pistol-monthly");
+        Assert.assertEquals(subscription3.getEvents().get(3).getPhase(), "pistol-monthly-evergreen");
+        Assert.assertEquals(subscription3.getEvents().get(3).getPriceList(), PriceListSet.DEFAULT_PRICELIST_NAME.toString());
+        Assert.assertEquals(subscription3.getEvents().get(3).getProduct(), "Pistol");
     }
 
     @Test(groups = "slow", description = "Create a base entitlement and also addOns entitlements under the same bundle")
