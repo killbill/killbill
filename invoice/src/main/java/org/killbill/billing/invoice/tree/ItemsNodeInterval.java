@@ -134,37 +134,37 @@ public class ItemsNodeInterval extends NodeInterval {
         return addNode(newNode, new AddNodeCallback() {
             @Override
             public boolean onExistingNode(final NodeInterval existingNode) {
-                if (!shouldInsertNode(existingNode)) {
+                // If we receive a new proposed that is the same kind as the reversed existing (current node),
+                // we match existing and proposed. If not, we keep the proposed item as-is outside of the tree.
+                if (isSameKind((ItemsNodeInterval) existingNode)) {
+                    final ItemsInterval existingOrNewNodeItems = ((ItemsNodeInterval) existingNode).getItemsInterval();
+                    existingOrNewNodeItems.cancelItems(item);
+                    return true;
+                } else {
                     return false;
                 }
-
-                final ItemsInterval existingOrNewNodeItems = ((ItemsNodeInterval) existingNode).getItemsInterval();
-                existingOrNewNodeItems.cancelItems(item);
-                // In the merge logic, whether we really insert the node or find an existing node on which to insert items should be seen
-                // as an insertion (so as to avoid keeping that proposed item, see how return value of addProposedItem is used)
-                return true;
             }
 
             @Override
             public boolean shouldInsertNode(final NodeInterval insertionNode) {
-                // The root level is solely for the reversed existing items. If there is a new node that does not fit below the level
-                // of reversed existing items, we want to return false and keep it outside of the tree. It should be 'kept as such'.
+                // At this stage, we're currently merging a proposed item that does not fit any of the existing intervals.
+                // If this new node is about to be inserted at the root level, this means the proposed item overlaps any
+                // existing item. We keep these as-is, outside of the tree: they will become part of the resulting list.
                 if (insertionNode.isRoot()) {
                     return false;
                 }
 
-                final List<Item> insertionNodeItems = ((ItemsNodeInterval) insertionNode).getItems();
+                // If we receive a new proposed that is the same kind as the reversed existing (parent node),
+                // we want to insert it to generate a piece of repair (see SubscriptionItemTree#buildForMerge).
+                // If not, we keep the proposed item as-is outside of the tree.
+                return isSameKind((ItemsNodeInterval) insertionNode);
+            }
+
+            private boolean isSameKind(final ItemsNodeInterval insertionNode) {
+                final List<Item> insertionNodeItems = insertionNode.getItems();
                 Preconditions.checkState(insertionNodeItems.size() == 1, "Expected existing node to have only one item");
                 final Item insertionNodeItem = insertionNodeItems.get(0);
-
-                // If we receive a new proposed that is the same kind as the reversed existing we want to insert it to generate
-                // a piece of repair
-                if (insertionNodeItem.isSameKind(item)) {
-                    return true;
-                } else {
-                    // If not, then keep the proposed outside of the tree.
-                    return false;
-                }
+                return insertionNodeItem.isSameKind(item);
             }
         });
     }
