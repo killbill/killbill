@@ -150,9 +150,8 @@ public class DefaultDuration extends ValidatingConfig<StandaloneCatalog> impleme
             case YEARS:
                 return new Period().withYears(number);
             case UNLIMITED:
-                return new Period().withYears(100);
             default:
-                return new Period();
+                throw new  IllegalStateException("Unexpected duration unit " + unit);
         }
     }
 
