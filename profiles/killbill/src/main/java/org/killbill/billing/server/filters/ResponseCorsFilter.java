@@ -32,6 +32,7 @@ import javax.servlet.http.HttpServletResponse;
 import org.killbill.billing.jaxrs.resources.JaxrsResource;
 
 import com.google.common.base.Joiner;
+import com.google.common.base.MoreObjects;
 import com.google.common.collect.ImmutableList;
 import com.google.common.net.HttpHeaders;
 
@@ -65,7 +66,7 @@ public class ResponseCorsFilter implements Filter {
         final HttpServletResponse res = (HttpServletResponse) response;
         final HttpServletRequest req = (HttpServletRequest) request;
 
-        final String origin = req.getHeader(HttpHeaders.ORIGIN);
+        final String origin = MoreObjects.firstNonNull(req.getHeader(HttpHeaders.ORIGIN), "*");
         res.addHeader(HttpHeaders.ACCESS_CONTROL_ALLOW_ORIGIN, origin);
         res.addHeader(HttpHeaders.ACCESS_CONTROL_ALLOW_METHODS, "GET, POST, DELETE, PUT, OPTIONS");
         res.addHeader(HttpHeaders.ACCESS_CONTROL_ALLOW_HEADERS, allowedHeaders);
