@@ -51,11 +51,13 @@ import com.google.common.collect.ImmutableList;
 
 public class CatalogUpdater {
 
-    private static URI DUMMY_URI;
+    public static String DEFAULT_CATALOG_NAME = "DEFAULT";
+
+    private static URI DEFAULT_URI;
 
     static {
         try {
-            DUMMY_URI = new URI("dummy");
+            DEFAULT_URI = new URI(DEFAULT_CATALOG_NAME);
         } catch (URISyntaxException e) {
         }
     }
@@ -68,11 +70,11 @@ public class CatalogUpdater {
         this.catalog = new DefaultMutableStaticCatalog(standaloneCatalog);
     }
 
-    public CatalogUpdater(final String catalogName, final BillingMode billingMode, final DateTime effectiveDate, final Currency... currencies) {
+    public CatalogUpdater(final BillingMode billingMode, final DateTime effectiveDate, final Currency... currencies) {
 
         final DefaultPriceList defaultPriceList = new DefaultPriceList().setName(PriceListSet.DEFAULT_PRICELIST_NAME);
         final StandaloneCatalog tmp = new StandaloneCatalog()
-                .setCatalogName(catalogName)
+                .setCatalogName(DEFAULT_CATALOG_NAME)
                 .setEffectiveDate(effectiveDate.toDate())
                 .setRecurringBillingMode(billingMode)
                 .setProducts(ImmutableList.<Product>of())
@@ -84,7 +86,7 @@ public class CatalogUpdater {
         } else {
             tmp.setSupportedCurrencies(new Currency[0]);
         }
-        tmp.initialize(tmp, DUMMY_URI);
+        tmp.initialize(tmp, DEFAULT_URI);
 
         this.catalog = new DefaultMutableStaticCatalog(tmp);
     }
@@ -118,7 +120,7 @@ public class CatalogUpdater {
             product = new DefaultProduct();
             product.setName(desc.getProductName());
             product.setCatagory(desc.getProductCategory());
-            product.initialize(catalog, DUMMY_URI);
+            product.initialize(catalog, DEFAULT_URI);
             catalog.addProduct(product);
         }
 
@@ -192,7 +194,7 @@ public class CatalogUpdater {
         }
 
         // Reinit catalog
-        catalog.initialize(catalog, DUMMY_URI);
+        catalog.initialize(catalog, DEFAULT_URI);
     }
 
     private boolean isPriceForCurrencyExists(final InternationalPrice price, final Currency currency) {

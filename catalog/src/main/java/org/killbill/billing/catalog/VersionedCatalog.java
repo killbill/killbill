@@ -224,7 +224,7 @@ public class VersionedCatalog extends ValidatingConfig<VersionedCatalog> impleme
     }
 
     public void add(final StandaloneCatalog e) throws CatalogApiException {
-        if (catalogName == null) {
+        if (catalogName == null && e.getCatalogName() != null) {
             catalogName = e.getCatalogName();
         }
         if (recurringBillingMode == null) {
