@@ -240,7 +240,7 @@ public class SubscriptionResource extends JaxRsResourceBase {
 
             @Override
             public Response doResponseOk(final Entitlement createdEntitlement) {
-                return uriBuilder.buildResponse(uriInfo, SubscriptionResource.class, "getEntitlement", createdEntitlement.getId());
+                return uriBuilder.buildResponse(uriInfo, SubscriptionResource.class, "getEntitlement", createdEntitlement.getId(), request);
             }
         };
 
@@ -326,7 +326,7 @@ public class SubscriptionResource extends JaxRsResourceBase {
             }
             @Override
             public Response doResponseOk(final List<Entitlement> entitlements) {
-                return uriBuilder.buildResponse(uriInfo, BundleResource.class, "getBundle", entitlements.get(0).getBundleId());
+                return uriBuilder.buildResponse(uriInfo, BundleResource.class, "getBundle", entitlements.get(0).getBundleId(), request);
             }
         };
         final EntitlementCallCompletion<List<Entitlement>> callCompletionCreation = new EntitlementCallCompletion<List<Entitlement>>();
@@ -416,7 +416,7 @@ public class SubscriptionResource extends JaxRsResourceBase {
             }
             @Override
             public Response doResponseOk(final List<Entitlement> entitlements) {
-                return uriBuilder.buildResponse(uriInfo, AccountResource.class, "getAccountBundles", entitlements.get(0).getAccountId(), buildQueryParams(buildBundleIdList(entitlements)));
+                return uriBuilder.buildResponse(uriInfo, AccountResource.class, "getAccountBundles", entitlements.get(0).getAccountId(), buildQueryParams(buildBundleIdList(entitlements)), request);
             }
         };
         final EntitlementCallCompletion<List<Entitlement>> callCompletionCreation = new EntitlementCallCompletion<List<Entitlement>>();
@@ -849,7 +849,7 @@ public class SubscriptionResource extends JaxRsResourceBase {
                                        @javax.ws.rs.core.Context final HttpServletRequest request,
                                        @javax.ws.rs.core.Context final UriInfo uriInfo) throws CustomFieldApiException {
         return super.createCustomFields(UUID.fromString(id), customFields,
-                                        context.createContext(createdBy, reason, comment, request), uriInfo);
+                                        context.createContext(createdBy, reason, comment, request), uriInfo, request);
     }
 
     @DELETE
@@ -899,7 +899,7 @@ public class SubscriptionResource extends JaxRsResourceBase {
                                @javax.ws.rs.core.Context final UriInfo uriInfo,
                                @javax.ws.rs.core.Context final HttpServletRequest request) throws TagApiException {
         return super.createTags(UUID.fromString(id), tagList, uriInfo,
-                                context.createContext(createdBy, reason, comment, request));
+                                context.createContext(createdBy, reason, comment, request), request);
     }
 
     @DELETE

@@ -321,7 +321,7 @@ public class BundleResource extends JaxRsResourceBase {
                                        @javax.ws.rs.core.Context final HttpServletRequest request,
                                        @javax.ws.rs.core.Context final UriInfo uriInfo) throws CustomFieldApiException {
         return super.createCustomFields(UUID.fromString(id), customFields,
-                                        context.createContext(createdBy, reason, comment, request), uriInfo);
+                                        context.createContext(createdBy, reason, comment, request), uriInfo, request);
     }
 
     @TimedResource
@@ -389,7 +389,7 @@ public class BundleResource extends JaxRsResourceBase {
         final LocalDate inputLocalDate = toLocalDate(requestedDate);
 
         final UUID newBundleId = entitlementApi.transferEntitlementsOverrideBillingPolicy(bundle.getAccountId(), UUID.fromString(json.getAccountId()), bundle.getExternalKey(), inputLocalDate, policy, pluginProperties, callContext);
-        return uriBuilder.buildResponse(BundleResource.class, "getBundle", newBundleId, uriInfo.getBaseUri().toString());
+        return uriBuilder.buildResponse(uriInfo, BundleResource.class, "getBundle", newBundleId, request);
     }
 
     @TimedResource
@@ -407,7 +407,7 @@ public class BundleResource extends JaxRsResourceBase {
                                @javax.ws.rs.core.Context final UriInfo uriInfo,
                                @javax.ws.rs.core.Context final HttpServletRequest request) throws TagApiException {
         return super.createTags(UUID.fromString(id), tagList, uriInfo,
-                                context.createContext(createdBy, reason, comment, request));
+                                context.createContext(createdBy, reason, comment, request), request);
     }
 
     @TimedResource

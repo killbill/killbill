@@ -47,7 +47,6 @@ import org.killbill.billing.jaxrs.util.JaxrsUriBuilder;
 import org.killbill.billing.payment.api.Payment;
 import org.killbill.billing.payment.api.PaymentApi;
 import org.killbill.billing.payment.api.PaymentApiException;
-import org.killbill.billing.payment.api.PaymentTransaction;
 import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.payment.api.TransactionStatus;
 import org.killbill.billing.util.api.AuditUserApi;
@@ -114,7 +113,7 @@ public class TransactionResource extends JaxRsResourceBase {
 
         final boolean success = TransactionStatus.SUCCESS.name().equals(json.getStatus());
         final Payment result = paymentApi.notifyPendingTransactionOfStateChanged(account, UUID.fromString(transactionIdStr), success, callContext);
-        return uriBuilder.buildResponse(uriInfo, PaymentResource.class, "getPayment", result.getId());
+        return uriBuilder.buildResponse(uriInfo, PaymentResource.class, "getPayment", result.getId(), request);
     }
 
 
@@ -145,7 +144,7 @@ public class TransactionResource extends JaxRsResourceBase {
                                        @javax.ws.rs.core.Context final HttpServletRequest request,
                                        @javax.ws.rs.core.Context final UriInfo uriInfo) throws CustomFieldApiException {
         return super.createCustomFields(UUID.fromString(id), customFields,
-                                        context.createContext(createdBy, reason, comment, request), uriInfo);
+                                        context.createContext(createdBy, reason, comment, request), uriInfo, request);
     }
 
     @TimedResource
@@ -196,7 +195,7 @@ public class TransactionResource extends JaxRsResourceBase {
                                @javax.ws.rs.core.Context final UriInfo uriInfo,
                                @javax.ws.rs.core.Context final HttpServletRequest request) throws TagApiException {
         return super.createTags(UUID.fromString(id), tagList, uriInfo,
-                                context.createContext(createdBy, reason, comment, request));
+                                context.createContext(createdBy, reason, comment, request), request);
     }
 
     @TimedResource

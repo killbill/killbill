@@ -131,7 +131,7 @@ public class TagDefinitionResource extends JaxRsResourceBase {
                              json.getDescription(), "TagDefinition description needs to be set");
 
         final TagDefinition createdTagDef = tagUserApi.createTagDefinition(json.getName(), json.getDescription(), context.createContext(createdBy, reason, comment, request));
-        return uriBuilder.buildResponse(uriInfo, TagDefinitionResource.class, "getTagDefinition", createdTagDef.getId());
+        return uriBuilder.buildResponse(uriInfo, TagDefinitionResource.class, "getTagDefinition", createdTagDef.getId(), request);
     }
 
     @TimedResource

@@ -78,7 +78,6 @@ import org.killbill.billing.payment.api.PaymentTransaction;
 import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.payment.api.TransactionStatus;
 import org.killbill.billing.payment.api.TransactionType;
-import org.killbill.billing.util.UUIDs;
 import org.killbill.billing.util.api.AuditUserApi;
 import org.killbill.billing.util.api.CustomFieldApiException;
 import org.killbill.billing.util.api.CustomFieldUserApi;
@@ -213,11 +212,12 @@ public abstract class JaxRsResourceBase implements JaxrsResource {
     protected Response createTags(final UUID id,
                                   final String tagList,
                                   final UriInfo uriInfo,
-                                  final CallContext context) throws TagApiException {
+                                  final CallContext context,
+                                  final HttpServletRequest request) throws TagApiException {
         final Collection<UUID> input = getTagDefinitionUUIDs(tagList);
         tagUserApi.addTags(id, getObjectType(), input, context);
         // TODO This will always return 201, even if some (or all) tags already existed (in which case we don't do anything)
-        return uriBuilder.buildResponse(this.getClass(), "getTags", id, uriInfo.getBaseUri().toString());
+        return uriBuilder.buildResponse(uriInfo, this.getClass(), "getTags", id, request);
     }
 
     protected Collection<UUID> getTagDefinitionUUIDs(final String tagList) {
@@ -255,7 +255,8 @@ public abstract class JaxRsResourceBase implements JaxrsResource {
     protected Response createCustomFields(final UUID id,
                                           final List<CustomFieldJson> customFields,
                                           final CallContext context,
-                                          final UriInfo uriInfo) throws CustomFieldApiException {
+                                          final UriInfo uriInfo,
+                                          final HttpServletRequest request) throws CustomFieldApiException {
         final LinkedList<CustomField> input = new LinkedList<CustomField>();
         for (final CustomFieldJson cur : customFields) {
             verifyNonNullOrEmpty(cur.getName(), "CustomFieldJson name needs to be set");
@@ -264,7 +265,7 @@ public abstract class JaxRsResourceBase implements JaxrsResource {
         }
 
         customFieldUserApi.addCustomFields(input, context);
-        return uriBuilder.buildResponse(uriInfo, this.getClass(), "getCustomFields", id);
+        return uriBuilder.buildResponse(uriInfo, this.getClass(), "getCustomFields", id, request);
     }
 
     /**
@@ -554,7 +555,7 @@ public abstract class JaxRsResourceBase implements JaxrsResource {
         }
     }
 
-    protected Response createPaymentResponse(final UriInfo uriInfo, final Payment payment, final TransactionType transactionType, @Nullable final String transactionExternalKey) {
+    protected Response createPaymentResponse(final UriInfo uriInfo, final Payment payment, final TransactionType transactionType, @Nullable final String transactionExternalKey, final HttpServletRequest request) {
         final PaymentTransaction createdTransaction = findCreatedTransaction(payment, transactionType, transactionExternalKey);
         Preconditions.checkNotNull(createdTransaction, "No transaction of type '%s' found", transactionType);
 
@@ -563,7 +564,7 @@ public abstract class JaxRsResourceBase implements JaxrsResource {
         switch (createdTransaction.getTransactionStatus()) {
             case PENDING:
             case SUCCESS:
-                return uriBuilder.buildResponse(uriInfo, PaymentResource.class, "getPayment", payment.getId());
+                return uriBuilder.buildResponse(uriInfo, PaymentResource.class, "getPayment", payment.getId(), request);
             case PAYMENT_FAILURE:
                 // 402 - Payment Required
                 responseBuilder = Response.status(402);
@@ -590,7 +591,7 @@ public abstract class JaxRsResourceBase implements JaxrsResource {
                 exception = createBillingException("This should never have happened!!!");
         }
         addExceptionToResponse(responseBuilder, exception);
-        return responseBuilder.location(getPaymentLocation(uriInfo, payment)).build();
+        return uriBuilder.buildResponse(uriInfo, PaymentResource.class, "getPayment", payment.getId(), request);
     }
 
     private void addExceptionToResponse(final ResponseBuilder responseBuilder, final BillingExceptionJson exception) {
@@ -606,10 +607,6 @@ public abstract class JaxRsResourceBase implements JaxrsResource {
         final BillingExceptionJson exception;
         exception = new BillingExceptionJson(PaymentApiException.class.getName(), null, message, null, null, Collections.<StackTraceElementJson>emptyList());
         return exception;
-    }
-
-    private URI getPaymentLocation(final UriInfo uriInfo, final Payment payment) {
-        return uriBuilder.buildLocation(uriInfo, PaymentResource.class, "getPayment", payment.getId(), null);
     }
 
     private PaymentTransaction findCreatedTransaction(final Payment payment, final TransactionType transactionType, @Nullable final String transactionExternalKey) {

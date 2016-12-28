@@ -36,9 +36,7 @@ import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.killbill.billing.account.api.AccountUserApi;
 import org.killbill.billing.catalog.StandaloneCatalog;
-import org.killbill.billing.catalog.StandaloneCatalogWithPriceOverride;
 import org.killbill.billing.catalog.VersionedCatalog;
-import org.killbill.billing.catalog.api.Catalog;
 import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.catalog.api.CatalogUserApi;
 import org.killbill.billing.catalog.api.Listing;
@@ -113,7 +111,7 @@ public class CatalogResource extends JaxRsResourceBase {
                                      @javax.ws.rs.core.Context final UriInfo uriInfo) throws Exception {
         final CallContext callContext = context.createContext(createdBy, reason, comment, request);
         catalogUserApi.uploadCatalog(catalogXML, callContext);
-        return uriBuilder.buildResponse(uriInfo, CatalogResource.class, null, null);
+        return uriBuilder.buildResponse(uriInfo, CatalogResource.class, null, null, request);
     }
 
     @TimedResource
@@ -219,7 +217,7 @@ public class CatalogResource extends JaxRsResourceBase {
                                                                           simplePlan.getTrialTimeUnit(),
                                                                           simplePlan.getAvailableBaseProducts());
         catalogUserApi.addSimplePlan(desc, clock.getUTCNow(), callContext);
-        return uriBuilder.buildResponse(uriInfo, CatalogResource.class, null, null);
+        return uriBuilder.buildResponse(uriInfo, CatalogResource.class, null, null, request);
     }
 
 }

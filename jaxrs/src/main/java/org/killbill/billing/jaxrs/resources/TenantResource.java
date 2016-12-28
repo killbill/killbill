@@ -142,7 +142,7 @@ public class TenantResource extends JaxRsResourceBase {
                                                                    UserType.CUSTOMER, Context.getOrCreateUserToken(), clock);
             catalogUserApi.createDefaultEmptyCatalog(clock.getUTCNow(),callContext);
         }
-        return uriBuilder.buildResponse(uriInfo, TenantResource.class, "getTenant", tenant.getId());
+        return uriBuilder.buildResponse(uriInfo, TenantResource.class, "getTenant", tenant.getId(), request);
     }
 
     @TimedResource
@@ -341,7 +341,7 @@ public class TenantResource extends JaxRsResourceBase {
                                @javax.ws.rs.core.Context  final UriInfo uriInfo) throws TenantApiException {
         final CallContext callContext = context.createContext(createdBy, reason, comment, request);
         tenantApi.addTenantKeyValue(key, value, callContext);
-        return uriBuilder.buildResponse(uriInfo, TenantResource.class, "getUserKeyValue", key);
+        return uriBuilder.buildResponse(uriInfo, TenantResource.class, "getUserKeyValue", key, request);
     }
 
     @TimedResource
@@ -389,7 +389,7 @@ public class TenantResource extends JaxRsResourceBase {
         final String tenantKey = keyPostfix != null ? key.toString() + keyPostfix : key.toString();
         tenantApi.addTenantKeyValue(tenantKey, value, callContext);
 
-        return uriBuilder.buildResponse(uriInfo, TenantResource.class, getMethodStr, keyPostfix);
+        return uriBuilder.buildResponse(uriInfo, TenantResource.class, getMethodStr, keyPostfix, request);
     }
 
 

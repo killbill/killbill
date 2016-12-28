@@ -131,7 +131,7 @@ public class CreditResource extends JaxRsResourceBase {
                                                  account.getCurrency(), autoCommit, json.getDescription(), callContext);
         }
 
-        return uriBuilder.buildResponse(uriInfo, CreditResource.class, "getCredit", credit.getId());
+        return uriBuilder.buildResponse(uriInfo, CreditResource.class, "getCredit", credit.getId(), request);
     }
 
     @Override

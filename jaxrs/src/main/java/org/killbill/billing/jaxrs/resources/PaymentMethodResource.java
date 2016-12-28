@@ -303,7 +303,7 @@ public class PaymentMethodResource extends JaxRsResourceBase {
                                        @javax.ws.rs.core.Context final HttpServletRequest request,
                                        @javax.ws.rs.core.Context final UriInfo uriInfo) throws CustomFieldApiException {
         return super.createCustomFields(UUID.fromString(paymentMethodId), customFields,
-                                        context.createContext(createdBy, reason, comment, request), uriInfo);
+                                        context.createContext(createdBy, reason, comment, request), uriInfo, request);
     }
 
     @TimedResource

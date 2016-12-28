@@ -22,14 +22,18 @@ import java.util.Map;
 
 import javax.annotation.Nullable;
 import javax.inject.Inject;
+import javax.servlet.ServletRequest;
 import javax.ws.rs.Path;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.Response.ResponseBuilder;
 import javax.ws.rs.core.UriBuilder;
 import javax.ws.rs.core.UriInfo;
 
 import org.killbill.billing.jaxrs.resources.JaxRsResourceBase;
 import org.killbill.billing.jaxrs.resources.JaxrsResource;
 import org.killbill.billing.util.config.definition.JaxrsConfig;
+
+import com.google.common.base.MoreObjects;
 
 public class JaxrsUriBuilder {
 
@@ -44,24 +48,51 @@ public class JaxrsUriBuilder {
         this.jaxrsConfig = jaxrsConfig;
     }
 
-    public Response buildResponse(final UriInfo uriInfo, final Class<? extends JaxrsResource> theClass,
-                                  final String getMethodName, final Object objectId) {
-        final URI location = buildLocation(uriInfo, theClass, getMethodName, objectId, null);
-        return !jaxrsConfig.isJaxrsLocationFullUrl() ?
-               Response.status(Response.Status.CREATED).header("Location", location.getPath()).build() :
-               Response.created(location).build();
+    public Response buildResponse(final UriInfo uriInfo,
+                                  final Class<? extends JaxrsResource> theClass,
+                                  final String getMethodName,
+                                  final Object objectId,
+                                  final ServletRequest request) {
+        return buildResponse(uriInfo, theClass, getMethodName, objectId, null, request);
     }
 
-    public Response buildResponse(final UriInfo uriInfo, final Class<? extends JaxrsResource> theClass,
-                                  final String getMethodName, final Object objectId, final Map<String, String> params) {
-        final URI location = buildLocation(uriInfo, theClass, getMethodName, objectId, params);
-        return !jaxrsConfig.isJaxrsLocationFullUrl() ?
-               Response.status(Response.Status.CREATED).header("Location", location.getPath()).build() :
-               Response.created(location).build();
+    public Response buildResponse(final UriInfo uriInfo,
+                                  final Class<? extends JaxrsResource> theClass,
+                                  final String getMethodName,
+                                  final Object objectId,
+                                  final Map<String, String> params,
+                                  final ServletRequest request) {
+        return buildResponse(Response.status(Response.Status.CREATED), uriInfo, theClass, getMethodName, objectId, params, request);
     }
 
-    public URI buildLocation(final UriInfo uriInfo, final Class<? extends JaxrsResource> theClass,
-                             final String getMethodName, final Object objectId, final Map<String, String> params) {
+    public Response buildResponse(final ResponseBuilder responseBuilder,
+                                  final UriInfo uriInfo,
+                                  final Class<? extends JaxrsResource> theClass,
+                                  final String getMethodName,
+                                  final Object objectId,
+                                  final ServletRequest request) {
+        return buildResponse(responseBuilder, uriInfo, theClass, getMethodName, objectId, null, request);
+    }
+
+    public Response buildResponse(final ResponseBuilder responseBuilder,
+                                  final UriInfo uriInfo,
+                                  final Class<? extends JaxrsResource> theClass,
+                                  final String getMethodName,
+                                  final Object objectId,
+                                  final Map<String, String> params,
+                                  final ServletRequest request) {
+        final URI location = buildLocation(uriInfo, theClass, getMethodName, objectId, params, request);
+        return !jaxrsConfig.isJaxrsLocationFullUrl() ?
+               responseBuilder.header("Location", location.getPath()).build() :
+               responseBuilder.location(location).build();
+    }
+
+    private URI buildLocation(final UriInfo uriInfo,
+                              final Class<? extends JaxrsResource> theClass,
+                              final String getMethodName,
+                              final Object objectId,
+                              final Map<String, String> params,
+                              final ServletRequest request) {
         final UriBuilder uriBuilder = getUriBuilder(uriInfo.getBaseUri().getPath(), theClass, getMethodName);
 
         if (null != params && !params.isEmpty()) {
@@ -71,9 +102,17 @@ public class JaxrsUriBuilder {
         }
 
         if (jaxrsConfig.isJaxrsLocationFullUrl()) {
-            uriBuilder.scheme(uriInfo.getAbsolutePath().getScheme())
-                      .host(uriInfo.getAbsolutePath().getHost())
-                      .port(uriInfo.getAbsolutePath().getPort());
+            if (jaxrsConfig.isJaxrsLocationUseForwardHeaders()) {
+                // Use "remote" value to support X-Forwarded headers (assumes RemoteIpValve or similar is configured)
+                // See https://github.com/killbill/killbill/issues/566
+                uriBuilder.scheme(request.getScheme())
+                          .host(MoreObjects.firstNonNull(jaxrsConfig.getJaxrsLocationHost(), uriInfo.getAbsolutePath().getHost())) // Should we look for X-Forwarded-By instead?
+                          .port(request.getServerPort());
+            } else {
+                uriBuilder.scheme(uriInfo.getAbsolutePath().getScheme())
+                          .host(uriInfo.getAbsolutePath().getHost())
+                          .port(uriInfo.getAbsolutePath().getPort());
+            }
         }
         return objectId != null ? uriBuilder.build(objectId) : uriBuilder.build();
     }
@@ -90,23 +129,6 @@ public class JaxrsUriBuilder {
             uriBuilder.queryParam(key, params.get(key));
         }
         return uriBuilder.build();
-    }
-
-    public Response buildResponse(final Class<? extends JaxrsResource> theClass, final String getMethodName, final Object objectId, final String baseUri) {
-
-        // Let's build a n absolute location for cross resources
-        // See Jersey ContainerResponse.setHeaders
-        final StringBuilder tmp = new StringBuilder(baseUri.substring(0, baseUri.length() - 1));
-        tmp.append(getUriBuilder(theClass, getMethodName).build(objectId).toString());
-        final URI newUriFromResource = UriBuilder.fromUri(tmp.toString()).build();
-        final Response.ResponseBuilder ri = Response.created(newUriFromResource);
-        final Object obj = new Object() {
-            @SuppressWarnings(value = "all")
-            public URI getUri() {
-                return newUriFromResource;
-            }
-        };
-        return ri.entity(obj).build();
     }
 
     private UriBuilder getUriBuilder(final String path, final Class<? extends JaxrsResource> theClassMaybeEnhanced, @Nullable final String getMethodName) {

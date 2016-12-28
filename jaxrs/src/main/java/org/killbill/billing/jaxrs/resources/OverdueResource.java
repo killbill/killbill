@@ -107,7 +107,7 @@ public class OverdueResource extends JaxRsResourceBase {
 
         final CallContext callContext = context.createContext(createdBy, reason, comment, request);
         overdueApi.uploadOverdueConfig(overdueXML, callContext);
-        return uriBuilder.buildResponse(uriInfo, OverdueResource.class, null, null);
+        return uriBuilder.buildResponse(uriInfo, OverdueResource.class, null, null, request);
     }
 
     @TimedResource
@@ -140,7 +140,7 @@ public class OverdueResource extends JaxRsResourceBase {
 
         final OverdueConfig overdueConfig = OverdueJson.toOverdueConfigWithValidation(overdueJson);
         overdueApi.uploadOverdueConfig(overdueConfig, callContext);
-        return uriBuilder.buildResponse(uriInfo, OverdueResource.class, null, null);
+        return uriBuilder.buildResponse(uriInfo, OverdueResource.class, null, null, request);
     }
 
 }
