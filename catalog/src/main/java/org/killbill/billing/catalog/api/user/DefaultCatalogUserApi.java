@@ -31,7 +31,6 @@ import org.killbill.billing.ErrorCode;
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.catalog.CatalogUpdater;
 import org.killbill.billing.catalog.StandaloneCatalog;
-import org.killbill.billing.catalog.StandaloneCatalogWithPriceOverride;
 import org.killbill.billing.catalog.VersionedCatalog;
 import org.killbill.billing.catalog.api.BillingMode;
 import org.killbill.billing.catalog.api.Catalog;
@@ -48,11 +47,16 @@ import org.killbill.billing.tenant.api.TenantUserApi;
 import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.billing.util.callcontext.TenantContext;
+import org.killbill.xmlloader.ValidationErrors;
 import org.killbill.xmlloader.ValidationException;
 import org.killbill.xmlloader.XMLLoader;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.xml.sax.SAXException;
 
 public class  DefaultCatalogUserApi implements CatalogUserApi {
+
+    private final Logger logger = LoggerFactory.getLogger(DefaultCatalogUserApi.class);
 
     private final CatalogService catalogService;
     private final InternalCallContextFactory internalCallContextFactory;
@@ -89,9 +93,27 @@ public class  DefaultCatalogUserApi implements CatalogUserApi {
 
         final InternalTenantContext internalTenantContext = createInternalTenantContext(callContext);
         try {
+
+            final StaticCatalog currentCatalog = catalogService.getCurrentCatalog(false, true, internalTenantContext);
+
+
             // Validation purpose:  Will throw if bad XML or catalog validation fails
             final InputStream stream = new ByteArrayInputStream(catalogXML.getBytes());
-            XMLLoader.getObjectFromStream(new URI("dummy"), stream, StandaloneCatalog.class);
+            final StaticCatalog newCatalogVersion = XMLLoader.getObjectFromStream(new URI("dummy"), stream, StandaloneCatalog.class);
+
+            // currentCatalog.getCatalogName() could be null if tenant was created with a default catalog
+            if (currentCatalog != null && currentCatalog.getCatalogName() !=  null) {
+                if (!newCatalogVersion.getCatalogName().equals(currentCatalog.getCatalogName())) {
+                    final ValidationErrors errors = new ValidationErrors();
+                    errors.add(String.format("Catalog name '%s' should match previous catalog name '%s'", newCatalogVersion.getCatalogName(), currentCatalog.getCatalogName()),
+                                                   new URI("dummy"), StandaloneCatalog.class, "");
+                    // Bummer ValidationException CTOR is private to package...
+                    //final ValidationException validationException = new ValidationException(errors);
+                    //throw new CatalogApiException(errors, ErrorCode.CAT_INVALID_FOR_TENANT, internalTenantContext.getTenantRecordId());
+                    logger.info("Failed to load new catalog version: " + errors.toString());
+                    throw new CatalogApiException(ErrorCode.CAT_INVALID_FOR_TENANT, internalTenantContext.getTenantRecordId());
+                }
+            }
 
             catalogCache.clearCatalog(internalTenantContext);
             tenantApi.addTenantKeyValue(TenantKey.CATALOG.toString(), catalogXML, callContext);
@@ -124,7 +146,7 @@ public class  DefaultCatalogUserApi implements CatalogUserApi {
             final StandaloneCatalog currentCatalog = getCurrentStandaloneCatalogForTenant(internalTenantContext);
             final CatalogUpdater catalogUpdater = (currentCatalog != null) ?
                                                   new CatalogUpdater(currentCatalog) :
-                                                  new CatalogUpdater("dummy", BillingMode.IN_ADVANCE, effectiveDate, null);
+                                                  new CatalogUpdater(BillingMode.IN_ADVANCE, effectiveDate, null);
 
             catalogCache.clearCatalog(internalTenantContext);
             tenantApi.updateTenantKeyValue(TenantKey.CATALOG.toString(), catalogUpdater.getCatalogXML(), callContext);
@@ -141,7 +163,7 @@ public class  DefaultCatalogUserApi implements CatalogUserApi {
             final StandaloneCatalog currentCatalog = getCurrentStandaloneCatalogForTenant(internalTenantContext);
             final CatalogUpdater catalogUpdater = (currentCatalog != null) ?
                                                   new CatalogUpdater(currentCatalog) :
-                                                  new CatalogUpdater("dummy", BillingMode.IN_ADVANCE, effectiveDate, descriptor.getCurrency());
+                                                  new CatalogUpdater(BillingMode.IN_ADVANCE, effectiveDate, descriptor.getCurrency());
 
             catalogUpdater.addSimplePlanDescriptor(descriptor);
 
