@@ -26,12 +26,15 @@ import javax.servlet.FilterConfig;
 import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
+import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.killbill.billing.jaxrs.resources.JaxrsResource;
 
 import com.google.common.base.Joiner;
+import com.google.common.base.MoreObjects;
 import com.google.common.collect.ImmutableList;
+import com.google.common.net.HttpHeaders;
 
 @Singleton
 public class ResponseCorsFilter implements Filter {
@@ -39,8 +42,9 @@ public class ResponseCorsFilter implements Filter {
     private final String allowedHeaders;
 
     public ResponseCorsFilter() {
-        allowedHeaders = Joiner.on(",").join(ImmutableList.<String>of("Authorization",
-                                                                      "Content-Type",
+        allowedHeaders = Joiner.on(",").join(ImmutableList.<String>of(HttpHeaders.AUTHORIZATION,
+                                                                      HttpHeaders.CONTENT_TYPE,
+                                                                      HttpHeaders.LOCATION,
                                                                       JaxrsResource.HDR_API_KEY,
                                                                       JaxrsResource.HDR_API_SECRET,
                                                                       JaxrsResource.HDR_COMMENT,
@@ -60,10 +64,14 @@ public class ResponseCorsFilter implements Filter {
     @Override
     public void doFilter(final ServletRequest request, final ServletResponse response, final FilterChain chain) throws IOException, ServletException {
         final HttpServletResponse res = (HttpServletResponse) response;
-        res.addHeader("Access-Control-Allow-Origin", "*");
-        res.addHeader("Access-Control-Allow-Methods", "GET, POST, DELETE, PUT, OPTIONS");
-        res.addHeader("Access-Control-Allow-Headers", allowedHeaders);
-        res.addHeader("Access-Control-Expose-Headers", allowedHeaders);
+        final HttpServletRequest req = (HttpServletRequest) request;
+
+        final String origin = MoreObjects.firstNonNull(req.getHeader(HttpHeaders.ORIGIN), "*");
+        res.addHeader(HttpHeaders.ACCESS_CONTROL_ALLOW_ORIGIN, origin);
+        res.addHeader(HttpHeaders.ACCESS_CONTROL_ALLOW_METHODS, "GET, POST, DELETE, PUT, OPTIONS");
+        res.addHeader(HttpHeaders.ACCESS_CONTROL_ALLOW_HEADERS, allowedHeaders);
+        res.addHeader(HttpHeaders.ACCESS_CONTROL_EXPOSE_HEADERS, allowedHeaders);
+        res.addHeader(HttpHeaders.ACCESS_CONTROL_ALLOW_CREDENTIALS, "true");
         chain.doFilter(request, response);
     }
 

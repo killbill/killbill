@@ -57,7 +57,6 @@ import org.killbill.billing.jaxrs.util.JaxrsUriBuilder;
 import org.killbill.billing.payment.api.Payment;
 import org.killbill.billing.payment.api.PaymentApi;
 import org.killbill.billing.payment.api.PaymentApiException;
-import org.killbill.billing.payment.api.PaymentMethod;
 import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.util.UUIDs;
 import org.killbill.billing.util.api.AuditUserApi;
@@ -200,7 +199,7 @@ public class InvoicePaymentResource extends JaxRsResourceBase {
                                                                pluginProperties, createInvoicePaymentControlPluginApiPaymentOptions(false), callContext);
         }
 
-        return uriBuilder.buildResponse(InvoicePaymentResource.class, "getInvoicePayment", result.getId(), uriInfo.getBaseUri().toString());
+        return uriBuilder.buildResponse(uriInfo, InvoicePaymentResource.class, "getInvoicePayment", result.getId(), request);
     }
 
     @TimedResource
@@ -229,7 +228,7 @@ public class InvoicePaymentResource extends JaxRsResourceBase {
 
         final Payment result = paymentApi.createChargebackWithPaymentControl(account, payment.getId(), json.getAmount(), account.getCurrency(),
                                                                                    transactionExternalKey, createInvoicePaymentControlPluginApiPaymentOptions(false), callContext);
-        return uriBuilder.buildResponse(uriInfo, InvoicePaymentResource.class, "getInvoicePayment", result.getId());
+        return uriBuilder.buildResponse(uriInfo, InvoicePaymentResource.class, "getInvoicePayment", result.getId(), request);
     }
 
     @TimedResource
@@ -256,7 +255,7 @@ public class InvoicePaymentResource extends JaxRsResourceBase {
         final Account account = accountUserApi.getAccountById(payment.getAccountId(), callContext);
 
         final Payment result = paymentApi.createChargebackReversalWithPaymentControl(account, payment.getId(), json.getTransactionExternalKey(), createInvoicePaymentControlPluginApiPaymentOptions(false), callContext);
-        return uriBuilder.buildResponse(uriInfo, InvoicePaymentResource.class, "getInvoicePayment", result.getId());
+        return uriBuilder.buildResponse(uriInfo, InvoicePaymentResource.class, "getInvoicePayment", result.getId(), request);
     }
 
     @TimedResource
@@ -286,7 +285,7 @@ public class InvoicePaymentResource extends JaxRsResourceBase {
                                        @javax.ws.rs.core.Context final HttpServletRequest request,
                                        @javax.ws.rs.core.Context final UriInfo uriInfo) throws CustomFieldApiException {
         return super.createCustomFields(UUID.fromString(id), customFields,
-                                        context.createContext(createdBy, reason, comment, request), uriInfo);
+                                        context.createContext(createdBy, reason, comment, request), uriInfo, request);
     }
 
     @TimedResource
@@ -340,7 +339,7 @@ public class InvoicePaymentResource extends JaxRsResourceBase {
                                @javax.ws.rs.core.Context final UriInfo uriInfo,
                                @javax.ws.rs.core.Context final HttpServletRequest request) throws TagApiException {
         return super.createTags(UUID.fromString(id), tagList, uriInfo,
-                                context.createContext(createdBy, reason, comment, request));
+                                context.createContext(createdBy, reason, comment, request), request);
     }
 
     @TimedResource

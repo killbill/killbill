@@ -19,6 +19,7 @@ package org.killbill.billing.util.config.definition;
 
 import org.skife.config.Config;
 import org.skife.config.Default;
+import org.skife.config.DefaultNull;
 import org.skife.config.Description;
 import org.skife.config.TimeSpan;
 
@@ -39,4 +40,13 @@ public interface JaxrsConfig extends KillbillConfig {
     @Description("Type of return for the jaxrs response location URL")
     boolean isJaxrsLocationFullUrl();
 
+    @Config("org.killbill.jaxrs.location.useForwardHeaders")
+    @Default("true")
+    @Description("Whether to respect X-Forwarded headers for redirect URLs")
+    boolean isJaxrsLocationUseForwardHeaders();
+
+    @Config("org.killbill.jaxrs.location.host")
+    @DefaultNull
+    @Description("Base host address to use for redirect URLs")
+    String getJaxrsLocationHost();
 }

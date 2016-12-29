@@ -93,7 +93,6 @@ import org.killbill.billing.tenant.api.TenantApiException;
 import org.killbill.billing.tenant.api.TenantKV.TenantKey;
 import org.killbill.billing.tenant.api.TenantUserApi;
 import org.killbill.billing.util.LocaleUtils;
-import org.killbill.billing.util.UUIDs;
 import org.killbill.billing.util.api.AuditUserApi;
 import org.killbill.billing.util.api.CustomFieldApiException;
 import org.killbill.billing.util.api.CustomFieldUserApi;
@@ -311,7 +310,7 @@ public class InvoiceResource extends JaxRsResourceBase {
         try {
             final Invoice generatedInvoice = invoiceApi.triggerInvoiceGeneration(UUID.fromString(accountId), inputDate, null,
                                                                                  callContext);
-            return uriBuilder.buildResponse(uriInfo, InvoiceResource.class, "getInvoice", generatedInvoice.getId());
+            return uriBuilder.buildResponse(uriInfo, InvoiceResource.class, "getInvoice", generatedInvoice.getId(), request);
         } catch (InvoiceApiException e) {
             if (e.getCode() == ErrorCode.INVOICE_NOTHING_TO_DO.getCode()) {
                 return Response.status(Status.NOT_FOUND).build();
@@ -341,7 +340,7 @@ public class InvoiceResource extends JaxRsResourceBase {
         final Iterable<InvoiceItem> sanitizedInvoiceItems = validateSanitizeAndTranformInputItems(account.getCurrency(), items);
         final LocalDate resolvedTargetDate =  toLocalDateDefaultToday(account, targetDate, callContext);
         final UUID invoiceId = invoiceApi.createMigrationInvoice(UUID.fromString(accountId), resolvedTargetDate, sanitizedInvoiceItems, callContext);
-        return uriBuilder.buildResponse(uriInfo, InvoiceResource.class, "getInvoice", invoiceId);
+        return uriBuilder.buildResponse(uriInfo, InvoiceResource.class, "getInvoice", invoiceId, request);
     }
 
 
@@ -475,7 +474,7 @@ public class InvoiceResource extends JaxRsResourceBase {
                                                                     callContext);
         }
 
-        return uriBuilder.buildResponse(uriInfo, InvoiceResource.class, "getInvoice", adjustmentItem.getInvoiceId());
+        return uriBuilder.buildResponse(uriInfo, InvoiceResource.class, "getInvoice", adjustmentItem.getInvoiceId(), request);
     }
 
     @TimedResource
@@ -663,7 +662,7 @@ public class InvoiceResource extends JaxRsResourceBase {
         final Payment result = createPurchaseForInvoice(account, invoiceId, payment.getPurchasedAmount(), paymentMethodId, externalPayment,
                                                         (payment.getPaymentExternalKey() != null) ? payment.getPaymentExternalKey() : null, null, pluginProperties, callContext);
         return result != null ?
-               uriBuilder.buildResponse(uriInfo, InvoicePaymentResource.class, "getInvoicePayment", result.getId()) :
+               uriBuilder.buildResponse(uriInfo, InvoicePaymentResource.class, "getInvoicePayment", result.getId(), request) :
                Response.status(Status.NO_CONTENT).build();
     }
 
@@ -878,7 +877,7 @@ public class InvoiceResource extends JaxRsResourceBase {
             }
         }
         tenantApi.addTenantKeyValue(tenantKeyStr, templateResource, callContext);
-        return uriBuilder.buildResponse(uriInfo, InvoiceResource.class, getMethodStr, localeStr);
+        return uriBuilder.buildResponse(uriInfo, InvoiceResource.class, getMethodStr, localeStr, request);
     }
 
     private Response getTemplateResource(@Nullable final String localeStr,
@@ -919,7 +918,7 @@ public class InvoiceResource extends JaxRsResourceBase {
                                        @javax.ws.rs.core.Context final HttpServletRequest request,
                                        @javax.ws.rs.core.Context final UriInfo uriInfo) throws CustomFieldApiException {
         return super.createCustomFields(UUID.fromString(id), customFields,
-                                        context.createContext(createdBy, reason, comment, request), uriInfo);
+                                        context.createContext(createdBy, reason, comment, request), uriInfo, request);
     }
 
     @TimedResource
@@ -971,7 +970,7 @@ public class InvoiceResource extends JaxRsResourceBase {
                                @javax.ws.rs.core.Context final UriInfo uriInfo,
                                @javax.ws.rs.core.Context final HttpServletRequest request) throws TagApiException {
         return super.createTags(UUID.fromString(id), tagList, uriInfo,
-                                context.createContext(createdBy, reason, comment, request));
+                                context.createContext(createdBy, reason, comment, request), request);
     }
 
     @TimedResource

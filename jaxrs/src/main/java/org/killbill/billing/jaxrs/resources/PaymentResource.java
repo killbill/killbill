@@ -323,7 +323,7 @@ public class PaymentResource extends ComboPaymentResource {
                                                                                                  json != null ? json.getTransactionType() : null);
         // If transaction was already completed, return early (See #626)
         if (pendingOrSuccessTransaction.getTransactionStatus() == TransactionStatus.SUCCESS) {
-            return uriBuilder.buildResponse(uriInfo, PaymentResource.class, "getPayment", pendingOrSuccessTransaction.getPaymentId());
+            return uriBuilder.buildResponse(uriInfo, PaymentResource.class, "getPayment", pendingOrSuccessTransaction.getPaymentId(), request);
         }
 
 
@@ -357,7 +357,7 @@ public class PaymentResource extends ComboPaymentResource {
             default:
                 return Response.status(Status.PRECONDITION_FAILED).entity("TransactionType " + pendingTransaction.getTransactionType() + " cannot be completed").build();
         }
-        return createPaymentResponse(uriInfo, result, pendingTransaction.getTransactionType(), pendingTransaction.getExternalKey());
+        return createPaymentResponse(uriInfo, result, pendingTransaction.getTransactionType(), pendingTransaction.getExternalKey(), request);
     }
 
     @TimedResource(name = "captureAuthorization")
@@ -433,7 +433,7 @@ public class PaymentResource extends ComboPaymentResource {
 
         final Payment payment = paymentApi.createCaptureWithPaymentControl(account, initialPayment.getId(), json.getAmount(), currency,
                                                          json.getTransactionExternalKey(), pluginProperties, paymentOptions, callContext);
-        return createPaymentResponse(uriInfo, payment, TransactionType.CAPTURE, json.getTransactionExternalKey());
+        return createPaymentResponse(uriInfo, payment, TransactionType.CAPTURE, json.getTransactionExternalKey(), request);
     }
 
     @TimedResource(name = "refundPayment")
@@ -512,7 +512,7 @@ public class PaymentResource extends ComboPaymentResource {
         final Payment payment = paymentApi.createRefundWithPaymentControl(account, initialPayment.getId(), json.getAmount(), currency,
                                                         json.getTransactionExternalKey(), pluginProperties, paymentOptions, callContext);
 
-        return createPaymentResponse(uriInfo, payment, TransactionType.REFUND, json.getTransactionExternalKey());
+        return createPaymentResponse(uriInfo, payment, TransactionType.REFUND, json.getTransactionExternalKey(), request);
     }
 
     @TimedResource(name = "voidPayment")
@@ -584,7 +584,7 @@ public class PaymentResource extends ComboPaymentResource {
 
         final Payment payment = paymentApi.createVoidWithPaymentControl(account, initialPayment.getId(), transactionExternalKey,
                                                                         pluginProperties, paymentOptions, callContext);
-        return createPaymentResponse(uriInfo, payment, TransactionType.VOID, json.getTransactionExternalKey());
+        return createPaymentResponse(uriInfo, payment, TransactionType.VOID, json.getTransactionExternalKey(), request);
     }
 
     @TimedResource(name = "chargebackPayment")
@@ -660,7 +660,7 @@ public class PaymentResource extends ComboPaymentResource {
 
         final Payment payment = paymentApi.createChargebackWithPaymentControl(account, initialPayment.getId(), json.getAmount(), currency,
                                                             json.getTransactionExternalKey(), paymentOptions, callContext);
-        return createPaymentResponse(uriInfo, payment, TransactionType.CHARGEBACK, json.getTransactionExternalKey());
+        return createPaymentResponse(uriInfo, payment, TransactionType.CHARGEBACK, json.getTransactionExternalKey(), request);
     }
 
     @TimedResource(name = "chargebackReversalPayment")
@@ -734,7 +734,7 @@ public class PaymentResource extends ComboPaymentResource {
         final PaymentOptions paymentOptions = createControlPluginApiPaymentOptions(paymentControlPluginNames);
 
         final Payment payment = paymentApi.createChargebackReversalWithPaymentControl(account, initialPayment.getId(), json.getTransactionExternalKey(), paymentOptions, callContext);
-        return createPaymentResponse(uriInfo, payment, TransactionType.CHARGEBACK, json.getTransactionExternalKey());
+        return createPaymentResponse(uriInfo, payment, TransactionType.CHARGEBACK, json.getTransactionExternalKey(), request);
     }
 
     @TimedResource
@@ -794,7 +794,7 @@ public class PaymentResource extends ComboPaymentResource {
             default:
                 return Response.status(Status.PRECONDITION_FAILED).entity("TransactionType " + transactionType + " is not allowed for an account").build();
         }
-        return createPaymentResponse(uriInfo, result, transactionType, paymentTransactionJson.getTransactionExternalKey());
+        return createPaymentResponse(uriInfo, result, transactionType, paymentTransactionJson.getTransactionExternalKey(), request);
     }
 
     @TimedResource(name = "cancelScheduledPaymentTransaction")
@@ -863,7 +863,7 @@ public class PaymentResource extends ComboPaymentResource {
                                        @javax.ws.rs.core.Context final HttpServletRequest request,
                                        @javax.ws.rs.core.Context final UriInfo uriInfo) throws CustomFieldApiException {
         return super.createCustomFields(UUID.fromString(id), customFields,
-                                        context.createContext(createdBy, reason, comment, request), uriInfo);
+                                        context.createContext(createdBy, reason, comment, request), uriInfo, request);
     }
 
     @TimedResource
@@ -915,7 +915,7 @@ public class PaymentResource extends ComboPaymentResource {
                                @javax.ws.rs.core.Context final UriInfo uriInfo,
                                @javax.ws.rs.core.Context final HttpServletRequest request) throws TagApiException {
         return super.createTags(UUID.fromString(id), tagList, uriInfo,
-                                context.createContext(createdBy, reason, comment, request));
+                                context.createContext(createdBy, reason, comment, request), request);
     }
 
     @TimedResource
