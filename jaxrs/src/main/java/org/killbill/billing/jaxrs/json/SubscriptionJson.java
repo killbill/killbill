@@ -346,7 +346,8 @@ public class SubscriptionJson extends JsonBase {
         this.startDate = subscription.getEffectiveStartDate();
 
         // last* fields can be null if the subscription starts in the future - rely on the first available event instead
-        final SubscriptionEvent firstEvent = subscription.getSubscriptionEvents().isEmpty() ? null : subscription.getSubscriptionEvents().get(0);
+        final List<SubscriptionEvent> subscriptionEvents = subscription.getSubscriptionEvents();
+        final SubscriptionEvent firstEvent = subscriptionEvents.isEmpty() ? null : subscriptionEvents.get(0);
         if (subscription.getLastActiveProduct() == null) {
             this.productName = firstEvent == null ? null : firstEvent.getNextProduct().getName();
         } else {
