@@ -83,6 +83,7 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
     // Final subscription fields
     //
     private final UUID bundleId;
+    private final String bundleExternalKey;
     private final DateTime alignStartDate;
     private final DateTime bundleStartDate;
     private final ProductCategory category;
@@ -118,6 +119,7 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
         this.apiService = apiService;
         this.clock = clock;
         this.bundleId = builder.getBundleId();
+        this.bundleExternalKey = builder.getBundleExternalKey();
         this.alignStartDate = builder.getAlignStartDate();
         this.bundleStartDate = builder.getBundleStartDate();
         this.category = builder.getCategory();
@@ -131,6 +133,7 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
         this.apiService = apiService;
         this.clock = clock;
         this.bundleId = internalSubscription.getBundleId();
+        this.bundleExternalKey = internalSubscription.getBundleExternalKey();
         this.alignStartDate = internalSubscription.getAlignStartDate();
         this.bundleStartDate = internalSubscription.getBundleStartDate();
         this.category = internalSubscription.getCategory();
@@ -143,6 +146,10 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
     @Override
     public UUID getBundleId() {
         return bundleId;
+    }
+
+    public String getBundleExternalKey() {
+        return bundleExternalKey;
     }
 
     @Override
@@ -713,7 +720,7 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
             nextPriceList = (nextPlan != null) ? catalog.findPriceListForPlan(nextPlanName, cur.getEffectiveDate(), getAlignStartDate()) : null;
 
             final SubscriptionBaseTransitionData transition = new SubscriptionBaseTransitionData(
-                    cur.getId(), id, bundleId, cur.getType(), apiEventType,
+                    cur.getId(), id, bundleId, bundleExternalKey, cur.getType(), apiEventType,
                     cur.getEffectiveDate(),
                     prevEventId, prevCreatedDate,
                     previousState, previousPlan, previousPhase,

@@ -34,6 +34,7 @@ public class DefaultRequestedSubscriptionEvent extends DefaultSubscriptionEvent 
     public DefaultRequestedSubscriptionEvent(@JsonProperty("eventId") final UUID eventId,
                                              @JsonProperty("subscriptionId") final UUID subscriptionId,
                                              @JsonProperty("bundleId") final UUID bundleId,
+                                             @JsonProperty("bundleExternalKey") final String bundleExternalKey,
                                              @JsonProperty("requestedTransitionTime") final DateTime requestedTransitionTime,
                                              @JsonProperty("effectiveTransitionTime") final DateTime effectiveTransitionTime,
                                              @JsonProperty("previousState") final EntitlementState previousState,
@@ -53,7 +54,7 @@ public class DefaultRequestedSubscriptionEvent extends DefaultSubscriptionEvent 
                                              @JsonProperty("searchKey1") final Long searchKey1,
                                              @JsonProperty("searchKey2") final Long searchKey2,
                                              @JsonProperty("userToken") final UUID userToken) {
-        super(eventId, subscriptionId, bundleId, requestedTransitionTime, effectiveTransitionTime, previousState, previousPlan,
+        super(eventId, subscriptionId, bundleId, bundleExternalKey, requestedTransitionTime, effectiveTransitionTime, previousState, previousPlan,
               previousPhase, previousPriceList, previousBillCycleDayLocal, nextState, nextPlan, nextPhase, nextPriceList, nextBillCycleDayLocal, totalOrdering,
               transitionType, remainingEventsForUserOperation, startDate, searchKey1, searchKey2, userToken);
     }
@@ -64,7 +65,7 @@ public class DefaultRequestedSubscriptionEvent extends DefaultSubscriptionEvent 
                                              final Long searchKey1,
                                              final Long searchKey2,
                                              final UUID userToken) {
-        this(nextEvent.getId(), nextEvent.getSubscriptionId(), subscription.getBundleId(), nextEvent.getEffectiveDate(), nextEvent.getEffectiveDate(),
+        this(nextEvent.getId(), nextEvent.getSubscriptionId(), subscription.getBundleId(), subscription.getBundleExternalKey(), nextEvent.getEffectiveDate(), nextEvent.getEffectiveDate(),
              null, null, null, null, null, null, null, null, null, null, nextEvent.getTotalOrdering(), transitionType, 0, null, searchKey1, searchKey2, userToken);
     }
 }

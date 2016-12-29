@@ -28,6 +28,7 @@ public class SubscriptionBuilder {
 
     private UUID id;
     private UUID bundleId;
+    private String bundleExternalKey;
     private DateTime createdDate;
     private DateTime updatedDate;
     private DateTime alignStartDate;
@@ -42,6 +43,7 @@ public class SubscriptionBuilder {
     public SubscriptionBuilder(final DefaultSubscriptionBase original) {
         this.id = original.getId();
         this.bundleId = original.getBundleId();
+        this.bundleExternalKey = original.getBundleExternalKey();
         this.alignStartDate = original.getAlignStartDate();
         this.bundleStartDate = original.getBundleStartDate();
         this.category = original.getCategory();
@@ -66,6 +68,11 @@ public class SubscriptionBuilder {
 
     public SubscriptionBuilder setBundleId(final UUID bundleId) {
         this.bundleId = bundleId;
+        return this;
+    }
+
+    public SubscriptionBuilder setBundleExternalKey(final String bundleExternalKey) {
+        this.bundleExternalKey = bundleExternalKey;
         return this;
     }
 
@@ -107,6 +114,10 @@ public class SubscriptionBuilder {
 
     public UUID getBundleId() {
         return bundleId;
+    }
+
+    public String getBundleExternalKey() {
+        return bundleExternalKey;
     }
 
     public DateTime getAlignStartDate() {

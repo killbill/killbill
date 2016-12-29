@@ -78,6 +78,7 @@ public class TestBillingApi extends JunctionTestSuiteNoDB {
     private static final UUID eventId = new UUID(0L, 0L);
     private static final UUID subId = new UUID(1L, 0L);
     private static final UUID bunId = new UUID(2L, 0L);
+    private static final String bunKey = bunId.toString();
 
     private List<EffectiveSubscriptionInternalEvent> effectiveSubscriptionTransitions;
     private SubscriptionBase subscription;
@@ -282,7 +283,7 @@ public class TestBillingApi extends JunctionTestSuiteNoDB {
         final PriceList nextPriceList = catalog.findPriceList(PriceListSet.DEFAULT_PRICELIST_NAME, now);
 
         final EffectiveSubscriptionInternalEvent t = new MockEffectiveSubscriptionEvent(
-                eventId, subId, bunId, then, now, null, null, null, null, null, EntitlementState.ACTIVE,
+                eventId, subId, bunId, bunKey, then, now, null, null, null, null, null, EntitlementState.ACTIVE,
                 nextPlan.getName(), nextPhase.getName(),
                 nextPriceList.getName(), null, 1L,
                 SubscriptionBaseTransitionType.CREATE, 1, null, 1L, 2L, null);

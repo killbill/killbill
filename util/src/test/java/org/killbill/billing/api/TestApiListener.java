@@ -144,6 +144,9 @@ public class TestApiListener {
     @Subscribe
     public void handleSubscriptionEvents(final EffectiveSubscriptionInternalEvent eventEffective) {
         log.info(String.format("Got subscription event %s", eventEffective.toString()));
+
+        Assert.assertNotNull(eventEffective.getBundleExternalKey());
+
         switch (eventEffective.getTransitionType()) {
             case TRANSFER:
                 assertEqualsNicely(NextEvent.TRANSFER);

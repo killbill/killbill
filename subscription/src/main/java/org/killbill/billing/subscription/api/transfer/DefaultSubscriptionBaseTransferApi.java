@@ -248,6 +248,7 @@ public class DefaultSubscriptionBaseTransferApi extends SubscriptionApiBase impl
                 final DefaultSubscriptionBase defaultSubscriptionBase = createSubscriptionForApiUse(new SubscriptionBuilder()
                                                                                                             .setId(UUIDs.randomUUID())
                                                                                                             .setBundleId(subscriptionBundleData.getId())
+                                                                                                            .setBundleExternalKey(subscriptionBundleData.getExternalKey())
                                                                                                             .setCategory(productCategory)
                                                                                                             .setBundleStartDate(effectiveTransferDate)
                                                                                                             .setAlignStartDate(subscriptionAlignStartDate),

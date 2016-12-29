@@ -192,6 +192,7 @@ public class DefaultSubscriptionInternalApi extends SubscriptionApiBase implemen
             return apiService.createPlan(new SubscriptionBuilder()
                                                  .setId(UUIDs.randomUUID())
                                                  .setBundleId(bundleId)
+                                                 .setBundleExternalKey(bundle.getExternalKey())
                                                  .setCategory(plan.getProduct().getCategory())
                                                  .setBundleStartDate(bundleStartDate)
                                                  .setAlignStartDate(effectiveDate)
@@ -202,7 +203,7 @@ public class DefaultSubscriptionInternalApi extends SubscriptionApiBase implemen
         }
     }
 
-    private List<SubscriptionSpecifier> verifyAndBuildSubscriptionSpecifiers(final UUID bundleId, final Iterable<EntitlementSpecifier> entitlements, final boolean isMigrated, final InternalCallContext context, final DateTime now, final DateTime effectiveDate, final Catalog catalog, final CallContext callContext) throws SubscriptionBaseApiException, CatalogApiException {
+    private List<SubscriptionSpecifier> verifyAndBuildSubscriptionSpecifiers(final UUID bundleId, final String externalKey, final Iterable<EntitlementSpecifier> entitlements, final boolean isMigrated, final InternalCallContext context, final DateTime now, final DateTime effectiveDate, final Catalog catalog, final CallContext callContext) throws SubscriptionBaseApiException, CatalogApiException {
         final List<SubscriptionSpecifier> subscriptions = new ArrayList<SubscriptionSpecifier>();
         boolean first = true;
         final List<SubscriptionBase> subscriptionsForBundle = getSubscriptionsForBundle(bundleId, null, context);
@@ -248,6 +249,7 @@ public class DefaultSubscriptionInternalApi extends SubscriptionApiBase implemen
             subscription.setBuilder(new SubscriptionBuilder()
                                             .setId(UUIDs.randomUUID())
                                             .setBundleId(bundleId)
+                                            .setBundleExternalKey(externalKey)
                                             .setCategory(plan.getProduct().getCategory())
                                             .setBundleStartDate(effectiveDate)
                                             .setAlignStartDate(effectiveDate)
@@ -276,6 +278,7 @@ public class DefaultSubscriptionInternalApi extends SubscriptionApiBase implemen
                         bundle.getId(),
                         effectiveDate,
                         verifyAndBuildSubscriptionSpecifiers(bundle.getId(),
+                                                             bundle.getExternalKey(),
                                                              entitlementWithAddOnsSpecifier.getEntitlementSpecifier(),
                                                              entitlementWithAddOnsSpecifier.isMigrated(),
                                                              context,
@@ -641,6 +644,7 @@ public class DefaultSubscriptionInternalApi extends SubscriptionApiBase implemen
                     final SubscriptionBuilder builder = new SubscriptionBuilder()
                             .setId(subscriptionId)
                             .setBundleId(bundleId)
+                            .setBundleExternalKey(null)
                             .setCategory(plan.getProduct().getCategory())
                             .setBundleStartDate(bundleStartDate)
                             .setAlignStartDate(startEffectiveDate);

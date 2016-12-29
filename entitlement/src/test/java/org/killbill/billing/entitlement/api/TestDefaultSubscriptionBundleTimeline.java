@@ -53,11 +53,13 @@ import static org.testng.Assert.assertNull;
 public class TestDefaultSubscriptionBundleTimeline extends EntitlementTestSuiteNoDB {
 
     private UUID bundleId;
+    private String bundleExternalKey;
 
     @BeforeClass(groups = "fast")
     protected void beforeClass() throws Exception {
         super.beforeClass();
         bundleId = UUID.randomUUID();
+        bundleExternalKey = bundleId.toString();
     }
 
     public class TestSubscriptionBundleTimeline extends DefaultSubscriptionBundleTimeline {
@@ -1559,6 +1561,7 @@ public class TestDefaultSubscriptionBundleTimeline extends EntitlementTestSuiteN
         return new SubscriptionBaseTransitionData(UUID.randomUUID(),
                                                   entitlementId,
                                                   bundleId,
+                                                  bundleExternalKey,
                                                   eventType,
                                                   apiEventType,
                                                   effectiveDate,

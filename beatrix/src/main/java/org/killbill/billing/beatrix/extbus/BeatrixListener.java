@@ -162,7 +162,7 @@ public class BeatrixListener {
                 }
 
                 SubscriptionMetadata.ActionType actionType = (event instanceof EffectiveSubscriptionInternalEvent) ? ActionType.EFFECTIVE : ActionType.REQUESTED;
-                final SubscriptionMetadata subscriptionMetadataObj = new SubscriptionMetadata(actionType);
+                final SubscriptionMetadata subscriptionMetadataObj = new SubscriptionMetadata(actionType, realEventST.getBundleExternalKey());
                 metaData = objectMapper.writeValueAsString(subscriptionMetadataObj);
                 break;
 
