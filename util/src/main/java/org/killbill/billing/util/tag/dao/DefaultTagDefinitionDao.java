@@ -68,7 +68,7 @@ public class DefaultTagDefinitionDao extends EntityDaoBase<TagDefinitionModelDao
     }
 
     @Override
-    public List<TagDefinitionModelDao> getTagDefinitions(final InternalTenantContext context) {
+    public List<TagDefinitionModelDao> getTagDefinitions(final boolean includeSystemTags, final InternalTenantContext context) {
         return transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<List<TagDefinitionModelDao>>() {
             @Override
             public List<TagDefinitionModelDao> inTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory) throws Exception {
@@ -79,7 +79,7 @@ public class DefaultTagDefinitionDao extends EntityDaoBase<TagDefinitionModelDao
                 Iterators.addAll(definitionList, all);
 
                 // Add invoice tag definitions
-                definitionList.addAll(SystemTags.all());
+                definitionList.addAll(SystemTags.get(includeSystemTags));
                 return definitionList;
             }
         });

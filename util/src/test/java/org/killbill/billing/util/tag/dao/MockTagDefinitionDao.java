@@ -34,7 +34,7 @@ public class MockTagDefinitionDao extends MockEntityDaoBase<TagDefinitionModelDa
     private final Map<String, TagDefinitionModelDao> tags = new ConcurrentHashMap<String, TagDefinitionModelDao>();
 
     @Override
-    public List<TagDefinitionModelDao> getTagDefinitions(final InternalTenantContext context) {
+    public List<TagDefinitionModelDao> getTagDefinitions(final boolean dummy, final InternalTenantContext context) {
         return new ArrayList<TagDefinitionModelDao>(tags.values());
     }
 

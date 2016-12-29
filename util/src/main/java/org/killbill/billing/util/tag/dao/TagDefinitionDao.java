@@ -28,7 +28,7 @@ import org.killbill.billing.util.tag.TagDefinition;
 
 public interface TagDefinitionDao extends EntityDao<TagDefinitionModelDao, TagDefinition, TagDefinitionApiException> {
 
-    public List<TagDefinitionModelDao> getTagDefinitions(InternalTenantContext context);
+    public List<TagDefinitionModelDao> getTagDefinitions(boolean includeSystemTags, InternalTenantContext context);
 
     public TagDefinitionModelDao getByName(String definitionName, InternalTenantContext context);
 

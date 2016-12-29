@@ -35,6 +35,7 @@ import org.killbill.billing.client.model.TagDefinition;
 import org.killbill.billing.client.model.Tags;
 import org.killbill.billing.util.api.AuditLevel;
 import org.killbill.billing.util.tag.ControlTagType;
+import org.killbill.billing.util.tag.dao.SystemTags;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
@@ -61,6 +62,8 @@ public class TestTag extends TestJaxrsBase {
         }
     }
 
+
+
     @Test(groups = "slow", description = "Can create a TagDefinition")
     public void testTagDefinitionOk() throws Exception {
         final TagDefinition input = new TagDefinition(null, false, "blue", "relaxing color", ImmutableList.<ObjectType>of());
@@ -75,6 +78,10 @@ public class TestTag extends TestJaxrsBase {
     public void testMultipleTagDefinitionOk() throws Exception {
         List<TagDefinition> objFromJson = killBillClient.getTagDefinitions();
         final int sizeSystemTag = objFromJson.isEmpty() ? 0 : objFromJson.size();
+
+        for (final TagDefinition cur : objFromJson) {
+            Assert.assertFalse(SystemTags.isSystemTag(cur.getId()));
+        }
 
         final TagDefinition inputBlue = new TagDefinition(null, false, "blue", "relaxing color", ImmutableList.<ObjectType>of());
         killBillClient.createTagDefinition(inputBlue, createdBy, reason, comment);
@@ -145,6 +152,19 @@ public class TestTag extends TestJaxrsBase {
         for (final ControlTagType controlTagType : ControlTagType.values()) {
             Assert.assertEquals(killBillClient.searchTags(controlTagType.toString()).size(), 1);
             Assert.assertEquals(killBillClient.searchTags(controlTagType.getDescription()).size(), 1);
+        }
+    }
+
+    @Test(groups = "slow", description = "Can create a TagDefinition")
+    public void testNotAllowedSystemTag() throws Exception {
+
+        final Account account = createAccount();
+
+        try {
+            killBillClient.createAccountTag(account.getAccountId(), SystemTags.PARK_TAG_DEFINITION_ID, requestOptions);
+            Assert.fail("Creating a tag associated with a system tag should fail");
+        } catch (final Exception e) {
+            Assert.assertTrue(true);
         }
     }
 
