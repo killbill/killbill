@@ -43,6 +43,7 @@ import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.assertNull;
 import static org.testng.Assert.assertTrue;
 
@@ -384,6 +385,48 @@ public class TestUserApiCancel extends SubscriptionTestSuiteWithEmbeddedDB {
         subscription = (DefaultSubscriptionBase) subscriptionInternalApi.getSubscriptionFromId(subscription.getId(), internalCallContext);
         Assert.assertEquals(subscription.getAllTransitions().get(subscription.getAllTransitions().size() - 1).getTransitionType(), SubscriptionBaseTransitionType.CANCEL);
         Assert.assertEquals(new LocalDate(subscription.getAllTransitions().get(subscription.getAllTransitions().size() - 1).getEffectiveTransitionTime(), accountData.getTimeZone()), new LocalDate(2016, 12, 1));
+    }
+
+    @Test(groups = "slow")
+    public void testCancelUncancelFutureSubscription() throws SubscriptionBaseApiException {
+        final DateTime init = clock.getUTCNow();
+
+        final String productName = "Shotgun";
+        final BillingPeriod term = BillingPeriod.MONTHLY;
+        final String planSetName = PriceListSet.DEFAULT_PRICELIST_NAME;
+
+
+        final DateTime futureCreationDate = init.plusDays(10);
+
+        DefaultSubscriptionBase subscription = (DefaultSubscriptionBase) subscriptionInternalApi.createSubscription(bundle.getId(),
+                                                                                                                    testUtil.getProductSpecifier(productName, planSetName, term, null), null, futureCreationDate, false, internalCallContext);
+        assertListenerStatus();
+        assertNotNull(subscription);
+        assertEquals(subscription.getState(), EntitlementState.PENDING);
+
+        // Cancel / Uncancel a few times to make sure this works and we end up on a stable state
+        for (int i = 0; i < 3; i++) {
+            subscription.cancelWithPolicy(BillingActionPolicy.IMMEDIATE, null, -1, callContext);
+
+            subscription = (DefaultSubscriptionBase) subscriptionInternalApi.getSubscriptionFromId(subscription.getId(), internalCallContext);
+            assertEquals(subscription.getState(), EntitlementState.PENDING);
+
+            subscription.uncancel(callContext);
+        }
+
+        // Now check we are on the right state (as if nothing had happened)
+        testListener.pushExpectedEvents(NextEvent.CREATE, NextEvent.UNCANCEL, NextEvent.UNCANCEL, NextEvent.UNCANCEL);
+        clock.addDays(10);
+        assertListenerStatus();
+
+        subscription = (DefaultSubscriptionBase) subscriptionInternalApi.getSubscriptionFromId(subscription.getId(), internalCallContext);
+        assertEquals(subscription.getState(), EntitlementState.ACTIVE);
+
+        testListener.pushExpectedEvent(NextEvent.PHASE);
+        clock.addMonths(1);
+        assertListenerStatus();
+
+
 
     }
 

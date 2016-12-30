@@ -204,7 +204,7 @@ public class DefaultSubscriptionBaseService implements EventListener, Subscripti
     }
 
     private boolean onBasePlanEvent(final DefaultSubscriptionBase baseSubscription, final SubscriptionBaseEvent event, final CallContext context) throws CatalogApiException {
-        apiService.cancelAddOnsIfRequiredOnBasePlanEvent(baseSubscription, event, context);
+        apiService.handleBasePlanEvent(baseSubscription, event, context);
         return true;
     }
 }

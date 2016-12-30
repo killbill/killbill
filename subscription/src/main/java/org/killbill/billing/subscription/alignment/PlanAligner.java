@@ -38,8 +38,9 @@ import org.killbill.billing.catalog.api.PlanAlignmentCreate;
 import org.killbill.billing.catalog.api.PlanPhase;
 import org.killbill.billing.catalog.api.PlanPhaseSpecifier;
 import org.killbill.billing.catalog.api.PlanSpecifier;
+import org.killbill.billing.entitlement.api.Entitlement.EntitlementState;
 import org.killbill.billing.subscription.api.user.SubscriptionBaseApiException;
-import org.killbill.billing.subscription.api.user.SubscriptionBaseTransitionData;
+import org.killbill.billing.subscription.api.user.SubscriptionBaseTransition;
 import org.killbill.billing.subscription.api.user.DefaultSubscriptionBase;
 import org.killbill.billing.subscription.exceptions.SubscriptionBaseError;
 
@@ -89,7 +90,6 @@ public class PlanAligner extends BaseAligner {
                                                                    bundleStartDate,
                                                                    plan,
                                                                    initialPhase,
-                                                                   priceList,
                                                                    effectiveDate,
                                                                    context);
         final TimedPhase[] result = new TimedPhase[2];
@@ -145,39 +145,42 @@ public class PlanAligner extends BaseAligner {
      * @return the next phase
      */
     public TimedPhase getNextTimedPhase(final DefaultSubscriptionBase subscription, final DateTime effectiveDate, final InternalTenantContext context) {
+
+
         try {
-            final SubscriptionBaseTransitionData lastPlanTransition = subscription.getLastTransitionForCurrentPlan();
-            if (effectiveDate.isBefore(lastPlanTransition.getEffectiveTransitionTime())) {
-                throw new SubscriptionBaseError(String.format("Cannot specify an effectiveDate prior to last Plan Change, subscription = %s, effectiveDate = %s",
-                                                         subscription.getId(), effectiveDate));
+            final SubscriptionBaseTransition pendingOrLastPlanTransition;
+            if (subscription.getState() == EntitlementState.PENDING) {
+                pendingOrLastPlanTransition = subscription.getPendingTransition();
+            } else {
+                pendingOrLastPlanTransition = subscription.getLastTransitionForCurrentPlan();
             }
 
-            switch (lastPlanTransition.getTransitionType()) {
+
+            switch (pendingOrLastPlanTransition.getTransitionType()) {
                 // If we never had any Plan change, borrow the logic for createPlan alignment
                 case CREATE:
                 case TRANSFER:
                     final List<TimedPhase> timedPhases = getTimedPhaseOnCreate(subscription.getAlignStartDate(),
                                                                                subscription.getBundleStartDate(),
-                                                                               lastPlanTransition.getNextPlan(),
-                                                                               lastPlanTransition.getNextPhase().getPhaseType(),
-                                                                               lastPlanTransition.getNextPriceList().getName(),
+                                                                               pendingOrLastPlanTransition.getNextPlan(),
+                                                                               pendingOrLastPlanTransition.getNextPhase().getPhaseType(),
                                                                                effectiveDate,
                                                                                context);
                     return getTimedPhase(timedPhases, effectiveDate, WhichPhase.NEXT);
                 case CHANGE:
                     return getTimedPhaseOnChange(subscription.getAlignStartDate(),
                                                  subscription.getBundleStartDate(),
-                                                 lastPlanTransition.getPreviousPhase(),
-                                                 lastPlanTransition.getPreviousPlan(),
-                                                 lastPlanTransition.getNextPlan(),
+                                                 pendingOrLastPlanTransition.getPreviousPhase(),
+                                                 pendingOrLastPlanTransition.getPreviousPlan(),
+                                                 pendingOrLastPlanTransition.getNextPlan(),
                                                  effectiveDate,
-                                                 lastPlanTransition.getEffectiveTransitionTime(),
+                                                 pendingOrLastPlanTransition.getEffectiveTransitionTime(),
                                                  subscription.getAllTransitions().get(0).getNextPhase().getPhaseType(),
                                                  WhichPhase.NEXT,
                                                  context);
                 default:
                     throw new SubscriptionBaseError(String.format("Unexpected initial transition %s for current plan %s on subscription %s",
-                                                             lastPlanTransition.getTransitionType(), subscription.getCurrentPlan(), subscription.getId()));
+                                                             pendingOrLastPlanTransition.getTransitionType(), subscription.getCurrentPlan(), subscription.getId()));
             }
         } catch (Exception /* SubscriptionBaseApiException, CatalogApiException */ e) {
             throw new SubscriptionBaseError(String.format("Could not compute next phase change for subscription %s", subscription.getId()), e);
@@ -188,7 +191,6 @@ public class PlanAligner extends BaseAligner {
                                                    final DateTime bundleStartDate,
                                                    final Plan plan,
                                                    @Nullable final PhaseType initialPhase,
-                                                   final String priceList,
                                                    final DateTime effectiveDate,
                                                    final InternalTenantContext context)
             throws CatalogApiException, SubscriptionBaseApiException {

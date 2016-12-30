@@ -80,14 +80,6 @@ public class TestPlanAligner extends SubscriptionTestSuiteNoDB {
         Assert.assertNull(phasesInThePast[0]);
         Assert.assertEquals(phasesInThePast[1].getStartPhase(), defaultSubscriptionBase.getBundleStartDate());
 
-        // Verify the next phase via the other API
-        try {
-            planAligner.getNextTimedPhase(defaultSubscriptionBase, effectiveDateInThePast, internalCallContext);
-            Assert.fail("Can't use getNextTimedPhase(): the effective date is before the initial plan");
-        } catch (SubscriptionBaseError e) {
-            Assert.assertTrue(true);
-        }
-
         // Try a change plan now (simulate an IMMEDIATE policy)
         final String newProductName = "shotgun-monthly";
         final DateTime effectiveChangeDate = clock.getUTCNow();
@@ -124,14 +116,6 @@ public class TestPlanAligner extends SubscriptionTestSuiteNoDB {
         final TimedPhase[] phasesInThePast = getTimedPhasesOnCreate(productName, initialPhase, defaultSubscriptionBase, effectiveDateInThePast);
         Assert.assertNull(phasesInThePast[0]);
         Assert.assertEquals(phasesInThePast[1].getStartPhase(), defaultSubscriptionBase.getStartDate());
-
-        // Verify the next phase via the other API
-        try {
-            planAligner.getNextTimedPhase(defaultSubscriptionBase, effectiveDateInThePast, internalCallContext);
-            Assert.fail("Can't use getNextTimedPhase(): the effective date is before the initial plan");
-        } catch (SubscriptionBaseError e) {
-            Assert.assertTrue(true);
-        }
 
         // Try a change plan (simulate END_OF_TERM policy)
         final String newProductName = "telescopic-scope-monthly";
