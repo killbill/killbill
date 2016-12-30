@@ -349,6 +349,82 @@ public class TestDefaultSubscriptionBundleTimeline extends EntitlementTestSuiteN
     }
 
 
+    @Test(groups="fast", enabled = true)
+    public void testOneSimpleEntitlementCancelImmediately() throws CatalogApiException {
+        testOneSimpleEntitlementCancelImmediatelyImpl(false);
+    }
+
+    @Test(groups="fast", enabled = true)
+    public void testOneSimpleEntitlementCancelImmediatelyWithRegression() throws CatalogApiException {
+        testOneSimpleEntitlementCancelImmediatelyImpl(true);
+    }
+
+
+    private void testOneSimpleEntitlementCancelImmediatelyImpl(boolean regressionFlagForOlderVersionThan_0_17_X) throws CatalogApiException {
+
+        clock.setDay(new LocalDate(2013, 1, 1));
+
+        final UUID accountId = UUID.randomUUID();
+        final String externalKey = "foo";
+
+        final List<BlockingState> blockingStates = new ArrayList<BlockingState>();
+
+        final UUID entitlementId = UUID.randomUUID();
+
+        final List<SubscriptionBaseTransition> allTransitions = new ArrayList<SubscriptionBaseTransition>();
+
+        DateTime effectiveDate = new DateTime(2013, 1, 1, 15, 43, 25, 0, DateTimeZone.UTC);
+        final SubscriptionBaseTransition tr1 = createTransition(entitlementId, EventType.API_USER, ApiEventType.CREATE, effectiveDate, clock.getUTCNow(), null, "trial");
+        allTransitions.add(tr1);
+
+        if (!regressionFlagForOlderVersionThan_0_17_X) {
+            final BlockingState bsCreate = new DefaultBlockingState(UUID.randomUUID(), entitlementId, BlockingStateType.SUBSCRIPTION,
+                                                                    DefaultEntitlementApi.ENT_STATE_START, DefaultEntitlementService.ENTITLEMENT_SERVICE_NAME,
+                                                                    false, false, false, effectiveDate, clock.getUTCNow(), clock.getUTCNow(), 0L);
+            blockingStates.add(bsCreate);
+        }
+
+        final SubscriptionBaseTransition tr2 = createTransition(entitlementId, EventType.API_USER, ApiEventType.CANCEL, effectiveDate, clock.getUTCNow(), "trial", null);
+        allTransitions.add(tr2);
+
+        final BlockingState bsCancel = new DefaultBlockingState(UUID.randomUUID(), entitlementId, BlockingStateType.SUBSCRIPTION,
+                                                                DefaultEntitlementApi.ENT_STATE_CANCELLED, DefaultEntitlementService.ENTITLEMENT_SERVICE_NAME,
+                                                                false, false, false, effectiveDate, clock.getUTCNow(), clock.getUTCNow(), 0L);
+        blockingStates.add(bsCancel);
+
+
+
+        final List<Entitlement> entitlements = new ArrayList<Entitlement>();
+        final Entitlement entitlement = createEntitlement(entitlementId, allTransitions, blockingStates);
+        entitlements.add(entitlement);
+
+        final SubscriptionBundleTimeline timeline = new DefaultSubscriptionBundleTimeline(accountId, bundleId, externalKey, entitlements, internalCallContext);
+
+        assertEquals(timeline.getAccountId(), accountId);
+        assertEquals(timeline.getBundleId(), bundleId);
+        assertEquals(timeline.getExternalKey(), externalKey);
+
+        final List<SubscriptionEvent> events = timeline.getSubscriptionEvents();
+        assertEquals(events.size(), 4);
+
+        assertEquals(events.get(0).getSubscriptionEventType(), SubscriptionEventType.START_ENTITLEMENT);
+        assertEquals(events.get(1).getSubscriptionEventType(), SubscriptionEventType.START_BILLING);
+        assertEquals(events.get(2).getSubscriptionEventType(), SubscriptionEventType.STOP_ENTITLEMENT);
+        assertEquals(events.get(3).getSubscriptionEventType(), SubscriptionEventType.STOP_BILLING);
+
+        assertNull(events.get(0).getPrevPhase());
+        assertEquals(events.get(0).getNextPhase().getName(), "trial");
+
+        assertNull(events.get(1).getPrevPhase());
+        assertEquals(events.get(1).getNextPhase().getName(), "trial");
+
+        assertEquals(events.get(2).getPrevPhase().getName(), "trial");
+        assertNull(events.get(2).getNextPhase());
+
+        assertEquals(events.get(3).getPrevPhase().getName(), "trial");
+        assertNull(events.get(3).getNextPhase());
+    }
+
 
     @Test(groups = "fast")
     public void testCancelBundleBeforeSubscription() throws CatalogApiException {

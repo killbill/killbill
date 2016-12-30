@@ -100,7 +100,27 @@ public class BlockingStateOrdering extends EntitlementOrderingBase {
         while (it.hasNext()) {
             final DefaultSubscriptionEvent cur = (DefaultSubscriptionEvent) it.next();
             final int compEffectiveDate = currentBlockingState.getEffectiveDate().compareTo(cur.getEffectiveDateTime());
-            final boolean shouldContinue = (compEffectiveDate >= 0);
+
+            final boolean shouldContinue;
+            switch (compEffectiveDate) {
+                case -1:
+                    shouldContinue = false;
+                    break;
+                case 0:
+                    // In case of exact same date, we want to make sure that a START_ENTITLEMENT event gets correctly populated when the STOP_BILLING is also on the same date
+                    if (currentBlockingState.getStateName().equals(DefaultEntitlementApi.ENT_STATE_START) && cur.getSubscriptionEventType() != SubscriptionEventType.STOP_BILLING) {
+                        shouldContinue = false;
+                    } else {
+                        shouldContinue = true;
+                    }
+                    break;
+                case 1:
+                    shouldContinue = true;
+                    break;
+                default:
+                    // Make compiler happy
+                    throw new IllegalStateException("Cannot reach statement");
+            }
             if (!shouldContinue) {
                 break;
             }
