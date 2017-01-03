@@ -45,6 +45,8 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.StreamingOutput;
 
+import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
 import org.killbill.billing.ErrorCode;
 import org.killbill.billing.ObjectType;
 import org.killbill.billing.account.api.AccountUserApi;
@@ -149,6 +151,7 @@ public class AdminResource extends JaxRsResourceBase {
                                    @QueryParam("queueName") final String queueName,
                                    @QueryParam("serviceName") final String serviceName,
                                    @QueryParam("withHistory") @DefaultValue("true") final Boolean withHistory,
+                                   @QueryParam("minDate") final String minDateOrNull,
                                    @QueryParam("withInProcessing") @DefaultValue("true") final Boolean withInProcessing,
                                    @QueryParam("withBusEvents") @DefaultValue("true") final Boolean withBusEvents,
                                    @QueryParam("withNotifications") @DefaultValue("true") final Boolean withNotifications,
@@ -156,6 +159,9 @@ public class AdminResource extends JaxRsResourceBase {
         final TenantContext tenantContext = context.createContext(request);
         final Long tenantRecordId = recordIdApi.getRecordId(tenantContext.getTenantId(), ObjectType.TENANT, tenantContext);
         final Long accountRecordId = Strings.isNullOrEmpty(accountIdStr) ? null : recordIdApi.getRecordId(UUID.fromString(accountIdStr), ObjectType.ACCOUNT, tenantContext);
+
+        // Limit search results by default
+        final DateTime minDate = minDateOrNull != null ? DATE_TIME_FORMATTER.parseDateTime(minDateOrNull).toDateTime(DateTimeZone.UTC) : clock.getUTCNow().minusMonths(2);
 
         final StreamingOutput json = new StreamingOutput() {
             @Override
@@ -168,7 +174,7 @@ public class AdminResource extends JaxRsResourceBase {
                 if (withBusEvents) {
                     generator.writeFieldName("busEvents");
                     generator.writeStartArray();
-                    for (final BusEventWithMetadata<BusEvent> busEvent : getBusEvents(withInProcessing, withHistory, accountRecordId, tenantRecordId)) {
+                    for (final BusEventWithMetadata<BusEvent> busEvent : getBusEvents(withInProcessing, withHistory, minDate, accountRecordId, tenantRecordId)) {
                         generator.writeObject(new BusEventWithRichMetadata(busEvent));
                     }
                     generator.writeEndArray();
@@ -177,7 +183,7 @@ public class AdminResource extends JaxRsResourceBase {
                 if (withNotifications) {
                     generator.writeFieldName("notifications");
                     generator.writeStartArray();
-                    for (final NotificationEventWithMetadata<NotificationEvent> notification : getNotifications(queueName, serviceName, withInProcessing, withHistory, accountRecordId, tenantRecordId)) {
+                    for (final NotificationEventWithMetadata<NotificationEvent> notification : getNotifications(queueName, serviceName, withInProcessing, withHistory, minDate, accountRecordId, tenantRecordId)) {
                         generator.writeObject(notification);
                     }
                     generator.writeEndArray();
@@ -383,7 +389,8 @@ public class AdminResource extends JaxRsResourceBase {
     private Iterable<NotificationEventWithMetadata<NotificationEvent>> getNotifications(@Nullable final String queueName,
                                                                                         @Nullable final String serviceName,
                                                                                         final boolean includeInProcessing,
-                                                                                        final boolean includeHistory, // TODO
+                                                                                        final boolean includeHistory,
+                                                                                        @Nullable final DateTime minEffectiveDate,
                                                                                         @Nullable final Long accountRecordId,
                                                                                         final Long tenantRecordId) {
         final Collection<NotificationEventWithMetadata<NotificationEvent>> notifications = new LinkedList<NotificationEventWithMetadata<NotificationEvent>>();
@@ -410,6 +417,14 @@ public class AdminResource extends JaxRsResourceBase {
             }
 
             notifications.addAll(notificationsForQueue);
+
+            if (includeHistory) {
+                if (accountRecordId != null) {
+                    notifications.addAll(notificationQueue.getHistoricalNotificationForSearchKeys(accountRecordId, tenantRecordId));
+                } else {
+                    notifications.addAll(notificationQueue.getHistoricalNotificationForSearchKey2(minEffectiveDate, tenantRecordId));
+                }
+            }
         }
 
         return Ordering.<NotificationEventWithMetadata<NotificationEvent>>from(new Comparator<NotificationEventWithMetadata<NotificationEvent>>() {
@@ -422,21 +437,30 @@ public class AdminResource extends JaxRsResourceBase {
     }
 
     private Iterable<BusEventWithMetadata<BusEvent>> getBusEvents(final boolean includeInProcessing,
-                                                                  final boolean includeHistory, // TODO
+                                                                  final boolean includeHistory,
+                                                                  @Nullable final DateTime minCreatedDate,
                                                                   @Nullable final Long accountRecordId,
                                                                   final Long tenantRecordId) {
-        final List<BusEventWithMetadata<BusEvent>> busEvents;
+        final Collection<BusEventWithMetadata<BusEvent>> busEvents = new LinkedList<BusEventWithMetadata<BusEvent>>();
         if (includeInProcessing) {
             if (accountRecordId != null) {
-                busEvents = persistentBus.getAvailableOrInProcessingBusEventsForSearchKeys(accountRecordId, tenantRecordId);
+                busEvents.addAll(persistentBus.getAvailableOrInProcessingBusEventsForSearchKeys(accountRecordId, tenantRecordId));
             } else {
-                busEvents = persistentBus.getAvailableOrInProcessingBusEventsForSearchKey2(tenantRecordId);
+                busEvents.addAll(persistentBus.getAvailableOrInProcessingBusEventsForSearchKey2(tenantRecordId));
             }
         } else {
             if (accountRecordId != null) {
-                busEvents = persistentBus.getAvailableBusEventsForSearchKeys(accountRecordId, tenantRecordId);
+                busEvents.addAll(persistentBus.getAvailableBusEventsForSearchKeys(accountRecordId, tenantRecordId));
             } else {
-                busEvents = persistentBus.getAvailableBusEventsForSearchKey2(tenantRecordId);
+                busEvents.addAll(persistentBus.getAvailableBusEventsForSearchKey2(tenantRecordId));
+            }
+        }
+
+        if (includeHistory) {
+            if (accountRecordId != null) {
+                busEvents.addAll(persistentBus.getHistoricalBusEventsForSearchKeys(accountRecordId, tenantRecordId));
+            } else {
+                busEvents.addAll(persistentBus.getHistoricalBusEventsForSearchKey2(minCreatedDate, tenantRecordId));
             }
         }
 
