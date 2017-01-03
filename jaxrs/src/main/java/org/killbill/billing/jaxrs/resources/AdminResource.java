@@ -161,7 +161,7 @@ public class AdminResource extends JaxRsResourceBase {
         final Long accountRecordId = Strings.isNullOrEmpty(accountIdStr) ? null : recordIdApi.getRecordId(UUID.fromString(accountIdStr), ObjectType.ACCOUNT, tenantContext);
 
         // Limit search results by default
-        final DateTime minDate = minDateOrNull != null ? DATE_TIME_FORMATTER.parseDateTime(minDateOrNull).toDateTime(DateTimeZone.UTC) : clock.getUTCNow().minusMonths(2);
+        final DateTime minDate = Strings.isNullOrEmpty(minDateOrNull) ? clock.getUTCNow().minusMonths(2) : DATE_TIME_FORMATTER.parseDateTime(minDateOrNull).toDateTime(DateTimeZone.UTC);
 
         final StreamingOutput json = new StreamingOutput() {
             @Override
