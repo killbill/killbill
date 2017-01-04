@@ -147,15 +147,15 @@ public class AdminResource extends JaxRsResourceBase {
     @Produces(APPLICATION_JSON)
     @ApiOperation(value = "Get queues entries", response = Response.class)
     @ApiResponses(value = {})
-    public Response getCurrentTime(@QueryParam("accountId") final String accountIdStr,
-                                   @QueryParam("queueName") final String queueName,
-                                   @QueryParam("serviceName") final String serviceName,
-                                   @QueryParam("withHistory") @DefaultValue("true") final Boolean withHistory,
-                                   @QueryParam("minDate") final String minDateOrNull,
-                                   @QueryParam("withInProcessing") @DefaultValue("true") final Boolean withInProcessing,
-                                   @QueryParam("withBusEvents") @DefaultValue("true") final Boolean withBusEvents,
-                                   @QueryParam("withNotifications") @DefaultValue("true") final Boolean withNotifications,
-                                   @javax.ws.rs.core.Context final HttpServletRequest request) {
+    public Response getQueueEntries(@QueryParam("accountId") final String accountIdStr,
+                                    @QueryParam("queueName") final String queueName,
+                                    @QueryParam("serviceName") final String serviceName,
+                                    @QueryParam("withHistory") @DefaultValue("true") final Boolean withHistory,
+                                    @QueryParam("minDate") final String minDateOrNull,
+                                    @QueryParam("withInProcessing") @DefaultValue("true") final Boolean withInProcessing,
+                                    @QueryParam("withBusEvents") @DefaultValue("true") final Boolean withBusEvents,
+                                    @QueryParam("withNotifications") @DefaultValue("true") final Boolean withNotifications,
+                                    @javax.ws.rs.core.Context final HttpServletRequest request) {
         final TenantContext tenantContext = context.createContext(request);
         final Long tenantRecordId = recordIdApi.getRecordId(tenantContext.getTenantId(), ObjectType.TENANT, tenantContext);
         final Long accountRecordId = Strings.isNullOrEmpty(accountIdStr) ? null : recordIdApi.getRecordId(UUID.fromString(accountIdStr), ObjectType.ACCOUNT, tenantContext);
