@@ -101,6 +101,7 @@ import org.killbill.notificationq.api.NotificationQueueService.NoSuchNotificatio
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
 import com.google.common.base.Predicate;
 import com.google.common.collect.Collections2;
@@ -762,7 +763,8 @@ public class DefaultSubscriptionInternalApi extends SubscriptionApiBase implemen
         }
     }
 
-    private DateTime getEffectiveDateForNewBCD(final int bcd, @Nullable final LocalDate effectiveFromDate, final InternalCallContext internalCallContext) {
+    @VisibleForTesting
+    DateTime getEffectiveDateForNewBCD(final int bcd, @Nullable final LocalDate effectiveFromDate, final InternalCallContext internalCallContext) {
         if (internalCallContext.getAccountRecordId() == null) {
             throw new IllegalStateException("Need to have a valid context with accountRecordId");
         }
@@ -782,7 +784,7 @@ public class DefaultSubscriptionInternalApi extends SubscriptionApiBase implemen
             final int lastDayOfNextMonth = startDatePlusOneMonth.dayOfMonth().getMaximumValue();
             final int originalBCDORLastDayOfMonth = bcd <= lastDayOfNextMonth ? bcd : lastDayOfNextMonth;
             requestedDate = new LocalDate(startDatePlusOneMonth.getYear(), startDatePlusOneMonth.getMonthOfYear(), originalBCDORLastDayOfMonth);
-        } else if (bcd == currentDay) {
+        } else if (bcd == currentDay && effectiveFromDate == null) {
             // will default to immediate event
             requestedDate = null;
         } else if (bcd <= lastDayOfMonth) {
