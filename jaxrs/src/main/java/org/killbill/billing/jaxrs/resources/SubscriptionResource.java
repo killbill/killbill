@@ -710,20 +710,42 @@ public class SubscriptionResource extends JaxRsResourceBase {
     public Response updateSubscriptionBCD(final SubscriptionJson json,
                                           @PathParam(ID_PARAM_NAME) final String id,
                                           @QueryParam(QUERY_ENTITLEMENT_EFFECTIVE_FROM_DT) final String effectiveFromDateStr,
+                                          @QueryParam(QUERY_FORCE_NEW_BCD_WITH_PAST_EFFECTIVE_DATE) @DefaultValue("false") final Boolean forceNewBcdWithPastEffectiveDate,
                                           @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                           @HeaderParam(HDR_REASON) final String reason,
                                           @HeaderParam(HDR_COMMENT) final String comment,
                                           @javax.ws.rs.core.Context final UriInfo uriInfo,
-                                          @javax.ws.rs.core.Context final HttpServletRequest request) throws SubscriptionApiException, EntitlementApiException {
+                                          @javax.ws.rs.core.Context final HttpServletRequest request) throws SubscriptionApiException, EntitlementApiException, AccountApiException {
 
         verifyNonNullOrEmpty(json, "SubscriptionJson body should be specified");
         verifyNonNullOrEmpty(json.getBillCycleDayLocal(), "SubscriptionJson new BCD should be specified");
 
-        final LocalDate effectiveFromDate = toLocalDate(effectiveFromDateStr);
+        LocalDate effectiveFromDate = toLocalDate(effectiveFromDateStr);
         final CallContext callContext = context.createContext(createdBy, reason, comment, request);
+
         final UUID subscriptionId = UUID.fromString(id);
 
         final Entitlement entitlement = entitlementApi.getEntitlementForId(subscriptionId, callContext);
+        if (effectiveFromDateStr != null) {
+            final Account account = accountUserApi.getAccountById(entitlement.getAccountId(), callContext);
+            final LocalDate accountToday  =  new LocalDate(clock.getUTCNow(), account.getTimeZone());
+            int comp = effectiveFromDate.compareTo(accountToday);
+            switch (comp) {
+                case -1:
+                    if (!forceNewBcdWithPastEffectiveDate) {
+                        throw new IllegalArgumentException("Changing a subscription BCD in the past may have consequences on previous invoice generated. Use flag forceNewBcdWithPastEffectiveDate to force this behavior");
+                    }
+                    break;
+                case 0:
+                    // Ensure system will use curremt time for the event so it happens immediately
+                    effectiveFromDate = null;
+                    break;
+                case 1:
+                    // Future date, normal case where such effectiveFromDateStr is being passed
+                    break;
+            }
+        }
+
         entitlement.updateBCD(json.getBillCycleDayLocal(), effectiveFromDate, callContext);
         return Response.status(Status.OK).build();
     }
