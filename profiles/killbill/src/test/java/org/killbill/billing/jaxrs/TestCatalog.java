@@ -26,9 +26,8 @@ import java.util.Set;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
-import org.killbill.billing.catalog.StandaloneCatalog;
-import org.killbill.billing.catalog.VersionedCatalog;
 import org.killbill.billing.catalog.api.BillingPeriod;
+import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.catalog.api.ProductCategory;
 import org.killbill.billing.catalog.api.TimeUnit;
@@ -41,7 +40,6 @@ import org.killbill.billing.client.model.Product;
 import org.killbill.billing.client.model.SimplePlan;
 import org.killbill.billing.client.model.Tenant;
 import org.killbill.billing.client.model.Usage;
-import org.killbill.xmlloader.XMLLoader;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
@@ -60,6 +58,32 @@ public class TestCatalog extends TestJaxrsBase {
         // We can't deserialize the VersionedCatalog using our JAXB models because it contains several
         // Standalone catalog and ids (JAXB name) are not unique across the various catalogs so deserialization would fail
         //
+    }
+
+    @Test(groups = "slow")
+    public void testUploadWithErrors() throws Exception {
+        final String versionPath1 = Resources.getResource("SpyCarBasic.xml").getPath();
+        killBillClient.uploadXMLCatalog(versionPath1, requestOptions);
+
+        // Retry to upload same version
+        try {
+            killBillClient.uploadXMLCatalog(versionPath1, requestOptions);
+            Assert.fail("Uploading same version should fail");
+        } catch (KillBillClientException e) {
+            Assert.assertEquals(e.getMessage(), "Invalid catalog for tenant : 1");
+        }
+
+        // Try to upload another version with an invalid name (different than orignal name)
+        try {
+            final String versionPath2 = Resources.getResource("SpyCarBasicInvalidName.xml").getPath();
+            killBillClient.uploadXMLCatalog(versionPath2, requestOptions);
+            Assert.fail("Uploading same version should fail");
+        } catch (KillBillClientException e) {
+            Assert.assertEquals(e.getMessage(), "Invalid catalog for tenant : 1");
+        }
+
+        String catalog = killBillClient.getXMLCatalog(requestOptions);
+        Assert.assertNotNull(catalog);
     }
 
     @Test(groups = "slow", description = "Can retrieve a json version of the catalog")

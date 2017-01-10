@@ -94,24 +94,37 @@ public class  DefaultCatalogUserApi implements CatalogUserApi {
         final InternalTenantContext internalTenantContext = createInternalTenantContext(callContext);
         try {
 
-            final StaticCatalog currentCatalog = catalogService.getCurrentCatalog(false, true, internalTenantContext);
-
+            final VersionedCatalog versionedCatalog = (VersionedCatalog) catalogService.getFullCatalog(false, true, internalTenantContext);
 
             // Validation purpose:  Will throw if bad XML or catalog validation fails
             final InputStream stream = new ByteArrayInputStream(catalogXML.getBytes());
             final StaticCatalog newCatalogVersion = XMLLoader.getObjectFromStream(new URI("dummy"), stream, StandaloneCatalog.class);
 
-            // currentCatalog.getCatalogName() could be null if tenant was created with a default catalog
-            if (currentCatalog != null && currentCatalog.getCatalogName() !=  null) {
-                if (!newCatalogVersion.getCatalogName().equals(currentCatalog.getCatalogName())) {
+            if (versionedCatalog != null) {
+
+                // currentCatalog.getCatalogName() could be null if tenant was created with a default catalog
+                if (versionedCatalog.getCatalogName() !=  null && !newCatalogVersion.getCatalogName().equals(versionedCatalog.getCatalogName())) {
                     final ValidationErrors errors = new ValidationErrors();
-                    errors.add(String.format("Catalog name '%s' should match previous catalog name '%s'", newCatalogVersion.getCatalogName(), currentCatalog.getCatalogName()),
-                                                   new URI("dummy"), StandaloneCatalog.class, "");
+                    errors.add(String.format("Catalog name '%s' should match previous catalog name '%s'", newCatalogVersion.getCatalogName(), versionedCatalog.getCatalogName()),
+                               new URI("dummy"), StandaloneCatalog.class, "");
                     // Bummer ValidationException CTOR is private to package...
                     //final ValidationException validationException = new ValidationException(errors);
                     //throw new CatalogApiException(errors, ErrorCode.CAT_INVALID_FOR_TENANT, internalTenantContext.getTenantRecordId());
                     logger.info("Failed to load new catalog version: " + errors.toString());
                     throw new CatalogApiException(ErrorCode.CAT_INVALID_FOR_TENANT, internalTenantContext.getTenantRecordId());
+                }
+
+                for (StandaloneCatalog c : versionedCatalog.getVersions()) {
+                    if (c.getEffectiveDate().compareTo(newCatalogVersion.getEffectiveDate()) == 0) {
+                        final ValidationErrors errors = new ValidationErrors();
+                        errors.add(String.format("Catalog version for effectiveDate '%s' already exists", newCatalogVersion.getEffectiveDate()),
+                                   new URI("dummy"), StandaloneCatalog.class, "");
+                        // Bummer ValidationException CTOR is private to package...
+                        //final ValidationException validationException = new ValidationException(errors);
+                        //throw new CatalogApiException(errors, ErrorCode.CAT_INVALID_FOR_TENANT, internalTenantContext.getTenantRecordId());
+                        logger.info("Failed to load new catalog version: " + errors.toString());
+                        throw new CatalogApiException(ErrorCode.CAT_INVALID_FOR_TENANT, internalTenantContext.getTenantRecordId());
+                    }
                 }
             }
 
