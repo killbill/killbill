@@ -53,8 +53,8 @@ public class TestCatalog extends TestJaxrsBase {
     @Test(groups = "slow", description = "Upload and retrieve a per tenant catalog")
     public void testMultiTenantCatalog() throws Exception {
         final String versionPath1 = Resources.getResource("SpyCarBasic.xml").getPath();
-        killBillClient.uploadXMLCatalog(versionPath1, createdBy, reason, comment);
-        String catalog = killBillClient.getXMLCatalog();
+        killBillClient.uploadXMLCatalog(versionPath1, requestOptions);
+        String catalog = killBillClient.getXMLCatalog(requestOptions);
         Assert.assertNotNull(catalog);
         //
         // We can't deserialize the VersionedCatalog using our JAXB models because it contains several
@@ -66,7 +66,7 @@ public class TestCatalog extends TestJaxrsBase {
     public void testCatalog() throws Exception {
         final Set<String> allBasePlans = new HashSet<String>();
 
-        final List<Catalog> catalogsJson = killBillClient.getJSONCatalog();
+        final List<Catalog> catalogsJson = killBillClient.getJSONCatalog(requestOptions);
 
         Assert.assertEquals(catalogsJson.get(0).getName(), "Firearms");
         Assert.assertEquals(catalogsJson.get(0).getEffectiveDate(), Date.valueOf("2011-01-01"));
@@ -99,7 +99,7 @@ public class TestCatalog extends TestJaxrsBase {
             }
 
             // Retrieve available products (addons) for that base product
-            final List<PlanDetail> availableAddons = killBillClient.getAvailableAddons(productJson.getName());
+            final List<PlanDetail> availableAddons = killBillClient.getAvailableAddons(productJson.getName(), requestOptions);
             final Set<String> availableAddonsNames = new HashSet<String>();
             for (final PlanDetail planDetailJson : availableAddons) {
                 availableAddonsNames.add(planDetailJson.getProduct());
@@ -108,7 +108,7 @@ public class TestCatalog extends TestJaxrsBase {
         }
 
         // Verify base plans endpoint
-        final List<PlanDetail> basePlans = killBillClient.getBasePlans();
+        final List<PlanDetail> basePlans = killBillClient.getBasePlans(requestOptions);
         final Set<String> foundBasePlans = new HashSet<String>();
         for (final PlanDetail planDetailJson : basePlans) {
             foundBasePlans.add(planDetailJson.getPlan());
@@ -120,7 +120,7 @@ public class TestCatalog extends TestJaxrsBase {
             expectedExceptions = KillBillClientException.class,
             expectedExceptionsMessageRegExp = "There is no catalog version that applies for the given date.*")
     public void testCatalogInvalidDate() throws Exception {
-        final List<Catalog> catalogsJson = killBillClient.getJSONCatalog(DateTime.parse("2008-01-01"));
+        final List<Catalog> catalogsJson = killBillClient.getJSONCatalog(DateTime.parse("2008-01-01"), requestOptions);
         Assert.fail();
     }
 
@@ -188,5 +188,7 @@ public class TestCatalog extends TestJaxrsBase {
         Assert.assertEquals(catalogsJson.get(0).getPriceLists().get(0).getName(), "DEFAULT");
         Assert.assertEquals(catalogsJson.get(0).getPriceLists().get(0).getPlans().size(), 2);
     }
+
+
 
 }
