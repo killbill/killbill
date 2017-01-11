@@ -69,12 +69,13 @@ public class DefaultLimit extends ValidatingConfig<StandaloneCatalog> implements
 
     @Override
     public ValidationErrors validate(StandaloneCatalog root, ValidationErrors errors) {
-        if (max == null && min == null) {
+        if (max == CatalogSafetyInitializer.DEFAULT_NON_REQUIRED_DOUBLE_FIELD_VALUE && min == CatalogSafetyInitializer.DEFAULT_NON_REQUIRED_DOUBLE_FIELD_VALUE) {
             errors.add(new ValidationError("max and min cannot both be ommitted", root.getCatalogURI(), Limit.class, ""));
-        } else if (max != null && min != null && max.doubleValue() < min.doubleValue()) {
+        } else if (max != CatalogSafetyInitializer.DEFAULT_NON_REQUIRED_DOUBLE_FIELD_VALUE &&
+                   min != CatalogSafetyInitializer.DEFAULT_NON_REQUIRED_DOUBLE_FIELD_VALUE &&
+                   max.doubleValue() < min.doubleValue()) {
             errors.add(new ValidationError("max must be greater than min", root.getCatalogURI(), Limit.class, ""));
         }
-
         return errors;
     }
 
@@ -87,12 +88,12 @@ public class DefaultLimit extends ValidatingConfig<StandaloneCatalog> implements
 
     @Override
     public boolean compliesWith(double value) {
-        if (max != null) {
+        if (max != CatalogSafetyInitializer.DEFAULT_NON_REQUIRED_DOUBLE_FIELD_VALUE) {
             if (value > max.doubleValue()) {
                 return false;
             }
         }
-        if (min != null) {
+        if (min != CatalogSafetyInitializer.DEFAULT_NON_REQUIRED_DOUBLE_FIELD_VALUE) {
             if (value < min.doubleValue()) {
                 return false;
             }
@@ -126,10 +127,10 @@ public class DefaultLimit extends ValidatingConfig<StandaloneCatalog> implements
 
         final DefaultLimit that = (DefaultLimit) o;
 
-        if (max != null ? !max.equals(that.max) : that.max != null) {
+        if (!max.equals(that.max)) {
             return false;
         }
-        if (min != null ? !min.equals(that.min) : that.min != null) {
+        if (!min.equals(that.min)) {
             return false;
         }
         if (unit != null ? !unit.equals(that.unit) : that.unit != null) {
@@ -142,8 +143,8 @@ public class DefaultLimit extends ValidatingConfig<StandaloneCatalog> implements
     @Override
     public int hashCode() {
         int result = unit != null ? unit.hashCode() : 0;
-        result = 31 * result + (max != null ? max.hashCode() : 0);
-        result = 31 * result + (min != null ? min.hashCode() : 0);
+        result = 31 * result + max.hashCode();
+        result = 31 * result + min.hashCode();
         return result;
     }
 }

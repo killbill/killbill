@@ -33,6 +33,7 @@ public class CatalogSafetyInitializer {
 
 
     public static final Integer DEFAULT_NON_REQUIRED_INTEGER_FIELD_VALUE = -1;
+    public static final Double DEFAULT_NON_REQUIRED_DOUBLE_FIELD_VALUE = new Double(-1);
 
     private static final Map<Class, LinkedList<Field>> perCatalogClassNonRequiredFields = new HashMap<Class, LinkedList<Field>>();
 
@@ -60,6 +61,8 @@ public class CatalogSafetyInitializer {
                         }
                     } else if (Integer.class.equals(f.getType())) {
                         initializeFieldWithValue(obj, f, DEFAULT_NON_REQUIRED_INTEGER_FIELD_VALUE);
+                    } else if (Double.class.equals(f.getType())) {
+                        initializeFieldWithValue(obj, f, DEFAULT_NON_REQUIRED_DOUBLE_FIELD_VALUE);
                     }
                 }
             }
@@ -96,6 +99,8 @@ public class CatalogSafetyInitializer {
                         result.add(f);
                     }
                 } else if (Integer.class.equals(f.getType())) {
+                    result.add(f);
+                } else if (Double.class.equals(f.getType())) {
                     result.add(f);
                 }
             }

@@ -61,6 +61,15 @@ public class TestCatalog extends TestJaxrsBase {
     }
 
     @Test(groups = "slow")
+    public void testUploadAndFetchUsageCatlog() throws Exception {
+        final String versionPath1 = Resources.getResource("UsageExperimental.xml").getPath();
+        killBillClient.uploadXMLCatalog(versionPath1, requestOptions);
+        String catalog = killBillClient.getXMLCatalog(requestOptions);
+        Assert.assertNotNull(catalog);
+    }
+
+
+    @Test(groups = "slow")
     public void testUploadWithErrors() throws Exception {
         final String versionPath1 = Resources.getResource("SpyCarBasic.xml").getPath();
         killBillClient.uploadXMLCatalog(versionPath1, requestOptions);
