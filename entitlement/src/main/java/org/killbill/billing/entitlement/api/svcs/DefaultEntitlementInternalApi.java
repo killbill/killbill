@@ -254,10 +254,19 @@ public class DefaultEntitlementInternalApi extends DefaultEntitlementApiBase imp
         @Override
         public Entitlement doCall(final EntitlementApi entitlementApi, final EntitlementContext updatedPluginContext) throws EntitlementApiException {
             DateTime effectiveDate = dateHelper.fromLocalDateAndReferenceTime(updatedPluginContext.getBaseEntitlementWithAddOnsSpecifiers().iterator().next().getEntitlementEffectiveDate(), internalCallContext);
-            // Avoid timing issues for IMM cancellations (we don't want an entitlement cancel date one second or so after the subscription cancel date or
-            // add-ons cancellations computations won't work).
-            if (effectiveDate.compareTo(entitlement.getSubscriptionBase().getEndDate()) > 0) {
-                effectiveDate = entitlement.getSubscriptionBase().getEndDate();
+
+            //
+            // If the entitlementDate provided is ahead we default to the effective subscriptionBase cancellationDate to avoid weird timing issues.
+            //
+            // (Note that entitlement.getSubscriptionBase() returns the right state (although we did not refresh context) because the DefaultSubscriptionBaseApiService#doCancelPlan
+            //  rebuild transitions on that same  DefaultSubscriptionBase object)
+            //
+            final DateTime subscriptionBaseCancellationDate = entitlement.getSubscriptionBase().getEndDate() != null ?
+                                                              entitlement.getSubscriptionBase().getEndDate() :
+                                                              entitlement.getSubscriptionBase().getFutureEndDate();
+
+            if (effectiveDate.compareTo(subscriptionBaseCancellationDate) > 0) {
+                effectiveDate = subscriptionBaseCancellationDate;
             }
 
             final BlockingState newBlockingState = new DefaultBlockingState(entitlement.getId(), BlockingStateType.SUBSCRIPTION, DefaultEntitlementApi.ENT_STATE_CANCELLED, EntitlementService.ENTITLEMENT_SERVICE_NAME, true, true, false, effectiveDate);
