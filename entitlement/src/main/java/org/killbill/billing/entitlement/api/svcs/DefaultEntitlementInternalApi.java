@@ -146,15 +146,14 @@ public class DefaultEntitlementInternalApi extends DefaultEntitlementApiBase imp
                                                                                    callContext);
             pluginContexts.add(pluginContext);
 
-            final DefaultEntitlement defaultEntitlement = getDefaultEntitlement(entitlement, internalCallContext);
-            final WithEntitlementPlugin<Entitlement> cancelEntitlementWithPlugin = new WithDateOverrideBillingPolicyEntitlementCanceler(defaultEntitlement,
+            final WithEntitlementPlugin<Entitlement> cancelEntitlementWithPlugin = new WithDateOverrideBillingPolicyEntitlementCanceler((DefaultEntitlement) entitlement,
                                                                                                                                         blockingStates,
                                                                                                                                         notificationEvents,
                                                                                                                                         callContext,
                                                                                                                                         internalCallContext);
             callbacks.add(cancelEntitlementWithPlugin);
 
-            subscriptions.add(defaultEntitlement.getSubscriptionBase());
+            subscriptions.add(((DefaultEntitlement) entitlement).getSubscriptionBase());
         }
 
         final Callable<Void> preCallbacksCallback = new BulkSubscriptionBaseCancellation(subscriptions,
@@ -185,16 +184,6 @@ public class DefaultEntitlementInternalApi extends DefaultEntitlementApiBase imp
             throw new RuntimeException(e);
         } catch (final IOException e) {
             throw new RuntimeException(e);
-        }
-    }
-
-    // For forward-compatibility
-    private DefaultEntitlement getDefaultEntitlement(final Entitlement entitlement, final InternalTenantContext context) throws EntitlementApiException {
-        if (entitlement instanceof DefaultEntitlement) {
-            return (DefaultEntitlement) entitlement;
-        } else {
-            // Safe cast
-            return (DefaultEntitlement) getEntitlementForId(entitlement.getId(), context);
         }
     }
 

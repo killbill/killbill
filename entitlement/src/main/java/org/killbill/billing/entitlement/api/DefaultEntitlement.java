@@ -493,9 +493,6 @@ public class DefaultEntitlement extends EntityBase implements Entitlement {
                     throw new EntitlementApiException(ErrorCode.SUB_CANCEL_BAD_STATE, getId(), EntitlementState.CANCELLED);
                 }
 
-                // Make sure to compute the entitlement effective date first to avoid timing issues for IMM cancellations
-                // (we don't want an entitlement cancel date one second or so after the subscription cancel date or add-ons cancellations
-                // computations won't work).
                 final InternalCallContext contextWithValidAccountRecordId = internalCallContextFactory.createInternalCallContext(getAccountId(), callContext);
 
                 try {
