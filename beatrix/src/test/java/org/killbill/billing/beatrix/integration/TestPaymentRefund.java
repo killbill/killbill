@@ -116,8 +116,7 @@ public class TestPaymentRefund extends TestIntegrationBase {
         }
     }
 
-    @Test(groups = "slow", description = "https://github.com/killbill/killbill/issues/255",
-            expectedExceptions = PaymentApiException.class, expectedExceptionsMessageRegExp = "Payment method .* does not exist")
+    @Test(groups = "slow", description = "https://github.com/killbill/killbill/issues/255")
     public void testRefundWithDeletedPaymentMethod() throws Exception {
 
         // delete payment method
@@ -126,8 +125,10 @@ public class TestPaymentRefund extends TestIntegrationBase {
         assertListenerStatus();
 
         // try to create a refund for a payment with its payment method deleted
+        busHandler.pushExpectedEvent(NextEvent.PAYMENT);
         paymentApi.createRefund(account, payment.getId(), payment.getPurchasedAmount(), payment.getCurrency(),
                                 UUID.randomUUID().toString(), PLUGIN_PROPERTIES, callContext);
+        assertListenerStatus();
     }
 
     private void setupRefundTest() throws Exception {

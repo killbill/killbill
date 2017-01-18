@@ -26,8 +26,10 @@ import java.util.List;
 import java.util.UUID;
 
 import javax.annotation.Nullable;
+import javax.annotation.concurrent.Immutable;
 
 import org.joda.time.LocalDate;
+import org.joda.time.LocalDate.Property;
 import org.killbill.billing.ErrorCode;
 import org.killbill.billing.account.api.Account;
 import org.killbill.billing.catalog.api.Currency;
@@ -181,6 +183,19 @@ public class TestPaymentApi extends PaymentTestSuiteWithEmbeddedDB {
             Assert.assertEquals(e.getCode(), ErrorCode.PAYMENT_INTERNAL_ERROR.getCode());
         }
         checkPaymentMethodPagination(paymentMethodId, baseNbRecords + 1, false);
+    }
+
+    @Test(groups = "slow", description="Verify we can make a refund on  payment whose original payment method was deleted. See 694")
+    public void testRefundAfterDeletedPaymentMethod() throws PaymentApiException {
+
+        final BigDecimal requestedAmount = BigDecimal.TEN;
+        final Payment payment = paymentApi.createPurchase(account, account.getPaymentMethodId(), null, requestedAmount, Currency.EUR, UUID.randomUUID().toString(), UUID.randomUUID().toString(),
+                                                          ImmutableList.<PluginProperty>of(), callContext);
+
+        paymentApi.deletePaymentMethod(account, account.getPaymentMethodId(), false, true, ImmutableList.<PluginProperty>of(), callContext);
+
+        final Payment newPayment = paymentApi.createRefund(account, payment.getId(),requestedAmount,  Currency.EUR, UUID.randomUUID().toString(), ImmutableList.<PluginProperty>of(), callContext);
+        Assert.assertEquals(newPayment.getTransactions().size(), 2);
     }
 
     @Test(groups = "slow")
