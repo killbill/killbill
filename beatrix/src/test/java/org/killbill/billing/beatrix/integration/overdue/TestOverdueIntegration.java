@@ -45,6 +45,7 @@ import org.killbill.billing.invoice.api.Invoice;
 import org.killbill.billing.invoice.api.InvoiceItem;
 import org.killbill.billing.invoice.api.InvoiceItemType;
 import org.killbill.billing.invoice.api.InvoicePayment;
+import org.killbill.billing.invoice.generator.InvoiceWithMetadata;
 import org.killbill.billing.invoice.model.ExternalChargeInvoiceItem;
 import org.killbill.billing.overdue.config.DefaultOverdueConfig;
 import org.killbill.billing.overdue.wrapper.OverdueWrapper;
@@ -1095,6 +1096,56 @@ public class TestOverdueIntegration extends TestOverdueBase {
 
         // We should be clear now
         checkODState(OverdueWrapper.CLEAR_STATE_NAME);
+    }
+
+
+
+    @Test(groups = "slow", description = "Test clearing balance with credit also clears overdue state")
+    public void testOverdueClearWithCredit() throws Exception {
+        // 2012-05-01T00:03:42.000Z
+        clock.setTime(new DateTime(2012, 5, 1, 0, 3, 42, 0));
+
+        setupAccount();
+
+        // Set next invoice to fail and create subscription
+        paymentPlugin.makeAllInvoicesFailWithError(true);
+        final DefaultEntitlement baseEntitlement = createBaseEntitlementAndCheckForCompletion(account.getId(), "externalKey", productName, ProductCategory.BASE, term, NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE);
+        bundle = subscriptionApi.getSubscriptionBundle(baseEntitlement.getBundleId(), callContext);
+
+        invoiceChecker.checkInvoice(account.getId(), 1, callContext, new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 1), null, InvoiceItemType.FIXED, new BigDecimal("0")));
+        invoiceChecker.checkChargedThroughDate(baseEntitlement.getId(), new LocalDate(2012, 5, 1), callContext);
+
+        // 2012-05-31 => DAY 30 have to get out of trial {I0, P0}
+        addDaysAndCheckForCompletion(30, NextEvent.PHASE, NextEvent.INVOICE, NextEvent.PAYMENT_ERROR, NextEvent.INVOICE_PAYMENT_ERROR);
+
+        invoiceChecker.checkInvoice(account.getId(), 2, callContext, new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 31), new LocalDate(2012, 6, 30), InvoiceItemType.RECURRING, new BigDecimal("249.95")));
+        invoiceChecker.checkChargedThroughDate(baseEntitlement.getId(), new LocalDate(2012, 6, 30), callContext);
+
+        // 2012-06-08 => Retry P0
+        addDaysAndCheckForCompletion(8, NextEvent.PAYMENT_ERROR, NextEvent.INVOICE_PAYMENT_ERROR);
+        checkODState(OverdueWrapper.CLEAR_STATE_NAME);
+
+        // 2012-06-16 => Retry P0
+        addDaysAndCheckForCompletion(8, NextEvent.PAYMENT_ERROR, NextEvent.INVOICE_PAYMENT_ERROR);
+        checkODState(OverdueWrapper.CLEAR_STATE_NAME);
+
+        // 2012-06-24 => Retry P0
+        addDaysAndCheckForCompletion(8, NextEvent.PAYMENT_ERROR, NextEvent.INVOICE_PAYMENT_ERROR);
+        checkODState(OverdueWrapper.CLEAR_STATE_NAME);
+
+        // 2012-06-30 => P1
+        addDaysAndCheckForCompletion(6, NextEvent.BLOCK, NextEvent.INVOICE, NextEvent.PAYMENT_ERROR, NextEvent.INVOICE_PAYMENT_ERROR);
+        checkODState("OD1");
+        checkChangePlanWithOverdueState(baseEntitlement, true, true);
+        invoiceChecker.checkInvoice(account.getId(), 3, callContext, new ExpectedInvoiceItemCheck(new LocalDate(2012, 6, 30), new LocalDate(2012, 7, 31), InvoiceItemType.RECURRING, new BigDecimal("249.95")));
+        invoiceChecker.checkChargedThroughDate(baseEntitlement.getId(), new LocalDate(2012, 7, 31), callContext);
+
+        final BigDecimal accountBalance = invoiceUserApi.getAccountBalance(account.getId(), callContext);
+
+        busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.BLOCK);
+        invoiceUserApi.insertCredit(account.getId(), accountBalance, new LocalDate(2012, 06, 30), account.getCurrency(), true, "credit invoice", callContext);
+        assertListenerStatus();
+
     }
 
     private void allowPaymentsAndResetOverdueToClearByPayingAllUnpaidInvoices(final boolean extraPayment) {
