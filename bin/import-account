@@ -47,18 +47,18 @@ function fill_empty_columns() {
 
     local filename=$1
     local tmp=${filename}.tmp
-    grep ',,' $filename > /dev/null
+    grep '||' $filename > /dev/null
     while [[ $? = 0 ]]; do
-        cat $filename | sed s/,,/,\\\\N,/ > $tmp
+        cat $filename | sed s/\|\|/\|\\\\N\|/ > $tmp
         mv $tmp $filename
-        grep ',,' $filename > /dev/null
+        grep '||' $filename > /dev/null
     done
 
-    grep ',$' $filename > /dev/null
+    grep '|$' $filename > /dev/null
     while [[ $? = 0 ]]; do
-        cat $filename | sed s/,$/,\\\\N/ > $tmp
+        cat $filename | sed s/\|$/\|\\\\N/ > $tmp
         mv $tmp $filename
-        grep ',$' $filename > /dev/null
+        grep '|$' $filename > /dev/null
     done
 
 }
@@ -68,16 +68,16 @@ function replace_boolean() {
     local filename=$1
     local tmp=${filename}.tmp
 
-    cat $filename | sed s/,true/,1/g > $tmp
+    cat $filename | sed s/\|true/\|1/g > $tmp
     mv $tmp $filename
 
-    cat $filename | sed s/true,/1,/g > $tmp
+    cat $filename | sed s/true\|/1\|/g > $tmp
     mv $tmp $filename
 
-    cat $filename | sed s/,false/,0/g > $tmp
+    cat $filename | sed s/\|false/\|0/g > $tmp
     mv $tmp $filename
 
-    cat $filename | sed s/false,/0,/g > $tmp
+    cat $filename | sed s/false\|/0\|/g > $tmp
     mv $tmp $filename
 }
 
@@ -86,7 +86,7 @@ function fix_dates() {
     local filename=$1
     local tmp=${filename}.tmp
 
-    cat $filename | sed s/+0000\",/\",/g > $tmp
+    cat $filename | sed s/+0000\"\|/\"\|/g > $tmp
     mv $tmp $filename
 }
 
@@ -98,8 +98,11 @@ function export_data() {
 
 function import_data() {
     local filename=$1
-    local columns_names=$2
-    mysql --local-infile --execute="LOAD DATA LOCAL INFILE '$TMP_DIR/$filename' INTO TABLE $filename FIELDS TERMINATED BY ',' OPTIONALLY ENCLOSED BY '\"' IGNORE 1 LINES ($columns_names); SHOW WARNINGS" -u$USERNAME -p$PASSWORD $DATABASE
+    # Separator for column names needs to be ',' and not the '|'
+    local columns_names=`echo "$2" | sed s/\|/,/g`
+
+    echo "****  $filename: $columns_names"
+    mysql --local-infile --execute="LOAD DATA LOCAL INFILE '$TMP_DIR/$filename' INTO TABLE $filename FIELDS TERMINATED BY '|' OPTIONALLY ENCLOSED BY '\"' IGNORE 1 LINES ($columns_names); SHOW WARNINGS" -u$USERNAME -p$PASSWORD $DATABASE
 }
 
 function sanitize_and_import() {
