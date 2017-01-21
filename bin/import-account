@@ -101,7 +101,6 @@ function import_data() {
     # Separator for column names needs to be ',' and not the '|'
     local columns_names=`echo "$2" | sed s/\|/,/g`
 
-    echo "****  $filename: $columns_names"
     mysql --local-infile --execute="LOAD DATA LOCAL INFILE '$TMP_DIR/$filename' INTO TABLE $filename FIELDS TERMINATED BY '|' OPTIONALLY ENCLOSED BY '\"' IGNORE 1 LINES ($columns_names); SHOW WARNINGS" -u$USERNAME -p$PASSWORD $DATABASE
 }
 
