@@ -122,6 +122,7 @@ CREATE UNIQUE INDEX payments_id ON payments(id);
 CREATE UNIQUE INDEX payments_key ON payments(external_key, tenant_record_id);
 CREATE INDEX payments_accnt ON payments(account_id);
 CREATE INDEX payments_tenant_account_record_id ON payments(tenant_record_id, account_record_id);
+CREATE INDEX payments_tenant_record_id_state_name ON payments(tenant_record_id, state_name);
 
 
 DROP TABLE IF EXISTS payment_history;

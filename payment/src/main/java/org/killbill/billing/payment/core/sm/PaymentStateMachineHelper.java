@@ -78,6 +78,35 @@ public class PaymentStateMachineHelper {
 
     private final StateMachineConfigCache stateMachineConfigCache;
 
+    public static final String[] STATE_NAMES = {AUTH_ERRORED,
+                                                AUTHORIZE_FAILED,
+                                                AUTHORIZE_PENDING,
+                                                AUTHORIZE_SUCCESS,
+                                                CAPTURE_ERRORED,
+                                                CAPTURE_FAILED,
+                                                CAPTURE_PENDING,
+                                                CAPTURE_SUCCESS,
+                                                CHARGEBACK_ERRORED,
+                                                CHARGEBACK_FAILED,
+                                                CHARGEBACK_PENDING,
+                                                CHARGEBACK_SUCCESS,
+                                                CREDIT_ERRORED,
+                                                CREDIT_FAILED,
+                                                CREDIT_PENDING,
+                                                CREDIT_SUCCESS,
+                                                PURCHASE_ERRORED,
+                                                PURCHASE_FAILED,
+                                                PURCHASE_PENDING,
+                                                PURCHASE_SUCCESS,
+                                                REFUND_ERRORED,
+                                                REFUND_FAILED,
+                                                REFUND_PENDING,
+                                                REFUND_SUCCESS,
+                                                VOID_ERRORED,
+                                                VOID_FAILED,
+                                                VOID_PENDING,
+                                                VOID_SUCCESS};
+
     @Inject
     public PaymentStateMachineHelper(final StateMachineConfigCache stateMachineConfigCache) {
         this.stateMachineConfigCache = stateMachineConfigCache;
