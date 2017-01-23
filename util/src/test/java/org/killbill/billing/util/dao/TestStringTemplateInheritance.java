@@ -123,9 +123,14 @@ public class TestStringTemplateInheritance extends UtilTestSuiteNoDB {
                                                                                                                                                           ", t.account_record_id\r?\n" +
                                                                                                                                                           ", t.tenant_record_id\r?\n" +
                                                                                                                                                           "from kombucha t\r?\n" +
-                                                                                                                                                          "where t.tenant_record_id = :tenantRecordId\r?\n" +
+                                                                                                                                                          "join \\(\r?\n" +
+                                                                                                                                                          "  select record_id\r?\n" +
+                                                                                                                                                          "  from kombucha\r?\n" +
+                                                                                                                                                          "  where tenant_record_id = :tenantRecordId\r?\n" +
+                                                                                                                                                          "  order by record_id\r?\n" +
+                                                                                                                                                          "  limit :rowCount offset :offset\r?\n" +
+                                                                                                                                                          "\\) optimization on optimization.record_id = t.record_id\r?\n" +
                                                                                                                                                           "order by t.record_id\r?\n" +
-                                                                                                                                                          "limit :rowCount offset :offset\r?\n" +
                                                                                                                                                           ";");
         assertPattern(kombucha.getInstanceOf("test").toString(), "select\r?\n" +
                                                                  "  t.record_id\r?\n" +

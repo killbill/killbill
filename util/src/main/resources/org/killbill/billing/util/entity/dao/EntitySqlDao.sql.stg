@@ -151,10 +151,15 @@ get(offset, rowCount, orderBy) ::= <<
 select
 <allTableFields("t.")>
 from <tableName()> t
-where <CHECK_TENANT("t.")>
-<andCheckSoftDeletionWithComma("t.")>
+join (
+  select <recordIdField()>
+  from <tableName()>
+  where <CHECK_TENANT()>
+  <andCheckSoftDeletionWithComma()>
+  order by <orderBy>
+  limit :rowCount offset :offset
+) optimization on <recordIdField("optimization.")> = <recordIdField("t.")>
 order by t.<orderBy>
-limit :rowCount offset :offset
 ;
 >>
 
