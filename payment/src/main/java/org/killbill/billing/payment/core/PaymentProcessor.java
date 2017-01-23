@@ -87,9 +87,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Function;
+import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Iterators;
 import com.google.common.collect.Lists;
@@ -241,17 +243,45 @@ public class PaymentProcessor extends ProcessorBase {
 
     public Pagination<Payment> getPayments(final Long offset, final Long limit, final boolean withPluginInfo, final boolean withAttempts,
                                            final Iterable<PluginProperty> properties, final TenantContext tenantContext, final InternalTenantContext internalTenantContext) {
-        return getEntityPaginationFromPlugins(true,
-                                              getAvailablePlugins(),
-                                              offset,
-                                              limit,
-                                              new EntityPaginationBuilder<Payment, PaymentApiException>() {
-                                                  @Override
-                                                  public Pagination<Payment> build(final Long offset, final Long limit, final String pluginName) throws PaymentApiException {
-                                                      return getPayments(offset, limit, pluginName, withPluginInfo, withAttempts, properties, tenantContext, internalTenantContext);
-                                                  }
-                                              }
-                                             );
+        final Map<UUID, Optional<PaymentPluginApi>> paymentMethodIdToPaymentPluginApi = new HashMap<UUID, Optional<PaymentPluginApi>>();
+
+        try {
+            return getEntityPagination(limit,
+                                       new SourcePaginationBuilder<PaymentModelDao, PaymentApiException>() {
+                                           @Override
+                                           public Pagination<PaymentModelDao> build() {
+                                               // Find all payments for all accounts
+                                               return paymentDao.get(offset, limit, internalTenantContext);
+                                           }
+                                       },
+                                       new Function<PaymentModelDao, Payment>() {
+                                           @Override
+                                           public Payment apply(final PaymentModelDao paymentModelDao) {
+                                               final PaymentPluginApi pluginApi;
+                                               if (!withPluginInfo) {
+                                                   pluginApi = null;
+                                               } else {
+                                                   if (paymentMethodIdToPaymentPluginApi.get(paymentModelDao.getPaymentMethodId()) == null) {
+                                                       try {
+                                                           final PaymentPluginApi paymentProviderPlugin = getPaymentProviderPlugin(paymentModelDao.getPaymentMethodId(), internalTenantContext);
+                                                           paymentMethodIdToPaymentPluginApi.put(paymentModelDao.getPaymentMethodId(), Optional.<PaymentPluginApi>of(paymentProviderPlugin));
+                                                       } catch (final PaymentApiException e) {
+                                                           log.warn("Unable to retrieve PaymentPluginApi for paymentMethodId='{}'", paymentModelDao.getPaymentMethodId(), e);
+                                                           // We use Optional to avoid printing the log line for each result
+                                                           paymentMethodIdToPaymentPluginApi.put(paymentModelDao.getPaymentMethodId(), Optional.<PaymentPluginApi>absent());
+                                                       }
+                                                   }
+                                                   pluginApi = paymentMethodIdToPaymentPluginApi.get(paymentModelDao.getPaymentMethodId()).orNull();
+                                               }
+                                               final List<PaymentTransactionInfoPlugin> pluginInfo = getPaymentTransactionInfoPluginsIfNeeded(pluginApi, paymentModelDao, tenantContext);
+                                               return toPayment(paymentModelDao.getId(), pluginInfo, withAttempts, internalTenantContext);
+                                           }
+                                       }
+                                      );
+        } catch (final PaymentApiException e) {
+            log.warn("Unable to get payments", e);
+            return new DefaultPagination<Payment>(offset, limit, null, null, ImmutableSet.<Payment>of().iterator());
+        }
     }
 
     public Pagination<Payment> getPayments(final Long offset, final Long limit, final String pluginName, final boolean withPluginInfo, final boolean withAttempts, final Iterable<PluginProperty> properties, final TenantContext tenantContext, final InternalTenantContext internalTenantContext) throws PaymentApiException {

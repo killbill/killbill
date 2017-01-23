@@ -80,7 +80,33 @@ searchQuery(prefix) ::= <<
   or <prefix>account_id = :searchKey
   or <prefix>payment_method_id = :searchKey
   or <prefix>external_key like :likeSearchKey
-  or <prefix>state_name like :likeSearchKey
+>>
+
+searchByState(states) ::= <<
+select
+<allTableFields("t.")>
+from <tableName()> t
+join (
+  select <recordIdField()>
+  from <tableName()>
+  where state_name in (<states: {state | :state_<i0>}; separator="," >)
+  <AND_CHECK_TENANT()>
+  <andCheckSoftDeletionWithComma()>
+  order by <recordIdField()>
+  limit :rowCount offset :offset
+) optimization on <recordIdField("optimization.")> = <recordIdField("t.")>
+order by <recordIdField("t.")>
+;
+>>
+
+getSearchByStateCount(states) ::= <<
+select
+  count(1) as count
+from <tableName()> t
+where t.state_name in (<states: {state | :state_<i0>}; separator="," >)
+<andCheckSoftDeletionWithComma("t.")>
+<AND_CHECK_TENANT("t.")>
+;
 >>
 
 getByPluginName() ::= <<
