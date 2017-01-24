@@ -89,6 +89,7 @@ public interface JaxrsResource {
 
     public static final String QUERY_ACCOUNT_WITH_BALANCE = "accountWithBalance";
     public static final String QUERY_ACCOUNT_WITH_BALANCE_AND_CBA = "accountWithBalanceAndCBA";
+    public static final String QUERY_ACCOUNT_TREAT_NULL_AS_RESET = "treatNullAsReset";
 
     public static final String QUERY_ACCOUNT_ID = "accountId";
 

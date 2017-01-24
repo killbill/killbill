@@ -354,7 +354,7 @@ public class AccountResource extends JaxRsResourceBase {
                                   @javax.ws.rs.core.Context final UriInfo uriInfo) throws AccountApiException {
         verifyNonNullOrEmpty(json, "AccountJson body should be specified");
 
-        final AccountData data = json.toAccountData();
+        final AccountData data = json.toAccountData(null);
         final Account account = accountUserApi.createAccount(data, context.createContext(createdBy, reason, comment, request));
         return uriBuilder.buildResponse(uriInfo, AccountResource.class, "getAccount", account.getId(), request);
     }
@@ -368,15 +368,20 @@ public class AccountResource extends JaxRsResourceBase {
     @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid account data supplied")})
     public Response updateAccount(final AccountJson json,
                                   @PathParam("accountId") final String accountId,
+                                  @QueryParam(QUERY_ACCOUNT_TREAT_NULL_AS_RESET) @DefaultValue("false") final Boolean treatNullValueAsReset,
                                   @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                   @HeaderParam(HDR_REASON) final String reason,
                                   @HeaderParam(HDR_COMMENT) final String comment,
                                   @javax.ws.rs.core.Context final HttpServletRequest request) throws AccountApiException {
         verifyNonNullOrEmpty(json, "AccountJson body should be specified");
 
-        final AccountData data = json.toAccountData();
         final UUID uuid = UUID.fromString(accountId);
-        accountUserApi.updateAccount(uuid, data, context.createContext(createdBy, reason, comment, request));
+        final Account data = json.toAccountData(uuid);
+        if (treatNullValueAsReset) {
+            accountUserApi.updateAccount(data, context.createContext(createdBy, reason, comment, request));
+        } else {
+            accountUserApi.updateAccount(uuid, data, context.createContext(createdBy, reason, comment, request));
+        }
         return getAccount(accountId, false, false, new AuditMode(AuditLevel.NONE.toString()), request);
     }
 

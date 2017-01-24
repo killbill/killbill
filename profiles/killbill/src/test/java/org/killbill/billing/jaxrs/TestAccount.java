@@ -126,6 +126,80 @@ public class TestAccount extends TestJaxrsBase {
         searchAccount(input, null);
     }
 
+    @Test(groups = "slow", description = "Can reset account notes using flag treatNullAsReset")
+    public void testResetAccountNotes() throws Exception {
+
+        final Account input = createAccount();
+        Assert.assertNotNull(input.getExternalKey());
+        Assert.assertNotNull(input.getNotes());
+        Assert.assertEquals(input.getNotes(), "notes");
+        Assert.assertEquals(input.getTimeZone(), "UTC");
+        Assert.assertEquals(input.getAddress1(), "12 rue des ecoles");
+        Assert.assertEquals(input.getAddress2(), "Poitier");
+        Assert.assertEquals(input.getCity(), "Quelque part");
+        Assert.assertEquals(input.getState(), "Poitou");
+        Assert.assertEquals(input.getCountry(), "France");
+        Assert.assertEquals(input.getLocale(), "fr");
+
+
+        // Set notes to something else
+        final Account newInput = new Account(input.getAccountId(),
+                                             null,
+                                             null,
+                                             null,
+                                             null,
+                                             null,
+                                             null,
+                                             null,
+                                             null,
+                                             null,
+                                             null,
+                                             null,
+                                             null,
+                                             null,
+                                             null,
+                                             null,
+                                             null,
+                                             null,
+                                             null,
+                                             null,
+                                             "notes2",
+                                             null,
+                                             null,
+                                             null,
+                                             null);
+
+
+        // Update notes, all other fields remaining the same (value set to null but treatNullAsReset defaults to false)
+        Account updatedAccount = killBillClient.updateAccount(newInput, requestOptions);
+
+        Assert.assertNotNull(updatedAccount.getExternalKey());
+        Assert.assertNotNull(updatedAccount.getNotes());
+        Assert.assertEquals(updatedAccount.getNotes(), "notes2");
+        Assert.assertEquals(updatedAccount.getTimeZone(), "UTC");
+        Assert.assertEquals(updatedAccount.getAddress1(), "12 rue des ecoles");
+        Assert.assertEquals(updatedAccount.getAddress2(), "Poitier");
+        Assert.assertEquals(updatedAccount.getCity(), "Quelque part");
+        Assert.assertEquals(updatedAccount.getState(), "Poitou");
+        Assert.assertEquals(updatedAccount.getCountry(), "France");
+        Assert.assertEquals(updatedAccount.getLocale(), "fr");
+
+        // Reset notes, all other fields remaining the same
+        updatedAccount.setNotes(null);
+        updatedAccount = killBillClient.updateAccount(updatedAccount, true, requestOptions);
+
+        Assert.assertNotNull(updatedAccount.getExternalKey());
+        Assert.assertNull(updatedAccount.getNotes());
+        Assert.assertEquals(updatedAccount.getTimeZone(), "UTC");
+        Assert.assertEquals(updatedAccount.getAddress1(), "12 rue des ecoles");
+        Assert.assertEquals(updatedAccount.getAddress2(), "Poitier");
+        Assert.assertEquals(updatedAccount.getCity(), "Quelque part");
+        Assert.assertEquals(updatedAccount.getState(), "Poitou");
+        Assert.assertEquals(updatedAccount.getCountry(), "France");
+        Assert.assertEquals(updatedAccount.getLocale(), "fr");
+    }
+
+
     @Test(groups = "slow", description = "Can retrieve the account balance")
     public void testAccountWithBalance() throws Exception {
         final Account accountJson = createAccountNoPMBundleAndSubscriptionAndWaitForFirstInvoice();

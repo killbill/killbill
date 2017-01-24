@@ -312,31 +312,15 @@ public class DefaultAccount extends EntityBase implements Account {
     public Account mergeWithDelegate(final Account currentAccount) {
         final DefaultMutableAccountData accountData = new DefaultMutableAccountData(this);
 
-        if (externalKey != null && currentAccount.getExternalKey() != null && !currentAccount.getExternalKey().equals(externalKey)) {
-            throw new IllegalArgumentException(String.format("Killbill doesn't support updating the account external key yet: new=%s, current=%s",
-                                                             externalKey, currentAccount.getExternalKey()));
-        } else {
-            // Default to current value
-            accountData.setExternalKey(currentAccount.getExternalKey());
-        }
+        validateAccountUpdateInput(currentAccount, false);
 
-        if (currency != null && currentAccount.getCurrency() != null && !currentAccount.getCurrency().equals(currency)) {
-            throw new IllegalArgumentException(String.format("Killbill doesn't support updating the account currency yet: new=%s, current=%s",
-                                                             currency, currentAccount.getCurrency()));
-        } else {
-            // Default to current value
-            accountData.setCurrency(currentAccount.getCurrency());
-        }
+        accountData.setExternalKey(currentAccount.getExternalKey());
 
+        accountData.setCurrency(currentAccount.getCurrency());
 
-        if (currentAccount.getBillCycleDayLocal() != DEFAULT_BILLING_CYCLE_DAY_LOCAL && // There is already a BCD set
-            billCycleDayLocal != null && // and the proposed date is not null
-            billCycleDayLocal != DEFAULT_BILLING_CYCLE_DAY_LOCAL && // and the proposed date is not 0
-            !currentAccount.getBillCycleDayLocal().equals(billCycleDayLocal)) { // and it does not match we we have
-            throw new IllegalArgumentException(String.format("Killbill doesn't support updating the account BCD yet: new=%s, current=%s", billCycleDayLocal, currentAccount.getBillCycleDayLocal()));
-        } else if (currentAccount.getBillCycleDayLocal() == DEFAULT_BILLING_CYCLE_DAY_LOCAL && // There is *not* already a BCD set
-                   billCycleDayLocal != null && // and the value proposed is not null
-                   billCycleDayLocal != DEFAULT_BILLING_CYCLE_DAY_LOCAL) {  // and the proposed date is not 0
+        if (currentAccount.getBillCycleDayLocal() == DEFAULT_BILLING_CYCLE_DAY_LOCAL && // There is *not* already a BCD set
+            billCycleDayLocal != null && // and the value proposed is not null
+            billCycleDayLocal != DEFAULT_BILLING_CYCLE_DAY_LOCAL) {  // and the proposed date is not 0
             accountData.setBillCycleDayLocal(billCycleDayLocal);
         } else {
             accountData.setBillCycleDayLocal(currentAccount.getBillCycleDayLocal());
@@ -525,4 +509,46 @@ public class DefaultAccount extends EntityBase implements Account {
         result = 31 * result + (isNotifiedForInvoices != null ? isNotifiedForInvoices.hashCode() : 0);
         return result;
     }
+
+    public void validateAccountUpdateInput(final Account currentAccount, boolean ignoreNullInput) {
+
+        //
+        // We don't allow update on the following fields:
+        //
+        // All these conditions are written in the exact same way:
+        //
+        // There is already a defined value BUT those don't match (either input is null or different) => Not Allowed
+        // * ignoreNullInput=true (case where we allow to reset values)
+        // * ignoreNullInput=true (case where we DON'T allow to reset values and so is such value is null we ignore the check)
+        //
+        //
+        if ((ignoreNullInput || externalKey != null) &&
+            currentAccount.getExternalKey() != null &&
+            !currentAccount.getExternalKey().equals(externalKey)) {
+            throw new IllegalArgumentException(String.format("Killbill doesn't support updating the account external key yet: new=%s, current=%s",
+                                                             externalKey, currentAccount.getExternalKey()));
+        }
+
+        if ((ignoreNullInput || currency != null) &&
+            currentAccount.getCurrency() != null &&
+            !currentAccount.getCurrency().equals(currency)) {
+            throw new IllegalArgumentException(String.format("Killbill doesn't support updating the account currency yet: new=%s, current=%s",
+                                                             currency, currentAccount.getCurrency()));
+        }
+
+        if ((ignoreNullInput || (billCycleDayLocal != null && billCycleDayLocal != DEFAULT_BILLING_CYCLE_DAY_LOCAL)) &&
+            currentAccount.getBillCycleDayLocal() != DEFAULT_BILLING_CYCLE_DAY_LOCAL && // There is already a BCD set
+            !currentAccount.getBillCycleDayLocal().equals(billCycleDayLocal)) { // and it does not match we we have
+            throw new IllegalArgumentException(String.format("Killbill doesn't support updating the account BCD yet: new=%s, current=%s", billCycleDayLocal, currentAccount.getBillCycleDayLocal()));
+        }
+
+        if ((ignoreNullInput || timeZone != null) &&
+            currentAccount.getTimeZone() != null &&
+            !currentAccount.getTimeZone().equals(timeZone)) {
+            throw new IllegalArgumentException(String.format("Killbill doesn't support updating the account timeZone yet: new=%s, current=%s",
+                                                             timeZone, currentAccount.getTimeZone()));
+        }
+
+    }
+
 }

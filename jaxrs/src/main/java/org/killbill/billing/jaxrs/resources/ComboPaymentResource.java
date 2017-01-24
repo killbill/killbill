@@ -76,7 +76,7 @@ public abstract class ComboPaymentResource extends JaxRsResourceBase {
             }
         }
         // Finally create if does not exist
-        return accountUserApi.createAccount(accountJson.toAccountData(), callContext);
+        return accountUserApi.createAccount(accountJson.toAccountData(null), callContext);
     }
 
     protected UUID getOrCreatePaymentMethod(final Account account, final PaymentMethodJson paymentMethodJson, final Iterable<PluginProperty> pluginProperties, final CallContext callContext) throws PaymentApiException {

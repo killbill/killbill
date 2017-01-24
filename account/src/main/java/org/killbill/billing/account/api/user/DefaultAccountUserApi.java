@@ -147,7 +147,20 @@ public class DefaultAccountUserApi extends DefaultAccountApiBase implements Acco
 
     @Override
     public void updateAccount(final Account account, final CallContext context) throws AccountApiException {
-        updateAccount(account.getId(), account, context);
+
+        // Convert to DefaultAccount to make sure we can safely call validateAccountUpdateInput
+        final DefaultAccount input = new DefaultAccount(account.getId(), account);
+
+        final Account currentAccount = getAccountById(input.getId(), context);
+        if (currentAccount == null) {
+            throw new AccountApiException(ErrorCode.ACCOUNT_DOES_NOT_EXIST_FOR_ID, input.getId());
+        }
+
+        input.validateAccountUpdateInput(currentAccount, true);
+
+        final AccountModelDao updatedAccountModelDao = new AccountModelDao(currentAccount.getId(), input);
+
+        accountDao.update(updatedAccountModelDao, internalCallContextFactory.createInternalCallContext(updatedAccountModelDao.getId(), context));
     }
 
     @Override
