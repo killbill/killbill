@@ -254,7 +254,7 @@ public class DefaultPaymentDao extends EntityDaoBase<PaymentModelDao, Payment, P
     @Override
     public Pagination<PaymentModelDao> searchPayments(final String searchKey, final Long offset, final Long limit, final InternalTenantContext context) {
         // Optimization: if the search key looks like a state name (e.g. _ERRORED), assume the user is searching by state only
-        final List<String> paymentStates = shouldSearchByStateNameOnly(searchKey);
+        final List<String> paymentStates = expandSearchFilterToStateNames(searchKey);
 
         final String likeSearchKey = String.format("%%%s%%", searchKey);
         return paginationHelper.getPagination(PaymentSqlDao.class,
@@ -274,7 +274,7 @@ public class DefaultPaymentDao extends EntityDaoBase<PaymentModelDao, Payment, P
                                               context);
     }
 
-    private List<String> shouldSearchByStateNameOnly(final String searchKey) {
+    private List<String> expandSearchFilterToStateNames(final String searchKey) {
         final Pattern pattern = Pattern.compile(".*" + searchKey + ".*");
 
         // Note that technically, we should look at all of the available state names in the database instead since the state machine is configurable. The common use-case

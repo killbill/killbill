@@ -38,6 +38,7 @@ import org.killbill.billing.util.audit.ChangeType;
 import org.killbill.billing.util.cache.CacheControllerDispatcher;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.billing.util.dao.NonEntityDao;
+import org.killbill.billing.util.entity.DefaultPagination;
 import org.killbill.billing.util.entity.Pagination;
 import org.killbill.billing.util.entity.dao.DefaultPaginationSqlDaoHelper.PaginationIteratorBuilder;
 import org.killbill.billing.util.entity.dao.EntityDaoBase;
@@ -51,6 +52,7 @@ import org.skife.jdbi.v2.IDBI;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
 
 public class DefaultAccountDao extends EntityDaoBase<AccountModelDao, Account, AccountApiException> implements AccountDao {
@@ -110,6 +112,25 @@ public class DefaultAccountDao extends EntityDaoBase<AccountModelDao, Account, A
 
     @Override
     public Pagination<AccountModelDao> searchAccounts(final String searchKey, final Long offset, final Long limit, final InternalTenantContext context) {
+        final boolean userIsFeelingLucky = limit == 1 && offset == -1;
+        if (userIsFeelingLucky) {
+            // The use-case we can optimize is when the user is looking for an exact match (e.g. he knows the full email). In that case, we can speed up the queries
+            // by doing exact searches only.
+            final AccountModelDao accountModelDao = transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<AccountModelDao>() {
+                @Override
+                public AccountModelDao inTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory) throws Exception {
+                    return entitySqlDaoWrapperFactory.become(AccountSqlDao.class).luckySearch(searchKey, context);
+                }
+            });
+            return new DefaultPagination<AccountModelDao>(0L,
+                                                          1L,
+                                                          accountModelDao == null ? 0L : 1L,
+                                                          null, // We don't compute stats for speed in that case
+                                                          accountModelDao == null ? ImmutableList.<AccountModelDao>of().iterator() : ImmutableList.<AccountModelDao>of(accountModelDao).iterator());
+        }
+
+        // Otherwise, we pretty much need to do a full table scan (leading % in the like clause).
+        // Note: forcing MySQL to search indexes (like luckySearch above) doesn't always seem to help on large tables, especially with large offsets
         return paginationHelper.getPagination(AccountSqlDao.class,
                                               new PaginationIteratorBuilder<AccountModelDao, Account, AccountSqlDao>() {
                                                   @Override
