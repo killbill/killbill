@@ -37,6 +37,9 @@ CREATE UNIQUE INDEX accounts_id ON accounts(id);
 CREATE UNIQUE INDEX accounts_external_key ON accounts(external_key, tenant_record_id);
 CREATE INDEX accounts_parents ON accounts(parent_account_id);
 CREATE INDEX accounts_tenant_record_id ON accounts(tenant_record_id);
+CREATE INDEX accounts_email_tenant_record_id ON accounts(email, tenant_record_id);
+CREATE INDEX accounts_company_name_tenant_record_id ON accounts(company_name, tenant_record_id);
+CREATE INDEX accounts_name_tenant_record_id ON accounts(name, tenant_record_id);
 
 DROP TABLE IF EXISTS account_history;
 CREATE TABLE account_history (

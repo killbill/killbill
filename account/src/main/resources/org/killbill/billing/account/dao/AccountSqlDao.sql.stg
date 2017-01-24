@@ -106,6 +106,64 @@ searchQuery(prefix) ::= <<
   or <prefix>company_name like :likeSearchKey
 >>
 
+/** Unfortunately, we need to force MySQL to use the individual indexes */
+luckySearch() ::= <<
+select
+<allTableFields("t.")>
+from <tableName()> t
+join (
+  select distinct <recordIdField()>
+  from (
+    (
+      select <recordIdField()>
+      from <tableName()>
+      where <idField()> = :searchKey
+      <andCheckSoftDeletionWithComma()>
+      <AND_CHECK_TENANT()>
+      limit 1
+    )
+    union all
+    (
+      select <recordIdField()>
+      from <tableName()>
+      where name = :searchKey
+      <andCheckSoftDeletionWithComma()>
+      <AND_CHECK_TENANT()>
+      limit 1
+    )
+    union all
+    (
+      select <recordIdField()>
+      from <tableName()>
+      where email = :searchKey
+      <andCheckSoftDeletionWithComma()>
+      <AND_CHECK_TENANT()>
+      limit 1
+    )
+    union all
+    (
+      select <recordIdField()>
+      from <tableName()>
+      where external_key = :searchKey
+      <andCheckSoftDeletionWithComma()>
+      <AND_CHECK_TENANT()>
+      limit 1
+    )
+    union all
+    (
+      select <recordIdField()>
+      from <tableName()>
+      where company_name = :searchKey
+      <andCheckSoftDeletionWithComma()>
+      <AND_CHECK_TENANT()>
+      limit 1
+    )
+  ) search_with_idx
+) optimization on <recordIdField("optimization.")> = <recordIdField("t.")>
+limit 1
+;
+>>
+
 getIdFromKey() ::= <<
     SELECT id
     FROM accounts
