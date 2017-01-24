@@ -180,13 +180,13 @@ public class TestBundle extends TestJaxrsBase {
         final Subscription subscription2 = killBillClient.getSubscription(entitlement.getSubscriptionId());
         assertEquals(subscription2.getState(), EntitlementState.ACTIVE);
 
-        final BlockingStates blockingStates = killBillClient.getBlockingStates(accountJson.getAccountId(), null, ImmutableList.<String>of("service"), AuditLevel.FULL, basicRequestOptions());
+        final BlockingStates blockingStates = killBillClient.getBlockingStates(accountJson.getAccountId(), null, ImmutableList.<String>of("service"), AuditLevel.FULL, requestOptions);
         Assert.assertEquals(blockingStates.size(), 2);
 
-        final BlockingStates blockingStates2 = killBillClient.getBlockingStates(accountJson.getAccountId(), ImmutableList.<BlockingStateType>of(BlockingStateType.SUBSCRIPTION_BUNDLE), null, AuditLevel.FULL, basicRequestOptions());
+        final BlockingStates blockingStates2 = killBillClient.getBlockingStates(accountJson.getAccountId(), ImmutableList.<BlockingStateType>of(BlockingStateType.SUBSCRIPTION_BUNDLE), null, AuditLevel.FULL, requestOptions);
         Assert.assertEquals(blockingStates2.size(), 2);
 
-        final BlockingStates blockingStates3 = killBillClient.getBlockingStates(accountJson.getAccountId(), null, null, AuditLevel.FULL, basicRequestOptions());
+        final BlockingStates blockingStates3 = killBillClient.getBlockingStates(accountJson.getAccountId(), null, null, AuditLevel.FULL, requestOptions);
         Assert.assertEquals(blockingStates3.size(), 3);
     }
 
