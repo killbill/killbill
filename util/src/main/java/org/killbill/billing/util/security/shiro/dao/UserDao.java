@@ -27,7 +27,7 @@ public interface UserDao {
 
     public List<UserRolesModelDao> getUserRoles(String username);
 
-    public void addRoleDefinition(String role, List<String> permissions, String createdBy);
+    public void addRoleDefinition(String role, List<String> permissions, String createdBy) throws SecurityApiException;
 
     public List<RolesPermissionsModelDao> getRoleDefinition(String role);
 
