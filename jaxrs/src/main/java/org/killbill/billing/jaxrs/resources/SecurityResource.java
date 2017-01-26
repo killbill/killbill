@@ -143,6 +143,18 @@ public class SecurityResource extends JaxRsResourceBase {
         return Response.status(Status.OK).build();
     }
 
+    @TimedResource
+    @GET
+    @Produces(APPLICATION_JSON)
+    @Path("/users/{username:" + ANYTHING_PATTERN + "}/roles")
+    @ApiOperation(value = "Get roles associated to a user")
+    public Response getUserRoles(@PathParam("username") final String username,
+                                 @javax.ws.rs.core.Context final HttpServletRequest request,
+                                 @javax.ws.rs.core.Context final UriInfo uriInfo) throws SecurityApiException {
+        final List<String> roles = securityApi.getUserRoles(username, context.createContext(request));
+        final UserRolesJson userRolesJson = new UserRolesJson(username, null, roles);
+        return Response.status(Status.OK).entity(userRolesJson).build();
+    }
 
     @TimedResource
     @PUT
