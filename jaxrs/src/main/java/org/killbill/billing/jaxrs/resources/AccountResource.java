@@ -354,7 +354,7 @@ public class AccountResource extends JaxRsResourceBase {
                                   @javax.ws.rs.core.Context final UriInfo uriInfo) throws AccountApiException {
         verifyNonNullOrEmpty(json, "AccountJson body should be specified");
 
-        final AccountData data = json.toAccountData(null);
+        final AccountData data = json.toAccount(null);
         final Account account = accountUserApi.createAccount(data, context.createContext(createdBy, reason, comment, request));
         return uriBuilder.buildResponse(uriInfo, AccountResource.class, "getAccount", account.getId(), request);
     }
@@ -376,7 +376,7 @@ public class AccountResource extends JaxRsResourceBase {
         verifyNonNullOrEmpty(json, "AccountJson body should be specified");
 
         final UUID uuid = UUID.fromString(accountId);
-        final Account data = json.toAccountData(uuid);
+        final Account data = json.toAccount(uuid);
         if (treatNullValueAsReset) {
             accountUserApi.updateAccount(data, context.createContext(createdBy, reason, comment, request));
         } else {

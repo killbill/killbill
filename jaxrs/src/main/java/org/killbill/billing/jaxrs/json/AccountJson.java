@@ -152,7 +152,7 @@ public class AccountJson extends JsonBase {
         this.accountCBA = accountCBA;
     }
 
-    public Account toAccountData(@Nullable final UUID accountId) {
+    public Account toAccount(@Nullable final UUID accountId) {
         return new Account() {
 
             @Override
