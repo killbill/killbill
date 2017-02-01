@@ -66,7 +66,7 @@ public class DefaultUserDao implements UserDao {
                                                            password, salt.toBase64(), securityConfig.getShiroNbHashIterations()).toBase64();
 
         final DateTime createdDate = clock.getUTCNow();
-        dbi.inTransaction(new TransactionCallback<Void>() {
+        inTransactionWithExceptionHandling(new TransactionCallback<Void>() {
             @Override
             public Void inTransaction(final Handle handle, final TransactionStatus status) throws Exception {
                 final UserRolesSqlDao userRolesSqlDao = handle.attach(UserRolesSqlDao.class);
@@ -96,9 +96,9 @@ public class DefaultUserDao implements UserDao {
     }
 
     @Override
-    public void addRoleDefinition(final String role, final List<String> permissions, final String createdBy) {
+    public void addRoleDefinition(final String role, final List<String> permissions, final String createdBy)  throws SecurityApiException {
         final DateTime createdDate = clock.getUTCNow();
-        dbi.inTransaction(new TransactionCallback<Void>() {
+        inTransactionWithExceptionHandling(new TransactionCallback<Void>() {
             @Override
             public Void inTransaction(final Handle handle, final TransactionStatus status) throws Exception {
                 final RolesPermissionsSqlDao rolesPermissionsSqlDao = handle.attach(RolesPermissionsSqlDao.class);
@@ -132,7 +132,7 @@ public class DefaultUserDao implements UserDao {
         final String hashedPasswordBase64 = new SimpleHash(KillbillCredentialsMatcher.HASH_ALGORITHM_NAME,
                                                            password, salt.toBase64(), securityConfig.getShiroNbHashIterations()).toBase64();
 
-        dbi.inTransaction(new TransactionCallback<Void>() {
+        inTransactionWithExceptionHandling(new TransactionCallback<Void>() {
             @Override
             public Void inTransaction(final Handle handle, final TransactionStatus status) throws Exception {
 
@@ -150,7 +150,7 @@ public class DefaultUserDao implements UserDao {
 
     @Override
     public void updateUserRoles(final String username, final List<String> roles, final String updatedBy) throws SecurityApiException {
-        dbi.inTransaction(new TransactionCallback<Void>() {
+        inTransactionWithExceptionHandling(new TransactionCallback<Void>() {
             @Override
             public Void inTransaction(final Handle handle, final TransactionStatus status) throws Exception {
                 final DateTime updatedDate = clock.getUTCNow();
@@ -192,7 +192,7 @@ public class DefaultUserDao implements UserDao {
 
     @Override
     public void invalidateUser(final String username, final String updatedBy) throws SecurityApiException {
-        dbi.inTransaction(new TransactionCallback<Void>() {
+        inTransactionWithExceptionHandling(new TransactionCallback<Void>() {
             @Override
             public Void inTransaction(final Handle handle, final TransactionStatus status) throws Exception {
                 final DateTime updatedDate = clock.getUTCNow();
@@ -205,5 +205,25 @@ public class DefaultUserDao implements UserDao {
                 return null;
             }
         });
+    }
+
+    private <T> T inTransactionWithExceptionHandling(final TransactionCallback<T> callback) throws SecurityApiException {
+        // Similar to EntitySqlDaoTransactionalJdbiWrapper#execute
+        try {
+            return dbi.inTransaction(callback);
+        } catch (final RuntimeException e) {
+            throwSecurityApiException(e);
+            return null;
+        }
+    }
+
+    private void throwSecurityApiException(final Throwable e) throws SecurityApiException {
+        if (e.getCause() != null && e.getCause().getClass().isAssignableFrom(SecurityApiException.class)) {
+            throw (SecurityApiException) e.getCause();
+        } else if (e.getCause() != null) {
+            throwSecurityApiException(e.getCause());
+        } else {
+            throw e instanceof RuntimeException ? (RuntimeException) e : new RuntimeException(e);
+        }
     }
 }
