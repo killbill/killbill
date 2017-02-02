@@ -122,6 +122,34 @@ public class TestPayment extends TestJaxrsBase {
     }
 
     @Test(groups = "slow")
+    public void testWithFailedPaymentAndWithoutFollowLocation() throws Exception {
+        final Account account = createAccountWithDefaultPaymentMethod();
+
+        mockPaymentProviderPlugin.makeNextPaymentFailWithError();
+
+        final PaymentTransaction authTransaction = new PaymentTransaction();
+        authTransaction.setAmount(BigDecimal.ONE);
+        authTransaction.setCurrency(account.getCurrency());
+        authTransaction.setTransactionType(TransactionType.AUTHORIZE.name());
+
+        final RequestOptions requestOptionsWithoutFollowLocation = RequestOptions.builder()
+                                                                                 .withCreatedBy(createdBy)
+                                                                                 .withReason(reason)
+                                                                                 .withComment(comment)
+                                                                                 .withFollowLocation(false)
+                                                                                 .build();
+
+        try {
+            killBillClient.createPayment(account.getAccountId(), account.getPaymentMethodId(), authTransaction,
+                                         ImmutableMap.<String, String>of(), requestOptionsWithoutFollowLocation);
+            fail();
+        } catch (final KillBillClientException e) {
+            assertEquals(e.getResponse().getStatusCode(), 402);
+            assertEquals(e.getBillingException().getMessage(), "Payment decline by gateway. Error message: gatewayError");
+        }
+    }
+
+    @Test(groups = "slow")
     public void testWithCanceledPayment() throws Exception {
         final Account account = createAccountWithDefaultPaymentMethod();
 
