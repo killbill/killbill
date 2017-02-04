@@ -24,9 +24,11 @@ import java.util.UUID;
 
 import javax.annotation.Nullable;
 
+import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.killbill.billing.account.api.Account;
 import org.killbill.billing.account.api.AccountData;
+import org.killbill.billing.account.api.MutableAccountData;
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.util.audit.AccountAuditLogs;
 
@@ -150,8 +152,14 @@ public class AccountJson extends JsonBase {
         this.accountCBA = accountCBA;
     }
 
-    public AccountData toAccountData() {
-        return new AccountData() {
+    public Account toAccount(@Nullable final UUID accountId) {
+        return new Account() {
+
+            @Override
+            public UUID getId() {
+                return accountId;
+            }
+
             @Override
             public DateTimeZone getTimeZone() {
                 if (Strings.emptyToNull(timeZone) == null) {
@@ -215,6 +223,7 @@ public class AccountJson extends JsonBase {
                 return firstNameLength;
             }
 
+
             @Override
             public String getExternalKey() {
                 return externalKey;
@@ -276,6 +285,39 @@ public class AccountJson extends JsonBase {
             @Override
             public Boolean isPaymentDelegatedToParent() {
                 return isPaymentDelegatedToParent;
+            }
+
+            //
+            // Non implemented
+            //
+            @Override
+            public DateTimeZone getFixedOffsetTimeZone() {
+                return null;
+            }
+
+            @Override
+            public DateTime getReferenceTime() {
+                return null;
+            }
+
+            @Override
+            public DateTime getCreatedDate() {
+                return null;
+            }
+
+            @Override
+            public DateTime getUpdatedDate() {
+                return null;
+            }
+
+            @Override
+            public MutableAccountData toMutableAccountData() {
+                return null;
+            }
+
+            @Override
+            public Account mergeWithDelegate(final Account delegate) {
+                return null;
             }
         };
     }

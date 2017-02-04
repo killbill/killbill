@@ -31,6 +31,7 @@ import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.events.ControlTagCreationInternalEvent;
 import org.killbill.billing.events.ControlTagDeletionInternalEvent;
 import org.killbill.billing.events.InvoiceAdjustmentInternalEvent;
+import org.killbill.billing.events.InvoiceCreationInternalEvent;
 import org.killbill.billing.events.InvoicePaymentErrorInternalEvent;
 import org.killbill.billing.events.InvoicePaymentInfoInternalEvent;
 import org.killbill.billing.overdue.api.OverdueApiException;
@@ -129,6 +130,13 @@ public class OverdueListener {
     @Subscribe
     public void handleInvoiceAdjustmentEvent(final InvoiceAdjustmentInternalEvent event) {
         log.debug("Received InvoiceAdjustment event {}", event);
+        insertBusEventIntoNotificationQueue(event.getAccountId(), event);
+    }
+
+    @AllowConcurrentEvents
+    @Subscribe
+    public void handleInvoiceCreation(final InvoiceCreationInternalEvent event) {
+        log.debug("Received InvoiceCreation event {}", event);
         insertBusEventIntoNotificationQueue(event.getAccountId(), event);
     }
 

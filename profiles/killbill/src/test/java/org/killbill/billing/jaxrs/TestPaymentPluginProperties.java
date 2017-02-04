@@ -222,7 +222,7 @@ public class TestPaymentPluginProperties extends TestJaxrsBase {
         completeTransactionByPaymentId.setPaymentId(initialPayment.getPaymentId());
         completeTransactionByPaymentId.setProperties(bodyProperties);
 
-        final RequestOptions basicRequestOptions = basicRequestOptions();
+        final RequestOptions basicRequestOptions = requestOptions;
         final Multimap<String, String> params = LinkedListMultimap.create(basicRequestOptions.getQueryParams());
         params.putAll(KillBillHttpClient.CONTROL_PLUGIN_NAME, ImmutableList.<String>of(PluginPropertiesVerificator.PLUGIN_NAME));
 
@@ -245,7 +245,7 @@ public class TestPaymentPluginProperties extends TestJaxrsBase {
         authTransaction.setPaymentExternalKey(paymentExternalKey);
         authTransaction.setTransactionExternalKey(transactionExternalKey);
         authTransaction.setTransactionType(transactionType.toString());
-        final Payment payment = killBillClient.createPayment(account.getAccountId(), paymentMethodId, authTransaction, pluginProperties, basicRequestOptions());
+        final Payment payment = killBillClient.createPayment(account.getAccountId(), paymentMethodId, authTransaction, pluginProperties, requestOptions);
         return payment;
     }
 

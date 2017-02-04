@@ -18,6 +18,7 @@
 
 package org.killbill.billing.beatrix.integration;
 
+import java.io.IOException;
 import java.util.UUID;
 import java.util.concurrent.Callable;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -26,12 +27,15 @@ import org.joda.time.DateTime;
 import org.killbill.billing.DBTestingHelper;
 import org.killbill.billing.account.api.Account;
 import org.killbill.billing.api.TestApiListener.NextEvent;
+import org.killbill.billing.beatrix.extbus.DefaultBusExternalEvent;
 import org.killbill.billing.callcontext.DefaultCallContext;
 import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.catalog.api.PriceListSet;
 import org.killbill.billing.catalog.api.ProductCategory;
 import org.killbill.billing.entitlement.api.DefaultEntitlement;
 import org.killbill.billing.notification.plugin.api.ExtBusEvent;
+import org.killbill.billing.notification.plugin.api.ExtBusEventType;
+import org.killbill.billing.notification.plugin.api.SubscriptionMetadata;
 import org.killbill.billing.overdue.api.OverdueConfig;
 import org.killbill.billing.platform.api.KillbillConfigSource;
 import org.killbill.billing.tenant.api.DefaultTenant;
@@ -41,15 +45,19 @@ import org.killbill.billing.tenant.api.TenantKV.TenantKey;
 import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.CallOrigin;
 import org.killbill.billing.util.callcontext.UserType;
+import org.killbill.billing.util.jackson.ObjectMapper;
 import org.killbill.billing.util.nodes.NodeCommand;
 import org.killbill.billing.util.nodes.NodeCommandMetadata;
 import org.killbill.billing.util.nodes.NodeCommandProperty;
 import org.killbill.billing.util.nodes.PluginNodeCommandMetadata;
 import org.killbill.billing.util.nodes.SystemNodeCommandType;
+import org.testng.Assert;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
+import com.fasterxml.jackson.core.JsonParseException;
+import com.fasterxml.jackson.databind.JsonMappingException;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.eventbus.Subscribe;
@@ -63,6 +71,8 @@ public class TestPublicBus extends TestIntegrationBase {
     private PublicListener publicListener;
 
     private AtomicInteger externalBusCount;
+
+    private final ObjectMapper mapper = new ObjectMapper();
 
     @Override
     protected KillbillConfigSource getConfigSource() {
@@ -78,6 +88,26 @@ public class TestPublicBus extends TestIntegrationBase {
         @Subscribe
         public void handleExternalEvents(final ExtBusEvent event) {
             log.info("GOT EXT EVENT " + event);
+
+            if (event.getEventType() == ExtBusEventType.SUBSCRIPTION_CREATION ||
+                event.getEventType() == ExtBusEventType.SUBSCRIPTION_CANCEL ||
+                event.getEventType() == ExtBusEventType.SUBSCRIPTION_PHASE ||
+                event.getEventType() == ExtBusEventType.SUBSCRIPTION_CHANGE ||
+                event.getEventType() == ExtBusEventType.SUBSCRIPTION_UNCANCEL ||
+                event.getEventType() == ExtBusEventType.SUBSCRIPTION_BCD_CHANGE) {
+                try {
+                    final SubscriptionMetadata obj = (SubscriptionMetadata) mapper.readValue(event.getMetaData(), SubscriptionMetadata.class);
+                    Assert.assertNotNull(obj.getBundleExternalKey());
+                    Assert.assertNotNull(obj.getActionType());
+                } catch (JsonParseException e) {
+                    Assert.fail("Could not deserialize metada section", e);
+                } catch (JsonMappingException e) {
+                    Assert.fail("Could not deserialize metada section", e);
+                } catch (IOException e) {
+                    Assert.fail("Could not deserialize metada section", e);
+                }
+            }
+
             externalBusCount.incrementAndGet();
 
         }

@@ -33,7 +33,6 @@ import org.skife.jdbi.v2.sqlobject.Bind;
 import org.skife.jdbi.v2.sqlobject.BindBean;
 import org.skife.jdbi.v2.sqlobject.SqlQuery;
 import org.skife.jdbi.v2.sqlobject.SqlUpdate;
-import org.skife.jdbi.v2.sqlobject.customizers.Define;
 
 @EntitySqlDaoStringTemplate
 public interface PaymentSqlDao extends EntitySqlDao<PaymentModelDao, Payment> {
@@ -66,6 +65,17 @@ public interface PaymentSqlDao extends EntitySqlDao<PaymentModelDao, Payment> {
                                                                   @Bind("createdBeforeDate") final Date createdBeforeDate,
                                                                   @Bind("createdAfterDate") final Date createdAfterDate,
                                                                   @Bind("limit") final int limit);
+
+    @SqlQuery
+    @SmartFetchSize(shouldStream = true)
+    public Iterator<PaymentModelDao> searchByState(@PaymentStateCollectionBinder final Collection<String> paymentStates,
+                                                   @Bind("offset") final Long offset,
+                                                   @Bind("rowCount") final Long rowCount,
+                                                   @BindBean final InternalTenantContext context);
+
+    @SqlQuery
+    public Long getSearchByStateCount(@PaymentStateCollectionBinder final Collection<String> paymentStates,
+                                      @BindBean final InternalTenantContext context);
 
     @SqlQuery
     @SmartFetchSize(shouldStream = true)

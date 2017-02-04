@@ -20,9 +20,12 @@ package org.killbill.billing.account.api.user;
 
 import java.util.LinkedList;
 import java.util.List;
+import java.util.TimeZone;
 import java.util.UUID;
 import java.util.concurrent.Callable;
+import java.util.spi.TimeZoneNameProvider;
 
+import org.joda.time.DateTimeZone;
 import org.killbill.billing.ErrorCode;
 import org.killbill.billing.account.AccountTestSuiteWithEmbeddedDB;
 import org.killbill.billing.account.api.Account;
@@ -34,17 +37,76 @@ import org.killbill.billing.account.api.MutableAccountData;
 import org.killbill.billing.account.dao.AccountModelDao;
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.events.AccountCreationInternalEvent;
+import org.killbill.billing.util.entity.Pagination;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.eventbus.Subscribe;
 
 import static com.jayway.awaitility.Awaitility.await;
 import static java.util.concurrent.TimeUnit.SECONDS;
+import static org.killbill.billing.account.AccountTestUtils.createAccountData;
 import static org.killbill.billing.account.AccountTestUtils.createTestAccount;
+import static org.killbill.billing.account.api.DefaultMutableAccountData.DEFAULT_BILLING_CYCLE_DAY_LOCAL;
 import static org.testng.Assert.assertEquals;
 
 public class TestDefaultAccountUserApi extends AccountTestSuiteWithEmbeddedDB {
+
+    @Test(groups = "slow", description = "Test Account search")
+    public void testSearch() throws Exception {
+        final MutableAccountData mutableAccountData1 = createAccountData();
+        mutableAccountData1.setEmail("john@acme.com");
+        mutableAccountData1.setCompanyName("Acme, Inc.");
+        final AccountModelDao account1ModelDao = new AccountModelDao(UUID.randomUUID(), mutableAccountData1);
+        final AccountData accountData1 = new DefaultAccount(account1ModelDao);
+        accountUserApi.createAccount(accountData1, callContext);
+
+        final MutableAccountData mutableAccountData2 = createAccountData();
+        mutableAccountData2.setEmail("bob@gmail.com");
+        mutableAccountData2.setCompanyName("Acme, Inc.");
+        final AccountModelDao account2ModelDao = new AccountModelDao(UUID.randomUUID(), mutableAccountData2);
+        final AccountData accountData2 = new DefaultAccount(account2ModelDao);
+        accountUserApi.createAccount(accountData2, callContext);
+
+        final Pagination<Account> search1 = accountUserApi.searchAccounts("Inc.", 0L, 5L, callContext);
+        Assert.assertEquals(search1.getCurrentOffset(), (Long) 0L);
+        Assert.assertNull(search1.getNextOffset());
+        Assert.assertEquals(search1.getMaxNbRecords(), (Long) 2L);
+        Assert.assertEquals(search1.getTotalNbRecords(), (Long) 2L);
+        Assert.assertEquals(ImmutableList.<Account>copyOf(search1.iterator()).size(), 2);
+
+        final Pagination<Account> search2 = accountUserApi.searchAccounts("Inc.", 0L, 1L, callContext);
+        Assert.assertEquals(search2.getCurrentOffset(), (Long) 0L);
+        Assert.assertEquals(search2.getNextOffset(), (Long) 1L);
+        Assert.assertEquals(search2.getMaxNbRecords(), (Long) 2L);
+        Assert.assertEquals(search2.getTotalNbRecords(), (Long) 2L);
+        Assert.assertEquals(ImmutableList.<Account>copyOf(search2.iterator()).size(), 1);
+
+        final Pagination<Account> search3 = accountUserApi.searchAccounts("acme.com", 0L, 5L, callContext);
+        Assert.assertEquals(search3.getCurrentOffset(), (Long) 0L);
+        Assert.assertNull(search3.getNextOffset());
+        Assert.assertEquals(search3.getMaxNbRecords(), (Long) 2L);
+        Assert.assertEquals(search3.getTotalNbRecords(), (Long) 1L);
+        Assert.assertEquals(ImmutableList.<Account>copyOf(search3.iterator()).size(), 1);
+
+        // Exact search will fail
+        final Pagination<Account> search4 = accountUserApi.searchAccounts("acme.com", -1L, 1L, callContext);
+        Assert.assertEquals(search4.getCurrentOffset(), (Long) 0L);
+        Assert.assertNull(search4.getNextOffset());
+        // Not computed
+        Assert.assertNull(search4.getMaxNbRecords());
+        Assert.assertEquals(search4.getTotalNbRecords(), (Long) 0L);
+        Assert.assertEquals(ImmutableList.<Account>copyOf(search4.iterator()).size(), 0);
+
+        final Pagination<Account> search5 = accountUserApi.searchAccounts("john@acme.com", -1L, 1L, callContext);
+        Assert.assertEquals(search5.getCurrentOffset(), (Long) 0L);
+        Assert.assertNull(search5.getNextOffset());
+        // Not computed
+        Assert.assertNull(search5.getMaxNbRecords());
+        Assert.assertEquals(search5.getTotalNbRecords(), (Long) 1L);
+        Assert.assertEquals(ImmutableList.<Account>copyOf(search5.iterator()).size(), 1);
+    }
 
     @Test(groups = "slow", description = "Test Account creation generates an event")
     public void testBusEvents() throws Exception {
@@ -118,6 +180,136 @@ public class TestDefaultAccountUserApi extends AccountTestSuiteWithEmbeddedDB {
 
         accountUserApi.updateAccount(new DefaultAccount(account.getId(), otherAccount), callContext);
     }
+
+
+    @Test(groups = "slow", description = "Test Account update to reset notes")
+    public void testAccountResetAccountNotes() throws Exception {
+        final Account account = createAccount(new DefaultAccount(createTestAccount()));
+
+        // Update the address and leave other fields null
+        final MutableAccountData mutableAccountData = new DefaultMutableAccountData(account);
+        mutableAccountData.setNotes(null);
+
+        DefaultAccount newAccount = new DefaultAccount(account.getId(), mutableAccountData);
+        accountUserApi.updateAccount(newAccount, callContext);
+
+        final Account retrievedAccount = accountUserApi.getAccountById(account.getId(), callContext);
+
+        Assert.assertEquals(retrievedAccount.getName(), account.getName());
+        Assert.assertEquals(retrievedAccount.getFirstNameLength(), account.getFirstNameLength());
+        Assert.assertEquals(retrievedAccount.getEmail(), account.getEmail());
+        Assert.assertEquals(retrievedAccount.getBillCycleDayLocal(), account.getBillCycleDayLocal());
+        Assert.assertEquals(retrievedAccount.getCurrency(), account.getCurrency());
+        Assert.assertEquals(retrievedAccount.getPaymentMethodId(), account.getPaymentMethodId());
+        Assert.assertEquals(retrievedAccount.getTimeZone(), account.getTimeZone());
+        Assert.assertEquals(retrievedAccount.getLocale(), account.getLocale());
+        Assert.assertEquals(retrievedAccount.getAddress1(), account.getAddress1());
+        Assert.assertEquals(retrievedAccount.getAddress2(), account.getAddress2());
+        Assert.assertEquals(retrievedAccount.getCompanyName(), account.getCompanyName());
+        Assert.assertEquals(retrievedAccount.getCity(), account.getCity());
+        Assert.assertEquals(retrievedAccount.getStateOrProvince(), account.getStateOrProvince());
+        Assert.assertEquals(retrievedAccount.getPostalCode(), account.getPostalCode());
+        Assert.assertEquals(retrievedAccount.getCountry(), account.getCountry());
+        Assert.assertEquals(retrievedAccount.getPhone(), account.getPhone());
+        Assert.assertEquals(retrievedAccount.isMigrated(), account.isMigrated());
+        Assert.assertEquals(retrievedAccount.isNotifiedForInvoices(), account.isNotifiedForInvoices());
+        Assert.assertEquals(retrievedAccount.getParentAccountId(), account.getParentAccountId());
+        Assert.assertEquals(retrievedAccount.isPaymentDelegatedToParent(), account.isPaymentDelegatedToParent());
+        // Finally check account notes did get reset
+        Assert.assertNull(retrievedAccount.getNotes());
+    }
+
+
+    @Test(groups = "slow", description = "Test failure on resetting externalKey", expectedExceptions = IllegalArgumentException.class)
+    public void testAccountResetExternalKey() throws Exception {
+        final Account account = createAccount(new DefaultAccount(createTestAccount()));
+
+        // Update the address and leave other fields null
+        final MutableAccountData mutableAccountData = new DefaultMutableAccountData(account);
+        mutableAccountData.setExternalKey(null);
+
+        DefaultAccount newAccount = new DefaultAccount(account.getId(), mutableAccountData);
+        accountUserApi.updateAccount(newAccount, callContext);
+    }
+
+
+    @Test(groups = "slow", description = "Test failure on changing externalKey", expectedExceptions = IllegalArgumentException.class)
+    public void testAccountChangeExternalKey() throws Exception {
+        final Account account = createAccount(new DefaultAccount(createTestAccount()));
+
+        // Update the address and leave other fields null
+        final MutableAccountData mutableAccountData = new DefaultMutableAccountData(account);
+        mutableAccountData.setExternalKey("somethingVeryDifferent");
+
+        DefaultAccount newAccount = new DefaultAccount(account.getId(), mutableAccountData);
+        accountUserApi.updateAccount(newAccount, callContext);
+    }
+
+
+    @Test(groups = "slow", description = "Test failure on resetting currency", expectedExceptions = IllegalArgumentException.class)
+    public void testAccountResetCurrency() throws Exception {
+        final Account account = createAccount(new DefaultAccount(createTestAccount()));
+
+        // Update the address and leave other fields null
+        final MutableAccountData mutableAccountData = new DefaultMutableAccountData(account);
+        mutableAccountData.setCurrency(null);
+
+        DefaultAccount newAccount = new DefaultAccount(account.getId(), mutableAccountData);
+        accountUserApi.updateAccount(newAccount, callContext);
+    }
+
+
+    @Test(groups = "slow", description = "Test failure on changing currency", expectedExceptions = IllegalArgumentException.class)
+    public void testAccountChangeCurrency() throws Exception {
+        final Account account = createAccount(new DefaultAccount(createTestAccount()));
+
+        // Update the address and leave other fields null
+        final MutableAccountData mutableAccountData = new DefaultMutableAccountData(account);
+        mutableAccountData.setCurrency(Currency.AFN);
+
+        DefaultAccount newAccount = new DefaultAccount(account.getId(), mutableAccountData);
+        accountUserApi.updateAccount(newAccount, callContext);
+    }
+
+    @Test(groups = "slow", description = "Test failure on resetting BCD", expectedExceptions = IllegalArgumentException.class)
+    public void testAccountResetBCD() throws Exception {
+        final Account account = createAccount(new DefaultAccount(createTestAccount()));
+
+        // Update the address and leave other fields null
+        final MutableAccountData mutableAccountData = new DefaultMutableAccountData(account);
+        mutableAccountData.setBillCycleDayLocal(DEFAULT_BILLING_CYCLE_DAY_LOCAL);
+
+        DefaultAccount newAccount = new DefaultAccount(account.getId(), mutableAccountData);
+        accountUserApi.updateAccount(newAccount, callContext);
+    }
+
+    @Test(groups = "slow", description = "Test failure on resetting timeZone", expectedExceptions = IllegalArgumentException.class)
+    public void testAccountResetTimeZone() throws Exception {
+        final Account account = createAccount(new DefaultAccount(createTestAccount()));
+
+        // Update the address and leave other fields null
+        final MutableAccountData mutableAccountData = new DefaultMutableAccountData(account);
+        mutableAccountData.setTimeZone(null);
+
+        DefaultAccount newAccount = new DefaultAccount(account.getId(), mutableAccountData);
+        accountUserApi.updateAccount(newAccount, callContext);
+    }
+
+
+    @Test(groups = "slow", description = "Test failure on changing timeZone", expectedExceptions = IllegalArgumentException.class)
+    public void testAccountChangingTimeZone() throws Exception {
+        final Account account = createAccount(new DefaultAccount(createTestAccount()));
+
+        // Update the address and leave other fields null
+        final MutableAccountData mutableAccountData = new DefaultMutableAccountData(account);
+        mutableAccountData.setTimeZone(DateTimeZone.UTC);
+
+        DefaultAccount newAccount = new DefaultAccount(account.getId(), mutableAccountData);
+        accountUserApi.updateAccount(newAccount, callContext);
+    }
+
+
+
 
     private static final class AccountEventHandler {
 

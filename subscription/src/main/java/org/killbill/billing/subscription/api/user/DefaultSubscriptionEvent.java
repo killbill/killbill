@@ -34,6 +34,7 @@ public abstract class DefaultSubscriptionEvent extends BusEventBase implements S
     private final Long totalOrdering;
     private final UUID subscriptionId;
     private final UUID bundleId;
+    private final String bundleExternalKey;
     private final UUID eventId;
     private final DateTime requestedTransitionTime;
     private final DateTime effectiveTransitionTime;
@@ -59,6 +60,7 @@ public abstract class DefaultSubscriptionEvent extends BusEventBase implements S
         this(in.getId(),
              in.getSubscriptionId(),
              in.getBundleId(),
+             in.getBundleExternalKey(),
              in.getEffectiveTransitionTime(),
              in.getEffectiveTransitionTime(),
              in.getPreviousState(),
@@ -84,6 +86,7 @@ public abstract class DefaultSubscriptionEvent extends BusEventBase implements S
     public DefaultSubscriptionEvent(@JsonProperty("eventId") final UUID eventId,
                                     @JsonProperty("subscriptionId") final UUID subscriptionId,
                                     @JsonProperty("bundleId") final UUID bundleId,
+                                    @JsonProperty("bundleExternalKey") final String bundleExternalKey,
                                     @JsonProperty("requestedTransitionTime") final DateTime requestedTransitionTime,
                                     @JsonProperty("effectiveTransitionTime") final DateTime effectiveTransitionTime,
                                     @JsonProperty("previousState") final EntitlementState previousState,
@@ -107,6 +110,7 @@ public abstract class DefaultSubscriptionEvent extends BusEventBase implements S
         this.eventId = eventId;
         this.subscriptionId = subscriptionId;
         this.bundleId = bundleId;
+        this.bundleExternalKey = bundleExternalKey;
         this.requestedTransitionTime = requestedTransitionTime;
         this.effectiveTransitionTime = effectiveTransitionTime;
         this.previousState = previousState;
@@ -145,6 +149,11 @@ public abstract class DefaultSubscriptionEvent extends BusEventBase implements S
     @Override
     public UUID getBundleId() {
         return bundleId;
+    }
+
+    @Override
+    public String getBundleExternalKey() {
+        return bundleExternalKey;
     }
 
     @Override

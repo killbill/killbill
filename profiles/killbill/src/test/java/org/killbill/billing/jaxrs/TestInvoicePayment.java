@@ -238,22 +238,22 @@ public class TestInvoicePayment extends TestJaxrsBase {
 
         final Account accountJson = createAccountWithPMBundleAndSubscriptionAndWaitForFirstInvoice();
 
-        InvoicePayments invoicePayments = killBillClient.getInvoicePaymentsForAccount(accountJson.getAccountId(), basicRequestOptions());
+        InvoicePayments invoicePayments = killBillClient.getInvoicePaymentsForAccount(accountJson.getAccountId(), requestOptions);
         assertEquals(invoicePayments.size(), 1);
 
         final InvoicePayment invoicePayment = invoicePayments.get(0);
         // Verify targetInvoiceId is not Null. See #593
         assertNotNull(invoicePayment.getTargetInvoiceId());
 
-        final Invoices invoices = killBillClient.getInvoicesForAccount(accountJson.getAccountId(), basicRequestOptions());
+        final Invoices invoices = killBillClient.getInvoicesForAccount(accountJson.getAccountId(), requestOptions);
         assertEquals(invoices.size(), 2);
         final Invoice invoice = invoices.get(1);
         // Verify this is the correct value
         assertEquals(invoicePayment.getTargetInvoiceId(), invoice.getInvoiceId());
 
         // Make a payment and verify both invoice payment point to the same targetInvoiceId
-        killBillClient.payAllInvoices(accountJson.getAccountId(), false, null, basicRequestOptions());
-        invoicePayments = killBillClient.getInvoicePaymentsForAccount(accountJson.getAccountId(), basicRequestOptions());
+        killBillClient.payAllInvoices(accountJson.getAccountId(), false, null, requestOptions);
+        invoicePayments = killBillClient.getInvoicePaymentsForAccount(accountJson.getAccountId(), requestOptions);
         assertEquals(invoicePayments.size(), 2);
         for (final InvoicePayment cur : invoicePayments) {
             assertEquals(cur.getTargetInvoiceId(), invoice.getInvoiceId());

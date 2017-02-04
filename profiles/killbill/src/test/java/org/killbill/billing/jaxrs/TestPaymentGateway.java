@@ -42,7 +42,7 @@ public class TestPaymentGateway extends TestJaxrsBase {
 
         final HostedPaymentPageFields hppFields = new HostedPaymentPageFields();
 
-        final HostedPaymentPageFormDescriptor hostedPaymentPageFormDescriptor = killBillClient.buildFormDescriptor(hppFields, account.getAccountId(), null, ImmutableMap.<String, String>of(), basicRequestOptions());
+        final HostedPaymentPageFormDescriptor hostedPaymentPageFormDescriptor = killBillClient.buildFormDescriptor(hppFields, account.getAccountId(), null, ImmutableMap.<String, String>of(), requestOptions);
         Assert.assertEquals(hostedPaymentPageFormDescriptor.getKbAccountId(), account.getAccountId());
     }
 
@@ -58,7 +58,7 @@ public class TestPaymentGateway extends TestJaxrsBase {
 
         final ComboHostedPaymentPage comboHostedPaymentPage = new ComboHostedPaymentPage(account, paymentMethod, ImmutableList.<PluginProperty>of(), hppFields);
 
-        final HostedPaymentPageFormDescriptor hostedPaymentPageFormDescriptor = killBillClient.buildFormDescriptor(comboHostedPaymentPage, ImmutableMap.<String, String>of(), basicRequestOptions());
+        final HostedPaymentPageFormDescriptor hostedPaymentPageFormDescriptor = killBillClient.buildFormDescriptor(comboHostedPaymentPage, ImmutableMap.<String, String>of(), requestOptions);
         Assert.assertNotNull(hostedPaymentPageFormDescriptor.getKbAccountId());
     }
 

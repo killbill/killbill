@@ -68,7 +68,7 @@ public class PaymentStateMachineHelper {
     private static final String VOID_FAILED = "VOID_FAILED";
     private static final String CHARGEBACK_FAILED = "CHARGEBACK_FAILED";
 
-    private static final String AUTH_ERRORED = "AUTH_ERRORED";
+    private static final String AUTHORIZE_ERRORED = "AUTH_ERRORED";
     private static final String CAPTURE_ERRORED = "CAPTURE_ERRORED";
     private static final String PURCHASE_ERRORED = "PURCHASE_ERRORED";
     private static final String REFUND_ERRORED = "REFUND_ERRORED";
@@ -77,6 +77,35 @@ public class PaymentStateMachineHelper {
     private static final String CHARGEBACK_ERRORED = "CHARGEBACK_ERRORED";
 
     private final StateMachineConfigCache stateMachineConfigCache;
+
+    public static final String[] STATE_NAMES = {AUTHORIZE_ERRORED,
+                                                AUTHORIZE_FAILED,
+                                                AUTHORIZE_PENDING,
+                                                AUTHORIZE_SUCCESS,
+                                                CAPTURE_ERRORED,
+                                                CAPTURE_FAILED,
+                                                CAPTURE_PENDING,
+                                                CAPTURE_SUCCESS,
+                                                CHARGEBACK_ERRORED,
+                                                CHARGEBACK_FAILED,
+                                                CHARGEBACK_PENDING,
+                                                CHARGEBACK_SUCCESS,
+                                                CREDIT_ERRORED,
+                                                CREDIT_FAILED,
+                                                CREDIT_PENDING,
+                                                CREDIT_SUCCESS,
+                                                PURCHASE_ERRORED,
+                                                PURCHASE_FAILED,
+                                                PURCHASE_PENDING,
+                                                PURCHASE_SUCCESS,
+                                                REFUND_ERRORED,
+                                                REFUND_FAILED,
+                                                REFUND_PENDING,
+                                                REFUND_SUCCESS,
+                                                VOID_ERRORED,
+                                                VOID_FAILED,
+                                                VOID_PENDING,
+                                                VOID_SUCCESS};
 
     @Inject
     public PaymentStateMachineHelper(final StateMachineConfigCache stateMachineConfigCache) {
@@ -132,7 +161,7 @@ public class PaymentStateMachineHelper {
     public String getErroredStateForTransaction(final TransactionType transactionType) {
         switch (transactionType) {
             case AUTHORIZE:
-                return AUTH_ERRORED;
+                return AUTHORIZE_ERRORED;
             case CAPTURE:
                 return CAPTURE_ERRORED;
             case PURCHASE:

@@ -25,7 +25,6 @@ import org.killbill.billing.subscription.api.user.SubscriptionBuilder;
 import org.killbill.billing.subscription.api.user.DefaultSubscriptionBase;
 import org.killbill.billing.subscription.api.SubscriptionBase;
 import org.killbill.billing.util.dao.TableName;
-import org.killbill.billing.entity.EntityBase;
 import org.killbill.billing.util.entity.dao.EntityModelDao;
 import org.killbill.billing.util.entity.dao.EntityModelDaoBase;
 
@@ -106,13 +105,14 @@ public class SubscriptionModelDao extends EntityModelDaoBase implements EntityMo
         this.migrated = migrated;
     }
 
-    public static SubscriptionBase toSubscription(final SubscriptionModelDao src) {
+    public static SubscriptionBase toSubscription(final SubscriptionModelDao src, final String externalKey) {
         if (src == null) {
             return null;
         }
         return new DefaultSubscriptionBase(new SubscriptionBuilder()
                                             .setId(src.getId())
                                             .setBundleId(src.getBundleId())
+                                            .setBundleExternalKey(externalKey)
                                             .setCategory(src.getCategory())
                                             .setCreatedDate(src.getCreatedDate())
                                             .setUpdatedDate(src.getUpdatedDate())

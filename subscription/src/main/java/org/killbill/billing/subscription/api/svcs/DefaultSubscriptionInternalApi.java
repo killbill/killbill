@@ -54,6 +54,7 @@ import org.killbill.billing.entitlement.api.Entitlement.EntitlementState;
 import org.killbill.billing.entitlement.api.EntitlementAOStatusDryRun;
 import org.killbill.billing.entitlement.api.EntitlementAOStatusDryRun.DryRunChangeReason;
 import org.killbill.billing.entitlement.api.EntitlementSpecifier;
+import org.killbill.billing.entitlement.api.Subscription;
 import org.killbill.billing.events.EffectiveSubscriptionInternalEvent;
 import org.killbill.billing.invoice.api.DryRunArguments;
 import org.killbill.billing.subscription.api.SubscriptionApiBase;
@@ -101,6 +102,7 @@ import org.killbill.notificationq.api.NotificationQueueService.NoSuchNotificatio
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
 import com.google.common.base.Predicate;
 import com.google.common.collect.Collections2;
@@ -192,6 +194,7 @@ public class DefaultSubscriptionInternalApi extends SubscriptionApiBase implemen
             return apiService.createPlan(new SubscriptionBuilder()
                                                  .setId(UUIDs.randomUUID())
                                                  .setBundleId(bundleId)
+                                                 .setBundleExternalKey(bundle.getExternalKey())
                                                  .setCategory(plan.getProduct().getCategory())
                                                  .setBundleStartDate(bundleStartDate)
                                                  .setAlignStartDate(effectiveDate)
@@ -202,7 +205,7 @@ public class DefaultSubscriptionInternalApi extends SubscriptionApiBase implemen
         }
     }
 
-    private List<SubscriptionSpecifier> verifyAndBuildSubscriptionSpecifiers(final UUID bundleId, final Iterable<EntitlementSpecifier> entitlements, final boolean isMigrated, final InternalCallContext context, final DateTime now, final DateTime effectiveDate, final Catalog catalog, final CallContext callContext) throws SubscriptionBaseApiException, CatalogApiException {
+    private List<SubscriptionSpecifier> verifyAndBuildSubscriptionSpecifiers(final UUID bundleId, final String externalKey, final Iterable<EntitlementSpecifier> entitlements, final boolean isMigrated, final InternalCallContext context, final DateTime now, final DateTime effectiveDate, final Catalog catalog, final CallContext callContext) throws SubscriptionBaseApiException, CatalogApiException {
         final List<SubscriptionSpecifier> subscriptions = new ArrayList<SubscriptionSpecifier>();
         boolean first = true;
         final List<SubscriptionBase> subscriptionsForBundle = getSubscriptionsForBundle(bundleId, null, context);
@@ -248,6 +251,7 @@ public class DefaultSubscriptionInternalApi extends SubscriptionApiBase implemen
             subscription.setBuilder(new SubscriptionBuilder()
                                             .setId(UUIDs.randomUUID())
                                             .setBundleId(bundleId)
+                                            .setBundleExternalKey(externalKey)
                                             .setCategory(plan.getProduct().getCategory())
                                             .setBundleStartDate(effectiveDate)
                                             .setAlignStartDate(effectiveDate)
@@ -276,6 +280,7 @@ public class DefaultSubscriptionInternalApi extends SubscriptionApiBase implemen
                         bundle.getId(),
                         effectiveDate,
                         verifyAndBuildSubscriptionSpecifiers(bundle.getId(),
+                                                             bundle.getExternalKey(),
                                                              entitlementWithAddOnsSpecifier.getEntitlementSpecifier(),
                                                              entitlementWithAddOnsSpecifier.isMigrated(),
                                                              context,
@@ -335,6 +340,33 @@ public class DefaultSubscriptionInternalApi extends SubscriptionApiBase implemen
     public SubscriptionBaseBundle createBundleForAccount(final UUID accountId, final String bundleKey, final InternalCallContext context) throws SubscriptionBaseApiException {
 
         final List<SubscriptionBaseBundle> existingBundles = dao.getSubscriptionBundlesForKey(bundleKey, context);
+
+        //
+        // Because the creation of the SubscriptionBundle is not atomic (with creation of Subscription/SubscriptionEvent), we verify if we were left
+        // with an empty SubscriptionBaseBundle form a past failing operation (See #684). We only allow reuse if such SubscriptionBaseBundle is fully
+        // empty (and don't allow use case where all Subscription are cancelled, which is the condition for that key to be re-used)
+        // Such condition should have been checked upstream (to decide whether that key is valid or not)
+        //
+        final SubscriptionBaseBundle existingBundleForAccount = Iterables.tryFind(existingBundles, new Predicate<SubscriptionBaseBundle>() {
+            @Override
+            public boolean apply(final SubscriptionBaseBundle input) {
+                return input.getAccountId().equals(accountId);
+            }
+        }).orNull();
+
+        // If Bundle already exists, and there is 0 Subscription, we reuse
+        if (existingBundleForAccount != null) {
+            try {
+                final Map<UUID, List<SubscriptionBase>> accountSubscriptions = dao.getSubscriptionsForAccount(context);
+                final List<SubscriptionBase> subscriptions = accountSubscriptions.get(existingBundleForAccount.getId());
+                if (subscriptions == null || subscriptions.size() == 0) {
+                    return existingBundleForAccount;
+                }
+            } catch (final CatalogApiException e) {
+                throw new SubscriptionBaseApiException(e);
+            }
+        }
+
         final DateTime now = clock.getUTCNow();
         final DateTime originalCreatedDate = !existingBundles.isEmpty() ? existingBundles.get(0).getCreatedDate() : now;
         final DefaultSubscriptionBaseBundle bundle = new DefaultSubscriptionBaseBundle(bundleKey, accountId, now, originalCreatedDate, now, now);
@@ -641,6 +673,7 @@ public class DefaultSubscriptionInternalApi extends SubscriptionApiBase implemen
                     final SubscriptionBuilder builder = new SubscriptionBuilder()
                             .setId(subscriptionId)
                             .setBundleId(bundleId)
+                            .setBundleExternalKey(null)
                             .setCategory(plan.getProduct().getCategory())
                             .setBundleStartDate(bundleStartDate)
                             .setAlignStartDate(startEffectiveDate);
@@ -758,7 +791,8 @@ public class DefaultSubscriptionInternalApi extends SubscriptionApiBase implemen
         }
     }
 
-    private DateTime getEffectiveDateForNewBCD(final int bcd, @Nullable final LocalDate effectiveFromDate, final InternalCallContext internalCallContext) {
+    @VisibleForTesting
+    DateTime getEffectiveDateForNewBCD(final int bcd, @Nullable final LocalDate effectiveFromDate, final InternalCallContext internalCallContext) {
         if (internalCallContext.getAccountRecordId() == null) {
             throw new IllegalStateException("Need to have a valid context with accountRecordId");
         }
@@ -778,7 +812,7 @@ public class DefaultSubscriptionInternalApi extends SubscriptionApiBase implemen
             final int lastDayOfNextMonth = startDatePlusOneMonth.dayOfMonth().getMaximumValue();
             final int originalBCDORLastDayOfMonth = bcd <= lastDayOfNextMonth ? bcd : lastDayOfNextMonth;
             requestedDate = new LocalDate(startDatePlusOneMonth.getYear(), startDatePlusOneMonth.getMonthOfYear(), originalBCDORLastDayOfMonth);
-        } else if (bcd == currentDay) {
+        } else if (bcd == currentDay && effectiveFromDate == null) {
             // will default to immediate event
             requestedDate = null;
         } else if (bcd <= lastDayOfMonth) {

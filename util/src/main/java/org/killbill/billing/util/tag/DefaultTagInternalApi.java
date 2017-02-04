@@ -51,7 +51,7 @@ public class DefaultTagInternalApi implements TagInternalApi {
 
     @Override
     public List<TagDefinition> getTagDefinitions(final InternalTenantContext context) {
-        return ImmutableList.<TagDefinition>copyOf(Collections2.transform(tagDefinitionDao.getTagDefinitions(context),
+        return ImmutableList.<TagDefinition>copyOf(Collections2.transform(tagDefinitionDao.getTagDefinitions(true, context),
                                                                           new Function<TagDefinitionModelDao, TagDefinition>() {
                                                                               @Override
                                                                               public TagDefinition apply(final TagDefinitionModelDao input) {

@@ -19,16 +19,19 @@
 package org.killbill.billing.payment.dao;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 import java.util.UUID;
+import java.util.regex.Pattern;
 
 import javax.annotation.Nullable;
 import javax.inject.Inject;
 
 import org.joda.time.DateTime;
+import org.killbill.billing.ErrorCode;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.catalog.api.Currency;
@@ -38,10 +41,12 @@ import org.killbill.billing.payment.api.DefaultPaymentErrorEvent;
 import org.killbill.billing.payment.api.DefaultPaymentInfoEvent;
 import org.killbill.billing.payment.api.DefaultPaymentPluginErrorEvent;
 import org.killbill.billing.payment.api.Payment;
+import org.killbill.billing.payment.api.PaymentApiException;
 import org.killbill.billing.payment.api.PaymentMethod;
 import org.killbill.billing.payment.api.PaymentTransaction;
 import org.killbill.billing.payment.api.TransactionStatus;
 import org.killbill.billing.payment.api.TransactionType;
+import org.killbill.billing.payment.core.sm.PaymentStateMachineHelper;
 import org.killbill.billing.util.cache.CacheControllerDispatcher;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.billing.util.dao.NonEntityDao;
@@ -49,6 +54,7 @@ import org.killbill.billing.util.entity.Entity;
 import org.killbill.billing.util.entity.Pagination;
 import org.killbill.billing.util.entity.dao.DefaultPaginationSqlDaoHelper;
 import org.killbill.billing.util.entity.dao.DefaultPaginationSqlDaoHelper.PaginationIteratorBuilder;
+import org.killbill.billing.util.entity.dao.EntityDaoBase;
 import org.killbill.billing.util.entity.dao.EntitySqlDaoTransactionWrapper;
 import org.killbill.billing.util.entity.dao.EntitySqlDaoTransactionalJdbiWrapper;
 import org.killbill.billing.util.entity.dao.EntitySqlDaoWrapperFactory;
@@ -66,11 +72,10 @@ import com.google.common.collect.Collections2;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 
-public class DefaultPaymentDao implements PaymentDao {
+public class DefaultPaymentDao extends EntityDaoBase<PaymentModelDao, Payment, PaymentApiException> implements PaymentDao {
 
     private static final Logger log = LoggerFactory.getLogger(DefaultPaymentDao.class);
 
-    private final EntitySqlDaoTransactionalJdbiWrapper transactionalSqlDao;
     private final DefaultPaginationSqlDaoHelper paginationHelper;
     private final PersistentBus eventBus;
     private final Clock clock;
@@ -78,7 +83,7 @@ public class DefaultPaymentDao implements PaymentDao {
     @Inject
     public DefaultPaymentDao(final IDBI dbi, final Clock clock, final CacheControllerDispatcher cacheControllerDispatcher,
                              final NonEntityDao nonEntityDao, final InternalCallContextFactory internalCallContextFactory, final PersistentBus eventBus) {
-        this.transactionalSqlDao = new EntitySqlDaoTransactionalJdbiWrapper(dbi, clock, cacheControllerDispatcher, nonEntityDao, internalCallContextFactory);
+        super(new EntitySqlDaoTransactionalJdbiWrapper(dbi, clock, cacheControllerDispatcher, nonEntityDao, internalCallContextFactory), PaymentSqlDao.class);
         this.paginationHelper = new DefaultPaginationSqlDaoHelper(transactionalSqlDao);
         this.eventBus = eventBus;
         this.clock = clock;
@@ -248,21 +253,39 @@ public class DefaultPaymentDao implements PaymentDao {
 
     @Override
     public Pagination<PaymentModelDao> searchPayments(final String searchKey, final Long offset, final Long limit, final InternalTenantContext context) {
+        // Optimization: if the search key looks like a state name (e.g. _ERRORED), assume the user is searching by state only
+        final List<String> paymentStates = expandSearchFilterToStateNames(searchKey);
+
+        final String likeSearchKey = String.format("%%%s%%", searchKey);
         return paginationHelper.getPagination(PaymentSqlDao.class,
                                               new PaginationIteratorBuilder<PaymentModelDao, Payment, PaymentSqlDao>() {
                                                   @Override
                                                   public Long getCount(final PaymentSqlDao paymentSqlDao, final InternalTenantContext context) {
-                                                      return paymentSqlDao.getSearchCount(searchKey, String.format("%%%s%%", searchKey), context);
+                                                      return !paymentStates.isEmpty() ? paymentSqlDao.getSearchByStateCount(paymentStates, context) : paymentSqlDao.getSearchCount(searchKey, likeSearchKey, context);
                                                   }
 
                                                   @Override
                                                   public Iterator<PaymentModelDao> build(final PaymentSqlDao paymentSqlDao, final Long limit, final InternalTenantContext context) {
-                                                      return paymentSqlDao.search(searchKey, String.format("%%%s%%", searchKey), offset, limit, context);
+                                                      return !paymentStates.isEmpty() ? paymentSqlDao.searchByState(paymentStates, offset, limit, context) : paymentSqlDao.search(searchKey, likeSearchKey, offset, limit, context);
                                                   }
                                               },
                                               offset,
                                               limit,
                                               context);
+    }
+
+    private List<String> expandSearchFilterToStateNames(final String searchKey) {
+        final Pattern pattern = Pattern.compile(".*" + searchKey + ".*");
+
+        // Note that technically, we should look at all of the available state names in the database instead since the state machine is configurable. The common use-case
+        // is to override transitions though, not to introduce new states, and since some of it is already hardcoded in PaymentStateMachineHelper anyways, it's probably good enough for now.
+        final List<String> stateNames = new ArrayList<String>();
+        for (final String stateName : PaymentStateMachineHelper.STATE_NAMES) {
+            if (pattern.matcher(stateName).matches()) {
+                stateNames.add(stateName);
+            }
+        }
+        return stateNames;
     }
 
     @Override
@@ -649,5 +672,10 @@ public class DefaultPaymentDao implements PaymentDao {
 
     private InternalCallContext contextWithUpdatedDate(final InternalCallContext input) {
         return new InternalCallContext(input, clock.getUTCNow());
+    }
+
+    @Override
+    protected PaymentApiException generateAlreadyExistsException(final PaymentModelDao entity, final InternalCallContext context) {
+        return new PaymentApiException(ErrorCode.PAYMENT_INTERNAL_ERROR, "Payment already exists");
     }
 }

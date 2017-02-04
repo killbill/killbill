@@ -346,7 +346,8 @@ public class SubscriptionJson extends JsonBase {
         this.startDate = subscription.getEffectiveStartDate();
 
         // last* fields can be null if the subscription starts in the future - rely on the first available event instead
-        final SubscriptionEvent firstEvent = subscription.getSubscriptionEvents().isEmpty() ? null : subscription.getSubscriptionEvents().get(0);
+        final List<SubscriptionEvent> subscriptionEvents = subscription.getSubscriptionEvents();
+        final SubscriptionEvent firstEvent = subscriptionEvents.isEmpty() ? null : subscriptionEvents.get(0);
         if (subscription.getLastActiveProduct() == null) {
             this.productName = firstEvent == null ? null : firstEvent.getNextProduct().getName();
         } else {
@@ -395,9 +396,16 @@ public class SubscriptionJson extends JsonBase {
         this.priceOverrides = new ArrayList<PhasePriceOverrideJson>();
 
         String currentPhaseName = null;
+        String currentPlanName = null;
         for (final SubscriptionEvent subscriptionEvent : subscription.getSubscriptionEvents()) {
             this.events.add(new EventSubscriptionJson(subscriptionEvent, accountAuditLogs));
             if (currency != null) {
+
+                final Plan curPlan = subscriptionEvent.getNextPlan();
+                if (curPlan != null && (currentPlanName == null || !curPlan.getName().equals(currentPlanName))) {
+                    currentPlanName = curPlan.getName();
+                }
+
                 final PlanPhase curPlanPhase = subscriptionEvent.getNextPhase();
                 if (curPlanPhase == null || curPlanPhase.getName().equals(currentPhaseName)) {
                     continue;
@@ -406,7 +414,7 @@ public class SubscriptionJson extends JsonBase {
 
                 final BigDecimal fixedPrice = curPlanPhase.getFixed() != null ? curPlanPhase.getFixed().getPrice().getPrice(currency) : null;
                 final BigDecimal recurringPrice = curPlanPhase.getRecurring() != null ? curPlanPhase.getRecurring().getRecurringPrice().getPrice(currency) : null;
-                final PhasePriceOverrideJson phase = new PhasePriceOverrideJson(subscriptionEvent.getNextPlan().getName(), curPlanPhase.getName(), curPlanPhase.getPhaseType().toString(), fixedPrice, recurringPrice, curPlanPhase.getUsages(),currency);
+                final PhasePriceOverrideJson phase = new PhasePriceOverrideJson(currentPlanName, curPlanPhase.getName(), curPlanPhase.getPhaseType().toString(), fixedPrice, recurringPrice, curPlanPhase.getUsages(), currency);
                 priceOverrides.add(phase);
             }
         }

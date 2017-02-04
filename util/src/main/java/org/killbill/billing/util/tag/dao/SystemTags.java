@@ -22,9 +22,13 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.UUID;
 
+import javax.annotation.Nullable;
+
 import org.killbill.billing.util.tag.ControlTagType;
 
+import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Iterables;
 
 public class SystemTags {
 
@@ -35,8 +39,10 @@ public class SystemTags {
     // Note! TagSqlDao.sql.stg needs to be kept in sync (see userAndSystemTagDefinitions)
     private static final List<TagDefinitionModelDao> SYSTEM_DEFINED_TAG_DEFINITIONS = ImmutableList.<TagDefinitionModelDao>of(new TagDefinitionModelDao(PARK_TAG_DEFINITION_ID, null, null, PARK_TAG_DEFINITION_NAME, "Accounts with invalid invoicing state"));
 
-    public static Collection<TagDefinitionModelDao> all() {
-        final Collection<TagDefinitionModelDao> all = new LinkedList<TagDefinitionModelDao>(SYSTEM_DEFINED_TAG_DEFINITIONS);
+    public static Collection<TagDefinitionModelDao> get(final boolean includeSystemTags) {
+        final Collection<TagDefinitionModelDao> all = includeSystemTags ?
+                                                      new LinkedList<TagDefinitionModelDao>(SYSTEM_DEFINED_TAG_DEFINITIONS) :
+                                                      new LinkedList<TagDefinitionModelDao>();
         for (final ControlTagType controlTag : ControlTagType.values()) {
             all.add(new TagDefinitionModelDao(controlTag));
         }
@@ -57,6 +63,15 @@ public class SystemTags {
         }
 
         return null;
+    }
+
+    public static boolean isSystemTag(final UUID tagDefinitionId) {
+        return Iterables.any(SYSTEM_DEFINED_TAG_DEFINITIONS, new Predicate<TagDefinitionModelDao>() {
+            @Override
+            public boolean apply(final TagDefinitionModelDao input) {
+                return input.getId().equals(tagDefinitionId);
+            }
+        });
     }
 
     public static TagDefinitionModelDao lookup(final UUID tagDefinitionId) {

@@ -26,9 +26,8 @@ import java.util.Set;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
-import org.killbill.billing.catalog.StandaloneCatalog;
-import org.killbill.billing.catalog.VersionedCatalog;
 import org.killbill.billing.catalog.api.BillingPeriod;
+import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.catalog.api.ProductCategory;
 import org.killbill.billing.catalog.api.TimeUnit;
@@ -41,7 +40,6 @@ import org.killbill.billing.client.model.Product;
 import org.killbill.billing.client.model.SimplePlan;
 import org.killbill.billing.client.model.Tenant;
 import org.killbill.billing.client.model.Usage;
-import org.killbill.xmlloader.XMLLoader;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
@@ -53,8 +51,8 @@ public class TestCatalog extends TestJaxrsBase {
     @Test(groups = "slow", description = "Upload and retrieve a per tenant catalog")
     public void testMultiTenantCatalog() throws Exception {
         final String versionPath1 = Resources.getResource("SpyCarBasic.xml").getPath();
-        killBillClient.uploadXMLCatalog(versionPath1, createdBy, reason, comment);
-        String catalog = killBillClient.getXMLCatalog();
+        killBillClient.uploadXMLCatalog(versionPath1, requestOptions);
+        String catalog = killBillClient.getXMLCatalog(requestOptions);
         Assert.assertNotNull(catalog);
         //
         // We can't deserialize the VersionedCatalog using our JAXB models because it contains several
@@ -62,17 +60,52 @@ public class TestCatalog extends TestJaxrsBase {
         //
     }
 
+    @Test(groups = "slow")
+    public void testUploadAndFetchUsageCatlog() throws Exception {
+        final String versionPath1 = Resources.getResource("UsageExperimental.xml").getPath();
+        killBillClient.uploadXMLCatalog(versionPath1, requestOptions);
+        String catalog = killBillClient.getXMLCatalog(requestOptions);
+        Assert.assertNotNull(catalog);
+    }
+
+
+    @Test(groups = "slow")
+    public void testUploadWithErrors() throws Exception {
+        final String versionPath1 = Resources.getResource("SpyCarBasic.xml").getPath();
+        killBillClient.uploadXMLCatalog(versionPath1, requestOptions);
+
+        // Retry to upload same version
+        try {
+            killBillClient.uploadXMLCatalog(versionPath1, requestOptions);
+            Assert.fail("Uploading same version should fail");
+        } catch (KillBillClientException e) {
+            Assert.assertEquals(e.getMessage(), "Invalid catalog for tenant : 1");
+        }
+
+        // Try to upload another version with an invalid name (different than orignal name)
+        try {
+            final String versionPath2 = Resources.getResource("SpyCarBasicInvalidName.xml").getPath();
+            killBillClient.uploadXMLCatalog(versionPath2, requestOptions);
+            Assert.fail("Uploading same version should fail");
+        } catch (KillBillClientException e) {
+            Assert.assertEquals(e.getMessage(), "Invalid catalog for tenant : 1");
+        }
+
+        String catalog = killBillClient.getXMLCatalog(requestOptions);
+        Assert.assertNotNull(catalog);
+    }
+
     @Test(groups = "slow", description = "Can retrieve a json version of the catalog")
     public void testCatalog() throws Exception {
         final Set<String> allBasePlans = new HashSet<String>();
 
-        final List<Catalog> catalogsJson = killBillClient.getJSONCatalog();
+        final List<Catalog> catalogsJson = killBillClient.getJSONCatalog(requestOptions);
 
         Assert.assertEquals(catalogsJson.get(0).getName(), "Firearms");
         Assert.assertEquals(catalogsJson.get(0).getEffectiveDate(), Date.valueOf("2011-01-01"));
         Assert.assertEquals(catalogsJson.get(0).getCurrencies().size(), 3);
         Assert.assertEquals(catalogsJson.get(0).getProducts().size(), 11);
-        Assert.assertEquals(catalogsJson.get(0).getPriceLists().size(), 4);
+        Assert.assertEquals(catalogsJson.get(0).getPriceLists().size(), 6);
 
         for (final Product productJson : catalogsJson.get(0).getProducts()) {
             if (!"BASE".equals(productJson.getType())) {
@@ -99,7 +132,7 @@ public class TestCatalog extends TestJaxrsBase {
             }
 
             // Retrieve available products (addons) for that base product
-            final List<PlanDetail> availableAddons = killBillClient.getAvailableAddons(productJson.getName());
+            final List<PlanDetail> availableAddons = killBillClient.getAvailableAddons(productJson.getName(), requestOptions);
             final Set<String> availableAddonsNames = new HashSet<String>();
             for (final PlanDetail planDetailJson : availableAddons) {
                 availableAddonsNames.add(planDetailJson.getProduct());
@@ -108,7 +141,7 @@ public class TestCatalog extends TestJaxrsBase {
         }
 
         // Verify base plans endpoint
-        final List<PlanDetail> basePlans = killBillClient.getBasePlans();
+        final List<PlanDetail> basePlans = killBillClient.getBasePlans(requestOptions);
         final Set<String> foundBasePlans = new HashSet<String>();
         for (final PlanDetail planDetailJson : basePlans) {
             foundBasePlans.add(planDetailJson.getPlan());
@@ -120,7 +153,7 @@ public class TestCatalog extends TestJaxrsBase {
             expectedExceptions = KillBillClientException.class,
             expectedExceptionsMessageRegExp = "There is no catalog version that applies for the given date.*")
     public void testCatalogInvalidDate() throws Exception {
-        final List<Catalog> catalogsJson = killBillClient.getJSONCatalog(DateTime.parse("2008-01-01"));
+        final List<Catalog> catalogsJson = killBillClient.getJSONCatalog(DateTime.parse("2008-01-01"), requestOptions);
         Assert.fail();
     }
 
@@ -188,5 +221,7 @@ public class TestCatalog extends TestJaxrsBase {
         Assert.assertEquals(catalogsJson.get(0).getPriceLists().get(0).getName(), "DEFAULT");
         Assert.assertEquals(catalogsJson.get(0).getPriceLists().get(0).getPlans().size(), 2);
     }
+
+
 
 }

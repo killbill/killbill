@@ -45,6 +45,7 @@ import org.killbill.billing.catalog.api.PlanPhasePriceOverride;
 import org.killbill.billing.catalog.api.PriceList;
 import org.killbill.billing.catalog.api.Product;
 import org.killbill.billing.catalog.api.Recurring;
+import org.killbill.billing.catalog.api.TimeUnit;
 import org.killbill.xmlloader.ValidatingConfig;
 import org.killbill.xmlloader.ValidationError;
 import org.killbill.xmlloader.ValidationErrors;
@@ -272,7 +273,8 @@ public class DefaultPlan extends ValidatingConfig<StandaloneCatalog> implements 
                 }
             }
             final Recurring recurring = phase.getRecurring();
-            if (recurring == null || recurring.getRecurringPrice() == null || recurring.getRecurringPrice().isZero()) {
+            if (phase.getDuration().getUnit() != TimeUnit.UNLIMITED &&
+                (recurring == null || recurring.getRecurringPrice() == null || recurring.getRecurringPrice().isZero())) {
                 try {
                     result = phase.getDuration().addToDateTime(result);
                 } catch (final CatalogApiException ignored) {

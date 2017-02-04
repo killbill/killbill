@@ -60,10 +60,10 @@ public class TestCSVExportOutputStream extends UtilTestSuiteNoDB {
                                                   "last_name", "dupont",
                                                   "age", "30"));
 
-        Assert.assertEquals(out.toString(), "-- " + tableName + " first_name,last_name,age\n" +
-                                            "jean,dupond,35\n" +
-                                            "jack,dujardin,40\n" +
-                                            "pierre,schmitt,12\n" +
-                                            "stephane,dupont,30\n");
+        Assert.assertEquals(out.toString(), "-- " + tableName + " first_name|last_name|age\n" +
+                                            "jean|dupond|35\n" +
+                                            "jack|dujardin|40\n" +
+                                            "pierre|schmitt|12\n" +
+                                            "stephane|dupont|30\n");
     }
 }

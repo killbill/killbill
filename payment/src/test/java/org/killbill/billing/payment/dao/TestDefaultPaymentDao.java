@@ -27,6 +27,7 @@ import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.payment.PaymentTestSuiteWithEmbeddedDB;
 import org.killbill.billing.payment.api.TransactionStatus;
 import org.killbill.billing.payment.api.TransactionType;
+import org.killbill.billing.payment.core.sm.PaymentStateMachineHelper;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
@@ -37,11 +38,11 @@ public class TestDefaultPaymentDao extends PaymentTestSuiteWithEmbeddedDB {
     @Test(groups = "slow")
     public void testPaymentCRUD() throws Exception {
         for (int i = 0; i < 3; i++) {
-            testPaymentCRUDForAccount();
+            testPaymentCRUDForAccount(i + 1);
         }
     }
 
-    public void testPaymentCRUDForAccount() throws Exception {
+    private void testPaymentCRUDForAccount(final int runNb) throws Exception {
         final Account account = testHelper.createTestAccount(UUID.randomUUID().toString(), true);
         final UUID accountId = account.getId();
 
@@ -68,8 +69,8 @@ public class TestDefaultPaymentDao extends PaymentTestSuiteWithEmbeddedDB {
                                                            specifiedSecondPaymentTransactionModelDao.getAttemptId(),
                                                            specifiedSecondPaymentTransactionModelDao.getPaymentId(),
                                                            specifiedFirstPaymentTransactionModelDao.getTransactionType(),
-                                                           "SOME_ERRORED_STATE",
-                                                           "SOME_ERRORED_STATE",
+                                                           PaymentStateMachineHelper.STATE_NAMES[0],
+                                                           PaymentStateMachineHelper.STATE_NAMES[0],
                                                            specifiedSecondPaymentTransactionModelDao.getId(),
                                                            TransactionStatus.PAYMENT_FAILURE,
                                                            processedAmount,
@@ -99,6 +100,7 @@ public class TestDefaultPaymentDao extends PaymentTestSuiteWithEmbeddedDB {
 
         // Verify search APIs
         Assert.assertEquals(ImmutableList.<PaymentModelDao>copyOf(paymentDao.searchPayments(accountId.toString(), 0L, 100L, internalCallContext).iterator()).size(), 4);
+        Assert.assertEquals(ImmutableList.<PaymentModelDao>copyOf(paymentDao.searchPayments("_ERRORED", 0L, 100L, internalCallContext).iterator()).size(), runNb);
     }
 
     private void verifyPaymentAndTransactions(final InternalCallContext accountCallContext, final PaymentModelDao specifiedFirstPaymentModelDao, final PaymentTransactionModelDao... specifiedFirstPaymentTransactionModelDaos) {

@@ -30,6 +30,8 @@ public interface SubscriptionInternalEvent extends BusInternalEvent {
 
     UUID getBundleId();
 
+    String getBundleExternalKey();
+
     UUID getSubscriptionId();
 
     DateTime getSubscriptionStartDate();

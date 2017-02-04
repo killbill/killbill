@@ -60,4 +60,9 @@ public interface AccountSqlDao extends EntitySqlDao<AccountModelDao, Account> {
     @SqlQuery
     List<AccountModelDao> getAccountsByParentId(@Bind("parentAccountId") UUID parentAccountId,
                                                 @BindBean final InternalTenantContext context);
+
+    @SqlQuery
+    public AccountModelDao luckySearch(@Bind("searchKey") final String searchKey,
+                                       @BindBean final InternalTenantContext context);
+
 }

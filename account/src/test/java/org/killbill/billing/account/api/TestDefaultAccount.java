@@ -110,17 +110,20 @@ public class TestDefaultAccount extends AccountTestSuiteNoDB {
         // Null BCD -> 0 BCD
         Assert.assertEquals(accountWithNullBCD.getBillCycleDayLocal(), (Integer) 0);
 
-        final AccountData accountDataWithZeroBCD = getAccountData(0, currency, externalKey);
+        final DefaultMutableAccountData accountDataWithZeroBCD = new DefaultMutableAccountData(accountDataWithNullBCD);
+        accountDataWithZeroBCD.setBillCycleDayLocal(0);
         final Account accountWithZeroBCD = new DefaultAccount(accountId, accountDataWithZeroBCD);
         // Null BCD and 0 BCD -> 0 BCD
         Assert.assertEquals(accountWithNullBCD.mergeWithDelegate(accountWithZeroBCD).getBillCycleDayLocal(), (Integer) 0);
 
-        final AccountData accountDataWithRealBCD = getAccountData(12, currency, externalKey);
+        final DefaultMutableAccountData accountDataWithRealBCD = new DefaultMutableAccountData(accountDataWithNullBCD);
+        accountDataWithRealBCD.setBillCycleDayLocal(12);
         final Account accountWithRealBCD = new DefaultAccount(accountId, accountDataWithRealBCD);
         // Null BCD and real BCD -> real BCD
         Assert.assertEquals(accountWithNullBCD.mergeWithDelegate(accountWithRealBCD).getBillCycleDayLocal(), (Integer) 12);
 
-        final AccountData accountDataWithAnotherRealBCD = getAccountData(20, currency, externalKey);
+        final DefaultMutableAccountData accountDataWithAnotherRealBCD = new DefaultMutableAccountData(accountDataWithNullBCD);
+        accountDataWithAnotherRealBCD.setBillCycleDayLocal(20);
         final Account accountWithAnotherBCD = new DefaultAccount(accountId, accountDataWithAnotherRealBCD);
         // Same BCD
         Assert.assertEquals(accountWithAnotherBCD.mergeWithDelegate(accountWithAnotherBCD).getBillCycleDayLocal(), (Integer) 20);

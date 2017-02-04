@@ -33,6 +33,7 @@ public class SubscriptionBaseTransitionData implements SubscriptionBaseTransitio
     private final Long totalOrdering;
     private final UUID subscriptionId;
     private final UUID bundleId;
+    private final String bundleExternalKey;
     private final UUID eventId;
     private final EventType eventType;
     private final ApiEventType apiEventType;
@@ -59,6 +60,7 @@ public class SubscriptionBaseTransitionData implements SubscriptionBaseTransitio
     public SubscriptionBaseTransitionData(final UUID eventId,
                                           final UUID subscriptionId,
                                           final UUID bundleId,
+                                          final String bundleExternalKey,
                                           final EventType eventType,
                                           final ApiEventType apiEventType,
                                           final DateTime effectiveTransitionTime,
@@ -83,6 +85,7 @@ public class SubscriptionBaseTransitionData implements SubscriptionBaseTransitio
         this.eventId = eventId;
         this.subscriptionId = subscriptionId;
         this.bundleId = bundleId;
+        this.bundleExternalKey = bundleExternalKey;
         this.eventType = eventType;
         this.apiEventType = apiEventType;
         this.effectiveTransitionTime = effectiveTransitionTime;
@@ -117,6 +120,7 @@ public class SubscriptionBaseTransitionData implements SubscriptionBaseTransitio
         this.eventId = input.getId();
         this.subscriptionId = input.getSubscriptionId();
         this.bundleId = input.getBundleId();
+        this.bundleExternalKey = input.getBundleExternalKey();
         this.eventType = eventType;
         this.apiEventType = apiEventType;
         this.effectiveTransitionTime = input.getEffectiveTransitionTime();
@@ -154,6 +158,10 @@ public class SubscriptionBaseTransitionData implements SubscriptionBaseTransitio
     @Override
     public UUID getBundleId() {
         return bundleId;
+    }
+
+    public String getBundleExternalKey() {
+        return bundleExternalKey;
     }
 
     @Override
@@ -285,6 +293,7 @@ public class SubscriptionBaseTransitionData implements SubscriptionBaseTransitio
         sb.append(", totalOrdering=").append(totalOrdering);
         sb.append(", subscriptionId=").append(subscriptionId);
         sb.append(", bundleId=").append(bundleId);
+        sb.append(", bundleExternalKey=").append(bundleExternalKey);
         sb.append(", eventId=").append(eventId);
         sb.append(", eventType=").append(eventType);
         sb.append(", effectiveTransitionTime=").append(effectiveTransitionTime);
@@ -320,6 +329,9 @@ public class SubscriptionBaseTransitionData implements SubscriptionBaseTransitio
             return false;
         }
         if (bundleId != null ? !bundleId.equals(that.bundleId) : that.bundleId != null) {
+            return false;
+        }
+        if (bundleExternalKey != null ? !bundleExternalKey.equals(that.bundleExternalKey) : that.bundleExternalKey != null) {
             return false;
         }
         if (effectiveTransitionTime != null ? effectiveTransitionTime.compareTo(that.effectiveTransitionTime) != 0 : that.effectiveTransitionTime != null) {
@@ -384,6 +396,7 @@ public class SubscriptionBaseTransitionData implements SubscriptionBaseTransitio
         int result = totalOrdering != null ? totalOrdering.hashCode() : 0;
         result = 31 * result + (subscriptionId != null ? subscriptionId.hashCode() : 0);
         result = 31 * result + (bundleId != null ? bundleId.hashCode() : 0);
+        result = 31 * result + (bundleExternalKey != null ? bundleExternalKey.hashCode() : 0);
         result = 31 * result + (eventId != null ? eventId.hashCode() : 0);
         result = 31 * result + (eventType != null ? eventType.hashCode() : 0);
         result = 31 * result + (apiEventType != null ? apiEventType.hashCode() : 0);

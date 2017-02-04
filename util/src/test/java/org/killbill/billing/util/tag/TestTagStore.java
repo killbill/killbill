@@ -144,7 +144,7 @@ public class TestTagStore extends UtilTestSuiteWithEmbeddedDB {
 
     @Test(groups = "slow")
     public void testGetTagDefinitions() {
-        final List<TagDefinitionModelDao> definitionList = tagDefinitionDao.getTagDefinitions(internalCallContext);
+        final List<TagDefinitionModelDao> definitionList = tagDefinitionDao.getTagDefinitions(false, internalCallContext);
         assertTrue(definitionList.size() >= ControlTagType.values().length);
     }
 }

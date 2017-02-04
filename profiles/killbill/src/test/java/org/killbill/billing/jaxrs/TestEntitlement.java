@@ -291,7 +291,7 @@ public class TestEntitlement extends TestJaxrsBase {
         final Subscription newInput = new Subscription();
         newInput.setSubscriptionId(subscription2.getSubscriptionId());
         newInput.setPlanName("pistol-monthly");
-        final Subscription subscription3 = killBillClient.updateSubscription(newInput, null, BillingActionPolicy.IMMEDIATE, DEFAULT_WAIT_COMPLETION_TIMEOUT_SEC, basicRequestOptions());
+        final Subscription subscription3 = killBillClient.updateSubscription(newInput, null, BillingActionPolicy.IMMEDIATE, DEFAULT_WAIT_COMPLETION_TIMEOUT_SEC, requestOptions);
 
         Assert.assertEquals(subscription3.getEvents().size(), 4);
         Assert.assertEquals(subscription3.getEvents().get(0).getEventType(), SubscriptionEventType.START_ENTITLEMENT.name());
@@ -515,7 +515,7 @@ public class TestEntitlement extends TestJaxrsBase {
         final Subscription updatedSubscription = new Subscription();
         updatedSubscription.setSubscriptionId(entitlementJson.getSubscriptionId());
         updatedSubscription.setBillCycleDayLocal(9);
-        killBillClient.updateSubscriptionBCD(updatedSubscription, null, DEFAULT_WAIT_COMPLETION_TIMEOUT_SEC, basicRequestOptions());
+        killBillClient.updateSubscriptionBCD(updatedSubscription, null, DEFAULT_WAIT_COMPLETION_TIMEOUT_SEC, requestOptions);
 
 
         final Subscription result = killBillClient.getSubscription(entitlementJson.getSubscriptionId());
@@ -545,7 +545,7 @@ public class TestEntitlement extends TestJaxrsBase {
         input.setExternalKey("somethingSpecial");
         input.setPlanName("shotgun-monthly");
 
-        final Subscription entitlementJson = killBillClient.createSubscription(input, null, DEFAULT_WAIT_COMPLETION_TIMEOUT_SEC, basicRequestOptions());
+        final Subscription entitlementJson = killBillClient.createSubscription(input, null, DEFAULT_WAIT_COMPLETION_TIMEOUT_SEC, requestOptions);
         Assert.assertEquals(entitlementJson.getProductName(), "Shotgun");
         Assert.assertEquals(entitlementJson.getBillingPeriod(), BillingPeriod.MONTHLY);
         Assert.assertEquals(entitlementJson.getPriceList(), DefaultPriceListSet.DEFAULT_PRICELIST_NAME);
@@ -556,7 +556,7 @@ public class TestEntitlement extends TestJaxrsBase {
         newInput.setAccountId(entitlementJson.getAccountId());
         newInput.setSubscriptionId(entitlementJson.getSubscriptionId());
         newInput.setPlanName("pistol-monthly");
-        final Subscription newEntitlementJson = killBillClient.updateSubscription(newInput, null, null, DEFAULT_WAIT_COMPLETION_TIMEOUT_SEC, basicRequestOptions());
+        final Subscription newEntitlementJson = killBillClient.updateSubscription(newInput, null, null, DEFAULT_WAIT_COMPLETION_TIMEOUT_SEC, requestOptions);
         Assert.assertEquals(newEntitlementJson.getProductName(), "Pistol");
         Assert.assertEquals(newEntitlementJson.getBillingPeriod(), BillingPeriod.MONTHLY);
         Assert.assertEquals(newEntitlementJson.getPriceList(), DefaultPriceListSet.DEFAULT_PRICELIST_NAME);

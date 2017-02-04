@@ -33,6 +33,7 @@ public class CatalogSafetyInitializer {
 
 
     public static final Integer DEFAULT_NON_REQUIRED_INTEGER_FIELD_VALUE = -1;
+    public static final Double DEFAULT_NON_REQUIRED_DOUBLE_FIELD_VALUE = new Double(-1);
 
     private static final Map<Class, LinkedList<Field>> perCatalogClassNonRequiredFields = new HashMap<Class, LinkedList<Field>>();
 
@@ -60,6 +61,8 @@ public class CatalogSafetyInitializer {
                         }
                     } else if (Integer.class.equals(f.getType())) {
                         initializeFieldWithValue(obj, f, DEFAULT_NON_REQUIRED_INTEGER_FIELD_VALUE);
+                    } else if (Double.class.equals(f.getType())) {
+                        initializeFieldWithValue(obj, f, DEFAULT_NON_REQUIRED_DOUBLE_FIELD_VALUE);
                     }
                 }
             }
@@ -97,6 +100,8 @@ public class CatalogSafetyInitializer {
                     }
                 } else if (Integer.class.equals(f.getType())) {
                     result.add(f);
+                } else if (Double.class.equals(f.getType())) {
+                    result.add(f);
                 }
             }
         }
@@ -104,19 +109,23 @@ public class CatalogSafetyInitializer {
     }
 
     private static void initializeFieldWithValue(final Object obj, final Field f, final Object value) throws IllegalAccessException, ClassNotFoundException {
-        f.setAccessible(true);
-        if (f.get(obj) == null) {
-            f.set(obj, value);
+        synchronized (perCatalogClassNonRequiredFields) {
+            f.setAccessible(true);
+            if (f.get(obj) == null) {
+                f.set(obj, value);
+            }
+            f.setAccessible(false);
         }
-        f.setAccessible(false);
     }
 
     private static void initializeArrayIfNull(final Object obj, final Field f) throws IllegalAccessException, ClassNotFoundException {
-        f.setAccessible(true);
-        if (f.get(obj) == null) {
-            f.set(obj, getZeroLengthArrayInitializer(f));
+        synchronized (perCatalogClassNonRequiredFields) {
+            f.setAccessible(true);
+            if (f.get(obj) == null) {
+                f.set(obj, getZeroLengthArrayInitializer(f));
+            }
+            f.setAccessible(false);
         }
-        f.setAccessible(false);
     }
 
 

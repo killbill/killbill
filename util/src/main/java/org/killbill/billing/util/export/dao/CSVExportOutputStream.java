@@ -66,6 +66,8 @@ public class CSVExportOutputStream extends OutputStream implements DatabaseExpor
         // Remove quoting of character which applies (somewhat arbitrarily, Tatu???) for string whose length is greater than MAX_QUOTE_CHECK = 24 -- See CVSWriter#_mayNeedQuotes
         builder.disableQuoteChar();
 
+        builder.setColumnSeparator('|');
+
         for (final ColumnInfo columnInfo : columnsForTable) {
             builder.addColumn(columnInfo.getColumnName(), getColumnTypeFromSqlType(columnInfo.getDataType()));
         }

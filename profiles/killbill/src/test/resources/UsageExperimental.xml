@@ -1,0 +1,289 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!--
+  ~ Copyright 2014 The Billing Project, Inc.
+  ~
+  ~ Ning licenses this file to you under the Apache License, version 2.0
+  ~ (the "License"); you may not use this file except in compliance with the
+  ~ License.  You may obtain a copy of the License at:
+  ~
+  ~    http://www.apache.org/licenses/LICENSE-2.0
+  ~
+  ~ Unless required by applicable law or agreed to in writing, software
+  ~ distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+  ~ WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the
+  ~ License for the specific language governing permissions and limitations
+  ~ under the License.
+  -->
+
+<catalog xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:noNamespaceSchemaLocation="CatalogSchema.xsd ">
+
+    <effectiveDate>2013-02-08T00:00:00+00:00</effectiveDate>
+    <catalogName>Usage</catalogName>
+
+    <!-- TBD
+    Defines the billingMode for all recurring subscription in that catalog:
+    Goal is to avoid to end up in a situation where a user could switch plan and suddenly his
+    recurring billing goes from IN_ADVANCE to IN_ARREAR or the reverse.
+    -->
+    <recurringBillingMode>IN_ADVANCE</recurringBillingMode>
+
+    <currencies>
+        <currency>BTC</currency>
+    </currencies>
+
+    <units>
+        <unit name="members"/>
+        <unit name="cell-phone-minutes"/>
+        <unit name="fastrack-tokens"/>
+        <unit name="bandwith-meg-sec"/>
+        <unit name="Mbytes"/>
+    </units>
+
+    <products>
+        <product name="Dummy">
+            <category>BASE</category>
+        </product>
+        <product name="CapacityInAdvance">
+            <category>BASE</category>
+        </product>
+        <product name="ConsumableInAdvancePrepayCredit">
+            <category>BASE</category>
+        </product>
+        <product name="ConsumableInAdvanceTopUp">
+            <category>BASE</category>
+        </product>
+        <product name="CapacityInArrear">
+            <category>BASE</category>
+        </product>
+        <product name="ConsumableInArrear">
+            <category>BASE</category>
+        </product>
+    </products>
+
+    <rules>
+        <changePolicy>
+            <changePolicyCase>
+                <policy>IMMEDIATE</policy>
+            </changePolicyCase>
+        </changePolicy>
+        <cancelPolicy>
+            <cancelPolicyCase>
+                <policy>IMMEDIATE</policy>
+            </cancelPolicyCase>
+        </cancelPolicy>
+    </rules>
+
+    <plans>
+        <plan name="capacity-in-advance-monthly">
+            <product>CapacityInAdvance</product>
+            <finalPhase type="EVERGREEN">
+                <duration>
+                    <unit>UNLIMITED</unit>
+                </duration>
+
+                <usages>
+                    <usage name="capacity-in-advance-monthly-usage1" billingMode="IN_ADVANCE" usageType="CAPACITY">
+                        <billingPeriod>MONTHLY</billingPeriod>
+                        <limits>
+                            <limit>
+                                <unit>members</unit>
+                                <max>100</max>
+                            </limit>
+                        </limits>
+                        <!-- could accept a fixed price and/or a recurring price -->
+                        <recurringPrice>
+                            <price>
+                                <currency>BTC</currency>
+                                <value>100.00</value>
+                            </price>
+                        </recurringPrice>
+                    </usage>
+                </usages>
+            </finalPhase>
+        </plan>
+
+
+        <plan name="consumable-in-advance-prepay-credit-monthly">
+            <product>ConsumableInAdvancePrepayCredit</product>
+            <finalPhase type="EVERGREEN">
+                <duration>
+                    <unit>UNLIMITED</unit>
+                </duration>
+                <usages>
+                    <usage name="consumable-in-advance-prepay-credit-monthly-usage1" billingMode="IN_ADVANCE" usageType="CONSUMABLE">
+                        <billingPeriod>MONTHLY</billingPeriod>
+                        <blocks>
+                            <block>
+                                <unit>cell-phone-minutes</unit>
+                                <size>1000</size>
+                                <!-- could be either fixed (with NO_BILLING_PERIOD) )or recurring:
+                                * In billing period is NO_BILLING_PERIOD, we buy one block of units
+                                * In billing period ha s been specified, we buy one block of units for each period
+                                -->
+                                <prices>
+                                    <price>
+                                        <currency>BTC</currency>
+                                        <value>0.10</value>
+                                    </price>
+                                </prices>
+                            </block>
+                        </blocks>
+                        <!-- We could instead define the price here as we did for capacity-in-advance if we want to 'bundle' linit/units -->
+                    </usage>
+                </usages>
+            </finalPhase>
+        </plan>
+
+
+        <plan name="consumable-in-advance-topup">
+            <product>ConsumableInAdvanceTopUp</product>
+            <finalPhase type="EVERGREEN">
+                <duration>
+                    <unit>UNLIMITED</unit>
+                </duration>
+
+                <usages>
+                    <usage name="consumable-in-advance-topup-usage1" billingMode="IN_ADVANCE" usageType="CONSUMABLE">
+                        <billingPeriod>NO_BILLING_PERIOD</billingPeriod>
+                        <blocks>
+                            <block type="TOP_UP">
+                                <unit>fastrack-tokens</unit>
+                                <size>10</size>
+                                <prices>
+                                    <price>
+                                        <currency>BTC</currency>
+                                        <value>0.10</value>
+                                    </price>
+                                </prices>
+                                <minTopUpCredit>5</minTopUpCredit>
+                            </block>
+                        </blocks>
+                    </usage>
+                </usages>
+            </finalPhase>
+        </plan>
+
+
+        <plan name="capacity-in-arrear">
+            <product>CapacityInArrear</product>
+            <finalPhase type="EVERGREEN">
+                <duration>
+                    <unit>UNLIMITED</unit>
+                </duration>
+
+                <usages>
+                    <usage name="capacity-in-arrear-usage1" billingMode="IN_ARREAR" usageType="CAPACITY">
+                        <billingPeriod>MONTHLY</billingPeriod>
+                        <tiers>
+                            <tier>
+                                <limits>
+                                    <limit>
+                                        <unit>bandwith-meg-sec</unit>
+                                        <max>100</max>
+                                    </limit>
+                                    <limit>
+                                        <unit>members</unit>
+                                        <max>500</max>
+                                    </limit>
+                                </limits>
+                                <fixedPrice>
+                                    <price>
+                                        <currency>BTC</currency>
+                                        <value>0.007</value>
+                                    </price>
+                                </fixedPrice>
+                                <recurringPrice>
+                                    <price>
+                                        <currency>BTC</currency>
+                                        <value>0.8</value>
+                                    </price>
+                                </recurringPrice>
+                            </tier>
+                            <tier>
+                                <limits>
+                                    <limit>
+                                        <unit>bandwith-meg-sec</unit>
+                                        <max>100</max>
+                                    </limit>
+                                    <limit>
+                                        <unit>members</unit>
+                                        <max>1000</max>
+                                    </limit>
+                                </limits>
+                                <fixedPrice>
+                                    <price>
+                                        <currency>BTC</currency>
+                                        <value>0.4</value>
+                                    </price>
+                                </fixedPrice>
+                                <recurringPrice>
+                                    <price>
+                                        <currency>BTC</currency>
+                                        <value>1.2</value>
+                                    </price>
+                                </recurringPrice>
+                            </tier>
+                        </tiers>
+                    </usage>
+                </usages>
+            </finalPhase>
+        </plan>
+
+
+        <plan name="consumable-in-arrear">
+            <product>ConsumableInArrear</product>
+            <finalPhase type="EVERGREEN">
+                <duration>
+                    <unit>UNLIMITED</unit>
+                </duration>
+                <usages>
+                    <usage name="consumable-in-arrear-usage1" billingMode="IN_ARREAR" usageType="CONSUMABLE">
+                        <billingPeriod>MONTHLY</billingPeriod>
+                        <tiers>
+                            <tier>
+                                <blocks>
+                                    <tieredBlock>
+                                        <unit>cell-phone-minutes</unit>
+                                        <size>1000</size>
+                                        <prices>
+                                            <price>
+                                                <currency>BTC</currency>
+                                                <value>0.5</value>
+                                            </price>
+                                        </prices>
+                                        <max>10000</max>
+                                    </tieredBlock>
+                                    <tieredBlock>
+                                        <unit>Mbytes</unit>
+                                        <size>512</size>
+                                        <prices>
+                                            <price>
+                                                <currency>BTC</currency>
+                                                <value>0.3</value>
+                                            </price>
+                                        </prices>
+                                        <max>512000</max>
+                                    </tieredBlock>
+                                </blocks>
+                            </tier>
+                        </tiers>
+                    </usage>
+                </usages>
+            </finalPhase>
+        </plan>
+
+
+    </plans>
+    <priceLists>
+        <defaultPriceList name="DEFAULT">
+            <plans>
+                <plan>capacity-in-advance-monthly</plan>
+                <plan>consumable-in-advance-prepay-credit-monthly</plan>
+                <plan>consumable-in-advance-topup</plan>
+                <plan>capacity-in-arrear</plan>
+                <plan>consumable-in-arrear</plan>
+            </plans>
+        </defaultPriceList>
+    </priceLists>
+</catalog>

@@ -168,6 +168,12 @@ public class DefaultTier extends ValidatingConfig<StandaloneCatalog> implements 
     public void initialize(final StandaloneCatalog catalog, final URI sourceURI) {
         super.initialize(catalog, sourceURI);
         CatalogSafetyInitializer.initializeNonRequiredNullFieldsWithDefaultValue(this);
+        for (DefaultLimit cur : limits) {
+            cur.initialize(catalog, sourceURI);
+        }
+        for (DefaultBlock cur : blocks) {
+            cur.initialize(catalog, sourceURI);
+        }
     }
 
 

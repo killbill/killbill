@@ -187,11 +187,13 @@ public class PaymentAutomatonRunner {
                 operationCallback = new VoidOperation(daoHelper, locker, paymentPluginDispatcher, paymentConfig, paymentStateContext);
                 leavingStateCallback = new VoidInitiated(daoHelper, paymentStateContext);
                 enteringStateCallback = new VoidCompleted(daoHelper, paymentStateContext);
+                includeDeletedPaymentMethod = Boolean.TRUE;
                 break;
             case REFUND:
                 operationCallback = new RefundOperation(daoHelper, locker, paymentPluginDispatcher, paymentConfig, paymentStateContext);
                 leavingStateCallback = new RefundInitiated(daoHelper, paymentStateContext);
                 enteringStateCallback = new RefundCompleted(daoHelper, paymentStateContext);
+                includeDeletedPaymentMethod = Boolean.TRUE;
                 break;
             case CREDIT:
                 operationCallback = new CreditOperation(daoHelper, locker, paymentPluginDispatcher, paymentConfig, paymentStateContext);

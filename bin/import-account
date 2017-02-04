@@ -25,6 +25,14 @@
 KILLBILL_HOST=${KILLBILL_HOST-127.0.0.1}
 KILLBILL_URL=http://${KILLBILL_HOST}:8080
 
+# USER/PWD
+KILLBILL_USER=${KILLBILL_USER-admin}
+KILLBILL_PWD=${KILLBILL_PWD-password}
+
+# TENANT KEY
+KILLBILL_API_KEY=${KILLBILL_API_KEY-bob}
+KILLBILL_API_SECRET=${KILLBILL_API_SECRET-lazar}
+
 # Destination database
 DATABASE=${DATABASE-killbill}
 USERNAME=${USERNAME-root}
@@ -39,18 +47,18 @@ function fill_empty_columns() {
 
     local filename=$1
     local tmp=${filename}.tmp
-    grep ',,' $filename > /dev/null
+    grep '||' $filename > /dev/null
     while [[ $? = 0 ]]; do
-        cat $filename | sed s/,,/,\\\\N,/ > $tmp
+        cat $filename | sed s/\|\|/\|\\\\N\|/ > $tmp
         mv $tmp $filename
-        grep ',,' $filename > /dev/null
+        grep '||' $filename > /dev/null
     done
 
-    grep ',$' $filename > /dev/null
+    grep '|$' $filename > /dev/null
     while [[ $? = 0 ]]; do
-        cat $filename | sed s/,$/,\\\\N/ > $tmp
+        cat $filename | sed s/\|$/\|\\\\N/ > $tmp
         mv $tmp $filename
-        grep ',$' $filename > /dev/null
+        grep '|$' $filename > /dev/null
     done
 
 }
@@ -60,16 +68,16 @@ function replace_boolean() {
     local filename=$1
     local tmp=${filename}.tmp
 
-    cat $filename | sed s/,true/,1/g > $tmp
+    cat $filename | sed s/\|true/\|1/g > $tmp
     mv $tmp $filename
 
-    cat $filename | sed s/true,/1,/g > $tmp
+    cat $filename | sed s/true\|/1\|/g > $tmp
     mv $tmp $filename
 
-    cat $filename | sed s/,false/,0/g > $tmp
+    cat $filename | sed s/\|false/\|0/g > $tmp
     mv $tmp $filename
 
-    cat $filename | sed s/false,/0,/g > $tmp
+    cat $filename | sed s/false\|/0\|/g > $tmp
     mv $tmp $filename
 }
 
@@ -78,19 +86,22 @@ function fix_dates() {
     local filename=$1
     local tmp=${filename}.tmp
 
-    cat $filename | sed s/+0000\",/\",/g > $tmp
+    cat $filename | sed s/+0000\"\|/\"\|/g > $tmp
     mv $tmp $filename
 }
 
 function export_data() {
     local account_id=$1
-    curl $KILLBILL_URL/1.0/kb/export/$1 -H"X-Killbill-CreatedBy: $WHO" > $TMP_DIR/kbdump
+    curl $KILLBILL_URL/1.0/kb/export/$1 -u "$KILLBILL_USER:$KILLBILL_PWD" -H "X-Killbill-ApiKey: $KILLBILL_API_KEY" -H "X-Killbill-ApiSecret: $KILLBILL_API_SECRET" -H"X-Killbill-CreatedBy: $WHO" > $TMP_DIR/kbdump
+    echo "Data exported under $TMP_DIR/kbdump"
 }
 
 function import_data() {
     local filename=$1
-    local columns_names=$2
-    mysql --local-infile --execute="LOAD DATA LOCAL INFILE '$TMP_DIR/$filename' INTO TABLE $filename FIELDS TERMINATED BY ',' OPTIONALLY ENCLOSED BY '\"' IGNORE 1 LINES ($columns_names); SHOW WARNINGS" -u$USERNAME -p$PASSWORD $DATABASE
+    # Separator for column names needs to be ',' and not the '|'
+    local columns_names=`echo "$2" | sed s/\|/,/g`
+
+    mysql --local-infile --execute="LOAD DATA LOCAL INFILE '$TMP_DIR/$filename' INTO TABLE $filename FIELDS TERMINATED BY '|' OPTIONALLY ENCLOSED BY '\"' IGNORE 1 LINES ($columns_names); SHOW WARNINGS" -u$USERNAME -p$PASSWORD $DATABASE
 }
 
 function sanitize_and_import() {
@@ -131,7 +142,7 @@ eval set -- "${ARGS}"
 
 function usage() {
     echo -n "./import-account"
-    echo -n " -a|--action <export|import>"
+    echo -n " -a|--action <export|import|all>"
     echo -n " --help this message"
     echo
     exit 1
@@ -145,24 +156,28 @@ while true; do
   esac
 done
 
+
 if [ -z $ACTION ]; then
     echo "Need to specify an action"
     usage
 fi
 
-if [ $ACTION == "export" ]; then
+if [ $ACTION == "export" ] || [ $ACTION == "all" ]; then
   if [ -z $1 ]; then
       echo "Need to specify an account id"
       usage
   fi
   export_data $1
-  sanitize_and_import $TMP_DIR/kbdump
 fi
 
-if [ $ACTION == "import" ]; then
+if [ $ACTION == "import" ] || [ $ACTION == "all" ]; then
   if [ -z $1 ]; then
       echo "Need to specify a file"
       usage
   fi
-  sanitize_and_import $1
+  if [ $ACTION == "import" ]; then
+      sanitize_and_import $1
+  else
+      sanitize_and_import $TMP_DIR/kbdump
+  fi
 fi

@@ -20,12 +20,12 @@ import java.util.Locale;
 import java.util.UUID;
 
 import org.joda.time.DateTimeZone;
-import org.testng.Assert;
-
 import org.killbill.billing.account.api.AccountData;
 import org.killbill.billing.account.api.DefaultMutableAccountData;
+import org.killbill.billing.account.api.MutableAccountData;
 import org.killbill.billing.account.dao.AccountModelDao;
 import org.killbill.billing.catalog.api.Currency;
+import org.testng.Assert;
 
 public abstract class AccountTestUtils {
 
@@ -81,11 +81,11 @@ public abstract class AccountTestUtils {
         return new AccountModelDao(UUID.randomUUID(), accountData);
     }
 
-    public static AccountData createAccountData() {
+    public static MutableAccountData createAccountData() {
         return createAccountData(30, 31, UUID.randomUUID().toString().substring(0, 4));
     }
 
-    private static AccountData createAccountData(final int billCycleDayUTC, final int billCycleDayLocal, final String phone) {
+    private static MutableAccountData createAccountData(final int billCycleDayUTC, final int billCycleDayLocal, final String phone) {
         final String externalKey = UUID.randomUUID().toString();
         final String email = UUID.randomUUID().toString().substring(0, 4) + '@' + UUID.randomUUID().toString().substring(0, 4);
         final String name = UUID.randomUUID().toString();

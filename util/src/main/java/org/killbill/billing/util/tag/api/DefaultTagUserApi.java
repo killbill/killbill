@@ -37,6 +37,7 @@ import org.killbill.billing.util.tag.DefaultTagDefinition;
 import org.killbill.billing.util.tag.DescriptiveTag;
 import org.killbill.billing.util.tag.Tag;
 import org.killbill.billing.util.tag.TagDefinition;
+import org.killbill.billing.util.tag.dao.SystemTags;
 import org.killbill.billing.util.tag.dao.TagDao;
 import org.killbill.billing.util.tag.dao.TagDefinitionDao;
 import org.killbill.billing.util.tag.dao.TagDefinitionModelDao;
@@ -74,7 +75,7 @@ public class DefaultTagUserApi implements TagUserApi {
 
     @Override
     public List<TagDefinition> getTagDefinitions(final TenantContext context) {
-        return ImmutableList.<TagDefinition>copyOf(Collections2.transform(tagDefinitionDao.getTagDefinitions(internalCallContextFactory.createInternalTenantContextWithoutAccountRecordId(context)),
+        return ImmutableList.<TagDefinition>copyOf(Collections2.transform(tagDefinitionDao.getTagDefinitions(false, internalCallContextFactory.createInternalTenantContextWithoutAccountRecordId(context)),
                                                                           new Function<TagDefinitionModelDao, TagDefinition>() {
                                                                               @Override
                                                                               public TagDefinition apply(final TagDefinitionModelDao input) {
@@ -125,6 +126,12 @@ public class DefaultTagUserApi implements TagUserApi {
 
     @Override
     public void addTag(final UUID objectId, final ObjectType objectType, final UUID tagDefinitionId, final CallContext context) throws TagApiException {
+
+        if (SystemTags.isSystemTag(tagDefinitionId)) {
+            // TODO Create a proper ErrorCode instaed
+            throw new IllegalStateException(String.format("Failed to add tag for tagDefinitionId='%s': System tags are reserved for the system.", tagDefinitionId));
+        }
+
         final InternalCallContext internalContext = internalCallContextFactory.createInternalCallContext(objectId, objectType, context);
         final TagModelDao tag = new TagModelDao(context.getCreatedDate(), tagDefinitionId, objectId, objectType);
         try {

@@ -85,9 +85,11 @@ public interface JaxrsResource {
     public static final String QUERY_SEARCH_OFFSET = "offset";
     public static final String QUERY_SEARCH_LIMIT = "limit";
     public static final String QUERY_ENTITLEMENT_EFFECTIVE_FROM_DT = "effectiveFromDate";
+    public static final String QUERY_FORCE_NEW_BCD_WITH_PAST_EFFECTIVE_DATE = "forceNewBcdWithPastEffectiveDate";
 
     public static final String QUERY_ACCOUNT_WITH_BALANCE = "accountWithBalance";
     public static final String QUERY_ACCOUNT_WITH_BALANCE_AND_CBA = "accountWithBalanceAndCBA";
+    public static final String QUERY_ACCOUNT_TREAT_NULL_AS_RESET = "treatNullAsReset";
 
     public static final String QUERY_ACCOUNT_ID = "accountId";
 

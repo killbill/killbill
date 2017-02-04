@@ -354,9 +354,9 @@ public class AccountResource extends JaxRsResourceBase {
                                   @javax.ws.rs.core.Context final UriInfo uriInfo) throws AccountApiException {
         verifyNonNullOrEmpty(json, "AccountJson body should be specified");
 
-        final AccountData data = json.toAccountData();
+        final AccountData data = json.toAccount(null);
         final Account account = accountUserApi.createAccount(data, context.createContext(createdBy, reason, comment, request));
-        return uriBuilder.buildResponse(uriInfo, AccountResource.class, "getAccount", account.getId());
+        return uriBuilder.buildResponse(uriInfo, AccountResource.class, "getAccount", account.getId(), request);
     }
 
     @TimedResource
@@ -368,15 +368,20 @@ public class AccountResource extends JaxRsResourceBase {
     @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid account data supplied")})
     public Response updateAccount(final AccountJson json,
                                   @PathParam("accountId") final String accountId,
+                                  @QueryParam(QUERY_ACCOUNT_TREAT_NULL_AS_RESET) @DefaultValue("false") final Boolean treatNullValueAsReset,
                                   @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                   @HeaderParam(HDR_REASON) final String reason,
                                   @HeaderParam(HDR_COMMENT) final String comment,
                                   @javax.ws.rs.core.Context final HttpServletRequest request) throws AccountApiException {
         verifyNonNullOrEmpty(json, "AccountJson body should be specified");
 
-        final AccountData data = json.toAccountData();
         final UUID uuid = UUID.fromString(accountId);
-        accountUserApi.updateAccount(uuid, data, context.createContext(createdBy, reason, comment, request));
+        final Account data = json.toAccount(uuid);
+        if (treatNullValueAsReset) {
+            accountUserApi.updateAccount(data, context.createContext(createdBy, reason, comment, request));
+        } else {
+            accountUserApi.updateAccount(uuid, data, context.createContext(createdBy, reason, comment, request));
+        }
         return getAccount(accountId, false, false, new AuditMode(AuditLevel.NONE.toString()), request);
     }
 
@@ -783,7 +788,7 @@ public class AccountResource extends JaxRsResourceBase {
                 createPurchaseForInvoice(account, invoice.getId(), invoice.getBalance(), paymentMethodId, false, null, null, pluginProperties, callContext);
             }
         }
-        return uriBuilder.buildResponse(PaymentMethodResource.class, "getPaymentMethod", paymentMethodId, uriInfo.getBaseUri().toString());
+        return uriBuilder.buildResponse(uriInfo, PaymentMethodResource.class, "getPaymentMethod", paymentMethodId, request);
     }
 
     @TimedResource
@@ -930,7 +935,7 @@ public class AccountResource extends JaxRsResourceBase {
         final CallContext callContext = context.createContext(createdBy, reason, comment, request);
         final Account account = accountUserApi.getAccountByKey(externalKey, callContext);
 
-        return processPayment(json, account, paymentMethodIdStr, paymentControlPluginNames, pluginPropertiesString, uriInfo, callContext);
+        return processPayment(json, account, paymentMethodIdStr, paymentControlPluginNames, pluginPropertiesString, uriInfo, callContext, request);
     }
 
     @TimedResource(name = "processPayment")
@@ -961,7 +966,7 @@ public class AccountResource extends JaxRsResourceBase {
         final CallContext callContext = context.createContext(createdBy, reason, comment, request);
         final Account account = accountUserApi.getAccountById(accountId, callContext);
 
-        return processPayment(json, account, paymentMethodIdStr, paymentControlPluginNames, pluginPropertiesString, uriInfo, callContext);
+        return processPayment(json, account, paymentMethodIdStr, paymentControlPluginNames, pluginPropertiesString, uriInfo, callContext, request);
     }
 
     private Response processPayment(final PaymentTransactionJson json,
@@ -970,7 +975,8 @@ public class AccountResource extends JaxRsResourceBase {
                                     final List<String> paymentControlPluginNames,
                                     final List<String> pluginPropertiesString,
                                     final UriInfo uriInfo,
-                                    final CallContext callContext) throws PaymentApiException {
+                                    final CallContext callContext,
+                                    final HttpServletRequest request) throws PaymentApiException {
         verifyNonNullOrEmpty(json, "PaymentTransactionJson body should be specified");
         verifyNonNullOrEmpty(json.getTransactionType(), "PaymentTransactionJson transactionType needs to be set",
                              json.getAmount(), "PaymentTransactionJson amount needs to be set");
@@ -993,7 +999,7 @@ public class AccountResource extends JaxRsResourceBase {
                                                                                    json != null ? json.getTransactionType() : null);
             // If transaction was already completed, return early (See #626)
             if (pendingOrSuccessTransaction.getTransactionStatus() == TransactionStatus.SUCCESS) {
-                return uriBuilder.buildResponse(uriInfo, PaymentResource.class, "getPayment", pendingOrSuccessTransaction.getPaymentId());
+                return uriBuilder.buildResponse(uriInfo, PaymentResource.class, "getPayment", pendingOrSuccessTransaction.getPaymentId(), request);
             }
 
             paymentMethodId = initialPayment.getPaymentMethodId();
@@ -1025,7 +1031,7 @@ public class AccountResource extends JaxRsResourceBase {
             default:
                 return Response.status(Status.PRECONDITION_FAILED).entity("TransactionType " + transactionType + " is not allowed for an account").build();
         }
-        return createPaymentResponse(uriInfo, result, transactionType, json.getTransactionExternalKey());
+        return createPaymentResponse(uriInfo, result, transactionType, json.getTransactionExternalKey(), request);
     }
 
     /*
@@ -1130,7 +1136,7 @@ public class AccountResource extends JaxRsResourceBase {
                                        @javax.ws.rs.core.Context final HttpServletRequest request,
                                        @javax.ws.rs.core.Context final UriInfo uriInfo) throws CustomFieldApiException {
         return super.createCustomFields(UUID.fromString(id), customFields, context.createContext(createdBy, reason,
-                                             comment, request), uriInfo);
+                                             comment, request), uriInfo, request);
     }
 
     @TimedResource
@@ -1203,7 +1209,7 @@ public class AccountResource extends JaxRsResourceBase {
                                @javax.ws.rs.core.Context final UriInfo uriInfo,
                                @javax.ws.rs.core.Context final HttpServletRequest request) throws TagApiException {
         return super.createTags(UUID.fromString(id), tagList, uriInfo,
-                                context.createContext(createdBy, reason, comment, request));
+                                context.createContext(createdBy, reason, comment, request), request);
     }
 
     @TimedResource
@@ -1303,7 +1309,7 @@ public class AccountResource extends JaxRsResourceBase {
             accountUserApi.addEmail(accountId, json.toAccountEmail(UUIDs.randomUUID()), callContext);
         }
 
-        return uriBuilder.buildResponse(uriInfo, AccountResource.class, "getEmails", json.getAccountId());
+        return uriBuilder.buildResponse(uriInfo, AccountResource.class, "getEmails", json.getAccountId(), request);
     }
 
     @TimedResource

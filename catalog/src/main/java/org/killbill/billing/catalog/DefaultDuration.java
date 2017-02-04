@@ -71,6 +71,8 @@ public class DefaultDuration extends ValidatingConfig<StandaloneCatalog> impleme
         switch (unit) {
             case DAYS:
                 return dateTime.plusDays(number);
+            case WEEKS:
+                return dateTime.plusWeeks(number);
             case MONTHS:
                 return dateTime.plusMonths(number);
             case YEARS:
@@ -90,6 +92,8 @@ public class DefaultDuration extends ValidatingConfig<StandaloneCatalog> impleme
         switch (unit) {
             case DAYS:
                 return localDate.plusDays(number);
+            case WEEKS:
+                return localDate.plusWeeks(number);
             case MONTHS:
                 return localDate.plusMonths(number);
             case YEARS:
@@ -145,14 +149,15 @@ public class DefaultDuration extends ValidatingConfig<StandaloneCatalog> impleme
         switch (unit) {
             case DAYS:
                 return new Period().withDays(number);
+            case WEEKS:
+                return new Period().withWeeks(number);
             case MONTHS:
                 return new Period().withMonths(number);
             case YEARS:
                 return new Period().withYears(number);
             case UNLIMITED:
-                return new Period().withYears(100);
             default:
-                return new Period();
+                throw new  IllegalStateException("Unexpected duration unit " + unit);
         }
     }
 

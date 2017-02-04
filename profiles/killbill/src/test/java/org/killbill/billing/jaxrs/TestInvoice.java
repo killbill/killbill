@@ -751,7 +751,7 @@ public class TestInvoice extends TestJaxrsBase {
 
         final Account accountWithBalance = killBillClient.getAccount(accountJson.getAccountId(), true, true);
 
-        final Invoice migrationInvoice = killBillClient.createMigrationInvoice(accountJson.getAccountId(), null, ImmutableList.<InvoiceItem>of(externalCharge), basicRequestOptions());
+        final Invoice migrationInvoice = killBillClient.createMigrationInvoice(accountJson.getAccountId(), null, ImmutableList.<InvoiceItem>of(externalCharge), requestOptions);
         assertEquals(migrationInvoice.getBalance(), BigDecimal.ZERO);
         assertEquals(migrationInvoice.getItems().size(), 1);
         assertEquals(migrationInvoice.getItems().get(0).getAmount().compareTo(chargeAmount), 0);
@@ -786,7 +786,7 @@ public class TestInvoice extends TestJaxrsBase {
         Assert.assertEquals(parentInvoices.size(), 0);
 
         // transfer credit to parent account
-        killBillClient.transferChildCreditToParent(childAccount.getAccountId(), basicRequestOptions());
+        killBillClient.transferChildCreditToParent(childAccount.getAccountId(), requestOptions);
 
         childInvoices = killBillClient.getInvoicesForAccount(childAccount.getAccountId(), true, false);
         Assert.assertEquals(childInvoices.size(), 2);
@@ -803,7 +803,7 @@ public class TestInvoice extends TestJaxrsBase {
         final Account account = createAccount();
 
         // transfer credit to parent account
-        killBillClient.transferChildCreditToParent(account.getAccountId(), basicRequestOptions());
+        killBillClient.transferChildCreditToParent(account.getAccountId(), requestOptions);
 
     }
 
@@ -814,7 +814,7 @@ public class TestInvoice extends TestJaxrsBase {
         final Account childAccount = createAccount(parentAccount.getAccountId());
 
         // transfer credit to parent account
-        killBillClient.transferChildCreditToParent(childAccount.getAccountId(), basicRequestOptions());
+        killBillClient.transferChildCreditToParent(childAccount.getAccountId(), requestOptions);
 
     }
 

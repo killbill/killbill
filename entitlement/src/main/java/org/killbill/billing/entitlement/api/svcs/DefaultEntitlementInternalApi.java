@@ -146,15 +146,14 @@ public class DefaultEntitlementInternalApi extends DefaultEntitlementApiBase imp
                                                                                    callContext);
             pluginContexts.add(pluginContext);
 
-            final DefaultEntitlement defaultEntitlement = getDefaultEntitlement(entitlement, internalCallContext);
-            final WithEntitlementPlugin<Entitlement> cancelEntitlementWithPlugin = new WithDateOverrideBillingPolicyEntitlementCanceler(defaultEntitlement,
+            final WithEntitlementPlugin<Entitlement> cancelEntitlementWithPlugin = new WithDateOverrideBillingPolicyEntitlementCanceler((DefaultEntitlement) entitlement,
                                                                                                                                         blockingStates,
                                                                                                                                         notificationEvents,
                                                                                                                                         callContext,
                                                                                                                                         internalCallContext);
             callbacks.add(cancelEntitlementWithPlugin);
 
-            subscriptions.add(defaultEntitlement.getSubscriptionBase());
+            subscriptions.add(((DefaultEntitlement) entitlement).getSubscriptionBase());
         }
 
         final Callable<Void> preCallbacksCallback = new BulkSubscriptionBaseCancellation(subscriptions,
@@ -185,16 +184,6 @@ public class DefaultEntitlementInternalApi extends DefaultEntitlementApiBase imp
             throw new RuntimeException(e);
         } catch (final IOException e) {
             throw new RuntimeException(e);
-        }
-    }
-
-    // For forward-compatibility
-    private DefaultEntitlement getDefaultEntitlement(final Entitlement entitlement, final InternalTenantContext context) throws EntitlementApiException {
-        if (entitlement instanceof DefaultEntitlement) {
-            return (DefaultEntitlement) entitlement;
-        } else {
-            // Safe cast
-            return (DefaultEntitlement) getEntitlementForId(entitlement.getId(), context);
         }
     }
 
@@ -254,10 +243,19 @@ public class DefaultEntitlementInternalApi extends DefaultEntitlementApiBase imp
         @Override
         public Entitlement doCall(final EntitlementApi entitlementApi, final EntitlementContext updatedPluginContext) throws EntitlementApiException {
             DateTime effectiveDate = dateHelper.fromLocalDateAndReferenceTime(updatedPluginContext.getBaseEntitlementWithAddOnsSpecifiers().iterator().next().getEntitlementEffectiveDate(), internalCallContext);
-            // Avoid timing issues for IMM cancellations (we don't want an entitlement cancel date one second or so after the subscription cancel date or
-            // add-ons cancellations computations won't work).
-            if (effectiveDate.compareTo(entitlement.getSubscriptionBase().getEndDate()) > 0) {
-                effectiveDate = entitlement.getSubscriptionBase().getEndDate();
+
+            //
+            // If the entitlementDate provided is ahead we default to the effective subscriptionBase cancellationDate to avoid weird timing issues.
+            //
+            // (Note that entitlement.getSubscriptionBase() returns the right state (although we did not refresh context) because the DefaultSubscriptionBaseApiService#doCancelPlan
+            //  rebuild transitions on that same  DefaultSubscriptionBase object)
+            //
+            final DateTime subscriptionBaseCancellationDate = entitlement.getSubscriptionBase().getEndDate() != null ?
+                                                              entitlement.getSubscriptionBase().getEndDate() :
+                                                              entitlement.getSubscriptionBase().getFutureEndDate();
+
+            if (effectiveDate.compareTo(subscriptionBaseCancellationDate) > 0) {
+                effectiveDate = subscriptionBaseCancellationDate;
             }
 
             final BlockingState newBlockingState = new DefaultBlockingState(entitlement.getId(), BlockingStateType.SUBSCRIPTION, DefaultEntitlementApi.ENT_STATE_CANCELLED, EntitlementService.ENTITLEMENT_SERVICE_NAME, true, true, false, effectiveDate);
