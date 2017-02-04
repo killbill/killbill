@@ -104,18 +104,18 @@ public class PlanAligner extends BaseAligner {
      * @param subscription  the subscription in change (only start date, bundle start date, current phase, plan and pricelist
      *                      are looked at)
      * @param plan          the current Plan
-     * @param priceList     the priceList on which we should change that subscription.
      * @param effectiveDate the effective change date (driven by the catalog policy, i.e. when the change occurs)
+     * @param newPlanInitialPhaseType the phase on which to start when switching to new plan
      * @return the current phase
      * @throws CatalogApiException         for catalog errors
      * @throws org.killbill.billing.subscription.api.user.SubscriptionBaseApiException for subscription errors
      */
     public TimedPhase getCurrentTimedPhaseOnChange(final DefaultSubscriptionBase subscription,
                                                    final Plan plan,
-                                                   final String priceList,
                                                    final DateTime effectiveDate,
+                                                   final PhaseType newPlanInitialPhaseType,
                                                    final InternalTenantContext context) throws CatalogApiException, SubscriptionBaseApiException {
-        return getTimedPhaseOnChange(subscription, plan, effectiveDate, WhichPhase.CURRENT, context);
+        return getTimedPhaseOnChange(subscription, plan, effectiveDate, newPlanInitialPhaseType, WhichPhase.CURRENT, context);
     }
 
     /**
@@ -124,18 +124,18 @@ public class PlanAligner extends BaseAligner {
      * @param subscription  the subscription in change (only start date, bundle start date, current phase, plan and pricelist
      *                      are looked at)
      * @param plan          the current Plan
-     * @param priceList     the priceList on which we should change that subscription.
      * @param effectiveDate the effective change date (driven by the catalog policy, i.e. when the change occurs)
+     * @param newPlanInitialPhaseType the phase on which to start when switching to new plan
      * @return the next phase
      * @throws CatalogApiException         for catalog errors
      * @throws org.killbill.billing.subscription.api.user.SubscriptionBaseApiException for subscription errors
      */
     public TimedPhase getNextTimedPhaseOnChange(final DefaultSubscriptionBase subscription,
                                                 final Plan plan,
-                                                final String priceList,
                                                 final DateTime effectiveDate,
+                                                final PhaseType newPlanInitialPhaseType,
                                                 final InternalTenantContext context) throws CatalogApiException, SubscriptionBaseApiException {
-        return getTimedPhaseOnChange(subscription, plan, effectiveDate, WhichPhase.NEXT, context);
+        return getTimedPhaseOnChange(subscription, plan, effectiveDate, newPlanInitialPhaseType, WhichPhase.NEXT, context);
     }
 
     /**
@@ -176,6 +176,7 @@ public class PlanAligner extends BaseAligner {
                                                  effectiveDate,
                                                  pendingOrLastPlanTransition.getEffectiveTransitionTime(),
                                                  subscription.getAllTransitions().get(0).getNextPhase().getPhaseType(),
+                                                 null,
                                                  WhichPhase.NEXT,
                                                  context);
                 default:
@@ -217,6 +218,7 @@ public class PlanAligner extends BaseAligner {
     private TimedPhase getTimedPhaseOnChange(final DefaultSubscriptionBase subscription,
                                              final Plan nextPlan,
                                              final DateTime effectiveDate,
+                                             final PhaseType newPlanInitialPhaseType,
                                              final WhichPhase which,
                                              final InternalTenantContext context) throws CatalogApiException, SubscriptionBaseApiException {
         return getTimedPhaseOnChange(subscription.getAlignStartDate(),
@@ -228,6 +230,7 @@ public class PlanAligner extends BaseAligner {
                                      // This method is only called while doing the change, hence we want to pass the change effective date
                                      effectiveDate,
                                      subscription.getAllTransitions().get(0).getNextPhase().getPhaseType(),
+                                     newPlanInitialPhaseType,
                                      which,
                                      context);
     }
@@ -240,6 +243,7 @@ public class PlanAligner extends BaseAligner {
                                              final DateTime effectiveDate,
                                              final DateTime lastOrCurrentChangeEffectiveDate,
                                              final PhaseType originalInitialPhase,
+                                             @Nullable final PhaseType newPlanInitialPhaseType,
                                              final WhichPhase which,
                                              final InternalTenantContext context) throws CatalogApiException, SubscriptionBaseApiException {
         final Catalog catalog = catalogService.getFullCatalog(true, true, context);
@@ -253,15 +257,17 @@ public class PlanAligner extends BaseAligner {
         switch (alignment) {
             case START_OF_SUBSCRIPTION:
                 planStartDate = subscriptionStartDate;
-                initialPhase = isPlanContainPhaseType(nextPlan, originalInitialPhase) ? originalInitialPhase : null;
+                initialPhase = newPlanInitialPhaseType != null ? newPlanInitialPhaseType :
+                               (isPlanContainPhaseType(nextPlan, originalInitialPhase) ? originalInitialPhase : null);
                 break;
             case START_OF_BUNDLE:
                 planStartDate = bundleStartDate;
-                initialPhase = isPlanContainPhaseType(nextPlan, originalInitialPhase) ? originalInitialPhase : null;
+                initialPhase =  newPlanInitialPhaseType != null ? newPlanInitialPhaseType :
+                                (isPlanContainPhaseType(nextPlan, originalInitialPhase) ? originalInitialPhase : null);
                 break;
             case CHANGE_OF_PLAN:
                 planStartDate = lastOrCurrentChangeEffectiveDate;
-                initialPhase = null;
+                initialPhase = newPlanInitialPhaseType;
                 break;
             case CHANGE_OF_PRICELIST:
                 throw new SubscriptionBaseError(String.format("Not implemented yet %s", alignment));

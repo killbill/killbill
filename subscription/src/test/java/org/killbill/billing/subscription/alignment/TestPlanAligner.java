@@ -33,7 +33,6 @@ import org.killbill.billing.subscription.events.SubscriptionBaseEvent;
 import org.killbill.billing.subscription.events.user.ApiEventBase;
 import org.killbill.billing.subscription.events.user.ApiEventBuilder;
 import org.killbill.billing.subscription.events.user.ApiEventType;
-import org.killbill.billing.subscription.exceptions.SubscriptionBaseError;
 import org.killbill.clock.DefaultClock;
 import org.testng.Assert;
 import org.testng.annotations.BeforeClass;
@@ -60,7 +59,12 @@ public class TestPlanAligner extends SubscriptionTestSuiteNoDB {
     public void testCreationBundleAlignment() throws Exception {
         final String productName = "pistol-monthly";
         final PhaseType initialPhase = PhaseType.TRIAL;
-        final DefaultSubscriptionBase defaultSubscriptionBase = createSubscriptionStartedInThePast(productName, initialPhase);
+
+        final DateTime now = clock.getUTCNow();
+        final DateTime bundleStartDate = now.minusHours(10);
+        final DateTime alignStartDate = bundleStartDate.plusHours(5);
+
+        final DefaultSubscriptionBase defaultSubscriptionBase = createSubscriptionStartedInThePast(bundleStartDate, alignStartDate, productName, initialPhase);
 
         // Make the creation effective now, after the bundle and the subscription started
         final DateTime effectiveDate = clock.getUTCNow();
@@ -97,7 +101,12 @@ public class TestPlanAligner extends SubscriptionTestSuiteNoDB {
     public void testCreationSubscriptionAlignment() throws Exception {
         final String productName = "laser-scope-monthly";
         final PhaseType initialPhase = PhaseType.DISCOUNT;
-        final DefaultSubscriptionBase defaultSubscriptionBase = createSubscriptionStartedInThePast(productName, initialPhase);
+
+        final DateTime now = clock.getUTCNow();
+        final DateTime bundleStartDate = now.minusHours(10);
+        final DateTime alignStartDate = bundleStartDate.plusHours(5);
+
+        final DefaultSubscriptionBase defaultSubscriptionBase = createSubscriptionStartedInThePast(bundleStartDate, alignStartDate, productName, initialPhase);
 
         // Look now, after the bundle and the subscription started
         final DateTime effectiveDate = clock.getUTCNow();
@@ -130,11 +139,11 @@ public class TestPlanAligner extends SubscriptionTestSuiteNoDB {
         Assert.assertNull(newPhase);
     }
 
-    private DefaultSubscriptionBase createSubscriptionStartedInThePast(final String productName, final PhaseType phaseType) throws CatalogApiException {
+    private DefaultSubscriptionBase createSubscriptionStartedInThePast(final DateTime bundleStartDate, final DateTime alignStartDate, final String productName, final PhaseType phaseType) throws CatalogApiException {
         final SubscriptionBuilder builder = new SubscriptionBuilder();
-        builder.setBundleStartDate(clock.getUTCNow().minusHours(10));
+        builder.setBundleStartDate(bundleStartDate);
         // Make sure to set the dates apart
-        builder.setAlignStartDate(new DateTime(builder.getBundleStartDate().plusHours(5)));
+        builder.setAlignStartDate(new DateTime(alignStartDate));
 
         // Create the transitions
         final DefaultSubscriptionBase defaultSubscriptionBase = new DefaultSubscriptionBase(builder, null, clock);
@@ -205,7 +214,7 @@ public class TestPlanAligner extends SubscriptionTestSuiteNoDB {
         // The date is used for different catalog versions - we don't care here
         final Plan newPlan = catalogService.getFullCatalog(true, true, internalCallContext).findPlan(newProductName, clock.getUTCNow());
 
-        return planAligner.getNextTimedPhaseOnChange(defaultSubscriptionBase, newPlan, priceList, effectiveChangeDate, internalCallContext);
+        return planAligner.getNextTimedPhaseOnChange(defaultSubscriptionBase, newPlan, effectiveChangeDate, null, internalCallContext);
     }
 
     private TimedPhase[] getTimedPhasesOnCreate(final String productName,

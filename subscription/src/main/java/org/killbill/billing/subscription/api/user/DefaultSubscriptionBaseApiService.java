@@ -33,9 +33,6 @@ import org.joda.time.DateTimeZone;
 import org.joda.time.ReadableInstant;
 import org.killbill.billing.ErrorCode;
 import org.killbill.billing.ObjectType;
-import org.killbill.billing.account.api.AccountApiException;
-import org.killbill.billing.account.api.AccountInternalApi;
-import org.killbill.billing.account.api.ImmutableAccountInternalApi;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.catalog.api.BillingActionPolicy;
@@ -115,6 +112,11 @@ public class DefaultSubscriptionBaseApiService implements SubscriptionBaseApiSer
         final InternalCallContext internalCallContext = createCallContextFromBundleId(subscription.getBundleId(), context);
 
         try {
+
+            if (subscription.getAlignStartDate().compareTo(effectiveDate) != 0) {
+                throw new RuntimeException("Subscription id = " + subscription.getId() + ", alignStartDate = " + subscription.getAlignStartDate() + ", effectiveDate = " + effectiveDate);
+            }
+
             final List<SubscriptionBaseEvent> events = getEventsOnCreation(subscription.getBundleId(), subscription.getId(), subscription.getAlignStartDate(), subscription.getBundleStartDate(),
                                                                            plan, initialPhase, realPriceList, effectiveDate, processedDate, internalCallContext);
             dao.createSubscription(subscription, events, internalCallContext);
@@ -437,6 +439,17 @@ public class DefaultSubscriptionBaseApiService implements SubscriptionBaseApiSer
         final PlanPhasePriceOverridesWithCallContext overridesWithContext = new DefaultPlanPhasePriceOverridesWithCallContext(overrides, context);
         final Plan newPlan = catalogService.getFullCatalog(true, true, internalCallContext).createOrFindPlan(spec, overridesWithContext, effectiveDate, subscription.getStartDate());
 
+        final PhaseType initialPhaseType;
+        if (overrides != null &&
+            overrides.size() == 1 &&
+            overrides.get(0).getPlanPhaseSpecifier() != null &&
+            overrides.get(0).getCurrency() == null) {
+            initialPhaseType = overrides.get(0).getPlanPhaseSpecifier().getPhaseType();
+        } else {
+            initialPhaseType = null;
+        }
+
+
         if (ProductCategory.ADD_ON.toString().equalsIgnoreCase(newPlan.getProduct().getCategory().toString())) {
             if (newPlan.getPlansAllowedInBundle() != -1
                 && newPlan.getPlansAllowedInBundle() > 0
@@ -453,7 +466,7 @@ public class DefaultSubscriptionBaseApiService implements SubscriptionBaseApiSer
 
         final List<DefaultSubscriptionBase> addOnSubscriptionsToBeCancelled = new ArrayList<DefaultSubscriptionBase>();
         final List<SubscriptionBaseEvent> addOnCancelEvents = new ArrayList<SubscriptionBaseEvent>();
-        final List<SubscriptionBaseEvent> changeEvents = getEventsOnChangePlan(subscription, newPlan, newPlan.getPriceListName(), effectiveDate, true, addOnSubscriptionsToBeCancelled, addOnCancelEvents, internalCallContext);
+        final List<SubscriptionBaseEvent> changeEvents = getEventsOnChangePlan(subscription, newPlan, newPlan.getPriceListName(), effectiveDate, true, addOnSubscriptionsToBeCancelled, addOnCancelEvents, initialPhaseType, internalCallContext);
 
         dao.changePlan(subscription, changeEvents, addOnSubscriptionsToBeCancelled, addOnCancelEvents, internalCallContext);
 
@@ -497,7 +510,7 @@ public class DefaultSubscriptionBaseApiService implements SubscriptionBaseApiSer
         final Collection<DefaultSubscriptionBase> addOnSubscriptionsToBeCancelled = new ArrayList<DefaultSubscriptionBase>();
         final Collection<SubscriptionBaseEvent> addOnCancelEvents = new ArrayList<SubscriptionBaseEvent>();
 
-        final List<SubscriptionBaseEvent> changeEvents = getEventsOnChangePlan(subscription, newPlan, newPriceList, effectiveDate, addCancellationAddOnForEventsIfRequired, addOnSubscriptionsToBeCancelled, addOnCancelEvents, internalTenantContext);
+        final List<SubscriptionBaseEvent> changeEvents = getEventsOnChangePlan(subscription, newPlan, newPriceList, effectiveDate, addCancellationAddOnForEventsIfRequired, addOnSubscriptionsToBeCancelled, addOnCancelEvents, null, internalTenantContext);
         changeEvents.addAll(addOnCancelEvents);
         return changeEvents;
     }
@@ -507,8 +520,9 @@ public class DefaultSubscriptionBaseApiService implements SubscriptionBaseApiSer
                                                               final boolean addCancellationAddOnForEventsIfRequired,
                                                               final Collection<DefaultSubscriptionBase> addOnSubscriptionsToBeCancelled,
                                                               final Collection<SubscriptionBaseEvent> addOnCancelEvents,
+                                                              final PhaseType initialPhaseType,
                                                               final InternalTenantContext internalTenantContext) throws CatalogApiException, SubscriptionBaseApiException {
-        final TimedPhase currentTimedPhase = planAligner.getCurrentTimedPhaseOnChange(subscription, newPlan, newPriceList, effectiveDate, internalTenantContext);
+        final TimedPhase currentTimedPhase = planAligner.getCurrentTimedPhaseOnChange(subscription, newPlan, effectiveDate, initialPhaseType, internalTenantContext);
 
         final SubscriptionBaseEvent changeEvent = new ApiEventChange(new ApiEventBuilder()
                                                                              .setSubscriptionId(subscription.getId())
@@ -518,7 +532,7 @@ public class DefaultSubscriptionBaseApiService implements SubscriptionBaseApiSer
                                                                              .setEffectiveDate(effectiveDate)
                                                                              .setFromDisk(true));
 
-        final TimedPhase nextTimedPhase = planAligner.getNextTimedPhaseOnChange(subscription, newPlan, newPriceList, effectiveDate, internalTenantContext);
+        final TimedPhase nextTimedPhase = planAligner.getNextTimedPhaseOnChange(subscription, newPlan, effectiveDate, initialPhaseType, internalTenantContext);
         final PhaseEvent nextPhaseEvent = (nextTimedPhase != null) ?
                                           PhaseEventData.createNextPhaseEvent(subscription.getId(),
                                                                               nextTimedPhase.getPhase().getName(), nextTimedPhase.getStartPhase()) :

@@ -143,7 +143,8 @@ public class PhasePriceOverrideJson {
                     final PlanPhaseSpecifier planPhaseSpecifier = spec.getPlanName() != null ?
                                                                   new PlanPhaseSpecifier(spec.getPlanName(), phaseType) :
                                                                   new PlanPhaseSpecifier(spec.getProductName(), spec.getBillingPeriod(), spec.getPriceListName(), phaseType);
-                    return new DefaultPlanPhasePriceOverride(planPhaseSpecifier, currency, input.getFixedPrice(), input.getRecurringPrice());
+                    final Currency resolvedCurrency = input.getFixedPrice() != null || input.getRecurringPrice() != null ? currency : null;
+                    return new DefaultPlanPhasePriceOverride(planPhaseSpecifier, resolvedCurrency, input.getFixedPrice(), input.getRecurringPrice());
                 }
             }
         }));
