@@ -591,7 +591,7 @@ public abstract class JaxRsResourceBase implements JaxrsResource {
                 exception = createBillingException("This should never have happened!!!");
         }
         addExceptionToResponse(responseBuilder, exception);
-        return uriBuilder.buildResponse(uriInfo, PaymentResource.class, "getPayment", payment.getId(), request);
+        return uriBuilder.buildResponse(responseBuilder, uriInfo, PaymentResource.class, "getPayment", payment.getId(), request);
     }
 
     private void addExceptionToResponse(final ResponseBuilder responseBuilder, final BillingExceptionJson exception) {
