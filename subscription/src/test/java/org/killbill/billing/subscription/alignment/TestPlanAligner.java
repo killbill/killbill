@@ -64,7 +64,7 @@ public class TestPlanAligner extends SubscriptionTestSuiteNoDB {
         final DateTime bundleStartDate = now.minusHours(10);
         final DateTime alignStartDate = bundleStartDate.plusHours(5);
 
-        final DefaultSubscriptionBase defaultSubscriptionBase = createSubscriptionStartedInThePast(bundleStartDate, alignStartDate, productName, initialPhase);
+        final DefaultSubscriptionBase defaultSubscriptionBase = createSubscription(bundleStartDate, alignStartDate, productName, initialPhase);
 
         // Make the creation effective now, after the bundle and the subscription started
         final DateTime effectiveDate = clock.getUTCNow();
@@ -106,7 +106,7 @@ public class TestPlanAligner extends SubscriptionTestSuiteNoDB {
         final DateTime bundleStartDate = now.minusHours(10);
         final DateTime alignStartDate = bundleStartDate.plusHours(5);
 
-        final DefaultSubscriptionBase defaultSubscriptionBase = createSubscriptionStartedInThePast(bundleStartDate, alignStartDate, productName, initialPhase);
+        final DefaultSubscriptionBase defaultSubscriptionBase = createSubscription(bundleStartDate, alignStartDate, productName, initialPhase);
 
         // Look now, after the bundle and the subscription started
         final DateTime effectiveDate = clock.getUTCNow();
@@ -139,7 +139,237 @@ public class TestPlanAligner extends SubscriptionTestSuiteNoDB {
         Assert.assertNull(newPhase);
     }
 
-    private DefaultSubscriptionBase createSubscriptionStartedInThePast(final DateTime bundleStartDate, final DateTime alignStartDate, final String productName, final PhaseType phaseType) throws CatalogApiException {
+
+    //
+    // Scenario : change Plan with START_OF_SUBSCRIPTION after skipping TRIAL on Create to a new Plan that only has EVERGREEN
+    //
+    @Test(groups = "fast")
+    public void testCreateWithTargetPhaseType1() throws Exception {
+        final String productName = "pistol-monthly";
+
+        final DateTime now = clock.getUTCNow();
+        final DateTime bundleStartDate = now;
+        final DateTime alignStartDate = bundleStartDate;
+
+        final Plan plan = catalogService.getFullCatalog(true, true, internalCallContext).findPlan(productName, clock.getUTCNow());
+        final TimedPhase [] phases = planAligner.getCurrentAndNextTimedPhaseOnCreate(alignStartDate, bundleStartDate, plan, PhaseType.EVERGREEN, PriceListSet.DEFAULT_PRICELIST_NAME, now, internalCallContext);
+        Assert.assertEquals(phases.length, 2);
+        Assert.assertEquals(phases[0].getPhase().getPhaseType(), PhaseType.EVERGREEN);
+        Assert.assertEquals(phases[0].getStartPhase(), now);
+        Assert.assertNull(phases[1]);
+
+        final DefaultSubscriptionBase defaultSubscriptionBase = createSubscription(bundleStartDate, alignStartDate, productName, PhaseType.EVERGREEN);
+
+        final String newProductName = "pistol-monthly-notrial";
+        final Plan newPlan = catalogService.getFullCatalog(true, true, internalCallContext).findPlan(newProductName, clock.getUTCNow());
+        final DateTime effectiveChangeDate = defaultSubscriptionBase.getStartDate().plusMonths(15);
+
+        final TimedPhase currentPhase  = planAligner.getCurrentTimedPhaseOnChange(defaultSubscriptionBase, newPlan, effectiveChangeDate, null, internalCallContext);
+        Assert.assertEquals(currentPhase.getStartPhase(), alignStartDate);
+        Assert.assertEquals(currentPhase.getPhase().getPhaseType(), PhaseType.EVERGREEN);
+    }
+
+
+    //
+    // Scenario : change Plan with START_OF_SUBSCRIPTION after skipping TRIAL on Create to a new Plan that has {TRIAL, EVERGREEN}
+    //
+    @Test(groups = "fast")
+    public void testCreateWithTargetPhaseType2() throws Exception {
+        final String productName = "pistol-monthly";
+
+        final DateTime now = clock.getUTCNow();
+        final DateTime bundleStartDate = now;
+        final DateTime alignStartDate = bundleStartDate;
+
+        final Plan plan = catalogService.getFullCatalog(true, true, internalCallContext).findPlan(productName, clock.getUTCNow());
+        final TimedPhase [] phases = planAligner.getCurrentAndNextTimedPhaseOnCreate(alignStartDate, bundleStartDate, plan, PhaseType.EVERGREEN, PriceListSet.DEFAULT_PRICELIST_NAME, now, internalCallContext);
+        Assert.assertEquals(phases.length, 2);
+        Assert.assertEquals(phases[0].getPhase().getPhaseType(), PhaseType.EVERGREEN);
+        Assert.assertEquals(phases[0].getStartPhase(), now);
+        Assert.assertNull(phases[1]);
+
+        final DefaultSubscriptionBase defaultSubscriptionBase = createSubscription(bundleStartDate, alignStartDate, productName, PhaseType.EVERGREEN);
+
+        final String newProductName = "shotgun-monthly";
+        final Plan newPlan = catalogService.getFullCatalog(true, true, internalCallContext).findPlan(newProductName, clock.getUTCNow());
+        final DateTime effectiveChangeDate = defaultSubscriptionBase.getStartDate().plusMonths(15);
+
+        final TimedPhase currentPhase  = planAligner.getCurrentTimedPhaseOnChange(defaultSubscriptionBase, newPlan, effectiveChangeDate, null, internalCallContext);
+        Assert.assertEquals(currentPhase.getStartPhase(), alignStartDate);
+        Assert.assertEquals(currentPhase.getPhase().getPhaseType(), PhaseType.EVERGREEN);
+    }
+
+
+    //
+    // Scenario : change Plan with START_OF_SUBSCRIPTION after skipping TRIAL on Create to a new Plan that has {TRIAL, DISCOUNT, EVERGREEN}
+    //
+    @Test(groups = "fast")
+    public void testCreateWithTargetPhaseType3() throws Exception {
+        final String productName = "pistol-monthly";
+
+        final DateTime now = clock.getUTCNow();
+        final DateTime bundleStartDate = now;
+        final DateTime alignStartDate = bundleStartDate;
+
+        final Plan plan = catalogService.getFullCatalog(true, true, internalCallContext).findPlan(productName, clock.getUTCNow());
+        final TimedPhase [] phases = planAligner.getCurrentAndNextTimedPhaseOnCreate(alignStartDate, bundleStartDate, plan, PhaseType.EVERGREEN, PriceListSet.DEFAULT_PRICELIST_NAME, now, internalCallContext);
+        Assert.assertEquals(phases.length, 2);
+        Assert.assertEquals(phases[0].getPhase().getPhaseType(), PhaseType.EVERGREEN);
+        Assert.assertEquals(phases[0].getStartPhase(), now);
+        Assert.assertNull(phases[1]);
+
+        final DefaultSubscriptionBase defaultSubscriptionBase = createSubscription(bundleStartDate, alignStartDate, productName, PhaseType.EVERGREEN);
+
+        final String newProductName = "assault-rifle-annual-gunclub-discount";
+        final Plan newPlan = catalogService.getFullCatalog(true, true, internalCallContext).findPlan(newProductName, clock.getUTCNow());
+        final DateTime effectiveChangeDate = defaultSubscriptionBase.getStartDate().plusMonths(15);
+
+        // Because new Plan has an EVERGREEN PhaseType we end up directly on that PhaseType
+        final TimedPhase currentPhase  = planAligner.getCurrentTimedPhaseOnChange(defaultSubscriptionBase, newPlan, effectiveChangeDate, null, internalCallContext);
+        Assert.assertEquals(currentPhase.getStartPhase(), alignStartDate);
+        Assert.assertEquals(currentPhase.getPhase().getPhaseType(), PhaseType.EVERGREEN);
+
+    }
+
+    //
+    // Scenario : change Plan with START_OF_SUBSCRIPTION after skipping TRIAL on Create to a new Plan that has {DISCOUNT, EVERGREEN}
+    //
+    @Test(groups = "fast")
+    public void testCreateWithTargetPhaseType4() throws Exception {
+        final String productName = "pistol-monthly";
+
+        final DateTime now = clock.getUTCNow();
+        final DateTime bundleStartDate = now;
+        final DateTime alignStartDate = bundleStartDate;
+
+        final Plan plan = catalogService.getFullCatalog(true, true, internalCallContext).findPlan(productName, clock.getUTCNow());
+        final TimedPhase [] phases = planAligner.getCurrentAndNextTimedPhaseOnCreate(alignStartDate, bundleStartDate, plan, PhaseType.EVERGREEN, PriceListSet.DEFAULT_PRICELIST_NAME, now, internalCallContext);
+        Assert.assertEquals(phases.length, 2);
+        Assert.assertEquals(phases[0].getPhase().getPhaseType(), PhaseType.EVERGREEN);
+        Assert.assertEquals(phases[0].getStartPhase(), now);
+        Assert.assertNull(phases[1]);
+
+        final DefaultSubscriptionBase defaultSubscriptionBase = createSubscription(bundleStartDate, alignStartDate, productName, PhaseType.EVERGREEN);
+
+        final String newProductName = "pistol-annual-gunclub-discount-notrial";
+        final Plan newPlan = catalogService.getFullCatalog(true, true, internalCallContext).findPlan(newProductName, clock.getUTCNow());
+        final DateTime effectiveChangeDate = defaultSubscriptionBase.getStartDate().plusMonths(15);
+
+        // Because new Plan has an EVERGREEN PhaseType we end up directly on that PhaseType
+        final TimedPhase currentPhase  = planAligner.getCurrentTimedPhaseOnChange(defaultSubscriptionBase, newPlan, effectiveChangeDate, null, internalCallContext);
+        Assert.assertEquals(currentPhase.getStartPhase(), alignStartDate);
+        Assert.assertEquals(currentPhase.getPhase().getPhaseType(), PhaseType.EVERGREEN);
+    }
+
+    //
+    // Scenario : change Plan with START_OF_SUBSCRIPTION after skipping TRIAL on Create to a new Plan that has {TRIAL, FIXEDTERM}
+    //
+    @Test(groups = "fast")
+    public void testCreateWithTargetPhaseType5() throws Exception {
+        final String productName = "pistol-monthly";
+
+        final DateTime now = clock.getUTCNow();
+        final DateTime bundleStartDate = now;
+        final DateTime alignStartDate = bundleStartDate;
+
+        final Plan plan = catalogService.getFullCatalog(true, true, internalCallContext).findPlan(productName, clock.getUTCNow());
+        final TimedPhase [] phases = planAligner.getCurrentAndNextTimedPhaseOnCreate(alignStartDate, bundleStartDate, plan, PhaseType.EVERGREEN, PriceListSet.DEFAULT_PRICELIST_NAME, now, internalCallContext);
+        Assert.assertEquals(phases.length, 2);
+        Assert.assertEquals(phases[0].getPhase().getPhaseType(), PhaseType.EVERGREEN);
+        Assert.assertEquals(phases[0].getStartPhase(), now);
+        Assert.assertNull(phases[1]);
+
+        final DefaultSubscriptionBase defaultSubscriptionBase = createSubscription(bundleStartDate, alignStartDate, productName, PhaseType.EVERGREEN);
+
+        final String newProductName = "pistol-monthly-fixedterm";
+        final Plan newPlan = catalogService.getFullCatalog(true, true, internalCallContext).findPlan(newProductName, clock.getUTCNow());
+        final DateTime effectiveChangeDate = defaultSubscriptionBase.getStartDate().plusDays(5);
+
+        final TimedPhase currentPhase = planAligner.getCurrentTimedPhaseOnChange(defaultSubscriptionBase, newPlan, effectiveChangeDate, null, internalCallContext);
+
+        // Initial phase EVERGREEN does not exist in the new Plan so we ignore the original skipped Phase and proceed with default alignment (we only move the clock 5 days so we are still in TRIAL)
+        Assert.assertEquals(currentPhase.getStartPhase(), alignStartDate);
+        Assert.assertEquals(currentPhase.getPhase().getPhaseType(), PhaseType.TRIAL);
+
+        final TimedPhase nextPhase  = planAligner.getNextTimedPhaseOnChange(defaultSubscriptionBase, newPlan, effectiveChangeDate, null, internalCallContext);
+        Assert.assertEquals(nextPhase.getStartPhase(), alignStartDate.plusDays(30));
+        Assert.assertEquals(nextPhase.getPhase().getPhaseType(), PhaseType.FIXEDTERM);
+    }
+
+
+    //
+    // Scenario : change Plan with START_OF_SUBSCRIPTION to a new Plan that has {TRIAL, DISCOUNT, EVERGREEN} and specifying a target PhaseType = DISCOUNT
+    //
+    @Test(groups = "fast")
+    public void testChangeWithTargetPhaseType1() throws Exception {
+        final String productName = "pistol-monthly";
+
+        final DateTime now = clock.getUTCNow();
+        final DateTime bundleStartDate = now;
+        final DateTime alignStartDate = bundleStartDate;
+
+        final Plan plan = catalogService.getFullCatalog(true, true, internalCallContext).findPlan(productName, clock.getUTCNow());
+        final TimedPhase [] phases = planAligner.getCurrentAndNextTimedPhaseOnCreate(alignStartDate, bundleStartDate, plan, null, PriceListSet.DEFAULT_PRICELIST_NAME, now, internalCallContext);
+        Assert.assertEquals(phases.length, 2);
+        Assert.assertEquals(phases[0].getPhase().getPhaseType(), PhaseType.TRIAL);
+        Assert.assertEquals(phases[0].getStartPhase(), now);
+        Assert.assertEquals(phases[1].getPhase().getPhaseType(), PhaseType.EVERGREEN);
+        Assert.assertEquals(phases[1].getStartPhase(), now.plusDays(30));
+
+        final DefaultSubscriptionBase defaultSubscriptionBase = createSubscription(bundleStartDate, alignStartDate, productName, PhaseType.TRIAL);
+
+        final String newProductName = "pistol-annual-gunclub-discount";
+        final Plan newPlan = catalogService.getFullCatalog(true, true, internalCallContext).findPlan(newProductName, clock.getUTCNow());
+        final DateTime effectiveChangeDate = defaultSubscriptionBase.getStartDate().plusDays(5);
+
+        final TimedPhase currentPhase = planAligner.getCurrentTimedPhaseOnChange(defaultSubscriptionBase, newPlan, effectiveChangeDate, PhaseType.DISCOUNT, internalCallContext);
+
+        // We end up straight on DISCOUNT but because we are using START_OF_SUBSCRIPTION alignment, such Phase starts with beginning of subscription
+        Assert.assertEquals(currentPhase.getStartPhase(), alignStartDate);
+        Assert.assertEquals(currentPhase.getPhase().getPhaseType(), PhaseType.DISCOUNT);
+
+        final TimedPhase nextPhase  = planAligner.getNextTimedPhaseOnChange(defaultSubscriptionBase, newPlan, effectiveChangeDate, PhaseType.DISCOUNT, internalCallContext);
+        Assert.assertEquals(nextPhase.getStartPhase(), alignStartDate.plusMonths(6));
+        Assert.assertEquals(nextPhase.getPhase().getPhaseType(), PhaseType.EVERGREEN);
+    }
+
+    //
+    // Scenario : change Plan with CHANGE_OF_PLAN to a new Plan that has {DISCOUNT, EVERGREEN} and specifying a target PhaseType = EVERGREEN
+    //
+    @Test(groups = "fast")
+    public void testChangeWithTargetPhaseType2() throws Exception {
+        final String productName = "pistol-monthly";
+
+        final DateTime now = clock.getUTCNow();
+        final DateTime bundleStartDate = now;
+        final DateTime alignStartDate = bundleStartDate;
+
+        final Plan plan = catalogService.getFullCatalog(true, true, internalCallContext).findPlan(productName, clock.getUTCNow());
+        final TimedPhase [] phases = planAligner.getCurrentAndNextTimedPhaseOnCreate(alignStartDate, bundleStartDate, plan, null, PriceListSet.DEFAULT_PRICELIST_NAME, now, internalCallContext);
+        Assert.assertEquals(phases.length, 2);
+        Assert.assertEquals(phases[0].getPhase().getPhaseType(), PhaseType.TRIAL);
+        Assert.assertEquals(phases[0].getStartPhase(), now);
+        Assert.assertEquals(phases[1].getPhase().getPhaseType(), PhaseType.EVERGREEN);
+        Assert.assertEquals(phases[1].getStartPhase(), now.plusDays(30));
+
+        final DefaultSubscriptionBase defaultSubscriptionBase = createSubscription(bundleStartDate, alignStartDate, productName, PhaseType.TRIAL);
+
+        final String newProductName = "assault-rifle-annual-rescue";
+        final Plan newPlan = catalogService.getFullCatalog(true, true, internalCallContext).findPlan(newProductName, clock.getUTCNow());
+        final DateTime effectiveChangeDate = defaultSubscriptionBase.getStartDate().plusDays(5);
+
+        final TimedPhase currentPhase = planAligner.getCurrentTimedPhaseOnChange(defaultSubscriptionBase, newPlan, effectiveChangeDate, PhaseType.EVERGREEN, internalCallContext);
+
+        // We end up straight on EVERGREEN Phase and because we are CHANGE_OF_PLAN aligned the start is at the effective date of the change
+        Assert.assertEquals(currentPhase.getStartPhase(), alignStartDate.plusDays(5));
+        Assert.assertEquals(currentPhase.getPhase().getPhaseType(), PhaseType.EVERGREEN);
+
+        final TimedPhase nextPhase  = planAligner.getNextTimedPhaseOnChange(defaultSubscriptionBase, newPlan, effectiveChangeDate, PhaseType.EVERGREEN, internalCallContext);
+        Assert.assertNull(nextPhase);
+    }
+
+
+    private DefaultSubscriptionBase createSubscription(final DateTime bundleStartDate, final DateTime alignStartDate, final String productName, final PhaseType phaseType) throws CatalogApiException {
         final SubscriptionBuilder builder = new SubscriptionBuilder();
         builder.setBundleStartDate(bundleStartDate);
         // Make sure to set the dates apart
