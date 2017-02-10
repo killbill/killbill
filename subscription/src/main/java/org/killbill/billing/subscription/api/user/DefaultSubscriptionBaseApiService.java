@@ -113,10 +113,6 @@ public class DefaultSubscriptionBaseApiService implements SubscriptionBaseApiSer
 
         try {
 
-            if (subscription.getAlignStartDate().compareTo(effectiveDate) != 0) {
-                throw new RuntimeException("Subscription id = " + subscription.getId() + ", alignStartDate = " + subscription.getAlignStartDate() + ", effectiveDate = " + effectiveDate);
-            }
-
             final List<SubscriptionBaseEvent> events = getEventsOnCreation(subscription.getBundleId(), subscription.getId(), subscription.getAlignStartDate(), subscription.getBundleStartDate(),
                                                                            plan, initialPhase, realPriceList, effectiveDate, processedDate, internalCallContext);
             dao.createSubscription(subscription, events, internalCallContext);
