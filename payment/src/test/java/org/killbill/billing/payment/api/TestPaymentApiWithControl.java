@@ -94,7 +94,7 @@ public class TestPaymentApiWithControl extends PaymentTestSuiteWithEmbeddedDB {
     @Test(groups = "slow")
     public void testCreateAuthWithControl() throws PaymentApiException {
         final PaymentMethodPlugin paymentMethodInfo = new DefaultNoOpPaymentMethodPlugin(UUID.randomUUID().toString(), false, null);
-        final UUID newPaymentMethodId = paymentApi.addPaymentMethod(account, paymentMethodInfo.getExternalPaymentMethodId(), MockPaymentProviderPlugin.PLUGIN_NAME, false, paymentMethodInfo, ImmutableList.<PluginProperty>of(), callContext);
+        final UUID newPaymentMethodId = paymentApi.addPaymentMethod(account, null, MockPaymentProviderPlugin.PLUGIN_NAME, false, paymentMethodInfo, ImmutableList.<PluginProperty>of(), callContext);
         testPaymentControlPluginApi.setNewPaymentMethodId(newPaymentMethodId);
 
         final Payment payment = paymentApi.createAuthorizationWithPaymentControl(account, account.getPaymentMethodId(), null, BigDecimal.TEN, Currency.USD, UUID.randomUUID().toString(),
