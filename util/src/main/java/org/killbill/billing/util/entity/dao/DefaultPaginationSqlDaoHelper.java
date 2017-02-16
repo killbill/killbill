@@ -29,6 +29,11 @@ import org.killbill.billing.util.entity.Pagination;
 
 public class DefaultPaginationSqlDaoHelper {
 
+    // Number large enough so that small installations have access to an accurate count
+    // but small enough to not impact very large deployments
+    // TODO Should this be configurable per tenant?
+    private static final Long SIMPLE_PAGINATION_THRESHOLD = 20000L;
+
     private final EntitySqlDaoTransactionalJdbiWrapper transactionalSqlDao;
 
     public DefaultPaginationSqlDaoHelper(final EntitySqlDaoTransactionalJdbiWrapper transactionalSqlDao) {
@@ -38,8 +43,13 @@ public class DefaultPaginationSqlDaoHelper {
     public <E extends Entity, M extends EntityModelDao<E>, S extends EntitySqlDao<M, E>> Pagination<M> getPagination(final Class<? extends EntitySqlDao<M, E>> sqlDaoClazz,
                                                                                                                      final PaginationIteratorBuilder<M, E, S> paginationIteratorBuilder,
                                                                                                                      final Long offset,
-                                                                                                                     final Long limit,
+                                                                                                                     final Long limitMaybeNegative,
                                                                                                                      @Nullable final InternalTenantContext context) {
+        // Use a negative limit as a hint to go backwards. It's a bit awkward -- using a negative offset instead would be more intuitive,
+        // but it is non-deterministic for the first page unfortunately (limit 0 offset 50: ASC or DESC?)
+        final Ordering ordering = limitMaybeNegative >= 0 ? Ordering.ASC : Ordering.DESC;
+        final Long limit = Math.abs(limitMaybeNegative);
+
         // Note: the connection will be busy as we stream the results out: hence we cannot use
         // SQL_CALC_FOUND_ROWS / FOUND_ROWS on the actual query.
         // We still need to know the actual number of results, mainly for the UI so that it knows if it needs to fetch
@@ -56,8 +66,16 @@ public class DefaultPaginationSqlDaoHelper {
         // We usually always want to wrap our queries in an EntitySqlDaoTransactionWrapper... except here.
         // Since we want to stream the results out, we don't want to auto-commit when this method returns.
         final EntitySqlDao<M, E> sqlDao = transactionalSqlDao.onDemandForStreamingResults(sqlDaoClazz);
-        final Long maxNbRecords = context != null ? sqlDao.getCount(context) : null;
-        final Iterator<M> results = paginationIteratorBuilder.build((S) sqlDao, limit, context);
+        // The count to get maxNbRecords can be expensive on very large datasets. As a heuristic to check how large that number is,
+        // we retrieve 1 record at offset SIMPLE_PAGINATION_THRESHOLD (pretty fast). If we've found a record, that means the count is larger
+        // than this threshold and we don't issue the full count query
+        final Long maxNbRecords;
+        if (context == null || paginationIteratorBuilder.build((S) sqlDao, SIMPLE_PAGINATION_THRESHOLD, 1L, ordering, context).hasNext()) {
+            maxNbRecords = null;
+        } else {
+            maxNbRecords = sqlDao.getCount(context);
+        }
+        final Iterator<M> results = paginationIteratorBuilder.build((S) sqlDao, offset, limit, ordering, context);
 
         final Long totalNbRecords = totalNbRecordsOrNull == null ? maxNbRecords : totalNbRecordsOrNull;
 
@@ -71,6 +89,11 @@ public class DefaultPaginationSqlDaoHelper {
         // - For get calls, return the total number of records (totalNbRecords == maxNbRecords)
         public abstract Long getCount(final S sqlDao, final InternalTenantContext context);
 
-        public abstract Iterator<M> build(final S sqlDao, final Long limit, final InternalTenantContext context);
+        public abstract Iterator<M> build(final S sqlDao, final Long offset, final Long limit, final Ordering ordering, final InternalTenantContext context);
+    }
+
+    public enum Ordering {
+        ASC,
+        DESC
     }
 }
