@@ -137,7 +137,8 @@ public abstract class EntityDaoBase<M extends EntityModelDao<E>, E extends Entit
                                               new PaginationIteratorBuilder<M, E, EntitySqlDao<M, E>>() {
                                                   @Override
                                                   public Long getCount(final EntitySqlDao<M, E> sqlDao, final InternalTenantContext context) {
-                                                      return sqlDao.getCount(context);
+                                                      // Only need to compute it once, because no search filter has been applied (see DefaultPaginationSqlDaoHelper)
+                                                      return null;
                                                   }
 
                                                   @Override

@@ -44,7 +44,8 @@ public class DefaultPaginationSqlDaoHelper {
         // SQL_CALC_FOUND_ROWS / FOUND_ROWS on the actual query.
         // We still need to know the actual number of results, mainly for the UI so that it knows if it needs to fetch
         // more pages.
-        final Long count = transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<Long>() {
+        // Note: for simple pagination (no search filter), this will be computed below instead (MaxNbRecords == TotalNbRecords)
+        final Long totalNbRecordsOrNull = transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<Long>() {
             @Override
             public Long inTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory) throws Exception {
                 final EntitySqlDao<M, E> sqlDao = entitySqlDaoWrapperFactory.become(sqlDaoClazz);
@@ -55,10 +56,12 @@ public class DefaultPaginationSqlDaoHelper {
         // We usually always want to wrap our queries in an EntitySqlDaoTransactionWrapper... except here.
         // Since we want to stream the results out, we don't want to auto-commit when this method returns.
         final EntitySqlDao<M, E> sqlDao = transactionalSqlDao.onDemandForStreamingResults(sqlDaoClazz);
-        final Long totalCount = context !=  null ? sqlDao.getCount(context) : null;
+        final Long maxNbRecords = context != null ? sqlDao.getCount(context) : null;
         final Iterator<M> results = paginationIteratorBuilder.build((S) sqlDao, limit, context);
 
-        return new DefaultPagination<M>(offset, limit, count, totalCount, results);
+        final Long totalNbRecords = totalNbRecordsOrNull == null ? maxNbRecords : totalNbRecordsOrNull;
+
+        return new DefaultPagination<M>(offset, limit, totalNbRecords, maxNbRecords, results);
     }
 
     public abstract static class PaginationIteratorBuilder<M extends EntityModelDao<E>, E extends Entity, S extends EntitySqlDao<M, E>> {
