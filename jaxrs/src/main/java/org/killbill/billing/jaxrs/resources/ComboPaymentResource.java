@@ -79,7 +79,13 @@ public abstract class ComboPaymentResource extends JaxRsResourceBase {
         return accountUserApi.createAccount(accountJson.toAccount(null), callContext);
     }
 
-    protected UUID getOrCreatePaymentMethod(final Account account, final PaymentMethodJson paymentMethodJson, final Iterable<PluginProperty> pluginProperties, final CallContext callContext) throws PaymentApiException {
+    protected UUID getOrCreatePaymentMethod(final Account account, @Nullable final PaymentMethodJson paymentMethodJson, final Iterable<PluginProperty> pluginProperties, final CallContext callContext) throws PaymentApiException {
+
+        // No info about payment method was passed, we default to null payment Method ID (which is allowed to be overiden in payment control plugins)
+        if (paymentMethodJson == null || paymentMethodJson.isEmpty()) {
+            return null;
+        }
+
         // Get all payment methods for account
         final List<PaymentMethod> accountPaymentMethods = paymentApi.getAccountPaymentMethods(account.getId(), false, ImmutableList.<PluginProperty>of(), callContext);
 
