@@ -34,6 +34,7 @@ import org.killbill.billing.util.audit.ChangeType;
 import org.killbill.billing.util.entity.dao.Audited;
 import org.killbill.billing.util.entity.dao.EntitySqlDao;
 import org.killbill.billing.util.entity.dao.EntitySqlDaoStringTemplate;
+import org.skife.jdbi.v2.sqlobject.customizers.Define;
 
 @EntitySqlDaoStringTemplate
 public interface PaymentMethodSqlDao extends EntitySqlDao<PaymentMethodModelDao, PaymentMethod> {
@@ -69,6 +70,7 @@ public interface PaymentMethodSqlDao extends EntitySqlDao<PaymentMethodModelDao,
     public Iterator<PaymentMethodModelDao> getByPluginName(@Bind("pluginName") final String pluginName,
                                                            @Bind("offset") final Long offset,
                                                            @Bind("rowCount") final Long rowCount,
+                                                           @Define("ordering") final String ordering,
                                                            @BindBean final InternalTenantContext context);
 
     @SqlQuery

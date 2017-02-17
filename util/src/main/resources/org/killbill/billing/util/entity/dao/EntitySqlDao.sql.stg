@@ -147,7 +147,7 @@ where <CHECK_TENANT("t.")>
 ;
 >>
 
-get(offset, rowCount, orderBy) ::= <<
+get(offset, rowCount, orderBy, ordering) ::= <<
 select
 <allTableFields("t.")>
 from <tableName()> t
@@ -156,10 +156,10 @@ join (
   from <tableName()>
   where <CHECK_TENANT()>
   <andCheckSoftDeletionWithComma()>
-  order by <orderBy>
+  order by <orderBy> <ordering>
   limit :rowCount offset :offset
 ) optimization on <recordIdField("optimization.")> = <recordIdField("t.")>
-order by t.<orderBy>
+order by t.<orderBy> <ordering>
 ;
 >>
 
@@ -268,14 +268,14 @@ searchQuery(prefix) ::= <<
 1 = 1
 >>
 
-search() ::= <<
+search(ordering) ::= <<
 select
 <allTableFields("t.")>
 from <tableName()> t
 where (<searchQuery("t.")>)
 <andCheckSoftDeletionWithComma("t.")>
 <AND_CHECK_TENANT("t.")>
-order by <recordIdField("t.")> ASC
+order by <recordIdField("t.")> <ordering>
 limit :rowCount offset :offset
 ;
 >>

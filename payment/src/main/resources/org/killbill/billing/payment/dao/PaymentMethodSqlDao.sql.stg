@@ -101,14 +101,14 @@ searchQuery(prefix) ::= <<
   or <prefix>plugin_name like :likeSearchKey
 >>
 
-getByPluginName() ::= <<
+getByPluginName(ordering) ::= <<
 select
 <allTableFields("t.")>
 from <tableName()> t
 where t.plugin_name = :pluginName
 <andCheckSoftDeletionWithComma("t.")>
 <AND_CHECK_TENANT("t.")>
-order by t.record_id
+order by t.record_id <ordering>
 limit :rowCount offset :offset
 ;
 >>

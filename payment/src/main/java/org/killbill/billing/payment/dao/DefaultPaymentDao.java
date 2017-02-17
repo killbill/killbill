@@ -53,6 +53,7 @@ import org.killbill.billing.util.dao.NonEntityDao;
 import org.killbill.billing.util.entity.Entity;
 import org.killbill.billing.util.entity.Pagination;
 import org.killbill.billing.util.entity.dao.DefaultPaginationSqlDaoHelper;
+import org.killbill.billing.util.entity.dao.DefaultPaginationSqlDaoHelper.Ordering;
 import org.killbill.billing.util.entity.dao.DefaultPaginationSqlDaoHelper.PaginationIteratorBuilder;
 import org.killbill.billing.util.entity.dao.EntityDaoBase;
 import org.killbill.billing.util.entity.dao.EntitySqlDaoTransactionWrapper;
@@ -150,8 +151,8 @@ public class DefaultPaymentDao extends EntityDaoBase<PaymentModelDao, Payment, P
                                                       return sqlDao.getCountByStateNameAcrossTenants(stateName, createdBefore);
                                                   }
                                                   @Override
-                                                  public Iterator<PaymentAttemptModelDao> build(final PaymentAttemptSqlDao sqlDao, final Long limit, final InternalTenantContext context) {
-                                                      return sqlDao.getByStateNameAcrossTenants(stateName, createdBefore, offset, limit);
+                                                  public Iterator<PaymentAttemptModelDao> build(final PaymentAttemptSqlDao sqlDao, final Long offset, final Long limit, final Ordering ordering, final InternalTenantContext context) {
+                                                      return sqlDao.getByStateNameAcrossTenants(stateName, createdBefore, offset, limit, ordering.toString());
                                                   }
                                               },
                                               offset,
@@ -200,8 +201,8 @@ public class DefaultPaymentDao extends EntityDaoBase<PaymentModelDao, Payment, P
                                                   }
 
                                                   @Override
-                                                  public Iterator<PaymentTransactionModelDao> build(final TransactionSqlDao sqlDao, final Long limit, final InternalTenantContext context) {
-                                                      return sqlDao.getByTransactionStatusPriorDateAcrossTenants(allTransactionStatus, createdBefore, createdAfter, offset, limit);
+                                                  public Iterator<PaymentTransactionModelDao> build(final TransactionSqlDao sqlDao, final Long offset, final Long limit, final Ordering ordering, final InternalTenantContext context) {
+                                                      return sqlDao.getByTransactionStatusPriorDateAcrossTenants(allTransactionStatus, createdBefore, createdAfter, offset, limit, ordering.toString());
                                                   }
                                               },
                                               offset,
@@ -240,8 +241,8 @@ public class DefaultPaymentDao extends EntityDaoBase<PaymentModelDao, Payment, P
                                                   }
 
                                                   @Override
-                                                  public Iterator<PaymentModelDao> build(final PaymentSqlDao paymentSqlDao, final Long limit, final InternalTenantContext context) {
-                                                      final Iterator<PaymentModelDao> result = paymentSqlDao.getByPluginName(pluginName, offset, limit, context);
+                                                  public Iterator<PaymentModelDao> build(final PaymentSqlDao paymentSqlDao, final Long offset, final Long limit, final Ordering ordering, final InternalTenantContext context) {
+                                                      final Iterator<PaymentModelDao> result = paymentSqlDao.getByPluginName(pluginName, offset, limit, ordering.toString(), context);
                                                       return result;
                                                   }
                                               },
@@ -265,8 +266,8 @@ public class DefaultPaymentDao extends EntityDaoBase<PaymentModelDao, Payment, P
                                                   }
 
                                                   @Override
-                                                  public Iterator<PaymentModelDao> build(final PaymentSqlDao paymentSqlDao, final Long limit, final InternalTenantContext context) {
-                                                      return !paymentStates.isEmpty() ? paymentSqlDao.searchByState(paymentStates, offset, limit, context) : paymentSqlDao.search(searchKey, likeSearchKey, offset, limit, context);
+                                                  public Iterator<PaymentModelDao> build(final PaymentSqlDao paymentSqlDao, final Long offset, final Long limit, final Ordering ordering, final InternalTenantContext context) {
+                                                      return !paymentStates.isEmpty() ? paymentSqlDao.searchByState(paymentStates, offset, limit, ordering.toString(), context) : paymentSqlDao.search(searchKey, likeSearchKey, offset, limit, ordering.toString(), context);
                                                   }
                                               },
                                               offset,
@@ -492,8 +493,8 @@ public class DefaultPaymentDao extends EntityDaoBase<PaymentModelDao, Payment, P
                                                   }
 
                                                   @Override
-                                                  public Iterator<PaymentMethodModelDao> build(final PaymentMethodSqlDao paymentMethodSqlDao, final Long limit, final InternalTenantContext context) {
-                                                      return paymentMethodSqlDao.search(searchKey, String.format("%%%s%%", searchKey), offset, limit, context);
+                                                  public Iterator<PaymentMethodModelDao> build(final PaymentMethodSqlDao paymentMethodSqlDao, final Long offset, final Long limit, final Ordering ordering, final InternalTenantContext context) {
+                                                      return paymentMethodSqlDao.search(searchKey, String.format("%%%s%%", searchKey), offset, limit, ordering.toString(), context);
                                                   }
                                               },
                                               offset,
@@ -511,8 +512,8 @@ public class DefaultPaymentDao extends EntityDaoBase<PaymentModelDao, Payment, P
                                                   }
 
                                                   @Override
-                                                  public Iterator<PaymentMethodModelDao> build(final PaymentMethodSqlDao paymentMethodSqlDao, final Long limit, final InternalTenantContext context) {
-                                                      return paymentMethodSqlDao.getByPluginName(pluginName, offset, limit, context);
+                                                  public Iterator<PaymentMethodModelDao> build(final PaymentMethodSqlDao paymentMethodSqlDao, final Long offset, final Long limit, final Ordering ordering, final InternalTenantContext context) {
+                                                      return paymentMethodSqlDao.getByPluginName(pluginName, offset, limit, ordering.toString(), context);
                                                   }
                                               },
                                               offset,

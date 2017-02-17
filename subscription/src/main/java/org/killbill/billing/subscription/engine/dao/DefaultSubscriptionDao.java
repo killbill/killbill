@@ -82,6 +82,7 @@ import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.billing.util.dao.NonEntityDao;
 import org.killbill.billing.util.entity.Entity;
 import org.killbill.billing.util.entity.Pagination;
+import org.killbill.billing.util.entity.dao.DefaultPaginationSqlDaoHelper.Ordering;
 import org.killbill.billing.util.entity.dao.DefaultPaginationSqlDaoHelper.PaginationIteratorBuilder;
 import org.killbill.billing.util.entity.dao.EntityDaoBase;
 import org.killbill.billing.util.entity.dao.EntitySqlDao;
@@ -97,7 +98,6 @@ import org.killbill.notificationq.api.NotificationQueue;
 import org.killbill.notificationq.api.NotificationQueueService;
 import org.killbill.notificationq.api.NotificationQueueService.NoSuchNotificationQueue;
 import org.skife.jdbi.v2.IDBI;
-import org.skife.jdbi.v2.sqlobject.customizers.OverrideStatementLocatorWith;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -206,8 +206,8 @@ public class DefaultSubscriptionDao extends EntityDaoBase<SubscriptionBundleMode
                                                   }
 
                                                   @Override
-                                                  public Iterator<SubscriptionBundleModelDao> build(final BundleSqlDao bundleSqlDao, final Long limit, final InternalTenantContext context) {
-                                                      return bundleSqlDao.search(searchKey, String.format("%%%s%%", searchKey), offset, limit, context);
+                                                  public Iterator<SubscriptionBundleModelDao> build(final BundleSqlDao bundleSqlDao, final Long offset, final Long limit, final Ordering ordering, final InternalTenantContext context) {
+                                                      return bundleSqlDao.search(searchKey, String.format("%%%s%%", searchKey), offset, limit, ordering.toString(), context);
                                                   }
                                               },
                                               offset,

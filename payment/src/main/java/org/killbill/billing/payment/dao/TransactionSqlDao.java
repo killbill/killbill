@@ -35,6 +35,7 @@ import org.skife.jdbi.v2.sqlobject.Bind;
 import org.skife.jdbi.v2.sqlobject.BindBean;
 import org.skife.jdbi.v2.sqlobject.SqlQuery;
 import org.skife.jdbi.v2.sqlobject.SqlUpdate;
+import org.skife.jdbi.v2.sqlobject.customizers.Define;
 
 @EntitySqlDaoStringTemplate
 public interface TransactionSqlDao extends EntitySqlDao<PaymentTransactionModelDao, PaymentTransaction> {
@@ -61,10 +62,11 @@ public interface TransactionSqlDao extends EntitySqlDao<PaymentTransactionModelD
 
     @SqlQuery
     Iterator<PaymentTransactionModelDao> getByTransactionStatusPriorDateAcrossTenants(@TransactionStatusCollectionBinder final Collection<String> statuses,
-                                                                                  @Bind("createdBeforeDate") final Date createdBeforeDate,
-                                                                                  @Bind("createdAfterDate") final Date createdAfterDate,
-                                                                                  @Bind("offset") final Long offset,
-                                                                                  @Bind("rowCount") final Long rowCount);
+                                                                                      @Bind("createdBeforeDate") final Date createdBeforeDate,
+                                                                                      @Bind("createdAfterDate") final Date createdAfterDate,
+                                                                                      @Bind("offset") final Long offset,
+                                                                                      @Bind("rowCount") final Long rowCount,
+                                                                                      @Define("ordering") final String ordering);
 
     @SqlQuery
     public List<PaymentTransactionModelDao> getByPaymentId(@Bind("paymentId") final UUID paymentId,

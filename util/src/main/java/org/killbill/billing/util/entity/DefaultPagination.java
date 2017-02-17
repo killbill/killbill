@@ -67,7 +67,8 @@ public class DefaultPagination<T> implements Pagination<T> {
                              @Nullable final Long totalNbRecords, @Nullable final Long maxNbRecords,
                              final Iterator<T> delegateIterator) {
         this.currentOffset = currentOffset;
-        this.limit = limit;
+        // See DefaultPaginationSqlDaoHelper
+        this.limit = Math.abs(limit);
         this.totalNbRecords = totalNbRecords;
         this.maxNbRecords = maxNbRecords;
         this.delegateIterator = delegateIterator;
