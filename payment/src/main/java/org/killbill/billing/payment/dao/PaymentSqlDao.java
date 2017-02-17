@@ -33,6 +33,7 @@ import org.skife.jdbi.v2.sqlobject.Bind;
 import org.skife.jdbi.v2.sqlobject.BindBean;
 import org.skife.jdbi.v2.sqlobject.SqlQuery;
 import org.skife.jdbi.v2.sqlobject.SqlUpdate;
+import org.skife.jdbi.v2.sqlobject.customizers.Define;
 
 @EntitySqlDaoStringTemplate
 public interface PaymentSqlDao extends EntitySqlDao<PaymentModelDao, Payment> {
@@ -71,6 +72,7 @@ public interface PaymentSqlDao extends EntitySqlDao<PaymentModelDao, Payment> {
     public Iterator<PaymentModelDao> searchByState(@PaymentStateCollectionBinder final Collection<String> paymentStates,
                                                    @Bind("offset") final Long offset,
                                                    @Bind("rowCount") final Long rowCount,
+                                                   @Define("ordering") final String ordering,
                                                    @BindBean final InternalTenantContext context);
 
     @SqlQuery
@@ -82,7 +84,8 @@ public interface PaymentSqlDao extends EntitySqlDao<PaymentModelDao, Payment> {
     public Iterator<PaymentModelDao> getByPluginName(@Bind("pluginName") final String pluginName,
                                                      @Bind("offset") final Long offset,
                                                      @Bind("rowCount") final Long rowCount,
-                                                           @BindBean final InternalTenantContext context);
+                                                     @Define("ordering") final String ordering,
+                                                     @BindBean final InternalTenantContext context);
 
     @SqlQuery
     public Long getCountByPluginName(@Bind("pluginName") final String pluginName,

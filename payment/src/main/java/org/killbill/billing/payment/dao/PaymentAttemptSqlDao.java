@@ -31,6 +31,7 @@ import org.skife.jdbi.v2.sqlobject.Bind;
 import org.skife.jdbi.v2.sqlobject.BindBean;
 import org.skife.jdbi.v2.sqlobject.SqlQuery;
 import org.skife.jdbi.v2.sqlobject.SqlUpdate;
+import org.skife.jdbi.v2.sqlobject.customizers.Define;
 
 @EntitySqlDaoStringTemplate
 public interface PaymentAttemptSqlDao extends EntitySqlDao<PaymentAttemptModelDao, Entity> {
@@ -66,6 +67,7 @@ public interface PaymentAttemptSqlDao extends EntitySqlDao<PaymentAttemptModelDa
     Iterator<PaymentAttemptModelDao> getByStateNameAcrossTenants(@Bind("stateName") final String stateName,
                                                                  @Bind("createdBeforeDate") final Date createdBeforeDate,
                                                                  @Bind("offset") final Long offset,
-                                                                 @Bind("rowCount") final Long rowCount);
+                                                                 @Bind("rowCount") final Long rowCount,
+                                                                 @Define("ordering") final String ordering);
 
 }

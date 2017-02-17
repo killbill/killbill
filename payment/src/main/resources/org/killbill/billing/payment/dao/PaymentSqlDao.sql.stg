@@ -82,7 +82,7 @@ searchQuery(prefix) ::= <<
   or <prefix>external_key like :likeSearchKey
 >>
 
-searchByState(states) ::= <<
+searchByState(states, ordering) ::= <<
 select
 <allTableFields("t.")>
 from <tableName()> t
@@ -92,10 +92,10 @@ join (
   where state_name in (<states: {state | :state_<i0>}; separator="," >)
   <AND_CHECK_TENANT()>
   <andCheckSoftDeletionWithComma()>
-  order by <recordIdField()>
+  order by <recordIdField()> <ordering>
   limit :rowCount offset :offset
 ) optimization on <recordIdField("optimization.")> = <recordIdField("t.")>
-order by <recordIdField("t.")>
+order by <recordIdField("t.")> <ordering>
 ;
 >>
 
@@ -109,14 +109,14 @@ where t.state_name in (<states: {state | :state_<i0>}; separator="," >)
 ;
 >>
 
-getByPluginName() ::= <<
+getByPluginName(ordering) ::= <<
 select
 <allTableFields("t.")>
 from <tableName()> t
 join payment_methods pm on pm.id = t.payment_method_id
 where pm.plugin_name = :pluginName
 <AND_CHECK_TENANT("t.")>
-order by t.record_id asc
+order by t.record_id <ordering>
 limit :rowCount offset :offset
 ;
 >>
