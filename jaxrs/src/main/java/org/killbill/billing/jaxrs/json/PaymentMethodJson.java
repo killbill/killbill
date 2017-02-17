@@ -187,15 +187,6 @@ public class PaymentMethodJson extends JsonBase {
         return externalKey;
     }
 
-    @JsonIgnore
-    public boolean isEmpty() {
-        return (externalKey == null &&
-                paymentMethodId == null &&
-                accountId == null &&
-                isDefault == null &&
-                pluginName == null &&
-                pluginInfo == null);
-    }
 
     @Override
     public String toString() {
