@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014-2016 Groupon, Inc
- * Copyright 2014-2016 The Billing Project, LLC
+ * Copyright 2014-2017 Groupon, Inc
+ * Copyright 2014-2017 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -39,6 +39,7 @@ import org.killbill.billing.ErrorCode;
 import org.killbill.billing.ObjectType;
 import org.killbill.billing.account.api.Account;
 import org.killbill.billing.account.api.AccountApiException;
+import org.killbill.billing.account.api.AccountData;
 import org.killbill.billing.account.api.AccountInternalApi;
 import org.killbill.billing.account.api.ImmutableAccountData;
 import org.killbill.billing.callcontext.InternalCallContext;
@@ -770,7 +771,7 @@ public class InvoiceDispatcher {
         }
     }
 
-    public void processParentInvoiceForInvoiceGeneration(final ImmutableAccountData account, final UUID childInvoiceId, final InternalCallContext context) throws InvoiceApiException {
+    public void processParentInvoiceForInvoiceGeneration(final Account account, final UUID childInvoiceId, final InternalCallContext context) throws InvoiceApiException {
 
         final InvoiceModelDao childInvoiceModelDao = invoiceDao.getById(childInvoiceId, context);
         final Invoice childInvoice = new DefaultInvoice(childInvoiceModelDao);
@@ -839,7 +840,7 @@ public class InvoiceDispatcher {
         return true;
     }
 
-    public void processParentInvoiceForAdjustments(final ImmutableAccountData account, final UUID childInvoiceId, final InternalCallContext context) throws InvoiceApiException {
+    public void processParentInvoiceForAdjustments(final AccountData account, final UUID childInvoiceId, final InternalCallContext context) throws InvoiceApiException {
 
         final InvoiceModelDao childInvoiceModelDao = invoiceDao.getById(childInvoiceId, context);
         final InvoiceModelDao parentInvoiceModelDao = childInvoiceModelDao.getParentInvoice();

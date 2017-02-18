@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014-2016 Groupon, Inc
- * Copyright 2014-2016 The Billing Project, LLC
+ * Copyright 2014-2017 Groupon, Inc
+ * Copyright 2014-2017 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -21,9 +21,9 @@ package org.killbill.billing.invoice;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
+import org.killbill.billing.account.api.Account;
 import org.killbill.billing.account.api.AccountApiException;
 import org.killbill.billing.account.api.AccountInternalApi;
-import org.killbill.billing.account.api.ImmutableAccountData;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.events.BlockingTransitionInternalEvent;
 import org.killbill.billing.events.EffectiveSubscriptionInternalEvent;
@@ -127,8 +127,7 @@ public class InvoiceListener {
 
         try {
             final InternalCallContext context = internalCallContextFactory.createInternalCallContext(event.getSearchKey2(), event.getSearchKey1(), "CreateParentInvoice", CallOrigin.INTERNAL, UserType.SYSTEM, event.getUserToken());
-            // TODO it may change to Account - #459
-            final ImmutableAccountData account = accountApi.getImmutableAccountDataById(event.getAccountId(), context);
+            final Account account = accountApi.getAccountById(event.getAccountId(), context);
 
             // catch children invoices and populate the parent summary invoice
             if (isChildrenAccountAndPaymentDelegated(account)) {
@@ -142,7 +141,7 @@ public class InvoiceListener {
         }
     }
 
-    private boolean isChildrenAccountAndPaymentDelegated(final ImmutableAccountData account) {
+    private boolean isChildrenAccountAndPaymentDelegated(final Account account) {
         return account.getParentAccountId() != null && account.isPaymentDelegatedToParent();
     }
 
@@ -161,8 +160,7 @@ public class InvoiceListener {
 
         try {
             final InternalCallContext context = internalCallContextFactory.createInternalCallContext(event.getSearchKey2(), event.getSearchKey1(), "AdjustParentInvoice", CallOrigin.INTERNAL, UserType.SYSTEM, event.getUserToken());
-            // TODO it may change to Account - #459
-            final ImmutableAccountData account = accountApi.getImmutableAccountDataById(event.getAccountId(), context);
+            final Account account = accountApi.getAccountById(event.getAccountId(), context);
 
             // catch children invoices and populate the parent summary invoice
             if (isChildrenAccountAndPaymentDelegated(account)) {

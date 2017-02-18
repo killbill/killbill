@@ -1,6 +1,6 @@
 /*
- * Copyright 2014-2016 Groupon, Inc
- * Copyright 2014-2016 The Billing Project, LLC
+ * Copyright 2014-2017 Groupon, Inc
+ * Copyright 2014-2017 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -23,6 +23,8 @@ import java.util.List;
 import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
 import org.killbill.billing.account.api.Account;
+import org.killbill.billing.account.api.DefaultAccount;
+import org.killbill.billing.account.dao.AccountModelDao;
 import org.killbill.billing.api.TestApiListener.NextEvent;
 import org.killbill.billing.catalog.api.BillingActionPolicy;
 import org.killbill.billing.catalog.api.BillingPeriod;
@@ -36,14 +38,17 @@ import org.killbill.billing.invoice.api.InvoiceItem;
 import org.killbill.billing.invoice.api.InvoiceItemType;
 import org.killbill.billing.invoice.api.InvoiceStatus;
 import org.killbill.billing.payment.api.Payment;
+import org.killbill.billing.payment.api.PluginProperty;
 import org.testng.annotations.Test;
 
+import com.google.common.collect.ImmutableList;
+
 import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertFalse;
+import static org.testng.Assert.assertNull;
 import static org.testng.Assert.assertTrue;
 
 public class TestIntegrationParentInvoice extends TestIntegrationBase {
-
-
 
     @Test(groups = "slow")
     public void testParentInvoiceGeneration() throws Exception {
@@ -584,7 +589,7 @@ public class TestIntegrationParentInvoice extends TestIntegrationBase {
 
         final List<Invoice> parentInvoices = invoiceUserApi.getInvoicesByAccount(parentAccount.getId(), false, callContext);
         final List<Invoice> childInvoices = invoiceUserApi.getInvoicesByAccount(childAccount.getId(), false, callContext);
-        
+
         // get last child invoice
         Invoice childInvoice = childInvoices.get(1);
         assertEquals(childInvoice.getNumberOfItems(), 1);
@@ -1032,4 +1037,241 @@ public class TestIntegrationParentInvoice extends TestIntegrationBase {
 
     }
 
+    @Test(groups = "slow")
+    public void testUnParentingWithUnpaidInvoice() throws Exception {
+        final int billingDay = 14;
+        final DateTime initialCreationDate = new DateTime(2015, 5, 15, 0, 0, 0, 0, testTimeZone);
+        // set clock to the initial start date
+        clock.setTime(initialCreationDate);
+
+        final Account parentAccount = createAccountWithNonOsgiPaymentMethod(getAccountData(billingDay));
+        Account childAccount = createAccountWithNonOsgiPaymentMethod(getChildAccountData(billingDay, parentAccount.getId(), true));
+
+        // Verify mapping
+        childAccount = accountUserApi.getAccountById(childAccount.getId(), callContext);
+        assertEquals(childAccount.getParentAccountId(), parentAccount.getId());
+        assertTrue(childAccount.isPaymentDelegatedToParent());
+        List<Account> childrenAccounts = accountUserApi.getChildrenAccounts(parentAccount.getId(), callContext);
+        assertEquals(childrenAccounts.size(), 1);
+        assertEquals(childrenAccounts.get(0).getId(), childAccount.getId());
+
+        // Create subscription
+        createBaseEntitlementAndCheckForCompletion(childAccount.getId(), "bundleKey1", "Shotgun", ProductCategory.BASE, BillingPeriod.MONTHLY, NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE);
+
+        // Moving a day the NotificationQ calls the commitInvoice. No payment is expected
+        busHandler.pushExpectedEvents(NextEvent.INVOICE);
+        clock.addDays(1);
+        assertListenerStatus();
+
+        // First Parent invoice over TRIAL period
+        List<Invoice> parentInvoices = invoiceUserApi.getInvoicesByAccount(parentAccount.getId(), false, callContext);
+        assertEquals(parentInvoices.size(), 1);
+        Invoice parentInvoice = parentInvoices.get(0);
+        assertEquals(parentInvoice.getNumberOfItems(), 1);
+        assertEquals(parentInvoice.getStatus(), InvoiceStatus.COMMITTED);
+        assertTrue(parentInvoice.isParentInvoice());
+        assertEquals(parentInvoice.getBalance().compareTo(BigDecimal.ZERO), 0);
+
+        // First child invoice over TRIAL period
+        List<Invoice> childInvoices = invoiceUserApi.getInvoicesByAccount(childAccount.getId(), false, callContext);
+        assertEquals(childInvoices.size(), 1);
+        assertEquals(childInvoices.get(0).getBalance().compareTo(BigDecimal.ZERO), 0);
+
+        busHandler.pushExpectedEvents(NextEvent.PHASE, NextEvent.INVOICE);
+        clock.addDays(29);
+        assertListenerStatus();
+
+        paymentPlugin.makeNextPaymentFailWithError();
+
+        busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.PAYMENT_ERROR, NextEvent.INVOICE_PAYMENT_ERROR);
+        clock.addDays(1);
+        assertListenerStatus();
+
+        // Second Parent invoice over Recurring period
+        parentInvoices = invoiceUserApi.getInvoicesByAccount(parentAccount.getId(), false, callContext);
+        assertEquals(parentInvoices.size(), 2);
+        parentInvoice = parentInvoices.get(1);
+        assertEquals(parentInvoice.getNumberOfItems(), 1);
+        assertEquals(parentInvoice.getStatus(), InvoiceStatus.COMMITTED);
+        assertTrue(parentInvoice.isParentInvoice());
+        assertEquals(parentInvoice.getBalance().compareTo(new BigDecimal("249.95")), 0);
+        // The parent has attempted to pay the child invoice
+        assertEquals(parentInvoice.getPayments().size(), 1);
+        assertEquals(paymentApi.getPayment(parentInvoice.getPayments().get(0).getPaymentId(), false, false, ImmutableList.<PluginProperty>of(), callContext).getPaymentMethodId(),
+                     parentAccount.getPaymentMethodId());
+
+        // Second child invoice over Recurring period
+        childInvoices = invoiceUserApi.getInvoicesByAccount(childAccount.getId(), false, callContext);
+        assertEquals(childInvoices.size(), 2);
+        assertEquals(childInvoices.get(1).getBalance().compareTo(new BigDecimal("249.95")), 0);
+
+        // Verify balances
+        assertEquals(invoiceUserApi.getAccountBalance(parentAccount.getId(), callContext).compareTo(new BigDecimal("249.95")), 0);
+        assertEquals(invoiceUserApi.getAccountBalance(childAccount.getId(), callContext).compareTo(new BigDecimal("249.95")), 0);
+
+        // Un-parent the child
+        final AccountModelDao childAccountModelDao = new AccountModelDao(childAccount.getId(), childAccount);
+        childAccountModelDao.setParentAccountId(null);
+        childAccountModelDao.setIsPaymentDelegatedToParent(false);
+        accountUserApi.updateAccount(new DefaultAccount(childAccountModelDao), callContext);
+
+        // Verify mapping
+        childAccount = accountUserApi.getAccountById(childAccount.getId(), callContext);
+        assertNull(childAccount.getParentAccountId());
+        assertFalse(childAccount.isPaymentDelegatedToParent());
+        childrenAccounts = accountUserApi.getChildrenAccounts(parentAccount.getId(), callContext);
+        assertEquals(childrenAccounts.size(), 0);
+
+        // Verify balances
+        // TODO Should we automatically adjust the invoice at the parent level or should it be the responsibility of the user?
+        assertEquals(invoiceUserApi.getAccountBalance(parentAccount.getId(), callContext).compareTo(new BigDecimal("249.95")), 0);
+        assertEquals(invoiceUserApi.getAccountBalance(childAccount.getId(), callContext).compareTo(new BigDecimal("249.95")), 0);
+
+        final int nbDaysBeforeRetry = paymentConfig.getPaymentFailureRetryDays(internalCallContext).get(0);
+
+        // Move time for retry to happen
+        busHandler.pushExpectedEvents(NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
+        clock.addDays(nbDaysBeforeRetry + 1);
+        assertListenerStatus();
+
+        // Second Parent invoice over Recurring period
+        parentInvoices = invoiceUserApi.getInvoicesByAccount(parentAccount.getId(), false, callContext);
+        // Note that the parent still owns both invoices
+        assertEquals(parentInvoices.size(), 2);
+        parentInvoice = parentInvoices.get(1);
+        assertEquals(parentInvoice.getNumberOfItems(), 1);
+        assertEquals(parentInvoice.getStatus(), InvoiceStatus.COMMITTED);
+        assertTrue(parentInvoice.isParentInvoice());
+        assertEquals(parentInvoice.getBalance().compareTo(BigDecimal.ZERO), 0);
+        // Even if the child-parent mapping has been removed, the parent has retried and successfully paid the summary invoice
+        // TODO Should we automatically disable payment retries when un-parenting?
+        assertEquals(parentInvoice.getPayments().size(), 1);
+        assertEquals(paymentApi.getPayment(parentInvoice.getPayments().get(0).getPaymentId(), false, false, ImmutableList.<PluginProperty>of(), callContext).getPaymentMethodId(),
+                     parentAccount.getPaymentMethodId());
+
+        // Second child invoice over Recurring period
+        childInvoices = invoiceUserApi.getInvoicesByAccount(childAccount.getId(), false, callContext);
+        assertEquals(childInvoices.size(), 2);
+        assertEquals(childInvoices.get(1).getBalance().compareTo(BigDecimal.ZERO), 0);
+
+        // Verify balances (the parent has paid the summary invoice, so the child invoice is automatically paid)
+        assertEquals(invoiceUserApi.getAccountBalance(parentAccount.getId(), callContext).compareTo(BigDecimal.ZERO), 0);
+        assertEquals(invoiceUserApi.getAccountBalance(childAccount.getId(), callContext).compareTo(BigDecimal.ZERO), 0);
+
+        busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT);
+        clock.addDays(29 - nbDaysBeforeRetry - 1);
+        assertListenerStatus();
+
+        // No new invoice for the parent
+        parentInvoices = invoiceUserApi.getInvoicesByAccount(parentAccount.getId(), false, callContext);
+        assertEquals(parentInvoices.size(), 2);
+
+        // Third child invoice over second Recurring period
+        childInvoices = invoiceUserApi.getInvoicesByAccount(childAccount.getId(), false, callContext);
+        assertEquals(childInvoices.size(), 3);
+        assertEquals(childInvoices.get(2).getBalance().compareTo(BigDecimal.ZERO), 0);
+        // Verify the child paid the invoice this time
+        assertEquals(childInvoices.get(2).getPayments().size(), 1);
+        assertEquals(paymentApi.getPayment(childInvoices.get(2).getPayments().get(0).getPaymentId(), false, false, ImmutableList.<PluginProperty>of(), callContext).getPaymentMethodId(),
+                     childAccount.getPaymentMethodId());
+
+        // Verify balances
+        assertEquals(invoiceUserApi.getAccountBalance(parentAccount.getId(), callContext).compareTo(BigDecimal.ZERO), 0);
+        assertEquals(invoiceUserApi.getAccountBalance(childAccount.getId(), callContext).compareTo(BigDecimal.ZERO), 0);
+    }
+
+    @Test(groups = "slow")
+    public void testParentingWithFuturePhaseEvent() throws Exception {
+        final int billingDay = 14;
+        final DateTime initialCreationDate = new DateTime(2015, 5, 15, 0, 0, 0, 0, testTimeZone);
+        // set clock to the initial start date
+        clock.setTime(initialCreationDate);
+
+        final Account parentAccount = createAccountWithNonOsgiPaymentMethod(getAccountData(billingDay));
+        Account childAccount = createAccountWithNonOsgiPaymentMethod(getAccountData(billingDay));
+
+        // Verify mapping
+        childAccount = accountUserApi.getAccountById(childAccount.getId(), callContext);
+        assertNull(childAccount.getParentAccountId());
+        assertFalse(childAccount.isPaymentDelegatedToParent());
+        List<Account> childrenAccounts = accountUserApi.getChildrenAccounts(parentAccount.getId(), callContext);
+        assertEquals(childrenAccounts.size(), 0);
+
+        // Create subscription
+        createBaseEntitlementAndCheckForCompletion(childAccount.getId(), "bundleKey1", "Shotgun", ProductCategory.BASE, BillingPeriod.MONTHLY, NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE);
+
+        // First child invoice over TRIAL period
+        List<Invoice> childInvoices = invoiceUserApi.getInvoicesByAccount(childAccount.getId(), false, callContext);
+        assertEquals(childInvoices.size(), 1);
+        assertEquals(childInvoices.get(0).getBalance().compareTo(BigDecimal.ZERO), 0);
+
+        // Add parent to the child -- the child still pays its invoices though
+        AccountModelDao childAccountModelDao = new AccountModelDao(childAccount.getId(), childAccount);
+        childAccountModelDao.setParentAccountId(parentAccount.getId());
+        childAccountModelDao.setIsPaymentDelegatedToParent(false);
+        accountUserApi.updateAccount(new DefaultAccount(childAccountModelDao), callContext);
+
+        // Verify mapping
+        childAccount = accountUserApi.getAccountById(childAccount.getId(), callContext);
+        assertEquals(childAccount.getParentAccountId(), parentAccount.getId());
+        assertFalse(childAccount.isPaymentDelegatedToParent());
+        childrenAccounts = accountUserApi.getChildrenAccounts(parentAccount.getId(), callContext);
+        assertEquals(childrenAccounts.size(), 1);
+        assertEquals(childrenAccounts.get(0).getId(), childAccount.getId());
+
+        busHandler.pushExpectedEvents(NextEvent.PHASE, NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT);
+        clock.addDays(30);
+        assertListenerStatus();
+
+        // The parent still has no invoice
+        List<Invoice> parentInvoices = invoiceUserApi.getInvoicesByAccount(parentAccount.getId(), false, callContext);
+        assertEquals(parentInvoices.size(), 0);
+
+        // Second child invoice over Recurring period
+        childInvoices = invoiceUserApi.getInvoicesByAccount(childAccount.getId(), false, callContext);
+        assertEquals(childInvoices.size(), 2);
+        assertEquals(childInvoices.get(1).getBalance().compareTo(BigDecimal.ZERO), 0);
+        assertEquals(childInvoices.get(1).getPayments().size(), 1);
+        assertEquals(paymentApi.getPayment(childInvoices.get(1).getPayments().get(0).getPaymentId(), false, false, ImmutableList.<PluginProperty>of(), callContext).getPaymentMethodId(),
+                     childAccount.getPaymentMethodId());
+
+        // The child now delegates its payments
+        childAccountModelDao = new AccountModelDao(childAccount.getId(), childAccount);
+        childAccountModelDao.setIsPaymentDelegatedToParent(true);
+        accountUserApi.updateAccount(new DefaultAccount(childAccountModelDao), callContext);
+
+        // Verify mapping
+        childAccount = accountUserApi.getAccountById(childAccount.getId(), callContext);
+        assertEquals(childAccount.getParentAccountId(), parentAccount.getId());
+        assertTrue(childAccount.isPaymentDelegatedToParent());
+        childrenAccounts = accountUserApi.getChildrenAccounts(parentAccount.getId(), callContext);
+        assertEquals(childrenAccounts.size(), 1);
+        assertEquals(childrenAccounts.get(0).getId(), childAccount.getId());
+
+        busHandler.pushExpectedEvents(NextEvent.INVOICE);
+        clock.addDays(30);
+        assertListenerStatus();
+
+        // Moving a day the NotificationQ calls the commitInvoice. No payment is expected
+        busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT);
+        clock.addDays(1);
+        assertListenerStatus();
+
+        // The parent now owns the invoice
+        parentInvoices = invoiceUserApi.getInvoicesByAccount(parentAccount.getId(), false, callContext);
+        assertEquals(parentInvoices.size(), 1);
+        final Invoice parentInvoice = parentInvoices.get(0);
+        assertEquals(parentInvoice.getNumberOfItems(), 1);
+        assertEquals(parentInvoice.getStatus(), InvoiceStatus.COMMITTED);
+        assertTrue(parentInvoice.isParentInvoice());
+        assertEquals(parentInvoice.getBalance().compareTo(BigDecimal.ZERO), 0);
+        assertEquals(parentInvoice.getPayments().size(), 1);
+        assertEquals(paymentApi.getPayment(parentInvoice.getPayments().get(0).getPaymentId(), false, false, ImmutableList.<PluginProperty>of(), callContext).getPaymentMethodId(),
+                     parentAccount.getPaymentMethodId());
+
+        // Third child invoice over Recurring period
+        childInvoices = invoiceUserApi.getInvoicesByAccount(childAccount.getId(), false, callContext);
+        assertEquals(childInvoices.size(), 3);
+        assertEquals(childInvoices.get(2).getBalance().compareTo(BigDecimal.ZERO), 0);
+    }
 }
