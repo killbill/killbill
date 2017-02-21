@@ -46,8 +46,8 @@ public class TestRawUsageOptimizer extends TestUsageInArrearBase {
 
         final Map<String, Usage> knownUsage = new HashMap<String, Usage>();
         final DefaultTieredBlock block = createDefaultTieredBlock("unit", 100, 1000, BigDecimal.ONE);
-        final DefaultTier tier = createDefaultTier(block);
-        final DefaultUsage usage = createDefaultUsage(usageName, BillingPeriod.MONTHLY, tier);
+        final DefaultTier tier = createDefaultTierWithBlocks(block);
+        final DefaultUsage usage = createConsumableInArrearUsage(usageName, BillingPeriod.MONTHLY, tier);
         knownUsage.put(usageName, usage);
 
         final LocalDate result = rawUsageOptimizer.getOptimizedRawUsageStartDate(firstEventStartDate, firstEventStartDate.plusDays(1), invoiceItems, knownUsage, internalCallContext);
@@ -65,8 +65,8 @@ public class TestRawUsageOptimizer extends TestUsageInArrearBase {
 
         final Map<String, Usage> knownUsage = new HashMap<String, Usage>();
         final DefaultTieredBlock block = createDefaultTieredBlock("unit", 100, 1000, BigDecimal.ONE);
-        final DefaultTier tier = createDefaultTier(block);
-        final DefaultUsage usage = createDefaultUsage(usageName, BillingPeriod.MONTHLY, tier);
+        final DefaultTier tier = createDefaultTierWithBlocks(block);
+        final DefaultUsage usage = createConsumableInArrearUsage(usageName, BillingPeriod.MONTHLY, tier);
         knownUsage.put(usageName, usage);
 
         final LocalDate result = rawUsageOptimizer.getOptimizedRawUsageStartDate(firstEventStartDate, targetDate, invoiceItems, knownUsage, internalCallContext);
@@ -88,8 +88,8 @@ public class TestRawUsageOptimizer extends TestUsageInArrearBase {
 
         final Map<String, Usage> knownUsage = new HashMap<String, Usage>();
         final DefaultTieredBlock block = createDefaultTieredBlock("unit", 100, 1000, BigDecimal.ONE);
-        final DefaultTier tier = createDefaultTier(block);
-        final DefaultUsage usage = createDefaultUsage(usageName, BillingPeriod.MONTHLY, tier);
+        final DefaultTier tier = createDefaultTierWithBlocks(block);
+        final DefaultUsage usage = createConsumableInArrearUsage(usageName, BillingPeriod.MONTHLY, tier);
         knownUsage.put(usageName, usage);
 
         final LocalDate result = rawUsageOptimizer.getOptimizedRawUsageStartDate(firstEventStartDate, targetDate, invoiceItems, knownUsage, internalCallContext);
@@ -110,13 +110,13 @@ public class TestRawUsageOptimizer extends TestUsageInArrearBase {
 
         final Map<String, Usage> knownUsage = new HashMap<String, Usage>();
         final DefaultTieredBlock block = createDefaultTieredBlock("unit", 100, 1000, BigDecimal.ONE);
-        final DefaultTier tier = createDefaultTier(block);
-        final DefaultUsage usage = createDefaultUsage(usageName, BillingPeriod.MONTHLY, tier);
+        final DefaultTier tier = createDefaultTierWithBlocks(block);
+        final DefaultUsage usage = createConsumableInArrearUsage(usageName, BillingPeriod.MONTHLY, tier);
         knownUsage.put(usageName, usage);
 
         final DefaultTieredBlock block2 = createDefaultTieredBlock("unit2", 10, 10000, BigDecimal.TEN);
-        final DefaultTier tier2 = createDefaultTier(block2);
-        final DefaultUsage usage2 = createDefaultUsage("usageName2", BillingPeriod.ANNUAL, tier2);
+        final DefaultTier tier2 = createDefaultTierWithBlocks(block2);
+        final DefaultUsage usage2 = createConsumableInArrearUsage("usageName2", BillingPeriod.ANNUAL, tier2);
         knownUsage.put("usageName2", usage2);
 
         final LocalDate result = rawUsageOptimizer.getOptimizedRawUsageStartDate(firstEventStartDate, targetDate, invoiceItems, knownUsage, internalCallContext);

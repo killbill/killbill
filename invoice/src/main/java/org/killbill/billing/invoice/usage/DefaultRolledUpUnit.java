@@ -38,4 +38,12 @@ public class DefaultRolledUpUnit implements RolledUpUnit {
     public Long getAmount() {
         return amount;
     }
+
+    @Override
+    public String toString() {
+        return "DefaultRolledUpUnit{" +
+               "unitType='" + unitType + '\'' +
+               ", amount=" + amount +
+               '}';
+    }
 }

@@ -16,28 +16,19 @@
 
 package org.killbill.billing.invoice.usage;
 
-import java.util.Collections;
-import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
-import javax.annotation.Nullable;
-
 import org.killbill.billing.catalog.api.BillingMode;
+import org.killbill.billing.catalog.api.Limit;
 import org.killbill.billing.catalog.api.Tier;
 import org.killbill.billing.catalog.api.TieredBlock;
 import org.killbill.billing.catalog.api.Usage;
 import org.killbill.billing.catalog.api.UsageType;
-import org.killbill.billing.junction.BillingEvent;
-import org.killbill.billing.junction.BillingEventSet;
 
-import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Predicate;
-import com.google.common.collect.Iterables;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 
 public class UsageUtils {
@@ -71,5 +62,29 @@ public class UsageUtils {
         }
         return result;
     }
+
+
+    public static List<Tier> getCapacityInArrearTier(final Usage usage) {
+
+        Preconditions.checkArgument(usage.getBillingMode() == BillingMode.IN_ARREAR && usage.getUsageType() == UsageType.CAPACITY);
+        Preconditions.checkArgument(usage.getTiers().length > 0);
+        return ImmutableList.copyOf(usage.getTiers());
+    }
+
+
+    public static Set<String> getCapacityInArrearUnitTypes(final Usage usage) {
+
+        Preconditions.checkArgument(usage.getBillingMode() == BillingMode.IN_ARREAR && usage.getUsageType() == UsageType.CAPACITY);
+        Preconditions.checkArgument(usage.getTiers().length > 0);
+
+        final Set<String> result = new HashSet<String>();
+        for (Tier tier : usage.getTiers()) {
+            for (Limit limit : tier.getLimits()) {
+                result.add(limit.getUnit().getName());
+            }
+        }
+        return result;
+    }
+
 
 }

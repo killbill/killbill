@@ -52,13 +52,13 @@ public class TestSubscriptionConsumableInArrear extends TestUsageInArrearBase {
 
         final String usageName1 = "erw";
         final DefaultTieredBlock block1 = createDefaultTieredBlock("unit", 100, 10, BigDecimal.ONE);
-        final DefaultTier tier1 = createDefaultTier(block1);
-        final Usage usage1 = createDefaultUsage(usageName1, BillingPeriod.MONTHLY, tier1);
+        final DefaultTier tier1 = createDefaultTierWithBlocks(block1);
+        final Usage usage1 = createConsumableInArrearUsage(usageName1, BillingPeriod.MONTHLY, tier1);
 
         final String usageName2 = "hghg";
         final DefaultTieredBlock block2 = createDefaultTieredBlock("unit", 100, 10, BigDecimal.ONE);
-        final DefaultTier tier2 = createDefaultTier(block2);
-        final Usage usage2 = createDefaultUsage(usageName2, BillingPeriod.MONTHLY, tier2);
+        final DefaultTier tier2 = createDefaultTierWithBlocks(block2);
+        final Usage usage2 = createConsumableInArrearUsage(usageName2, BillingPeriod.MONTHLY, tier2);
 
         final DateTime dt1 = new DateTime(2013, 3, 23, 4, 34, 59, DateTimeZone.UTC);
         final BillingEvent evt1 = createMockBillingEvent(dt1, BillingPeriod.MONTHLY, ImmutableList.<Usage>builder().add(usage1).add(usage2).build());
@@ -74,8 +74,8 @@ public class TestSubscriptionConsumableInArrear extends TestUsageInArrearBase {
 
         LocalDate targetDate = new LocalDate(2013, 6, 23);
 
-        final SubscriptionConsumableInArrear foo = new SubscriptionConsumableInArrear(accountId, invoiceId, billingEvents, ImmutableList.<RawUsage>of(), targetDate, new LocalDate(dt1, DateTimeZone.UTC), internalCallContext);
-        final List<ContiguousIntervalConsumableInArrear> result = foo.computeInArrearUsageInterval();
+        final SubscriptionUsageInArrear foo = new SubscriptionUsageInArrear(accountId, invoiceId, billingEvents, ImmutableList.<RawUsage>of(), targetDate, new LocalDate(dt1, DateTimeZone.UTC), internalCallContext);
+        final List<ContiguousIntervalUsageInArrear> result = foo.computeInArrearUsageInterval();
         assertEquals(result.size(), 3);
 
         assertEquals(result.get(0).getUsage().getName(), usageName2);
