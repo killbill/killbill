@@ -71,11 +71,11 @@ getParentDraftInvoice() ::= <<
    <defaultOrderBy()>
 >>
 
-getParentInvoiceByChildInvoiceId() ::= <<
-   SELECT <allTableFields("i.")>
-     FROM <tableName()> i
-     INNER JOIN invoice_parent_children ipc ON i.id = ipc.parent_invoice_id
-    WHERE ipc.child_invoice_id = :childInvoiceId
-   <AND_CHECK_TENANT("i.")>
-   <AND_CHECK_TENANT("ipc.")>
- >>
+getByIds(ids) ::= <<
+select
+  <allTableFields("t.")>
+from <tableName()> t
+where <idField("t.")> in (<ids: {id | :id_<i0>}; separator="," >)
+<AND_CHECK_TENANT("t.")>
+;
+>>

@@ -30,8 +30,16 @@ allTableValues() ::= <<
 
 getChildInvoicesByParentInvoiceId() ::= <<
    SELECT <allTableFields()>
-     FROM <tableName()>
-    WHERE parent_invoice_id = :parentInvoiceId
-    <AND_CHECK_TENANT()>
-    <defaultOrderBy()>
+   FROM <tableName()>
+   WHERE parent_invoice_id = :parentInvoiceId
+   <AND_CHECK_TENANT()>
+   <defaultOrderBy()>
+ >>
+
+getParentChildMappingsByChildInvoiceIds(ids) ::= <<
+   SELECT <allTableFields()>
+   FROM <tableName()>
+   WHERE child_invoice_id in (<ids: {id | :id_<i0>}; separator="," >)
+   <AND_CHECK_TENANT()>
+   <defaultOrderBy()>
  >>

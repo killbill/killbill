@@ -83,7 +83,6 @@ public class InvoiceListener {
         }
     }
 
-
     @AllowConcurrentEvents
     @Subscribe
     public void handleBlockingStateTransition(final BlockingTransitionInternalEvent event) {

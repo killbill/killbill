@@ -1,0 +1,1 @@
+alter table invoice_parent_children add index invoice_parent_children_child_invoice_id(child_invoice_id);

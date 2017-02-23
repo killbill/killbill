@@ -771,35 +771,52 @@ public class InvoiceDispatcher {
         }
     }
 
-    public void processParentInvoiceForInvoiceGeneration(final Account account, final UUID childInvoiceId, final InternalCallContext context) throws InvoiceApiException {
+    public void processParentInvoiceForInvoiceGeneration(final Account childAccount, final UUID childInvoiceId, final InternalCallContext context) throws InvoiceApiException {
+        GlobalLock lock = null;
+        try {
+            lock = locker.lockWithNumberOfTries(LockerType.ACCNT_INV_PAY.toString(), childAccount.getParentAccountId().toString(), invoiceConfig.getMaxGlobalLockRetries());
 
+            processParentInvoiceForInvoiceGenerationWithLock(childAccount, childInvoiceId, context);
+        } catch (final LockFailedException e) {
+            log.warn("Failed to process parent invoice for parentAccountId='{}'", childAccount.getParentAccountId().toString(), e);
+        } finally {
+            if (lock != null) {
+                lock.release();
+            }
+        }
+    }
+
+    private void processParentInvoiceForInvoiceGenerationWithLock(final Account childAccount, final UUID childInvoiceId, final InternalCallContext context) throws InvoiceApiException {
+        log.info("Processing parent invoice for parentAccountId='{}', childInvoiceId='{}'", childAccount.getParentAccountId(), childInvoiceId);
         final InvoiceModelDao childInvoiceModelDao = invoiceDao.getById(childInvoiceId, context);
         final Invoice childInvoice = new DefaultInvoice(childInvoiceModelDao);
 
-        final Long parentAccountRecordId = internalCallContextFactory.getRecordIdFromObject(account.getParentAccountId(), ObjectType.ACCOUNT, buildTenantContext(context));
+        final Long parentAccountRecordId = internalCallContextFactory.getRecordIdFromObject(childAccount.getParentAccountId(), ObjectType.ACCOUNT, buildTenantContext(context));
         final InternalCallContext parentContext = internalCallContextFactory.createInternalCallContext(parentAccountRecordId, context);
 
         BigDecimal childInvoiceAmount = InvoiceCalculatorUtils.computeChildInvoiceAmount(childInvoice.getCurrency(), childInvoice.getInvoiceItems());
-        InvoiceModelDao draftParentInvoice = invoiceDao.getParentDraftInvoice(account.getParentAccountId(), parentContext);
+        InvoiceModelDao draftParentInvoice = invoiceDao.getParentDraftInvoice(childAccount.getParentAccountId(), parentContext);
 
-        final String description = account.getExternalKey().concat(" summary");
+        final String description = childAccount.getExternalKey().concat(" summary");
         if (draftParentInvoice != null) {
-
             for (InvoiceItemModelDao item : draftParentInvoice.getInvoiceItems()) {
                 if ((item.getChildAccountId() != null) && item.getChildAccountId().equals(childInvoice.getAccountId())) {
                     // update child item amount for existing parent invoice item
                     BigDecimal newChildInvoiceAmount = childInvoiceAmount.add(item.getAmount());
+                    log.info("Updating existing itemId='{}', oldAmount='{}', newAmount='{}' on existing DRAFT invoiceId='{}'", item.getId(), item.getAmount(), newChildInvoiceAmount, draftParentInvoice.getId());
                     invoiceDao.updateInvoiceItemAmount(item.getId(), newChildInvoiceAmount, parentContext);
                     return;
                 }
             }
 
             // new item when the parent invoices does not have this child item yet
-            final ParentInvoiceItem newParentInvoiceItem = new ParentInvoiceItem(UUID.randomUUID(), context.getCreatedDate(), draftParentInvoice.getId(), account.getParentAccountId(), account.getId(), childInvoiceAmount, account.getCurrency(), description);
-            draftParentInvoice.addInvoiceItem(new InvoiceItemModelDao(newParentInvoiceItem));
+            final ParentInvoiceItem newParentInvoiceItem = new ParentInvoiceItem(UUID.randomUUID(), context.getCreatedDate(), draftParentInvoice.getId(), childAccount.getParentAccountId(), childAccount.getId(), childInvoiceAmount, childAccount.getCurrency(), description);
+            final InvoiceItemModelDao parentInvoiceItem = new InvoiceItemModelDao(newParentInvoiceItem);
+            draftParentInvoice.addInvoiceItem(parentInvoiceItem);
 
             List<InvoiceModelDao> invoices = new ArrayList<InvoiceModelDao>();
             invoices.add(draftParentInvoice);
+            log.info("Adding new itemId='{}', amount='{}' on existing DRAFT invoiceId='{}'", parentInvoiceItem.getId(), childInvoiceAmount, draftParentInvoice.getId());
             invoiceDao.createInvoices(invoices, parentContext);
         } else {
             if (shouldIgnoreChildInvoice(childInvoice, childInvoiceAmount)) {
@@ -807,20 +824,20 @@ public class InvoiceDispatcher {
             }
 
             final LocalDate invoiceDate = context.toLocalDate(context.getCreatedDate());
-            draftParentInvoice = new InvoiceModelDao(account.getParentAccountId(), invoiceDate, account.getCurrency(), InvoiceStatus.DRAFT, true);
-            final InvoiceItem parentInvoiceItem = new ParentInvoiceItem(UUID.randomUUID(), context.getCreatedDate(), draftParentInvoice.getId(), account.getParentAccountId(), account.getId(), childInvoiceAmount, account.getCurrency(), description);
+            draftParentInvoice = new InvoiceModelDao(childAccount.getParentAccountId(), invoiceDate, childAccount.getCurrency(), InvoiceStatus.DRAFT, true);
+            final InvoiceItem parentInvoiceItem = new ParentInvoiceItem(UUID.randomUUID(), context.getCreatedDate(), draftParentInvoice.getId(), childAccount.getParentAccountId(), childAccount.getId(), childInvoiceAmount, childAccount.getCurrency(), description);
             draftParentInvoice.addInvoiceItem(new InvoiceItemModelDao(parentInvoiceItem));
 
             // build account date time zone
             final FutureAccountNotifications futureAccountNotifications = new FutureAccountNotifications(ImmutableMap.<UUID, List<SubscriptionNotification>>of());
 
+            log.info("Adding new itemId='{}', amount='{}' on new DRAFT invoiceId='{}'", parentInvoiceItem.getId(), childInvoiceAmount, draftParentInvoice.getId());
             invoiceDao.createInvoice(draftParentInvoice, draftParentInvoice.getInvoiceItems(), true, futureAccountNotifications, parentContext);
         }
 
         // save parent child invoice relation
-        final InvoiceParentChildModelDao invoiceRelation = new InvoiceParentChildModelDao(draftParentInvoice.getId(), childInvoiceId, account.getId());
+        final InvoiceParentChildModelDao invoiceRelation = new InvoiceParentChildModelDao(draftParentInvoice.getId(), childInvoiceId, childAccount.getId());
         invoiceDao.createParentChildInvoiceRelation(invoiceRelation, parentContext);
-
     }
 
     private boolean shouldIgnoreChildInvoice(final Invoice childInvoice, final BigDecimal childInvoiceAmount) {
@@ -840,8 +857,22 @@ public class InvoiceDispatcher {
         return true;
     }
 
-    public void processParentInvoiceForAdjustments(final AccountData account, final UUID childInvoiceId, final InternalCallContext context) throws InvoiceApiException {
+    public void processParentInvoiceForAdjustments(final Account childAccount, final UUID childInvoiceId, final InternalCallContext context) throws InvoiceApiException {
+        GlobalLock lock = null;
+        try {
+            lock = locker.lockWithNumberOfTries(LockerType.ACCNT_INV_PAY.toString(), childAccount.getParentAccountId().toString(), invoiceConfig.getMaxGlobalLockRetries());
 
+            processParentInvoiceForAdjustmentsWithLock(childAccount, childInvoiceId, context);
+        } catch (final LockFailedException e) {
+            log.warn("Failed to process parent invoice for parentAccountId='{}'", childAccount.getParentAccountId().toString(), e);
+        } finally {
+            if (lock != null) {
+                lock.release();
+            }
+        }
+    }
+
+    public void processParentInvoiceForAdjustmentsWithLock(final Account account, final UUID childInvoiceId, final InternalCallContext context) throws InvoiceApiException {
         final InvoiceModelDao childInvoiceModelDao = invoiceDao.getById(childInvoiceId, context);
         final InvoiceModelDao parentInvoiceModelDao = childInvoiceModelDao.getParentInvoice();
 
