@@ -56,6 +56,8 @@ public interface EventsStream {
 
     boolean isEntitlementActive();
 
+    boolean isEntitlementPending();
+
     boolean isBlockChange();
 
     boolean isEntitlementCancelled();

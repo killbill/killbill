@@ -188,6 +188,11 @@ public class DefaultEventsStream implements EventsStream {
     }
 
     @Override
+    public boolean isEntitlementPending() {
+        return entitlementState == EntitlementState.PENDING;
+    }
+
+    @Override
     public boolean isEntitlementCancelled() {
         return entitlementState == EntitlementState.CANCELLED;
     }
