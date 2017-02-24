@@ -20,6 +20,7 @@ package org.killbill.billing.jaxrs.resources;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.URI;
+import java.util.Iterator;
 import java.util.UUID;
 
 import javax.annotation.Nullable;
@@ -163,31 +164,53 @@ public class AdminResource extends JaxRsResourceBase {
         final StreamingOutput json = new StreamingOutput() {
             @Override
             public void write(final OutputStream output) throws IOException, WebApplicationException {
-                final JsonGenerator generator = mapper.getFactory().createGenerator(output);
-                generator.configure(JsonGenerator.Feature.AUTO_CLOSE_TARGET, false);
+                Iterator<BusEventWithMetadata<BusEvent>> busEventsIterator = null;
+                Iterator<NotificationEventWithMetadata<NotificationEvent>> notificationsIterator = null;
 
-                generator.writeStartObject();
+                try {
+                    final JsonGenerator generator = mapper.getFactory().createGenerator(output);
+                    generator.configure(JsonGenerator.Feature.AUTO_CLOSE_TARGET, false);
 
-                if (withBusEvents) {
-                    generator.writeFieldName("busEvents");
-                    generator.writeStartArray();
-                    for (final BusEventWithMetadata<BusEvent> busEvent : getBusEvents(withInProcessing, withHistory, minDate, maxDate, accountRecordId, tenantRecordId)) {
-                        generator.writeObject(new BusEventWithRichMetadata(busEvent));
+                    generator.writeStartObject();
+
+                    if (withBusEvents) {
+                        generator.writeFieldName("busEvents");
+                        generator.writeStartArray();
+                        busEventsIterator = getBusEvents(withInProcessing, withHistory, minDate, maxDate, accountRecordId, tenantRecordId).iterator();
+                        while (busEventsIterator.hasNext()) {
+                            final BusEventWithMetadata<BusEvent> busEvent = busEventsIterator.next();
+                            generator.writeObject(new BusEventWithRichMetadata(busEvent));
+                        }
+                        generator.writeEndArray();
                     }
-                    generator.writeEndArray();
-                }
 
-                if (withNotifications) {
-                    generator.writeFieldName("notifications");
-                    generator.writeStartArray();
-                    for (final NotificationEventWithMetadata<NotificationEvent> notification : getNotifications(queueName, serviceName, withInProcessing, withHistory, minDate, maxDate, accountRecordId, tenantRecordId)) {
-                        generator.writeObject(notification);
+                    if (withNotifications) {
+                        generator.writeFieldName("notifications");
+                        generator.writeStartArray();
+
+                        notificationsIterator = getNotifications(queueName, serviceName, withInProcessing, withHistory, minDate, maxDate, accountRecordId, tenantRecordId).iterator();
+                        while (notificationsIterator.hasNext()) {
+                            final NotificationEventWithMetadata<NotificationEvent> notification = notificationsIterator.next();
+                            generator.writeObject(notification);
+                        }
+                        generator.writeEndArray();
                     }
-                    generator.writeEndArray();
-                }
 
-                generator.writeEndObject();
-                generator.close();
+                    generator.writeEndObject();
+                    generator.close();
+                } finally {
+                    // In case the client goes away (IOException), make sure to close the underlying DB connection
+                    if (busEventsIterator != null) {
+                        while (busEventsIterator.hasNext()) {
+                            busEventsIterator.next();
+                        }
+                    }
+                    if (notificationsIterator != null) {
+                        while (notificationsIterator.hasNext()) {
+                            notificationsIterator.next();
+                        }
+                    }
+                }
             }
         };
 
@@ -242,28 +265,37 @@ public class AdminResource extends JaxRsResourceBase {
 
         // TODO Consider adding a real invoice API post 0.18.x
         final Pagination<Tag> tags = tagUserApi.searchTags(SystemTags.PARK_TAG_DEFINITION_NAME, offset, limit, callContext);
+        final Iterator<Tag> iterator = tags.iterator();
 
         final StreamingOutput json = new StreamingOutput() {
             @Override
             public void write(final OutputStream output) throws IOException, WebApplicationException {
-                final JsonGenerator generator = mapper.getFactory().createGenerator(output);
-                generator.configure(JsonGenerator.Feature.AUTO_CLOSE_TARGET, false);
+                try {
+                    final JsonGenerator generator = mapper.getFactory().createGenerator(output);
+                    generator.configure(JsonGenerator.Feature.AUTO_CLOSE_TARGET, false);
 
-                generator.writeStartObject();
-                for (final Tag tag : tags) {
-                    final UUID accountId = tag.getObjectId();
-                    try {
-                        invoiceUserApi.triggerInvoiceGeneration(accountId, clock.getUTCToday(), null, callContext);
-                        generator.writeStringField(accountId.toString(), OK);
-                    } catch (final InvoiceApiException e) {
-                        if (e.getCode() != ErrorCode.INVOICE_NOTHING_TO_DO.getCode()) {
-                            log.warn("Unable to trigger invoice generation for accountId='{}'", accountId);
+                    generator.writeStartObject();
+                    while (iterator.hasNext()) {
+                        final Tag tag = iterator.next();
+                        final UUID accountId = tag.getObjectId();
+                        try {
+                            invoiceUserApi.triggerInvoiceGeneration(accountId, clock.getUTCToday(), null, callContext);
+                            generator.writeStringField(accountId.toString(), OK);
+                        } catch (final InvoiceApiException e) {
+                            if (e.getCode() != ErrorCode.INVOICE_NOTHING_TO_DO.getCode()) {
+                                log.warn("Unable to trigger invoice generation for accountId='{}'", accountId);
+                            }
+                            generator.writeStringField(accountId.toString(), ErrorCode.fromCode(e.getCode()).toString());
                         }
-                        generator.writeStringField(accountId.toString(), ErrorCode.fromCode(e.getCode()).toString());
+                    }
+                    generator.writeEndObject();
+                    generator.close();
+                } finally {
+                    // In case the client goes away (IOException), make sure to close the underlying DB connection
+                    while (iterator.hasNext()) {
+                        iterator.next();
                     }
                 }
-                generator.writeEndObject();
-                generator.close();
             }
         };
 
