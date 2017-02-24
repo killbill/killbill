@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014-2015 Groupon, Inc
- * Copyright 2014-2015 The Billing Project, LLC
+ * Copyright 2014-2017 Groupon, Inc
+ * Copyright 2014-2017 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -19,7 +19,6 @@
 package org.killbill.billing.invoice.notification;
 
 import java.io.IOException;
-import java.util.List;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
@@ -34,8 +33,6 @@ import org.killbill.notificationq.api.NotificationQueueService.NoSuchNotificatio
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Predicate;
-import com.google.common.collect.Iterables;
 import com.google.inject.Inject;
 
 public class DefaultNextBillingDatePoster implements NextBillingDatePoster {
@@ -71,23 +68,25 @@ public class DefaultNextBillingDatePoster implements NextBillingDatePoster {
                                                                              DefaultNextBillingDateNotifier.NEXT_BILLING_DATE_NOTIFIER_QUEUE);
 
             // If we see existing notification for the same date (and isDryRunForInvoiceNotification mode), we don't insert a new notification
-            final List<NotificationEventWithMetadata<NextBillingDateNotificationKey>> futureNotifications = nextBillingQueue.getFutureNotificationFromTransactionForSearchKeys(internalCallContext.getAccountRecordId(), internalCallContext.getTenantRecordId(), entitySqlDaoWrapperFactory.getHandle().getConnection());
-            final NotificationEventWithMetadata<NextBillingDateNotificationKey> existingFutureNotificationWithSameDate = Iterables.tryFind(futureNotifications, new Predicate<NotificationEventWithMetadata<NextBillingDateNotificationKey>>() {
-                @Override
-                public boolean apply(final NotificationEventWithMetadata<NextBillingDateNotificationKey> input) {
-                    final boolean isEventDryRunForNotifications = input.getEvent().isDryRunForInvoiceNotification() != null ?
-                                                                  input.getEvent().isDryRunForInvoiceNotification() : false;
+            final Iterable<NotificationEventWithMetadata<NextBillingDateNotificationKey>> futureNotifications = nextBillingQueue.getFutureNotificationFromTransactionForSearchKeys(internalCallContext.getAccountRecordId(), internalCallContext.getTenantRecordId(), entitySqlDaoWrapperFactory.getHandle().getConnection());
 
-                    final LocalDate notificationEffectiveLocaleDate = internalCallContext.toLocalDate(futureNotificationTime);
-                    final LocalDate eventEffectiveLocaleDate = internalCallContext.toLocalDate(input.getEffectiveDate());
+            boolean existingFutureNotificationWithSameDate = false;
+            for (final NotificationEventWithMetadata<NextBillingDateNotificationKey> input : futureNotifications) {
+                final boolean isEventDryRunForNotifications = input.getEvent().isDryRunForInvoiceNotification() != null ?
+                                                              input.getEvent().isDryRunForInvoiceNotification() : false;
 
-                    return notificationEffectiveLocaleDate.compareTo(eventEffectiveLocaleDate) == 0 &&
-                           ((isDryRunForInvoiceNotification && isEventDryRunForNotifications) ||
-                            (!isDryRunForInvoiceNotification && !isEventDryRunForNotifications));
+                final LocalDate notificationEffectiveLocaleDate = internalCallContext.toLocalDate(futureNotificationTime);
+                final LocalDate eventEffectiveLocaleDate = internalCallContext.toLocalDate(input.getEffectiveDate());
+
+                if (notificationEffectiveLocaleDate.compareTo(eventEffectiveLocaleDate) == 0 &&
+                    ((isDryRunForInvoiceNotification && isEventDryRunForNotifications) ||
+                     (!isDryRunForInvoiceNotification && !isEventDryRunForNotifications))) {
+                    existingFutureNotificationWithSameDate = true;
                 }
-            }).orNull();
+                // Go through all results to close the connection
+            }
 
-            if (existingFutureNotificationWithSameDate == null) {
+            if (!existingFutureNotificationWithSameDate) {
                 log.info("Queuing next billing date notification at {} for subscriptionId {}", futureNotificationTime.toString(), subscriptionId.toString());
 
                 nextBillingQueue.recordFutureNotificationFromTransaction(entitySqlDaoWrapperFactory.getHandle().getConnection(), futureNotificationTime,

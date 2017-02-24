@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014-2016 Groupon, Inc
- * Copyright 2014-2016 The Billing Project, LLC
+ * Copyright 2014-2017 Groupon, Inc
+ * Copyright 2014-2017 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -408,14 +408,14 @@ public class PaymentProcessor extends ProcessorBase {
     public void cancelScheduledPaymentTransaction(final UUID lastPaymentAttemptId, final InternalCallContext internalCallContext) throws PaymentApiException {
         try {
             final NotificationQueue retryQueue = notificationQueueService.getNotificationQueue(DefaultPaymentService.SERVICE_NAME, DefaultRetryService.QUEUE_NAME);
-            final List<NotificationEventWithMetadata<NotificationEvent>> notificationEventWithMetadatas =
+            final Iterable<NotificationEventWithMetadata<NotificationEvent>> notificationEventWithMetadatas =
                     retryQueue.getFutureNotificationForSearchKeys(internalCallContext.getAccountRecordId(), internalCallContext.getTenantRecordId());
 
             for (final NotificationEventWithMetadata<NotificationEvent> notificationEvent : notificationEventWithMetadatas) {
                 if (((PaymentRetryNotificationKey) notificationEvent.getEvent()).getAttemptId().equals(lastPaymentAttemptId)) {
                     retryQueue.removeNotification(notificationEvent.getRecordId());
-                    break;
                 }
+                // Go through all results to close the connection
             }
         } catch (final NoSuchNotificationQueue noSuchNotificationQueue) {
             log.error("ERROR Loading Notification Queue - " + noSuchNotificationQueue.getMessage());
@@ -767,7 +767,7 @@ public class PaymentProcessor extends ProcessorBase {
         // Get Future Payment Attempts from Notification Queue and add them to the list
         try {
             final NotificationQueue retryQueue = notificationQueueService.getNotificationQueue(DefaultPaymentService.SERVICE_NAME, DefaultRetryService.QUEUE_NAME);
-            final List<NotificationEventWithMetadata<NotificationEvent>> notificationEventWithMetadatas =
+            final Iterable<NotificationEventWithMetadata<NotificationEvent>> notificationEventWithMetadatas =
                     retryQueue.getFutureNotificationForSearchKeys(internalTenantContext.getAccountRecordId(), internalTenantContext.getTenantRecordId());
 
             for (final NotificationEventWithMetadata<NotificationEvent> notificationEvent : notificationEventWithMetadatas) {
