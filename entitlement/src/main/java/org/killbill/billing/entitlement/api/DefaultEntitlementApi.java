@@ -299,8 +299,10 @@ public class DefaultEntitlementApi extends DefaultEntitlementApiBase implements 
             public Entitlement doCall(final EntitlementApi entitlementApi, final EntitlementContext updatedPluginContext) throws EntitlementApiException {
                 final EventsStream eventsStreamForBaseSubscription = eventsStreamBuilder.buildForBaseSubscription(bundleId, callContext);
 
-                // Check the base entitlement state is active
-                if (!eventsStreamForBaseSubscription.isEntitlementActive()) {
+                if (eventsStreamForBaseSubscription.isEntitlementCancelled() ||
+                    (eventsStreamForBaseSubscription.isEntitlementPending() &&
+                     (baseEntitlementWithAddOnsSpecifier.getEntitlementEffectiveDate() == null ||
+                      baseEntitlementWithAddOnsSpecifier.getEntitlementEffectiveDate().compareTo(eventsStreamForBaseSubscription.getEntitlementEffectiveStartDate()) < 0))) {
                     throw new EntitlementApiException(ErrorCode.SUB_GET_NO_SUCH_BASE_SUBSCRIPTION, bundleId);
                 }
 

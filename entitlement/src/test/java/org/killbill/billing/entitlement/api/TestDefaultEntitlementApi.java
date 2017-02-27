@@ -279,6 +279,57 @@ public class TestDefaultEntitlementApi extends EntitlementTestSuiteWithEmbeddedD
     }
 
     @Test(groups = "slow")
+    public void testAddEntitlementOnPendingBase() throws AccountApiException, EntitlementApiException {
+        final LocalDate initialDate = new LocalDate(2013, 8, 7);
+        clock.setDay(initialDate);
+
+        final Account account = createAccount(getAccountData(7));
+
+        final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("Shotgun", BillingPeriod.ANNUAL, PriceListSet.DEFAULT_PRICELIST_NAME, null);
+
+        // Create entitlement and check each field
+        final LocalDate startDate = initialDate.plusDays(10);
+        final Entitlement baseEntitlement = entitlementApi.createBaseEntitlement(account.getId(), spec, account.getExternalKey(), null, startDate, startDate, false, ImmutableList.<PluginProperty>of(), callContext);
+
+        // Add ADD_ON immediately. Because BASE is PENDING should fail
+        final PlanPhaseSpecifier spec1 = new PlanPhaseSpecifier("Telescopic-Scope", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, null);
+
+        try {
+            entitlementApi.addEntitlement(baseEntitlement.getBundleId(), spec1, null, initialDate, initialDate, false, ImmutableList.<PluginProperty>of(), callContext);
+            fail("Should not succeed to create ADD_On prior BASE is active");
+        } catch (final EntitlementApiException e) {
+            assertEquals(e.getCode(), ErrorCode.SUB_GET_NO_SUCH_BASE_SUBSCRIPTION.getCode());
+        }
+
+
+        // Add ADD_ON with a startDate similar to BASE
+        final Entitlement telescopicEntitlement = entitlementApi.addEntitlement(baseEntitlement.getBundleId(), spec1, null, startDate, startDate, false, ImmutableList.<PluginProperty>of(), callContext);
+
+        testListener.pushExpectedEvents(NextEvent.CREATE, NextEvent.CREATE, NextEvent.BLOCK, NextEvent.BLOCK);
+        clock.addDays(10);
+        assertListenerStatus();
+
+
+        assertEquals(telescopicEntitlement.getAccountId(), account.getId());
+        assertEquals(telescopicEntitlement.getExternalKey(), account.getExternalKey());
+
+        assertEquals(telescopicEntitlement.getEffectiveStartDate(), startDate);
+        assertNull(telescopicEntitlement.getEffectiveEndDate());
+
+        assertEquals(telescopicEntitlement.getLastActivePriceList().getName(), PriceListSet.DEFAULT_PRICELIST_NAME);
+        assertEquals(telescopicEntitlement.getLastActiveProduct().getName(), "Telescopic-Scope");
+        assertEquals(telescopicEntitlement.getLastActivePhase().getName(), "telescopic-scope-monthly-discount");
+        assertEquals(telescopicEntitlement.getLastActivePlan().getName(), "telescopic-scope-monthly");
+        assertEquals(telescopicEntitlement.getLastActiveProductCategory(), ProductCategory.ADD_ON);
+
+        List<Entitlement> bundleEntitlements = entitlementApi.getAllEntitlementsForBundle(telescopicEntitlement.getBundleId(), callContext);
+        assertEquals(bundleEntitlements.size(), 2);
+
+        bundleEntitlements = entitlementApi.getAllEntitlementsForAccountIdAndExternalKey(account.getId(), account.getExternalKey(), callContext);
+        assertEquals(bundleEntitlements.size(), 2);
+    }
+
+    @Test(groups = "slow")
     public void testPauseUnpause() throws AccountApiException, EntitlementApiException {
         final LocalDate initialDate = new LocalDate(2013, 8, 7);
         clock.setDay(initialDate);
@@ -319,12 +370,12 @@ public class TestDefaultEntitlementApi extends EntitlementTestSuiteWithEmbeddedD
             assertEquals(cur.getState(), EntitlementState.BLOCKED);
         }
 
-        // Try to add an ADD_ON, it should fail
+        // Try to add an ADD_ON, it should fail because BASE is blocked
         try {
             final PlanPhaseSpecifier spec3 = new PlanPhaseSpecifier("Telescopic-Scope", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, null);
-            final Entitlement telescopicEntitlement3 = entitlementApi.addEntitlement(baseEntitlement.getBundleId(), spec1, null, effectiveDateSpec1, effectiveDateSpec1, false, ImmutableList.<PluginProperty>of(), callContext);
+            entitlementApi.addEntitlement(baseEntitlement.getBundleId(), spec3, null, effectiveDateSpec1, effectiveDateSpec1, false, ImmutableList.<PluginProperty>of(), callContext);
         } catch (EntitlementApiException e) {
-            assertEquals(e.getCode(), ErrorCode.SUB_GET_NO_SUCH_BASE_SUBSCRIPTION.getCode());
+            assertEquals(e.getCode(), ErrorCode.BLOCK_BLOCKED_ACTION.getCode());
         }
 
         clock.addDays(3);

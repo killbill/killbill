@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014-2016 Groupon, Inc
- * Copyright 2014-2016 The Billing Project, LLC
+ * Copyright 2014-2017 Groupon, Inc
+ * Copyright 2014-2017 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -19,7 +19,7 @@
 package org.killbill.billing.overdue.wrapper;
 
 import org.joda.time.DateTime;
-import org.killbill.billing.account.api.ImmutableAccountData;
+import org.killbill.billing.account.api.Account;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.entitlement.api.BlockingState;
@@ -52,7 +52,7 @@ public class OverdueWrapper {
     // Should we introduce a config?
     private static final int MAX_LOCK_RETRIES = 50;
 
-    private final ImmutableAccountData overdueable;
+    private final Account overdueable;
     private final BlockingInternalApi api;
     private final GlobalLocker locker;
     private final Clock clock;
@@ -61,7 +61,7 @@ public class OverdueWrapper {
     private final OverdueStateApplicator overdueStateApplicator;
     private final InternalCallContextFactory internalCallContextFactory;
 
-    public OverdueWrapper(final ImmutableAccountData overdueable,
+    public OverdueWrapper(final Account overdueable,
                           final BlockingInternalApi api,
                           final OverdueStateSet overdueStateSet,
                           final GlobalLocker locker,

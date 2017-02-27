@@ -204,6 +204,14 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
                                                  : getPreviousTransition().getNextPlan();
     }
 
+    public Plan getCurrentOrPendingPlan() {
+        if (getState() == EntitlementState.PENDING) {
+            return getPendingTransition().getNextPlan();
+        } else {
+            return getCurrentPlan();
+        }
+    }
+
     @Override
     public PriceList getCurrentPriceList() {
         return (getPreviousTransition() == null) ? null :

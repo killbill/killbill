@@ -69,9 +69,7 @@ public class DefaultLimit extends ValidatingConfig<StandaloneCatalog> implements
 
     @Override
     public ValidationErrors validate(StandaloneCatalog root, ValidationErrors errors) {
-        if (max == CatalogSafetyInitializer.DEFAULT_NON_REQUIRED_DOUBLE_FIELD_VALUE && min == CatalogSafetyInitializer.DEFAULT_NON_REQUIRED_DOUBLE_FIELD_VALUE) {
-            errors.add(new ValidationError("max and min cannot both be ommitted", root.getCatalogURI(), Limit.class, ""));
-        } else if (max != CatalogSafetyInitializer.DEFAULT_NON_REQUIRED_DOUBLE_FIELD_VALUE &&
+        if (max != CatalogSafetyInitializer.DEFAULT_NON_REQUIRED_DOUBLE_FIELD_VALUE &&
                    min != CatalogSafetyInitializer.DEFAULT_NON_REQUIRED_DOUBLE_FIELD_VALUE &&
                    max.doubleValue() < min.doubleValue()) {
             errors.add(new ValidationError("max must be greater than min", root.getCatalogURI(), Limit.class, ""));

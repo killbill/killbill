@@ -44,12 +44,12 @@ public class TestPagination extends UtilTestSuiteWithEmbeddedDB {
 
         // Tests via SQL dao directly
         Assert.assertEquals(ImmutableList.<TagDefinitionModelDao>copyOf(tagDefinitionSqlDao.getAll(internalCallContext)).size(), 10);
-        Assert.assertEquals(ImmutableList.<TagDefinitionModelDao>copyOf(tagDefinitionSqlDao.get(0L, 100L, "record_id", internalCallContext)).size(), 10);
-        Assert.assertEquals(ImmutableList.<TagDefinitionModelDao>copyOf(tagDefinitionSqlDao.get(5L, 100L, "record_id", internalCallContext)).size(), 5);
-        Assert.assertEquals(ImmutableList.<TagDefinitionModelDao>copyOf(tagDefinitionSqlDao.get(5L, 10L, "record_id", internalCallContext)).size(), 5);
-        Assert.assertEquals(ImmutableList.<TagDefinitionModelDao>copyOf(tagDefinitionSqlDao.get(0L, 5L, "record_id", internalCallContext)).size(), 5);
+        Assert.assertEquals(ImmutableList.<TagDefinitionModelDao>copyOf(tagDefinitionSqlDao.get(0L, 100L, "record_id", "asc", internalCallContext)).size(), 10);
+        Assert.assertEquals(ImmutableList.<TagDefinitionModelDao>copyOf(tagDefinitionSqlDao.get(5L, 100L, "record_id", "asc", internalCallContext)).size(), 5);
+        Assert.assertEquals(ImmutableList.<TagDefinitionModelDao>copyOf(tagDefinitionSqlDao.get(5L, 10L, "record_id", "asc", internalCallContext)).size(), 5);
+        Assert.assertEquals(ImmutableList.<TagDefinitionModelDao>copyOf(tagDefinitionSqlDao.get(0L, 5L, "record_id", "asc", internalCallContext)).size(), 5);
         for (int i = 0; i < 10; i++) {
-            final List<TagDefinitionModelDao> tagDefinitions = ImmutableList.<TagDefinitionModelDao>copyOf(tagDefinitionSqlDao.get(0L, (long) i, "record_id", internalCallContext));
+            final List<TagDefinitionModelDao> tagDefinitions = ImmutableList.<TagDefinitionModelDao>copyOf(tagDefinitionSqlDao.get(0L, (long) i, "record_id", "asc", internalCallContext));
             Assert.assertEquals(tagDefinitions.size(), i);
 
             for (int j = 0; j < tagDefinitions.size(); j++) {

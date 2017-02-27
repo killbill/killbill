@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014-2016 Groupon, Inc
- * Copyright 2014-2016 The Billing Project, LLC
+ * Copyright 2014-2017 Groupon, Inc
+ * Copyright 2014-2017 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -191,11 +191,12 @@ public class InvoiceModelDao extends EntityModelDaoBase implements EntityModelDa
         this.status = status;
     }
 
+    @SuppressWarnings("unused")
     public void setParentInvoice(final boolean isParentInvoice) {
         this.isParentInvoice = isParentInvoice;
     }
 
-    public void addParentInvoice(InvoiceModelDao parentInvoice) {
+    public void addParentInvoice(final InvoiceModelDao parentInvoice) {
         this.parentInvoice = parentInvoice;
     }
 

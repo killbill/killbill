@@ -314,18 +314,28 @@ public abstract class JaxRsResourceBase implements JaxrsResource {
         final StreamingOutput json = new StreamingOutput() {
             @Override
             public void write(final OutputStream output) throws IOException, WebApplicationException {
-                final JsonGenerator generator = mapper.getFactory().createJsonGenerator(output);
-                generator.configure(JsonGenerator.Feature.AUTO_CLOSE_TARGET, false);
+                final Iterator<E> iterator = entities.iterator();
 
-                generator.writeStartArray();
-                for (final E entity : entities) {
-                    final J asJson = toJson.apply(entity);
-                    if (asJson != null) {
-                        generator.writeObject(asJson);
+                try {
+                    final JsonGenerator generator = mapper.getFactory().createGenerator(output);
+                    generator.configure(JsonGenerator.Feature.AUTO_CLOSE_TARGET, false);
+
+                    generator.writeStartArray();
+                    while (iterator.hasNext()) {
+                        final E entity = iterator.next();
+                        final J asJson = toJson.apply(entity);
+                        if (asJson != null) {
+                            generator.writeObject(asJson);
+                        }
+                    }
+                    generator.writeEndArray();
+                    generator.close();
+                } finally {
+                    // In case the client goes away (IOException), make sure to close the underlying DB connection
+                    while (iterator.hasNext()) {
+                        iterator.next();
                     }
                 }
-                generator.writeEndArray();
-                generator.close();
             }
         };
 

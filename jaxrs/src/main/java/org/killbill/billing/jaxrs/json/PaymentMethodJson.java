@@ -33,6 +33,7 @@ import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.util.audit.AccountAuditLogs;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Function;
 import com.google.common.collect.Collections2;
@@ -65,6 +66,7 @@ public class PaymentMethodJson extends JsonBase {
         this.pluginName = pluginName;
         this.pluginInfo = pluginInfo;
     }
+
 
     public static PaymentMethodJson toPaymentMethodJson(final Account account, final PaymentMethod in, @Nullable final AccountAuditLogs accountAuditLogs) {
         final boolean isDefault = account.getPaymentMethodId() != null && account.getPaymentMethodId().equals(in.getId());
@@ -184,6 +186,7 @@ public class PaymentMethodJson extends JsonBase {
     public String getExternalKey() {
         return externalKey;
     }
+
 
     @Override
     public String toString() {

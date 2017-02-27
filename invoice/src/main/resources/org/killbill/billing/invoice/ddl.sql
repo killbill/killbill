@@ -81,8 +81,6 @@ CREATE INDEX invoice_payments_payment_id ON invoice_payments(payment_id);
 CREATE INDEX invoice_payments_payment_cookie_id ON invoice_payments(payment_cookie_id);
 CREATE INDEX invoice_payments_tenant_account_record_id ON invoice_payments(tenant_record_id, account_record_id);
 
-
-
 DROP TABLE IF EXISTS invoice_parent_children;
 CREATE TABLE invoice_parent_children (
     record_id serial unique,
@@ -99,3 +97,4 @@ CREATE TABLE invoice_parent_children (
 CREATE UNIQUE INDEX invoice_parent_children_id ON invoice_parent_children(id);
 CREATE INDEX invoice_parent_children_invoice_id ON invoice_parent_children(parent_invoice_id);
 CREATE INDEX invoice_parent_children_tenant_account_record_id ON invoice_parent_children(tenant_record_id, account_record_id);
+CREATE INDEX invoice_parent_children_child_invoice_id ON invoice_parent_children(child_invoice_id);

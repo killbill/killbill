@@ -1,7 +1,9 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
+ * Copyright 2014-2017 Groupon, Inc
+ * Copyright 2014-2017 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -16,6 +18,7 @@
 
 package org.killbill.billing.invoice.dao;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
 
@@ -26,6 +29,7 @@ import org.killbill.billing.util.audit.ChangeType;
 import org.killbill.billing.util.entity.dao.Audited;
 import org.killbill.billing.util.entity.dao.EntitySqlDao;
 import org.killbill.billing.util.entity.dao.EntitySqlDaoStringTemplate;
+import org.killbill.billing.util.tag.dao.UUIDCollectionBinder;
 import org.skife.jdbi.v2.sqlobject.Bind;
 import org.skife.jdbi.v2.sqlobject.BindBean;
 import org.skife.jdbi.v2.sqlobject.SqlQuery;
@@ -45,15 +49,15 @@ public interface InvoiceSqlDao extends EntitySqlDao<InvoiceModelDao, Invoice> {
     @SqlUpdate
     @Audited(ChangeType.UPDATE)
     void updateStatus(@Bind("id") String invoiceId,
-                             @Bind("status") String status,
-                             @BindBean final InternalCallContext context);
+                      @Bind("status") String status,
+                      @BindBean final InternalCallContext context);
 
     @SqlQuery
     InvoiceModelDao getParentDraftInvoice(@Bind("accountId") final String parentAccountId,
-                               @BindBean final InternalTenantContext context);
+                                          @BindBean final InternalTenantContext context);
 
     @SqlQuery
-    InvoiceModelDao getParentInvoiceByChildInvoiceId(@Bind("childInvoiceId") final String childInvoiceId,
-                                                     @BindBean final InternalTenantContext context);
+    List<InvoiceModelDao> getByIds(@UUIDCollectionBinder final Collection<String> invoiceIds,
+                                   @BindBean final InternalTenantContext context);
 }
 

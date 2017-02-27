@@ -1,6 +1,6 @@
 /*
- * Copyright 2014-2016 Groupon, Inc
- * Copyright 2014-2016 The Billing Project, LLC
+ * Copyright 2014-2017 Groupon, Inc
+ * Copyright 2014-2017 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -30,26 +30,25 @@ public class DefaultImmutableAccountData implements ImmutableAccountData {
     private final String externalKey;
     private final Currency currency;
     private final DateTimeZone dateTimeZone;
-    private final UUID parentAccountId;
-    private final boolean isPaymentDelegatedToParent;
     private final DateTimeZone fixedOffsetDateTimeZone;
     private final DateTime referenceTime;
 
-    public DefaultImmutableAccountData(final UUID id, final String externalKey, final Currency currency, final DateTimeZone dateTimeZone, final DateTimeZone fixedOffsetDateTimeZone, final DateTime referenceTime, final UUID parentAccountId, final boolean isPaymentDelegatedToParent) {
+    public DefaultImmutableAccountData(final UUID id, final String externalKey, final Currency currency, final DateTimeZone dateTimeZone, final DateTimeZone fixedOffsetDateTimeZone, final DateTime referenceTime) {
         this.id = id;
         this.externalKey = externalKey;
         this.currency = currency;
         this.dateTimeZone = dateTimeZone;
         this.fixedOffsetDateTimeZone = fixedOffsetDateTimeZone;
         this.referenceTime = referenceTime;
-        this.parentAccountId = parentAccountId;
-        this.isPaymentDelegatedToParent = isPaymentDelegatedToParent;
     }
 
     public DefaultImmutableAccountData(final Account account) {
-        this(account.getId(), account.getExternalKey(), account.getCurrency(), account.getTimeZone(),
-             AccountDateTimeUtils.getFixedOffsetTimeZone(account), AccountDateTimeUtils.getReferenceDateTime(account),
-             account.getParentAccountId(), account.isPaymentDelegatedToParent());
+        this(account.getId(),
+             account.getExternalKey(),
+             account.getCurrency(),
+             account.getTimeZone(),
+             AccountDateTimeUtils.getFixedOffsetTimeZone(account),
+             AccountDateTimeUtils.getReferenceDateTime(account));
     }
 
     @Override
@@ -73,13 +72,17 @@ public class DefaultImmutableAccountData implements ImmutableAccountData {
     }
 
     @Override
+    @Deprecated
     public UUID getParentAccountId() {
-        return parentAccountId;
+        // Should only be used internally by ImmutableAccountInternalApi
+        throw new UnsupportedOperationException("WILL BE REMOVED IN 0.20.0");
     }
 
     @Override
+    @Deprecated
     public Boolean isPaymentDelegatedToParent() {
-        return isPaymentDelegatedToParent;
+        // Should only be used internally by ImmutableAccountInternalApi
+        throw new UnsupportedOperationException("WILL BE REMOVED IN 0.20.0");
     }
 
     public DateTimeZone getFixedOffsetTimeZone() {

@@ -193,6 +193,7 @@ CREATE TABLE notifications_history (
     future_user_token varchar(36),
     PRIMARY KEY(record_id)
 ) /*! CHARACTER SET utf8 COLLATE utf8_bin */;
+CREATE INDEX notifications_history_tenant_account_record_id ON notifications_history(search_key2, search_key1);
 
 DROP TABLE IF EXISTS bus_events;
 CREATE TABLE bus_events (
@@ -231,6 +232,7 @@ CREATE TABLE bus_events_history (
     search_key2 bigint /*! unsigned */ not null default 0,
     PRIMARY KEY(record_id)
 ) /*! CHARACTER SET utf8 COLLATE utf8_bin */;
+CREATE INDEX bus_events_history_tenant_account_record_id ON bus_events_history(search_key2, search_key1);
 
 drop table if exists sessions;
 create table sessions (

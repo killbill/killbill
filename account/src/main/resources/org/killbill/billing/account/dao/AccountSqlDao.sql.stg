@@ -67,14 +67,32 @@ accountRecordIdFieldWithComma(prefix) ::= ""
 accountRecordIdValueWithComma(prefix) ::= ""
 
 update() ::= <<
-    UPDATE accounts
-    SET email = :email, name = :name, first_name_length = :firstNameLength,
-        currency = :currency, billing_cycle_day_local = :billingCycleDayLocal,
-        payment_method_id = :paymentMethodId, time_zone = :timeZone, locale = :locale,
-        address1 = :address1, address2 = :address2, company_name = :companyName, city = :city, state_or_province = :stateOrProvince,
-        country = :country, postal_code = :postalCode, phone = :phone, notes = :notes,
-        is_notified_for_invoices = :isNotifiedForInvoices, updated_date = :updatedDate, updated_by = :updatedBy
-    WHERE id = :id <AND_CHECK_TENANT()>;
+update accounts set
+  email = :email
+, name = :name
+, first_name_length = :firstNameLength
+, currency = :currency
+, billing_cycle_day_local = :billingCycleDayLocal
+, parent_account_id = :parentAccountId
+, is_payment_delegated_to_parent = :isPaymentDelegatedToParent
+, payment_method_id = :paymentMethodId
+, time_zone = :timeZone
+, locale = :locale
+, address1 = :address1
+, address2 = :address2
+, company_name = :companyName
+, city = :city
+, state_or_province = :stateOrProvince
+, country = :country
+, postal_code = :postalCode
+, phone = :phone
+, notes = :notes
+, is_notified_for_invoices = :isNotifiedForInvoices
+, updated_date = :updatedDate
+, updated_by = :updatedBy
+where id = :id
+<AND_CHECK_TENANT()>
+;
 >>
 
 

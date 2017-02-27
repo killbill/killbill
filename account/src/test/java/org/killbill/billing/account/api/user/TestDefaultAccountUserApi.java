@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014-2015 Groupon, Inc
- * Copyright 2014-2015 The Billing Project, LLC
+ * Copyright 2014-2017 Groupon, Inc
+ * Copyright 2014-2017 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -20,10 +20,8 @@ package org.killbill.billing.account.api.user;
 
 import java.util.LinkedList;
 import java.util.List;
-import java.util.TimeZone;
 import java.util.UUID;
 import java.util.concurrent.Callable;
-import java.util.spi.TimeZoneNameProvider;
 
 import org.joda.time.DateTimeZone;
 import org.killbill.billing.ErrorCode;
@@ -356,8 +354,73 @@ public class TestDefaultAccountUserApi extends AccountTestSuiteWithEmbeddedDB {
 
     }
 
+    @Test(groups = "slow", description = "Test un- and re-parenting")
+    public void testUnAndReParenting() throws Exception {
+        // Create child1
+        final AccountModelDao childAccountModelDao1 = createTestAccount();
+        Account childAccount1 = accountUserApi.createAccount(new DefaultAccount(childAccountModelDao1), callContext);
+        Assert.assertNull(childAccount1.getParentAccountId());
+        Assert.assertFalse(childAccount1.isPaymentDelegatedToParent());
+
+        // Create parent
+        final Account parentAccount = accountUserApi.createAccount(new DefaultAccount(createTestAccount()), callContext);
+        Assert.assertNull(parentAccount.getParentAccountId());
+        Assert.assertFalse(parentAccount.isPaymentDelegatedToParent());
+        List<Account> childrenAccounts = accountUserApi.getChildrenAccounts(parentAccount.getId(), callContext);
+        Assert.assertEquals(childrenAccounts.size(), 0);
+
+        // Associate child1 to parent
+        childAccountModelDao1.setId(childAccount1.getId());
+        childAccountModelDao1.setParentAccountId(parentAccount.getId());
+        childAccountModelDao1.setIsPaymentDelegatedToParent(true);
+        accountUserApi.updateAccount(new DefaultAccount(childAccountModelDao1), callContext);
+
+        // Verify mapping
+        childAccount1 = accountUserApi.getAccountById(childAccount1.getId(), callContext);
+        Assert.assertEquals(childAccount1.getParentAccountId(), parentAccount.getId());
+        Assert.assertTrue(childAccount1.isPaymentDelegatedToParent());
+        childrenAccounts = accountUserApi.getChildrenAccounts(parentAccount.getId(), callContext);
+        Assert.assertEquals(childrenAccounts.size(), 1);
+        Assert.assertEquals(childrenAccounts.get(0).getId(), childAccount1.getId());
+
+        // Un-parent child1 from parent
+        childAccountModelDao1.setParentAccountId(null);
+        childAccountModelDao1.setIsPaymentDelegatedToParent(false);
+        accountUserApi.updateAccount(new DefaultAccount(childAccountModelDao1), callContext);
+
+        // Verify mapping
+        childAccount1 = accountUserApi.getAccountById(childAccount1.getId(), callContext);
+        Assert.assertNull(childAccount1.getParentAccountId());
+        Assert.assertFalse(childAccount1.isPaymentDelegatedToParent());
+        childrenAccounts = accountUserApi.getChildrenAccounts(parentAccount.getId(), callContext);
+        Assert.assertEquals(childrenAccounts.size(), 0);
+
+        // Create child2
+        final AccountModelDao childAccountModelDao2 = createTestAccount();
+        Account childAccount2 = accountUserApi.createAccount(new DefaultAccount(childAccountModelDao2), callContext);
+        Assert.assertNull(childAccount2.getParentAccountId());
+        Assert.assertFalse(childAccount2.isPaymentDelegatedToParent());
+
+        // Associate child2 to parent
+        childAccountModelDao2.setId(childAccount2.getId());
+        childAccountModelDao2.setParentAccountId(parentAccount.getId());
+        childAccountModelDao2.setIsPaymentDelegatedToParent(true);
+        accountUserApi.updateAccount(new DefaultAccount(childAccountModelDao2), callContext);
+
+        // Verify mapping
+        childAccount1 = accountUserApi.getAccountById(childAccount1.getId(), callContext);
+        Assert.assertNull(childAccount1.getParentAccountId());
+        Assert.assertFalse(childAccount1.isPaymentDelegatedToParent());
+        childAccount2 = accountUserApi.getAccountById(childAccount2.getId(), callContext);
+        Assert.assertEquals(childAccount2.getParentAccountId(), parentAccount.getId());
+        Assert.assertTrue(childAccount2.isPaymentDelegatedToParent());
+        childrenAccounts = accountUserApi.getChildrenAccounts(parentAccount.getId(), callContext);
+        Assert.assertEquals(childrenAccounts.size(), 1);
+        Assert.assertEquals(childrenAccounts.get(0).getId(), childAccount2.getId());
+    }
+
     @Test(groups = "slow", description = "Test Account creation with External Key over limit")
-        public void testCreateAccountWithExternalKeyOverLimit() throws Exception {
+    public void testCreateAccountWithExternalKeyOverLimit() throws Exception {
         AccountModelDao accountModelDao = createTestAccount();
         // Set an externalKey of 256 characters (over limit)
         accountModelDao.setExternalKey("Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Aenean commodo ligula eget dolor. Aenean massa. Cum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. Donec quam felis, ultricies nec, pellentesque eu, pretium quis,.");

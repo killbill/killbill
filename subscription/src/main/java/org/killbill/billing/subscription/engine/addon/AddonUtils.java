@@ -47,19 +47,22 @@ public class AddonUtils {
     public void checkAddonCreationRights(final DefaultSubscriptionBase baseSubscription, final Plan targetAddOnPlan, final DateTime requestedDate, final InternalTenantContext context)
             throws SubscriptionBaseApiException, CatalogApiException {
 
-        if (baseSubscription.getState() != EntitlementState.ACTIVE) {
+
+        if (baseSubscription.getState() == EntitlementState.CANCELLED ||
+            (baseSubscription.getState() == EntitlementState.PENDING &&  context.toLocalDate(baseSubscription.getStartDate()).compareTo(context.toLocalDate(requestedDate)) < 0)) {
             throw new SubscriptionBaseApiException(ErrorCode.SUB_CREATE_AO_BP_NON_ACTIVE, targetAddOnPlan.getName());
         }
 
-        final Product baseProduct = catalogService.getFullCatalog(true, true, context).findProduct(baseSubscription.getCurrentPlan().getProduct().getName(), requestedDate);
+        final Plan currentOrPendingPlan = baseSubscription.getCurrentOrPendingPlan();
+        final Product baseProduct = catalogService.getFullCatalog(true, true, context).findProduct(currentOrPendingPlan.getProduct().getName(), requestedDate);
         if (isAddonIncluded(baseProduct, targetAddOnPlan)) {
             throw new SubscriptionBaseApiException(ErrorCode.SUB_CREATE_AO_ALREADY_INCLUDED,
-                                                   targetAddOnPlan.getName(), baseSubscription.getCurrentPlan().getProduct().getName());
+                                                   targetAddOnPlan.getName(), currentOrPendingPlan.getProduct().getName());
         }
 
         if (!isAddonAvailable(baseProduct, targetAddOnPlan)) {
             throw new SubscriptionBaseApiException(ErrorCode.SUB_CREATE_AO_NOT_AVAILABLE,
-                                                   targetAddOnPlan.getName(), baseSubscription.getCurrentPlan().getProduct().getName());
+                                                   targetAddOnPlan.getName(), currentOrPendingPlan.getProduct().getName());
         }
     }
 

@@ -26,6 +26,7 @@ import org.killbill.billing.util.audit.ChangeType;
 import org.killbill.billing.util.entity.DefaultPagination;
 import org.killbill.billing.util.entity.Entity;
 import org.killbill.billing.util.entity.Pagination;
+import org.killbill.billing.util.entity.dao.DefaultPaginationSqlDaoHelper.Ordering;
 import org.killbill.billing.util.entity.dao.DefaultPaginationSqlDaoHelper.PaginationIteratorBuilder;
 
 public abstract class EntityDaoBase<M extends EntityModelDao<E>, E extends Entity, U extends BillingExceptionBase> implements EntityDao<M, E, U> {
@@ -137,12 +138,13 @@ public abstract class EntityDaoBase<M extends EntityModelDao<E>, E extends Entit
                                               new PaginationIteratorBuilder<M, E, EntitySqlDao<M, E>>() {
                                                   @Override
                                                   public Long getCount(final EntitySqlDao<M, E> sqlDao, final InternalTenantContext context) {
-                                                      return sqlDao.getCount(context);
+                                                      // Only need to compute it once, because no search filter has been applied (see DefaultPaginationSqlDaoHelper)
+                                                      return null;
                                                   }
 
                                                   @Override
-                                                  public Iterator<M> build(final EntitySqlDao<M, E> sqlDao, final Long limit, final InternalTenantContext context) {
-                                                      return sqlDao.get(offset, limit, getNaturalOrderingColumns(), context);
+                                                  public Iterator<M> build(final EntitySqlDao<M, E> sqlDao, final Long offset, final Long limit, final Ordering ordering, final InternalTenantContext context) {
+                                                      return sqlDao.get(offset, limit, getNaturalOrderingColumns(), ordering.toString(), context);
                                                   }
                                               },
                                               offset,

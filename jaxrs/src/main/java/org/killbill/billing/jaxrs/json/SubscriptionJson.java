@@ -349,32 +349,32 @@ public class SubscriptionJson extends JsonBase {
         final List<SubscriptionEvent> subscriptionEvents = subscription.getSubscriptionEvents();
         final SubscriptionEvent firstEvent = subscriptionEvents.isEmpty() ? null : subscriptionEvents.get(0);
         if (subscription.getLastActiveProduct() == null) {
-            this.productName = firstEvent == null ? null : firstEvent.getNextProduct().getName();
+            this.productName = (firstEvent == null || firstEvent.getNextProduct() == null) ? null : firstEvent.getNextProduct().getName();
         } else {
             this.productName = subscription.getLastActiveProduct().getName();
         }
         if (subscription.getLastActiveProductCategory() == null) {
-            this.productCategory = firstEvent == null ? null : firstEvent.getNextProduct().getCategory().name();
+            this.productCategory = (firstEvent == null || firstEvent.getNextProduct() == null) ? null : firstEvent.getNextProduct().getCategory().name();
         } else {
             this.productCategory = subscription.getLastActiveProductCategory().name();
         }
         if (subscription.getLastActivePlan() == null) {
-            this.billingPeriod = firstEvent == null ? null : firstEvent.getNextPlan().getRecurringBillingPeriod().name();
+            this.billingPeriod = (firstEvent == null || firstEvent.getNextPlan() == null) ? null : firstEvent.getNextPlan().getRecurringBillingPeriod().name();
         } else {
             this.billingPeriod = subscription.getLastActivePlan().getRecurringBillingPeriod().toString();
         }
         if (subscription.getLastActivePhase() == null) {
-            this.phaseType = firstEvent == null ? null : firstEvent.getNextPhase().getPhaseType().name();
+            this.phaseType = (firstEvent == null || firstEvent.getNextPhase() == null) ? null : firstEvent.getNextPhase().getPhaseType().name();
         } else {
             this.phaseType = subscription.getLastActivePhase().getPhaseType().toString();
         }
         if (subscription.getLastActivePriceList() == null) {
-            this.priceList = firstEvent == null ? null : firstEvent.getNextPriceList().getName();
+            this.priceList = (firstEvent == null || firstEvent.getNextPriceList() == null) ? null : firstEvent.getNextPriceList().getName();
         } else {
             this.priceList = subscription.getLastActivePriceList().getName();
         }
         if (subscription.getLastActivePlan() == null) {
-            this.planName = firstEvent == null ? null : firstEvent.getNextPlan().getName();
+            this.planName = (firstEvent == null || firstEvent.getNextPlan() == null) ? null : firstEvent.getNextPlan().getName();
         } else {
             this.planName = subscription.getLastActivePlan().getName();
         }

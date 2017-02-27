@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014-2015 Groupon, Inc
- * Copyright 2014-2015 The Billing Project, LLC
+ * Copyright 2014-2017 Groupon, Inc
+ * Copyright 2014-2017 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -17,9 +17,6 @@
  */
 
 package org.killbill.billing.jaxrs.resources;
-
-import java.util.Collection;
-import java.util.List;
 
 import javax.inject.Inject;
 import javax.servlet.ServletRequest;
@@ -61,9 +58,7 @@ import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.common.base.Predicate;
-import com.google.common.collect.Collections2;
-import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Iterables;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
@@ -237,30 +232,27 @@ public class TestResource extends JaxRsResourceBase {
     }
 
     private boolean areAllNotificationsProcessed(final Long tenantRecordId) {
-        final Collection<NotificationQueue> filtered = ImmutableList.<NotificationQueue>copyOf(Collections2.<NotificationQueue>filter(notificationQueueService.getNotificationQueues(),
-                                                                                                                                      new Predicate<NotificationQueue>() {
-                                                                                                                                          @Override
-                                                                                                                                          public boolean apply(final NotificationQueue notificationQueue) {
-                                                                                                                                              for (final NotificationEventWithMetadata<NotificationEvent> notificationEvent : notificationQueue.getFutureOrInProcessingNotificationForSearchKey2(tenantRecordId)) {
-                                                                                                                                                  if (!notificationEvent.getEffectiveDate().isAfter(clock.getUTCNow())) {
-                                                                                                                                                      return true;
-                                                                                                                                                  }
-                                                                                                                                              }
-                                                                                                                                              return false;
-                                                                                                                                          }
-                                                                                                                                      }));
-        if (!filtered.isEmpty()) {
-            log.info("TestResource: {} queue(s) with more notification(s) to process", filtered.size());
+        int nbNotifications = 0;
+        for (final NotificationQueue notificationQueue : notificationQueueService.getNotificationQueues()) {
+            for (final NotificationEventWithMetadata<NotificationEvent> notificationEvent : notificationQueue.getFutureOrInProcessingNotificationForSearchKey2(null, tenantRecordId)) {
+                if (!notificationEvent.getEffectiveDate().isAfter(clock.getUTCNow())) {
+                    nbNotifications += 1;
+                }
+            }
         }
-        return filtered.isEmpty();
+        if (nbNotifications != 0) {
+            log.info("TestResource: {} queue(s) with more notification(s) to process", nbNotifications);
+        }
+        return nbNotifications == 0;
     }
 
     private boolean areAllBusEventsProcessed(final Long tenantRecordId) {
-        final List<BusEventWithMetadata<BusEvent>> availableBusEventForSearchKey2 = persistentBus.getAvailableOrInProcessingBusEventsForSearchKey2(tenantRecordId);
-        if (!availableBusEventForSearchKey2.isEmpty()) {
-            log.info("TestResource: at least {} more bus event(s) to process", availableBusEventForSearchKey2.size());
+        final Iterable<BusEventWithMetadata<BusEvent>> availableBusEventForSearchKey2 = persistentBus.getAvailableOrInProcessingBusEventsForSearchKey2(null, tenantRecordId);
+        final int nbBusEvents = Iterables.<BusEventWithMetadata<BusEvent>>size(availableBusEventForSearchKey2);
+        if (nbBusEvents != 0) {
+            log.info("TestResource: at least {} more bus event(s) to process", nbBusEvents);
         }
-        return availableBusEventForSearchKey2.isEmpty();
+        return nbBusEvents == 0;
     }
 
     private ClockMock getClockMock() {

@@ -26,6 +26,7 @@ import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDate;
 import org.killbill.billing.account.api.Account;
 import org.killbill.billing.catalog.DefaultInternationalPrice;
+import org.killbill.billing.catalog.DefaultLimit;
 import org.killbill.billing.catalog.DefaultPrice;
 import org.killbill.billing.catalog.DefaultTier;
 import org.killbill.billing.catalog.DefaultTieredBlock;
@@ -71,8 +72,8 @@ public abstract class TestUsageInArrearBase extends InvoiceTestSuiteNoDB {
         currency = Currency.BTC;
     }
 
-    protected ContiguousIntervalConsumableInArrear createContiguousIntervalConsumableInArrear(final DefaultUsage usage, final List<RawUsage> rawUsages, final LocalDate targetDate, final boolean closedInterval, final BillingEvent... events) {
-        final ContiguousIntervalConsumableInArrear intervalConsumableInArrear = new ContiguousIntervalConsumableInArrear(usage, accountId, invoiceId, rawUsages, targetDate, new LocalDate(events[0].getEffectiveDate()), internalCallContext);
+    protected ContiguousIntervalUsageInArrear createContiguousIntervalConsumableInArrear(final DefaultUsage usage, final List<RawUsage> rawUsages, final LocalDate targetDate, final boolean closedInterval, final BillingEvent... events) {
+        final ContiguousIntervalUsageInArrear intervalConsumableInArrear = new ContiguousIntervalUsageInArrear(usage, accountId, invoiceId, rawUsages, targetDate, new LocalDate(events[0].getEffectiveDate()), internalCallContext);
         for (final BillingEvent event : events) {
             intervalConsumableInArrear.addBillingEvent(event);
         }
@@ -80,7 +81,7 @@ public abstract class TestUsageInArrearBase extends InvoiceTestSuiteNoDB {
         return intervalConsumableInArrear;
     }
 
-    protected DefaultUsage createDefaultUsage(final String usageName, final BillingPeriod billingPeriod, final DefaultTier... tiers) {
+    protected DefaultUsage createConsumableInArrearUsage(final String usageName, final BillingPeriod billingPeriod, final DefaultTier... tiers) {
         final DefaultUsage usage = new DefaultUsage();
         usage.setName(usageName);
         usage.setBillingMode(BillingMode.IN_ARREAR);
@@ -90,9 +91,30 @@ public abstract class TestUsageInArrearBase extends InvoiceTestSuiteNoDB {
         return usage;
     }
 
-    protected DefaultTier createDefaultTier(final DefaultTieredBlock... blocks) {
+    protected DefaultUsage createCapacityInArrearUsage(final String usageName, final BillingPeriod billingPeriod, final DefaultTier... tiers) {
+        final DefaultUsage usage = new DefaultUsage();
+        usage.setName(usageName);
+        usage.setBillingMode(BillingMode.IN_ARREAR);
+        usage.setUsageType(UsageType.CAPACITY);
+        usage.setBillingPeriod(billingPeriod);
+        usage.setTiers(tiers);
+        return usage;
+    }
+
+    protected DefaultTier createDefaultTierWithBlocks(final DefaultTieredBlock... blocks) {
         final DefaultTier tier = new DefaultTier();
         tier.setBlocks(blocks);
+        return tier;
+    }
+
+    protected DefaultTier createDefaultTierWithLimits(final BigDecimal recurringAmountInCurrency, final DefaultLimit... limits) {
+        final DefaultTier tier = new DefaultTier();
+        tier.setLimits(limits);
+
+        final DefaultPrice[] prices = new DefaultPrice[1];
+        prices[0] = new DefaultPrice().setCurrency(currency).setValue(recurringAmountInCurrency);
+        final DefaultInternationalPrice price = new DefaultInternationalPrice().setPrices(prices);
+        tier.setRecurringPrice(price);
         return tier;
     }
 

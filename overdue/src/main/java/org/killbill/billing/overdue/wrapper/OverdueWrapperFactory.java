@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014-2016 Groupon, Inc
- * Copyright 2014-2016 The Billing Project, LLC
+ * Copyright 2014-2017 Groupon, Inc
+ * Copyright 2014-2017 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -21,9 +21,9 @@ package org.killbill.billing.overdue.wrapper;
 import java.util.UUID;
 
 import org.joda.time.Period;
+import org.killbill.billing.account.api.Account;
 import org.killbill.billing.account.api.AccountApiException;
 import org.killbill.billing.account.api.AccountInternalApi;
-import org.killbill.billing.account.api.ImmutableAccountData;
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.junction.BlockingInternalApi;
 import org.killbill.billing.overdue.api.OverdueApiException;
@@ -76,13 +76,13 @@ public class OverdueWrapperFactory {
         this.internalCallContextFactory = internalCallContextFactory;
     }
 
-    public OverdueWrapper createOverdueWrapperFor(final ImmutableAccountData blockable, final InternalTenantContext context) throws OverdueException {
+    public OverdueWrapper createOverdueWrapperFor(final Account blockable, final InternalTenantContext context) throws OverdueException {
         return new OverdueWrapper(blockable, api, getOverdueStateSet(context), locker, clock, billingStateCalculator, overdueStateApplicator, internalCallContextFactory);
     }
 
     public OverdueWrapper createOverdueWrapperFor(final UUID id, final InternalTenantContext context) throws OverdueException {
         try {
-            final ImmutableAccountData account = accountApi.getImmutableAccountDataById(id, context);
+            final Account account = accountApi.getAccountById(id, context);
             return new OverdueWrapper(account, api, getOverdueStateSet(context), locker, clock, billingStateCalculator, overdueStateApplicator, internalCallContextFactory);
         } catch (final AccountApiException e) {
             throw new OverdueException(e);
