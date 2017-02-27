@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014-2016 Groupon, Inc
- * Copyright 2014-2016 The Billing Project, LLC
+ * Copyright 2014-2017 Groupon, Inc
+ * Copyright 2014-2017 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -18,8 +18,6 @@
 
 package org.killbill.billing.overdue.notification;
 
-import java.util.Collection;
-
 import org.joda.time.DateTime;
 import org.killbill.billing.util.cache.CacheControllerDispatcher;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
@@ -31,6 +29,7 @@ import org.killbill.notificationq.api.NotificationQueue;
 import org.killbill.notificationq.api.NotificationQueueService;
 import org.skife.jdbi.v2.IDBI;
 
+import com.google.common.collect.Iterables;
 import com.google.inject.Inject;
 
 public class OverdueAsyncBusPoster extends DefaultOverduePosterBase {
@@ -44,12 +43,13 @@ public class OverdueAsyncBusPoster extends DefaultOverduePosterBase {
 
     @Override
     protected <T extends OverdueCheckNotificationKey> boolean cleanupFutureNotificationsFormTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory,
-                                                                                                        final Collection<NotificationEventWithMetadata<T>> futureNotifications,
+                                                                                                        final Iterable<NotificationEventWithMetadata<T>> futureNotifications,
                                                                                                         final DateTime futureNotificationTime,
                                                                                                         final NotificationQueue overdueQueue) {
         // If we already have notification for that account we don't insert the new one
         // Note that this is slightly incorrect because we could for instance already have a REFRESH and insert a CLEAR, but if that were the case,
         // if means overdue state would change very rapidly and the behavior would anyway be non deterministic
-        return futureNotifications.isEmpty();
+        // Note: don't use isEmpty() to go through all results to close the connection
+        return Iterables.<NotificationEventWithMetadata<T>>size(futureNotifications) == 0;
     }
 }

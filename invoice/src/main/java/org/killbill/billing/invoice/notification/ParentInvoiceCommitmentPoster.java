@@ -1,6 +1,6 @@
 /*
- * Copyright 2014-2016 Groupon, Inc
- * Copyright 2014-2016 The Billing Project, LLC
+ * Copyright 2014-2017 Groupon, Inc
+ * Copyright 2014-2017 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -18,7 +18,6 @@
 package org.killbill.billing.invoice.notification;
 
 import java.io.IOException;
-import java.util.List;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
@@ -33,8 +32,6 @@ import org.killbill.notificationq.api.NotificationQueueService.NoSuchNotificatio
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Predicate;
-import com.google.common.collect.Iterables;
 import com.google.inject.Inject;
 
 public class ParentInvoiceCommitmentPoster {
@@ -58,19 +55,20 @@ public class ParentInvoiceCommitmentPoster {
                                                                                ParentInvoiceCommitmentNotifier.PARENT_INVOICE_COMMITMENT_NOTIFIER_QUEUE);
 
             // If we see existing notification for the same date we don't insert a new notification
-            final List<NotificationEventWithMetadata<ParentInvoiceCommitmentNotificationKey>> futureNotifications = commitInvoiceQueue.getFutureNotificationFromTransactionForSearchKeys(internalCallContext.getAccountRecordId(), internalCallContext.getTenantRecordId(), entitySqlDaoWrapperFactory.getHandle().getConnection());
-            final NotificationEventWithMetadata<ParentInvoiceCommitmentNotificationKey> existingFutureNotificationWithSameDate = Iterables.tryFind(futureNotifications, new Predicate<NotificationEventWithMetadata<ParentInvoiceCommitmentNotificationKey>>() {
-                @Override
-                public boolean apply(final NotificationEventWithMetadata<ParentInvoiceCommitmentNotificationKey> input) {
+            final Iterable<NotificationEventWithMetadata<ParentInvoiceCommitmentNotificationKey>> futureNotifications = commitInvoiceQueue.getFutureNotificationFromTransactionForSearchKeys(internalCallContext.getAccountRecordId(), internalCallContext.getTenantRecordId(), entitySqlDaoWrapperFactory.getHandle().getConnection());
 
-                    final LocalDate notificationEffectiveLocaleDate = internalCallContext.toLocalDate(futureNotificationTime);
-                    final LocalDate eventEffectiveLocaleDate = internalCallContext.toLocalDate(input.getEffectiveDate());
+            boolean existingFutureNotificationWithSameDate = false;
+            for (final NotificationEventWithMetadata<ParentInvoiceCommitmentNotificationKey> input : futureNotifications) {
+                final LocalDate notificationEffectiveLocaleDate = internalCallContext.toLocalDate(futureNotificationTime);
+                final LocalDate eventEffectiveLocaleDate = internalCallContext.toLocalDate(input.getEffectiveDate());
 
-                    return notificationEffectiveLocaleDate.compareTo(eventEffectiveLocaleDate) == 0;
+                if (notificationEffectiveLocaleDate.compareTo(eventEffectiveLocaleDate) == 0) {
+                    existingFutureNotificationWithSameDate = true;
                 }
-            }).orNull();
+                // Go through all results to close the connection
+            }
 
-            if (existingFutureNotificationWithSameDate == null) {
+            if (!existingFutureNotificationWithSameDate) {
                 log.info("Queuing parent invoice commitment notification at {} for invoiceId {}", futureNotificationTime.toString(), invoiceId.toString());
 
                 commitInvoiceQueue.recordFutureNotificationFromTransaction(entitySqlDaoWrapperFactory.getHandle().getConnection(), futureNotificationTime,

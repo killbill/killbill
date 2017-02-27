@@ -25,6 +25,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -39,7 +40,6 @@ import org.killbill.billing.ErrorCode;
 import org.killbill.billing.ObjectType;
 import org.killbill.billing.account.api.Account;
 import org.killbill.billing.account.api.AccountApiException;
-import org.killbill.billing.account.api.AccountData;
 import org.killbill.billing.account.api.AccountInternalApi;
 import org.killbill.billing.account.api.ImmutableAccountData;
 import org.killbill.billing.callcontext.InternalCallContext;
@@ -695,26 +695,21 @@ public class InvoiceDispatcher {
         try {
             final NotificationQueue notificationQueue = notificationQueueService.getNotificationQueue(DefaultInvoiceService.INVOICE_SERVICE_NAME,
                                                                                                       DefaultNextBillingDateNotifier.NEXT_BILLING_DATE_NOTIFIER_QUEUE);
-            final List<NotificationEventWithMetadata<NextBillingDateNotificationKey>> futureNotifications = notificationQueue.getFutureNotificationForSearchKeys(internalCallContext.getAccountRecordId(), internalCallContext.getTenantRecordId());
+            final Iterable<NotificationEventWithMetadata<NextBillingDateNotificationKey>> futureNotifications = notificationQueue.getFutureNotificationForSearchKeys(internalCallContext.getAccountRecordId(), internalCallContext.getTenantRecordId());
 
-            final Iterable<NotificationEventWithMetadata<NextBillingDateNotificationKey>> allUpcomingEvents = Iterables.filter(futureNotifications, new Predicate<NotificationEventWithMetadata<NextBillingDateNotificationKey>>() {
-                @Override
-                public boolean apply(@Nullable final NotificationEventWithMetadata<NextBillingDateNotificationKey> input) {
-                    final boolean isEventForSubscription = !filteredSubscriptionIds.iterator().hasNext() || Iterables.contains(filteredSubscriptionIds, input.getEvent().getUuidKey());
+            final Collection<DateTime> effectiveDates = new LinkedList<DateTime>();
+            for (final NotificationEventWithMetadata<NextBillingDateNotificationKey> input : futureNotifications) {
+                final boolean isEventForSubscription = !filteredSubscriptionIds.iterator().hasNext() || Iterables.contains(filteredSubscriptionIds, input.getEvent().getUuidKey());
 
-                    final boolean isEventDryRunForNotifications = input.getEvent().isDryRunForInvoiceNotification() != null ?
-                                                                  input.getEvent().isDryRunForInvoiceNotification() : false;
-                    return isEventForSubscription && !isEventDryRunForNotifications;
+                final boolean isEventDryRunForNotifications = input.getEvent().isDryRunForInvoiceNotification() != null ?
+                                                              input.getEvent().isDryRunForInvoiceNotification() : false;
+                if (isEventForSubscription && !isEventDryRunForNotifications) {
+                    effectiveDates.add(input.getEffectiveDate());
                 }
-            });
 
-            return Iterables.transform(allUpcomingEvents, new Function<NotificationEventWithMetadata<NextBillingDateNotificationKey>, DateTime>() {
-                @Nullable
-                @Override
-                public DateTime apply(@Nullable final NotificationEventWithMetadata<NextBillingDateNotificationKey> input) {
-                    return input.getEffectiveDate();
-                }
-            });
+            }
+
+            return effectiveDates;
         } catch (final NoSuchNotificationQueue noSuchNotificationQueue) {
             throw new IllegalStateException(noSuchNotificationQueue);
         }
