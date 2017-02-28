@@ -21,7 +21,7 @@
     <parent>
         <artifactId>killbill-oss-parent</artifactId>
         <groupId>org.kill-bill.billing</groupId>
-        <version>0.140.12</version>
+        <version>0.140.13</version>
     </parent>
     <artifactId>killbill</artifactId>
     <version>0.18.5-SNAPSHOT</version>
