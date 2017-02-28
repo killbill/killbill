@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014-2016 Groupon, Inc
- * Copyright 2014-2016 The Billing Project, LLC
+ * Copyright 2014-2017 Groupon, Inc
+ * Copyright 2014-2017 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -278,7 +278,9 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
                     for (final InvoiceItemModelDao invoiceItemModelDao : invoiceItems) {
                         createInvoiceItemFromTransaction(transInvoiceItemSqlDao, invoiceItemModelDao, context);
                     }
-                    cbaDao.addCBAComplexityFromTransaction(invoice, entitySqlDaoWrapperFactory, context);
+                    // Keep invoice up-to-date for CBA below
+                    invoice.addInvoiceItems(invoiceItems);
+                    cbaDao.doCBAComplexityFromTransaction(invoice, entitySqlDaoWrapperFactory, context);
                     if (InvoiceStatus.COMMITTED.equals(invoice.getStatus())) {
                         notifyOfFutureBillingEvents(entitySqlDaoWrapperFactory, invoice.getAccountId(), callbackDateTimePerSubscriptions, context);
                     }
@@ -320,8 +322,13 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
                         }
                     }
 
-                    if (madeChanges) {
-                        cbaDao.addCBAComplexityFromTransaction(invoiceModelDao.getId(), entitySqlDaoWrapperFactory, context);
+                    if (newInvoice) {
+                        // New invoice, so no associated payment yet: no need to refresh the invoice state
+                        cbaDao.doCBAComplexityFromTransaction(invoiceModelDao, entitySqlDaoWrapperFactory, context);
+                    } else if (madeChanges) {
+                        // Existing invoice (e.g. we're processing an adjustment): refresh the invoice state to get the correct balance
+                        // Should we maybe enforce callers (e.g. InvoiceApiHelper) to properly populate these invoices?
+                        cbaDao.doCBAComplexityFromTransaction(invoiceModelDao.getId(), entitySqlDaoWrapperFactory, context);
                     }
 
                     if (InvoiceStatus.COMMITTED.equals(invoiceModelDao.getStatus())) {
@@ -411,7 +418,7 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
         return transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<BigDecimal>() {
             @Override
             public BigDecimal inTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory) throws Exception {
-                return cbaDao.getAccountCBAFromTransaction(accountId, entitySqlDaoWrapperFactory, context);
+                return cbaDao.getAccountCBAFromTransaction(entitySqlDaoWrapperFactory, context);
             }
         });
     }
@@ -530,7 +537,8 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
                     }
                 }
 
-                cbaDao.addCBAComplexityFromTransaction(invoice, entitySqlDaoWrapperFactory, context);
+                // The invoice object has been kept up-to-date
+                cbaDao.doCBAComplexityFromTransaction(invoice, entitySqlDaoWrapperFactory, context);
 
                 if (isInvoiceAdjusted) {
                     notifyBusOfInvoiceAdjustment(entitySqlDaoWrapperFactory, invoice.getId(), invoice.getAccountId(), context.getUserToken(), context);
@@ -586,7 +594,7 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
                 // Notify the bus since the balance of the invoice changed
                 final UUID accountId = transactional.getAccountIdFromInvoicePaymentId(chargeBack.getId().toString(), context);
 
-                cbaDao.addCBAComplexityFromTransaction(payment.getInvoiceId(), entitySqlDaoWrapperFactory, context);
+                cbaDao.doCBAComplexityFromTransaction(payment.getInvoiceId(), entitySqlDaoWrapperFactory, context);
 
                 notifyBusOfInvoicePayment(entitySqlDaoWrapperFactory, chargeBack, accountId, context.getUserToken(), context);
 
@@ -622,7 +630,7 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
                 // Notify the bus since the balance of the invoice changed
                 final UUID accountId = transactional.getAccountIdFromInvoicePaymentId(chargebackReversed.getId().toString(), context);
 
-                cbaDao.addCBAComplexityFromTransaction(chargebackReversed.getInvoiceId(), entitySqlDaoWrapperFactory, context);
+                cbaDao.doCBAComplexityFromTransaction(chargebackReversed.getInvoiceId(), entitySqlDaoWrapperFactory, context);
 
                 notifyBusOfInvoicePayment(entitySqlDaoWrapperFactory, chargebackReversed, accountId, context.getUserToken(), context);
 
@@ -636,7 +644,7 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
         return transactionalSqlDao.execute(InvoiceApiException.class, new EntitySqlDaoTransactionWrapper<InvoiceItemModelDao>() {
             @Override
             public InvoiceItemModelDao inTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory) throws Exception {
-                final InvoiceItemModelDao cbaNewItem = cbaDao.computeCBAComplexity(invoice, entitySqlDaoWrapperFactory, context);
+                final InvoiceItemModelDao cbaNewItem = cbaDao.computeCBAComplexity(invoice, null, entitySqlDaoWrapperFactory, context);
                 return cbaNewItem;
             }
         });
@@ -836,7 +844,7 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
 
                 // If there is more account credit than CBA we adjusted, we're done.
                 // Otherwise, we need to find further invoices on which this credit was consumed
-                final BigDecimal accountCBA = cbaDao.getAccountCBAFromTransaction(accountId, entitySqlDaoWrapperFactory, context);
+                final BigDecimal accountCBA = cbaDao.getAccountCBAFromTransaction(entitySqlDaoWrapperFactory, context);
                 if (accountCBA.compareTo(BigDecimal.ZERO) < 0) {
                     if (accountCBA.compareTo(cbaItem.getAmount().negate()) < 0) {
                         throw new IllegalStateException("The account balance can't be lower than the amount adjusted");
@@ -895,12 +903,12 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
         });
     }
 
+    @Override
     public void consumeExstingCBAOnAccountWithUnpaidInvoices(final UUID accountId, final InternalCallContext context) {
         transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<Void>() {
             @Override
             public Void inTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory) throws Exception {
-                // In theory we should only have to call useExistingCBAFromTransaction but just to be safe we also check for credit generation
-                cbaDao.addCBAComplexityFromTransaction(entitySqlDaoWrapperFactory, context);
+                cbaDao.doCBAComplexityFromTransaction(entitySqlDaoWrapperFactory, context);
                 return null;
             }
         });
@@ -1016,6 +1024,8 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
                 }
 
                 transactional.updateStatus(invoiceId.toString(), newStatus.toString(), context);
+
+                cbaDao.doCBAComplexityFromTransaction(entitySqlDaoWrapperFactory, context);
 
                 if (InvoiceStatus.COMMITTED.equals(newStatus)) {
                     // notify invoice creation event
@@ -1163,19 +1173,25 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
 
 
                 // save invoices and invoice items
-                InvoiceModelDao childInvoice = new InvoiceModelDao(invoiceForExternalCharge);
+                final InvoiceModelDao childInvoice = new InvoiceModelDao(invoiceForExternalCharge);
                 invoiceSqlDao.create(childInvoice, childAccountContext);
-                createInvoiceItemFromTransaction(transInvoiceItemSqlDao, new InvoiceItemModelDao(externalChargeItem), childAccountContext);
+                final InvoiceItemModelDao childExternalChargeItem = new InvoiceItemModelDao(externalChargeItem);
+                createInvoiceItemFromTransaction(transInvoiceItemSqlDao, childExternalChargeItem, childAccountContext);
+                // Keep invoice up-to-date for CBA below
+                childInvoice.addInvoiceItem(childExternalChargeItem);
 
-                InvoiceModelDao parentInvoice = new InvoiceModelDao(invoiceForCredit);
+                final InvoiceModelDao parentInvoice = new InvoiceModelDao(invoiceForCredit);
                 invoiceSqlDao.create(parentInvoice, parentAccountContext);
-                createInvoiceItemFromTransaction(transInvoiceItemSqlDao, new InvoiceItemModelDao(creditItem), parentAccountContext);
+                final InvoiceItemModelDao parentCreditItem = new InvoiceItemModelDao(creditItem);
+                createInvoiceItemFromTransaction(transInvoiceItemSqlDao, parentCreditItem, parentAccountContext);
+                // Keep invoice up-to-date for CBA below
+                parentInvoice.addInvoiceItem(parentCreditItem);
 
                 // add CBA complexity and notify bus on child invoice creation
-                cbaDao.addCBAComplexityFromTransaction(childInvoice.getId(), entitySqlDaoWrapperFactory, childAccountContext);
+                cbaDao.doCBAComplexityFromTransaction(childInvoice, entitySqlDaoWrapperFactory, childAccountContext);
                 notifyBusOfInvoiceCreation(entitySqlDaoWrapperFactory, childInvoice, childAccountContext);
 
-                cbaDao.addCBAComplexityFromTransaction(parentInvoice.getId(), entitySqlDaoWrapperFactory, parentAccountContext);
+                cbaDao.doCBAComplexityFromTransaction(parentInvoice, entitySqlDaoWrapperFactory, parentAccountContext);
                 notifyBusOfInvoiceCreation(entitySqlDaoWrapperFactory, parentInvoice, parentAccountContext);
 
                 return null;
