@@ -183,6 +183,10 @@ public class InvoiceItemModelDao extends EntityModelDaoBase implements EntityMod
         this.subscriptionId = subscriptionId;
     }
 
+    public void setDescription(final String description) {
+        this.description = description;
+    }
+
     public void setPlanName(final String planName) {
         this.planName = planName;
     }
