@@ -276,7 +276,7 @@ public class SubscriptionResource extends JaxRsResourceBase {
         final int baseSubscriptionsSize = Iterables.size(Iterables.filter(entitlements, new Predicate<SubscriptionJson>() {
             @Override
             public boolean apply(final SubscriptionJson subscription) {
-                return subscription.getProductCategory().equals(ProductCategory.BASE.toString());
+                return ProductCategory.BASE.toString().equals(subscription.getProductCategory());
             }
         }));
         verifyNumberOfElements(baseSubscriptionsSize, 1, "Only one BASE product is allowed.");
@@ -284,7 +284,7 @@ public class SubscriptionResource extends JaxRsResourceBase {
         final int addOnSubscriptionsSize = Iterables.size(Iterables.filter(entitlements, new Predicate<SubscriptionJson>() {
             @Override
             public boolean apply(final SubscriptionJson subscription) {
-                return subscription.getProductCategory().equals(ProductCategory.ADD_ON.toString());
+                return ProductCategory.ADD_ON.toString().equals(subscription.getProductCategory());
             }
         }));
         verifyNumberOfElements(addOnSubscriptionsSize, entitlements.size() - 1, "It should be " + (entitlements.size() - 1) + " ADD_ON products.");
@@ -390,7 +390,7 @@ public class SubscriptionResource extends JaxRsResourceBase {
             final int addOnSubscriptionsSize = Iterables.size(Iterables.filter(bulkBaseEntitlementWithAddOns.getBaseEntitlementAndAddOns(), new Predicate<SubscriptionJson>() {
                 @Override
                 public boolean apply(final SubscriptionJson subscription) {
-                    return subscription.getProductCategory().equals(ProductCategory.ADD_ON.toString());
+                    return ProductCategory.ADD_ON.toString().equals(subscription.getProductCategory());
                 }
             }));
             verifyNumberOfElements(addOnSubscriptionsSize, bulkBaseEntitlementWithAddOns.getBaseEntitlementAndAddOns().size() - 1, "It should be " + (bulkBaseEntitlementWithAddOns.getBaseEntitlementAndAddOns().size() - 1) + " ADD_ON products.");
