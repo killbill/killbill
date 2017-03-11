@@ -278,6 +278,12 @@ public class TestPatternObfuscator extends ServerTestSuiteNoDB {
                event);
     }
 
+    @Test(groups = "fast")
+    public void testPluginProperties() throws Exception {
+        verify("ENTERING onSuccessCall paymentMethodId='e92a3bfd-0713-4396-a1e2-ff46cb051f8c' ccVerificationValue='123' ccNumber = '4111111111111111' ccTrackData=\"XXX\" ccFirstName = \"John\" ccLastName=\"'Smith'\"",
+               "ENTERING onSuccessCall paymentMethodId='e92a3bfd-0713-4396-a1e2-ff46cb051f8c' ccVerificationValue='***' ccNumber = '****************' ccTrackData=\"***\" ccFirstName = \"****\" ccLastName=\"*******\"");
+    }
+
     private void verify(final String input, final ILoggingEvent event) {
         verify(input, input, event);
     }

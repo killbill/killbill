@@ -35,6 +35,11 @@ public class PatternObfuscator extends Obfuscator {
             "bic",
             "cardvalidationnum",
             "cavv",
+            "ccFirstName",
+            "ccLastName",
+            "ccNumber",
+            "ccTrackData",
+            "ccVerificationValue",
             "ccvv",
             "cvNumber",
             "cvc",
@@ -59,6 +64,8 @@ public class PatternObfuscator extends Obfuscator {
             this.patterns.add(buildJSONPattern(sensitiveKey));
             this.patterns.add(buildXMLPattern(sensitiveKey));
             this.patterns.add(buildMultiValuesXMLPattern(sensitiveKey));
+            this.patterns.add(buildKeyValuePattern1(sensitiveKey));
+            this.patterns.add(buildKeyValuePattern2(sensitiveKey));
         }
         this.patterns.addAll(extraPatterns);
     }
@@ -78,5 +85,15 @@ public class PatternObfuscator extends Obfuscator {
 
     private Pattern buildMultiValuesXMLPattern(final String key) {
         return Pattern.compile(key + "</key>\\s*<value[^>]*>([^<\\n]+)</value>", DEFAULT_PATTERN_FLAGS);
+    }
+
+    // Splunk-type logging
+    private Pattern buildKeyValuePattern1(final String key) {
+        return Pattern.compile(key + "\\s*=\\s*'([^\']+)'", DEFAULT_PATTERN_FLAGS);
+    }
+
+    // Splunk-type logging
+    private Pattern buildKeyValuePattern2(final String key) {
+        return Pattern.compile(key + "\\s*=\\s*\"([^\"]+)\"", DEFAULT_PATTERN_FLAGS);
     }
 }
