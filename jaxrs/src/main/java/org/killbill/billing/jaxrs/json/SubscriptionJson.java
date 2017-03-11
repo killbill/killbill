@@ -397,7 +397,7 @@ public class SubscriptionJson extends JsonBase {
 
         String currentPhaseName = null;
         String currentPlanName = null;
-        for (final SubscriptionEvent subscriptionEvent : subscription.getSubscriptionEvents()) {
+        for (final SubscriptionEvent subscriptionEvent : subscriptionEvents) {
             this.events.add(new EventSubscriptionJson(subscriptionEvent, accountAuditLogs));
 
             if (currency != null) {
