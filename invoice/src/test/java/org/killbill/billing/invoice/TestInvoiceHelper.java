@@ -68,6 +68,7 @@ import org.killbill.billing.invoice.dao.InvoiceModelDao;
 import org.killbill.billing.invoice.dao.InvoiceModelDaoHelper;
 import org.killbill.billing.invoice.dao.InvoicePaymentModelDao;
 import org.killbill.billing.invoice.dao.InvoicePaymentSqlDao;
+import org.killbill.billing.invoice.dao.InvoiceSqlDao;
 import org.killbill.billing.invoice.generator.InvoiceGenerator;
 import org.killbill.billing.invoice.notification.NullInvoiceNotifier;
 import org.killbill.billing.junction.BillingEvent;
@@ -168,6 +169,7 @@ public class TestInvoiceHelper {
     // Low level SqlDao used by the tests to directly insert rows
     private final InvoicePaymentSqlDao invoicePaymentSqlDao;
     private final InvoiceItemSqlDao invoiceItemSqlDao;
+    private final InvoiceSqlDao invoiceSqlDao;
 
 
     @Inject
@@ -190,6 +192,7 @@ public class TestInvoiceHelper {
         this.parkedAccountsManager = parkedAccountsManager;
         this.internalCallContext = internalCallContext;
         this.internalCallContextFactory = internalCallContextFactory;
+        this.invoiceSqlDao = dbi.onDemand(InvoiceSqlDao.class);
         this.invoiceItemSqlDao = dbi.onDemand(InvoiceItemSqlDao.class);
         this.invoicePaymentSqlDao = dbi.onDemand(InvoicePaymentSqlDao.class);
         this.invoiceConfig = invoiceConfig;
@@ -290,7 +293,7 @@ public class TestInvoiceHelper {
         return invoiceItemSqlDao.getInvoiceItemsByInvoice(invoiceId.toString(), internalCallContext);
     }
 
-    public void createInvoice(final Invoice invoice, final boolean isRealInvoiceWithItems, final InternalCallContext internalCallContext) {
+    public void createInvoice(final Invoice invoice, final InternalCallContext internalCallContext) throws EntityPersistenceException {
         final InvoiceModelDao invoiceModelDao = new InvoiceModelDao(invoice);
         final List<InvoiceItemModelDao> invoiceItemModelDaos = ImmutableList.<InvoiceItemModelDao>copyOf(Collections2.transform(invoice.getInvoiceItems(),
                                                                                                                                 new Function<InvoiceItem, InvoiceItemModelDao>() {
@@ -299,17 +302,11 @@ public class TestInvoiceHelper {
                                                                                                                                         return new InvoiceItemModelDao(input);
                                                                                                                                     }
                                                                                                                                 }));
-        // Not really needed, there shouldn't be any payment at this stage
-        final List<InvoicePaymentModelDao> invoicePaymentModelDaos = ImmutableList.<InvoicePaymentModelDao>copyOf(Collections2.transform(invoice.getPayments(),
-                                                                                                                                         new Function<InvoicePayment, InvoicePaymentModelDao>() {
-                                                                                                                                             @Override
-                                                                                                                                             public InvoicePaymentModelDao apply(final InvoicePayment input) {
-                                                                                                                                                 return new InvoicePaymentModelDao(input);
-                                                                                                                                             }
-                                                                                                                                         }));
+        invoiceSqlDao.create(invoiceModelDao, internalCallContext);
 
-        // The test does not use the invoice callback notifier hence the empty map
-        invoiceDao.createInvoice(invoiceModelDao, invoiceItemModelDaos, isRealInvoiceWithItems, new FutureAccountNotifications(ImmutableMap.<UUID, List<SubscriptionNotification>>of()), internalCallContext);
+        for (final InvoiceItem invoiceItem : invoice.getInvoiceItems()) {
+            createInvoiceItem(invoiceItem, internalCallContext);
+        }
     }
 
     public void createPayment(final InvoicePayment invoicePayment, final InternalCallContext internalCallContext) {

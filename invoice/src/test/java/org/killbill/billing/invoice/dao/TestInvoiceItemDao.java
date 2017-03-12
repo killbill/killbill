@@ -134,7 +134,7 @@ public class TestInvoiceItemDao extends InvoiceTestSuiteWithEmbeddedDB {
         final LocalDate targetDate = new LocalDate(2011, 5, 23);
         final DefaultInvoice invoice = new DefaultInvoice(accountId, clock.getUTCToday(), targetDate, Currency.USD);
 
-        invoiceUtil.createInvoice(invoice, true, context);
+        invoiceUtil.createInvoice(invoice, context);
 
         final UUID invoiceId = invoice.getId();
         final LocalDate startDate = new LocalDate(2011, 3, 1);

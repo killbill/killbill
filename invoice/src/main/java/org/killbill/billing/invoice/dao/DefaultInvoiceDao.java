@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014-2016 Groupon, Inc
- * Copyright 2014-2016 The Billing Project, LLC
+ * Copyright 2014-2017 Groupon, Inc
+ * Copyright 2014-2017 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -20,6 +20,7 @@ package org.killbill.billing.invoice.dao;
 
 import java.math.BigDecimal;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -79,6 +80,7 @@ import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Iterators;
 import com.google.common.collect.Ordering;
@@ -257,42 +259,37 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
     }
 
     @Override
-    public void createInvoice(final InvoiceModelDao invoice, final List<InvoiceItemModelDao> invoiceItems,
-                              final boolean isRealInvoice, final FutureAccountNotifications callbackDateTimePerSubscriptions,
+    public void createInvoice(final InvoiceModelDao invoice,
+                              final FutureAccountNotifications callbackDateTimePerSubscriptions,
                               final InternalCallContext context) {
-        transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<Void>() {
-            @Override
-            public Void inTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory) throws Exception {
-                final InvoiceSqlDao transactional = entitySqlDaoWrapperFactory.become(InvoiceSqlDao.class);
-
-                final InvoiceModelDao currentInvoice = transactional.getById(invoice.getId().toString(), context);
-                if (currentInvoice == null) {
-                    // We only want to insert that invoice if there are real invoiceItems associated to it -- if not, this is just
-                    // a shell invoice and we only need to insert the invoiceItems -- for the already existing invoices
-                    if (isRealInvoice) {
-                        transactional.create(invoice, context);
-                    }
-
-                    // Create the invoice items
-                    final InvoiceItemSqlDao transInvoiceItemSqlDao = entitySqlDaoWrapperFactory.become(InvoiceItemSqlDao.class);
-                    for (final InvoiceItemModelDao invoiceItemModelDao : invoiceItems) {
-                        createInvoiceItemFromTransaction(transInvoiceItemSqlDao, invoiceItemModelDao, context);
-                    }
-                    cbaDao.addCBAComplexityFromTransaction(invoice, entitySqlDaoWrapperFactory, context);
-                    if (InvoiceStatus.COMMITTED.equals(invoice.getStatus())) {
-                        notifyOfFutureBillingEvents(entitySqlDaoWrapperFactory, invoice.getAccountId(), callbackDateTimePerSubscriptions, context);
-                    }
-                    if (invoice.isParentInvoice()) {
-                        notifyOfParentInvoiceCreation(entitySqlDaoWrapperFactory, invoice, callbackDateTimePerSubscriptions, context);
-                    }
-                }
-                return null;
-            }
-        });
+        createInvoices(ImmutableList.<InvoiceModelDao>of(invoice), callbackDateTimePerSubscriptions, context);
     }
 
     @Override
-    public List<InvoiceItemModelDao> createInvoices(final List<InvoiceModelDao> invoices, final InternalCallContext context) {
+    public List<InvoiceItemModelDao> createInvoices(final List<InvoiceModelDao> invoices,
+                                                    final InternalCallContext context) {
+        return createInvoices(invoices, new FutureAccountNotifications(ImmutableMap.<UUID, List<SubscriptionNotification>>of()), context);
+    }
+
+    private List<InvoiceItemModelDao> createInvoices(final Iterable<InvoiceModelDao> invoices,
+                                                     final FutureAccountNotifications callbackDateTimePerSubscriptions,
+                                                     final InternalCallContext context) {
+        final Collection<UUID> createdInvoiceIds = new HashSet<UUID>();
+        final Collection<UUID> adjustedInvoiceIds = new HashSet<UUID>();
+        final Collection<UUID> committedInvoiceIds = new HashSet<UUID>();
+
+        final Collection<UUID> uniqueInvoiceIds = new HashSet<UUID>();
+        for (final InvoiceModelDao invoiceModelDao : invoices) {
+            for (final InvoiceItemModelDao invoiceItemModelDao : invoiceModelDao.getInvoiceItems()) {
+                uniqueInvoiceIds.add(invoiceItemModelDao.getInvoiceId());
+            }
+        }
+
+        if (Iterables.<InvoiceModelDao>isEmpty(invoices)) {
+            return ImmutableList.<InvoiceItemModelDao>of();
+        }
+        final UUID accountId = invoices.iterator().next().getAccountId();
+
         return transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<List<InvoiceItemModelDao>>() {
             @Override
             public List<InvoiceItemModelDao> inTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory) throws Exception {
@@ -301,37 +298,49 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
 
                 final List<InvoiceItemModelDao> createdInvoiceItems = new LinkedList<InvoiceItemModelDao>();
                 for (final InvoiceModelDao invoiceModelDao : invoices) {
-                    boolean madeChanges = false;
-                    boolean newInvoice = false;
+                    final boolean isRealInvoice = uniqueInvoiceIds.remove(invoiceModelDao.getId());
 
                     // Create the invoice if needed
                     if (invoiceSqlDao.getById(invoiceModelDao.getId().toString(), context) == null) {
-                        invoiceSqlDao.create(invoiceModelDao, context);
-                        madeChanges = true;
-                        newInvoice = true;
+                        // We only want to insert that invoice if there are real invoiceItems associated to it -- if not, this is just
+                        // a shell invoice and we only need to insert the invoiceItems -- for the already existing invoices
+                        if (isRealInvoice) {
+                            invoiceSqlDao.create(invoiceModelDao, context);
+                            createdInvoiceIds.add(invoiceModelDao.getId());
+                        }
                     }
 
-                    // Create the invoice items if needed
+                    // Create the invoice items if needed (note: they may not necessarily belong to that invoice)
                     for (final InvoiceItemModelDao invoiceItemModelDao : invoiceModelDao.getInvoiceItems()) {
                         if (transInvoiceItemSqlDao.getById(invoiceItemModelDao.getId().toString(), context) == null) {
                             createInvoiceItemFromTransaction(transInvoiceItemSqlDao, invoiceItemModelDao, context);
                             createdInvoiceItems.add(transInvoiceItemSqlDao.getById(invoiceItemModelDao.getId().toString(), context));
-                            madeChanges = true;
+
+                            adjustedInvoiceIds.add(invoiceItemModelDao.getInvoiceId());
                         }
                     }
 
-                    if (madeChanges) {
-                        cbaDao.addCBAComplexityFromTransaction(invoiceModelDao.getId(), entitySqlDaoWrapperFactory, context);
-                    }
-
+                    final boolean wasInvoiceCreated = createdInvoiceIds.contains(invoiceModelDao.getId());
                     if (InvoiceStatus.COMMITTED.equals(invoiceModelDao.getStatus())) {
-                        if (newInvoice) {
+                        committedInvoiceIds.add(invoiceModelDao.getId());
+
+                        notifyOfFutureBillingEvents(entitySqlDaoWrapperFactory, invoiceModelDao.getAccountId(), callbackDateTimePerSubscriptions, context);
+
+                        if (wasInvoiceCreated) {
                             notifyBusOfInvoiceCreation(entitySqlDaoWrapperFactory, invoiceModelDao, context);
-                        } else if (madeChanges) {
-                            // Notify the bus since the balance of the invoice changed (only if the invoice is COMMITTED)
-                            // TODO should we post an InvoiceCreationInternalEvent event instead? Note! This will trigger a payment (see InvoiceHandler)
-                            notifyBusOfInvoiceAdjustment(entitySqlDaoWrapperFactory, invoiceModelDao.getId(), invoiceModelDao.getAccountId(), context.getUserToken(), context);
                         }
+                    } else if (wasInvoiceCreated && invoiceModelDao.isParentInvoice()) {
+                        // Commit queue
+                        notifyOfParentInvoiceCreation(entitySqlDaoWrapperFactory, invoiceModelDao, context);
+                    }
+                }
+
+                for (final UUID adjustedInvoiceId : adjustedInvoiceIds) {
+                    cbaDao.addCBAComplexityFromTransaction(adjustedInvoiceId, entitySqlDaoWrapperFactory, context);
+
+                    if (committedInvoiceIds.contains(adjustedInvoiceId) && !createdInvoiceIds.contains(adjustedInvoiceId)) {
+                        // Notify the bus since the balance of the invoice changed (only if the invoice is COMMITTED)
+                        notifyBusOfInvoiceAdjustment(entitySqlDaoWrapperFactory, adjustedInvoiceId, accountId, context.getUserToken(), context);
                     }
                 }
 
@@ -1040,9 +1049,10 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
         }
     }
 
-    private void notifyOfParentInvoiceCreation(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory, final InvoiceModelDao parentInvoice,
-                                               final FutureAccountNotifications callbackDateTime, final InternalCallContext context) {
-        DateTime futureNotificationDate = parentInvoice.getCreatedDate().withTimeAtStartOfDay().plusDays(1);
+    private void notifyOfParentInvoiceCreation(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory,
+                                               final InvoiceModelDao parentInvoice,
+                                               final InternalCallContext context) {
+        final DateTime futureNotificationDate = parentInvoice.getCreatedDate().withTimeAtStartOfDay().plusDays(1);
         parentInvoiceCommitmentPoster.insertParentInvoiceFromTransactionInternal(entitySqlDaoWrapperFactory, parentInvoice.getId(), futureNotificationDate, context);
     }
 

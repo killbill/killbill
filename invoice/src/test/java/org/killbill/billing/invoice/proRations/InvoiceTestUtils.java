@@ -106,7 +106,9 @@ public class InvoiceTestUtils {
         }
         Mockito.when(invoice.getInvoiceItems()).thenReturn(invoiceItems);
 
-        invoiceDao.createInvoice(new InvoiceModelDao(invoice), invoiceModelItems, true, new FutureAccountNotifications(ImmutableMap.<UUID, List<SubscriptionNotification>>of()), internalCallContext);
+        final InvoiceModelDao invoiceModelDao = new InvoiceModelDao(invoice);
+        invoiceModelDao.addInvoiceItems(invoiceModelItems);
+        invoiceDao.createInvoices(ImmutableList.<InvoiceModelDao>of(invoiceModelDao), internalCallContext);
 
         return invoice;
     }

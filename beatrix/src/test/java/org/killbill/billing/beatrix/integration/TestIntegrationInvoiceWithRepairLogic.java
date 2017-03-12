@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014-2016 Groupon, Inc
- * Copyright 2014-2016 The Billing Project, LLC
+ * Copyright 2014-2017 Groupon, Inc
+ * Copyright 2014-2017 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -727,7 +727,8 @@ public class TestIntegrationInvoiceWithRepairLogic extends TestIntegrationBase {
         newItems.add(repair23);
         newItems.add(recurring3);
         newItems.add(repair3);
-        invoiceDao.createInvoice(shellInvoice, newItems, false, new FutureAccountNotifications(new HashMap<UUID, List<SubscriptionNotification>>()), internalCallContext);
+        shellInvoice.addInvoiceItems(newItems);
+        invoiceDao.createInvoice(shellInvoice, new FutureAccountNotifications(new HashMap<UUID, List<SubscriptionNotification>>()), internalCallContext);
 
 
         // Move ahead one month, verify nothing from previous data was generated
