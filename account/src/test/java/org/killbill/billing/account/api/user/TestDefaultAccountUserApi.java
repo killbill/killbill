@@ -33,8 +33,12 @@ import org.killbill.billing.account.api.DefaultAccount;
 import org.killbill.billing.account.api.DefaultMutableAccountData;
 import org.killbill.billing.account.api.MutableAccountData;
 import org.killbill.billing.account.dao.AccountModelDao;
+import org.killbill.billing.callcontext.DefaultCallContext;
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.events.AccountCreationInternalEvent;
+import org.killbill.billing.tenant.dao.TenantModelDao;
+import org.killbill.billing.tenant.dao.TenantSqlDao;
+import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.entity.Pagination;
 import org.testng.Assert;
 import org.testng.annotations.Test;
@@ -431,5 +435,28 @@ public class TestDefaultAccountUserApi extends AccountTestSuiteWithEmbeddedDB {
         } catch (final AccountApiException e) {
             assertEquals(e.getCode(), ErrorCode.EXTERNAL_KEY_LIMIT_EXCEEDED.getCode());
         }
+    }
+
+    @Test(groups = "slow", description = "Test Account creation with same External Key in different tenants")
+    public void testCreateAccountWithSameExternalKeyInDifferentTenants() throws Exception {
+        final AccountData accountData = createAccountData();
+
+        final Account account1 = accountUserApi.createAccount(accountData, callContext);
+        try {
+            // Same tenant
+            accountUserApi.createAccount(accountData, callContext);
+            Assert.fail();
+        } catch (final AccountApiException e) {
+            assertEquals(e.getCode(), ErrorCode.ACCOUNT_ALREADY_EXISTS.getCode());
+        }
+
+        final TenantSqlDao tenantSqlDao = dbi.onDemand(TenantSqlDao.class);
+        final TenantModelDao tenant2 = new TenantModelDao();
+        tenantSqlDao.create(tenant2, internalCallContext);
+        final CallContext callContext2 = new DefaultCallContext(tenant2.getId(), callContext.getUserName(), callContext.getCallOrigin(), callContext.getUserType(), callContext.getUserToken(), clock);
+        final Account account2 = accountUserApi.createAccount(accountData, callContext2);
+
+        Assert.assertEquals(account1.getExternalKey(), account2.getExternalKey());
+        Assert.assertNotEquals(account1.getId(), account2.getId());
     }
 }
