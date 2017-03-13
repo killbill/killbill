@@ -86,3 +86,16 @@ getInvoiceItemsByParentInvoice() ::= <<
   <defaultOrderBy()>
   ;
 >>
+
+getAccountCBA() ::= <<
+select coalesce(sum(ii.amount), 0) cba
+from invoice_items ii
+join invoices i on i.id = ii.invoice_id
+where i.status = 'COMMITTED'
+and ii.type = 'CBA_ADJ'
+and <accountRecordIdField("i.")> = :accountRecordId
+and <accountRecordIdField("ii.")> = :accountRecordId
+<AND_CHECK_TENANT("i.")>
+<AND_CHECK_TENANT("ii.")>
+;
+>>

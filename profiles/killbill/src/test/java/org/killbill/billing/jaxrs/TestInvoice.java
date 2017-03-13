@@ -776,7 +776,7 @@ public class TestInvoice extends TestJaxrsBase {
         credit.setCreditAmount(creditAmount);
 
         // insert credit to child account
-        final Credit creditJson = killBillClient.createCredit(credit, false, createdBy, reason, comment);
+        final Credit creditJson = killBillClient.createCredit(credit, true, requestOptions);
 
         Invoices childInvoices = killBillClient.getInvoicesForAccount(childAccount.getAccountId(), true, false);
         Assert.assertEquals(childInvoices.size(), 1);

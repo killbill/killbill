@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014-2016 Groupon, Inc
- * Copyright 2014-2016 The Billing Project, LLC
+ * Copyright 2014-2017 Groupon, Inc
+ * Copyright 2014-2017 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -813,7 +813,7 @@ public class TestInvoiceDao extends InvoiceTestSuiteWithEmbeddedDB {
         final UUID accountId = account.getId();
         final UUID bundleId = UUID.randomUUID();
 
-        createCredit(accountId, clock.getUTCToday(), new BigDecimal("20.0"));
+        final InvoiceItemModelDao credit = createCredit(accountId, clock.getUTCToday(), new BigDecimal("20.0"), true);
 
         final String description = UUID.randomUUID().toString();
         final InvoiceModelDao invoiceForExternalCharge = new InvoiceModelDao(accountId, clock.getUTCToday(), clock.getUTCToday(), Currency.USD, false);
@@ -821,8 +821,55 @@ public class TestInvoiceDao extends InvoiceTestSuiteWithEmbeddedDB {
         invoiceForExternalCharge.addInvoiceItem(externalCharge);
         final InvoiceItemModelDao charge = invoiceDao.createInvoices(ImmutableList.<InvoiceModelDao>of(invoiceForExternalCharge), context).get(0);
 
-        final InvoiceModelDao newInvoice = invoiceDao.getById(charge.getInvoiceId(), context);
-        final List<InvoiceItemModelDao> items = newInvoice.getInvoiceItems();
+        InvoiceModelDao newInvoice = invoiceDao.getById(charge.getInvoiceId(), context);
+        List<InvoiceItemModelDao> items = newInvoice.getInvoiceItems();
+        // No CBA consumed yet since the credit was created on a DRAFT invoice
+        assertEquals(items.size(), 1);
+        assertEquals(items.get(0).getType(), InvoiceItemType.EXTERNAL_CHARGE);
+        assertEquals(items.get(0).getDescription(), description);
+
+        invoiceDao.changeInvoiceStatus(credit.getInvoiceId(), InvoiceStatus.COMMITTED, context);
+
+        // CBA should have been consumed
+        newInvoice = invoiceDao.getById(charge.getInvoiceId(), context);
+        items = newInvoice.getInvoiceItems();
+        assertEquals(items.size(), 2);
+        for (final InvoiceItemModelDao cur : items) {
+            if (cur.getId().equals(charge.getId())) {
+                assertEquals(cur.getType(), InvoiceItemType.EXTERNAL_CHARGE);
+                assertEquals(cur.getDescription(), description);
+            } else {
+                assertEquals(cur.getType(), InvoiceItemType.CBA_ADJ);
+                assertTrue(cur.getAmount().compareTo(new BigDecimal("-15.00")) == 0);
+            }
+        }
+    }
+
+    @Test(groups = "slow")
+    public void testExternalChargeOnDRAFTInvoiceWithCBA() throws InvoiceApiException, EntityPersistenceException {
+        final UUID accountId = account.getId();
+        final UUID bundleId = UUID.randomUUID();
+
+        final InvoiceItemModelDao credit = createCredit(accountId, clock.getUTCToday(), new BigDecimal("20.0"), false);
+
+        final String description = UUID.randomUUID().toString();
+        final InvoiceModelDao draftInvoiceForExternalCharge = new InvoiceModelDao(accountId, clock.getUTCToday(), clock.getUTCToday(), Currency.USD, false, InvoiceStatus.DRAFT);
+        final InvoiceItemModelDao externalCharge = new InvoiceItemModelDao(new ExternalChargeInvoiceItem(draftInvoiceForExternalCharge.getId(), accountId, bundleId, description, clock.getUTCToday(), new BigDecimal("15.0"), Currency.USD));
+        draftInvoiceForExternalCharge.addInvoiceItem(externalCharge);
+        final InvoiceItemModelDao charge = invoiceDao.createInvoices(ImmutableList.<InvoiceModelDao>of(draftInvoiceForExternalCharge), context).get(0);
+
+        InvoiceModelDao newInvoice = invoiceDao.getById(charge.getInvoiceId(), context);
+        List<InvoiceItemModelDao> items = newInvoice.getInvoiceItems();
+        // No CBA consumed yet since the charge was created on a DRAFT invoice
+        assertEquals(items.size(), 1);
+        assertEquals(items.get(0).getType(), InvoiceItemType.EXTERNAL_CHARGE);
+        assertEquals(items.get(0).getDescription(), description);
+
+        invoiceDao.changeInvoiceStatus(charge.getInvoiceId(), InvoiceStatus.COMMITTED, context);
+
+        // CBA should have been consumed
+        newInvoice = invoiceDao.getById(charge.getInvoiceId(), context);
+        items = newInvoice.getInvoiceItems();
         assertEquals(items.size(), 2);
         for (final InvoiceItemModelDao cur : items) {
             if (cur.getId().equals(charge.getId())) {
@@ -924,13 +971,13 @@ public class TestInvoiceDao extends InvoiceTestSuiteWithEmbeddedDB {
     }
 
     @Test(groups = "slow")
-    public void testAccountCredit() {
+    public void testAccountCredit() throws InvoiceApiException {
         final UUID accountId = account.getId();
         final LocalDate effectiveDate = new LocalDate(2011, 3, 1);
 
         final BigDecimal creditAmount = new BigDecimal("5.0");
 
-        createCredit(accountId, effectiveDate, creditAmount);
+        createCredit(accountId, effectiveDate, creditAmount, true);
 
         final List<InvoiceModelDao> invoices = invoiceDao.getAllInvoicesByAccount(context);
         assertEquals(invoices.size(), 1);
@@ -952,6 +999,12 @@ public class TestInvoiceDao extends InvoiceTestSuiteWithEmbeddedDB {
         }
         assertTrue(foundCredit);
         assertTrue(foundCBA);
+
+        // No account CBA yet since the invoice is in DRAFT mode
+        assertEquals(invoiceDao.getAccountCBA(accountId, context).compareTo(BigDecimal.ZERO), 0);
+
+        invoiceDao.changeInvoiceStatus(invoice.getId(), InvoiceStatus.COMMITTED, context);
+        assertEquals(invoiceDao.getAccountCBA(accountId, context).compareTo(creditAmount), 0);
     }
 
     @Test(groups = "slow")
@@ -999,7 +1052,7 @@ public class TestInvoiceDao extends InvoiceTestSuiteWithEmbeddedDB {
         // Create the credit item
         final LocalDate effectiveDate = new LocalDate(2011, 3, 1);
 
-        createCredit(accountId, invoice1.getId(), effectiveDate, creditAmount);
+        createCredit(accountId, invoice1.getId(), effectiveDate, creditAmount, false);
 
         final List<InvoiceModelDao> invoices = invoiceDao.getAllInvoicesByAccount(context);
         assertEquals(invoices.size(), 1);
@@ -1114,7 +1167,7 @@ public class TestInvoiceDao extends InvoiceTestSuiteWithEmbeddedDB {
         assertEquals(allInvoicesByAccount.size(), 1);
 
         // insert DRAFT invoice
-        createCredit(accountId, new LocalDate(2011, 12, 31), BigDecimal.TEN);
+        createCredit(accountId, new LocalDate(2011, 12, 31), BigDecimal.TEN, true);
 
         allInvoicesByAccount = invoiceDao.getInvoicesByAccount(new LocalDate(2011, 1, 1), context);
         assertEquals(allInvoicesByAccount.size(), 2);
@@ -1694,14 +1747,14 @@ public class TestInvoiceDao extends InvoiceTestSuiteWithEmbeddedDB {
     }
 
 
-    private void createCredit(final UUID accountId, final LocalDate effectiveDate, final BigDecimal creditAmount) {
-        createCredit(accountId, null, effectiveDate, creditAmount);
+    private InvoiceItemModelDao createCredit(final UUID accountId, final LocalDate effectiveDate, final BigDecimal creditAmount, final boolean draft) {
+        return createCredit(accountId, null, effectiveDate, creditAmount, draft);
     }
 
-    private void createCredit(final UUID accountId, @Nullable final UUID invoiceId, final LocalDate effectiveDate, final BigDecimal creditAmount) {
+    private InvoiceItemModelDao createCredit(final UUID accountId, @Nullable final UUID invoiceId, final LocalDate effectiveDate, final BigDecimal creditAmount, final boolean draft) {
         final InvoiceModelDao invoiceModelDao;
         if (invoiceId == null) {
-            invoiceModelDao = new InvoiceModelDao(accountId, effectiveDate, effectiveDate, Currency.USD, false, InvoiceStatus.DRAFT);
+            invoiceModelDao = new InvoiceModelDao(accountId, effectiveDate, effectiveDate, Currency.USD, false, draft ? InvoiceStatus.DRAFT : InvoiceStatus.COMMITTED);
         } else {
             invoiceModelDao = invoiceDao.getById(invoiceId, context);
         }
@@ -1715,7 +1768,7 @@ public class TestInvoiceDao extends InvoiceTestSuiteWithEmbeddedDB {
                                                                           creditAmount.negate(),
                                                                           invoiceModelDao.getCurrency());
         invoiceModelDao.addInvoiceItem(new InvoiceItemModelDao(invoiceItem));
-        invoiceDao.createInvoices(ImmutableList.<InvoiceModelDao>of(invoiceModelDao), context);
+        return invoiceDao.createInvoices(ImmutableList.<InvoiceModelDao>of(invoiceModelDao), context).get(0);
     }
 
     @Test(groups = "slow")
