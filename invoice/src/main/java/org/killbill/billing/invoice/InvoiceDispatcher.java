@@ -386,7 +386,7 @@ public class InvoiceDispatcher {
 
             final Currency targetCurrency = account.getCurrency();
             final InvoiceWithMetadata invoiceWithMetadata = generator.generateInvoice(account, billingEvents, invoices, targetDate, targetCurrency, context);
-            final Invoice invoice = invoiceWithMetadata.getInvoice();
+            final DefaultInvoice invoice = invoiceWithMetadata.getInvoice();
 
             // Compute future notifications
             final FutureAccountNotifications futureAccountNotifications = createNextFutureNotificationDate(invoiceWithMetadata, context);
@@ -411,15 +411,22 @@ public class InvoiceDispatcher {
             }
 
             // Generate missing credit (> 0 for generation and < 0 for use) prior we call the plugin
-            final InvoiceItem cbaItem = computeCBAOnExistingInvoice(invoice, context);
-            if (cbaItem != null) {
-                invoice.addInvoiceItem(cbaItem);
+            final InvoiceItem cbaItemPreInvoicePlugins = computeCBAOnExistingInvoice(invoice, context);
+            DefaultInvoice tmpInvoiceForInvoicePlugins = invoice;
+            if (cbaItemPreInvoicePlugins != null) {
+                tmpInvoiceForInvoicePlugins = (DefaultInvoice) tmpInvoiceForInvoicePlugins.clone();
+                tmpInvoiceForInvoicePlugins.addInvoiceItem(cbaItemPreInvoicePlugins);
             }
             //
             // Ask external invoice plugins if additional items (tax, etc) shall be added to the invoice
             //
             final CallContext callContext = buildCallContext(context);
-            invoice.addInvoiceItems(invoicePluginDispatcher.getAdditionalInvoiceItems(invoice, isDryRun, callContext));
+            invoice.addInvoiceItems(invoicePluginDispatcher.getAdditionalInvoiceItems(tmpInvoiceForInvoicePlugins, isDryRun, callContext));
+            // Use credit after we call the plugin (https://github.com/killbill/killbill/issues/637)
+            final InvoiceItem cbaItemPostInvoicePlugins = computeCBAOnExistingInvoice(invoice, context);
+            if (cbaItemPostInvoicePlugins != null) {
+                invoice.addInvoiceItem(cbaItemPostInvoicePlugins);
+            }
 
             if (!isDryRun) {
 
