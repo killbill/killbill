@@ -1,6 +1,6 @@
 /*
- * Copyright 2014-2016 Groupon, Inc
- * Copyright 2014-2016 The Billing Project, LLC
+ * Copyright 2014-2017 Groupon, Inc
+ * Copyright 2014-2017 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -43,6 +43,7 @@ import org.killbill.billing.payment.api.PaymentApiException;
 import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.payment.api.TransactionType;
 import org.killbill.billing.payment.core.PaymentExecutors;
+import org.killbill.billing.payment.core.PaymentPluginServiceRegistration;
 import org.killbill.billing.payment.core.PaymentProcessor;
 import org.killbill.billing.payment.core.sm.control.AuthorizeControlOperation;
 import org.killbill.billing.payment.core.sm.control.CaptureControlOperation;
@@ -60,7 +61,6 @@ import org.killbill.billing.payment.core.sm.control.PurchaseControlOperation;
 import org.killbill.billing.payment.core.sm.control.RefundControlOperation;
 import org.killbill.billing.payment.core.sm.control.VoidControlOperation;
 import org.killbill.billing.payment.dao.PaymentDao;
-import org.killbill.billing.payment.plugin.api.PaymentPluginApi;
 import org.killbill.billing.payment.retry.BaseRetryService.RetryServiceScheduler;
 import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.config.definition.PaymentConfig;
@@ -96,11 +96,11 @@ public class PluginControlPaymentAutomatonRunner extends PaymentAutomatonRunner 
     private final PaymentConfig paymentConfig;
 
     @Inject
-    public PluginControlPaymentAutomatonRunner(final PaymentDao paymentDao, final GlobalLocker locker, final OSGIServiceRegistration<PaymentPluginApi> pluginRegistry,
+    public PluginControlPaymentAutomatonRunner(final PaymentDao paymentDao, final GlobalLocker locker, final PaymentPluginServiceRegistration paymentPluginServiceRegistration,
                                                final OSGIServiceRegistration<PaymentControlPluginApi> paymentControlPluginRegistry, final Clock clock, final PaymentProcessor paymentProcessor, @Named(RETRYABLE_NAMED) final RetryServiceScheduler retryServiceScheduler,
                                                final PaymentConfig paymentConfig, final PaymentExecutors executors, final PaymentStateMachineHelper paymentSMHelper, final PaymentControlStateMachineHelper paymentControlStateMachineHelper,
                                                final ControlPluginRunner controlPluginRunner, final PersistentBus eventBus) {
-        super(paymentConfig, paymentDao, locker, pluginRegistry, clock, executors, eventBus, paymentSMHelper);
+        super(paymentConfig, paymentDao, locker, paymentPluginServiceRegistration, clock, executors, eventBus, paymentSMHelper);
         this.paymentProcessor = paymentProcessor;
         this.paymentControlPluginRegistry = paymentControlPluginRegistry;
         this.retryServiceScheduler = retryServiceScheduler;

@@ -1,6 +1,6 @@
 /*
- * Copyright 2014-2016 Groupon, Inc
- * Copyright 2014-2016 The Billing Project, LLC
+ * Copyright 2014-2017 Groupon, Inc
+ * Copyright 2014-2017 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -31,14 +31,13 @@ import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.events.PaymentInternalEvent;
-import org.killbill.billing.osgi.api.OSGIServiceRegistration;
 import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.payment.api.TransactionStatus;
+import org.killbill.billing.payment.core.PaymentPluginServiceRegistration;
 import org.killbill.billing.payment.core.PaymentTransactionInfoPluginConverter;
 import org.killbill.billing.payment.core.sm.PaymentControlStateMachineHelper;
 import org.killbill.billing.payment.core.sm.PaymentStateMachineHelper;
 import org.killbill.billing.payment.dao.PaymentDao;
-import org.killbill.billing.payment.dao.PaymentMethodModelDao;
 import org.killbill.billing.payment.dao.PaymentModelDao;
 import org.killbill.billing.payment.dao.PaymentTransactionModelDao;
 import org.killbill.billing.payment.plugin.api.PaymentPluginApi;
@@ -59,7 +58,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableList;
@@ -74,12 +72,20 @@ public class IncompletePaymentTransactionTask extends CompletionTaskBase<Payment
                                                                                                           .add(TransactionStatus.UNKNOWN)
                                                                                                           .build();
 
+    private final PaymentPluginServiceRegistration paymentPluginServiceRegistration;
+
     @Inject
-    public IncompletePaymentTransactionTask(final InternalCallContextFactory internalCallContextFactory, final PaymentConfig paymentConfig,
-                                            final PaymentDao paymentDao, final Clock clock,
-                                            final PaymentStateMachineHelper paymentStateMachineHelper, final PaymentControlStateMachineHelper retrySMHelper, final AccountInternalApi accountInternalApi,
-                                            final OSGIServiceRegistration<PaymentPluginApi> pluginRegistry, final GlobalLocker locker) {
-        super(internalCallContextFactory, paymentConfig, paymentDao, clock, paymentStateMachineHelper, retrySMHelper, accountInternalApi, pluginRegistry, locker);
+    public IncompletePaymentTransactionTask(final InternalCallContextFactory internalCallContextFactory,
+                                            final PaymentConfig paymentConfig,
+                                            final PaymentDao paymentDao,
+                                            final Clock clock,
+                                            final PaymentStateMachineHelper paymentStateMachineHelper,
+                                            final PaymentControlStateMachineHelper retrySMHelper,
+                                            final AccountInternalApi accountInternalApi,
+                                            final PaymentPluginServiceRegistration paymentPluginServiceRegistration,
+                                            final GlobalLocker locker) {
+        super(internalCallContextFactory, paymentConfig, paymentDao, clock, paymentStateMachineHelper, retrySMHelper, accountInternalApi, locker);
+        this.paymentPluginServiceRegistration = paymentPluginServiceRegistration;
     }
 
     @Override
@@ -113,9 +119,6 @@ public class IncompletePaymentTransactionTask extends CompletionTaskBase<Payment
                 final TenantContext tenantContext = internalCallContextFactory.createTenantContext(internalTenantContext);
                 final PaymentModelDao payment = paymentDao.getPayment(rehydratedPaymentTransaction.getPaymentId(), internalTenantContext);
 
-                final PaymentMethodModelDao paymentMethod = paymentDao.getPaymentMethod(payment.getPaymentMethodId(), internalTenantContext);
-                final PaymentPluginApi paymentPluginApi = getPaymentPluginApi(payment, paymentMethod.getPluginName());
-
                 final PaymentTransactionInfoPlugin undefinedPaymentTransaction = new DefaultNoOpPaymentInfoPlugin(payment.getId(),
                                                                                                                   rehydratedPaymentTransaction.getId(),
                                                                                                                   rehydratedPaymentTransaction.getTransactionType(),
@@ -128,6 +131,7 @@ public class IncompletePaymentTransactionTask extends CompletionTaskBase<Payment
                                                                                                                   null);
                 PaymentTransactionInfoPlugin paymentTransactionInfoPlugin;
                 try {
+                    final PaymentPluginApi paymentPluginApi = paymentPluginServiceRegistration.getPaymentPluginApi(payment.getPaymentMethodId(), false, internalTenantContext);
                     final List<PaymentTransactionInfoPlugin> result = paymentPluginApi.getPaymentInfo(payment.getAccountId(), payment.getId(), ImmutableList.<PluginProperty>of(), tenantContext);
                     paymentTransactionInfoPlugin = Iterables.tryFind(result, new Predicate<PaymentTransactionInfoPlugin>() {
                         @Override
@@ -259,12 +263,6 @@ public class IncompletePaymentTransactionTask extends CompletionTaskBase<Payment
     private TransactionStatus computeNewTransactionStatusFromPaymentTransactionInfoPlugin(final PaymentTransactionInfoPlugin input, final TransactionStatus currentTransactionStatus) {
         final TransactionStatus newTransactionStatus = PaymentTransactionInfoPluginConverter.toTransactionStatus(input);
         return (newTransactionStatus != TransactionStatus.UNKNOWN) ? newTransactionStatus : currentTransactionStatus;
-    }
-
-    private PaymentPluginApi getPaymentPluginApi(final PaymentModelDao item, final String pluginName) {
-        final PaymentPluginApi pluginApi = pluginRegistry.getServiceForName(pluginName);
-        Preconditions.checkState(pluginApi != null, "Janitor IncompletePaymentTransactionTask cannot retrieve PaymentPluginApi for plugin %s (payment id %s), skipping", pluginName, item.getId());
-        return pluginApi;
     }
 
     @VisibleForTesting

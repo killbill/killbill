@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014-2015 Groupon, Inc
- * Copyright 2014-2015 The Billing Project, LLC
+ * Copyright 2014-2017 Groupon, Inc
+ * Copyright 2014-2017 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -27,12 +27,10 @@ import javax.annotation.Nullable;
 
 import org.killbill.billing.ErrorCode;
 import org.killbill.billing.ObjectType;
-import org.killbill.billing.account.api.Account;
 import org.killbill.billing.account.api.AccountInternalApi;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.invoice.api.InvoiceInternalApi;
-import org.killbill.billing.osgi.api.OSGIServiceRegistration;
 import org.killbill.billing.payment.api.PaymentApiException;
 import org.killbill.billing.payment.dao.PaymentDao;
 import org.killbill.billing.payment.dao.PaymentMethodModelDao;
@@ -61,7 +59,8 @@ public abstract class ProcessorBase {
 
     private static final Logger log = LoggerFactory.getLogger(ProcessorBase.class);
 
-    protected final OSGIServiceRegistration<PaymentPluginApi> pluginRegistry;
+    private final PaymentPluginServiceRegistration paymentPluginServiceRegistration;
+
     protected final AccountInternalApi accountInternalApi;
     protected final GlobalLocker locker;
     protected final PaymentDao paymentDao;
@@ -70,7 +69,7 @@ public abstract class ProcessorBase {
     protected final Clock clock;
     protected final InvoiceInternalApi invoiceApi;
 
-    public ProcessorBase(final OSGIServiceRegistration<PaymentPluginApi> pluginRegistry,
+    public ProcessorBase(final PaymentPluginServiceRegistration paymentPluginServiceRegistration,
                          final AccountInternalApi accountInternalApi,
                          final PaymentDao paymentDao,
                          final TagInternalApi tagInternalApi,
@@ -78,7 +77,7 @@ public abstract class ProcessorBase {
                          final InternalCallContextFactory internalCallContextFactory,
                          final InvoiceInternalApi invoiceApi,
                          final Clock clock) {
-        this.pluginRegistry = pluginRegistry;
+        this.paymentPluginServiceRegistration = paymentPluginServiceRegistration;
         this.accountInternalApi = accountInternalApi;
         this.paymentDao = paymentDao;
         this.locker = locker;
@@ -110,42 +109,23 @@ public abstract class ProcessorBase {
     }
 
     public Set<String> getAvailablePlugins() {
-        return pluginRegistry.getAllServices();
+        return paymentPluginServiceRegistration.getAvailablePlugins();
     }
 
     protected PaymentPluginApi getPaymentPluginApi(final String pluginName) throws PaymentApiException {
-        final PaymentPluginApi pluginApi = pluginRegistry.getServiceForName(pluginName);
-        if (pluginApi == null) {
-            throw new PaymentApiException(ErrorCode.PAYMENT_NO_SUCH_PAYMENT_PLUGIN, pluginName);
-        }
-        return pluginApi;
+        return paymentPluginServiceRegistration.getPaymentPluginApi(pluginName);
     }
 
-    protected PaymentPluginApi getPaymentProviderPlugin(final UUID paymentMethodId, final InternalTenantContext context) throws PaymentApiException {
-        final String pluginName = getPaymentProviderPluginName(paymentMethodId, context);
-        return getPaymentPluginApi(pluginName);
+    protected PaymentPluginApi getPaymentProviderPlugin(final UUID paymentMethodId, final boolean includedDeleted, final InternalTenantContext context) throws PaymentApiException {
+        return paymentPluginServiceRegistration.getPaymentPluginApi(paymentMethodId, includedDeleted, context);
     }
 
-    protected String getPaymentProviderPluginName(final UUID paymentMethodId, final InternalTenantContext context) throws PaymentApiException {
-        final PaymentMethodModelDao methodDao = paymentDao.getPaymentMethodIncludedDeleted(paymentMethodId, context);
-        if (methodDao == null) {
-            log.error("PaymentMethod does not exist", paymentMethodId);
-            throw new PaymentApiException(ErrorCode.PAYMENT_NO_SUCH_PAYMENT_METHOD, paymentMethodId);
-        }
-        return methodDao.getPluginName();
+    protected PaymentMethodModelDao getPaymentMethodById(final UUID paymentMethodId, final boolean includedDeleted, final InternalTenantContext context) throws PaymentApiException {
+        return paymentPluginServiceRegistration.getPaymentMethodById(paymentMethodId, includedDeleted, context);
     }
 
-    protected PaymentPluginApi getPaymentProviderPlugin(final Account account, final InternalTenantContext context) throws PaymentApiException {
-        final UUID paymentMethodId = getDefaultPaymentMethodId(account);
-        return getPaymentProviderPlugin(paymentMethodId, context);
-    }
-
-    protected UUID getDefaultPaymentMethodId(final Account account) throws PaymentApiException {
-        final UUID paymentMethodId = account.getPaymentMethodId();
-        if (paymentMethodId == null) {
-            throw new PaymentApiException(ErrorCode.PAYMENT_NO_DEFAULT_PAYMENT_METHOD, account.getId());
-        }
-        return paymentMethodId;
+    protected PaymentMethodModelDao getPaymentMethodByExternalKey(final String paymentMethodExternalKey, final boolean includedDeleted, final InternalTenantContext context) throws PaymentApiException {
+        return paymentPluginServiceRegistration.getPaymentMethodByExternalKey(paymentMethodExternalKey, includedDeleted, context);
     }
 
     protected TenantContext buildTenantContext(final InternalTenantContext context) {

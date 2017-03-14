@@ -41,7 +41,6 @@ import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.invoice.api.InvoiceInternalApi;
-import org.killbill.billing.osgi.api.OSGIServiceRegistration;
 import org.killbill.billing.payment.api.DefaultPayment;
 import org.killbill.billing.payment.api.DefaultPaymentAttempt;
 import org.killbill.billing.payment.api.DefaultPaymentTransaction;
@@ -114,7 +113,7 @@ public class PaymentProcessor extends ProcessorBase {
 
 
     @Inject
-    public PaymentProcessor(final OSGIServiceRegistration<PaymentPluginApi> pluginRegistry,
+    public PaymentProcessor(final PaymentPluginServiceRegistration paymentPluginServiceRegistration,
                             final AccountInternalApi accountUserApi,
                             final InvoiceInternalApi invoiceApi,
                             final TagInternalApi tagUserApi,
@@ -125,7 +124,7 @@ public class PaymentProcessor extends ProcessorBase {
                             final IncompletePaymentTransactionTask incompletePaymentTransactionTask,
                             final NotificationQueueService notificationQueueService,
                             final Clock clock) {
-        super(pluginRegistry, accountUserApi, paymentDao, tagUserApi, locker, internalCallContextFactory, invoiceApi, clock);
+        super(paymentPluginServiceRegistration, accountUserApi, paymentDao, tagUserApi, locker, internalCallContextFactory, invoiceApi, clock);
         this.paymentAutomatonRunner = paymentAutomatonRunner;
         this.incompletePaymentTransactionTask = incompletePaymentTransactionTask;
         this.notificationQueueService = notificationQueueService;
@@ -206,7 +205,7 @@ public class PaymentProcessor extends ProcessorBase {
                                                                                                         PaymentPluginApi pluginApi = paymentPluginByPaymentMethodId.get(paymentModelDao.getPaymentMethodId());
                                                                                                         if (pluginApi == null && !absentPlugins.contains(paymentModelDao.getPaymentMethodId())) {
                                                                                                             try {
-                                                                                                                pluginApi = getPaymentProviderPlugin(paymentModelDao.getPaymentMethodId(), tenantContext);
+                                                                                                                pluginApi = getPaymentProviderPlugin(paymentModelDao.getPaymentMethodId(), true, tenantContext);
                                                                                                                 paymentPluginByPaymentMethodId.put(paymentModelDao.getPaymentMethodId(), pluginApi);
                                                                                                             } catch (final PaymentApiException e) {
                                                                                                                 log.warn("Unable to retrieve pluginApi for payment method " + paymentModelDao.getPaymentMethodId());
@@ -263,7 +262,7 @@ public class PaymentProcessor extends ProcessorBase {
                                                } else {
                                                    if (paymentMethodIdToPaymentPluginApi.get(paymentModelDao.getPaymentMethodId()) == null) {
                                                        try {
-                                                           final PaymentPluginApi paymentProviderPlugin = getPaymentProviderPlugin(paymentModelDao.getPaymentMethodId(), internalTenantContext);
+                                                           final PaymentPluginApi paymentProviderPlugin = getPaymentProviderPlugin(paymentModelDao.getPaymentMethodId(), true, internalTenantContext);
                                                            paymentMethodIdToPaymentPluginApi.put(paymentModelDao.getPaymentMethodId(), Optional.<PaymentPluginApi>of(paymentProviderPlugin));
                                                        } catch (final PaymentApiException e) {
                                                            log.warn("Unable to retrieve PaymentPluginApi for paymentMethodId='{}'", paymentModelDao.getPaymentMethodId(), e);
@@ -503,7 +502,7 @@ public class PaymentProcessor extends ProcessorBase {
             // Always invoke the Janitor first to get the latest state. The state machine will then
             // prevent disallowed transitions in case the state couldn't be fixed (or if it's already in a final state).
             if (runJanitor) {
-                final PaymentPluginApi plugin = getPaymentProviderPlugin(paymentModelDao.getPaymentMethodId(), internalCallContext);
+                final PaymentPluginApi plugin = getPaymentProviderPlugin(paymentModelDao.getPaymentMethodId(), true, internalCallContext);
                 final List<PaymentTransactionInfoPlugin> pluginTransactions = getPaymentTransactionInfoPlugins(plugin, paymentModelDao, properties, callContext);
                 paymentModelDao = invokeJanitor(paymentModelDao, paymentTransactionsForCurrentPayment, pluginTransactions, internalCallContext);
             }
@@ -642,7 +641,7 @@ public class PaymentProcessor extends ProcessorBase {
 
     // Used in single get APIs (getPayment / getPaymentByExternalKey)
     private Payment toPayment(final PaymentModelDao paymentModelDao, final boolean withPluginInfo, final boolean withAttempts, final Iterable<PluginProperty> properties, final TenantContext context, final InternalTenantContext tenantContext) throws PaymentApiException {
-        final PaymentPluginApi plugin = getPaymentProviderPlugin(paymentModelDao.getPaymentMethodId(), tenantContext);
+        final PaymentPluginApi plugin = getPaymentProviderPlugin(paymentModelDao.getPaymentMethodId(), true, tenantContext);
         final List<PaymentTransactionInfoPlugin> pluginTransactions = withPluginInfo ? getPaymentTransactionInfoPlugins(plugin, paymentModelDao, properties, context) : null;
 
         return toPayment(paymentModelDao, pluginTransactions, withAttempts, tenantContext);
