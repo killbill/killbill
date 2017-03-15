@@ -29,7 +29,7 @@ import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.invoice.api.InvoiceItemType;
 import org.killbill.billing.util.UUIDs;
 
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 
 public class RecurringInvoiceItem extends InvoiceItemBase {
 
@@ -53,7 +53,7 @@ public class RecurringInvoiceItem extends InvoiceItemBase {
 
     @Override
     public String getDescription() {
-        return Objects.firstNonNull(description, phaseName);
+        return MoreObjects.firstNonNull(description, phaseName);
     }
 
     @Override

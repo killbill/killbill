@@ -32,7 +32,7 @@ import org.killbill.billing.util.dao.TableName;
 import org.killbill.billing.util.entity.dao.EntityModelDao;
 import org.killbill.billing.util.entity.dao.EntityModelDaoBase;
 
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 
 public class PaymentTransactionModelDao extends EntityModelDaoBase implements EntityModelDao<PaymentTransaction> {
 
@@ -57,7 +57,7 @@ public class PaymentTransactionModelDao extends EntityModelDaoBase implements En
                                       final TransactionStatus paymentStatus, final BigDecimal amount, final Currency currency, final String gatewayErrorCode, final String gatewayErrorMsg) {
         super(id, createdDate, updatedDate);
         this.attemptId = attemptId;
-        this.transactionExternalKey = Objects.firstNonNull(transactionExternalKey, id.toString());
+        this.transactionExternalKey = MoreObjects.firstNonNull(transactionExternalKey, id.toString());
         this.paymentId = paymentId;
         this.transactionType = transactionType;
         this.effectiveDate = effectiveDate;

@@ -30,7 +30,7 @@ import org.killbill.billing.invoice.api.InvoiceItem;
 import org.killbill.billing.invoice.api.InvoiceItemType;
 import org.killbill.billing.util.UUIDs;
 
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 
 public class ItemAdjInvoiceItem extends AdjInvoiceItem {
 
@@ -53,6 +53,6 @@ public class ItemAdjInvoiceItem extends AdjInvoiceItem {
 
     @Override
     public String getDescription() {
-        return Objects.firstNonNull(description, "Invoice item adjustment");
+        return MoreObjects.firstNonNull(description, "Invoice item adjustment");
     }
 }

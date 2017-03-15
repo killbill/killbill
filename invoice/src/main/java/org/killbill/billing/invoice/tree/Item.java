@@ -31,7 +31,7 @@ import org.killbill.billing.invoice.model.RecurringInvoiceItem;
 import org.killbill.billing.invoice.model.RepairAdjInvoiceItem;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
 
 /**
@@ -200,9 +200,9 @@ public class Item {
                // following conditions: same type, subscription, start date. Depending on the catalog configuration, the end
                // date check could also match (e.g. repair from annual to monthly). For that scenario, we need to default
                // to catalog checks (the rate check is a lame check for versioned catalogs).
-               Objects.firstNonNull(planName, "").equals(Objects.firstNonNull(otherItem.getPlanName(), "")) &&
-               Objects.firstNonNull(phaseName, "").equals(Objects.firstNonNull(otherItem.getPhaseName(), "")) &&
-               Objects.firstNonNull(rate, BigDecimal.ZERO).compareTo(Objects.firstNonNull(otherItem.getRate(), BigDecimal.ZERO)) == 0;
+               MoreObjects.firstNonNull(planName, "").equals(MoreObjects.firstNonNull(otherItem.getPlanName(), "")) &&
+               MoreObjects.firstNonNull(phaseName, "").equals(MoreObjects.firstNonNull(otherItem.getPhaseName(), "")) &&
+               MoreObjects.firstNonNull(rate, BigDecimal.ZERO).compareTo(MoreObjects.firstNonNull(otherItem.getRate(), BigDecimal.ZERO)) == 0;
     }
 
     @Override

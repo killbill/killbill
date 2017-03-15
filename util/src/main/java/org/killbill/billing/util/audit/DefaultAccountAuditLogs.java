@@ -29,7 +29,7 @@ import org.killbill.billing.util.api.AuditLevel;
 import com.google.common.base.Predicate;
 import com.google.common.collect.AbstractIterator;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Iterators;
+import com.google.common.collect.ImmutableSet;
 
 public class DefaultAccountAuditLogs implements AccountAuditLogs {
 
@@ -40,7 +40,7 @@ public class DefaultAccountAuditLogs implements AccountAuditLogs {
     private final Map<ObjectType, DefaultAccountAuditLogsForObjectType> auditLogsCache = new HashMap<ObjectType, DefaultAccountAuditLogsForObjectType>();
 
     public DefaultAccountAuditLogs(final UUID accountId) {
-        this(accountId, AuditLevel.NONE, Iterators.<AuditLog>emptyIterator());
+        this(accountId, AuditLevel.NONE, ImmutableSet.<AuditLog>of().iterator());
     }
 
     public DefaultAccountAuditLogs(final UUID accountId, final AuditLevel auditLevel, final Iterator<AuditLog> accountAuditLogsOrderedByTableName) {
