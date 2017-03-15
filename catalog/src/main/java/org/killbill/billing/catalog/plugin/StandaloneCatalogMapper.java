@@ -19,6 +19,7 @@ package org.killbill.billing.catalog.plugin;
 
 import java.net.URI;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -26,9 +27,11 @@ import java.util.Map;
 
 import javax.annotation.Nullable;
 
+import org.killbill.billing.catalog.DefaultBlock;
 import org.killbill.billing.catalog.DefaultDuration;
 import org.killbill.billing.catalog.DefaultFixed;
 import org.killbill.billing.catalog.DefaultInternationalPrice;
+import org.killbill.billing.catalog.DefaultLimit;
 import org.killbill.billing.catalog.DefaultPlan;
 import org.killbill.billing.catalog.DefaultPlanPhase;
 import org.killbill.billing.catalog.DefaultPrice;
@@ -36,21 +39,28 @@ import org.killbill.billing.catalog.DefaultPriceList;
 import org.killbill.billing.catalog.DefaultPriceListSet;
 import org.killbill.billing.catalog.DefaultProduct;
 import org.killbill.billing.catalog.DefaultRecurring;
+import org.killbill.billing.catalog.DefaultTier;
+import org.killbill.billing.catalog.DefaultTieredBlock;
 import org.killbill.billing.catalog.DefaultUnit;
 import org.killbill.billing.catalog.DefaultUsage;
 import org.killbill.billing.catalog.StandaloneCatalog;
 import org.killbill.billing.catalog.api.BillingMode;
+import org.killbill.billing.catalog.api.Block;
 import org.killbill.billing.catalog.api.CurrencyValueNull;
 import org.killbill.billing.catalog.api.Duration;
 import org.killbill.billing.catalog.api.Fixed;
 import org.killbill.billing.catalog.api.InternationalPrice;
+import org.killbill.billing.catalog.api.Limit;
 import org.killbill.billing.catalog.api.Plan;
 import org.killbill.billing.catalog.api.PlanPhase;
 import org.killbill.billing.catalog.api.Price;
 import org.killbill.billing.catalog.api.PriceList;
 import org.killbill.billing.catalog.api.Product;
 import org.killbill.billing.catalog.api.Recurring;
+import org.killbill.billing.catalog.api.Tier;
+import org.killbill.billing.catalog.api.TieredBlock;
 import org.killbill.billing.catalog.api.Unit;
+import org.killbill.billing.catalog.api.Usage;
 import org.killbill.billing.catalog.api.rules.Case;
 import org.killbill.billing.catalog.api.rules.CaseBillingAlignment;
 import org.killbill.billing.catalog.api.rules.CaseCancelPolicy;
@@ -97,7 +107,6 @@ public class StandaloneCatalogMapper {
     }
 
     public StandaloneCatalog toStandaloneCatalog(final StandalonePluginCatalog pluginCatalog, @Nullable URI catalogURI) {
-
 
         final StandaloneCatalog result = new StandaloneCatalog();
         result.setCatalogName(catalogName);
@@ -251,7 +260,6 @@ public class StandaloneCatalogMapper {
         result.setToProductCategory(input.getToProductCategory());
     }
 
-
     private Iterable<Product> toDefaultProducts(final Iterable<Product> input) {
         if (tmpDefaultProducts == null) {
             final Map<String, Product> map = new HashMap<String, Product>();
@@ -353,7 +361,6 @@ public class StandaloneCatalogMapper {
         return result;
     }
 
-
     private DefaultPriceList toDefaultPriceList(@Nullable final PriceList input) {
         if (input == null) {
             return null;
@@ -368,7 +375,6 @@ public class StandaloneCatalogMapper {
         }
         return result;
     }
-
 
     private Product toDefaultProduct(@Nullable final Product input) {
         if (input == null) {
@@ -409,7 +415,9 @@ public class StandaloneCatalogMapper {
         result.setFixed(toDefaultFixed(input.getFixed()));
         result.setPhaseType(input.getPhaseType());
         result.setRecurring(toDefaultRecurring(input.getRecurring()));
-        result.setUsages(new DefaultUsage[0]);
+        if (input.getUsages() != null && input.getUsages().length > 0) {
+            result.setUsages(toDefaultUsages(Arrays.asList(input.getUsages())));
+        }
         return result;
     }
 
@@ -441,8 +449,11 @@ public class StandaloneCatalogMapper {
     }
 
     private DefaultInternationalPrice toDefaultInternationalPrice(final InternationalPrice input) {
-        final DefaultInternationalPrice result = new DefaultInternationalPrice();
-        result.setPrices(toDefaultPrices(ImmutableList.copyOf(input.getPrices())));
+        DefaultInternationalPrice result = null;
+        if (input != null) {
+            result = new DefaultInternationalPrice();
+            result.setPrices(toDefaultPrices(ImmutableList.copyOf(input.getPrices())));
+        }
         return result;
     }
 
@@ -455,6 +466,127 @@ public class StandaloneCatalogMapper {
         } catch (CurrencyValueNull currencyValueNull) {
             throw new IllegalStateException(currencyValueNull);
         }
+    }
+
+    private DefaultUsage[] toDefaultUsages(final Iterable<Usage> input) {
+        return toArrayWithTransform(input, new Function<Usage, DefaultUsage>() {
+            @Nullable
+            @Override
+            public DefaultUsage apply(@Nullable final Usage input) {
+                return toDefaultUsage(input);
+            }
+        });
+    }
+
+    private DefaultUsage toDefaultUsage(final Usage input) {
+        final DefaultUsage result = new DefaultUsage();
+        result.setName(input.getName());
+        result.setBillingMode(input.getBillingMode());
+        result.setBillingPeriod(input.getBillingPeriod());
+        result.setUsageType(input.getUsageType());
+        if (input.getLimits() != null && input.getLimits().length > 0) {
+            result.setLimits(toDefaultLimits(Arrays.asList(input.getLimits())));
+        }
+        if (input.getBlocks() != null && input.getBlocks().length > 0) {
+            result.setBlocks(toDefaultBlocks(Arrays.asList(input.getBlocks())));
+        }
+        if (input.getTiers() != null && input.getTiers().length > 0) {
+            result.setTiers(toDefaultTiers(Arrays.asList(input.getTiers())));
+        }
+        result.setFixedPrice(toDefaultInternationalPrice(input.getFixedPrice()));
+        result.setRecurringPrice(toDefaultInternationalPrice(input.getRecurringPrice()));
+        return result;
+    }
+
+    private DefaultLimit[] toDefaultLimits(final Iterable<Limit> input) {
+        return toArrayWithTransform(input, new Function<Limit, DefaultLimit>() {
+            @Override
+            public DefaultLimit apply(final Limit input) {
+                return toDefaultLimit(input);
+            }
+        });
+    }
+
+    private DefaultLimit toDefaultLimit(final Limit input) {
+        DefaultLimit result = null;
+        if (input != null) {
+            result = new DefaultLimit();
+            result.setUnit(toDefaultUnit(input.getUnit()));
+            result.setMax(input.getMax());
+            result.setMin(input.getMin());
+        }
+        return result;
+    }
+
+    private DefaultBlock[] toDefaultBlocks(final Iterable<Block> input) {
+        return toArrayWithTransform(input, new Function<Block, DefaultBlock>() {
+            @Nullable
+            @Override
+            public DefaultBlock apply(@Nullable final Block input) {
+                return toDefaultBlock(input);
+            }
+        });
+    }
+
+    private DefaultBlock toDefaultBlock(final Block input) {
+        DefaultBlock result = null;
+        if (input != null) {
+            result = new DefaultBlock();
+            result.setType(input.getType());
+            result.setPrice(toDefaultInternationalPrice(input.getPrice()));
+            result.setUnit(toDefaultUnit(input.getUnit()));
+            result.setSize(input.getSize());
+        }
+        return result;
+    }
+
+    private DefaultTier[] toDefaultTiers(final Iterable<Tier> input) {
+        return toArrayWithTransform(input, new Function<Tier, DefaultTier>() {
+            @Nullable
+            @Override
+            public DefaultTier apply(@Nullable final Tier input) {
+                return toDefaultTier(input);
+            }
+        });
+    }
+
+    private DefaultTier toDefaultTier(final Tier input) {
+        DefaultTier result = null;
+        if (input != null) {
+            result = new DefaultTier();
+            if (input.getLimits() != null && input.getLimits().length > 0) {
+                result.setLimits(toDefaultLimits(Arrays.asList(input.getLimits())));
+            }
+            result.setFixedPrice(toDefaultInternationalPrice(input.getFixedPrice()));
+            result.setRecurringPrice(toDefaultInternationalPrice(input.getRecurringPrice()));
+            if (input.getTieredBlocks() != null && input.getTieredBlocks().length > 0) {
+                result.setBlocks(toDefaultTieredBlocks(Arrays.asList(input.getTieredBlocks())));
+            }
+        }
+        return result;
+    }
+
+    private DefaultTieredBlock[] toDefaultTieredBlocks(Iterable<TieredBlock> input) {
+        return toArrayWithTransform(input, new Function<TieredBlock, DefaultTieredBlock>() {
+            @Nullable
+            @Override
+            public DefaultTieredBlock apply(@Nullable final TieredBlock input) {
+                return toDefaultTieredBlock(input);
+            }
+        });
+    }
+
+    private DefaultTieredBlock toDefaultTieredBlock(TieredBlock input) {
+        DefaultTieredBlock result = null;
+        if (input != null) {
+            result = new DefaultTieredBlock();
+            result.setUnit(toDefaultUnit(input.getUnit()));
+            result.setMax(input.getMax());
+            result.setType(input.getType());
+            result.setSize(input.getSize());
+            result.setPrice(toDefaultInternationalPrice(input.getPrice()));
+        }
+        return result;
     }
 
     private <I, C extends I> C[] toArrayWithTransform(final Iterable<I> input, final Function<I, C> transformer) {
