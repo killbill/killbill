@@ -70,10 +70,16 @@ public class PaymentTransactionModelDao extends EntityModelDaoBase implements En
         this.gatewayErrorMsg = gatewayErrorMsg;
     }
 
+    public PaymentTransactionModelDao(final UUID id, @Nullable final DateTime createdDate, @Nullable final DateTime updatedDate, @Nullable final UUID attemptId,
+                                      @Nullable final String transactionExternalKey, final UUID paymentId, final TransactionType transactionType, final DateTime effectiveDate,
+                                      final TransactionStatus paymentStatus, final BigDecimal amount, final Currency currency, final String gatewayErrorCode, final String gatewayErrorMsg) {
+        this(id, attemptId, transactionExternalKey, createdDate, updatedDate, paymentId, transactionType, effectiveDate, paymentStatus, amount, currency, gatewayErrorCode, gatewayErrorMsg);
+    }
+
     public PaymentTransactionModelDao(@Nullable final DateTime createdDate, @Nullable final DateTime updatedDate, @Nullable final UUID attemptId,
                                       @Nullable final String transactionExternalKey, final UUID paymentId, final TransactionType transactionType, final DateTime effectiveDate,
                                       final TransactionStatus paymentStatus, final BigDecimal amount, final Currency currency, final String gatewayErrorCode, final String gatewayErrorMsg) {
-        this(UUIDs.randomUUID(), attemptId, transactionExternalKey, createdDate, updatedDate, paymentId, transactionType, effectiveDate, paymentStatus, amount, currency, gatewayErrorCode, gatewayErrorMsg);
+        this(UUIDs.randomUUID(), createdDate, updatedDate, attemptId, transactionExternalKey, paymentId, transactionType, effectiveDate, paymentStatus, amount, currency, gatewayErrorCode, gatewayErrorMsg);
     }
 
     public UUID getPaymentId() {

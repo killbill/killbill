@@ -33,6 +33,7 @@ import org.killbill.billing.payment.dao.PaymentTransactionModelDao;
 import org.killbill.billing.payment.plugin.api.PaymentTransactionInfoPlugin;
 import org.killbill.billing.util.callcontext.CallContext;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 
 public class PaymentStateContext {
@@ -56,6 +57,8 @@ public class PaymentStateContext {
     // Set in the control layer in the leavingState callback
     private String paymentExternalKey;
     private String paymentTransactionExternalKey;
+    protected UUID paymentIdForNewPayment;
+    protected UUID paymentTransactionIdForNewPaymentTransaction;
 
     // Set in the control layer after creating the attempt in the enteringState callback
     private UUID attemptId;
@@ -72,20 +75,20 @@ public class PaymentStateContext {
     private final CallContext callContext;
     private final boolean isApiPayment;
 
-    // Use to create new transactions only
+    @VisibleForTesting
     public PaymentStateContext(final boolean isApiPayment, @Nullable final UUID paymentId, @Nullable final String paymentTransactionExternalKey, final TransactionType transactionType,
                                final Account account, @Nullable final UUID paymentMethodId, final BigDecimal amount, final Currency currency,
                                final boolean shouldLockAccountAndDispatch, final Iterable<PluginProperty> properties,
                                final InternalCallContext internalCallContext, final CallContext callContext) {
         this(isApiPayment, paymentId, null, null, null, paymentTransactionExternalKey, transactionType, account, paymentMethodId,
-             amount, currency, shouldLockAccountAndDispatch, null, properties, internalCallContext, callContext);
+             amount, currency, null, null, shouldLockAccountAndDispatch, null, properties, internalCallContext, callContext);
     }
 
     // Used to create new payment and transactions
     public PaymentStateContext(final boolean isApiPayment, @Nullable final UUID paymentId, final UUID transactionId, @Nullable final UUID attemptId, @Nullable final String paymentExternalKey,
                                @Nullable final String paymentTransactionExternalKey, final TransactionType transactionType,
                                final Account account, @Nullable final UUID paymentMethodId, final BigDecimal amount, final Currency currency,
-                               final boolean shouldLockAccountAndDispatch, final OperationResult overridePluginOperationResult, final Iterable<PluginProperty> properties,
+                               @Nullable final UUID paymentIdForNewPayment, @Nullable final UUID paymentTransactionIdForNewPaymentTransaction, final boolean shouldLockAccountAndDispatch, final OperationResult overridePluginOperationResult, final Iterable<PluginProperty> properties,
                                final InternalCallContext internalCallContext, final CallContext callContext) {
         this.isApiPayment = isApiPayment;
         this.paymentId = paymentId;
@@ -98,6 +101,8 @@ public class PaymentStateContext {
         this.paymentMethodId = paymentMethodId;
         this.amount = amount;
         this.currency = currency;
+        this.paymentIdForNewPayment = paymentIdForNewPayment;
+        this.paymentTransactionIdForNewPaymentTransaction = paymentTransactionIdForNewPaymentTransaction;
         this.shouldLockAccountAndDispatch = shouldLockAccountAndDispatch;
         this.overridePluginOperationResult = overridePluginOperationResult;
         this.properties = properties;
@@ -234,4 +239,11 @@ public class PaymentStateContext {
         this.properties = properties;
     }
 
+    public UUID getPaymentIdForNewPayment() {
+        return paymentIdForNewPayment;
+    }
+
+    public UUID getPaymentTransactionIdForNewPaymentTransaction() {
+        return paymentTransactionIdForNewPaymentTransaction;
+    }
 }

@@ -18,6 +18,7 @@
 package org.killbill.billing.payment.core.sm.control;
 
 import java.util.List;
+import java.util.UUID;
 
 import org.joda.time.DateTime;
 import org.killbill.automaton.OperationException;
@@ -85,7 +86,9 @@ public class DefaultControlInitiated implements LeavingStateCallback {
             stateContext.setPaymentExternalKey(payment.getExternalKey());
             stateContext.setPaymentMethodId(payment.getPaymentMethodId());
         } else if (stateContext.getPaymentExternalKey() == null) {
-            stateContext.setPaymentExternalKey(UUIDs.randomUUID().toString());
+            final UUID paymentIdForNewPayment = UUIDs.randomUUID();
+            stateContext.setPaymentIdForNewPayment(paymentIdForNewPayment);
+            stateContext.setPaymentExternalKey(paymentIdForNewPayment.toString());
         }
 
         if (paymentTransactionModelDao != null) {
@@ -93,7 +96,9 @@ public class DefaultControlInitiated implements LeavingStateCallback {
             stateContext.setProcessedAmount(paymentTransactionModelDao.getProcessedAmount());
             stateContext.setProcessedCurrency(paymentTransactionModelDao.getProcessedCurrency());
         } else if (stateContext.getPaymentTransactionExternalKey() == null) {
-            stateContext.setPaymentTransactionExternalKey(UUIDs.randomUUID().toString());
+            final UUID paymentTransactionIdForNewPaymentTransaction = UUIDs.randomUUID();
+            stateContext.setPaymentTransactionIdForNewPaymentTransaction(paymentTransactionIdForNewPaymentTransaction);
+            stateContext.setPaymentTransactionExternalKey(paymentTransactionIdForNewPaymentTransaction.toString());
         }
 
         if (stateContext.getPaymentMethodId() == null) {

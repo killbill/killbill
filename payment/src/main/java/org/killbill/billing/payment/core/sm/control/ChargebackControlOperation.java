@@ -45,6 +45,7 @@ public class ChargebackControlOperation extends OperationControlCallback {
                                                  paymentStateControlContext.getPaymentTransactionExternalKey(),
                                                  paymentStateControlContext.getAmount(),
                                                  paymentStateControlContext.getCurrency(),
+                                                 paymentStateControlContext.getPaymentTransactionIdForNewPaymentTransaction(),
                                                  false,
                                                  paymentStateControlContext.getCallContext(),
                                                  paymentStateControlContext.getInternalCallContext());

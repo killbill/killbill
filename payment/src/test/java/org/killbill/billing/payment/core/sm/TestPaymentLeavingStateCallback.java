@@ -112,6 +112,8 @@ public class TestPaymentLeavingStateCallback extends PaymentTestSuiteWithEmbedde
                                                       UUID.randomUUID(),
                                                       new BigDecimal("192.3920111"),
                                                       Currency.BRL,
+                                                      null,
+                                                      null,
                                                       false,
                                                       null, ImmutableList.<PluginProperty>of(),
                                                       internalCallContext,

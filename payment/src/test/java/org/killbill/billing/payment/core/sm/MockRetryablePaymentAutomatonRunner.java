@@ -42,7 +42,6 @@ import org.killbill.billing.payment.core.sm.control.ControlPluginRunner;
 import org.killbill.billing.payment.core.sm.control.PaymentStateControlContext;
 import org.killbill.billing.payment.dao.PaymentDao;
 import org.killbill.billing.payment.dispatcher.PluginDispatcher;
-import org.killbill.billing.payment.plugin.api.PaymentPluginApi;
 import org.killbill.billing.payment.retry.BaseRetryService.RetryServiceScheduler;
 import org.killbill.billing.tag.TagInternalApi;
 import org.killbill.billing.util.callcontext.CallContext;

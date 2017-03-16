@@ -195,11 +195,20 @@ public class PaymentAutomatonDAOHelper {
         final DateTime createdDate = utcNow;
         final DateTime updatedDate = utcNow;
 
-        return new PaymentModelDao(createdDate,
-                                   updatedDate,
-                                   paymentStateContext.getAccount().getId(),
-                                   paymentStateContext.getPaymentMethodId(),
-                                   paymentStateContext.getPaymentExternalKey());
+        if (paymentStateContext.getPaymentIdForNewPayment() != null) {
+            return new PaymentModelDao(paymentStateContext.getPaymentIdForNewPayment(),
+                                       createdDate,
+                                       updatedDate,
+                                       paymentStateContext.getAccount().getId(),
+                                       paymentStateContext.getPaymentMethodId(),
+                                       paymentStateContext.getPaymentExternalKey());
+        } else {
+            return new PaymentModelDao(createdDate,
+                                       updatedDate,
+                                       paymentStateContext.getAccount().getId(),
+                                       paymentStateContext.getPaymentMethodId(),
+                                       paymentStateContext.getPaymentExternalKey());
+        }
     }
 
     private PaymentTransactionModelDao buildNewPaymentTransactionModelDao(final UUID paymentId) {
@@ -209,18 +218,34 @@ public class PaymentAutomatonDAOHelper {
         final String gatewayErrorCode = null;
         final String gatewayErrorMsg = null;
 
-        return new PaymentTransactionModelDao(createdDate,
-                                              updatedDate,
-                                              paymentStateContext.getAttemptId(),
-                                              paymentStateContext.getPaymentTransactionExternalKey(),
-                                              paymentId,
-                                              paymentStateContext.getTransactionType(),
-                                              effectiveDate,
-                                              TransactionStatus.UNKNOWN,
-                                              paymentStateContext.getAmount(),
-                                              paymentStateContext.getCurrency(),
-                                              gatewayErrorCode,
-                                              gatewayErrorMsg);
+        if (paymentStateContext.getPaymentTransactionIdForNewPaymentTransaction() != null) {
+            return new PaymentTransactionModelDao(paymentStateContext.getPaymentTransactionIdForNewPaymentTransaction(),
+                                                  createdDate,
+                                                  updatedDate,
+                                                  paymentStateContext.getAttemptId(),
+                                                  paymentStateContext.getPaymentTransactionExternalKey(),
+                                                  paymentId,
+                                                  paymentStateContext.getTransactionType(),
+                                                  effectiveDate,
+                                                  TransactionStatus.UNKNOWN,
+                                                  paymentStateContext.getAmount(),
+                                                  paymentStateContext.getCurrency(),
+                                                  gatewayErrorCode,
+                                                  gatewayErrorMsg);
+        } else {
+            return new PaymentTransactionModelDao(createdDate,
+                                                  updatedDate,
+                                                  paymentStateContext.getAttemptId(),
+                                                  paymentStateContext.getPaymentTransactionExternalKey(),
+                                                  paymentId,
+                                                  paymentStateContext.getTransactionType(),
+                                                  effectiveDate,
+                                                  TransactionStatus.UNKNOWN,
+                                                  paymentStateContext.getAmount(),
+                                                  paymentStateContext.getCurrency(),
+                                                  gatewayErrorCode,
+                                                  gatewayErrorMsg);
+        }
     }
 
     public String getPluginName() {

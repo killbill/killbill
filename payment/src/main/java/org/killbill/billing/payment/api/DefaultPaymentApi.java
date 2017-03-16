@@ -90,7 +90,7 @@ public class DefaultPaymentApi extends DefaultApiBase implements PaymentApi {
 
             final InternalCallContext internalCallContext = internalCallContextFactory.createInternalCallContext(account.getId(), callContext);
             payment = paymentProcessor.createAuthorization(IS_API_PAYMENT, NULL_ATTEMPT_ID, account, paymentMethodId, paymentId, amount, currency, paymentExternalKey, paymentTransactionExternalKey,
-                                                                         SHOULD_LOCK_ACCOUNT, properties, callContext, internalCallContext);
+                                                           null, null, SHOULD_LOCK_ACCOUNT, properties, callContext, internalCallContext);
 
             paymentTransaction = findPaymentTransaction(payment, paymentTransactionExternalKey);
 
@@ -187,7 +187,7 @@ public class DefaultPaymentApi extends DefaultApiBase implements PaymentApi {
 
             final InternalCallContext internalCallContext = internalCallContextFactory.createInternalCallContext(account.getId(), callContext);
             payment = paymentProcessor.createCapture(IS_API_PAYMENT, NULL_ATTEMPT_ID, account, paymentId, amount, currency, paymentTransactionExternalKey,
-                                                                   SHOULD_LOCK_ACCOUNT, properties, callContext, internalCallContext);
+                                                     null, SHOULD_LOCK_ACCOUNT, properties, callContext, internalCallContext);
 
             paymentTransaction = findPaymentTransaction(payment, paymentTransactionExternalKey);
 
@@ -283,7 +283,7 @@ public class DefaultPaymentApi extends DefaultApiBase implements PaymentApi {
 
             final InternalCallContext internalCallContext = internalCallContextFactory.createInternalCallContext(account.getId(), callContext);
             payment = paymentProcessor.createPurchase(IS_API_PAYMENT, NULL_ATTEMPT_ID, account, paymentMethodId, paymentId, amount, currency, paymentExternalKey, paymentTransactionExternalKey,
-                                                                    SHOULD_LOCK_ACCOUNT, properties, callContext, internalCallContext);
+                                                      null, null, SHOULD_LOCK_ACCOUNT, properties, callContext, internalCallContext);
 
             paymentTransaction = findPaymentTransaction(payment, paymentTransactionExternalKey);
 
@@ -388,7 +388,7 @@ public class DefaultPaymentApi extends DefaultApiBase implements PaymentApi {
 
             final InternalCallContext internalCallContext = internalCallContextFactory.createInternalCallContext(account.getId(), callContext);
             payment = paymentProcessor.createVoid(IS_API_PAYMENT, NULL_ATTEMPT_ID, account, paymentId, paymentTransactionExternalKey,
-                                                                SHOULD_LOCK_ACCOUNT, properties, callContext, internalCallContext);
+                                                  null, SHOULD_LOCK_ACCOUNT, properties, callContext, internalCallContext);
 
             paymentTransaction = findPaymentTransaction(payment, paymentTransactionExternalKey);
 
@@ -480,7 +480,7 @@ public class DefaultPaymentApi extends DefaultApiBase implements PaymentApi {
 
             final InternalCallContext internalCallContext = internalCallContextFactory.createInternalCallContext(account.getId(), callContext);
             payment = paymentProcessor.createRefund(IS_API_PAYMENT, NULL_ATTEMPT_ID, account, paymentId, amount, currency, paymentTransactionExternalKey,
-                                                                  SHOULD_LOCK_ACCOUNT, properties, callContext, internalCallContext);
+                                                    null, SHOULD_LOCK_ACCOUNT, properties, callContext, internalCallContext);
 
             paymentTransaction = findPaymentTransaction(payment, paymentTransactionExternalKey);
 
@@ -581,7 +581,7 @@ public class DefaultPaymentApi extends DefaultApiBase implements PaymentApi {
                                                paymentMethodProcessor.createOrGetExternalPaymentMethod(UUIDs.randomUUID().toString(), account, properties, callContext, internalCallContext);
 
             payment = paymentProcessor.createCredit(IS_API_PAYMENT, NULL_ATTEMPT_ID, account, nonNullPaymentMethodId, paymentId, amount, currency, paymentExternalKey, paymentTransactionExternalKey,
-                                                                  SHOULD_LOCK_ACCOUNT, properties, callContext, internalCallContext);
+                                                    null, null, SHOULD_LOCK_ACCOUNT, properties, callContext, internalCallContext);
 
             paymentTransaction = findPaymentTransaction(payment, paymentTransactionExternalKey);
 
@@ -784,8 +784,8 @@ public class DefaultPaymentApi extends DefaultApiBase implements PaymentApi {
             logEnterAPICall(log, transactionType, account, null, paymentId, null, amount, currency, null, paymentTransactionExternalKey, null, null);
 
             final InternalCallContext internalCallContext = internalCallContextFactory.createInternalCallContext(account.getId(), callContext);
-            payment = paymentProcessor.createChargeback(IS_API_PAYMENT, NULL_ATTEMPT_ID, account, paymentId, paymentTransactionExternalKey, amount, currency, true,
-                                                                      callContext, internalCallContext);
+            payment = paymentProcessor.createChargeback(IS_API_PAYMENT, NULL_ATTEMPT_ID, account, paymentId, paymentTransactionExternalKey, amount, currency, null, true,
+                                                        callContext, internalCallContext);
 
             paymentTransaction = findPaymentTransaction(payment, paymentTransactionExternalKey);
 
@@ -870,7 +870,7 @@ public class DefaultPaymentApi extends DefaultApiBase implements PaymentApi {
             logEnterAPICall(log, transactionType, account, null, paymentId, null, null, null, null, paymentTransactionExternalKey, null, null);
 
             final InternalCallContext internalCallContext = internalCallContextFactory.createInternalCallContext(account.getId(), callContext);
-            payment = paymentProcessor.createChargebackReversal(IS_API_PAYMENT, NULL_ATTEMPT_ID, account, paymentId, paymentTransactionExternalKey, null, null, true, callContext, internalCallContext);
+            payment = paymentProcessor.createChargebackReversal(IS_API_PAYMENT, NULL_ATTEMPT_ID, account, paymentId, paymentTransactionExternalKey, null, null, null, true, callContext, internalCallContext);
 
             paymentTransaction = findPaymentTransaction(payment, paymentTransactionExternalKey);
 

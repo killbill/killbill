@@ -52,9 +52,14 @@ public class PaymentModelDao extends EntityModelDaoBase implements EntityModelDa
         this.externalKey = MoreObjects.firstNonNull(externalKey, id.toString());
     }
 
+    public PaymentModelDao(final UUID id, @Nullable final DateTime createdDate, @Nullable final DateTime updatedDate, final UUID accountId,
+                           final UUID paymentMethodId, @Nullable final String externalKey) {
+        this(id, createdDate, updatedDate, accountId, paymentMethodId, INVALID_PAYMENT_NUMBER, externalKey);
+    }
+
     public PaymentModelDao(@Nullable final DateTime createdDate, @Nullable final DateTime updatedDate, final UUID accountId,
                            final UUID paymentMethodId, @Nullable final String externalKey) {
-        this(UUIDs.randomUUID(), createdDate, updatedDate, accountId, paymentMethodId, INVALID_PAYMENT_NUMBER, externalKey);
+        this(UUIDs.randomUUID(), createdDate, updatedDate, accountId, paymentMethodId, externalKey);
     }
 
     public UUID getAccountId() { return accountId; }
