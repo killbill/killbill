@@ -110,6 +110,11 @@ public class ControlPluginRunner {
             log.debug("Calling priorCall of plugin {}", pluginName);
             prevResult = plugin.priorCall(inputPaymentControlContext, inputPluginProperties);
             log.debug("Successful executed priorCall of plugin {}", pluginName);
+            if (prevResult == null) {
+                // Nothing returned by the plugin
+                continue;
+            }
+
             if (prevResult.getAdjustedPaymentMethodId() != null) {
                 inputPaymentMethodId = prevResult.getAdjustedPaymentMethodId();
             }
@@ -143,7 +148,7 @@ public class ControlPluginRunner {
                                                                           callContext);
         }
         // Rebuild latest result to include inputPluginProperties
-        prevResult = new DefaultPriorPaymentControlResult(prevResult.isAborted(), inputPaymentMethodId, inputAmount, inputCurrency, inputPluginProperties);
+        prevResult = new DefaultPriorPaymentControlResult(prevResult != null && prevResult.isAborted(), inputPaymentMethodId, inputAmount, inputCurrency, inputPluginProperties);
         return prevResult;
     }
 
@@ -191,6 +196,11 @@ public class ControlPluginRunner {
                     log.debug("Calling onSuccessCall of plugin {}", pluginName);
                     final OnSuccessPaymentControlResult result = plugin.onSuccessCall(inputPaymentControlContext, inputPluginProperties);
                     log.debug("Successful executed onSuccessCall of plugin {}", pluginName);
+                    if (result == null) {
+                        // Nothing returned by the plugin
+                        continue;
+                    }
+
                     if (result.getAdjustedPluginProperties() != null) {
                         inputPluginProperties = result.getAdjustedPluginProperties();
                     }
@@ -251,6 +261,11 @@ public class ControlPluginRunner {
                     log.debug("Calling onSuccessCall of plugin {}", pluginName);
                     final OnFailurePaymentControlResult result = plugin.onFailureCall(inputPaymentControlContext, inputPluginProperties);
                     log.debug("Successful executed onSuccessCall of plugin {}", pluginName);
+                    if (result == null) {
+                        // Nothing returned by the plugin
+                        continue;
+                    }
+
                     if (candidate == null) {
                         candidate = result.getNextRetryDate();
                     } else if (result.getNextRetryDate() != null) {

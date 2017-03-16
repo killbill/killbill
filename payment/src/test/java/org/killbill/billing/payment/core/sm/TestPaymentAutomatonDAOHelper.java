@@ -114,8 +114,10 @@ public class TestPaymentAutomatonDAOHelper extends PaymentTestSuiteWithEmbeddedD
         Mockito.when(account.getId()).thenReturn(UUID.randomUUID());
         // No default payment method
 
-        paymentStateContext = new PaymentStateContext(true, paymentId,
-                                                      null, null,
+        paymentStateContext = new PaymentStateContext(true,
+                                                      paymentId,
+                                                      null,
+                                                      null,
                                                       paymentExternalKey,
                                                       paymentTransactionExternalKey,
                                                       TransactionType.CAPTURE,
@@ -123,8 +125,11 @@ public class TestPaymentAutomatonDAOHelper extends PaymentTestSuiteWithEmbeddedD
                                                       UUID.randomUUID(),
                                                       amount,
                                                       currency,
+                                                      null,
+                                                      null,
                                                       false,
-                                                      null, ImmutableList.<PluginProperty>of(),
+                                                      null,
+                                                      ImmutableList.<PluginProperty>of(),
                                                       internalCallContext,
                                                       callContext);
 

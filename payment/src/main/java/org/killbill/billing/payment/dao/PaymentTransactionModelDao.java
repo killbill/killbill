@@ -32,7 +32,7 @@ import org.killbill.billing.util.dao.TableName;
 import org.killbill.billing.util.entity.dao.EntityModelDao;
 import org.killbill.billing.util.entity.dao.EntityModelDaoBase;
 
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 
 public class PaymentTransactionModelDao extends EntityModelDaoBase implements EntityModelDao<PaymentTransaction> {
 
@@ -57,7 +57,7 @@ public class PaymentTransactionModelDao extends EntityModelDaoBase implements En
                                       final TransactionStatus paymentStatus, final BigDecimal amount, final Currency currency, final String gatewayErrorCode, final String gatewayErrorMsg) {
         super(id, createdDate, updatedDate);
         this.attemptId = attemptId;
-        this.transactionExternalKey = Objects.firstNonNull(transactionExternalKey, id.toString());
+        this.transactionExternalKey = MoreObjects.firstNonNull(transactionExternalKey, id.toString());
         this.paymentId = paymentId;
         this.transactionType = transactionType;
         this.effectiveDate = effectiveDate;
@@ -70,10 +70,16 @@ public class PaymentTransactionModelDao extends EntityModelDaoBase implements En
         this.gatewayErrorMsg = gatewayErrorMsg;
     }
 
+    public PaymentTransactionModelDao(final UUID id, @Nullable final DateTime createdDate, @Nullable final DateTime updatedDate, @Nullable final UUID attemptId,
+                                      @Nullable final String transactionExternalKey, final UUID paymentId, final TransactionType transactionType, final DateTime effectiveDate,
+                                      final TransactionStatus paymentStatus, final BigDecimal amount, final Currency currency, final String gatewayErrorCode, final String gatewayErrorMsg) {
+        this(id, attemptId, transactionExternalKey, createdDate, updatedDate, paymentId, transactionType, effectiveDate, paymentStatus, amount, currency, gatewayErrorCode, gatewayErrorMsg);
+    }
+
     public PaymentTransactionModelDao(@Nullable final DateTime createdDate, @Nullable final DateTime updatedDate, @Nullable final UUID attemptId,
                                       @Nullable final String transactionExternalKey, final UUID paymentId, final TransactionType transactionType, final DateTime effectiveDate,
                                       final TransactionStatus paymentStatus, final BigDecimal amount, final Currency currency, final String gatewayErrorCode, final String gatewayErrorMsg) {
-        this(UUIDs.randomUUID(), attemptId, transactionExternalKey, createdDate, updatedDate, paymentId, transactionType, effectiveDate, paymentStatus, amount, currency, gatewayErrorCode, gatewayErrorMsg);
+        this(UUIDs.randomUUID(), createdDate, updatedDate, attemptId, transactionExternalKey, paymentId, transactionType, effectiveDate, paymentStatus, amount, currency, gatewayErrorCode, gatewayErrorMsg);
     }
 
     public UUID getPaymentId() {

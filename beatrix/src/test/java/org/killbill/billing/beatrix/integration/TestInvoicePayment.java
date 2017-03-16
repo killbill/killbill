@@ -573,6 +573,9 @@ public class TestInvoicePayment extends TestIntegrationBase {
         assertEquals(payments.get(0).getTransactions().get(0).getCurrency(), Currency.USD);
         assertEquals(payments.get(0).getTransactions().get(0).getProcessedAmount().compareTo(BigDecimal.ZERO), 0);
         assertEquals(payments.get(0).getTransactions().get(0).getProcessedCurrency(), Currency.USD);
+        // Verify fix for https://github.com/killbill/killbill/issues/349
+        assertEquals(payments.get(0).getId().toString(), payments.get(0).getExternalKey());
+        assertEquals(payments.get(0).getTransactions().get(0).getId().toString(), payments.get(0).getTransactions().get(0).getExternalKey());
 
         // Trigger the payment retry
         busHandler.pushExpectedEvents(NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);

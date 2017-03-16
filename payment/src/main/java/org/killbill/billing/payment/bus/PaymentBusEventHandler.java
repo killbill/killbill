@@ -103,9 +103,6 @@ public class PaymentBusEventHandler {
         final List<String> paymentControlPluginNames = paymentConfig.getPaymentControlPluginNames(internalContext) != null ? new LinkedList<String>(paymentConfig.getPaymentControlPluginNames(internalContext)) : new LinkedList<String>();
         paymentControlPluginNames.add(InvoicePaymentControlPluginApi.PLUGIN_NAME);
 
-        final String paymentExternalKey = UUIDs.randomUUID().toString();
-        final String paymentTransactionExternalKey = UUIDs.randomUUID().toString();
-
         final String transactionType = TransactionType.PURCHASE.name();
         Account account = null;
         Payment payment = null;
@@ -121,20 +118,14 @@ public class PaymentBusEventHandler {
                             null,
                             amountToBePaid,
                             account.getCurrency(),
-                            paymentExternalKey,
-                            paymentTransactionExternalKey,
+                            null,
+                            null,
                             null,
                             paymentControlPluginNames);
 
-            payment = pluginControlPaymentProcessor.createPurchase(false, account, account.getPaymentMethodId(), null, amountToBePaid, account.getCurrency(), paymentExternalKey, paymentTransactionExternalKey, properties, paymentControlPluginNames, callContext, internalContext);
+            payment = pluginControlPaymentProcessor.createPurchase(false, account, account.getPaymentMethodId(), null, amountToBePaid, account.getCurrency(), null, null, properties, paymentControlPluginNames, callContext, internalContext);
 
-            paymentTransaction = Iterables.<PaymentTransaction>find(Lists.<PaymentTransaction>reverse(payment.getTransactions()),
-                                                                    new Predicate<PaymentTransaction>() {
-                                                                        @Override
-                                                                        public boolean apply(final PaymentTransaction input) {
-                                                                            return paymentTransactionExternalKey.equals(input.getExternalKey());
-                                                                        }
-                                                                    });
+            paymentTransaction = payment.getTransactions().get(payment.getTransactions().size() - 1);
         } catch (final AccountApiException e) {
             log.warn("Failed to process invoice payment", e);
         } catch (final PaymentApiException e) {

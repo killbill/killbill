@@ -20,7 +20,7 @@ import java.math.BigDecimal;
 
 import org.killbill.billing.overdue.config.api.BillingState;
 
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 
 import static org.killbill.billing.util.DefaultAmountFormatter.round;
 
@@ -32,6 +32,6 @@ public class DefaultBillingStateFormatter extends BillingStateFormatter {
 
     @Override
     public String getFormattedBalanceOfUnpaidInvoices() {
-        return round(Objects.firstNonNull(getBalanceOfUnpaidInvoices(), BigDecimal.ZERO)).toString();
+        return round(MoreObjects.firstNonNull(getBalanceOfUnpaidInvoices(), BigDecimal.ZERO)).toString();
     }
 }

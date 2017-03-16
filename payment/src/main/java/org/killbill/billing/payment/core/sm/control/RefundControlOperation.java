@@ -44,6 +44,7 @@ public class RefundControlOperation extends OperationControlCallback {
                                              paymentStateControlContext.getAmount(),
                                              paymentStateControlContext.getCurrency(),
                                              paymentStateControlContext.getPaymentTransactionExternalKey(),
+                                             paymentStateControlContext.getPaymentTransactionIdForNewPaymentTransaction(),
                                              false,
                                              paymentStateControlContext.getProperties(),
                                              paymentStateControlContext.getCallContext(),

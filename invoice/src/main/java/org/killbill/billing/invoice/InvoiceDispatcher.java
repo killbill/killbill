@@ -52,8 +52,6 @@ import org.killbill.billing.catalog.api.PlanPhaseSpecifier;
 import org.killbill.billing.entitlement.api.SubscriptionEventType;
 import org.killbill.billing.events.BusInternalEvent;
 import org.killbill.billing.events.EffectiveSubscriptionInternalEvent;
-import org.killbill.billing.events.InvoiceAdjustmentInternalEvent;
-import org.killbill.billing.events.InvoiceInternalEvent;
 import org.killbill.billing.events.InvoiceNotificationInternalEvent;
 import org.killbill.billing.invoice.InvoiceDispatcher.FutureAccountNotifications.SubscriptionNotification;
 import org.killbill.billing.invoice.api.DefaultInvoiceService;
@@ -65,7 +63,6 @@ import org.killbill.billing.invoice.api.InvoiceItem;
 import org.killbill.billing.invoice.api.InvoiceItemType;
 import org.killbill.billing.invoice.api.InvoiceNotifier;
 import org.killbill.billing.invoice.api.InvoiceStatus;
-import org.killbill.billing.invoice.api.user.DefaultInvoiceAdjustmentEvent;
 import org.killbill.billing.invoice.api.user.DefaultInvoiceNotificationInternalEvent;
 import org.killbill.billing.invoice.api.user.DefaultNullInvoiceEvent;
 import org.killbill.billing.invoice.calculator.InvoiceCalculatorUtils;
@@ -421,11 +418,19 @@ public class InvoiceDispatcher {
             // Ask external invoice plugins if additional items (tax, etc) shall be added to the invoice
             //
             final CallContext callContext = buildCallContext(context);
-            invoice.addInvoiceItems(invoicePluginDispatcher.getAdditionalInvoiceItems(tmpInvoiceForInvoicePlugins, isDryRun, callContext));
-            // Use credit after we call the plugin (https://github.com/killbill/killbill/issues/637)
-            final InvoiceItem cbaItemPostInvoicePlugins = computeCBAOnExistingInvoice(invoice, context);
-            if (cbaItemPostInvoicePlugins != null) {
-                invoice.addInvoiceItem(cbaItemPostInvoicePlugins);
+            final List<InvoiceItem> additionalInvoiceItemsFromPlugins = invoicePluginDispatcher.getAdditionalInvoiceItems(tmpInvoiceForInvoicePlugins, isDryRun, callContext);
+            if (additionalInvoiceItemsFromPlugins.isEmpty()) {
+                // PERF: avoid re-computing the CBA if no change was made
+                if (cbaItemPreInvoicePlugins != null) {
+                    invoice.addInvoiceItem(cbaItemPreInvoicePlugins);
+                }
+            } else {
+                invoice.addInvoiceItems(additionalInvoiceItemsFromPlugins);
+                // Use credit after we call the plugin (https://github.com/killbill/killbill/issues/637)
+                final InvoiceItem cbaItemPostInvoicePlugins = computeCBAOnExistingInvoice(invoice, context);
+                if (cbaItemPostInvoicePlugins != null) {
+                    invoice.addInvoiceItem(cbaItemPostInvoicePlugins);
+                }
             }
 
             if (!isDryRun) {

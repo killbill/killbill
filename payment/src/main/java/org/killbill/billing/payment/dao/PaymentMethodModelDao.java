@@ -24,11 +24,10 @@ import org.joda.time.DateTime;
 
 import org.killbill.billing.payment.api.PaymentMethod;
 import org.killbill.billing.util.dao.TableName;
-import org.killbill.billing.entity.EntityBase;
 import org.killbill.billing.util.entity.dao.EntityModelDao;
 import org.killbill.billing.util.entity.dao.EntityModelDaoBase;
 
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 
 public class PaymentMethodModelDao extends EntityModelDaoBase implements EntityModelDao<PaymentMethod> {
 
@@ -43,7 +42,7 @@ public class PaymentMethodModelDao extends EntityModelDaoBase implements EntityM
                                  final UUID accountId, final String pluginName,
                                  final Boolean isActive) {
         super(id, createdDate, updatedDate);
-        this.externalKey = Objects.firstNonNull(externalKey, id.toString());
+        this.externalKey = MoreObjects.firstNonNull(externalKey, id.toString());
         this.accountId = accountId;
         this.pluginName = pluginName;
         this.isActive = isActive;

@@ -84,8 +84,8 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
-import com.google.common.collect.Iterators;
 import com.google.common.collect.Ordering;
 import com.google.inject.Inject;
 
@@ -417,7 +417,7 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
                                                                  ImmutableList.<InvoiceModelDao>of(getByNumber(invoiceNumber, context)).iterator() :
                                                                  invoiceSqlDao.search(searchKey, String.format("%%%s%%", searchKey), offset, limit, ordering.toString(), context);
                                                       } catch (final InvoiceApiException ignored) {
-                                                          return Iterators.<InvoiceModelDao>emptyIterator();
+                                                          return ImmutableSet.<InvoiceModelDao>of().iterator();
                                                       }
                                                   }
                                               },

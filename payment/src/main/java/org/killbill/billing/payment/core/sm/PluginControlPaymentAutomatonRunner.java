@@ -70,7 +70,6 @@ import org.killbill.commons.locker.GlobalLocker;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.MoreObjects;
-import com.google.common.base.Objects;
 
 import static org.killbill.billing.payment.glue.PaymentModule.RETRYABLE_NAMED;
 
@@ -272,7 +271,7 @@ public class PluginControlPaymentAutomatonRunner extends PaymentAutomatonRunner 
 
             paymentControlStateMachineHelper.getInitialState().runOperation(paymentControlStateMachineHelper.getOperation(), callback, enteringStateCallback, leavingStateCallback);
         } catch (final MissingEntryException e) {
-            throw new PaymentApiException(e.getCause(), ErrorCode.PAYMENT_INTERNAL_ERROR, Objects.firstNonNull(e.getMessage(), ""));
+            throw new PaymentApiException(e.getCause(), ErrorCode.PAYMENT_INTERNAL_ERROR, MoreObjects.firstNonNull(e.getMessage(), ""));
         } catch (final OperationException e) {
             if (e.getCause() instanceof PaymentApiException) {
                 throw (PaymentApiException) e.getCause();

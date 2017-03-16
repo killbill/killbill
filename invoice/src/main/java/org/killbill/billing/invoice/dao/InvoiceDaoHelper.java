@@ -40,7 +40,6 @@ import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.invoice.api.InvoiceApiException;
 import org.killbill.billing.invoice.api.InvoiceItemType;
 import org.killbill.billing.invoice.api.InvoiceStatus;
-import org.killbill.billing.tag.TagInternalApi;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.billing.util.entity.dao.EntitySqlDaoWrapperFactory;
 import org.killbill.billing.util.tag.ControlTagType;
@@ -48,7 +47,7 @@ import org.killbill.billing.util.tag.Tag;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 import com.google.common.base.Predicate;
 import com.google.common.collect.Collections2;
 import com.google.common.collect.ImmutableList;
@@ -112,7 +111,7 @@ public class InvoiceDaoHelper {
             throw new InvoiceApiException(ErrorCode.INVOICE_ITEM_ADJUSTMENT_AMOUNT_INVALID, proposedItemAmount, maxAdjLeftAmount);
         }
 
-        final BigDecimal itemAmountToAdjust = Objects.firstNonNull(proposedItemAmount, maxAdjLeftAmount);
+        final BigDecimal itemAmountToAdjust = MoreObjects.firstNonNull(proposedItemAmount, maxAdjLeftAmount);
         if (itemAmountToAdjust.compareTo(BigDecimal.ZERO) > 0) {
             outputAdjInvoiceItem.put(targetInvoiceItem.getId(), itemAmountToAdjust);
         }
@@ -212,9 +211,9 @@ public class InvoiceDaoHelper {
         }
 
         // Retrieve the amount and currency if needed
-        final BigDecimal amountToAdjust = Objects.firstNonNull(positiveAdjAmount, invoiceItemToBeAdjusted.getAmount());
+        final BigDecimal amountToAdjust = MoreObjects.firstNonNull(positiveAdjAmount, invoiceItemToBeAdjusted.getAmount());
         // TODO - should we enforce the currency (and respect the original one) here if the amount passed was null?
-        final Currency currencyForAdjustment = Objects.firstNonNull(currency, invoiceItemToBeAdjusted.getCurrency());
+        final Currency currencyForAdjustment = MoreObjects.firstNonNull(currency, invoiceItemToBeAdjusted.getCurrency());
 
         // Finally, create the adjustment
         // Note! The amount is negated here!
@@ -275,7 +274,7 @@ public class InvoiceDaoHelper {
 
         for (final InvoiceModelDao invoice : invoices) {
             // Make sure to set invoice items to a non-null value
-            final List<InvoiceItemModelDao> invoiceItemsForInvoice = Objects.firstNonNull(invoiceItemsPerInvoiceId.get(invoice.getId()), ImmutableList.<InvoiceItemModelDao>of());
+            final List<InvoiceItemModelDao> invoiceItemsForInvoice = MoreObjects.firstNonNull(invoiceItemsPerInvoiceId.get(invoice.getId()), ImmutableList.<InvoiceItemModelDao>of());
             log.debug("Found items={} for invoice={}", invoiceItemsForInvoice, invoice);
             invoice.addInvoiceItems(invoiceItemsForInvoice);
         }
@@ -295,7 +294,7 @@ public class InvoiceDaoHelper {
 
         for (final InvoiceModelDao invoice : invoices) {
             // Make sure to set payments to a non-null value
-            final List<InvoicePaymentModelDao> invoicePaymentsForInvoice = Objects.firstNonNull(invoicePaymentsPerInvoiceId.get(invoice.getId()), ImmutableList.<InvoicePaymentModelDao>of());
+            final List<InvoicePaymentModelDao> invoicePaymentsForInvoice = MoreObjects.firstNonNull(invoicePaymentsPerInvoiceId.get(invoice.getId()), ImmutableList.<InvoicePaymentModelDao>of());
             log.debug("Found payments={} for invoice={}", invoicePaymentsForInvoice, invoice);
             invoice.addPayments(invoicePaymentsForInvoice);
 

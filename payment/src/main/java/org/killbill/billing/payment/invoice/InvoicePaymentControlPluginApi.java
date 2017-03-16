@@ -77,7 +77,6 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Function;
 import com.google.common.base.MoreObjects;
-import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.collect.Collections2;
@@ -468,7 +467,7 @@ public final class InvoicePaymentControlPluginApi implements PaymentControlPlugi
                     (specifiedItemAmount.compareTo(BigDecimal.ZERO) <= 0 || specifiedItemAmount.compareTo(itemAmount) > 0)) {
                     throw new PaymentControlApiException("Failed to compute refund: ", new PaymentApiException(ErrorCode.PAYMENT_PLUGIN_EXCEPTION, "You need to specify a valid invoice item amount"));
                 }
-                amountFromItems = amountFromItems.add(Objects.firstNonNull(specifiedItemAmount, itemAmount));
+                amountFromItems = amountFromItems.add(MoreObjects.firstNonNull(specifiedItemAmount, itemAmount));
             }
             return amountFromItems;
         } catch (final InvoiceApiException e) {

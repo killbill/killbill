@@ -65,12 +65,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Function;
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 import com.google.common.base.Predicate;
 import com.google.common.collect.Collections2;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
-import com.google.common.collect.Iterators;
 import com.google.inject.Inject;
 
 import static org.killbill.billing.payment.dispatcher.PaymentPluginDispatcher.dispatchWithExceptionHandling;
@@ -316,7 +316,7 @@ public class PaymentMethodProcessor extends ProcessorBase {
                                           );
             } catch (final PaymentApiException e) {
                 log.warn("Unable to search through payment methods", e);
-                return new DefaultPagination<PaymentMethod>(offset, limit, null, null, Iterators.<PaymentMethod>emptyIterator());
+                return new DefaultPagination<PaymentMethod>(offset, limit, null, null, ImmutableSet.<PaymentMethod>of().iterator());
             }
         }
     }
@@ -433,7 +433,7 @@ public class PaymentMethodProcessor extends ProcessorBase {
                 }
             });
         } catch (final Exception e) {
-            throw new PaymentApiException(e, ErrorCode.PAYMENT_INTERNAL_ERROR, Objects.firstNonNull(e.getMessage(), ""));
+            throw new PaymentApiException(e, ErrorCode.PAYMENT_INTERNAL_ERROR, MoreObjects.firstNonNull(e.getMessage(), ""));
         }
     }
 
@@ -464,7 +464,7 @@ public class PaymentMethodProcessor extends ProcessorBase {
                 }
             });
         } catch (final Exception e) {
-            throw new PaymentApiException(e, ErrorCode.PAYMENT_INTERNAL_ERROR, Objects.firstNonNull(e.getMessage(), ""));
+            throw new PaymentApiException(e, ErrorCode.PAYMENT_INTERNAL_ERROR, MoreObjects.firstNonNull(e.getMessage(), ""));
         }
     }
 
@@ -547,7 +547,7 @@ public class PaymentMethodProcessor extends ProcessorBase {
             });
             return result.getReturnType();
         } catch (final Exception e) {
-            throw new PaymentApiException(e, ErrorCode.PAYMENT_INTERNAL_ERROR, Objects.firstNonNull(e.getMessage(), ""));
+            throw new PaymentApiException(e, ErrorCode.PAYMENT_INTERNAL_ERROR, MoreObjects.firstNonNull(e.getMessage(), ""));
         }
     }
 

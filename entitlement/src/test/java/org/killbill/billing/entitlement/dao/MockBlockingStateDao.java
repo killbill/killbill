@@ -34,7 +34,7 @@ import org.killbill.billing.entitlement.api.BlockingStateType;
 import org.killbill.billing.entitlement.api.EntitlementApiException;
 import org.killbill.billing.util.entity.dao.MockEntityDaoBase;
 
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
 import com.google.common.collect.Collections2;
@@ -81,7 +81,7 @@ public class MockBlockingStateDao extends MockEntityDaoBase<BlockingStateModelDa
 
     @Override
     public List<BlockingState> getBlockingAllForAccountRecordId(final InternalTenantContext context) {
-        return Objects.firstNonNull(blockingStatesPerAccountRecordId.get(context.getAccountRecordId()), ImmutableList.<BlockingState>of());
+        return MoreObjects.firstNonNull(blockingStatesPerAccountRecordId.get(context.getAccountRecordId()), ImmutableList.<BlockingState>of());
     }
 
     @Override

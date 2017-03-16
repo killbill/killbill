@@ -37,7 +37,7 @@ import org.killbill.billing.util.template.translation.DefaultCatalogTranslator;
 import org.killbill.billing.util.template.translation.Translator;
 import org.killbill.billing.util.template.translation.TranslatorConfig;
 
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 import com.google.common.base.Strings;
 
 /**
@@ -67,7 +67,7 @@ public class DefaultInvoiceItemFormatter implements InvoiceItemFormatter {
 
     @Override
     public BigDecimal getAmount() {
-        return Objects.firstNonNull(item.getAmount(), BigDecimal.ZERO);
+        return MoreObjects.firstNonNull(item.getAmount(), BigDecimal.ZERO);
     }
 
     @Override
