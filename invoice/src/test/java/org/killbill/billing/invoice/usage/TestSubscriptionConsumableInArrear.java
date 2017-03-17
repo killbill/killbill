@@ -26,6 +26,7 @@ import org.joda.time.LocalDate;
 import org.killbill.billing.catalog.DefaultTier;
 import org.killbill.billing.catalog.DefaultTieredBlock;
 import org.killbill.billing.catalog.api.BillingPeriod;
+import org.killbill.billing.catalog.api.TierBlockPolicy;
 import org.killbill.billing.catalog.api.Usage;
 import org.killbill.billing.junction.BillingEvent;
 import org.killbill.billing.usage.RawUsage;
@@ -53,12 +54,12 @@ public class TestSubscriptionConsumableInArrear extends TestUsageInArrearBase {
         final String usageName1 = "erw";
         final DefaultTieredBlock block1 = createDefaultTieredBlock("unit", 100, 10, BigDecimal.ONE);
         final DefaultTier tier1 = createDefaultTierWithBlocks(block1);
-        final Usage usage1 = createConsumableInArrearUsage(usageName1, BillingPeriod.MONTHLY, tier1);
+        final Usage usage1 = createConsumableInArrearUsage(usageName1, BillingPeriod.MONTHLY, TierBlockPolicy.ALL_TIERS, tier1);
 
         final String usageName2 = "hghg";
         final DefaultTieredBlock block2 = createDefaultTieredBlock("unit", 100, 10, BigDecimal.ONE);
         final DefaultTier tier2 = createDefaultTierWithBlocks(block2);
-        final Usage usage2 = createConsumableInArrearUsage(usageName2, BillingPeriod.MONTHLY, tier2);
+        final Usage usage2 = createConsumableInArrearUsage(usageName2, BillingPeriod.MONTHLY, TierBlockPolicy.ALL_TIERS, tier2);
 
         final DateTime dt1 = new DateTime(2013, 3, 23, 4, 34, 59, DateTimeZone.UTC);
         final BillingEvent evt1 = createMockBillingEvent(dt1, BillingPeriod.MONTHLY, ImmutableList.<Usage>builder().add(usage1).add(usage2).build());

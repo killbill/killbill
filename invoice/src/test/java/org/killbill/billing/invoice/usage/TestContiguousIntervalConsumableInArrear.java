@@ -31,6 +31,7 @@ import org.killbill.billing.catalog.DefaultUsage;
 import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.catalog.api.Currency;
+import org.killbill.billing.catalog.api.TierBlockPolicy;
 import org.killbill.billing.catalog.api.Usage;
 import org.killbill.billing.invoice.api.InvoiceItem;
 import org.killbill.billing.invoice.model.FixedPriceInvoiceItem;
@@ -84,7 +85,7 @@ public class TestContiguousIntervalConsumableInArrear extends TestUsageInArrearB
 
         final DefaultTieredBlock block = createDefaultTieredBlock("unit", 100, 1000, BigDecimal.ONE);
         final DefaultTier tier = createDefaultTierWithBlocks(block);
-        final DefaultUsage usage = createConsumableInArrearUsage(usageName, BillingPeriod.MONTHLY, tier);
+        final DefaultUsage usage = createConsumableInArrearUsage(usageName, BillingPeriod.MONTHLY, TierBlockPolicy.ALL_TIERS, tier);
 
         final LocalDate targetDate = startDate.plusDays(1);
         final ContiguousIntervalUsageInArrear intervalConsumableInArrear = createContiguousIntervalConsumableInArrear(usage, ImmutableList.<RawUsage>of(), targetDate, false,
@@ -116,21 +117,21 @@ public class TestContiguousIntervalConsumableInArrear extends TestUsageInArrearB
     }
 
     @Test(groups = "fast")
-    public void testComputeBilledUsage() throws CatalogApiException {
+    public void testComputeBilledUsageWith_ALL_TIERS() throws CatalogApiException {
 
         final DefaultTieredBlock block1 = createDefaultTieredBlock("unit", 100, 10, BigDecimal.ONE);
         final DefaultTier tier1 = createDefaultTierWithBlocks(block1);
 
         final DefaultTieredBlock block2 = createDefaultTieredBlock("unit", 1000, 100, BigDecimal.ONE);
         final DefaultTier tier2 = createDefaultTierWithBlocks(block2);
-        final DefaultUsage usage = createConsumableInArrearUsage(usageName, BillingPeriod.MONTHLY, tier1, tier2);
+        final DefaultUsage usage = createConsumableInArrearUsage(usageName, BillingPeriod.MONTHLY, TierBlockPolicy.ALL_TIERS, tier1, tier2);
 
         final LocalDate targetDate = new LocalDate(2014, 03, 20);
 
         final ContiguousIntervalUsageInArrear intervalConsumableInArrear = createContiguousIntervalConsumableInArrear(usage, ImmutableList.<RawUsage>of(), targetDate, false,
                                                                                                                       createMockBillingEvent(targetDate.toDateTimeAtStartOfDay(DateTimeZone.UTC),
-                                                                                                                                                  BillingPeriod.MONTHLY,
-                                                                                                                                                  Collections.<Usage>emptyList())
+                                                                                                                                             BillingPeriod.MONTHLY,
+                                                                                                                                             Collections.<Usage>emptyList())
                                                                                                                      );
 
         final BigDecimal result = intervalConsumableInArrear.computeToBeBilledConsumableInArrear(new DefaultRolledUpUnit("unit", 5325L));
@@ -138,6 +139,51 @@ public class TestContiguousIntervalConsumableInArrear extends TestUsageInArrearB
         // 5000 = 1000 (tier1) + 4325 (tier2) => 10 + 5 = 15
         assertEquals(result, new BigDecimal("15"));
     }
+
+    @Test(groups = "fast")
+    public void testComputeBilledUsageWith_TOP_TIER() throws CatalogApiException {
+
+        final DefaultTieredBlock block1 = createDefaultTieredBlock("unit", 100, 10, BigDecimal.ONE);
+        final DefaultTier tier1 = createDefaultTierWithBlocks(block1);
+
+        final DefaultTieredBlock block2 = createDefaultTieredBlock("unit", 1000, 100, BigDecimal.ONE);
+        final DefaultTier tier2 = createDefaultTierWithBlocks(block2);
+
+        final DefaultTieredBlock block3 = createDefaultTieredBlock("unit", 1000, 100, new BigDecimal("0.5"));
+        final DefaultTier tier3 = createDefaultTierWithBlocks(block3);
+
+        final DefaultUsage usage = createConsumableInArrearUsage(usageName, BillingPeriod.MONTHLY, TierBlockPolicy.TOP_TIER, tier1, tier2, tier3);
+
+        final LocalDate targetDate = new LocalDate(2014, 03, 20);
+
+        final ContiguousIntervalUsageInArrear intervalConsumableInArrear = createContiguousIntervalConsumableInArrear(usage, ImmutableList.<RawUsage>of(), targetDate, false,
+                                                                                                                      createMockBillingEvent(targetDate.toDateTimeAtStartOfDay(DateTimeZone.UTC),
+                                                                                                                                             BillingPeriod.MONTHLY,
+                                                                                                                                             Collections.<Usage>emptyList())
+                                                                                                                     );
+        //
+        // In this model unit amount is first used to figure out which tier we are in, and then we price all unit at that 'target' tier
+        //
+        final BigDecimal inputTier1 = intervalConsumableInArrear.computeToBeBilledConsumableInArrear(new DefaultRolledUpUnit("unit", 1000L));
+        // 1000 units => (tier1) : 1000 / 100 + 1000 % 100 = 10
+        assertEquals(inputTier1, new BigDecimal("10"));
+
+        final BigDecimal inputTier2 = intervalConsumableInArrear.computeToBeBilledConsumableInArrear(new DefaultRolledUpUnit("unit", 101000L));
+        // 101000 units => (tier2) :  101000 / 1000 + 101000 % 1000 = 101 + 0 = 101
+        assertEquals(inputTier2, new BigDecimal("101"));
+
+        final BigDecimal inputTier3 = intervalConsumableInArrear.computeToBeBilledConsumableInArrear(new DefaultRolledUpUnit("unit", 101001L));
+        // 101001 units => (tier3) : 101001 / 1000 + 101001 % 1000 = 101 + 1 = 102 units => $51
+        assertEquals(inputTier3, new BigDecimal("51.0"));
+
+        // If we pass the maximum of the last tier, we price all units at the last tier
+        final BigDecimal inputLastTier = intervalConsumableInArrear.computeToBeBilledConsumableInArrear(new DefaultRolledUpUnit("unit", 300000L));
+        // 300000 units => (tier3) : 300000 / 1000 + 300000 % 1000 = 300 units => $150
+        assertEquals(inputLastTier, new BigDecimal("150.0"));
+
+    }
+
+
 
     @Test(groups = "fast")
     public void testComputeMissingItems() throws CatalogApiException {
@@ -155,7 +201,7 @@ public class TestContiguousIntervalConsumableInArrear extends TestUsageInArrearB
 
         final DefaultTieredBlock block = createDefaultTieredBlock("unit", 100, 10, BigDecimal.ONE);
         final DefaultTier tier = createDefaultTierWithBlocks(block);
-        final DefaultUsage usage = createConsumableInArrearUsage(usageName, BillingPeriod.MONTHLY, tier);
+        final DefaultUsage usage = createConsumableInArrearUsage(usageName, BillingPeriod.MONTHLY, TierBlockPolicy.ALL_TIERS, tier);
 
         final LocalDate targetDate = endDate;
 
@@ -216,7 +262,7 @@ public class TestContiguousIntervalConsumableInArrear extends TestUsageInArrearB
         final DefaultTier tier = createDefaultTierWithBlocks(tieredBlock1, tieredBlock2);
 
 
-        final DefaultUsage usage = createConsumableInArrearUsage(usageName, BillingPeriod.MONTHLY, tier);
+        final DefaultUsage usage = createConsumableInArrearUsage(usageName, BillingPeriod.MONTHLY, TierBlockPolicy.ALL_TIERS, tier);
 
 
         final LocalDate t0 = new LocalDate(2015, 03, BCD);

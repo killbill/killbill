@@ -37,6 +37,7 @@ import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.catalog.api.Plan;
 import org.killbill.billing.catalog.api.PlanPhase;
+import org.killbill.billing.catalog.api.TierBlockPolicy;
 import org.killbill.billing.catalog.api.Usage;
 import org.killbill.billing.catalog.api.UsageType;
 import org.killbill.billing.invoice.InvoiceTestSuiteNoDB;
@@ -81,11 +82,12 @@ public abstract class TestUsageInArrearBase extends InvoiceTestSuiteNoDB {
         return intervalConsumableInArrear;
     }
 
-    protected DefaultUsage createConsumableInArrearUsage(final String usageName, final BillingPeriod billingPeriod, final DefaultTier... tiers) {
+    protected DefaultUsage createConsumableInArrearUsage(final String usageName, final BillingPeriod billingPeriod, final TierBlockPolicy tierBlockPolicy, final DefaultTier... tiers) {
         final DefaultUsage usage = new DefaultUsage();
         usage.setName(usageName);
         usage.setBillingMode(BillingMode.IN_ARREAR);
         usage.setUsageType(UsageType.CONSUMABLE);
+        usage.setTierBlockPolicy(tierBlockPolicy);
         usage.setBillingPeriod(billingPeriod);
         usage.setTiers(tiers);
         return usage;

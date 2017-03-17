@@ -42,6 +42,8 @@ import org.killbill.billing.catalog.api.TieredBlockPriceOverride;
 import org.killbill.billing.catalog.api.Usage;
 import org.killbill.billing.catalog.api.UsagePriceOverride;
 import org.killbill.billing.catalog.api.UsageType;
+import org.killbill.billing.catalog.api.TierBlockPolicy;
+
 import org.killbill.xmlloader.ValidatingConfig;
 import org.killbill.xmlloader.ValidationError;
 import org.killbill.xmlloader.ValidationErrors;
@@ -62,6 +64,9 @@ public class DefaultUsage extends ValidatingConfig<StandaloneCatalog> implements
 
     @XmlAttribute(required = true)
     private UsageType usageType;
+
+    @XmlAttribute(required = false)
+    private TierBlockPolicy tierBlockPolicy;
 
     @XmlElement(required = true)
     private BillingPeriod billingPeriod;
@@ -98,6 +103,7 @@ public class DefaultUsage extends ValidatingConfig<StandaloneCatalog> implements
     public DefaultUsage(final Usage in, UsagePriceOverride override, Currency currency) {
               this.name = in.getName();
               this.usageType = in.getUsageType();
+              this.tierBlockPolicy = in.getTierBlockPolicy();
               this.billingPeriod = in.getBillingPeriod();
               this.billingMode = in.getBillingMode();
               this.limits = (DefaultLimit[]) in.getLimits();
@@ -151,6 +157,11 @@ public class DefaultUsage extends ValidatingConfig<StandaloneCatalog> implements
     @Override
     public UsageType getUsageType() {
         return usageType;
+    }
+
+    @Override
+    public TierBlockPolicy getTierBlockPolicy() {
+        return tierBlockPolicy;
     }
 
     @Override
@@ -251,6 +262,11 @@ public class DefaultUsage extends ValidatingConfig<StandaloneCatalog> implements
         return this;
     }
 
+    public DefaultUsage setTierBlockPolicy(final TierBlockPolicy tierBlockPolicy) {
+        this.tierBlockPolicy = tierBlockPolicy;
+        return this;
+    }
+
     public DefaultUsage setPhase(final PlanPhase phase) {
         this.phase = phase;
         return this;
@@ -331,6 +347,9 @@ public class DefaultUsage extends ValidatingConfig<StandaloneCatalog> implements
         if (usageType != that.usageType) {
             return false;
         }
+        if (tierBlockPolicy != that.tierBlockPolicy) {
+            return false;
+        }
 
         return true;
     }
@@ -340,6 +359,7 @@ public class DefaultUsage extends ValidatingConfig<StandaloneCatalog> implements
         int result = name != null ? name.hashCode() : 0;
         result = 31 * result + (billingMode != null ? billingMode.hashCode() : 0);
         result = 31 * result + (usageType != null ? usageType.hashCode() : 0);
+        result = 31 * result + (tierBlockPolicy != null ? tierBlockPolicy.hashCode() : 0);
         result = 31 * result + (billingPeriod != null ? billingPeriod.hashCode() : 0);
         result = 31 * result + (limits != null ? Arrays.hashCode(limits) : 0);
         result = 31 * result + (blocks != null ? Arrays.hashCode(blocks) : 0);

@@ -395,11 +395,24 @@ public class ContiguousIntervalUsageInArrear {
     BigDecimal computeToBeBilledConsumableInArrear(final RolledUpUnit roUnit) throws CatalogApiException {
 
         Preconditions.checkState(isBuilt.get());
+        final List<TieredBlock> tieredBlocks = getConsumableInArrearTieredBlocks(usage, roUnit.getUnitType());
+
+        switch (usage.getTierBlockPolicy()) {
+            case ALL_TIERS:
+                return computeToBeBilledConsumableInArrearWith_ALL_TIERS(tieredBlocks, roUnit.getAmount());
+            case TOP_TIER:
+                return computeToBeBilledConsumableInArrearWith_TOP_TIER(tieredBlocks, roUnit.getAmount());
+            default:
+                throw new IllegalStateException("Unknwon TierBlockPolicy " + usage.getTierBlockPolicy());
+
+        }
+    }
+
+
+    BigDecimal computeToBeBilledConsumableInArrearWith_ALL_TIERS(final List<TieredBlock> tieredBlocks, final Long units) throws CatalogApiException {
 
         BigDecimal result = BigDecimal.ZERO;
-
-        final List<TieredBlock> tieredBlocks = getConsumableInArrearTieredBlocks(usage, roUnit.getUnitType());
-        int remainingUnits = roUnit.getAmount().intValue();
+        int remainingUnits = units.intValue();
         for (final TieredBlock tieredBlock : tieredBlocks) {
 
             final int blockTierSize = tieredBlock.getSize().intValue();
@@ -416,6 +429,30 @@ public class ContiguousIntervalUsageInArrear {
         }
         return result;
     }
+
+    BigDecimal computeToBeBilledConsumableInArrearWith_TOP_TIER(final List<TieredBlock> tieredBlocks, final Long units) throws CatalogApiException {
+
+        int remainingUnits = units.intValue();
+
+        // By default last last tierBlock
+        TieredBlock targetBlock = tieredBlocks.get(tieredBlocks.size() - 1);
+        // Loop through all tier block
+        for (final TieredBlock tieredBlock : tieredBlocks) {
+
+            final int blockTierSize = tieredBlock.getSize().intValue();
+            final int tmp = remainingUnits / blockTierSize + (remainingUnits % blockTierSize == 0 ? 0 : 1);
+            if (tmp > tieredBlock.getMax()) {
+                remainingUnits -= tieredBlock.getMax() * blockTierSize;
+            } else {
+                targetBlock = tieredBlock;
+                break;
+            }
+        }
+        final int lastBlockTierSize = targetBlock.getSize().intValue();
+        final int nbBlocks = units.intValue() / lastBlockTierSize + (units.intValue() % lastBlockTierSize == 0 ? 0 : 1);
+        return targetBlock.getPrice().getPrice(getCurrency()).multiply(new BigDecimal(nbBlocks));
+    }
+
 
     /**
      * @param filteredUsageForInterval the list of invoiceItem to consider
