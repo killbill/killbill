@@ -32,6 +32,7 @@ import org.killbill.billing.account.api.AccountData;
 import org.killbill.billing.api.TestApiListener.NextEvent;
 import org.killbill.billing.beatrix.util.InvoiceChecker.ExpectedInvoiceItemCheck;
 import org.killbill.billing.beatrix.util.PaymentChecker.ExpectedPaymentCheck;
+import org.killbill.billing.catalog.api.BillingActionPolicy;
 import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.catalog.api.PriceListSet;
@@ -607,6 +608,106 @@ public class TestIntegration extends TestIntegrationBase {
                                     new ExpectedInvoiceItemCheck(new LocalDate(2012, 4, 5), new LocalDate(2012, 4, 5), InvoiceItemType.CBA_ADJ, new BigDecimal("-224.96")));
 
         checkNoMoreInvoiceToGenerate(account);
+    }
+
+    @Test(groups = "slow", description = "https://github.com/killbill/killbill/issues/715")
+    public void testWithPauseResumeAfterENT_CANCELLEDBlockingState() throws Exception {
+        final DateTime initialDate = new DateTime(2012, 2, 1, 0, 3, 42, 0, testTimeZone);
+        final int billingDay = 2;
+        // set clock to the initial start date
+        clock.setDeltaFromReality(initialDate.getMillis() - clock.getUTCNow().getMillis());
+
+        final Account account = createAccountWithNonOsgiPaymentMethod(getAccountData(billingDay));
+        final UUID accountId = account.getId();
+        assertNotNull(account);
+
+        final String productName = "Shotgun";
+        final BillingPeriod term = BillingPeriod.MONTHLY;
+
+        //
+        // CREATE SUBSCRIPTION AND EXPECT BOTH EVENTS: NextEvent.CREATE, NextEvent.BLOCK NextEvent.INVOICE
+        //
+        final DefaultEntitlement baseEntitlement = createBaseEntitlementAndCheckForCompletion(account.getId(), "bundleKey", productName, ProductCategory.BASE, term, NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE);
+        assertNotNull(baseEntitlement);
+
+        //
+        // VERIFY CTD HAS BEEN SET
+        //
+        final DefaultSubscriptionBase subscription = (DefaultSubscriptionBase) baseEntitlement.getSubscriptionBase();
+        final DateTime startDate = subscription.getCurrentPhaseStart();
+        final BigDecimal rate = subscription.getCurrentPhase().getFixed().getPrice().getPrice(Currency.USD);
+        verifyTestResult(accountId, subscription.getId(), startDate, null, rate, clock.getUTCNow(), 1);
+
+        //
+        // MOVE TIME TO AFTER TRIAL (2012-03-04)
+        //
+        busHandler.pushExpectedEvents(NextEvent.PHASE, NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT);
+        clock.addDeltaFromReality(AT_LEAST_ONE_MONTH_MS);
+        assertListenerStatus();
+
+        invoiceChecker.checkInvoice(accountId,
+                                    1,
+                                    callContext,
+                                    ImmutableList.<ExpectedInvoiceItemCheck>of(new ExpectedInvoiceItemCheck(new LocalDate(2012, 2, 1), null, InvoiceItemType.FIXED, BigDecimal.ZERO)));
+
+        invoiceChecker.checkInvoice(accountId,
+                                    2,
+                                    callContext,
+                                    ImmutableList.<ExpectedInvoiceItemCheck>of(new ExpectedInvoiceItemCheck(new LocalDate(2012, 3, 2), new LocalDate(2012, 4, 2), InvoiceItemType.RECURRING, new BigDecimal("249.95"))));
+
+        // Pause the entitlement between 2012-03-05 and 2012-03-15
+        DefaultEntitlement entitlement = (DefaultEntitlement) entitlementApi.getEntitlementForId(baseEntitlement.getId(), callContext);
+        entitlementApi.pause(entitlement.getBundleId(), new LocalDate(2012, 3, 5), ImmutableList.<PluginProperty>of(), callContext);
+        entitlementApi.resume(entitlement.getBundleId(), new LocalDate(2012, 3, 15), ImmutableList.<PluginProperty>of(), callContext);
+
+        // Advance clock to 2012-03-07
+        busHandler.pushExpectedEvents(NextEvent.BLOCK, NextEvent.INVOICE);
+        clock.addDays(3);
+        assertListenerStatus();
+
+        invoiceChecker.checkInvoice(accountId,
+                                    2,
+                                    callContext,
+                                    ImmutableList.<ExpectedInvoiceItemCheck>of(new ExpectedInvoiceItemCheck(new LocalDate(2012, 3, 2), new LocalDate(2012, 4, 2), InvoiceItemType.RECURRING, new BigDecimal("249.95"))));
+
+        invoiceChecker.checkInvoice(accountId,
+                                    3,
+                                    callContext,
+                                    ImmutableList.<ExpectedInvoiceItemCheck>of(new ExpectedInvoiceItemCheck(new LocalDate(2012, 3, 5), new LocalDate(2012, 4, 2), InvoiceItemType.REPAIR_ADJ, new BigDecimal("-225.76")),
+                                                                               new ExpectedInvoiceItemCheck(new LocalDate(2012, 3, 7), new LocalDate(2012, 3, 7), InvoiceItemType.CBA_ADJ, new BigDecimal("225.76"))));
+
+        // Entitlement should be blocked
+        entitlement = (DefaultEntitlement) entitlementApi.getEntitlementForId(baseEntitlement.getId(), callContext);
+        Assert.assertEquals(entitlement.getState(), EntitlementState.BLOCKED);
+
+        // Advance clock to 2012-03-12, nothing should happen
+        clock.addDays(5);
+        assertListenerStatus();
+
+        // Entitlement is still blocked
+        entitlement = (DefaultEntitlement) entitlementApi.getEntitlementForId(baseEntitlement.getId(), callContext);
+        Assert.assertEquals(entitlement.getState(), EntitlementState.BLOCKED);
+
+        List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(accountId, false, callContext);
+        assertEquals(invoices.size(), 3);
+
+        // Cancel entitlement start of term but with billing policy immediate (ENT_BLOCKED must be after ENT_CANCELLED to trigger the bug)
+        busHandler.pushExpectedEvents(NextEvent.BLOCK, NextEvent.CANCEL, NextEvent.NULL_INVOICE);
+        baseEntitlement.cancelEntitlementWithDateOverrideBillingPolicy(new LocalDate(2012, 3, 2), BillingActionPolicy.IMMEDIATE, ImmutableList.<PluginProperty>of(), callContext);
+        assertListenerStatus();
+
+        // 2012-03-16
+        busHandler.pushExpectedEvents(NextEvent.BLOCK, NextEvent.NULL_INVOICE);
+        clock.addDays(4);
+        assertListenerStatus();
+
+        busHandler.pushExpectedEvents(NextEvent.NULL_INVOICE);
+        clock.addMonths(3);
+        assertListenerStatus();
+
+        // No new invoices
+        invoices = invoiceUserApi.getInvoicesByAccount(accountId, false, callContext);
+        assertEquals(invoices.size(), 3);
     }
 
     @Test(groups = "slow")

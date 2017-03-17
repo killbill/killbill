@@ -496,7 +496,7 @@ public class TestJanitor extends PaymentTestSuiteWithEmbeddedDB {
                                                                                                           (BigDecimal) row.get("amount"),
                                                                                                           Currency.valueOf((String) row.get("currency")),
                                                                                                           (String) row.get("gateway_error_code"),
-                                                                                                          (String) row.get("gateway_error_msg"));
+                                                                                                          String.valueOf(row.get("gateway_error_msg")));
                     result.add(transactionModelDao);
                 }
                 return result;

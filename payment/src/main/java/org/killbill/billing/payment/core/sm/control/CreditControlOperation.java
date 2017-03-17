@@ -46,6 +46,8 @@ public class CreditControlOperation extends OperationControlCallback {
                                              paymentStateControlContext.getCurrency(),
                                              paymentStateControlContext.getPaymentExternalKey(),
                                              paymentStateControlContext.getPaymentTransactionExternalKey(),
+                                             paymentStateControlContext.getPaymentIdForNewPayment(),
+                                             paymentStateControlContext.getPaymentTransactionIdForNewPaymentTransaction(),
                                              false,
                                              paymentStateControlContext.getProperties(),
                                              paymentStateControlContext.getCallContext(),

@@ -28,7 +28,7 @@ import org.killbill.billing.util.entity.dao.EntityModelDao;
 import org.killbill.billing.util.entity.dao.EntityModelDaoBase;
 import org.killbill.billing.util.UUIDs;
 
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 
 public class PaymentModelDao extends EntityModelDaoBase implements EntityModelDao<Payment> {
 
@@ -49,12 +49,17 @@ public class PaymentModelDao extends EntityModelDaoBase implements EntityModelDa
         this.accountId = accountId;
         this.paymentMethodId = paymentMethodId;
         this.paymentNumber = paymentNumber;
-        this.externalKey = Objects.firstNonNull(externalKey, id.toString());
+        this.externalKey = MoreObjects.firstNonNull(externalKey, id.toString());
+    }
+
+    public PaymentModelDao(final UUID id, @Nullable final DateTime createdDate, @Nullable final DateTime updatedDate, final UUID accountId,
+                           final UUID paymentMethodId, @Nullable final String externalKey) {
+        this(id, createdDate, updatedDate, accountId, paymentMethodId, INVALID_PAYMENT_NUMBER, externalKey);
     }
 
     public PaymentModelDao(@Nullable final DateTime createdDate, @Nullable final DateTime updatedDate, final UUID accountId,
                            final UUID paymentMethodId, @Nullable final String externalKey) {
-        this(UUIDs.randomUUID(), createdDate, updatedDate, accountId, paymentMethodId, INVALID_PAYMENT_NUMBER, externalKey);
+        this(UUIDs.randomUUID(), createdDate, updatedDate, accountId, paymentMethodId, externalKey);
     }
 
     public UUID getAccountId() { return accountId; }

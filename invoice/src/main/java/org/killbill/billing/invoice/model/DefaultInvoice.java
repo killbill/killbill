@@ -119,7 +119,6 @@ public class DefaultInvoice extends EntityBase implements Invoice, Cloneable {
         this.parentInvoice = (parentInvoice != null) ? new DefaultInvoice(parentInvoice) : null;
     }
 
-
     // Semi deep copy where we copy the lists but not the elements in the lists since they are immutables.
     @Override
     public Object clone() {

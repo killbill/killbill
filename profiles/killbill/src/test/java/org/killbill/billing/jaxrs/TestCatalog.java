@@ -79,7 +79,7 @@ public class TestCatalog extends TestJaxrsBase {
             killBillClient.uploadXMLCatalog(versionPath1, requestOptions);
             Assert.fail("Uploading same version should fail");
         } catch (KillBillClientException e) {
-            Assert.assertEquals(e.getMessage(), "Invalid catalog for tenant : 1");
+            Assert.assertTrue(e.getMessage().startsWith("Invalid catalog for tenant : "));
         }
 
         // Try to upload another version with an invalid name (different than orignal name)
@@ -88,7 +88,7 @@ public class TestCatalog extends TestJaxrsBase {
             killBillClient.uploadXMLCatalog(versionPath2, requestOptions);
             Assert.fail("Uploading same version should fail");
         } catch (KillBillClientException e) {
-            Assert.assertEquals(e.getMessage(), "Invalid catalog for tenant : 1");
+            Assert.assertTrue(e.getMessage().startsWith("Invalid catalog for tenant : "));
         }
 
         String catalog = killBillClient.getXMLCatalog(requestOptions);

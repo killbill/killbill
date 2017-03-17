@@ -61,8 +61,8 @@ public class MockInvoiceDao extends MockEntityDaoBase<InvoiceModelDao, Invoice, 
     }
 
     @Override
-    public void createInvoice(final InvoiceModelDao invoice, final List<InvoiceItemModelDao> invoiceItems,
-                              final boolean isRealInvoice, final FutureAccountNotifications callbackDateTimePerSubscriptions, final InternalCallContext context) {
+    public void createInvoice(final InvoiceModelDao invoice,
+                              final FutureAccountNotifications callbackDateTimePerSubscriptions, final InternalCallContext context) {
         synchronized (monitor) {
             storeInvoice(invoice, context);
         }

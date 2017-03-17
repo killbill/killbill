@@ -33,7 +33,6 @@ import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.catalog.api.PlanPhaseSpecifier;
 import org.killbill.billing.catalog.api.PlanSpecifier;
 import org.killbill.billing.catalog.api.PriceListSet;
-import org.killbill.billing.catalog.api.ProductCategory;
 import org.killbill.billing.entitlement.AccountEventsStreams;
 import org.killbill.billing.entitlement.EntitlementService;
 import org.killbill.billing.entitlement.EntitlementTestSuiteWithEmbeddedDB;
@@ -50,7 +49,7 @@ import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
@@ -395,10 +394,10 @@ public class TestEntitlementUtils extends EntitlementTestSuiteWithEmbeddedDB {
 
     // Test the "write" path
     private void checkActualBlockingStatesToCancel(final DefaultEntitlement baseEntitlement, final DefaultEntitlement addOnEntitlement, @Nullable final DateTime effectiveCancellationDateTime, final boolean approximateDateCheck) throws EntitlementApiException {
-        final Collection<BlockingState> blockingStatesForCancellationViaEntitlement = computeBlockingStatesForAssociatedAddonsViaEntitlement(baseEntitlement, Objects.firstNonNull(effectiveCancellationDateTime, initialDate.toDateTimeAtStartOfDay()));
+        final Collection<BlockingState> blockingStatesForCancellationViaEntitlement = computeBlockingStatesForAssociatedAddonsViaEntitlement(baseEntitlement, MoreObjects.firstNonNull(effectiveCancellationDateTime, initialDate.toDateTimeAtStartOfDay()));
         doCheckActualBlockingStatesToCancel(addOnEntitlement, effectiveCancellationDateTime, approximateDateCheck, blockingStatesForCancellationViaEntitlement);
 
-        final Collection<BlockingState> blockingStatesForCancellationViaAccount = computeBlockingStatesForAssociatedAddonsViaAccount(baseEntitlement, Objects.firstNonNull(effectiveCancellationDateTime, initialDate.toDateTimeAtStartOfDay()));
+        final Collection<BlockingState> blockingStatesForCancellationViaAccount = computeBlockingStatesForAssociatedAddonsViaAccount(baseEntitlement, MoreObjects.firstNonNull(effectiveCancellationDateTime, initialDate.toDateTimeAtStartOfDay()));
         doCheckActualBlockingStatesToCancel(addOnEntitlement, effectiveCancellationDateTime, approximateDateCheck, blockingStatesForCancellationViaAccount);
     }
 

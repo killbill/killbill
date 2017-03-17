@@ -42,6 +42,7 @@ public class VoidControlOperation extends OperationControlCallback {
                                            paymentStateControlContext.getAccount(),
                                            paymentStateControlContext.getPaymentId(),
                                            paymentStateControlContext.getPaymentTransactionExternalKey(),
+                                           paymentStateControlContext.getPaymentTransactionIdForNewPaymentTransaction(),
                                            false,
                                            paymentStateControlContext.getProperties(),
                                            paymentStateControlContext.getCallContext(),

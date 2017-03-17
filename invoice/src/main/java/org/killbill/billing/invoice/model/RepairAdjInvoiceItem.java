@@ -29,7 +29,7 @@ import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.invoice.api.InvoiceItemType;
 import org.killbill.billing.util.UUIDs;
 
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 
 public class RepairAdjInvoiceItem extends AdjInvoiceItem {
 
@@ -55,6 +55,6 @@ public class RepairAdjInvoiceItem extends AdjInvoiceItem {
 
     @Override
     public String getDescription() {
-        return Objects.firstNonNull(description, "Adjustment (subscription change)");
+        return MoreObjects.firstNonNull(description, "Adjustment (subscription change)");
     }
 }

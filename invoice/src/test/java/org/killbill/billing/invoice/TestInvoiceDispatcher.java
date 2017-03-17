@@ -189,11 +189,10 @@ public class TestInvoiceDispatcher extends InvoiceTestSuiteWithEmbeddedDB {
                                                                                  BigDecimal.ONE,
                                                                                  currency,
                                                                                  null);
-        invoiceDao.createInvoice(invoiceModelDao,
-                                 ImmutableList.<InvoiceItemModelDao>of(invoiceItemModelDao1, invoiceItemModelDao2),
-                                 true,
-                                 new FutureAccountNotifications(ImmutableMap.<UUID, List<SubscriptionNotification>>of()),
-                                 context);
+
+        invoiceModelDao.addInvoiceItem(invoiceItemModelDao1);
+        invoiceModelDao.addInvoiceItem(invoiceItemModelDao2);
+        invoiceDao.createInvoices(ImmutableList.<InvoiceModelDao>of(invoiceModelDao), context);
 
         try {
             dispatcher.processAccountFromNotificationOrBusEvent(accountId, target, new DryRunFutureDateArguments(), context);

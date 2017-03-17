@@ -29,7 +29,7 @@ import org.killbill.billing.util.audit.DefaultAccountAuditLogs;
 import org.killbill.billing.util.audit.DefaultAccountAuditLogsForObjectType;
 import org.killbill.billing.util.dao.TableName;
 
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 import com.google.common.collect.ImmutableList;
 
 public class MockAuditDao implements AuditDao {
@@ -70,7 +70,7 @@ public class MockAuditDao implements AuditDao {
         }
 
         final List<AuditLog> auditLogsForObjectId = auditLogsForTableName.get(objectId);
-        final List<AuditLog> allAuditLogs = Objects.firstNonNull(auditLogsForObjectId, ImmutableList.<AuditLog>of());
+        final List<AuditLog> allAuditLogs = MoreObjects.firstNonNull(auditLogsForObjectId, ImmutableList.<AuditLog>of());
         if (AuditLevel.FULL.equals(auditLevel)) {
             return allAuditLogs;
         } else if (AuditLevel.MINIMAL.equals(auditLevel) && allAuditLogs.size() > 0) {

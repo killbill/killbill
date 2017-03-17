@@ -131,7 +131,7 @@ public class BlockingCalculator {
                 }
 
                 final List<BlockingState> subscriptionBlockingEvents = perSubscriptionBlockingEvents.get(subscription.getId()) != null ? perSubscriptionBlockingEvents.get(subscription.getId()) : ImmutableList.<BlockingState>of();
-                final List<BlockingState> aggregateSubscriptionBlockingEvents = getAggregateBlockingEventsPerSubscription(subscriptionBlockingEvents, bundleBlockingEvents, accountBlockingEvents);
+                final List<BlockingState> aggregateSubscriptionBlockingEvents = getAggregateBlockingEventsPerSubscription(subscription.getEndDate(), subscriptionBlockingEvents, bundleBlockingEvents, accountBlockingEvents);
                 final List<DisabledDuration> accountBlockingDurations = createBlockingDurations(aggregateSubscriptionBlockingEvents);
 
                 billingEventsToAdd.addAll(createNewEvents(accountBlockingDurations, billingEvents, subscription, context));
@@ -150,9 +150,16 @@ public class BlockingCalculator {
         return !(billingEventsToAdd.isEmpty() && billingEventsToRemove.isEmpty());
     }
 
-    final List<BlockingState> getAggregateBlockingEventsPerSubscription(final Iterable<BlockingState> subscriptionBlockingEvents, final Iterable<BlockingState> bundleBlockingEvents, final Iterable<BlockingState> accountBlockingEvents) {
+    final List<BlockingState> getAggregateBlockingEventsPerSubscription(@Nullable final DateTime subscriptionEndDate, final Iterable<BlockingState> subscriptionBlockingEvents, final Iterable<BlockingState> bundleBlockingEvents, final Iterable<BlockingState> accountBlockingEvents) {
         final Iterable<BlockingState> tmp = Iterables.concat(subscriptionBlockingEvents, bundleBlockingEvents, accountBlockingEvents);
-        final List<BlockingState> result = Lists.newArrayList(tmp);
+        final Iterable<BlockingState> allEventsPriorToCancelDate = Iterables.filter(tmp,
+                                                                                    new Predicate<BlockingState>() {
+                                                                                        @Override
+                                                                                        public boolean apply(final BlockingState input) {
+                                                                                            return subscriptionEndDate == null || input.getEffectiveDate().compareTo(subscriptionEndDate) <= 0;
+                                                                                        }
+                                                                                    });
+        final List<BlockingState> result = Lists.newArrayList(allEventsPriorToCancelDate);
         Collections.sort(result);
         return result;
     }

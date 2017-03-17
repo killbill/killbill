@@ -28,6 +28,7 @@ import org.killbill.billing.util.customfield.ShouldntHappenException;
 
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterators;
 
 public class DefaultAccountAuditLogsForObjectType implements AccountAuditLogsForObjectType {
@@ -38,7 +39,7 @@ public class DefaultAccountAuditLogsForObjectType implements AccountAuditLogsFor
     private final Iterator<AuditLog> allAuditLogsForObjectType;
 
     public DefaultAccountAuditLogsForObjectType(final AuditLevel auditLevel) {
-        this(auditLevel, Iterators.<AuditLog>emptyIterator());
+        this(auditLevel, ImmutableSet.<AuditLog>of().iterator());
     }
 
     public DefaultAccountAuditLogsForObjectType(final AuditLevel auditLevel, final Iterator<AuditLog> allAuditLogsForObjectType) {

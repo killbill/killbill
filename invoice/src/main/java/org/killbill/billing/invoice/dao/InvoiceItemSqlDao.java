@@ -1,7 +1,9 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
+ * Copyright 2014-2017 Groupon, Inc
+ * Copyright 2014-2017 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -20,16 +22,15 @@ import java.math.BigDecimal;
 import java.util.List;
 
 import org.killbill.billing.callcontext.InternalCallContext;
+import org.killbill.billing.callcontext.InternalTenantContext;
+import org.killbill.billing.invoice.api.InvoiceItem;
 import org.killbill.billing.util.audit.ChangeType;
 import org.killbill.billing.util.entity.dao.Audited;
+import org.killbill.billing.util.entity.dao.EntitySqlDao;
+import org.killbill.billing.util.entity.dao.EntitySqlDaoStringTemplate;
 import org.skife.jdbi.v2.sqlobject.Bind;
 import org.skife.jdbi.v2.sqlobject.BindBean;
 import org.skife.jdbi.v2.sqlobject.SqlQuery;
-
-import org.killbill.billing.invoice.api.InvoiceItem;
-import org.killbill.billing.callcontext.InternalTenantContext;
-import org.killbill.billing.util.entity.dao.EntitySqlDao;
-import org.killbill.billing.util.entity.dao.EntitySqlDaoStringTemplate;
 import org.skife.jdbi.v2.sqlobject.SqlUpdate;
 
 @EntitySqlDaoStringTemplate
@@ -57,4 +58,7 @@ public interface InvoiceItemSqlDao extends EntitySqlDao<InvoiceItemModelDao, Inv
     @SqlQuery
     List<InvoiceItemModelDao> getInvoiceItemsByParentInvoice(@Bind("parentInvoiceId") final String parentInvoiceId,
                                                              @BindBean final InternalTenantContext context);
+
+    @SqlQuery
+    BigDecimal getAccountCBA(@BindBean final InternalTenantContext context);
 }

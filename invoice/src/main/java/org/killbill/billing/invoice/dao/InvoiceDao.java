@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014-2016 Groupon, Inc
- * Copyright 2014-2016 The Billing Project, LLC
+ * Copyright 2014-2017 Groupon, Inc
+ * Copyright 2014-2017 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -39,14 +39,14 @@ import org.killbill.billing.util.entity.dao.EntityDao;
 
 public interface InvoiceDao extends EntityDao<InvoiceModelDao, Invoice, InvoiceApiException> {
 
-    void createInvoice(final InvoiceModelDao invoice, final List<InvoiceItemModelDao> invoiceItems,
-                       final boolean isRealInvoice, final FutureAccountNotifications callbackDateTimePerSubscriptions,
+    void createInvoice(final InvoiceModelDao invoice,
+                       final FutureAccountNotifications callbackDateTimePerSubscriptions,
                        final InternalCallContext context);
+
+    List<InvoiceItemModelDao> createInvoices(final List<InvoiceModelDao> invoices, final InternalCallContext context);
 
     public void setFutureAccountNotificationsForEmptyInvoice(final UUID accountId, final FutureAccountNotifications callbackDateTimePerSubscriptions,
                                                              final InternalCallContext context);
-
-    List<InvoiceItemModelDao> createInvoices(final List<InvoiceModelDao> invoices, final InternalCallContext context);
 
     InvoiceModelDao getByNumber(Integer number, InternalTenantContext context) throws InvoiceApiException;
 

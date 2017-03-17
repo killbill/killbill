@@ -1,6 +1,6 @@
 /*
- * Copyright 2014-2016 Groupon, Inc
- * Copyright 2014-2016 The Billing Project, LLC
+ * Copyright 2014-2017 Groupon, Inc
+ * Copyright 2014-2017 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -25,11 +25,9 @@ import org.killbill.billing.account.api.ImmutableAccountData;
 import org.killbill.billing.callcontext.DefaultCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.events.PaymentInternalEvent;
-import org.killbill.billing.osgi.api.OSGIServiceRegistration;
 import org.killbill.billing.payment.core.sm.PaymentControlStateMachineHelper;
 import org.killbill.billing.payment.core.sm.PaymentStateMachineHelper;
 import org.killbill.billing.payment.dao.PaymentDao;
-import org.killbill.billing.payment.plugin.api.PaymentPluginApi;
 import org.killbill.billing.util.UUIDs;
 import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.CallOrigin;
@@ -57,17 +55,20 @@ abstract class CompletionTaskBase<T> implements Runnable {
     protected final PaymentStateMachineHelper paymentStateMachineHelper;
     protected final PaymentControlStateMachineHelper retrySMHelper;
     protected final AccountInternalApi accountInternalApi;
-    protected final OSGIServiceRegistration<PaymentPluginApi> pluginRegistry;
     protected final GlobalLocker locker;
 
     protected NotificationQueue janitorQueue;
 
     private volatile boolean isStopped;
 
-    public CompletionTaskBase(final InternalCallContextFactory internalCallContextFactory, final PaymentConfig paymentConfig,
-                              final PaymentDao paymentDao, final Clock clock, final PaymentStateMachineHelper paymentStateMachineHelper,
-                              final PaymentControlStateMachineHelper retrySMHelper, final AccountInternalApi accountInternalApi,
-                              final OSGIServiceRegistration<PaymentPluginApi> pluginRegistry, final GlobalLocker locker) {
+    public CompletionTaskBase(final InternalCallContextFactory internalCallContextFactory,
+                              final PaymentConfig paymentConfig,
+                              final PaymentDao paymentDao,
+                              final Clock clock,
+                              final PaymentStateMachineHelper paymentStateMachineHelper,
+                              final PaymentControlStateMachineHelper retrySMHelper,
+                              final AccountInternalApi accountInternalApi,
+                              final GlobalLocker locker) {
         this.internalCallContextFactory = internalCallContextFactory;
         this.paymentConfig = paymentConfig;
         this.paymentDao = paymentDao;
@@ -75,7 +76,6 @@ abstract class CompletionTaskBase<T> implements Runnable {
         this.paymentStateMachineHelper = paymentStateMachineHelper;
         this.retrySMHelper = retrySMHelper;
         this.accountInternalApi = accountInternalApi;
-        this.pluginRegistry = pluginRegistry;
         this.locker = locker;
         this.isStopped = false;
     }

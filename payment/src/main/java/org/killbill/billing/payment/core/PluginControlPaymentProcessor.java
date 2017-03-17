@@ -1,6 +1,6 @@
 /*
- * Copyright 2014-2016 Groupon, Inc
- * Copyright 2014-2016 The Billing Project, LLC
+ * Copyright 2014-2017 Groupon, Inc
+ * Copyright 2014-2017 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -34,7 +34,6 @@ import org.killbill.billing.account.api.AccountInternalApi;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.invoice.api.InvoiceInternalApi;
-import org.killbill.billing.osgi.api.OSGIServiceRegistration;
 import org.killbill.billing.payment.api.Payment;
 import org.killbill.billing.payment.api.PaymentApiException;
 import org.killbill.billing.payment.api.PaymentTransaction;
@@ -50,7 +49,6 @@ import org.killbill.billing.payment.dao.PaymentTransactionModelDao;
 import org.killbill.billing.payment.dao.PluginPropertySerializer;
 import org.killbill.billing.payment.dao.PluginPropertySerializer.PluginPropertySerializerException;
 import org.killbill.billing.payment.invoice.InvoicePaymentControlPluginApi;
-import org.killbill.billing.payment.plugin.api.PaymentPluginApi;
 import org.killbill.billing.tag.TagInternalApi;
 import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
@@ -78,7 +76,7 @@ public class PluginControlPaymentProcessor extends ProcessorBase {
     private final PaymentControlStateMachineHelper paymentControlStateMachineHelper;
 
     @Inject
-    public PluginControlPaymentProcessor(final OSGIServiceRegistration<PaymentPluginApi> pluginRegistry,
+    public PluginControlPaymentProcessor(final PaymentPluginServiceRegistration paymentPluginServiceRegistration,
                                          final AccountInternalApi accountInternalApi,
                                          final InvoiceInternalApi invoiceApi,
                                          final TagInternalApi tagUserApi,
@@ -88,7 +86,7 @@ public class PluginControlPaymentProcessor extends ProcessorBase {
                                          final PluginControlPaymentAutomatonRunner pluginControlledPaymentAutomatonRunner,
                                          final PaymentControlStateMachineHelper paymentControlStateMachineHelper,
                                          final Clock clock) {
-        super(pluginRegistry, accountInternalApi, paymentDao, tagUserApi, locker, internalCallContextFactory, invoiceApi, clock);
+        super(paymentPluginServiceRegistration, accountInternalApi, paymentDao, tagUserApi, locker, internalCallContextFactory, invoiceApi, clock);
         this.paymentControlStateMachineHelper = paymentControlStateMachineHelper;
         this.pluginControlledPaymentAutomatonRunner = pluginControlledPaymentAutomatonRunner;
     }

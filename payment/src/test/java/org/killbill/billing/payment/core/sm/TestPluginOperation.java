@@ -206,8 +206,10 @@ public class TestPluginOperation extends PaymentTestSuiteNoDB {
     private PaymentOperation getPluginOperation(final boolean shouldLockAccount, final int timeoutSeconds) throws PaymentApiException {
         final PluginDispatcher<OperationResult> paymentPluginDispatcher = new PluginDispatcher<OperationResult>(timeoutSeconds, paymentExecutors);
 
-        final PaymentStateContext paymentStateContext = new PaymentStateContext(true, UUID.randomUUID(),
-                                                                                null, null,
+        final PaymentStateContext paymentStateContext = new PaymentStateContext(true,
+                                                                                UUID.randomUUID(),
+                                                                                null,
+                                                                                null,
                                                                                 UUID.randomUUID().toString(),
                                                                                 UUID.randomUUID().toString(),
                                                                                 TransactionType.CAPTURE,
@@ -215,8 +217,11 @@ public class TestPluginOperation extends PaymentTestSuiteNoDB {
                                                                                 UUID.randomUUID(),
                                                                                 new BigDecimal("192.3920111"),
                                                                                 Currency.BRL,
+                                                                                null,
+                                                                                null,
                                                                                 shouldLockAccount,
-                                                                                null, ImmutableList.<PluginProperty>of(),
+                                                                                null,
+                                                                                ImmutableList.<PluginProperty>of(),
                                                                                 internalCallContext,
                                                                                 callContext);
 

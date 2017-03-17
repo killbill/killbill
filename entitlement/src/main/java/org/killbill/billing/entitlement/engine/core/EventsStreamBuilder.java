@@ -66,7 +66,7 @@ import org.killbill.clock.Clock;
 import org.killbill.notificationq.api.NotificationQueueService;
 import org.skife.jdbi.v2.IDBI;
 
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
@@ -184,14 +184,14 @@ public class EventsStreamBuilder {
             final SubscriptionBaseBundle bundle = bundlesPerId.get(bundleId);
             final List<SubscriptionBase> allSubscriptionsForBundle = subscriptions.get(bundleId);
             final SubscriptionBase baseSubscription = findBaseSubscription(allSubscriptionsForBundle);
-            final List<BlockingState> bundleBlockingStates = Objects.firstNonNull(blockingStatesPerBundle.get(bundleId), ImmutableList.<BlockingState>of());
+            final List<BlockingState> bundleBlockingStates = MoreObjects.firstNonNull(blockingStatesPerBundle.get(bundleId), ImmutableList.<BlockingState>of());
 
             if (entitlementsPerBundle.get(bundleId) == null) {
                 entitlementsPerBundle.put(bundleId, new LinkedList<EventsStream>());
             }
 
             for (final SubscriptionBase subscription : allSubscriptionsForBundle) {
-                final List<BlockingState> subscriptionBlockingStatesOnDisk = Objects.firstNonNull(blockingStatesPerSubscription.get(subscription.getId()), ImmutableList.<BlockingState>of());
+                final List<BlockingState> subscriptionBlockingStatesOnDisk = MoreObjects.firstNonNull(blockingStatesPerSubscription.get(subscription.getId()), ImmutableList.<BlockingState>of());
 
                 // We cannot always use blockingStatesForAccount here: we need subscriptionBlockingStates to contain the events not on disk when building an EventsStream
                 // for an add-on - which means going through the magic of ProxyBlockingStateDao, which will recursively
@@ -294,8 +294,8 @@ public class EventsStreamBuilder {
             }
         }
 
-        final List<BlockingState> bundleBlockingStates = Objects.firstNonNull(blockingStatesPerBundle.get(subscription.getBundleId()), ImmutableList.<BlockingState>of());
-        final List<BlockingState> subscriptionBlockingStatesOnDisk = Objects.firstNonNull(blockingStatesPerSubscription.get(subscription.getId()), ImmutableList.<BlockingState>of());
+        final List<BlockingState> bundleBlockingStates = MoreObjects.firstNonNull(blockingStatesPerBundle.get(subscription.getBundleId()), ImmutableList.<BlockingState>of());
+        final List<BlockingState> subscriptionBlockingStatesOnDisk = MoreObjects.firstNonNull(blockingStatesPerSubscription.get(subscription.getId()), ImmutableList.<BlockingState>of());
 
         // We cannot always use blockingStatesForAccount here: we need subscriptionBlockingStates to contain the events not on disk when building an EventsStream
         // for an add-on - which means going through the magic of ProxyBlockingStateDao, which will recursively

@@ -31,6 +31,7 @@ import org.killbill.billing.catalog.api.BillingMode;
 import org.killbill.billing.invoice.api.Invoice;
 import org.killbill.billing.invoice.api.InvoiceItem;
 import org.killbill.billing.invoice.api.InvoiceItemType;
+import org.killbill.billing.invoice.model.DefaultInvoice;
 
 import com.google.common.base.Predicate;
 import com.google.common.collect.Iterables;
@@ -39,16 +40,16 @@ public class InvoiceWithMetadata {
 
     private final Map<UUID, SubscriptionFutureNotificationDates> perSubscriptionFutureNotificationDates;
 
-    private Invoice invoice;
+    private DefaultInvoice invoice;
 
-    public InvoiceWithMetadata(final Invoice originalInvoice, final Map<UUID, SubscriptionFutureNotificationDates> perSubscriptionFutureNotificationDates) {
+    public InvoiceWithMetadata(final DefaultInvoice originalInvoice, final Map<UUID, SubscriptionFutureNotificationDates> perSubscriptionFutureNotificationDates) {
         this.invoice = originalInvoice;
         this.perSubscriptionFutureNotificationDates = perSubscriptionFutureNotificationDates;
         build();
         remove$0UsageItems();
     }
 
-    public Invoice getInvoice() {
+    public DefaultInvoice getInvoice() {
         return invoice;
     }
 

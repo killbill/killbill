@@ -1,6 +1,6 @@
 /*
- * Copyright 2014 Groupon, Inc
- * Copyright 2014 The Billing Project, LLC
+ * Copyright 2014-2017 Groupon, Inc
+ * Copyright 2014-2017 The Billing Project, LLC
  *
  * Groupon licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -30,6 +30,7 @@ import org.killbill.billing.payment.PaymentTestSuiteNoDB;
 import org.killbill.billing.payment.api.PaymentApiException;
 import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.payment.api.TransactionType;
+import org.killbill.billing.payment.core.PaymentPluginServiceRegistration;
 import org.killbill.billing.payment.core.sm.payments.PaymentOperation;
 import org.killbill.billing.payment.dao.PaymentDao;
 import org.killbill.billing.payment.dao.PaymentMethodModelDao;
@@ -115,6 +116,8 @@ public class TestPaymentOperation extends PaymentTestSuiteNoDB {
                                                       UUID.randomUUID(),
                                                       new BigDecimal("192.3920111"),
                                                       Currency.BRL,
+                                                      null,
+                                                      null,
                                                       false,
                                                       null, ImmutableList.<PluginProperty>of(),
                                                       internalCallContext,
@@ -125,7 +128,8 @@ public class TestPaymentOperation extends PaymentTestSuiteNoDB {
         final PaymentDao paymentDao = Mockito.mock(PaymentDao.class);
         Mockito.when(paymentDao.getPaymentMethod(paymentStateContext.getPaymentMethodId(), internalCallContext)).thenReturn(paymentMethodModelDao);
 
-        final PaymentAutomatonDAOHelper daoHelper = new PaymentAutomatonDAOHelper(paymentStateContext, clock.getUTCNow(), paymentDao, registry, internalCallContext, eventBus, paymentSMHelper);
+        final PaymentPluginServiceRegistration paymentPluginServiceRegistration = new PaymentPluginServiceRegistration(paymentDao, registry);
+        final PaymentAutomatonDAOHelper daoHelper = new PaymentAutomatonDAOHelper(paymentStateContext, clock.getUTCNow(), paymentDao, paymentPluginServiceRegistration, internalCallContext, eventBus, paymentSMHelper);
         paymentOperation = new PaymentOperationTest(paymentPluginStatus, daoHelper, locker, paymentPluginDispatcher, paymentConfig, paymentStateContext);
     }
 

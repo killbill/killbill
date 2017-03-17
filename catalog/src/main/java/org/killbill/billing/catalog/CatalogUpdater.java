@@ -115,6 +115,8 @@ public class CatalogUpdater {
             throw new CatalogApiException(ErrorCode.CAT_INVALID_SIMPLE_PLAN_DESCRIPTOR, desc);
         }
 
+        validateNewPlanDescriptor(desc);
+
         DefaultProduct product = plan != null ? (DefaultProduct) plan.getProduct() : (DefaultProduct)  getExistingProduct(desc.getProductName());
         if (product == null) {
             product = new DefaultProduct();
@@ -125,8 +127,6 @@ public class CatalogUpdater {
         }
 
         if (plan == null) {
-
-            validateNewPlanDescriptor(desc);
 
             plan = new DefaultPlan();
             plan.setName(desc.getPlanId());

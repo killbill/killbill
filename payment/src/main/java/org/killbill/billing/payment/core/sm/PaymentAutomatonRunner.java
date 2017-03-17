@@ -1,6 +1,6 @@
 /*
- * Copyright 2014-2016 Groupon, Inc
- * Copyright 2014-2016 The Billing Project, LLC
+ * Copyright 2014-2017 Groupon, Inc
+ * Copyright 2014-2017 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -40,12 +40,12 @@ import org.killbill.billing.ErrorCode;
 import org.killbill.billing.account.api.Account;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.catalog.api.Currency;
-import org.killbill.billing.osgi.api.OSGIServiceRegistration;
 import org.killbill.billing.payment.api.PaymentApiException;
 import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.payment.api.TransactionStatus;
 import org.killbill.billing.payment.api.TransactionType;
 import org.killbill.billing.payment.core.PaymentExecutors;
+import org.killbill.billing.payment.core.PaymentPluginServiceRegistration;
 import org.killbill.billing.payment.core.sm.payments.AuthorizeCompleted;
 import org.killbill.billing.payment.core.sm.payments.AuthorizeInitiated;
 import org.killbill.billing.payment.core.sm.payments.AuthorizeOperation;
@@ -71,7 +71,6 @@ import org.killbill.billing.payment.dao.PaymentDao;
 import org.killbill.billing.payment.dao.PaymentModelDao;
 import org.killbill.billing.payment.dao.PaymentTransactionModelDao;
 import org.killbill.billing.payment.dispatcher.PluginDispatcher;
-import org.killbill.billing.payment.plugin.api.PaymentPluginApi;
 import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.config.definition.PaymentConfig;
 import org.killbill.bus.api.PersistentBus;
@@ -86,7 +85,7 @@ public class PaymentAutomatonRunner {
     protected final PaymentDao paymentDao;
     protected final GlobalLocker locker;
     protected final PluginDispatcher<OperationResult> paymentPluginDispatcher;
-    protected final OSGIServiceRegistration<PaymentPluginApi> pluginRegistry;
+    protected final PaymentPluginServiceRegistration paymentPluginServiceRegistration;
     protected final Clock clock;
 
     private final PersistentBus eventBus;
@@ -96,7 +95,7 @@ public class PaymentAutomatonRunner {
     public PaymentAutomatonRunner(final PaymentConfig paymentConfig,
                                   final PaymentDao paymentDao,
                                   final GlobalLocker locker,
-                                  final OSGIServiceRegistration<PaymentPluginApi> pluginRegistry,
+                                  final PaymentPluginServiceRegistration paymentPluginServiceRegistration,
                                   final Clock clock,
                                   final PaymentExecutors executors,
                                   final PersistentBus eventBus,
@@ -104,7 +103,7 @@ public class PaymentAutomatonRunner {
         this.paymentSMHelper = paymentSMHelper;
         this.paymentDao = paymentDao;
         this.locker = locker;
-        this.pluginRegistry = pluginRegistry;
+        this.paymentPluginServiceRegistration = paymentPluginServiceRegistration;
         this.clock = clock;
         this.eventBus = eventBus;
         this.paymentConfig = paymentConfig;
@@ -123,6 +122,8 @@ public class PaymentAutomatonRunner {
                                                         final String paymentTransactionExternalKey,
                                                         @Nullable final BigDecimal amount,
                                                         @Nullable final Currency currency,
+                                                        @Nullable final UUID paymentIdForNewPayment,
+                                                        @Nullable final UUID paymentTransactionIdForNewPaymentTransaction,
                                                         final boolean shouldLockAccount,
                                                         final OperationResult overridePluginOperationResult,
                                                         final Iterable<PluginProperty> properties,
@@ -143,6 +144,8 @@ public class PaymentAutomatonRunner {
                                        paymentMethodId,
                                        amount,
                                        currency,
+                                       paymentIdForNewPayment,
+                                       paymentTransactionIdForNewPaymentTransaction,
                                        shouldLockAccount,
                                        overridePluginOperationResult,
                                        properties,
@@ -154,7 +157,7 @@ public class PaymentAutomatonRunner {
                                                     final InternalCallContext internalCallContext) throws PaymentApiException {
         final DateTime utcNow = clock.getUTCNow();
 
-        return new PaymentAutomatonDAOHelper(paymentStateContext, utcNow, paymentDao, pluginRegistry, internalCallContext, eventBus, paymentSMHelper);
+        return new PaymentAutomatonDAOHelper(paymentStateContext, utcNow, paymentDao, paymentPluginServiceRegistration, internalCallContext, eventBus, paymentSMHelper);
     }
 
     public UUID run(final PaymentStateContext paymentStateContext,

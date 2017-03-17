@@ -1,6 +1,6 @@
 /*
- * Copyright 2014 Groupon, Inc
- * Copyright 2014 The Billing Project, LLC
+ * Copyright 2014-2017 Groupon, Inc
+ * Copyright 2014-2017 The Billing Project, LLC
  *
  * Groupon licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -114,8 +114,10 @@ public class TestPaymentAutomatonDAOHelper extends PaymentTestSuiteWithEmbeddedD
         Mockito.when(account.getId()).thenReturn(UUID.randomUUID());
         // No default payment method
 
-        paymentStateContext = new PaymentStateContext(true, paymentId,
-                                                      null, null,
+        paymentStateContext = new PaymentStateContext(true,
+                                                      paymentId,
+                                                      null,
+                                                      null,
                                                       paymentExternalKey,
                                                       paymentTransactionExternalKey,
                                                       TransactionType.CAPTURE,
@@ -123,11 +125,14 @@ public class TestPaymentAutomatonDAOHelper extends PaymentTestSuiteWithEmbeddedD
                                                       UUID.randomUUID(),
                                                       amount,
                                                       currency,
+                                                      null,
+                                                      null,
                                                       false,
-                                                      null, ImmutableList.<PluginProperty>of(),
+                                                      null,
+                                                      ImmutableList.<PluginProperty>of(),
                                                       internalCallContext,
                                                       callContext);
 
-        return new PaymentAutomatonDAOHelper(paymentStateContext, clock.getUTCNow(), paymentDao, registry, internalCallContext, eventBus, paymentSMHelper);
+        return new PaymentAutomatonDAOHelper(paymentStateContext, clock.getUTCNow(), paymentDao, paymentPluginServiceRegistration, internalCallContext, eventBus, paymentSMHelper);
     }
 }

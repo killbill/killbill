@@ -52,8 +52,6 @@ import org.killbill.billing.catalog.api.PlanPhaseSpecifier;
 import org.killbill.billing.entitlement.api.SubscriptionEventType;
 import org.killbill.billing.events.BusInternalEvent;
 import org.killbill.billing.events.EffectiveSubscriptionInternalEvent;
-import org.killbill.billing.events.InvoiceAdjustmentInternalEvent;
-import org.killbill.billing.events.InvoiceInternalEvent;
 import org.killbill.billing.events.InvoiceNotificationInternalEvent;
 import org.killbill.billing.invoice.InvoiceDispatcher.FutureAccountNotifications.SubscriptionNotification;
 import org.killbill.billing.invoice.api.DefaultInvoiceService;
@@ -65,8 +63,6 @@ import org.killbill.billing.invoice.api.InvoiceItem;
 import org.killbill.billing.invoice.api.InvoiceItemType;
 import org.killbill.billing.invoice.api.InvoiceNotifier;
 import org.killbill.billing.invoice.api.InvoiceStatus;
-import org.killbill.billing.invoice.api.user.DefaultInvoiceAdjustmentEvent;
-import org.killbill.billing.invoice.api.user.DefaultInvoiceCreationEvent;
 import org.killbill.billing.invoice.api.user.DefaultInvoiceNotificationInternalEvent;
 import org.killbill.billing.invoice.api.user.DefaultNullInvoiceEvent;
 import org.killbill.billing.invoice.calculator.InvoiceCalculatorUtils;
@@ -119,7 +115,6 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.collect.Collections2;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Ordering;
@@ -388,7 +383,7 @@ public class InvoiceDispatcher {
 
             final Currency targetCurrency = account.getCurrency();
             final InvoiceWithMetadata invoiceWithMetadata = generator.generateInvoice(account, billingEvents, invoices, targetDate, targetCurrency, context);
-            final Invoice invoice = invoiceWithMetadata.getInvoice();
+            final DefaultInvoice invoice = invoiceWithMetadata.getInvoice();
 
             // Compute future notifications
             final FutureAccountNotifications futureAccountNotifications = createNextFutureNotificationDate(invoiceWithMetadata, context);
@@ -406,22 +401,37 @@ public class InvoiceDispatcher {
                     final BusInternalEvent event = new DefaultNullInvoiceEvent(accountId, clock.getUTCToday(),
                                                                                context.getAccountRecordId(), context.getTenantRecordId(), context.getUserToken());
 
-                    commitInvoiceAndSetFutureNotifications(account, null, ImmutableList.<InvoiceItemModelDao>of(), futureAccountNotifications, false, context);
+                    commitInvoiceAndSetFutureNotifications(account, null, futureAccountNotifications, context);
                     postEvent(event);
                 }
                 return null;
             }
 
             // Generate missing credit (> 0 for generation and < 0 for use) prior we call the plugin
-            final InvoiceItem cbaItem = computeCBAOnExistingInvoice(invoice, context);
-            if (cbaItem != null) {
-                invoice.addInvoiceItem(cbaItem);
+            final InvoiceItem cbaItemPreInvoicePlugins = computeCBAOnExistingInvoice(invoice, context);
+            DefaultInvoice tmpInvoiceForInvoicePlugins = invoice;
+            if (cbaItemPreInvoicePlugins != null) {
+                tmpInvoiceForInvoicePlugins = (DefaultInvoice) tmpInvoiceForInvoicePlugins.clone();
+                tmpInvoiceForInvoicePlugins.addInvoiceItem(cbaItemPreInvoicePlugins);
             }
             //
             // Ask external invoice plugins if additional items (tax, etc) shall be added to the invoice
             //
             final CallContext callContext = buildCallContext(context);
-            invoice.addInvoiceItems(invoicePluginDispatcher.getAdditionalInvoiceItems(invoice, isDryRun, callContext));
+            final List<InvoiceItem> additionalInvoiceItemsFromPlugins = invoicePluginDispatcher.getAdditionalInvoiceItems(tmpInvoiceForInvoicePlugins, isDryRun, callContext);
+            if (additionalInvoiceItemsFromPlugins.isEmpty()) {
+                // PERF: avoid re-computing the CBA if no change was made
+                if (cbaItemPreInvoicePlugins != null) {
+                    invoice.addInvoiceItem(cbaItemPreInvoicePlugins);
+                }
+            } else {
+                invoice.addInvoiceItems(additionalInvoiceItemsFromPlugins);
+                // Use credit after we call the plugin (https://github.com/killbill/killbill/issues/637)
+                final InvoiceItem cbaItemPostInvoicePlugins = computeCBAOnExistingInvoice(invoice, context);
+                if (cbaItemPostInvoicePlugins != null) {
+                    invoice.addInvoiceItem(cbaItemPostInvoicePlugins);
+                }
+            }
 
             if (!isDryRun) {
 
@@ -434,18 +444,17 @@ public class InvoiceDispatcher {
 
                 // Transformation to Invoice -> InvoiceModelDao
                 final InvoiceModelDao invoiceModelDao = new InvoiceModelDao(invoice);
-                final Iterable<InvoiceItemModelDao> invoiceItemModelDaos = transformToInvoiceModelDao(invoice.getInvoiceItems());
+                final List<InvoiceItemModelDao> invoiceItemModelDaos = transformToInvoiceModelDao(invoice.getInvoiceItems());
+                invoiceModelDao.addInvoiceItems(invoiceItemModelDaos);
 
                 // Commit invoice on disk
-                final boolean isThereAnyItemsLeft = commitInvoiceAndSetFutureNotifications(account, invoiceModelDao, invoiceItemModelDaos, futureAccountNotifications, isRealInvoiceWithItems, context);
+                final boolean isThereAnyItemsLeft = commitInvoiceAndSetFutureNotifications(account, invoiceModelDao, futureAccountNotifications, context);
 
                 final boolean isRealInvoiceWithNonEmptyItems = isThereAnyItemsLeft ? isRealInvoiceWithItems : false;
 
                 setChargedThroughDates(invoice.getInvoiceItems(FixedPriceInvoiceItem.class), invoice.getInvoiceItems(RecurringInvoiceItem.class), context);
 
                 if (InvoiceStatus.COMMITTED.equals(invoice.getStatus())) {
-                    // TODO we should send bus events when we commit the invoice on disk in commitInvoice
-                    postEvents(account, invoice, adjustedUniqueOtherInvoiceId, isRealInvoiceWithNonEmptyItems, context);
                     notifyAccountIfEnabled(account, invoice, isRealInvoiceWithNonEmptyItems, context);
                 }
 
@@ -502,8 +511,8 @@ public class InvoiceDispatcher {
         return new FutureAccountNotifications(result);
     }
 
-    private Iterable<InvoiceItemModelDao> transformToInvoiceModelDao(final List<InvoiceItem> invoiceItems) {
-        return Iterables.transform(invoiceItems,
+    private List<InvoiceItemModelDao> transformToInvoiceModelDao(final List<InvoiceItem> invoiceItems) {
+        return Lists.transform(invoiceItems,
                                    new Function<InvoiceItem, InvoiceItemModelDao>() {
                                        @Override
                                        public InvoiceItemModelDao apply(final InvoiceItem input) {
@@ -539,35 +548,17 @@ public class InvoiceDispatcher {
         log.info(tmp.toString());
     }
 
-    private boolean commitInvoiceAndSetFutureNotifications(final ImmutableAccountData account, final InvoiceModelDao invoiceModelDao,
-                                                           final Iterable<InvoiceItemModelDao> invoiceItemModelDaos,
+    private boolean commitInvoiceAndSetFutureNotifications(final ImmutableAccountData account,
+                                                           @Nullable final InvoiceModelDao invoiceModelDao,
                                                            final FutureAccountNotifications futureAccountNotifications,
-                                                           final boolean isRealInvoiceWithItems, final InternalCallContext context) throws SubscriptionBaseApiException, InvoiceApiException {
-        final boolean isThereAnyItemsLeft = invoiceItemModelDaos.iterator().hasNext();
+                                                           final InternalCallContext context) throws SubscriptionBaseApiException, InvoiceApiException {
+        final boolean isThereAnyItemsLeft = invoiceModelDao != null && !invoiceModelDao.getInvoiceItems().isEmpty();
         if (isThereAnyItemsLeft) {
-            invoiceDao.createInvoice(invoiceModelDao, ImmutableList.copyOf(invoiceItemModelDaos), isRealInvoiceWithItems, futureAccountNotifications, context);
+            invoiceDao.createInvoice(invoiceModelDao, futureAccountNotifications, context);
         } else {
             invoiceDao.setFutureAccountNotificationsForEmptyInvoice(account.getId(), futureAccountNotifications, context);
         }
         return isThereAnyItemsLeft;
-    }
-
-    private void postEvents(final ImmutableAccountData account, final Invoice invoice, final Set<UUID> adjustedUniqueOtherInvoiceId, final boolean isRealInvoiceWithNonEmptyItems, final InternalCallContext context) {
-
-        final List<InvoiceInternalEvent> events = new ArrayList<InvoiceInternalEvent>();
-        if (isRealInvoiceWithNonEmptyItems) {
-            events.add(new DefaultInvoiceCreationEvent(invoice.getId(), invoice.getAccountId(),
-                                                       invoice.getBalance(), invoice.getCurrency(),
-                                                       context.getAccountRecordId(), context.getTenantRecordId(), context.getUserToken()));
-        }
-        for (final UUID cur : adjustedUniqueOtherInvoiceId) {
-            final InvoiceAdjustmentInternalEvent event = new DefaultInvoiceAdjustmentEvent(cur, invoice.getAccountId(),
-                                                                                           context.getAccountRecordId(), context.getTenantRecordId(), context.getUserToken());
-            events.add(event);
-        }
-        for (final InvoiceInternalEvent event : events) {
-            postEvent(event);
-        }
     }
 
     private void notifyAccountIfEnabled(final ImmutableAccountData account, final Invoice invoice, final boolean isRealInvoiceWithNonEmptyItems, final InternalCallContext context) throws InvoiceApiException, AccountApiException {
@@ -823,11 +814,8 @@ public class InvoiceDispatcher {
             final InvoiceItem parentInvoiceItem = new ParentInvoiceItem(UUID.randomUUID(), context.getCreatedDate(), draftParentInvoice.getId(), childAccount.getParentAccountId(), childAccount.getId(), childInvoiceAmount, childAccount.getCurrency(), description);
             draftParentInvoice.addInvoiceItem(new InvoiceItemModelDao(parentInvoiceItem));
 
-            // build account date time zone
-            final FutureAccountNotifications futureAccountNotifications = new FutureAccountNotifications(ImmutableMap.<UUID, List<SubscriptionNotification>>of());
-
             log.info("Adding new itemId='{}', amount='{}' on new DRAFT invoiceId='{}'", parentInvoiceItem.getId(), childInvoiceAmount, draftParentInvoice.getId());
-            invoiceDao.createInvoice(draftParentInvoice, draftParentInvoice.getInvoiceItems(), true, futureAccountNotifications, parentContext);
+            invoiceDao.createInvoices(ImmutableList.<InvoiceModelDao>of(draftParentInvoice), parentContext);
         }
 
         // save parent child invoice relation

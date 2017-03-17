@@ -30,18 +30,18 @@ import org.killbill.billing.account.api.Account;
 import org.killbill.billing.account.api.AccountData;
 import org.killbill.billing.api.TestApiListener.NextEvent;
 import org.killbill.billing.catalog.api.Currency;
-import org.killbill.billing.osgi.api.OSGIServiceDescriptor;
-import org.killbill.billing.osgi.api.OSGIServiceRegistration;
-import org.killbill.billing.payment.api.Payment;
-import org.killbill.billing.payment.api.PaymentOptions;
-import org.killbill.billing.payment.api.PluginProperty;
-import org.killbill.billing.payment.api.TransactionType;
 import org.killbill.billing.control.plugin.api.OnFailurePaymentControlResult;
 import org.killbill.billing.control.plugin.api.OnSuccessPaymentControlResult;
 import org.killbill.billing.control.plugin.api.PaymentControlApiException;
 import org.killbill.billing.control.plugin.api.PaymentControlContext;
 import org.killbill.billing.control.plugin.api.PaymentControlPluginApi;
 import org.killbill.billing.control.plugin.api.PriorPaymentControlResult;
+import org.killbill.billing.osgi.api.OSGIServiceDescriptor;
+import org.killbill.billing.osgi.api.OSGIServiceRegistration;
+import org.killbill.billing.payment.api.Payment;
+import org.killbill.billing.payment.api.PaymentOptions;
+import org.killbill.billing.payment.api.PluginProperty;
+import org.killbill.billing.payment.api.TransactionType;
 import org.testng.Assert;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
@@ -118,9 +118,22 @@ public class TestPaymentWithControl extends TestIntegrationBase {
                                                                                  properties, paymentOptions, callContext);
         assertListenerStatus();
 
+        Payment paymentWithAttempts = paymentApi.getPayment(payment.getId(), false, true, ImmutableList.<PluginProperty>of(), callContext);
+        Assert.assertEquals(paymentWithAttempts.getPaymentAttempts().size(), 1);
+        Assert.assertEquals(paymentWithAttempts.getExternalKey(), paymentWithAttempts.getPaymentAttempts().get(0).getPaymentExternalKey());
+        Assert.assertEquals(paymentWithAttempts.getTransactions().get(0).getExternalKey(), paymentWithAttempts.getPaymentAttempts().get(0).getTransactionExternalKey());
+        // Verify fix for https://github.com/killbill/killbill/issues/349 when no external key is set
+        Assert.assertEquals(paymentWithAttempts.getId().toString(), paymentWithAttempts.getPaymentAttempts().get(0).getPaymentExternalKey());
+        Assert.assertEquals(paymentWithAttempts.getTransactions().get(0).getId().toString(), paymentWithAttempts.getPaymentAttempts().get(0).getTransactionExternalKey());
+
         busHandler.pushExpectedEvents(NextEvent.PAYMENT);
         paymentApi.createCaptureWithPaymentControl(account, payment.getId(), BigDecimal.ONE, account.getCurrency(), null, properties, paymentOptions, callContext);
         assertListenerStatus();
+
+        paymentWithAttempts = paymentApi.getPayment(payment.getId(), false, true, ImmutableList.<PluginProperty>of(), callContext);
+        Assert.assertEquals(paymentWithAttempts.getPaymentAttempts().size(), 2);
+        Assert.assertEquals(paymentWithAttempts.getTransactions().get(1).getExternalKey(), paymentWithAttempts.getPaymentAttempts().get(1).getTransactionExternalKey());
+        Assert.assertEquals(paymentWithAttempts.getTransactions().get(1).getId().toString(), paymentWithAttempts.getPaymentAttempts().get(1).getTransactionExternalKey());
 
         Assert.assertEquals(testPaymentControlWithControl.getCalls().size(), 2);
         Assert.assertEquals(testPaymentControlWithControl.getCalls().get(TransactionType.AUTHORIZE.toString()), new Integer(1));
@@ -132,14 +145,36 @@ public class TestPaymentWithControl extends TestIntegrationBase {
         final AccountData accountData = getAccountData(1);
         final Account account = createAccountWithNonOsgiPaymentMethod(accountData);
 
+        final String paymentExternalKey = "something-that-is-not-a-uuid";
+        final String paymentTransactionExternalKey = "something-that-is-not-a-uuid-2";
+
         busHandler.pushExpectedEvents(NextEvent.PAYMENT);
-        final Payment payment = paymentApi.createAuthorizationWithPaymentControl(account, account.getPaymentMethodId(), null, BigDecimal.ONE, account.getCurrency(), null, null,
+        final Payment payment = paymentApi.createAuthorizationWithPaymentControl(account, account.getPaymentMethodId(), null, BigDecimal.ONE, account.getCurrency(), paymentExternalKey, paymentTransactionExternalKey,
                                                                                  properties, paymentOptions, callContext);
         assertListenerStatus();
 
+        Payment paymentWithAttempts = paymentApi.getPayment(payment.getId(), false, true, ImmutableList.<PluginProperty>of(), callContext);
+        Assert.assertEquals(paymentWithAttempts.getPaymentAttempts().size(), 1);
+        Assert.assertEquals(paymentWithAttempts.getExternalKey(), paymentExternalKey);
+        Assert.assertEquals(paymentWithAttempts.getTransactions().get(0).getExternalKey(), paymentTransactionExternalKey);
+        Assert.assertEquals(paymentWithAttempts.getExternalKey(), paymentWithAttempts.getPaymentAttempts().get(0).getPaymentExternalKey());
+        Assert.assertEquals(paymentWithAttempts.getTransactions().get(0).getExternalKey(), paymentWithAttempts.getPaymentAttempts().get(0).getTransactionExternalKey());
+        // Verify fix for https://github.com/killbill/killbill/issues/349 when external key is set
+        Assert.assertNotEquals(paymentWithAttempts.getId().toString(), paymentWithAttempts.getPaymentAttempts().get(0).getPaymentExternalKey());
+        Assert.assertNotEquals(paymentWithAttempts.getTransactions().get(0).getId().toString(), paymentWithAttempts.getPaymentAttempts().get(0).getTransactionExternalKey());
+
+        final String paymentTransactionExternalKey2 = "something-that-is-not-a-uuid-3";
+
         busHandler.pushExpectedEvents(NextEvent.PAYMENT);
-        paymentApi.createVoidWithPaymentControl(account, payment.getId(), null, properties, paymentOptions, callContext);
+        paymentApi.createVoidWithPaymentControl(account, payment.getId(), paymentTransactionExternalKey2, properties, paymentOptions, callContext);
         assertListenerStatus();
+
+        paymentWithAttempts = paymentApi.getPayment(payment.getId(), false, true, ImmutableList.<PluginProperty>of(), callContext);
+        Assert.assertEquals(paymentWithAttempts.getPaymentAttempts().size(), 2);
+        Assert.assertEquals(paymentWithAttempts.getTransactions().get(1).getExternalKey(), paymentTransactionExternalKey2);
+        Assert.assertEquals(paymentWithAttempts.getTransactions().get(1).getExternalKey(), paymentWithAttempts.getPaymentAttempts().get(1).getTransactionExternalKey());
+        Assert.assertNotEquals(paymentWithAttempts.getTransactions().get(1).getId().toString(), paymentWithAttempts.getPaymentAttempts().get(1).getTransactionExternalKey());
+
         Assert.assertEquals(testPaymentControlWithControl.getCalls().size(), 2);
         Assert.assertEquals(testPaymentControlWithControl.getCalls().get(TransactionType.AUTHORIZE.toString()), new Integer(1));
         Assert.assertEquals(testPaymentControlWithControl.getCalls().get(TransactionType.VOID.toString()), new Integer(1));

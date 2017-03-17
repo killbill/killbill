@@ -1,6 +1,6 @@
 /*
- * Copyright 2014-2016 Groupon, Inc
- * Copyright 2014-2016 The Billing Project, LLC
+ * Copyright 2014-2017 Groupon, Inc
+ * Copyright 2014-2017 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -23,10 +23,8 @@ import java.util.UUID;
 
 import javax.annotation.Nullable;
 
-import org.killbill.automaton.OperationException;
 import org.killbill.automaton.State;
 import org.killbill.billing.account.api.Account;
-import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.payment.PaymentTestSuiteWithEmbeddedDB;
 import org.killbill.billing.payment.api.PaymentApiException;
@@ -114,6 +112,8 @@ public class TestPaymentLeavingStateCallback extends PaymentTestSuiteWithEmbedde
                                                       UUID.randomUUID(),
                                                       new BigDecimal("192.3920111"),
                                                       Currency.BRL,
+                                                      null,
+                                                      null,
                                                       false,
                                                       null, ImmutableList.<PluginProperty>of(),
                                                       internalCallContext,
@@ -144,7 +144,7 @@ public class TestPaymentLeavingStateCallback extends PaymentTestSuiteWithEmbedde
             paymentDao.insertPaymentWithFirstTransaction(newPaymentModelDao, newPaymentTransactionModelDao, internalCallContext);
         }
 
-        final PaymentAutomatonDAOHelper daoHelper = new PaymentAutomatonDAOHelper(paymentStateContext, clock.getUTCNow(), paymentDao, registry, internalCallContext, eventBus, paymentSMHelper);
+        final PaymentAutomatonDAOHelper daoHelper = new PaymentAutomatonDAOHelper(paymentStateContext, clock.getUTCNow(), paymentDao, paymentPluginServiceRegistration, internalCallContext, eventBus, paymentSMHelper);
         callback = new PaymentLeavingStateTestCallback(daoHelper, paymentStateContext);
 
         Mockito.when(state.getName()).thenReturn("NEW_STATE");

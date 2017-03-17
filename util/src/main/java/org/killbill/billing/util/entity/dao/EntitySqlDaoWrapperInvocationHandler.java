@@ -65,7 +65,7 @@ import org.skife.jdbi.v2.sqlobject.SqlObjectBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableList.Builder;
@@ -375,8 +375,8 @@ public class EntitySqlDaoWrapperInvocationHandler<S extends EntitySqlDao<M, E>, 
             public Object execute() {
                 final M reHydratedEntity = sqlDao.getById(entityId, context);
                 final Long reHydratedEntityRecordId = sqlDao.getRecordId(entityId, context);
-                final M entity = Objects.firstNonNull(reHydratedEntity, entities.get(entityId));
-                final Long entityRecordId = Objects.firstNonNull(reHydratedEntityRecordId, entityRecordIds.get(entityId));
+                final M entity = MoreObjects.firstNonNull(reHydratedEntity, entities.get(entityId));
+                final Long entityRecordId = MoreObjects.firstNonNull(reHydratedEntityRecordId, entityRecordIds.get(entityId));
                 final TableName tableName = entity.getTableName();
 
                 // Note: audit entries point to the history record id
@@ -463,7 +463,7 @@ public class EntitySqlDaoWrapperInvocationHandler<S extends EntitySqlDao<M, E>, 
     }
 
     private void insertAudits(final TableName tableName, final Long entityRecordId, final Long historyRecordId, final ChangeType changeType, final InternalCallContext contextMaybeWithoutAccountRecordId) {
-        final TableName destinationTableName = Objects.firstNonNull(tableName.getHistoryTableName(), tableName);
+        final TableName destinationTableName = MoreObjects.firstNonNull(tableName.getHistoryTableName(), tableName);
         final EntityAudit audit = new EntityAudit(destinationTableName, historyRecordId, changeType, clock.getUTCNow());
 
         final InternalCallContext context;
