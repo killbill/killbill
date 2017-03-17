@@ -114,7 +114,7 @@ public class EhCacheOverdueConfigCache implements OverdueConfigCache {
     private CacheLoaderArgument initializeCacheLoaderArgument() {
         final LoaderCallback loaderCallback = new LoaderCallback() {
             @Override
-            public Object loadOverdueConfig(final String overdueConfigXML) throws OverdueApiException {
+            public OverdueConfig loadOverdueConfig(final String overdueConfigXML) throws OverdueApiException {
                 final InputStream overdueConfigStream = new ByteArrayInputStream(overdueConfigXML.getBytes());
                 final URI uri;
                 try {

@@ -345,19 +345,19 @@ public class EntitySqlDaoWrapperInvocationHandler<S extends EntitySqlDao<M, E>, 
     private void populateCacheOnGetByIdInvocation(M model) {
 
         final CacheController<Object, Object> cacheRecordId = cacheControllerDispatcher.getCacheController(CacheType.RECORD_ID);
-        cacheRecordId.add(getKey(model.getId().toString(), CacheType.RECORD_ID, model.getTableName()), model.getRecordId());
+        cacheRecordId.putIfAbsent(getKey(model.getId().toString(), CacheType.RECORD_ID, model.getTableName()), model.getRecordId());
 
         final CacheController<Object, Object> cacheObjectId = cacheControllerDispatcher.getCacheController(CacheType.OBJECT_ID);
-        cacheObjectId.add(getKey(model.getRecordId().toString(), CacheType.OBJECT_ID, model.getTableName()), model.getId());
+        cacheObjectId.putIfAbsent(getKey(model.getRecordId().toString(), CacheType.OBJECT_ID, model.getTableName()), model.getId());
 
         if (model.getTenantRecordId() != null) {
             final CacheController<Object, Object> cacheTenantRecordId = cacheControllerDispatcher.getCacheController(CacheType.TENANT_RECORD_ID);
-            cacheTenantRecordId.add(getKey(model.getId().toString(), CacheType.TENANT_RECORD_ID, model.getTableName()), model.getTenantRecordId());
+            cacheTenantRecordId.putIfAbsent(getKey(model.getId().toString(), CacheType.TENANT_RECORD_ID, model.getTableName()), model.getTenantRecordId());
         }
 
         if (model.getAccountRecordId() != null) {
             final CacheController<Object, Object> cacheAccountRecordId = cacheControllerDispatcher.getCacheController(CacheType.ACCOUNT_RECORD_ID);
-            cacheAccountRecordId.add(getKey(model.getId().toString(), CacheType.ACCOUNT_RECORD_ID, model.getTableName()), model.getAccountRecordId());
+            cacheAccountRecordId.putIfAbsent(getKey(model.getId().toString(), CacheType.ACCOUNT_RECORD_ID, model.getTableName()), model.getAccountRecordId());
         }
     }
 

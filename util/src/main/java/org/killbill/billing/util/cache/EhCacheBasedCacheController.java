@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2012 Ning, Inc.
- * Copyright 2014-2015 Groupon, Inc
- * Copyright 2014-2015 The Billing Project, LLC
+ * Copyright 2014-2017 Groupon, Inc
+ * Copyright 2014-2017 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -18,51 +18,62 @@
 
 package org.killbill.billing.util.cache;
 
-import javax.annotation.Nullable;
-
 import org.killbill.billing.util.cache.Cachable.CacheType;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import net.sf.ehcache.CacheException;
 import net.sf.ehcache.Ehcache;
 import net.sf.ehcache.Element;
 
 public class EhCacheBasedCacheController<K, V> implements CacheController<K, V> {
 
-    private final Ehcache cache;
-    private final CacheType cacheType;
+    private static final Logger logger = LoggerFactory.getLogger(EhCacheBasedCacheController.class);
 
-    public EhCacheBasedCacheController(final Ehcache cache, final CacheType cacheType) {
+    private final Ehcache cache;
+    private final BaseCacheLoader<K, V> baseCacheLoader;
+
+    public EhCacheBasedCacheController(final Ehcache cache, final BaseCacheLoader<K, V> baseCacheLoader) {
         this.cache = cache;
-        this.cacheType = cacheType;
+        this.baseCacheLoader = baseCacheLoader;
     }
 
     @Override
-    public void add(final K key, final V value) {
+    public V get(final K key, final CacheLoaderArgument cacheLoaderArgument) {
+        final V value;
+        if (!cache.isKeyInCache(key)) {
+            value = computeAndCacheValue(key, cacheLoaderArgument);
+        } else {
+            final Element element = cache.get(key);
+            if (element == null) {
+                value = null;
+            } else if (element.isExpired()) {
+                value = computeAndCacheValue(key, cacheLoaderArgument);
+            } else {
+                value = (V) element.getObjectValue();
+            }
+        }
+
+        if (value == null || value.equals(BaseCacheLoader.EMPTY_VALUE_PLACEHOLDER)) {
+            return null;
+        } else {
+            return value;
+        }
+    }
+
+    @Override
+    public void putIfAbsent(final K key, final V value) {
         cache.putIfAbsent(new Element(key, value));
     }
 
     @Override
-    public V get(final K key, @Nullable final CacheLoaderArgument cacheLoaderArgument) {
-        return getWithOrWithoutCacheLoaderArgument(key, cacheLoaderArgument);
-    }
-
-    @Override
-    public V get(final K key) {
-        return getWithOrWithoutCacheLoaderArgument(key, null);
-    }
-
-    public void putIfAbsent(final K key, V value) {
-        final Element element = new Element(key, value);
-        cache.putIfAbsent(element);
-    }
-
-    @Override
     public boolean remove(final K key) {
-        return cache.remove(key);
-    }
-
-    @Override
-    public int size() {
-        return cache.getSize();
+        if (cache.isKeyInCache(key)) {
+            cache.remove(key);
+            return true;
+        } else {
+            return false;
+        }
     }
 
     @Override
@@ -71,16 +82,31 @@ public class EhCacheBasedCacheController<K, V> implements CacheController<K, V> 
     }
 
     @Override
-    public CacheType getCacheType() {
-        return cacheType;
+    public int size() {
+        return cache.getSize();
     }
 
-    private V getWithOrWithoutCacheLoaderArgument(final K key, @Nullable final CacheLoaderArgument cacheLoaderArgument) {
-        final Element element = cacheLoaderArgument != null ? cache.getWithLoader(key, null, cacheLoaderArgument) : cache.get(key);
-        if (element == null || element.getObjectValue() == null || element.getObjectValue().equals(BaseCacheLoader.EMPTY_VALUE_PLACEHOLDER)) {
+    @Override
+    public CacheType getCacheType() {
+        return baseCacheLoader.getCacheType();
+    }
+
+    private V computeAndCacheValue(final K key, final CacheLoaderArgument cacheLoaderArgument) {
+        final V value;
+        try {
+            value = baseCacheLoader.compute(key, cacheLoaderArgument);
+        } catch (final Exception e) {
+            logger.warn("Unable to compute cached value for key='{}' and cacheLoaderArgument='{}'", key, cacheLoaderArgument);
+            throw new CacheException(e);
+        }
+
+        if (value == null) {
             return null;
         }
-        return (V) element.getObjectValue();
-    }
 
+        // Race condition, we may compute it for nothing
+        cache.putIfAbsent(new Element(key, value));
+
+        return value;
+    }
 }

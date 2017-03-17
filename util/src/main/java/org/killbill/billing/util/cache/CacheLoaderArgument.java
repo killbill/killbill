@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014-2015 Groupon, Inc
- * Copyright 2014-2015 The Billing Project, LLC
+ * Copyright 2014-2017 Groupon, Inc
+ * Copyright 2014-2017 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -17,6 +17,8 @@
  */
 
 package org.killbill.billing.util.cache;
+
+import java.util.Arrays;
 
 import javax.annotation.Nullable;
 
@@ -60,5 +62,15 @@ public class CacheLoaderArgument {
 
     public Handle getHandle() {
         return handle;
+    }
+
+    @Override
+    public String toString() {
+        final StringBuilder sb = new StringBuilder("CacheLoaderArgument{");
+        sb.append("objectType=").append(objectType);
+        sb.append(", args=").append(Arrays.toString(args));
+        sb.append(", internalTenantContext=").append(internalTenantContext);
+        sb.append('}');
+        return sb.toString();
     }
 }

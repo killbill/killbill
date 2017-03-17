@@ -1,6 +1,6 @@
 /*
- * Copyright 2016 Groupon, Inc
- * Copyright 2016 The Billing Project, LLC
+ * Copyright 2016-2017 Groupon, Inc
+ * Copyright 2016-2017 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -78,7 +78,7 @@ public class DefaultImmutableAccountInternalApi implements ImmutableAccountInter
     private CacheLoaderArgument createImmutableAccountCacheLoaderArgument(final InternalTenantContext context) {
         final LoaderCallback loaderCallback = new LoaderCallback() {
             @Override
-            public Object loadAccount(final Long recordId, final InternalTenantContext context) {
+            public ImmutableAccountData loadAccount(final Long recordId, final InternalTenantContext context) {
                 final Account account = getAccountByRecordIdInternal(recordId, context);
                 return account != null ? new DefaultImmutableAccountData(account) : null;
             }

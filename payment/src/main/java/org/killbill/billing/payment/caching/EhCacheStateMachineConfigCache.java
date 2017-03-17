@@ -105,7 +105,7 @@ public class EhCacheStateMachineConfigCache implements StateMachineConfigCache {
             // It means we are using the default state machine config in a multi-tenant deployment
             if (pluginPaymentStateMachineConfig == null) {
                 pluginPaymentStateMachineConfig = defaultPaymentStateMachineConfig;
-                cacheController.add(pluginConfigKey, pluginPaymentStateMachineConfig);
+                cacheController.putIfAbsent(pluginConfigKey, pluginPaymentStateMachineConfig);
             }
             return pluginPaymentStateMachineConfig;
         } catch (final IllegalStateException e) {

@@ -1,6 +1,6 @@
 /*
- * Copyright 2014-2016 Groupon, Inc
- * Copyright 2014-2016 The Billing Project, LLC
+ * Copyright 2014-2017 Groupon, Inc
+ * Copyright 2014-2017 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -25,11 +25,12 @@ import javax.inject.Singleton;
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.tenant.api.TenantInternalApi;
 import org.killbill.billing.util.cache.Cachable.CacheType;
+import org.killbill.billing.util.config.tenant.PerTenantConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 @Singleton
-public class TenantConfigCacheLoader extends BaseCacheLoader {
+public class TenantConfigCacheLoader extends BaseCacheLoader<Long, PerTenantConfig> {
 
     private final Logger log = LoggerFactory.getLogger(TenantConfigCacheLoader.class);
 
@@ -47,19 +48,9 @@ public class TenantConfigCacheLoader extends BaseCacheLoader {
     }
 
     @Override
-    public Object load(final Object key, final Object argument) {
-        checkCacheLoaderStatus();
-
-        if (!(key instanceof Long)) {
-            throw new IllegalArgumentException("Unexpected key type of " + key.getClass().getName());
-        }
-        if (!(argument instanceof CacheLoaderArgument)) {
-            throw new IllegalArgumentException("Unexpected argument type of " + argument.getClass().getName());
-        }
-
-        final Long tenantRecordId = (Long) key;
+    public PerTenantConfig compute(final Long key, final CacheLoaderArgument cacheLoaderArgument) {
+        final Long tenantRecordId = key;
         final InternalTenantContext internalTenantContext = new InternalTenantContext(tenantRecordId);
-        final CacheLoaderArgument cacheLoaderArgument = (CacheLoaderArgument) argument;
 
         if (cacheLoaderArgument.getArgs() == null || !(cacheLoaderArgument.getArgs()[0] instanceof LoaderCallback)) {
             throw new IllegalArgumentException("Missing LoaderCallback from the arguments ");
@@ -77,7 +68,7 @@ public class TenantConfigCacheLoader extends BaseCacheLoader {
     }
 
     public interface LoaderCallback {
-        public Object loadConfig(final String inputJson) throws IOException;
-    }
 
+        public PerTenantConfig loadConfig(final String inputJson) throws IOException;
+    }
 }
