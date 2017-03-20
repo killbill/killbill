@@ -18,10 +18,14 @@
 
 package org.killbill.billing.util.cache;
 
+import java.util.Collection;
+import java.util.HashSet;
+
 import org.killbill.billing.util.cache.Cachable.CacheType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.base.Function;
 import net.sf.ehcache.CacheException;
 import net.sf.ehcache.Ehcache;
 import net.sf.ehcache.Element;
@@ -74,6 +78,17 @@ public class EhCacheBasedCacheController<K, V> implements CacheController<K, V> 
         } else {
             return false;
         }
+    }
+
+    @Override
+    public void remove(final Function<K, Boolean> keyMatcher) {
+        final Collection<K> toRemove = new HashSet<K>();
+        for (final Object key : cache.getKeys()) {
+            if (keyMatcher.apply((K) key) == Boolean.TRUE) {
+                toRemove.add((K) key);
+            }
+        }
+        cache.removeAll(toRemove);
     }
 
     @Override

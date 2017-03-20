@@ -18,11 +18,15 @@ package org.killbill.billing.util.cache;
 
 import org.killbill.billing.util.cache.Cachable.CacheType;
 
+import com.google.common.base.Function;
+
 public interface CacheController<K, V> {
 
     V get(K key, CacheLoaderArgument objectType);
 
     boolean remove(K key);
+
+    void remove(Function<K, Boolean> keyMatcher);
 
     void putIfAbsent(final K key, V value);
 

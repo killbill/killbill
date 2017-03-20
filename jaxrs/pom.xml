@@ -76,10 +76,6 @@
             <artifactId>joda-time</artifactId>
         </dependency>
         <dependency>
-            <groupId>net.sf.ehcache</groupId>
-            <artifactId>ehcache</artifactId>
-        </dependency>
-        <dependency>
             <groupId>org.apache.shiro</groupId>
             <artifactId>shiro-core</artifactId>
         </dependency>
