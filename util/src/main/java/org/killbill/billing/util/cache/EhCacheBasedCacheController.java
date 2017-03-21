@@ -44,6 +44,8 @@ public class EhCacheBasedCacheController<K, V> implements CacheController<K, V> 
 
     @Override
     public V get(final K key, final CacheLoaderArgument cacheLoaderArgument) {
+        checkKey(key);
+
         final V value;
         if (!cache.isKeyInCache(key)) {
             value = computeAndCacheValue(key, cacheLoaderArgument);
@@ -61,17 +63,21 @@ public class EhCacheBasedCacheController<K, V> implements CacheController<K, V> 
         if (value == null || value.equals(BaseCacheLoader.EMPTY_VALUE_PLACEHOLDER)) {
             return null;
         } else {
+            checkValue(value);
             return value;
         }
     }
 
     @Override
     public void putIfAbsent(final K key, final V value) {
+        checkKey(key);
+        checkValue(value);
         cache.putIfAbsent(new Element(key, value));
     }
 
     @Override
     public boolean remove(final K key) {
+        checkKey(key);
         if (cache.isKeyInCache(key)) {
             cache.remove(key);
             return true;
@@ -107,6 +113,8 @@ public class EhCacheBasedCacheController<K, V> implements CacheController<K, V> 
     }
 
     private V computeAndCacheValue(final K key, final CacheLoaderArgument cacheLoaderArgument) {
+        checkKey(key);
+
         final V value;
         try {
             value = baseCacheLoader.compute(key, cacheLoaderArgument);
@@ -119,9 +127,29 @@ public class EhCacheBasedCacheController<K, V> implements CacheController<K, V> 
             return null;
         }
 
+        checkValue(value);
+
         // Race condition, we may compute it for nothing
         cache.putIfAbsent(new Element(key, value));
 
         return value;
+    }
+
+    private void checkKey(final K keyObject) {
+        if (keyObject == null) {
+            throw new NullPointerException();
+        }
+        if (!getCacheType().getKeyType().isAssignableFrom(keyObject.getClass())) {
+            throw new ClassCastException("Invalid key type, expected : " + getCacheType().getKeyType().getName() + " but was : " + keyObject.getClass().getName());
+        }
+    }
+
+    private void checkValue(final V valueObject) {
+        if (valueObject == null) {
+            throw new NullPointerException();
+        }
+        if (!getCacheType().getValueType().isAssignableFrom(valueObject.getClass())) {
+            throw new ClassCastException("Invalid value type, expected : " + getCacheType().getValueType().getName() + " but was : " + valueObject.getClass().getName());
+        }
     }
 }

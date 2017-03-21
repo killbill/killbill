@@ -53,7 +53,7 @@ public class EhCacheCatalogCache implements CatalogCache {
 
     private final Logger logger = LoggerFactory.getLogger(EhCacheCatalogCache.class);
 
-    private final CacheController cacheController;
+    private final CacheController<Long, Catalog> cacheController;
     private final VersionedCatalogLoader loader;
     private final CacheLoaderArgument cacheLoaderArgumentWithTemplateFiltering;
     private final CacheLoaderArgument cacheLoaderArgument;

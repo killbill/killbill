@@ -59,6 +59,7 @@ import org.killbill.billing.invoice.notification.ParentInvoiceCommitmentPoster;
 import org.killbill.billing.tag.TagInternalApi;
 import org.killbill.billing.util.UUIDs;
 import org.killbill.billing.util.cache.Cachable.CacheType;
+import org.killbill.billing.util.cache.CacheController;
 import org.killbill.billing.util.cache.CacheControllerDispatcher;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.billing.util.config.definition.InvoiceConfig;
@@ -115,7 +116,7 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
     private final CBADao cbaDao;
     private final InvoiceConfig invoiceConfig;
     private final Clock clock;
-    private final CacheControllerDispatcher cacheControllerDispatcher;
+    private final CacheController<String, UUID> objectIdCacheController;
     private final NonEntityDao nonEntityDao;
     private final ParentInvoiceCommitmentPoster parentInvoiceCommitmentPoster;
     private final TagInternalApi tagInternalApi;
@@ -142,7 +143,7 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
         this.invoiceDaoHelper = invoiceDaoHelper;
         this.cbaDao = cbaDao;
         this.clock = clock;
-        this.cacheControllerDispatcher = cacheControllerDispatcher;
+        this.objectIdCacheController = cacheControllerDispatcher.getCacheController(CacheType.OBJECT_ID);
         this.nonEntityDao = nonEntityDao;
         this.parentInvoiceCommitmentPoster = parentInvoiceCommitmentPoster;
     }
@@ -832,7 +833,7 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
                 }
 
                 if (completion) {
-                    final UUID accountId = nonEntityDao.retrieveIdFromObjectInTransaction(context.getAccountRecordId(), ObjectType.ACCOUNT, cacheControllerDispatcher.getCacheController(CacheType.OBJECT_ID), entitySqlDaoWrapperFactory.getHandle());
+                    final UUID accountId = nonEntityDao.retrieveIdFromObjectInTransaction(context.getAccountRecordId(), ObjectType.ACCOUNT, objectIdCacheController, entitySqlDaoWrapperFactory.getHandle());
                     notifyBusOfInvoicePayment(entitySqlDaoWrapperFactory, invoicePayment, accountId, context.getUserToken(), context);
                 }
                 return null;

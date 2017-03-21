@@ -30,7 +30,7 @@ import org.killbill.billing.util.dao.AuditSqlDao;
 import org.skife.jdbi.v2.IDBI;
 
 @Singleton
-public class AuditLogViaHistoryCacheLoader extends BaseCacheLoader<Object, List<AuditLogModelDao>> {
+public class AuditLogViaHistoryCacheLoader extends BaseCacheLoader<String, List<AuditLogModelDao>> {
 
     private final AuditSqlDao auditSqlDao;
 
@@ -46,7 +46,7 @@ public class AuditLogViaHistoryCacheLoader extends BaseCacheLoader<Object, List<
     }
 
     @Override
-    public List<AuditLogModelDao> compute(final Object key, final CacheLoaderArgument cacheLoaderArgument) {
+    public List<AuditLogModelDao> compute(final String key, final CacheLoaderArgument cacheLoaderArgument) {
         final Object[] args = cacheLoaderArgument.getArgs();
         final String tableName = (String) args[0];
         final String historyTableName = (String) args[1];

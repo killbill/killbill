@@ -48,7 +48,7 @@ import com.google.common.collect.Iterables;
 
 public class EhCacheOverriddenPlanCache implements OverriddenPlanCache {
 
-    private final CacheController cacheController;
+    private final CacheController<String, Plan> cacheController;
     private final LoaderCallback loaderCallback;
     private final CatalogOverrideDao overrideDao;
 

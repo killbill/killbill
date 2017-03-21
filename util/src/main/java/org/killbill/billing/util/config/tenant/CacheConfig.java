@@ -34,7 +34,7 @@ import com.google.inject.Inject;
 
 public class CacheConfig {
 
-    private final CacheController cacheController;
+    private final CacheController<Long, PerTenantConfig> cacheController;
     private final CacheLoaderArgument cacheLoaderArgument;
 
     private final ObjectMapper objectMapper;
@@ -48,7 +48,7 @@ public class CacheConfig {
     }
 
     public PerTenantConfig getPerTenantConfig(final InternalTenantContext tenantContext) {
-        final PerTenantConfig perTenantConfig = (PerTenantConfig) cacheController.get(tenantContext.getTenantRecordId(), cacheLoaderArgument);
+        final PerTenantConfig perTenantConfig = cacheController.get(tenantContext.getTenantRecordId(), cacheLoaderArgument);
         return perTenantConfig;
     }
 

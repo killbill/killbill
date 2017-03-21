@@ -56,7 +56,7 @@ public class DefaultAccountInternalApi extends DefaultAccountApiBase implements 
 
     private final ImmutableAccountInternalApi immutableAccountInternalApi;
     private final AccountDao accountDao;
-    private final CacheController bcdCacheController;
+    private final CacheController<UUID, Integer> bcdCacheController;
 
     @Inject
     public DefaultAccountInternalApi(final ImmutableAccountInternalApi immutableAccountInternalApi,
@@ -106,7 +106,7 @@ public class DefaultAccountInternalApi extends DefaultAccountApiBase implements 
     @Override
     public int getBCD(final UUID accountId, final InternalTenantContext context) throws AccountApiException {
         final CacheLoaderArgument arg = createBCDCacheLoaderArgument(context);
-        final Integer result = (Integer) bcdCacheController.get(accountId, arg);
+        final Integer result = bcdCacheController.get(accountId, arg);
         return result != null ? result : DefaultMutableAccountData.DEFAULT_BILLING_CYCLE_DAY_LOCAL;
     }
 

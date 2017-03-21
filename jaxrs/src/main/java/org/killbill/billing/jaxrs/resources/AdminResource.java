@@ -344,15 +344,17 @@ public class AdminResource extends JaxRsResourceBase {
     @ApiResponses(value = {})
     public Response invalidatesCacheByAccount(@PathParam("accountId") final String accountIdStr,
                                               @javax.ws.rs.core.Context final HttpServletRequest request) {
+        final TenantContext tenantContext = context.createContext(request);
         final UUID accountId = UUID.fromString(accountIdStr);
+        final Long accountRecordId = recordIdApi.getRecordId(accountId, ObjectType.ACCOUNT, tenantContext);
 
         // clear account-record-id cache by accountId (note: String!)
         cacheControllerDispatcher.getCacheController(CacheType.ACCOUNT_RECORD_ID).remove(accountIdStr);
 
-        // clear account-immutable cache by accountId
-        cacheControllerDispatcher.getCacheController(CacheType.ACCOUNT_IMMUTABLE).remove(accountId);
+        // clear account-immutable cache by account record id
+        cacheControllerDispatcher.getCacheController(CacheType.ACCOUNT_IMMUTABLE).remove(accountRecordId);
 
-        // clear account-bcd cache by accountId
+        // clear account-bcd cache by accountId (note: UUID!)
         cacheControllerDispatcher.getCacheController(CacheType.ACCOUNT_BCD).remove(accountId);
 
         return Response.status(Status.OK).build();

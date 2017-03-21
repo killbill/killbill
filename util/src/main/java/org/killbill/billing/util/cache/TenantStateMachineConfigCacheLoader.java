@@ -52,7 +52,7 @@ public class TenantStateMachineConfigCacheLoader extends BaseCacheLoader<String,
 
     @Override
     public Object compute(final String key, final CacheLoaderArgument cacheLoaderArgument) {
-        final String[] parts = ((String) key).split(CacheControllerDispatcher.CACHE_KEY_SEPARATOR);
+        final String[] parts = key.split(CacheControllerDispatcher.CACHE_KEY_SEPARATOR);
         final String rawKey = parts[0];
         final Matcher matcher = PATTERN.matcher(rawKey);
         if (!matcher.matches()) {

@@ -35,6 +35,7 @@ import org.testng.annotations.Test;
 
 import com.google.common.io.Resources;
 import net.sf.ehcache.Ehcache;
+import net.sf.ehcache.Element;
 
 import static org.testng.Assert.assertFalse;
 import static org.testng.Assert.assertNotNull;
@@ -83,9 +84,11 @@ public class TestCache extends TestJaxrsBase {
 
         // verify that they are not null and have the accountId stored as a key (the account created before)
         assertNotNull(accountRecordIdCache);
-        assertNotNull(accountRecordIdCache.get(input.getAccountId().toString()));
+        final Element accountRecordIdElement = accountRecordIdCache.get(input.getAccountId().toString());
+        assertNotNull(accountRecordIdElement);
+        final Long accountRecordId = (Long) accountRecordIdElement.getObjectValue();
         assertNotNull(accountImmutableCache);
-        assertNotNull(accountImmutableCache.get(input.getAccountId()));
+        assertNotNull(accountImmutableCache.get(accountRecordId));
         assertNotNull(accountBcdCache);
         assertNotNull(accountBcdCache.get(input.getAccountId()));
 
@@ -94,7 +97,7 @@ public class TestCache extends TestJaxrsBase {
 
         // verify that now the caches don't have the accountId key stored
         Assert.assertNull(accountRecordIdCache.get(input.getAccountId().toString()));
-        Assert.assertNull(accountImmutableCache.get(input.getAccountId()));
+        Assert.assertNull(accountImmutableCache.get(accountRecordId));
         Assert.assertNull(accountBcdCache.get(input.getAccountId()));
     }
 
