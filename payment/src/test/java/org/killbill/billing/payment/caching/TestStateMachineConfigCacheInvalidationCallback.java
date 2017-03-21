@@ -1,6 +1,6 @@
 /*
- * Copyright 2016 Groupon, Inc
- * Copyright 2016 The Billing Project, LLC
+ * Copyright 2016-2017 Groupon, Inc
+ * Copyright 2016-2017 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -31,8 +31,6 @@ import org.mockito.stubbing.Answer;
 import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
-
-import net.sf.ehcache.CacheException;
 
 public class TestStateMachineConfigCacheInvalidationCallback extends PaymentTestSuiteNoDB {
 
@@ -67,7 +65,7 @@ public class TestStateMachineConfigCacheInvalidationCallback extends PaymentTest
             @Override
             public String answer(final InvocationOnMock invocation) throws Throwable {
                 if (shouldThrow.get()) {
-                    throw new RuntimeException();
+                    throw new RuntimeException("For test purposes");
                 }
                 return null;
             }
@@ -87,8 +85,9 @@ public class TestStateMachineConfigCacheInvalidationCallback extends PaymentTest
         try {
             stateMachineConfigCache.getPaymentStateMachineConfig(pluginName, multiTenantContext);
             Assert.fail();
-        } catch (final CacheException exception) {
+        } catch (final RuntimeException exception) {
             Assert.assertTrue(exception.getCause() instanceof RuntimeException);
+            Assert.assertEquals(exception.getCause().getMessage(), "For test purposes");
         }
 
         // No exception (cached)

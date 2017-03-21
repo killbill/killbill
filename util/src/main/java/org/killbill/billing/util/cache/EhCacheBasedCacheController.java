@@ -27,7 +27,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Function;
-import net.sf.ehcache.CacheException;
 import net.sf.ehcache.Ehcache;
 import net.sf.ehcache.Element;
 
@@ -130,8 +129,8 @@ public class EhCacheBasedCacheController<K, V> implements CacheController<K, V> 
         try {
             value = baseCacheLoader.compute(key, cacheLoaderArgument);
         } catch (final Exception e) {
-            logger.warn("Unable to compute cached value for key='{}' and cacheLoaderArgument='{}'", key, cacheLoaderArgument);
-            throw new CacheException(e);
+            logger.warn("Unable to compute cached value for key='{}' and cacheLoaderArgument='{}'", key, cacheLoaderArgument, e);
+            throw new RuntimeException(e);
         }
 
         if (value == null) {
