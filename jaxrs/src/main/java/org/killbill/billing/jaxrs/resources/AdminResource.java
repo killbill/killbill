@@ -47,6 +47,8 @@ import org.joda.time.DateTimeZone;
 import org.killbill.billing.ErrorCode;
 import org.killbill.billing.ObjectType;
 import org.killbill.billing.account.api.AccountUserApi;
+import org.killbill.billing.account.api.ImmutableAccountData;
+import org.killbill.billing.catalog.api.Catalog;
 import org.killbill.billing.invoice.api.InvoiceApiException;
 import org.killbill.billing.invoice.api.InvoiceUserApi;
 import org.killbill.billing.jaxrs.json.AdminPaymentJson;
@@ -67,9 +69,11 @@ import org.killbill.billing.util.api.CustomFieldUserApi;
 import org.killbill.billing.util.api.RecordIdApi;
 import org.killbill.billing.util.api.TagUserApi;
 import org.killbill.billing.util.cache.Cachable.CacheType;
+import org.killbill.billing.util.cache.CacheController;
 import org.killbill.billing.util.cache.CacheControllerDispatcher;
 import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.TenantContext;
+import org.killbill.billing.util.config.tenant.PerTenantConfig;
 import org.killbill.billing.util.entity.Pagination;
 import org.killbill.billing.util.tag.Tag;
 import org.killbill.billing.util.tag.dao.SystemTags;
@@ -349,13 +353,16 @@ public class AdminResource extends JaxRsResourceBase {
         final Long accountRecordId = recordIdApi.getRecordId(accountId, ObjectType.ACCOUNT, tenantContext);
 
         // clear account-record-id cache by accountId (note: String!)
-        cacheControllerDispatcher.getCacheController(CacheType.ACCOUNT_RECORD_ID).remove(accountIdStr);
+        final CacheController<String, Long> accountRecordIdCacheController = cacheControllerDispatcher.getCacheController(CacheType.ACCOUNT_RECORD_ID);
+        accountRecordIdCacheController.remove(accountIdStr);
 
         // clear account-immutable cache by account record id
-        cacheControllerDispatcher.getCacheController(CacheType.ACCOUNT_IMMUTABLE).remove(accountRecordId);
+        final CacheController<Long, ImmutableAccountData> accountImmutableCacheController = cacheControllerDispatcher.getCacheController(CacheType.ACCOUNT_IMMUTABLE);
+        accountImmutableCacheController.remove(accountRecordId);
 
         // clear account-bcd cache by accountId (note: UUID!)
-        cacheControllerDispatcher.getCacheController(CacheType.ACCOUNT_BCD).remove(accountId);
+        final CacheController<UUID, Integer> accountBCDCacheController = cacheControllerDispatcher.getCacheController(CacheType.ACCOUNT_BCD);
+        accountBCDCacheController.remove(accountId);
 
         return Response.status(Status.OK).build();
     }
@@ -376,33 +383,40 @@ public class AdminResource extends JaxRsResourceBase {
         // getting Tenant Record Id
         final Long tenantRecordId = recordIdApi.getRecordId(tenantContext.getTenantId(), ObjectType.TENANT, tenantContext);
 
-        final Function<Object, Boolean> tenantKeysMatcher = new Function<Object, Boolean>() {
+        final Function<String, Boolean> tenantKeysMatcher = new Function<String, Boolean>() {
             @Override
-            public Boolean apply(@Nullable final Object key) {
-                return key != null && key.toString().endsWith("::" + tenantRecordId);
+            public Boolean apply(@Nullable final String key) {
+                return key != null && key.endsWith("::" + tenantRecordId);
             }
         };
 
         // clear tenant-record-id cache by tenantId
-        cacheControllerDispatcher.getCacheController(CacheType.TENANT_RECORD_ID).remove(currentTenant.getId().toString());
+        final CacheController<String, Long> tenantRecordIdCacheController = cacheControllerDispatcher.getCacheController(CacheType.TENANT_RECORD_ID);
+        tenantRecordIdCacheController.remove(currentTenant.getId().toString());
 
         // clear tenant-payment-state-machine-config cache by tenantRecordId
-        cacheControllerDispatcher.getCacheController(CacheType.TENANT_PAYMENT_STATE_MACHINE_CONFIG).remove(tenantKeysMatcher);
+        final CacheController<String, Object> tenantPaymentStateMachineConfigCacheController = cacheControllerDispatcher.getCacheController(CacheType.TENANT_PAYMENT_STATE_MACHINE_CONFIG);
+        tenantPaymentStateMachineConfigCacheController.remove(tenantKeysMatcher);
 
         // clear tenant cache by tenantApiKey
-        cacheControllerDispatcher.getCacheController(CacheType.TENANT).remove(currentTenant.getApiKey());
+        final CacheController<String, Tenant> tenantCacheController = cacheControllerDispatcher.getCacheController(CacheType.TENANT);
+        tenantCacheController.remove(currentTenant.getApiKey());
 
         // clear tenant-kv cache by tenantRecordId
-        cacheControllerDispatcher.getCacheController(CacheType.TENANT_KV).remove(tenantKeysMatcher);
+        final CacheController<String, String> tenantKVCacheController = cacheControllerDispatcher.getCacheController(CacheType.TENANT_KV);
+        tenantKVCacheController.remove(tenantKeysMatcher);
 
         // clear tenant-config cache by tenantRecordId
-        cacheControllerDispatcher.getCacheController(CacheType.TENANT_CONFIG).remove(tenantRecordId);
+        final CacheController<Long, PerTenantConfig> tenantConfigCacheController = cacheControllerDispatcher.getCacheController(CacheType.TENANT_CONFIG);
+        tenantConfigCacheController.remove(tenantRecordId);
 
         // clear tenant-overdue-config cache by tenantRecordId
-        cacheControllerDispatcher.getCacheController(CacheType.TENANT_OVERDUE_CONFIG).remove(tenantRecordId);
+        final CacheController<Long, Object> tenantOverdueConfigCacheController = cacheControllerDispatcher.getCacheController(CacheType.TENANT_OVERDUE_CONFIG);
+        tenantOverdueConfigCacheController.remove(tenantRecordId);
 
         // clear tenant-catalog cache by tenantRecordId
-        cacheControllerDispatcher.getCacheController(CacheType.TENANT_CATALOG).remove(tenantRecordId);
+        final CacheController<Long, Catalog> tenantCatalogCacheController = cacheControllerDispatcher.getCacheController(CacheType.TENANT_CATALOG);
+        tenantCatalogCacheController.remove(tenantRecordId);
 
         return Response.status(Status.OK).build();
     }

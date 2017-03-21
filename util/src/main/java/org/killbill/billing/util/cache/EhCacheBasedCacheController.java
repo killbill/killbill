@@ -20,6 +20,7 @@ package org.killbill.billing.util.cache;
 
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.List;
 
 import org.killbill.billing.util.cache.Cachable.CacheType;
 import org.slf4j.Logger;
@@ -43,11 +44,21 @@ public class EhCacheBasedCacheController<K, V> implements CacheController<K, V> 
     }
 
     @Override
+    public List<K> getKeys() {
+        return cache.getKeys();
+    }
+
+    @Override
+    public boolean isKeyInCache(final K key) {
+        return cache.isKeyInCache(key);
+    }
+
+    @Override
     public V get(final K key, final CacheLoaderArgument cacheLoaderArgument) {
         checkKey(key);
 
         final V value;
-        if (!cache.isKeyInCache(key)) {
+        if (!isKeyInCache(key)) {
             value = computeAndCacheValue(key, cacheLoaderArgument);
         } else {
             final Element element = cache.get(key);
@@ -78,7 +89,7 @@ public class EhCacheBasedCacheController<K, V> implements CacheController<K, V> 
     @Override
     public boolean remove(final K key) {
         checkKey(key);
-        if (cache.isKeyInCache(key)) {
+        if (isKeyInCache(key)) {
             cache.remove(key);
             return true;
         } else {
@@ -89,7 +100,7 @@ public class EhCacheBasedCacheController<K, V> implements CacheController<K, V> 
     @Override
     public void remove(final Function<K, Boolean> keyMatcher) {
         final Collection<K> toRemove = new HashSet<K>();
-        for (final Object key : cache.getKeys()) {
+        for (final Object key : getKeys()) {
             if (keyMatcher.apply((K) key) == Boolean.TRUE) {
                 toRemove.add((K) key);
             }
