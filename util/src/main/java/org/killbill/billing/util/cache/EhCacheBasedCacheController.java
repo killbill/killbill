@@ -18,76 +18,73 @@
 
 package org.killbill.billing.util.cache;
 
-import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
+
+import javax.cache.Cache;
+import javax.cache.Cache.Entry;
 
 import org.killbill.billing.util.cache.Cachable.CacheType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Function;
-import net.sf.ehcache.Ehcache;
-import net.sf.ehcache.Element;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Iterables;
 
 public class EhCacheBasedCacheController<K, V> implements CacheController<K, V> {
 
     private static final Logger logger = LoggerFactory.getLogger(EhCacheBasedCacheController.class);
 
-    private final Ehcache cache;
+    private final Cache<K, V> cache;
     private final BaseCacheLoader<K, V> baseCacheLoader;
 
-    public EhCacheBasedCacheController(final Ehcache cache, final BaseCacheLoader<K, V> baseCacheLoader) {
+    public EhCacheBasedCacheController(final Cache<K, V> cache, final BaseCacheLoader<K, V> baseCacheLoader) {
         this.cache = cache;
         this.baseCacheLoader = baseCacheLoader;
     }
 
     @Override
     public List<K> getKeys() {
-        return cache.getKeys();
+        final Iterable<K> kIterable = Iterables.<Entry<K, V>, K>transform(cache,
+                                                                          new Function<Entry<K, V>, K>() {
+                                                                              @Override
+                                                                              public K apply(final Entry<K, V> input) {
+                                                                                  return input.getKey();
+                                                                              }
+                                                                          });
+        return ImmutableList.<K>copyOf(kIterable);
     }
 
     @Override
     public boolean isKeyInCache(final K key) {
-        return cache.isKeyInCache(key);
+        return cache.containsKey(key);
     }
 
     @Override
     public V get(final K key, final CacheLoaderArgument cacheLoaderArgument) {
-        checkKey(key);
-
         final V value;
         if (!isKeyInCache(key)) {
             value = computeAndCacheValue(key, cacheLoaderArgument);
         } else {
-            final Element element = cache.get(key);
-            if (element == null) {
-                value = null;
-            } else if (element.isExpired()) {
-                value = computeAndCacheValue(key, cacheLoaderArgument);
-            } else {
-                value = (V) element.getObjectValue();
-            }
+            value = cache.get(key);
         }
 
         if (value == null || value.equals(BaseCacheLoader.EMPTY_VALUE_PLACEHOLDER)) {
             return null;
         } else {
-            checkValue(value);
             return value;
         }
     }
 
     @Override
     public void putIfAbsent(final K key, final V value) {
-        checkKey(key);
-        checkValue(value);
-        cache.putIfAbsent(new Element(key, value));
+        cache.putIfAbsent(key, value);
     }
 
     @Override
     public boolean remove(final K key) {
-        checkKey(key);
         if (isKeyInCache(key)) {
             cache.remove(key);
             return true;
@@ -98,7 +95,7 @@ public class EhCacheBasedCacheController<K, V> implements CacheController<K, V> 
 
     @Override
     public void remove(final Function<K, Boolean> keyMatcher) {
-        final Collection<K> toRemove = new HashSet<K>();
+        final Set<K> toRemove = new HashSet<K>();
         for (final Object key : getKeys()) {
             if (keyMatcher.apply((K) key) == Boolean.TRUE) {
                 toRemove.add((K) key);
@@ -109,12 +106,12 @@ public class EhCacheBasedCacheController<K, V> implements CacheController<K, V> 
 
     @Override
     public void removeAll() {
-        cache.removeAll();
+        cache.clear();
     }
 
     @Override
     public int size() {
-        return cache.getSize();
+        return Iterables.<Cache.Entry<K, V>>size(cache);
     }
 
     @Override
@@ -123,8 +120,6 @@ public class EhCacheBasedCacheController<K, V> implements CacheController<K, V> 
     }
 
     private V computeAndCacheValue(final K key, final CacheLoaderArgument cacheLoaderArgument) {
-        checkKey(key);
-
         final V value;
         try {
             value = baseCacheLoader.compute(key, cacheLoaderArgument);
@@ -137,29 +132,9 @@ public class EhCacheBasedCacheController<K, V> implements CacheController<K, V> 
             return null;
         }
 
-        checkValue(value);
-
         // Race condition, we may compute it for nothing
-        cache.putIfAbsent(new Element(key, value));
+        cache.putIfAbsent(key, value);
 
         return value;
-    }
-
-    private void checkKey(final K keyObject) {
-        if (keyObject == null) {
-            throw new NullPointerException();
-        }
-        if (!getCacheType().getKeyType().isAssignableFrom(keyObject.getClass())) {
-            throw new ClassCastException("Invalid key type, expected : " + getCacheType().getKeyType().getName() + " but was : " + keyObject.getClass().getName());
-        }
-    }
-
-    private void checkValue(final V valueObject) {
-        if (valueObject == null) {
-            throw new NullPointerException();
-        }
-        if (!getCacheType().getValueType().isAssignableFrom(valueObject.getClass())) {
-            throw new ClassCastException("Invalid value type, expected : " + getCacheType().getValueType().getName() + " but was : " + valueObject.getClass().getName());
-        }
     }
 }

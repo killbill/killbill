@@ -86,7 +86,7 @@ public class KillBillShiroModule extends ShiroModule {
         super.bindSecurityManager(bind);
 
         // Magic provider to configure the cache manager
-        bind(CacheManager.class).toProvider(EhCacheManagerProvider.class).asEagerSingleton();
+        bind(CacheManager.class).toProvider(EhcacheShiroManagerProvider.class).asEagerSingleton();
     }
 
     @Override

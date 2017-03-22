@@ -22,15 +22,14 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
 
+import javax.cache.Cache;
+import javax.cache.CacheManager;
 import javax.inject.Inject;
 import javax.inject.Provider;
 
 import org.killbill.billing.util.cache.Cachable.CacheType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import net.sf.ehcache.CacheManager;
-import net.sf.ehcache.Ehcache;
 
 // Build the abstraction layer between EhCache and Kill Bill
 public class CacheControllerDispatcherProvider implements Provider<CacheControllerDispatcher> {
@@ -53,7 +52,7 @@ public class CacheControllerDispatcherProvider implements Provider<CacheControll
         for (final BaseCacheLoader cacheLoader : cacheLoaders) {
             final CacheType cacheType = cacheLoader.getCacheType();
 
-            final Ehcache cache = cacheManager.getEhcache(cacheType.getCacheName());
+            final Cache cache = cacheManager.getCache(cacheType.getCacheName(), cacheType.getKeyType(), cacheType.getValueType());
             if (cache == null) {
                 logger.warn("Cache for cacheName='{}' not configured - check your ehcache.xml", cacheLoader.getCacheType().getCacheName());
                 continue;

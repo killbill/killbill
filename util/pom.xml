@@ -104,7 +104,11 @@
         </dependency>
         <dependency>
             <groupId>io.dropwizard.metrics</groupId>
-            <artifactId>metrics-ehcache</artifactId>
+            <artifactId>metrics-jcache</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>javax.cache</groupId>
+            <artifactId>cache-api</artifactId>
         </dependency>
         <dependency>
             <groupId>javax.inject</groupId>
@@ -126,10 +130,6 @@
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>net.sf.ehcache</groupId>
-            <artifactId>ehcache</artifactId>
-        </dependency>
-        <dependency>
             <groupId>org.antlr</groupId>
             <artifactId>stringtemplate</artifactId>
         </dependency>
@@ -143,11 +143,15 @@
         </dependency>
         <dependency>
             <groupId>org.apache.shiro</groupId>
-            <artifactId>shiro-ehcache</artifactId>
+            <artifactId>shiro-guice</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.apache.shiro</groupId>
-            <artifactId>shiro-guice</artifactId>
+            <groupId>org.ehcache</groupId>
+            <artifactId>ehcache</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.ehcache.integrations.shiro</groupId>
+            <artifactId>shiro-ehcache3</artifactId>
         </dependency>
         <dependency>
             <groupId>org.flywaydb</groupId>

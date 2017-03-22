@@ -18,6 +18,8 @@
 
 package org.killbill.billing.util.glue;
 
+import javax.cache.CacheManager;
+
 import org.killbill.billing.platform.api.KillbillConfigSource;
 import org.killbill.billing.util.cache.AccountBCDCacheLoader;
 import org.killbill.billing.util.cache.AccountRecordIdCacheLoader;
@@ -26,7 +28,6 @@ import org.killbill.billing.util.cache.AuditLogViaHistoryCacheLoader;
 import org.killbill.billing.util.cache.BaseCacheLoader;
 import org.killbill.billing.util.cache.CacheControllerDispatcher;
 import org.killbill.billing.util.cache.CacheControllerDispatcherProvider;
-import org.killbill.billing.util.cache.EhCacheCacheManagerProvider;
 import org.killbill.billing.util.cache.ImmutableAccountCacheLoader;
 import org.killbill.billing.util.cache.ObjectIdCacheLoader;
 import org.killbill.billing.util.cache.OverriddenPlanCacheLoader;
@@ -42,7 +43,6 @@ import org.killbill.billing.util.config.definition.EhCacheConfig;
 import org.skife.config.ConfigurationObjectFactory;
 
 import com.google.inject.multibindings.Multibinder;
-import net.sf.ehcache.CacheManager;
 
 public class CacheModule extends KillBillModule {
 
@@ -56,7 +56,7 @@ public class CacheModule extends KillBillModule {
         bind(EhCacheConfig.class).toInstance(config);
 
         // EhCache specifics
-        bind(CacheManager.class).toProvider(EhCacheCacheManagerProvider.class).asEagerSingleton();
+        bind(CacheManager.class).toProvider(Eh107CacheManagerProvider.class).asEagerSingleton();
 
         // Kill Bill generic cache dispatcher
         bind(CacheControllerDispatcher.class).toProvider(CacheControllerDispatcherProvider.class).asEagerSingleton();
