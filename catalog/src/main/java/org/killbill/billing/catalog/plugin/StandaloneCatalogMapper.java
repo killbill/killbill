@@ -484,6 +484,7 @@ public class StandaloneCatalogMapper {
         result.setBillingMode(input.getBillingMode());
         result.setBillingPeriod(input.getBillingPeriod());
         result.setUsageType(input.getUsageType());
+        result.setTierBlockPolicy(input.getTierBlockPolicy());
         if (input.getLimits() != null && input.getLimits().length > 0) {
             result.setLimits(toDefaultLimits(Arrays.asList(input.getLimits())));
         }
