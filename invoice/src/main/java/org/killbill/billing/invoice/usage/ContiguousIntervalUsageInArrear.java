@@ -403,8 +403,7 @@ public class ContiguousIntervalUsageInArrear {
             case TOP_TIER:
                 return computeToBeBilledConsumableInArrearWith_TOP_TIER(tieredBlocks, roUnit.getAmount());
             default:
-                throw new IllegalStateException("Unknwon TierBlockPolicy " + usage.getTierBlockPolicy());
-
+                throw new IllegalStateException("Unknown TierBlockPolicy " + usage.getTierBlockPolicy());
         }
     }
 
