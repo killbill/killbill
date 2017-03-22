@@ -1,6 +1,6 @@
 /*
- * Copyright 2014-2015 Groupon, Inc
- * Copyright 2014-2015 The Billing Project, LLC
+ * Copyright 2014-2017 Groupon, Inc
+ * Copyright 2014-2017 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -17,10 +17,11 @@
 
 package org.killbill.billing.util.cache;
 
+import org.killbill.billing.account.api.ImmutableAccountData;
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.util.cache.Cachable.CacheType;
 
-public class ImmutableAccountCacheLoader extends BaseCacheLoader {
+public class ImmutableAccountCacheLoader extends BaseCacheLoader<Long, ImmutableAccountData> {
 
     @Override
     public CacheType getCacheType() {
@@ -28,30 +29,18 @@ public class ImmutableAccountCacheLoader extends BaseCacheLoader {
     }
 
     @Override
-    public Object load(final Object key, final Object argument) {
-
-        checkCacheLoaderStatus();
-
-        if (!(key instanceof Long)) {
-            throw new IllegalArgumentException("Unexpected key type of " + key.getClass().getName());
-        }
-
-        if (!(argument instanceof CacheLoaderArgument)) {
-            throw new IllegalArgumentException("Unexpected argument type of " + argument.getClass().getName());
-        }
-
-        final CacheLoaderArgument cacheLoaderArgument = (CacheLoaderArgument) argument;
-
+    public ImmutableAccountData compute(final Long key, final CacheLoaderArgument cacheLoaderArgument) {
         if (cacheLoaderArgument.getArgs() == null ||
             !(cacheLoaderArgument.getArgs()[0] instanceof LoaderCallback)) {
             throw new IllegalArgumentException("Missing LoaderCallback from the arguments ");
         }
 
         final LoaderCallback callback = (LoaderCallback) cacheLoaderArgument.getArgs()[0];
-        return callback.loadAccount((Long) key, cacheLoaderArgument.getInternalTenantContext());
+        return callback.loadAccount(key, cacheLoaderArgument.getInternalTenantContext());
     }
 
     public interface LoaderCallback {
-        Object loadAccount(final Long recordId, final InternalTenantContext context);
+
+        ImmutableAccountData loadAccount(final Long recordId, final InternalTenantContext context);
     }
 }

@@ -1,6 +1,6 @@
 /*
- * Copyright 2014-2015 Groupon, Inc
- * Copyright 2014-2015 The Billing Project, LLC
+ * Copyright 2014-2017 Groupon, Inc
+ * Copyright 2014-2017 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -27,6 +27,7 @@ import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.catalog.StandaloneCatalog;
 import org.killbill.billing.catalog.StandaloneCatalogWithPriceOverride;
 import org.killbill.billing.catalog.VersionedCatalog;
+import org.killbill.billing.catalog.api.Catalog;
 import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.catalog.io.VersionedCatalogLoader;
 import org.killbill.billing.catalog.override.PriceOverride;
@@ -52,7 +53,7 @@ public class EhCacheCatalogCache implements CatalogCache {
 
     private final Logger logger = LoggerFactory.getLogger(EhCacheCatalogCache.class);
 
-    private final CacheController cacheController;
+    private final CacheController<Long, Catalog> cacheController;
     private final VersionedCatalogLoader loader;
     private final CacheLoaderArgument cacheLoaderArgumentWithTemplateFiltering;
     private final CacheLoaderArgument cacheLoaderArgument;
@@ -113,7 +114,7 @@ public class EhCacheCatalogCache implements CatalogCache {
                     final StandaloneCatalogWithPriceOverride curWithOverride = new StandaloneCatalogWithPriceOverride(cur, priceOverride, tenantContext.getTenantRecordId(), internalCallContextFactory);
                     tenantCatalog.add(curWithOverride);
                 }
-                cacheController.add(tenantContext.getTenantRecordId(), tenantCatalog);
+                cacheController.putIfAbsent(tenantContext.getTenantRecordId(), tenantCatalog);
             }
             return tenantCatalog;
         } catch (final IllegalStateException e) {
@@ -150,7 +151,7 @@ public class EhCacheCatalogCache implements CatalogCache {
     private CacheLoaderArgument initializeCacheLoaderArgument(final boolean filterTemplateCatalog) {
         final LoaderCallback loaderCallback = new LoaderCallback() {
             @Override
-            public Object loadCatalog(final List<String> catalogXMLs, final Long tenantRecordId) throws CatalogApiException {
+            public Catalog loadCatalog(final List<String> catalogXMLs, final Long tenantRecordId) throws CatalogApiException {
                 return loader.load(catalogXMLs, filterTemplateCatalog, tenantRecordId);
             }
         };

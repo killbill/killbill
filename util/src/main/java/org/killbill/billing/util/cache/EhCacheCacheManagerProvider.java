@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2012 Ning, Inc.
- * Copyright 2014-2015 Groupon, Inc
- * Copyright 2014-2015 The Billing Project, LLC
+ * Copyright 2014-2017 Groupon, Inc
+ * Copyright 2014-2017 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -21,8 +21,7 @@ package org.killbill.billing.util.cache;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URISyntaxException;
-import java.util.Collection;
-import java.util.LinkedList;
+import java.util.Set;
 
 import javax.inject.Inject;
 import javax.inject.Provider;
@@ -37,7 +36,6 @@ import com.codahale.metrics.ehcache.InstrumentedEhcache;
 import net.sf.ehcache.CacheException;
 import net.sf.ehcache.CacheManager;
 import net.sf.ehcache.Ehcache;
-import net.sf.ehcache.loader.CacheLoader;
 
 // EhCache specific provider
 public class EhCacheCacheManagerProvider implements Provider<CacheManager> {
@@ -46,43 +44,15 @@ public class EhCacheCacheManagerProvider implements Provider<CacheManager> {
 
     private final MetricRegistry metricRegistry;
     private final EhCacheConfig cacheConfig;
-    private final Collection<BaseCacheLoader> cacheLoaders = new LinkedList<BaseCacheLoader>();
+    private final Set<BaseCacheLoader> cacheLoaders;
 
     @Inject
     public EhCacheCacheManagerProvider(final MetricRegistry metricRegistry,
                                        final EhCacheConfig cacheConfig,
-                                       final ImmutableAccountCacheLoader accountCacheLoader,
-                                       final AccountBCDCacheLoader accountBCDCacheLoader,
-                                       final RecordIdCacheLoader recordIdCacheLoader,
-                                       final AccountRecordIdCacheLoader accountRecordIdCacheLoader,
-                                       final TenantRecordIdCacheLoader tenantRecordIdCacheLoader,
-                                       final ObjectIdCacheLoader objectIdCacheLoader,
-                                       final AuditLogCacheLoader auditLogCacheLoader,
-                                       final AuditLogViaHistoryCacheLoader auditLogViaHistoryCacheLoader,
-                                       final TenantCatalogCacheLoader tenantCatalogCacheLoader,
-                                       final TenantConfigCacheLoader tenantConfigCacheLoader,
-                                       final TenantOverdueConfigCacheLoader tenantOverdueConfigCacheLoader,
-                                       final TenantKVCacheLoader tenantKVCacheLoader,
-                                       final TenantCacheLoader tenantCacheLoader,
-                                       final OverriddenPlanCacheLoader overriddenPlanCacheLoader,
-                                       final TenantStateMachineConfigCacheLoader tenantStateMachineConfigCacheLoader) {
+                                       final Set<BaseCacheLoader> cacheLoaders) {
         this.metricRegistry = metricRegistry;
         this.cacheConfig = cacheConfig;
-        cacheLoaders.add(accountCacheLoader);
-        cacheLoaders.add(accountBCDCacheLoader);
-        cacheLoaders.add(recordIdCacheLoader);
-        cacheLoaders.add(accountRecordIdCacheLoader);
-        cacheLoaders.add(tenantRecordIdCacheLoader);
-        cacheLoaders.add(objectIdCacheLoader);
-        cacheLoaders.add(auditLogCacheLoader);
-        cacheLoaders.add(auditLogViaHistoryCacheLoader);
-        cacheLoaders.add(tenantCatalogCacheLoader);
-        cacheLoaders.add(tenantConfigCacheLoader);
-        cacheLoaders.add(tenantOverdueConfigCacheLoader);
-        cacheLoaders.add(tenantKVCacheLoader);
-        cacheLoaders.add(tenantCacheLoader);
-        cacheLoaders.add(overriddenPlanCacheLoader);
-        cacheLoaders.add(tenantStateMachineConfigCacheLoader);
+        this.cacheLoaders = cacheLoaders;
     }
 
     @Override
@@ -98,20 +68,12 @@ public class EhCacheCacheManagerProvider implements Provider<CacheManager> {
         }
 
         for (final BaseCacheLoader cacheLoader : cacheLoaders) {
-            cacheLoader.init();
-
             final Ehcache cache = cacheManager.getEhcache(cacheLoader.getCacheType().getCacheName());
 
             if (cache == null) {
                 logger.warn("Cache for cacheName='{}' not configured - check your ehcache.xml", cacheLoader.getCacheType().getCacheName());
                 continue;
             }
-
-            // Make sure we start from a clean state - this is mainly useful for tests
-            for (final CacheLoader existingCacheLoader : cache.getRegisteredCacheLoaders()) {
-                cache.unregisterCacheLoader(existingCacheLoader);
-            }
-            cache.registerCacheLoader(cacheLoader);
 
             // Instrument the cache
             final Ehcache decoratedCache = InstrumentedEhcache.instrument(metricRegistry, cache);
@@ -121,6 +83,7 @@ public class EhCacheCacheManagerProvider implements Provider<CacheManager> {
                 logger.warn("Unable to instrument cache {}: {}", cache.getName(), e.getMessage());
             }
         }
+
         return cacheManager;
     }
 }

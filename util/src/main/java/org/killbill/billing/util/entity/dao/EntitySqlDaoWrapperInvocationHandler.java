@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2012 Ning, Inc.
- * Copyright 2014-2016 Groupon, Inc
- * Copyright 2014-2016 The Billing Project, LLC
+ * Copyright 2014-2017 Groupon, Inc
+ * Copyright 2014-2017 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -30,6 +30,7 @@ import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 import javax.annotation.Nullable;
 
@@ -344,20 +345,20 @@ public class EntitySqlDaoWrapperInvocationHandler<S extends EntitySqlDao<M, E>, 
 
     private void populateCacheOnGetByIdInvocation(M model) {
 
-        final CacheController<Object, Object> cacheRecordId = cacheControllerDispatcher.getCacheController(CacheType.RECORD_ID);
-        cacheRecordId.add(getKey(model.getId().toString(), CacheType.RECORD_ID, model.getTableName()), model.getRecordId());
+        final CacheController<String, Long> cacheRecordId = cacheControllerDispatcher.getCacheController(CacheType.RECORD_ID);
+        cacheRecordId.putIfAbsent(getKey(model.getId().toString(), CacheType.RECORD_ID, model.getTableName()), model.getRecordId());
 
-        final CacheController<Object, Object> cacheObjectId = cacheControllerDispatcher.getCacheController(CacheType.OBJECT_ID);
-        cacheObjectId.add(getKey(model.getRecordId().toString(), CacheType.OBJECT_ID, model.getTableName()), model.getId());
+        final CacheController<String, UUID> cacheObjectId = cacheControllerDispatcher.getCacheController(CacheType.OBJECT_ID);
+        cacheObjectId.putIfAbsent(getKey(model.getRecordId().toString(), CacheType.OBJECT_ID, model.getTableName()), model.getId());
 
         if (model.getTenantRecordId() != null) {
-            final CacheController<Object, Object> cacheTenantRecordId = cacheControllerDispatcher.getCacheController(CacheType.TENANT_RECORD_ID);
-            cacheTenantRecordId.add(getKey(model.getId().toString(), CacheType.TENANT_RECORD_ID, model.getTableName()), model.getTenantRecordId());
+            final CacheController<String, Long> cacheTenantRecordId = cacheControllerDispatcher.getCacheController(CacheType.TENANT_RECORD_ID);
+            cacheTenantRecordId.putIfAbsent(getKey(model.getId().toString(), CacheType.TENANT_RECORD_ID, model.getTableName()), model.getTenantRecordId());
         }
 
         if (model.getAccountRecordId() != null) {
-            final CacheController<Object, Object> cacheAccountRecordId = cacheControllerDispatcher.getCacheController(CacheType.ACCOUNT_RECORD_ID);
-            cacheAccountRecordId.add(getKey(model.getId().toString(), CacheType.ACCOUNT_RECORD_ID, model.getTableName()), model.getAccountRecordId());
+            final CacheController<String, Long> cacheAccountRecordId = cacheControllerDispatcher.getCacheController(CacheType.ACCOUNT_RECORD_ID);
+            cacheAccountRecordId.putIfAbsent(getKey(model.getId().toString(), CacheType.ACCOUNT_RECORD_ID, model.getTableName()), model.getAccountRecordId());
         }
     }
 
@@ -478,13 +479,13 @@ public class EntitySqlDaoWrapperInvocationHandler<S extends EntitySqlDao<M, E>, 
         // We need to invalidate the caches. There is a small window of doom here where caches will be stale.
         // TODO Knowledge on how the key is constructed is also in AuditSqlDao
         if (tableName.getHistoryTableName() != null) {
-            final CacheController<Object, Object> cacheController = cacheControllerDispatcher.getCacheController(CacheType.AUDIT_LOG_VIA_HISTORY);
+            final CacheController<String, List> cacheController = cacheControllerDispatcher.getCacheController(CacheType.AUDIT_LOG_VIA_HISTORY);
             if (cacheController != null) {
                 final String key = buildCacheKey(ImmutableMap.<Integer, Object>of(0, tableName.getHistoryTableName(), 1, tableName.getHistoryTableName(), 2, entityRecordId));
                 cacheController.remove(key);
             }
         } else {
-            final CacheController<Object, Object> cacheController = cacheControllerDispatcher.getCacheController(CacheType.AUDIT_LOG);
+            final CacheController<String, List> cacheController = cacheControllerDispatcher.getCacheController(CacheType.AUDIT_LOG);
             if (cacheController != null) {
                 final String key = buildCacheKey(ImmutableMap.<Integer, Object>of(0, tableName, 1, entityRecordId));
                 cacheController.remove(key);

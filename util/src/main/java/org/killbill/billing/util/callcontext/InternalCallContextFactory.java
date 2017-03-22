@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2012 Ning, Inc.
- * Copyright 2014-2016 Groupon, Inc
- * Copyright 2014-2016 The Billing Project, LLC
+ * Copyright 2014-2017 Groupon, Inc
+ * Copyright 2014-2017 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -32,6 +32,7 @@ import org.killbill.billing.account.api.ImmutableAccountInternalApi;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.util.cache.Cachable.CacheType;
+import org.killbill.billing.util.cache.CacheController;
 import org.killbill.billing.util.cache.CacheControllerDispatcher;
 import org.killbill.billing.util.dao.NonEntityDao;
 import org.killbill.clock.Clock;
@@ -50,7 +51,10 @@ public class InternalCallContextFactory {
     private final ImmutableAccountInternalApi accountInternalApi;
     private final Clock clock;
     private final NonEntityDao nonEntityDao;
-    private final CacheControllerDispatcher cacheControllerDispatcher;
+    private final CacheController<String, UUID> objectIdCacheController;
+    private final CacheController<String, Long> recordIdCacheController;
+    private final CacheController<String, Long> accountRecordIdCacheController;
+    private final CacheController<String, Long> tenantRecordIdCacheController;
 
     @Inject
     public InternalCallContextFactory(@Nullable final ImmutableAccountInternalApi accountInternalApi,
@@ -60,7 +64,17 @@ public class InternalCallContextFactory {
         this.accountInternalApi = accountInternalApi;
         this.clock = clock;
         this.nonEntityDao = nonEntityDao;
-        this.cacheControllerDispatcher = cacheControllerDispatcher;
+        if (cacheControllerDispatcher == null) {
+            this.objectIdCacheController = null;
+            this.recordIdCacheController = null;
+            this.accountRecordIdCacheController = null;
+            this.tenantRecordIdCacheController = null;
+        } else {
+            this.objectIdCacheController = cacheControllerDispatcher.getCacheController(CacheType.OBJECT_ID);
+            this.recordIdCacheController = cacheControllerDispatcher.getCacheController(CacheType.RECORD_ID);
+            this.accountRecordIdCacheController = cacheControllerDispatcher.getCacheController(CacheType.ACCOUNT_RECORD_ID);
+            this.tenantRecordIdCacheController = cacheControllerDispatcher.getCacheController(CacheType.TENANT_RECORD_ID);
+        }
     }
 
     //
@@ -307,7 +321,7 @@ public class InternalCallContextFactory {
     public UUID getAccountId(final UUID objectId, final ObjectType objectType, final TenantContext context) {
         final Long accountRecordId = getAccountRecordIdSafe(objectId, objectType, context);
         if (accountRecordId != null) {
-            return nonEntityDao.retrieveIdFromObject(accountRecordId, ObjectType.ACCOUNT, cacheControllerDispatcher == null ? null : cacheControllerDispatcher.getCacheController(CacheType.OBJECT_ID));
+            return nonEntityDao.retrieveIdFromObject(accountRecordId, ObjectType.ACCOUNT, objectIdCacheController);
         } else {
             return null;
         }
@@ -317,7 +331,7 @@ public class InternalCallContextFactory {
     public Long getRecordIdFromObject(final UUID objectId, final ObjectType objectType, final TenantContext context) {
         try {
             if (objectBelongsToTheRightTenant(objectId, objectType, context)) {
-                return nonEntityDao.retrieveRecordIdFromObject(objectId, objectType, cacheControllerDispatcher == null ? null : cacheControllerDispatcher.getCacheController(CacheType.RECORD_ID));
+                return nonEntityDao.retrieveRecordIdFromObject(objectId, objectType, recordIdCacheController);
             } else {
                 return null;
             }
@@ -358,7 +372,7 @@ public class InternalCallContextFactory {
     }
 
     private UUID getTenantIdSafe(final InternalTenantContext context) {
-        return nonEntityDao.retrieveIdFromObject(context.getTenantRecordId(), ObjectType.TENANT, cacheControllerDispatcher == null ? null : cacheControllerDispatcher.getCacheController(CacheType.OBJECT_ID));
+        return nonEntityDao.retrieveIdFromObject(context.getTenantRecordId(), ObjectType.TENANT, objectIdCacheController);
     }
 
     //
@@ -386,11 +400,11 @@ public class InternalCallContextFactory {
     //
 
     private Long getAccountRecordIdUnsafe(final UUID objectId, final ObjectType objectType) {
-        return nonEntityDao.retrieveAccountRecordIdFromObject(objectId, objectType, cacheControllerDispatcher == null ? null : cacheControllerDispatcher.getCacheController(CacheType.ACCOUNT_RECORD_ID));
+        return nonEntityDao.retrieveAccountRecordIdFromObject(objectId, objectType, accountRecordIdCacheController);
     }
 
     private Long getTenantRecordIdUnsafe(final UUID objectId, final ObjectType objectType) {
-        return nonEntityDao.retrieveTenantRecordIdFromObject(objectId, objectType, cacheControllerDispatcher == null ? null : cacheControllerDispatcher.getCacheController(CacheType.TENANT_RECORD_ID));
+        return nonEntityDao.retrieveTenantRecordIdFromObject(objectId, objectType, tenantRecordIdCacheController);
     }
 
     public static final class ObjectDoesNotExist extends IllegalStateException {

@@ -1,6 +1,6 @@
 /*
- * Copyright 2014-2016 Groupon, Inc
- * Copyright 2014-2016 The Billing Project, LLC
+ * Copyright 2014-2017 Groupon, Inc
+ * Copyright 2014-2017 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -22,13 +22,14 @@ import javax.inject.Singleton;
 
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.catalog.api.CatalogApiException;
+import org.killbill.billing.catalog.api.Plan;
 import org.killbill.billing.catalog.api.StaticCatalog;
 import org.killbill.billing.util.cache.Cachable.CacheType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 @Singleton
-public class OverriddenPlanCacheLoader extends BaseCacheLoader {
+public class OverriddenPlanCacheLoader extends BaseCacheLoader<String, Plan> {
 
     private final Logger log = LoggerFactory.getLogger(OverriddenPlanCacheLoader.class);
 
@@ -43,18 +44,7 @@ public class OverriddenPlanCacheLoader extends BaseCacheLoader {
     }
 
     @Override
-    public Object load(final Object key, final Object argument) {
-        checkCacheLoaderStatus();
-
-        if (!(key instanceof String)) {
-            throw new IllegalArgumentException("Unexpected key type of " + key.getClass().getName());
-        }
-        if (!(argument instanceof CacheLoaderArgument)) {
-            throw new IllegalArgumentException("Unexpected argument type of " + argument.getClass().getName());
-        }
-
-
-        final CacheLoaderArgument cacheLoaderArgument = (CacheLoaderArgument) argument;
+    public Plan compute(final String key, final CacheLoaderArgument cacheLoaderArgument) {
         if (cacheLoaderArgument.getArgs() == null || cacheLoaderArgument.getArgs().length != 2) {
             throw new IllegalArgumentException("Invalid arguments for overridden plans");
         }
@@ -66,11 +56,10 @@ public class OverriddenPlanCacheLoader extends BaseCacheLoader {
             throw new IllegalArgumentException("Invalid arguments for overridden plans: missing catalog from argument");
         }
 
-
-        final String planName = (String) key;
+        final String planName = key;
         final LoaderCallback callback = (LoaderCallback) cacheLoaderArgument.getArgs()[0];
         final StaticCatalog catalog = (StaticCatalog) cacheLoaderArgument.getArgs()[1];
-        final InternalTenantContext internalTenantContext = ((CacheLoaderArgument) argument).getInternalTenantContext();
+        final InternalTenantContext internalTenantContext = cacheLoaderArgument.getInternalTenantContext();
         try {
             log.info("Loading overridden plan {} for tenant {}", planName, internalTenantContext.getTenantRecordId());
 
@@ -82,6 +71,7 @@ public class OverriddenPlanCacheLoader extends BaseCacheLoader {
     }
 
     public interface LoaderCallback {
-        public Object loadPlan(final String planName, final StaticCatalog catalog, final InternalTenantContext context) throws CatalogApiException;
+
+        public Plan loadPlan(final String planName, final StaticCatalog catalog, final InternalTenantContext context) throws CatalogApiException;
     }
 }

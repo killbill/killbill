@@ -1,6 +1,6 @@
 /*
- * Copyright 2014-2016 Groupon, Inc
- * Copyright 2014-2016 The Billing Project, LLC
+ * Copyright 2014-2017 Groupon, Inc
+ * Copyright 2014-2017 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -34,7 +34,7 @@ import com.google.inject.Inject;
 
 public class CacheConfig {
 
-    private final CacheController cacheController;
+    private final CacheController<Long, PerTenantConfig> cacheController;
     private final CacheLoaderArgument cacheLoaderArgument;
 
     private final ObjectMapper objectMapper;
@@ -48,7 +48,7 @@ public class CacheConfig {
     }
 
     public PerTenantConfig getPerTenantConfig(final InternalTenantContext tenantContext) {
-        final PerTenantConfig perTenantConfig = (PerTenantConfig) cacheController.get(tenantContext.getTenantRecordId(), cacheLoaderArgument);
+        final PerTenantConfig perTenantConfig = cacheController.get(tenantContext.getTenantRecordId(), cacheLoaderArgument);
         return perTenantConfig;
     }
 
@@ -59,7 +59,7 @@ public class CacheConfig {
     private CacheLoaderArgument initializeCacheLoaderArgument() {
         final LoaderCallback loaderCallback = new LoaderCallback() {
             @Override
-            public Object loadConfig(@Nullable final String inputJson) throws IOException {
+            public PerTenantConfig loadConfig(@Nullable final String inputJson) throws IOException {
                 return inputJson != null ? objectMapper.readValue(inputJson, PerTenantConfig.class) : new PerTenantConfig();
             }
         };
@@ -69,5 +69,4 @@ public class CacheConfig {
         final InternalTenantContext notUsed = null;
         return new CacheLoaderArgument(irrelevant, args, notUsed);
     }
-
 }

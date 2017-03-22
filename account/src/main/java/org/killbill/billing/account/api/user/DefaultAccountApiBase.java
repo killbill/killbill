@@ -1,6 +1,6 @@
 /*
- * Copyright 2014-2015 Groupon, Inc
- * Copyright 2014-2015 The Billing Project, LLC
+ * Copyright 2014-2017 Groupon, Inc
+ * Copyright 2014-2017 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -25,6 +25,7 @@ import org.killbill.billing.account.api.Account;
 import org.killbill.billing.account.api.AccountApiException;
 import org.killbill.billing.account.api.DefaultAccount;
 import org.killbill.billing.account.api.DefaultImmutableAccountData;
+import org.killbill.billing.account.api.ImmutableAccountData;
 import org.killbill.billing.account.dao.AccountDao;
 import org.killbill.billing.account.dao.AccountModelDao;
 import org.killbill.billing.callcontext.InternalTenantContext;
@@ -36,8 +37,8 @@ import org.killbill.billing.util.dao.NonEntityDao;
 public class DefaultAccountApiBase {
 
     private final AccountDao accountDao;
-    private final CacheControllerDispatcher cacheControllerDispatcher;
-    private final CacheController accountCacheController;
+    private final CacheController<Long, ImmutableAccountData> accountCacheController;
+    private final CacheController<String, Long> recordIdCacheController;
     private final NonEntityDao nonEntityDao;
 
     public DefaultAccountApiBase(final AccountDao accountDao,
@@ -45,17 +46,17 @@ public class DefaultAccountApiBase {
                                  final CacheControllerDispatcher cacheControllerDispatcher) {
         this.accountDao = accountDao;
         this.nonEntityDao = nonEntityDao;
-        this.cacheControllerDispatcher = cacheControllerDispatcher;
         this.accountCacheController = cacheControllerDispatcher.getCacheController(CacheType.ACCOUNT_IMMUTABLE);
+        this.recordIdCacheController = cacheControllerDispatcher.getCacheController(CacheType.RECORD_ID);
     }
 
     protected Account getAccountById(final UUID accountId, final InternalTenantContext context) throws AccountApiException {
-        final Long recordId = nonEntityDao.retrieveRecordIdFromObject(accountId, ObjectType.ACCOUNT, cacheControllerDispatcher.getCacheController(CacheType.RECORD_ID));
+        final Long recordId = nonEntityDao.retrieveRecordIdFromObject(accountId, ObjectType.ACCOUNT, recordIdCacheController);
         final Account account = getAccountByRecordIdInternal(recordId, context);
         if (account == null) {
             throw new AccountApiException(ErrorCode.ACCOUNT_DOES_NOT_EXIST_FOR_ID, accountId);
         }
-        accountCacheController.putIfAbsent(accountId, new DefaultImmutableAccountData(account));
+        accountCacheController.putIfAbsent(recordId, new DefaultImmutableAccountData(account));
         return account;
     }
 
@@ -65,7 +66,8 @@ public class DefaultAccountApiBase {
             throw new AccountApiException(ErrorCode.ACCOUNT_DOES_NOT_EXIST_FOR_KEY, key);
         }
         final Account account = new DefaultAccount(accountModelDao);
-        accountCacheController.putIfAbsent(account.getId(), new DefaultImmutableAccountData(account));
+        final Long recordId = nonEntityDao.retrieveRecordIdFromObject(account.getId(), ObjectType.ACCOUNT, recordIdCacheController);
+        accountCacheController.putIfAbsent(recordId, new DefaultImmutableAccountData(account));
         return account;
     }
 

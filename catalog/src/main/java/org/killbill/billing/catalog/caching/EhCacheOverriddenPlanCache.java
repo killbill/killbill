@@ -1,6 +1,6 @@
 /*
- * Copyright 2014-2015 Groupon, Inc
- * Copyright 2014-2015 The Billing Project, LLC
+ * Copyright 2014-2017 Groupon, Inc
+ * Copyright 2014-2017 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -48,7 +48,7 @@ import com.google.common.collect.Iterables;
 
 public class EhCacheOverriddenPlanCache implements OverriddenPlanCache {
 
-    private final CacheController cacheController;
+    private final CacheController<String, Plan> cacheController;
     private final LoaderCallback loaderCallback;
     private final CatalogOverrideDao overrideDao;
 
@@ -58,7 +58,7 @@ public class EhCacheOverriddenPlanCache implements OverriddenPlanCache {
         this.cacheController = cacheControllerDispatcher.getCacheController(CacheType.OVERRIDDEN_PLAN);
         this.loaderCallback = new LoaderCallback() {
             @Override
-            public Object loadPlan(final String planName, final StaticCatalog catalog, final InternalTenantContext context) throws CatalogApiException {
+            public Plan loadPlan(final String planName, final StaticCatalog catalog, final InternalTenantContext context) throws CatalogApiException {
                 return loadOverriddenPlan(planName, catalog, context);
             }
         };
