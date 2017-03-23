@@ -21,6 +21,7 @@ import java.util.List;
 
 import javax.inject.Inject;
 
+import org.joda.time.DateTime;
 import org.killbill.billing.ErrorCode;
 import org.killbill.billing.ObjectType;
 import org.killbill.billing.callcontext.InternalTenantContext;
@@ -91,7 +92,6 @@ public class EhCacheCatalogCache implements CatalogCache {
     @Override
     public VersionedCatalog getCatalog(final boolean useDefaultCatalog, final boolean filterTemplateCatalog, final InternalTenantContext tenantContext) throws CatalogApiException {
 
-        // STEPH TODO what are the possibilities for caching here ?
         final VersionedCatalog pluginVersionedCatalog = getCatalogFromPlugins(tenantContext);
         if (pluginVersionedCatalog != null) {
             return pluginVersionedCatalog;
@@ -132,11 +132,35 @@ public class EhCacheCatalogCache implements CatalogCache {
         final TenantContext tenantContext = internalCallContextFactory.createTenantContext(internalTenantContext);
         for (final String service : pluginRegistry.getAllServices()) {
             final CatalogPluginApi plugin = pluginRegistry.getServiceForName(service);
+
+            //
+            // Beware plugin implementors:  latestCatalogUpdatedDate returned by the plugin should also match the effectiveDate of the VersionedCatalog.
+            //
+            // However, this is the plugin choice to return one, or many catalog versions (StandaloneCatalog), Kill Bill catalog module does not care.
+            // As a guideline, if plugin keeps seeing new Plans/Products, this can all fit into the same version; however if there is a true versioning
+            // (e.g deleted Plans...), then multiple versions must be returned.
+            //
+            final DateTime latestCatalogUpdatedDate = plugin.getLatestCatalogVersion(ImmutableList.<PluginProperty>of(), tenantContext);
+            // A null latestCatalogUpdatedDate by passing caching, by fetching full catalog from plugin below (compatibility mode with 0.18.x or non optimized plugin api mode)
+            //
+            if (latestCatalogUpdatedDate != null) {
+                final VersionedCatalog tenantCatalog = (VersionedCatalog) cacheController.get(internalTenantContext.getTenantRecordId());
+                if (tenantCatalog != null) {
+                    if (tenantCatalog.getEffectiveDate().compareTo(latestCatalogUpdatedDate.toDate()) == 0) {
+                        // Current cached version matches the one from the plugin
+                        return tenantCatalog;
+                    }
+                }
+            }
+
             final VersionedPluginCatalog pluginCatalog = plugin.getVersionedPluginCatalog(ImmutableList.<PluginProperty>of(), tenantContext);
             // First plugin that gets something (for that tenant) returns it
             if (pluginCatalog != null) {
                 logger.info("Returning catalog from plugin {} on tenant {} ", service, internalTenantContext.getTenantRecordId());
-                return versionedCatalogMapper.toVersionedCatalog(pluginCatalog, internalTenantContext);
+                final VersionedCatalog resolvedPluginCatalog = versionedCatalogMapper.toVersionedCatalog(pluginCatalog, internalTenantContext);
+                cacheController.remove(internalTenantContext.getTenantRecordId());
+                cacheController.add(internalTenantContext.getTenantRecordId(), resolvedPluginCatalog);
+                return resolvedPluginCatalog;
             }
         }
         return null;
