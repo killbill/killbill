@@ -770,7 +770,6 @@ public class TestDefaultEntitlementApi extends EntitlementTestSuiteWithEmbeddedD
         final List<Entitlement> entitlementsForBundle2 = entitlementApi.getAllEntitlementsForAccountIdAndExternalKey(account.getId(), bundleKey2, callContext);
         Assert.assertEquals(entitlementsForBundle2.size(), 2);
 
-
     }
 
 
@@ -788,6 +787,24 @@ public class TestDefaultEntitlementApi extends EntitlementTestSuiteWithEmbeddedD
         final BaseEntitlementWithAddOnsSpecifier baseEntitlementWithAddOnsSpecifier2 = new DefaultBaseEntitlementWithAddOnsSpecifier(null, bundleKey2, specs2, null, null, false);
 
         final Iterable<BaseEntitlementWithAddOnsSpecifier> baseEntitlementWithAddOnsSpecifiers = ImmutableList.of(baseEntitlementWithAddOnsSpecifier2);
+
+        entitlementApi.createBaseEntitlementsWithAddOns(account.getId(), baseEntitlementWithAddOnsSpecifiers, ImmutableList.<PluginProperty>of(), callContext);
+    }
+
+    @Test(groups = "slow", expectedExceptions = IllegalArgumentException.class)
+    public void testCreateBaseSubscriptionsWithAddOnsBadOrdering() throws AccountApiException, EntitlementApiException, SubscriptionApiException {
+        final LocalDate initialDate = new LocalDate(2013, 8, 7);
+        clock.setDay(initialDate);
+
+        final Account account = createAccount(getAccountData(7));
+
+        final String bundleKey1 = "bundleKey1";
+        final EntitlementSpecifier spec11 = new DefaultEntitlementSpecifier(new PlanPhaseSpecifier("Telescopic-Scope",  BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, null), null);
+        final EntitlementSpecifier spec12 = new DefaultEntitlementSpecifier(new PlanPhaseSpecifier("Shotgun",  BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, null), null);
+        final List<EntitlementSpecifier> specs1 = ImmutableList.of(spec11, spec12);
+        final BaseEntitlementWithAddOnsSpecifier baseEntitlementWithAddOnsSpecifier1 = new DefaultBaseEntitlementWithAddOnsSpecifier(null, bundleKey1, specs1, null, null, false);
+
+        final Iterable<BaseEntitlementWithAddOnsSpecifier> baseEntitlementWithAddOnsSpecifiers = ImmutableList.of(baseEntitlementWithAddOnsSpecifier1);
 
         entitlementApi.createBaseEntitlementsWithAddOns(account.getId(), baseEntitlementWithAddOnsSpecifiers, ImmutableList.<PluginProperty>of(), callContext);
     }
