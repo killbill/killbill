@@ -55,7 +55,6 @@ import org.killbill.billing.entitlement.api.Entitlement.EntitlementState;
 import org.killbill.billing.entitlement.api.EntitlementAOStatusDryRun;
 import org.killbill.billing.entitlement.api.EntitlementAOStatusDryRun.DryRunChangeReason;
 import org.killbill.billing.entitlement.api.EntitlementSpecifier;
-import org.killbill.billing.entitlement.api.Subscription;
 import org.killbill.billing.events.EffectiveSubscriptionInternalEvent;
 import org.killbill.billing.invoice.api.DryRunArguments;
 import org.killbill.billing.subscription.api.SubscriptionApiBase;
@@ -66,9 +65,7 @@ import org.killbill.billing.subscription.api.SubscriptionBaseTransitionType;
 import org.killbill.billing.subscription.api.SubscriptionBaseWithAddOns;
 import org.killbill.billing.subscription.api.user.DefaultEffectiveSubscriptionEvent;
 import org.killbill.billing.subscription.api.user.DefaultSubscriptionBase;
-import org.killbill.billing.subscription.api.user.DefaultSubscriptionBaseApiService;
 import org.killbill.billing.subscription.api.user.DefaultSubscriptionBaseBundle;
-import org.killbill.billing.subscription.api.user.DefaultSubscriptionBaseWithAddOns;
 import org.killbill.billing.subscription.api.user.DefaultSubscriptionStatusDryRun;
 import org.killbill.billing.subscription.api.user.SubscriptionAndAddOnsSpecifier;
 import org.killbill.billing.subscription.api.user.SubscriptionBaseApiException;
@@ -260,7 +257,6 @@ public class DefaultSubscriptionInternalApi extends SubscriptionApiBase implemen
         return subscriptions;
     }
 
-
     private boolean isBaseSpecified(final Catalog catalog, final BaseEntitlementWithAddOnsSpecifier entitlementWithAddOnsSpecifier, final DateTime effectiveDate) throws SubscriptionBaseApiException {
 
         // We expect input to be correctly ordered where BP is first
@@ -271,8 +267,27 @@ public class DefaultSubscriptionInternalApi extends SubscriptionApiBase implemen
 
         final EntitlementSpecifier firstPlanSpecifier = iterator.next();
         try {
+            // Look for BASE plan in the first entry
             final Plan plan = catalog.createOrFindPlan(firstPlanSpecifier.getPlanPhaseSpecifier(), null, effectiveDate);
-            return plan.getProduct().getCategory() == ProductCategory.BASE;
+            final boolean isBaseSpecified = plan.getProduct().getCategory() == ProductCategory.BASE;
+
+            // If there is no BASE as a first entry, validate it is not in the subsequent entries
+            if (!isBaseSpecified) {
+                if (Iterables.any(entitlementWithAddOnsSpecifier.getEntitlementSpecifier(), new Predicate<EntitlementSpecifier>() {
+                    @Override
+                    public boolean apply(final EntitlementSpecifier input) {
+                        try {
+                            final Plan inputPlan = catalog.createOrFindPlan(input.getPlanPhaseSpecifier(), null, effectiveDate);
+                            return inputPlan.getProduct().getCategory() == ProductCategory.BASE;
+                        } catch (CatalogApiException e) {
+                            throw new IllegalArgumentException(String.format("createBaseSubscriptionsWithAddOns plan='%s' does not exist", input.getPlanPhaseSpecifier().getPlanName()));
+                        }
+                    }
+                })) {
+                    throw new IllegalArgumentException("createBaseSubscriptionsWithAddOns BASE plan should be first in the list of specifier");
+                }
+            }
+            return isBaseSpecified;
         } catch (final CatalogApiException e) {
             throw new SubscriptionBaseApiException(e);
         }

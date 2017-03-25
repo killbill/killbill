@@ -48,6 +48,9 @@ import org.killbill.billing.util.api.AuditLevel;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Iterables;
+
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertFalse;
 import static org.testng.Assert.assertNotNull;
@@ -363,6 +366,8 @@ public class TestEntitlement extends TestJaxrsBase {
         assertEquals(invoices.size(), 1);
     }
 
+
+
     @Test(groups = "slow", description = "Create a bulk of base entitlement and addOns under the same transaction")
     public void testCreateEntitlementsWithAddOns() throws Exception {
         final DateTime initialDate = new DateTime(2012, 4, 25, 0, 3, 42, 0);
@@ -411,12 +416,17 @@ public class TestEntitlement extends TestJaxrsBase {
     }
 
     @Test(groups = "slow", description = "Create a bulk of base entitlements and addOns under the same transaction",
-            expectedExceptions = KillBillClientException.class, expectedExceptionsMessageRegExp = "SubscriptionJson Base Entitlement needs to be provided")
+            expectedExceptions = KillBillClientException.class, expectedExceptionsMessageRegExp = "Missing Base Subscription for bundle 12345")
     public void testCreateEntitlementsWithoutBase() throws Exception {
         final DateTime initialDate = new DateTime(2012, 4, 25, 0, 3, 42, 0);
         clock.setDeltaFromReality(initialDate.getMillis() - clock.getUTCNow().getMillis());
 
         final Account accountJson = createAccountWithDefaultPaymentMethod();
+
+        final Subscription bp = new Subscription();
+        bp.setAccountId(accountJson.getAccountId());
+        bp.setProductCategory(ProductCategory.BASE);
+        bp.setExternalKey("12345");
 
         final Subscription addOn1 = new Subscription();
         addOn1.setAccountId(accountJson.getAccountId());
@@ -426,6 +436,7 @@ public class TestEntitlement extends TestJaxrsBase {
         addOn1.setPriceList(PriceListSet.DEFAULT_PRICELIST_NAME);
 
         final List<Subscription> subscriptions = new ArrayList<Subscription>();
+        subscriptions.add(bp);
         subscriptions.add(addOn1);
 
         final List<BulkBaseSubscriptionAndAddOns> bulkList = new ArrayList<BulkBaseSubscriptionAndAddOns>();
@@ -434,6 +445,58 @@ public class TestEntitlement extends TestJaxrsBase {
 
         killBillClient.createSubscriptionsWithAddOns(bulkList, null, 10, requestOptions);
     }
+
+    @Test(groups = "slow", description = "Create addOns in a bundle where BP subscrsiptions already exist")
+    public void testEntitlementsWithAddOnsAndAlreadyExistingBP() throws Exception {
+        final DateTime initialDate = new DateTime(2012, 4, 25, 0, 3, 42, 0);
+        clock.setDeltaFromReality(initialDate.getMillis() - clock.getUTCNow().getMillis());
+
+        final Account accountJson = createAccountWithDefaultPaymentMethod();
+
+        final Subscription input = new Subscription();
+        input.setAccountId(accountJson.getAccountId());
+        input.setExternalKey("foobarxyz");
+        input.setProductName("Shotgun");
+        input.setProductCategory(ProductCategory.BASE);
+        input.setBillingPeriod(BillingPeriod.MONTHLY);
+        input.setPriceList(PriceListSet.DEFAULT_PRICELIST_NAME);
+        final Subscription subscription = killBillClient.createSubscription(input, null, DEFAULT_WAIT_COMPLETION_TIMEOUT_SEC, requestOptions);
+
+        final Subscription base = new Subscription();
+        base.setAccountId(accountJson.getAccountId());
+        base.setProductCategory(ProductCategory.BASE);
+        base.setExternalKey("foobarxyz");
+
+        final Subscription addOn1 = new Subscription();
+        addOn1.setAccountId(accountJson.getAccountId());
+        addOn1.setProductName("Telescopic-Scope");
+        addOn1.setProductCategory(ProductCategory.ADD_ON);
+        addOn1.setBillingPeriod(BillingPeriod.MONTHLY);
+        addOn1.setPriceList(PriceListSet.DEFAULT_PRICELIST_NAME);
+
+        final Subscription addOn2 = new Subscription();
+        addOn2.setAccountId(accountJson.getAccountId());
+        addOn2.setProductName("Laser-Scope");
+        addOn2.setProductCategory(ProductCategory.ADD_ON);
+        addOn2.setBillingPeriod(BillingPeriod.MONTHLY);
+        addOn2.setPriceList(PriceListSet.DEFAULT_PRICELIST_NAME);
+
+        final List<Subscription> subscriptions = new ArrayList<Subscription>();
+        subscriptions.add(base);
+        subscriptions.add(addOn1);
+        subscriptions.add(addOn2);
+
+        final Iterable<BulkBaseSubscriptionAndAddOns> bulkBaseSubscriptionAndAddOns = ImmutableList.of(new BulkBaseSubscriptionAndAddOns(subscriptions));
+
+        final Bundles bundles = killBillClient.createSubscriptionsWithAddOns(bulkBaseSubscriptionAndAddOns, null, 10, requestOptions);
+        assertNotNull(bundles);
+        assertEquals(bundles.size(), 1);
+        assertEquals(bundles.get(0).getSubscriptions().size(), 3);
+
+        final List<Invoice> invoices = killBillClient.getInvoicesForAccount(accountJson.getAccountId(), true, false, false, AuditLevel.FULL, requestOptions);
+        assertEquals(invoices.size(), 2);
+    }
+
 
     @Test(groups = "slow", description = "Can create an entitlement in the future")
     public void testCreateEntitlementInTheFuture() throws Exception {
