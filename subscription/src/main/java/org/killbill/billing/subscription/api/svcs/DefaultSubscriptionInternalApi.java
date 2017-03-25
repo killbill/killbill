@@ -23,6 +23,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -207,12 +208,15 @@ public class DefaultSubscriptionInternalApi extends SubscriptionApiBase implemen
 
     private List<SubscriptionSpecifier> verifyAndBuildSubscriptionSpecifiers(final UUID bundleId, final String externalKey, final Iterable<EntitlementSpecifier> entitlements, final boolean isMigrated, final InternalCallContext context, final DateTime now, final DateTime effectiveDate, final Catalog catalog, final CallContext callContext) throws SubscriptionBaseApiException, CatalogApiException {
         final List<SubscriptionSpecifier> subscriptions = new ArrayList<SubscriptionSpecifier>();
-        boolean first = true;
         final List<SubscriptionBase> subscriptionsForBundle = getSubscriptionsForBundle(bundleId, null, context);
 
         for (final EntitlementSpecifier entitlement : entitlements) {
 
             final PlanPhaseSpecifier spec = entitlement.getPlanPhaseSpecifier();
+            if (spec == null) {
+                // BP already exists
+                continue;
+            }
 
             final PlanPhasePriceOverridesWithCallContext overridesWithContext = new DefaultPlanPhasePriceOverridesWithCallContext(entitlement.getOverrides(), callContext);
 
@@ -223,12 +227,6 @@ public class DefaultSubscriptionInternalApi extends SubscriptionApiBase implemen
                                                               spec.getProductName(), spec.getBillingPeriod().toString(), plan.getPriceListName()));
             }
 
-            if (first) {
-                first = false;
-                if (plan.getProduct().getCategory() != ProductCategory.BASE) {
-                    throw new SubscriptionBaseApiException(new IllegalArgumentException(), ErrorCode.SUB_CREATE_NO_BP.getCode(), "Missing Base Subscription.");
-                }
-            }
 
             // verify the number of subscriptions (of the same kind) allowed per bundle and the existing ones
             if (ProductCategory.ADD_ON.toString().equalsIgnoreCase(plan.getProduct().getCategory().toString())) {
@@ -262,6 +260,25 @@ public class DefaultSubscriptionInternalApi extends SubscriptionApiBase implemen
         return subscriptions;
     }
 
+
+    private boolean isBaseSpecified(final Catalog catalog, final BaseEntitlementWithAddOnsSpecifier entitlementWithAddOnsSpecifier, final DateTime effectiveDate) throws SubscriptionBaseApiException {
+
+        // We expect input to be correctly ordered where BP is first
+        final Iterator<EntitlementSpecifier> iterator = entitlementWithAddOnsSpecifier.getEntitlementSpecifier().iterator();
+        if (!iterator.hasNext()) {
+            throw new IllegalArgumentException("createBaseSubscriptionsWithAddOns should contain at least one specifier!");
+        }
+
+        final EntitlementSpecifier firstPlanSpecifier = iterator.next();
+        try {
+            final Plan plan = catalog.createOrFindPlan(firstPlanSpecifier.getPlanPhaseSpecifier(), null, effectiveDate);
+            return plan.getProduct().getCategory() == ProductCategory.BASE;
+        } catch (final CatalogApiException e) {
+            throw new SubscriptionBaseApiException(e);
+        }
+    }
+
+
     @Override
     public List<SubscriptionBaseWithAddOns> createBaseSubscriptionsWithAddOns(final UUID accountId, final Iterable<BaseEntitlementWithAddOnsSpecifier> baseEntitlementWithAddOnsSpecifier, final InternalCallContext context) throws SubscriptionBaseApiException {
         try {
@@ -274,7 +291,21 @@ public class DefaultSubscriptionInternalApi extends SubscriptionApiBase implemen
                 final DateTime effectiveDate = (entitlementWithAddOnsSpecifier.getBillingEffectiveDate() != null) ?
                                                DefaultClock.truncateMs(entitlementWithAddOnsSpecifier.getBillingEffectiveDate().toDateTimeAtStartOfDay()) : now;
 
-                final SubscriptionBaseBundle bundle = createBundleForAccount(accountId, entitlementWithAddOnsSpecifier.getExternalKey(), context);
+
+                final SubscriptionBaseBundle bundle;
+                if (isBaseSpecified(catalog, entitlementWithAddOnsSpecifier, effectiveDate)) {
+                    bundle = createBundleForAccount(accountId, entitlementWithAddOnsSpecifier.getExternalKey(), context);
+                } else {
+                    final List<SubscriptionBaseBundle> existingBundles = dao.getSubscriptionBundlesForKey(entitlementWithAddOnsSpecifier.getExternalKey(), context);
+                    final SubscriptionBaseBundle tmp = getActiveBundleForKeyNotException(existingBundles, dao, clock, context);
+                    if (tmp == null) {
+                        throw new SubscriptionBaseApiException(ErrorCode.SUB_CREATE_NO_BP, entitlementWithAddOnsSpecifier.getExternalKey());
+                    } else if (!tmp.getAccountId().equals(accountId)) {
+                        throw new SubscriptionBaseApiException(ErrorCode.SUB_CREATE_ACTIVE_BUNDLE_KEY_EXISTS, entitlementWithAddOnsSpecifier.getExternalKey());
+                    } else {
+                        bundle = tmp;
+                    }
+                }
 
                 final SubscriptionAndAddOnsSpecifier subscriptionAndAddOnsSpecifier = new SubscriptionAndAddOnsSpecifier(
                         bundle.getId(),
@@ -335,6 +366,7 @@ public class DefaultSubscriptionInternalApi extends SubscriptionApiBase implemen
                                                 accountBillCycleDayLocal,
                                                 context);
     }
+
 
     @Override
     public SubscriptionBaseBundle createBundleForAccount(final UUID accountId, final String bundleKey, final InternalCallContext context) throws SubscriptionBaseApiException {
@@ -822,6 +854,7 @@ public class DefaultSubscriptionInternalApi extends SubscriptionApiBase implemen
         }
         return requestedDate == null ? clock.getUTCNow() : internalCallContext.toUTCDateTime(requestedDate);
     }
+
 
     private DateTime getBundleStartDateWithSanity(final UUID bundleId, @Nullable final DefaultSubscriptionBase baseSubscription, final Plan plan,
                                                   final DateTime effectiveDate, final InternalTenantContext context) throws SubscriptionBaseApiException, CatalogApiException {
