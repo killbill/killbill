@@ -53,6 +53,7 @@ public @interface Cachable {
 
     CacheType value();
 
+    // Make sure both the key and value are Serializable
     enum CacheType {
 
         /* Mapping from object 'id (UUID as String)' -> object 'recordId (Long)' */
@@ -67,19 +68,19 @@ public @interface Cachable {
         /* Mapping from object 'recordId (Long as String)' -> object 'id (UUID)'  */
         OBJECT_ID(OBJECT_ID_CACHE_NAME, String.class, UUID.class, true),
 
-        /* Mapping from object 'tableName::targetRecordId' -> matching objects 'Iterable<AuditLog>' */
+        /* Mapping from object 'tableName::targetRecordId' -> matching objects 'List<AuditLogModelDao>' */
         AUDIT_LOG(AUDIT_LOG_CACHE_NAME, String.class, List.class, true),
 
-        /* Mapping from object 'tableName::historyTableName::targetRecordId' -> matching objects 'Iterable<AuditLog>' */
+        /* Mapping from object 'tableName::historyTableName::targetRecordId' -> matching objects 'List<AuditLogModelDao>' */
         AUDIT_LOG_VIA_HISTORY(AUDIT_LOG_VIA_HISTORY_CACHE_NAME, String.class, List.class, true),
 
         /* Tenant catalog cache */
         TENANT_CATALOG(TENANT_CATALOG_CACHE_NAME, Long.class, Catalog.class, false),
 
-        /* Tenant payment state machine config cache */
+        /* Tenant payment state machine config cache (String -> SerializableStateMachineConfig) */
         TENANT_PAYMENT_STATE_MACHINE_CONFIG(TENANT_PAYMENT_STATE_MACHINE_CONFIG_CACHE_NAME, String.class, Object.class, false),
 
-        /* Tenant overdue config cache */
+        /* Tenant overdue config cache (String -> DefaultOverdueConfig) */
         TENANT_OVERDUE_CONFIG(TENANT_OVERDUE_CONFIG_CACHE_NAME, Long.class, Object.class, false),
 
         /* Tenant overdue config cache */
@@ -88,7 +89,7 @@ public @interface Cachable {
         /* Tenant config cache */
         TENANT_KV(TENANT_KV_CACHE_NAME, String.class, String.class, false),
 
-        /* Tenant config cache */
+        /* Tenant cache */
         TENANT(TENANT_CACHE_NAME, String.class, Tenant.class, false),
 
         /* Overwritten plans  */

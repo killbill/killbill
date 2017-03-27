@@ -1,7 +1,9 @@
 /*
- * Copyright 2010-2011 Ning, Inc.
+ * Copyright 2010-2013 Ning, Inc.
+ * Copyright 2014-2017 Groupon, Inc
+ * Copyright 2014-2017 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -17,11 +19,18 @@
 package org.killbill.billing.util.jackson;
 
 import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.dataformat.smile.SmileFactory;
 import com.fasterxml.jackson.datatype.joda.JodaModule;
 
 public class ObjectMapper extends com.fasterxml.jackson.databind.ObjectMapper {
-    public ObjectMapper() {
+
+    public ObjectMapper(final SmileFactory f) {
+        super(f);
         this.registerModule(new JodaModule());
         this.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
+    }
+
+    public ObjectMapper() {
+        this(null);
     }
 }
