@@ -140,7 +140,7 @@ public class DefaultNonEntityDao implements NonEntityDao {
 
     @Override
     public UUID retrieveIdFromObjectInTransaction(final Long recordId, final ObjectType objectType, @Nullable final CacheController<String, UUID> cache, @Nullable final Handle handle) {
-        if (objectType == ObjectType.TENANT && recordId == InternalCallContextFactory.INTERNAL_TENANT_RECORD_ID) {
+        if (objectType == ObjectType.TENANT && InternalCallContextFactory.INTERNAL_TENANT_RECORD_ID.equals(recordId)) {
             return null;
         }
 

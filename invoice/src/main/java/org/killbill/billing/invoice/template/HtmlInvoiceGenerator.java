@@ -101,7 +101,7 @@ public class HtmlInvoiceGenerator {
 
     private String getTemplateText(final Locale locale, final boolean manualPay, final InternalTenantContext context) throws IOException {
 
-        if (context.getTenantRecordId() == InternalCallContextFactory.INTERNAL_TENANT_RECORD_ID) {
+        if (InternalCallContextFactory.INTERNAL_TENANT_RECORD_ID.equals(context.getTenantRecordId())) {
             return getDefaultTemplate(manualPay ? config.getManualPayTemplateName() : config.getTemplateName());
         }
         final String template = manualPay ?

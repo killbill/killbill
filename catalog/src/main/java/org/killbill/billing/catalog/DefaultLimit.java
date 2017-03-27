@@ -69,8 +69,8 @@ public class DefaultLimit extends ValidatingConfig<StandaloneCatalog> implements
 
     @Override
     public ValidationErrors validate(StandaloneCatalog root, ValidationErrors errors) {
-        if (max != CatalogSafetyInitializer.DEFAULT_NON_REQUIRED_DOUBLE_FIELD_VALUE &&
-                   min != CatalogSafetyInitializer.DEFAULT_NON_REQUIRED_DOUBLE_FIELD_VALUE &&
+        if (!CatalogSafetyInitializer.DEFAULT_NON_REQUIRED_DOUBLE_FIELD_VALUE.equals(max) &&
+            !CatalogSafetyInitializer.DEFAULT_NON_REQUIRED_DOUBLE_FIELD_VALUE.equals(min) &&
                    max.doubleValue() < min.doubleValue()) {
             errors.add(new ValidationError("max must be greater than min", root.getCatalogURI(), Limit.class, ""));
         }
@@ -86,12 +86,12 @@ public class DefaultLimit extends ValidatingConfig<StandaloneCatalog> implements
 
     @Override
     public boolean compliesWith(double value) {
-        if (max != CatalogSafetyInitializer.DEFAULT_NON_REQUIRED_DOUBLE_FIELD_VALUE) {
+        if (!CatalogSafetyInitializer.DEFAULT_NON_REQUIRED_DOUBLE_FIELD_VALUE.equals(max)) {
             if (value > max.doubleValue()) {
                 return false;
             }
         }
-        if (min != CatalogSafetyInitializer.DEFAULT_NON_REQUIRED_DOUBLE_FIELD_VALUE) {
+        if (!CatalogSafetyInitializer.DEFAULT_NON_REQUIRED_DOUBLE_FIELD_VALUE.equals(min)) {
             if (value < min.doubleValue()) {
                 return false;
             }

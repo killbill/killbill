@@ -91,7 +91,7 @@ public class EhCacheOverdueConfigCache implements OverdueConfigCache {
 
     @Override
     public OverdueConfig getOverdueConfig(final InternalTenantContext tenantContext) throws OverdueApiException {
-        if (tenantContext.getTenantRecordId() == InternalCallContextFactory.INTERNAL_TENANT_RECORD_ID) {
+        if (InternalCallContextFactory.INTERNAL_TENANT_RECORD_ID.equals(tenantContext.getTenantRecordId())) {
             return defaultOverdueConfig;
         }
         // The cache loader might choke on some bad xml -- unlikely since we check its validity prior storing it,
@@ -106,7 +106,7 @@ public class EhCacheOverdueConfigCache implements OverdueConfigCache {
 
     @Override
     public void clearOverdueConfig(final InternalTenantContext tenantContext) {
-        if (tenantContext.getTenantRecordId() != InternalCallContextFactory.INTERNAL_TENANT_RECORD_ID) {
+        if (!InternalCallContextFactory.INTERNAL_TENANT_RECORD_ID.equals(tenantContext.getTenantRecordId())) {
             cacheController.remove(tenantContext.getTenantRecordId());
         }
     }

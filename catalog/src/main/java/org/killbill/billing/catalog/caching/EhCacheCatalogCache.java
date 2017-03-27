@@ -98,7 +98,7 @@ public class EhCacheCatalogCache implements CatalogCache {
             return pluginVersionedCatalog;
         }
 
-        if (tenantContext.getTenantRecordId() == InternalCallContextFactory.INTERNAL_TENANT_RECORD_ID) {
+        if (InternalCallContextFactory.INTERNAL_TENANT_RECORD_ID.equals(tenantContext.getTenantRecordId())) {
             return useDefaultCatalog ? defaultCatalog : null;
         }
         // The cache loader might choke on some bad xml -- unlikely since we check its validity prior storing it,
@@ -124,7 +124,7 @@ public class EhCacheCatalogCache implements CatalogCache {
 
     @Override
     public void clearCatalog(final InternalTenantContext tenantContext) {
-        if (tenantContext.getTenantRecordId() != InternalCallContextFactory.INTERNAL_TENANT_RECORD_ID) {
+        if (!InternalCallContextFactory.INTERNAL_TENANT_RECORD_ID.equals(tenantContext.getTenantRecordId())) {
             cacheController.remove(tenantContext.getTenantRecordId());
         }
     }

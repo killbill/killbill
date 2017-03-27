@@ -119,13 +119,13 @@ public class OverdueConditionJson {
         if (controlTagExclusion != that.controlTagExclusion) {
             return false;
         }
-        if (numberOfUnpaidInvoicesEqualsOrExceeds != that.numberOfUnpaidInvoicesEqualsOrExceeds) {
+        if (!numberOfUnpaidInvoicesEqualsOrExceeds.equals(that.numberOfUnpaidInvoicesEqualsOrExceeds)) {
             return false;
         }
         if (responseForLastFailedPayment != that.responseForLastFailedPayment) {
             return false;
         }
-        return totalUnpaidInvoiceBalanceEqualsOrExceeds == that.totalUnpaidInvoiceBalanceEqualsOrExceeds;
+        return totalUnpaidInvoiceBalanceEqualsOrExceeds.equals(that.totalUnpaidInvoiceBalanceEqualsOrExceeds);
 
     }
 

@@ -80,7 +80,7 @@ public class DefaultBlock extends ValidatingConfig<StandaloneCatalog> implements
 
     @Override
     public Double getMinTopUpCredit() throws CatalogApiException {
-        if (minTopUpCredit != CatalogSafetyInitializer.DEFAULT_NON_REQUIRED_DOUBLE_FIELD_VALUE && type != BlockType.TOP_UP) {
+        if (!CatalogSafetyInitializer.DEFAULT_NON_REQUIRED_DOUBLE_FIELD_VALUE.equals(minTopUpCredit) && type != BlockType.TOP_UP) {
             throw new CatalogApiException(ErrorCode.CAT_NOT_TOP_UP_BLOCK, phase.getName());
         }
         return minTopUpCredit;
@@ -93,7 +93,7 @@ public class DefaultBlock extends ValidatingConfig<StandaloneCatalog> implements
             throw new IllegalStateException("type should have been automatically been initialized with VANILLA ");
         }
 
-        if (type == BlockType.TOP_UP && minTopUpCredit == CatalogSafetyInitializer.DEFAULT_NON_REQUIRED_DOUBLE_FIELD_VALUE) {
+        if (type == BlockType.TOP_UP && CatalogSafetyInitializer.DEFAULT_NON_REQUIRED_DOUBLE_FIELD_VALUE.equals(minTopUpCredit)) {
             errors.add(new ValidationError(String.format("TOP_UP block needs to define minTopUpCredit for phase %s",
                                                          phase.getName()), catalog.getCatalogURI(), DefaultUsage.class, ""));
         }

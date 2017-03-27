@@ -95,7 +95,7 @@ public class EhCacheStateMachineConfigCache implements StateMachineConfigCache {
 
     @Override
     public StateMachineConfig getPaymentStateMachineConfig(final String pluginName, final InternalTenantContext tenantContext) throws PaymentApiException {
-        if (tenantContext.getTenantRecordId() == InternalCallContextFactory.INTERNAL_TENANT_RECORD_ID || cacheController == null) {
+        if (InternalCallContextFactory.INTERNAL_TENANT_RECORD_ID.equals(tenantContext.getTenantRecordId()) || cacheController == null) {
             return defaultPaymentStateMachineConfig;
         }
 
@@ -126,7 +126,7 @@ public class EhCacheStateMachineConfigCache implements StateMachineConfigCache {
 
     @Override
     public void clearPaymentStateMachineConfig(final String pluginName, final InternalTenantContext tenantContext) {
-        if (tenantContext.getTenantRecordId() != InternalCallContextFactory.INTERNAL_TENANT_RECORD_ID && cacheController != null) {
+        if (!InternalCallContextFactory.INTERNAL_TENANT_RECORD_ID.equals(tenantContext.getTenantRecordId()) && cacheController != null) {
             final String key = getCacheKeyName(pluginName, tenantContext);
             cacheController.remove(key);
         }

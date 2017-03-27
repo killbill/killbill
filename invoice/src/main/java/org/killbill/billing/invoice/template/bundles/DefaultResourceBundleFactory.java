@@ -51,7 +51,7 @@ public class DefaultResourceBundleFactory implements ResourceBundleFactory {
 
     @Override
     public ResourceBundle createBundle(final Locale locale, final String bundlePath, final ResourceBundleType type, final InternalTenantContext tenantContext) {
-        if (tenantContext.getTenantRecordId() == InternalCallContextFactory.INTERNAL_TENANT_RECORD_ID) {
+        if (InternalCallContextFactory.INTERNAL_TENANT_RECORD_ID.equals(tenantContext.getTenantRecordId())) {
             return getGlobalBundle(locale, bundlePath);
         }
         final String bundle = getTenantBundleForType(locale, type, tenantContext);
