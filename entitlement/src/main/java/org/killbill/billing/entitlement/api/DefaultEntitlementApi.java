@@ -155,9 +155,6 @@ public class DefaultEntitlementApi extends DefaultEntitlementApiBase implements 
             public Entitlement doCall(final EntitlementApi entitlementApi, final EntitlementContext updatedPluginContext) throws EntitlementApiException {
                 final InternalCallContext contextWithValidAccountRecordId = internalCallContextFactory.createInternalCallContext(accountId, callContext);
                 try {
-                    if (entitlementUtils.getFirstActiveSubscriptionIdForKeyOrNull(externalKey, contextWithValidAccountRecordId) != null) {
-                        throw new EntitlementApiException(new SubscriptionBaseApiException(ErrorCode.SUB_CREATE_ACTIVE_BUNDLE_KEY_EXISTS, externalKey));
-                    }
 
                     final SubscriptionBaseBundle bundle = subscriptionBaseInternalApi.createBundleForAccount(accountId, externalKey, contextWithValidAccountRecordId);
 
@@ -222,12 +219,6 @@ public class DefaultEntitlementApi extends DefaultEntitlementApiBase implements 
                 final InternalCallContext contextWithValidAccountRecordId = internalCallContextFactory.createInternalCallContext(accountId, callContext);
 
                 try {
-                    // First verify bundleKey
-                    for (final BaseEntitlementWithAddOnsSpecifier baseEntitlementWithAddOnsSpecifier : baseEntitlementWithAddOnsSpecifiers) {
-                        if (entitlementUtils.getFirstActiveSubscriptionIdForKeyOrNull(baseEntitlementWithAddOnsSpecifier.getExternalKey(), contextWithValidAccountRecordId) != null) {
-                            throw new EntitlementApiException(new SubscriptionBaseApiException(ErrorCode.SUB_CREATE_ACTIVE_BUNDLE_KEY_EXISTS, baseEntitlementWithAddOnsSpecifier.getExternalKey()));
-                        }
-                    }
 
                     final List<SubscriptionBaseWithAddOns> subscriptionsWithAddOns = subscriptionBaseInternalApi.createBaseSubscriptionsWithAddOns(accountId, baseEntitlementWithAddOnsSpecifiers, contextWithValidAccountRecordId);
                     final Map<BlockingState, UUID> blockingStateMap = new HashMap<BlockingState, UUID>();
