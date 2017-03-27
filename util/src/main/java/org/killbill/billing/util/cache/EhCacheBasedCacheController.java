@@ -133,7 +133,7 @@ public class EhCacheBasedCacheController<K, V> implements CacheController<K, V> 
         }
 
         // Race condition, we may compute it for nothing
-        cache.putIfAbsent(key, value);
+        putIfAbsent(key, value);
 
         return value;
     }
