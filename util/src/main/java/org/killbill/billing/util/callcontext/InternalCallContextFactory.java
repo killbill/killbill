@@ -43,7 +43,8 @@ import com.google.common.base.MoreObjects;
 // Internal contexts almost always expect accountRecordId and tenantRecordId to be populated
 public class InternalCallContextFactory {
 
-    public static final long INTERNAL_TENANT_RECORD_ID = 0L;
+    // Long, not long, to avoid NPE with ==
+    public static final Long INTERNAL_TENANT_RECORD_ID = 0L;
 
     public static final String MDC_KB_ACCOUNT_RECORD_ID = "kb.accountRecordId";
     public static final String MDC_KB_TENANT_RECORD_ID = "kb.tenantRecordId";
