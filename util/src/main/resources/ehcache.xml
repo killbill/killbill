@@ -21,10 +21,13 @@
 <ehcache:config xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance'
                 xmlns:ehcache='http://www.ehcache.org/v3'
                 xmlns:jsr107='http://www.ehcache.org/v3/jsr107'
+                xmlns:terracotta='http://www.ehcache.org/v3/clustered'
                 xsi:schemaLocation="http://www.ehcache.org/v3
-                                    http://www.ehcache.org/schema/ehcache-core-3.0.xsd
+                                    http://www.ehcache.org/schema/ehcache-core-3.3.xsd
                                     http://www.ehcache.org/v3/jsr107
-                                    http://www.ehcache.org/schema/ehcache-107-ext-3.0.xsd">
+                                    http://www.ehcache.org/schema/ehcache-107-ext-3.3.xsd
+                                    http://www.ehcache.org/v3/clustered
+                                    http://www.ehcache.org/schema/ehcache-clustered-ext-3.3.xsd">
     <ehcache:service>
         <jsr107:defaults default-template="defaultCacheConfiguration" enable-management="true" enable-statistics="true"/>
     </ehcache:service>
