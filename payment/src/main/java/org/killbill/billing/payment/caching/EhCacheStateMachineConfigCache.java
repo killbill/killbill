@@ -102,7 +102,7 @@ public class EhCacheStateMachineConfigCache implements StateMachineConfigCache {
         final String pluginConfigKey = getCacheKeyName(pluginName, tenantContext);
         final CacheLoaderArgument cacheLoaderArgument = createCacheLoaderArgument(pluginName);
         try {
-            StateMachineConfig pluginPaymentStateMachineConfig = (StateMachineConfig) cacheController.get(pluginConfigKey, cacheLoaderArgument);
+            StateMachineConfig pluginPaymentStateMachineConfig = cacheController.get(pluginConfigKey, cacheLoaderArgument);
             // It means we are using the default state machine config in a multi-tenant deployment
             if (pluginPaymentStateMachineConfig == null) {
                 pluginPaymentStateMachineConfig = defaultPaymentStateMachineConfig;
