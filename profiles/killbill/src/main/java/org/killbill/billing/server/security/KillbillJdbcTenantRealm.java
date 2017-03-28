@@ -72,7 +72,7 @@ public class KillbillJdbcTenantRealm extends JdbcRealm {
         final ByteSource base64Salt = authenticationInfo.getCredentialsSalt();
         final byte[] bytes = Base64.decode(base64Salt.getBytes());
         // SimpleByteSource isn't Serializable
-        authenticationInfo.setCredentialsSalt(new VerySimpleByteSource(bytes));
+        authenticationInfo.setCredentialsSalt(new SerializableSimpleByteSource(bytes));
 
         return authenticationInfo;
     }
@@ -90,7 +90,7 @@ public class KillbillJdbcTenantRealm extends JdbcRealm {
         setDataSource(dataSource);
     }
 
-    private static final class VerySimpleByteSource implements ByteSource, Externalizable {
+    private static final class SerializableSimpleByteSource implements ByteSource, Externalizable {
 
         private static final long serialVersionUID = 4498655519894503985L;
 
@@ -99,9 +99,9 @@ public class KillbillJdbcTenantRealm extends JdbcRealm {
         private String cachedBase64;
 
         // For deserialization
-        public VerySimpleByteSource() {}
+        public SerializableSimpleByteSource() {}
 
-        VerySimpleByteSource(final byte[] bytes) {
+        SerializableSimpleByteSource(final byte[] bytes) {
             this.bytes = bytes;
         }
 
