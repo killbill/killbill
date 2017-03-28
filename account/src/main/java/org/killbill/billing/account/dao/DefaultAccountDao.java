@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014-2016 Groupon, Inc
- * Copyright 2014-2016 The Billing Project, LLC
+ * Copyright 2014-2017 Groupon, Inc
+ * Copyright 2014-2017 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -91,7 +91,7 @@ public class DefaultAccountDao extends EntityDaoBase<AccountModelDao, Account, A
 
         final Long recordId = entitySqlDaoWrapperFactory.become(AccountSqlDao.class).getRecordId(savedAccount.getId().toString(), context);
         // We need to re-hydrate the callcontext with the account record id
-        final InternalCallContext rehydratedContext = internalCallContextFactory.createInternalCallContext(recordId, context);
+        final InternalCallContext rehydratedContext = internalCallContextFactory.createInternalCallContext(savedAccount, recordId, context);
         final AccountCreationInternalEvent creationEvent = new DefaultAccountCreationEvent(new DefaultAccountData(savedAccount), savedAccount.getId(),
                                                                                            rehydratedContext.getAccountRecordId(), rehydratedContext.getTenantRecordId(), rehydratedContext.getUserToken());
         try {

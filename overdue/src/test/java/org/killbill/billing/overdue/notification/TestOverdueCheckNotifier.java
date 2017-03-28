@@ -1,7 +1,9 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
+ * Copyright 2014-2017 Groupon, Inc
+ * Copyright 2014-2017 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -20,18 +22,17 @@ import java.util.UUID;
 import java.util.concurrent.Callable;
 
 import org.joda.time.DateTime;
+import org.killbill.billing.account.api.Account;
+import org.killbill.billing.callcontext.InternalCallContext;
+import org.killbill.billing.callcontext.InternalTenantContext;
+import org.killbill.billing.overdue.OverdueTestSuiteWithEmbeddedDB;
+import org.killbill.billing.overdue.listener.OverdueDispatcher;
+import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.mockito.Mockito;
 import org.testng.Assert;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
-
-import org.killbill.billing.account.api.Account;
-import org.killbill.billing.callcontext.InternalCallContext;
-import org.killbill.billing.overdue.OverdueTestSuiteWithEmbeddedDB;
-import org.killbill.billing.overdue.listener.OverdueDispatcher;
-import org.killbill.billing.util.callcontext.InternalCallContextFactory;
-import org.killbill.billing.callcontext.InternalTenantContext;
 
 import static com.jayway.awaitility.Awaitility.await;
 import static java.util.concurrent.TimeUnit.SECONDS;
@@ -41,9 +42,7 @@ public class TestOverdueCheckNotifier extends OverdueTestSuiteWithEmbeddedDB {
     private OverdueDispatcherMock mockDispatcher;
     private OverdueNotifier notifierForMock;
 
-
-
-    private static final class  OverdueDispatcherMock extends OverdueDispatcher {
+    private static final class OverdueDispatcherMock extends OverdueDispatcher {
 
         int eventCount = 0;
         UUID latestAccountId = null;
@@ -73,9 +72,6 @@ public class TestOverdueCheckNotifier extends OverdueTestSuiteWithEmbeddedDB {
         //super.beforeMethod();
         // We override the parent method on purpose, because we want to register a different OverdueCheckNotifier
 
-        final Account account = Mockito.mock(Account.class);
-        Mockito.when(accountApi.getAccountById(Mockito.<UUID>any(), Mockito.<InternalTenantContext>any())).thenReturn(account);
-
         mockDispatcher = new OverdueDispatcherMock(internalCallContextFactory);
         notifierForMock = new OverdueCheckNotifier(notificationQueueService, overdueProperties, internalCallContextFactory, mockDispatcher);
 
@@ -95,6 +91,7 @@ public class TestOverdueCheckNotifier extends OverdueTestSuiteWithEmbeddedDB {
         final UUID accountId = new UUID(0L, 1L);
         final Account account = Mockito.mock(Account.class);
         Mockito.when(account.getId()).thenReturn(accountId);
+        Mockito.when(accountApi.getImmutableAccountDataByRecordId(Mockito.<UUID>eq(internalCallContext.getAccountRecordId()), Mockito.<InternalTenantContext>any())).thenReturn(account);
         final DateTime now = clock.getUTCNow();
         final DateTime readyTime = now.plusMillis(2000);
 

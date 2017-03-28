@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014-2016 Groupon, Inc
- * Copyright 2014-2016 The Billing Project, LLC
+ * Copyright 2014-2017 Groupon, Inc
+ * Copyright 2014-2017 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -24,7 +24,10 @@ import javax.inject.Inject;
 
 import org.killbill.billing.GuicyKillbillTestSuiteNoDB;
 import org.killbill.billing.account.api.AccountData;
+import org.killbill.billing.account.api.ImmutableAccountData;
+import org.killbill.billing.account.api.ImmutableAccountInternalApi;
 import org.killbill.billing.api.TestApiListener;
+import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.catalog.api.Catalog;
 import org.killbill.billing.catalog.api.CatalogService;
 import org.killbill.billing.dao.MockNonEntityDao;
@@ -61,6 +64,8 @@ public class SubscriptionTestSuiteNoDB extends GuicyKillbillTestSuiteNoDB {
 
     protected static final Logger log = LoggerFactory.getLogger(SubscriptionTestSuiteNoDB.class);
 
+    @Inject
+    protected ImmutableAccountInternalApi immutableAccountInternalApi;
     @Inject
     protected SubscriptionBaseService subscriptionBaseService;
     @Inject
@@ -132,7 +137,13 @@ public class SubscriptionTestSuiteNoDB extends GuicyKillbillTestSuiteNoDB {
         this.accountData = subscriptionTestInitializer.initAccountData();
         final UUID accountId = UUIDs.randomUUID();
         mockNonEntityDao.addTenantRecordIdMapping(accountId, internalCallContext);
+
+        final ImmutableAccountData immutableAccountData = Mockito.mock(ImmutableAccountData.class);
+        Mockito.when(immutableAccountInternalApi.getImmutableAccountDataByRecordId(Mockito.<Long>eq(internalCallContext.getAccountRecordId()), Mockito.<InternalTenantContext>any())).thenReturn(immutableAccountData);
+
         this.bundle = subscriptionTestInitializer.initBundle(accountId, subscriptionInternalApi, internalCallContext);
+        mockNonEntityDao.addTenantRecordIdMapping(bundle.getId(), internalCallContext);
+        mockNonEntityDao.addAccountRecordIdMapping(bundle.getId(), internalCallContext);
     }
 
     @AfterMethod(groups = "fast")

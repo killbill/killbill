@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2014 Ning, Inc.
- * Copyright 2014-2015 Groupon, Inc
- * Copyright 2014-2015 The Billing Project, LLC
+ * Copyright 2014-2017 Groupon, Inc
+ * Copyright 2014-2017 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -21,6 +21,7 @@ package org.killbill.billing.util;
 import javax.inject.Inject;
 
 import org.killbill.billing.GuicyKillbillTestSuiteWithEmbeddedDB;
+import org.killbill.billing.account.api.ImmutableAccountInternalApi;
 import org.killbill.billing.api.TestApiListener;
 import org.killbill.billing.security.api.SecurityApi;
 import org.killbill.billing.util.audit.dao.AuditDao;
@@ -65,6 +66,8 @@ public abstract class UtilTestSuiteWithEmbeddedDB extends GuicyKillbillTestSuite
     protected NonEntityDao nonEntityDao;
     @Inject
     protected InternalCallContextFactory internalCallContextFactory;
+    @Inject
+    protected ImmutableAccountInternalApi immutableAccountInternalApi;
     @Inject
     protected DefaultTagUserApi tagUserApi;
     @Inject

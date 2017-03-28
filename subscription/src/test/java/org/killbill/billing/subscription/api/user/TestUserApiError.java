@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014-2015 Groupon, Inc
- * Copyright 2014-2015 The Billing Project, LLC
+ * Copyright 2014-2017 Groupon, Inc
+ * Copyright 2014-2017 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -77,6 +77,9 @@ public class TestUserApiError extends SubscriptionTestSuiteNoDB {
     @Test(groups = "fast")
     public void testCreateSubscriptionAddOnNotAvailable() throws SubscriptionBaseApiException {
         final SubscriptionBaseBundle aoBundle = subscriptionInternalApi.createBundleForAccount(bundle.getAccountId(), "myAOBundle", internalCallContext);
+        mockNonEntityDao.addTenantRecordIdMapping(aoBundle.getId(), internalCallContext);
+        mockNonEntityDao.addAccountRecordIdMapping(aoBundle.getId(), internalCallContext);
+
         testUtil.createSubscriptionWithBundle(aoBundle.getId(), "Pistol", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, null);
         tCreateSubscriptionInternal(aoBundle.getId(), "Telescopic-Scope", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, ErrorCode.SUB_CREATE_AO_NOT_AVAILABLE);
     }
@@ -84,6 +87,9 @@ public class TestUserApiError extends SubscriptionTestSuiteNoDB {
     @Test(groups = "fast")
     public void testCreateSubscriptionAddOnIncluded() throws SubscriptionBaseApiException {
         final SubscriptionBaseBundle aoBundle = subscriptionInternalApi.createBundleForAccount(bundle.getAccountId(), "myAOBundle", internalCallContext);
+        mockNonEntityDao.addTenantRecordIdMapping(aoBundle.getId(), internalCallContext);
+        mockNonEntityDao.addAccountRecordIdMapping(aoBundle.getId(), internalCallContext);
+
         testUtil.createSubscriptionWithBundle(aoBundle.getId(), "Assault-Rifle", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, null);
         tCreateSubscriptionInternal(aoBundle.getId(), "Telescopic-Scope", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, ErrorCode.SUB_CREATE_AO_ALREADY_INCLUDED);
     }

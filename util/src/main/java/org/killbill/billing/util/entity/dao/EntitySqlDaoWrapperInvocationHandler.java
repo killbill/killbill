@@ -21,6 +21,7 @@ package org.killbill.billing.util.entity.dao;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
+import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
@@ -293,9 +294,14 @@ public class EntitySqlDaoWrapperInvocationHandler<S extends EntitySqlDao<M, E>, 
             int foundIndexForEntityModelDao = -1;
             for (int i = 0; i < types.length; i++) {
                 final Class clz = ((Class) types[i]);
-                if (EntityModelDao.class.getName().equals(((Class) ((java.lang.reflect.ParameterizedType) clz.getGenericInterfaces()[0]).getRawType()).getName())) {
-                    foundIndexForEntityModelDao = i;
-                    break;
+                final Type[] genericInterfaces = clz.getGenericInterfaces();
+                for (final Type genericInterface : genericInterfaces) {
+                    if (genericInterface instanceof ParameterizedType) {
+                        if (EntityModelDao.class.getName().equals(((Class) ((ParameterizedType) genericInterface).getRawType()).getName())) {
+                            foundIndexForEntityModelDao = i;
+                            break;
+                        }
+                    }
                 }
             }
 
@@ -389,7 +395,7 @@ public class EntitySqlDaoWrapperInvocationHandler<S extends EntitySqlDao<M, E>, 
                 }
 
                 // Make sure to re-hydrate the object (especially needed for create calls)
-                insertAudits(tableName, entityRecordId, historyRecordId, changeType, context);
+                insertAudits(tableName, reHydratedEntity, entityRecordId, historyRecordId, changeType, context);
                 return null;
             }
         });
@@ -463,14 +469,16 @@ public class EntitySqlDaoWrapperInvocationHandler<S extends EntitySqlDao<M, E>, 
         return nonEntityDao.retrieveLastHistoryRecordIdFromTransaction(entityRecordId, entityModelDao.getHistoryTableName(), transactional);
     }
 
-    private void insertAudits(final TableName tableName, final Long entityRecordId, final Long historyRecordId, final ChangeType changeType, final InternalCallContext contextMaybeWithoutAccountRecordId) {
+    private void insertAudits(final TableName tableName, final M entityModelDao, final Long entityRecordId, final Long historyRecordId, final ChangeType changeType, final InternalCallContext contextMaybeWithoutAccountRecordId) {
         final TableName destinationTableName = MoreObjects.firstNonNull(tableName.getHistoryTableName(), tableName);
         final EntityAudit audit = new EntityAudit(destinationTableName, historyRecordId, changeType, clock.getUTCNow());
 
         final InternalCallContext context;
         // Populate the account record id when creating the account record
         if (TableName.ACCOUNT.equals(tableName) && ChangeType.INSERT.equals(changeType)) {
-            context = internalCallContextFactory.createInternalCallContext(entityRecordId, contextMaybeWithoutAccountRecordId);
+            // AccountModelDao in practice
+            final TimeZoneAwareEntity accountModelDao = (TimeZoneAwareEntity) entityModelDao;
+            context = internalCallContextFactory.createInternalCallContext(accountModelDao, entityRecordId, contextMaybeWithoutAccountRecordId);
         } else {
             context = contextMaybeWithoutAccountRecordId;
         }

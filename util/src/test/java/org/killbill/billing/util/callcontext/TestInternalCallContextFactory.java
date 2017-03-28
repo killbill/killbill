@@ -1,7 +1,9 @@
 /*
- * Copyright 2010-2012 Ning, Inc.
+ * Copyright 2010-2013 Ning, Inc.
+ * Copyright 2014-2017 Groupon, Inc
+ * Copyright 2014-2017 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -19,6 +21,9 @@ package org.killbill.billing.util.callcontext;
 import java.util.Date;
 import java.util.UUID;
 
+import org.killbill.billing.account.api.ImmutableAccountData;
+import org.killbill.billing.callcontext.InternalTenantContext;
+import org.mockito.Mockito;
 import org.skife.jdbi.v2.Handle;
 import org.skife.jdbi.v2.tweak.HandleCallback;
 import org.testng.Assert;
@@ -35,6 +40,9 @@ public class TestInternalCallContextFactory extends UtilTestSuiteWithEmbeddedDB 
     public void testCreateInternalCallContextWithAccountRecordIdFromSimpleObjectType() throws Exception {
         final UUID invoiceId = UUID.randomUUID();
         final Long accountRecordId = 19384012L;
+
+        final ImmutableAccountData immutableAccountData = Mockito.mock(ImmutableAccountData.class);
+        Mockito.when(immutableAccountInternalApi.getImmutableAccountDataByRecordId(Mockito.<Long>eq(accountRecordId), Mockito.<InternalTenantContext>any())).thenReturn(immutableAccountData);
 
         dbi.withHandle(new HandleCallback<Void>() {
             @Override
@@ -70,6 +78,9 @@ public class TestInternalCallContextFactory extends UtilTestSuiteWithEmbeddedDB 
     public void testCreateInternalCallContextWithAccountRecordIdFromAccountObjectType() throws Exception {
         final UUID accountId = UUID.randomUUID();
         final Long accountRecordId = 19384012L;
+
+        final ImmutableAccountData immutableAccountData = Mockito.mock(ImmutableAccountData.class);
+        Mockito.when(immutableAccountInternalApi.getImmutableAccountDataByRecordId(Mockito.<Long>eq(accountRecordId), Mockito.<InternalTenantContext>any())).thenReturn(immutableAccountData);
 
         dbi.withHandle(new HandleCallback<Void>() {
             @Override

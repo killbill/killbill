@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014 Groupon, Inc
- * Copyright 2014 The Billing Project, LLC
+ * Copyright 2014-2017 Groupon, Inc
+ * Copyright 2014-2017 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -21,7 +21,7 @@ package org.killbill.billing.overdue;
 import javax.inject.Named;
 
 import org.killbill.billing.GuicyKillbillTestSuiteWithEmbeddedDB;
-import org.killbill.billing.account.api.AccountInternalApi;
+import org.killbill.billing.account.api.ImmutableAccountInternalApi;
 import org.killbill.billing.invoice.api.InvoiceInternalApi;
 import org.killbill.billing.junction.BlockingInternalApi;
 import org.killbill.billing.lifecycle.api.BusService;
@@ -52,7 +52,7 @@ import com.google.inject.Injector;
 public abstract class OverdueTestSuiteWithEmbeddedDB extends GuicyKillbillTestSuiteWithEmbeddedDB {
 
     @Inject
-    protected AccountInternalApi accountApi;
+    protected ImmutableAccountInternalApi accountApi;
     @Inject
     protected BillingStateCalculator calculatorBundle;
     @Inject

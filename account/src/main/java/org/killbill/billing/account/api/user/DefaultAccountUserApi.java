@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014-2015 Groupon, Inc
- * Copyright 2014-2015 The Billing Project, LLC
+ * Copyright 2014-2017 Groupon, Inc
+ * Copyright 2014-2017 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -29,6 +29,8 @@ import org.killbill.billing.account.api.AccountEmail;
 import org.killbill.billing.account.api.AccountUserApi;
 import org.killbill.billing.account.api.DefaultAccount;
 import org.killbill.billing.account.api.DefaultAccountEmail;
+import org.killbill.billing.account.api.ImmutableAccountData;
+import org.killbill.billing.account.api.ImmutableAccountInternalApi;
 import org.killbill.billing.account.dao.AccountDao;
 import org.killbill.billing.account.dao.AccountEmailModelDao;
 import org.killbill.billing.account.dao.AccountModelDao;
@@ -51,15 +53,18 @@ import static org.killbill.billing.util.entity.dao.DefaultPaginationHelper.getEn
 
 public class DefaultAccountUserApi extends DefaultAccountApiBase implements AccountUserApi {
 
+    private final ImmutableAccountInternalApi immutableAccountInternalApi;
     private final InternalCallContextFactory internalCallContextFactory;
     private final AccountDao accountDao;
 
     @Inject
-    public DefaultAccountUserApi(final AccountDao accountDao,
+    public DefaultAccountUserApi(final ImmutableAccountInternalApi immutableAccountInternalApi,
+                                 final AccountDao accountDao,
                                  final NonEntityDao nonEntityDao,
                                  final CacheControllerDispatcher cacheControllerDispatcher,
                                  final InternalCallContextFactory internalCallContextFactory) {
         super(accountDao, nonEntityDao, cacheControllerDispatcher);
+        this.immutableAccountInternalApi = immutableAccountInternalApi;
         this.internalCallContextFactory = internalCallContextFactory;
         this.accountDao = accountDao;
     }
@@ -89,7 +94,10 @@ public class DefaultAccountUserApi extends DefaultAccountApiBase implements Acco
 
         if (data.getParentAccountId() != null) {
             // verify that parent account exists if parentAccountId is not null
-            getAccountById(data.getParentAccountId(), internalContext);
+            final ImmutableAccountData immutableAccountData = immutableAccountInternalApi.getImmutableAccountDataById(data.getParentAccountId(), internalContext);
+            if (immutableAccountData == null) {
+                throw new AccountApiException(ErrorCode.ACCOUNT_DOES_NOT_EXIST_FOR_ID, data.getParentAccountId());
+            }
         }
 
         final AccountModelDao account = new AccountModelDao(data);
