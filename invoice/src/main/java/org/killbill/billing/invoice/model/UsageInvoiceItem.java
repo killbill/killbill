@@ -35,13 +35,14 @@ public class UsageInvoiceItem extends InvoiceItemCatalogBase {
     public UsageInvoiceItem(final UUID invoiceId, final UUID accountId, @Nullable final UUID bundleId, @Nullable final UUID subscriptionId,
                             final String planName, final String phaseName, final String usageName,
                             final LocalDate startDate, final LocalDate endDate, final BigDecimal amount, final Currency currency) {
-        this(UUIDs.randomUUID(), null, invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, usageName, startDate, endDate, null, amount, currency);
+        this(UUIDs.randomUUID(), null, invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, usageName, null, null, null, startDate, endDate, null, amount, currency);
     }
 
     public UsageInvoiceItem(final UUID id, @Nullable final DateTime createdDate, final UUID invoiceId, final UUID accountId, final UUID bundleId,
                             final UUID subscriptionId, final String planName, final String phaseName, final String usageName,
+                            final String prettyPlanName, final String prettyPhaseName, final String prettyUsageName,
                             final LocalDate startDate, final LocalDate endDate, @Nullable final String description, final BigDecimal amount, final Currency currency) {
-        super(id, createdDate, invoiceId, accountId, bundleId, subscriptionId, description, planName, phaseName, usageName, startDate, endDate, amount, null, currency, null);
+        super(id, createdDate, invoiceId, accountId, bundleId, subscriptionId, description, planName, phaseName, usageName, prettyPlanName, prettyPhaseName, prettyUsageName, startDate, endDate, amount, null, currency, null);
     }
 
     @Override

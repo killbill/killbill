@@ -56,14 +56,8 @@ public abstract class InvoiceItemBase extends EntityBase implements InvoiceItem 
 
     public InvoiceItemBase(final UUID id, @Nullable final DateTime createdDate, final UUID invoiceId, final UUID accountId, @Nullable final UUID bundleId,
                            @Nullable final UUID subscriptionId, @Nullable final String description,
-                           final LocalDate startDate, final LocalDate endDate, final BigDecimal amount, final BigDecimal rate, final Currency currency) {
-        this(id, createdDate, invoiceId, accountId, null, bundleId, subscriptionId, description, startDate, endDate, amount, rate, currency, null);
-    }
-
-    public InvoiceItemBase(final UUID id, @Nullable final DateTime createdDate, final UUID invoiceId, final UUID accountId, @Nullable final UUID bundleId,
-                           @Nullable final UUID subscriptionId, @Nullable final String description,
-                           final LocalDate startDate, final LocalDate endDate, final BigDecimal amount, final Currency currency, final UUID reversedItemId) {
-        this(id, createdDate, invoiceId, accountId, null, bundleId, subscriptionId, description, startDate, endDate, amount, null, currency, reversedItemId);
+                           final LocalDate startDate, final LocalDate endDate, final BigDecimal amount, final BigDecimal rate, final Currency currency, final UUID reversedItemId) {
+        this(id, createdDate, invoiceId, accountId, null, bundleId, subscriptionId, description, startDate, endDate, amount, rate, currency, reversedItemId);
     }
 
     // For parent invoices

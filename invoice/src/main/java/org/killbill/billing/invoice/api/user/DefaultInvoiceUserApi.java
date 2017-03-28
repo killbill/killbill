@@ -36,10 +36,11 @@ import org.killbill.billing.account.api.AccountApiException;
 import org.killbill.billing.account.api.AccountInternalApi;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
+import org.killbill.billing.catalog.api.Catalog;
+import org.killbill.billing.catalog.api.CatalogApiException;
+import org.killbill.billing.catalog.api.CatalogService;
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.invoice.InvoiceDispatcher;
-import org.killbill.billing.invoice.InvoiceDispatcher.FutureAccountNotifications;
-import org.killbill.billing.invoice.InvoiceDispatcher.FutureAccountNotifications.SubscriptionNotification;
 import org.killbill.billing.invoice.api.DryRunArguments;
 import org.killbill.billing.invoice.api.Invoice;
 import org.killbill.billing.invoice.api.InvoiceApiException;
@@ -78,7 +79,6 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.collect.Collections2;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 import com.google.inject.Inject;
 
@@ -97,6 +97,8 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
     private final InternalCallContextFactory internalCallContextFactory;
     private final PersistentBus eventBus;
 
+    private final CatalogService catalogService;
+
     @Inject
     public DefaultInvoiceUserApi(final InvoiceDao dao,
                                  final InvoiceDispatcher dispatcher,
@@ -105,6 +107,7 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
                                  final TagInternalApi tagApi,
                                  final InvoiceApiHelper invoiceApiHelper,
                                  final HtmlInvoiceGenerator generator,
+                                 final CatalogService catalogService,
                                  final InternalCallContextFactory internalCallContextFactory) {
         this.dao = dao;
         this.dispatcher = dispatcher;
@@ -112,34 +115,39 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
         this.tagApi = tagApi;
         this.invoiceApiHelper = invoiceApiHelper;
         this.generator = generator;
+        this.catalogService = catalogService;
         this.internalCallContextFactory = internalCallContextFactory;
         this.eventBus = eventBus;
     }
 
     @Override
     public List<Invoice> getInvoicesByAccount(final UUID accountId, boolean includesMigrated, final TenantContext context) {
-        final List<InvoiceModelDao> invoicesByAccount = includesMigrated ?
-                                                        dao.getAllInvoicesByAccount(internalCallContextFactory.createInternalTenantContext(accountId, context)) :
-                                                        dao.getInvoicesByAccount(internalCallContextFactory.createInternalTenantContext(accountId, context));
 
-        return fromInvoiceModelDao(invoicesByAccount);
+
+        final InternalTenantContext internalTenantContext = internalCallContextFactory.createInternalTenantContext(accountId, context);
+        final List<InvoiceModelDao> invoicesByAccount = includesMigrated ?
+                                                        dao.getAllInvoicesByAccount(internalTenantContext) :
+                                                        dao.getInvoicesByAccount(internalTenantContext);
+
+        return fromInvoiceModelDao(invoicesByAccount, getCatalogSafelyForPrettyNames(internalTenantContext));
     }
 
     @Override
     public List<Invoice> getInvoicesByAccount(final UUID accountId, final LocalDate fromDate, final TenantContext context) {
-        final List<InvoiceModelDao> invoicesByAccount = dao.getInvoicesByAccount(fromDate, internalCallContextFactory.createInternalTenantContext(accountId, context));
-        return fromInvoiceModelDao(invoicesByAccount);
+        final InternalTenantContext internalTenantContext = internalCallContextFactory.createInternalTenantContext(accountId, context);
+        final List<InvoiceModelDao> invoicesByAccount = dao.getInvoicesByAccount(fromDate, internalTenantContext);
+        return fromInvoiceModelDao(invoicesByAccount, getCatalogSafelyForPrettyNames(internalTenantContext));
     }
 
     @Override
     public Invoice getInvoiceByPayment(final UUID paymentId, final TenantContext context) throws InvoiceApiException {
-        final InternalTenantContext tenantContext = internalCallContextFactory.createInternalTenantContext(paymentId, ObjectType.PAYMENT, context);
-        final UUID invoiceId = dao.getInvoiceIdByPaymentId(paymentId, tenantContext);
+        final InternalTenantContext internalTenantContext = internalCallContextFactory.createInternalTenantContext(paymentId, ObjectType.PAYMENT, context);
+        final UUID invoiceId = dao.getInvoiceIdByPaymentId(paymentId, internalTenantContext);
         if (invoiceId == null) {
             throw new InvoiceApiException(ErrorCode.INVOICE_NOT_FOUND, paymentId);
         }
-        final InvoiceModelDao invoiceModelDao = dao.getById(invoiceId, tenantContext);
-        return new DefaultInvoice(invoiceModelDao);
+        final InvoiceModelDao invoiceModelDao = dao.getById(invoiceId, internalTenantContext);
+        return new DefaultInvoice(invoiceModelDao, getCatalogSafelyForPrettyNames(internalTenantContext));
     }
 
     @Override
@@ -194,19 +202,22 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
 
     @Override
     public Invoice getInvoice(final UUID invoiceId, final TenantContext context) throws InvoiceApiException {
-        return new DefaultInvoice(dao.getById(invoiceId, internalCallContextFactory.createInternalTenantContext(invoiceId, ObjectType.INVOICE, context)));
+        final InternalTenantContext internalTenantContext = internalCallContextFactory.createInternalTenantContext(invoiceId, ObjectType.INVOICE, context);
+        return new DefaultInvoice(dao.getById(invoiceId, internalTenantContext), getCatalogSafelyForPrettyNames(internalTenantContext));
     }
 
     @Override
     public Invoice getInvoiceByNumber(final Integer number, final TenantContext context) throws InvoiceApiException {
         // The account record id will be populated in the DAO
-        return new DefaultInvoice(dao.getByNumber(number, internalCallContextFactory.createInternalTenantContextWithoutAccountRecordId(context)));
+        final InternalTenantContext internalTenantContextWithoutAccountRecordId = internalCallContextFactory.createInternalTenantContextWithoutAccountRecordId(context);
+        return new DefaultInvoice(dao.getByNumber(number, internalTenantContextWithoutAccountRecordId), getCatalogSafelyForPrettyNames(internalTenantContextWithoutAccountRecordId));
     }
 
     @Override
     public List<Invoice> getUnpaidInvoicesByAccountId(final UUID accountId, final LocalDate upToDate, final TenantContext context) {
-        final List<InvoiceModelDao> unpaidInvoicesByAccountId = dao.getUnpaidInvoicesByAccountId(accountId, upToDate, internalCallContextFactory.createInternalTenantContext(accountId, context));
-        return fromInvoiceModelDao(unpaidInvoicesByAccountId);
+        final InternalTenantContext internalTenantContext = internalCallContextFactory.createInternalTenantContext(accountId, context);
+        final List<InvoiceModelDao> unpaidInvoicesByAccountId = dao.getUnpaidInvoicesByAccountId(accountId, upToDate, internalTenantContext);
+        return fromInvoiceModelDao(unpaidInvoicesByAccountId, getCatalogSafelyForPrettyNames(internalTenantContext));
     }
 
     @Override
@@ -514,12 +525,12 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
         }
     }
 
-    private List<Invoice> fromInvoiceModelDao(final Collection<InvoiceModelDao> invoiceModelDaos) {
+    private List<Invoice> fromInvoiceModelDao(final Collection<InvoiceModelDao> invoiceModelDaos, final Catalog catalog) {
         return ImmutableList.<Invoice>copyOf(Collections2.transform(invoiceModelDaos,
                                                                     new Function<InvoiceModelDao, Invoice>() {
                                                                         @Override
                                                                         public Invoice apply(final InvoiceModelDao input) {
-                                                                            return new DefaultInvoice(input);
+                                                                            return new DefaultInvoice(input, catalog);
                                                                         }
                                                                     }));
     }
@@ -573,5 +584,14 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
                 return InvoiceItemFactory.fromModelDao(input);
             }
         }));
+    }
+
+    private Catalog getCatalogSafelyForPrettyNames(final InternalTenantContext internalTenantContext) {
+        try {
+            return catalogService.getFullCatalog(true, true, internalTenantContext);
+        } catch (final CatalogApiException e) {
+            log.warn(String.format("Failed to extract catalog to fill invoice item pretty names for tenantRecordId='%s', ignoring...", internalTenantContext.getTenantRecordId()), internalTenantContext.getTenantRecordId());
+            return null;
+        }
     }
 }

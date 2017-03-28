@@ -33,13 +33,28 @@ public abstract class InvoiceItemCatalogBase extends InvoiceItemBase implements 
     protected final String phaseName;
     protected final String usageName;
 
+    protected final String prettyPlanName;
+    protected final String prettyPhaseName;
+    protected final String prettyUsageName;
+
     public InvoiceItemCatalogBase(final UUID id, @Nullable final DateTime createdDate, final UUID invoiceId, final UUID accountId, @Nullable final UUID bundleId,
                                   @Nullable final UUID subscriptionId, @Nullable final String description, @Nullable final String planName, @Nullable final String phaseName, @Nullable final String usageName,
                                   final LocalDate startDate, final LocalDate endDate, final BigDecimal amount, final BigDecimal rate, final Currency currency, @Nullable final UUID linkedItemId) {
-        super(id, createdDate, invoiceId, accountId, bundleId, subscriptionId, description, startDate, endDate, amount, rate, currency);
+        this(id, createdDate, invoiceId, accountId, bundleId, subscriptionId, description, planName, phaseName, usageName, null, null, null, startDate, endDate, amount, rate, currency, linkedItemId);
+    }
+
+
+    public InvoiceItemCatalogBase(final UUID id, @Nullable final DateTime createdDate, final UUID invoiceId, final UUID accountId, @Nullable final UUID bundleId,
+                                  @Nullable final UUID subscriptionId, @Nullable final String description, @Nullable final String planName, @Nullable final String phaseName, @Nullable final String usageName,
+                                  @Nullable final String prettyPlanName, @Nullable final String prettyPhaseName, @Nullable final String prettyUsageName,
+                                  final LocalDate startDate, final LocalDate endDate, final BigDecimal amount, final BigDecimal rate, final Currency currency, @Nullable final UUID linkedItemId) {
+        super(id, createdDate, invoiceId, accountId, bundleId, subscriptionId, description, startDate, endDate, amount, rate, currency, linkedItemId);
         this.planName = planName;
         this.phaseName = phaseName;
         this.usageName = usageName;
+        this.prettyPlanName = prettyPlanName;
+        this.prettyPhaseName = prettyPhaseName;
+        this.prettyUsageName = prettyUsageName;
     }
 
 
@@ -61,17 +76,17 @@ public abstract class InvoiceItemCatalogBase extends InvoiceItemBase implements 
 
     @Override
     public String getPrettyPlanName() {
-        return null;
+        return prettyPlanName;
     }
 
     @Override
     public String getPrettyPhaseName() {
-        return null;
+        return prettyPhaseName;
     }
 
     @Override
     public String getPrettyUsageName() {
-        return null;
+        return prettyUsageName;
     }
 
 

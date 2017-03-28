@@ -42,13 +42,13 @@ public class RecurringInvoiceItem extends InvoiceItemCatalogBase {
     public RecurringInvoiceItem(final UUID id, @Nullable final DateTime createdDate, final UUID invoiceId, final UUID accountId, final UUID bundleId, final UUID subscriptionId,
                                 final String planName, final String phaseName, final LocalDate startDate, final LocalDate endDate,
                                 final BigDecimal amount, final BigDecimal rate, final Currency currency) {
-        this(id, createdDate, invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, null, startDate, endDate, amount, rate, currency);
+        this(id, createdDate, invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, null, null, null, startDate, endDate, amount, rate, currency);
     }
 
     public RecurringInvoiceItem(final UUID id, @Nullable final DateTime createdDate, final UUID invoiceId, final UUID accountId, final UUID bundleId, final UUID subscriptionId,
-                                final String planName, final String phaseName, @Nullable final String description, final LocalDate startDate, final LocalDate endDate,
+                                final String planName, final String phaseName, final String prettyPlanName, final String prettyPhaseName, @Nullable final String description, final LocalDate startDate, final LocalDate endDate,
                                 final BigDecimal amount, final BigDecimal rate, final Currency currency) {
-        super(id, createdDate, invoiceId, accountId, bundleId, subscriptionId, description, planName, phaseName, null, startDate, endDate, amount, rate, currency, null);
+        super(id, createdDate, invoiceId, accountId, bundleId, subscriptionId, description, planName, phaseName, null, prettyPlanName, prettyPhaseName, null, startDate, endDate, amount, rate, currency, null);
     }
 
     @Override
