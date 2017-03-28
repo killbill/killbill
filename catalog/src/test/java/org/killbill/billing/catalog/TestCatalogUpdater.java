@@ -281,25 +281,25 @@ public class TestCatalogUpdater extends CatalogTestSuiteNoDB {
                                    "    </currencies>\n" +
                                    "    <units/>\n" +
                                    "    <products>\n" +
-                                   "        <product name=\"Dynamic\">\n" +
+                                   "        <product name=\"Dynamic\" prettyName=\"Dynamic\">\n" +
                                    "            <category>BASE</category>\n" +
                                    "            <included/>\n" +
                                    "            <available/>\n" +
                                    "            <limits/>\n" +
                                    "        </product>\n" +
-                                   "        <product name=\"Sports\">\n" +
+                                   "        <product name=\"Sports\" prettyName=\"Sports\">\n" +
                                    "            <category>BASE</category>\n" +
                                    "            <included/>\n" +
                                    "            <available/>\n" +
                                    "            <limits/>\n" +
                                    "        </product>\n" +
-                                   "        <product name=\"Standard\">\n" +
+                                   "        <product name=\"Standard\" prettyName=\"Standard\">\n" +
                                    "            <category>BASE</category>\n" +
                                    "            <included/>\n" +
                                    "            <available/>\n" +
                                    "            <limits/>\n" +
                                    "        </product>\n" +
-                                   "        <product name=\"Super\">\n" +
+                                   "        <product name=\"Super\" prettyName=\"Super\">\n" +
                                    "            <category>BASE</category>\n" +
                                    "            <included/>\n" +
                                    "            <available/>\n" +
@@ -339,7 +339,7 @@ public class TestCatalogUpdater extends CatalogTestSuiteNoDB {
                                    "        </priceList>\n" +
                                    "    </rules>\n" +
                                    "    <plans>\n" +
-                                   "        <plan name=\"dynamic-annual\">\n" +
+                                   "        <plan name=\"dynamic-annual\" prettyName=\"dynamic-annual\">\n" +
                                    "            <product>Dynamic</product>\n" +
                                    "            <initialPhases>\n" +
                                    "                <phase type=\"TRIAL\">\n" +
@@ -376,7 +376,7 @@ public class TestCatalogUpdater extends CatalogTestSuiteNoDB {
                                    "            </finalPhase>\n" +
                                    "            <plansAllowedInBundle>-1</plansAllowedInBundle>\n" +
                                    "        </plan>\n" +
-                                   "        <plan name=\"sports-monthly\">\n" +
+                                   "        <plan name=\"sports-monthly\" prettyName=\"sports-monthly\">\n" +
                                    "            <product>Sports</product>\n" +
                                    "            <initialPhases>\n" +
                                    "                <phase type=\"TRIAL\">\n" +
@@ -412,7 +412,7 @@ public class TestCatalogUpdater extends CatalogTestSuiteNoDB {
                                    "            </finalPhase>\n" +
                                    "            <plansAllowedInBundle>-1</plansAllowedInBundle>\n" +
                                    "        </plan>\n" +
-                                   "        <plan name=\"standard-monthly\">\n" +
+                                   "        <plan name=\"standard-monthly\" prettyName=\"standard-monthly\">\n" +
                                    "            <product>Standard</product>\n" +
                                    "            <initialPhases>\n" +
                                    "                <phase type=\"TRIAL\">\n" +
@@ -448,7 +448,7 @@ public class TestCatalogUpdater extends CatalogTestSuiteNoDB {
                                    "            </finalPhase>\n" +
                                    "            <plansAllowedInBundle>-1</plansAllowedInBundle>\n" +
                                    "        </plan>\n" +
-                                   "        <plan name=\"super-monthly\">\n" +
+                                   "        <plan name=\"super-monthly\" prettyName=\"super-monthly\">\n" +
                                    "            <product>Super</product>\n" +
                                    "            <initialPhases>\n" +
                                    "                <phase type=\"TRIAL\">\n" +

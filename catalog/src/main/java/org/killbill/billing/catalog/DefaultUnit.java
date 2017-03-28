@@ -43,6 +43,11 @@ public class DefaultUnit extends ValidatingConfig<StandaloneCatalog> implements 
     }
 
     @Override
+    public String getPrettyName() {
+        return name;
+    }
+
+    @Override
     public ValidationErrors validate(StandaloneCatalog root, ValidationErrors errors) {
         return errors;
     }

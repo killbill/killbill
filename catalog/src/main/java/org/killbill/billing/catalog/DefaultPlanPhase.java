@@ -49,6 +49,9 @@ import com.google.common.collect.Iterables;
 @XmlAccessorType(XmlAccessType.NONE)
 public class DefaultPlanPhase extends ValidatingConfig<StandaloneCatalog> implements PlanPhase {
 
+    @XmlAttribute(required = false)
+    private String prettyName;
+
     @XmlAttribute(required = true)
     private PhaseType type;
 
@@ -147,6 +150,11 @@ public class DefaultPlanPhase extends ValidatingConfig<StandaloneCatalog> implem
     }
 
     @Override
+    public String getPrettyName() {
+        return prettyName != null ? prettyName : getName();
+    }
+
+    @Override
     public Duration getDuration() {
         return duration;
     }
@@ -194,6 +202,11 @@ public class DefaultPlanPhase extends ValidatingConfig<StandaloneCatalog> implem
             usage.setPhase(this);
         }
         duration.initialize(root, uri);
+    }
+
+    public DefaultPlanPhase setPrettyName(final String prettyName) {
+        this.prettyName = prettyName;
+        return this;
     }
 
     public DefaultPlanPhase setFixed(final DefaultFixed fixed) {

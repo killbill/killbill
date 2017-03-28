@@ -45,6 +45,11 @@ public class MockPriceList implements PriceList {
     }
 
     @Override
+    public String getPrettyName() {
+        return name;
+    }
+
+    @Override
     public Collection<Plan> findPlans(final Product product, final BillingPeriod period) {
         return ImmutableList.of(plan);
     }

@@ -57,6 +57,9 @@ public class DefaultPlan extends ValidatingConfig<StandaloneCatalog> implements 
     @XmlID
     private String name;
 
+    @XmlAttribute(required = false)
+    private String prettyName;
+
     @XmlElement(required = false)
     private Date effectiveDateForExistingSubscriptions;
 
@@ -123,6 +126,11 @@ public class DefaultPlan extends ValidatingConfig<StandaloneCatalog> implements 
     }
 
     @Override
+    public String getPrettyName() {
+        return prettyName;
+    }
+
+    @Override
     public DefaultPlanPhase getFinalPhase() {
         return finalPhase;
     }
@@ -177,6 +185,9 @@ public class DefaultPlan extends ValidatingConfig<StandaloneCatalog> implements 
         super.initialize(catalog, sourceURI);
         CatalogSafetyInitializer.initializeNonRequiredNullFieldsWithDefaultValue(this);
 
+        if (prettyName == null) {
+            this.prettyName = name;
+        }
         if (finalPhase != null) {
             finalPhase.setPlan(this);
             finalPhase.initialize(catalog, sourceURI);
@@ -232,6 +243,11 @@ public class DefaultPlan extends ValidatingConfig<StandaloneCatalog> implements 
 
     public DefaultPlan setName(final String name) {
         this.name = name;
+        return this;
+    }
+
+    public DefaultPlan setPrettyName(final String prettyName) {
+        this.prettyName = prettyName;
         return this;
     }
 
