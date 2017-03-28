@@ -30,7 +30,7 @@ import org.killbill.billing.util.UUIDs;
 
 import com.google.common.base.MoreObjects;
 
-public class UsageInvoiceItem extends InvoiceItemBase {
+public class UsageInvoiceItem extends InvoiceItemCatalogBase {
 
     public UsageInvoiceItem(final UUID invoiceId, final UUID accountId, @Nullable final UUID bundleId, @Nullable final UUID subscriptionId,
                             final String planName, final String phaseName, final String usageName,
@@ -41,7 +41,7 @@ public class UsageInvoiceItem extends InvoiceItemBase {
     public UsageInvoiceItem(final UUID id, @Nullable final DateTime createdDate, final UUID invoiceId, final UUID accountId, final UUID bundleId,
                             final UUID subscriptionId, final String planName, final String phaseName, final String usageName,
                             final LocalDate startDate, final LocalDate endDate, @Nullable final String description, final BigDecimal amount, final Currency currency) {
-        super(id, createdDate, invoiceId, accountId, bundleId, subscriptionId, description, planName, phaseName, usageName, startDate, endDate, amount, currency);
+        super(id, createdDate, invoiceId, accountId, bundleId, subscriptionId, description, planName, phaseName, usageName, startDate, endDate, amount, null, currency, null);
     }
 
     @Override

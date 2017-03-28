@@ -185,12 +185,27 @@ public class InvoiceItemJson extends JsonBase {
             }
 
             @Override
+            public String getPrettyPlanName() {
+                return planName;
+            }
+
+            @Override
             public String getPhaseName() {
                 return phaseName;
             }
 
             @Override
+            public String getPrettyPhaseName() {
+                return phaseName;
+            }
+
+            @Override
             public String getUsageName() {
+                return usageName;
+            }
+
+            @Override
+            public String getPrettyUsageName() {
                 return usageName;
             }
 

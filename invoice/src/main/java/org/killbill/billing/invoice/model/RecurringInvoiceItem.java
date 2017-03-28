@@ -31,7 +31,7 @@ import org.killbill.billing.util.UUIDs;
 
 import com.google.common.base.MoreObjects;
 
-public class RecurringInvoiceItem extends InvoiceItemBase {
+public class RecurringInvoiceItem extends InvoiceItemCatalogBase {
 
     public RecurringInvoiceItem(final UUID invoiceId, final UUID accountId, final UUID bundleId, final UUID subscriptionId,
                                 final String planName, final String phaseName, final LocalDate startDate, final LocalDate endDate,
@@ -48,7 +48,7 @@ public class RecurringInvoiceItem extends InvoiceItemBase {
     public RecurringInvoiceItem(final UUID id, @Nullable final DateTime createdDate, final UUID invoiceId, final UUID accountId, final UUID bundleId, final UUID subscriptionId,
                                 final String planName, final String phaseName, @Nullable final String description, final LocalDate startDate, final LocalDate endDate,
                                 final BigDecimal amount, final BigDecimal rate, final Currency currency) {
-        super(id, createdDate, invoiceId, accountId, bundleId, subscriptionId, description, planName, phaseName, null, startDate, endDate, amount, rate, currency);
+        super(id, createdDate, invoiceId, accountId, bundleId, subscriptionId, description, planName, phaseName, null, startDate, endDate, amount, rate, currency, null);
     }
 
     @Override

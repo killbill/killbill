@@ -27,7 +27,7 @@ import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.invoice.api.InvoiceItemType;
 import org.killbill.billing.util.UUIDs;
 
-public class TaxInvoiceItem extends InvoiceItemBase {
+public class TaxInvoiceItem extends InvoiceItemCatalogBase {
 
     public TaxInvoiceItem(final UUID invoiceId, final UUID accountId, @Nullable final UUID bundleId, @Nullable final String description,
                           final LocalDate date, final BigDecimal amount, final Currency currency) {
@@ -42,7 +42,7 @@ public class TaxInvoiceItem extends InvoiceItemBase {
     public TaxInvoiceItem(final UUID id, @Nullable final DateTime createdDate, final UUID invoiceId, final UUID accountId, @Nullable final UUID bundleId,
                           @Nullable final UUID subscriptionId, @Nullable final String planName, @Nullable final String phaseName, @Nullable final String usageName,
                           final LocalDate date, @Nullable final String description, final BigDecimal amount, final Currency currency, @Nullable final UUID linkedItemId) {
-        super(id, createdDate, invoiceId, accountId, bundleId, subscriptionId, description, planName, phaseName, usageName, date, null, amount, currency, linkedItemId);
+        super(id, createdDate, invoiceId, accountId, bundleId, subscriptionId, description, planName, phaseName, usageName, date, null, amount, null, currency, linkedItemId);
     }
 
     @Override
