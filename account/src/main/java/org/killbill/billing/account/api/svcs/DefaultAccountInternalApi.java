@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014-2016 Groupon, Inc
- * Copyright 2014-2016 The Billing Project, LLC
+ * Copyright 2014-2017 Groupon, Inc
+ * Copyright 2014-2017 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -56,7 +56,7 @@ public class DefaultAccountInternalApi extends DefaultAccountApiBase implements 
 
     private final ImmutableAccountInternalApi immutableAccountInternalApi;
     private final AccountDao accountDao;
-    private final CacheController bcdCacheController;
+    private final CacheController<UUID, Integer> bcdCacheController;
 
     @Inject
     public DefaultAccountInternalApi(final ImmutableAccountInternalApi immutableAccountInternalApi,
@@ -106,7 +106,7 @@ public class DefaultAccountInternalApi extends DefaultAccountApiBase implements 
     @Override
     public int getBCD(final UUID accountId, final InternalTenantContext context) throws AccountApiException {
         final CacheLoaderArgument arg = createBCDCacheLoaderArgument(context);
-        final Integer result = (Integer) bcdCacheController.get(accountId, arg);
+        final Integer result = bcdCacheController.get(accountId, arg);
         return result != null ? result : DefaultMutableAccountData.DEFAULT_BILLING_CYCLE_DAY_LOCAL;
     }
 
@@ -160,8 +160,8 @@ public class DefaultAccountInternalApi extends DefaultAccountApiBase implements 
     private CacheLoaderArgument createBCDCacheLoaderArgument(final InternalTenantContext context) {
         final AccountBCDCacheLoader.LoaderCallback loaderCallback = new AccountBCDCacheLoader.LoaderCallback() {
             @Override
-            public Object loadAccountBCD(final UUID accountId, final InternalTenantContext context) {
-                Object result = accountDao.getAccountBCD(accountId, context);
+            public Integer loadAccountBCD(final UUID accountId, final InternalTenantContext context) {
+                Integer result = accountDao.getAccountBCD(accountId, context);
                 if (result != null) {
                     // If the value is 0, then account BCD was not set so we don't want to create a cache entry
                     result = result.equals(DefaultMutableAccountData.DEFAULT_BILLING_CYCLE_DAY_LOCAL) ? null : result;

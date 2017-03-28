@@ -47,6 +47,8 @@ import org.joda.time.DateTimeZone;
 import org.killbill.billing.ErrorCode;
 import org.killbill.billing.ObjectType;
 import org.killbill.billing.account.api.AccountUserApi;
+import org.killbill.billing.account.api.ImmutableAccountData;
+import org.killbill.billing.catalog.api.Catalog;
 import org.killbill.billing.invoice.api.InvoiceApiException;
 import org.killbill.billing.invoice.api.InvoiceUserApi;
 import org.killbill.billing.jaxrs.json.AdminPaymentJson;
@@ -67,8 +69,11 @@ import org.killbill.billing.util.api.CustomFieldUserApi;
 import org.killbill.billing.util.api.RecordIdApi;
 import org.killbill.billing.util.api.TagUserApi;
 import org.killbill.billing.util.cache.Cachable.CacheType;
+import org.killbill.billing.util.cache.CacheController;
+import org.killbill.billing.util.cache.CacheControllerDispatcher;
 import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.TenantContext;
+import org.killbill.billing.util.config.tenant.PerTenantConfig;
 import org.killbill.billing.util.entity.Pagination;
 import org.killbill.billing.util.tag.Tag;
 import org.killbill.billing.util.tag.dao.SystemTags;
@@ -82,6 +87,7 @@ import org.killbill.notificationq.api.NotificationQueue;
 import org.killbill.notificationq.api.NotificationQueueService;
 
 import com.fasterxml.jackson.core.JsonGenerator;
+import com.google.common.base.Function;
 import com.google.common.base.Predicate;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
@@ -92,8 +98,6 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
-import net.sf.ehcache.CacheManager;
-import net.sf.ehcache.Ehcache;
 
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 
@@ -107,7 +111,7 @@ public class AdminResource extends JaxRsResourceBase {
     private final AdminPaymentApi adminPaymentApi;
     private final InvoiceUserApi invoiceUserApi;
     private final TenantUserApi tenantApi;
-    private final CacheManager cacheManager;
+    private final CacheControllerDispatcher cacheControllerDispatcher;
     private final RecordIdApi recordIdApi;
     private final PersistentBus persistentBus;
     private final NotificationQueueService notificationQueueService;
@@ -121,7 +125,7 @@ public class AdminResource extends JaxRsResourceBase {
                          final PaymentApi paymentApi,
                          final AdminPaymentApi adminPaymentApi,
                          final InvoiceUserApi invoiceUserApi,
-                         final CacheManager cacheManager,
+                         final CacheControllerDispatcher cacheControllerDispatcher,
                          final TenantUserApi tenantApi,
                          final RecordIdApi recordIdApi,
                          final PersistentBus persistentBus,
@@ -133,7 +137,7 @@ public class AdminResource extends JaxRsResourceBase {
         this.invoiceUserApi = invoiceUserApi;
         this.tenantApi = tenantApi;
         this.recordIdApi = recordIdApi;
-        this.cacheManager = cacheManager;
+        this.cacheControllerDispatcher = cacheControllerDispatcher;
         this.persistentBus = persistentBus;
         this.notificationQueueService = notificationQueueService;
     }
@@ -322,17 +326,17 @@ public class AdminResource extends JaxRsResourceBase {
     public Response invalidatesCache(@QueryParam("cacheName") final String cacheName,
                                      @javax.ws.rs.core.Context final HttpServletRequest request) {
         if (null != cacheName && !cacheName.isEmpty()) {
-            final Ehcache cache = cacheManager.getEhcache(cacheName);
-            // check if cache is null
-            if (cache == null) {
+            // Clear given cache
+            final CacheType cacheType = CacheType.findByName(cacheName);
+            if (cacheType != null) {
+                cacheControllerDispatcher.getCacheController(cacheType).removeAll();
+            } else {
                 log.warn("Cache for specified cacheName='{}' does not exist or is not alive", cacheName);
                 return Response.status(Status.BAD_REQUEST).build();
             }
-            // Clear given cache
-            cache.removeAll();
         } else {
             // if not given a specific cacheName, clear all
-            cacheManager.clearAll();
+            cacheControllerDispatcher.clearAll();
         }
         return Response.status(Status.OK).build();
     }
@@ -342,20 +346,23 @@ public class AdminResource extends JaxRsResourceBase {
     @Produces(APPLICATION_JSON)
     @ApiOperation(value = "Invalidates Caches per account level")
     @ApiResponses(value = {})
-    public Response invalidatesCacheByAccount(@PathParam("accountId") final String accountId,
+    public Response invalidatesCacheByAccount(@PathParam("accountId") final String accountIdStr,
                                               @javax.ws.rs.core.Context final HttpServletRequest request) {
+        final TenantContext tenantContext = context.createContext(request);
+        final UUID accountId = UUID.fromString(accountIdStr);
+        final Long accountRecordId = recordIdApi.getRecordId(accountId, ObjectType.ACCOUNT, tenantContext);
 
-        // clear account-record-id cache by accountId
-        final Ehcache accountRecordIdCache = cacheManager.getEhcache(CacheType.ACCOUNT_RECORD_ID.getCacheName());
-        accountRecordIdCache.remove(accountId);
+        // clear account-record-id cache by accountId (note: String!)
+        final CacheController<String, Long> accountRecordIdCacheController = cacheControllerDispatcher.getCacheController(CacheType.ACCOUNT_RECORD_ID);
+        accountRecordIdCacheController.remove(accountIdStr);
 
-        // clear account-immutable cache by accountId
-        final Ehcache accountImmutableCache = cacheManager.getEhcache(CacheType.ACCOUNT_IMMUTABLE.getCacheName());
-        accountImmutableCache.remove(UUID.fromString(accountId));
+        // clear account-immutable cache by account record id
+        final CacheController<Long, ImmutableAccountData> accountImmutableCacheController = cacheControllerDispatcher.getCacheController(CacheType.ACCOUNT_IMMUTABLE);
+        accountImmutableCacheController.remove(accountRecordId);
 
-        // clear account-bcd cache by accountId
-        final Ehcache accountBcdCache = cacheManager.getEhcache(CacheType.ACCOUNT_BCD.getCacheName());
-        accountBcdCache.remove(UUID.fromString(accountId));
+        // clear account-bcd cache by accountId (note: UUID!)
+        final CacheController<UUID, Integer> accountBCDCacheController = cacheControllerDispatcher.getCacheController(CacheType.ACCOUNT_BCD);
+        accountBCDCacheController.remove(accountId);
 
         return Response.status(Status.OK).build();
     }
@@ -369,50 +376,49 @@ public class AdminResource extends JaxRsResourceBase {
                                              @javax.ws.rs.core.Context final HttpServletRequest request) throws TenantApiException {
 
         // creating Tenant Context from Request
-        TenantContext tenantContext = context.createContext(request);
+        final TenantContext tenantContext = context.createContext(request);
 
-        Tenant currentTenant = tenantApi.getTenantById(tenantContext.getTenantId());
+        final Tenant currentTenant = tenantApi.getTenantById(tenantContext.getTenantId());
 
         // getting Tenant Record Id
-        Long tenantRecordId = recordIdApi.getRecordId(tenantContext.getTenantId(), ObjectType.TENANT, tenantContext);
+        final Long tenantRecordId = recordIdApi.getRecordId(tenantContext.getTenantId(), ObjectType.TENANT, tenantContext);
+
+        final Function<String, Boolean> tenantKeysMatcher = new Function<String, Boolean>() {
+            @Override
+            public Boolean apply(@Nullable final String key) {
+                return key != null && key.endsWith("::" + tenantRecordId);
+            }
+        };
 
         // clear tenant-record-id cache by tenantId
-        final Ehcache tenantRecordIdCache = cacheManager.getEhcache(CacheType.TENANT_RECORD_ID.getCacheName());
-        tenantRecordIdCache.remove(currentTenant.getId().toString());
+        final CacheController<String, Long> tenantRecordIdCacheController = cacheControllerDispatcher.getCacheController(CacheType.TENANT_RECORD_ID);
+        tenantRecordIdCacheController.remove(currentTenant.getId().toString());
 
         // clear tenant-payment-state-machine-config cache by tenantRecordId
-        final Ehcache tenantPaymentStateMachineConfigCache = cacheManager.getEhcache(CacheType.TENANT_PAYMENT_STATE_MACHINE_CONFIG.getCacheName());
-        removeCacheByKey(tenantPaymentStateMachineConfigCache, tenantRecordId.toString());
+        final CacheController<String, Object> tenantPaymentStateMachineConfigCacheController = cacheControllerDispatcher.getCacheController(CacheType.TENANT_PAYMENT_STATE_MACHINE_CONFIG);
+        tenantPaymentStateMachineConfigCacheController.remove(tenantKeysMatcher);
 
         // clear tenant cache by tenantApiKey
-        final Ehcache tenantCache = cacheManager.getEhcache(CacheType.TENANT.getCacheName());
-        tenantCache.remove(currentTenant.getApiKey());
+        final CacheController<String, Tenant> tenantCacheController = cacheControllerDispatcher.getCacheController(CacheType.TENANT);
+        tenantCacheController.remove(currentTenant.getApiKey());
 
         // clear tenant-kv cache by tenantRecordId
-        final Ehcache tenantKvCache = cacheManager.getEhcache(CacheType.TENANT_KV.getCacheName());
-        removeCacheByKey(tenantKvCache, tenantRecordId.toString());
+        final CacheController<String, String> tenantKVCacheController = cacheControllerDispatcher.getCacheController(CacheType.TENANT_KV);
+        tenantKVCacheController.remove(tenantKeysMatcher);
 
         // clear tenant-config cache by tenantRecordId
-        final Ehcache tenantConfigCache = cacheManager.getEhcache(CacheType.TENANT_CONFIG.getCacheName());
-        tenantConfigCache.remove(tenantRecordId);
+        final CacheController<Long, PerTenantConfig> tenantConfigCacheController = cacheControllerDispatcher.getCacheController(CacheType.TENANT_CONFIG);
+        tenantConfigCacheController.remove(tenantRecordId);
 
         // clear tenant-overdue-config cache by tenantRecordId
-        final Ehcache tenantOverdueConfigCache = cacheManager.getEhcache(CacheType.TENANT_OVERDUE_CONFIG.getCacheName());
-        tenantOverdueConfigCache.remove(tenantRecordId);
+        final CacheController<Long, Object> tenantOverdueConfigCacheController = cacheControllerDispatcher.getCacheController(CacheType.TENANT_OVERDUE_CONFIG);
+        tenantOverdueConfigCacheController.remove(tenantRecordId);
 
         // clear tenant-catalog cache by tenantRecordId
-        final Ehcache tenantCatalogCache = cacheManager.getEhcache(CacheType.TENANT_CATALOG.getCacheName());
-        tenantCatalogCache.remove(tenantRecordId);
+        final CacheController<Long, Catalog> tenantCatalogCacheController = cacheControllerDispatcher.getCacheController(CacheType.TENANT_CATALOG);
+        tenantCatalogCacheController.remove(tenantRecordId);
 
         return Response.status(Status.OK).build();
-    }
-
-    private void removeCacheByKey(final Ehcache tenantCache, final String tenantRecordId) {
-        for (Object key : tenantCache.getKeys()) {
-            if (null != key && key.toString().endsWith("::" + tenantRecordId)) {
-                tenantCache.remove(key);
-            }
-        }
     }
 
     private Iterable<NotificationEventWithMetadata<NotificationEvent>> getNotifications(@Nullable final String queueName,

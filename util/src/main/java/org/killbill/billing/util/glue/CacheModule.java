@@ -19,12 +19,29 @@
 package org.killbill.billing.util.glue;
 
 import org.killbill.billing.platform.api.KillbillConfigSource;
+import org.killbill.billing.util.cache.AccountBCDCacheLoader;
+import org.killbill.billing.util.cache.AccountRecordIdCacheLoader;
+import org.killbill.billing.util.cache.AuditLogCacheLoader;
+import org.killbill.billing.util.cache.AuditLogViaHistoryCacheLoader;
+import org.killbill.billing.util.cache.BaseCacheLoader;
 import org.killbill.billing.util.cache.CacheControllerDispatcher;
 import org.killbill.billing.util.cache.CacheControllerDispatcherProvider;
 import org.killbill.billing.util.cache.EhCacheCacheManagerProvider;
+import org.killbill.billing.util.cache.ImmutableAccountCacheLoader;
+import org.killbill.billing.util.cache.ObjectIdCacheLoader;
+import org.killbill.billing.util.cache.OverriddenPlanCacheLoader;
+import org.killbill.billing.util.cache.RecordIdCacheLoader;
+import org.killbill.billing.util.cache.TenantCacheLoader;
+import org.killbill.billing.util.cache.TenantCatalogCacheLoader;
+import org.killbill.billing.util.cache.TenantConfigCacheLoader;
+import org.killbill.billing.util.cache.TenantKVCacheLoader;
+import org.killbill.billing.util.cache.TenantOverdueConfigCacheLoader;
+import org.killbill.billing.util.cache.TenantRecordIdCacheLoader;
+import org.killbill.billing.util.cache.TenantStateMachineConfigCacheLoader;
 import org.killbill.billing.util.config.definition.EhCacheConfig;
 import org.skife.config.ConfigurationObjectFactory;
 
+import com.google.inject.multibindings.Multibinder;
 import net.sf.ehcache.CacheManager;
 
 public class CacheModule extends KillBillModule {
@@ -43,5 +60,22 @@ public class CacheModule extends KillBillModule {
 
         // Kill Bill generic cache dispatcher
         bind(CacheControllerDispatcher.class).toProvider(CacheControllerDispatcherProvider.class).asEagerSingleton();
+
+        final Multibinder<BaseCacheLoader> resultSetMapperSetBinder = Multibinder.newSetBinder(binder(), BaseCacheLoader.class);
+        resultSetMapperSetBinder.addBinding().to(ImmutableAccountCacheLoader.class).asEagerSingleton();
+        resultSetMapperSetBinder.addBinding().to(AccountBCDCacheLoader.class).asEagerSingleton();
+        resultSetMapperSetBinder.addBinding().to(RecordIdCacheLoader.class).asEagerSingleton();
+        resultSetMapperSetBinder.addBinding().to(AccountRecordIdCacheLoader.class).asEagerSingleton();
+        resultSetMapperSetBinder.addBinding().to(TenantRecordIdCacheLoader.class).asEagerSingleton();
+        resultSetMapperSetBinder.addBinding().to(ObjectIdCacheLoader.class).asEagerSingleton();
+        resultSetMapperSetBinder.addBinding().to(AuditLogCacheLoader.class).asEagerSingleton();
+        resultSetMapperSetBinder.addBinding().to(AuditLogViaHistoryCacheLoader.class).asEagerSingleton();
+        resultSetMapperSetBinder.addBinding().to(TenantCatalogCacheLoader.class).asEagerSingleton();
+        resultSetMapperSetBinder.addBinding().to(TenantConfigCacheLoader.class).asEagerSingleton();
+        resultSetMapperSetBinder.addBinding().to(TenantOverdueConfigCacheLoader.class).asEagerSingleton();
+        resultSetMapperSetBinder.addBinding().to(TenantKVCacheLoader.class).asEagerSingleton();
+        resultSetMapperSetBinder.addBinding().to(TenantCacheLoader.class).asEagerSingleton();
+        resultSetMapperSetBinder.addBinding().to(OverriddenPlanCacheLoader.class).asEagerSingleton();
+        resultSetMapperSetBinder.addBinding().to(TenantStateMachineConfigCacheLoader.class).asEagerSingleton();
     }
 }

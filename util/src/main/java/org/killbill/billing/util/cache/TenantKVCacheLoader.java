@@ -1,6 +1,6 @@
 /*
- * Copyright 2014-2015 Groupon, Inc
- * Copyright 2014-2015 The Billing Project, LLC
+ * Copyright 2014-2017 Groupon, Inc
+ * Copyright 2014-2017 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -27,7 +27,7 @@ import org.killbill.billing.tenant.api.TenantInternalApi;
 import org.killbill.billing.util.cache.Cachable.CacheType;
 
 @Singleton
-public class TenantKVCacheLoader extends BaseCacheLoader {
+public class TenantKVCacheLoader extends BaseCacheLoader<String, String> {
 
     private final TenantInternalApi tenantApi;
 
@@ -43,16 +43,8 @@ public class TenantKVCacheLoader extends BaseCacheLoader {
     }
 
     @Override
-    public Object load(final Object key, final Object argument) {
-        checkCacheLoaderStatus();
-
-        if (!(key instanceof String)) {
-            throw new IllegalArgumentException("Unexpected key type of " + key.getClass().getName());
-        }
-        if (!(argument instanceof CacheLoaderArgument)) {
-            throw new IllegalArgumentException("Unexpected key type of " + argument.getClass().getName());
-        }
-        final String[] parts = ((String) key).split(CacheControllerDispatcher.CACHE_KEY_SEPARATOR);
+    public String compute(final String key, final CacheLoaderArgument cacheLoaderArgument) {
+        final String[] parts = key.split(CacheControllerDispatcher.CACHE_KEY_SEPARATOR);
         final String rawKey = parts[0];
         final String tenantRecordId = parts[1];
 

@@ -16,11 +16,13 @@
 
 package org.killbill.billing.jaxrs;
 
-import java.util.List;
 import java.util.UUID;
 
 import org.joda.time.LocalDate;
+import org.killbill.automaton.StateMachineConfig;
+import org.killbill.billing.account.api.ImmutableAccountData;
 import org.killbill.billing.catalog.api.BillingPeriod;
+import org.killbill.billing.catalog.api.Catalog;
 import org.killbill.billing.catalog.api.PriceListSet;
 import org.killbill.billing.catalog.api.ProductCategory;
 import org.killbill.billing.client.RequestOptions;
@@ -29,12 +31,14 @@ import org.killbill.billing.client.model.PaymentMethod;
 import org.killbill.billing.client.model.PaymentMethodPluginDetail;
 import org.killbill.billing.client.model.Subscription;
 import org.killbill.billing.client.model.Tenant;
+import org.killbill.billing.overdue.api.OverdueConfig;
 import org.killbill.billing.util.cache.Cachable.CacheType;
+import org.killbill.billing.util.cache.CacheController;
+import org.killbill.billing.util.config.tenant.PerTenantConfig;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import com.google.common.io.Resources;
-import net.sf.ehcache.Ehcache;
 
 import static org.testng.Assert.assertFalse;
 import static org.testng.Assert.assertNotNull;
@@ -45,31 +49,31 @@ public class TestCache extends TestJaxrsBase {
     @Test(groups = "slow", description = "Can Invalidate (clear) a Cache by name")
     public void testInvalidateCacheByName() throws Exception {
         // get Ehcache item with name "record-id"
-        final Ehcache cache = cacheManager.getEhcache(CacheType.RECORD_ID.getCacheName());
+        final CacheController<String, Long> cache = cacheControllerDispatcher.getCacheController(CacheType.RECORD_ID);
         // verify that it is not null and has one stored key (the default tenant created for all integration tests)
         assertNotNull(cache);
-        Assert.assertEquals(cache.getSize(), 1);
+        Assert.assertEquals(cache.size(), 1);
 
         // invalidate the specified cache
-        killBillClient.invalidateCacheByName(cache.getName(), requestOptions);
+        killBillClient.invalidateCacheByName(CacheType.RECORD_ID.getCacheName(), requestOptions);
 
         // verify that now the cache is empty and has no keys stored
-        Assert.assertEquals(cache.getSize(), 0);
+        Assert.assertEquals(cache.size(), 0);
     }
 
     @Test(groups = "slow", description = "Can Invalidate (clear) all available Caches")
     public void testInvalidateAllCaches() throws Exception {
         // get Ehcache item with name "record-id"
-        final Ehcache cache = cacheManager.getEhcache(CacheType.RECORD_ID.getCacheName());
+        final CacheController<String, Long> cache = cacheControllerDispatcher.getCacheController(CacheType.RECORD_ID);
         // verify that it is not null and has one stored key (the default tenant created for all integration tests)
         assertNotNull(cache);
-        Assert.assertEquals(cache.getSize(), 1);
+        Assert.assertEquals(cache.size(), 1);
 
         // invalidate all caches
         killBillClient.invalidateAllCaches(requestOptions);
 
         // verify that now the cache is empty and has no keys stored
-        Assert.assertEquals(cache.getSize(), 0);
+        Assert.assertEquals(cache.size(), 0);
     }
 
     @Test(groups = "slow", description = "Can Invalidate (clear) all Account Caches by accountId")
@@ -77,25 +81,23 @@ public class TestCache extends TestJaxrsBase {
         final Account input = createAccountNoPMBundleAndSubscription();
 
         // get all caches per account level
-        final Ehcache accountRecordIdCache = cacheManager.getEhcache(CacheType.ACCOUNT_RECORD_ID.getCacheName());
-        final Ehcache accountImmutableCache = cacheManager.getEhcache(CacheType.ACCOUNT_IMMUTABLE.getCacheName());
-        final Ehcache accountBcdCache = cacheManager.getEhcache(CacheType.ACCOUNT_BCD.getCacheName());
+        final CacheController<String, Long> accountRecordIdCache = cacheControllerDispatcher.getCacheController(CacheType.ACCOUNT_RECORD_ID);
+        final CacheController<Long, ImmutableAccountData> accountImmutableCache = cacheControllerDispatcher.getCacheController(CacheType.ACCOUNT_IMMUTABLE);
+        final CacheController<UUID, Integer> accountBcdCache = cacheControllerDispatcher.getCacheController(CacheType.ACCOUNT_BCD);
 
         // verify that they are not null and have the accountId stored as a key (the account created before)
-        assertNotNull(accountRecordIdCache);
-        assertNotNull(accountRecordIdCache.get(input.getAccountId().toString()));
-        assertNotNull(accountImmutableCache);
-        assertNotNull(accountImmutableCache.get(input.getAccountId()));
-        assertNotNull(accountBcdCache);
-        assertNotNull(accountBcdCache.get(input.getAccountId()));
+        assertTrue(accountRecordIdCache.isKeyInCache(input.getAccountId().toString()));
+        final Long accountRecordId = accountRecordIdCache.get(input.getAccountId().toString(), null);
+        assertTrue(accountImmutableCache.isKeyInCache(accountRecordId));
+        assertTrue(accountBcdCache.isKeyInCache(input.getAccountId()));
 
         // invalidate caches per account level by accountId
         killBillClient.invalidateCacheByAccount(input.getAccountId().toString(), requestOptions);
 
         // verify that now the caches don't have the accountId key stored
-        Assert.assertNull(accountRecordIdCache.get(input.getAccountId().toString()));
-        Assert.assertNull(accountImmutableCache.get(input.getAccountId()));
-        Assert.assertNull(accountBcdCache.get(input.getAccountId()));
+        Assert.assertFalse(accountRecordIdCache.isKeyInCache(input.getAccountId().toString()));
+        Assert.assertFalse(accountImmutableCache.isKeyInCache(accountRecordId));
+        Assert.assertFalse(accountBcdCache.isKeyInCache(input.getAccountId()));
     }
 
     @Test(groups = "slow", description = "Can Invalidate (clear) all Tenant Caches for current Tenant")
@@ -125,48 +127,40 @@ public class TestCache extends TestJaxrsBase {
         createAccountWithPMBundleAndSubscriptionAndWaitForFirstInvoiceWithInputOptions(inputOptions);
 
         // get all caches per tenant level
-        final Ehcache tenantRecordIdCache = cacheManager.getEhcache(CacheType.TENANT_RECORD_ID.getCacheName());
-        final Ehcache tenantPaymentStateMachineConfigCache = cacheManager.getEhcache(CacheType.TENANT_PAYMENT_STATE_MACHINE_CONFIG.getCacheName());
-        final Ehcache tenantCache = cacheManager.getEhcache(CacheType.TENANT.getCacheName());
-        final Ehcache tenantKvCache = cacheManager.getEhcache(CacheType.TENANT_KV.getCacheName());
-        final Ehcache tenantConfigCache = cacheManager.getEhcache(CacheType.TENANT_CONFIG.getCacheName());
-        final Ehcache tenantOverdueConfigCache = cacheManager.getEhcache(CacheType.TENANT_OVERDUE_CONFIG.getCacheName());
-        final Ehcache tenantCatalogCache = cacheManager.getEhcache(CacheType.TENANT_CATALOG.getCacheName());
-
-        // getting current Tenant's record Id from the specific Cache
-        Long tenantRecordId = (Long) tenantRecordIdCache.get(currentTenant.getTenantId().toString()).getObjectValue();
+        final CacheController<String, Long> tenantRecordIdCache = cacheControllerDispatcher.getCacheController(CacheType.TENANT_RECORD_ID);
+        final CacheController<String, StateMachineConfig> tenantPaymentStateMachineConfigCache = cacheControllerDispatcher.getCacheController(CacheType.TENANT_PAYMENT_STATE_MACHINE_CONFIG);
+        final CacheController<String, org.killbill.billing.tenant.api.Tenant> tenantCache = cacheControllerDispatcher.getCacheController(CacheType.TENANT);
+        final CacheController<String, String> tenantKvCache = cacheControllerDispatcher.getCacheController(CacheType.TENANT_KV);
+        final CacheController<Long, PerTenantConfig> tenantConfigCache = cacheControllerDispatcher.getCacheController(CacheType.TENANT_CONFIG);
+        final CacheController<Long, OverdueConfig> tenantOverdueConfigCache = cacheControllerDispatcher.getCacheController(CacheType.TENANT_OVERDUE_CONFIG);
+        final CacheController<Long, Catalog> tenantCatalogCache = cacheControllerDispatcher.getCacheController(CacheType.TENANT_CATALOG);
 
         // verify that they are not null and have the expected tenant information
-        assertNotNull(tenantRecordIdCache);
-        assertNotNull(tenantRecordIdCache.get(currentTenant.getTenantId().toString()));
-        assertNotNull(tenantPaymentStateMachineConfigCache);
+        assertTrue(tenantRecordIdCache.isKeyInCache(currentTenant.getTenantId().toString()));
+        final Long tenantRecordId = tenantRecordIdCache.get(currentTenant.getTenantId().toString(), null);
+
         assertTrue(hasKeysByTenantRecordId(tenantPaymentStateMachineConfigCache, tenantRecordId.toString()));
-        assertNotNull(tenantCache);
-        assertNotNull(tenantCache.get(testApiKey));
-        assertNotNull(tenantKvCache);
+        assertTrue(tenantCache.isKeyInCache(testApiKey));
         assertTrue(hasKeysByTenantRecordId(tenantKvCache, tenantRecordId.toString()));
-        assertNotNull(tenantConfigCache);
-        assertNotNull(tenantConfigCache.get(tenantRecordId));
-        assertNotNull(tenantOverdueConfigCache);
-        assertNotNull(tenantOverdueConfigCache.get(tenantRecordId));
-        assertNotNull(tenantCatalogCache);
-        assertNotNull(tenantCatalogCache.get(tenantRecordId));
+        assertTrue(tenantConfigCache.isKeyInCache(tenantRecordId));
+        assertTrue(tenantOverdueConfigCache.isKeyInCache(tenantRecordId));
+        assertTrue(tenantCatalogCache.isKeyInCache(tenantRecordId));
 
         // invalidate caches per tenant level
         killBillClient.invalidateCacheByTenant(inputOptions);
 
         // verify that now the caches don't have the previous values
-        Assert.assertNull(tenantRecordIdCache.get(currentTenant.getTenantId().toString()));
+        assertFalse(tenantRecordIdCache.isKeyInCache(currentTenant.getTenantId().toString()));
         assertFalse(hasKeysByTenantRecordId(tenantPaymentStateMachineConfigCache, tenantRecordId.toString()));
-        Assert.assertNull(tenantCache.get(testApiKey));
+        assertFalse(tenantCache.isKeyInCache(testApiKey));
         assertFalse(hasKeysByTenantRecordId(tenantKvCache, tenantRecordId.toString()));
-        Assert.assertNull(tenantConfigCache.get(tenantRecordId));
-        Assert.assertNull(tenantOverdueConfigCache.get(tenantRecordId));
-        Assert.assertNull(tenantCatalogCache.get(tenantRecordId));
+        assertFalse(tenantConfigCache.isKeyInCache(tenantRecordId));
+        assertFalse(tenantOverdueConfigCache.isKeyInCache(tenantRecordId));
+        assertFalse(tenantCatalogCache.isKeyInCache(tenantRecordId));
     }
 
-    private boolean hasKeysByTenantRecordId(final Ehcache tenantCache, final String tenantRecordId) {
-        for (String key : (List<String>) tenantCache.getKeys()) {
+    private boolean hasKeysByTenantRecordId(final CacheController<String, ?> tenantCache, final String tenantRecordId) {
+        for (final String key : tenantCache.getKeys()) {
             if (key.endsWith("::" + tenantRecordId)) {
                 return true;
             }

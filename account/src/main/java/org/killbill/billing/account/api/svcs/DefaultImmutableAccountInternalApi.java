@@ -1,6 +1,6 @@
 /*
- * Copyright 2016 Groupon, Inc
- * Copyright 2016 The Billing Project, LLC
+ * Copyright 2016-2017 Groupon, Inc
+ * Copyright 2016-2017 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -48,8 +48,8 @@ public class DefaultImmutableAccountInternalApi implements ImmutableAccountInter
 
     private final EntitySqlDaoTransactionalJdbiWrapper transactionalSqlDao;
     private final NonEntityDao nonEntityDao;
-    private final CacheControllerDispatcher cacheControllerDispatcher;
-    private final CacheController accountCacheController;
+    private final CacheController<Long, ImmutableAccountData> accountCacheController;
+    private final CacheController<String, Long> recordIdCacheController;
 
     @Inject
     public DefaultImmutableAccountInternalApi(final IDBI dbi,
@@ -59,26 +59,26 @@ public class DefaultImmutableAccountInternalApi implements ImmutableAccountInter
         // This API will directly issue queries instead of relying on the DAO (introduced to avoid Guice circular dependencies with InternalCallContextFactory)
         this.transactionalSqlDao = new EntitySqlDaoTransactionalJdbiWrapper(dbi, clock, cacheControllerDispatcher, nonEntityDao, null);
         this.nonEntityDao = nonEntityDao;
-        this.cacheControllerDispatcher = cacheControllerDispatcher;
         this.accountCacheController = cacheControllerDispatcher.getCacheController(CacheType.ACCOUNT_IMMUTABLE);
+        this.recordIdCacheController = cacheControllerDispatcher.getCacheController(CacheType.RECORD_ID);
     }
 
     @Override
     public ImmutableAccountData getImmutableAccountDataById(final UUID accountId, final InternalTenantContext context) throws AccountApiException {
-        final Long recordId = nonEntityDao.retrieveRecordIdFromObject(accountId, ObjectType.ACCOUNT, cacheControllerDispatcher.getCacheController(CacheType.RECORD_ID));
+        final Long recordId = nonEntityDao.retrieveRecordIdFromObject(accountId, ObjectType.ACCOUNT, recordIdCacheController);
         return getImmutableAccountDataByRecordId(recordId, context);
     }
 
     @Override
     public ImmutableAccountData getImmutableAccountDataByRecordId(final Long recordId, final InternalTenantContext context) throws AccountApiException {
         final CacheLoaderArgument arg = createImmutableAccountCacheLoaderArgument(context);
-        return (ImmutableAccountData) accountCacheController.get(recordId, arg);
+        return accountCacheController.get(recordId, arg);
     }
 
     private CacheLoaderArgument createImmutableAccountCacheLoaderArgument(final InternalTenantContext context) {
         final LoaderCallback loaderCallback = new LoaderCallback() {
             @Override
-            public Object loadAccount(final Long recordId, final InternalTenantContext context) {
+            public ImmutableAccountData loadAccount(final Long recordId, final InternalTenantContext context) {
                 final Account account = getAccountByRecordIdInternal(recordId, context);
                 return account != null ? new DefaultImmutableAccountData(account) : null;
             }

@@ -1,6 +1,6 @@
 /*
- * Copyright 2016 Groupon, Inc
- * Copyright 2016 The Billing Project, LLC
+ * Copyright 2016-2017 Groupon, Inc
+ * Copyright 2016-2017 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -32,7 +32,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 @Singleton
-public class TenantStateMachineConfigCacheLoader extends BaseCacheLoader {
+public class TenantStateMachineConfigCacheLoader extends BaseCacheLoader<String, Object> {
 
     private static final Pattern PATTERN = Pattern.compile(TenantKey.PLUGIN_PAYMENT_STATE_MACHINE_.toString() + "(.*)");
     private static final Logger log = LoggerFactory.getLogger(TenantStateMachineConfigCacheLoader.class);
@@ -51,17 +51,8 @@ public class TenantStateMachineConfigCacheLoader extends BaseCacheLoader {
     }
 
     @Override
-    public Object load(final Object key, final Object argument) {
-        checkCacheLoaderStatus();
-
-        if (!(key instanceof String)) {
-            throw new IllegalArgumentException("Unexpected key type of " + key.getClass().getName());
-        }
-        if (!(argument instanceof CacheLoaderArgument)) {
-            throw new IllegalArgumentException("Unexpected key type of " + argument.getClass().getName());
-        }
-
-        final String[] parts = ((String) key).split(CacheControllerDispatcher.CACHE_KEY_SEPARATOR);
+    public Object compute(final String key, final CacheLoaderArgument cacheLoaderArgument) {
+        final String[] parts = key.split(CacheControllerDispatcher.CACHE_KEY_SEPARATOR);
         final String rawKey = parts[0];
         final Matcher matcher = PATTERN.matcher(rawKey);
         if (!matcher.matches()) {
@@ -70,7 +61,6 @@ public class TenantStateMachineConfigCacheLoader extends BaseCacheLoader {
         final String pluginName = matcher.group(1);
         final String tenantRecordId = parts[1];
 
-        final CacheLoaderArgument cacheLoaderArgument = (CacheLoaderArgument) argument;
         final LoaderCallback callback = (LoaderCallback) cacheLoaderArgument.getArgs()[0];
 
         final InternalTenantContext internalTenantContext = new InternalTenantContext(Long.valueOf(tenantRecordId));

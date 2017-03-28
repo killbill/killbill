@@ -44,13 +44,18 @@ public class CacheControllerDispatcher {
         caches = new HashMap<CacheType, CacheController<Object, Object>>();
     }
 
-    public CacheController<Object, Object> getCacheController(final CacheType cacheType) {
-        return caches.get(cacheType);
+    public <K, V> CacheController<K, V> getCacheController(final CacheType cacheType) {
+        return cast(caches.get(cacheType));
     }
 
     public void clearAll() {
         for (final CacheController<Object, Object> cacheController : caches.values()) {
             cacheController.removeAll();
         }
+    }
+
+    @SuppressWarnings("unchecked")
+    private static <K, V> CacheController<K, V> cast(final CacheController<?, ?> cache) {
+        return (CacheController<K, V>) cache;
     }
 }

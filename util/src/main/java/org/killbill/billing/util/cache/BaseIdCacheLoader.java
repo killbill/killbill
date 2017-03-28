@@ -1,6 +1,6 @@
 /*
- * Copyright 2014-2015 Groupon, Inc
- * Copyright 2014-2015 The Billing Project, LLC
+ * Copyright 2014-2017 Groupon, Inc
+ * Copyright 2014-2017 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -18,40 +18,28 @@
 package org.killbill.billing.util.cache;
 
 import org.killbill.billing.ObjectType;
-import org.killbill.billing.util.cache.Cachable.CacheType;
 import org.skife.jdbi.v2.Handle;
 
-public abstract class BaseIdCacheLoader extends BaseCacheLoader {
+public abstract class BaseIdCacheLoader<V> extends BaseCacheLoader<String, V> {
 
     protected BaseIdCacheLoader() {
         super();
     }
 
-    @Override
-    public abstract CacheType getCacheType();
-
-    protected abstract Object doRetrieveOperation(final String rawKey, final ObjectType objectType, final Handle handle);
+    protected abstract V doRetrieveOperation(final String rawKey, final ObjectType objectType, final Handle handle);
 
     @Override
-    public Object load(final Object key, final Object argument) {
-        checkCacheLoaderStatus();
-
-        if (!(key instanceof String)) {
-            throw new IllegalArgumentException("Unexpected key type of " + key.getClass().getName());
-        }
-        if (!(argument instanceof CacheLoaderArgument)) {
-            throw new IllegalArgumentException("Unexpected key type of " + argument.getClass().getName());
-        }
-
+    public V compute(final String key, final CacheLoaderArgument cacheLoaderArgument) {
         final String rawKey;
         if (getCacheType().isKeyPrefixedWithTableName()) {
-            final String[] parts = ((String) key).split(CacheControllerDispatcher.CACHE_KEY_SEPARATOR);
+            final String[] parts = key.split(CacheControllerDispatcher.CACHE_KEY_SEPARATOR);
             rawKey = parts[1];
         } else {
-            rawKey = (String) key;
+            rawKey = key;
         }
-        final ObjectType objectType = ((CacheLoaderArgument) argument).getObjectType();
-        final Handle handle = ((CacheLoaderArgument) argument).getHandle();
+
+        final ObjectType objectType = cacheLoaderArgument.getObjectType();
+        final Handle handle = cacheLoaderArgument.getHandle();
         return doRetrieveOperation(rawKey, objectType, handle);
     }
 }
