@@ -61,9 +61,7 @@ public class TestUsage extends TestJaxrsBase {
         final Bundle bundle = killBillClient.createSubscriptionWithAddOns(ImmutableList.<Subscription>of(base, addOn),
                                                                           null,
                                                                           DEFAULT_WAIT_COMPLETION_TIMEOUT_SEC,
-                                                                          createdBy,
-                                                                          reason,
-                                                                          comment);
+                                                                          requestOptions);
         final UUID addOnSubscriptionId = Iterables.<Subscription>find(bundle.getSubscriptions(),
                                                                       new Predicate<Subscription>() {
                                                                           @Override
@@ -90,28 +88,28 @@ public class TestUsage extends TestJaxrsBase {
         usage.setSubscriptionId(addOnSubscriptionId);
         usage.setUnitUsageRecords(ImmutableList.<UnitUsageRecord>of(unitUsageRecord));
 
-        killBillClient.createSubscriptionUsageRecord(usage, createdBy, reason, comment);
+        killBillClient.createSubscriptionUsageRecord(usage, requestOptions);
 
-        final RolledUpUsage retrievedUsage1 = killBillClient.getRolledUpUsage(addOnSubscriptionId, unitUsageRecord.getUnitType(), clock.getUTCToday().minusDays(1), clock.getUTCToday());
+        final RolledUpUsage retrievedUsage1 = killBillClient.getRolledUpUsage(addOnSubscriptionId, unitUsageRecord.getUnitType(), clock.getUTCToday().minusDays(1), clock.getUTCToday(), requestOptions);
         Assert.assertEquals(retrievedUsage1.getSubscriptionId(), usage.getSubscriptionId());
         Assert.assertEquals(retrievedUsage1.getRolledUpUnits().size(), 1);
         Assert.assertEquals(retrievedUsage1.getRolledUpUnits().get(0).getUnitType(), unitUsageRecord.getUnitType());
         // endDate is excluded
         Assert.assertEquals((long) retrievedUsage1.getRolledUpUnits().get(0).getAmount(), 10);
 
-        final RolledUpUsage retrievedUsage2 = killBillClient.getRolledUpUsage(addOnSubscriptionId, unitUsageRecord.getUnitType(), clock.getUTCToday().minusDays(1), clock.getUTCToday().plusDays(1));
+        final RolledUpUsage retrievedUsage2 = killBillClient.getRolledUpUsage(addOnSubscriptionId, unitUsageRecord.getUnitType(), clock.getUTCToday().minusDays(1), clock.getUTCToday().plusDays(1), requestOptions);
         Assert.assertEquals(retrievedUsage2.getSubscriptionId(), usage.getSubscriptionId());
         Assert.assertEquals(retrievedUsage2.getRolledUpUnits().size(), 1);
         Assert.assertEquals(retrievedUsage2.getRolledUpUnits().get(0).getUnitType(), unitUsageRecord.getUnitType());
         Assert.assertEquals((long) retrievedUsage2.getRolledUpUnits().get(0).getAmount(), 15);
 
-        final RolledUpUsage retrievedUsage3 = killBillClient.getRolledUpUsage(addOnSubscriptionId, unitUsageRecord.getUnitType(), clock.getUTCToday(), clock.getUTCToday().plusDays(1));
+        final RolledUpUsage retrievedUsage3 = killBillClient.getRolledUpUsage(addOnSubscriptionId, unitUsageRecord.getUnitType(), clock.getUTCToday(), clock.getUTCToday().plusDays(1), requestOptions);
         Assert.assertEquals(retrievedUsage3.getSubscriptionId(), usage.getSubscriptionId());
         Assert.assertEquals(retrievedUsage3.getRolledUpUnits().size(), 1);
         Assert.assertEquals(retrievedUsage3.getRolledUpUnits().get(0).getUnitType(), unitUsageRecord.getUnitType());
         Assert.assertEquals((long) retrievedUsage3.getRolledUpUnits().get(0).getAmount(), 5);
 
-        final RolledUpUsage retrievedUsage4 = killBillClient.getRolledUpUsage(addOnSubscriptionId, null, clock.getUTCToday(), clock.getUTCToday().plusDays(1));
+        final RolledUpUsage retrievedUsage4 = killBillClient.getRolledUpUsage(addOnSubscriptionId, null, clock.getUTCToday(), clock.getUTCToday().plusDays(1), requestOptions);
         Assert.assertEquals(retrievedUsage4.getSubscriptionId(), usage.getSubscriptionId());
         Assert.assertEquals(retrievedUsage4.getRolledUpUnits().size(), 1);
         Assert.assertEquals(retrievedUsage4.getRolledUpUnits().get(0).getUnitType(), "bullets");
@@ -139,10 +137,7 @@ public class TestUsage extends TestJaxrsBase {
 
         final Bundle bundle = killBillClient.createSubscriptionWithAddOns(ImmutableList.<Subscription>of(base, addOn),
                                                                           null,
-                                                                          DEFAULT_WAIT_COMPLETION_TIMEOUT_SEC,
-                                                                          createdBy,
-                                                                          reason,
-                                                                          comment);
+                                                                          DEFAULT_WAIT_COMPLETION_TIMEOUT_SEC, requestOptions);
         final UUID addOnSubscriptionId = Iterables.<Subscription>find(bundle.getSubscriptions(),
                                                                       new Predicate<Subscription>() {
                                                                           @Override
@@ -164,10 +159,10 @@ public class TestUsage extends TestJaxrsBase {
         usage.setTrackingId(UUID.randomUUID().toString());
         usage.setUnitUsageRecords(ImmutableList.<UnitUsageRecord>of(unitUsageRecord));
 
-        killBillClient.createSubscriptionUsageRecord(usage, createdBy, reason, comment);
+        killBillClient.createSubscriptionUsageRecord(usage, requestOptions);
 
         try {
-            killBillClient.createSubscriptionUsageRecord(usage, createdBy, reason, comment);
+            killBillClient.createSubscriptionUsageRecord(usage, requestOptions );
             Assert.fail();
         }
         catch (final KillBillClientException e) {
