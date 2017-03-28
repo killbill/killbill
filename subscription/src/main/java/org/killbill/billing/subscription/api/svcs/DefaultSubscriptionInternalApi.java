@@ -257,40 +257,34 @@ public class DefaultSubscriptionInternalApi extends SubscriptionApiBase implemen
         return subscriptions;
     }
 
-    private boolean isBaseSpecified(final Catalog catalog, final BaseEntitlementWithAddOnsSpecifier entitlementWithAddOnsSpecifier, final DateTime effectiveDate) throws SubscriptionBaseApiException {
+    private boolean sanityAndReorderBPSpecFirst(final Catalog catalog, final BaseEntitlementWithAddOnsSpecifier entitlementWithAddOnsSpecifier, final DateTime effectiveDate, final List<EntitlementSpecifier> outputEntitlementSpecifier) throws SubscriptionBaseApiException {
 
-        // We expect input to be correctly ordered where BP is first
-        final Iterator<EntitlementSpecifier> iterator = entitlementWithAddOnsSpecifier.getEntitlementSpecifier().iterator();
-        if (!iterator.hasNext()) {
-            throw new IllegalArgumentException("createBaseSubscriptionsWithAddOns should contain at least one specifier!");
-        }
 
-        final EntitlementSpecifier firstPlanSpecifier = iterator.next();
+        EntitlementSpecifier basePlanSpecifier = null;
+        final List<EntitlementSpecifier> addOnSpecifiers = new ArrayList<EntitlementSpecifier>();
         try {
-            // Look for BASE plan in the first entry
-            final Plan plan = catalog.createOrFindPlan(firstPlanSpecifier.getPlanPhaseSpecifier(), null, effectiveDate);
-            final boolean isBaseSpecified = plan.getProduct().getCategory() == ProductCategory.BASE;
-
-            // If there is no BASE as a first entry, validate it is not in the subsequent entries
-            if (!isBaseSpecified) {
-                if (Iterables.any(entitlementWithAddOnsSpecifier.getEntitlementSpecifier(), new Predicate<EntitlementSpecifier>() {
-                    @Override
-                    public boolean apply(final EntitlementSpecifier input) {
-                        try {
-                            final Plan inputPlan = catalog.createOrFindPlan(input.getPlanPhaseSpecifier(), null, effectiveDate);
-                            return inputPlan.getProduct().getCategory() == ProductCategory.BASE;
-                        } catch (CatalogApiException e) {
-                            throw new IllegalArgumentException(String.format("createBaseSubscriptionsWithAddOns plan='%s' does not exist", input.getPlanPhaseSpecifier().getPlanName()));
-                        }
+            for (final EntitlementSpecifier cur : entitlementWithAddOnsSpecifier.getEntitlementSpecifier()) {
+                final Plan inputPlan = catalog.createOrFindPlan(cur.getPlanPhaseSpecifier(), null, effectiveDate);
+                final boolean isBaseSpecifier = inputPlan.getProduct().getCategory() == ProductCategory.BASE;
+                if (isBaseSpecifier) {
+                    if (basePlanSpecifier == null) {
+                        basePlanSpecifier =  cur;
+                    } else {
+                        throw new SubscriptionBaseApiException(ErrorCode.SUB_CREATE_INVALID_ENTITLEMENT_SPECIFIER);
                     }
-                })) {
-                    throw new IllegalArgumentException("createBaseSubscriptionsWithAddOns BASE plan should be first in the list of specifier");
+                } else {
+                    addOnSpecifiers.add(cur);
                 }
             }
-            return isBaseSpecified;
         } catch (final CatalogApiException e) {
             throw new SubscriptionBaseApiException(e);
         }
+
+        if (basePlanSpecifier != null) {
+            outputEntitlementSpecifier.add(basePlanSpecifier);
+        }
+        outputEntitlementSpecifier.addAll(addOnSpecifiers);
+        return basePlanSpecifier != null;
     }
 
 
@@ -307,8 +301,12 @@ public class DefaultSubscriptionInternalApi extends SubscriptionApiBase implemen
                                                DefaultClock.truncateMs(entitlementWithAddOnsSpecifier.getBillingEffectiveDate().toDateTimeAtStartOfDay()) : now;
 
 
+
+                final List<EntitlementSpecifier> reorderedSpecifiers = new ArrayList<EntitlementSpecifier>();
+                final boolean isBaseSpecifierExists = sanityAndReorderBPSpecFirst(catalog, entitlementWithAddOnsSpecifier, effectiveDate, reorderedSpecifiers);
+
                 final SubscriptionBaseBundle bundle;
-                if (isBaseSpecified(catalog, entitlementWithAddOnsSpecifier, effectiveDate)) {
+                if (isBaseSpecifierExists) {
                     bundle = createBundleForAccount(accountId, entitlementWithAddOnsSpecifier.getExternalKey(), context);
                 } else {
                     final List<SubscriptionBaseBundle> existingBundles = dao.getSubscriptionBundlesForKey(entitlementWithAddOnsSpecifier.getExternalKey(), context);
@@ -327,7 +325,7 @@ public class DefaultSubscriptionInternalApi extends SubscriptionApiBase implemen
                         effectiveDate,
                         verifyAndBuildSubscriptionSpecifiers(bundle.getId(),
                                                              bundle.getExternalKey(),
-                                                             entitlementWithAddOnsSpecifier.getEntitlementSpecifier(),
+                                                             reorderedSpecifiers,
                                                              entitlementWithAddOnsSpecifier.isMigrated(),
                                                              context,
                                                              now,

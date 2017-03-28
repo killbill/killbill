@@ -791,7 +791,7 @@ public class TestDefaultEntitlementApi extends EntitlementTestSuiteWithEmbeddedD
         entitlementApi.createBaseEntitlementsWithAddOns(account.getId(), baseEntitlementWithAddOnsSpecifiers, ImmutableList.<PluginProperty>of(), callContext);
     }
 
-    @Test(groups = "slow", expectedExceptions = IllegalArgumentException.class)
+    @Test(groups = "slow")
     public void testCreateBaseSubscriptionsWithAddOnsBadOrdering() throws AccountApiException, EntitlementApiException, SubscriptionApiException {
         final LocalDate initialDate = new LocalDate(2013, 8, 7);
         clock.setDay(initialDate);
@@ -806,6 +806,10 @@ public class TestDefaultEntitlementApi extends EntitlementTestSuiteWithEmbeddedD
 
         final Iterable<BaseEntitlementWithAddOnsSpecifier> baseEntitlementWithAddOnsSpecifiers = ImmutableList.of(baseEntitlementWithAddOnsSpecifier1);
 
+
+        testListener.pushExpectedEvents(NextEvent.BLOCK, NextEvent.CREATE, NextEvent.BLOCK, NextEvent.CREATE);
         entitlementApi.createBaseEntitlementsWithAddOns(account.getId(), baseEntitlementWithAddOnsSpecifiers, ImmutableList.<PluginProperty>of(), callContext);
+        assertListenerStatus();
+
     }
 }
