@@ -67,7 +67,7 @@ public abstract class EntityDaoBase<M extends EntityModelDao<E>, E extends Entit
     }
 
     protected boolean checkEntityAlreadyExists(final EntitySqlDao<M, E> transactional, final M entity, final InternalCallContext context) {
-        return transactional.getById(entity.getId().toString(), context) != null;
+        return transactional.getRecordId(entity.getId().toString(), context) != null;
     }
 
     protected void postBusEventFromTransaction(final M entity, final M savedEntity, final ChangeType changeType,

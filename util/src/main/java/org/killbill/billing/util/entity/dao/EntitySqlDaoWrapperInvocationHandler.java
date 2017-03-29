@@ -225,8 +225,8 @@ public class EntitySqlDaoWrapperInvocationHandler<S extends EntitySqlDao<M, E>, 
         final ObjectType objectType = getObjectType();
         final CacheType cacheType = cachableAnnotation.value();
         final CacheController<Object, Object> cache = cacheControllerDispatcher.getCacheController(cacheType);
-        Object result = null;
-        if (cache != null) {
+        // TODO Change NonEntityDao to take in TableName instead to cache things like TenantBroadcastModelDao (no ObjectType)
+        if (cache != null && objectType != null) {
             // Find all arguments marked with @CachableKey
             final Map<Integer, Object> keyPieces = new LinkedHashMap<Integer, Object>();
             final Annotation[][] annotations = method.getParameterAnnotations();
@@ -252,16 +252,9 @@ public class EntitySqlDaoWrapperInvocationHandler<S extends EntitySqlDao<M, E>, 
             }, null);
             final CacheLoaderArgument cacheLoaderArgument = new CacheLoaderArgument(objectType, args, internalTenantContext, handle);
             return cache.get(cacheKey, cacheLoaderArgument);
+        } else {
+            return invokeRaw(method, args);
         }
-        if (result == null) {
-            result = prof.executeWithProfiling(ProfilingFeatureType.DAO_DETAILS, sqlDaoClass.getSimpleName() + "(raw) :" + method.getName(), new WithProfilingCallback() {
-                @Override
-                public Object execute() throws Throwable {
-                    return method.invoke(sqlDao, args);
-                }
-            });
-        }
-        return result;
     }
 
     /**
