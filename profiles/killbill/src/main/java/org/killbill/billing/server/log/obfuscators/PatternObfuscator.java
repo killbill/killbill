@@ -43,6 +43,7 @@ public class PatternObfuscator extends Obfuscator {
             "ccvv",
             "cvNumber",
             "cvc",
+            "cvv",
             "email",
             "iban",
             "name",
