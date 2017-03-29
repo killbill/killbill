@@ -68,6 +68,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.base.MoreObjects;
+import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableList.Builder;
@@ -318,18 +319,17 @@ public class EntitySqlDaoWrapperInvocationHandler<S extends EntitySqlDao<M, E>, 
     }
 
     private Object invokeWithAuditAndHistory(final Audited auditedAnnotation, final Method method, final Object[] args) throws Throwable {
-        InternalCallContext context = null;
-        List<String> entityIds = null;
-        final Map<String, M> entities = new HashMap<String, M>();
-        final Map<String, Long> entityRecordIds = new HashMap<String, Long>();
-        if (auditedAnnotation != null) {
-            // There will be some work required after the statement is executed,
-            // get the id before in case the change is a delete
-            context = retrieveContextFromArguments(args);
-            entityIds = retrieveEntityIdsFromArguments(method, args);
+        final InternalCallContext context = retrieveContextFromArguments(args);
+        final List<String> entityIds = retrieveEntityIdsFromArguments(method, args);
+
+        final ChangeType changeType = auditedAnnotation.value();
+
+        // Get the current state before deletion for the history tables
+        final Map<String, M> deletedEntities = new HashMap<String, M>();
+        // Unfortunately, we cannot just look at DELETE as "markAsInactive" operations are often treated as UPDATE
+        if (changeType == ChangeType.UPDATE || changeType == ChangeType.DELETE) {
             for (final String entityId : entityIds) {
-                entities.put(entityId, sqlDao.getById(entityId, context));
-                entityRecordIds.put(entityId, sqlDao.getRecordId(entityId, context));
+                deletedEntities.put(entityId, sqlDao.getById(entityId, context));
             }
         }
 
@@ -341,10 +341,8 @@ public class EntitySqlDaoWrapperInvocationHandler<S extends EntitySqlDao<M, E>, 
             }
         });
 
-        final ChangeType changeType = auditedAnnotation.value();
-
         for (final String entityId : entityIds) {
-            updateHistoryAndAudit(entityId, entities, entityRecordIds, changeType, context);
+            updateHistoryAndAudit(entityId, deletedEntities.get(entityId), changeType, context);
         }
         return obj;
     }
@@ -374,22 +372,25 @@ public class EntitySqlDaoWrapperInvocationHandler<S extends EntitySqlDao<M, E>, 
                rawKey;
     }
 
-    private void updateHistoryAndAudit(final String entityId, final Map<String, M> entities, final Map<String, Long> entityRecordIds,
-                                       final ChangeType changeType, final InternalCallContext context) throws Throwable {
-
+    private void updateHistoryAndAudit(final String entityId, @Nullable final M deletedEntity, final ChangeType changeType, final InternalCallContext context) throws Throwable {
         prof.executeWithProfiling(ProfilingFeatureType.DAO_DETAILS, sqlDaoClass.getSimpleName() + " (history/audit) :", new WithProfilingCallback() {
             @Override
             public Object execute() {
-                final M reHydratedEntity = sqlDao.getById(entityId, context);
-                final Long reHydratedEntityRecordId = sqlDao.getRecordId(entityId, context);
-                final M entity = MoreObjects.firstNonNull(reHydratedEntity, entities.get(entityId));
-                final Long entityRecordId = MoreObjects.firstNonNull(reHydratedEntityRecordId, entityRecordIds.get(entityId));
-                final TableName tableName = entity.getTableName();
+                final M reHydratedEntity;
+                if (changeType == ChangeType.DELETE) {
+                    reHydratedEntity = deletedEntity;
+                } else {
+                    // See note above regarding "markAsInactive" operations
+                    reHydratedEntity = MoreObjects.firstNonNull(sqlDao.getById(entityId, context), deletedEntity);
+                }
+                Preconditions.checkNotNull(reHydratedEntity, "reHydratedEntity cannot be null");
+                final Long entityRecordId = reHydratedEntity.getRecordId();
+                final TableName tableName = reHydratedEntity.getTableName();
 
                 // Note: audit entries point to the history record id
                 final Long historyRecordId;
                 if (tableName.getHistoryTableName() != null) {
-                    historyRecordId = insertHistory(entityRecordId, entity, changeType, context);
+                    historyRecordId = insertHistory(entityRecordId, reHydratedEntity, changeType, context);
                 } else {
                     historyRecordId = entityRecordId;
                 }
@@ -429,7 +430,7 @@ public class EntitySqlDaoWrapperInvocationHandler<S extends EntitySqlDao<M, E>, 
                 }
             }
         }
-        return null;
+        return ImmutableList.<String>of();
     }
 
     private Builder<String> extractEntityIdsFromBatchArgument(final Iterable arg) {
