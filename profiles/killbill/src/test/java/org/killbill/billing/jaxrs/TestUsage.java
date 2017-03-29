@@ -19,6 +19,8 @@ package org.killbill.billing.jaxrs;
 
 import java.util.UUID;
 
+import javax.annotation.Nullable;
+
 import org.killbill.billing.ErrorCode;
 import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.catalog.api.PriceListSet;
@@ -26,11 +28,15 @@ import org.killbill.billing.catalog.api.ProductCategory;
 import org.killbill.billing.client.KillBillClientException;
 import org.killbill.billing.client.model.Account;
 import org.killbill.billing.client.model.Bundle;
+import org.killbill.billing.client.model.InvoiceItem;
+import org.killbill.billing.client.model.Invoices;
 import org.killbill.billing.client.model.RolledUpUsage;
 import org.killbill.billing.client.model.Subscription;
 import org.killbill.billing.client.model.SubscriptionUsageRecord;
 import org.killbill.billing.client.model.UnitUsageRecord;
 import org.killbill.billing.client.model.UsageRecord;
+import org.killbill.billing.invoice.api.InvoiceItemType;
+import org.killbill.billing.util.api.AuditLevel;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
@@ -114,6 +120,25 @@ public class TestUsage extends TestJaxrsBase {
         Assert.assertEquals(retrievedUsage4.getRolledUpUnits().size(), 1);
         Assert.assertEquals(retrievedUsage4.getRolledUpUnits().get(0).getUnitType(), "bullets");
         Assert.assertEquals((long) retrievedUsage4.getRolledUpUnits().get(0).getAmount(), 5);
+
+        clock.addMonths(1);
+        crappyWaitForLackOfProperSynchonization();
+
+
+        final Invoices invoices = killBillClient.getInvoicesForAccount(accountJson.getAccountId(), true, false, false, AuditLevel.MINIMAL, requestOptions);
+        Assert.assertEquals(invoices.size(), 2);
+
+        final InvoiceItem usageItem =  Iterables.tryFind(invoices.get(1).getItems(), new Predicate<InvoiceItem>() {
+            @Override
+            public boolean apply(final InvoiceItem input) {
+                return InvoiceItemType.valueOf(input.getItemType()) == InvoiceItemType.USAGE;
+            }
+        }).orNull();
+        Assert.assertNotNull(usageItem);
+
+        Assert.assertEquals(usageItem.getPrettyPlanName(), "Bullet Monthly Plan");
+        Assert.assertEquals(usageItem.getPrettyPhaseName(), "Bullet Monthly Plan Evergreen");
+        Assert.assertEquals(usageItem.getPrettyUsageName(), "Bullet Usage In Arrear");
     }
 
     @Test(groups = "slow", description = "Test tracking ID already exists")

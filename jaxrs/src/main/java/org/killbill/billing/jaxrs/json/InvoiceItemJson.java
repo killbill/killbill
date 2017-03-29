@@ -55,6 +55,9 @@ public class InvoiceItemJson extends JsonBase {
     private final String planName;
     private final String phaseName;
     private final String usageName;
+    private final String prettyPlanName;
+    private final String prettyPhaseName;
+    private final String prettyUsageName;
     private final String itemType;
     private final String description;
     private final LocalDate startDate;
@@ -74,6 +77,9 @@ public class InvoiceItemJson extends JsonBase {
                            @JsonProperty("planName") final String planName,
                            @JsonProperty("phaseName") final String phaseName,
                            @JsonProperty("usageName") final String usageName,
+                           @JsonProperty("prettyPlanName") final String prettyPlanName,
+                           @JsonProperty("prettyPhaseName") final String prettyPhaseName,
+                           @JsonProperty("prettyUsageName") final String prettyUsageName,
                            @JsonProperty("itemType") final String itemType,
                            @JsonProperty("description") final String description,
                            @JsonProperty("startDate") final LocalDate startDate,
@@ -93,6 +99,9 @@ public class InvoiceItemJson extends JsonBase {
         this.planName = planName;
         this.phaseName = phaseName;
         this.usageName = usageName;
+        this.prettyPlanName = prettyPlanName;
+        this.prettyPhaseName = prettyPhaseName;
+        this.prettyUsageName = prettyUsageName;
         this.itemType = itemType;
         this.description = description;
         this.startDate = startDate;
@@ -105,7 +114,9 @@ public class InvoiceItemJson extends JsonBase {
     public InvoiceItemJson(final InvoiceItem item, final List<InvoiceItem> childItems, @Nullable final List<AuditLog> auditLogs) {
         this(toString(item.getId()), toString(item.getInvoiceId()), toString(item.getLinkedItemId()),
              toString(item.getAccountId()), toString(item.getChildAccountId()), toString(item.getBundleId()), toString(item.getSubscriptionId()),
-             item.getPlanName(), item.getPhaseName(), item.getUsageName(), item.getInvoiceItemType().toString(),
+             item.getPlanName(), item.getPhaseName(), item.getUsageName(),
+             item.getPrettyPlanName(), item.getPrettyPhaseName(), item.getPrettyUsageName(),
+             item.getInvoiceItemType().toString(),
              item.getDescription(), item.getStartDate(), item.getEndDate(),
              item.getAmount(), item.getCurrency().name(), toInvoiceItemJson(childItems), toAuditLogJson(auditLogs));
     }
@@ -186,7 +197,7 @@ public class InvoiceItemJson extends JsonBase {
 
             @Override
             public String getPrettyPlanName() {
-                return planName;
+                return prettyPlanName;
             }
 
             @Override
@@ -196,7 +207,7 @@ public class InvoiceItemJson extends JsonBase {
 
             @Override
             public String getPrettyPhaseName() {
-                return phaseName;
+                return prettyPhaseName;
             }
 
             @Override
@@ -206,7 +217,7 @@ public class InvoiceItemJson extends JsonBase {
 
             @Override
             public String getPrettyUsageName() {
-                return usageName;
+                return prettyUsageName;
             }
 
             @Override
@@ -283,6 +294,18 @@ public class InvoiceItemJson extends JsonBase {
 
     public String getUsageName() {
         return usageName;
+    }
+
+    public String getPrettyPlanName() {
+        return prettyPlanName;
+    }
+
+    public String getPrettyPhaseName() {
+        return prettyPhaseName;
+    }
+
+    public String getPrettyUsageName() {
+        return prettyUsageName;
     }
 
     public String getItemType() {

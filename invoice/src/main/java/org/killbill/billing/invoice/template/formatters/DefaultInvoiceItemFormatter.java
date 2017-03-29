@@ -144,7 +144,7 @@ public class DefaultInvoiceItemFormatter implements InvoiceItemFormatter {
 
     @Override
     public String getPrettyPlanName() {
-        return getPlanName();
+        return Strings.nullToEmpty(translator.getTranslation(item.getPrettyPlanName()));
     }
 
     @Override
@@ -154,7 +154,7 @@ public class DefaultInvoiceItemFormatter implements InvoiceItemFormatter {
 
     @Override
     public String getPrettyPhaseName() {
-        return getPhaseName();
+        return Strings.nullToEmpty(translator.getTranslation(item.getPrettyPhaseName()));
     }
 
     @Override
@@ -164,7 +164,7 @@ public class DefaultInvoiceItemFormatter implements InvoiceItemFormatter {
 
     @Override
     public String getPrettyUsageName() {
-        return getUsageName();
+        return Strings.nullToEmpty(translator.getTranslation(item.getPrettyUsageName()));
     }
 
     @Override

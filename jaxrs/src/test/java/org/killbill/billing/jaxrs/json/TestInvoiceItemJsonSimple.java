@@ -21,14 +21,13 @@ import java.util.List;
 import java.util.UUID;
 
 import org.joda.time.LocalDate;
-import org.mockito.Mockito;
-import org.testng.Assert;
-import org.testng.annotations.Test;
-
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.invoice.api.InvoiceItem;
 import org.killbill.billing.invoice.api.InvoiceItemType;
 import org.killbill.billing.jaxrs.JaxrsTestSuiteNoDB;
+import org.mockito.Mockito;
+import org.testng.Assert;
+import org.testng.annotations.Test;
 
 import static org.killbill.billing.jaxrs.JaxrsTestUtils.createAuditLogsJson;
 
@@ -54,8 +53,10 @@ public class TestInvoiceItemJsonSimple extends JaxrsTestSuiteNoDB {
         final Currency currency = Currency.MXN;
         final List<AuditLogJson> auditLogs = createAuditLogsJson(clock.getUTCNow());
         final InvoiceItemJson invoiceItemJson = new InvoiceItemJson(invoiceItemId, invoiceId, linkedInvoiceItemId, accountId, childAccountId,
-                                                                                      bundleId, subscriptionId, planName, phaseName, usageName, type, description,
-                                                                                      startDate, endDate, amount, currency.name(), null, auditLogs);
+                                                                    bundleId, subscriptionId, planName, phaseName, usageName,
+                                                                    null, null, null,
+                                                                    type, description,
+                                                                    startDate, endDate, amount, currency.name(), null, auditLogs);
         Assert.assertEquals(invoiceItemJson.getInvoiceItemId(), invoiceItemId);
         Assert.assertEquals(invoiceItemJson.getInvoiceId(), invoiceId);
         Assert.assertEquals(invoiceItemJson.getLinkedInvoiceItemId(), linkedInvoiceItemId);
