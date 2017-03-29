@@ -64,6 +64,10 @@ public class EhCacheBasedCacheController<K, V> implements CacheController<K, V> 
 
     @Override
     public V get(final K key, final CacheLoaderArgument cacheLoaderArgument) {
+        if (key == null) {
+            return null;
+        }
+
         final V value;
         if (!isKeyInCache(key)) {
             value = computeAndCacheValue(key, cacheLoaderArgument);
