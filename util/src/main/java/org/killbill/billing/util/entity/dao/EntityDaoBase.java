@@ -47,13 +47,15 @@ public abstract class EntityDaoBase<M extends EntityModelDao<E>, E extends Entit
 
     @Override
     public void create(final M entity, final InternalCallContext context) throws U {
-        transactionalSqlDao.execute(getCreateEntitySqlDaoTransactionWrapper(entity, context));
+        final M refreshedEntity = transactionalSqlDao.execute(getCreateEntitySqlDaoTransactionWrapper(entity, context));
+        // Populate the caches only after the transaction has been committed, in case of rollbacks
+        transactionalSqlDao.populateCaches(refreshedEntity);
     }
 
-    protected EntitySqlDaoTransactionWrapper<Void> getCreateEntitySqlDaoTransactionWrapper(final M entity, final InternalCallContext context) {
-        return new EntitySqlDaoTransactionWrapper<Void>() {
+    protected EntitySqlDaoTransactionWrapper<M> getCreateEntitySqlDaoTransactionWrapper(final M entity, final InternalCallContext context) {
+        return new EntitySqlDaoTransactionWrapper<M>() {
             @Override
-            public Void inTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory) throws Exception {
+            public M inTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory) throws Exception {
                 final EntitySqlDao<M, E> transactional = entitySqlDaoWrapperFactory.become(realSqlDao);
 
                 if (checkEntityAlreadyExists(transactional, entity, context)) {
@@ -62,7 +64,7 @@ public abstract class EntityDaoBase<M extends EntityModelDao<E>, E extends Entit
                 final M refreshedEntity = createAndRefresh(transactional, entity, context);
 
                 postBusEventFromTransaction(entity, refreshedEntity, ChangeType.INSERT, entitySqlDaoWrapperFactory, context);
-                return null;
+                return refreshedEntity;
             }
         };
     }

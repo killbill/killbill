@@ -349,8 +349,11 @@ public class EntitySqlDaoWrapperInvocationHandler<S extends EntitySqlDao<M, E>, 
         }
     }
 
-    private void populateCacheOnGetByIdInvocation(M model) {
+    private void populateCacheOnGetByIdInvocation(final M model) {
+        populateCaches(cacheControllerDispatcher, model);
+    }
 
+    public static void populateCaches(final CacheControllerDispatcher cacheControllerDispatcher, final EntityModelDao model) {
         final CacheController<String, Long> cacheRecordId = cacheControllerDispatcher.getCacheController(CacheType.RECORD_ID);
         cacheRecordId.putIfAbsent(getKey(model.getId().toString(), CacheType.RECORD_ID, model.getTableName()), model.getRecordId());
 
@@ -368,7 +371,7 @@ public class EntitySqlDaoWrapperInvocationHandler<S extends EntitySqlDao<M, E>, 
         }
     }
 
-    private String getKey(final String rawKey, final CacheType cacheType, final TableName tableName) {
+    private static String getKey(final String rawKey, final CacheType cacheType, final TableName tableName) {
         return cacheType.isKeyPrefixedWithTableName() ?
                tableName + CacheControllerDispatcher.CACHE_KEY_SEPARATOR + rawKey :
                rawKey;

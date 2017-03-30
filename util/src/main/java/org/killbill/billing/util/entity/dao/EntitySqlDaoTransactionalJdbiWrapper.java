@@ -49,6 +49,10 @@ public class EntitySqlDaoTransactionalJdbiWrapper {
         this.internalCallContextFactory = internalCallContextFactory;
     }
 
+    public <M extends EntityModelDao> void populateCaches(final M refreshedEntity) {
+        EntitySqlDaoWrapperInvocationHandler.populateCaches(cacheControllerDispatcher, refreshedEntity);
+    }
+
     class JdbiTransaction<ReturnType, M extends EntityModelDao<E>, E extends Entity> implements Transaction<ReturnType, EntitySqlDao<M, E>> {
 
         private final Handle h;
