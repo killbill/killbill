@@ -29,11 +29,15 @@ import javax.inject.Provider;
 
 import org.killbill.billing.util.cache.BaseCacheLoader;
 import org.killbill.billing.util.config.definition.EhCacheConfig;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.codahale.metrics.MetricRegistry;
 
 // EhCache specific provider
 public class Eh107CacheManagerProvider extends CacheProviderBase implements Provider<CacheManager> {
+
+    private static final Logger logger = LoggerFactory.getLogger(Eh107CacheManagerProvider.class);
 
     private final Set<BaseCacheLoader> cacheLoaders;
 
@@ -50,11 +54,15 @@ public class Eh107CacheManagerProvider extends CacheProviderBase implements Prov
         // JSR-107 registration, required for JMX integration
         final CachingProvider cachingProvider = Caching.getCachingProvider();
 
-        final CacheManager cacheManager;
+        CacheManager cacheManager;
         try {
             cacheManager = cachingProvider.getCacheManager(xmlConfigurationURL.toURI(), getClass().getClassLoader());
+        } catch (final RuntimeException e) {
+            logger.error("Unable to read ehcache.xml, using default configuration", e);
+            cacheManager = cachingProvider.getCacheManager();
         } catch (final URISyntaxException e) {
-            throw new IllegalArgumentException(e);
+            logger.error("Unable to read ehcache.xml, using default configuration", e);
+            cacheManager = cachingProvider.getCacheManager();
         }
 
         for (final BaseCacheLoader<?, ?> cacheLoader : cacheLoaders) {
