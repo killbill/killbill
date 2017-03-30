@@ -468,13 +468,7 @@ public class EntitySqlDaoWrapperInvocationHandler<S extends EntitySqlDao<M, E>, 
 
     private Long insertHistory(final Long entityRecordId, final M entityModelDao, final ChangeType changeType, final InternalCallContext context) {
         final EntityHistoryModelDao<M, E> history = new EntityHistoryModelDao<M, E>(entityModelDao, entityRecordId, changeType, clock.getUTCNow());
-
-        sqlDao.addHistoryFromTransaction(history, context);
-
-        final NonEntitySqlDao transactional = SqlObjectBuilder.attach(handle, NonEntitySqlDao.class);
-
-        /* return transactional.getLastHistoryRecordId(entityRecordId, entityModelDao.getHistoryTableName().getTableName()); */
-        return nonEntityDao.retrieveLastHistoryRecordIdFromTransaction(entityRecordId, entityModelDao.getHistoryTableName(), transactional);
+        return sqlDao.addHistoryFromTransaction(history, context);
     }
 
     private void insertAudits(final TableName tableName, final M entityModelDao, final Long entityRecordId, final Long historyRecordId, final ChangeType changeType, final InternalCallContext contextMaybeWithoutAccountRecordId) {

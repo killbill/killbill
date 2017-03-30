@@ -25,6 +25,7 @@ import org.killbill.billing.util.entity.Entity;
 import org.killbill.billing.util.entity.dao.EntityModelDao;
 import org.skife.jdbi.v2.sqlobject.Bind;
 import org.skife.jdbi.v2.sqlobject.BindBean;
+import org.skife.jdbi.v2.sqlobject.GetGeneratedKeys;
 import org.skife.jdbi.v2.sqlobject.SqlQuery;
 import org.skife.jdbi.v2.sqlobject.SqlUpdate;
 
@@ -33,8 +34,8 @@ public interface HistorySqlDao<M extends EntityModelDao<E>, E extends Entity> {
     @SqlQuery
     public List<EntityHistoryModelDao<M, E>> getHistoryForTargetRecordId(@Bind("targetRecordId") final long targetRecordId,
                                                                          @BindBean InternalCallContext context);
-
     @SqlUpdate
-    public void addHistoryFromTransaction(@EntityHistoryBinder EntityHistoryModelDao<M, E> history,
+    @GetGeneratedKeys
+    public Long addHistoryFromTransaction(@EntityHistoryBinder EntityHistoryModelDao<M, E> history,
                                           @BindBean InternalCallContext context);
 }
