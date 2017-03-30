@@ -29,8 +29,22 @@
                                     http://www.ehcache.org/v3/clustered
                                     http://www.ehcache.org/schema/ehcache-clustered-ext-3.3.xsd">
     <ehcache:service>
-        <jsr107:defaults default-template="defaultCacheConfiguration" enable-management="true" enable-statistics="true"/>
+        <jsr107:defaults default-template="defaultCacheConfiguration" enable-management="true" enable-statistics="true">
+            <!-- See AuditSqlDao -->
+            <jsr107:cache name="audit-log" template="defaultShortTTLCacheConfiguration"/>
+            <jsr107:cache name="audit-log-via-history" template="defaultShortTTLCacheConfiguration"/>
+        </jsr107:defaults>
     </ehcache:service>
+
+    <ehcache:cache-template name="defaultShortTTLCacheConfiguration">
+        <ehcache:expiry>
+            <ehcache:ttl unit="seconds">20</ehcache:ttl>
+        </ehcache:expiry>
+
+        <ehcache:resources>
+            <ehcache:heap unit="entries">100000</ehcache:heap>
+        </ehcache:resources>
+    </ehcache:cache-template>
 
     <ehcache:cache-template name="defaultCacheConfiguration">
         <ehcache:expiry>
@@ -38,7 +52,6 @@
         </ehcache:expiry>
 
         <ehcache:resources>
-            <!-- The maximal number of entries to be held in the Cache, prior to eviction starting -->
             <ehcache:heap unit="entries">100000</ehcache:heap>
         </ehcache:resources>
     </ehcache:cache-template>
