@@ -94,7 +94,7 @@ public class EntitySqlDaoWrapperInvocationHandler<S extends EntitySqlDao<M, E>, 
     private final Clock clock;
     private final NonEntityDao nonEntityDao;
     private final InternalCallContextFactory internalCallContextFactory;
-    private final Profiling prof;
+    private final Profiling<Object, Throwable> prof;
 
     public EntitySqlDaoWrapperInvocationHandler(final Class<S> sqlDaoClass,
                                                 final S sqlDao,
@@ -117,7 +117,7 @@ public class EntitySqlDaoWrapperInvocationHandler<S extends EntitySqlDao<M, E>, 
     @Override
     public Object invoke(final Object proxy, final Method method, final Object[] args) throws Throwable {
         try {
-            return prof.executeWithProfiling(ProfilingFeatureType.DAO, sqlDaoClass.getSimpleName() + ":" + method.getName(), new WithProfilingCallback() {
+            return prof.executeWithProfiling(ProfilingFeatureType.DAO, sqlDaoClass.getSimpleName() + ":" + method.getName(), new WithProfilingCallback<Object, Throwable>() {
                 @Override
                 public Object execute() throws Throwable {
                     return invokeSafely(proxy, method, args);
@@ -204,7 +204,7 @@ public class EntitySqlDaoWrapperInvocationHandler<S extends EntitySqlDao<M, E>, 
     }
 
     private Object invokeRaw(final Method method, final Object[] args) throws Throwable {
-        return prof.executeWithProfiling(ProfilingFeatureType.DAO_DETAILS, sqlDaoClass.getSimpleName() + " (raw):" + method.getName(), new WithProfilingCallback() {
+        return prof.executeWithProfiling(ProfilingFeatureType.DAO_DETAILS, sqlDaoClass.getSimpleName() + " (raw):" + method.getName(), new WithProfilingCallback<Object, Throwable>() {
             @Override
             public Object execute() throws Throwable {
                 Object result = method.invoke(sqlDao, args);
@@ -327,17 +327,26 @@ public class EntitySqlDaoWrapperInvocationHandler<S extends EntitySqlDao<M, E>, 
         }
 
         // Real jdbc call
-        final Object obj = prof.executeWithProfiling(ProfilingFeatureType.DAO_DETAILS, sqlDaoClass.getSimpleName() + " (raw) :", new WithProfilingCallback() {
+        final Object obj = prof.executeWithProfiling(ProfilingFeatureType.DAO_DETAILS, sqlDaoClass.getSimpleName() + " (raw) :", new WithProfilingCallback<Object, Throwable>() {
             @Override
             public Object execute() throws Throwable {
                 return method.invoke(sqlDao, args);
             }
         });
 
+        M m = null;
         for (final String entityId : entityIds) {
-            updateHistoryAndAudit(entityId, deletedEntities.get(entityId), changeType, context);
+            m = updateHistoryAndAudit(entityId, deletedEntities.get(entityId), changeType, context);
         }
-        return obj;
+
+        // PERF: override the return value with the reHydrated entity to avoid an extra 'get' in the transaction,
+        // (see EntityDaoBase#createAndRefresh for an example, but it works for updates as well).
+        if (entityIds.size() == 1) {
+            return m;
+        } else {
+            // jDBI will return the number of rows modified otherwise
+            return obj;
+        }
     }
 
     private void populateCacheOnGetByIdInvocation(M model) {
@@ -365,10 +374,10 @@ public class EntitySqlDaoWrapperInvocationHandler<S extends EntitySqlDao<M, E>, 
                rawKey;
     }
 
-    private void updateHistoryAndAudit(final String entityId, @Nullable final M deletedEntity, final ChangeType changeType, final InternalCallContext context) throws Throwable {
-        prof.executeWithProfiling(ProfilingFeatureType.DAO_DETAILS, sqlDaoClass.getSimpleName() + " (history/audit) :", new WithProfilingCallback() {
+    private M updateHistoryAndAudit(final String entityId, @Nullable final M deletedEntity, final ChangeType changeType, final InternalCallContext context) throws Throwable {
+        final Object reHydratedEntity = prof.executeWithProfiling(ProfilingFeatureType.DAO_DETAILS, sqlDaoClass.getSimpleName() + " (history/audit) :", new WithProfilingCallback<Object, Throwable>() {
             @Override
-            public Object execute() {
+            public M execute() throws Throwable {
                 final M reHydratedEntity;
                 if (changeType == ChangeType.DELETE) {
                     reHydratedEntity = deletedEntity;
@@ -390,9 +399,11 @@ public class EntitySqlDaoWrapperInvocationHandler<S extends EntitySqlDao<M, E>, 
 
                 // Make sure to re-hydrate the object (especially needed for create calls)
                 insertAudits(tableName, reHydratedEntity, entityRecordId, historyRecordId, changeType, context);
-                return null;
+                return reHydratedEntity;
             }
         });
+        //noinspection unchecked
+        return (M) reHydratedEntity;
     }
 
     private List<String> retrieveEntityIdsFromArguments(final Method method, final Object[] args) {

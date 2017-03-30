@@ -215,9 +215,8 @@ public class DefaultAccountDao extends EntityDaoBase<AccountModelDao, Account, A
                 }
 
                 final String thePaymentMethodId = paymentMethodId != null ? paymentMethodId.toString() : null;
-                transactional.updatePaymentMethod(accountId.toString(), thePaymentMethodId, context);
+                final AccountModelDao account = (AccountModelDao) transactional.updatePaymentMethod(accountId.toString(), thePaymentMethodId, context);
 
-                final AccountModelDao account = transactional.getById(accountId.toString(), context);
                 final AccountChangeInternalEvent changeEvent = new DefaultAccountChangeEvent(accountId, currentAccount, account,
                                                                                              context.getAccountRecordId(),
                                                                                              context.getTenantRecordId(),
@@ -245,7 +244,7 @@ public class DefaultAccountDao extends EntityDaoBase<AccountModelDao, Account, A
                     throw new AccountApiException(ErrorCode.ACCOUNT_EMAIL_ALREADY_EXISTS, email.getId());
                 }
 
-                transactional.create(email, context);
+                createAndRefresh(transactional, email, context);
                 return null;
             }
         });

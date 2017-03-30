@@ -326,7 +326,7 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
                         // We only want to insert that invoice if there are real invoiceItems associated to it -- if not, this is just
                         // a shell invoice and we only need to insert the invoiceItems -- for the already existing invoices
                         if (isRealInvoice) {
-                            invoiceSqlDao.create(invoiceModelDao, context);
+                            createAndRefresh(invoiceSqlDao, invoiceModelDao, context);
                             createdInvoiceIds.add(invoiceModelDao.getId());
                         }
                     }
@@ -334,8 +334,7 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
                     // Create the invoice items if needed (note: they may not necessarily belong to that invoice)
                     for (final InvoiceItemModelDao invoiceItemModelDao : invoiceModelDao.getInvoiceItems()) {
                         if (transInvoiceItemSqlDao.getById(invoiceItemModelDao.getId().toString(), context) == null) {
-                            createInvoiceItemFromTransaction(transInvoiceItemSqlDao, invoiceItemModelDao, context);
-                            createdInvoiceItems.add(transInvoiceItemSqlDao.getById(invoiceItemModelDao.getId().toString(), context));
+                            createdInvoiceItems.add(createInvoiceItemFromTransaction(transInvoiceItemSqlDao, invoiceItemModelDao, context));
 
                             adjustedInvoiceIds.add(invoiceItemModelDao.getInvoiceId());
                         }
@@ -551,14 +550,13 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
                                                                                  payment.getInvoiceId(), paymentId,
                                                                                  context.getCreatedDate(), requestedPositiveAmount.negate(),
                                                                                  payment.getCurrency(), payment.getProcessedCurrency(), transactionExternalKey, payment.getId(), true);
-                transactional.create(refund, context);
+                createAndRefresh(transactional, refund, context);
 
                 // Retrieve invoice after the Refund
                 final InvoiceModelDao invoice = transInvoiceDao.getById(payment.getInvoiceId().toString(), context);
                 Preconditions.checkState(invoice != null, "Invoice shouldn't be null for payment " + payment.getId());
                 invoiceDaoHelper.populateChildren(invoice, invoicesTags, entitySqlDaoWrapperFactory, context);
 
-                final BigDecimal invoiceBalanceAfterRefund = InvoiceModelDaoHelper.getBalance(invoice);
                 final InvoiceItemSqlDao transInvoiceItemDao = entitySqlDaoWrapperFactory.become(InvoiceItemSqlDao.class);
 
                 // At this point, we created the refund which made the invoice balance positive and applied any existing
@@ -631,7 +629,7 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
                                                                                      payment.getInvoiceId(), payment.getPaymentId(), context.getCreatedDate(),
                                                                                      requestedChargedBackAmount.negate(), payment.getCurrency(), payment.getProcessedCurrency(),
                                                                                      chargebackTransactionExternalKey, payment.getId(), true);
-                transactional.create(chargeBack, context);
+                createAndRefresh(transactional, chargeBack, context);
 
                 // Notify the bus since the balance of the invoice changed
                 final UUID accountId = transactional.getAccountIdFromInvoicePaymentId(chargeBack.getId().toString(), context);
@@ -817,7 +815,7 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
                     }).orNull();
 
                     if (existingAttempt == null) {
-                        transactional.create(invoicePayment, context);
+                        createAndRefresh(transactional, invoicePayment, context);
                     } else {
                         transactional.updateAttempt(existingAttempt.getRecordId(),
                                                     invoicePayment.getPaymentId().toString(),
@@ -1033,7 +1031,7 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
         }
     }
 
-    private void createInvoiceItemFromTransaction(final InvoiceItemSqlDao invoiceItemSqlDao, final InvoiceItemModelDao invoiceItemModelDao, final InternalCallContext context) throws EntityPersistenceException, InvoiceApiException {
+    private InvoiceItemModelDao createInvoiceItemFromTransaction(final InvoiceItemSqlDao invoiceItemSqlDao, final InvoiceItemModelDao invoiceItemModelDao, final InternalCallContext context) throws EntityPersistenceException, InvoiceApiException {
         // There is no efficient way to retrieve an invoice item given an ID today (and invoice plugins can put item adjustments
         // on a different invoice than the original item), so it's easier to do the check in the DAO rather than in the API layer
         // See also https://github.com/killbill/killbill/issues/7
@@ -1041,7 +1039,7 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
             validateInvoiceItemToBeAdjusted(invoiceItemSqlDao, invoiceItemModelDao, context);
         }
 
-        invoiceItemSqlDao.create(invoiceItemModelDao, context);
+        return createAndRefresh(invoiceItemSqlDao, invoiceItemModelDao, context);
     }
 
     private void validateInvoiceItemToBeAdjusted(final InvoiceItemSqlDao invoiceItemSqlDao, final InvoiceItemModelDao invoiceItemModelDao, final InternalCallContext context) throws InvoiceApiException {
@@ -1115,7 +1113,7 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
             @Override
             public Void inTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory) throws Exception {
                 final InvoiceParentChildrenSqlDao transactional = entitySqlDaoWrapperFactory.become(InvoiceParentChildrenSqlDao.class);
-                transactional.create(invoiceRelation, context);
+                createAndRefresh(transactional, invoiceRelation, context);
                 return null;
             }
         });
@@ -1231,14 +1229,14 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
 
                 // save invoices and invoice items
                 final InvoiceModelDao childInvoice = new InvoiceModelDao(invoiceForExternalCharge);
-                invoiceSqlDao.create(childInvoice, childAccountContext);
+                createAndRefresh(invoiceSqlDao, childInvoice, childAccountContext);
                 final InvoiceItemModelDao childExternalChargeItem = new InvoiceItemModelDao(externalChargeItem);
                 createInvoiceItemFromTransaction(transInvoiceItemSqlDao, childExternalChargeItem, childAccountContext);
                 // Keep invoice up-to-date for CBA below
                 childInvoice.addInvoiceItem(childExternalChargeItem);
 
                 final InvoiceModelDao parentInvoice = new InvoiceModelDao(invoiceForCredit);
-                invoiceSqlDao.create(parentInvoice, parentAccountContext);
+                createAndRefresh(invoiceSqlDao, parentInvoice, parentAccountContext);
                 final InvoiceItemModelDao parentCreditItem = new InvoiceItemModelDao(creditItem);
                 createInvoiceItemFromTransaction(transInvoiceItemSqlDao, parentCreditItem, parentAccountContext);
                 // Keep invoice up-to-date for CBA below

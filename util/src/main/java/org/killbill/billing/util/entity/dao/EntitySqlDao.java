@@ -45,8 +45,8 @@ public interface EntitySqlDao<M extends EntityModelDao<E>, E extends Entity> ext
 
     @SqlUpdate
     @Audited(ChangeType.INSERT)
-    public void create(@BindBean final M entity,
-                       @BindBean final InternalCallContext context) throws EntityPersistenceException;
+    public Object create(@BindBean final M entity,
+                         @BindBean final InternalCallContext context) throws EntityPersistenceException;
 
     @SqlQuery
     public M getById(@Bind("id") final String id,

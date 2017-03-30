@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014-2016 Groupon, Inc
- * Copyright 2014-2016 The Billing Project, LLC
+ * Copyright 2014-2017 Groupon, Inc
+ * Copyright 2014-2017 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -258,10 +258,9 @@ public class DefaultSubscriptionDao extends EntityDaoBase<SubscriptionBundleMode
         return transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<SubscriptionBaseBundle>() {
             @Override
             public SubscriptionBaseBundle inTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory) throws EntityPersistenceException {
-
                 final SubscriptionBundleModelDao model = new SubscriptionBundleModelDao(bundle);
-                entitySqlDaoWrapperFactory.become(BundleSqlDao.class).create(model, context);
-                final SubscriptionBundleModelDao result = entitySqlDaoWrapperFactory.become(BundleSqlDao.class).getById(bundle.getId().toString(), context);
+                final BundleSqlDao bundleSqlDao = entitySqlDaoWrapperFactory.become(BundleSqlDao.class);
+                final SubscriptionBundleModelDao result = createAndRefresh(bundleSqlDao, model, context);
                 return SubscriptionBundleModelDao.toSubscriptionbundle(result);
             }
         });
@@ -425,7 +424,7 @@ public class DefaultSubscriptionDao extends EntityDaoBase<SubscriptionBundleMode
                 final SubscriptionEventSqlDao transactional = entitySqlDaoWrapperFactory.become(SubscriptionEventSqlDao.class);
                 final UUID subscriptionId = subscription.getId();
                 cancelNextPhaseEventFromTransaction(subscriptionId, entitySqlDaoWrapperFactory, context);
-                transactional.create(new SubscriptionEventModelDao(nextPhaseEvent), context);
+                createAndRefresh(transactional, new SubscriptionEventModelDao(nextPhaseEvent), context);
                 recordFutureNotificationFromTransaction(entitySqlDaoWrapperFactory,
                                                         nextPhaseEvent.getEffectiveDate(),
                                                         new SubscriptionNotificationKey(nextPhaseEvent.getId()), context);
@@ -503,11 +502,11 @@ public class DefaultSubscriptionDao extends EntityDaoBase<SubscriptionBundleMode
             @Override
             public Void inTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory) throws Exception {
                 final SubscriptionSqlDao transactional = entitySqlDaoWrapperFactory.become(SubscriptionSqlDao.class);
-                transactional.create(new SubscriptionModelDao(subscription), context);
+                createAndRefresh(transactional, new SubscriptionModelDao(subscription), context);
 
                 final SubscriptionEventSqlDao eventsDaoFromSameTransaction = entitySqlDaoWrapperFactory.become(SubscriptionEventSqlDao.class);
                 for (final SubscriptionBaseEvent cur : initialEvents) {
-                    eventsDaoFromSameTransaction.create(new SubscriptionEventModelDao(cur), context);
+                    createAndRefresh(eventsDaoFromSameTransaction, new SubscriptionEventModelDao(cur), context);
 
                     final boolean isBusEvent = cur.getEffectiveDate().compareTo(clock.getUTCNow()) <= 0 && (cur.getType() == EventType.API_USER);
                     recordBusOrFutureNotificationFromTransaction(subscription, cur, entitySqlDaoWrapperFactory, isBusEvent, 0, context);
@@ -534,12 +533,11 @@ public class DefaultSubscriptionDao extends EntityDaoBase<SubscriptionBundleMode
                     for (final SubscriptionBase subscriptionBase : subscription.getSubscriptionBaseList()) {
                         // Safe cast
                         final DefaultSubscriptionBase defaultSubscriptionBase = (DefaultSubscriptionBase) subscriptionBase;
-
-                        transactional.create(new SubscriptionModelDao(defaultSubscriptionBase), context);
+                        createAndRefresh(transactional, new SubscriptionModelDao(defaultSubscriptionBase), context);
 
                         final List<SubscriptionBaseEvent> initialEvents = initialEventsMap.get(defaultSubscriptionBase.getId());
                         for (final SubscriptionBaseEvent cur : initialEvents) {
-                            eventsDaoFromSameTransaction.create(new SubscriptionEventModelDao(cur), context);
+                            createAndRefresh(eventsDaoFromSameTransaction, new SubscriptionEventModelDao(cur), context);
 
                             final boolean isBusEvent = cur.getEffectiveDate().compareTo(clock.getUTCNow()) <= 0 && (cur.getType() == EventType.API_USER);
                             recordBusOrFutureNotificationFromTransaction(defaultSubscriptionBase, cur, entitySqlDaoWrapperFactory, isBusEvent, 0, context);
@@ -654,7 +652,7 @@ public class DefaultSubscriptionDao extends EntityDaoBase<SubscriptionBundleMode
                 cancelFutureEventsFromTransaction(subscriptionId, changeEvents.get(0).getEffectiveDate(), entitySqlDaoWrapperFactory, false, context);
 
                 for (final SubscriptionBaseEvent cur : changeEvents) {
-                    transactional.create(new SubscriptionEventModelDao(cur), context);
+                    createAndRefresh(transactional, new SubscriptionEventModelDao(cur), context);
 
                     final boolean isBusEvent = cur.getEffectiveDate().compareTo(clock.getUTCNow()) <= 0 && (cur.getType() == EventType.API_USER);
                     recordBusOrFutureNotificationFromTransaction(subscription, cur, entitySqlDaoWrapperFactory, isBusEvent, 0, context);
@@ -701,7 +699,8 @@ public class DefaultSubscriptionDao extends EntityDaoBase<SubscriptionBundleMode
             throws EntityPersistenceException {
         final UUID subscriptionId = subscription.getId();
         cancelFutureEventsFromTransaction(subscriptionId, cancelEvent.getEffectiveDate(), entitySqlDaoWrapperFactory, true, context);
-        entitySqlDaoWrapperFactory.become(SubscriptionEventSqlDao.class).create(new SubscriptionEventModelDao(cancelEvent), context);
+        final SubscriptionEventSqlDao subscriptionEventSqlDao = entitySqlDaoWrapperFactory.become(SubscriptionEventSqlDao.class);
+        createAndRefresh(subscriptionEventSqlDao, new SubscriptionEventModelDao(cancelEvent), context);
 
         final boolean isBusEvent = cancelEvent.getEffectiveDate().compareTo(clock.getUTCNow()) <= 0;
         recordBusOrFutureNotificationFromTransaction(subscription, cancelEvent, entitySqlDaoWrapperFactory, isBusEvent, seqId, context);
@@ -957,7 +956,7 @@ public class DefaultSubscriptionDao extends EntityDaoBase<SubscriptionBundleMode
             @Override
             public Void inTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory) throws Exception {
                 final SubscriptionEventSqlDao transactional = entitySqlDaoWrapperFactory.become(SubscriptionEventSqlDao.class);
-                transactional.create(new SubscriptionEventModelDao(bcdEvent), context);
+                createAndRefresh(transactional, new SubscriptionEventModelDao(bcdEvent), context);
 
                 // Notify the Bus
                 notifyBusOfRequestedChange(entitySqlDaoWrapperFactory, subscription, bcdEvent, SubscriptionBaseTransitionType.BCD_CHANGE, context);
@@ -1072,20 +1071,20 @@ public class DefaultSubscriptionDao extends EntityDaoBase<SubscriptionBundleMode
         for (final SubscriptionTransferData curSubscription : bundleTransferData.getSubscriptions()) {
             final DefaultSubscriptionBase subData = curSubscription.getData();
             for (final SubscriptionBaseEvent curEvent : curSubscription.getInitialEvents()) {
-                transactional.create(new SubscriptionEventModelDao(curEvent), context);
+                createAndRefresh(transactional, new SubscriptionEventModelDao(curEvent), context);
                 recordFutureNotificationFromTransaction(entitySqlDaoWrapperFactory,
                                                         curEvent.getEffectiveDate(),
                                                         new SubscriptionNotificationKey(curEvent.getId()),
                                                         context);
             }
-            transSubDao.create(new SubscriptionModelDao(subData), context);
+            createAndRefresh(transSubDao, new SubscriptionModelDao(subData), context);
 
             // Notify the Bus of the latest requested change
             final SubscriptionBaseEvent finalEvent = curSubscription.getInitialEvents().get(curSubscription.getInitialEvents().size() - 1);
             notifyBusOfRequestedChange(entitySqlDaoWrapperFactory, subData, finalEvent, SubscriptionBaseTransitionType.TRANSFER, context);
         }
 
-        transBundleDao.create(new SubscriptionBundleModelDao(bundleData), context);
+        createAndRefresh(transBundleDao, new SubscriptionBundleModelDao(bundleData), context);
     }
 
     //

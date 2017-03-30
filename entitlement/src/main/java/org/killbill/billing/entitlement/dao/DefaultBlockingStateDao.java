@@ -230,7 +230,7 @@ public class DefaultBlockingStateDao extends EntityDaoBase<BlockingStateModelDao
                     boolean inserted = false;
                     // Create the state, if needed
                     if (!blockingStatesToRemove.contains(newBlockingStateModelDao.getId())) {
-                        sqlDao.create(newBlockingStateModelDao, context);
+                        createAndRefresh(sqlDao, newBlockingStateModelDao, context);
                         inserted = true;
                     }
 

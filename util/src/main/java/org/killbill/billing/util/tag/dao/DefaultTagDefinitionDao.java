@@ -155,7 +155,7 @@ public class DefaultTagDefinitionDao extends EntityDaoBase<TagDefinitionModelDao
 
                     // Create it
                     final TagDefinitionModelDao tagDefinition = new TagDefinitionModelDao(context.getCreatedDate(), definitionName, description);
-                    tagDefinitionSqlDao.create(tagDefinition, context);
+                    createAndRefresh(tagDefinitionSqlDao, tagDefinition, context);
 
                     // Post an event to the bus
                     final boolean isControlTag = TagModelDaoHelper.isControlTag(tagDefinition.getName());
