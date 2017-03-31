@@ -134,6 +134,15 @@ public class AccountModelDao extends EntityModelDaoBase implements TimeZoneAware
         this(UUIDs.randomUUID(), account);
     }
 
+    @Override
+    public void setRecordId(final Long recordId) {
+        super.setRecordId(recordId);
+        // Invoked by the jDBI mapper when retrieving the record: while there is no account_record_id column,
+        // populate the field manually for EntitySqlDaoWrapperInvocationHandler#populateCaches to populate the
+        // ACCOUNT_RECORD_ID cache
+        setAccountRecordId(recordId);
+    }
+
     public String getExternalKey() {
         return externalKey;
     }
