@@ -25,6 +25,7 @@ import java.util.UUID;
 
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
+import org.killbill.billing.account.dao.AccountModelDao;
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.util.account.AccountDateTimeUtils;
 import org.killbill.billing.util.cache.ExternalizableInput;
@@ -55,6 +56,15 @@ public class DefaultImmutableAccountData implements ImmutableAccountData, Extern
     }
 
     public DefaultImmutableAccountData(final Account account) {
+        this(account.getId(),
+             account.getExternalKey(),
+             account.getCurrency(),
+             account.getTimeZone(),
+             AccountDateTimeUtils.getFixedOffsetTimeZone(account),
+             AccountDateTimeUtils.getReferenceDateTime(account));
+    }
+
+    public DefaultImmutableAccountData(final AccountModelDao account) {
         this(account.getId(),
              account.getExternalKey(),
              account.getCurrency(),
