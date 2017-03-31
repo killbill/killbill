@@ -61,7 +61,9 @@ public class EhcacheShiroManagerProvider extends CacheProviderBase implements Pr
 
         if (securityManager instanceof DefaultSecurityManager) {
             // For RBAC only (see also KillbillJdbcTenantRealmProvider)
-            ((DefaultSecurityManager) securityManager).setCacheManager(shiroEhCacheManager);
+            final DefaultSecurityManager securityManager = (DefaultSecurityManager) this.securityManager;
+            securityManager.setCacheManager(shiroEhCacheManager);
+            securityManager.setSubjectDAO(new KillBillSubjectDAO());
         }
 
         return shiroEhCacheManager;

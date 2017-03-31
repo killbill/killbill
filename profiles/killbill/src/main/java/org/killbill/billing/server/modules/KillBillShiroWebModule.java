@@ -31,10 +31,10 @@ import org.apache.shiro.session.mgt.SessionManager;
 import org.apache.shiro.web.filter.authc.BasicHttpAuthenticationFilter;
 import org.apache.shiro.web.mgt.DefaultWebSecurityManager;
 import org.apache.shiro.web.mgt.WebSecurityManager;
-import org.apache.shiro.web.session.mgt.DefaultWebSessionManager;
 import org.apache.shiro.web.util.WebUtils;
 import org.killbill.billing.jaxrs.resources.JaxrsResource;
 import org.killbill.billing.server.security.FirstSuccessfulStrategyWith540;
+import org.killbill.billing.server.security.KillBillWebSessionManager;
 import org.killbill.billing.server.security.KillbillJdbcTenantRealm;
 import org.killbill.billing.util.config.definition.RbacConfig;
 import org.killbill.billing.util.glue.EhcacheShiroManagerProvider;
@@ -111,7 +111,7 @@ public class KillBillShiroWebModule extends ShiroWebModuleWith435 {
     protected void bindSessionManager(final AnnotatedBindingBuilder<SessionManager> bind) {
         // Bypass the servlet container completely for session management and delegate it to Shiro.
         // The default session timeout is 30 minutes.
-        bind.to(DefaultWebSessionManager.class).asEagerSingleton();
+        bind.to(KillBillWebSessionManager.class).asEagerSingleton();
 
         // Magic provider to configure the session DAO
         bind(JDBCSessionDao.class).toProvider(JDBCSessionDaoProvider.class).asEagerSingleton();
