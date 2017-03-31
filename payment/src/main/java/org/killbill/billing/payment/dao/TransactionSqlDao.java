@@ -42,14 +42,14 @@ public interface TransactionSqlDao extends EntitySqlDao<PaymentTransactionModelD
 
     @SqlUpdate
     @Audited(ChangeType.UPDATE)
-    void updateTransactionStatus(@Bind("id") final String transactionId,
-                                 @Bind("attemptId") final String attemptId,
-                                 @Bind("processedAmount") final BigDecimal processedAmount,
-                                 @Bind("processedCurrency") final String processedCurrency,
-                                 @Bind("transactionStatus") final String transactionStatus,
-                                 @Bind("gatewayErrorCode") final String gatewayErrorCode,
-                                 @Bind("gatewayErrorMsg") final String gatewayErrorMsg,
-                                 @BindBean final InternalCallContext context);
+    Object updateTransactionStatus(@Bind("id") final String transactionId,
+                                   @Bind("attemptId") final String attemptId,
+                                   @Bind("processedAmount") final BigDecimal processedAmount,
+                                   @Bind("processedCurrency") final String processedCurrency,
+                                   @Bind("transactionStatus") final String transactionStatus,
+                                   @Bind("gatewayErrorCode") final String gatewayErrorCode,
+                                   @Bind("gatewayErrorMsg") final String gatewayErrorMsg,
+                                   @BindBean final InternalCallContext context);
 
     @SqlQuery
     List<PaymentTransactionModelDao> getPaymentTransactionsByExternalKey(@Bind("transactionExternalKey") final String transactionExternalKey,

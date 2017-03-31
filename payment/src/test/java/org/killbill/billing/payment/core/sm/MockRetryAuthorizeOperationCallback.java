@@ -87,7 +87,7 @@ public class MockRetryAuthorizeOperationCallback extends AuthorizeControlOperati
                                                                                       paymentStateContext.getCurrency(),
                                                                                       "",
                                                                                       "");
-        final PaymentModelDao paymentModelDao = paymentDao.insertPaymentWithFirstTransaction(payment, transaction, paymentStateContext.getInternalCallContext());
+        final PaymentModelDao paymentModelDao = paymentDao.insertPaymentWithFirstTransaction(payment, transaction, paymentStateContext.getInternalCallContext()).getPaymentModelDao();
         final PaymentTransaction convertedTransaction = new DefaultPaymentTransaction(transaction.getId(),
                                                                                                   paymentStateContext.getAttemptId(),
                                                                                                   transaction.getTransactionExternalKey(),

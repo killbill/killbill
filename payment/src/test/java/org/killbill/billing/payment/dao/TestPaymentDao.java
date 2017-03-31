@@ -110,7 +110,7 @@ public class TestPaymentDao extends PaymentTestSuiteWithEmbeddedDB {
                                                                                               TransactionStatus.SUCCESS, BigDecimal.TEN, Currency.AED,
                                                                                               "success", "");
 
-        final PaymentModelDao savedPayment = paymentDao.insertPaymentWithFirstTransaction(paymentModelDao, transactionModelDao, internalCallContext);
+        final PaymentModelDao savedPayment = paymentDao.insertPaymentWithFirstTransaction(paymentModelDao, transactionModelDao, internalCallContext).getPaymentModelDao();
         assertEquals(savedPayment.getId(), paymentModelDao.getId());
         assertEquals(savedPayment.getAccountId(), paymentModelDao.getAccountId());
         assertEquals(savedPayment.getExternalKey(), paymentModelDao.getExternalKey());
@@ -312,7 +312,7 @@ public class TestPaymentDao extends PaymentTestSuiteWithEmbeddedDB {
                                                                                        TransactionStatus.PENDING, BigDecimal.TEN, Currency.AED,
                                                                                        "pending", "");
 
-        final PaymentModelDao payment = paymentDao.insertPaymentWithFirstTransaction(paymentModelDao, transaction1, internalCallContext);
+        final PaymentModelDao payment = paymentDao.insertPaymentWithFirstTransaction(paymentModelDao, transaction1, internalCallContext).getPaymentModelDao();
 
         final PaymentTransactionModelDao transaction2 = new PaymentTransactionModelDao(initialTime, initialTime, null, transactionExternalKey2,
                                                                                        paymentModelDao.getId(), TransactionType.AUTHORIZE, initialTime,

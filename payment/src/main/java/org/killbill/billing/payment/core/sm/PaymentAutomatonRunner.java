@@ -160,7 +160,7 @@ public class PaymentAutomatonRunner {
         return new PaymentAutomatonDAOHelper(paymentStateContext, utcNow, paymentDao, paymentPluginServiceRegistration, internalCallContext, eventBus, paymentSMHelper);
     }
 
-    public UUID run(final PaymentStateContext paymentStateContext,
+    public void run(final PaymentStateContext paymentStateContext,
                     final PaymentAutomatonDAOHelper daoHelper,
                     @Nullable final String currentStateNameOrNull,
                     final TransactionType transactionType) throws PaymentApiException {
@@ -214,8 +214,6 @@ public class PaymentAutomatonRunner {
         }
 
         runStateMachineOperation(currentStateName, transactionType, leavingStateCallback, operationCallback, enteringStateCallback, includeDeletedPaymentMethod, paymentStateContext, daoHelper);
-
-        return paymentStateContext.getPaymentId();
     }
 
     //
