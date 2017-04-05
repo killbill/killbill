@@ -1,7 +1,9 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
+ * Copyright 2014-2017 Groupon, Inc
+ * Copyright 2014-2017 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -22,6 +24,7 @@ import java.util.UUID;
 import javax.inject.Inject;
 
 import org.killbill.billing.util.cache.Cachable.CacheType;
+import org.killbill.billing.util.cache.CacheController;
 import org.killbill.billing.util.cache.CacheControllerDispatcher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -46,14 +49,14 @@ public class SubscriptionChecker {
     private final SubscriptionBaseInternalApi subscriptionApi;
     private final AuditChecker auditChecker;
     private final NonEntityDao nonEntityDao;
-    private final CacheControllerDispatcher cacheControllerDispatcher;
+    private final CacheController<String, UUID> objectIdCacheController;
 
     @Inject
     public SubscriptionChecker(final SubscriptionBaseInternalApi subscriptionApi, final AuditChecker auditChecker, final NonEntityDao nonEntityDao, final CacheControllerDispatcher cacheControllerDispatcher) {
         this.subscriptionApi = subscriptionApi;
         this.auditChecker = auditChecker;
         this.nonEntityDao = nonEntityDao;
-        this.cacheControllerDispatcher = cacheControllerDispatcher;
+        objectIdCacheController = cacheControllerDispatcher.getCacheController(CacheType.OBJECT_ID);
     }
 
     public SubscriptionBaseBundle checkBundleNoAudits(final UUID bundleId, final UUID expectedAccountId, final String expectedKey, final InternalTenantContext context) throws SubscriptionBaseApiException {
@@ -65,7 +68,7 @@ public class SubscriptionChecker {
     }
 
     public SubscriptionBase checkSubscriptionCreated(final UUID subscriptionId, final InternalCallContext context) throws SubscriptionBaseApiException {
-        final UUID tenantId = nonEntityDao.retrieveIdFromObject(context.getTenantRecordId(), ObjectType.TENANT, cacheControllerDispatcher.getCacheController(CacheType.OBJECT_ID));
+        final UUID tenantId = nonEntityDao.retrieveIdFromObject(context.getTenantRecordId(), ObjectType.TENANT, objectIdCacheController);
         final CallContext callContext = context.toCallContext(tenantId);
 
         final SubscriptionBase subscription = subscriptionApi.getSubscriptionFromId(subscriptionId, context);

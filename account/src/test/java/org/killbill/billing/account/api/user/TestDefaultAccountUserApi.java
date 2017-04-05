@@ -350,12 +350,10 @@ public class TestDefaultAccountUserApi extends AccountTestSuiteWithEmbeddedDB {
     @Test(groups = "slow", description = "Test Account create Child with a non existing Parent",
             expectedExceptions = AccountApiException.class, expectedExceptionsMessageRegExp = "Account does not exist for id .*")
     public void testCreateChildAccountWithInvalidParent() throws Exception {
-
         final AccountModelDao childAccountModel = createTestAccount();
         childAccountModel.setParentAccountId(UUID.randomUUID());
         final AccountData childAccountData = new DefaultAccount(childAccountModel);
         final Account childAccount = accountUserApi.createAccount(childAccountData, callContext);
-
     }
 
     @Test(groups = "slow", description = "Test un- and re-parenting")

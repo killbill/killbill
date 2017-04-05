@@ -143,11 +143,17 @@ public class DefaultSubscriptionBaseApiService implements SubscriptionBaseApiSer
         final InternalCallContext internalCallContext = createCallContextFromAccountId(accountId, context);
         dao.createSubscriptionsWithAddOns(allSubscriptions, eventsMap, internalCallContext);
 
-        for (final List<SubscriptionBase> subscriptions : subscriptionBaseAndAddOnsList) {
-            final SubscriptionBase baseSubscription = findBaseSubscription(subscriptions);
-            rebuildTransitions(internalCallContext, subscriptions, baseSubscription);
+        try {
+            for (final List<SubscriptionBase> subscriptions : subscriptionBaseAndAddOnsList) {
+                for (final SubscriptionBase input : subscriptions) {
+                    ((DefaultSubscriptionBase) input).rebuildTransitions(dao.getEventsForSubscription(input.getId(), internalCallContext),
+                                                                         catalogService.getFullCatalog(true, true, internalCallContext));
+                }
+            }
+            return allSubscriptions;
+        } catch (final CatalogApiException e) {
+            throw new SubscriptionBaseApiException(e);
         }
-        return allSubscriptions;
     }
 
     private void createEvents(final Iterable<SubscriptionSpecifier> subscriptions, final CallContext context, final Map<UUID, List<SubscriptionBaseEvent>> eventsMap, final Collection<SubscriptionBase> subscriptionBaseList) throws SubscriptionBaseApiException {
@@ -165,35 +171,6 @@ public class DefaultSubscriptionBaseApiService implements SubscriptionBaseApiSer
                 throw new SubscriptionBaseApiException(e);
             }
         }
-    }
-
-    private void rebuildTransitions(final InternalCallContext internalCallContext, final Iterable<SubscriptionBase> subscriptions, final SubscriptionBase baseSubscription) throws SubscriptionBaseApiException {
-        try {
-            // Safe cast
-            ((DefaultSubscriptionBase) baseSubscription).rebuildTransitions(dao.getEventsForSubscription(baseSubscription.getId(), internalCallContext),
-                                                                            catalogService.getFullCatalog(true, true, internalCallContext));
-
-            for (final SubscriptionBase input : subscriptions) {
-                if (input.getId().equals(baseSubscription.getId())) {
-                    continue;
-                }
-
-                // Safe cast
-                ((DefaultSubscriptionBase) input).rebuildTransitions(dao.getEventsForSubscription(input.getId(), internalCallContext),
-                                                                     catalogService.getFullCatalog(true, true, internalCallContext));
-            }
-        } catch (final CatalogApiException e) {
-            throw new SubscriptionBaseApiException(e);
-        }
-    }
-
-    private SubscriptionBase findBaseSubscription(final Iterable<SubscriptionBase> subscriptionBaseList) {
-        return Iterables.tryFind(subscriptionBaseList, new Predicate<SubscriptionBase>() {
-            @Override
-            public boolean apply(final SubscriptionBase subscription) {
-                return ProductCategory.BASE.equals(subscription.getCategory());
-            }
-        }).orNull();
     }
 
     @Override

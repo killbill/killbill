@@ -1,5 +1,6 @@
 .idea/workspace.xml
 .idea/libraries
+.idea/kotlinc.xml
 *.ipr
 *.iws
 *.DS_Store

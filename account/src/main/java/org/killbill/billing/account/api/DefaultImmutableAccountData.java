@@ -17,32 +17,54 @@
 
 package org.killbill.billing.account.api;
 
+import java.io.Externalizable;
+import java.io.IOException;
+import java.io.ObjectInput;
+import java.io.ObjectOutput;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
+import org.killbill.billing.account.dao.AccountModelDao;
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.util.account.AccountDateTimeUtils;
+import org.killbill.billing.util.cache.ExternalizableInput;
+import org.killbill.billing.util.cache.ExternalizableOutput;
+import org.killbill.billing.util.cache.MapperHolder;
 
-public class DefaultImmutableAccountData implements ImmutableAccountData {
+public class DefaultImmutableAccountData implements ImmutableAccountData, Externalizable {
 
-    private final UUID id;
-    private final String externalKey;
-    private final Currency currency;
-    private final DateTimeZone dateTimeZone;
-    private final DateTimeZone fixedOffsetDateTimeZone;
-    private final DateTime referenceTime;
+    private static final long serialVersionUID = 8117686452347277415L;
 
-    public DefaultImmutableAccountData(final UUID id, final String externalKey, final Currency currency, final DateTimeZone dateTimeZone, final DateTimeZone fixedOffsetDateTimeZone, final DateTime referenceTime) {
+    private UUID id;
+    private String externalKey;
+    private Currency currency;
+    private DateTimeZone timeZone;
+    private DateTimeZone fixedOffsetTimeZone;
+    private DateTime referenceTime;
+
+    // For deserialization
+    public DefaultImmutableAccountData() {}
+
+    public DefaultImmutableAccountData(final UUID id, final String externalKey, final Currency currency, final DateTimeZone timeZone, final DateTimeZone fixedOffsetTimeZone, final DateTime referenceTime) {
         this.id = id;
         this.externalKey = externalKey;
         this.currency = currency;
-        this.dateTimeZone = dateTimeZone;
-        this.fixedOffsetDateTimeZone = fixedOffsetDateTimeZone;
+        this.timeZone = timeZone;
+        this.fixedOffsetTimeZone = fixedOffsetTimeZone;
         this.referenceTime = referenceTime;
     }
 
     public DefaultImmutableAccountData(final Account account) {
+        this(account.getId(),
+             account.getExternalKey(),
+             account.getCurrency(),
+             account.getTimeZone(),
+             AccountDateTimeUtils.getFixedOffsetTimeZone(account),
+             AccountDateTimeUtils.getReferenceDateTime(account));
+    }
+
+    public DefaultImmutableAccountData(final AccountModelDao account) {
         this(account.getId(),
              account.getExternalKey(),
              account.getCurrency(),
@@ -68,7 +90,7 @@ public class DefaultImmutableAccountData implements ImmutableAccountData {
 
     @Override
     public DateTimeZone getTimeZone() {
-        return dateTimeZone;
+        return timeZone;
     }
 
     @Override
@@ -86,7 +108,7 @@ public class DefaultImmutableAccountData implements ImmutableAccountData {
     }
 
     public DateTimeZone getFixedOffsetTimeZone() {
-        return fixedOffsetDateTimeZone;
+        return fixedOffsetTimeZone;
     }
 
     @Override
@@ -100,8 +122,8 @@ public class DefaultImmutableAccountData implements ImmutableAccountData {
         sb.append("id=").append(id);
         sb.append(", externalKey='").append(externalKey).append('\'');
         sb.append(", currency=").append(currency);
-        sb.append(", dateTimeZone=").append(dateTimeZone);
-        sb.append(", fixedOffsetDateTimeZone=").append(fixedOffsetDateTimeZone);
+        sb.append(", timeZone=").append(timeZone);
+        sb.append(", fixedOffsetTimeZone=").append(fixedOffsetTimeZone);
         sb.append(", referenceTime=").append(referenceTime);
         sb.append('}');
         return sb.toString();
@@ -127,10 +149,10 @@ public class DefaultImmutableAccountData implements ImmutableAccountData {
         if (currency != that.currency) {
             return false;
         }
-        if (dateTimeZone != null ? !dateTimeZone.equals(that.dateTimeZone) : that.dateTimeZone != null) {
+        if (timeZone != null ? !timeZone.equals(that.timeZone) : that.timeZone != null) {
             return false;
         }
-        if (fixedOffsetDateTimeZone != null ? !fixedOffsetDateTimeZone.equals(that.fixedOffsetDateTimeZone) : that.fixedOffsetDateTimeZone != null) {
+        if (fixedOffsetTimeZone != null ? !fixedOffsetTimeZone.equals(that.fixedOffsetTimeZone) : that.fixedOffsetTimeZone != null) {
             return false;
         }
         return referenceTime != null ? referenceTime.compareTo(that.referenceTime) == 0 : that.referenceTime == null;
@@ -141,9 +163,19 @@ public class DefaultImmutableAccountData implements ImmutableAccountData {
         int result = id != null ? id.hashCode() : 0;
         result = 31 * result + (externalKey != null ? externalKey.hashCode() : 0);
         result = 31 * result + (currency != null ? currency.hashCode() : 0);
-        result = 31 * result + (dateTimeZone != null ? dateTimeZone.hashCode() : 0);
-        result = 31 * result + (fixedOffsetDateTimeZone != null ? fixedOffsetDateTimeZone.hashCode() : 0);
+        result = 31 * result + (timeZone != null ? timeZone.hashCode() : 0);
+        result = 31 * result + (fixedOffsetTimeZone != null ? fixedOffsetTimeZone.hashCode() : 0);
         result = 31 * result + (referenceTime != null ? referenceTime.hashCode() : 0);
         return result;
+    }
+
+    @Override
+    public void readExternal(final ObjectInput in) throws IOException {
+        MapperHolder.mapper().readerForUpdating(this).readValue(new ExternalizableInput(in));
+    }
+
+    @Override
+    public void writeExternal(final ObjectOutput oo) throws IOException {
+        MapperHolder.mapper().writeValue(new ExternalizableOutput(oo), this);
     }
 }

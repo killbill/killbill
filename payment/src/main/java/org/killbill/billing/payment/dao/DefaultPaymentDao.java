@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014-2016 Groupon, Inc
- * Copyright 2014-2016 The Billing Project, LLC
+ * Copyright 2014-2017 Groupon, Inc
+ * Copyright 2014-2017 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -107,9 +107,7 @@ public class DefaultPaymentDao extends EntityDaoBase<PaymentModelDao, Payment, P
             @Override
             public PaymentAttemptModelDao inTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory) throws Exception {
                 final PaymentAttemptSqlDao transactional = entitySqlDaoWrapperFactory.become(PaymentAttemptSqlDao.class);
-                transactional.create(attempt, context);
-                final PaymentAttemptModelDao result = transactional.getById(attempt.getId().toString(), context);
-                return result;
+                return createAndRefresh(transactional, attempt, context);
             }
         });
     }
@@ -290,16 +288,22 @@ public class DefaultPaymentDao extends EntityDaoBase<PaymentModelDao, Payment, P
     }
 
     @Override
-    public PaymentModelDao insertPaymentWithFirstTransaction(final PaymentModelDao payment, final PaymentTransactionModelDao paymentTransaction, final InternalCallContext context) {
+    public PaymentAndTransactionModelDao insertPaymentWithFirstTransaction(final PaymentModelDao payment, final PaymentTransactionModelDao paymentTransaction, final InternalCallContext context) {
+        final PaymentAndTransactionModelDao paymentAndTransactionModelDao = new PaymentAndTransactionModelDao();
 
-        return transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<PaymentModelDao>() {
+        return transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<PaymentAndTransactionModelDao>() {
 
             @Override
-            public PaymentModelDao inTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory) throws Exception {
+            public PaymentAndTransactionModelDao inTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory) throws Exception {
                 final PaymentSqlDao paymentSqlDao = entitySqlDaoWrapperFactory.become(PaymentSqlDao.class);
-                paymentSqlDao.create(payment, context);
-                entitySqlDaoWrapperFactory.become(TransactionSqlDao.class).create(paymentTransaction, context);
-                return paymentSqlDao.getById(payment.getId().toString(), context);
+                final PaymentModelDao paymentModelDao = createAndRefresh(paymentSqlDao, payment, context);
+                paymentAndTransactionModelDao.setPaymentModelDao(paymentModelDao);
+
+                final TransactionSqlDao transactionSqlDao = entitySqlDaoWrapperFactory.become(TransactionSqlDao.class);
+                final PaymentTransactionModelDao paymentTransactionModelDao = createAndRefresh(transactionSqlDao, paymentTransaction, context);
+                paymentAndTransactionModelDao.setPaymentTransactionModelDao(paymentTransactionModelDao);
+
+                return paymentAndTransactionModelDao;
             }
         });
     }
@@ -310,8 +314,7 @@ public class DefaultPaymentDao extends EntityDaoBase<PaymentModelDao, Payment, P
             @Override
             public PaymentTransactionModelDao inTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory) throws Exception {
                 final TransactionSqlDao transactional = entitySqlDaoWrapperFactory.become(TransactionSqlDao.class);
-                transactional.create(paymentTransaction, context);
-                final PaymentTransactionModelDao paymentTransactionModelDao = transactional.getById(paymentTransaction.getId().toString(), context);
+                final PaymentTransactionModelDao paymentTransactionModelDao = createAndRefresh(transactional, paymentTransaction, context);
 
                 entitySqlDaoWrapperFactory.become(PaymentSqlDao.class).updatePaymentForNewTransaction(paymentId.toString(), contextWithUpdatedDate(context));
 
@@ -321,34 +324,50 @@ public class DefaultPaymentDao extends EntityDaoBase<PaymentModelDao, Payment, P
     }
 
     @Override
-    public void updatePaymentAndTransactionOnCompletion(final UUID accountId, @Nullable final UUID attemptId, final UUID paymentId, final TransactionType transactionType,
-                                                        final String currentPaymentStateName, @Nullable final String lastPaymentSuccessStateName,
-                                                        final UUID transactionId, final TransactionStatus transactionStatus,
-                                                        final BigDecimal processedAmount, final Currency processedCurrency,
-                                                        final String gatewayErrorCode, final String gatewayErrorMsg,
-                                                        final InternalCallContext context) {
-        transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<Void>() {
+    public PaymentAndTransactionModelDao updatePaymentAndTransactionOnCompletion(final UUID accountId, @Nullable final UUID attemptId, final UUID paymentId, final TransactionType transactionType,
+                                                                                                    final String currentPaymentStateName, @Nullable final String lastPaymentSuccessStateName,
+                                                                                                    final UUID transactionId, final TransactionStatus transactionStatus,
+                                                                                                    final BigDecimal processedAmount, final Currency processedCurrency,
+                                                                                                    final String gatewayErrorCode, final String gatewayErrorMsg,
+                                                                                                    final InternalCallContext context) {
+        final PaymentAndTransactionModelDao paymentAndTransactionModelDao = new PaymentAndTransactionModelDao();
+
+        return transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<PaymentAndTransactionModelDao>() {
 
             @Override
-            public Void inTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory) throws Exception {
+            public PaymentAndTransactionModelDao inTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory) throws Exception {
                 final InternalCallContext contextWithUpdatedDate = contextWithUpdatedDate(context);
+
                 final TransactionSqlDao transactional = entitySqlDaoWrapperFactory.become(TransactionSqlDao.class);
-                final PaymentTransactionModelDao paymentTransactionModelDao = transactional.getById(transactionId.toString(), context);
-                transactional.updateTransactionStatus(transactionId.toString(),
-                                                      attemptId == null ? (paymentTransactionModelDao.getAttemptId() == null ? null : paymentTransactionModelDao.getAttemptId().toString()) : attemptId.toString(),
-                                                      processedAmount,
-                                                      processedCurrency == null ? null : processedCurrency.toString(),
-                                                      transactionStatus == null ? null : transactionStatus.toString(),
-                                                      gatewayErrorCode,
-                                                      gatewayErrorMsg,
-                                                      contextWithUpdatedDate);
-                if (lastPaymentSuccessStateName != null) {
-                    entitySqlDaoWrapperFactory.become(PaymentSqlDao.class).updateLastSuccessPaymentStateName(paymentId.toString(), currentPaymentStateName, lastPaymentSuccessStateName, contextWithUpdatedDate);
+                final String updatedAttemptId;
+                if (attemptId == null) {
+                    final PaymentTransactionModelDao paymentTransactionModelDao = transactional.getById(transactionId.toString(), context);
+                    updatedAttemptId = paymentTransactionModelDao.getAttemptId() == null ? null : paymentTransactionModelDao.getAttemptId().toString();
                 } else {
-                    entitySqlDaoWrapperFactory.become(PaymentSqlDao.class).updatePaymentStateName(paymentId.toString(), currentPaymentStateName, contextWithUpdatedDate);
+                    updatedAttemptId = attemptId.toString();
                 }
+                final PaymentTransactionModelDao paymentTransactionModelDao = (PaymentTransactionModelDao) transactional.updateTransactionStatus(transactionId.toString(),
+                                                                                                                                                 updatedAttemptId,
+                                                                                                                                                 processedAmount,
+                                                                                                                                                 processedCurrency == null ? null : processedCurrency.toString(),
+                                                                                                                                                 transactionStatus == null ? null : transactionStatus.toString(),
+                                                                                                                                                 gatewayErrorCode,
+                                                                                                                                                 gatewayErrorMsg,
+                                                                                                                                                 contextWithUpdatedDate);
+                paymentAndTransactionModelDao.setPaymentTransactionModelDao(paymentTransactionModelDao);
+
+                final PaymentSqlDao paymentSqlDao = entitySqlDaoWrapperFactory.become(PaymentSqlDao.class);
+                final PaymentModelDao paymentModelDao;
+                if (lastPaymentSuccessStateName != null) {
+                    paymentModelDao = (PaymentModelDao) paymentSqlDao.updateLastSuccessPaymentStateName(paymentId.toString(), currentPaymentStateName, lastPaymentSuccessStateName, contextWithUpdatedDate);
+                } else {
+                    paymentModelDao = (PaymentModelDao) paymentSqlDao.updatePaymentStateName(paymentId.toString(), currentPaymentStateName, contextWithUpdatedDate);
+                }
+                paymentAndTransactionModelDao.setPaymentModelDao(paymentModelDao);
+
                 postPaymentEventFromTransaction(accountId, transactionStatus, transactionType, paymentId, transactionId, processedAmount, processedCurrency, clock.getUTCNow(), gatewayErrorCode, entitySqlDaoWrapperFactory, context);
-                return null;
+
+                return paymentAndTransactionModelDao;
             }
         });
     }
@@ -428,9 +447,7 @@ public class DefaultPaymentDao extends EntityDaoBase<PaymentModelDao, Payment, P
     private PaymentMethodModelDao insertPaymentMethodInTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory, final PaymentMethodModelDao paymentMethod, final InternalCallContext context)
             throws EntityPersistenceException {
         final PaymentMethodSqlDao transactional = entitySqlDaoWrapperFactory.become(PaymentMethodSqlDao.class);
-        transactional.create(paymentMethod, context);
-
-        return transactional.getById(paymentMethod.getId().toString(), context);
+        return createAndRefresh(transactional, paymentMethod, context);
     }
 
     @Override

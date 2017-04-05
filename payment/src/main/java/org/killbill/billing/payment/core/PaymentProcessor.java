@@ -225,14 +225,15 @@ public class PaymentProcessor extends ProcessorBase {
 
     public Payment getPayment(final UUID paymentId, final boolean withPluginInfo, final boolean withAttempts, final Iterable<PluginProperty> properties, final TenantContext tenantContext, final InternalTenantContext internalTenantContext) throws PaymentApiException {
         final PaymentModelDao paymentModelDao = paymentDao.getPayment(paymentId, internalTenantContext);
-        if (paymentModelDao == null) {
-            return null;
-        }
-        return toPayment(paymentModelDao, withPluginInfo, withAttempts, properties, tenantContext, internalTenantContext);
+        return getPayment(paymentModelDao, withPluginInfo, withAttempts, properties, tenantContext, internalTenantContext);
     }
 
     public Payment getPaymentByExternalKey(final String paymentExternalKey, final boolean withPluginInfo, final boolean withAttempts, final Iterable<PluginProperty> properties, final TenantContext tenantContext, final InternalTenantContext internalTenantContext) throws PaymentApiException {
         final PaymentModelDao paymentModelDao = paymentDao.getPaymentByExternalKey(paymentExternalKey, internalTenantContext);
+        return getPayment(paymentModelDao, withPluginInfo, withAttempts, properties, tenantContext, internalTenantContext);
+    }
+
+    private Payment getPayment(final PaymentModelDao paymentModelDao, final boolean withPluginInfo, final boolean withAttempts, final Iterable<PluginProperty> properties, final TenantContext tenantContext, final InternalTenantContext internalTenantContext) throws PaymentApiException {
         if (paymentModelDao == null) {
             return null;
         }
@@ -546,9 +547,9 @@ public class PaymentProcessor extends ProcessorBase {
             currentStateName = paymentModelDao.getLastSuccessStateName();
         }
 
-        final UUID nonNullPaymentId = paymentAutomatonRunner.run(paymentStateContext, daoHelper, currentStateName, transactionType);
+        paymentAutomatonRunner.run(paymentStateContext, daoHelper, currentStateName, transactionType);
 
-        return getPayment(nonNullPaymentId, true, false, properties, callContext, internalCallContext);
+        return getPayment(paymentStateContext.getPaymentModelDao(), true, false, properties, callContext, internalCallContext);
     }
 
     private void runSanityOnTransactionExternalKey(final Iterable<PaymentTransactionModelDao> allPaymentTransactionsForKey,

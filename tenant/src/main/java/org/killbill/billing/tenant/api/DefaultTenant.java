@@ -16,22 +16,35 @@
 
 package org.killbill.billing.tenant.api;
 
+import java.io.Externalizable;
+import java.io.IOException;
+import java.io.ObjectInput;
+import java.io.ObjectOutput;
 import java.util.UUID;
 
 import javax.annotation.Nullable;
 
 import org.joda.time.DateTime;
-
 import org.killbill.billing.tenant.dao.TenantModelDao;
-import org.killbill.billing.entity.EntityBase;
 import org.killbill.billing.util.UUIDs;
+import org.killbill.billing.util.cache.ExternalizableInput;
+import org.killbill.billing.util.cache.ExternalizableOutput;
+import org.killbill.billing.util.cache.MapperHolder;
 
-public class DefaultTenant extends EntityBase implements Tenant {
+public class DefaultTenant implements Tenant, Externalizable {
 
-    private final String externalKey;
-    private final String apiKey;
+    private static final long serialVersionUID = -6662488328218280007L;
+
+    private UUID id;
+    private DateTime createdDate;
+    private DateTime updatedDate;
+    private String externalKey;
+    private String apiKey;
     // Decrypted (clear) secret
-    private final String apiSecret;
+    private transient String apiSecret;
+
+    // For deserialization
+    public DefaultTenant() {}
 
     /**
      * This call is used to create a tenant
@@ -54,7 +67,9 @@ public class DefaultTenant extends EntityBase implements Tenant {
 
     public DefaultTenant(final UUID id, @Nullable final DateTime createdDate, @Nullable final DateTime updatedDate,
                          final String externalKey, final String apiKey, final String apiSecret) {
-        super(id, createdDate, updatedDate);
+        this.id = id;
+        this.createdDate = createdDate;
+        this.updatedDate = updatedDate;
         this.externalKey = externalKey;
         this.apiKey = apiKey;
         this.apiSecret = apiSecret;
@@ -63,6 +78,21 @@ public class DefaultTenant extends EntityBase implements Tenant {
     public DefaultTenant(final TenantModelDao tenant) {
         this(tenant.getId(), tenant.getCreatedDate(), tenant.getUpdatedDate(), tenant.getExternalKey(), tenant.getApiKey(),
              tenant.getApiSecret());
+    }
+
+    @Override
+    public UUID getId() {
+        return id;
+    }
+
+    @Override
+    public DateTime getCreatedDate() {
+        return createdDate;
+    }
+
+    @Override
+    public DateTime getUpdatedDate() {
+        return updatedDate;
     }
 
     @Override
@@ -82,9 +112,11 @@ public class DefaultTenant extends EntityBase implements Tenant {
 
     @Override
     public String toString() {
-        final StringBuilder sb = new StringBuilder();
-        sb.append("DefaultTenant");
-        sb.append("{externalKey='").append(externalKey).append('\'');
+        final StringBuilder sb = new StringBuilder("DefaultTenant{");
+        sb.append("id=").append(id);
+        sb.append(", createdDate=").append(createdDate);
+        sb.append(", updatedDate=").append(updatedDate);
+        sb.append(", externalKey='").append(externalKey).append('\'');
         sb.append(", apiKey='").append(apiKey).append('\'');
         // Don't print the secret
         sb.append('}');
@@ -102,24 +134,42 @@ public class DefaultTenant extends EntityBase implements Tenant {
 
         final DefaultTenant that = (DefaultTenant) o;
 
-        if (apiKey != null ? !apiKey.equals(that.apiKey) : that.apiKey != null) {
+        if (id != null ? !id.equals(that.id) : that.id != null) {
+            return false;
+        }
+        if (createdDate != null ? !createdDate.equals(that.createdDate) : that.createdDate != null) {
+            return false;
+        }
+        if (updatedDate != null ? !updatedDate.equals(that.updatedDate) : that.updatedDate != null) {
             return false;
         }
         if (externalKey != null ? !externalKey.equals(that.externalKey) : that.externalKey != null) {
             return false;
         }
-        if (apiSecret != null ? !apiSecret.equals(that.apiSecret) : that.apiSecret != null) {
+        if (apiKey != null ? !apiKey.equals(that.apiKey) : that.apiKey != null) {
             return false;
         }
-
-        return true;
+        return apiSecret != null ? apiSecret.equals(that.apiSecret) : that.apiSecret == null;
     }
 
     @Override
     public int hashCode() {
-        int result = externalKey != null ? externalKey.hashCode() : 0;
+        int result = id != null ? id.hashCode() : 0;
+        result = 31 * result + (createdDate != null ? createdDate.hashCode() : 0);
+        result = 31 * result + (updatedDate != null ? updatedDate.hashCode() : 0);
+        result = 31 * result + (externalKey != null ? externalKey.hashCode() : 0);
         result = 31 * result + (apiKey != null ? apiKey.hashCode() : 0);
         result = 31 * result + (apiSecret != null ? apiSecret.hashCode() : 0);
         return result;
+    }
+
+    @Override
+    public void readExternal(final ObjectInput in) throws IOException {
+        MapperHolder.mapper().readerForUpdating(this).readValue(new ExternalizableInput(in));
+    }
+
+    @Override
+    public void writeExternal(final ObjectOutput oo) throws IOException {
+        MapperHolder.mapper().writeValue(new ExternalizableOutput(oo), this);
     }
 }

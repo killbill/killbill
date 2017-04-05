@@ -1,6 +1,6 @@
 /*
- * Copyright 2014-2015 Groupon, Inc
- * Copyright 2014-2015 The Billing Project, LLC
+ * Copyright 2014-2017 Groupon, Inc
+ * Copyright 2014-2017 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -23,6 +23,7 @@ import javax.inject.Inject;
 import javax.inject.Singleton;
 
 import org.killbill.billing.callcontext.InternalTenantContext;
+import org.killbill.billing.catalog.api.Catalog;
 import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.tenant.api.TenantInternalApi;
 import org.killbill.billing.util.cache.Cachable.CacheType;
@@ -30,7 +31,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 @Singleton
-public class TenantCatalogCacheLoader extends BaseCacheLoader {
+public class TenantCatalogCacheLoader extends BaseCacheLoader<Long, Catalog> {
 
     private final Logger log = LoggerFactory.getLogger(TenantCatalogCacheLoader.class);
 
@@ -48,19 +49,9 @@ public class TenantCatalogCacheLoader extends BaseCacheLoader {
     }
 
     @Override
-    public Object load(final Object key, final Object argument) {
-        checkCacheLoaderStatus();
-
-        if (!(key instanceof Long)) {
-            throw new IllegalArgumentException("Unexpected key type of " + key.getClass().getName());
-        }
-        if (!(argument instanceof CacheLoaderArgument)) {
-            throw new IllegalArgumentException("Unexpected argument type of " + argument.getClass().getName());
-        }
-
-        final Long tenantRecordId = (Long) key;
+    public Catalog compute(final Long key, final CacheLoaderArgument cacheLoaderArgument) {
+        final Long tenantRecordId = key;
         final InternalTenantContext internalTenantContext = new InternalTenantContext(tenantRecordId);
-        final CacheLoaderArgument cacheLoaderArgument = (CacheLoaderArgument) argument;
 
         if (cacheLoaderArgument.getArgs() == null || !(cacheLoaderArgument.getArgs()[0] instanceof LoaderCallback)) {
             throw new IllegalArgumentException("Missing LoaderCallback from the arguments ");
@@ -80,6 +71,7 @@ public class TenantCatalogCacheLoader extends BaseCacheLoader {
     }
 
     public interface LoaderCallback {
-        public Object loadCatalog(final List<String> catalogXMLs, final Long tenantRecordId) throws CatalogApiException;
+
+        public Catalog loadCatalog(final List<String> catalogXMLs, final Long tenantRecordId) throws CatalogApiException;
     }
 }

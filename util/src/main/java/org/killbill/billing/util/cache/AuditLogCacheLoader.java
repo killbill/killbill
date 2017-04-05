@@ -1,7 +1,9 @@
 /*
- * Copyright 2010-2012 Ning, Inc.
+ * Copyright 2010-2013 Ning, Inc.
+ * Copyright 2014-2017 Groupon, Inc
+ * Copyright 2014-2017 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -16,25 +18,24 @@
 
 package org.killbill.billing.util.cache;
 
+import java.util.List;
+
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
-import org.skife.jdbi.v2.IDBI;
-
 import org.killbill.billing.callcontext.InternalTenantContext;
+import org.killbill.billing.util.audit.dao.AuditLogModelDao;
 import org.killbill.billing.util.cache.Cachable.CacheType;
 import org.killbill.billing.util.dao.AuditSqlDao;
-import org.killbill.billing.util.dao.NonEntityDao;
-
-import net.sf.ehcache.loader.CacheLoader;
+import org.skife.jdbi.v2.IDBI;
 
 @Singleton
-public class AuditLogCacheLoader extends BaseCacheLoader implements CacheLoader {
+public class AuditLogCacheLoader extends BaseCacheLoader<String, List<AuditLogModelDao>> {
 
     private final AuditSqlDao auditSqlDao;
 
     @Inject
-    public AuditLogCacheLoader(final IDBI dbi, final NonEntityDao nonEntityDao) {
+    public AuditLogCacheLoader(final IDBI dbi) {
         super();
         this.auditSqlDao = dbi.onDemand(AuditSqlDao.class);
     }
@@ -45,17 +46,8 @@ public class AuditLogCacheLoader extends BaseCacheLoader implements CacheLoader 
     }
 
     @Override
-    public Object load(final Object key, final Object argument) {
-        checkCacheLoaderStatus();
-
-        if (!(key instanceof String)) {
-            throw new IllegalArgumentException("Unexpected key type of " + key.getClass().getName());
-        }
-        if (!(argument instanceof CacheLoaderArgument)) {
-            throw new IllegalArgumentException("Unexpected key type of " + argument.getClass().getName());
-        }
-
-        final Object[] args = ((CacheLoaderArgument) argument).getArgs();
+    public List<AuditLogModelDao> compute(final String key, final CacheLoaderArgument cacheLoaderArgument) {
+        final Object[] args = cacheLoaderArgument.getArgs();
         final String tableName = (String) args[0];
         final Long targetRecordId = (Long) args[1];
         final InternalTenantContext internalTenantContext = (InternalTenantContext) args[2];

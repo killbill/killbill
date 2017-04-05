@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014-2015 Groupon, Inc
- * Copyright 2014-2015 The Billing Project, LLC
+ * Copyright 2014-2017 Groupon, Inc
+ * Copyright 2014-2017 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -31,12 +31,13 @@ import org.killbill.billing.util.UUIDs;
 import org.killbill.billing.util.dao.TableName;
 import org.killbill.billing.util.entity.dao.EntityModelDao;
 import org.killbill.billing.util.entity.dao.EntityModelDaoBase;
+import org.killbill.billing.util.entity.dao.TimeZoneAwareEntity;
 
 import com.google.common.base.MoreObjects;
 
 import static org.killbill.billing.account.api.DefaultMutableAccountData.DEFAULT_BILLING_CYCLE_DAY_LOCAL;
 
-public class AccountModelDao extends EntityModelDaoBase implements EntityModelDao<Account> {
+public class AccountModelDao extends EntityModelDaoBase implements TimeZoneAwareEntity, EntityModelDao<Account> {
 
     private String externalKey;
     private String email;
@@ -133,6 +134,15 @@ public class AccountModelDao extends EntityModelDaoBase implements EntityModelDa
         this(UUIDs.randomUUID(), account);
     }
 
+    @Override
+    public void setRecordId(final Long recordId) {
+        super.setRecordId(recordId);
+        // Invoked by the jDBI mapper when retrieving the record: while there is no account_record_id column,
+        // populate the field manually for EntitySqlDaoWrapperInvocationHandler#populateCaches to populate the
+        // ACCOUNT_RECORD_ID cache
+        setAccountRecordId(recordId);
+    }
+
     public String getExternalKey() {
         return externalKey;
     }
@@ -205,6 +215,7 @@ public class AccountModelDao extends EntityModelDaoBase implements EntityModelDa
         this.paymentMethodId = paymentMethodId;
     }
 
+    @Override
     public DateTimeZone getTimeZone() {
         return timeZone;
     }

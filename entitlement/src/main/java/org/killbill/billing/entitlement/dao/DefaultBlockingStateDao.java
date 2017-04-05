@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014-2016 Groupon, Inc
- * Copyright 2014-2016 The Billing Project, LLC
+ * Copyright 2014-2017 Groupon, Inc
+ * Copyright 2014-2017 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -36,7 +36,6 @@ import org.killbill.billing.ObjectType;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.entitlement.DefaultEntitlementService;
-import org.killbill.billing.entitlement.EntitlementService;
 import org.killbill.billing.entitlement.api.BlockingApiException;
 import org.killbill.billing.entitlement.api.BlockingState;
 import org.killbill.billing.entitlement.api.BlockingStateType;
@@ -46,6 +45,7 @@ import org.killbill.billing.entitlement.block.BlockingChecker.BlockingAggregator
 import org.killbill.billing.entitlement.block.StatelessBlockingChecker;
 import org.killbill.billing.entitlement.engine.core.BlockingTransitionNotificationKey;
 import org.killbill.billing.util.cache.Cachable.CacheType;
+import org.killbill.billing.util.cache.CacheController;
 import org.killbill.billing.util.cache.CacheControllerDispatcher;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.billing.util.dao.NonEntityDao;
@@ -107,7 +107,7 @@ public class DefaultBlockingStateDao extends EntityDaoBase<BlockingStateModelDao
     private final Clock clock;
     private final NotificationQueueService notificationQueueService;
     private final PersistentBus eventBus;
-    private final CacheControllerDispatcher cacheControllerDispatcher;
+    private final CacheController<String, UUID> objectIdCacheController;
     private final NonEntityDao nonEntityDao;
 
     private final StatelessBlockingChecker statelessBlockingChecker = new StatelessBlockingChecker();
@@ -118,7 +118,7 @@ public class DefaultBlockingStateDao extends EntityDaoBase<BlockingStateModelDao
         this.clock = clock;
         this.notificationQueueService = notificationQueueService;
         this.eventBus = eventBus;
-        this.cacheControllerDispatcher = cacheControllerDispatcher;
+        this.objectIdCacheController = cacheControllerDispatcher.getCacheController(CacheType.OBJECT_ID);
         this.nonEntityDao = nonEntityDao;
     }
 
@@ -230,7 +230,7 @@ public class DefaultBlockingStateDao extends EntityDaoBase<BlockingStateModelDao
                     boolean inserted = false;
                     // Create the state, if needed
                     if (!blockingStatesToRemove.contains(newBlockingStateModelDao.getId())) {
-                        sqlDao.create(newBlockingStateModelDao, context);
+                        createAndRefresh(sqlDao, newBlockingStateModelDao, context);
                         inserted = true;
                     }
 
@@ -260,12 +260,12 @@ public class DefaultBlockingStateDao extends EntityDaoBase<BlockingStateModelDao
         final List<BlockingState> bundleBlockingStates;
         final List<BlockingState> subscriptionBlockingStates;
         if (type == BlockingStateType.SUBSCRIPTION) {
-            final UUID accountId = nonEntityDao.retrieveIdFromObjectInTransaction(context.getAccountRecordId(), ObjectType.ACCOUNT, cacheControllerDispatcher.getCacheController(CacheType.OBJECT_ID), handle);
+            final UUID accountId = nonEntityDao.retrieveIdFromObjectInTransaction(context.getAccountRecordId(), ObjectType.ACCOUNT, objectIdCacheController, handle);
             accountBlockingStates = getBlockingState(sqlDao, accountId, BlockingStateType.ACCOUNT, upToDate, context);
             bundleBlockingStates = getBlockingState(sqlDao, bundleId, BlockingStateType.SUBSCRIPTION_BUNDLE, upToDate, context);
             subscriptionBlockingStates = getBlockingState(sqlDao, blockableId, BlockingStateType.SUBSCRIPTION, upToDate, context);
         } else if (type == BlockingStateType.SUBSCRIPTION_BUNDLE) {
-            final UUID accountId = nonEntityDao.retrieveIdFromObjectInTransaction(context.getAccountRecordId(), ObjectType.ACCOUNT, cacheControllerDispatcher.getCacheController(CacheType.OBJECT_ID), handle);
+            final UUID accountId = nonEntityDao.retrieveIdFromObjectInTransaction(context.getAccountRecordId(), ObjectType.ACCOUNT, objectIdCacheController, handle);
             accountBlockingStates = getBlockingState(sqlDao, accountId, BlockingStateType.ACCOUNT, upToDate, context);
             bundleBlockingStates = getBlockingState(sqlDao, blockableId, BlockingStateType.SUBSCRIPTION_BUNDLE, upToDate, context);
             subscriptionBlockingStates = ImmutableList.<BlockingState>of();

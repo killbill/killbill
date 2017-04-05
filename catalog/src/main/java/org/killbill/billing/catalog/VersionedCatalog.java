@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014-2016 Groupon, Inc
- * Copyright 2014-2016 The Billing Project, LLC
+ * Copyright 2014-2017 Groupon, Inc
+ * Copyright 2014-2017 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -18,6 +18,10 @@
 
 package org.killbill.billing.catalog;
 
+import java.io.Externalizable;
+import java.io.IOException;
+import java.io.ObjectInput;
+import java.io.ObjectOutput;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -58,6 +62,9 @@ import org.killbill.billing.catalog.api.PriceListSet;
 import org.killbill.billing.catalog.api.Product;
 import org.killbill.billing.catalog.api.StaticCatalog;
 import org.killbill.billing.catalog.api.Unit;
+import org.killbill.billing.util.cache.ExternalizableInput;
+import org.killbill.billing.util.cache.ExternalizableOutput;
+import org.killbill.billing.util.cache.MapperHolder;
 import org.killbill.clock.Clock;
 import org.killbill.xmlloader.ValidatingConfig;
 import org.killbill.xmlloader.ValidationError;
@@ -65,7 +72,9 @@ import org.killbill.xmlloader.ValidationErrors;
 
 @XmlRootElement(name = "catalogs")
 @XmlAccessorType(XmlAccessType.NONE)
-public class VersionedCatalog extends ValidatingConfig<VersionedCatalog> implements Catalog, StaticCatalog {
+public class VersionedCatalog extends ValidatingConfig<VersionedCatalog> implements Catalog, StaticCatalog, Externalizable {
+
+    private static final long serialVersionUID = 3181874902672322725L;
 
     private final Clock clock;
 
@@ -552,5 +561,15 @@ public class VersionedCatalog extends ValidatingConfig<VersionedCatalog> impleme
     @Override
     public boolean compliesWithLimits(final String phaseName, final String unit, final double value) throws CatalogApiException {
         return versionForDate(clock.getUTCNow()).compliesWithLimits(phaseName, unit, value);
+    }
+
+    @Override
+    public void readExternal(final ObjectInput in) throws IOException {
+        MapperHolder.mapper().readerForUpdating(this).readValue(new ExternalizableInput(in));
+    }
+
+    @Override
+    public void writeExternal(final ObjectOutput oo) throws IOException {
+        MapperHolder.mapper().writeValue(new ExternalizableOutput(oo), this);
     }
 }

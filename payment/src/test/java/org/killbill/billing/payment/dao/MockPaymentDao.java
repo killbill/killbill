@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014-2016 Groupon, Inc
- * Copyright 2014-2016 The Billing Project, LLC
+ * Copyright 2014-2017 Groupon, Inc
+ * Copyright 2014-2017 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -191,7 +191,8 @@ public class MockPaymentDao extends MockEntityDaoBase<PaymentModelDao, Payment, 
     }
 
     @Override
-    public PaymentModelDao insertPaymentWithFirstTransaction(final PaymentModelDao payment, final PaymentTransactionModelDao paymentTransaction, final InternalCallContext context) {
+    public PaymentAndTransactionModelDao insertPaymentWithFirstTransaction(final PaymentModelDao payment, final PaymentTransactionModelDao paymentTransaction, final InternalCallContext context) {
+        final PaymentAndTransactionModelDao paymentAndTransactionModelDao = new PaymentAndTransactionModelDao();
 
         payment.setTenantRecordId(context.getTenantRecordId());
         paymentTransaction.setTenantRecordId(context.getTenantRecordId());
@@ -207,7 +208,11 @@ public class MockPaymentDao extends MockEntityDaoBase<PaymentModelDao, Payment, 
             mockNonEntityDao.addTenantRecordIdMapping(paymentTransaction.getId(), context);
             mockNonEntityDao.addAccountRecordIdMapping((paymentTransaction.getId()), context);
         }
-        return payment;
+
+        paymentAndTransactionModelDao.setPaymentModelDao(payment);
+        paymentAndTransactionModelDao.setPaymentTransactionModelDao(paymentTransaction);
+
+        return paymentAndTransactionModelDao;
     }
 
     @Override
@@ -224,10 +229,12 @@ public class MockPaymentDao extends MockEntityDaoBase<PaymentModelDao, Payment, 
     }
 
     @Override
-    public void updatePaymentAndTransactionOnCompletion(final UUID accountId, final UUID attemptId, final UUID paymentId, final TransactionType transactionType,
-                                                        final String currentPaymentStateName, final String lastSuccessPaymentStateName, final UUID transactionId,
-                                                        final TransactionStatus paymentStatus, final BigDecimal processedAmount, final Currency processedCurrency,
-                                                        final String gatewayErrorCode, final String gatewayErrorMsg, final InternalCallContext context) {
+    public PaymentAndTransactionModelDao updatePaymentAndTransactionOnCompletion(final UUID accountId, final UUID attemptId, final UUID paymentId, final TransactionType transactionType,
+                                                                                 final String currentPaymentStateName, final String lastSuccessPaymentStateName, final UUID transactionId,
+                                                                                 final TransactionStatus paymentStatus, final BigDecimal processedAmount, final Currency processedCurrency,
+                                                                                 final String gatewayErrorCode, final String gatewayErrorMsg, final InternalCallContext context) {
+        final PaymentAndTransactionModelDao paymentAndTransactionModelDao = new PaymentAndTransactionModelDao();
+
         synchronized (this) {
             final PaymentModelDao payment = payments.get(paymentId);
             if (payment != null) {
@@ -242,6 +249,11 @@ public class MockPaymentDao extends MockEntityDaoBase<PaymentModelDao, Payment, 
                 transaction.setGatewayErrorCode(gatewayErrorCode);
                 transaction.setGatewayErrorMsg(gatewayErrorMsg);
             }
+
+            paymentAndTransactionModelDao.setPaymentModelDao(payment);
+            paymentAndTransactionModelDao.setPaymentTransactionModelDao(transaction);
+
+            return paymentAndTransactionModelDao;
         }
     }
 

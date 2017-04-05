@@ -1,6 +1,6 @@
 /*
- * Copyright 2016 Groupon, Inc
- * Copyright 2016 The Billing Project, LLC
+ * Copyright 2016-2017 Groupon, Inc
+ * Copyright 2016-2017 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -51,7 +51,7 @@ public class EhCacheStateMachineConfigCache implements StateMachineConfigCache {
     private static final Logger logger = LoggerFactory.getLogger(EhCacheStateMachineConfigCache.class);
 
     private final TenantInternalApi tenantInternalApi;
-    private final CacheController cacheController;
+    private final CacheController<String, StateMachineConfig> cacheController;
     private final CacheInvalidationCallback cacheInvalidationCallback;
     private final LoaderCallback loaderCallback;
 
@@ -71,7 +71,8 @@ public class EhCacheStateMachineConfigCache implements StateMachineConfigCache {
 
                 try {
                     final InputStream stream = new ByteArrayInputStream(stateMachineConfigXML.getBytes());
-                    return XMLLoader.getObjectFromStream(new URI("dummy"), stream, DefaultStateMachineConfig.class);
+                    final DefaultStateMachineConfig defaultStateMachineConfig = XMLLoader.getObjectFromStream(new URI("dummy"), stream, DefaultStateMachineConfig.class);
+                    return new SerializableStateMachineConfig(defaultStateMachineConfig);
                 } catch (final Exception e) {
                     // TODO 0.17 proper error code
                     throw new PaymentApiException(e, ErrorCode.PAYMENT_INTERNAL_ERROR, "Invalid payment state machine config");
@@ -94,18 +95,18 @@ public class EhCacheStateMachineConfigCache implements StateMachineConfigCache {
 
     @Override
     public StateMachineConfig getPaymentStateMachineConfig(final String pluginName, final InternalTenantContext tenantContext) throws PaymentApiException {
-        if (tenantContext.getTenantRecordId() == InternalCallContextFactory.INTERNAL_TENANT_RECORD_ID || cacheController == null) {
+        if (InternalCallContextFactory.INTERNAL_TENANT_RECORD_ID.equals(tenantContext.getTenantRecordId()) || cacheController == null) {
             return defaultPaymentStateMachineConfig;
         }
 
         final String pluginConfigKey = getCacheKeyName(pluginName, tenantContext);
         final CacheLoaderArgument cacheLoaderArgument = createCacheLoaderArgument(pluginName);
         try {
-            StateMachineConfig pluginPaymentStateMachineConfig = (StateMachineConfig) cacheController.get(pluginConfigKey, cacheLoaderArgument);
+            StateMachineConfig pluginPaymentStateMachineConfig = cacheController.get(pluginConfigKey, cacheLoaderArgument);
             // It means we are using the default state machine config in a multi-tenant deployment
             if (pluginPaymentStateMachineConfig == null) {
                 pluginPaymentStateMachineConfig = defaultPaymentStateMachineConfig;
-                cacheController.add(pluginConfigKey, pluginPaymentStateMachineConfig);
+                cacheController.putIfAbsent(pluginConfigKey, pluginPaymentStateMachineConfig);
             }
             return pluginPaymentStateMachineConfig;
         } catch (final IllegalStateException e) {
@@ -125,7 +126,7 @@ public class EhCacheStateMachineConfigCache implements StateMachineConfigCache {
 
     @Override
     public void clearPaymentStateMachineConfig(final String pluginName, final InternalTenantContext tenantContext) {
-        if (tenantContext.getTenantRecordId() != InternalCallContextFactory.INTERNAL_TENANT_RECORD_ID && cacheController != null) {
+        if (!InternalCallContextFactory.INTERNAL_TENANT_RECORD_ID.equals(tenantContext.getTenantRecordId()) && cacheController != null) {
             final String key = getCacheKeyName(pluginName, tenantContext);
             cacheController.remove(key);
         }

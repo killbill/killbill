@@ -336,6 +336,18 @@ auditTableValues() ::= <<
 <if(tenantRecordIdField(""))>, <tenantRecordIdValue()><endif>
 >>
 
+getHistoryForTargetRecordId() ::= <<
+select
+  <idField()>
+, <historyTableFields("t.")>
+<accountRecordIdFieldWithComma("t.")>
+<tenantRecordIdFieldWithComma("t.")>
+from <historyTableName()> t
+where <targetRecordIdField("t.")> = :targetRecordId
+<AND_CHECK_TENANT("t.")>
+order by <recordIdField("t.")> ASC
+;
+>>
 
 addHistoryFromTransaction() ::= <<
 insert into <historyTableName()> (

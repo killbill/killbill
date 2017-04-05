@@ -19,7 +19,7 @@
     <parent>
         <artifactId>killbill</artifactId>
         <groupId>org.kill-bill.billing</groupId>
-        <version>0.18.5-SNAPSHOT</version>
+        <version>0.18.7-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
     <artifactId>killbill-payment</artifactId>
@@ -95,10 +95,6 @@
             <groupId>mysql</groupId>
             <artifactId>mysql-connector-mxj</artifactId>
             <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>net.sf.ehcache</groupId>
-            <artifactId>ehcache</artifactId>
         </dependency>
         <dependency>
             <groupId>org.apache.shiro</groupId>

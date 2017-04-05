@@ -43,6 +43,7 @@ public class PatternObfuscator extends Obfuscator {
             "ccvv",
             "cvNumber",
             "cvc",
+            "cvv",
             "email",
             "iban",
             "name",
@@ -76,7 +77,7 @@ public class PatternObfuscator extends Obfuscator {
     }
 
     private Pattern buildJSONPattern(final String key) {
-        return Pattern.compile(key + "\":\\s*([^,{]+)", DEFAULT_PATTERN_FLAGS);
+        return Pattern.compile(key + "\"\\s*:\\s*([^,{}]+)", DEFAULT_PATTERN_FLAGS);
     }
 
     private Pattern buildXMLPattern(final String key) {

@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014-2016 Groupon, Inc
- * Copyright 2014-2016 The Billing Project, LLC
+ * Copyright 2014-2017 Groupon, Inc
+ * Copyright 2014-2017 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -98,7 +98,8 @@ public class DefaultTenantDao extends EntityDaoBase<TenantModelDao, Tenant, Tena
                 final TenantModelDao tenantModelDaoWithSecret = new TenantModelDao(entity.getId(), context.getCreatedDate(), context.getUpdatedDate(),
                                                                                    entity.getExternalKey(), entity.getApiKey(),
                                                                                    hashedPasswordBase64, salt.toBase64());
-                entitySqlDaoWrapperFactory.become(TenantSqlDao.class).create(tenantModelDaoWithSecret, context);
+                final TenantSqlDao tenantSqlDao = entitySqlDaoWrapperFactory.become(TenantSqlDao.class);
+                createAndRefresh(tenantSqlDao, tenantModelDaoWithSecret, context);
                 return null;
             }
         });
@@ -145,8 +146,7 @@ public class DefaultTenantDao extends EntityDaoBase<TenantModelDao, Tenant, Tena
                 if (uniqueKey) {
                     deleteFromTransaction(key, entitySqlDaoWrapperFactory, context);
                 }
-                tenantKVSqlDao.create(tenantKVModelDao, context);
-                final TenantKVModelDao rehydrated = tenantKVSqlDao.getById(tenantKVModelDao.getId().toString(), context);
+                final TenantKVModelDao rehydrated = createAndRefresh(tenantKVSqlDao, tenantKVModelDao, context);
                 broadcastConfigurationChangeFromTransaction(rehydrated.getRecordId(), key, entitySqlDaoWrapperFactory, context);
                 return null;
             }
@@ -164,14 +164,14 @@ public class DefaultTenantDao extends EntityDaoBase<TenantModelDao, Tenant, Tena
                 // Retrieve all values for key ordered with recordId (last at the end)
                 final List<TenantKVModelDao> tenantKV = tenantKVSqlDao.getTenantValueForKey(key, context);
                 final String id;
+                final TenantKVModelDao rehydrated;
                 if (!tenantKV.isEmpty()) {
                     id = tenantKV.get(tenantKV.size() - 1).getId().toString();
-                    tenantKVSqlDao.updateTenantValueKey(id, value, context);
+                    rehydrated = (TenantKVModelDao) tenantKVSqlDao.updateTenantValueKey(id, value, context);
                 } else {
                     id = tenantKVModelDao.getId().toString();
-                    tenantKVSqlDao.create(tenantKVModelDao, context);
+                    rehydrated = createAndRefresh(tenantKVSqlDao, tenantKVModelDao, context);
                 }
-                final TenantKVModelDao rehydrated = tenantKVSqlDao.getById(id, context);
                 broadcastConfigurationChangeFromTransaction(rehydrated.getRecordId(), key, entitySqlDaoWrapperFactory, context);
                 return null;
             }
@@ -225,7 +225,8 @@ public class DefaultTenantDao extends EntityDaoBase<TenantModelDao, Tenant, Tena
                                                              final InternalCallContext context) throws EntityPersistenceException {
         if (isSystemKey(key)) {
             final TenantBroadcastModelDao broadcast = new TenantBroadcastModelDao(kvRecordId, key, context.getUserToken());
-            entitySqlDaoWrapperFactory.become(TenantBroadcastSqlDao.class).create(broadcast, context);
+            final TenantBroadcastSqlDao tenantBroadcastSqlDao = entitySqlDaoWrapperFactory.become(TenantBroadcastSqlDao.class);
+            createAndRefresh(tenantBroadcastSqlDao, broadcast, context);
         }
     }
 

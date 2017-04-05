@@ -1,7 +1,9 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
+ * Copyright 2014-2017 Groupon, Inc
+ * Copyright 2014-2017 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -20,6 +22,13 @@ import javax.inject.Singleton;
 
 import org.apache.shiro.authz.AuthorizationException;
 import org.apache.shiro.authz.UnauthenticatedException;
+import org.killbill.billing.security.Permission;
+import org.killbill.billing.security.RequiresPermissions;
+import org.killbill.billing.tenant.api.TenantInternalApi;
+import org.killbill.billing.util.UtilTestSuiteNoDB;
+import org.killbill.billing.util.dao.NonEntityDao;
+import org.killbill.billing.util.glue.CacheModule;
+import org.killbill.billing.util.glue.KillBillShiroAopModule;
 import org.killbill.billing.util.glue.TestSecurityModuleNoDB;
 import org.killbill.billing.util.glue.TestUtilModuleNoDB.ShiroModuleNoDB;
 import org.mockito.Mockito;
@@ -27,18 +36,10 @@ import org.skife.jdbi.v2.IDBI;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
-import org.killbill.billing.security.Permission;
-import org.killbill.billing.security.RequiresPermissions;
-import org.killbill.billing.util.UtilTestSuiteNoDB;
-import org.killbill.billing.util.glue.KillBillShiroAopModule;
-import org.killbill.billing.util.glue.KillBillShiroModule;
-import org.killbill.billing.util.glue.SecurityModule;
-
 import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Stage;
-import net.sf.ehcache.CacheManager;
 
 public class TestPermissionAnnotationMethodInterceptor extends UtilTestSuiteNoDB {
 
@@ -73,16 +74,18 @@ public class TestPermissionAnnotationMethodInterceptor extends UtilTestSuiteNoDB
 
         // Now, verify the interception works
         configureShiro();
-        // Shutdown the cache manager to avoid duplicate exceptions
-        CacheManager.getInstance().shutdown();
+
         final Injector injector = Guice.createInjector(Stage.PRODUCTION,
                                                        new ShiroModuleNoDB(configSource),
                                                        new KillBillShiroAopModule(),
                                                        new TestSecurityModuleNoDB(configSource),
+                                                       new CacheModule(configSource),
                                                        new AbstractModule() {
                                                            @Override
                                                            protected void configure() {
                                                                bind(IDBI.class).toInstance(Mockito.mock(IDBI.class));
+                                                               bind(TenantInternalApi.class).toInstance(Mockito.mock(TenantInternalApi.class));
+                                                               bind(NonEntityDao.class).toInstance(Mockito.mock(NonEntityDao.class));
                                                            }
                                                        });
         final AopTester aopedTester = injector.getInstance(AopTester.class);
@@ -101,17 +104,19 @@ public class TestPermissionAnnotationMethodInterceptor extends UtilTestSuiteNoDB
 
         // Now, verify the interception works
         configureShiro();
-        // Shutdown the cache manager to avoid duplicate exceptions
-        CacheManager.getInstance().shutdown();
+
         final Injector injector = Guice.createInjector(Stage.PRODUCTION,
                                                        new ShiroModuleNoDB(configSource),
                                                        new KillBillShiroAopModule(),
                                                        new TestSecurityModuleNoDB(configSource),
+                                                       new CacheModule(configSource),
                                                        new AbstractModule() {
                                                            @Override
                                                            public void configure() {
                                                                bind(IDBI.class).toInstance(Mockito.mock(IDBI.class));
                                                                bind(IAopTester.class).to(AopTesterImpl.class).asEagerSingleton();
+                                                               bind(TenantInternalApi.class).toInstance(Mockito.mock(TenantInternalApi.class));
+                                                               bind(NonEntityDao.class).toInstance(Mockito.mock(NonEntityDao.class));
                                                            }
                                                        });
         final IAopTester aopedTester = injector.getInstance(IAopTester.class);

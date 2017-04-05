@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014-2015 Groupon, Inc
- * Copyright 2014-2015 The Billing Project, LLC
+ * Copyright 2014-2017 Groupon, Inc
+ * Copyright 2014-2017 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -18,6 +18,11 @@
 
 package org.killbill.billing.server.security;
 
+import java.io.Externalizable;
+import java.io.IOException;
+import java.io.ObjectInput;
+import java.io.ObjectOutput;
+
 import javax.sql.DataSource;
 
 import org.apache.shiro.authc.AuthenticationException;
@@ -25,8 +30,12 @@ import org.apache.shiro.authc.AuthenticationInfo;
 import org.apache.shiro.authc.AuthenticationToken;
 import org.apache.shiro.authc.SimpleAuthenticationInfo;
 import org.apache.shiro.codec.Base64;
+import org.apache.shiro.codec.Hex;
 import org.apache.shiro.realm.jdbc.JdbcRealm;
 import org.apache.shiro.util.ByteSource;
+import org.killbill.billing.util.cache.ExternalizableInput;
+import org.killbill.billing.util.cache.ExternalizableOutput;
+import org.killbill.billing.util.cache.MapperHolder;
 import org.killbill.billing.util.config.definition.SecurityConfig;
 import org.killbill.billing.util.security.shiro.KillbillCredentialsMatcher;
 
@@ -61,7 +70,9 @@ public class KillbillJdbcTenantRealm extends JdbcRealm {
 
         // We store the salt bytes in Base64 (because the JdbcRealm retrieves it as a String)
         final ByteSource base64Salt = authenticationInfo.getCredentialsSalt();
-        authenticationInfo.setCredentialsSalt(ByteSource.Util.bytes(Base64.decode(base64Salt.getBytes())));
+        final byte[] bytes = Base64.decode(base64Salt.getBytes());
+        // SimpleByteSource isn't Serializable
+        authenticationInfo.setCredentialsSalt(new SerializableSimpleByteSource(bytes));
 
         return authenticationInfo;
     }
@@ -77,5 +88,57 @@ public class KillbillJdbcTenantRealm extends JdbcRealm {
 
     private void configureDataSource() {
         setDataSource(dataSource);
+    }
+
+    private static final class SerializableSimpleByteSource implements ByteSource, Externalizable {
+
+        private static final long serialVersionUID = 4498655519894503985L;
+
+        private byte[] bytes;
+        private String cachedHex;
+        private String cachedBase64;
+
+        // For deserialization
+        public SerializableSimpleByteSource() {}
+
+        SerializableSimpleByteSource(final byte[] bytes) {
+            this.bytes = bytes;
+        }
+
+        @Override
+        public byte[] getBytes() {
+            return bytes;
+        }
+
+        @Override
+        public String toHex() {
+            if (this.cachedHex == null) {
+                this.cachedHex = Hex.encodeToString(getBytes());
+            }
+            return this.cachedHex;
+        }
+
+        @Override
+        public String toBase64() {
+            if (this.cachedBase64 == null) {
+                this.cachedBase64 = Base64.encodeToString(getBytes());
+            }
+            return this.cachedBase64;
+        }
+
+        @Override
+        public boolean isEmpty() {
+            return this.bytes == null || this.bytes.length == 0;
+        }
+
+        @Override
+        public void readExternal(final ObjectInput in) throws IOException {
+            MapperHolder.mapper().readerForUpdating(this).readValue(new ExternalizableInput(in));
+        }
+
+        @Override
+        public void writeExternal(final ObjectOutput oo) throws IOException {
+            MapperHolder.mapper().writeValue(new ExternalizableOutput(oo), this);
+        }
     }
 }

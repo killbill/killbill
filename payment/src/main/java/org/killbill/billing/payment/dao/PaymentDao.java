@@ -1,7 +1,9 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
+ * Copyright 2014-2017 Groupon, Inc
+ * Copyright 2014-2017 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -55,13 +57,13 @@ public interface PaymentDao extends EntityDao<PaymentModelDao, Payment, PaymentA
 
     public Pagination<PaymentModelDao> searchPayments(String searchKey, Long offset, Long limit, InternalTenantContext context);
 
-    public PaymentModelDao insertPaymentWithFirstTransaction(PaymentModelDao payment, PaymentTransactionModelDao paymentTransaction, InternalCallContext context);
+    public PaymentAndTransactionModelDao insertPaymentWithFirstTransaction(PaymentModelDao payment, PaymentTransactionModelDao paymentTransaction, InternalCallContext context);
 
     public PaymentTransactionModelDao updatePaymentWithNewTransaction(UUID paymentId, PaymentTransactionModelDao paymentTransaction, InternalCallContext context);
 
-    public void updatePaymentAndTransactionOnCompletion(UUID accountId, UUID attemptId, UUID paymentId, TransactionType transactionType, String currentPaymentStateName, String lastPaymentSuccessStateName, UUID transactionId,
-                                                        TransactionStatus paymentStatus, BigDecimal processedAmount, Currency processedCurrency,
-                                                        String gatewayErrorCode, String gatewayErrorMsg, InternalCallContext context);
+    public PaymentAndTransactionModelDao updatePaymentAndTransactionOnCompletion(UUID accountId, UUID attemptId, UUID paymentId, TransactionType transactionType, String currentPaymentStateName, String lastPaymentSuccessStateName, UUID transactionId,
+                                                                                 TransactionStatus paymentStatus, BigDecimal processedAmount, Currency processedCurrency,
+                                                                                 String gatewayErrorCode, String gatewayErrorMsg, InternalCallContext context);
 
     public PaymentModelDao getPayment(UUID paymentId, InternalTenantContext context);
 

@@ -1,7 +1,9 @@
 /*
- * Copyright 2010-2011 Ning, Inc.
+ * Copyright 2010-2013 Ning, Inc.
+ * Copyright 2014-2017 Groupon, Inc
+ * Copyright 2014-2017 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -16,16 +18,24 @@
 
 package org.killbill.billing.util.dao;
 
-import org.skife.jdbi.v2.sqlobject.BindBean;
-import org.skife.jdbi.v2.sqlobject.SqlUpdate;
+import java.util.List;
 
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.util.entity.Entity;
 import org.killbill.billing.util.entity.dao.EntityModelDao;
+import org.skife.jdbi.v2.sqlobject.Bind;
+import org.skife.jdbi.v2.sqlobject.BindBean;
+import org.skife.jdbi.v2.sqlobject.GetGeneratedKeys;
+import org.skife.jdbi.v2.sqlobject.SqlQuery;
+import org.skife.jdbi.v2.sqlobject.SqlUpdate;
 
 public interface HistorySqlDao<M extends EntityModelDao<E>, E extends Entity> {
 
+    @SqlQuery
+    public List<EntityHistoryModelDao<M, E>> getHistoryForTargetRecordId(@Bind("targetRecordId") final long targetRecordId,
+                                                                         @BindBean InternalCallContext context);
     @SqlUpdate
-    public void addHistoryFromTransaction(@EntityHistoryBinder EntityHistoryModelDao<M, E> history,
+    @GetGeneratedKeys
+    public Long addHistoryFromTransaction(@EntityHistoryBinder EntityHistoryModelDao<M, E> history,
                                           @BindBean InternalCallContext context);
 }

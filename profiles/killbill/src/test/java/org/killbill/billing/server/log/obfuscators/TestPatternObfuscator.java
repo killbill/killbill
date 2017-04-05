@@ -181,6 +181,10 @@ public class TestPatternObfuscator extends ServerTestSuiteNoDB {
                "    \"id\": \"card_483etw4er9fg4vF3sQdrt3FG\",\n" +
                "    \"object\": \"card\",\n" +
                "    \"banknumber\": 4111111111111111,\n" +
+               "    \"cvv\" : 111,\n" +
+               "    \"cvv\": 111,\n" +
+               "    \"cvv\": \"111\",\n" +
+               "    \"data\": {\"cvv\" : 111 },\n" +
                "    \"last4\": \"0000\",\n" +
                "    \"brand\": \"Visa\",\n" +
                "    \"funding\": \"credit\",\n" +
@@ -204,6 +208,10 @@ public class TestPatternObfuscator extends ServerTestSuiteNoDB {
                "    \"id\": \"card_483etw4er9fg4vF3sQdrt3FG\",\n" +
                "    \"object\": \"card\",\n" +
                "    \"banknumber\": ****************,\n" +
+               "    \"cvv\" : ***,\n" +
+               "    \"cvv\": ***,\n" +
+               "    \"cvv\": *****,\n" +
+               "    \"data\": {\"cvv\" : ****},\n" +
                "    \"last4\": \"0000\",\n" +
                "    \"brand\": \"Visa\",\n" +
                "    \"funding\": \"credit\",\n" +

@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2012 Ning, Inc.
- * Copyright 2014-2015 Groupon, Inc
- * Copyright 2014-2015 The Billing Project, LLC
+ * Copyright 2014-2017 Groupon, Inc
+ * Copyright 2014-2017 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -28,10 +28,8 @@ import org.killbill.billing.util.cache.Cachable.CacheType;
 import org.killbill.billing.util.dao.NonEntityDao;
 import org.skife.jdbi.v2.Handle;
 
-import net.sf.ehcache.loader.CacheLoader;
-
 @Singleton
-public class RecordIdCacheLoader extends BaseIdCacheLoader implements CacheLoader {
+public class RecordIdCacheLoader extends BaseIdCacheLoader<Long> {
 
     private final NonEntityDao nonEntityDao;
 
@@ -47,7 +45,7 @@ public class RecordIdCacheLoader extends BaseIdCacheLoader implements CacheLoade
     }
 
     @Override
-    protected Object doRetrieveOperation(final String rawKey, final ObjectType objectType, final Handle handle) {
+    protected Long doRetrieveOperation(final String rawKey, final ObjectType objectType, final Handle handle) {
         return nonEntityDao.retrieveRecordIdFromObjectInTransaction(UUID.fromString(rawKey), objectType, null, handle);
     }
 }

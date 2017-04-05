@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014-2016 Groupon, Inc
- * Copyright 2014-2016 The Billing Project, LLC
+ * Copyright 2014-2017 Groupon, Inc
+ * Copyright 2014-2017 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -18,6 +18,10 @@
 
 package org.killbill.billing.catalog;
 
+import java.io.Externalizable;
+import java.io.IOException;
+import java.io.ObjectInput;
+import java.io.ObjectOutput;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -46,12 +50,17 @@ import org.killbill.billing.catalog.api.PriceList;
 import org.killbill.billing.catalog.api.Product;
 import org.killbill.billing.catalog.api.Recurring;
 import org.killbill.billing.catalog.api.TimeUnit;
+import org.killbill.billing.util.cache.ExternalizableInput;
+import org.killbill.billing.util.cache.ExternalizableOutput;
+import org.killbill.billing.util.cache.MapperHolder;
 import org.killbill.xmlloader.ValidatingConfig;
 import org.killbill.xmlloader.ValidationError;
 import org.killbill.xmlloader.ValidationErrors;
 
 @XmlAccessorType(XmlAccessType.NONE)
-public class DefaultPlan extends ValidatingConfig<StandaloneCatalog> implements Plan {
+public class DefaultPlan extends ValidatingConfig<StandaloneCatalog> implements Plan, Externalizable {
+
+    private static final long serialVersionUID = -4159932819592790086L;
 
     @XmlAttribute(required = true)
     @XmlID
@@ -80,6 +89,7 @@ public class DefaultPlan extends ValidatingConfig<StandaloneCatalog> implements 
 
     private String priceListName;
 
+    // For deserialization
     public DefaultPlan() {
         initialPhases = new DefaultPlanPhase[0];
     }
@@ -102,9 +112,19 @@ public class DefaultPlan extends ValidatingConfig<StandaloneCatalog> implements 
         return effectiveDateForExistingSubscriptions;
     }
 
+    public void setEffectiveDateForExistingSubscriptions(
+            final Date effectiveDateForExistingSubscriptions) {
+        this.effectiveDateForExistingSubscriptions = effectiveDateForExistingSubscriptions;
+    }
+
     @Override
     public DefaultPlanPhase[] getInitialPhases() {
         return initialPhases;
+    }
+
+    public DefaultPlan setInitialPhases(final DefaultPlanPhase[] phases) {
+        this.initialPhases = phases;
+        return this;
     }
 
     @Override
@@ -112,9 +132,19 @@ public class DefaultPlan extends ValidatingConfig<StandaloneCatalog> implements 
         return product;
     }
 
+    public DefaultPlan setProduct(final Product product) {
+        this.product = (DefaultProduct) product;
+        return this;
+    }
+
     @Override
     public String getPriceListName() {
         return priceListName;
+    }
+
+    public DefaultPlan setPriceListName(final String priceListName) {
+        this.priceListName = priceListName;
+        return this;
     }
 
     @Override
@@ -122,9 +152,19 @@ public class DefaultPlan extends ValidatingConfig<StandaloneCatalog> implements 
         return name;
     }
 
+    public DefaultPlan setName(final String name) {
+        this.name = name;
+        return this;
+    }
+
     @Override
     public DefaultPlanPhase getFinalPhase() {
         return finalPhase;
+    }
+
+    public DefaultPlan setFinalPhase(final DefaultPlanPhase finalPhase) {
+        this.finalPhase = finalPhase;
+        return this;
     }
 
     @Override
@@ -162,9 +202,11 @@ public class DefaultPlan extends ValidatingConfig<StandaloneCatalog> implements 
         return plansAllowedInBundle;
     }
 
-    /* (non-Javadoc)
-      * @see org.killbill.billing.catalog.IPlan#getPhaseIterator()
-      */
+    public DefaultPlan setPlansAllowedInBundle(final Integer plansAllowedInBundle) {
+        this.plansAllowedInBundle = plansAllowedInBundle;
+        return this;
+    }
+
     @Override
     public Iterator<PlanPhase> getInitialPhaseIterator() {
         final Collection<PlanPhase> list = new ArrayList<PlanPhase>();
@@ -185,7 +227,7 @@ public class DefaultPlan extends ValidatingConfig<StandaloneCatalog> implements 
             p.setPlan(this);
             p.initialize(catalog, sourceURI);
         }
-        this.priceListName = this.priceListName  != null ? this.priceListName : findPriceListForPlan(catalog);
+        this.priceListName = this.priceListName != null ? this.priceListName : findPriceListForPlan(catalog);
     }
 
     @Override
@@ -202,7 +244,7 @@ public class DefaultPlan extends ValidatingConfig<StandaloneCatalog> implements 
             errors.add(new ValidationError(String.format("Invalid product for plan '%s'", name), catalog.getCatalogURI(), DefaultPlan.class, ""));
         }
 
-        for (DefaultPlanPhase cur  : initialPhases) {
+        for (final DefaultPlanPhase cur : initialPhases) {
             cur.validate(catalog, errors);
             if (cur.getPhaseType() == PhaseType.EVERGREEN || cur.getPhaseType() == PhaseType.FIXEDTERM) {
                 errors.add(new ValidationError(String.format("Initial Phase %s of plan %s cannot be of type %s",
@@ -223,41 +265,6 @@ public class DefaultPlan extends ValidatingConfig<StandaloneCatalog> implements 
             throw new IllegalStateException("plansAllowedInBundle should have been automatically been initialized with DEFAULT_NON_REQUIRED_INTEGER_FIELD_VALUE (-1)");
         }
         return errors;
-    }
-
-    public void setEffectiveDateForExistingSubscriptions(
-            final Date effectiveDateForExistingSubscriptions) {
-        this.effectiveDateForExistingSubscriptions = effectiveDateForExistingSubscriptions;
-    }
-
-    public DefaultPlan setName(final String name) {
-        this.name = name;
-        return this;
-    }
-
-    public DefaultPlan setFinalPhase(final DefaultPlanPhase finalPhase) {
-        this.finalPhase = finalPhase;
-        return this;
-    }
-
-    public DefaultPlan setProduct(final Product product) {
-        this.product = (DefaultProduct) product;
-        return this;
-    }
-
-    public DefaultPlan setPriceListName(final String priceListName) {
-        this.priceListName = priceListName;
-        return this;
-    }
-
-    public DefaultPlan setInitialPhases(final DefaultPlanPhase[] phases) {
-        this.initialPhases = phases;
-        return this;
-    }
-
-    public DefaultPlan setPlansAllowedInBundle(final Integer plansAllowedInBundle) {
-        this.plansAllowedInBundle = plansAllowedInBundle;
-        return this;
     }
 
     @Override
@@ -344,5 +351,15 @@ public class DefaultPlan extends ValidatingConfig<StandaloneCatalog> implements 
             }
         }
         throw new IllegalStateException("Cannot extract pricelist for plan " + name);
+    }
+
+    @Override
+    public void readExternal(final ObjectInput in) throws IOException {
+        MapperHolder.mapper().readerForUpdating(this).readValue(new ExternalizableInput(in));
+    }
+
+    @Override
+    public void writeExternal(final ObjectOutput oo) throws IOException {
+        MapperHolder.mapper().writeValue(new ExternalizableOutput(oo), this);
     }
 }

@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2012 Ning, Inc.
- * Copyright 2014-2016 Groupon, Inc
- * Copyright 2014-2016 The Billing Project, LLC
+ * Copyright 2014-2017 Groupon, Inc
+ * Copyright 2014-2017 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -31,18 +31,23 @@ import org.killbill.billing.account.api.ImmutableAccountData;
 import org.killbill.billing.account.api.ImmutableAccountInternalApi;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
+import org.killbill.billing.util.account.AccountDateTimeUtils;
 import org.killbill.billing.util.cache.Cachable.CacheType;
+import org.killbill.billing.util.cache.CacheController;
 import org.killbill.billing.util.cache.CacheControllerDispatcher;
 import org.killbill.billing.util.dao.NonEntityDao;
+import org.killbill.billing.util.entity.dao.TimeZoneAwareEntity;
 import org.killbill.clock.Clock;
 import org.slf4j.MDC;
 
 import com.google.common.base.MoreObjects;
+import com.google.common.base.Preconditions;
 
 // Internal contexts almost always expect accountRecordId and tenantRecordId to be populated
 public class InternalCallContextFactory {
 
-    public static final long INTERNAL_TENANT_RECORD_ID = 0L;
+    // Long, not long, to avoid NPE with ==
+    public static final Long INTERNAL_TENANT_RECORD_ID = 0L;
 
     public static final String MDC_KB_ACCOUNT_RECORD_ID = "kb.accountRecordId";
     public static final String MDC_KB_TENANT_RECORD_ID = "kb.tenantRecordId";
@@ -50,7 +55,10 @@ public class InternalCallContextFactory {
     private final ImmutableAccountInternalApi accountInternalApi;
     private final Clock clock;
     private final NonEntityDao nonEntityDao;
-    private final CacheControllerDispatcher cacheControllerDispatcher;
+    private final CacheController<String, UUID> objectIdCacheController;
+    private final CacheController<String, Long> recordIdCacheController;
+    private final CacheController<String, Long> accountRecordIdCacheController;
+    private final CacheController<String, Long> tenantRecordIdCacheController;
 
     @Inject
     public InternalCallContextFactory(@Nullable final ImmutableAccountInternalApi accountInternalApi,
@@ -60,7 +68,17 @@ public class InternalCallContextFactory {
         this.accountInternalApi = accountInternalApi;
         this.clock = clock;
         this.nonEntityDao = nonEntityDao;
-        this.cacheControllerDispatcher = cacheControllerDispatcher;
+        if (cacheControllerDispatcher == null) {
+            this.objectIdCacheController = null;
+            this.recordIdCacheController = null;
+            this.accountRecordIdCacheController = null;
+            this.tenantRecordIdCacheController = null;
+        } else {
+            this.objectIdCacheController = cacheControllerDispatcher.getCacheController(CacheType.OBJECT_ID);
+            this.recordIdCacheController = cacheControllerDispatcher.getCacheController(CacheType.RECORD_ID);
+            this.accountRecordIdCacheController = cacheControllerDispatcher.getCacheController(CacheType.ACCOUNT_RECORD_ID);
+            this.tenantRecordIdCacheController = cacheControllerDispatcher.getCacheController(CacheType.TENANT_RECORD_ID);
+        }
     }
 
     //
@@ -138,7 +156,10 @@ public class InternalCallContextFactory {
         if (accountRecordId == null) {
             return new InternalTenantContext(tenantRecordId);
         } else {
-            return new InternalTenantContext(tenantRecordId, accountRecordId, getFixedOffsetTimeZone(accountRecordId, tenantRecordId), getReferenceTime(accountRecordId, tenantRecordId));
+            final ImmutableAccountData immutableAccountData = getImmutableAccountData(accountRecordId, tenantRecordId);
+            final DateTimeZone fixedOffsetTimeZone = immutableAccountData.getFixedOffsetTimeZone();
+            final DateTime referenceTime = immutableAccountData.getReferenceTime();
+            return new InternalTenantContext(tenantRecordId, accountRecordId, fixedOffsetTimeZone, referenceTime);
         }
     }
 
@@ -222,8 +243,23 @@ public class InternalCallContextFactory {
 
     // Used when we need to re-hydrate the callcontext with the account_record_id (when creating the account)
     public InternalCallContext createInternalCallContext(final Long accountRecordId, final InternalCallContext context) {
-        final DateTimeZone fixedOffsetTimeZone = getFixedOffsetTimeZone(accountRecordId, context.getTenantRecordId());
-        final DateTime referenceTime = getReferenceTime(accountRecordId, context.getTenantRecordId());
+        final ImmutableAccountData immutableAccountData = getImmutableAccountData(accountRecordId, context.getTenantRecordId());
+        final DateTimeZone fixedOffsetTimeZone = immutableAccountData.getFixedOffsetTimeZone();
+        final DateTime referenceTime = immutableAccountData.getReferenceTime();
+        populateMDCContext(accountRecordId, context.getTenantRecordId());
+        return new InternalCallContext(context, accountRecordId, fixedOffsetTimeZone, referenceTime, clock.getUTCNow());
+    }
+
+    // Used during the account creation transaction (account not visible outside of the transaction yet)
+    public InternalCallContext createInternalCallContext(final TimeZoneAwareEntity accountModelDao, final Long accountRecordId, final InternalCallContext context) {
+        // See DefaultImmutableAccountData implementation
+        final DateTimeZone fixedOffsetTimeZone = AccountDateTimeUtils.getFixedOffsetTimeZone(accountModelDao);
+        final DateTime referenceTime = AccountDateTimeUtils.getReferenceDateTime(accountModelDao);
+        populateMDCContext(accountRecordId, context.getTenantRecordId());
+        return new InternalCallContext(context, accountRecordId, fixedOffsetTimeZone, referenceTime, clock.getUTCNow());
+    }
+
+    public InternalCallContext createInternalCallContext(final DateTimeZone fixedOffsetTimeZone, final DateTime referenceTime, final Long accountRecordId, final InternalCallContext context) {
         populateMDCContext(accountRecordId, context.getTenantRecordId());
         return new InternalCallContext(context, accountRecordId, fixedOffsetTimeZone, referenceTime, clock.getUTCNow());
     }
@@ -242,8 +278,18 @@ public class InternalCallContextFactory {
                                                           final CallOrigin callOrigin, final UserType userType, @Nullable final UUID userToken,
                                                           @Nullable final String reasonCode, @Nullable final String comment) {
         final Long nonNulTenantRecordId = MoreObjects.firstNonNull(tenantRecordId, INTERNAL_TENANT_RECORD_ID);
-        final DateTimeZone fixedOffsetTimeZone = getFixedOffsetTimeZone(accountRecordId, tenantRecordId);
-        final DateTime referenceTime = getReferenceTime(accountRecordId, tenantRecordId);
+
+        final DateTimeZone fixedOffsetTimeZone;
+        final DateTime referenceTime;
+        if (accountRecordId == null) {
+            // TENANT_CONFIG_CHANGE event for instance
+            fixedOffsetTimeZone = null;
+            referenceTime = null;
+        } else {
+            final ImmutableAccountData immutableAccountData = getImmutableAccountData(accountRecordId, nonNulTenantRecordId);
+            fixedOffsetTimeZone = immutableAccountData.getFixedOffsetTimeZone();
+            referenceTime = immutableAccountData.getReferenceTime();
+        }
 
         populateMDCContext(accountRecordId, nonNulTenantRecordId);
 
@@ -261,34 +307,15 @@ public class InternalCallContextFactory {
                                        clock.getUTCNow());
     }
 
-    private DateTimeZone getFixedOffsetTimeZone(@Nullable final Long accountRecordId, final Long tenantRecordId) {
-        if (accountRecordId == null || accountInternalApi == null) {
-            return null;
-        }
-
-        populateMDCContext(accountRecordId, tenantRecordId);
-
-        final ImmutableAccountData immutableAccountData = getImmutableAccountData(accountRecordId, tenantRecordId);
-        // Will be null while creating the account
-        return immutableAccountData == null ? null : immutableAccountData.getFixedOffsetTimeZone();
-    }
-
-    private DateTime getReferenceTime(@Nullable final Long accountRecordId, final Long tenantRecordId) {
-        if (accountRecordId == null || accountInternalApi == null) {
-            return null;
-        }
-
-        final ImmutableAccountData immutableAccountData = getImmutableAccountData(accountRecordId, tenantRecordId);
-        // Will be null while creating the account
-        return immutableAccountData == null ? null : immutableAccountData.getReferenceTime();
-    }
-
-    private ImmutableAccountData getImmutableAccountData(@Nullable final Long accountRecordId, final Long tenantRecordId) {
+    private ImmutableAccountData getImmutableAccountData(final Long accountRecordId, final Long tenantRecordId) {
+        Preconditions.checkNotNull(accountRecordId, "Missing accountRecordId");
         final InternalTenantContext tmp = new InternalTenantContext(tenantRecordId, accountRecordId, null, null);
         try {
-            return accountInternalApi.getImmutableAccountDataByRecordId(accountRecordId, tmp);
+            final ImmutableAccountData immutableAccountData = accountInternalApi.getImmutableAccountDataByRecordId(accountRecordId, tmp);
+            Preconditions.checkNotNull(immutableAccountData, "Unable to retrieve immutableAccountData");
+            return immutableAccountData;
         } catch (final AccountApiException e) {
-            return null;
+            throw new RuntimeException(e);
         }
     }
 
@@ -307,7 +334,7 @@ public class InternalCallContextFactory {
     public UUID getAccountId(final UUID objectId, final ObjectType objectType, final TenantContext context) {
         final Long accountRecordId = getAccountRecordIdSafe(objectId, objectType, context);
         if (accountRecordId != null) {
-            return nonEntityDao.retrieveIdFromObject(accountRecordId, ObjectType.ACCOUNT, cacheControllerDispatcher == null ? null : cacheControllerDispatcher.getCacheController(CacheType.OBJECT_ID));
+            return nonEntityDao.retrieveIdFromObject(accountRecordId, ObjectType.ACCOUNT, objectIdCacheController);
         } else {
             return null;
         }
@@ -317,7 +344,7 @@ public class InternalCallContextFactory {
     public Long getRecordIdFromObject(final UUID objectId, final ObjectType objectType, final TenantContext context) {
         try {
             if (objectBelongsToTheRightTenant(objectId, objectType, context)) {
-                return nonEntityDao.retrieveRecordIdFromObject(objectId, objectType, cacheControllerDispatcher == null ? null : cacheControllerDispatcher.getCacheController(CacheType.RECORD_ID));
+                return nonEntityDao.retrieveRecordIdFromObject(objectId, objectType, recordIdCacheController);
             } else {
                 return null;
             }
@@ -358,7 +385,7 @@ public class InternalCallContextFactory {
     }
 
     private UUID getTenantIdSafe(final InternalTenantContext context) {
-        return nonEntityDao.retrieveIdFromObject(context.getTenantRecordId(), ObjectType.TENANT, cacheControllerDispatcher == null ? null : cacheControllerDispatcher.getCacheController(CacheType.OBJECT_ID));
+        return nonEntityDao.retrieveIdFromObject(context.getTenantRecordId(), ObjectType.TENANT, objectIdCacheController);
     }
 
     //
@@ -386,11 +413,11 @@ public class InternalCallContextFactory {
     //
 
     private Long getAccountRecordIdUnsafe(final UUID objectId, final ObjectType objectType) {
-        return nonEntityDao.retrieveAccountRecordIdFromObject(objectId, objectType, cacheControllerDispatcher == null ? null : cacheControllerDispatcher.getCacheController(CacheType.ACCOUNT_RECORD_ID));
+        return nonEntityDao.retrieveAccountRecordIdFromObject(objectId, objectType, accountRecordIdCacheController);
     }
 
     private Long getTenantRecordIdUnsafe(final UUID objectId, final ObjectType objectType) {
-        return nonEntityDao.retrieveTenantRecordIdFromObject(objectId, objectType, cacheControllerDispatcher == null ? null : cacheControllerDispatcher.getCacheController(CacheType.TENANT_RECORD_ID));
+        return nonEntityDao.retrieveTenantRecordIdFromObject(objectId, objectType, tenantRecordIdCacheController);
     }
 
     public static final class ObjectDoesNotExist extends IllegalStateException {

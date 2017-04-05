@@ -49,9 +49,7 @@ public interface TenantKVSqlDao extends EntitySqlDao<TenantKVModelDao, TenantKV>
 
     @SqlUpdate
     @Audited(ChangeType.UPDATE)
-    public void updateTenantValueKey(@Bind("id") final String id,
-                                     @Bind("tenantValue") final String tenantValue,
-                                     @BindBean final InternalCallContext context);
-
-
+    public Object updateTenantValueKey(@Bind("id") final String id,
+                                       @Bind("tenantValue") final String tenantValue,
+                                       @BindBean final InternalCallContext context);
 }

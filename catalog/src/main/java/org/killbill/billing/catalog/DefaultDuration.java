@@ -113,10 +113,10 @@ public class DefaultDuration extends ValidatingConfig<StandaloneCatalog> impleme
         }
 
         //Validation: TimeUnit UNLIMITED if number == -1
-        if ((unit == TimeUnit.UNLIMITED && number != CatalogSafetyInitializer.DEFAULT_NON_REQUIRED_INTEGER_FIELD_VALUE)) {
+        if ((unit == TimeUnit.UNLIMITED && !CatalogSafetyInitializer.DEFAULT_NON_REQUIRED_INTEGER_FIELD_VALUE.equals(number))) {
             errors.add(new ValidationError("Duration can only have 'UNLIMITED' unit if the number is omitted",
                                            catalog.getCatalogURI(), DefaultDuration.class, ""));
-        } else if ((unit != TimeUnit.UNLIMITED) && number == CatalogSafetyInitializer.DEFAULT_NON_REQUIRED_INTEGER_FIELD_VALUE) {
+        } else if ((unit != TimeUnit.UNLIMITED) && CatalogSafetyInitializer.DEFAULT_NON_REQUIRED_INTEGER_FIELD_VALUE.equals(number)) {
             errors.add(new ValidationError("Finite Duration must have a well defined length",
                                            catalog.getCatalogURI(), DefaultDuration.class, ""));
         }

@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014-2015 Groupon, Inc
- * Copyright 2014-2015 The Billing Project, LLC
+ * Copyright 2014-2017 Groupon, Inc
+ * Copyright 2014-2017 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -40,22 +40,22 @@ import com.google.common.base.Preconditions;
 public class DefaultNonEntityDao implements NonEntityDao {
 
     private final NonEntitySqlDao nonEntitySqlDao;
-    private final WithCaching<UUID, Long> withCachingObjectId;
-    private final WithCaching<Long, UUID> withCachingRecordId;
+    private final WithCaching<String, Long> withCachingObjectId;
+    private final WithCaching<String, UUID> withCachingRecordId;
 
     @Inject
     public DefaultNonEntityDao(final IDBI dbi) {
         this.nonEntitySqlDao = dbi.onDemand(NonEntitySqlDao.class);
-        this.withCachingObjectId = new WithCaching<UUID, Long>();
-        this.withCachingRecordId = new WithCaching<Long, UUID>();
+        this.withCachingObjectId = new WithCaching<String, Long>();
+        this.withCachingRecordId = new WithCaching<String, UUID>();
     }
 
     @Override
-    public Long retrieveRecordIdFromObject(@Nullable final UUID objectId, final ObjectType objectType, @Nullable final CacheController<Object, Object> cache) {
+    public Long retrieveRecordIdFromObject(@Nullable final UUID objectId, final ObjectType objectType, @Nullable final CacheController<String, Long> cache) {
         return retrieveRecordIdFromObjectInTransaction(objectId, objectType, cache, null);
     }
 
-    public Long retrieveRecordIdFromObjectInTransaction(@Nullable final UUID objectId, final ObjectType objectType, @Nullable final CacheController<Object, Object> cache, @Nullable final Handle handle) {
+    public Long retrieveRecordIdFromObjectInTransaction(@Nullable final UUID objectId, final ObjectType objectType, @Nullable final CacheController<String, Long> cache, @Nullable final Handle handle) {
         if (objectId == null) {
             return null;
         }
@@ -63,28 +63,29 @@ public class DefaultNonEntityDao implements NonEntityDao {
         final TableName tableName = TableName.fromObjectType(objectType);
         Preconditions.checkNotNull(tableName, "%s is not a valid ObjectType", objectType);
 
-        return withCachingObjectId.withCaching(new OperationRetrieval<UUID, Long>() {
+        return withCachingObjectId.withCaching(new OperationRetrieval<Long>() {
             @Override
-            public Long doRetrieve(final UUID objectOrRecordId, final ObjectType objectType) {
+            public Long doRetrieve(final ObjectType objectType) {
                 final NonEntitySqlDao inTransactionNonEntitySqlDao = handle == null ? nonEntitySqlDao : SqlObjectBuilder.attach(handle, NonEntitySqlDao.class);
                 return inTransactionNonEntitySqlDao.getRecordIdFromObject(objectId.toString(), tableName.getTableName());
             }
-        }, objectId, objectType, tableName, cache);
+        }, objectId.toString(), objectType, tableName, cache);
     }
 
     @Override
-    public Long retrieveAccountRecordIdFromObject(@Nullable final UUID objectId, final ObjectType objectType, @Nullable final CacheController<Object, Object> cache) {
+    public Long retrieveAccountRecordIdFromObject(@Nullable final UUID objectId, final ObjectType objectType, @Nullable final CacheController<String, Long> cache) {
         return retrieveAccountRecordIdFromObjectInTransaction(objectId, objectType, cache, null);
     }
 
     @Override
-    public Long retrieveAccountRecordIdFromObjectInTransaction(@Nullable final UUID objectId, final ObjectType objectType, @Nullable final CacheController<Object, Object> cache, @Nullable final Handle handle) {
+    public Long retrieveAccountRecordIdFromObjectInTransaction(@Nullable final UUID objectId, final ObjectType objectType, @Nullable final CacheController<String, Long> cache, @Nullable final Handle handle) {
         final TableName tableName = TableName.fromObjectType(objectType);
         Preconditions.checkNotNull(tableName, "%s is not a valid ObjectType", objectType);
 
-        return withCachingObjectId.withCaching(new OperationRetrieval<UUID, Long>() {
+        final String objectIdOrNull = objectId != null ? objectId.toString() : null;
+        return withCachingObjectId.withCaching(new OperationRetrieval<Long>() {
             @Override
-            public Long doRetrieve(final UUID objectId, final ObjectType objectType) {
+            public Long doRetrieve(final ObjectType objectType) {
                 final NonEntitySqlDao inTransactionNonEntitySqlDao = handle == null ? nonEntitySqlDao : SqlObjectBuilder.attach(handle, NonEntitySqlDao.class);
 
                 switch (tableName) {
@@ -94,64 +95,65 @@ public class DefaultNonEntityDao implements NonEntityDao {
                         return null;
 
                     case ACCOUNT:
-                        return inTransactionNonEntitySqlDao.getAccountRecordIdFromAccount(objectId.toString());
+                        return inTransactionNonEntitySqlDao.getAccountRecordIdFromAccount(objectIdOrNull);
 
                     default:
-                        return inTransactionNonEntitySqlDao.getAccountRecordIdFromObjectOtherThanAccount(objectId.toString(), tableName.getTableName());
+                        return inTransactionNonEntitySqlDao.getAccountRecordIdFromObjectOtherThanAccount(objectIdOrNull, tableName.getTableName());
                 }
             }
-        }, objectId, objectType, tableName, cache);
+        }, objectIdOrNull, objectType, tableName, cache);
     }
 
     @Override
-    public Long retrieveTenantRecordIdFromObject(@Nullable final UUID objectId, final ObjectType objectType, @Nullable final CacheController<Object, Object> cache) {
+    public Long retrieveTenantRecordIdFromObject(@Nullable final UUID objectId, final ObjectType objectType, @Nullable final CacheController<String, Long> cache) {
         return retrieveTenantRecordIdFromObjectInTransaction(objectId, objectType, cache, null);
     }
 
     @Override
-    public Long retrieveTenantRecordIdFromObjectInTransaction(@Nullable final UUID objectId, final ObjectType objectType, @Nullable final CacheController<Object, Object> cache, @Nullable final Handle handle) {
+    public Long retrieveTenantRecordIdFromObjectInTransaction(@Nullable final UUID objectId, final ObjectType objectType, @Nullable final CacheController<String, Long> cache, @Nullable final Handle handle) {
         final TableName tableName = TableName.fromObjectType(objectType);
         Preconditions.checkNotNull(tableName, "%s is not a valid ObjectType", objectType);
 
-        return withCachingObjectId.withCaching(new OperationRetrieval<UUID, Long>() {
+        final String objectIdOrNull = objectId != null ? objectId.toString() : null;
+        return withCachingObjectId.withCaching(new OperationRetrieval<Long>() {
             @Override
-            public Long doRetrieve(final UUID objectId, final ObjectType objectType) {
+            public Long doRetrieve(final ObjectType objectType) {
                 final NonEntitySqlDao inTransactionNonEntitySqlDao = handle == null ? nonEntitySqlDao : SqlObjectBuilder.attach(handle, NonEntitySqlDao.class);
 
                 switch (tableName) {
                     case TENANT:
                         // Explicit cast to Long to avoid NPE (unboxing to long)
-                        return objectId == null ? (Long) 0L : inTransactionNonEntitySqlDao.getTenantRecordIdFromTenant(objectId.toString());
+                        return objectId == null ? (Long) 0L : inTransactionNonEntitySqlDao.getTenantRecordIdFromTenant(objectIdOrNull);
 
                     default:
-                        return inTransactionNonEntitySqlDao.getTenantRecordIdFromObjectOtherThanTenant(objectId.toString(), tableName.getTableName());
+                        return inTransactionNonEntitySqlDao.getTenantRecordIdFromObjectOtherThanTenant(objectIdOrNull, tableName.getTableName());
                 }
 
             }
-        }, objectId, objectType, tableName, cache);
+        }, objectIdOrNull, objectType, tableName, cache);
     }
 
     @Override
-    public UUID retrieveIdFromObject(final Long recordId, final ObjectType objectType, @Nullable final CacheController<Object, Object> cache) {
+    public UUID retrieveIdFromObject(final Long recordId, final ObjectType objectType, @Nullable final CacheController<String, UUID> cache) {
         return retrieveIdFromObjectInTransaction(recordId, objectType, cache, null);
     }
 
     @Override
-    public UUID retrieveIdFromObjectInTransaction(final Long recordId, final ObjectType objectType, @Nullable final CacheController<Object, Object> cache, @Nullable final Handle handle) {
-        if (objectType == ObjectType.TENANT && recordId == InternalCallContextFactory.INTERNAL_TENANT_RECORD_ID) {
+    public UUID retrieveIdFromObjectInTransaction(final Long recordId, final ObjectType objectType, @Nullable final CacheController<String, UUID> cache, @Nullable final Handle handle) {
+        if (objectType == ObjectType.TENANT && InternalCallContextFactory.INTERNAL_TENANT_RECORD_ID.equals(recordId)) {
             return null;
         }
 
         final TableName tableName = TableName.fromObjectType(objectType);
         Preconditions.checkNotNull(tableName, "%s is not a valid ObjectType", objectType);
 
-        return withCachingRecordId.withCaching(new OperationRetrieval<Long, UUID>() {
+        return withCachingRecordId.withCaching(new OperationRetrieval<UUID>() {
             @Override
-            public UUID doRetrieve(final Long objectOrRecordId, final ObjectType objectType) {
+            public UUID doRetrieve(final ObjectType objectType) {
                 final NonEntitySqlDao inTransactionNonEntitySqlDao = handle == null ? nonEntitySqlDao : SqlObjectBuilder.attach(handle, NonEntitySqlDao.class);
                 return inTransactionNonEntitySqlDao.getIdFromObject(recordId, tableName.getTableName());
             }
-        }, recordId, objectType, tableName, cache);
+        }, String.valueOf(recordId), objectType, tableName, cache);
     }
 
     @Override
@@ -165,31 +167,31 @@ public class DefaultNonEntityDao implements NonEntityDao {
         return nonEntitySqlDao.getHistoryTargetRecordId(recordId, tableName.getTableName());
     }
 
-    private interface OperationRetrieval<TypeIn, TypeOut> {
+    private interface OperationRetrieval<TypeOut> {
 
-        public TypeOut doRetrieve(final TypeIn objectOrRecordId, final ObjectType objectType);
+        public TypeOut doRetrieve(final ObjectType objectType);
     }
 
     // 'cache' will be null for the CacheLoader classes -- or if cache is not configured.
     private class WithCaching<TypeIn, TypeOut> {
 
-        private TypeOut withCaching(final OperationRetrieval<TypeIn, TypeOut> op, @Nullable final TypeIn objectOrRecordId, final ObjectType objectType, final TableName tableName, @Nullable final CacheController<Object, Object> cache) {
+        private TypeOut withCaching(final OperationRetrieval<TypeOut> op, @Nullable final TypeIn objectOrRecordId, final ObjectType objectType, final TableName tableName, @Nullable final CacheController<TypeIn, TypeOut> cache) {
 
             final Profiling<TypeOut, RuntimeException> prof = new Profiling<TypeOut, RuntimeException>();
             if (objectOrRecordId == null) {
                 return null;
             }
             if (cache != null) {
-                final String key = (cache.getCacheType().isKeyPrefixedWithTableName()) ?
-                                   tableName + CacheControllerDispatcher.CACHE_KEY_SEPARATOR + objectOrRecordId.toString() :
-                                   objectOrRecordId.toString();
-                return (TypeOut) cache.get(key, new CacheLoaderArgument(objectType));
+                final TypeIn key = (cache.getCacheType().isKeyPrefixedWithTableName()) ?
+                                   (TypeIn) (tableName + CacheControllerDispatcher.CACHE_KEY_SEPARATOR + objectOrRecordId.toString()) :
+                                   objectOrRecordId;
+                return cache.get(key, new CacheLoaderArgument(objectType));
             }
             final TypeOut result;
             result = prof.executeWithProfiling(ProfilingFeatureType.DAO_DETAILS, "NonEntityDao (type = " + objectType + ") cache miss", new WithProfilingCallback<TypeOut, RuntimeException>() {
                 @Override
                 public TypeOut execute() throws RuntimeException {
-                    return op.doRetrieve(objectOrRecordId, objectType);
+                    return op.doRetrieve(objectType);
                 }
             });
             return result;

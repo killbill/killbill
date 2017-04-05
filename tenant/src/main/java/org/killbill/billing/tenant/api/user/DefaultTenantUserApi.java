@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014-2015 Groupon, Inc
- * Copyright 2014-2015 The Billing Project, LLC
+ * Copyright 2014-2017 Groupon, Inc
+ * Copyright 2014-2017 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -71,8 +71,8 @@ public class DefaultTenantUserApi implements TenantUserApi {
 
     private final TenantDao tenantDao;
     private final InternalCallContextFactory internalCallContextFactory;
-    private final CacheController<Object, Object> tenantKVCache;
-    private final CacheController<Object, Object> tenantCache;
+    private final CacheController<String, String> tenantKVCache;
+    private final CacheController<String, Tenant> tenantCache;
 
 
     @Inject
@@ -101,7 +101,7 @@ public class DefaultTenantUserApi implements TenantUserApi {
 
     @Override
     public Tenant getTenantByApiKey(final String key) throws TenantApiException {
-        final Tenant tenant = (Tenant) tenantCache.get(key, new CacheLoaderArgument(ObjectType.TENANT));
+        final Tenant tenant = tenantCache.get(key, new CacheLoaderArgument(ObjectType.TENANT));
         if (tenant == null) {
             throw new TenantApiException(ErrorCode.TENANT_DOES_NOT_EXIST_FOR_API_KEY, key);
         }

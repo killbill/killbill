@@ -1,6 +1,6 @@
 /*
- * Copyright 2014-2015 Groupon, Inc
- * Copyright 2014-2015 The Billing Project, LLC
+ * Copyright 2014-2017 Groupon, Inc
+ * Copyright 2014-2017 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -22,7 +22,7 @@ import java.util.UUID;
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.util.cache.Cachable.CacheType;
 
-public class AccountBCDCacheLoader extends BaseCacheLoader {
+public class AccountBCDCacheLoader extends BaseCacheLoader<UUID, Integer> {
 
     @Override
     public CacheType getCacheType() {
@@ -30,30 +30,18 @@ public class AccountBCDCacheLoader extends BaseCacheLoader {
     }
 
     @Override
-    public Object load(final Object key, final Object argument) {
-
-        checkCacheLoaderStatus();
-
-        if (!(key instanceof UUID)) {
-            throw new IllegalArgumentException("Unexpected key type of " + key.getClass().getName());
-        }
-
-        if (!(argument instanceof CacheLoaderArgument)) {
-            throw new IllegalArgumentException("Unexpected argument type of " + argument.getClass().getName());
-        }
-
-        final CacheLoaderArgument cacheLoaderArgument = (CacheLoaderArgument) argument;
-
+    public Integer compute(final UUID key, final CacheLoaderArgument cacheLoaderArgument) {
         if (cacheLoaderArgument.getArgs() == null ||
             !(cacheLoaderArgument.getArgs()[0] instanceof LoaderCallback)) {
             throw new IllegalArgumentException("Missing LoaderCallback from the arguments ");
         }
 
         final LoaderCallback callback = (LoaderCallback) cacheLoaderArgument.getArgs()[0];
-        return callback.loadAccountBCD((UUID) key, cacheLoaderArgument.getInternalTenantContext());
+        return callback.loadAccountBCD(key, cacheLoaderArgument.getInternalTenantContext());
     }
 
     public interface LoaderCallback {
-        Object loadAccountBCD(final UUID accountId, final InternalTenantContext context);
+
+        Integer loadAccountBCD(final UUID accountId, final InternalTenantContext context);
     }
 }

@@ -1,7 +1,9 @@
 /*
- * Copyright 2010-2011 Ning, Inc.
+ * Copyright 2010-2013 Ning, Inc.
+ * Copyright 2014-2017 Groupon, Inc
+ * Copyright 2014-2017 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -36,7 +38,7 @@ import org.killbill.billing.util.entity.dao.EntitySqlDaoStringTemplate;
 
 /**
  * Note 1: cache invalidation has to happen for audit logs (which is tricky in the multi-nodes scenario).
- * For now, we're using a time-based eviction strategy (see timeToIdleSeconds and timeToLiveSeconds in ehcache.xml)
+ * For now, we're using a time-based eviction strategy (see ehcache.xml)
  * which is good enough: the cache will always get at least the initial CREATION audit log entry, which is the one
  * we really care about (both for Analytics and for Kaui's endpoints). Besides, we do cache invalidation properly
  * on our own node (see EntitySqlDaoWrapperInvocationHandler).

@@ -46,42 +46,42 @@ public class MockNonEntityDao implements NonEntityDao {
     }
 
     @Override
-    public Long retrieveRecordIdFromObject(final UUID objectId, final ObjectType objectType, @Nullable final CacheController<Object, Object> cache) {
+    public Long retrieveRecordIdFromObject(final UUID objectId, final ObjectType objectType, @Nullable final CacheController<String, Long> cache) {
         return null;
     }
 
     @Override
-    public Long retrieveRecordIdFromObjectInTransaction(final UUID objectId, final ObjectType objectType, @Nullable final CacheController<Object, Object> cache, @Nullable final Handle handle) {
+    public Long retrieveRecordIdFromObjectInTransaction(final UUID objectId, final ObjectType objectType, @Nullable final CacheController<String, Long> cache, @Nullable final Handle handle) {
         return null;
     }
 
     @Override
-    public Long retrieveAccountRecordIdFromObject(final UUID objectId, final ObjectType objectType, @Nullable final CacheController<Object, Object> cache) {
+    public Long retrieveAccountRecordIdFromObject(final UUID objectId, final ObjectType objectType, @Nullable final CacheController<String, Long> cache) {
         return accountRecordIdMappings.get(objectId);
     }
 
     @Override
-    public Long retrieveAccountRecordIdFromObjectInTransaction(final UUID objectId, final ObjectType objectType, @Nullable final CacheController<Object, Object> cache, @Nullable final Handle handle) {
+    public Long retrieveAccountRecordIdFromObjectInTransaction(final UUID objectId, final ObjectType objectType, @Nullable final CacheController<String, Long> cache, @Nullable final Handle handle) {
         return null;
     }
 
     @Override
-    public Long retrieveTenantRecordIdFromObject(final UUID objectId, final ObjectType objectType, @Nullable final CacheController<Object, Object> cache) {
+    public Long retrieveTenantRecordIdFromObject(final UUID objectId, final ObjectType objectType, @Nullable final CacheController<String, Long> cache) {
         return tenantRecordIdMappings.get(objectId);
     }
 
     @Override
-    public Long retrieveTenantRecordIdFromObjectInTransaction(final UUID objectId, final ObjectType objectType, @Nullable final CacheController<Object, Object> cache, @Nullable final Handle handle) {
+    public Long retrieveTenantRecordIdFromObjectInTransaction(final UUID objectId, final ObjectType objectType, @Nullable final CacheController<String, Long> cache, @Nullable final Handle handle) {
         return null;
     }
 
     @Override
-    public UUID retrieveIdFromObject(final Long recordId, final ObjectType objectType, @Nullable final CacheController<Object, Object> cache) {
+    public UUID retrieveIdFromObject(final Long recordId, final ObjectType objectType, @Nullable final CacheController<String, UUID> cache) {
         return null;
     }
 
     @Override
-    public UUID retrieveIdFromObjectInTransaction(final Long recordId, final ObjectType objectType, @Nullable final CacheController<Object, Object> cache, @Nullable final Handle handle) {
+    public UUID retrieveIdFromObjectInTransaction(final Long recordId, final ObjectType objectType, @Nullable final CacheController<String, UUID> cache, @Nullable final Handle handle) {
         return null;
     }
 

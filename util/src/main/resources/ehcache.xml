@@ -2,8 +2,8 @@
 
 <!--
   ~ Copyright 2010-2014 Ning, Inc.
-  ~ Copyright 2014-2016 Groupon, Inc
-  ~ Copyright 2014-2016 The Billing Project, LLC
+  ~ Copyright 2014-2017 Groupon, Inc
+  ~ Copyright 2014-2017 The Billing Project, LLC
   ~
   ~ The Billing Project licenses this file to you under the Apache License, version 2.0
   ~ (the "License"); you may not use this file except in compliance with the
@@ -18,221 +18,42 @@
   ~ under the License.
   -->
 
-<ehcache xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:noNamespaceSchemaLocation="ehcache.xsd">
+<ehcache:config xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance'
+                xmlns:ehcache='http://www.ehcache.org/v3'
+                xmlns:jsr107='http://www.ehcache.org/v3/jsr107'
+                xmlns:terracotta='http://www.ehcache.org/v3/clustered'
+                xsi:schemaLocation="http://www.ehcache.org/v3
+                                    http://www.ehcache.org/schema/ehcache-core-3.3.xsd
+                                    http://www.ehcache.org/v3/jsr107
+                                    http://www.ehcache.org/schema/ehcache-107-ext-3.3.xsd
+                                    http://www.ehcache.org/v3/clustered
+                                    http://www.ehcache.org/schema/ehcache-clustered-ext-3.3.xsd">
+    <ehcache:service>
+        <jsr107:defaults default-template="defaultCacheConfiguration" enable-management="true" enable-statistics="true">
+            <!-- See AuditSqlDao -->
+            <jsr107:cache name="audit-log" template="defaultShortTTLCacheConfiguration"/>
+            <jsr107:cache name="audit-log-via-history" template="defaultShortTTLCacheConfiguration"/>
+        </jsr107:defaults>
+    </ehcache:service>
 
-    <defaultCache
-            maxElementsInMemory="100000"
-            maxElementsOnDisk="0"
-            eternal="true"
-            overflowToDisk="false"
-            diskPersistent="false"
-            memoryStoreEvictionPolicy="LFU"
-            statistics="true"
-            />
+    <ehcache:cache-template name="defaultShortTTLCacheConfiguration">
+        <ehcache:expiry>
+            <ehcache:ttl unit="seconds">20</ehcache:ttl>
+        </ehcache:expiry>
 
-    <cache name="record-id"
-           maxElementsInMemory="100000"
-           maxElementsOnDisk="0"
-           eternal="true"
-           overflowToDisk="false"
-           diskPersistent="false"
-           memoryStoreEvictionPolicy="LFU"
-           statistics="true"
-            >
-        <cacheEventListenerFactory
-                class="org.killbill.billing.util.cache.ExpirationListenerFactory"
-                properties=""/>
-    </cache>
+        <ehcache:resources>
+            <ehcache:heap unit="entries">100000</ehcache:heap>
+        </ehcache:resources>
+    </ehcache:cache-template>
 
-    <cache name="tenant-record-id"
-           maxElementsInMemory="100000"
-           maxElementsOnDisk="0"
-           eternal="true"
-           overflowToDisk="false"
-           diskPersistent="false"
-           memoryStoreEvictionPolicy="LFU"
-           statistics="true"
-            >
-        <cacheEventListenerFactory
-                class="org.killbill.billing.util.cache.ExpirationListenerFactory"
-                properties=""/>
-    </cache>
+    <ehcache:cache-template name="defaultCacheConfiguration">
+        <ehcache:expiry>
+            <ehcache:none/>
+        </ehcache:expiry>
 
-    <cache name="account-record-id"
-           maxElementsInMemory="100000"
-           maxElementsOnDisk="0"
-           eternal="true"
-           overflowToDisk="false"
-           diskPersistent="false"
-           memoryStoreEvictionPolicy="LFU"
-           statistics="true"
-            >
-        <cacheEventListenerFactory
-                class="org.killbill.billing.util.cache.ExpirationListenerFactory"
-                properties=""/>
-    </cache>
-
-    <cache name="object-id"
-           maxElementsInMemory="100000"
-           maxElementsOnDisk="0"
-           eternal="true"
-           overflowToDisk="false"
-           diskPersistent="false"
-           memoryStoreEvictionPolicy="LFU"
-           statistics="true"
-            >
-        <cacheEventListenerFactory
-                class="org.killbill.billing.util.cache.ExpirationListenerFactory"
-                properties=""/>
-    </cache>
-
-
-    <cache name="audit-log"
-           maxElementsInMemory="500000"
-           maxElementsOnDisk="0"
-           timeToIdleSeconds="600"
-           timeToLiveSeconds="600"
-           overflowToDisk="false"
-           diskPersistent="false"
-           memoryStoreEvictionPolicy="LFU"
-           statistics="true"
-            >
-        <cacheEventListenerFactory
-                class="org.killbill.billing.util.cache.ExpirationListenerFactory"
-                properties=""/>
-    </cache>
-
-    <cache name="audit-log-via-history"
-           maxElementsInMemory="500000"
-           maxElementsOnDisk="0"
-           timeToIdleSeconds="600"
-           timeToLiveSeconds="600"
-           overflowToDisk="false"
-           diskPersistent="false"
-           memoryStoreEvictionPolicy="LFU"
-           statistics="true"
-            >
-        <cacheEventListenerFactory
-                class="org.killbill.billing.util.cache.ExpirationListenerFactory"
-                properties=""/>
-    </cache>
-
-    <cache name="tenant-catalog"
-           maxElementsInMemory="1000"
-           maxElementsOnDisk="0"
-           overflowToDisk="false"
-           diskPersistent="false"
-           memoryStoreEvictionPolicy="LFU"
-           statistics="true"
-            >
-        <cacheEventListenerFactory
-                class="org.killbill.billing.util.cache.ExpirationListenerFactory"
-                properties=""/>
-    </cache>
-
-    <cache name="tenant-overdue-config"
-           maxElementsInMemory="1000"
-           maxElementsOnDisk="0"
-           overflowToDisk="false"
-           diskPersistent="false"
-           memoryStoreEvictionPolicy="LFU"
-           statistics="true">
-        <cacheEventListenerFactory
-                class="org.killbill.billing.util.cache.ExpirationListenerFactory"
-                properties=""/>
-    </cache>
-
-    <cache name="tenant-config"
-           maxElementsInMemory="1000"
-           maxElementsOnDisk="0"
-           overflowToDisk="false"
-           diskPersistent="false"
-           memoryStoreEvictionPolicy="LFU"
-           statistics="true">
-        <cacheEventListenerFactory
-                class="org.killbill.billing.util.cache.ExpirationListenerFactory"
-                properties=""/>
-    </cache>
-
-    <cache name="tenant-kv"
-           maxElementsInMemory="1000"
-           maxElementsOnDisk="0"
-           overflowToDisk="false"
-           diskPersistent="false"
-           memoryStoreEvictionPolicy="LFU"
-           statistics="true"
-            >
-        <cacheEventListenerFactory
-                class="org.killbill.billing.util.cache.ExpirationListenerFactory"
-                properties=""/>
-    </cache>
-
-    <cache name="overridden-plan"
-           maxElementsInMemory="1000"
-           maxElementsOnDisk="0"
-           overflowToDisk="false"
-           diskPersistent="false"
-           memoryStoreEvictionPolicy="LFU"
-           statistics="true"
-            >
-        <cacheEventListenerFactory
-                class="org.killbill.billing.util.cache.ExpirationListenerFactory"
-                properties=""/>
-    </cache>
-
-    <cache name="account-immutable"
-           maxElementsInMemory="1000"
-           maxElementsOnDisk="0"
-           overflowToDisk="false"
-           diskPersistent="false"
-           memoryStoreEvictionPolicy="LFU"
-           statistics="true"
-            >
-        <cacheEventListenerFactory
-                class="org.killbill.billing.util.cache.ExpirationListenerFactory"
-                properties=""/>
-    </cache>
-
-    <cache name="account-bcd"
-           maxElementsInMemory="1000"
-           maxElementsOnDisk="0"
-           overflowToDisk="false"
-           diskPersistent="false"
-           memoryStoreEvictionPolicy="LFU"
-           statistics="true"
-            >
-        <cacheEventListenerFactory
-                class="org.killbill.billing.util.cache.ExpirationListenerFactory"
-                properties=""/>
-    </cache>
-
-
-    <cache name="tenant"
-           maxElementsInMemory="100"
-           maxElementsOnDisk="0"
-           overflowToDisk="false"
-           diskPersistent="false"
-           memoryStoreEvictionPolicy="LFU"
-           statistics="true"
-            >
-        <cacheEventListenerFactory
-                class="org.killbill.billing.util.cache.ExpirationListenerFactory"
-                properties=""/>
-    </cache>
-
-    <cache name="tenant-payment-state-machine-config"
-           maxElementsInMemory="100"
-           maxElementsOnDisk="0"
-           overflowToDisk="false"
-           diskPersistent="false"
-           memoryStoreEvictionPolicy="LFU"
-           statistics="true"
-            >
-        <cacheEventListenerFactory
-                class="org.killbill.billing.util.cache.ExpirationListenerFactory"
-                properties=""/>
-    </cache>
-
-</ehcache>
+        <ehcache:resources>
+            <ehcache:heap unit="entries">100000</ehcache:heap>
+        </ehcache:resources>
+    </ehcache:cache-template>
+</ehcache:config>
 

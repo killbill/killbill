@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014-2016 Groupon, Inc
- * Copyright 2014-2016 The Billing Project, LLC
+ * Copyright 2014-2017 Groupon, Inc
+ * Copyright 2014-2017 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -26,6 +26,8 @@ import org.killbill.billing.BillingExceptionBase;
 import org.killbill.billing.ErrorCode;
 import org.killbill.billing.account.api.Account;
 import org.killbill.billing.account.api.AccountApiException;
+import org.killbill.billing.account.api.DefaultImmutableAccountData;
+import org.killbill.billing.account.api.ImmutableAccountData;
 import org.killbill.billing.account.api.user.DefaultAccountChangeEvent;
 import org.killbill.billing.account.api.user.DefaultAccountCreationEvent;
 import org.killbill.billing.account.api.user.DefaultAccountCreationEvent.DefaultAccountData;
@@ -35,6 +37,8 @@ import org.killbill.billing.entity.EntityPersistenceException;
 import org.killbill.billing.events.AccountChangeInternalEvent;
 import org.killbill.billing.events.AccountCreationInternalEvent;
 import org.killbill.billing.util.audit.ChangeType;
+import org.killbill.billing.util.cache.Cachable.CacheType;
+import org.killbill.billing.util.cache.CacheController;
 import org.killbill.billing.util.cache.CacheControllerDispatcher;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.billing.util.dao.NonEntityDao;
@@ -60,6 +64,7 @@ public class DefaultAccountDao extends EntityDaoBase<AccountModelDao, Account, A
 
     private static final Logger log = LoggerFactory.getLogger(DefaultAccountDao.class);
 
+    private final CacheController<Long, ImmutableAccountData> accountImmutableCacheController;
     private final PersistentBus eventBus;
     private final InternalCallContextFactory internalCallContextFactory;
     private final Clock clock;
@@ -68,9 +73,19 @@ public class DefaultAccountDao extends EntityDaoBase<AccountModelDao, Account, A
     public DefaultAccountDao(final IDBI dbi, final PersistentBus eventBus, final Clock clock, final CacheControllerDispatcher cacheControllerDispatcher,
                              final InternalCallContextFactory internalCallContextFactory, final NonEntityDao nonEntityDao) {
         super(new EntitySqlDaoTransactionalJdbiWrapper(dbi, clock, cacheControllerDispatcher, nonEntityDao, internalCallContextFactory), AccountSqlDao.class);
+        this.accountImmutableCacheController  = cacheControllerDispatcher.getCacheController(CacheType.ACCOUNT_IMMUTABLE);
         this.eventBus = eventBus;
         this.internalCallContextFactory = internalCallContextFactory;
         this.clock = clock;
+    }
+
+    @Override
+    public void create(final AccountModelDao entity, final InternalCallContext context) throws AccountApiException {
+        final AccountModelDao refreshedEntity = transactionalSqlDao.execute(getCreateEntitySqlDaoTransactionWrapper(entity, context));
+        // Populate the caches only after the transaction has been committed, in case of rollbacks
+        transactionalSqlDao.populateCaches(refreshedEntity);
+        // Eagerly populate the account-immutable cache as well
+        accountImmutableCacheController.putIfAbsent(refreshedEntity.getRecordId(), new DefaultImmutableAccountData(refreshedEntity));
     }
 
     @Override
@@ -89,9 +104,9 @@ public class DefaultAccountDao extends EntityDaoBase<AccountModelDao, Account, A
                 return;
         }
 
-        final Long recordId = entitySqlDaoWrapperFactory.become(AccountSqlDao.class).getRecordId(savedAccount.getId().toString(), context);
+        final Long recordId = savedAccount.getRecordId();
         // We need to re-hydrate the callcontext with the account record id
-        final InternalCallContext rehydratedContext = internalCallContextFactory.createInternalCallContext(recordId, context);
+        final InternalCallContext rehydratedContext = internalCallContextFactory.createInternalCallContext(savedAccount, recordId, context);
         final AccountCreationInternalEvent creationEvent = new DefaultAccountCreationEvent(new DefaultAccountData(savedAccount), savedAccount.getId(),
                                                                                            rehydratedContext.getAccountRecordId(), rehydratedContext.getTenantRecordId(), rehydratedContext.getUserToken());
         try {
@@ -215,9 +230,8 @@ public class DefaultAccountDao extends EntityDaoBase<AccountModelDao, Account, A
                 }
 
                 final String thePaymentMethodId = paymentMethodId != null ? paymentMethodId.toString() : null;
-                transactional.updatePaymentMethod(accountId.toString(), thePaymentMethodId, context);
+                final AccountModelDao account = (AccountModelDao) transactional.updatePaymentMethod(accountId.toString(), thePaymentMethodId, context);
 
-                final AccountModelDao account = transactional.getById(accountId.toString(), context);
                 final AccountChangeInternalEvent changeEvent = new DefaultAccountChangeEvent(accountId, currentAccount, account,
                                                                                              context.getAccountRecordId(),
                                                                                              context.getTenantRecordId(),
@@ -245,7 +259,7 @@ public class DefaultAccountDao extends EntityDaoBase<AccountModelDao, Account, A
                     throw new AccountApiException(ErrorCode.ACCOUNT_EMAIL_ALREADY_EXISTS, email.getId());
                 }
 
-                transactional.create(email, context);
+                createAndRefresh(transactional, email, context);
                 return null;
             }
         });

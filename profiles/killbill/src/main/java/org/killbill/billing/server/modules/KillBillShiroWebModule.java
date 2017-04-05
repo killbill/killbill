@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014 Groupon, Inc
- * Copyright 2014 The Billing Project, LLC
+ * Copyright 2014-2017 Groupon, Inc
+ * Copyright 2014-2017 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -27,32 +27,27 @@ import org.apache.shiro.authc.pam.ModularRealmAuthenticator;
 import org.apache.shiro.authc.pam.ModularRealmAuthenticatorWith540;
 import org.apache.shiro.cache.CacheManager;
 import org.apache.shiro.guice.web.ShiroWebModuleWith435;
-import org.apache.shiro.realm.Realm;
 import org.apache.shiro.session.mgt.SessionManager;
-import org.apache.shiro.session.mgt.eis.CachingSessionDAO;
 import org.apache.shiro.web.filter.authc.BasicHttpAuthenticationFilter;
 import org.apache.shiro.web.mgt.DefaultWebSecurityManager;
 import org.apache.shiro.web.mgt.WebSecurityManager;
-import org.apache.shiro.web.session.mgt.DefaultWebSessionManager;
 import org.apache.shiro.web.util.WebUtils;
 import org.killbill.billing.jaxrs.resources.JaxrsResource;
 import org.killbill.billing.server.security.FirstSuccessfulStrategyWith540;
+import org.killbill.billing.server.security.KillBillWebSessionManager;
 import org.killbill.billing.server.security.KillbillJdbcTenantRealm;
 import org.killbill.billing.util.config.definition.RbacConfig;
-import org.killbill.billing.util.glue.EhCacheManagerProvider;
+import org.killbill.billing.util.glue.EhcacheShiroManagerProvider;
 import org.killbill.billing.util.glue.IniRealmProvider;
 import org.killbill.billing.util.glue.JDBCSessionDaoProvider;
 import org.killbill.billing.util.glue.KillBillShiroModule;
-import org.killbill.billing.util.glue.ShiroEhCacheInstrumentor;
 import org.killbill.billing.util.security.shiro.dao.JDBCSessionDao;
 import org.killbill.billing.util.security.shiro.realm.KillBillJdbcRealm;
 import org.killbill.billing.util.security.shiro.realm.KillBillJndiLdapRealm;
 import org.skife.config.ConfigSource;
 import org.skife.config.ConfigurationObjectFactory;
 
-import com.google.inject.Inject;
 import com.google.inject.Key;
-import com.google.inject.Provider;
 import com.google.inject.TypeLiteral;
 import com.google.inject.binder.AnnotatedBindingBuilder;
 import com.google.inject.matcher.AbstractMatcher;
@@ -73,16 +68,9 @@ public class KillBillShiroWebModule extends ShiroWebModuleWith435 {
     }
 
     @Override
-    public void configure() {
-        super.configure();
-
-        bind(ShiroEhCacheInstrumentor.class).asEagerSingleton();
-    }
-
-    @Override
     protected void configureShiroWeb() {
         // Magic provider to configure the cache manager
-        bind(CacheManager.class).toProvider(EhCacheManagerProvider.class).asEagerSingleton();
+        bind(CacheManager.class).toProvider(EhcacheShiroManagerProvider.class).asEagerSingleton();
 
         configureShiroForRBAC();
 
@@ -106,7 +94,7 @@ public class KillBillShiroWebModule extends ShiroWebModuleWith435 {
                              return Matchers.subclassesOf(WebSecurityManager.class).matches(o.getRawType());
                          }
                      },
-                     new DefaultWebSecurityManagerTypeListener(getProvider(ShiroEhCacheInstrumentor.class)));
+                     new DefaultWebSecurityManagerTypeListener());
 
         if (KillBillShiroModule.isRBACEnabled()) {
             addFilterChain(JaxrsResource.PREFIX + "/**", Key.get(CorsBasicHttpAuthenticationFilter.class));
@@ -123,7 +111,7 @@ public class KillBillShiroWebModule extends ShiroWebModuleWith435 {
     protected void bindSessionManager(final AnnotatedBindingBuilder<SessionManager> bind) {
         // Bypass the servlet container completely for session management and delegate it to Shiro.
         // The default session timeout is 30 minutes.
-        bind.to(DefaultWebSessionManager.class).asEagerSingleton();
+        bind.to(KillBillWebSessionManager.class).asEagerSingleton();
 
         // Magic provider to configure the session DAO
         bind(JDBCSessionDao.class).toProvider(JDBCSessionDaoProvider.class).asEagerSingleton();
@@ -143,30 +131,16 @@ public class KillBillShiroWebModule extends ShiroWebModuleWith435 {
 
     private static final class DefaultWebSecurityManagerTypeListener implements TypeListener {
 
-        private final Provider<ShiroEhCacheInstrumentor> instrumentorProvider;
-
-        @Inject
-        public DefaultWebSecurityManagerTypeListener(final Provider<ShiroEhCacheInstrumentor> instrumentorProvider) {
-            this.instrumentorProvider = instrumentorProvider;
-        }
-
         @Override
         public <I> void hear(final TypeLiteral<I> typeLiteral, final TypeEncounter<I> typeEncounter) {
             typeEncounter.register(new InjectionListener<I>() {
                 @Override
                 public void afterInjection(final Object o) {
-                    final ShiroEhCacheInstrumentor ehCacheInstrumentor = instrumentorProvider.get();
-                    ehCacheInstrumentor.instrument(CachingSessionDAO.ACTIVE_SESSION_CACHE_NAME);
-
                     final DefaultWebSecurityManager webSecurityManager = (DefaultWebSecurityManager) o;
                     if (webSecurityManager.getAuthenticator() instanceof ModularRealmAuthenticator) {
                         final ModularRealmAuthenticator authenticator = (ModularRealmAuthenticator) webSecurityManager.getAuthenticator();
                         authenticator.setAuthenticationStrategy(new FirstSuccessfulStrategyWith540());
                         webSecurityManager.setAuthenticator(new ModularRealmAuthenticatorWith540(authenticator));
-
-                        for (final Realm realm : webSecurityManager.getRealms()) {
-                            ehCacheInstrumentor.instrument(realm);
-                        }
                     }
                 }
             });

@@ -1,6 +1,6 @@
 /*
- * Copyright 2014-2015 Groupon, Inc
- * Copyright 2014-2015 The Billing Project, LLC
+ * Copyright 2014-2017 Groupon, Inc
+ * Copyright 2014-2017 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -29,6 +29,7 @@ import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.payment.api.TransactionType;
+import org.killbill.billing.payment.dao.PaymentModelDao;
 import org.killbill.billing.payment.dao.PaymentTransactionModelDao;
 import org.killbill.billing.payment.plugin.api.PaymentTransactionInfoPlugin;
 import org.killbill.billing.util.callcontext.CallContext;
@@ -38,7 +39,7 @@ import com.google.common.collect.ImmutableList;
 
 public class PaymentStateContext {
 
-
+    private PaymentModelDao paymentModelDao;
     // The following fields (paymentId, transactionId, amount, currency) may take their value from the paymentTransactionModelDao *when they are not already set*
     private PaymentTransactionModelDao paymentTransactionModelDao;
     // Initialized in CTOR or only set through paymentTransactionModelDao
@@ -117,6 +118,14 @@ public class PaymentStateContext {
 
     public void setPaymentMethodId(final UUID paymentMethodId) {
         this.paymentMethodId = paymentMethodId;
+    }
+
+    public PaymentModelDao getPaymentModelDao() {
+        return paymentModelDao;
+    }
+
+    public void setPaymentModelDao(final PaymentModelDao paymentModelDao) {
+        this.paymentModelDao = paymentModelDao;
     }
 
     public PaymentTransactionModelDao getPaymentTransactionModelDao() {

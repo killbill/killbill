@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014-2015 Groupon, Inc
- * Copyright 2014-2015 The Billing Project, LLC
+ * Copyright 2014-2017 Groupon, Inc
+ * Copyright 2014-2017 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -24,11 +24,14 @@ import java.util.Map;
 import java.util.UUID;
 
 import org.killbill.billing.ObjectType;
+import org.killbill.billing.account.api.ImmutableAccountData;
 import org.killbill.billing.api.TestApiListener.NextEvent;
+import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.util.UtilTestSuiteWithEmbeddedDB;
 import org.killbill.billing.util.customfield.CustomField;
 import org.killbill.billing.util.customfield.StringCustomField;
 import org.killbill.billing.util.entity.Pagination;
+import org.mockito.Mockito;
 import org.skife.jdbi.v2.Handle;
 import org.skife.jdbi.v2.tweak.HandleCallback;
 import org.testng.Assert;
@@ -42,6 +45,9 @@ public class TestDefaultCustomFieldUserApi extends UtilTestSuiteWithEmbeddedDB {
     public void testSaveCustomFieldWithAccountRecordId() throws Exception {
         final UUID accountId = UUID.randomUUID();
         final Long accountRecordId = 19384012L;
+
+        final ImmutableAccountData immutableAccountData = Mockito.mock(ImmutableAccountData.class);
+        Mockito.when(immutableAccountInternalApi.getImmutableAccountDataByRecordId(Mockito.<Long>eq(accountRecordId), Mockito.<InternalTenantContext>any())).thenReturn(immutableAccountData);
 
         dbi.withHandle(new HandleCallback<Void>() {
             @Override

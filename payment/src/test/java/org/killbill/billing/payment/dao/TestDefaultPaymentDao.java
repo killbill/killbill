@@ -1,6 +1,6 @@
 /*
- * Copyright 2014-2016 Groupon, Inc
- * Copyright 2014-2016 The Billing Project, LLC
+ * Copyright 2014-2017 Groupon, Inc
+ * Copyright 2014-2017 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -50,7 +50,7 @@ public class TestDefaultPaymentDao extends PaymentTestSuiteWithEmbeddedDB {
         final PaymentTransactionModelDao specifiedFirstPaymentTransactionModelDao = generatePaymentTransactionModelDao(specifiedFirstPaymentModelDao.getId());
 
         // Create and verify the payment and transaction
-        final PaymentModelDao firstPaymentModelDao = paymentDao.insertPaymentWithFirstTransaction(specifiedFirstPaymentModelDao, specifiedFirstPaymentTransactionModelDao, internalCallContext);
+        final PaymentModelDao firstPaymentModelDao = paymentDao.insertPaymentWithFirstTransaction(specifiedFirstPaymentModelDao, specifiedFirstPaymentTransactionModelDao, internalCallContext).getPaymentModelDao();
         verifyPayment(firstPaymentModelDao, specifiedFirstPaymentModelDao);
         verifyPaymentAndTransactions(internalCallContext, specifiedFirstPaymentModelDao, specifiedFirstPaymentTransactionModelDao);
 
@@ -89,7 +89,7 @@ public class TestDefaultPaymentDao extends PaymentTestSuiteWithEmbeddedDB {
             final PaymentModelDao paymentModelDao = generatePaymentModelDao(accountId);
             final PaymentTransactionModelDao paymentTransactionModelDao = generatePaymentTransactionModelDao(paymentModelDao.getId());
 
-            final PaymentModelDao insertedPaymentModelDao = paymentDao.insertPaymentWithFirstTransaction(paymentModelDao, paymentTransactionModelDao, internalCallContext);
+            final PaymentModelDao insertedPaymentModelDao = paymentDao.insertPaymentWithFirstTransaction(paymentModelDao, paymentTransactionModelDao, internalCallContext).getPaymentModelDao();
             verifyPayment(insertedPaymentModelDao, paymentModelDao);
 
             // Verify search APIs
