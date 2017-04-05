@@ -145,7 +145,7 @@ public class EhCacheCatalogCache implements CatalogCache {
             // A null latestCatalogUpdatedDate by passing caching, by fetching full catalog from plugin below (compatibility mode with 0.18.x or non optimized plugin api mode)
             //
             if (latestCatalogUpdatedDate != null) {
-                final VersionedCatalog tenantCatalog = (VersionedCatalog) cacheController.get(internalTenantContext.getTenantRecordId());
+                final VersionedCatalog tenantCatalog = (VersionedCatalog) cacheController.get(internalTenantContext.getTenantRecordId(), cacheLoaderArgument);
                 if (tenantCatalog != null) {
                     if (tenantCatalog.getEffectiveDate().compareTo(latestCatalogUpdatedDate.toDate()) == 0) {
                         // Current cached version matches the one from the plugin
@@ -160,7 +160,7 @@ public class EhCacheCatalogCache implements CatalogCache {
                 logger.info("Returning catalog from plugin {} on tenant {} ", service, internalTenantContext.getTenantRecordId());
                 final VersionedCatalog resolvedPluginCatalog = versionedCatalogMapper.toVersionedCatalog(pluginCatalog, internalTenantContext);
                 cacheController.remove(internalTenantContext.getTenantRecordId());
-                cacheController.add(internalTenantContext.getTenantRecordId(), resolvedPluginCatalog);
+                cacheController.putIfAbsent(internalTenantContext.getTenantRecordId(), resolvedPluginCatalog);
                 return resolvedPluginCatalog;
             }
         }

@@ -448,7 +448,7 @@
             </finalPhase>
         </plan>
 
-        <plan name="shotgun-monthly">
+        <plan name="shotgun-monthly" prettyName="Shotgun Monthly">
             <product>Shotgun</product>
             <initialPhases>
                 <phase type="TRIAL">
@@ -1220,14 +1220,14 @@
                 </recurring>
             </finalPhase>
         </plan>
-        <plan name="bullets-usage-in-arrear">
+        <plan name="bullets-usage-in-arrear" prettyName="Bullet Monthly Plan">
             <product>Bullets</product>
-            <finalPhase type="EVERGREEN">
+            <finalPhase type="EVERGREEN" prettyName="Bullet Monthly Plan Evergreen">
                 <duration>
                     <unit>UNLIMITED</unit>
                 </duration>
                 <usages>
-                    <usage name="bullets-usage-in-arrear-usage" billingMode="IN_ARREAR" usageType="CONSUMABLE">
+                    <usage name="bullets-usage-in-arrear-usage" prettyName="Bullet Usage In Arrear" billingMode="IN_ARREAR" usageType="CONSUMABLE">
                         <billingPeriod>MONTHLY</billingPeriod>
                         <tiers>
                             <tier>

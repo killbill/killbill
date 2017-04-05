@@ -26,6 +26,7 @@ import javax.annotation.Nullable;
 
 import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
+import org.killbill.billing.catalog.api.Catalog;
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.entity.EntityBase;
 import org.killbill.billing.invoice.api.Invoice;
@@ -74,7 +75,7 @@ public class DefaultInvoice extends EntityBase implements Invoice, Cloneable {
     }
 
     // This CTOR is used to return an existing invoice and must include everything (items, payments, tags,..)
-    public DefaultInvoice(final InvoiceModelDao invoiceModelDao) {
+    public DefaultInvoice(final InvoiceModelDao invoiceModelDao, @Nullable final Catalog catalog) {
         this(invoiceModelDao.getId(), invoiceModelDao.getCreatedDate(), invoiceModelDao.getAccountId(),
              invoiceModelDao.getInvoiceNumber(), invoiceModelDao.getInvoiceDate(), invoiceModelDao.getTargetDate(),
              invoiceModelDao.getCurrency(), invoiceModelDao.getProcessedCurrency(), invoiceModelDao.isMigrated(),
@@ -83,7 +84,7 @@ public class DefaultInvoice extends EntityBase implements Invoice, Cloneable {
         addInvoiceItems(Collections2.transform(invoiceModelDao.getInvoiceItems(), new Function<InvoiceItemModelDao, InvoiceItem>() {
             @Override
             public InvoiceItem apply(final InvoiceItemModelDao input) {
-                return InvoiceItemFactory.fromModelDao(input);
+                return InvoiceItemFactory.fromModelDaoWithCatalog(input, catalog);
             }
         }));
         addPayments(Collections2.transform(invoiceModelDao.getInvoicePayments(), new Function<InvoicePaymentModelDao, InvoicePayment>() {
@@ -92,6 +93,10 @@ public class DefaultInvoice extends EntityBase implements Invoice, Cloneable {
                 return new DefaultInvoicePayment(input);
             }
         }));
+    }
+
+    public DefaultInvoice(final InvoiceModelDao invoiceModelDao) {
+        this(invoiceModelDao, null);
     }
 
     public DefaultInvoice(final UUID accountId, final LocalDate invoiceDate, final Currency currency) {

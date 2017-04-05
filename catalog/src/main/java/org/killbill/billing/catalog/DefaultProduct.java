@@ -42,6 +42,9 @@ public class DefaultProduct extends ValidatingConfig<StandaloneCatalog> implemen
     @XmlID
     private String name;
 
+    @XmlAttribute(required = false)
+    private String prettyName;
+
     @XmlElement(required = true)
     private ProductCategory category;
 
@@ -105,6 +108,11 @@ public class DefaultProduct extends ValidatingConfig<StandaloneCatalog> implemen
         return name;
     }
 
+    @Override
+    public String getPrettyName() {
+        return prettyName;
+    }
+
     public boolean isIncluded(final DefaultProduct addon) {
         for (final Product p : included.getEntries()) {
             if (addon == p) {
@@ -155,6 +163,9 @@ public class DefaultProduct extends ValidatingConfig<StandaloneCatalog> implemen
         CatalogSafetyInitializer.initializeNonRequiredNullFieldsWithDefaultValue(this);
         for (DefaultLimit cur : limits) {
             cur.initialize(catalog, sourceURI);
+        }
+        if (prettyName == null) {
+            this.prettyName = name;
         }
         catalogName = catalog.getCatalogName();
     }

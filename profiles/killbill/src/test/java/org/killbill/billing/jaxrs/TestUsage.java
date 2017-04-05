@@ -19,6 +19,8 @@ package org.killbill.billing.jaxrs;
 
 import java.util.UUID;
 
+import javax.annotation.Nullable;
+
 import org.killbill.billing.ErrorCode;
 import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.catalog.api.PriceListSet;
@@ -26,11 +28,15 @@ import org.killbill.billing.catalog.api.ProductCategory;
 import org.killbill.billing.client.KillBillClientException;
 import org.killbill.billing.client.model.Account;
 import org.killbill.billing.client.model.Bundle;
+import org.killbill.billing.client.model.InvoiceItem;
+import org.killbill.billing.client.model.Invoices;
 import org.killbill.billing.client.model.RolledUpUsage;
 import org.killbill.billing.client.model.Subscription;
 import org.killbill.billing.client.model.SubscriptionUsageRecord;
 import org.killbill.billing.client.model.UnitUsageRecord;
 import org.killbill.billing.client.model.UsageRecord;
+import org.killbill.billing.invoice.api.InvoiceItemType;
+import org.killbill.billing.util.api.AuditLevel;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
@@ -61,9 +67,7 @@ public class TestUsage extends TestJaxrsBase {
         final Bundle bundle = killBillClient.createSubscriptionWithAddOns(ImmutableList.<Subscription>of(base, addOn),
                                                                           null,
                                                                           DEFAULT_WAIT_COMPLETION_TIMEOUT_SEC,
-                                                                          createdBy,
-                                                                          reason,
-                                                                          comment);
+                                                                          requestOptions);
         final UUID addOnSubscriptionId = Iterables.<Subscription>find(bundle.getSubscriptions(),
                                                                       new Predicate<Subscription>() {
                                                                           @Override
@@ -90,32 +94,51 @@ public class TestUsage extends TestJaxrsBase {
         usage.setSubscriptionId(addOnSubscriptionId);
         usage.setUnitUsageRecords(ImmutableList.<UnitUsageRecord>of(unitUsageRecord));
 
-        killBillClient.createSubscriptionUsageRecord(usage, createdBy, reason, comment);
+        killBillClient.createSubscriptionUsageRecord(usage, requestOptions);
 
-        final RolledUpUsage retrievedUsage1 = killBillClient.getRolledUpUsage(addOnSubscriptionId, unitUsageRecord.getUnitType(), clock.getUTCToday().minusDays(1), clock.getUTCToday());
+        final RolledUpUsage retrievedUsage1 = killBillClient.getRolledUpUsage(addOnSubscriptionId, unitUsageRecord.getUnitType(), clock.getUTCToday().minusDays(1), clock.getUTCToday(), requestOptions);
         Assert.assertEquals(retrievedUsage1.getSubscriptionId(), usage.getSubscriptionId());
         Assert.assertEquals(retrievedUsage1.getRolledUpUnits().size(), 1);
         Assert.assertEquals(retrievedUsage1.getRolledUpUnits().get(0).getUnitType(), unitUsageRecord.getUnitType());
         // endDate is excluded
         Assert.assertEquals((long) retrievedUsage1.getRolledUpUnits().get(0).getAmount(), 10);
 
-        final RolledUpUsage retrievedUsage2 = killBillClient.getRolledUpUsage(addOnSubscriptionId, unitUsageRecord.getUnitType(), clock.getUTCToday().minusDays(1), clock.getUTCToday().plusDays(1));
+        final RolledUpUsage retrievedUsage2 = killBillClient.getRolledUpUsage(addOnSubscriptionId, unitUsageRecord.getUnitType(), clock.getUTCToday().minusDays(1), clock.getUTCToday().plusDays(1), requestOptions);
         Assert.assertEquals(retrievedUsage2.getSubscriptionId(), usage.getSubscriptionId());
         Assert.assertEquals(retrievedUsage2.getRolledUpUnits().size(), 1);
         Assert.assertEquals(retrievedUsage2.getRolledUpUnits().get(0).getUnitType(), unitUsageRecord.getUnitType());
         Assert.assertEquals((long) retrievedUsage2.getRolledUpUnits().get(0).getAmount(), 15);
 
-        final RolledUpUsage retrievedUsage3 = killBillClient.getRolledUpUsage(addOnSubscriptionId, unitUsageRecord.getUnitType(), clock.getUTCToday(), clock.getUTCToday().plusDays(1));
+        final RolledUpUsage retrievedUsage3 = killBillClient.getRolledUpUsage(addOnSubscriptionId, unitUsageRecord.getUnitType(), clock.getUTCToday(), clock.getUTCToday().plusDays(1), requestOptions);
         Assert.assertEquals(retrievedUsage3.getSubscriptionId(), usage.getSubscriptionId());
         Assert.assertEquals(retrievedUsage3.getRolledUpUnits().size(), 1);
         Assert.assertEquals(retrievedUsage3.getRolledUpUnits().get(0).getUnitType(), unitUsageRecord.getUnitType());
         Assert.assertEquals((long) retrievedUsage3.getRolledUpUnits().get(0).getAmount(), 5);
 
-        final RolledUpUsage retrievedUsage4 = killBillClient.getRolledUpUsage(addOnSubscriptionId, null, clock.getUTCToday(), clock.getUTCToday().plusDays(1));
+        final RolledUpUsage retrievedUsage4 = killBillClient.getRolledUpUsage(addOnSubscriptionId, null, clock.getUTCToday(), clock.getUTCToday().plusDays(1), requestOptions);
         Assert.assertEquals(retrievedUsage4.getSubscriptionId(), usage.getSubscriptionId());
         Assert.assertEquals(retrievedUsage4.getRolledUpUnits().size(), 1);
         Assert.assertEquals(retrievedUsage4.getRolledUpUnits().get(0).getUnitType(), "bullets");
         Assert.assertEquals((long) retrievedUsage4.getRolledUpUnits().get(0).getAmount(), 5);
+
+        clock.addMonths(1);
+        crappyWaitForLackOfProperSynchonization();
+
+
+        final Invoices invoices = killBillClient.getInvoicesForAccount(accountJson.getAccountId(), true, false, false, AuditLevel.MINIMAL, requestOptions);
+        Assert.assertEquals(invoices.size(), 2);
+
+        final InvoiceItem usageItem =  Iterables.tryFind(invoices.get(1).getItems(), new Predicate<InvoiceItem>() {
+            @Override
+            public boolean apply(final InvoiceItem input) {
+                return InvoiceItemType.valueOf(input.getItemType()) == InvoiceItemType.USAGE;
+            }
+        }).orNull();
+        Assert.assertNotNull(usageItem);
+
+        Assert.assertEquals(usageItem.getPrettyPlanName(), "Bullet Monthly Plan");
+        Assert.assertEquals(usageItem.getPrettyPhaseName(), "Bullet Monthly Plan Evergreen");
+        Assert.assertEquals(usageItem.getPrettyUsageName(), "Bullet Usage In Arrear");
     }
 
     @Test(groups = "slow", description = "Test tracking ID already exists")
@@ -139,10 +162,7 @@ public class TestUsage extends TestJaxrsBase {
 
         final Bundle bundle = killBillClient.createSubscriptionWithAddOns(ImmutableList.<Subscription>of(base, addOn),
                                                                           null,
-                                                                          DEFAULT_WAIT_COMPLETION_TIMEOUT_SEC,
-                                                                          createdBy,
-                                                                          reason,
-                                                                          comment);
+                                                                          DEFAULT_WAIT_COMPLETION_TIMEOUT_SEC, requestOptions);
         final UUID addOnSubscriptionId = Iterables.<Subscription>find(bundle.getSubscriptions(),
                                                                       new Predicate<Subscription>() {
                                                                           @Override
@@ -164,10 +184,10 @@ public class TestUsage extends TestJaxrsBase {
         usage.setTrackingId(UUID.randomUUID().toString());
         usage.setUnitUsageRecords(ImmutableList.<UnitUsageRecord>of(unitUsageRecord));
 
-        killBillClient.createSubscriptionUsageRecord(usage, createdBy, reason, comment);
+        killBillClient.createSubscriptionUsageRecord(usage, requestOptions);
 
         try {
-            killBillClient.createSubscriptionUsageRecord(usage, createdBy, reason, comment);
+            killBillClient.createSubscriptionUsageRecord(usage, requestOptions );
             Assert.fail();
         }
         catch (final KillBillClientException e) {

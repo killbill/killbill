@@ -63,6 +63,11 @@ public class MockPlan implements Plan {
     }
 
     @Override
+    public String getPrettyName() {
+        return name;
+    }
+
+    @Override
     public Date getEffectiveDateForExistingSubscriptions() {
         return new Date();
     }

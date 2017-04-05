@@ -29,7 +29,7 @@ import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.invoice.api.InvoiceItemType;
 import org.killbill.billing.util.UUIDs;
 
-public class FixedPriceInvoiceItem extends InvoiceItemBase {
+public class FixedPriceInvoiceItem extends InvoiceItemCatalogBase {
 
     public FixedPriceInvoiceItem(final UUID invoiceId, final UUID accountId, @Nullable final UUID bundleId, @Nullable final UUID subscriptionId,
                                  final String planName, final String phaseName,
@@ -40,7 +40,13 @@ public class FixedPriceInvoiceItem extends InvoiceItemBase {
     public FixedPriceInvoiceItem(final UUID id, @Nullable final DateTime createdDate, final UUID invoiceId, final UUID accountId, final UUID bundleId,
                                  final UUID subscriptionId, final String planName, final String phaseName,
                                  @Nullable final String description, final LocalDate date, final BigDecimal amount, final Currency currency) {
-        super(id, createdDate, invoiceId, accountId, bundleId, subscriptionId, description, planName, phaseName, null, date, null, amount, currency);
+        super(id, createdDate, invoiceId, accountId, bundleId, subscriptionId, description, planName, phaseName, null, date, null, amount, null, currency, null);
+    }
+
+    public FixedPriceInvoiceItem(final UUID id, @Nullable final DateTime createdDate, final UUID invoiceId, final UUID accountId, final UUID bundleId,
+                                 final UUID subscriptionId, final String planName, final String phaseName, final String prettyPlanName, final String prettyPhaseName,
+                                 @Nullable final String description, final LocalDate date, final BigDecimal amount, final Currency currency) {
+        super(id, createdDate, invoiceId, accountId, bundleId, subscriptionId, description, planName, phaseName, null, prettyPlanName, prettyPhaseName, null, date, null, amount, null, currency, null);
     }
 
     @Override

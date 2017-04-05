@@ -30,18 +30,18 @@ import org.killbill.billing.util.UUIDs;
 public class ExternalChargeInvoiceItem extends InvoiceItemBase {
 
     public ExternalChargeInvoiceItem(final UUID invoiceId, final UUID accountId, @Nullable final UUID bundleId, @Nullable final String description,
-                                     final LocalDate date, final BigDecimal amount, final Currency currency) {
-        this(UUIDs.randomUUID(), invoiceId, accountId, bundleId, description, date, amount, currency);
+                                     final LocalDate effectiveDate, final BigDecimal amount, final Currency currency) {
+        this(UUIDs.randomUUID(), invoiceId, accountId, bundleId, description, effectiveDate, amount, currency);
     }
 
     public ExternalChargeInvoiceItem(final UUID id, final UUID invoiceId, final UUID accountId, @Nullable final UUID bundleId,
-                                     @Nullable final String description, final LocalDate date, final BigDecimal amount, final Currency currency) {
-        this(id, null, invoiceId, accountId, bundleId, description, date, amount, currency);
+                                     @Nullable final String description, final LocalDate effectiveDate, final BigDecimal amount, final Currency currency) {
+        this(id, null, invoiceId, accountId, bundleId, description, effectiveDate, amount, currency);
     }
 
     public ExternalChargeInvoiceItem(final UUID id, @Nullable final DateTime createdDate, final UUID invoiceId, final UUID accountId, @Nullable final UUID bundleId,
-                                     @Nullable final String description, final LocalDate date, final BigDecimal amount, final Currency currency) {
-        super(id, createdDate, invoiceId, accountId, bundleId, null, description, null, null, null, date, null, amount, currency);
+                                     @Nullable final String description, final LocalDate effectiveDate, final BigDecimal amount, final Currency currency) {
+        super(id, createdDate, invoiceId, accountId, bundleId, null, description, effectiveDate, null, amount, null, currency, null);
     }
 
     @Override

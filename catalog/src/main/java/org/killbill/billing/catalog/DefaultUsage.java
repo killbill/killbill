@@ -59,6 +59,9 @@ public class DefaultUsage extends ValidatingConfig<StandaloneCatalog> implements
     @XmlID
     private String name;
 
+    @XmlAttribute(required = false)
+    private String prettyName;
+
     @XmlAttribute(required = true)
     private BillingMode billingMode;
 
@@ -150,6 +153,11 @@ public class DefaultUsage extends ValidatingConfig<StandaloneCatalog> implements
     }
 
     @Override
+    public String getPrettyName() {
+        return prettyName;
+    }
+
+    @Override
     public BillingMode getBillingMode() {
         return billingMode;
     }
@@ -227,6 +235,10 @@ public class DefaultUsage extends ValidatingConfig<StandaloneCatalog> implements
     public void initialize(final StandaloneCatalog root, final URI uri) {
         super.initialize(root, uri);
         CatalogSafetyInitializer.initializeNonRequiredNullFieldsWithDefaultValue(this);
+
+        if (prettyName == null) {
+            this.prettyName = name;
+        }
 
         for (DefaultLimit limit : limits) {
             limit.initialize(root, uri);
