@@ -93,20 +93,6 @@ public class DefaultImmutableAccountData implements ImmutableAccountData, Extern
         return timeZone;
     }
 
-    @Override
-    @Deprecated
-    public UUID getParentAccountId() {
-        // Should only be used internally by ImmutableAccountInternalApi
-        throw new UnsupportedOperationException("WILL BE REMOVED IN 0.20.0");
-    }
-
-    @Override
-    @Deprecated
-    public Boolean isPaymentDelegatedToParent() {
-        // Should only be used internally by ImmutableAccountInternalApi
-        throw new UnsupportedOperationException("WILL BE REMOVED IN 0.20.0");
-    }
-
     public DateTimeZone getFixedOffsetTimeZone() {
         return fixedOffsetTimeZone;
     }
