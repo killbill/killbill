@@ -64,7 +64,7 @@ public class OverdueStateJson {
 
         Period reevaluationIntervalPeriod = null;
         try {
-            reevaluationIntervalPeriod = overdueState.getAutoReevaluationInterval();
+            reevaluationIntervalPeriod = overdueState.getAutoReevaluationInterval().toJodaPeriod();
         } catch (final OverdueApiException ignored) {
         }
 

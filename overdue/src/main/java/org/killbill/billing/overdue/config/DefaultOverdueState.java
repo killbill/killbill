@@ -26,6 +26,7 @@ import javax.xml.bind.annotation.XmlID;
 
 import org.joda.time.Period;
 import org.killbill.billing.ErrorCode;
+import org.killbill.billing.catalog.api.Duration;
 import org.killbill.billing.catalog.api.TimeUnit;
 import org.killbill.billing.overdue.ConditionEvaluation;
 import org.killbill.billing.overdue.api.EmailNotification;
@@ -112,11 +113,11 @@ public class DefaultOverdueState extends ValidatingConfig<DefaultOverdueConfig> 
     }
 
     @Override
-    public Period getAutoReevaluationInterval() throws OverdueApiException {
+    public Duration getAutoReevaluationInterval() throws OverdueApiException {
         if (autoReevaluationInterval == null || autoReevaluationInterval.getUnit() == TimeUnit.UNLIMITED || autoReevaluationInterval.getNumber() == 0) {
             throw new OverdueApiException(ErrorCode.OVERDUE_NO_REEVALUATION_INTERVAL, name);
         }
-        return autoReevaluationInterval.toJodaPeriod();
+        return autoReevaluationInterval;
     }
 
     public void setAutoReevaluationInterval(final DefaultDuration autoReevaluationInterval) {

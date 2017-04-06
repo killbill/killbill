@@ -64,7 +64,7 @@ public class OverdueStateConfigJson {
         this.subscriptionCancellationPolicy = input.getOverdueCancellationPolicy();
         Integer tmpAutoReevaluationIntervalDays = null;
         try {
-            tmpAutoReevaluationIntervalDays = input.getAutoReevaluationInterval().getDays();
+            tmpAutoReevaluationIntervalDays = input.getAutoReevaluationInterval().toJodaPeriod().getDays();
         } catch (final OverdueApiException e) {
         } finally {
             this.autoReevaluationIntervalDays = tmpAutoReevaluationIntervalDays;

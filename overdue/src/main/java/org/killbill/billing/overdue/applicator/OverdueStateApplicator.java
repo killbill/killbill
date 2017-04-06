@@ -189,7 +189,7 @@ public class OverdueStateApplicator {
             if (nextOverdueState.isClearState()) {
                 return overdueStateSet.getInitialReevaluationInterval();
             } else {
-                return nextOverdueState.getAutoReevaluationInterval();
+                return nextOverdueState.getAutoReevaluationInterval().toJodaPeriod();
             }
         } catch (final OverdueApiException e) {
             if (e.getCode() == ErrorCode.OVERDUE_NO_REEVALUATION_INTERVAL.getCode()) {
