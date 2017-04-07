@@ -25,7 +25,29 @@ import org.killbill.billing.invoice.InvoiceTestSuiteNoDB;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
+import static org.killbill.billing.invoice.generator.InvoiceDateUtils.calculateNumberOfWholeBillingPeriods;
+
 public class TestInAdvanceBillingIntervalDetail extends InvoiceTestSuiteNoDB {
+
+
+    @Test(groups = "fast")
+    public void testWithBCDLargerThanEndMonth() throws Exception {
+        final LocalDate startDate = new LocalDate("2017-01-31");
+        final LocalDate endDate = null;
+        final LocalDate targetDate = new LocalDate("2017-03-31");
+        int BCD = 31;
+        final BillingIntervalDetail billingIntervalDetail = new BillingIntervalDetail(startDate, endDate, targetDate, BCD, BillingPeriod.MONTHLY, BillingMode.IN_ADVANCE);
+
+        final LocalDate firstBillingCycleDate = billingIntervalDetail.getFirstBillingCycleDate();
+        final LocalDate lastBillingCycleDate = billingIntervalDetail.getLastBillingCycleDate();
+
+        final int numberOfWholeBillingPeriods = calculateNumberOfWholeBillingPeriods(firstBillingCycleDate, lastBillingCycleDate, BillingPeriod.MONTHLY);
+
+
+        Assert.assertEquals(numberOfWholeBillingPeriods, 3);
+    }
+
+
 
     /*
      *

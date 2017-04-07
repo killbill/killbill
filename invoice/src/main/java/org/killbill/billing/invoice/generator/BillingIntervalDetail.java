@@ -212,8 +212,12 @@ public class BillingIntervalDetail {
     public static LocalDate alignProposedBillCycleDate(final LocalDate proposedDate, final int billingCycleDay) {
         final int lastDayOfMonth = proposedDate.dayOfMonth().getMaximumValue();
         int proposedBillCycleDate = proposedDate.getDayOfMonth();
-        if (proposedBillCycleDate < billingCycleDay && billingCycleDay <= lastDayOfMonth) {
-            proposedBillCycleDate = billingCycleDay;
+        if (proposedBillCycleDate < billingCycleDay) {
+            if (billingCycleDay <= lastDayOfMonth) {
+                proposedBillCycleDate = billingCycleDay;
+            } else {
+                proposedBillCycleDate = lastDayOfMonth;
+            }
         }
         return new LocalDate(proposedDate.getYear(), proposedDate.getMonthOfYear(), proposedBillCycleDate, proposedDate.getChronology());
     }
