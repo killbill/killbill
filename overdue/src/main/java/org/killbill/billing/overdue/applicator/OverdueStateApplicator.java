@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014-2016 Groupon, Inc
- * Copyright 2014-2016 The Billing Project, LLC
+ * Copyright 2014-2017 Groupon, Inc
+ * Copyright 2014-2017 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -70,7 +70,6 @@ import org.killbill.billing.util.email.EmailSender;
 import org.killbill.billing.util.tag.ControlTagType;
 import org.killbill.billing.util.tag.Tag;
 import org.killbill.bus.api.PersistentBus;
-import org.killbill.clock.Clock;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -154,16 +153,29 @@ public class OverdueStateApplicator {
                 return;
             }
 
-            cancelSubscriptionsIfRequired(effectiveDate, account, nextOverdueState, context);
+            final boolean autoInvoiceOffHack = quietlyCancelSubscriptionsIfRequired(effectiveDate, account, nextOverdueState, context);
 
             sendEmailIfRequired(account.getId(), billingState, nextOverdueState, context);
 
-            avoid_extra_credit_by_toggling_AUTO_INVOICE_OFF(account, previousOverdueState, nextOverdueState, context);
+            final Boolean shouldSetAutoInvoiceOff = avoidExtraCreditByQuietlyTogglingAUTO_INVOICE_OFF(account, previousOverdueState, nextOverdueState, context);
 
-            // Make sure to store the new state last here: the entitlement DAO will send a BlockingTransitionInternalEvent
-            // on the bus to which invoice will react. We need the latest state (including AUTO_INVOICE_OFF tag for example)
-            // to be present in the database first.
+            // This will send the event invoice will react to
             storeNewState(effectiveDate, account, nextOverdueState, context);
+
+            if (shouldSetAutoInvoiceOff == null) {
+                if (autoInvoiceOffHack) {
+                    // Remove the hack
+                    remove_AUTO_INVOICE_OFF_on_clear(account.getId(), false, context);
+                } else {
+                    // Nothing to do
+                }
+            } else if (shouldSetAutoInvoiceOff == Boolean.TRUE) {
+                // No-op, just to send the event
+                set_AUTO_INVOICE_OFF_on_blockedBilling(account.getId(), true, true, context);
+            } else {
+                // No-op, just to send the event
+                remove_AUTO_INVOICE_OFF_on_clear(account.getId(), true, context);
+            }
         } catch (final AccountApiException e) {
             throw new OverdueException(e);
         }
@@ -172,6 +184,36 @@ public class OverdueStateApplicator {
         try {
             event = createOverdueEvent(account, previousOverdueState.getName(), nextOverdueState.getName(), isBlockBillingTransition(previousOverdueState, nextOverdueState),
                                        isUnblockBillingTransition(previousOverdueState, nextOverdueState), context);
+        } catch (final BlockingApiException e) {
+            log.warn("Failed to create OverdueChangeInternalEvent for accountId='{}'", account.getId(), e);
+            return;
+        }
+
+        try {
+            bus.post(event);
+        } catch (final Exception e) {
+            log.warn("Failed to post event {}", event, e);
+        }
+    }
+
+    public void clear(final DateTime effectiveDate, final ImmutableAccountData account, final OverdueState previousOverdueState, final OverdueState clearState, final InternalCallContext context) throws OverdueException {
+        log.debug("OverdueStateApplicator:clear : time = " + effectiveDate + ", previousState = " + previousOverdueState.getName());
+
+        try {
+            avoidExtraCreditByQuietlyTogglingAUTO_INVOICE_OFF(account, previousOverdueState, clearState, context);
+        } catch (final OverdueApiException e) {
+            throw new OverdueException(e);
+        }
+
+        clearFutureNotification(account, context);
+
+        // This will send the event Invoice will react to
+        storeNewState(effectiveDate, account, clearState, context);
+
+        final OverdueChangeInternalEvent event;
+        try {
+            event = createOverdueEvent(account, previousOverdueState.getName(), clearState.getName(), isBlockBillingTransition(previousOverdueState, clearState),
+                                       isUnblockBillingTransition(previousOverdueState, clearState), context);
         } catch (final BlockingApiException e) {
             log.warn("Failed to create OverdueChangeInternalEvent for accountId='{}'", account.getId(), e);
             return;
@@ -200,42 +242,16 @@ public class OverdueStateApplicator {
         }
     }
 
-    private void avoid_extra_credit_by_toggling_AUTO_INVOICE_OFF(final ImmutableAccountData account, final OverdueState previousOverdueState,
-                                                                 final OverdueState nextOverdueState, final InternalCallContext context) throws OverdueApiException {
+    private Boolean avoidExtraCreditByQuietlyTogglingAUTO_INVOICE_OFF(final ImmutableAccountData account, final OverdueState previousOverdueState,
+                                                                   final OverdueState nextOverdueState, final InternalCallContext context) throws OverdueApiException {
         if (isBlockBillingTransition(previousOverdueState, nextOverdueState)) {
-            set_AUTO_INVOICE_OFF_on_blockedBilling(account.getId(), context);
+            set_AUTO_INVOICE_OFF_on_blockedBilling(account.getId(), false, true, context);
+            return true;
         } else if (isUnblockBillingTransition(previousOverdueState, nextOverdueState)) {
-            remove_AUTO_INVOICE_OFF_on_clear(account.getId(), context);
-        }
-    }
-
-    public void clear(final DateTime effectiveDate, final ImmutableAccountData account, final OverdueState previousOverdueState, final OverdueState clearState, final InternalCallContext context) throws OverdueException {
-
-        log.debug("OverdueStateApplicator:clear : time = " + effectiveDate + ", previousState = " + previousOverdueState.getName());
-
-        storeNewState(effectiveDate, account, clearState, context);
-
-        clearFutureNotification(account, context);
-
-        try {
-            avoid_extra_credit_by_toggling_AUTO_INVOICE_OFF(account, previousOverdueState, clearState, context);
-        } catch (final OverdueApiException e) {
-            throw new OverdueException(e);
-        }
-
-        final OverdueChangeInternalEvent event;
-        try {
-            event = createOverdueEvent(account, previousOverdueState.getName(), clearState.getName(), isBlockBillingTransition(previousOverdueState, clearState),
-                                       isUnblockBillingTransition(previousOverdueState, clearState), context);
-        } catch (final BlockingApiException e) {
-            log.warn("Failed to create OverdueChangeInternalEvent for accountId='{}'", account.getId(), e);
-            return;
-        }
-
-        try {
-            bus.post(event);
-        } catch (final Exception e) {
-            log.warn("Failed to post event {}", event, e);
+            remove_AUTO_INVOICE_OFF_on_clear(account.getId(), false, context);
+            return false;
+        } else {
+            return null;
         }
     }
 
@@ -245,7 +261,8 @@ public class OverdueStateApplicator {
                                              context.getAccountRecordId(), context.getTenantRecordId(), context.getUserToken());
     }
 
-    protected void storeNewState(final DateTime effectiveDate, final ImmutableAccountData blockable, final OverdueState nextOverdueState, final InternalCallContext context) throws OverdueException {
+    // This will notify invoice via BlockingTransitionInternalEvent
+    private void storeNewState(final DateTime effectiveDate, final ImmutableAccountData blockable, final OverdueState nextOverdueState, final InternalCallContext context) throws OverdueException {
         try {
             blockingApi.setBlockingState(new DefaultBlockingState(blockable.getId(),
                                                                   BlockingStateType.ACCOUNT,
@@ -261,17 +278,22 @@ public class OverdueStateApplicator {
         }
     }
 
-    private void set_AUTO_INVOICE_OFF_on_blockedBilling(final UUID accountId, final InternalCallContext context) throws OverdueApiException {
+    private boolean set_AUTO_INVOICE_OFF_on_blockedBilling(final UUID accountId, final boolean sendEvent, final boolean ignoreDuplicate, final InternalCallContext context) throws OverdueApiException {
         try {
-            tagApi.addTag(accountId, ObjectType.ACCOUNT, ControlTagType.AUTO_INVOICING_OFF.getId(), context);
+            tagApi.addTag(accountId, ObjectType.ACCOUNT, ControlTagType.AUTO_INVOICING_OFF.getId(), sendEvent, ignoreDuplicate, context);
+            return true;
         } catch (final TagApiException e) {
-            throw new OverdueApiException(e);
+            if (e.getCode() != ErrorCode.TAG_ALREADY_EXISTS.getCode()) {
+                throw new OverdueApiException(e);
+            } else {
+                return false;
+            }
         }
     }
 
-    private void remove_AUTO_INVOICE_OFF_on_clear(final UUID accountId, final InternalCallContext context) throws OverdueApiException {
+    private void remove_AUTO_INVOICE_OFF_on_clear(final UUID accountId, final boolean sendEvent, final InternalCallContext context) throws OverdueApiException {
         try {
-            tagApi.removeTag(accountId, ObjectType.ACCOUNT, ControlTagType.AUTO_INVOICING_OFF.getId(), context);
+            tagApi.removeTag(accountId, ObjectType.ACCOUNT, ControlTagType.AUTO_INVOICING_OFF.getId(), sendEvent, context);
         } catch (final TagApiException e) {
             if (e.getCode() != ErrorCode.TAG_DOES_NOT_EXIST.getCode()) {
                 throw new OverdueApiException(e);
@@ -299,19 +321,19 @@ public class OverdueStateApplicator {
         return nextOverdueState.isDisableEntitlementAndChangesBlocked();
     }
 
-    protected void createFutureNotification(final ImmutableAccountData account, final DateTime timeOfNextCheck, final InternalCallContext context) {
+    private void createFutureNotification(final ImmutableAccountData account, final DateTime timeOfNextCheck, final InternalCallContext context) {
         final OverdueCheckNotificationKey notificationKey = new OverdueCheckNotificationKey(account.getId());
         checkPoster.insertOverdueNotification(account.getId(), timeOfNextCheck, OverdueCheckNotifier.OVERDUE_CHECK_NOTIFIER_QUEUE, notificationKey, context);
     }
 
-    protected void clearFutureNotification(final ImmutableAccountData account, final InternalCallContext context) {
+    private void clearFutureNotification(final ImmutableAccountData account, final InternalCallContext context) {
         // Need to clear the override table here too (when we add it)
         checkPoster.clearOverdueCheckNotifications(account.getId(), OverdueCheckNotifier.OVERDUE_CHECK_NOTIFIER_QUEUE, OverdueCheckNotificationKey.class, context);
     }
 
-    private void cancelSubscriptionsIfRequired(final DateTime effectiveDate, final ImmutableAccountData account, final OverdueState nextOverdueState, final InternalCallContext context) throws OverdueException {
+    private boolean quietlyCancelSubscriptionsIfRequired(final DateTime effectiveDate, final ImmutableAccountData account, final OverdueState nextOverdueState, final InternalCallContext context) throws OverdueException {
         if (nextOverdueState.getOverdueCancellationPolicy() == OverdueCancellationPolicy.NONE) {
-            return;
+            return false;
         }
 
         final CallContext callContext = internalCallContextFactory.createCallContext(context);
@@ -331,7 +353,11 @@ public class OverdueStateApplicator {
             computeEntitlementsToCancel(account, toBeCancelled, callContext);
 
             try {
+                final boolean tagSet = set_AUTO_INVOICE_OFF_on_blockedBilling(account.getId(), false, false, context);
                 entitlementInternalApi.cancel(toBeCancelled, context.toLocalDate(effectiveDate), actionPolicy, ImmutableList.<PluginProperty>of(), context);
+                return tagSet;
+            } catch (final OverdueApiException e) {
+                throw new OverdueException(e);
             } catch (final EntitlementApiException e) {
                 throw new OverdueException(e);
             }

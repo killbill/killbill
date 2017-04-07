@@ -1,7 +1,9 @@
 /*
- * Copyright 2010-2011 Ning, Inc.
+ * Copyright 2010-2013 Ning, Inc.
+ * Copyright 2014-2017 Groupon, Inc
+ * Copyright 2014-2017 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -20,9 +22,9 @@ import java.util.List;
 import java.util.UUID;
 
 import org.killbill.billing.ObjectType;
-import org.killbill.billing.util.api.TagApiException;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
+import org.killbill.billing.util.api.TagApiException;
 import org.killbill.billing.util.tag.Tag;
 import org.killbill.billing.util.tag.TagDefinition;
 
@@ -40,10 +42,9 @@ public interface TagInternalApi {
      */
     public List<Tag> getTags(UUID objectId, ObjectType objectType, InternalTenantContext context);
 
-
     public List<Tag> getTagsForAccountType(ObjectType objectType, boolean includedDeleted, InternalTenantContext internalTenantContext);
 
-    public void addTag(final UUID objectId, final ObjectType objectType, UUID tagDefinitionId, InternalCallContext context) throws TagApiException;
+    public void addTag(final UUID objectId, final ObjectType objectType, UUID tagDefinitionId, final boolean sendEvent, final boolean ignoreDuplicate, InternalCallContext context) throws TagApiException;
 
-    public void removeTag(final UUID objectId, final ObjectType objectType, final UUID tagDefinitionId, InternalCallContext context) throws TagApiException;
+    public void removeTag(final UUID objectId, final ObjectType objectType, final UUID tagDefinitionId, final boolean sendEvent, InternalCallContext context) throws TagApiException;
 }

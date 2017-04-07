@@ -1,7 +1,9 @@
 /*
- * Copyright 2010-2011 Ning, Inc.
+ * Copyright 2010-2013 Ning, Inc.
+ * Copyright 2014-2017 Groupon, Inc
+ * Copyright 2014-2017 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -146,7 +148,7 @@ public class DefaultTagUserApi implements TagUserApi {
 
     @Override
     public void removeTag(final UUID objectId, final ObjectType objectType, final UUID tagDefinitionId, final CallContext context) throws TagApiException {
-        tagDao.deleteTag(objectId, objectType, tagDefinitionId, internalCallContextFactory.createInternalCallContext(objectId, objectType, context));
+        tagDao.deleteTag(objectId, objectType, tagDefinitionId, true, internalCallContextFactory.createInternalCallContext(objectId, objectType, context));
     }
 
     @Override
@@ -177,7 +179,7 @@ public class DefaultTagUserApi implements TagUserApi {
     public void removeTags(final UUID objectId, final ObjectType objectType, final Collection<UUID> tagDefinitionIds, final CallContext context) throws TagApiException {
         // TODO: consider making this batch
         for (final UUID tagDefinitionId : tagDefinitionIds) {
-            tagDao.deleteTag(objectId, objectType, tagDefinitionId, internalCallContextFactory.createInternalCallContext(objectId, objectType, context));
+            tagDao.deleteTag(objectId, objectType, tagDefinitionId, true, internalCallContextFactory.createInternalCallContext(objectId, objectType, context));
         }
     }
 

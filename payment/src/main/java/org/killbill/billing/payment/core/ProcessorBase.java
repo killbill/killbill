@@ -101,7 +101,7 @@ public abstract class ProcessorBase {
 
     protected void setAccountAutoPayOff(final UUID accountId, final InternalCallContext context) throws PaymentApiException {
         try {
-            tagInternalApi.addTag(accountId, ObjectType.ACCOUNT, ControlTagType.AUTO_PAY_OFF.getId(), context);
+            tagInternalApi.addTag(accountId, ObjectType.ACCOUNT, ControlTagType.AUTO_PAY_OFF.getId(), true, false, context);
         } catch (TagApiException e) {
             log.error("Failed to add AUTO_PAY_OFF on account " + accountId, e);
             throw new PaymentApiException(ErrorCode.PAYMENT_INTERNAL_ERROR, "Failed to add AUTO_PAY_OFF on account " + accountId);

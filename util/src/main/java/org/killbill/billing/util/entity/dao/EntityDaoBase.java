@@ -69,6 +69,50 @@ public abstract class EntityDaoBase<M extends EntityModelDao<E>, E extends Entit
         };
     }
 
+    protected EntitySqlDaoTransactionWrapper<M> getCreateEntitySqlDaoTransactionWrapperNoDuplicateCheck(final M entity, final InternalCallContext context) {
+        return new EntitySqlDaoTransactionWrapper<M>() {
+            @Override
+            public M inTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory) throws Exception {
+                final EntitySqlDao<M, E> transactional = entitySqlDaoWrapperFactory.become(realSqlDao);
+
+                final M refreshedEntity = createAndRefresh(transactional, entity, context);
+
+                postBusEventFromTransaction(entity, refreshedEntity, ChangeType.INSERT, entitySqlDaoWrapperFactory, context);
+                return refreshedEntity;
+            }
+        };
+    }
+
+    protected EntitySqlDaoTransactionWrapper<M> getCreateEntitySqlDaoTransactionWrapperNoEvent(final M entity, final InternalCallContext context) {
+        return new EntitySqlDaoTransactionWrapper<M>() {
+            @Override
+            public M inTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory) throws Exception {
+                final EntitySqlDao<M, E> transactional = entitySqlDaoWrapperFactory.become(realSqlDao);
+
+                if (checkEntityAlreadyExists(transactional, entity, context)) {
+                    throw generateAlreadyExistsException(entity, context);
+                }
+
+                return createAndRefresh(transactional, entity, context);
+            }
+        };
+    }
+
+    protected EntitySqlDaoTransactionWrapper<M> getCreateEntitySqlDaoTransactionWrapperNoEventNoDuplicateCheck(final M entity, final InternalCallContext context) {
+        return new EntitySqlDaoTransactionWrapper<M>() {
+            @Override
+            public M inTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory) throws Exception {
+                final EntitySqlDao<M, E> transactional = entitySqlDaoWrapperFactory.become(realSqlDao);
+
+                if (checkEntityAlreadyExists(transactional, entity, context)) {
+                    throw generateAlreadyExistsException(entity, context);
+                }
+
+                return createAndRefresh(transactional, entity, context);
+            }
+        };
+    }
+
     protected <F extends EntityModelDao> F createAndRefresh(final EntitySqlDao transactional, final F entity, final InternalCallContext context) throws EntityPersistenceException {
         // We have overridden the jDBI return type in EntitySqlDaoWrapperInvocationHandler
         return (F) transactional.create(entity, context);

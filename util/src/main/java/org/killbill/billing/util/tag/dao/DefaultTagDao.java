@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014-2016 Groupon, Inc
- * Copyright 2014-2016 The Billing Project, LLC
+ * Copyright 2014-2017 Groupon, Inc
+ * Copyright 2014-2017 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -185,7 +185,24 @@ public class DefaultTagDao extends EntityDaoBase<TagModelDao, Tag, TagApiExcepti
     }
 
     @Override
-    public void deleteTag(final UUID objectId, final ObjectType objectType, final UUID tagDefinitionId, final InternalCallContext context) throws TagApiException {
+    public void create(final TagModelDao entity, final boolean sendEvent, final boolean ignoreDuplicate, final InternalCallContext context) throws TagApiException {
+        if (ignoreDuplicate) {
+            if (sendEvent) {
+                transactionalSqlDao.execute(TagApiException.class, getCreateEntitySqlDaoTransactionWrapperNoDuplicateCheck(entity, context));
+            } else {
+                transactionalSqlDao.execute(TagApiException.class, getCreateEntitySqlDaoTransactionWrapperNoEventNoDuplicateCheck(entity, context));
+            }
+        } else {
+            if (sendEvent) {
+                create(entity, context);
+            } else {
+                transactionalSqlDao.execute(TagApiException.class, getCreateEntitySqlDaoTransactionWrapperNoEvent(entity, context));
+            }
+        }
+    }
+
+    @Override
+    public void deleteTag(final UUID objectId, final ObjectType objectType, final UUID tagDefinitionId, final boolean sendEvent, final InternalCallContext context) throws TagApiException {
 
         transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<Void>() {
 
@@ -208,7 +225,10 @@ public class DefaultTagDao extends EntityDaoBase<TagModelDao, Tag, TagApiExcepti
                 // Delete the tag
                 transactional.markTagAsDeleted(tag.getId().toString(), context);
 
-                postBusEventFromTransaction(tag, tag, ChangeType.DELETE, entitySqlDaoWrapperFactory, context);
+                if (sendEvent) {
+                    postBusEventFromTransaction(tag, tag, ChangeType.DELETE, entitySqlDaoWrapperFactory, context);
+                }
+
                 return null;
             }
         });

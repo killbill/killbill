@@ -1,7 +1,9 @@
 /*
- * Copyright 2010-2011 Ning, Inc.
+ * Copyright 2010-2013 Ning, Inc.
+ * Copyright 2014-2017 Groupon, Inc
+ * Copyright 2014-2017 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -71,17 +73,16 @@ public class DefaultTagInternalApi implements TagInternalApi {
     }
 
     @Override
-    public void addTag(final UUID objectId, final ObjectType objectType, final UUID tagDefinitionId, final InternalCallContext context)
+    public void addTag(final UUID objectId, final ObjectType objectType, final UUID tagDefinitionId, final boolean sendEvent, final boolean ignoreDuplicate, final InternalCallContext context)
             throws TagApiException {
         final TagModelDao tag = new TagModelDao(context.getCreatedDate(), tagDefinitionId, objectId, objectType);
-        tagDao.create(tag, context);
-
+        tagDao.create(tag, sendEvent, ignoreDuplicate, context);
     }
 
     @Override
-    public void removeTag(final UUID objectId, final ObjectType objectType, final UUID tagDefinitionId, final InternalCallContext context)
+    public void removeTag(final UUID objectId, final ObjectType objectType, final UUID tagDefinitionId, final boolean sendEvent, final InternalCallContext context)
             throws TagApiException {
-        tagDao.deleteTag(objectId, objectType, tagDefinitionId, context);
+        tagDao.deleteTag(objectId, objectType, tagDefinitionId, sendEvent, context);
     }
 
     private List<Tag> toTagList(final List<TagModelDao> input) {
@@ -94,6 +95,4 @@ public class DefaultTagInternalApi implements TagInternalApi {
             }
         }));
     }
-
-
 }

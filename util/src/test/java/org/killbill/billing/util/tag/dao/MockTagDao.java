@@ -1,7 +1,9 @@
 /*
- * Copyright 2010-2011 Ning, Inc.
+ * Copyright 2010-2013 Ning, Inc.
+ * Copyright 2014-2017 Groupon, Inc
+ * Copyright 2014-2017 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -48,8 +50,13 @@ public class MockTagDao extends MockEntityDaoBase<TagModelDao, Tag, TagApiExcept
     }
 
     @Override
+    public void create(final TagModelDao entity, final boolean sendEvent, final boolean ignoreDuplicate, final InternalCallContext context) throws TagApiException {
+        create(entity, context);
+    }
+
+    @Override
     public void deleteTag(final UUID objectId, final ObjectType objectType,
-                          final UUID tagDefinitionId, final InternalCallContext context) {
+                          final UUID tagDefinitionId, final boolean sendEvent, final InternalCallContext context) {
         final List<TagModelDao> tags = tagStore.get(objectId);
         if (tags != null) {
             final Iterator<TagModelDao> tagIterator = tags.iterator();

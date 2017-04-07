@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014-2016 Groupon, Inc
- * Copyright 2014-2016 The Billing Project, LLC
+ * Copyright 2014-2017 Groupon, Inc
+ * Copyright 2014-2017 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -19,9 +19,11 @@
 package org.killbill.billing.beatrix.integration.overdue;
 
 import java.math.BigDecimal;
+import java.util.List;
 
 import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
+import org.killbill.billing.ObjectType;
 import org.killbill.billing.api.TestApiListener.NextEvent;
 import org.killbill.billing.beatrix.util.InvoiceChecker.ExpectedInvoiceItemCheck;
 import org.killbill.billing.catalog.api.BillingPeriod;
@@ -32,6 +34,9 @@ import org.killbill.billing.entitlement.api.SubscriptionBundle;
 import org.killbill.billing.invoice.api.InvoiceItemType;
 import org.killbill.billing.overdue.wrapper.OverdueWrapper;
 import org.killbill.billing.subscription.api.SubscriptionBase;
+import org.killbill.billing.util.tag.ControlTagType;
+import org.killbill.billing.util.tag.Tag;
+import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import static org.testng.Assert.assertTrue;
@@ -167,5 +172,40 @@ public class TestOverdueWithSubscriptionCancellation extends TestOverdueBase {
 
         final SubscriptionBase cancelledBaseEntitlement3 = ((DefaultEntitlement) entitlementApi.getEntitlementForId(baseEntitlement3.getId(), callContext)).getSubscriptionBase();
         assertTrue(cancelledBaseEntitlement3.getState() == EntitlementState.CANCELLED);
+    }
+
+    @Test(groups = "slow", description = "Test overdue state doesn't change AUTO_INVOICE_OFF tag")
+    public void testOverdueStateWithExistingAUTO_INVOICE_OFFTag() throws Exception {
+        clock.setTime(new DateTime(2012, 5, 1, 0, 3, 42, 0));
+
+        setupAccount();
+
+        // Set next invoice to fail and create subscription
+        paymentPlugin.makeAllInvoicesFailWithError(true);
+        createBaseEntitlementAndCheckForCompletion(account.getId(), "externalKey", productName, ProductCategory.BASE, term, NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE);
+
+        // DAY 30 have to get out of trial before first payment
+        addDaysAndCheckForCompletion(30, NextEvent.PHASE, NextEvent.INVOICE, NextEvent.PAYMENT_ERROR, NextEvent.INVOICE_PAYMENT_ERROR);
+
+        // Should still be in clear state
+        checkODState(OverdueWrapper.CLEAR_STATE_NAME);
+
+        busHandler.pushExpectedEvents(NextEvent.TAG);
+        tagUserApi.addTag(account.getId(), ObjectType.ACCOUNT, ControlTagType.AUTO_INVOICING_OFF.getId(), callContext);
+        busHandler.assertListenerStatus();
+
+        final List<Tag> tagsForAccount1 = tagUserApi.getTagsForAccount(account.getId(), false, callContext);
+        Assert.assertEquals(tagsForAccount1.size(), 1);
+        Assert.assertEquals(tagsForAccount1.get(0).getTagDefinitionId(), ControlTagType.AUTO_INVOICING_OFF.getId());
+
+        // DAY 36 -- RIGHT AFTER OD1
+        addDaysAndCheckForCompletion(6, NextEvent.BLOCK, NextEvent.BLOCK, NextEvent.CANCEL);
+
+        // Should be in OD1
+        checkODState("OD1");
+
+        final List<Tag> tagsForAccount2 = tagUserApi.getTagsForAccount(account.getId(), false, callContext);
+        Assert.assertEquals(tagsForAccount2.size(), 1);
+        Assert.assertEquals(tagsForAccount2.get(0).getTagDefinitionId(), ControlTagType.AUTO_INVOICING_OFF.getId());
     }
 }

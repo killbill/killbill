@@ -1,7 +1,9 @@
 /*
- * Copyright 2010-2012 Ning, Inc.
+ * Copyright 2010-2013 Ning, Inc.
+ * Copyright 2014-2017 Groupon, Inc
+ * Copyright 2014-2017 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -82,7 +84,7 @@ public class TestDefaultAuditDao extends UtilTestSuiteWithEmbeddedDB {
         Assert.assertEquals(firstAuditLogs.get(0).getChangeType(), ChangeType.INSERT);
 
         eventsListener.pushExpectedEvent(NextEvent.TAG);
-        tagDao.deleteTag(tag.getObjectId(), tag.getObjectType(), tag.getTagDefinitionId(), internalCallContext);
+        tagDao.deleteTag(tag.getObjectId(), tag.getObjectType(), tag.getTagDefinitionId(), true, internalCallContext);
         assertListenerStatus();
 
         final List<AuditLog> secondAuditLogs = auditDao.getAuditLogsForId(TableName.TAG, tag.getId(), AuditLevel.FULL, internalCallContext);
