@@ -57,6 +57,7 @@ import org.killbill.bus.api.BusEvent;
 import org.killbill.bus.api.PersistentBus;
 import org.killbill.bus.api.PersistentBus.EventBusException;
 import org.killbill.clock.Clock;
+import org.killbill.commons.jdbi.notification.DatabaseTransactionNotificationApi;
 import org.killbill.notificationq.api.NotificationEvent;
 import org.killbill.notificationq.api.NotificationQueue;
 import org.killbill.notificationq.api.NotificationQueueService;
@@ -112,9 +113,9 @@ public class DefaultBlockingStateDao extends EntityDaoBase<BlockingStateModelDao
 
     private final StatelessBlockingChecker statelessBlockingChecker = new StatelessBlockingChecker();
 
-    public DefaultBlockingStateDao(final IDBI dbi, final Clock clock, final NotificationQueueService notificationQueueService, final PersistentBus eventBus,
+    public DefaultBlockingStateDao(final IDBI dbi, final DatabaseTransactionNotificationApi databaseTransactionNotificationApi, final Clock clock, final NotificationQueueService notificationQueueService, final PersistentBus eventBus,
                                    final CacheControllerDispatcher cacheControllerDispatcher, final NonEntityDao nonEntityDao, final InternalCallContextFactory internalCallContextFactory) {
-        super(new EntitySqlDaoTransactionalJdbiWrapper(dbi, clock, cacheControllerDispatcher, nonEntityDao, internalCallContextFactory), BlockingStateSqlDao.class);
+        super(new EntitySqlDaoTransactionalJdbiWrapper(dbi, databaseTransactionNotificationApi, clock, cacheControllerDispatcher, nonEntityDao, internalCallContextFactory), BlockingStateSqlDao.class);
         this.clock = clock;
         this.notificationQueueService = notificationQueueService;
         this.eventBus = eventBus;

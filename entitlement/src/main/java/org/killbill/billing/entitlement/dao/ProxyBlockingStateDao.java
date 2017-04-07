@@ -50,6 +50,7 @@ import org.killbill.billing.util.dao.NonEntityDao;
 import org.killbill.billing.util.entity.Pagination;
 import org.killbill.bus.api.PersistentBus;
 import org.killbill.clock.Clock;
+import org.killbill.commons.jdbi.notification.DatabaseTransactionNotificationApi;
 import org.killbill.notificationq.api.NotificationQueueService;
 import org.skife.jdbi.v2.IDBI;
 import org.slf4j.Logger;
@@ -171,12 +172,12 @@ public class ProxyBlockingStateDao implements BlockingStateDao {
 
     @Inject
     public ProxyBlockingStateDao(final EventsStreamBuilder eventsStreamBuilder, final SubscriptionBaseInternalApi subscriptionBaseInternalApi,
-                                 final IDBI dbi, final Clock clock, final NotificationQueueService notificationQueueService, final PersistentBus eventBus,
+                                 final IDBI dbi, final DatabaseTransactionNotificationApi databaseTransactionNotificationApi, final Clock clock, final NotificationQueueService notificationQueueService, final PersistentBus eventBus,
                                  final CacheControllerDispatcher cacheControllerDispatcher, final NonEntityDao nonEntityDao, final InternalCallContextFactory internalCallContextFactory) {
         this.eventsStreamBuilder = eventsStreamBuilder;
         this.subscriptionInternalApi = subscriptionBaseInternalApi;
         this.clock = clock;
-        this.delegate = new DefaultBlockingStateDao(dbi, clock, notificationQueueService, eventBus, cacheControllerDispatcher, nonEntityDao, internalCallContextFactory);
+        this.delegate = new DefaultBlockingStateDao(dbi, databaseTransactionNotificationApi, clock, notificationQueueService, eventBus, cacheControllerDispatcher, nonEntityDao, internalCallContextFactory);
     }
 
     @Override

@@ -25,6 +25,7 @@ import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.billing.util.dao.NonEntityDao;
 import org.killbill.billing.util.entity.Entity;
 import org.killbill.clock.Clock;
+import org.killbill.commons.jdbi.notification.DatabaseTransactionNotificationApi;
 import org.skife.jdbi.v2.Handle;
 import org.skife.jdbi.v2.sqlobject.SqlObjectBuilder;
 
@@ -37,14 +38,16 @@ import org.skife.jdbi.v2.sqlobject.SqlObjectBuilder;
 public class EntitySqlDaoWrapperFactory {
 
     private final Handle handle;
+    private final DatabaseTransactionNotificationApi databaseTransactionNotificationApi;
     private final Clock clock;
     private final CacheControllerDispatcher cacheControllerDispatcher;
 
     private final NonEntityDao nonEntityDao;
     private final InternalCallContextFactory internalCallContextFactory;
 
-    public EntitySqlDaoWrapperFactory(final Handle handle, final Clock clock, final CacheControllerDispatcher cacheControllerDispatcher, final NonEntityDao nonEntityDao, final InternalCallContextFactory internalCallContextFactory) {
+    public EntitySqlDaoWrapperFactory(final Handle handle, final DatabaseTransactionNotificationApi databaseTransactionNotificationApi, final Clock clock, final CacheControllerDispatcher cacheControllerDispatcher, final NonEntityDao nonEntityDao, final InternalCallContextFactory internalCallContextFactory) {
         this.handle = handle;
+        this.databaseTransactionNotificationApi = databaseTransactionNotificationApi;
         this.clock = clock;
         this.cacheControllerDispatcher = cacheControllerDispatcher;
         this.nonEntityDao = nonEntityDao;
@@ -77,6 +80,8 @@ public class EntitySqlDaoWrapperFactory {
         final Class[] interfacesToImplement = {newSqlDaoClass};
         final EntitySqlDaoWrapperInvocationHandler<NewSqlDao, NewEntityModelDao, NewEntity> wrapperInvocationHandler =
                 new EntitySqlDaoWrapperInvocationHandler<NewSqlDao, NewEntityModelDao, NewEntity>(newSqlDaoClass, newSqlDao, handle, clock, cacheControllerDispatcher, nonEntityDao, internalCallContextFactory);
+
+        databaseTransactionNotificationApi.registerForNotification(wrapperInvocationHandler);
 
         final Object newSqlDaoObject = Proxy.newProxyInstance(classLoader, interfacesToImplement, wrapperInvocationHandler);
         return newSqlDaoClass.cast(newSqlDaoObject);

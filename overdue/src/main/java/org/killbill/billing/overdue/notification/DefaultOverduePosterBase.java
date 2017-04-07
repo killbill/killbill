@@ -30,6 +30,7 @@ import org.killbill.billing.util.entity.dao.EntitySqlDaoTransactionWrapper;
 import org.killbill.billing.util.entity.dao.EntitySqlDaoTransactionalJdbiWrapper;
 import org.killbill.billing.util.entity.dao.EntitySqlDaoWrapperFactory;
 import org.killbill.clock.Clock;
+import org.killbill.commons.jdbi.notification.DatabaseTransactionNotificationApi;
 import org.killbill.notificationq.api.NotificationEventWithMetadata;
 import org.killbill.notificationq.api.NotificationQueue;
 import org.killbill.notificationq.api.NotificationQueueService;
@@ -48,10 +49,10 @@ public abstract class DefaultOverduePosterBase implements OverduePoster {
     private final EntitySqlDaoTransactionalJdbiWrapper transactionalSqlDao;
 
     public DefaultOverduePosterBase(final NotificationQueueService notificationQueueService,
-                                    final IDBI dbi, final Clock clock, final CacheControllerDispatcher cacheControllerDispatcher,
+                                    final IDBI dbi, final DatabaseTransactionNotificationApi databaseTransactionNotificationApi, final Clock clock, final CacheControllerDispatcher cacheControllerDispatcher,
                                     final NonEntityDao nonEntityDao, final InternalCallContextFactory internalCallContextFactory) {
         this.notificationQueueService = notificationQueueService;
-        this.transactionalSqlDao = new EntitySqlDaoTransactionalJdbiWrapper(dbi, clock, cacheControllerDispatcher, nonEntityDao, internalCallContextFactory);
+        this.transactionalSqlDao = new EntitySqlDaoTransactionalJdbiWrapper(dbi, databaseTransactionNotificationApi, clock, cacheControllerDispatcher, nonEntityDao, internalCallContextFactory);
     }
 
     @Override

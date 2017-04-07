@@ -40,6 +40,7 @@ import org.killbill.billing.util.entity.dao.EntitySqlDaoTransactionWrapper;
 import org.killbill.billing.util.entity.dao.EntitySqlDaoTransactionalJdbiWrapper;
 import org.killbill.billing.util.entity.dao.EntitySqlDaoWrapperFactory;
 import org.killbill.clock.Clock;
+import org.killbill.commons.jdbi.notification.DatabaseTransactionNotificationApi;
 import org.skife.jdbi.v2.IDBI;
 
 import com.google.inject.Inject;
@@ -53,11 +54,12 @@ public class DefaultImmutableAccountInternalApi implements ImmutableAccountInter
 
     @Inject
     public DefaultImmutableAccountInternalApi(final IDBI dbi,
+                                              final DatabaseTransactionNotificationApi databaseTransactionNotificationApi,
                                               final Clock clock,
                                               final NonEntityDao nonEntityDao,
                                               final CacheControllerDispatcher cacheControllerDispatcher) {
         // This API will directly issue queries instead of relying on the DAO (introduced to avoid Guice circular dependencies with InternalCallContextFactory)
-        this.transactionalSqlDao = new EntitySqlDaoTransactionalJdbiWrapper(dbi, clock, cacheControllerDispatcher, nonEntityDao, null);
+        this.transactionalSqlDao = new EntitySqlDaoTransactionalJdbiWrapper(dbi, databaseTransactionNotificationApi, clock, cacheControllerDispatcher, nonEntityDao, null);
         this.nonEntityDao = nonEntityDao;
         this.accountCacheController = cacheControllerDispatcher.getCacheController(CacheType.ACCOUNT_IMMUTABLE);
         this.recordIdCacheController = cacheControllerDispatcher.getCacheController(CacheType.RECORD_ID);

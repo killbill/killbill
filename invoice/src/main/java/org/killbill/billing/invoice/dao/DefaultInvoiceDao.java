@@ -76,6 +76,7 @@ import org.killbill.bus.api.BusEvent;
 import org.killbill.bus.api.PersistentBus;
 import org.killbill.bus.api.PersistentBus.EventBusException;
 import org.killbill.clock.Clock;
+import org.killbill.commons.jdbi.notification.DatabaseTransactionNotificationApi;
 import org.skife.jdbi.v2.IDBI;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -124,6 +125,7 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
     @Inject
     public DefaultInvoiceDao(final TagInternalApi tagInternalApi,
                              final IDBI dbi,
+                             final DatabaseTransactionNotificationApi databaseTransactionNotificationApi,
                              final NextBillingDatePoster nextBillingDatePoster,
                              final PersistentBus eventBus,
                              final Clock clock,
@@ -134,7 +136,7 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
                              final CBADao cbaDao,
                              final ParentInvoiceCommitmentPoster parentInvoiceCommitmentPoster,
                              final InternalCallContextFactory internalCallContextFactory) {
-        super(new EntitySqlDaoTransactionalJdbiWrapper(dbi, clock, cacheControllerDispatcher, nonEntityDao, internalCallContextFactory), InvoiceSqlDao.class);
+        super(new EntitySqlDaoTransactionalJdbiWrapper(dbi, databaseTransactionNotificationApi, clock, cacheControllerDispatcher, nonEntityDao, internalCallContextFactory), InvoiceSqlDao.class);
         this.tagInternalApi = tagInternalApi;
         this.nextBillingDatePoster = nextBillingDatePoster;
         this.eventBus = eventBus;

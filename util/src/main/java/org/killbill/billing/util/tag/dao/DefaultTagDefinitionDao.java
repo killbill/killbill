@@ -42,6 +42,7 @@ import org.killbill.billing.util.tag.TagDefinition;
 import org.killbill.billing.util.tag.api.user.TagEventBuilder;
 import org.killbill.bus.api.PersistentBus;
 import org.killbill.clock.Clock;
+import org.killbill.commons.jdbi.notification.DatabaseTransactionNotificationApi;
 import org.skife.jdbi.v2.IDBI;
 import org.skife.jdbi.v2.exceptions.TransactionFailedException;
 import org.slf4j.Logger;
@@ -60,9 +61,9 @@ public class DefaultTagDefinitionDao extends EntityDaoBase<TagDefinitionModelDao
     private final PersistentBus bus;
 
     @Inject
-    public DefaultTagDefinitionDao(final IDBI dbi, final TagEventBuilder tagEventBuilder, final PersistentBus bus, final Clock clock,
+    public DefaultTagDefinitionDao(final IDBI dbi, final DatabaseTransactionNotificationApi databaseTransactionNotificationApi, final TagEventBuilder tagEventBuilder, final PersistentBus bus, final Clock clock,
                                    final CacheControllerDispatcher controllerDispatcher, final NonEntityDao nonEntityDao, final InternalCallContextFactory internalCallContextFactory) {
-        super(new EntitySqlDaoTransactionalJdbiWrapper(dbi, clock, controllerDispatcher, nonEntityDao, internalCallContextFactory), TagDefinitionSqlDao.class);
+        super(new EntitySqlDaoTransactionalJdbiWrapper(dbi, databaseTransactionNotificationApi, clock, controllerDispatcher, nonEntityDao, internalCallContextFactory), TagDefinitionSqlDao.class);
         this.tagEventBuilder = tagEventBuilder;
         this.bus = bus;
     }

@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2012 Ning, Inc.
- * Copyright 2014-2016 Groupon, Inc
- * Copyright 2014-2016 The Billing Project, LLC
+ * Copyright 2014-2017 Groupon, Inc
+ * Copyright 2014-2017 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -23,6 +23,7 @@ import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.billing.util.dao.NonEntityDao;
 import org.killbill.billing.util.entity.Entity;
 import org.killbill.clock.Clock;
+import org.killbill.commons.jdbi.notification.DatabaseTransactionNotificationApi;
 import org.skife.jdbi.v2.Handle;
 import org.skife.jdbi.v2.IDBI;
 import org.skife.jdbi.v2.Transaction;
@@ -35,14 +36,20 @@ import org.skife.jdbi.v2.TransactionStatus;
 public class EntitySqlDaoTransactionalJdbiWrapper {
 
     private final IDBI dbi;
+    private final DatabaseTransactionNotificationApi databaseTransactionNotificationApi;
     private final Clock clock;
     private final CacheControllerDispatcher cacheControllerDispatcher;
     private final NonEntityDao nonEntityDao;
     private final InternalCallContextFactory internalCallContextFactory;
 
-    public EntitySqlDaoTransactionalJdbiWrapper(final IDBI dbi, final Clock clock, final CacheControllerDispatcher cacheControllerDispatcher,
-                                                final NonEntityDao nonEntityDao, final InternalCallContextFactory internalCallContextFactory) {
+    public EntitySqlDaoTransactionalJdbiWrapper(final IDBI dbi,
+                                                final DatabaseTransactionNotificationApi databaseTransactionNotificationApi,
+                                                final Clock clock,
+                                                final CacheControllerDispatcher cacheControllerDispatcher,
+                                                final NonEntityDao nonEntityDao,
+                                                final InternalCallContextFactory internalCallContextFactory) {
         this.dbi = dbi;
+        this.databaseTransactionNotificationApi = databaseTransactionNotificationApi;
         this.clock = clock;
         this.cacheControllerDispatcher = cacheControllerDispatcher;
         this.nonEntityDao = nonEntityDao;
@@ -65,7 +72,7 @@ public class EntitySqlDaoTransactionalJdbiWrapper {
 
         @Override
         public ReturnType inTransaction(final EntitySqlDao<M, E> transactionalSqlDao, final TransactionStatus status) throws Exception {
-            final EntitySqlDaoWrapperFactory factoryEntitySqlDao = new EntitySqlDaoWrapperFactory(h, clock, cacheControllerDispatcher, nonEntityDao, internalCallContextFactory);
+            final EntitySqlDaoWrapperFactory factoryEntitySqlDao = new EntitySqlDaoWrapperFactory(h, databaseTransactionNotificationApi, clock, cacheControllerDispatcher, nonEntityDao, internalCallContextFactory);
             return entitySqlDaoTransactionWrapper.inTransaction(factoryEntitySqlDao);
         }
     }

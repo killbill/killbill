@@ -62,6 +62,7 @@ import org.killbill.billing.util.entity.dao.EntitySqlDaoWrapperFactory;
 import org.killbill.bus.api.PersistentBus;
 import org.killbill.bus.api.PersistentBus.EventBusException;
 import org.killbill.clock.Clock;
+import org.killbill.commons.jdbi.notification.DatabaseTransactionNotificationApi;
 import org.skife.jdbi.v2.IDBI;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -82,9 +83,9 @@ public class DefaultPaymentDao extends EntityDaoBase<PaymentModelDao, Payment, P
     private final Clock clock;
 
     @Inject
-    public DefaultPaymentDao(final IDBI dbi, final Clock clock, final CacheControllerDispatcher cacheControllerDispatcher,
+    public DefaultPaymentDao(final IDBI dbi, final DatabaseTransactionNotificationApi databaseTransactionNotificationApi, final Clock clock, final CacheControllerDispatcher cacheControllerDispatcher,
                              final NonEntityDao nonEntityDao, final InternalCallContextFactory internalCallContextFactory, final PersistentBus eventBus) {
-        super(new EntitySqlDaoTransactionalJdbiWrapper(dbi, clock, cacheControllerDispatcher, nonEntityDao, internalCallContextFactory), PaymentSqlDao.class);
+        super(new EntitySqlDaoTransactionalJdbiWrapper(dbi, databaseTransactionNotificationApi, clock, cacheControllerDispatcher, nonEntityDao, internalCallContextFactory), PaymentSqlDao.class);
         this.paginationHelper = new DefaultPaginationSqlDaoHelper(transactionalSqlDao);
         this.eventBus = eventBus;
         this.clock = clock;

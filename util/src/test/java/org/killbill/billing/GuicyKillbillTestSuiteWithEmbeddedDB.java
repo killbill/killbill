@@ -21,6 +21,7 @@ import javax.sql.DataSource;
 
 import org.killbill.billing.util.cache.CacheControllerDispatcher;
 import org.killbill.commons.embeddeddb.EmbeddedDB;
+import org.killbill.commons.jdbi.notification.DatabaseTransactionNotificationApi;
 import org.skife.jdbi.v2.IDBI;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -40,6 +41,9 @@ public class GuicyKillbillTestSuiteWithEmbeddedDB extends GuicyKillbillTestSuite
 
     @Inject
     protected IDBI dbi;
+
+    @Inject
+    protected DatabaseTransactionNotificationApi databaseTransactionNotificationApi;
 
     @Inject
     protected CacheControllerDispatcher controlCacheDispatcher;

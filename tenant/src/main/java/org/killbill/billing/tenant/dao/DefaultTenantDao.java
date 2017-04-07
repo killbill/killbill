@@ -46,6 +46,7 @@ import org.killbill.billing.util.entity.dao.EntitySqlDaoTransactionalJdbiWrapper
 import org.killbill.billing.util.entity.dao.EntitySqlDaoWrapperFactory;
 import org.killbill.billing.util.security.shiro.KillbillCredentialsMatcher;
 import org.killbill.clock.Clock;
+import org.killbill.commons.jdbi.notification.DatabaseTransactionNotificationApi;
 import org.skife.jdbi.v2.IDBI;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -63,9 +64,9 @@ public class DefaultTenantDao extends EntityDaoBase<TenantModelDao, Tenant, Tena
     private final SecurityConfig securityConfig;
 
     @Inject
-    public DefaultTenantDao(final IDBI dbi, final Clock clock, final CacheControllerDispatcher cacheControllerDispatcher,
+    public DefaultTenantDao(final IDBI dbi, final DatabaseTransactionNotificationApi databaseTransactionNotificationApi, final Clock clock, final CacheControllerDispatcher cacheControllerDispatcher,
                             final NonEntityDao nonEntityDao, final InternalCallContextFactory internalCallContextFactory, final SecurityConfig securityConfig) {
-        super(new EntitySqlDaoTransactionalJdbiWrapper(dbi, clock, cacheControllerDispatcher, nonEntityDao, internalCallContextFactory), TenantSqlDao.class);
+        super(new EntitySqlDaoTransactionalJdbiWrapper(dbi, databaseTransactionNotificationApi, clock, cacheControllerDispatcher, nonEntityDao, internalCallContextFactory), TenantSqlDao.class);
         this.securityConfig = securityConfig;
     }
 
@@ -169,7 +170,6 @@ public class DefaultTenantDao extends EntityDaoBase<TenantModelDao, Tenant, Tena
                     id = tenantKV.get(tenantKV.size() - 1).getId().toString();
                     rehydrated = (TenantKVModelDao) tenantKVSqlDao.updateTenantValueKey(id, value, context);
                 } else {
-                    id = tenantKVModelDao.getId().toString();
                     rehydrated = createAndRefresh(tenantKVSqlDao, tenantKVModelDao, context);
                 }
                 broadcastConfigurationChangeFromTransaction(rehydrated.getRecordId(), key, entitySqlDaoWrapperFactory, context);

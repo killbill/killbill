@@ -35,6 +35,7 @@ import org.killbill.billing.util.entity.dao.EntitySqlDaoTransactionWrapper;
 import org.killbill.billing.util.entity.dao.EntitySqlDaoTransactionalJdbiWrapper;
 import org.killbill.billing.util.entity.dao.EntitySqlDaoWrapperFactory;
 import org.killbill.clock.Clock;
+import org.killbill.commons.jdbi.notification.DatabaseTransactionNotificationApi;
 import org.skife.jdbi.v2.IDBI;
 
 import com.google.common.base.Function;
@@ -54,8 +55,8 @@ import com.google.inject.Inject;
 public class NoCachingTenantDao extends EntityDaoBase<TenantModelDao, Tenant, TenantApiException> implements TenantDao {
 
     @Inject
-    public NoCachingTenantDao(final IDBI dbi, final Clock clock, @Named(DefaultTenantModule.NO_CACHING_TENANT) final InternalCallContextFactory internalCallContextFactory) {
-        super(new EntitySqlDaoTransactionalJdbiWrapper(dbi, clock, null, null, internalCallContextFactory), TenantSqlDao.class);
+    public NoCachingTenantDao(final IDBI dbi, final DatabaseTransactionNotificationApi databaseTransactionNotificationApi, final Clock clock, @Named(DefaultTenantModule.NO_CACHING_TENANT) final InternalCallContextFactory internalCallContextFactory) {
+        super(new EntitySqlDaoTransactionalJdbiWrapper(dbi, databaseTransactionNotificationApi, clock, null, null, internalCallContextFactory), TenantSqlDao.class);
     }
 
     @Override

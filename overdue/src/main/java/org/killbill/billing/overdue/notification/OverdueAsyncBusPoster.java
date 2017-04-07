@@ -24,6 +24,7 @@ import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.billing.util.dao.NonEntityDao;
 import org.killbill.billing.util.entity.dao.EntitySqlDaoWrapperFactory;
 import org.killbill.clock.Clock;
+import org.killbill.commons.jdbi.notification.DatabaseTransactionNotificationApi;
 import org.killbill.notificationq.api.NotificationEventWithMetadata;
 import org.killbill.notificationq.api.NotificationQueue;
 import org.killbill.notificationq.api.NotificationQueueService;
@@ -36,9 +37,9 @@ public class OverdueAsyncBusPoster extends DefaultOverduePosterBase {
 
     @Inject
     public OverdueAsyncBusPoster(final NotificationQueueService notificationQueueService,
-                                 final IDBI dbi, final Clock clock, final CacheControllerDispatcher cacheControllerDispatcher,
+                                 final IDBI dbi, final DatabaseTransactionNotificationApi databaseTransactionNotificationApi, final Clock clock, final CacheControllerDispatcher cacheControllerDispatcher,
                                  final NonEntityDao nonEntityDao, final InternalCallContextFactory internalCallContextFactory) {
-        super(notificationQueueService, dbi, clock, cacheControllerDispatcher, nonEntityDao, internalCallContextFactory);
+        super(notificationQueueService, dbi, databaseTransactionNotificationApi, clock, cacheControllerDispatcher, nonEntityDao, internalCallContextFactory);
     }
 
     @Override

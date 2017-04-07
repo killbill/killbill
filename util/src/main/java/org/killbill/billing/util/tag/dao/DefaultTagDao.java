@@ -24,6 +24,7 @@ import java.util.UUID;
 
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.billing.util.entity.dao.DefaultPaginationSqlDaoHelper.Ordering;
+import org.killbill.commons.jdbi.notification.DatabaseTransactionNotificationApi;
 import org.skife.jdbi.v2.IDBI;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -65,9 +66,9 @@ public class DefaultTagDao extends EntityDaoBase<TagModelDao, Tag, TagApiExcepti
     private final PersistentBus bus;
 
     @Inject
-    public DefaultTagDao(final IDBI dbi, final TagEventBuilder tagEventBuilder, final PersistentBus bus, final Clock clock,
+    public DefaultTagDao(final IDBI dbi, final DatabaseTransactionNotificationApi databaseTransactionNotificationApi, final TagEventBuilder tagEventBuilder, final PersistentBus bus, final Clock clock,
                          final CacheControllerDispatcher controllerDispatcher, final NonEntityDao nonEntityDao, final InternalCallContextFactory internalCallContextFactory) {
-        super(new EntitySqlDaoTransactionalJdbiWrapper(dbi, clock, controllerDispatcher, nonEntityDao, internalCallContextFactory), TagSqlDao.class);
+        super(new EntitySqlDaoTransactionalJdbiWrapper(dbi, databaseTransactionNotificationApi, clock, controllerDispatcher, nonEntityDao, internalCallContextFactory), TagSqlDao.class);
         this.tagEventBuilder = tagEventBuilder;
         this.bus = bus;
     }

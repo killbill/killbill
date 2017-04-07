@@ -29,6 +29,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -53,6 +54,8 @@ import org.killbill.billing.util.dao.TableName;
 import org.killbill.billing.util.entity.Entity;
 import org.killbill.billing.util.tag.dao.UUIDCollectionBinder;
 import org.killbill.clock.Clock;
+import org.killbill.commons.jdbi.notification.DatabaseTransactionEvent;
+import org.killbill.commons.jdbi.notification.DatabaseTransactionEventType;
 import org.killbill.commons.profiling.Profiling;
 import org.killbill.commons.profiling.Profiling.WithProfilingCallback;
 import org.killbill.commons.profiling.ProfilingFeature.ProfilingFeatureType;
@@ -72,6 +75,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableList.Builder;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
+import com.google.common.eventbus.Subscribe;
 
 /**
  * Wraps an instance of EntitySqlDao, performing extra work around each method (Sql query)
@@ -94,6 +98,8 @@ public class EntitySqlDaoWrapperInvocationHandler<S extends EntitySqlDao<M, E>, 
     private final InternalCallContextFactory internalCallContextFactory;
     private final Profiling<Object, Throwable> prof;
 
+    private final List<EntityModelDao> entitiesToCache = new LinkedList<EntityModelDao>();
+
     public EntitySqlDaoWrapperInvocationHandler(final Class<S> sqlDaoClass,
                                                 final S sqlDao,
                                                 final Handle handle,
@@ -110,6 +116,16 @@ public class EntitySqlDaoWrapperInvocationHandler<S extends EntitySqlDao<M, E>, 
         this.nonEntityDao = nonEntityDao;
         this.internalCallContextFactory = internalCallContextFactory;
         this.prof = new Profiling<Object, Throwable>();
+    }
+
+    @Subscribe
+    public void handleDatabaseTransactionEvent(final DatabaseTransactionEvent event) {
+        if (event.getType() == DatabaseTransactionEventType.COMMIT) {
+            for (final EntityModelDao entity : entitiesToCache) {
+                populateCacheOnGetByIdInvocation(entity);
+            }
+        }
+        entitiesToCache.clear();
     }
 
     @Override
@@ -211,7 +227,7 @@ public class EntitySqlDaoWrapperInvocationHandler<S extends EntitySqlDao<M, E>, 
                 // about (record_id, account_record_id, object_id, tenant_record_id)
                 //
                 if (result != null && method.getName().equals("getById")) {
-                    populateCacheOnGetByIdInvocation((M) result);
+                    entitiesToCache.add((EntityModelDao) result);
                 }
                 return result;
             }
@@ -347,7 +363,7 @@ public class EntitySqlDaoWrapperInvocationHandler<S extends EntitySqlDao<M, E>, 
         }
     }
 
-    private void populateCacheOnGetByIdInvocation(final M model) {
+    private void populateCacheOnGetByIdInvocation(final EntityModelDao model) {
         populateCaches(cacheControllerDispatcher, model);
     }
 
