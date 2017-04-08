@@ -198,6 +198,7 @@ public class BillingIntervalDetail {
         proposedDate = proposedDate.minus(billingPeriod.getPeriod());
         proposedDate = BillCycleDayCalculator.alignProposedBillCycleDate(proposedDate, billingCycleDay, billingPeriod);
 
+
         if (proposedDate.isBefore(firstBillingCycleDate)) {
             // Make sure not to go too far in the past
             lastBillingCycleDate = firstBillingCycleDate;

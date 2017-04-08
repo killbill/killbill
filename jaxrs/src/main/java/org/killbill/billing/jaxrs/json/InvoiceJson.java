@@ -69,7 +69,7 @@ public class InvoiceJson extends JsonBase {
                        @JsonProperty("invoiceNumber") final String invoiceNumber,
                        @JsonProperty("balance") final BigDecimal balance,
                        @JsonProperty("accountId") final String accountId,
-                       @JsonProperty("externalBundleKeys") final String bundleKeys,
+                       @JsonProperty("bundleKeys") final String bundleKeys,
                        @JsonProperty("credits") final List<CreditJson> credits,
                        @JsonProperty("items") final List<InvoiceItemJson> items,
                        @JsonProperty("isParentInvoice") final Boolean isParentInvoice,
