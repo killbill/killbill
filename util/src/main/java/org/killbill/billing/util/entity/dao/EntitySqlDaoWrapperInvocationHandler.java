@@ -120,12 +120,15 @@ public class EntitySqlDaoWrapperInvocationHandler<S extends EntitySqlDao<M, E>, 
 
     @Subscribe
     public void handleDatabaseTransactionEvent(final DatabaseTransactionEvent event) {
-        if (event.getType() == DatabaseTransactionEventType.COMMIT) {
-            for (final EntityModelDao entity : entitiesToCache) {
-                populateCacheOnGetByIdInvocation(entity);
+        try {
+            if (event.getType() == DatabaseTransactionEventType.COMMIT) {
+                for (final EntityModelDao entity : entitiesToCache) {
+                    populateCacheOnGetByIdInvocation(entity);
+                }
             }
+        } finally {
+            entitiesToCache.clear();
         }
-        entitiesToCache.clear();
     }
 
     @Override
