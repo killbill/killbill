@@ -165,16 +165,16 @@ public class OverdueStateApplicator {
             if (shouldSetAutoInvoiceOff == null) {
                 if (autoInvoiceOffHack) {
                     // Remove the hack
-                    remove_AUTO_INVOICE_OFF_on_clear(account.getId(), false, context);
+                    remove_AUTO_INVOICE_OFF(account.getId(), false, context);
                 } else {
                     // Nothing to do
                 }
             } else if (shouldSetAutoInvoiceOff == Boolean.TRUE) {
                 // No-op, just to send the event
-                set_AUTO_INVOICE_OFF_on_blockedBilling(account.getId(), true, true, context);
+                set_AUTO_INVOICE_OFF(account.getId(), true, true, context);
             } else {
                 // No-op, just to send the event
-                remove_AUTO_INVOICE_OFF_on_clear(account.getId(), true, context);
+                remove_AUTO_INVOICE_OFF(account.getId(), true, context);
             }
         } catch (final AccountApiException e) {
             throw new OverdueException(e);
@@ -245,10 +245,10 @@ public class OverdueStateApplicator {
     private Boolean avoidExtraCreditByQuietlyTogglingAUTO_INVOICE_OFF(final ImmutableAccountData account, final OverdueState previousOverdueState,
                                                                    final OverdueState nextOverdueState, final InternalCallContext context) throws OverdueApiException {
         if (isBlockBillingTransition(previousOverdueState, nextOverdueState)) {
-            set_AUTO_INVOICE_OFF_on_blockedBilling(account.getId(), false, true, context);
+            set_AUTO_INVOICE_OFF(account.getId(), false, true, context);
             return true;
         } else if (isUnblockBillingTransition(previousOverdueState, nextOverdueState)) {
-            remove_AUTO_INVOICE_OFF_on_clear(account.getId(), false, context);
+            remove_AUTO_INVOICE_OFF(account.getId(), false, context);
             return false;
         } else {
             return null;
@@ -278,7 +278,7 @@ public class OverdueStateApplicator {
         }
     }
 
-    private boolean set_AUTO_INVOICE_OFF_on_blockedBilling(final UUID accountId, final boolean sendEvent, final boolean ignoreDuplicate, final InternalCallContext context) throws OverdueApiException {
+    private boolean set_AUTO_INVOICE_OFF(final UUID accountId, final boolean sendEvent, final boolean ignoreDuplicate, final InternalCallContext context) throws OverdueApiException {
         try {
             tagApi.addTag(accountId, ObjectType.ACCOUNT, ControlTagType.AUTO_INVOICING_OFF.getId(), sendEvent, ignoreDuplicate, context);
             return true;
@@ -291,7 +291,7 @@ public class OverdueStateApplicator {
         }
     }
 
-    private void remove_AUTO_INVOICE_OFF_on_clear(final UUID accountId, final boolean sendEvent, final InternalCallContext context) throws OverdueApiException {
+    private void remove_AUTO_INVOICE_OFF(final UUID accountId, final boolean sendEvent, final InternalCallContext context) throws OverdueApiException {
         try {
             tagApi.removeTag(accountId, ObjectType.ACCOUNT, ControlTagType.AUTO_INVOICING_OFF.getId(), sendEvent, context);
         } catch (final TagApiException e) {
@@ -353,7 +353,7 @@ public class OverdueStateApplicator {
             computeEntitlementsToCancel(account, toBeCancelled, callContext);
 
             try {
-                final boolean tagSet = set_AUTO_INVOICE_OFF_on_blockedBilling(account.getId(), false, false, context);
+                final boolean tagSet = set_AUTO_INVOICE_OFF(account.getId(), false, false, context);
                 entitlementInternalApi.cancel(toBeCancelled, context.toLocalDate(effectiveDate), actionPolicy, ImmutableList.<PluginProperty>of(), context);
                 return tagSet;
             } catch (final OverdueApiException e) {
