@@ -389,6 +389,7 @@ public class StandaloneCatalogMapper {
         result.setCatalogName(catalogName);
         result.setCatagory(input.getCategory());
         result.setName(input.getName());
+        result.setPrettyName(input.getPrettyName());
         return result;
     }
 
@@ -400,6 +401,7 @@ public class StandaloneCatalogMapper {
         }
         final DefaultPlan result = new DefaultPlan();
         result.setName(input.getName());
+        result.setPrettyName(input.getPrettyName());
         result.setEffectiveDateForExistingSubscriptions(input.getEffectiveDateForExistingSubscriptions());
         result.setFinalPhase(toDefaultPlanPhase(input.getFinalPhase()));
         result.setInitialPhases(toDefaultPlanPhases(ImmutableList.copyOf(input.getInitialPhases())));

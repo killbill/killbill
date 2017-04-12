@@ -135,8 +135,8 @@ public class DefaultProduct extends ValidatingConfig<StandaloneCatalog> implemen
     public DefaultLimit[] getLimits() {
         return limits;
     }
-    
-    
+
+
     protected Limit findLimit(String unit) {
         for (Limit limit: limits) {
             if(limit.getUnit().getName().equals(unit) ) {
@@ -145,7 +145,7 @@ public class DefaultProduct extends ValidatingConfig<StandaloneCatalog> implemen
         }
         return null;
     }
-    
+
     @Override
     public boolean compliesWithLimits(String unit, double value) {
         Limit l = findLimit(unit);
@@ -183,6 +183,11 @@ public class DefaultProduct extends ValidatingConfig<StandaloneCatalog> implemen
 
     public DefaultProduct setName(final String name) {
         this.name = name;
+        return this;
+    }
+
+    public DefaultProduct setPrettyName(final String prettyName){
+        this.prettyName = prettyName;
         return this;
     }
 

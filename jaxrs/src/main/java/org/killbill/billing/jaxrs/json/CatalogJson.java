@@ -94,6 +94,7 @@ public class CatalogJson {
             if (productJson == null) {
                 productJson = new ProductJson(product.getCategory().toString(),
                                               product.getName(),
+                                              product.getPrettyName(),
                                               toProductNames(product.getIncluded()),
                                               toProductNames(product.getAvailable()));
                 productMap.put(product.getName(), productJson);
@@ -122,7 +123,7 @@ public class CatalogJson {
                 phases.add(phaseJson);
             }
 
-            final PlanJson planJson = new PlanJson(plan.getName(), plan.getRecurringBillingPeriod(), phases);
+            final PlanJson planJson = new PlanJson(plan.getName(), plan.getPrettyName(), plan.getRecurringBillingPeriod(), phases);
             productJson.getPlans().add(planJson);
         }
 
@@ -278,6 +279,7 @@ public class CatalogJson {
 
         private final String type;
         private final String name;
+        private final String prettyName;
         private final List<PlanJson> plans;
         private final List<String> included;
         private final List<String> available;
@@ -285,18 +287,20 @@ public class CatalogJson {
         @JsonCreator
         public ProductJson(@JsonProperty("type") final String type,
                            @JsonProperty("name") final String name,
+                           @JsonProperty("prettyName") final String prettyName,
                            @JsonProperty("plans") final List<PlanJson> plans,
                            @JsonProperty("included") final List<String> included,
                            @JsonProperty("available") final List<String> available) {
             this.type = type;
             this.name = name;
+            this.prettyName = prettyName;
             this.plans = plans;
             this.included = included;
             this.available = available;
         }
 
-        public ProductJson(final String type, final String name, final List<String> included, final List<String> available) {
-            this(type, name, new LinkedList<PlanJson>(), included, available);
+        public ProductJson(final String type, final String name, final String prettyName, final List<String> included, final List<String> available) {
+            this(type, name, prettyName, new LinkedList<PlanJson>(), included, available);
         }
 
         public String getType() {
@@ -305,6 +309,10 @@ public class CatalogJson {
 
         public String getName() {
             return name;
+        }
+
+        public String getPrettyName() {
+            return prettyName;
         }
 
         public List<PlanJson> getPlans() {
@@ -324,6 +332,7 @@ public class CatalogJson {
             final StringBuilder sb = new StringBuilder("ProductJson{");
             sb.append("type='").append(type).append('\'');
             sb.append(", name='").append(name).append('\'');
+            sb.append(", prettyName='").append(prettyName).append('\'');
             sb.append(", plans=").append(plans);
             sb.append(", included=").append(included);
             sb.append(", available=").append(available);
@@ -375,20 +384,27 @@ public class CatalogJson {
     public static class PlanJson {
 
         private final String name;
+        private final String prettyName;
         private final BillingPeriod billingPeriod;
         private final List<PhaseJson> phases;
 
         @JsonCreator
         public PlanJson(@JsonProperty("name") final String name,
+                        @JsonProperty("prettyName") final String prettyName,
                         @JsonProperty("billingPeriod") final BillingPeriod billingPeriod,
                         @JsonProperty("phases") final List<PhaseJson> phases) {
             this.name = name;
+            this.prettyName = prettyName;
             this.billingPeriod = billingPeriod;
             this.phases = phases;
         }
 
         public String getName() {
             return name;
+        }
+
+        public String getPrettyName() {
+            return prettyName;
         }
 
         public BillingPeriod getBillingPeriod() {
@@ -403,6 +419,7 @@ public class CatalogJson {
         public String toString() {
             final StringBuilder sb = new StringBuilder("PlanJson{");
             sb.append("name='").append(name).append('\'');
+            sb.append("prettyName='").append(prettyName).append('\'');
             sb.append("billingPeriod='").append(billingPeriod).append('\'');
             sb.append(", phases=").append(phases);
             sb.append('}');
