@@ -95,8 +95,8 @@ public class TestIncompletePaymentTransactionTaskWithDB extends PaymentTestSuite
             Assert.assertEquals(event.getUuidKey(), transactionId);
             Assert.assertEquals((int) event.getAttemptNumber(), 2);
 
-            // Based on config "15s,1m,3m,1h,1d,1d,1d,1d,1d"
-            Assert.assertTrue(notificationEventWithMetadata.getEffectiveDate().compareTo(clock.getUTCNow().plusMinutes(1).plusSeconds(1)) < 0);
+            // Based on config "1h, 1d"
+            Assert.assertTrue(notificationEventWithMetadata.getEffectiveDate().compareTo(clock.getUTCNow().plusDays(1).plusSeconds(5)) < 0);
         } catch (final LockFailedException e) {
             Assert.fail();
         } finally {

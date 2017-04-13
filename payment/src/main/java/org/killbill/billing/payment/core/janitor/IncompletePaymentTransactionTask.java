@@ -104,11 +104,16 @@ public class IncompletePaymentTransactionTask extends CompletionTaskBase<Payment
             tryToProcessNotification(notificationKey, userToken, accountRecordId, tenantRecordId);
         } catch (final LockFailedException e) {
             log.warn("Error locking accountRecordId='{}', will attempt to retry later", accountRecordId, e);
-            insertNewNotificationForUnresolvedTransactionIfNeeded(notificationKey.getUuidKey(), notificationKey.getAttemptNumber(), userToken, accountRecordId, tenantRecordId);
+
+            final InternalTenantContext internalTenantContext = internalCallContextFactory.createInternalTenantContext(tenantRecordId, accountRecordId);
+            final PaymentTransactionModelDao paymentTransaction = paymentDao.getPaymentTransaction(notificationKey.getUuidKey(), internalTenantContext);
+            if (TRANSACTION_STATUSES_TO_CONSIDER.contains(paymentTransaction.getTransactionStatus())) {
+                insertNewNotificationForUnresolvedTransactionIfNeeded(notificationKey.getUuidKey(), paymentTransaction.getTransactionStatus(), notificationKey.getAttemptNumber(), userToken, accountRecordId, tenantRecordId);
+            }
         }
     }
 
-    public void tryToProcessNotification(final JanitorNotificationKey notificationKey, final UUID userToken, final Long accountRecordId, final long tenantRecordId) throws LockFailedException {
+    private void tryToProcessNotification(final JanitorNotificationKey notificationKey, final UUID userToken, final Long accountRecordId, final long tenantRecordId) throws LockFailedException {
         final InternalTenantContext internalTenantContext = internalCallContextFactory.createInternalTenantContext(tenantRecordId, accountRecordId);
         tryToDoJanitorOperationWithAccountLock(new JanitorIterationCallback() {
             @Override
@@ -158,7 +163,7 @@ public class IncompletePaymentTransactionTask extends CompletionTaskBase<Payment
         if (!TRANSACTION_STATUSES_TO_CONSIDER.contains(event.getStatus())) {
             return;
         }
-        insertNewNotificationForUnresolvedTransactionIfNeeded(event.getPaymentTransactionId(), 0, event.getUserToken(), event.getSearchKey1(), event.getSearchKey2());
+        insertNewNotificationForUnresolvedTransactionIfNeeded(event.getPaymentTransactionId(), event.getStatus(), 0, event.getUserToken(), event.getSearchKey1(), event.getSearchKey2());
     }
 
     public boolean updatePaymentAndTransactionIfNeededWithAccountLock(final PaymentModelDao payment, final PaymentTransactionModelDao paymentTransaction, final PaymentTransactionInfoPlugin paymentTransactionInfoPlugin, final InternalTenantContext internalTenantContext) {
@@ -211,7 +216,7 @@ public class IncompletePaymentTransactionTask extends CompletionTaskBase<Payment
                              payment.getId(), paymentTransaction.getId(), paymentTransaction.getTransactionStatus(), transactionStatus);
                 }
                 // We can't get anything interesting from the plugin...
-                insertNewNotificationForUnresolvedTransactionIfNeeded(paymentTransaction.getId(), attemptNumber, userToken, internalTenantContext.getAccountRecordId(), internalTenantContext.getTenantRecordId());
+                insertNewNotificationForUnresolvedTransactionIfNeeded(paymentTransaction.getId(), transactionStatus, attemptNumber, userToken, internalTenantContext.getAccountRecordId(), internalTenantContext.getTenantRecordId());
                 return false;
         }
 
@@ -219,7 +224,7 @@ public class IncompletePaymentTransactionTask extends CompletionTaskBase<Payment
         if (transactionStatus == paymentTransaction.getTransactionStatus()) {
             log.debug("Janitor IncompletePaymentTransactionTask repairing payment {}, transaction {}, transitioning transactionStatus from {} -> {}",
                       payment.getId(), paymentTransaction.getId(), paymentTransaction.getTransactionStatus(), transactionStatus);
-            insertNewNotificationForUnresolvedTransactionIfNeeded(paymentTransaction.getId(), attemptNumber, userToken, internalTenantContext.getAccountRecordId(), internalTenantContext.getTenantRecordId());
+            insertNewNotificationForUnresolvedTransactionIfNeeded(paymentTransaction.getId(), transactionStatus, attemptNumber, userToken, internalTenantContext.getAccountRecordId(), internalTenantContext.getTenantRecordId());
             return false;
         }
 
@@ -266,9 +271,18 @@ public class IncompletePaymentTransactionTask extends CompletionTaskBase<Payment
     }
 
     @VisibleForTesting
-    DateTime getNextNotificationTime(final Integer attemptNumber, final InternalTenantContext tenantContext) {
+    DateTime getNextNotificationTime(final TransactionStatus transactionStatus, final Integer attemptNumber, final InternalTenantContext tenantContext) {
 
-        final List<TimeSpan> retries = paymentConfig.getIncompleteTransactionsRetries(tenantContext);
+        final List<TimeSpan> retries;
+        if (TransactionStatus.UNKNOWN.equals(transactionStatus)) {
+            retries = paymentConfig.getUnknownTransactionsRetries(tenantContext);
+        } else if (TransactionStatus.PENDING.equals(transactionStatus)) {
+            retries = paymentConfig.getPendingTransactionsRetries(tenantContext);
+        } else {
+            retries = ImmutableList.of();
+            log.warn("Unexpected transactionStatus='{}' from janitor, ignore...", transactionStatus);
+        }
+
         if (attemptNumber > retries.size()) {
             return null;
         }
@@ -276,7 +290,7 @@ public class IncompletePaymentTransactionTask extends CompletionTaskBase<Payment
         return clock.getUTCNow().plusMillis((int) nextDelay.getMillis());
     }
 
-    private void insertNewNotificationForUnresolvedTransactionIfNeeded(final UUID paymentTransactionId, @Nullable final Integer attemptNumber, @Nullable final UUID userToken, final Long accountRecordId, final Long tenantRecordId) {
+    private void insertNewNotificationForUnresolvedTransactionIfNeeded(final UUID paymentTransactionId, final TransactionStatus transactionStatus,  @Nullable final Integer attemptNumber, @Nullable final UUID userToken, final Long accountRecordId, final Long tenantRecordId) {
         // When we come from a GET path, we don't want to insert a new notification
         if (attemptNumber == null) {
             return;
@@ -287,7 +301,7 @@ public class IncompletePaymentTransactionTask extends CompletionTaskBase<Payment
         // Increment value before we insert
         final Integer newAttemptNumber = attemptNumber.intValue() + 1;
         final NotificationEvent key = new JanitorNotificationKey(paymentTransactionId, IncompletePaymentTransactionTask.class.toString(), newAttemptNumber);
-        final DateTime notificationTime = getNextNotificationTime(newAttemptNumber, tenantContext);
+        final DateTime notificationTime = getNextNotificationTime(transactionStatus, newAttemptNumber, tenantContext);
         // Will be null in the GET path or when we run out opf attempts..
         if (notificationTime != null) {
             try {

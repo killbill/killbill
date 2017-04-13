@@ -19,6 +19,7 @@ package org.killbill.billing.payment.core.janitor;
 
 import org.joda.time.DateTime;
 import org.killbill.billing.payment.PaymentTestSuiteNoDB;
+import org.killbill.billing.payment.api.TransactionStatus;
 import org.testng.annotations.Test;
 
 import com.google.inject.Inject;
@@ -36,31 +37,27 @@ public class TestIncompletePaymentTransactionTask extends PaymentTestSuiteNoDB {
     public void testGetNextNotificationTime() {
         final DateTime initTime = clock.getUTCNow();
 
-        // Based on config "15s,1m,3m,1h,1d,1d,1d,1d,1d"
-        for (int i = 1; i < 10; i++) {
-            final DateTime nextTime = incompletePaymentTransactionTask.getNextNotificationTime(i, internalCallContext);
+        // Based on config "5m,1h,1d,1d,1d,1d,1d"
+        for (int i = 1; i < 8; i++) {
+            final DateTime nextTime = incompletePaymentTransactionTask.getNextNotificationTime(TransactionStatus.UNKNOWN, i, internalCallContext);
             assertNotNull(nextTime);
             assertTrue(nextTime.compareTo(initTime) > 0);
             if (i == 0) {
-                assertTrue(nextTime.compareTo(initTime.plusSeconds(3).plusSeconds(1)) < 0);
+                assertTrue(nextTime.compareTo(initTime.plusMinutes(5).plusSeconds(1)) < 0);
             } else if (i == 1) {
-                assertTrue(nextTime.compareTo(initTime.plusMinutes(1).plusSeconds(1)) < 0);
-            } else if (i == 2) {
-                assertTrue(nextTime.compareTo(initTime.plusMinutes(3).plusSeconds(1)) < 0);
-            } else if (i == 3) {
                 assertTrue(nextTime.compareTo(initTime.plusHours(1).plusSeconds(1)) < 0);
+            } else if (i == 2) {
+                assertTrue(nextTime.compareTo(initTime.plusDays(1).plusSeconds(1)) < 0);
+            } else if (i == 3) {
+                assertTrue(nextTime.compareTo(initTime.plusDays(1).plusSeconds(1)) < 0);
             } else if (i == 4) {
                 assertTrue(nextTime.compareTo(initTime.plusDays(1).plusSeconds(1)) < 0);
             } else if (i == 5) {
                 assertTrue(nextTime.compareTo(initTime.plusDays(1).plusSeconds(1)) < 0);
             } else if (i == 6) {
                 assertTrue(nextTime.compareTo(initTime.plusDays(1).plusSeconds(1)) < 0);
-            } else if (i == 7) {
-                assertTrue(nextTime.compareTo(initTime.plusDays(1).plusSeconds(1)) < 0);
-            } else if (i == 8) {
-                assertTrue(nextTime.compareTo(initTime.plusDays(1).plusSeconds(1)) < 0);
             }
         }
-        assertNull(incompletePaymentTransactionTask.getNextNotificationTime(10, internalCallContext));
+        assertNull(incompletePaymentTransactionTask.getNextNotificationTime(TransactionStatus.UNKNOWN, 8, internalCallContext));
     }
 }

@@ -58,15 +58,26 @@ public interface PaymentConfig extends KillbillConfig {
     @Description("Specify the multiplier to apply between in retry before retrying a payment that failed due to a plugin failure (gateway is down, transient error, ...)")
     int getPluginFailureRetryMultiplier(@Param("dummy") final InternalTenantContext tenantContext);
 
-    @Config("org.killbill.payment.janitor.transactions.retries")
-    @Default("15s,1m,3m,1h,1d,1d,1d,1d,1d")
+    @Config("org.killbill.payment.janitor.unknown.retries")
+    @Default("5m,1h,1d,1d,1d,1d,1d")
     @Description("Delay before which unresolved transactions should be retried")
-    List<TimeSpan> getIncompleteTransactionsRetries();
+    List<TimeSpan> getUnknownTransactionsRetries();
 
-    @Config("org.killbill.payment.janitor.transactions.retries")
-    @Default("15s,1m,3m,1h,1d,1d,1d,1d,1d")
+    @Config("org.killbill.payment.janitor.unknown.retries")
+    @Default("5m,1h,1d,1d,1d,1d,1d")
     @Description("Delay before which unresolved transactions should be retried")
-    List<TimeSpan> getIncompleteTransactionsRetries(@Param("dummy") final InternalTenantContext tenantContext);
+    List<TimeSpan> getUnknownTransactionsRetries(@Param("dummy") final InternalTenantContext tenantContext);
+
+    @Config("org.killbill.payment.janitor.pending.retries")
+    @Default("1h, 1d")
+    @Description("Delay before which unresolved transactions should be retried")
+    List<TimeSpan> getPendingTransactionsRetries();
+
+    @Config("org.killbill.payment.janitor.pending.retries")
+    @Default("1h, 1d")
+    @Description("Delay before which unresolved transactions should be retried")
+    List<TimeSpan> getPendingTransactionsRetries(@Param("dummy") final InternalTenantContext tenantContext);
+
 
     @Config("org.killbill.payment.failure.retry.max.attempts")
     @Default("8")
