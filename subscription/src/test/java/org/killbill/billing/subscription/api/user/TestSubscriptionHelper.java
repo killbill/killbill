@@ -89,7 +89,10 @@ public class TestSubscriptionHelper {
 
     public DefaultSubscriptionBase createSubscriptionWithBundle(final UUID bundleId, final String productName, final BillingPeriod term, final String planSet, final DateTime requestedDate)
             throws SubscriptionBaseApiException {
-        testListener.pushExpectedEvent(NextEvent.CREATE);
+
+        if (requestedDate == null || requestedDate.compareTo(clock.getUTCNow()) <= 0) {
+            testListener.pushExpectedEvent(NextEvent.CREATE);
+        }
         final DefaultSubscriptionBase subscription = (DefaultSubscriptionBase) subscriptionApi.createSubscription(bundleId,
                                                                                                                   new PlanPhaseSpecifier(productName, term, planSet, null), null,
                                                                                                                   requestedDate == null ? clock.getUTCNow() : requestedDate, false, internalCallContext);

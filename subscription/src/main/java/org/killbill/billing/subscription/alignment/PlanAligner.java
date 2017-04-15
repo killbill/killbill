@@ -115,6 +115,7 @@ public class PlanAligner extends BaseAligner {
                                                    final DateTime effectiveDate,
                                                    final PhaseType newPlanInitialPhaseType,
                                                    final InternalTenantContext context) throws CatalogApiException, SubscriptionBaseApiException {
+
         return getTimedPhaseOnChange(subscription, plan, effectiveDate, newPlanInitialPhaseType, WhichPhase.CURRENT, context);
     }
 
@@ -221,10 +222,16 @@ public class PlanAligner extends BaseAligner {
                                              final PhaseType newPlanInitialPhaseType,
                                              final WhichPhase which,
                                              final InternalTenantContext context) throws CatalogApiException, SubscriptionBaseApiException {
+        final SubscriptionBaseTransition pendingOrLastPlanTransition;
+        if (subscription.getState() == EntitlementState.PENDING) {
+            pendingOrLastPlanTransition = subscription.getPendingTransition();
+        } else {
+            pendingOrLastPlanTransition = subscription.getLastTransitionForCurrentPlan();
+        }
         return getTimedPhaseOnChange(subscription.getAlignStartDate(),
                                      subscription.getBundleStartDate(),
-                                     subscription.getCurrentPhase(),
-                                     subscription.getCurrentPlan(),
+                                     pendingOrLastPlanTransition.getNextPhase(),
+                                     pendingOrLastPlanTransition.getNextPlan(),
                                      nextPlan,
                                      effectiveDate,
                                      // This method is only called while doing the change, hence we want to pass the change effective date
