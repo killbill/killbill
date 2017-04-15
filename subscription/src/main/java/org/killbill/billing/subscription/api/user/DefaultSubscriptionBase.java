@@ -166,9 +166,7 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
         }
 
         final SubscriptionBaseTransition pendingTransition = getPendingTransition();
-        if (pendingTransition != null &&
-            (pendingTransition.getTransitionType().equals(SubscriptionBaseTransitionType.CREATE) ||
-             pendingTransition.getTransitionType().equals(SubscriptionBaseTransitionType.TRANSFER))) {
+        if (pendingTransition != null) {
             return EntitlementState.PENDING;
         }
         throw new IllegalStateException("Should return a valid EntitlementState");
@@ -197,6 +195,15 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
         return (getPreviousTransition() == null) ? null
                                                  : getPreviousTransition().getNextPhase();
     }
+
+    public PlanPhase getCurrentOrPendingPhase() {
+        if (getState() == EntitlementState.PENDING) {
+            return getPendingTransition().getNextPhase();
+        } else {
+            return getCurrentPhase();
+        }
+    }
+
 
     @Override
     public Plan getCurrentPlan() {
@@ -293,7 +300,21 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
         final SubscriptionBaseTransitionDataIterator it = new SubscriptionBaseTransitionDataIterator(
                 clock, transitions, Order.ASC_FROM_PAST,
                 Visibility.ALL, TimeLimit.FUTURE_ONLY);
-        return it.hasNext() ? it.next() : null;
+
+        final SubscriptionBaseTransition initialPendingTransition = it.hasNext() ? it.next() : null;
+
+        // If we have multiple change aligning on the startDate we return the latest to ensure that we get access to right Plan
+        // TODO : However, this means this initial PENDING transition could be a CHANGE (which could confuse some clients, unclear)
+        SubscriptionBaseTransition result = initialPendingTransition;
+        while (it.hasNext()) {
+            final SubscriptionBaseTransition next = it.next();
+            if (next.getTransitionType() == SubscriptionBaseTransitionType.CHANGE && initialPendingTransition.getEffectiveTransitionTime().compareTo(next.getEffectiveTransitionTime()) == 0) {
+                result = next;
+            } else {
+                break;
+            }
+        }
+        return result;
     }
 
     @Override
