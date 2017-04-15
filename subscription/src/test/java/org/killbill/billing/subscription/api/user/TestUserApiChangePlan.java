@@ -18,6 +18,7 @@ package org.killbill.billing.subscription.api.user;
 
 import org.joda.time.DateTime;
 import org.joda.time.Interval;
+import org.joda.time.LocalDate;
 import org.killbill.billing.ErrorCode;
 import org.killbill.billing.api.TestApiListener.NextEvent;
 import org.killbill.billing.catalog.api.BillingActionPolicy;
@@ -31,7 +32,10 @@ import org.killbill.billing.catalog.api.PlanSpecifier;
 import org.killbill.billing.catalog.api.PriceListSet;
 import org.killbill.billing.catalog.api.ProductCategory;
 import org.killbill.billing.entitlement.api.Entitlement;
+import org.killbill.billing.entitlement.api.SubscriptionEventType;
+import org.killbill.billing.invoice.api.DryRunArguments;
 import org.killbill.billing.subscription.SubscriptionTestSuiteWithEmbeddedDB;
+import org.killbill.billing.subscription.api.SubscriptionBase;
 import org.killbill.billing.subscription.api.SubscriptionBillingApiException;
 import org.killbill.billing.subscription.events.SubscriptionBaseEvent;
 import org.killbill.billing.subscription.events.user.ApiEvent;
@@ -477,7 +481,13 @@ public class TestUserApiChangePlan extends SubscriptionTestSuiteWithEmbeddedDB {
 
         final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("Pistol", baseTerm, basePriceList, null);
 
+
         // First try with default api (no date -> IMM) => Call should fail because subscription is PENDING
+        final DryRunArguments dryRunArguments1  = testUtil.createDryRunArguments(subscription.getId(), subscription.getBundleId(), spec, null, SubscriptionEventType.CHANGE, null);
+        final List<SubscriptionBase> result1 = subscriptionInternalApi.getSubscriptionsForBundle(bundle.getId(), dryRunArguments1, internalCallContext);
+
+        // Check we are seeing the right PENDING transition (pistol-monthly), not the START but the CHANGE on the same date
+        assertEquals(((DefaultSubscriptionBase) result1.get(0)).getCurrentOrPendingPlan().getName(), "pistol-monthly");
         try {
             subscription.changePlan(spec, null, callContext);
             fail("Change plan should have failed : subscription PENDING");
@@ -487,13 +497,26 @@ public class TestUserApiChangePlan extends SubscriptionTestSuiteWithEmbeddedDB {
 
         // Second try with date prior to startDate => Call should fail because subscription is PENDING
         try {
+            final DryRunArguments dryRunArguments2  = testUtil.createDryRunArguments(subscription.getId(), subscription.getBundleId(), spec, new LocalDate(startDate.minusDays(1)), SubscriptionEventType.CHANGE, null);
+            subscriptionInternalApi.getSubscriptionsForBundle(bundle.getId(), dryRunArguments2, internalCallContext);
+            fail("Change plan should have failed : subscription PENDING");
+        } catch (final SubscriptionBaseApiException e) {
+            assertEquals(e.getCode(), ErrorCode.SUB_CHANGE_NON_ACTIVE.getCode());
+        }
+        try {
             subscription.changePlanWithDate(spec, null, startDate.minusDays(1), callContext);
             fail("Change plan should have failed : subscription PENDING");
         } catch (final SubscriptionBaseApiException e) {
             assertEquals(e.getCode(), ErrorCode.SUB_INVALID_REQUESTED_DATE.getCode());
         }
 
-        // Second try with date equals to startDate  Call should succeed, but no event because action in future
+        // Third try with date equals to startDate  Call should succeed, but no event because action in future
+        final DryRunArguments dryRunArguments3  = testUtil.createDryRunArguments(subscription.getId(), subscription.getBundleId(), spec, internalCallContext.toLocalDate(startDate), SubscriptionEventType.CHANGE, null);
+        final List<SubscriptionBase> result2 = subscriptionInternalApi.getSubscriptionsForBundle(bundle.getId(), dryRunArguments3, internalCallContext);
+        // Check we are seeing the right PENDING transition (pistol-monthly), not the START but the CHANGE on the same date
+        assertEquals(((DefaultSubscriptionBase) result2.get(0)).getCurrentOrPendingPlan().getName(), "pistol-monthly");
+
+
         subscription.changePlanWithDate(spec, null, startDate, callContext);
         assertListenerStatus();
 

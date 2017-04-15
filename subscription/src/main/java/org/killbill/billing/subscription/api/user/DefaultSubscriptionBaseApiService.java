@@ -392,10 +392,10 @@ public class DefaultSubscriptionBaseApiService implements SubscriptionBaseApiSer
         final PlanChangeResult planChangeResult;
         try {
             final InternalTenantContext internalCallContext = createTenantContextFromBundleId(subscription.getBundleId(), context);
-            final Plan currentPlan = subscription.getCurrentPlan();
+            final Plan currentPlan = subscription.getCurrentOrPendingPlan();
 
             final PlanPhaseSpecifier fromPlanPhase = new PlanPhaseSpecifier(currentPlan.getName(),
-                                                                            subscription.getCurrentPhase().getPhaseType());
+                                                                            subscription.getCurrentOrPendingPhase().getPhaseType());
             planChangeResult = catalogService.getFullCatalog(true, true, internalCallContext).planChange(fromPlanPhase, toPlanPhase, effectiveDate);
         } catch (final CatalogApiException e) {
             throw new SubscriptionBaseApiException(e);
@@ -496,7 +496,10 @@ public class DefaultSubscriptionBaseApiService implements SubscriptionBaseApiSer
                                                               final Collection<SubscriptionBaseEvent> addOnCancelEvents,
                                                               final PhaseType initialPhaseType,
                                                               final InternalTenantContext internalTenantContext) throws CatalogApiException, SubscriptionBaseApiException {
+
         final TimedPhase currentTimedPhase = planAligner.getCurrentTimedPhaseOnChange(subscription, newPlan, effectiveDate, initialPhaseType, internalTenantContext);
+
+        validateEntitlementState(subscription, effectiveDate);
 
         final SubscriptionBaseEvent changeEvent = new ApiEventChange(new ApiEventBuilder()
                                                                              .setSubscriptionId(subscription.getId())
