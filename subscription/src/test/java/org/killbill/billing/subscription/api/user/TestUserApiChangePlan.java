@@ -20,6 +20,7 @@ import org.joda.time.DateTime;
 import org.joda.time.Interval;
 import org.killbill.billing.ErrorCode;
 import org.killbill.billing.api.TestApiListener.NextEvent;
+import org.killbill.billing.catalog.api.BillingActionPolicy;
 import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.catalog.api.Duration;
 import org.killbill.billing.catalog.api.PhaseType;
@@ -42,6 +43,7 @@ import java.util.List;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
+import static org.testng.Assert.assertNull;
 import static org.testng.Assert.assertTrue;
 import static org.testng.Assert.fail;
 
@@ -461,7 +463,7 @@ public class TestUserApiChangePlan extends SubscriptionTestSuiteWithEmbeddedDB {
 
 
     @Test(groups = "slow")
-    public void testPendingSubscription() throws SubscriptionBaseApiException {
+    public void testChangePlanOnPendingSubscription() throws SubscriptionBaseApiException {
 
         final String baseProduct = "Shotgun";
         final BillingPeriod baseTerm = BillingPeriod.MONTHLY;
@@ -504,6 +506,97 @@ public class TestUserApiChangePlan extends SubscriptionTestSuiteWithEmbeddedDB {
         assertEquals(subscription2.getStartDate().compareTo(startDate), 0);
         assertEquals(subscription2.getState(), Entitlement.EntitlementState.ACTIVE);
         assertEquals(subscription2.getCurrentPlan().getProduct().getName(), "Pistol");
+    }
+
+    @Test(groups = "slow")
+    public void testCancelPlanOnPendingSubscription1() throws SubscriptionBaseApiException {
+
+        final String baseProduct = "Shotgun";
+        final BillingPeriod baseTerm = BillingPeriod.MONTHLY;
+        final String basePriceList = PriceListSet.DEFAULT_PRICELIST_NAME;
+
+        final DateTime startDate = clock.getUTCNow().plusDays(5);
+
+        final DefaultSubscriptionBase subscription = testUtil.createSubscription(bundle, baseProduct, baseTerm, basePriceList, startDate);
+        assertEquals(subscription.getState(), Entitlement.EntitlementState.PENDING);
+        assertEquals(subscription.getStartDate().compareTo(startDate), 0);
+
+        // The code will be smart to infer the cancelation date as being the future startDate
+        subscription.cancel(callContext);
+
+        testListener.pushExpectedEvents(NextEvent.CREATE, NextEvent.CANCEL);
+        clock.addDays(5);
+        assertListenerStatus();
+
+        final DefaultSubscriptionBase subscription2 = (DefaultSubscriptionBase) subscriptionInternalApi.getSubscriptionFromId(subscription.getId(), internalCallContext);
+        assertEquals(subscription2.getStartDate().compareTo(startDate), 0);
+        assertEquals(subscription2.getState(), Entitlement.EntitlementState.CANCELLED);
+        assertNull(subscription2.getCurrentPlan());
+    }
+
+    @Test(groups = "slow")
+    public void testCancelPlanOnPendingSubscription2() throws SubscriptionBaseApiException {
+
+        final String baseProduct = "Shotgun";
+        final BillingPeriod baseTerm = BillingPeriod.MONTHLY;
+        final String basePriceList = PriceListSet.DEFAULT_PRICELIST_NAME;
+
+        final DateTime startDate = clock.getUTCNow().plusDays(5);
+
+        final DefaultSubscriptionBase subscription = testUtil.createSubscription(bundle, baseProduct, baseTerm, basePriceList, startDate);
+        assertEquals(subscription.getState(), Entitlement.EntitlementState.PENDING);
+        assertEquals(subscription.getStartDate().compareTo(startDate), 0);
+
+        try {
+            subscription.cancelWithDate(null, callContext);
+            fail("Cancel plan should have failed : subscription PENDING");
+        } catch (SubscriptionBaseApiException e) {
+            assertEquals(e.getCode(), ErrorCode.SUB_INVALID_REQUESTED_DATE.getCode());
+        }
+
+        try {
+            subscription.cancelWithDate(startDate.minusDays(1), callContext);
+            fail("Cancel plan should have failed : subscription PENDING");
+        } catch (SubscriptionBaseApiException e) {
+            assertEquals(e.getCode(), ErrorCode.SUB_INVALID_REQUESTED_DATE.getCode());
+        }
+
+        subscription.cancelWithDate(startDate, callContext);
+
+        testListener.pushExpectedEvents(NextEvent.CREATE, NextEvent.CANCEL);
+        clock.addDays(5);
+        assertListenerStatus();
+
+        final DefaultSubscriptionBase subscription2 = (DefaultSubscriptionBase) subscriptionInternalApi.getSubscriptionFromId(subscription.getId(), internalCallContext);
+        assertEquals(subscription2.getStartDate().compareTo(startDate), 0);
+        assertEquals(subscription2.getState(), Entitlement.EntitlementState.CANCELLED);
+        assertNull(subscription2.getCurrentPlan());
+    }
+
+
+    @Test(groups = "slow")
+    public void testCancelPlanOnPendingSubscription3() throws SubscriptionBaseApiException {
+
+        final String baseProduct = "Shotgun";
+        final BillingPeriod baseTerm = BillingPeriod.MONTHLY;
+        final String basePriceList = PriceListSet.DEFAULT_PRICELIST_NAME;
+
+        final DateTime startDate = clock.getUTCNow().plusDays(5);
+
+        final DefaultSubscriptionBase subscription = testUtil.createSubscription(bundle, baseProduct, baseTerm, basePriceList, startDate);
+        assertEquals(subscription.getState(), Entitlement.EntitlementState.PENDING);
+        assertEquals(subscription.getStartDate().compareTo(startDate), 0);
+
+        subscription.cancelWithPolicy(BillingActionPolicy.IMMEDIATE, null, 1, callContext);
+
+        testListener.pushExpectedEvents(NextEvent.CREATE, NextEvent.CANCEL);
+        clock.addDays(5);
+        assertListenerStatus();
+
+        final DefaultSubscriptionBase subscription2 = (DefaultSubscriptionBase) subscriptionInternalApi.getSubscriptionFromId(subscription.getId(), internalCallContext);
+        assertEquals(subscription2.getStartDate().compareTo(startDate), 0);
+        assertEquals(subscription2.getState(), Entitlement.EntitlementState.CANCELLED);
+        assertNull(subscription2.getCurrentPlan());
     }
 
 }
