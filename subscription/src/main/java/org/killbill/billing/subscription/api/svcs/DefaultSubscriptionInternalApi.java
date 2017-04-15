@@ -729,7 +729,8 @@ public class DefaultSubscriptionInternalApi extends SubscriptionApiBase implemen
 
                 case CHANGE:
                     final DefaultSubscriptionBase subscriptionForChange = (DefaultSubscriptionBase) dao.getSubscriptionFromId(dryRunArguments.getSubscriptionId(), context);
-                    DateTime changeEffectiveDate = dryRunArguments.getEffectiveDate() != null ? context.toUTCDateTime(dryRunArguments.getEffectiveDate()) : null;
+
+                    DateTime changeEffectiveDate = getDryRunEffectiveDate(dryRunArguments.getEffectiveDate(), subscriptionForChange, context);
                     if (changeEffectiveDate == null) {
                         BillingActionPolicy policy = dryRunArguments.getBillingActionPolicy();
                         if (policy == null) {
@@ -744,7 +745,8 @@ public class DefaultSubscriptionInternalApi extends SubscriptionApiBase implemen
 
                 case STOP_BILLING:
                     final DefaultSubscriptionBase subscriptionForCancellation = (DefaultSubscriptionBase) dao.getSubscriptionFromId(dryRunArguments.getSubscriptionId(), context);
-                    DateTime cancelEffectiveDate = dryRunArguments.getEffectiveDate() != null ? context.toUTCDateTime(dryRunArguments.getEffectiveDate()) : null;
+
+                    DateTime cancelEffectiveDate = getDryRunEffectiveDate(dryRunArguments.getEffectiveDate(), subscriptionForCancellation, context);
                     if (dryRunArguments.getEffectiveDate() == null) {
                         BillingActionPolicy policy = dryRunArguments.getBillingActionPolicy();
                         if (policy == null) {
@@ -768,6 +770,21 @@ public class DefaultSubscriptionInternalApi extends SubscriptionApiBase implemen
         }
         if (dryRunEvents != null && !dryRunEvents.isEmpty()) {
             outputDryRunEvents.addAll(dryRunEvents);
+        }
+    }
+
+    private DateTime getDryRunEffectiveDate(@Nullable final LocalDate inputDate, final DefaultSubscriptionBase subscription, final InternalTenantContext context) {
+        if (inputDate == null) {
+            return null;
+        }
+
+        // We first use context account reference time to get a candidate)
+        final DateTime tmp = context.toUTCDateTime(inputDate);
+        // If we realize that the candidate is on the same LocalDate boundary as the subscription startDate but a bit prior we correct it to avoid weird things down the line
+        if (inputDate.compareTo(context.toLocalDate(subscription.getStartDate())) == 0 && tmp.compareTo(subscription.getStartDate()) < 0) {
+            return subscription.getStartDate();
+        } else {
+            return tmp;
         }
     }
 
