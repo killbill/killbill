@@ -642,7 +642,9 @@ public class DefaultEntitlement extends EntityBase implements Entitlement {
         final WithEntitlementPlugin<Entitlement> changePlanWithPlugin = new WithEntitlementPlugin<Entitlement>() {
             @Override
             public Entitlement doCall(final EntitlementApi entitlementApi, final EntitlementContext updatedPluginContext) throws EntitlementApiException {
-                if (!eventsStream.isEntitlementActive()) {
+
+                if ((effectiveDate == null && !eventsStream.isEntitlementActive()) ||
+                        (effectiveDate != null && effectiveDate.compareTo(eventsStream.getEntitlementEffectiveStartDate()) < 0)) {
                     throw new EntitlementApiException(ErrorCode.SUB_CHANGE_NON_ACTIVE, getId(), getState());
                 }
 
@@ -715,7 +717,9 @@ public class DefaultEntitlement extends EntityBase implements Entitlement {
         final WithEntitlementPlugin<Entitlement> changePlanWithPlugin = new WithEntitlementPlugin<Entitlement>() {
             @Override
             public Entitlement doCall(final EntitlementApi entitlementApi, final EntitlementContext updatedPluginContext) throws EntitlementApiException {
-                if (!eventsStream.isEntitlementActive()) {
+
+                if ((entitlementEffectiveDate == null && !eventsStream.isEntitlementActive()) ||
+                        (entitlementEffectiveDate != null && entitlementEffectiveDate.compareTo(eventsStream.getEntitlementEffectiveStartDate()) < 0)) {
                     throw new EntitlementApiException(ErrorCode.SUB_CHANGE_NON_ACTIVE, getId(), getState());
                 }
 
