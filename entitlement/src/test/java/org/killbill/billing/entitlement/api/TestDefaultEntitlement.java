@@ -26,6 +26,7 @@ import org.killbill.billing.account.api.AccountApiException;
 import org.killbill.billing.api.TestApiListener.NextEvent;
 import org.killbill.billing.catalog.api.BillingActionPolicy;
 import org.killbill.billing.catalog.api.BillingPeriod;
+import org.killbill.billing.catalog.api.PlanPhasePriceOverride;
 import org.killbill.billing.catalog.api.PlanPhaseSpecifier;
 import org.killbill.billing.catalog.api.PlanSpecifier;
 import org.killbill.billing.catalog.api.PriceListSet;
@@ -282,7 +283,7 @@ public class TestDefaultEntitlement extends EntitlementTestSuiteWithEmbeddedDB {
     }
 
     @Test(groups = "slow")
-    public void testEntitlementChangePlanOnPendingEntitlement() throws AccountApiException, EntitlementApiException {
+        public void testEntitlementChangePlanOnPendingEntitlement() throws AccountApiException, EntitlementApiException {
         final LocalDate initialDate = new LocalDate(2013, 8, 7);
         clock.setDay(initialDate);
 
@@ -301,23 +302,23 @@ public class TestDefaultEntitlement extends EntitlementTestSuiteWithEmbeddedDB {
         final PlanPhaseSpecifier spec2 = new PlanPhaseSpecifier("pistol-monthly", null);
         try {
             entitlement.changePlan(spec2, ImmutableList.<PlanPhasePriceOverride>of(), ImmutableList.<PluginProperty>of(), callContext);
-            Assert.fail("Changing plan immediately prior the subscription is active is not allowed");
+            fail("Changing plan immediately prior the subscription is active is not allowed");
         } catch (EntitlementApiException e) {
-            Assert.assertEquals(e.getCode(), ErrorCode.SUB_CHANGE_NON_ACTIVE.getCode());
+            assertEquals(e.getCode(), ErrorCode.SUB_CHANGE_NON_ACTIVE.getCode());
         }
 
         try {
             entitlement.changePlanWithDate(spec2, ImmutableList.<PlanPhasePriceOverride>of(), null, ImmutableList.<PluginProperty>of(), callContext);
-            Assert.fail("Changing plan immediately prior the subscription is active is not allowed");
+            fail("Changing plan immediately prior the subscription is active is not allowed");
         } catch (EntitlementApiException e) {
-            Assert.assertEquals(e.getCode(), ErrorCode.SUB_CHANGE_NON_ACTIVE.getCode());
+            assertEquals(e.getCode(), ErrorCode.SUB_CHANGE_NON_ACTIVE.getCode());
         }
 
         try {
             entitlement.changePlanWithDate(spec2, ImmutableList.<PlanPhasePriceOverride>of(), startDate.minusDays(1), ImmutableList.<PluginProperty>of(), callContext);
-            Assert.fail("Changing plan immediately prior the subscription is active is not allowed");
+            fail("Changing plan immediately prior the subscription is active is not allowed");
         } catch (EntitlementApiException e) {
-            Assert.assertEquals(e.getCode(), ErrorCode.SUB_CHANGE_NON_ACTIVE.getCode());
+            assertEquals(e.getCode(), ErrorCode.SUB_CHANGE_NON_ACTIVE.getCode());
         }
 
         entitlement.changePlanWithDate(spec2, ImmutableList.<PlanPhasePriceOverride>of(), startDate, ImmutableList.<PluginProperty>of(), callContext);
