@@ -1,7 +1,9 @@
 /*
- * Copyright 2010-2011 Ning, Inc.
+ * Copyright 2010-2013 Ning, Inc.
+ * Copyright 2014-2017 Groupon, Inc
+ * Copyright 2014-2017 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -22,14 +24,14 @@ public class DefaultColumnInfo implements ColumnInfo {
 
     private final String tableName;
     private final String columnName;
-    private final int scale;
-    private final int precision;
+    private final Long scale;
+    private final Long precision;
     private final boolean isNullable;
-    private final int maximumLength;
+    private final Long maximumLength;
     private final String dataType;
 
-    public DefaultColumnInfo(final String tableName, final String columnName, final int scale, final int precision,
-                             final boolean nullable, final int maximumLength, final String dataType) {
+    public DefaultColumnInfo(final String tableName, final String columnName, final Long scale, final Long precision,
+                             final boolean nullable, final Long maximumLength, final String dataType) {
         this.tableName = tableName;
         this.columnName = columnName;
         this.scale = scale;
@@ -49,11 +51,11 @@ public class DefaultColumnInfo implements ColumnInfo {
         return columnName;
     }
 
-    public int getScale() {
+    public Long getScale() {
         return scale;
     }
 
-    public int getPrecision() {
+    public Long getPrecision() {
         return precision;
     }
 
@@ -61,7 +63,7 @@ public class DefaultColumnInfo implements ColumnInfo {
         return isNullable;
     }
 
-    public int getMaximumLength() {
+    public Long getMaximumLength() {
         return maximumLength;
     }
 

@@ -45,8 +45,8 @@ public interface DatabaseSchemaSqlDao {
         public DefaultColumnInfo map(final int index, final ResultSet r, final StatementContext ctx) throws SQLException {
             final String tableName = r.getString("table_name");
             final String columnName = r.getString("column_name");
-            final Integer scale = r.getInt("numeric_scale");
-            final Integer precision = r.getInt("numeric_precision");
+            final Long scale = r.getLong("numeric_scale");
+            final Long precision = r.getLong("numeric_precision");
 
             // Special handling for PostgreSQL - the implementation of AbstractJdbc2ResultSet#getBoolean doesn't support YES/NO
             final String isNullableString = r.getString("is_nullable");
@@ -59,7 +59,7 @@ public interface DatabaseSchemaSqlDao {
                 isNullable = r.getBoolean("is_nullable");
             }
 
-            final Integer maximumLength = r.getInt("character_maximum_length");
+            final Long maximumLength = r.getLong("character_maximum_length");
             final String dataType = r.getString("data_type");
 
             return new DefaultColumnInfo(tableName, columnName, scale, precision, isNullable, maximumLength, dataType);
