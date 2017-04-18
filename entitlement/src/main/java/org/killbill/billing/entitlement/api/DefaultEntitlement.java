@@ -348,10 +348,10 @@ public class DefaultEntitlement extends EntityBase implements Entitlement {
 
                 final InternalCallContext contextWithValidAccountRecordId = internalCallContextFactory.createInternalCallContext(getAccountId(), callContext);
 
-                final DateTime effectiveCancelDate = dateHelper.fromLocalDateAndReferenceTimeWithMinimum(entitlementEffectiveDate, getEventsStream().getEntitlementEffectiveStartDateTime(), contextWithValidAccountRecordId);
+                final DateTime billingEffectiveCancelDate = dateHelper.fromLocalDateAndReferenceTimeWithMinimum(billingEffectiveDate, getEventsStream().getSubscriptionBase().getStartDate(), contextWithValidAccountRecordId);
                 try {
                     if (overrideBillingEffectiveDate) {
-                        getSubscriptionBase().cancelWithDate(effectiveCancelDate, callContext);
+                        getSubscriptionBase().cancelWithDate(billingEffectiveCancelDate, callContext);
                     } else {
                         getSubscriptionBase().cancel(callContext);
                     }
@@ -359,14 +359,15 @@ public class DefaultEntitlement extends EntityBase implements Entitlement {
                     throw new EntitlementApiException(e);
                 }
 
-                final BlockingState newBlockingState = new DefaultBlockingState(getId(), BlockingStateType.SUBSCRIPTION, DefaultEntitlementApi.ENT_STATE_CANCELLED, EntitlementService.ENTITLEMENT_SERVICE_NAME, true, true, false, effectiveCancelDate);
+                final DateTime entitlementEffectiveCancelDate = dateHelper.fromLocalDateAndReferenceTimeWithMinimum(entitlementEffectiveDate, getEventsStream().getEntitlementEffectiveStartDateTime(), contextWithValidAccountRecordId);
+                final BlockingState newBlockingState = new DefaultBlockingState(getId(), BlockingStateType.SUBSCRIPTION, DefaultEntitlementApi.ENT_STATE_CANCELLED, EntitlementService.ENTITLEMENT_SERVICE_NAME, true, true, false, entitlementEffectiveCancelDate);
                 final Collection<NotificationEvent> notificationEvents = new ArrayList<NotificationEvent>();
-                final Collection<BlockingState> addOnsBlockingStates = computeAddOnBlockingStates(effectiveCancelDate, notificationEvents, callContext, contextWithValidAccountRecordId);
+                final Collection<BlockingState> addOnsBlockingStates = computeAddOnBlockingStates(entitlementEffectiveCancelDate, notificationEvents, callContext, contextWithValidAccountRecordId);
 
                 // Record the new state first, then insert the notifications to avoid race conditions
                 setBlockingStates(newBlockingState, addOnsBlockingStates, contextWithValidAccountRecordId);
                 for (final NotificationEvent notificationEvent : notificationEvents) {
-                    recordFutureNotification(effectiveCancelDate, notificationEvent, contextWithValidAccountRecordId);
+                    recordFutureNotification(entitlementEffectiveCancelDate, notificationEvent, contextWithValidAccountRecordId);
                 }
 
                 return entitlementApi.getEntitlementForId(getId(), callContext);

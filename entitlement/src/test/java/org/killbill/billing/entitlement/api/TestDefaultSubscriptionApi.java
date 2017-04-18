@@ -526,6 +526,51 @@ public class TestDefaultSubscriptionApi extends EntitlementTestSuiteWithEmbedded
     }
 
     @Test(groups = "slow")
+    public void testCancellationEntitlementDifferentThanBilling() throws AccountApiException, EntitlementApiException, SubscriptionApiException {
+        final LocalDate initialDate = new LocalDate(2013, 8, 7);
+        clock.setDay(initialDate);
+
+        final Account account = createAccount(getAccountData(7));
+
+        // Create entitlement
+        testListener.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK);
+        final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("Shotgun", BillingPeriod.ANNUAL, PriceListSet.DEFAULT_PRICELIST_NAME, null);
+        final Entitlement baseEntitlement = entitlementApi.createBaseEntitlement(account.getId(), spec, account.getExternalKey(), null, null, null, false, ImmutableList.<PluginProperty>of(), callContext);
+        assertListenerStatus();
+
+        // 2013-08-10 : Stay in TRIAL to ensure IMMEDIATE billing policy is used
+        clock.addDays(3);
+        assertListenerStatus();
+
+
+        final LocalDate cancelDate = new LocalDate(2013, 8, 14);
+        testListener.pushExpectedEvents(NextEvent.CANCEL);
+        baseEntitlement.cancelEntitlementWithDate(cancelDate, false, ImmutableList.<PluginProperty>of(), callContext);
+        assertListenerStatus();
+
+        final Subscription result1 = subscriptionApi.getSubscriptionForEntitlementId(baseEntitlement.getId(), callContext);
+        assertEquals(result1.getBillingEndDate().compareTo(new LocalDate(2013, 8, 10)), 0);
+        assertEquals(result1.getEffectiveEndDate().compareTo(new LocalDate(2013, 8, 14)), 0);
+        assertEquals(result1.getLastActiveProduct().getName(), "Shotgun");
+        assertEquals(result1.getState(), EntitlementState.ACTIVE);
+
+        // 2013-08-14: entitlement cancelDate
+        testListener.pushExpectedEvents(NextEvent.BLOCK);
+        clock.addDays(4);
+        assertListenerStatus();
+
+        final Subscription result2 = subscriptionApi.getSubscriptionForEntitlementId(baseEntitlement.getId(), callContext);
+        assertEquals(result2.getBillingEndDate().compareTo(new LocalDate(2013, 8, 10)), 0);
+        assertEquals(result2.getEffectiveEndDate().compareTo(new LocalDate(2013, 8, 14)), 0);
+        assertEquals(result2.getLastActiveProduct().getName(), "Shotgun");
+        assertEquals(result2.getState(), EntitlementState.CANCELLED);
+    }
+
+
+
+
+
+    @Test(groups = "slow")
     public void testSubscriptionCreationWithExternalKeyOverLimit() throws AccountApiException, SubscriptionApiException, EntitlementApiException {
         final String externalKey = "Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Aenean commodo ligula eget dolor. Aenean massa. Cum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. Donec quam felis, ultricies nec, pellentesque eu, pretium quis,.";
 
