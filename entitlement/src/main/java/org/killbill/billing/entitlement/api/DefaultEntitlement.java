@@ -18,15 +18,7 @@
 
 package org.killbill.billing.entitlement.api;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.UUID;
-
-import javax.annotation.Nullable;
-
+import com.google.common.collect.ImmutableList;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDate;
@@ -75,7 +67,13 @@ import org.killbill.notificationq.api.NotificationQueueService.NoSuchNotificatio
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.collect.ImmutableList;
+import javax.annotation.Nullable;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.UUID;
 
 import static org.killbill.billing.entitlement.logging.EntitlementLoggingHelper.logCancelEntitlement;
 import static org.killbill.billing.entitlement.logging.EntitlementLoggingHelper.logChangePlan;
@@ -649,7 +647,12 @@ public class DefaultEntitlement extends EntityBase implements Entitlement {
                 }
 
                 final InternalCallContext context = internalCallContextFactory.createInternalCallContext(getAccountId(), callContext);
-                final DateTime effectiveChangeDate = dateHelper.fromLocalDateAndReferenceTime(updatedPluginContext.getBaseEntitlementWithAddOnsSpecifiers().iterator().next().getBillingEffectiveDate(), context);
+
+                // TOD Keeping this code, but allowing plugins to override the dates is not really tested and therefore supported (already SUB_CHANGE_NON_ACTIVE above would be wrong)
+                final LocalDate inputChangeDate = updatedPluginContext.getBaseEntitlementWithAddOnsSpecifiers().iterator().next().getBillingEffectiveDate() != null ?
+                        updatedPluginContext.getBaseEntitlementWithAddOnsSpecifiers().iterator().next().getBillingEffectiveDate() : effectiveDate;
+
+                final DateTime effectiveChangeDate = dateHelper.fromLocalDateAndReferenceTime(inputChangeDate, context);
 
                 final DateTime resultingEffectiveDate;
                 try {
