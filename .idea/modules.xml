@@ -2,6 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
+      <module fileurl="file://$PROJECT_DIR$/killbill.iml" filepath="$PROJECT_DIR$/killbill.iml" />
       <module fileurl="file://$PROJECT_DIR$/account/killbill-account.iml" filepath="$PROJECT_DIR$/account/killbill-account.iml" />
       <module fileurl="file://$PROJECT_DIR$/beatrix/killbill-beatrix.iml" filepath="$PROJECT_DIR$/beatrix/killbill-beatrix.iml" />
       <module fileurl="file://$PROJECT_DIR$/catalog/killbill-catalog.iml" filepath="$PROJECT_DIR$/catalog/killbill-catalog.iml" />
@@ -20,7 +21,6 @@
       <module fileurl="file://$PROJECT_DIR$/tenant/killbill-tenant.iml" filepath="$PROJECT_DIR$/tenant/killbill-tenant.iml" />
       <module fileurl="file://$PROJECT_DIR$/usage/killbill-usage.iml" filepath="$PROJECT_DIR$/usage/killbill-usage.iml" />
       <module fileurl="file://$PROJECT_DIR$/util/killbill-util.iml" filepath="$PROJECT_DIR$/util/killbill-util.iml" />
-      <module fileurl="file://$PROJECT_DIR$/.idea/killbill2.iml" filepath="$PROJECT_DIR$/.idea/killbill2.iml" />
     </modules>
   </component>
 </project>
