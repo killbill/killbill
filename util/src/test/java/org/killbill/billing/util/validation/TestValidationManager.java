@@ -56,8 +56,8 @@ public class TestValidationManager extends UtilTestSuiteWithEmbeddedDB {
 
         final DefaultColumnInfo numericColumnInfo = vm.getColumnInfo(TABLE_NAME, "column3");
         assertNotNull(numericColumnInfo);
-        assertEquals(numericColumnInfo.getScale(), 4);
-        assertEquals(numericColumnInfo.getPrecision(), 10);
+        assertEquals(numericColumnInfo.getScale(), (Long) 4L);
+        assertEquals(numericColumnInfo.getPrecision(), (Long) 10L);
     }
 
     @Test(groups = "slow")

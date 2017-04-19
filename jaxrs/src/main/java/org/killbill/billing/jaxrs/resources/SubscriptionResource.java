@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014-2015 Groupon, Inc
- * Copyright 2014-2015 The Billing Project, LLC
+ * Copyright 2014-2017 Groupon, Inc
+ * Copyright 2014-2017 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -71,6 +71,7 @@ import org.killbill.billing.events.BlockingTransitionInternalEvent;
 import org.killbill.billing.events.EffectiveSubscriptionInternalEvent;
 import org.killbill.billing.events.InvoiceCreationInternalEvent;
 import org.killbill.billing.events.InvoicePaymentErrorInternalEvent;
+import org.killbill.billing.events.InvoicePaymentInfoInternalEvent;
 import org.killbill.billing.events.NullInvoiceInternalEvent;
 import org.killbill.billing.events.PaymentErrorInternalEvent;
 import org.killbill.billing.events.PaymentInfoInternalEvent;
@@ -781,6 +782,12 @@ public class SubscriptionResource extends JaxRsResourceBase {
         @Override
         public void onPaymentPluginError(final PaymentPluginErrorInternalEvent event) {
             log.info("Got event PaymentPluginError token='{}'", event.getUserToken());
+            notifyForCompletion();
+        }
+
+        @Override
+        public void onInvoicePaymentInfo(final InvoicePaymentInfoInternalEvent event) {
+            log.info("Got event InvoicePaymentInfo token='{}'", event.getUserToken());
             notifyForCompletion();
         }
 
