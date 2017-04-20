@@ -608,6 +608,7 @@ public class TestDefaultEntitlementApi extends EntitlementTestSuiteWithEmbeddedD
         final PlanPhaseSpecifier spec2 = new PlanPhaseSpecifier("Pistol",  BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, null);
         try {
             entitlement.changePlanWithDate(spec2, ImmutableList.<PlanPhasePriceOverride>of(), null, ImmutableList.<PluginProperty>of(), callContext);
+            fail("Change plan prior entitlementDate should fail");
         } catch (EntitlementApiException e) {
             Assert.assertEquals(e.getCode(), ErrorCode.SUB_CHANGE_NON_ACTIVE.getCode());
         }
