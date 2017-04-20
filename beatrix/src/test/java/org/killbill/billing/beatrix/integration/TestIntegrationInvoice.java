@@ -440,8 +440,47 @@ public class TestIntegrationInvoice extends TestIntegrationBase {
         final Account refreshedAccount2 = accountUserApi.getAccountById(account.getId(), callContext);
         assertEquals(refreshedAccount2.getBillCycleDayLocal(), new Integer(31));
 
+
+        // Move clock past startDate to check nothing happens
+        busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.NULL_INVOICE);
+        clock.addDays(31);
+        assertListenerStatus();
+
+        // Move clock after PHASE event
+        busHandler.pushExpectedEvents(NextEvent.PHASE, NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT);
+        clock.addMonths(12);
+        assertListenerStatus();
     }
 
 
+    @Test(groups = "slow")
+    public void testDryRunWithPendingCancelledSubscription() throws Exception {
+
+        final LocalDate initialDate = new LocalDate(2017, 4, 1);
+        clock.setDay(initialDate);
+
+        // Create account with non BCD to force junction BCD logic to activate
+        final Account account = createAccountWithNonOsgiPaymentMethod(getAccountData(null));
+
+        final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("pistol-monthly-notrial", null);
+
+        final LocalDate futureDate = new LocalDate(2017, 5, 1);
+
+        // No CREATE event as this is set in the future
+        final Entitlement createdEntitlement = entitlementApi.createBaseEntitlement(account.getId(), spec, account.getExternalKey(), null, futureDate, futureDate, false, ImmutableList.<PluginProperty>of(), callContext);
+        assertEquals(createdEntitlement.getState(), Entitlement.EntitlementState.PENDING);
+        assertEquals(createdEntitlement.getEffectiveStartDate().compareTo(futureDate), 0);
+        assertEquals(createdEntitlement.getEffectiveEndDate(), null);
+        assertListenerStatus();
+
+        // Cancel subscription on its pending startDate
+        createdEntitlement.cancelEntitlementWithDate(futureDate, true, ImmutableList.<PluginProperty>of(), callContext);
+
+        // Move to startDate/cancel Date
+        busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.CANCEL, NextEvent.BLOCK, NextEvent.NULL_INVOICE, NextEvent.NULL_INVOICE);
+        clock.addMonths(1);
+        assertListenerStatus();
+
+    }
 
 }
