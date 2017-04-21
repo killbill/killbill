@@ -25,8 +25,8 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.Callable;
-import java.util.concurrent.TimeoutException;
 
+import org.awaitility.Duration;
 import org.joda.time.LocalDate;
 import org.killbill.billing.account.api.Account;
 import org.killbill.billing.catalog.api.Currency;
@@ -45,15 +45,12 @@ import org.testng.annotations.Test;
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
-import com.jayway.awaitility.Awaitility;
-import com.jayway.awaitility.Duration;
 
-import static com.jayway.awaitility.Awaitility.await;
-import static com.jayway.awaitility.Awaitility.setDefaultPollInterval;
 import static java.util.concurrent.TimeUnit.SECONDS;
+import static org.awaitility.Awaitility.await;
+import static org.awaitility.Awaitility.setDefaultPollInterval;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertTrue;
-import static org.testng.Assert.fail;
 
 public class TestRetryService extends PaymentTestSuiteNoDB {
 
@@ -67,7 +64,6 @@ public class TestRetryService extends PaymentTestSuiteNoDB {
         super.beforeMethod();
 
         setDefaultPollInterval(Duration.ONE_HUNDRED_MILLISECONDS);
-        Awaitility.setDefaultPollDelay(Duration.SAME_AS_POLL_INTERVAL);
 
         mockPaymentProviderPlugin = (MockPaymentProviderPlugin) registry.getServiceForName(MockPaymentProviderPlugin.PLUGIN_NAME);
         mockPaymentProviderPlugin.clear();
@@ -172,25 +168,21 @@ public class TestRetryService extends PaymentTestSuiteNoDB {
 
         moveClockForFailureType(FailureType.PAYMENT_FAILURE, 0);
 
-        try {
-            await().atMost(TIMEOUT, SECONDS).until(new Callable<Boolean>() {
-                @Override
-                public Boolean call() throws Exception {
-                    final List<PaymentAttemptModelDao> attempts = paymentDao.getPaymentAttempts(paymentExternalKey, internalCallContext);
-                    final List<PaymentAttemptModelDao> filteredAttempts = ImmutableList.copyOf(Iterables.filter(attempts, new Predicate<PaymentAttemptModelDao>() {
-                        @Override
-                        public boolean apply(final PaymentAttemptModelDao input) {
-                            return input.getStateName().equals("SUCCESS") ||
-                                   input.getStateName().equals("RETRIED") ||
-                                   input.getStateName().equals("ABORTED");
-                        }
-                    }));
-                    return filteredAttempts.size() == 2;
-                }
-            });
-        } catch (final TimeoutException e) {
-            fail("Timeout ");
-        }
+        await().atMost(TIMEOUT, SECONDS).until(new Callable<Boolean>() {
+            @Override
+            public Boolean call() throws Exception {
+                final List<PaymentAttemptModelDao> attempts = paymentDao.getPaymentAttempts(paymentExternalKey, internalCallContext);
+                final List<PaymentAttemptModelDao> filteredAttempts = ImmutableList.copyOf(Iterables.filter(attempts, new Predicate<PaymentAttemptModelDao>() {
+                    @Override
+                    public boolean apply(final PaymentAttemptModelDao input) {
+                        return input.getStateName().equals("SUCCESS") ||
+                               input.getStateName().equals("RETRIED") ||
+                               input.getStateName().equals("ABORTED");
+                    }
+                }));
+                return filteredAttempts.size() == 2;
+            }
+        });
 
         attempts = paymentDao.getPaymentAttempts(payment.getExternalKey(), internalCallContext);
         final int expectedAttempts = 2;
@@ -258,25 +250,21 @@ public class TestRetryService extends PaymentTestSuiteNoDB {
             moveClockForFailureType(FailureType.PAYMENT_FAILURE, curFailure);
             final int curFailureCondition = curFailure;
 
-            try {
-                await().atMost(TIMEOUT, SECONDS).until(new Callable<Boolean>() {
-                    @Override
-                    public Boolean call() throws Exception {
-                        final List<PaymentAttemptModelDao> attempts = paymentDao.getPaymentAttempts(paymentExternalKey, internalCallContext);
-                        final List<PaymentAttemptModelDao> filteredAttempts = ImmutableList.copyOf(Iterables.filter(attempts, new Predicate<PaymentAttemptModelDao>() {
-                            @Override
-                            public boolean apply(final PaymentAttemptModelDao input) {
-                                return input.getStateName().equals("SUCCESS") ||
-                                       input.getStateName().equals("RETRIED") ||
-                                       input.getStateName().equals("ABORTED");
-                            }
-                        }));
-                        return filteredAttempts.size() == curFailureCondition + 2;
-                    }
-                });
-            } catch (final TimeoutException e) {
-                fail("Timeout curFailure = " + curFailureCondition);
-            }
+            await().atMost(TIMEOUT, SECONDS).until(new Callable<Boolean>() {
+                @Override
+                public Boolean call() throws Exception {
+                    final List<PaymentAttemptModelDao> attempts = paymentDao.getPaymentAttempts(paymentExternalKey, internalCallContext);
+                    final List<PaymentAttemptModelDao> filteredAttempts = ImmutableList.copyOf(Iterables.filter(attempts, new Predicate<PaymentAttemptModelDao>() {
+                        @Override
+                        public boolean apply(final PaymentAttemptModelDao input) {
+                            return input.getStateName().equals("SUCCESS") ||
+                                   input.getStateName().equals("RETRIED") ||
+                                   input.getStateName().equals("ABORTED");
+                        }
+                    }));
+                    return filteredAttempts.size() == curFailureCondition + 2;
+                }
+            });
         }
         attempts = paymentDao.getPaymentAttempts(payment.getExternalKey(), internalCallContext);
         final int expectedAttempts = maxTries + 1;
@@ -343,25 +331,21 @@ public class TestRetryService extends PaymentTestSuiteNoDB {
             moveClockForFailureType(FailureType.PAYMENT_FAILURE, curFailure);
             final int curFailureCondition = curFailure;
 
-            try {
-                await().atMost(TIMEOUT, SECONDS).until(new Callable<Boolean>() {
-                    @Override
-                    public Boolean call() throws Exception {
-                        final List<PaymentAttemptModelDao> attempts = paymentDao.getPaymentAttempts(paymentExternalKey, internalCallContext);
-                        final List<PaymentAttemptModelDao> filteredAttempts = ImmutableList.copyOf(Iterables.filter(attempts, new Predicate<PaymentAttemptModelDao>() {
-                            @Override
-                            public boolean apply(final PaymentAttemptModelDao input) {
-                                return input.getStateName().equals("SUCCESS") ||
-                                       input.getStateName().equals("RETRIED") ||
-                                       input.getStateName().equals("ABORTED");
-                            }
-                        }));
-                        return filteredAttempts.size() == curFailureCondition + 2;
-                    }
-                });
-            } catch (final TimeoutException e) {
-                fail("Timeout curFailure = " + curFailureCondition);
-            }
+            await().atMost(TIMEOUT, SECONDS).until(new Callable<Boolean>() {
+                @Override
+                public Boolean call() throws Exception {
+                    final List<PaymentAttemptModelDao> attempts = paymentDao.getPaymentAttempts(paymentExternalKey, internalCallContext);
+                    final List<PaymentAttemptModelDao> filteredAttempts = ImmutableList.copyOf(Iterables.filter(attempts, new Predicate<PaymentAttemptModelDao>() {
+                        @Override
+                        public boolean apply(final PaymentAttemptModelDao input) {
+                            return input.getStateName().equals("SUCCESS") ||
+                                   input.getStateName().equals("RETRIED") ||
+                                   input.getStateName().equals("ABORTED");
+                        }
+                    }));
+                    return filteredAttempts.size() == curFailureCondition + 2;
+                }
+            });
         }
         attempts = paymentDao.getPaymentAttempts(payment.getExternalKey(), internalCallContext);
         final int expectedAttempts = maxTries + 1;

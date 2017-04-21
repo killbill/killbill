@@ -36,7 +36,7 @@ import org.killbill.xmlloader.XMLLoader;
 import org.killbill.billing.events.OverdueChangeInternalEvent;
 import org.killbill.billing.junction.DefaultBlockingState;
 
-import static com.jayway.awaitility.Awaitility.await;
+import static org.awaitility.Awaitility.await;
 import static java.util.concurrent.TimeUnit.SECONDS;
 
 public class TestOverdueStateApplicator extends OverdueTestSuiteWithEmbeddedDB {
