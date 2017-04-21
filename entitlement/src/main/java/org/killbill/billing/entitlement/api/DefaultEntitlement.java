@@ -648,11 +648,8 @@ public class DefaultEntitlement extends EntityBase implements Entitlement {
 
                 final InternalCallContext context = internalCallContextFactory.createInternalCallContext(getAccountId(), callContext);
 
-                // TOD Keeping this code, but allowing plugins to override the dates is not really tested and therefore supported (already SUB_CHANGE_NON_ACTIVE above would be wrong)
-                final LocalDate inputChangeDate = updatedPluginContext.getBaseEntitlementWithAddOnsSpecifiers().iterator().next().getBillingEffectiveDate() != null ?
-                        updatedPluginContext.getBaseEntitlementWithAddOnsSpecifiers().iterator().next().getBillingEffectiveDate() : effectiveDate;
 
-                final DateTime effectiveChangeDate = dateHelper.fromLocalDateAndReferenceTime(inputChangeDate, context);
+                final DateTime effectiveChangeDate = effectiveDate !=  null ? dateHelper.fromLocalDateAndReferenceTime(effectiveDate, context) : null;
 
                 final DateTime resultingEffectiveDate;
                 try {
