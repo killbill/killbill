@@ -473,13 +473,36 @@ public class TestIntegrationInvoice extends TestIntegrationBase {
         assertEquals(createdEntitlement.getEffectiveEndDate(), null);
         assertListenerStatus();
 
+        // Generate an invoice using a future targetDate
+        busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT);
+        final Invoice firstInvoice = invoiceUserApi.triggerInvoiceGeneration(createdEntitlement.getAccountId(), futureDate, null, callContext);
+        assertListenerStatus();
+
+        assertEquals(firstInvoice.getInvoiceItems().size(), 1);
+        assertEquals(firstInvoice.getInvoiceItems().get(0).getInvoiceItemType(),  InvoiceItemType.RECURRING);
+        assertEquals(firstInvoice.getInvoiceItems().get(0).getAmount().compareTo(new BigDecimal("19.95")), 0);
+        assertEquals(firstInvoice.getInvoiceItems().get(0).getStartDate(),  futureDate);
+        assertEquals(firstInvoice.getInvoiceItems().get(0).getPlanName(),  "pistol-monthly-notrial");
+
+
         // Cancel subscription on its pending startDate
         createdEntitlement.cancelEntitlementWithDate(futureDate, true, ImmutableList.<PluginProperty>of(), callContext);
 
         // Move to startDate/cancel Date
-        busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.CANCEL, NextEvent.BLOCK, NextEvent.NULL_INVOICE, NextEvent.NULL_INVOICE);
+        busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.CANCEL, NextEvent.BLOCK, NextEvent.NULL_INVOICE, NextEvent.INVOICE);
         clock.addMonths(1);
         assertListenerStatus();
+
+        final List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), false, callContext);
+        assertEquals(invoices.size(), 2);
+
+        final List<ExpectedInvoiceItemCheck> toBeChecked = ImmutableList.<ExpectedInvoiceItemCheck>of(
+                new ExpectedInvoiceItemCheck(new LocalDate(2017, 5, 1), new LocalDate(2017, 6, 1), InvoiceItemType.REPAIR_ADJ, new BigDecimal("-19.95")),
+                new ExpectedInvoiceItemCheck(new LocalDate(2017, 5, 1), new LocalDate(2017, 5, 1), InvoiceItemType.CBA_ADJ, new BigDecimal("19.95")));
+        invoiceChecker.checkInvoice(invoices.get(1).getId(), callContext, toBeChecked);
+
+
+
 
     }
 
