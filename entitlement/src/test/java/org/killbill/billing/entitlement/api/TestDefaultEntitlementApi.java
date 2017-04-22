@@ -604,14 +604,6 @@ public class TestDefaultEntitlementApi extends EntitlementTestSuiteWithEmbeddedD
         assertEquals(entitlement.getState(), EntitlementState.PENDING);
         assertEquals(entitlement.getEffectiveStartDate(), entitlementDate);
 
-        // effectiveDate is null and we are prior entitlementDate so call should fail with SUB_CHANGE_NON_ACTIVE
-        final PlanPhaseSpecifier spec2 = new PlanPhaseSpecifier("Pistol",  BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, null);
-        try {
-            entitlement.changePlanWithDate(spec2, ImmutableList.<PlanPhasePriceOverride>of(), null, ImmutableList.<PluginProperty>of(), callContext);
-            fail("Change plan prior entitlementDate should fail");
-        } catch (EntitlementApiException e) {
-            Assert.assertEquals(e.getCode(), ErrorCode.SUB_CHANGE_NON_ACTIVE.getCode());
-        }
 
 
         // 2013-08-10 : entitlementDate
@@ -624,14 +616,6 @@ public class TestDefaultEntitlementApi extends EntitlementTestSuiteWithEmbeddedD
         entitlement = entitlementApi.getEntitlementForId(entitlement.getId(), callContext);
         assertEquals(entitlement.getState(), EntitlementState.ACTIVE);
 
-        // effectiveDate is null (same as first case above), but we did not reach the billing startDate so will fail with SUB_INVALID_REQUESTED_DATE
-        try {
-            entitlement.changePlanWithDate(spec2, ImmutableList.<PlanPhasePriceOverride>of(), null, ImmutableList.<PluginProperty>of(), callContext);
-            Assert.fail("Change plan prior billingStartDate should fail");
-        } catch (EntitlementApiException e) {
-            Assert.assertEquals(e.getCode(), ErrorCode.SUB_INVALID_REQUESTED_DATE.getCode());
-        }
-
         // 2013-08-12 : billingDate
         testListener.pushExpectedEvents(NextEvent.CREATE);
         clock.addDays(2);
@@ -639,6 +623,7 @@ public class TestDefaultEntitlementApi extends EntitlementTestSuiteWithEmbeddedD
 
 
         // effectiveDate = entitlementDate prior billingDate
+        final PlanPhaseSpecifier spec2 = new PlanPhaseSpecifier("Pistol",  BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, null);
         try {
             entitlement.changePlanWithDate(spec2, ImmutableList.<PlanPhasePriceOverride>of(), entitlementDate, ImmutableList.<PluginProperty>of(), callContext);
             Assert.fail("Change plan prior billingStartDate should fail");

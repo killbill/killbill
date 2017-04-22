@@ -308,13 +308,6 @@ public class TestDefaultEntitlement extends EntitlementTestSuiteWithEmbeddedDB {
         }
 
         try {
-            entitlement.changePlanWithDate(spec2, ImmutableList.<PlanPhasePriceOverride>of(), null, ImmutableList.<PluginProperty>of(), callContext);
-            fail("Changing plan immediately prior the subscription is active is not allowed");
-        } catch (EntitlementApiException e) {
-            assertEquals(e.getCode(), ErrorCode.SUB_CHANGE_NON_ACTIVE.getCode());
-        }
-
-        try {
             entitlement.changePlanWithDate(spec2, ImmutableList.<PlanPhasePriceOverride>of(), startDate.minusDays(1), ImmutableList.<PluginProperty>of(), callContext);
             fail("Changing plan immediately prior the subscription is active is not allowed");
         } catch (EntitlementApiException e) {

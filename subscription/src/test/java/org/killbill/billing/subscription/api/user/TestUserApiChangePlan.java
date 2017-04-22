@@ -490,12 +490,6 @@ public class TestUserApiChangePlan extends SubscriptionTestSuiteWithEmbeddedDB {
         // Check we are seeing the right PENDING transition (pistol-monthly), not the START but the CHANGE on the same date
         assertEquals(((DefaultSubscriptionBase) result1.get(0)).getCurrentOrPendingPlan().getName(), "pistol-monthly");
         assertEquals(((DefaultSubscriptionBase) result1.get(0)).getPendingTransition().getTransitionType(), SubscriptionBaseTransitionType.CREATE);
-        try {
-            subscription.changePlan(spec, null, callContext);
-            fail("Change plan should have failed : subscription PENDING");
-        } catch (final SubscriptionBaseApiException e) {
-            assertEquals(e.getCode(), ErrorCode.SUB_CHANGE_NON_ACTIVE.getCode());
-        }
 
         // Second try with date prior to startDate => Call should fail because subscription is PENDING
         try {
