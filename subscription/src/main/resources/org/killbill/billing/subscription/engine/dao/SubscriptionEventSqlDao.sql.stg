@@ -84,7 +84,7 @@ and effective_date >= :now
 ;
 >>
 
-getEventsForSubscription() ::= <<
+getActiveEventsForSubscription() ::= <<
 select <allTableFields()>
 , record_id as total_ordering
 from <tableName()>

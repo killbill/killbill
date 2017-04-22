@@ -301,20 +301,7 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
                 clock, transitions, Order.ASC_FROM_PAST,
                 Visibility.ALL, TimeLimit.FUTURE_ONLY);
 
-        final SubscriptionBaseTransition initialPendingTransition = it.hasNext() ? it.next() : null;
-
-        // If we have multiple change aligning on the startDate we return the latest to ensure that we get access to right Plan
-        // TODO : However, this means this initial PENDING transition could be a CHANGE (which could confuse some clients, unclear)
-        SubscriptionBaseTransition result = initialPendingTransition;
-        while (it.hasNext()) {
-            final SubscriptionBaseTransition next = it.next();
-            if (next.getTransitionType() == SubscriptionBaseTransitionType.CHANGE && initialPendingTransition.getEffectiveTransitionTime().compareTo(next.getEffectiveTransitionTime()) == 0) {
-                result = next;
-            } else {
-                break;
-            }
-        }
-        return result;
+        return it.hasNext() ? it.next() : null;
     }
 
     @Override

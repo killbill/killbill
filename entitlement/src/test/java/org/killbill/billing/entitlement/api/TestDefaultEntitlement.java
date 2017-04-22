@@ -263,7 +263,7 @@ public class TestDefaultEntitlement extends EntitlementTestSuiteWithEmbeddedDB {
         assertListenerStatus();
 
         // Immediate change during trial
-        testListener.pushExpectedEvent(NextEvent.CHANGE);
+        testListener.pushExpectedEvent(NextEvent.CREATE);
         entitlement.changePlan(new PlanSpecifier("Assault-Rifle", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME), null, ImmutableList.<PluginProperty>of(), callContext);
         assertListenerStatus();
 
@@ -323,7 +323,7 @@ public class TestDefaultEntitlement extends EntitlementTestSuiteWithEmbeddedDB {
 
         entitlement.changePlanWithDate(spec2, ImmutableList.<PlanPhasePriceOverride>of(), startDate, ImmutableList.<PluginProperty>of(), callContext);
 
-        testListener.pushExpectedEvents(NextEvent.CREATE, NextEvent.CHANGE, NextEvent.BLOCK);
+        testListener.pushExpectedEvents(NextEvent.CREATE,  NextEvent.BLOCK);
         clock.addDays(10);
         assertListenerStatus();
 

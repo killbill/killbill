@@ -33,6 +33,7 @@ import java.util.UUID;
 import javax.annotation.Nullable;
 import javax.inject.Inject;
 
+import com.google.common.base.Preconditions;
 import org.joda.time.DateTime;
 import org.killbill.billing.ErrorCode;
 import org.killbill.billing.callcontext.InternalCallContext;
@@ -75,6 +76,7 @@ import org.killbill.billing.subscription.events.user.ApiEvent;
 import org.killbill.billing.subscription.events.user.ApiEventBuilder;
 import org.killbill.billing.subscription.events.user.ApiEventCancel;
 import org.killbill.billing.subscription.events.user.ApiEventChange;
+import org.killbill.billing.subscription.events.user.ApiEventCreate;
 import org.killbill.billing.subscription.events.user.ApiEventType;
 import org.killbill.billing.subscription.exceptions.SubscriptionBaseError;
 import org.killbill.billing.util.cache.CacheControllerDispatcher;
@@ -454,7 +456,7 @@ public class DefaultSubscriptionDao extends EntityDaoBase<SubscriptionBundleMode
         return transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<List<SubscriptionBaseEvent>>() {
             @Override
             public List<SubscriptionBaseEvent> inTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory) throws Exception {
-                final List<SubscriptionEventModelDao> models = entitySqlDaoWrapperFactory.become(SubscriptionEventSqlDao.class).getEventsForSubscription(subscriptionId.toString(), context);
+                final List<SubscriptionEventModelDao> models = entitySqlDaoWrapperFactory.become(SubscriptionEventSqlDao.class).getActiveEventsForSubscription(subscriptionId.toString(), context);
                 return filterSubscriptionBaseEvents(models);
             }
         });
@@ -641,17 +643,62 @@ public class DefaultSubscriptionDao extends EntityDaoBase<SubscriptionBundleMode
         });
     }
 
+
     @Override
-    public void changePlan(final DefaultSubscriptionBase subscription, final List<SubscriptionBaseEvent> changeEvents, final List<DefaultSubscriptionBase> subscriptionsToBeCancelled, final List<SubscriptionBaseEvent> cancelEvents, final InternalCallContext context) {
+    public void changePlan(final DefaultSubscriptionBase subscription, final List<SubscriptionBaseEvent> originalInputChangeEvents, final List<DefaultSubscriptionBase> subscriptionsToBeCancelled, final List<SubscriptionBaseEvent> cancelEvents, final InternalCallContext context) {
+
+        // First event is expected to be the subscription CHANGE event
+        final SubscriptionBaseEvent inputChangeEvent =  originalInputChangeEvents.get(0);
+        Preconditions.checkState(inputChangeEvent.getType() == EventType.API_USER &&
+                ((ApiEvent) inputChangeEvent).getApiEventType() == ApiEventType.CHANGE);
+        Preconditions.checkState(inputChangeEvent.getSubscriptionId().equals(subscription.getId()));
+
         transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<Void>() {
             @Override
             public Void inTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory) throws Exception {
+
                 final SubscriptionEventSqlDao transactional = entitySqlDaoWrapperFactory.become(SubscriptionEventSqlDao.class);
-                final UUID subscriptionId = subscription.getId();
+                final List<SubscriptionEventModelDao> activeSubscriptionEvents = entitySqlDaoWrapperFactory.become(SubscriptionEventSqlDao.class).getActiveEventsForSubscription(subscription.getId().toString(), context);
 
-                cancelFutureEventsFromTransaction(subscriptionId, changeEvents.get(0).getEffectiveDate(), entitySqlDaoWrapperFactory, false, context);
+                // First event is CREATE/TRANSFER event
+                final SubscriptionEventModelDao firstSubscriptionEvent = activeSubscriptionEvents.get(0);
+                final Iterable<SubscriptionEventModelDao> activePresentOrFutureSubscriptionEvents = Iterables.filter(activeSubscriptionEvents, new Predicate<SubscriptionEventModelDao>() {
+                    @Override
+                    public boolean apply(SubscriptionEventModelDao input) {
+                        return input.getEffectiveDate().compareTo(inputChangeEvent.getEffectiveDate()) >= 0;
+                    }
+                });
 
-                for (final SubscriptionBaseEvent cur : changeEvents) {
+                // We do a little magic here in case the CHANGE coincides exactly with the CREATE event to invalidate original CREATE event and
+                // change the input CHANGE event into a CREATE event.
+                final boolean isChangePlanOnStartDate = firstSubscriptionEvent.getEffectiveDate().compareTo(inputChangeEvent.getEffectiveDate()) == 0;
+
+                final List<SubscriptionBaseEvent> inputChangeEvents;
+                if (isChangePlanOnStartDate) {
+
+                    // Rebuild input event list with first the CREATE event and all original input events except for inputChangeEvent
+                    inputChangeEvents = new ArrayList<SubscriptionBaseEvent>();
+                    final SubscriptionBaseEvent newCreateEvent = new ApiEventBuilder((ApiEventChange) inputChangeEvent)
+                            .setApiEventType(ApiEventType.CREATE)
+                            .build();
+
+                    originalInputChangeEvents.remove(0);
+                    inputChangeEvents.add(newCreateEvent);
+                    inputChangeEvents.addAll(originalInputChangeEvents);
+
+                    // Deactivate original CREATE event
+                    unactivateEventFromTransaction(firstSubscriptionEvent, entitySqlDaoWrapperFactory, context);
+
+                } else {
+                    inputChangeEvents = originalInputChangeEvents;
+                }
+
+
+                cancelFutureEventsFromTransaction(activePresentOrFutureSubscriptionEvents, entitySqlDaoWrapperFactory, false, context);
+
+
+
+                for (final SubscriptionBaseEvent cur : inputChangeEvents) {
                     createAndRefresh(transactional, new SubscriptionEventModelDao(cur), context);
 
                     final boolean isBusEvent = cur.getEffectiveDate().compareTo(clock.getUTCNow()) <= 0 && (cur.getType() == EventType.API_USER);
@@ -659,7 +706,7 @@ public class DefaultSubscriptionDao extends EntityDaoBase<SubscriptionBundleMode
                 }
 
                 // Notify the Bus of the latest requested change
-                final SubscriptionBaseEvent finalEvent = changeEvents.get(changeEvents.size() - 1);
+                final SubscriptionBaseEvent finalEvent = inputChangeEvents.get(inputChangeEvents.size() - 1);
                 notifyBusOfRequestedChange(entitySqlDaoWrapperFactory, subscription, finalEvent, SubscriptionBaseTransitionType.CHANGE, context);
 
                 // Cancel associated add-ons
@@ -715,8 +762,12 @@ public class DefaultSubscriptionDao extends EntityDaoBase<SubscriptionBundleMode
 
     private void cancelFutureEventsFromTransaction(final UUID subscriptionId, final DateTime effectiveDate, final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory, final boolean includingBCDChange, final InternalCallContext context) {
         final List<SubscriptionEventModelDao> eventModels = entitySqlDaoWrapperFactory.become(SubscriptionEventSqlDao.class).getFutureOrPresentActiveEventForSubscription(subscriptionId.toString(), effectiveDate.toDate(), context);
-        for (final SubscriptionEventModelDao cur : eventModels) {
+        cancelFutureEventsFromTransaction(eventModels, entitySqlDaoWrapperFactory, includingBCDChange, context);
+    }
 
+
+    private void cancelFutureEventsFromTransaction(final Iterable<SubscriptionEventModelDao> eventModels, final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory, final boolean includingBCDChange, final InternalCallContext context) {
+        for (final SubscriptionEventModelDao cur : eventModels) {
             // Skip CREATE event (because of date equality in the query and we don't want to invalidate CREATE event that match a CANCEL event)
             if (cur.getEventType() == EventType.API_USER && (cur.getUserType()== ApiEventType.CREATE || cur.getUserType()== ApiEventType.TRANSFER)) {
                 continue;
@@ -879,40 +930,46 @@ public class DefaultSubscriptionDao extends EntityDaoBase<SubscriptionBundleMode
             return;
         }
         for (final SubscriptionBaseEvent curDryRun : dryRunEvents) {
+
+            boolean swapChangeEventWithCreate = false;
+
             if (curDryRun.getSubscriptionId() != null && curDryRun.getSubscriptionId().equals(subscriptionId)) {
 
-                //boolean inserted = false;
+                final boolean isApiChange = curDryRun.getType() == EventType.API_USER && ((ApiEvent) curDryRun).getApiEventType() == ApiEventType.CHANGE;
                 final Iterator<SubscriptionBaseEvent> it = events.iterator();
                 while (it.hasNext()) {
                     final SubscriptionBaseEvent event = it.next();
                     if (event.getEffectiveDate().isAfter(curDryRun.getEffectiveDate())) {
                         it.remove();
+                    } else if (event.getEffectiveDate().compareTo(curDryRun.getEffectiveDate()) == 0 &&
+                            isApiChange &&
+                            (event.getType() == EventType.API_USER && (((ApiEvent) event).getApiEventType() == ApiEventType.CREATE) || ((ApiEvent) event).getApiEventType() == ApiEventType.TRANSFER)) {
+                        it.remove();
+                        swapChangeEventWithCreate = true;
                     }
                 }
                 // Set total ordering value of the fake dryRun event to make sure billing events are correctly ordered
-                final SubscriptionBaseEvent curAdjustedDryRun;
-                if (!events.isEmpty()) {
-
-                    final EventBaseBuilder eventBuilder;
-                    switch (curDryRun.getType()) {
-                        case PHASE:
-                            eventBuilder = new PhaseEventBuilder((PhaseEvent) curDryRun);
-                            break;
-                        case BCD_UPDATE:
-                            eventBuilder = new BCDEventBuilder((BCDEvent) curDryRun);
-                            break;
-                        case API_USER:
-                        default:
-                            eventBuilder = new ApiEventBuilder((ApiEvent) curDryRun);
-                            break;
-                    }
-                    eventBuilder.setTotalOrdering(events.get(events.size() - 1).getTotalOrdering() + 1);
-
-                    curAdjustedDryRun = eventBuilder.build();
-                } else {
-                    curAdjustedDryRun = curDryRun;
+                // and also transform CHANGE event into CREATE in case of perfect effectiveDate match
+                final EventBaseBuilder eventBuilder;
+                switch (curDryRun.getType()) {
+                    case PHASE:
+                        eventBuilder = new PhaseEventBuilder((PhaseEvent) curDryRun);
+                        break;
+                    case BCD_UPDATE:
+                        eventBuilder = new BCDEventBuilder((BCDEvent) curDryRun);
+                        break;
+                    case API_USER:
+                    default:
+                        eventBuilder = new ApiEventBuilder((ApiEvent) curDryRun);
+                        if (swapChangeEventWithCreate) {
+                            ((ApiEventBuilder) eventBuilder).setApiEventType(ApiEventType.CREATE);
+                        }
+                        break;
                 }
-                events.add(curAdjustedDryRun);
+                if (!events.isEmpty()) {
+                    eventBuilder.setTotalOrdering(events.get(events.size() - 1).getTotalOrdering() + 1);
+                }
+                events.add(eventBuilder.build());
             }
         }
     }

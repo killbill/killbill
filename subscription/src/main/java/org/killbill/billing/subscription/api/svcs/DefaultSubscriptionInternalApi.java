@@ -627,7 +627,7 @@ public class DefaultSubscriptionInternalApi extends SubscriptionApiBase implemen
                 throw new SubscriptionBaseApiException(ErrorCode.SUB_CHANGE_AO_MAX_PLAN_ALLOWED_BY_BUNDLE, plan.getName());
             }
         }
-        return apiService.dryRunChangePlan((DefaultSubscriptionBase) subscription, spec, requestedDateWithMs, requestedPolicy, tenantContext);
+        return apiService.dryRunChangePlan((DefaultSubscriptionBase) subscription, spec, effectiveDate, requestedPolicy, tenantContext);
     }
 
     @Override

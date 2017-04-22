@@ -160,6 +160,7 @@ public class TestIntegration extends TestIntegrationBase {
         invoiceChecker.checkInvoiceNoAudits(dryRunInvoice, callContext, expectedInvoices);
 
 
+        clock.addDeltaFromReality(1000); // Make sure CHANGE does not collide with CREATE
         changeEntitlementAndCheckForCompletion(baseEntitlement, "Assault-Rifle", BillingPeriod.MONTHLY, null, NextEvent.CHANGE, NextEvent.INVOICE);
         invoiceChecker.checkInvoice(account.getId(), invoiceItemCount++, callContext, expectedInvoices);
         invoiceChecker.checkChargedThroughDate(subscription.getId(), clock.getUTCToday(), callContext);
@@ -263,6 +264,7 @@ public class TestIntegration extends TestIntegrationBase {
         //
         // CHANGE PLAN IMMEDIATELY AND EXPECT BOTH EVENTS: NextEvent.CHANGE NextEvent.INVOICE
         //
+        clock.addDeltaFromReality(1000); // Make sure CHANGE does not exactly align with CREATE
         changeEntitlementAndCheckForCompletion(baseEntitlement, "Assault-Rifle", BillingPeriod.MONTHLY, null, NextEvent.CHANGE, NextEvent.INVOICE);
         invoiceChecker.checkInvoice(account.getId(), invoiceItemCount++, callContext, new ExpectedInvoiceItemCheck(initialCreationDate.toLocalDate(), null, InvoiceItemType.FIXED, new BigDecimal("0")));
         invoiceChecker.checkChargedThroughDate(subscription.getId(), clock.getUTCToday(), callContext);
@@ -355,6 +357,7 @@ public class TestIntegration extends TestIntegrationBase {
         //
         // CHANGE PLAN IMMEDIATELY AND EXPECT BOTH EVENTS: NextEvent.CHANGE NextEvent.INVOICE
         //
+        clock.addDeltaFromReality(1000); // Ensure CHANGE does not collide with CREATE
         baseEntitlement = changeEntitlementAndCheckForCompletion(baseEntitlement, "Assault-Rifle", BillingPeriod.MONTHLY, null, NextEvent.CHANGE, NextEvent.INVOICE);
         invoiceChecker.checkInvoice(account.getId(), invoiceItemCount++, callContext, new ExpectedInvoiceItemCheck(initialCreationDate.toLocalDate(), null, InvoiceItemType.FIXED, new BigDecimal("0")));
         invoiceChecker.checkChargedThroughDate(subscription.getId(), clock.getUTCToday(), callContext);
