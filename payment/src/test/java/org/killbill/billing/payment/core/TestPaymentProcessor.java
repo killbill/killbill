@@ -47,7 +47,7 @@ import org.testng.annotations.Test;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.eventbus.Subscribe;
-import com.jayway.awaitility.Awaitility;
+import org.awaitility.Awaitility;
 
 import static java.math.BigDecimal.ZERO;
 

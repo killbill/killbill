@@ -36,6 +36,7 @@
       </profile>
     </annotationProcessing>
     <bytecodeTargetLevel>
+      <module name="killbill" target="1.6" />
       <module name="killbill-account" target="1.6" />
       <module name="killbill-beatrix" target="1.6" />
       <module name="killbill-catalog" target="1.6" />
@@ -54,7 +55,9 @@
       <module name="killbill-tenant" target="1.6" />
       <module name="killbill-usage" target="1.6" />
       <module name="killbill-util" target="1.6" />
-      <module name="killbill2" target="1.6" />
     </bytecodeTargetLevel>
+  </component>
+  <component name="JavacSettings">
+    <option name="ADDITIONAL_OPTIONS_STRING" value="-Xlint:unchecked " />
   </component>
 </project>

@@ -1,14 +1,22 @@
 language: java
 
 sudo: false
-# Flaky - see https://github.com/travis-ci/travis-ci/issues/3566
-#cache:
-#  directories:
-#      - $HOME/.m2
+cache:
+  directories:
+      - $HOME/.m2
 
-script: if [[ -v COMMAND ]]; then $COMMAND; else travis_retry mvn -q -Djava.security.egd=file:/dev/./urandom -Dorg.slf4j.simpleLogger.defaultLogLevel=WARN -Dorg.slf4j.simpleLogger.log.org.killbill.billing.util.cache=ERROR -Dorg.slf4j.simpleLogger.log.org.killbill.billing.lifecycle=ERROR -Dlogback.configurationFile=$PWD/profiles/killbill/src/test/resources/logback.travis.xml clean install $PHASE -pl '!beatrix,!profiles,!profiles/killbill,!profiles/killpay' 2>&1 | egrep -v 'Download|Install|[ \t]*at [ \ta-zA-Z0-9\.\:\(\)]+'; [ ${PIPESTATUS[0]} == 0 ]; fi
+dist: trusty
+
+before_install:
+  - echo "<settings><profiles><profile><repositories><repository><id>central</id><name>bintray</name><url>http://jcenter.bintray.com</url></repository></repositories><id>bintray</id></profile></profiles><activeProfiles><activeProfile>bintray</activeProfile></activeProfiles></settings>" > /var/tmp/settings.xml
+  - mvn -N io.takari:maven:wrapper -Dmaven=3.3.9
+
+before_script:
+  - jdk_switcher use $JDK
+
+script: if [[ -v COMMAND ]]; then $COMMAND; else travis_retry ./mvnw -q -Djava.security.egd=file:/dev/./urandom -Dorg.slf4j.simpleLogger.defaultLogLevel=WARN -Dorg.slf4j.simpleLogger.log.org.killbill.billing.util.cache=ERROR -Dorg.slf4j.simpleLogger.log.org.killbill.billing.lifecycle=ERROR -Dlogback.configurationFile=$PWD/profiles/killbill/src/test/resources/logback.travis.xml clean install $PHASE -pl '!beatrix,!profiles,!profiles/killbill,!profiles/killpay' 2>&1 | egrep -v 'Download|Install|[ \t]*at [ \ta-zA-Z0-9\.\:\(\)]+'; [ ${PIPESTATUS[0]} == 0 ]; fi
 # Remove --quiet to avoid timeouts
-install: mvn -U install -DskipTests=true | egrep -v 'Download|Install'
+install: mvn -U install -DskipTests=true --settings /var/tmp/settings.xml | egrep -v 'Download|Install'
 
 notifications:
   email:
@@ -19,39 +27,25 @@ env:
     - MAVEN_OPTS="-Xmx512m -XX:MaxPermSize=192m"
 
 matrix:
-  allow_failures:
-    - jdk: oraclejdk8
   include:
-    - env: PHASE="-Pmysql"
-      jdk: openjdk7
-    - env: PHASE="-Pmysql"
-      jdk: oraclejdk7
-    - env: PHASE="-Pmysql,jdk17"
-      jdk: openjdk7
-    - env: PHASE="-Pmysql,jdk17"
-      jdk: oraclejdk7
-    - env: PHASE="-Pmysql,jdk18"
-      jdk: oraclejdk8
-    - env: PHASE="-Ppostgresql"
-      jdk: openjdk7
-    - env: PHASE="-Ppostgresql"
-      jdk: oraclejdk7
-    - env: PHASE="-Ppostgresql,jdk17"
-      jdk: openjdk7
-    - env: PHASE="-Ppostgresql,jdk17"
-      jdk: oraclejdk7
-    - env: PHASE="-Ppostgresql,jdk18"
-      jdk: oraclejdk8
-    - env: PHASE="-Ptravis"
-      jdk: openjdk7
-    - env: PHASE="-Ptravis"
-      jdk: oraclejdk7
-    - env: PHASE="-Ptravis,jdk17"
-      jdk: openjdk7
-    - env: PHASE="-Ptravis,jdk17"
-      jdk: oraclejdk7
-    - env: PHASE="-Ptravis,jdk18"
-      jdk: oraclejdk8
+    - env: PHASE="-Ptravis,jdk16" JDK=oraclejdk8
+    - env: PHASE="-Ptravis,jdk16" JDK=openjdk8
+    - env: PHASE="-Ptravis,jdk17" JDK=oraclejdk8
+    - env: PHASE="-Ptravis,jdk17" JDK=openjdk8
+    - env: PHASE="-Ptravis,jdk18" JDK=oraclejdk8
+    - env: PHASE="-Ptravis,jdk18" JDK=openjdk8
+    - env: PHASE="-Pmysql,jdk16" JDK=oraclejdk8
+    - env: PHASE="-Pmysql,jdk16" JDK=openjdk8
+    - env: PHASE="-Pmysql,jdk17" JDK=oraclejdk8
+    - env: PHASE="-Pmysql,jdk17" JDK=openjdk8
+    - env: PHASE="-Pmysql,jdk18" JDK=oraclejdk8
+    - env: PHASE="-Pmysql,jdk18" JDK=openjdk8
+    - env: PHASE="-Ppostgresql,jdk16" JDK=oraclejdk8
+    - env: PHASE="-Ppostgresql,jdk16" JDK=openjdk8
+    - env: PHASE="-Ppostgresql,jdk17" JDK=oraclejdk8
+    - env: PHASE="-Ppostgresql,jdk17" JDK=openjdk8
+    - env: PHASE="-Ppostgresql,jdk18" JDK=oraclejdk8
+    - env: PHASE="-Ppostgresql,jdk18" JDK=openjdk8
   fast_finish: true
 
 after_success:

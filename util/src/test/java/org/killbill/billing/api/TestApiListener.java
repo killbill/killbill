@@ -53,7 +53,7 @@ import org.testng.Assert;
 import com.google.common.base.Joiner;
 import com.google.common.eventbus.Subscribe;
 
-import static com.jayway.awaitility.Awaitility.await;
+import static org.awaitility.Awaitility.await;
 import static org.testng.Assert.assertTrue;
 import static org.testng.Assert.fail;
 

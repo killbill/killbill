@@ -36,8 +36,8 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import com.google.inject.Inject;
-import com.jayway.awaitility.Awaitility;
-import com.jayway.awaitility.Duration;
+import org.awaitility.Awaitility;
+import org.awaitility.Duration;
 
 public class TestPerTenantConfig extends TestJaxrsBase {
 

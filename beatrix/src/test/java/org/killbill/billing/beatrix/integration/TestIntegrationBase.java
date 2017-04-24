@@ -137,7 +137,7 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.Callable;
 
-import static com.jayway.awaitility.Awaitility.await;
+import static org.awaitility.Awaitility.await;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;

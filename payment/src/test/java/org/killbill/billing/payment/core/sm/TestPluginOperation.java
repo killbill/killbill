@@ -54,7 +54,7 @@ import org.testng.annotations.Test;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.jayway.awaitility.Awaitility;
+import org.awaitility.Awaitility;
 
 public class TestPluginOperation extends PaymentTestSuiteNoDB {
 
