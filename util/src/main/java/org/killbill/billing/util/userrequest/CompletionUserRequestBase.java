@@ -1,7 +1,7 @@
 /*
- * Copyright 2010-2011 Ning, Inc.
- * Copyright 2014 Groupon, Inc
- * Copyright 2014 The Billing Project, LLC
+ * Copyright 2010-2013 Ning, Inc.
+ * Copyright 2014-2017 Groupon, Inc
+ * Copyright 2014-2017 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -30,6 +30,7 @@ import org.killbill.billing.events.BusInternalEvent;
 import org.killbill.billing.events.EffectiveSubscriptionInternalEvent;
 import org.killbill.billing.events.InvoiceCreationInternalEvent;
 import org.killbill.billing.events.InvoicePaymentErrorInternalEvent;
+import org.killbill.billing.events.InvoicePaymentInfoInternalEvent;
 import org.killbill.billing.events.NullInvoiceInternalEvent;
 import org.killbill.billing.events.PaymentErrorInternalEvent;
 import org.killbill.billing.events.PaymentInfoInternalEvent;
@@ -132,6 +133,9 @@ public class CompletionUserRequestBase implements CompletionUserRequest {
             case PAYMENT_PLUGIN_ERROR:
                 onPaymentPluginError((PaymentPluginErrorInternalEvent) curEvent);
                 break;
+            case INVOICE_PAYMENT_INFO:
+                onInvoicePaymentInfo((InvoicePaymentInfoInternalEvent) curEvent);
+                break;
             case INVOICE_PAYMENT_ERROR:
                 onInvoicePaymentError((InvoicePaymentErrorInternalEvent) curEvent);
                 break;
@@ -175,6 +179,10 @@ public class CompletionUserRequestBase implements CompletionUserRequest {
 
     @Override
     public void onPaymentPluginError(final PaymentPluginErrorInternalEvent curEvent) {
+    }
+
+    @Override
+    public void onInvoicePaymentInfo(final InvoicePaymentInfoInternalEvent curEvent) {
     }
 
     @Override
