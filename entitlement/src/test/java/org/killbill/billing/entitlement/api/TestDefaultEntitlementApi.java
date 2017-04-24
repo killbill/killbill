@@ -30,6 +30,7 @@ import org.killbill.billing.account.api.AccountApiException;
 import org.killbill.billing.api.TestApiListener.NextEvent;
 import org.killbill.billing.catalog.api.BillingActionPolicy;
 import org.killbill.billing.catalog.api.BillingPeriod;
+import org.killbill.billing.catalog.api.PlanPhasePriceOverride;
 import org.killbill.billing.catalog.api.PlanPhaseSpecifier;
 import org.killbill.billing.catalog.api.PriceListSet;
 import org.killbill.billing.catalog.api.ProductCategory;
@@ -586,7 +587,7 @@ public class TestDefaultEntitlementApi extends EntitlementTestSuiteWithEmbeddedD
     }
 
     @Test(groups = "slow")
-    public void testCreateBaseWithDifferentInTheFuture() throws AccountApiException, EntitlementApiException, SubscriptionApiException {
+    public void testCreateBaseWithDifferentStartDate() throws AccountApiException, EntitlementApiException, SubscriptionApiException {
         final LocalDate initialDate = new LocalDate(2013, 8, 7);
         clock.setDay(initialDate);
 
@@ -597,19 +598,48 @@ public class TestDefaultEntitlementApi extends EntitlementTestSuiteWithEmbeddedD
 
         final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("Shotgun",  BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, null);
 
-        final Entitlement entitlement = entitlementApi.createBaseEntitlement(account.getId(), spec, account.getExternalKey(), null, entitlementDate, billingDate, false, ImmutableList.<PluginProperty>of(), callContext);
+        Entitlement entitlement = entitlementApi.createBaseEntitlement(account.getId(), spec, account.getExternalKey(), null, entitlementDate, billingDate, false, ImmutableList.<PluginProperty>of(), callContext);
         assertListenerStatus();
 
         assertEquals(entitlement.getState(), EntitlementState.PENDING);
         assertEquals(entitlement.getEffectiveStartDate(), entitlementDate);
 
+
+
+        // 2013-08-10 : entitlementDate
         testListener.pushExpectedEvents(NextEvent.BLOCK);
         clock.addDays(3);
         assertListenerStatus();
 
+
+        // Once we pass entitlement startDate, state should be ACTIVE (although we did not pass billing startDate)
+        entitlement = entitlementApi.getEntitlementForId(entitlement.getId(), callContext);
+        assertEquals(entitlement.getState(), EntitlementState.ACTIVE);
+
+        // 2013-08-12 : billingDate
         testListener.pushExpectedEvents(NextEvent.CREATE);
         clock.addDays(2);
         assertListenerStatus();
+
+
+        // effectiveDate = entitlementDate prior billingDate
+        final PlanPhaseSpecifier spec2 = new PlanPhaseSpecifier("Pistol",  BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, null);
+        try {
+            entitlement.changePlanWithDate(spec2, ImmutableList.<PlanPhasePriceOverride>of(), entitlementDate, ImmutableList.<PluginProperty>of(), callContext);
+            Assert.fail("Change plan prior billingStartDate should fail");
+        } catch (EntitlementApiException e) {
+            Assert.assertEquals(e.getCode(), ErrorCode.SUB_INVALID_REQUESTED_DATE.getCode());
+        }
+
+        // effectiveDate is null (same as first case above), but **did**  reach the billing startDate (and entitlement startDate) so will succeed
+        clock.addDeltaFromReality(1000); // Add one sec to make sure CHANGE event does not coincide with CREATE (realistic scenario), and therefore we do expect a CHANGE event
+        testListener.pushExpectedEvents(NextEvent.CHANGE);
+        final Entitlement result = entitlement.changePlanWithDate(spec2, ImmutableList.<PlanPhasePriceOverride>of(), null, ImmutableList.<PluginProperty>of(), callContext);
+        assertListenerStatus();
+
+        assertEquals(result.getState(), EntitlementState.ACTIVE);
+        assertEquals(result.getLastActiveProduct().getName(), "Pistol");
+
     }
 
 

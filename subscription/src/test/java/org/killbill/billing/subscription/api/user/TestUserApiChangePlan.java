@@ -36,6 +36,7 @@ import org.killbill.billing.entitlement.api.SubscriptionEventType;
 import org.killbill.billing.invoice.api.DryRunArguments;
 import org.killbill.billing.subscription.SubscriptionTestSuiteWithEmbeddedDB;
 import org.killbill.billing.subscription.api.SubscriptionBase;
+import org.killbill.billing.subscription.api.SubscriptionBaseTransitionType;
 import org.killbill.billing.subscription.api.SubscriptionBillingApiException;
 import org.killbill.billing.subscription.events.SubscriptionBaseEvent;
 import org.killbill.billing.subscription.events.user.ApiEvent;
@@ -488,12 +489,7 @@ public class TestUserApiChangePlan extends SubscriptionTestSuiteWithEmbeddedDB {
 
         // Check we are seeing the right PENDING transition (pistol-monthly), not the START but the CHANGE on the same date
         assertEquals(((DefaultSubscriptionBase) result1.get(0)).getCurrentOrPendingPlan().getName(), "pistol-monthly");
-        try {
-            subscription.changePlan(spec, null, callContext);
-            fail("Change plan should have failed : subscription PENDING");
-        } catch (final SubscriptionBaseApiException e) {
-            assertEquals(e.getCode(), ErrorCode.SUB_CHANGE_NON_ACTIVE.getCode());
-        }
+        assertEquals(((DefaultSubscriptionBase) result1.get(0)).getPendingTransition().getTransitionType(), SubscriptionBaseTransitionType.CREATE);
 
         // Second try with date prior to startDate => Call should fail because subscription is PENDING
         try {
@@ -521,7 +517,7 @@ public class TestUserApiChangePlan extends SubscriptionTestSuiteWithEmbeddedDB {
         assertListenerStatus();
 
         // Move clock to startDate
-        testListener.pushExpectedEvents(NextEvent.CREATE, NextEvent.CHANGE);
+        testListener.pushExpectedEvents(NextEvent.CREATE);
         clock.addDays(5);
         assertListenerStatus();
 

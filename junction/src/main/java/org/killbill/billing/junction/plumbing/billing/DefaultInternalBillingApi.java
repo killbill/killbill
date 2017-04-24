@@ -188,11 +188,6 @@ public class DefaultInternalBillingApi implements BillingInternalApi {
 
         for (final SubscriptionBase subscription : subscriptions) {
 
-            // The subscription did not even start, so there is nothing to do yet, we can skip and avoid some NPE down the line when calculating the BCD
-            if (subscription.getState() == EntitlementState.PENDING) {
-                log.info("Skipping subscription id='{}', state = EntitlementState.PENDING", subscription.getId());
-                continue;
-            }
 
             final List<EffectiveSubscriptionInternalEvent> billingTransitions = subscriptionApi.getBillingTransitions(subscription, context);
             if (billingTransitions.isEmpty() ||

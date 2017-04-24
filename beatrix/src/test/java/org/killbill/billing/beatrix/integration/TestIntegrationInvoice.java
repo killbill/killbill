@@ -25,30 +25,39 @@ import java.util.UUID;
 
 import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
+import org.killbill.billing.ErrorCode;
 import org.killbill.billing.ObjectType;
 import org.killbill.billing.account.api.Account;
 import org.killbill.billing.api.TestApiListener.NextEvent;
 import org.killbill.billing.beatrix.util.InvoiceChecker.ExpectedInvoiceItemCheck;
+import org.killbill.billing.catalog.api.BillingActionPolicy;
 import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.catalog.api.PlanPhasePriceOverride;
 import org.killbill.billing.catalog.api.PlanPhaseSpecifier;
+import org.killbill.billing.catalog.api.PriceListSet;
 import org.killbill.billing.catalog.api.ProductCategory;
 import org.killbill.billing.entitlement.api.DefaultEntitlement;
 import org.killbill.billing.entitlement.api.Entitlement;
+import org.killbill.billing.entitlement.api.EntitlementApiException;
+import org.killbill.billing.entitlement.api.SubscriptionEventType;
 import org.killbill.billing.invoice.api.DryRunArguments;
 import org.killbill.billing.invoice.api.DryRunType;
 import org.killbill.billing.invoice.api.Invoice;
+import org.killbill.billing.invoice.api.InvoiceApiException;
 import org.killbill.billing.invoice.api.InvoiceItem;
 import org.killbill.billing.invoice.api.InvoiceItemType;
 import org.killbill.billing.invoice.model.ExternalChargeInvoiceItem;
 import org.killbill.billing.payment.api.Payment;
 import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.subscription.api.user.DefaultSubscriptionBase;
+import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import com.google.common.collect.ImmutableList;
 
+import static com.tc.util.Assert.fail;
 import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertNull;
 import static org.testng.Assert.assertTrue;
 
 public class TestIntegrationInvoice extends TestIntegrationBase {
@@ -361,5 +370,140 @@ public class TestIntegrationInvoice extends TestIntegrationBase {
         assertListenerStatus();
     }
 
+    @Test(groups = "slow")
+    public void testDryRunWithPendingSubscription() throws Exception {
+
+        final LocalDate initialDate = new LocalDate(2017, 4, 1);
+        clock.setDay(initialDate);
+
+        // Create account with non BCD to force junction BCD logic to activate
+        final Account account = createAccountWithNonOsgiPaymentMethod(getAccountData(null));
+
+        final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("Shotgun", BillingPeriod.ANNUAL, PriceListSet.DEFAULT_PRICELIST_NAME, null);
+
+        final LocalDate futureDate = new LocalDate(2017, 5, 1);
+
+        // No CREATE event as this is set in the future
+        final Entitlement createdEntitlement = entitlementApi.createBaseEntitlement(account.getId(), spec, account.getExternalKey(), null, futureDate, futureDate, false, ImmutableList.<PluginProperty>of(), callContext);
+        assertEquals(createdEntitlement.getState(), Entitlement.EntitlementState.PENDING);
+        assertEquals(createdEntitlement.getEffectiveStartDate().compareTo(futureDate), 0);
+        assertEquals(createdEntitlement.getEffectiveEndDate(), null);
+        assertListenerStatus();
+
+        // Generate a dryRun invoice on the billing startDate
+        final DryRunArguments dryRunArguments1 = new TestDryRunArguments(DryRunType.TARGET_DATE);
+        final Invoice dryRunInvoice1 = invoiceUserApi.triggerInvoiceGeneration(createdEntitlement.getAccountId(), futureDate, dryRunArguments1, callContext);
+        assertEquals(dryRunInvoice1.getInvoiceItems().size(), 1);
+        assertEquals(dryRunInvoice1.getInvoiceItems().get(0).getInvoiceItemType(),  InvoiceItemType.FIXED);
+        assertEquals(dryRunInvoice1.getInvoiceItems().get(0).getAmount().compareTo(BigDecimal.ZERO), 0);
+        assertEquals(dryRunInvoice1.getInvoiceItems().get(0).getStartDate(),  futureDate);
+        assertEquals(dryRunInvoice1.getInvoiceItems().get(0).getPlanName(),  "shotgun-annual");
+
+
+        // Generate a dryRun invoice with a plan change
+        final DryRunArguments dryRunArguments = new TestDryRunArguments(DryRunType.SUBSCRIPTION_ACTION, "Pistol", ProductCategory.BASE, BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, null,
+                SubscriptionEventType.CHANGE,  createdEntitlement.getId(), createdEntitlement.getBundleId(), futureDate, BillingActionPolicy.IMMEDIATE);
+
+        // First one day prior subscription starts
+        try {
+            invoiceUserApi.triggerInvoiceGeneration(createdEntitlement.getAccountId(), futureDate.minusDays(1), dryRunArguments, callContext);
+            fail("Should fail to trigger dryRun invoice prior subscription starts");
+        } catch (final InvoiceApiException e) {
+            assertEquals(e.getCode(),ErrorCode.INVOICE_NOTHING_TO_DO.getCode());
+        }
+
+        // Second, on the startDate
+        final Invoice dryRunInvoice2 = invoiceUserApi.triggerInvoiceGeneration(createdEntitlement.getAccountId(), futureDate, dryRunArguments, callContext);
+        assertEquals(dryRunInvoice2.getInvoiceItems().size(), 1);
+        assertEquals(dryRunInvoice2.getInvoiceItems().get(0).getInvoiceItemType(),  InvoiceItemType.FIXED);
+        assertEquals(dryRunInvoice2.getInvoiceItems().get(0).getAmount().compareTo(BigDecimal.ZERO), 0);
+        assertEquals(dryRunInvoice2.getInvoiceItems().get(0).getStartDate(),  futureDate);
+        assertEquals(dryRunInvoice2.getInvoiceItems().get(0).getPlanName(),  "pistol-monthly");
+
+
+        // Check BCD is not yet set
+        final Account refreshedAccount1 = accountUserApi.getAccountById(account.getId(), callContext);
+        assertEquals(refreshedAccount1.getBillCycleDayLocal(), new Integer(0));
+
+
+        busHandler.pushExpectedEvents(NextEvent.INVOICE);
+        final Invoice realInvoice = invoiceUserApi.triggerInvoiceGeneration(createdEntitlement.getAccountId(), futureDate, null, callContext);
+        assertListenerStatus();
+
+        assertEquals(realInvoice.getInvoiceItems().size(), 1);
+        assertEquals(realInvoice.getInvoiceItems().get(0).getInvoiceItemType(),  InvoiceItemType.FIXED);
+        assertEquals(realInvoice.getInvoiceItems().get(0).getAmount().compareTo(BigDecimal.ZERO), 0);
+        assertEquals(realInvoice.getInvoiceItems().get(0).getStartDate(),  futureDate);
+        assertEquals(realInvoice.getInvoiceItems().get(0).getPlanName(),  "shotgun-annual");
+
+        // Check BCD is now set
+        final Account refreshedAccount2 = accountUserApi.getAccountById(account.getId(), callContext);
+        assertEquals(refreshedAccount2.getBillCycleDayLocal(), new Integer(31));
+
+
+        // Move clock past startDate to check nothing happens
+        busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.NULL_INVOICE);
+        clock.addDays(31);
+        assertListenerStatus();
+
+        // Move clock after PHASE event
+        busHandler.pushExpectedEvents(NextEvent.PHASE, NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT);
+        clock.addMonths(12);
+        assertListenerStatus();
+    }
+
+
+    @Test(groups = "slow")
+    public void testDryRunWithPendingCancelledSubscription() throws Exception {
+
+        final LocalDate initialDate = new LocalDate(2017, 4, 1);
+        clock.setDay(initialDate);
+
+        // Create account with non BCD to force junction BCD logic to activate
+        final Account account = createAccountWithNonOsgiPaymentMethod(getAccountData(null));
+
+        final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("pistol-monthly-notrial", null);
+
+        final LocalDate futureDate = new LocalDate(2017, 5, 1);
+
+        // No CREATE event as this is set in the future
+        final Entitlement createdEntitlement = entitlementApi.createBaseEntitlement(account.getId(), spec, account.getExternalKey(), null, futureDate, futureDate, false, ImmutableList.<PluginProperty>of(), callContext);
+        assertEquals(createdEntitlement.getState(), Entitlement.EntitlementState.PENDING);
+        assertEquals(createdEntitlement.getEffectiveStartDate().compareTo(futureDate), 0);
+        assertEquals(createdEntitlement.getEffectiveEndDate(), null);
+        assertListenerStatus();
+
+        // Generate an invoice using a future targetDate
+        busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT);
+        final Invoice firstInvoice = invoiceUserApi.triggerInvoiceGeneration(createdEntitlement.getAccountId(), futureDate, null, callContext);
+        assertListenerStatus();
+
+        assertEquals(firstInvoice.getInvoiceItems().size(), 1);
+        assertEquals(firstInvoice.getInvoiceItems().get(0).getInvoiceItemType(),  InvoiceItemType.RECURRING);
+        assertEquals(firstInvoice.getInvoiceItems().get(0).getAmount().compareTo(new BigDecimal("19.95")), 0);
+        assertEquals(firstInvoice.getInvoiceItems().get(0).getStartDate(),  futureDate);
+        assertEquals(firstInvoice.getInvoiceItems().get(0).getPlanName(),  "pistol-monthly-notrial");
+
+
+        // Cancel subscription on its pending startDate
+        createdEntitlement.cancelEntitlementWithDate(futureDate, true, ImmutableList.<PluginProperty>of(), callContext);
+
+        // Move to startDate/cancel Date
+        busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.CANCEL, NextEvent.BLOCK, NextEvent.NULL_INVOICE, NextEvent.INVOICE);
+        clock.addMonths(1);
+        assertListenerStatus();
+
+        final List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), false, callContext);
+        assertEquals(invoices.size(), 2);
+
+        final List<ExpectedInvoiceItemCheck> toBeChecked = ImmutableList.<ExpectedInvoiceItemCheck>of(
+                new ExpectedInvoiceItemCheck(new LocalDate(2017, 5, 1), new LocalDate(2017, 6, 1), InvoiceItemType.REPAIR_ADJ, new BigDecimal("-19.95")),
+                new ExpectedInvoiceItemCheck(new LocalDate(2017, 5, 1), new LocalDate(2017, 5, 1), InvoiceItemType.CBA_ADJ, new BigDecimal("19.95")));
+        invoiceChecker.checkInvoice(invoices.get(1).getId(), callContext, toBeChecked);
+
+
+
+
+    }
 
 }

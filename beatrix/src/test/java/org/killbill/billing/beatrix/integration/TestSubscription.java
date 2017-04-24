@@ -30,6 +30,7 @@ import org.killbill.billing.api.TestApiListener.NextEvent;
 import org.killbill.billing.beatrix.util.InvoiceChecker.ExpectedInvoiceItemCheck;
 import org.killbill.billing.catalog.api.BillingActionPolicy;
 import org.killbill.billing.catalog.api.BillingPeriod;
+import org.killbill.billing.catalog.api.PlanPhase;
 import org.killbill.billing.catalog.api.PlanPhaseSpecifier;
 import org.killbill.billing.catalog.api.PriceListSet;
 import org.killbill.billing.catalog.api.ProductCategory;
@@ -477,6 +478,9 @@ public class TestSubscription extends TestIntegrationBase {
         assertEquals(createdEntitlement.getState(), EntitlementState.PENDING);
         assertEquals(createdEntitlement.getEffectiveStartDate().compareTo(futureDate), 0);
         assertEquals(createdEntitlement.getEffectiveEndDate(), null);
+        assertEquals(createdEntitlement.getLastActiveProduct().getName(), "Shotgun");
+        assertEquals(createdEntitlement.getLastActivePlan().getName(), "shotgun-annual");
+        assertEquals(createdEntitlement.getLastActiveProductCategory(), ProductCategory.BASE);
         assertListenerStatus();
 
 

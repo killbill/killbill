@@ -18,20 +18,12 @@
 
 package org.killbill.billing.subscription.api.user;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.UUID;
-
-import javax.annotation.Nullable;
-
+import com.google.common.base.Preconditions;
+import com.google.common.base.Predicate;
+import com.google.common.collect.Iterables;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDate;
-import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.catalog.api.BillingActionPolicy;
 import org.killbill.billing.catalog.api.BillingAlignment;
@@ -68,9 +60,14 @@ import org.killbill.clock.Clock;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Preconditions;
-import com.google.common.base.Predicate;
-import com.google.common.collect.Iterables;
+import javax.annotation.Nullable;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.UUID;
 
 public class DefaultSubscriptionBase extends EntityBase implements SubscriptionBase {
 
@@ -301,20 +298,7 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
                 clock, transitions, Order.ASC_FROM_PAST,
                 Visibility.ALL, TimeLimit.FUTURE_ONLY);
 
-        final SubscriptionBaseTransition initialPendingTransition = it.hasNext() ? it.next() : null;
-
-        // If we have multiple change aligning on the startDate we return the latest to ensure that we get access to right Plan
-        // TODO : However, this means this initial PENDING transition could be a CHANGE (which could confuse some clients, unclear)
-        SubscriptionBaseTransition result = initialPendingTransition;
-        while (it.hasNext()) {
-            final SubscriptionBaseTransition next = it.next();
-            if (next.getTransitionType() == SubscriptionBaseTransitionType.CHANGE && initialPendingTransition.getEffectiveTransitionTime().compareTo(next.getEffectiveTransitionTime()) == 0) {
-                result = next;
-            } else {
-                break;
-            }
-        }
-        return result;
+        return it.hasNext() ? it.next() : null;
     }
 
     @Override
@@ -322,6 +306,9 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
         if (getState() == EntitlementState.CANCELLED) {
             final SubscriptionBaseTransition data = getPreviousTransition();
             return data.getPreviousPlan().getProduct();
+        } else if (getState() == EntitlementState.PENDING) {
+            final SubscriptionBaseTransition data = getPendingTransition();
+            return data.getNextPlan().getProduct();
         } else {
             final Plan currentPlan = getCurrentPlan();
             // currentPlan can be null when playing with the clock (subscription created in the future)
@@ -334,6 +321,9 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
         if (getState() == EntitlementState.CANCELLED) {
             final SubscriptionBaseTransition data = getPreviousTransition();
             return data.getPreviousPriceList();
+        } else if (getState() == EntitlementState.PENDING) {
+            final SubscriptionBaseTransition data = getPendingTransition();
+            return data.getNextPriceList();
         } else {
             return getCurrentPriceList();
         }
@@ -344,6 +334,9 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
         if (getState() == EntitlementState.CANCELLED) {
             final SubscriptionBaseTransition data = getPreviousTransition();
             return data.getPreviousPlan().getProduct().getCategory();
+        } else if (getState() == EntitlementState.PENDING) {
+            final SubscriptionBaseTransition data = getPendingTransition();
+            return data.getNextPlan().getProduct().getCategory();
         } else {
             final Plan currentPlan = getCurrentPlan();
             // currentPlan can be null when playing with the clock (subscription created in the future)
@@ -356,6 +349,9 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
         if (getState() == EntitlementState.CANCELLED) {
             final SubscriptionBaseTransition data = getPreviousTransition();
             return data.getPreviousPlan();
+        } else if (getState() == EntitlementState.PENDING) {
+            final SubscriptionBaseTransition data = getPendingTransition();
+            return data.getNextPlan();
         } else {
             return getCurrentPlan();
         }
@@ -366,6 +362,9 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
         if (getState() == EntitlementState.CANCELLED) {
             final SubscriptionBaseTransition data = getPreviousTransition();
             return data.getPreviousPhase();
+        } else if (getState() == EntitlementState.PENDING) {
+            final SubscriptionBaseTransition data = getPendingTransition();
+            return data.getNextPhase();
         } else {
             return getCurrentPhase();
         }
@@ -376,6 +375,9 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
         if (getState() == EntitlementState.CANCELLED) {
             final SubscriptionBaseTransition data = getPreviousTransition();
             return data.getPreviousPlan().getRecurringBillingPeriod();
+        } else if (getState() == EntitlementState.PENDING) {
+            final SubscriptionBaseTransition data = getPendingTransition();
+            return data.getNextPlan().getRecurringBillingPeriod();
         } else {
             final Plan currentPlan = getCurrentPlan();
             // currentPlan can be null when playing with the clock (subscription created in the future)
