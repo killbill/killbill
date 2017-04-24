@@ -9,6 +9,7 @@ dist: trusty
 
 before_install:
   - echo "<settings><profiles><profile><repositories><repository><id>central</id><name>bintray</name><url>http://jcenter.bintray.com</url></repository></repositories><id>bintray</id></profile></profiles><activeProfiles><activeProfile>bintray</activeProfile></activeProfiles></settings>" > /var/tmp/settings.xml
+  - mvn install -N io.takari:maven:wrapper -Dmaven=3.3.9
 
 before_script:
   - jdk_switcher use $JDK
