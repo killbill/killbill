@@ -29,8 +29,7 @@ import org.killbill.billing.server.log.ServerTestSuiteNoDB;
 import org.killbill.billing.util.config.definition.JaxrsConfig;
 import org.testng.annotations.Test;
 
-import com.sun.jersey.api.client.ClientResponse.Status;
-
+import static javax.ws.rs.core.Response.Status.CREATED;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static org.testng.Assert.assertEquals;
@@ -50,7 +49,7 @@ public class TestBuildResponse extends ServerTestSuiteNoDB {
         JaxrsUriBuilder uriBuilder = new JaxrsUriBuilder(jaxrsConfig);
         Response response = uriBuilder.buildResponse(uriInfo, AccountResource.class, "getAccount", objectId, mockRequest(uriInfo));
 
-        assertEquals(response.getStatus(), Status.CREATED.getStatusCode());
+        assertEquals(response.getStatus(), CREATED.getStatusCode());
         assertEquals(response.getMetadata().get("Location").get(0), "/1.0/kb/accounts/" + objectId.toString());
     }
 
@@ -67,7 +66,7 @@ public class TestBuildResponse extends ServerTestSuiteNoDB {
         JaxrsUriBuilder uriBuilder = new JaxrsUriBuilder(jaxrsConfig);
         Response response = uriBuilder.buildResponse(uriInfo, AccountResource.class, "getAccount", objectId, mockRequest(uriInfo));
 
-        assertEquals(response.getStatus(), Status.CREATED.getStatusCode());
+        assertEquals(response.getStatus(), CREATED.getStatusCode());
         assertEquals(response.getMetadata().get("Location").get(0), "/killbill/1.0/kb/accounts/" + objectId.toString());
     }
 
@@ -85,7 +84,7 @@ public class TestBuildResponse extends ServerTestSuiteNoDB {
         JaxrsUriBuilder uriBuilder = new JaxrsUriBuilder(jaxrsConfig);
         Response response = uriBuilder.buildResponse(uriInfo, AccountResource.class, "getAccount", objectId, mockRequest(uriInfo));
 
-        assertEquals(response.getStatus(), Status.CREATED.getStatusCode());
+        assertEquals(response.getStatus(), CREATED.getStatusCode());
         assertEquals(response.getMetadata().get("Location").get(0).toString(), uri.toString() + "/1.0/kb/accounts/" + objectId.toString());
     }
 
@@ -103,7 +102,7 @@ public class TestBuildResponse extends ServerTestSuiteNoDB {
         JaxrsUriBuilder uriBuilder = new JaxrsUriBuilder(jaxrsConfig);
         Response response = uriBuilder.buildResponse(uriInfo, AccountResource.class, "getAccount", objectId, mockRequest(uriInfo));
 
-        assertEquals(response.getStatus(), Status.CREATED.getStatusCode());
+        assertEquals(response.getStatus(), CREATED.getStatusCode());
         assertEquals(response.getMetadata().get("Location").get(0).toString(), uri.toString() + "/1.0/kb/accounts/" + objectId.toString());
     }
 

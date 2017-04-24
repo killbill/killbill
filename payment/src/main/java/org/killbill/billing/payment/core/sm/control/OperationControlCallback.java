@@ -159,7 +159,7 @@ public abstract class OperationControlCallback extends OperationCallbackBase<Pay
         if (e.getCause() instanceof OperationException) {
             return (OperationException) e.getCause();
         }
-        logger.warn("Operation failed for accountId='{}' accountExternalKey='{}' error='{}'", paymentStateContext.getAccount().getExternalKey(), e.getMessage());
+        logger.warn("Operation failed for accountId='{}' accountExternalKey='{}' error='{}'", paymentStateContext.getAccount().getId(), paymentStateContext.getAccount().getExternalKey(), e.getMessage());
         return new OperationException(e, getOperationResultOnException(paymentStateContext));
     }
 

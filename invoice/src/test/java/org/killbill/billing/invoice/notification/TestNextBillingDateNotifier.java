@@ -31,7 +31,7 @@ import org.killbill.notificationq.api.NotificationQueue;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
-import static com.jayway.awaitility.Awaitility.await;
+import static org.awaitility.Awaitility.await;
 import static java.util.concurrent.TimeUnit.MINUTES;
 
 public class TestNextBillingDateNotifier extends InvoiceTestSuiteWithEmbeddedDB {

@@ -39,9 +39,9 @@ public class TestCSVExportOutputStream extends UtilTestSuiteNoDB {
         final String tableName = UUID.randomUUID().toString();
         out.newTable(tableName,
                      ImmutableList.<ColumnInfo>of(
-                             new DefaultColumnInfo(tableName, "first_name", 0, 0, true, 0, "varchar"),
-                             new DefaultColumnInfo(tableName, "last_name", 0, 0, true, 0, "varchar"),
-                             new DefaultColumnInfo(tableName, "age", 0, 0, true, 0, "tinyint"))
+                             new DefaultColumnInfo(tableName, "first_name", 0L, 0L, true, 0L, "varchar"),
+                             new DefaultColumnInfo(tableName, "last_name", 0L, 0L, true, 0L, "varchar"),
+                             new DefaultColumnInfo(tableName, "age", 0L, 0L, true, 0L, "tinyint"))
                     );
 
         // Write some data

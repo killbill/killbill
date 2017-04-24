@@ -615,9 +615,10 @@ public class DefaultSubscriptionInternalApi extends SubscriptionApiBase implemen
         // verify the number of subscriptions (of the same kind) allowed per bundle
         final Catalog catalog = catalogService.getFullCatalog(true, true, context);
         final DateTime now = clock.getUTCNow();
-        final DateTime effectiveDate = (requestedDateWithMs != null) ? DefaultClock.truncateMs(requestedDateWithMs) : now;
+        final DateTime effectiveDate = (requestedDateWithMs != null) ? DefaultClock.truncateMs(requestedDateWithMs) : null;
+        final DateTime effectiveCatalogDate = effectiveDate != null? effectiveDate : now;
         final PlanPhasePriceOverridesWithCallContext overridesWithContext = new DefaultPlanPhasePriceOverridesWithCallContext(overrides, callContext);
-        final Plan plan = catalog.createOrFindPlan(spec, overridesWithContext, effectiveDate);
+        final Plan plan = catalog.createOrFindPlan(spec, overridesWithContext, effectiveCatalogDate);
         if (ProductCategory.ADD_ON.toString().equalsIgnoreCase(plan.getProduct().getCategory().toString())) {
             if (plan.getPlansAllowedInBundle() != -1
                 && plan.getPlansAllowedInBundle() > 0
@@ -627,7 +628,7 @@ public class DefaultSubscriptionInternalApi extends SubscriptionApiBase implemen
                 throw new SubscriptionBaseApiException(ErrorCode.SUB_CHANGE_AO_MAX_PLAN_ALLOWED_BY_BUNDLE, plan.getName());
             }
         }
-        return apiService.dryRunChangePlan((DefaultSubscriptionBase) subscription, spec, requestedDateWithMs, requestedPolicy, tenantContext);
+        return apiService.dryRunChangePlan((DefaultSubscriptionBase) subscription, spec, effectiveDate, requestedPolicy, tenantContext);
     }
 
     @Override
@@ -729,7 +730,8 @@ public class DefaultSubscriptionInternalApi extends SubscriptionApiBase implemen
 
                 case CHANGE:
                     final DefaultSubscriptionBase subscriptionForChange = (DefaultSubscriptionBase) dao.getSubscriptionFromId(dryRunArguments.getSubscriptionId(), context);
-                    DateTime changeEffectiveDate = dryRunArguments.getEffectiveDate() != null ? context.toUTCDateTime(dryRunArguments.getEffectiveDate()) : null;
+
+                    DateTime changeEffectiveDate = getDryRunEffectiveDate(dryRunArguments.getEffectiveDate(), subscriptionForChange, context);
                     if (changeEffectiveDate == null) {
                         BillingActionPolicy policy = dryRunArguments.getBillingActionPolicy();
                         if (policy == null) {
@@ -744,7 +746,8 @@ public class DefaultSubscriptionInternalApi extends SubscriptionApiBase implemen
 
                 case STOP_BILLING:
                     final DefaultSubscriptionBase subscriptionForCancellation = (DefaultSubscriptionBase) dao.getSubscriptionFromId(dryRunArguments.getSubscriptionId(), context);
-                    DateTime cancelEffectiveDate = dryRunArguments.getEffectiveDate() != null ? context.toUTCDateTime(dryRunArguments.getEffectiveDate()) : null;
+
+                    DateTime cancelEffectiveDate = getDryRunEffectiveDate(dryRunArguments.getEffectiveDate(), subscriptionForCancellation, context);
                     if (dryRunArguments.getEffectiveDate() == null) {
                         BillingActionPolicy policy = dryRunArguments.getBillingActionPolicy();
                         if (policy == null) {
@@ -768,6 +771,21 @@ public class DefaultSubscriptionInternalApi extends SubscriptionApiBase implemen
         }
         if (dryRunEvents != null && !dryRunEvents.isEmpty()) {
             outputDryRunEvents.addAll(dryRunEvents);
+        }
+    }
+
+    private DateTime getDryRunEffectiveDate(@Nullable final LocalDate inputDate, final DefaultSubscriptionBase subscription, final InternalTenantContext context) {
+        if (inputDate == null) {
+            return null;
+        }
+
+        // We first use context account reference time to get a candidate)
+        final DateTime tmp = context.toUTCDateTime(inputDate);
+        // If we realize that the candidate is on the same LocalDate boundary as the subscription startDate but a bit prior we correct it to avoid weird things down the line
+        if (inputDate.compareTo(context.toLocalDate(subscription.getStartDate())) == 0 && tmp.compareTo(subscription.getStartDate()) < 0) {
+            return subscription.getStartDate();
+        } else {
+            return tmp;
         }
     }
 

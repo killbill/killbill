@@ -32,12 +32,17 @@ import org.killbill.billing.account.api.AccountUserApi;
 import org.killbill.billing.api.TestApiListener;
 import org.killbill.billing.api.TestApiListener.NextEvent;
 import org.killbill.billing.callcontext.InternalCallContext;
+import org.killbill.billing.catalog.api.BillingActionPolicy;
 import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.catalog.api.Duration;
 import org.killbill.billing.catalog.api.PhaseType;
+import org.killbill.billing.catalog.api.PlanPhasePriceOverride;
 import org.killbill.billing.catalog.api.PlanPhaseSpecifier;
 import org.killbill.billing.catalog.api.ProductCategory;
 import org.killbill.billing.catalog.api.TimeUnit;
+import org.killbill.billing.entitlement.api.SubscriptionEventType;
+import org.killbill.billing.invoice.api.DryRunArguments;
+import org.killbill.billing.invoice.api.DryRunType;
 import org.killbill.billing.subscription.api.SubscriptionBaseInternalApi;
 import org.killbill.billing.subscription.engine.dao.SubscriptionDao;
 import org.killbill.billing.subscription.events.SubscriptionBaseEvent;
@@ -58,23 +63,56 @@ public class TestSubscriptionHelper {
 
     private final Logger log = LoggerFactory.getLogger(TestSubscriptionHelper.class);
 
-    private final AccountUserApi accountApi;
     private final SubscriptionBaseInternalApi subscriptionApi;
     private final Clock clock;
     private final InternalCallContext internalCallContext;
-    private final CallContext callContext;
     private final TestApiListener testListener;
     private final SubscriptionDao dao;
 
     @Inject
-    public TestSubscriptionHelper(final AccountUserApi accountApi, final SubscriptionBaseInternalApi subscriptionApi, final Clock clock, final InternalCallContext internallCallContext, final CallContext callContext, final TestApiListener testListener, final SubscriptionDao dao) {
-        this.accountApi = accountApi;
+    public TestSubscriptionHelper(final SubscriptionBaseInternalApi subscriptionApi, final Clock clock, final InternalCallContext internallCallContext, final CallContext callContext, final TestApiListener testListener, final SubscriptionDao dao) {
         this.subscriptionApi = subscriptionApi;
         this.clock = clock;
         this.internalCallContext = internallCallContext;
-        this.callContext = callContext;
         this.testListener = testListener;
         this.dao = dao;
+    }
+
+    public DryRunArguments createDryRunArguments(final UUID subscriptionId, final UUID bundleId, final PlanPhaseSpecifier spec, final LocalDate requestedDate, final SubscriptionEventType type, final BillingActionPolicy billingActionPolicy) {
+        return new  DryRunArguments() {
+            @Override
+            public DryRunType getDryRunType() {
+                return DryRunType.SUBSCRIPTION_ACTION;
+            }
+            @Override
+            public PlanPhaseSpecifier getPlanPhaseSpecifier() {
+                return spec;
+            }
+            @Override
+            public SubscriptionEventType getAction() {
+                return type;
+            }
+            @Override
+            public UUID getSubscriptionId() {
+                return subscriptionId;
+            }
+            @Override
+            public LocalDate getEffectiveDate() {
+                return requestedDate;
+            }
+            @Override
+            public UUID getBundleId() {
+                return bundleId;
+            }
+            @Override
+            public BillingActionPolicy getBillingActionPolicy() {
+                return billingActionPolicy;
+            }
+            @Override
+            public List<PlanPhasePriceOverride> getPlanPhasePriceOverrides() {
+                return null;
+            }
+        };
     }
 
     public DefaultSubscriptionBase createSubscription(final SubscriptionBaseBundle bundle, final String productName, final BillingPeriod term, final String planSet, final DateTime requestedDate)
@@ -89,7 +127,10 @@ public class TestSubscriptionHelper {
 
     public DefaultSubscriptionBase createSubscriptionWithBundle(final UUID bundleId, final String productName, final BillingPeriod term, final String planSet, final DateTime requestedDate)
             throws SubscriptionBaseApiException {
-        testListener.pushExpectedEvent(NextEvent.CREATE);
+
+        if (requestedDate == null || requestedDate.compareTo(clock.getUTCNow()) <= 0) {
+            testListener.pushExpectedEvent(NextEvent.CREATE);
+        }
         final DefaultSubscriptionBase subscription = (DefaultSubscriptionBase) subscriptionApi.createSubscription(bundleId,
                                                                                                                   new PlanPhaseSpecifier(productName, term, planSet, null), null,
                                                                                                                   requestedDate == null ? clock.getUTCNow() : requestedDate, false, internalCallContext);

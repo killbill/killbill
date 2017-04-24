@@ -1,6 +1,6 @@
 /*
- * Copyright 2014-2015 Groupon, Inc
- * Copyright 2014-2015 The Billing Project, LLC
+ * Copyright 2014-2017 Groupon, Inc
+ * Copyright 2014-2017 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -62,5 +62,18 @@ public class BroadcastModelDao {
 
     public String getCreatedBy() {
         return createdBy;
+    }
+
+    @Override
+    public String toString() {
+        final StringBuilder sb = new StringBuilder("BroadcastModelDao{");
+        sb.append("recordId=").append(recordId);
+        sb.append(", serviceName='").append(serviceName).append('\'');
+        sb.append(", type='").append(type).append('\'');
+        sb.append(", event='").append(event).append('\'');
+        sb.append(", createdDate=").append(createdDate);
+        sb.append(", createdBy='").append(createdBy).append('\'');
+        sb.append('}');
+        return sb.toString();
     }
 }

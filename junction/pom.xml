@@ -45,11 +45,6 @@
             <scope>provided</scope>
         </dependency>
         <dependency>
-            <groupId>com.jayway.awaitility</groupId>
-            <artifactId>awaitility</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
             <groupId>io.airlift</groupId>
             <artifactId>command</artifactId>
             <scope>test</scope>
@@ -71,6 +66,11 @@
         <dependency>
             <groupId>mysql</groupId>
             <artifactId>mysql-connector-mxj</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.awaitility</groupId>
+            <artifactId>awaitility</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>

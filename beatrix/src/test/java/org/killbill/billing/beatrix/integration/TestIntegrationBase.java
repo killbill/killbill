@@ -18,18 +18,15 @@
 
 package org.killbill.billing.beatrix.integration;
 
-import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
-import java.util.concurrent.Callable;
-
-import javax.annotation.Nullable;
-import javax.inject.Inject;
-import javax.inject.Named;
-
+import com.google.common.base.Function;
+import com.google.common.base.Joiner;
+import com.google.common.base.Predicate;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
+import com.google.inject.Guice;
+import com.google.inject.Injector;
+import com.google.inject.Stage;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDate;
@@ -129,17 +126,18 @@ import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
 
-import com.google.common.base.Function;
-import com.google.common.base.Joiner;
-import com.google.common.base.Predicate;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Iterables;
-import com.google.common.collect.Lists;
-import com.google.inject.Guice;
-import com.google.inject.Injector;
-import com.google.inject.Stage;
+import javax.annotation.Nullable;
+import javax.inject.Inject;
+import javax.inject.Named;
+import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+import java.util.concurrent.Callable;
 
-import static com.jayway.awaitility.Awaitility.await;
+import static org.awaitility.Awaitility.await;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
@@ -427,19 +425,22 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB {
         return new TestPaymentMethodPlugin();
     }
 
-    protected AccountData getAccountData(final int billingDay) {
-        return new MockAccountBuilder().name(UUID.randomUUID().toString().substring(1, 8))
-                                       .firstNameLength(6)
-                                       .email(UUID.randomUUID().toString().substring(1, 8))
-                                       .phone(UUID.randomUUID().toString().substring(1, 8))
-                                       .migrated(false)
-                                       .isNotifiedForInvoices(false)
-                                       .externalKey(UUID.randomUUID().toString().substring(1, 8))
-                                       .billingCycleDayLocal(billingDay)
-                                       .currency(Currency.USD)
-                                       .paymentMethodId(UUID.randomUUID())
-                                       .timeZone(DateTimeZone.UTC)
-                                       .build();
+    protected AccountData getAccountData(@Nullable final Integer billingDay) {
+        final MockAccountBuilder builder = new MockAccountBuilder()
+                .name(UUID.randomUUID().toString().substring(1, 8))
+                .firstNameLength(6)
+                .email(UUID.randomUUID().toString().substring(1, 8))
+                .phone(UUID.randomUUID().toString().substring(1, 8))
+                .migrated(false)
+                .isNotifiedForInvoices(false)
+                .externalKey(UUID.randomUUID().toString().substring(1, 8))
+                .currency(Currency.USD)
+                .paymentMethodId(UUID.randomUUID())
+                .timeZone(DateTimeZone.UTC);
+        if (billingDay != null) {
+            builder.billingCycleDayLocal(billingDay);
+        }
+        return builder.build();
     }
 
     protected AccountData getChildAccountData(final int billingDay, final UUID parentAccountId, final boolean isPaymentDelegatedToParent) {

@@ -1,6 +1,6 @@
 /*
- * Copyright 2014-2015 Groupon, Inc
- * Copyright 2014-2015 The Billing Project, LLC
+ * Copyright 2014-2017 Groupon, Inc
+ * Copyright 2014-2017 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -29,8 +29,7 @@ public class TestBroadcastDao extends UtilTestSuiteWithEmbeddedDB {
 
     @Test(groups = "slow")
     public void testBasic() throws Exception {
-
-        DateTime now = clock.getUTCNow();
+        final DateTime now = clock.getUTCNow();
 
         final BroadcastModelDao b1 = new BroadcastModelDao("svc1", "type1", "{attribute: kewl}", now, "tester");
         broadcastDao.create(b1);
@@ -43,8 +42,7 @@ public class TestBroadcastDao extends UtilTestSuiteWithEmbeddedDB {
         final List<BroadcastModelDao> all = broadcastDao.getLatestEntriesFrom(0L);
         assertEquals(all.size(), 1);
 
-        final List<BroadcastModelDao> none = broadcastDao.getLatestEntriesFrom(1L);
-        assertEquals(none.size(), 0);
-
+        final List<BroadcastModelDao> none = broadcastDao.getLatestEntriesFrom(res.getRecordId());
+        assertEquals(none.size(), 0, "Invalid entries: " + none.toString());
     }
 }

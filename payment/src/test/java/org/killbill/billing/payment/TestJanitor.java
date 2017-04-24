@@ -63,7 +63,6 @@ import org.skife.config.TimeSpan;
 import org.skife.jdbi.v2.Handle;
 import org.skife.jdbi.v2.tweak.HandleCallback;
 import org.testng.Assert;
-import org.testng.annotations.AfterClass;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
@@ -74,7 +73,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 import com.google.inject.Inject;
 
-import static com.jayway.awaitility.Awaitility.await;
+import static org.awaitility.Awaitility.await;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.fail;
@@ -403,9 +402,9 @@ public class TestJanitor extends PaymentTestSuiteWithEmbeddedDB {
                                                            "loup", "chat", internalCallContext);
         testListener.assertListenerStatus();
 
-        // Move clock for notification to be processed
+        // Move clock for notification to be processed ((default config is set for one hour)
         testListener.pushExpectedEvent(NextEvent.PAYMENT);
-        clock.addDeltaFromReality(5 * 60 * 1000);
+        clock.addDeltaFromReality(1000 * (3600 + 1));
 
         assertNotificationsCompleted(internalCallContext, 5);
         testListener.assertListenerStatus();
@@ -442,8 +441,8 @@ public class TestJanitor extends PaymentTestSuiteWithEmbeddedDB {
                                                            "loup", "chat", internalCallContext);
         testListener.assertListenerStatus();
 
-        // 15s,1m,3m,1h,1d,1d,1d,1d,1d
-        for (final TimeSpan cur : paymentConfig.getIncompleteTransactionsRetries(internalCallContext)) {
+        // 1h, 1d
+        for (final TimeSpan cur : paymentConfig.getPendingTransactionsRetries(internalCallContext)) {
             // Verify there is a notification to retry updating the value
             assertEquals(getPendingNotificationCnt(internalCallContext), 1);
 

@@ -84,17 +84,31 @@ public class MultiTenantPaymentConfig extends MultiTenantConfigBase implements P
     }
 
     @Override
-    public List<TimeSpan> getIncompleteTransactionsRetries() {
-        return staticConfig.getIncompleteTransactionsRetries();
+    public List<TimeSpan> getUnknownTransactionsRetries() {
+        return staticConfig.getUnknownTransactionsRetries();
     }
 
     @Override
-    public List<TimeSpan> getIncompleteTransactionsRetries(@Param("dummy") final InternalTenantContext tenantContext) {
-        final String result = getStringTenantConfig("getIncompleteTransactionsRetries", tenantContext);
+    public List<TimeSpan> getUnknownTransactionsRetries(@Param("dummy") final InternalTenantContext tenantContext) {
+        final String result = getStringTenantConfig("getUnknownTransactionsRetries", tenantContext);
         if (result != null) {
-            return convertToListTimeSpan(result, "getIncompleteTransactionsRetries");
+            return convertToListTimeSpan(result, "getUnknownTransactionsRetries");
         }
-        return getIncompleteTransactionsRetries();
+        return getUnknownTransactionsRetries();
+    }
+
+    @Override
+    public List<TimeSpan> getPendingTransactionsRetries() {
+        return staticConfig.getPendingTransactionsRetries();
+    }
+
+    @Override
+    public List<TimeSpan> getPendingTransactionsRetries(@Param("dummy") final InternalTenantContext tenantContext) {
+        final String result = getStringTenantConfig("getPendingTransactionsRetries", tenantContext);
+        if (result != null) {
+            return convertToListTimeSpan(result, "getPendingTransactionsRetries");
+        }
+        return getPendingTransactionsRetries();
     }
 
     @Override
