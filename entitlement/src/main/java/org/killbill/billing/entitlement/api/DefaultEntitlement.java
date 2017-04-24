@@ -687,9 +687,9 @@ public class DefaultEntitlement extends EntityBase implements Entitlement {
     }
 
     @Override
-    public Entitlement changePlanOverrideBillingPolicy(final PlanSpecifier spec, final List<PlanPhasePriceOverride> overrides, final LocalDate effectiveDate, final BillingActionPolicy actionPolicy, final Iterable<PluginProperty> properties, final CallContext callContext) throws EntitlementApiException {
+    public Entitlement changePlanOverrideBillingPolicy(final PlanSpecifier spec, final List<PlanPhasePriceOverride> overrides, final LocalDate unused, final BillingActionPolicy actionPolicy, final Iterable<PluginProperty> properties, final CallContext callContext) throws EntitlementApiException {
 
-        logChangePlan(log, this, spec, overrides, effectiveDate, actionPolicy);
+        logChangePlan(log, this, spec, overrides, null, actionPolicy);
 
         checkForPermissions(Permission.ENTITLEMENT_CAN_CHANGE_PLAN, callContext);
 
@@ -700,7 +700,7 @@ public class DefaultEntitlement extends EntityBase implements Entitlement {
                 getBundleId(),
                 getExternalKey(),
                 null,
-                effectiveDate,
+                null,
                 null,
                 false);
         final List<BaseEntitlementWithAddOnsSpecifier> baseEntitlementWithAddOnsSpecifierList = new ArrayList<BaseEntitlementWithAddOnsSpecifier>();
@@ -717,23 +717,17 @@ public class DefaultEntitlement extends EntityBase implements Entitlement {
             @Override
             public Entitlement doCall(final EntitlementApi entitlementApi, final EntitlementContext updatedPluginContext) throws EntitlementApiException {
 
-                if (effectiveDate != null && effectiveDate.compareTo(eventsStream.getEntitlementEffectiveStartDate()) < 0) {
-                    throw new EntitlementApiException(ErrorCode.SUB_CHANGE_NON_ACTIVE, getId(), getState());
-                }
 
                 final InternalCallContext context = internalCallContextFactory.createInternalCallContext(getAccountId(), callContext);
 
-                final DateTime effectiveChangeDate = effectiveDate !=  null ? dateHelper.fromLocalDateAndReferenceTime(effectiveDate, context) : null;
-
                 final DateTime resultingEffectiveDate;
                 try {
-                    resultingEffectiveDate = subscriptionInternalApi.getDryRunChangePlanEffectiveDate(getSubscriptionBase(), spec, effectiveChangeDate, actionPolicy, overrides, context);
+                    resultingEffectiveDate = subscriptionInternalApi.getDryRunChangePlanEffectiveDate(getSubscriptionBase(), spec, null, actionPolicy, overrides, context);
                 } catch (final SubscriptionBaseApiException e) {
                     throw new EntitlementApiException(e, e.getCode(), e.getMessage());
                 } catch (final CatalogApiException e) {
                     throw new EntitlementApiException(e, e.getCode(), e.getMessage());
                 }
-
                 try {
                     checker.checkBlockedChange(getSubscriptionBase(), resultingEffectiveDate, context);
                 } catch (final BlockingApiException e) {

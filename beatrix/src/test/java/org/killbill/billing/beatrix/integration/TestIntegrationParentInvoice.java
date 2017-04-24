@@ -179,7 +179,7 @@ public class TestIntegrationParentInvoice extends TestIntegrationBase {
 
         // upgrade plan
         busHandler.pushExpectedEvents(NextEvent.CHANGE, NextEvent.INVOICE);
-        baseEntitlementChild.changePlanOverrideBillingPolicy(new PlanSpecifier("Shotgun", BillingPeriod.MONTHLY, baseEntitlementChild.getLastActivePriceList().getName()), null, clock.getToday(childAccount.getTimeZone()), BillingActionPolicy.IMMEDIATE, null, callContext);
+        baseEntitlementChild.changePlanWithDate(new PlanSpecifier("Shotgun", BillingPeriod.MONTHLY, baseEntitlementChild.getLastActivePriceList().getName()), null, null,null, callContext);
         assertListenerStatus();
 
         // check parent invoice. Expected to have the same invoice item with the amount updated

@@ -514,15 +514,6 @@ public class TestDefaultSubscriptionApi extends EntitlementTestSuiteWithEmbedded
             final Entitlement latestEntitlement = entitlementApi.getEntitlementForId(entitlement.getId(), callContext);
             assertEquals(latestEntitlement.getLastActivePlan().getProduct().getName(), "Shotgun");
         }
-
-        try {
-            entitlement.changePlanOverrideBillingPolicy(new PlanSpecifier("Assault-Rifle", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME), null, clock.getUTCToday(), BillingActionPolicy.IMMEDIATE, ImmutableList.<PluginProperty>of(), callContext);
-            fail();
-        } catch (final EntitlementApiException e) {
-            assertEquals(e.getCode(), ErrorCode.BLOCK_BLOCKED_ACTION.getCode());
-            final Entitlement latestEntitlement = entitlementApi.getEntitlementForId(entitlement.getId(), callContext);
-            assertEquals(latestEntitlement.getLastActivePlan().getProduct().getName(), "Shotgun");
-        }
     }
 
     @Test(groups = "slow")

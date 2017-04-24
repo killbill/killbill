@@ -567,7 +567,7 @@ public class SubscriptionResource extends JaxRsResourceBase {
                     newEntitlement = current.changePlanWithDate(planSpec, overrides, inputLocalDate, pluginProperties, ctx);
                 } else {
                     final BillingActionPolicy policy = BillingActionPolicy.valueOf(policyString.toUpperCase());
-                    newEntitlement = current.changePlanOverrideBillingPolicy(planSpec, overrides, inputLocalDate, policy, pluginProperties, ctx);
+                    newEntitlement = current.changePlanOverrideBillingPolicy(planSpec, overrides, null, policy, pluginProperties, ctx);
                 }
                 isImmediateOp = newEntitlement.getLastActiveProduct().getName().equals(entitlement.getProductName()) &&
                                 newEntitlement.getLastActivePlan().getRecurringBillingPeriod() == BillingPeriod.valueOf(entitlement.getBillingPeriod()) &&
