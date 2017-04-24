@@ -42,7 +42,7 @@ public class TestBroadcastDao extends UtilTestSuiteWithEmbeddedDB {
         final List<BroadcastModelDao> all = broadcastDao.getLatestEntriesFrom(0L);
         assertEquals(all.size(), 1);
 
-        final List<BroadcastModelDao> none = broadcastDao.getLatestEntriesFrom(1L);
-        assertEquals(none.size(), 0, none.isEmpty() ? null : "Invalid entry: " + none.get(0).toString());
+        final List<BroadcastModelDao> none = broadcastDao.getLatestEntriesFrom(res.getRecordId());
+        assertEquals(none.size(), 0, "Invalid entries: " + none.toString());
     }
 }
