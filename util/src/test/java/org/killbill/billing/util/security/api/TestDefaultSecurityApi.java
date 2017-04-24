@@ -1,7 +1,9 @@
 /*
- * Copyright 2010-2013 Ning, Inc.
+ * Copyright 2010-2014 Ning, Inc.
+ * Copyright 2014-2017 Groupon, Inc
+ * Copyright 2014-2017 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -36,8 +38,9 @@ public class TestDefaultSecurityApi extends UtilTestSuiteNoDB {
         // We don't want the Guice injected one (it has Shiro disabled)
         final SecurityApi securityApi = new DefaultSecurityApi(null);
 
+        logout();
         final Set<Permission> anonsPermissions = securityApi.getCurrentUserPermissions(callContext);
-        Assert.assertEquals(anonsPermissions.size(), 0);
+        Assert.assertEquals(anonsPermissions.size(), 0, "Invalid permissions: " + anonsPermissions);
 
         login("pierre");
         final Set<Permission> pierresPermissions = securityApi.getCurrentUserPermissions(callContext);
