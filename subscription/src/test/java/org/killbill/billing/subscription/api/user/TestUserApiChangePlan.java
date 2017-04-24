@@ -38,13 +38,21 @@ import org.killbill.billing.subscription.SubscriptionTestSuiteWithEmbeddedDB;
 import org.killbill.billing.subscription.api.SubscriptionBase;
 import org.killbill.billing.subscription.api.SubscriptionBaseTransitionType;
 import org.killbill.billing.subscription.api.SubscriptionBillingApiException;
+import org.killbill.billing.subscription.engine.dao.SubscriptionEventSqlDao;
+import org.killbill.billing.subscription.engine.dao.model.SubscriptionEventModelDao;
 import org.killbill.billing.subscription.events.SubscriptionBaseEvent;
 import org.killbill.billing.subscription.events.user.ApiEvent;
+import org.killbill.billing.subscription.events.user.ApiEventType;
+import org.skife.jdbi.v2.Handle;
+import org.skife.jdbi.v2.IDBI;
+import org.skife.jdbi.v2.tweak.HandleCallback;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
+import javax.inject.Inject;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
@@ -53,6 +61,9 @@ import static org.testng.Assert.assertTrue;
 import static org.testng.Assert.fail;
 
 public class TestUserApiChangePlan extends SubscriptionTestSuiteWithEmbeddedDB {
+
+    @Inject
+    private IDBI dbi;
 
     private void checkChangePlan(final DefaultSubscriptionBase subscription, final String expProduct, final ProductCategory expCategory,
                                  final BillingPeriod expBillingPeriod, final PhaseType expPhase) {
@@ -513,6 +524,25 @@ public class TestUserApiChangePlan extends SubscriptionTestSuiteWithEmbeddedDB {
         assertEquals(((DefaultSubscriptionBase) result2.get(0)).getCurrentOrPendingPlan().getName(), "pistol-monthly");
 
 
+        // To spice up the test, we insert manually an additional CHANGE event on the exact same dateas the CREATE to verify that code will also invalidate such event when doing the changePlanXX
+
+        final SubscriptionEventModelDao event = new SubscriptionEventModelDao(subscription.getEvents().get(0));
+        event.setId(UUID.randomUUID());
+        event.setUserType(ApiEventType.CHANGE);
+        event.setPlanName("blowdart-monthly");
+        event.setPhaseName("blowdart-monthly-trial");
+        dbi.withHandle(new HandleCallback<Void>() {
+            @Override
+            public Void withHandle(Handle handle) throws Exception {
+                final SubscriptionEventSqlDao sqlDao = handle.attach(SubscriptionEventSqlDao.class);
+                sqlDao.create(event, internalCallContext);
+                return null;
+            }
+        });
+
+        final DefaultSubscriptionBase refreshed1 =  (DefaultSubscriptionBase) subscriptionInternalApi.getSubscriptionFromId(subscription.getId(), internalCallContext);
+        assertEquals(refreshed1.getEvents().size(), subscription.getEvents().size() + 1);
+
         subscription.changePlanWithDate(spec, null, startDate, callContext);
         assertListenerStatus();
 
@@ -525,6 +555,8 @@ public class TestUserApiChangePlan extends SubscriptionTestSuiteWithEmbeddedDB {
         assertEquals(subscription2.getStartDate().compareTo(startDate), 0);
         assertEquals(subscription2.getState(), Entitlement.EntitlementState.ACTIVE);
         assertEquals(subscription2.getCurrentPlan().getProduct().getName(), "Pistol");
+        // Same original # active events
+        assertEquals(subscription2.getEvents().size(), subscription.getEvents().size());
     }
 
 }

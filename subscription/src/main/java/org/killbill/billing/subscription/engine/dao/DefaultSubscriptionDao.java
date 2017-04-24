@@ -679,7 +679,7 @@ public class DefaultSubscriptionDao extends EntityDaoBase<SubscriptionBundleMode
                     // Rebuild input event list with first the CREATE event and all original input events except for inputChangeEvent
                     inputChangeEvents = new ArrayList<SubscriptionBaseEvent>();
                     final SubscriptionBaseEvent newCreateEvent = new ApiEventBuilder((ApiEventChange) inputChangeEvent)
-                            .setApiEventType(ApiEventType.CREATE)
+                            .setApiEventType(firstSubscriptionEvent.getUserType())
                             .build();
 
                     originalInputChangeEvents.remove(0);
