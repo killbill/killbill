@@ -65,6 +65,8 @@ public class TestAccountTimeline extends TestJaxrsBase {
         Assert.assertEquals(timeline.getBundles().size(), 1);
         Assert.assertEquals(timeline.getBundles().get(0).getSubscriptions().size(), 1);
         Assert.assertEquals(timeline.getBundles().get(0).getSubscriptions().get(0).getEvents().size(), 3);
+        Assert.assertNotNull(timeline.getInvoices().get(0).getBundleKeys());
+
         final List<EventSubscription> events = timeline.getBundles().get(0).getSubscriptions().get(0).getEvents();
         Assert.assertEquals(events.get(0).getEffectiveDate(), new LocalDate(2012, 4, 25));
         Assert.assertEquals(events.get(0).getEventType(), "START_ENTITLEMENT");
