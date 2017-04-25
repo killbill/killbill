@@ -414,11 +414,13 @@ public class TestUserApiCancel extends SubscriptionTestSuiteWithEmbeddedDB {
             subscription = (DefaultSubscriptionBase) subscriptionInternalApi.getSubscriptionFromId(subscription.getId(), internalCallContext);
             assertEquals(subscription.getState(), EntitlementState.PENDING);
 
+            testListener.pushExpectedEvents(NextEvent.UNCANCEL);
             subscription.uncancel(callContext);
+            assertListenerStatus();
         }
 
         // Now check we are on the right state (as if nothing had happened)
-        testListener.pushExpectedEvents(NextEvent.CREATE, NextEvent.UNCANCEL, NextEvent.UNCANCEL, NextEvent.UNCANCEL);
+        testListener.pushExpectedEvents(NextEvent.CREATE);
         clock.addDays(10);
         assertListenerStatus();
 
