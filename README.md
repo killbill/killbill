@@ -17,6 +17,16 @@ You can find more information on [killbill.io](http://killbill.io).
 * [User guides](http://killbill.io/userguide/) (source in the [killbill-docs](https://github.com/killbill/killbill-docs) repo)
 * [Wiki](https://github.com/killbill/killbill/wiki)
 
+## Build
+
+Build is handled by Maven:
+
+```
+mvn clean install -DskipTests=true
+```
+
+Note: some third-party artifacts (such as metrics-guice) are released in Bintray. Make sure to follow the instructions [here](https://bintray.com/bintray/jcenter) (Set me up! button) to update your settings.xml.
+
 ## License
 
 Kill Bill is released under the [Apache license](http://www.apache.org/licenses/LICENSE-2.0).
