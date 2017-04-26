@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014-2015 Groupon, Inc
- * Copyright 2014-2015 The Billing Project, LLC
+ * Copyright 2014-2017 Groupon, Inc
+ * Copyright 2014-2017 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -18,11 +18,17 @@
 
 package org.killbill.billing.subscription.api.user;
 
-import com.google.common.base.Preconditions;
-import com.google.common.base.Predicate;
-import com.google.common.collect.Iterables;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.UUID;
+
+import javax.annotation.Nullable;
+
 import org.joda.time.DateTime;
-import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDate;
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.catalog.api.BillingActionPolicy;
@@ -60,14 +66,9 @@ import org.killbill.clock.Clock;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.annotation.Nullable;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.UUID;
+import com.google.common.base.Preconditions;
+import com.google.common.base.Predicate;
+import com.google.common.collect.Iterables;
 
 public class DefaultSubscriptionBase extends EntityBase implements SubscriptionBase {
 
@@ -261,8 +262,8 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
     }
 
     @Override
-    public boolean cancelWithPolicy(final BillingActionPolicy policy, final DateTimeZone accountTimeZone, int accountBillCycleDayLocal, final CallContext context) throws SubscriptionBaseApiException {
-        return apiService.cancelWithPolicy(this, policy, accountTimeZone, accountBillCycleDayLocal, context);
+    public boolean cancelWithPolicy(final BillingActionPolicy policy, int accountBillCycleDayLocal, final CallContext context) throws SubscriptionBaseApiException {
+        return apiService.cancelWithPolicy(this, policy, accountBillCycleDayLocal, context);
     }
 
     @Override
@@ -571,7 +572,7 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
         return getFutureEndDate() != null;
     }
 
-    public DateTime getPlanChangeEffectiveDate(final BillingActionPolicy policy, @Nullable final BillingAlignment alignment, @Nullable final DateTimeZone accountTimeZone, @Nullable final Integer accountBillCycleDayLocal, final InternalTenantContext context) {
+    public DateTime getPlanChangeEffectiveDate(final BillingActionPolicy policy, @Nullable final BillingAlignment alignment, @Nullable final Integer accountBillCycleDayLocal, final InternalTenantContext context) {
 
         final DateTime candidateResult;
         switch (policy) {
@@ -587,7 +588,7 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
                 } else {
 
                     // In certain path (dryRun, or default catalog START_OF_TERM policy), the info is not easily available and as a result, such policy is not implemented
-                    Preconditions.checkState(alignment != null && accountTimeZone != null && accountBillCycleDayLocal != null, "START_OF_TERM not implemented in dryRun use case");
+                    Preconditions.checkState(alignment != null && context != null && accountBillCycleDayLocal != null, "START_OF_TERM not implemented in dryRun use case");
 
                     Preconditions.checkState(alignment != BillingAlignment.BUNDLE || category != ProductCategory.ADD_ON,  "START_OF_TERM not implemented for AO configured with a BUNDLE billing alignment");
 
@@ -595,7 +596,7 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
                     // alignment purpose
                     Integer bcd = getBillCycleDayLocal();
                     if (bcd == null) {
-                        bcd = BillCycleDayCalculator.calculateBcdForAlignment(null, this, this, alignment, accountTimeZone, accountBillCycleDayLocal);
+                        bcd = BillCycleDayCalculator.calculateBcdForAlignment(null, this, this, alignment, context, accountBillCycleDayLocal);
                     }
 
                     final BillingPeriod billingPeriod = getLastActivePlan().getRecurringBillingPeriod();
@@ -604,7 +605,7 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
                         proposedDate = proposedDate.minus(billingPeriod.getPeriod());
                     }
 
-                    final LocalDate resultingLocalDate  = BillCycleDayCalculator.alignProposedBillCycleDate(proposedDate, bcd, billingPeriod, accountTimeZone);
+                    final LocalDate resultingLocalDate  = BillCycleDayCalculator.alignProposedBillCycleDate(proposedDate, bcd, billingPeriod, context);
                     candidateResult = context.toUTCDateTime(resultingLocalDate);
                 }
 

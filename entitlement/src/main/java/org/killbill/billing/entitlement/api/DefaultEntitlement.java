@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014-2016 Groupon, Inc
- * Copyright 2014-2016 The Billing Project, LLC
+ * Copyright 2014-2017 Groupon, Inc
+ * Copyright 2014-2017 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -18,9 +18,16 @@
 
 package org.killbill.billing.entitlement.api;
 
-import com.google.common.collect.ImmutableList;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.UUID;
+
+import javax.annotation.Nullable;
+
 import org.joda.time.DateTime;
-import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDate;
 import org.killbill.billing.ErrorCode;
 import org.killbill.billing.callcontext.InternalCallContext;
@@ -67,13 +74,7 @@ import org.killbill.notificationq.api.NotificationQueueService.NoSuchNotificatio
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.annotation.Nullable;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.UUID;
+import com.google.common.collect.ImmutableList;
 
 import static org.killbill.billing.entitlement.logging.EntitlementLoggingHelper.logCancelEntitlement;
 import static org.killbill.billing.entitlement.logging.EntitlementLoggingHelper.logChangePlan;
@@ -153,10 +154,6 @@ public class DefaultEntitlement extends EntityBase implements Entitlement {
 
     public EventsStream getEventsStream() {
         return eventsStream;
-    }
-
-    public DateTimeZone getAccountTimeZone() {
-        return eventsStream.getAccountTimeZone();
     }
 
     // Subscription associated with this entitlement (equals to baseSubscription for base subscriptions)
@@ -496,7 +493,7 @@ public class DefaultEntitlement extends EntityBase implements Entitlement {
 
                 try {
                     // Cancel subscription base first, to correctly compute the add-ons entitlements we need to cancel (see below)
-                    getSubscriptionBase().cancelWithPolicy(billingPolicy, eventsStream.getAccountTimeZone(), eventsStream.getDefaultBillCycleDayLocal(), callContext);
+                    getSubscriptionBase().cancelWithPolicy(billingPolicy, eventsStream.getDefaultBillCycleDayLocal(), callContext);
                 } catch (final SubscriptionBaseApiException e) {
                     throw new EntitlementApiException(e);
                 }

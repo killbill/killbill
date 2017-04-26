@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014-2016 Groupon, Inc
- * Copyright 2014-2016 The Billing Project, LLC
+ * Copyright 2014-2017 Groupon, Inc
+ * Copyright 2014-2017 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -37,7 +37,6 @@ import org.joda.time.LocalDate;
 import org.killbill.billing.account.api.AccountApiException;
 import org.killbill.billing.account.api.AccountInternalApi;
 import org.killbill.billing.callcontext.InternalCallContext;
-import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.catalog.api.BillingActionPolicy;
 import org.killbill.billing.entitlement.DefaultEntitlementService;
 import org.killbill.billing.entitlement.EntitlementInternalApi;
@@ -210,7 +209,7 @@ public class DefaultEntitlementInternalApi extends DefaultEntitlementApiBase imp
         @Override
         public Void call() throws Exception {
             try {
-                subscriptionInternalApi.cancelBaseSubscriptions(subscriptions, billingPolicy, accountTimeZone, accountBillCycleDayLocal, callContext);
+                subscriptionInternalApi.cancelBaseSubscriptions(subscriptions, billingPolicy, accountBillCycleDayLocal, callContext);
             } catch (final SubscriptionBaseApiException e) {
                 throw new EntitlementApiException(e);
             }

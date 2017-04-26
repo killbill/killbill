@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2011 Ning, Inc.
- * Copyright 2014-2016 Groupon, Inc
- * Copyright 2014-2016 The Billing Project, LLC
+ * Copyright 2014-2017 Groupon, Inc
+ * Copyright 2014-2017 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -25,7 +25,6 @@ import java.util.UUID;
 import javax.annotation.Nullable;
 
 import org.joda.time.DateTime;
-import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDate;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
@@ -50,7 +49,7 @@ public interface SubscriptionBaseInternalApi {
     public List<SubscriptionBaseWithAddOns> createBaseSubscriptionsWithAddOns(UUID accountId, Iterable<BaseEntitlementWithAddOnsSpecifier> baseEntitlementWithAddOnsSpecifier,
                                                                               InternalCallContext contextWithValidAccountRecordId) throws SubscriptionBaseApiException;
 
-    public void cancelBaseSubscriptions(Iterable<SubscriptionBase> subscriptions, BillingActionPolicy policy, DateTimeZone accountTimeZone, int accountBillCycleDayLocal, InternalCallContext context) throws SubscriptionBaseApiException;
+    public void cancelBaseSubscriptions(Iterable<SubscriptionBase> subscriptions, BillingActionPolicy policy, int accountBillCycleDayLocal, InternalCallContext context) throws SubscriptionBaseApiException;
 
     public SubscriptionBaseBundle createBundleForAccount(UUID accountId, String bundleName, InternalCallContext context)
             throws SubscriptionBaseApiException;
@@ -101,5 +100,5 @@ public interface SubscriptionBaseInternalApi {
 
     public void updateBCD(final UUID subscriptionId, final int bcd, @Nullable final LocalDate effectiveFromDate, final InternalCallContext internalCallContext) throws SubscriptionBaseApiException;
 
-    public int getDefaultBillCycleDayLocal(final Map<UUID, Integer> bcdCache, final SubscriptionBase subscription, final SubscriptionBase baseSubscription, final PlanPhaseSpecifier planPhaseSpecifier, final DateTimeZone accountTimeZone, final int accountBillCycleDayLocal, final DateTime effectiveDate, final InternalTenantContext context) throws SubscriptionBaseApiException;
+    public int getDefaultBillCycleDayLocal(final Map<UUID, Integer> bcdCache, final SubscriptionBase subscription, final SubscriptionBase baseSubscription, final PlanPhaseSpecifier planPhaseSpecifier, final int accountBillCycleDayLocal, final DateTime effectiveDate, final InternalTenantContext context) throws SubscriptionBaseApiException;
 }

@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014-2016 Groupon, Inc
- * Copyright 2014-2016 The Billing Project, LLC
+ * Copyright 2014-2017 Groupon, Inc
+ * Copyright 2014-2017 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -22,7 +22,6 @@ import java.util.List;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
-import org.joda.time.DateTimeZone;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.catalog.api.BillingActionPolicy;
@@ -33,7 +32,6 @@ import org.killbill.billing.catalog.api.PlanChangeResult;
 import org.killbill.billing.catalog.api.PlanPhasePriceOverride;
 import org.killbill.billing.catalog.api.PlanSpecifier;
 import org.killbill.billing.subscription.api.user.DefaultSubscriptionBase;
-import org.killbill.billing.subscription.api.user.DefaultSubscriptionBaseWithAddOns;
 import org.killbill.billing.subscription.api.user.SubscriptionAndAddOnsSpecifier;
 import org.killbill.billing.subscription.api.user.SubscriptionBaseApiException;
 import org.killbill.billing.subscription.api.user.SubscriptionBuilder;
@@ -57,10 +55,10 @@ public interface SubscriptionBaseApiService {
     public boolean cancelWithRequestedDate(DefaultSubscriptionBase subscription, DateTime requestedDate, CallContext context)
             throws SubscriptionBaseApiException;
 
-    public boolean cancelWithPolicy(DefaultSubscriptionBase subscription, BillingActionPolicy policy, DateTimeZone accountTimeZone, int accountBillCycleDayLocal, CallContext context)
+    public boolean cancelWithPolicy(DefaultSubscriptionBase subscription, BillingActionPolicy policy, int accountBillCycleDayLocal, CallContext context)
             throws SubscriptionBaseApiException;
 
-    public boolean cancelWithPolicyNoValidation(Iterable<DefaultSubscriptionBase> subscriptions, BillingActionPolicy policy, DateTimeZone accountTimeZone, int accountBillCycleDayLocal, InternalCallContext context)
+    public boolean cancelWithPolicyNoValidation(Iterable<DefaultSubscriptionBase> subscriptions, BillingActionPolicy policy, int accountBillCycleDayLocal, InternalCallContext context)
             throws SubscriptionBaseApiException;
 
     public boolean uncancel(DefaultSubscriptionBase subscription, CallContext context)

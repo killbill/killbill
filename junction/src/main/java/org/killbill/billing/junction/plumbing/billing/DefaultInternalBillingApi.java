@@ -33,6 +33,7 @@ import org.killbill.billing.account.api.AccountApiException;
 import org.killbill.billing.account.api.AccountInternalApi;
 import org.killbill.billing.account.api.ImmutableAccountData;
 import org.killbill.billing.callcontext.InternalCallContext;
+import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.catalog.api.BillingAlignment;
 import org.killbill.billing.catalog.api.Catalog;
 import org.killbill.billing.catalog.api.CatalogApiException;
@@ -41,7 +42,6 @@ import org.killbill.billing.catalog.api.Plan;
 import org.killbill.billing.catalog.api.PlanPhase;
 import org.killbill.billing.catalog.api.PlanPhaseSpecifier;
 import org.killbill.billing.catalog.api.StaticCatalog;
-import org.killbill.billing.entitlement.api.Entitlement.EntitlementState;
 import org.killbill.billing.entitlement.api.SubscriptionEventType;
 import org.killbill.billing.events.EffectiveSubscriptionInternalEvent;
 import org.killbill.billing.invoice.api.DryRunArguments;
@@ -210,7 +210,7 @@ public class DefaultInternalBillingApi implements BillingInternalApi {
                 overridenBCD = transition.getNextBillCycleDayLocal() != null ? transition.getNextBillCycleDayLocal() : overridenBCD;
                 final int bcdLocal = overridenBCD != null ?
                                      overridenBCD :
-                                     calculateBcdForTransition(catalog, bcdCache, baseSubscription, subscription, account, currentAccountBCD, transition);
+                                     calculateBcdForTransition(catalog, bcdCache, baseSubscription, subscription, currentAccountBCD, transition, context);
 
                 if (currentAccountBCD == 0 && !updatedAccountBCD) {
                     log.info("Setting account BCD='{}', accountId='{}'", bcdLocal, account.getId());
@@ -224,10 +224,10 @@ public class DefaultInternalBillingApi implements BillingInternalApi {
         }
     }
 
-    private int calculateBcdForTransition(final Catalog catalog, final Map<UUID, Integer> bcdCache, final SubscriptionBase baseSubscription, final SubscriptionBase subscription, final ImmutableAccountData account, final int accountBillCycleDayLocal, final EffectiveSubscriptionInternalEvent transition)
+    private int calculateBcdForTransition(final Catalog catalog, final Map<UUID, Integer> bcdCache, final SubscriptionBase baseSubscription, final SubscriptionBase subscription, final int accountBillCycleDayLocal, final EffectiveSubscriptionInternalEvent transition, final InternalTenantContext internalTenantContext)
             throws CatalogApiException, AccountApiException, SubscriptionBaseApiException {
         final BillingAlignment alignment = catalog.billingAlignment(getPlanPhaseSpecifierFromTransition(catalog, transition), transition.getEffectiveTransitionTime());
-        return BillCycleDayCalculator.calculateBcdForAlignment(bcdCache, subscription, baseSubscription, alignment, account.getTimeZone(), accountBillCycleDayLocal);
+        return BillCycleDayCalculator.calculateBcdForAlignment(bcdCache, subscription, baseSubscription, alignment, internalTenantContext, accountBillCycleDayLocal);
     }
 
     private PlanPhaseSpecifier getPlanPhaseSpecifierFromTransition(final Catalog catalog, final EffectiveSubscriptionInternalEvent transition) throws CatalogApiException {

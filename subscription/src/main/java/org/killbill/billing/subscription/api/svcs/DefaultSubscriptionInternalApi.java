@@ -23,7 +23,6 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -32,7 +31,6 @@ import java.util.UUID;
 import javax.annotation.Nullable;
 
 import org.joda.time.DateTime;
-import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDate;
 import org.killbill.billing.ErrorCode;
 import org.killbill.billing.callcontext.InternalCallContext;
@@ -362,7 +360,7 @@ public class DefaultSubscriptionInternalApi extends SubscriptionApiBase implemen
     }
 
     @Override
-    public void cancelBaseSubscriptions(final Iterable<SubscriptionBase> subscriptions, final BillingActionPolicy policy, final DateTimeZone accountTimeZone, int accountBillCycleDayLocal, final InternalCallContext context) throws SubscriptionBaseApiException {
+    public void cancelBaseSubscriptions(final Iterable<SubscriptionBase> subscriptions, final BillingActionPolicy policy, int accountBillCycleDayLocal, final InternalCallContext context) throws SubscriptionBaseApiException {
         apiService.cancelWithPolicyNoValidation(Iterables.<SubscriptionBase, DefaultSubscriptionBase>transform(subscriptions,
                                                                                                                new Function<SubscriptionBase, DefaultSubscriptionBase>() {
                                                                                                                    @Override
@@ -375,7 +373,6 @@ public class DefaultSubscriptionInternalApi extends SubscriptionApiBase implemen
                                                                                                                    }
                                                                                                                }),
                                                 policy,
-                                                accountTimeZone,
                                                 accountBillCycleDayLocal,
                                                 context);
     }
@@ -739,7 +736,7 @@ public class DefaultSubscriptionInternalApi extends SubscriptionApiBase implemen
                             policy = planChangeResult.getPolicy();
                         }
                         // We pass null for billingAlignment, accountTimezone, account BCD because this is not available which means that dryRun with START_OF_TERM BillingPolicy will fail
-                        changeEffectiveDate = subscriptionForChange.getPlanChangeEffectiveDate(policy, null, null, -1, context);
+                        changeEffectiveDate = subscriptionForChange.getPlanChangeEffectiveDate(policy, null, -1, context);
                     }
                     dryRunEvents = apiService.getEventsOnChangePlan(subscriptionForChange, plan, plan.getPriceListName(), changeEffectiveDate, utcNow, true, context);
                     break;
@@ -758,7 +755,7 @@ public class DefaultSubscriptionInternalApi extends SubscriptionApiBase implemen
                             policy = catalogService.getFullCatalog(true, true, context).planCancelPolicy(spec, utcNow);
                         }
                         // We pass null for billingAlignment, accountTimezone, account BCD because this is not available which means that dryRun with START_OF_TERM BillingPolicy will fail
-                        cancelEffectiveDate = subscriptionForCancellation.getPlanChangeEffectiveDate(policy, null, null, -1, context);
+                        cancelEffectiveDate = subscriptionForCancellation.getPlanChangeEffectiveDate(policy, null, -1, context);
                     }
                     dryRunEvents = apiService.getEventsOnCancelPlan(subscriptionForCancellation, cancelEffectiveDate, utcNow, true, context);
                     break;
@@ -843,12 +840,12 @@ public class DefaultSubscriptionInternalApi extends SubscriptionApiBase implemen
     }
 
     @Override
-    public int getDefaultBillCycleDayLocal(final Map<UUID, Integer> bcdCache, final SubscriptionBase subscription, final SubscriptionBase baseSubscription, final PlanPhaseSpecifier planPhaseSpecifier, final DateTimeZone accountTimeZone, final int accountBillCycleDayLocal, final DateTime effectiveDate, final InternalTenantContext context) throws SubscriptionBaseApiException {
+    public int getDefaultBillCycleDayLocal(final Map<UUID, Integer> bcdCache, final SubscriptionBase subscription, final SubscriptionBase baseSubscription, final PlanPhaseSpecifier planPhaseSpecifier, final int accountBillCycleDayLocal, final DateTime effectiveDate, final InternalTenantContext context) throws SubscriptionBaseApiException {
 
         try {
             final Catalog catalog = catalogService.getFullCatalog(true, true, context);
             final BillingAlignment alignment = catalog.billingAlignment(planPhaseSpecifier, effectiveDate);
-            return BillCycleDayCalculator.calculateBcdForAlignment(bcdCache, subscription, baseSubscription, alignment, accountTimeZone, accountBillCycleDayLocal);
+            return BillCycleDayCalculator.calculateBcdForAlignment(bcdCache, subscription, baseSubscription, alignment, context, accountBillCycleDayLocal);
         } catch (final CatalogApiException e) {
             throw new SubscriptionBaseApiException(e);
         }

@@ -57,7 +57,7 @@ public class TestBillCycleDayCalculator extends UtilTestSuiteNoDB {
 
         final ImmutableAccountData account = Mockito.mock(ImmutableAccountData.class);
         Mockito.when(account.getTimeZone()).thenReturn(accountTimeZone);
-        final Integer billCycleDayLocal = BillCycleDayCalculator.calculateBcdForAlignment(new HashMap<UUID, Integer>(), subscription, subscription, BillingAlignment.BUNDLE, account.getTimeZone(), 0);
+        final Integer billCycleDayLocal = BillCycleDayCalculator.calculateBcdForAlignment(new HashMap<UUID, Integer>(), subscription, subscription, BillingAlignment.BUNDLE, internalCallContext, 0);
 
         Assert.assertEquals(billCycleDayLocal, (Integer) expectedBCDUTC);
     }
@@ -125,7 +125,7 @@ public class TestBillCycleDayCalculator extends UtilTestSuiteNoDB {
         final ImmutableAccountData account = Mockito.mock(ImmutableAccountData.class);
         Mockito.when(account.getTimeZone()).thenReturn(accountTimeZone);
 
-        final Integer bcd = BillCycleDayCalculator.calculateBcdForAlignment(new HashMap<UUID, Integer>(), subscription, subscription, BillingAlignment.SUBSCRIPTION, account.getTimeZone(), 0);
+        final Integer bcd = BillCycleDayCalculator.calculateBcdForAlignment(new HashMap<UUID, Integer>(), subscription, subscription, BillingAlignment.SUBSCRIPTION, internalCallContext, 0);
         Assert.assertEquals(bcd, (Integer) bcdLocal);
     }
 }
