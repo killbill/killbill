@@ -48,6 +48,8 @@ import org.testng.annotations.Test;
 
 import com.google.common.collect.ImmutableList;
 
+import static org.testng.Assert.assertEquals;
+
 public class TestWithTimeZones extends TestIntegrationBase {
 
     // Verify that recurring invoice items are correctly computed although we went through and out of daylight saving transitions
@@ -254,4 +256,73 @@ public class TestWithTimeZones extends TestIntegrationBase {
             invoiceChecker.checkChargedThroughDate(entitlement.getId(), new LocalDate("2015-03-08").plusMonths(3 + i), callContext);
         }
     }
+
+
+    @Test(groups = "slow")
+    public void testIntoDaylightSavingTransition() throws Exception {
+
+        // Daylight saving happened on March 12th.
+        //
+        // Because we use 30 days trial, we start a bit before and that way we can check that computation of BCD crossing into daylight saving works as expected.
+        //
+        final DateTimeZone tz = DateTimeZone.forID("America/Los_Angeles");
+        clock.setTime(new DateTime(2017, 3, 1, 23, 30, 0, tz));
+
+        final AccountData accountData = new MockAccountBuilder().currency(Currency.USD)
+                                                                .timeZone(tz)
+                                                                .build();
+
+        // Create account with non BCD to force junction BCD logic to activate
+        final Account account = createAccountWithNonOsgiPaymentMethod(accountData);
+
+        createBaseEntitlementAndCheckForCompletion(account.getId(), "bundleKey", "Pistol", ProductCategory.BASE, BillingPeriod.MONTHLY,  NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE);
+
+        final Account accountWithBCD = accountUserApi.getAccountById(account.getId(), callContext);
+        assertEquals(accountWithBCD.getBillCycleDayLocal().intValue(), 31);
+
+        busHandler.pushExpectedEvents(NextEvent.PHASE, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
+        clock.addDays(30);
+        assertListenerStatus();
+
+
+        final List<ExpectedInvoiceItemCheck> expectedInvoices = new ArrayList<ExpectedInvoiceItemCheck>();
+        expectedInvoices.add(new ExpectedInvoiceItemCheck(new LocalDate(2017, 3, 31), new LocalDate(2017, 4, 30), InvoiceItemType.RECURRING, new BigDecimal("29.95")));
+        invoiceChecker.checkInvoice(account.getId(), 2, callContext, expectedInvoices);
+        expectedInvoices.clear();
+    }
+
+
+    @Test(groups = "slow")
+    public void testOutOfDaylightSavingTransition() throws Exception {
+
+        // Transition out of daylight saving is set for Nov 5
+        //
+        // Because we use 30 days trial, we start a bit before and that way we can check that computation of BCD crossing out of of daylight saving works as expected.
+        //
+        final DateTimeZone tz = DateTimeZone.forID("America/Los_Angeles");
+        clock.setTime(new DateTime(2017, 11, 1, 00, 30, 0, tz));
+
+        final AccountData accountData = new MockAccountBuilder().currency(Currency.USD)
+                                                                .timeZone(tz)
+                                                                .build();
+
+        // Create account with non BCD to force junction BCD logic to activate
+        final Account account = createAccountWithNonOsgiPaymentMethod(accountData);
+
+        createBaseEntitlementAndCheckForCompletion(account.getId(), "bundleKey", "Pistol", ProductCategory.BASE, BillingPeriod.MONTHLY,  NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE);
+
+        final Account accountWithBCD = accountUserApi.getAccountById(account.getId(), callContext);
+        assertEquals(accountWithBCD.getBillCycleDayLocal().intValue(), 1);
+
+        busHandler.pushExpectedEvents(NextEvent.PHASE, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
+        clock.addDays(30);
+        assertListenerStatus();
+
+
+        final List<ExpectedInvoiceItemCheck> expectedInvoices = new ArrayList<ExpectedInvoiceItemCheck>();
+        expectedInvoices.add(new ExpectedInvoiceItemCheck(new LocalDate(2017, 12, 1), new LocalDate(2018, 1, 1), InvoiceItemType.RECURRING, new BigDecimal("29.95")));
+        invoiceChecker.checkInvoice(account.getId(), 2, callContext, expectedInvoices);
+        expectedInvoices.clear();
+    }
+
 }
