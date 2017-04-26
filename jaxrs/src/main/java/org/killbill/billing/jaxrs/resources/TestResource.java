@@ -202,7 +202,7 @@ public class TestResource extends JaxRsResourceBase {
     }
 
     private boolean waitForNotificationToComplete(final ServletRequest request, final Long timeoutSec) {
-        final TenantContext tenantContext = context.createContext(request);
+        final TenantContext tenantContext = context.createTenantContextNoAccountId(request);
         final Long tenantRecordId = recordIdApi.getRecordId(tenantContext.getTenantId(), ObjectType.TENANT, tenantContext);
 
         int nbTryLeft = timeoutSec != null ? timeoutSec.intValue() : 0;

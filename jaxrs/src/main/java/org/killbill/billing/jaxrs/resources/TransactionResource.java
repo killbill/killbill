@@ -102,7 +102,7 @@ public class TransactionResource extends JaxRsResourceBase {
                                               @javax.ws.rs.core.Context final HttpServletRequest request) throws PaymentApiException {
         final Iterable<PluginProperty> pluginProperties = extractPluginProperties(pluginPropertiesString);
         final UUID transactionIdId = UUID.fromString(transactionIdStr);
-        final TenantContext tenantContext = context.createContext(request);
+        final TenantContext tenantContext = context.createTenantContextNoAccountId(request);
         final Payment payment = paymentApi.getPaymentByTransactionId(transactionIdId, withPluginInfo, withAttempts, pluginProperties, tenantContext);
         final AccountAuditLogs accountAuditLogs = auditUserApi.getAccountAuditLogs(payment.getAccountId(), auditMode.getLevel(), tenantContext);
         final PaymentJson result = new PaymentJson(payment, accountAuditLogs);
@@ -128,7 +128,7 @@ public class TransactionResource extends JaxRsResourceBase {
         verifyNonNullOrEmpty(json.getPaymentId(), "PaymentTransactionJson paymentId needs to be set",
                              json.getStatus(), "PaymentTransactionJson status needs to be set");
 
-        final CallContext callContext = context.createContext(createdBy, reason, comment, request);
+        final CallContext callContext = context.createCallContextNoAccountId(createdBy, reason, comment, request);
 
         final UUID paymentId = UUID.fromString(json.getPaymentId());
         final Payment payment = paymentApi.getPayment(paymentId, false, false, ImmutableList.<PluginProperty>of(), callContext);
@@ -149,7 +149,7 @@ public class TransactionResource extends JaxRsResourceBase {
     public Response getCustomFields(@PathParam(ID_PARAM_NAME) final String id,
                                     @QueryParam(QUERY_AUDIT) @DefaultValue("NONE") final AuditMode auditMode,
                                     @javax.ws.rs.core.Context final HttpServletRequest request) {
-        return super.getCustomFields(UUID.fromString(id), auditMode, context.createContext(request));
+        return super.getCustomFields(UUID.fromString(id), auditMode, context.createTenantContextNoAccountId(request));
     }
 
     @TimedResource
@@ -167,7 +167,7 @@ public class TransactionResource extends JaxRsResourceBase {
                                        @javax.ws.rs.core.Context final HttpServletRequest request,
                                        @javax.ws.rs.core.Context final UriInfo uriInfo) throws CustomFieldApiException {
         return super.createCustomFields(UUID.fromString(id), customFields,
-                                        context.createContext(createdBy, reason, comment, request), uriInfo, request);
+                                        context.createCallContextNoAccountId(createdBy, reason, comment, request), uriInfo, request);
     }
 
     @TimedResource
@@ -184,7 +184,7 @@ public class TransactionResource extends JaxRsResourceBase {
                                        @HeaderParam(HDR_COMMENT) final String comment,
                                        @javax.ws.rs.core.Context final HttpServletRequest request) throws CustomFieldApiException {
         return super.deleteCustomFields(UUID.fromString(id), customFieldList,
-                                        context.createContext(createdBy, reason, comment, request));
+                                        context.createCallContextNoAccountId(createdBy, reason, comment, request));
     }
 
     @TimedResource
@@ -198,7 +198,7 @@ public class TransactionResource extends JaxRsResourceBase {
                             @QueryParam(QUERY_AUDIT) @DefaultValue("NONE") final AuditMode auditMode,
                             @QueryParam(QUERY_TAGS_INCLUDED_DELETED) @DefaultValue("false") final Boolean includedDeleted,
                             @javax.ws.rs.core.Context final HttpServletRequest request) throws TagDefinitionApiException, PaymentApiException {
-        final TenantContext tenantContext = context.createContext(request);
+        final TenantContext tenantContext = context.createTenantContextNoAccountId(request);
         final Payment payment = paymentApi.getPaymentByTransactionId(UUID.fromString(id), false, false, ImmutableList.<PluginProperty>of(), tenantContext);
         return super.getTags(payment.getAccountId(), UUID.fromString(id), auditMode, includedDeleted, tenantContext);
     }
@@ -218,7 +218,7 @@ public class TransactionResource extends JaxRsResourceBase {
                                @javax.ws.rs.core.Context final UriInfo uriInfo,
                                @javax.ws.rs.core.Context final HttpServletRequest request) throws TagApiException {
         return super.createTags(UUID.fromString(id), tagList, uriInfo,
-                                context.createContext(createdBy, reason, comment, request), request);
+                                context.createCallContextNoAccountId(createdBy, reason, comment, request), request);
     }
 
     @TimedResource
@@ -235,7 +235,7 @@ public class TransactionResource extends JaxRsResourceBase {
                                @HeaderParam(HDR_COMMENT) final String comment,
                                @javax.ws.rs.core.Context final HttpServletRequest request) throws TagApiException {
         return super.deleteTags(UUID.fromString(id), tagList,
-                                context.createContext(createdBy, reason, comment, request));
+                                context.createCallContextNoAccountId(createdBy, reason, comment, request));
     }
 
     @Override

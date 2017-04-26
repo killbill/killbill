@@ -121,7 +121,7 @@ public class UsageResource extends JaxRsResourceBase {
                 verifyNonNull(usageRecordJson.getRecordDate(), "UsageRecordJson recordDate needs to be set");
             }
         }
-        final CallContext callContext = context.createContext(createdBy, reason, comment, request);
+        final CallContext callContext = context.createCallContextNoAccountId(createdBy, reason, comment, request);
         // Verify subscription exists..
         final Entitlement entitlement = entitlementApi.getEntitlementForId(UUID.fromString(json.getSubscriptionId()), callContext);
         if (entitlement.getState() != EntitlementState.ACTIVE) {
@@ -147,7 +147,7 @@ public class UsageResource extends JaxRsResourceBase {
         if (startDate == null || endDate == null) {
             return Response.status(Status.BAD_REQUEST).build();
         }
-        final TenantContext tenantContext = context.createContext(request);
+        final TenantContext tenantContext = context.createTenantContextNoAccountId(request);
 
         final LocalDate usageStartDate = LOCAL_DATE_FORMATTER.parseLocalDate(startDate);
         final LocalDate usageEndDate = LOCAL_DATE_FORMATTER.parseLocalDate(endDate);
@@ -171,7 +171,7 @@ public class UsageResource extends JaxRsResourceBase {
         if (startDate == null || endDate == null) {
             return Response.status(Status.BAD_REQUEST).build();
         }
-        final TenantContext tenantContext = context.createContext(request);
+        final TenantContext tenantContext = context.createTenantContextNoAccountId(request);
 
         final LocalDate usageStartDate = LOCAL_DATE_FORMATTER.parseLocalDate(startDate);
         final LocalDate usageEndDate = LOCAL_DATE_FORMATTER.parseLocalDate(endDate);

@@ -121,8 +121,7 @@ public class BundleResource extends JaxRsResourceBase {
                               @QueryParam(QUERY_AUDIT) @DefaultValue("NONE") final AuditMode auditMode,
                               @javax.ws.rs.core.Context final HttpServletRequest request) throws SubscriptionApiException, AccountApiException, CatalogApiException {
         final UUID id = UUID.fromString(bundleId);
-
-        final TenantContext tenantContext = this.context.createContext(request);
+        final TenantContext tenantContext = this.context.createTenantContextNoAccountId(request);
         final SubscriptionBundle bundle = subscriptionApi.getSubscriptionBundle(id, tenantContext);
         final Account account = accountUserApi.getAccountById(bundle.getAccountId(), tenantContext);
         final AccountAuditLogs accountAuditLogs = auditUserApi.getAccountAuditLogs(bundle.getAccountId(), auditMode.getLevel(), tenantContext);
@@ -140,7 +139,7 @@ public class BundleResource extends JaxRsResourceBase {
                                    @QueryParam(QUERY_AUDIT) @DefaultValue("NONE") final AuditMode auditMode,
                                    @javax.ws.rs.core.Context final HttpServletRequest request) throws SubscriptionApiException, AccountApiException, CatalogApiException {
 
-        final TenantContext tenantContext = this.context.createContext(request);
+        final TenantContext tenantContext = this.context.createTenantContextNoAccountId(request);
 
         final List<SubscriptionBundle> bundles;
         if (includedDeleted) {
@@ -169,7 +168,7 @@ public class BundleResource extends JaxRsResourceBase {
                                @QueryParam(QUERY_SEARCH_LIMIT) @DefaultValue("100") final Long limit,
                                @QueryParam(QUERY_AUDIT) @DefaultValue("NONE") final AuditMode auditMode,
                                @javax.ws.rs.core.Context final HttpServletRequest request) throws SubscriptionApiException {
-        final TenantContext tenantContext = context.createContext(request);
+        final TenantContext tenantContext = context.createTenantContextNoAccountId(request);
         final Pagination<SubscriptionBundle> bundles = subscriptionApi.getSubscriptionBundles(offset, limit, tenantContext);
         final URI nextPageUri = uriBuilder.nextPage(BundleResource.class, "getBundles", bundles.getNextOffset(), limit, ImmutableMap.<String, String>of(QUERY_AUDIT, auditMode.getLevel().toString()));
         final AtomicReference<Map<UUID, AccountAuditLogs>> accountsAuditLogs = new AtomicReference<Map<UUID, AccountAuditLogs>>(new HashMap<UUID, AccountAuditLogs>());
@@ -204,7 +203,7 @@ public class BundleResource extends JaxRsResourceBase {
                                   @QueryParam(QUERY_SEARCH_LIMIT) @DefaultValue("100") final Long limit,
                                   @QueryParam(QUERY_AUDIT) @DefaultValue("NONE") final AuditMode auditMode,
                                   @javax.ws.rs.core.Context final HttpServletRequest request) throws SubscriptionApiException {
-        final TenantContext tenantContext = context.createContext(request);
+        final TenantContext tenantContext = context.createTenantContextNoAccountId(request);
         final Pagination<SubscriptionBundle> bundles = subscriptionApi.searchSubscriptionBundles(searchKey, offset, limit, tenantContext);
         final URI nextPageUri = uriBuilder.nextPage(BundleResource.class, "searchBundles", bundles.getNextOffset(), limit, ImmutableMap.<String, String>of("searchKey", searchKey,
                                                                                                                                                            QUERY_AUDIT, auditMode.getLevel().toString()));
@@ -244,7 +243,7 @@ public class BundleResource extends JaxRsResourceBase {
                                 @HeaderParam(HDR_COMMENT) final String comment,
                                 @javax.ws.rs.core.Context final HttpServletRequest request) throws SubscriptionApiException, EntitlementApiException, AccountApiException {
         final Iterable<PluginProperty> pluginProperties = extractPluginProperties(pluginPropertiesString);
-        final CallContext callContext = context.createContext(createdBy, reason, comment, request);
+        final CallContext callContext = context.createCallContextNoAccountId(createdBy, reason, comment, request);
         final UUID bundleId = UUID.fromString(id);
         final LocalDate inputLocalDate = toLocalDate(requestedDate);
         entitlementApi.pause(bundleId, inputLocalDate, pluginProperties, callContext);
@@ -267,7 +266,7 @@ public class BundleResource extends JaxRsResourceBase {
                                  @HeaderParam(HDR_COMMENT) final String comment,
                                  @javax.ws.rs.core.Context final HttpServletRequest request) throws SubscriptionApiException, EntitlementApiException, AccountApiException {
         final Iterable<PluginProperty> pluginProperties = extractPluginProperties(pluginPropertiesString);
-        final CallContext callContext = context.createContext(createdBy, reason, comment, request);
+        final CallContext callContext = context.createCallContextNoAccountId(createdBy, reason, comment, request);
         final UUID bundleId = UUID.fromString(id);
         final LocalDate inputLocalDate = toLocalDate(requestedDate);
         entitlementApi.resume(bundleId, inputLocalDate, pluginProperties, callContext);
@@ -303,7 +302,7 @@ public class BundleResource extends JaxRsResourceBase {
     public Response getCustomFields(@PathParam(ID_PARAM_NAME) final String id,
                                     @QueryParam(QUERY_AUDIT) @DefaultValue("NONE") final AuditMode auditMode,
                                     @javax.ws.rs.core.Context final HttpServletRequest request) {
-        return super.getCustomFields(UUID.fromString(id), auditMode, context.createContext(request));
+        return super.getCustomFields(UUID.fromString(id), auditMode, context.createTenantContextNoAccountId(request));
     }
 
     @TimedResource
@@ -321,7 +320,7 @@ public class BundleResource extends JaxRsResourceBase {
                                        @javax.ws.rs.core.Context final HttpServletRequest request,
                                        @javax.ws.rs.core.Context final UriInfo uriInfo) throws CustomFieldApiException {
         return super.createCustomFields(UUID.fromString(id), customFields,
-                                        context.createContext(createdBy, reason, comment, request), uriInfo, request);
+                                        context.createCallContextNoAccountId(createdBy, reason, comment, request), uriInfo, request);
     }
 
     @TimedResource
@@ -338,7 +337,7 @@ public class BundleResource extends JaxRsResourceBase {
                                        @HeaderParam(HDR_COMMENT) final String comment,
                                        @javax.ws.rs.core.Context final HttpServletRequest request) throws CustomFieldApiException {
         return super.deleteCustomFields(UUID.fromString(id), customFieldList,
-                                        context.createContext(createdBy, reason, comment, request));
+                                        context.createCallContextNoAccountId(createdBy, reason, comment, request));
     }
 
     @TimedResource
@@ -353,8 +352,8 @@ public class BundleResource extends JaxRsResourceBase {
                             @QueryParam(QUERY_INCLUDED_DELETED) @DefaultValue("false") final Boolean includedDeleted,
                             @javax.ws.rs.core.Context final HttpServletRequest request) throws TagDefinitionApiException, SubscriptionApiException {
         final UUID bundleId = UUID.fromString(bundleIdString);
-        final TenantContext tenantContext = context.createContext(request);
-        final SubscriptionBundle bundle = subscriptionApi.getSubscriptionBundle(bundleId, context.createContext(request));
+        final TenantContext tenantContext = context.createTenantContextNoAccountId(request);
+        final SubscriptionBundle bundle = subscriptionApi.getSubscriptionBundle(bundleId, tenantContext);
         return super.getTags(bundle.getAccountId(), bundleId, auditMode, includedDeleted, tenantContext);
     }
 
@@ -382,7 +381,7 @@ public class BundleResource extends JaxRsResourceBase {
         final Iterable<PluginProperty> pluginProperties = extractPluginProperties(pluginPropertiesString);
         final BillingActionPolicy policy = BillingActionPolicy.valueOf(policyString.toUpperCase());
 
-        final CallContext callContext = context.createContext(createdBy, reason, comment, request);
+        final CallContext callContext = context.createCallContextNoAccountId(createdBy, reason, comment, request);
         final UUID bundleId = UUID.fromString(id);
 
         final SubscriptionBundle bundle = subscriptionApi.getSubscriptionBundle(bundleId, callContext);
@@ -407,7 +406,7 @@ public class BundleResource extends JaxRsResourceBase {
                                @javax.ws.rs.core.Context final UriInfo uriInfo,
                                @javax.ws.rs.core.Context final HttpServletRequest request) throws TagApiException {
         return super.createTags(UUID.fromString(id), tagList, uriInfo,
-                                context.createContext(createdBy, reason, comment, request), request);
+                                context.createCallContextNoAccountId(createdBy, reason, comment, request), request);
     }
 
     @TimedResource
@@ -424,7 +423,7 @@ public class BundleResource extends JaxRsResourceBase {
                                @HeaderParam(HDR_COMMENT) final String comment,
                                @javax.ws.rs.core.Context final HttpServletRequest request) throws TagApiException {
         return super.deleteTags(UUID.fromString(id), tagList,
-                                context.createContext(createdBy, reason, comment, request));
+                                context.createCallContextNoAccountId(createdBy, reason, comment, request));
     }
 
     @Override

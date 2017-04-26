@@ -106,7 +106,7 @@ public class PaymentGatewayResource extends ComboPaymentResource {
         final Iterable<PluginProperty> pluginProperties = extractPluginProperties(pluginPropertiesString);
         final PaymentOptions paymentOptions = createControlPluginApiPaymentOptions(paymentControlPluginNames);
 
-        final CallContext callContext = context.createContext(createdBy, reason, comment, request);
+        final CallContext callContext = context.createCallContextNoAccountId(createdBy, reason, comment, request);
         final Account account = getOrCreateAccount(json.getAccount(), callContext);
 
         final Iterable<PluginProperty> paymentMethodPluginProperties = extractPluginProperties(json.getPaymentMethodPluginProperties());
@@ -141,8 +141,8 @@ public class PaymentGatewayResource extends ComboPaymentResource {
                                         @javax.ws.rs.core.Context final HttpServletRequest request) throws PaymentApiException, AccountApiException {
         final Iterable<PluginProperty> pluginProperties = extractPluginProperties(pluginPropertiesString);
         final PaymentOptions paymentOptions = createControlPluginApiPaymentOptions(paymentControlPluginNames);
-        final CallContext callContext = context.createContext(createdBy, reason, comment, request);
         final UUID accountId = UUID.fromString(accountIdString);
+        final CallContext callContext = context.createCallContextWithAccountId(accountId, createdBy, reason, comment, request);
         final Account account = accountUserApi.getAccountById(accountId, callContext);
         final UUID paymentMethodId = paymentMethodIdStr == null ? account.getPaymentMethodId() : UUID.fromString(paymentMethodIdStr);
 
@@ -174,7 +174,7 @@ public class PaymentGatewayResource extends ComboPaymentResource {
                                         @javax.ws.rs.core.Context final HttpServletRequest request) throws PaymentApiException {
         final Iterable<PluginProperty> pluginProperties = extractPluginProperties(pluginPropertiesString);
         final PaymentOptions paymentOptions = createControlPluginApiPaymentOptions(paymentControlPluginNames);
-        final CallContext callContext = context.createContext(createdBy, reason, comment, request);
+        final CallContext callContext = context.createCallContextNoAccountId(createdBy, reason, comment, request);
 
         final String notificationPayload;
         if (Strings.emptyToNull(body) == null && uriInfo.getRequestUri() != null) {

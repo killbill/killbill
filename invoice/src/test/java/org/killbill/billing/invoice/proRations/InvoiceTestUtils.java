@@ -82,7 +82,7 @@ public class InvoiceTestUtils {
         final UUID invoiceId = UUID.randomUUID();
         final UUID accountId;
         try {
-            final Account account = testInvoiceHelper.createAccount(internalCallContext.toCallContext(null));
+            final Account account = testInvoiceHelper.createAccount(internalCallContext.toCallContext(null,null));
             accountId = account.getId();
         } catch (final AccountApiException e) {
             Assert.fail(e.getMessage());

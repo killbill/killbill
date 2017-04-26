@@ -85,7 +85,7 @@ public class TagDefinitionResource extends JaxRsResourceBase {
     @ApiResponses(value = {})
     public Response getTagDefinitions(@javax.ws.rs.core.Context final HttpServletRequest request,
                                       @QueryParam(QUERY_AUDIT) @DefaultValue("NONE") final AuditMode auditMode) {
-        final TenantContext tenantContext = context.createContext(request);
+        final TenantContext tenantContext = context.createTenantContextNoAccountId(request);
         final List<TagDefinition> tagDefinitions = tagUserApi.getTagDefinitions(tenantContext);
 
         final Collection<TagDefinitionJson> result = new LinkedList<TagDefinitionJson>();
@@ -106,7 +106,7 @@ public class TagDefinitionResource extends JaxRsResourceBase {
     public Response getTagDefinition(@PathParam("tagDefinitionId") final String tagDefId,
                                      @QueryParam(QUERY_AUDIT) @DefaultValue("NONE") final AuditMode auditMode,
                                      @javax.ws.rs.core.Context final HttpServletRequest request) throws TagDefinitionApiException {
-        final TenantContext tenantContext = context.createContext(request);
+        final TenantContext tenantContext = context.createTenantContextNoAccountId(request);
         final TagDefinition tagDefinition = tagUserApi.getTagDefinition(UUID.fromString(tagDefId), tenantContext);
         final List<AuditLog> auditLogs = auditUserApi.getAuditLogs(tagDefinition.getId(), ObjectType.TAG_DEFINITION, auditMode.getLevel(), tenantContext);
         final TagDefinitionJson json = new TagDefinitionJson(tagDefinition, auditLogs);
@@ -130,7 +130,7 @@ public class TagDefinitionResource extends JaxRsResourceBase {
         verifyNonNullOrEmpty(json.getName(), "TagDefinition name needs to be set",
                              json.getDescription(), "TagDefinition description needs to be set");
 
-        final TagDefinition createdTagDef = tagUserApi.createTagDefinition(json.getName(), json.getDescription(), context.createContext(createdBy, reason, comment, request));
+        final TagDefinition createdTagDef = tagUserApi.createTagDefinition(json.getName(), json.getDescription(), context.createCallContextNoAccountId(createdBy, reason, comment, request));
         return uriBuilder.buildResponse(uriInfo, TagDefinitionResource.class, "getTagDefinition", createdTagDef.getId(), request);
     }
 
@@ -145,7 +145,7 @@ public class TagDefinitionResource extends JaxRsResourceBase {
                                         @HeaderParam(HDR_REASON) final String reason,
                                         @HeaderParam(HDR_COMMENT) final String comment,
                                         @javax.ws.rs.core.Context final HttpServletRequest request) throws TagDefinitionApiException {
-        tagUserApi.deleteTagDefinition(UUID.fromString(tagDefId), context.createContext(createdBy, reason, comment, request));
+        tagUserApi.deleteTagDefinition(UUID.fromString(tagDefId), context.createCallContextNoAccountId(createdBy, reason, comment, request));
         return Response.status(Status.NO_CONTENT).build();
     }
 

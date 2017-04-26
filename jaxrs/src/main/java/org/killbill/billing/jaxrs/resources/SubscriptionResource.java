@@ -155,7 +155,7 @@ public class SubscriptionResource extends JaxRsResourceBase {
                                    @QueryParam(QUERY_AUDIT) @DefaultValue("NONE") final AuditMode auditMode,
                                    @javax.ws.rs.core.Context final HttpServletRequest request) throws SubscriptionApiException, AccountApiException, CatalogApiException {
         final UUID uuid = UUID.fromString(subscriptionId);
-        final TenantContext context = this.context.createContext(request);
+        final TenantContext context = this.context.createTenantContextNoAccountId(request);
         final Subscription subscription = subscriptionApi.getSubscriptionForEntitlementId(uuid, context);
         final Account account = accountUserApi.getAccountById(subscription.getAccountId(), context);
         final AccountAuditLogs accountAuditLogs = auditUserApi.getAccountAuditLogs(subscription.getAccountId(), auditMode.getLevel(), context);
@@ -200,7 +200,7 @@ public class SubscriptionResource extends JaxRsResourceBase {
         }
 
         final Iterable<PluginProperty> pluginProperties = extractPluginProperties(pluginPropertiesString);
-        final CallContext callContext = context.createContext(createdBy, reason, comment, request);
+        final CallContext callContext = context.createCallContextNoAccountId(createdBy, reason, comment, request);
 
         final EntitlementCallCompletionCallback<Entitlement> callback = new EntitlementCallCompletionCallback<Entitlement>() {
             @Override
@@ -316,7 +316,7 @@ public class SubscriptionResource extends JaxRsResourceBase {
         logDeprecationParameterWarningIfNeeded(QUERY_REQUESTED_DT, QUERY_ENTITLEMENT_REQUESTED_DT, QUERY_BILLING_REQUESTED_DT);
 
         final Iterable<PluginProperty> pluginProperties = extractPluginProperties(pluginPropertiesString);
-        final CallContext callContext = context.createContext(createdBy, reason, comment, request);
+        final CallContext callContext = context.createCallContextNoAccountId(createdBy, reason, comment, request);
 
         final Account account = accountUserApi.getAccountById(UUID.fromString(entitlementsWithAddOns.get(0).getBaseEntitlementAndAddOns().get(0).getAccountId()), callContext);
 
@@ -507,8 +507,8 @@ public class SubscriptionResource extends JaxRsResourceBase {
                                             @javax.ws.rs.core.Context final HttpServletRequest request) throws EntitlementApiException {
         final Iterable<PluginProperty> pluginProperties = extractPluginProperties(pluginPropertiesString);
         final UUID uuid = UUID.fromString(subscriptionId);
-        final Entitlement current = entitlementApi.getEntitlementForId(uuid, context.createContext(createdBy, reason, comment, request));
-        current.uncancelEntitlement(pluginProperties, context.createContext(createdBy, reason, comment, request));
+        final Entitlement current = entitlementApi.getEntitlementForId(uuid, context.createCallContextNoAccountId(createdBy, reason, comment, request));
+        current.uncancelEntitlement(pluginProperties, context.createCallContextNoAccountId(createdBy, reason, comment, request));
         return Response.status(Status.OK).build();
     }
 
@@ -539,7 +539,7 @@ public class SubscriptionResource extends JaxRsResourceBase {
         }
 
         final Iterable<PluginProperty> pluginProperties = extractPluginProperties(pluginPropertiesString);
-        final CallContext callContext = context.createContext(createdBy, reason, comment, request);
+        final CallContext callContext = context.createCallContextNoAccountId(createdBy, reason, comment, request);
 
         final EntitlementCallCompletionCallback<Response> callback = new EntitlementCallCompletionCallback<Response>() {
 
@@ -632,7 +632,7 @@ public class SubscriptionResource extends JaxRsResourceBase {
                                           @HeaderParam(HDR_COMMENT) final String comment,
                                           @javax.ws.rs.core.Context final UriInfo uriInfo,
                                           @javax.ws.rs.core.Context final HttpServletRequest request) throws EntitlementApiException, AccountApiException, SubscriptionApiException {
-        final CallContext callContext = context.createContext(createdBy, reason, comment, request);
+        final CallContext callContext = context.createCallContextNoAccountId(createdBy, reason, comment, request);
         final Iterable<PluginProperty> pluginProperties = extractPluginProperties(pluginPropertiesString);
 
         final EntitlementCallCompletionCallback<Response> callback = new EntitlementCallCompletionCallback<Response>() {
@@ -706,7 +706,7 @@ public class SubscriptionResource extends JaxRsResourceBase {
         verifyNonNullOrEmpty(json.getBillCycleDayLocal(), "SubscriptionJson new BCD should be specified");
 
         LocalDate effectiveFromDate = toLocalDate(effectiveFromDateStr);
-        final CallContext callContext = context.createContext(createdBy, reason, comment, request);
+        final CallContext callContext = context.createCallContextNoAccountId(createdBy, reason, comment, request);
 
         final UUID subscriptionId = UUID.fromString(id);
 
@@ -845,7 +845,7 @@ public class SubscriptionResource extends JaxRsResourceBase {
     public Response getCustomFields(@PathParam(ID_PARAM_NAME) final String id,
                                     @QueryParam(QUERY_AUDIT) @DefaultValue("NONE") final AuditMode auditMode,
                                     @javax.ws.rs.core.Context final HttpServletRequest request) {
-        return super.getCustomFields(UUID.fromString(id), auditMode, context.createContext(request));
+        return super.getCustomFields(UUID.fromString(id), auditMode, context.createTenantContextNoAccountId(request));
     }
 
     @POST
@@ -862,7 +862,7 @@ public class SubscriptionResource extends JaxRsResourceBase {
                                        @javax.ws.rs.core.Context final HttpServletRequest request,
                                        @javax.ws.rs.core.Context final UriInfo uriInfo) throws CustomFieldApiException {
         return super.createCustomFields(UUID.fromString(id), customFields,
-                                        context.createContext(createdBy, reason, comment, request), uriInfo, request);
+                                        context.createCallContextNoAccountId(createdBy, reason, comment, request), uriInfo, request);
     }
 
     @DELETE
@@ -879,7 +879,7 @@ public class SubscriptionResource extends JaxRsResourceBase {
                                        @javax.ws.rs.core.Context final UriInfo uriInfo,
                                        @javax.ws.rs.core.Context final HttpServletRequest request) throws CustomFieldApiException {
         return super.deleteCustomFields(UUID.fromString(id), customFieldList,
-                                        context.createContext(createdBy, reason, comment, request));
+                                        context.createCallContextNoAccountId(createdBy, reason, comment, request));
     }
 
     @GET
@@ -893,7 +893,7 @@ public class SubscriptionResource extends JaxRsResourceBase {
                             @QueryParam(QUERY_INCLUDED_DELETED) @DefaultValue("false") final Boolean includedDeleted,
                             @javax.ws.rs.core.Context final HttpServletRequest request) throws TagDefinitionApiException, SubscriptionApiException {
         final UUID subscriptionId = UUID.fromString(subscriptionIdString);
-        final TenantContext tenantContext = context.createContext(request);
+        final TenantContext tenantContext = context.createTenantContextNoAccountId(request);
         final Subscription subscription = subscriptionApi.getSubscriptionForEntitlementId(subscriptionId, tenantContext);
         return super.getTags(subscription.getAccountId(), subscriptionId, auditMode, includedDeleted, tenantContext);
     }
@@ -912,7 +912,7 @@ public class SubscriptionResource extends JaxRsResourceBase {
                                @javax.ws.rs.core.Context final UriInfo uriInfo,
                                @javax.ws.rs.core.Context final HttpServletRequest request) throws TagApiException {
         return super.createTags(UUID.fromString(id), tagList, uriInfo,
-                                context.createContext(createdBy, reason, comment, request), request);
+                                context.createCallContextNoAccountId(createdBy, reason, comment, request), request);
     }
 
     @DELETE
@@ -928,7 +928,7 @@ public class SubscriptionResource extends JaxRsResourceBase {
                                @HeaderParam(HDR_COMMENT) final String comment,
                                @javax.ws.rs.core.Context final HttpServletRequest request) throws TagApiException {
         return super.deleteTags(UUID.fromString(id), tagList,
-                                context.createContext(createdBy, reason, comment, request));
+                                context.createCallContextNoAccountId(createdBy, reason, comment, request));
     }
 
     @Override

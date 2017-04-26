@@ -41,13 +41,14 @@ public class TestDefaultAuditLog extends UtilTestSuiteNoDB {
         final ChangeType changeType = ChangeType.DELETE;
         final EntityAudit entityAudit = new EntityAudit(tableName, recordId, changeType, null);
 
+        final UUID accountId = UUID.randomUUID();
         final UUID tenantId = UUID.randomUUID();
         final String userName = UUID.randomUUID().toString();
         final CallOrigin callOrigin = CallOrigin.EXTERNAL;
         final UserType userType = UserType.CUSTOMER;
         final UUID userToken = UUID.randomUUID();
         final ClockMock clock = new ClockMock();
-        final CallContext callContext = new DefaultCallContext(tenantId, userName, callOrigin, userType, userToken, clock);
+        final CallContext callContext = new DefaultCallContext(accountId, tenantId, userName, callOrigin, userType, userToken, clock);
 
         final AuditLog auditLog = new DefaultAuditLog(new AuditLogModelDao(entityAudit, callContext), ObjectType.ACCOUNT_EMAIL, UUID.randomUUID());
         Assert.assertEquals(auditLog.getChangeType(), changeType);
@@ -65,13 +66,14 @@ public class TestDefaultAuditLog extends UtilTestSuiteNoDB {
         final ChangeType changeType = ChangeType.DELETE;
         final EntityAudit entityAudit = new EntityAudit(tableName, recordId, changeType, null);
 
+        final UUID accountId = UUID.randomUUID();
         final UUID tenantId = UUID.randomUUID();
         final String userName = UUID.randomUUID().toString();
         final CallOrigin callOrigin = CallOrigin.EXTERNAL;
         final UserType userType = UserType.CUSTOMER;
         final UUID userToken = UUID.randomUUID();
         final ClockMock clock = new ClockMock();
-        final CallContext callContext = new DefaultCallContext(tenantId, userName, callOrigin, userType, userToken, clock);
+        final CallContext callContext = new DefaultCallContext(accountId, tenantId, userName, callOrigin, userType, userToken, clock);
 
         final AuditLogModelDao auditLog = new AuditLogModelDao(entityAudit, callContext);
         Assert.assertEquals(auditLog, auditLog);
@@ -80,7 +82,7 @@ public class TestDefaultAuditLog extends UtilTestSuiteNoDB {
         Assert.assertEquals(sameAuditLog, auditLog);
 
         clock.addMonths(1);
-        final CallContext otherCallContext = new DefaultCallContext(tenantId, userName, callOrigin, userType, userToken, clock);
+        final CallContext otherCallContext = new DefaultCallContext(accountId, tenantId, userName, callOrigin, userType, userToken, clock);
         final AuditLogModelDao otherAuditLog = new AuditLogModelDao(entityAudit, otherCallContext);
         Assert.assertNotEquals(otherAuditLog, auditLog);
     }

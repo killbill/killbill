@@ -47,8 +47,8 @@ public class InternalTenantContext extends TimeAwareContext {
         this(defaultTenantRecordId, null, null, null);
     }
 
-    public TenantContext toTenantContext(final UUID tenantId) {
-        return new DefaultTenantContext(tenantId);
+    public TenantContext toTenantContext(final UUID accountId, final UUID tenantId) {
+        return new DefaultTenantContext(accountId, tenantId);
     }
 
     public Long getAccountRecordId() {

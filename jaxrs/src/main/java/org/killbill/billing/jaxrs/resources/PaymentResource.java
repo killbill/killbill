@@ -122,7 +122,7 @@ public class PaymentResource extends ComboPaymentResource {
                                @javax.ws.rs.core.Context final HttpServletRequest request) throws PaymentApiException {
         final Iterable<PluginProperty> pluginProperties = extractPluginProperties(pluginPropertiesString);
         final UUID paymentIdId = UUID.fromString(paymentIdStr);
-        final TenantContext tenantContext = context.createContext(request);
+        final TenantContext tenantContext = context.createTenantContextNoAccountId(request);
         final Payment payment = paymentApi.getPayment(paymentIdId, withPluginInfo, withAttempts, pluginProperties, tenantContext);
         final AccountAuditLogs accountAuditLogs = auditUserApi.getAccountAuditLogs(payment.getAccountId(), auditMode.getLevel(), tenantContext);
         final PaymentJson result = new PaymentJson(payment, accountAuditLogs);
@@ -142,7 +142,7 @@ public class PaymentResource extends ComboPaymentResource {
                                             @javax.ws.rs.core.Context final HttpServletRequest request) throws PaymentApiException {
         verifyNonNullOrEmpty(paymentExternalKey, "Payment externalKey needs to be specified");
         final Iterable<PluginProperty> pluginProperties = extractPluginProperties(pluginPropertiesString);
-        final TenantContext tenantContext = context.createContext(request);
+        final TenantContext tenantContext = context.createTenantContextNoAccountId(request);
         final Payment payment = paymentApi.getPaymentByExternalKey(paymentExternalKey, withPluginInfo, withAttempts, pluginProperties, tenantContext);
         final AccountAuditLogs accountAuditLogs = auditUserApi.getAccountAuditLogs(payment.getAccountId(), auditMode.getLevel(), tenantContext);
         final PaymentJson result = new PaymentJson(payment, accountAuditLogs);
@@ -164,7 +164,7 @@ public class PaymentResource extends ComboPaymentResource {
                                 @QueryParam(QUERY_WITH_ATTEMPTS) @DefaultValue("false") final Boolean withAttempts,
                                 @javax.ws.rs.core.Context final HttpServletRequest request) throws PaymentApiException {
         final Iterable<PluginProperty> pluginProperties = extractPluginProperties(pluginPropertiesString);
-        final TenantContext tenantContext = context.createContext(request);
+        final TenantContext tenantContext = context.createTenantContextNoAccountId(request);
 
         final Pagination<Payment> payments;
         if (Strings.isNullOrEmpty(pluginName)) {
@@ -209,7 +209,7 @@ public class PaymentResource extends ComboPaymentResource {
                                    @QueryParam(QUERY_WITH_ATTEMPTS) @DefaultValue("false") final Boolean withAttempts,
                                    @javax.ws.rs.core.Context final HttpServletRequest request) throws PaymentApiException {
         final Iterable<PluginProperty> pluginProperties = extractPluginProperties(pluginPropertiesString);
-        final TenantContext tenantContext = context.createContext(request);
+        final TenantContext tenantContext = context.createTenantContextNoAccountId(request);
 
         // Search the plugin(s)
         final Pagination<Payment> payments;
@@ -310,7 +310,7 @@ public class PaymentResource extends ComboPaymentResource {
 
         final Iterable<PluginProperty> pluginProperties = Iterables.concat(pluginPropertiesFromQuery, pluginPropertiesFromBody);
 
-        final CallContext callContext = context.createContext(createdBy, reason, comment, request);
+        final CallContext callContext = context.createCallContextNoAccountId(createdBy, reason, comment, request);
         final Payment initialPayment = getPaymentByIdOrKey(paymentIdStr, json == null ? null : json.getPaymentExternalKey(), pluginProperties, callContext);
 
         final Account account = accountUserApi.getAccountById(initialPayment.getAccountId(), callContext);
@@ -423,7 +423,7 @@ public class PaymentResource extends ComboPaymentResource {
         verifyNonNullOrEmpty(json.getAmount(), "PaymentTransactionJson amount needs to be set");
 
         final Iterable<PluginProperty> pluginProperties = extractPluginProperties(pluginPropertiesString);
-        final CallContext callContext = context.createContext(createdBy, reason, comment, request);
+        final CallContext callContext = context.createCallContextNoAccountId(createdBy, reason, comment, request);
         final Payment initialPayment = getPaymentByIdOrKey(paymentIdStr, json.getPaymentExternalKey(), pluginProperties, callContext);
 
         final Account account = accountUserApi.getAccountById(initialPayment.getAccountId(), callContext);
@@ -501,7 +501,7 @@ public class PaymentResource extends ComboPaymentResource {
         verifyNonNullOrEmpty(json.getAmount(), "PaymentTransactionJson amount needs to be set");
 
         final Iterable<PluginProperty> pluginProperties = extractPluginProperties(pluginPropertiesString);
-        final CallContext callContext = context.createContext(createdBy, reason, comment, request);
+        final CallContext callContext = context.createCallContextNoAccountId(createdBy, reason, comment, request);
         final Payment initialPayment = getPaymentByIdOrKey(paymentIdStr, json.getPaymentExternalKey(), pluginProperties, callContext);
 
         final Account account = accountUserApi.getAccountById(initialPayment.getAccountId(), callContext);
@@ -574,7 +574,7 @@ public class PaymentResource extends ComboPaymentResource {
                                          final UriInfo uriInfo,
                                          final HttpServletRequest request) throws PaymentApiException, AccountApiException {
         final Iterable<PluginProperty> pluginProperties = extractPluginProperties(pluginPropertiesString);
-        final CallContext callContext = context.createContext(createdBy, reason, comment, request);
+        final CallContext callContext = context.createCallContextNoAccountId(createdBy, reason, comment, request);
         final Payment initialPayment = getPaymentByIdOrKey(paymentIdStr, json.getPaymentExternalKey(), pluginProperties, callContext);
 
         final Account account = accountUserApi.getAccountById(initialPayment.getAccountId(), callContext);
@@ -650,7 +650,7 @@ public class PaymentResource extends ComboPaymentResource {
         verifyNonNullOrEmpty(json.getAmount(), "PaymentTransactionJson amount needs to be set");
 
         final Iterable<PluginProperty> pluginProperties = extractPluginProperties(pluginPropertiesString);
-        final CallContext callContext = context.createContext(createdBy, reason, comment, request);
+        final CallContext callContext = context.createCallContextNoAccountId(createdBy, reason, comment, request);
         final Payment initialPayment = getPaymentByIdOrKey(paymentIdStr, json.getPaymentExternalKey(), pluginProperties, callContext);
 
         final Account account = accountUserApi.getAccountById(initialPayment.getAccountId(), callContext);
@@ -726,7 +726,7 @@ public class PaymentResource extends ComboPaymentResource {
         verifyNonNullOrEmpty(json.getTransactionExternalKey(), "PaymentTransactionJson transactionExternalKey needs to be set");
 
         final Iterable<PluginProperty> pluginProperties = extractPluginProperties(pluginPropertiesString);
-        final CallContext callContext = context.createContext(createdBy, reason, comment, request);
+        final CallContext callContext = context.createCallContextNoAccountId(createdBy, reason, comment, request);
         final Payment initialPayment = getPaymentByIdOrKey(paymentIdStr, json.getPaymentExternalKey(), pluginProperties, callContext);
 
         final Account account = accountUserApi.getAccountById(initialPayment.getAccountId(), callContext);
@@ -760,7 +760,7 @@ public class PaymentResource extends ComboPaymentResource {
 
         verifyNonNullOrEmpty(json, "ComboPaymentTransactionJson body should be specified");
 
-        final CallContext callContext = context.createContext(createdBy, reason, comment, request);
+        final CallContext callContext = context.createCallContextNoAccountId(createdBy, reason, comment, request);
         final Account account = getOrCreateAccount(json.getAccount(), callContext);
 
         final Iterable<PluginProperty> paymentMethodPluginProperties = extractPluginProperties(json.getPaymentMethodPluginProperties());
@@ -810,7 +810,7 @@ public class PaymentResource extends ComboPaymentResource {
                                                           @HeaderParam(HDR_COMMENT) final String comment,
                                                           @javax.ws.rs.core.Context final UriInfo uriInfo,
                                                           @javax.ws.rs.core.Context final HttpServletRequest request) throws PaymentApiException, AccountApiException {
-        final CallContext callContext = context.createContext(createdBy, reason, comment, request);
+        final CallContext callContext = context.createCallContextNoAccountId(createdBy, reason, comment, request);
         paymentApi.cancelScheduledPaymentTransaction(UUID.fromString(paymentTransactionId), callContext);
         return Response.status(Status.OK).build();
     }
@@ -828,7 +828,7 @@ public class PaymentResource extends ComboPaymentResource {
                                                                    @HeaderParam(HDR_COMMENT) final String comment,
                                                                    @javax.ws.rs.core.Context final UriInfo uriInfo,
                                                                    @javax.ws.rs.core.Context final HttpServletRequest request) throws PaymentApiException, AccountApiException {
-        final CallContext callContext = context.createContext(createdBy, reason, comment, request);
+        final CallContext callContext = context.createCallContextNoAccountId(createdBy, reason, comment, request);
         paymentApi.cancelScheduledPaymentTransaction(paymentTransactionExternalKey, callContext);
         return Response.status(Status.OK).build();
     }
@@ -845,7 +845,7 @@ public class PaymentResource extends ComboPaymentResource {
     public Response getCustomFields(@PathParam(ID_PARAM_NAME) final String id,
                                     @QueryParam(QUERY_AUDIT) @DefaultValue("NONE") final AuditMode auditMode,
                                     @javax.ws.rs.core.Context final HttpServletRequest request) {
-        return super.getCustomFields(UUID.fromString(id), auditMode, context.createContext(request));
+        return super.getCustomFields(UUID.fromString(id), auditMode, context.createTenantContextNoAccountId(request));
     }
 
     @TimedResource
@@ -863,7 +863,7 @@ public class PaymentResource extends ComboPaymentResource {
                                        @javax.ws.rs.core.Context final HttpServletRequest request,
                                        @javax.ws.rs.core.Context final UriInfo uriInfo) throws CustomFieldApiException {
         return super.createCustomFields(UUID.fromString(id), customFields,
-                                        context.createContext(createdBy, reason, comment, request), uriInfo, request);
+                                        context.createCallContextNoAccountId(createdBy, reason, comment, request), uriInfo, request);
     }
 
     @TimedResource
@@ -880,7 +880,7 @@ public class PaymentResource extends ComboPaymentResource {
                                        @HeaderParam(HDR_COMMENT) final String comment,
                                        @javax.ws.rs.core.Context final HttpServletRequest request) throws CustomFieldApiException {
         return super.deleteCustomFields(UUID.fromString(id), customFieldList,
-                                        context.createContext(createdBy, reason, comment, request));
+                                        context.createCallContextNoAccountId(createdBy, reason, comment, request));
     }
 
     @TimedResource
@@ -894,7 +894,7 @@ public class PaymentResource extends ComboPaymentResource {
                             @QueryParam(QUERY_AUDIT) @DefaultValue("NONE") final AuditMode auditMode,
                             @QueryParam(QUERY_TAGS_INCLUDED_DELETED) @DefaultValue("false") final Boolean includedDeleted,
                             @javax.ws.rs.core.Context final HttpServletRequest request) throws TagDefinitionApiException, PaymentApiException {
-        final TenantContext tenantContext = context.createContext(request);
+        final TenantContext tenantContext = context.createTenantContextNoAccountId(request);
         final UUID paymentId = UUID.fromString(id);
         final Payment payment = paymentApi.getPayment(paymentId, false, false, ImmutableList.<PluginProperty>of(), tenantContext);
         return super.getTags(payment.getAccountId(), paymentId, auditMode, includedDeleted, tenantContext);
@@ -915,7 +915,7 @@ public class PaymentResource extends ComboPaymentResource {
                                @javax.ws.rs.core.Context final UriInfo uriInfo,
                                @javax.ws.rs.core.Context final HttpServletRequest request) throws TagApiException {
         return super.createTags(UUID.fromString(id), tagList, uriInfo,
-                                context.createContext(createdBy, reason, comment, request), request);
+                                context.createCallContextNoAccountId(createdBy, reason, comment, request), request);
     }
 
     @TimedResource
@@ -932,7 +932,7 @@ public class PaymentResource extends ComboPaymentResource {
                                @HeaderParam(HDR_COMMENT) final String comment,
                                @javax.ws.rs.core.Context final HttpServletRequest request) throws TagApiException {
         return super.deleteTags(UUID.fromString(id), tagList,
-                                context.createContext(createdBy, reason, comment, request));
+                                context.createCallContextNoAccountId(createdBy, reason, comment, request));
     }
 
     @Override

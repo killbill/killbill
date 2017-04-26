@@ -451,7 +451,7 @@ public class TestDefaultAccountUserApi extends AccountTestSuiteWithEmbeddedDB {
         final TenantSqlDao tenantSqlDao = dbi.onDemand(TenantSqlDao.class);
         final TenantModelDao tenant2 = new TenantModelDao();
         tenantSqlDao.create(tenant2, internalCallContext);
-        final CallContext callContext2 = new DefaultCallContext(tenant2.getId(), callContext.getUserName(), callContext.getCallOrigin(), callContext.getUserType(), callContext.getUserToken(), clock);
+        final CallContext callContext2 = new DefaultCallContext(account1.getId(), tenant2.getId(), callContext.getUserName(), callContext.getCallOrigin(), callContext.getUserType(), callContext.getUserToken(), clock);
         final Account account2 = accountUserApi.createAccount(accountData, callContext2);
 
         Assert.assertEquals(account1.getExternalKey(), account2.getExternalKey());

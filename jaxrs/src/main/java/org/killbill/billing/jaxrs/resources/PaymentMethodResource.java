@@ -105,7 +105,7 @@ public class PaymentMethodResource extends JaxRsResourceBase {
                                      @QueryParam(QUERY_WITH_PLUGIN_INFO) @DefaultValue("false") final Boolean withPluginInfo,
                                      @javax.ws.rs.core.Context final HttpServletRequest request) throws AccountApiException, PaymentApiException {
         final Iterable<PluginProperty> pluginProperties = extractPluginProperties(pluginPropertiesString);
-        final TenantContext tenantContext = context.createContext(request);
+        final TenantContext tenantContext = context.createTenantContextNoAccountId(request);
 
         final PaymentMethod paymentMethod = paymentApi.getPaymentMethodById(UUID.fromString(paymentMethodId), false, withPluginInfo, pluginProperties, tenantContext);
         final Account account = accountUserApi.getAccountById(paymentMethod.getAccountId(), tenantContext);
@@ -126,7 +126,7 @@ public class PaymentMethodResource extends JaxRsResourceBase {
                                           @QueryParam(QUERY_WITH_PLUGIN_INFO) @DefaultValue("false") final Boolean withPluginInfo,
                                           @javax.ws.rs.core.Context final HttpServletRequest request) throws AccountApiException, PaymentApiException {
         final Iterable<PluginProperty> pluginProperties = extractPluginProperties(pluginPropertiesString);
-        final TenantContext tenantContext = context.createContext(request);
+        final TenantContext tenantContext = context.createTenantContextNoAccountId(request);
 
         final PaymentMethod paymentMethod = paymentApi.getPaymentMethodByExternalKey(externalKey, false, withPluginInfo, pluginProperties, tenantContext);
         final Account account = accountUserApi.getAccountById(paymentMethod.getAccountId(), tenantContext);
@@ -149,7 +149,7 @@ public class PaymentMethodResource extends JaxRsResourceBase {
                                       @QueryParam(QUERY_WITH_PLUGIN_INFO) @DefaultValue("false") final Boolean withPluginInfo,
                                       @javax.ws.rs.core.Context final HttpServletRequest request) throws PaymentApiException {
         final Iterable<PluginProperty> pluginProperties = extractPluginProperties(pluginPropertiesString);
-        final TenantContext tenantContext = context.createContext(request);
+        final TenantContext tenantContext = context.createTenantContextNoAccountId(request);
 
         final Pagination<PaymentMethod> paymentMethods;
         if (Strings.isNullOrEmpty(pluginName)) {
@@ -206,7 +206,7 @@ public class PaymentMethodResource extends JaxRsResourceBase {
                                          @QueryParam(QUERY_WITH_PLUGIN_INFO) @DefaultValue("false") final Boolean withPluginInfo,
                                          @javax.ws.rs.core.Context final HttpServletRequest request) throws PaymentApiException, AccountApiException {
         final Iterable<PluginProperty> pluginProperties = extractPluginProperties(pluginPropertiesString);
-        final TenantContext tenantContext = context.createContext(request);
+        final TenantContext tenantContext = context.createTenantContextNoAccountId(request);
 
         // Search the plugin(s)
         final Pagination<PaymentMethod> paymentMethods;
@@ -266,7 +266,7 @@ public class PaymentMethodResource extends JaxRsResourceBase {
                                         @HeaderParam(HDR_COMMENT) final String comment,
                                         @javax.ws.rs.core.Context final HttpServletRequest request) throws PaymentApiException, AccountApiException {
         final Iterable<PluginProperty> pluginProperties = extractPluginProperties(pluginPropertiesString);
-        final CallContext callContext = context.createContext(createdBy, reason, comment, request);
+        final CallContext callContext = context.createCallContextNoAccountId(createdBy, reason, comment, request);
 
         final PaymentMethod paymentMethod = paymentApi.getPaymentMethodById(UUID.fromString(paymentMethodId), false, false, pluginProperties, callContext);
         final Account account = accountUserApi.getAccountById(paymentMethod.getAccountId(), callContext);
@@ -285,7 +285,7 @@ public class PaymentMethodResource extends JaxRsResourceBase {
     public Response getCustomFields(@PathParam("paymentMethodId") final String paymentMethodId,
                                     @QueryParam(QUERY_AUDIT) @DefaultValue("NONE") final AuditMode auditMode,
                                     @javax.ws.rs.core.Context final HttpServletRequest request) {
-        return super.getCustomFields(UUID.fromString(paymentMethodId), auditMode, context.createContext(request));
+        return super.getCustomFields(UUID.fromString(paymentMethodId), auditMode, context.createTenantContextNoAccountId(request));
     }
 
     @TimedResource
@@ -303,7 +303,7 @@ public class PaymentMethodResource extends JaxRsResourceBase {
                                        @javax.ws.rs.core.Context final HttpServletRequest request,
                                        @javax.ws.rs.core.Context final UriInfo uriInfo) throws CustomFieldApiException {
         return super.createCustomFields(UUID.fromString(paymentMethodId), customFields,
-                                        context.createContext(createdBy, reason, comment, request), uriInfo, request);
+                                        context.createCallContextNoAccountId(createdBy, reason, comment, request), uriInfo, request);
     }
 
     @TimedResource
@@ -320,7 +320,7 @@ public class PaymentMethodResource extends JaxRsResourceBase {
                                        @HeaderParam(HDR_COMMENT) final String comment,
                                        @javax.ws.rs.core.Context final HttpServletRequest request) throws CustomFieldApiException {
         return super.deleteCustomFields(UUID.fromString(paymentMethodId), customFieldList,
-                                        context.createContext(createdBy, reason, comment, request));
+                                        context.createCallContextNoAccountId(createdBy, reason, comment, request));
     }
 
     @Override

@@ -51,12 +51,18 @@ public class Context {
         this.internalCallContextFactory = internalCallContextFactory;
     }
 
-    public CallContext createContext(final String createdBy, final String reason, final String comment, final ServletRequest request)
+    public CallContext createCallContextNoAccountId(final String createdBy, final String reason, final String comment, final ServletRequest request)
+            throws IllegalArgumentException {
+        return createCallContextWithAccountId(null, createdBy, reason, comment, request);
+    }
+
+    public CallContext createCallContextWithAccountId(final UUID accountId, final String createdBy, final String reason, final String comment, final ServletRequest request)
             throws IllegalArgumentException {
         try {
             Preconditions.checkNotNull(createdBy, String.format("Header %s needs to be set", JaxrsResource.HDR_CREATED_BY));
             final Tenant tenant = getTenantFromRequest(request);
-            final CallContext callContext = contextFactory.createCallContext(tenant == null ? null : tenant.getId(), createdBy, origin, userType, reason,
+            final UUID tenantId = tenant == null ? null : tenant.getId();
+            final CallContext callContext = contextFactory.createCallContext(accountId, tenantId, createdBy, origin, userType, reason,
                                                                              comment, getOrCreateUserToken());
 
             populateMDCContext(callContext);
@@ -67,15 +73,19 @@ public class Context {
         }
     }
 
-    public TenantContext createContext(final ServletRequest request) {
+    public TenantContext createTenantContextNoAccountId(final ServletRequest request) {
+        return createTenantContextWithAccountId(null, request);
+    }
+
+    public TenantContext createTenantContextWithAccountId(final UUID accountId, final ServletRequest request) {
         final TenantContext tenantContext;
 
         final Tenant tenant = getTenantFromRequest(request);
         if (tenant == null) {
             // Multi-tenancy may not have been configured - default to "default" tenant (see InternalCallContextFactory)
-            tenantContext = contextFactory.createTenantContext(null);
+            tenantContext = contextFactory.createTenantContext(accountId, null);
         } else {
-            tenantContext = contextFactory.createTenantContext(tenant.getId());
+            tenantContext = contextFactory.createTenantContext(accountId, tenant.getId());
         }
 
         populateMDCContext(tenantContext);

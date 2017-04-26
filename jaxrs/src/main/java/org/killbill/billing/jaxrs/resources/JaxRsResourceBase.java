@@ -170,7 +170,7 @@ public abstract class JaxRsResourceBase implements JaxrsResource {
                                      final HttpServletRequest request) throws SubscriptionApiException, EntitlementApiException, AccountApiException {
 
         final Iterable<PluginProperty> pluginProperties = extractPluginProperties(pluginPropertiesString);
-        final CallContext callContext = context.createContext(createdBy, reason, comment, request);
+        final CallContext callContext = context.createCallContextNoAccountId(createdBy, reason, comment, request);
         final UUID blockableId = UUID.fromString(id);
 
         final boolean isBlockBilling = (json.isBlockBilling() != null && json.isBlockBilling());

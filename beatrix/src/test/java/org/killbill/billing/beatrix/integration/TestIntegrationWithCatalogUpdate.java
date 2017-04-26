@@ -421,7 +421,7 @@ public class TestIntegrationWithCatalogUpdate extends TestIntegrationBase {
         // Only place where we use callContext
         tenant = tenantUserApi.createTenant(new DefaultTenant(uuid, init, init, externalKey, apiKey, apiSecret), callContext);
 
-        testCallContext = new DefaultCallContext(tenant.getId(), "tester", CallOrigin.EXTERNAL, UserType.TEST,
+        testCallContext = new DefaultCallContext(null, tenant.getId(), "tester", CallOrigin.EXTERNAL, UserType.TEST,
                                                  "good reason", "trust me", uuid, clock);
     }
 

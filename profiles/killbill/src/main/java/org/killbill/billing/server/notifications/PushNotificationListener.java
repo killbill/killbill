@@ -98,7 +98,7 @@ public class PushNotificationListener {
     @AllowConcurrentEvents
     @Subscribe
     public void triggerPushNotifications(final ExtBusEvent event) {
-        final TenantContext context = contextFactory.createTenantContext(event.getTenantId());
+        final TenantContext context = contextFactory.createTenantContext(event.getAccountId(), event.getTenantId());
         try {
             final List<String> callbacks = getCallbacksForTenant(context);
             if (callbacks.isEmpty()) {
@@ -171,7 +171,7 @@ public class PushNotificationListener {
                                                                 notificationJson.getObjectId() != null ? UUID.fromString(notificationJson.getObjectId()) : null,
                                                                 attemptRetryNumber + 1, url);
 
-        final TenantContext tenantContext = contextFactory.createTenantContext(tenantId);
+        final TenantContext tenantContext = contextFactory.createTenantContext(null, tenantId);
         final DateTime nextNotificationTime = getNextNotificationTime(key.getAttemptNumber(), internalCallContextFactory.createInternalTenantContextWithoutAccountRecordId(tenantContext));
 
         if (nextNotificationTime == null) {

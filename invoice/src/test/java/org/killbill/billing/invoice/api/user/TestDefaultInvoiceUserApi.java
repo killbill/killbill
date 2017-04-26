@@ -138,7 +138,7 @@ public class TestDefaultInvoiceUserApi extends InvoiceTestSuiteWithEmbeddedDB {
         ((ClockMock) clock).addDays(1);
 
         // Sleep at least one sec to make sure created_date for the external charge is different than the created date for the invoice itself
-        CallContext newCallContextLater = new DefaultCallContext(callContext.getTenantId(), callContext.getUserName(), callContext.getCallOrigin(), callContext.getUserType(), callContext.getUserToken(), clock);
+        CallContext newCallContextLater = new DefaultCallContext(accountId, callContext.getTenantId(), callContext.getUserName(), callContext.getCallOrigin(), callContext.getUserType(), callContext.getUserToken(), clock);
         // Post an external charge
         final BigDecimal externalChargeAmount = BigDecimal.TEN;
         final InvoiceItem externalCharge = new ExternalChargeInvoiceItem(invoiceId, accountId, null, UUID.randomUUID().toString(), clock.getUTCToday(), externalChargeAmount, accountCurrency);

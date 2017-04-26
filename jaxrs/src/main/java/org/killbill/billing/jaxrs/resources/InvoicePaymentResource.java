@@ -121,7 +121,7 @@ public class InvoicePaymentResource extends JaxRsResourceBase {
 
         final Iterable<PluginProperty> pluginProperties = extractPluginProperties(pluginPropertiesString);
         final UUID paymentIdId = UUID.fromString(paymentIdStr);
-        final TenantContext tenantContext = context.createContext(request);
+        final TenantContext tenantContext = context.createTenantContextNoAccountId(request);
         final Payment payment = paymentApi.getPayment(paymentIdId, withPluginInfo, withAttempts, pluginProperties, tenantContext);
         final AccountAuditLogs accountAuditLogs = auditUserApi.getAccountAuditLogs(payment.getAccountId(), auditMode.getLevel(), tenantContext);
 
@@ -158,7 +158,7 @@ public class InvoicePaymentResource extends JaxRsResourceBase {
                                                 @javax.ws.rs.core.Context final HttpServletRequest request) throws PaymentApiException, AccountApiException {
         verifyNonNullOrEmpty(json, "InvoicePaymentTransactionJson body should be specified");
 
-        final CallContext callContext = context.createContext(createdBy, reason, comment, request);
+        final CallContext callContext = context.createCallContextNoAccountId(createdBy, reason, comment, request);
         final UUID paymentUuid = UUID.fromString(paymentId);
         final Payment payment = paymentApi.getPayment(paymentUuid, false, false, ImmutableList.<PluginProperty>of(), callContext);
         final Account account = accountUserApi.getAccountById(payment.getAccountId(), callContext);
@@ -220,7 +220,7 @@ public class InvoicePaymentResource extends JaxRsResourceBase {
         verifyNonNullOrEmpty(json, "InvoicePaymentTransactionJson body should be specified");
         verifyNonNullOrEmpty(json.getAmount(), "InvoicePaymentTransactionJson amount needs to be set");
 
-        final CallContext callContext = context.createContext(createdBy, reason, comment, request);
+        final CallContext callContext = context.createCallContextNoAccountId(createdBy, reason, comment, request);
         final UUID paymentUuid = UUID.fromString(paymentId);
         final Payment payment = paymentApi.getPayment(paymentUuid, false, false, ImmutableList.<PluginProperty>of(), callContext);
         final Account account = accountUserApi.getAccountById(payment.getAccountId(), callContext);
@@ -249,7 +249,7 @@ public class InvoicePaymentResource extends JaxRsResourceBase {
         verifyNonNullOrEmpty(json, "InvoicePaymentTransactionJson body should be specified");
         verifyNonNullOrEmpty(json.getTransactionExternalKey(), "transactionExternalKey amount needs to be set");
 
-        final CallContext callContext = context.createContext(createdBy, reason, comment, request);
+        final CallContext callContext = context.createCallContextNoAccountId(createdBy, reason, comment, request);
         final UUID paymentUuid = UUID.fromString(paymentId);
         final Payment payment = paymentApi.getPayment(paymentUuid, false, false, ImmutableList.<PluginProperty>of(), callContext);
         final Account account = accountUserApi.getAccountById(payment.getAccountId(), callContext);
@@ -267,7 +267,7 @@ public class InvoicePaymentResource extends JaxRsResourceBase {
     public Response getCustomFields(@PathParam(ID_PARAM_NAME) final String id,
                                     @QueryParam(QUERY_AUDIT) @DefaultValue("NONE") final AuditMode auditMode,
                                     @javax.ws.rs.core.Context final HttpServletRequest request) {
-        return super.getCustomFields(UUID.fromString(id), auditMode, context.createContext(request));
+        return super.getCustomFields(UUID.fromString(id), auditMode, context.createTenantContextNoAccountId(request));
     }
 
     @TimedResource
@@ -285,7 +285,7 @@ public class InvoicePaymentResource extends JaxRsResourceBase {
                                        @javax.ws.rs.core.Context final HttpServletRequest request,
                                        @javax.ws.rs.core.Context final UriInfo uriInfo) throws CustomFieldApiException {
         return super.createCustomFields(UUID.fromString(id), customFields,
-                                        context.createContext(createdBy, reason, comment, request), uriInfo, request);
+                                        context.createCallContextNoAccountId(createdBy, reason, comment, request), uriInfo, request);
     }
 
     @TimedResource
@@ -302,7 +302,7 @@ public class InvoicePaymentResource extends JaxRsResourceBase {
                                        @HeaderParam(HDR_COMMENT) final String comment,
                                        @javax.ws.rs.core.Context final HttpServletRequest request) throws CustomFieldApiException {
         return super.deleteCustomFields(UUID.fromString(id), customFieldList,
-                                        context.createContext(createdBy, reason, comment, request));
+                                        context.createCallContextNoAccountId(createdBy, reason, comment, request));
     }
 
     @TimedResource
@@ -319,7 +319,7 @@ public class InvoicePaymentResource extends JaxRsResourceBase {
                             @javax.ws.rs.core.Context final HttpServletRequest request) throws TagDefinitionApiException, PaymentApiException {
         final Iterable<PluginProperty> pluginProperties = extractPluginProperties(pluginPropertiesString);
         final UUID paymentId = UUID.fromString(paymentIdString);
-        final TenantContext tenantContext = context.createContext(request);
+        final TenantContext tenantContext = context.createTenantContextNoAccountId(request);
         final Payment payment = paymentApi.getPayment(paymentId, false, false, pluginProperties, tenantContext);
         return super.getTags(payment.getAccountId(), paymentId, auditMode, includedDeleted, tenantContext);
     }
@@ -339,7 +339,7 @@ public class InvoicePaymentResource extends JaxRsResourceBase {
                                @javax.ws.rs.core.Context final UriInfo uriInfo,
                                @javax.ws.rs.core.Context final HttpServletRequest request) throws TagApiException {
         return super.createTags(UUID.fromString(id), tagList, uriInfo,
-                                context.createContext(createdBy, reason, comment, request), request);
+                                context.createCallContextNoAccountId(createdBy, reason, comment, request), request);
     }
 
     @TimedResource
@@ -356,7 +356,7 @@ public class InvoicePaymentResource extends JaxRsResourceBase {
                                @HeaderParam(HDR_COMMENT) final String comment,
                                @javax.ws.rs.core.Context final HttpServletRequest request) throws TagApiException {
         return super.deleteTags(UUID.fromString(id), tagList,
-                                context.createContext(createdBy, reason, comment, request));
+                                context.createCallContextNoAccountId(createdBy, reason, comment, request));
     }
 
     @Override

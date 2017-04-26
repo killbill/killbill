@@ -69,7 +69,7 @@ public class SubscriptionChecker {
 
     public SubscriptionBase checkSubscriptionCreated(final UUID subscriptionId, final InternalCallContext context) throws SubscriptionBaseApiException {
         final UUID tenantId = nonEntityDao.retrieveIdFromObject(context.getTenantRecordId(), ObjectType.TENANT, objectIdCacheController);
-        final CallContext callContext = context.toCallContext(tenantId);
+        final CallContext callContext = context.toCallContext(null, tenantId);
 
         final SubscriptionBase subscription = subscriptionApi.getSubscriptionFromId(subscriptionId, context);
         Assert.assertNotNull(subscription);

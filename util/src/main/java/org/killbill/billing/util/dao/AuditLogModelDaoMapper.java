@@ -45,7 +45,7 @@ public class AuditLogModelDaoMapper extends MapperBase implements ResultSetMappe
 
         final EntityAudit entityAudit = new EntityAudit(id, TableName.valueOf(tableName), targetRecordId, ChangeType.valueOf(changeType), createdDate);
         // TODO - we have the tenant_record_id but not the tenant id here
-        final CallContext callContext = new DefaultCallContext(null, createdBy, createdDate, reasonCode, comments, userToken);
+        final CallContext callContext = new DefaultCallContext(null, null, createdBy, createdDate, reasonCode, comments, userToken);
         return new AuditLogModelDao(entityAudit, callContext);
     }
 }

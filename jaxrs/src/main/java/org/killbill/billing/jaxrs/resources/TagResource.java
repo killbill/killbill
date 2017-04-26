@@ -86,7 +86,7 @@ public class TagResource extends JaxRsResourceBase {
                             @QueryParam(QUERY_SEARCH_LIMIT) @DefaultValue("100") final Long limit,
                             @QueryParam(QUERY_AUDIT) @DefaultValue("NONE") final AuditMode auditMode,
                             @javax.ws.rs.core.Context final HttpServletRequest request) throws TagApiException {
-        final TenantContext tenantContext = context.createContext(request);
+        final TenantContext tenantContext = context.createTenantContextNoAccountId(request);
         final Pagination<Tag> tags = tagUserApi.getTags(offset, limit, tenantContext);
         final URI nextPageUri = uriBuilder.nextPage(TagResource.class, "getTags", tags.getNextOffset(), limit, ImmutableMap.<String, String>of(QUERY_AUDIT, auditMode.getLevel().toString()));
 
@@ -120,7 +120,7 @@ public class TagResource extends JaxRsResourceBase {
                                @QueryParam(QUERY_SEARCH_LIMIT) @DefaultValue("100") final Long limit,
                                @QueryParam(QUERY_AUDIT) @DefaultValue("NONE") final AuditMode auditMode,
                                @javax.ws.rs.core.Context final HttpServletRequest request) throws TagApiException {
-        final TenantContext tenantContext = context.createContext(request);
+        final TenantContext tenantContext = context.createTenantContextNoAccountId(request);
         final Pagination<Tag> tags = tagUserApi.searchTags(searchKey, offset, limit, tenantContext);
         final URI nextPageUri = uriBuilder.nextPage(TagResource.class, "searchTags", tags.getNextOffset(), limit, ImmutableMap.<String, String>of("searchKey", searchKey,
                                                                                                                                                   QUERY_AUDIT, auditMode.getLevel().toString()));

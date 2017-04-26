@@ -136,9 +136,9 @@ public class TenantResource extends JaxRsResourceBase {
                              json.getApiSecret(), "TenantJson apiSecret needs to be set");
 
         final TenantData data = json.toTenantData();
-        final Tenant tenant = tenantApi.createTenant(data, context.createContext(createdBy, reason, comment, request));
+        final Tenant tenant = tenantApi.createTenant(data, context.createCallContextNoAccountId(createdBy, reason, comment, request));
         if (!useGlobalDefault) {
-            final CallContext callContext = new DefaultCallContext(tenant.getId(), createdBy, CallOrigin.EXTERNAL,
+            final CallContext callContext = new DefaultCallContext(null, tenant.getId(), createdBy, CallOrigin.EXTERNAL,
                                                                    UserType.CUSTOMER, Context.getOrCreateUserToken(), clock);
             catalogUserApi.createDefaultEmptyCatalog(clock.getUTCNow(),callContext);
         }
@@ -236,7 +236,7 @@ public class TenantResource extends JaxRsResourceBase {
     public Response getAllPluginConfiguration(@PathParam("keyPrefix") final String keyPrefix,
                                               @javax.ws.rs.core.Context final HttpServletRequest request) throws TenantApiException {
 
-        final TenantContext tenantContext = context.createContext(request);
+        final TenantContext tenantContext = context.createTenantContextNoAccountId(request);
         final Map<String, List<String>> apiResult = tenantApi.searchTenantKeyValues(keyPrefix, tenantContext);
         final List<TenantKeyJson> result = new ArrayList<TenantKeyJson>();
         for (final String cur : apiResult.keySet()) {
@@ -339,7 +339,7 @@ public class TenantResource extends JaxRsResourceBase {
                                @HeaderParam(HDR_COMMENT) final String comment,
                                @javax.ws.rs.core.Context final HttpServletRequest request,
                                @javax.ws.rs.core.Context  final UriInfo uriInfo) throws TenantApiException {
-        final CallContext callContext = context.createContext(createdBy, reason, comment, request);
+        final CallContext callContext = context.createCallContextNoAccountId(createdBy, reason, comment, request);
         tenantApi.addTenantKeyValue(key, value, callContext);
         return uriBuilder.buildResponse(uriInfo, TenantResource.class, "getUserKeyValue", key, request);
     }
@@ -352,7 +352,7 @@ public class TenantResource extends JaxRsResourceBase {
     @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid tenantId supplied")})
     public Response getUserKeyValue(@PathParam("keyName") final String key,
                                            @javax.ws.rs.core.Context final HttpServletRequest request) throws TenantApiException {
-        final TenantContext tenantContext = context.createContext(request);
+        final TenantContext tenantContext = context.createTenantContextNoAccountId(request);
         final List<String> values = tenantApi.getTenantValuesForKey(key, tenantContext);
         final TenantKeyJson result = new TenantKeyJson(key, values);
         return Response.status(Status.OK).entity(result).build();
@@ -369,7 +369,7 @@ public class TenantResource extends JaxRsResourceBase {
                                               @HeaderParam(HDR_REASON) final String reason,
                                               @HeaderParam(HDR_COMMENT) final String comment,
                                               @javax.ws.rs.core.Context final HttpServletRequest request) throws TenantApiException {
-        final CallContext callContext = context.createContext(createdBy, reason, comment, request);
+        final CallContext callContext = context.createCallContextNoAccountId(createdBy, reason, comment, request);
         tenantApi.deleteTenantKey(key, callContext);
         return Response.status(Status.OK).build();
     }
@@ -385,7 +385,7 @@ public class TenantResource extends JaxRsResourceBase {
                                      final String reason,
                                      final String comment,
                                      final HttpServletRequest request) throws TenantApiException {
-        final CallContext callContext = context.createContext(createdBy, reason, comment, request);
+        final CallContext callContext = context.createCallContextNoAccountId(createdBy, reason, comment, request);
         final String tenantKey = keyPostfix != null ? key.toString() + keyPostfix : key.toString();
         tenantApi.addTenantKeyValue(tenantKey, value, callContext);
 
@@ -397,7 +397,7 @@ public class TenantResource extends JaxRsResourceBase {
     private Response getTenantKey(final TenantKey key,
                                   @Nullable final String keyPostfix,
                                   final HttpServletRequest request) throws TenantApiException {
-        final TenantContext tenantContext = context.createContext(request);
+        final TenantContext tenantContext = context.createTenantContextNoAccountId(request);
         final String tenantKey = keyPostfix != null ? key.toString() + keyPostfix : key.toString();
         final List<String> values = tenantApi.getTenantValuesForKey(tenantKey, tenantContext);
         final TenantKeyJson result = new TenantKeyJson(tenantKey, values);
@@ -410,7 +410,7 @@ public class TenantResource extends JaxRsResourceBase {
                                      final String reason,
                                      final String comment,
                                      final HttpServletRequest request) throws TenantApiException {
-        final CallContext callContext = context.createContext(createdBy, reason, comment, request);
+        final CallContext callContext = context.createCallContextNoAccountId(createdBy, reason, comment, request);
         final String tenantKey = keyPostfix != null ? key.toString() + keyPostfix : key.toString();
         tenantApi.deleteTenantKey(tenantKey, callContext);
         return Response.status(Status.OK).build();

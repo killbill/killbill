@@ -204,10 +204,10 @@ public class TestPublicBus extends TestIntegrationBase {
     public void testTenantKVChange() throws Exception {
 
         final TenantData tenantData = new DefaultTenant(null, clock.getUTCNow(), clock.getUTCNow(), "MY_TENANT", "key", "s3Cr3T");
-        final CallContext contextWithNoTenant = new DefaultCallContext(null, "loulou", CallOrigin.EXTERNAL, UserType.ADMIN, "no reason", "hum", UUID.randomUUID(), clock);
+        final CallContext contextWithNoTenant = new DefaultCallContext(null, null, "loulou", CallOrigin.EXTERNAL, UserType.ADMIN, "no reason", "hum", UUID.randomUUID(), clock);
         final Tenant tenant = tenantUserApi.createTenant(tenantData, contextWithNoTenant);
 
-        final CallContext contextWithTenant = new DefaultCallContext(tenant.getId(), "loulou", CallOrigin.EXTERNAL, UserType.ADMIN, "no reason", "hum", UUID.randomUUID(), clock);
+        final CallContext contextWithTenant = new DefaultCallContext(null, tenant.getId(), "loulou", CallOrigin.EXTERNAL, UserType.ADMIN, "no reason", "hum", UUID.randomUUID(), clock);
         final String tenantKey = TenantKey.PLUGIN_CONFIG_ + "FOO";
         tenantUserApi.addTenantKeyValue(tenantKey, "FOO", contextWithTenant);
 

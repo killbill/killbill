@@ -82,7 +82,7 @@ public class CustomFieldResource extends JaxRsResourceBase {
                                     @QueryParam(QUERY_SEARCH_LIMIT) @DefaultValue("100") final Long limit,
                                     @QueryParam(QUERY_AUDIT) @DefaultValue("NONE") final AuditMode auditMode,
                                     @javax.ws.rs.core.Context final HttpServletRequest request) throws CustomFieldApiException {
-        final TenantContext tenantContext = context.createContext(request);
+        final TenantContext tenantContext = context.createTenantContextNoAccountId(request);
         final Pagination<CustomField> customFields = customFieldUserApi.getCustomFields(offset, limit, tenantContext);
         final URI nextPageUri = uriBuilder.nextPage(CustomFieldResource.class, "getCustomFields", customFields.getNextOffset(), limit, ImmutableMap.<String, String>of(QUERY_AUDIT, auditMode.getLevel().toString()));
 
@@ -109,7 +109,7 @@ public class CustomFieldResource extends JaxRsResourceBase {
                                        @QueryParam(QUERY_SEARCH_LIMIT) @DefaultValue("100") final Long limit,
                                        @QueryParam(QUERY_AUDIT) @DefaultValue("NONE") final AuditMode auditMode,
                                        @javax.ws.rs.core.Context final HttpServletRequest request) throws CustomFieldApiException {
-        final TenantContext tenantContext = context.createContext(request);
+        final TenantContext tenantContext = context.createTenantContextNoAccountId(request);
         final Pagination<CustomField> customFields = customFieldUserApi.searchCustomFields(searchKey, offset, limit, tenantContext);
         final URI nextPageUri = uriBuilder.nextPage(CustomFieldResource.class, "searchCustomFields", customFields.getNextOffset(), limit, ImmutableMap.<String, String>of("searchKey", searchKey,
                                                                                                                                                                           QUERY_AUDIT, auditMode.getLevel().toString()));

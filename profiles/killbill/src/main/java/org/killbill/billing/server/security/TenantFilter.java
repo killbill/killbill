@@ -105,7 +105,7 @@ public class TenantFilter implements Filter {
             request.setAttribute(TENANT, tenant);
 
             // Create a dummy context, to set the MDC very early for LoggingFilter
-            context.createContext(request);
+            context.createTenantContextNoAccountId(request);
 
             chain.doFilter(request, response);
         } catch (final TenantApiException e) {

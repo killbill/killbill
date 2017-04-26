@@ -122,7 +122,7 @@ public class SecurityResource extends JaxRsResourceBase {
                                  @HeaderParam(HDR_COMMENT) final String comment,
                                  @javax.ws.rs.core.Context final HttpServletRequest request,
                                  @javax.ws.rs.core.Context final UriInfo uriInfo) throws SecurityApiException {
-        securityApi.addUserRoles(json.getUsername(), json.getPassword(), json.getRoles(), context.createContext(createdBy, reason, comment, request));
+        securityApi.addUserRoles(json.getUsername(), json.getPassword(), json.getRoles(), context.createCallContextNoAccountId(createdBy, reason, comment, request));
         return Response.status(Status.CREATED).build();
     }
 
@@ -139,7 +139,7 @@ public class SecurityResource extends JaxRsResourceBase {
                                        @HeaderParam(HDR_COMMENT) final String comment,
                                        @javax.ws.rs.core.Context final HttpServletRequest request,
                                        @javax.ws.rs.core.Context final UriInfo uriInfo) throws SecurityApiException {
-        securityApi.updateUserPassword(username, json.getPassword(), context.createContext(createdBy, reason, comment, request));
+        securityApi.updateUserPassword(username, json.getPassword(), context.createCallContextNoAccountId(createdBy, reason, comment, request));
         return Response.status(Status.OK).build();
     }
 
@@ -151,7 +151,7 @@ public class SecurityResource extends JaxRsResourceBase {
     public Response getUserRoles(@PathParam("username") final String username,
                                  @javax.ws.rs.core.Context final HttpServletRequest request,
                                  @javax.ws.rs.core.Context final UriInfo uriInfo) throws SecurityApiException {
-        final List<String> roles = securityApi.getUserRoles(username, context.createContext(request));
+        final List<String> roles = securityApi.getUserRoles(username, context.createTenantContextNoAccountId(request));
         final UserRolesJson userRolesJson = new UserRolesJson(username, null, roles);
         return Response.status(Status.OK).entity(userRolesJson).build();
     }
@@ -169,7 +169,7 @@ public class SecurityResource extends JaxRsResourceBase {
                                     @HeaderParam(HDR_COMMENT) final String comment,
                                     @javax.ws.rs.core.Context final HttpServletRequest request,
                                     @javax.ws.rs.core.Context final UriInfo uriInfo) throws SecurityApiException {
-        securityApi.updateUserRoles(username, json.getRoles(), context.createContext(createdBy, reason, comment, request));
+        securityApi.updateUserRoles(username, json.getRoles(), context.createCallContextNoAccountId(createdBy, reason, comment, request));
         return Response.status(Status.OK).build();
     }
 
@@ -185,7 +185,7 @@ public class SecurityResource extends JaxRsResourceBase {
                                     @HeaderParam(HDR_COMMENT) final String comment,
                                     @javax.ws.rs.core.Context final HttpServletRequest request,
                                     @javax.ws.rs.core.Context final UriInfo uriInfo) throws SecurityApiException {
-        securityApi.invalidateUser(username, context.createContext(createdBy, reason, comment, request));
+        securityApi.invalidateUser(username, context.createCallContextNoAccountId(createdBy, reason, comment, request));
         return Response.status(Status.NO_CONTENT).build();
     }
 
@@ -203,7 +203,7 @@ public class SecurityResource extends JaxRsResourceBase {
                                       @HeaderParam(HDR_COMMENT) final String comment,
                                       @javax.ws.rs.core.Context final HttpServletRequest request,
                                       @javax.ws.rs.core.Context final UriInfo uriInfo) throws SecurityApiException {
-        securityApi.addRoleDefinition(json.getRole(), json.getPermissions(), context.createContext(createdBy, reason, comment, request));
+        securityApi.addRoleDefinition(json.getRole(), json.getPermissions(), context.createCallContextNoAccountId(createdBy, reason, comment, request));
         return Response.status(Status.CREATED).build();
     }
 }

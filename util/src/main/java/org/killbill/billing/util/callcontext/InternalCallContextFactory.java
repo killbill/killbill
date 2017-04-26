@@ -86,13 +86,15 @@ public class InternalCallContextFactory {
     //
 
     public TenantContext createTenantContext(final InternalTenantContext context) {
+        final UUID accountId = getAccountIdSafe(context);
         final UUID tenantId = getTenantIdSafe(context);
-        return context.toTenantContext(tenantId);
+        return context.toTenantContext(accountId, tenantId);
     }
 
     public CallContext createCallContext(final InternalCallContext context) {
+        final UUID accountId = getAccountIdSafe(context);
         final UUID tenantId = getTenantIdSafe(context);
-        return context.toCallContext(tenantId);
+        return context.toCallContext(accountId, tenantId);
     }
 
     //
@@ -386,6 +388,10 @@ public class InternalCallContextFactory {
 
     private UUID getTenantIdSafe(final InternalTenantContext context) {
         return nonEntityDao.retrieveIdFromObject(context.getTenantRecordId(), ObjectType.TENANT, objectIdCacheController);
+    }
+
+    private UUID getAccountIdSafe(final InternalTenantContext context) {
+        return context.getAccountRecordId() != null ? nonEntityDao.retrieveIdFromObject(context.getAccountRecordId(), ObjectType.ACCOUNT, objectIdCacheController) : null;
     }
 
     //

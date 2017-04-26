@@ -28,13 +28,14 @@ public class TestDefaultCallContext extends UtilTestSuiteNoDB {
 
     @Test(groups = "fast")
     public void testGetters() throws Exception {
+        final UUID accountId = UUID.randomUUID();
         final UUID tenantId = UUID.randomUUID();
         final String userName = UUID.randomUUID().toString();
         final DateTime createdDate = clock.getUTCNow();
         final String reasonCode = UUID.randomUUID().toString();
         final String comment = UUID.randomUUID().toString();
         final UUID userToken = UUID.randomUUID();
-        final DefaultCallContext callContext = new DefaultCallContext(tenantId, userName, createdDate, reasonCode, comment, userToken);
+        final DefaultCallContext callContext = new DefaultCallContext(accountId, tenantId, userName, createdDate, reasonCode, comment, userToken);
 
         Assert.assertEquals(callContext.getTenantId(), tenantId);
         Assert.assertEquals(callContext.getCreatedDate(), createdDate);
@@ -49,6 +50,7 @@ public class TestDefaultCallContext extends UtilTestSuiteNoDB {
 
     @Test(groups = "fast")
     public void testEquals() throws Exception {
+        final UUID accountId = UUID.randomUUID();
         final UUID tenantId = UUID.randomUUID();
         final String userName = UUID.randomUUID().toString();
         final DateTime createdDate = clock.getUTCNow();
@@ -56,13 +58,13 @@ public class TestDefaultCallContext extends UtilTestSuiteNoDB {
         final String comment = UUID.randomUUID().toString();
         final UUID userToken = UUID.randomUUID();
 
-        final DefaultCallContext callContext = new DefaultCallContext(tenantId, userName, createdDate, reasonCode, comment, userToken);
+        final DefaultCallContext callContext = new DefaultCallContext(accountId, tenantId, userName, createdDate, reasonCode, comment, userToken);
         Assert.assertEquals(callContext, callContext);
 
-        final DefaultCallContext sameCallContext = new DefaultCallContext(tenantId, userName, createdDate, reasonCode, comment, userToken);
+        final DefaultCallContext sameCallContext = new DefaultCallContext(accountId, tenantId, userName, createdDate, reasonCode, comment, userToken);
         Assert.assertEquals(sameCallContext, callContext);
 
-        final DefaultCallContext otherCallContext = new DefaultCallContext(tenantId, UUID.randomUUID().toString(), createdDate, reasonCode, comment, userToken);
+        final DefaultCallContext otherCallContext = new DefaultCallContext(accountId, tenantId, UUID.randomUUID().toString(), createdDate, reasonCode, comment, userToken);
         Assert.assertNotEquals(otherCallContext, callContext);
     }
 }

@@ -104,8 +104,8 @@ public class InternalCallContext extends InternalTenantContext {
 
     // TODO should not be needed if all services are using internal API
     // Unfortunately not true as some APIs ae hidden in object -- e.g OverdueStateApplicator is doing subscription.cancelEntitlementWithDateOverrideBillingPolicy
-    public CallContext toCallContext(final UUID tenantId) {
-        return new DefaultCallContext(tenantId, createdBy, callOrigin, contextUserType, reasonCode, comments, userToken, createdDate, updatedDate);
+    public CallContext toCallContext(final UUID accountId, final UUID tenantId) {
+        return new DefaultCallContext(accountId, tenantId, createdBy, callOrigin, contextUserType, reasonCode, comments, userToken, createdDate, updatedDate);
     }
 
     public UUID getUserToken() {
@@ -148,7 +148,9 @@ public class InternalCallContext extends InternalTenantContext {
     public String toString() {
         final StringBuilder sb = new StringBuilder();
         sb.append("InternalCallContext");
-        sb.append("{userToken=").append(userToken);
+        sb.append("{accountRecordId=").append(accountRecordId);
+        sb.append(", tenantRecordId=").append(tenantRecordId);
+        sb.append(", userToken=").append(userToken);
         sb.append(", createdBy='").append(createdBy).append('\'');
         sb.append(", updatedBy='").append(updatedBy).append('\'');
         sb.append(", callOrigin=").append(callOrigin);

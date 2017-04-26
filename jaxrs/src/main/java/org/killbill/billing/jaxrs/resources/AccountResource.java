@@ -185,13 +185,14 @@ public class AccountResource extends JaxRsResourceBase {
     @ApiOperation(value = "Retrieve an account by id", response = AccountJson.class)
     @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid account id supplied"),
                            @ApiResponse(code = 404, message = "Account not found")})
-    public Response getAccount(@PathParam("accountId") final String accountId,
+    public Response getAccount(@PathParam("accountId") final String accountIdStr,
                                @QueryParam(QUERY_ACCOUNT_WITH_BALANCE) @DefaultValue("false") final Boolean accountWithBalance,
                                @QueryParam(QUERY_ACCOUNT_WITH_BALANCE_AND_CBA) @DefaultValue("false") final Boolean accountWithBalanceAndCBA,
                                @QueryParam(QUERY_AUDIT) @DefaultValue("NONE") final AuditMode auditMode,
                                @javax.ws.rs.core.Context final HttpServletRequest request) throws AccountApiException {
-        final TenantContext tenantContext = context.createContext(request);
-        final Account account = accountUserApi.getAccountById(UUID.fromString(accountId), tenantContext);
+        final UUID accountId = UUID.fromString(accountIdStr);
+        final TenantContext tenantContext = context.createTenantContextWithAccountId(accountId, request);
+        final Account account = accountUserApi.getAccountById(accountId, tenantContext);
         final AccountAuditLogs accountAuditLogs = auditUserApi.getAccountAuditLogs(account.getId(), auditMode.getLevel(), tenantContext);
         final AccountJson accountJson = getAccount(account, accountWithBalance, accountWithBalanceAndCBA, accountAuditLogs, tenantContext);
         return Response.status(Status.OK).entity(accountJson).build();
@@ -209,7 +210,7 @@ public class AccountResource extends JaxRsResourceBase {
                                 @QueryParam(QUERY_ACCOUNT_WITH_BALANCE_AND_CBA) @DefaultValue("false") final Boolean accountWithBalanceAndCBA,
                                 @QueryParam(QUERY_AUDIT) @DefaultValue("NONE") final AuditMode auditMode,
                                 @javax.ws.rs.core.Context final HttpServletRequest request) throws AccountApiException {
-        final TenantContext tenantContext = context.createContext(request);
+        final TenantContext tenantContext = context.createTenantContextNoAccountId(request);
         final Pagination<Account> accounts = accountUserApi.getAccounts(offset, limit, tenantContext);
         final URI nextPageUri = uriBuilder.nextPage(AccountResource.class, "getAccounts", accounts.getNextOffset(), limit, ImmutableMap.<String, String>of(QUERY_ACCOUNT_WITH_BALANCE, accountWithBalance.toString(),
                                                                                                                                                            QUERY_ACCOUNT_WITH_BALANCE_AND_CBA, accountWithBalanceAndCBA.toString(),
@@ -239,7 +240,7 @@ public class AccountResource extends JaxRsResourceBase {
                                    @QueryParam(QUERY_ACCOUNT_WITH_BALANCE_AND_CBA) @DefaultValue("false") final Boolean accountWithBalanceAndCBA,
                                    @QueryParam(QUERY_AUDIT) @DefaultValue("NONE") final AuditMode auditMode,
                                    @javax.ws.rs.core.Context final HttpServletRequest request) throws AccountApiException {
-        final TenantContext tenantContext = context.createContext(request);
+        final TenantContext tenantContext = context.createTenantContextNoAccountId(request);
         final Pagination<Account> accounts = accountUserApi.searchAccounts(searchKey, offset, limit, tenantContext);
         final URI nextPageUri = uriBuilder.nextPage(AccountResource.class, "searchAccounts", accounts.getNextOffset(), limit, ImmutableMap.<String, String>of("searchKey", searchKey,
                                                                                                                                                               QUERY_ACCOUNT_WITH_BALANCE, accountWithBalance.toString(),
@@ -264,19 +265,19 @@ public class AccountResource extends JaxRsResourceBase {
     @ApiOperation(value = "Retrieve bundles for account", response = BundleJson.class, responseContainer = "List")
     @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid account id supplied"),
                            @ApiResponse(code = 404, message = "Account not found")})
-    public Response getAccountBundles(@PathParam("accountId") final String accountId,
+    public Response getAccountBundles(@PathParam("accountId") final String accountIdStr,
                                       @QueryParam(QUERY_EXTERNAL_KEY) final String externalKey,
                                       @QueryParam(QUERY_BUNDLES_FILTER) final String bundlesFilter,
                                       @QueryParam(QUERY_AUDIT) @DefaultValue("NONE") final AuditMode auditMode,
                                       @javax.ws.rs.core.Context final HttpServletRequest request) throws AccountApiException, SubscriptionApiException {
-        final TenantContext tenantContext = context.createContext(request);
+        final UUID accountId = UUID.fromString(accountIdStr);
+        final TenantContext tenantContext = context.createTenantContextWithAccountId(accountId, request);
 
-        final UUID uuid = UUID.fromString(accountId);
-        final Account account = accountUserApi.getAccountById(uuid, tenantContext);
+        final Account account = accountUserApi.getAccountById(accountId, tenantContext);
 
         final List<SubscriptionBundle> bundles = (externalKey != null) ?
-                                                 subscriptionApi.getSubscriptionBundlesForAccountIdAndExternalKey(uuid, externalKey, tenantContext) :
-                                                 subscriptionApi.getSubscriptionBundlesForAccountId(uuid, tenantContext);
+                                                 subscriptionApi.getSubscriptionBundlesForAccountIdAndExternalKey(accountId, externalKey, tenantContext) :
+                                                 subscriptionApi.getSubscriptionBundlesForAccountId(accountId, tenantContext);
 
 
         final AccountAuditLogs accountAuditLogs = auditUserApi.getAccountAuditLogs(account.getId(), auditMode.getLevel(), tenantContext);
@@ -319,7 +320,7 @@ public class AccountResource extends JaxRsResourceBase {
                                     @QueryParam(QUERY_ACCOUNT_WITH_BALANCE_AND_CBA) @DefaultValue("false") final Boolean accountWithBalanceAndCBA,
                                     @QueryParam(QUERY_AUDIT) @DefaultValue("NONE") final AuditMode auditMode,
                                     @javax.ws.rs.core.Context final HttpServletRequest request) throws AccountApiException {
-        final TenantContext tenantContext = context.createContext(request);
+        final TenantContext tenantContext = context.createTenantContextNoAccountId(request);
         final Account account = accountUserApi.getAccountByKey(externalKey, tenantContext);
         final AccountAuditLogs accountAuditLogs = auditUserApi.getAccountAuditLogs(account.getId(), auditMode.getLevel(), tenantContext);
         final AccountJson accountJson = getAccount(account, accountWithBalance, accountWithBalanceAndCBA, accountAuditLogs, tenantContext);
@@ -355,7 +356,7 @@ public class AccountResource extends JaxRsResourceBase {
         verifyNonNullOrEmpty(json, "AccountJson body should be specified");
 
         final AccountData data = json.toAccount(null);
-        final Account account = accountUserApi.createAccount(data, context.createContext(createdBy, reason, comment, request));
+        final Account account = accountUserApi.createAccount(data, context.createCallContextNoAccountId(createdBy, reason, comment, request));
         return uriBuilder.buildResponse(uriInfo, AccountResource.class, "getAccount", account.getId(), request);
     }
 
@@ -367,7 +368,7 @@ public class AccountResource extends JaxRsResourceBase {
     @ApiOperation(value = "Update account")
     @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid account data supplied")})
     public Response updateAccount(final AccountJson json,
-                                  @PathParam("accountId") final String accountId,
+                                  @PathParam("accountId") final String accountIdStr,
                                   @QueryParam(QUERY_ACCOUNT_TREAT_NULL_AS_RESET) @DefaultValue("false") final Boolean treatNullValueAsReset,
                                   @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                   @HeaderParam(HDR_REASON) final String reason,
@@ -375,14 +376,14 @@ public class AccountResource extends JaxRsResourceBase {
                                   @javax.ws.rs.core.Context final HttpServletRequest request) throws AccountApiException {
         verifyNonNullOrEmpty(json, "AccountJson body should be specified");
 
-        final UUID uuid = UUID.fromString(accountId);
-        final Account data = json.toAccount(uuid);
+        final UUID accountId = UUID.fromString(accountIdStr);
+        final Account data = json.toAccount(accountId);
         if (treatNullValueAsReset) {
-            accountUserApi.updateAccount(data, context.createContext(createdBy, reason, comment, request));
+            accountUserApi.updateAccount(data, context.createCallContextWithAccountId(accountId, createdBy, reason, comment, request));
         } else {
-            accountUserApi.updateAccount(uuid, data, context.createContext(createdBy, reason, comment, request));
+            accountUserApi.updateAccount(accountId, data, context.createCallContextWithAccountId(accountId, createdBy, reason, comment, request));
         }
-        return getAccount(accountId, false, false, new AuditMode(AuditLevel.NONE.toString()), request);
+        return getAccount(accountIdStr, false, false, new AuditMode(AuditLevel.NONE.toString()), request);
     }
 
     // Not supported
@@ -413,13 +414,14 @@ public class AccountResource extends JaxRsResourceBase {
     @ApiOperation(value = "Retrieve account timeline", response = AccountTimelineJson.class)
     @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid account id supplied"),
                            @ApiResponse(code = 404, message = "Account not found")})
-    public Response getAccountTimeline(@PathParam("accountId") final String accountIdString,
+    public Response getAccountTimeline(@PathParam("accountId") final String accountIdStr,
                                        @QueryParam(QUERY_AUDIT) @DefaultValue("NONE") final AuditMode auditMode,
                                        @QueryParam(QUERY_PARALLEL) @DefaultValue("false") final Boolean parallel,
                                        @javax.ws.rs.core.Context final HttpServletRequest request) throws AccountApiException, PaymentApiException, SubscriptionApiException, InvoiceApiException, CatalogApiException {
-        final TenantContext tenantContext = context.createContext(request);
 
-        final UUID accountId = UUID.fromString(accountIdString);
+        final UUID accountId = UUID.fromString(accountIdStr);
+        final TenantContext tenantContext = context.createTenantContextWithAccountId(accountId, request);
+
         final Account account = accountUserApi.getAccountById(accountId, tenantContext);
 
         final Callable<List<SubscriptionBundle>> bundlesCallable = new Callable<List<SubscriptionBundle>>() {
@@ -566,10 +568,11 @@ public class AccountResource extends JaxRsResourceBase {
     @ApiOperation(value = "Retrieve account email notification", response = InvoiceEmailJson.class)
     @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid account id supplied"),
                            @ApiResponse(code = 404, message = "Account not found")})
-    public Response getEmailNotificationsForAccount(@PathParam("accountId") final String accountId,
+    public Response getEmailNotificationsForAccount(@PathParam("accountId") final String accountIdStr,
                                                     @javax.ws.rs.core.Context final HttpServletRequest request) throws AccountApiException {
-        final Account account = accountUserApi.getAccountById(UUID.fromString(accountId), context.createContext(request));
-        final InvoiceEmailJson invoiceEmailJson = new InvoiceEmailJson(accountId, account.isNotifiedForInvoices());
+        final UUID accountId = UUID.fromString(accountIdStr);
+        final Account account = accountUserApi.getAccountById(accountId, context.createTenantContextWithAccountId(accountId, request));
+        final InvoiceEmailJson invoiceEmailJson = new InvoiceEmailJson(accountIdStr, account.isNotifiedForInvoices());
 
         return Response.status(Status.OK).entity(invoiceEmailJson).build();
     }
@@ -583,16 +586,16 @@ public class AccountResource extends JaxRsResourceBase {
     @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid account id supplied"),
                            @ApiResponse(code = 404, message = "Account not found")})
     public Response setEmailNotificationsForAccount(final InvoiceEmailJson json,
-                                                    @PathParam("accountId") final String accountIdString,
+                                                    @PathParam("accountId") final String accountIdStr,
                                                     @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                                     @HeaderParam(HDR_REASON) final String reason,
                                                     @HeaderParam(HDR_COMMENT) final String comment,
                                                     @javax.ws.rs.core.Context final HttpServletRequest request) throws AccountApiException {
         verifyNonNullOrEmpty(json, "InvoiceEmailJson body should be specified");
 
-        final CallContext callContext = context.createContext(createdBy, reason, comment, request);
+        final UUID accountId = UUID.fromString(accountIdStr);
+        final CallContext callContext = context.createCallContextWithAccountId(accountId, createdBy, reason, comment, request);
 
-        final UUID accountId = UUID.fromString(accountIdString);
         final Account account = accountUserApi.getAccountById(accountId, callContext);
 
         final MutableAccountData mutableAccountData = account.toMutableAccountData();
@@ -612,14 +615,14 @@ public class AccountResource extends JaxRsResourceBase {
     @Produces(APPLICATION_JSON)
     @ApiOperation(value = "Rebalance account CBA")
     @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid account id supplied")})
-    public Response rebalanceExistingCBAOnAccount(@PathParam("accountId") final String accountIdString,
+    public Response rebalanceExistingCBAOnAccount(@PathParam("accountId") final String accountIdStr,
                                                   @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                                   @HeaderParam(HDR_REASON) final String reason,
                                                   @HeaderParam(HDR_COMMENT) final String comment,
                                                   @javax.ws.rs.core.Context final HttpServletRequest request) throws AccountApiException {
 
-        final CallContext callContext = context.createContext(createdBy, reason, comment, request);
-        final UUID accountId = UUID.fromString(accountIdString);
+        final UUID accountId = UUID.fromString(accountIdStr);
+        final CallContext callContext = context.createCallContextWithAccountId(accountId, createdBy, reason, comment, request);
 
         invoiceApi.consumeExstingCBAOnAccountWithUnpaidInvoices(accountId, callContext);
         return Response.status(Status.OK).build();
@@ -637,16 +640,17 @@ public class AccountResource extends JaxRsResourceBase {
     @ApiOperation(value = "Retrieve account invoices", response = InvoiceJson.class)
     @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid account id supplied"),
                            @ApiResponse(code = 404, message = "Account not found")})
-    public Response getInvoices(@PathParam("accountId") final String accountIdString,
+    public Response getInvoices(@PathParam("accountId") final String accountIdStr,
                                 @QueryParam(QUERY_INVOICE_WITH_ITEMS) @DefaultValue("false") final boolean withItems,
                                 @QueryParam(QUERY_WITH_MIGRATION_INVOICES) @DefaultValue("false") final boolean withMigrationInvoices,
                                 @QueryParam(QUERY_UNPAID_INVOICES_ONLY) @DefaultValue("false") final boolean unpaidInvoicesOnly,
                                 @QueryParam(QUERY_AUDIT) @DefaultValue("NONE") final AuditMode auditMode,
                                 @javax.ws.rs.core.Context final HttpServletRequest request) throws AccountApiException {
-        final TenantContext tenantContext = context.createContext(request);
+
+        final UUID accountId = UUID.fromString(accountIdStr);
+        final TenantContext tenantContext = context.createTenantContextWithAccountId(accountId, request);
 
         // Verify the account exists
-        final UUID accountId = UUID.fromString(accountIdString);
         accountUserApi.getAccountById(accountId, tenantContext);
 
         final List<Invoice> invoices = unpaidInvoicesOnly ?
@@ -683,7 +687,7 @@ public class AccountResource extends JaxRsResourceBase {
                                        @javax.ws.rs.core.Context final HttpServletRequest request) throws PaymentApiException, AccountApiException {
         final Iterable<PluginProperty> pluginProperties = extractPluginProperties(pluginPropertiesString);
         final UUID accountId = UUID.fromString(accountIdStr);
-        final TenantContext tenantContext = context.createContext(request);
+        final TenantContext tenantContext = context.createTenantContextWithAccountId(accountId, request);
         final Account account = accountUserApi.getAccountById(accountId, tenantContext);
         final List<Payment> payments = paymentApi.getAccountPayments(account.getId(), withPluginInfo, withAttempts, pluginProperties, tenantContext);
         final List<InvoicePayment> invoicePayments = invoicePaymentApi.getInvoicePaymentsByAccount(accountId, tenantContext);
@@ -704,7 +708,7 @@ public class AccountResource extends JaxRsResourceBase {
     @ApiOperation(value = "Trigger a payment for all unpaid invoices")
     @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid account id supplied"),
                            @ApiResponse(code = 404, message = "Account not found")})
-    public Response payAllInvoices(@PathParam("accountId") final String accountId,
+    public Response payAllInvoices(@PathParam("accountId") final String accountIdStr,
                                    @QueryParam(QUERY_PAYMENT_EXTERNAL) @DefaultValue("false") final Boolean externalPayment,
                                    @QueryParam(QUERY_PAYMENT_AMOUNT) final BigDecimal paymentAmount,
                                    @QueryParam(QUERY_PLUGIN_PROPERTY) final List<String> pluginPropertiesString,
@@ -712,10 +716,12 @@ public class AccountResource extends JaxRsResourceBase {
                                    @HeaderParam(HDR_REASON) final String reason,
                                    @HeaderParam(HDR_COMMENT) final String comment,
                                    @javax.ws.rs.core.Context final HttpServletRequest request) throws AccountApiException, PaymentApiException, InvoiceApiException {
-        final Iterable<PluginProperty> pluginProperties = extractPluginProperties(pluginPropertiesString);
-        final CallContext callContext = context.createContext(createdBy, reason, comment, request);
 
-        final Account account = accountUserApi.getAccountById(UUID.fromString(accountId), callContext);
+        final Iterable<PluginProperty> pluginProperties = extractPluginProperties(pluginPropertiesString);
+        final UUID accountId = UUID.fromString(accountIdStr);
+        final CallContext callContext = context.createCallContextWithAccountId(accountId, createdBy, reason, comment, request);
+
+        final Account account = accountUserApi.getAccountById(accountId, callContext);
         final Collection<Invoice> unpaidInvoices = invoiceApi.getUnpaidInvoicesByAccountId(account.getId(), clock.getUTCToday(), callContext);
 
         BigDecimal remainingRequestPayment = paymentAmount;
@@ -757,7 +763,7 @@ public class AccountResource extends JaxRsResourceBase {
     @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid account id supplied"),
                            @ApiResponse(code = 404, message = "Account not found")})
     public Response createPaymentMethod(final PaymentMethodJson json,
-                                        @PathParam("accountId") final String accountId,
+                                        @PathParam("accountId") final String accountIdStr,
                                         @QueryParam(QUERY_PAYMENT_METHOD_IS_DEFAULT) @DefaultValue("false") final Boolean isDefault,
                                         @QueryParam(QUERY_PAY_ALL_UNPAID_INVOICES) @DefaultValue("false") final Boolean payAllUnpaidInvoices,
                                         @QueryParam(QUERY_PLUGIN_PROPERTY) final List<String> pluginPropertiesString,
@@ -769,10 +775,12 @@ public class AccountResource extends JaxRsResourceBase {
         verifyNonNullOrEmpty(json, "PaymentMethodJson body should be specified");
         verifyNonNullOrEmpty(json.getPluginName(), "PaymentMethodJson pluginName should be specified");
 
-        final Iterable<PluginProperty> pluginProperties = extractPluginProperties(pluginPropertiesString);
-        final CallContext callContext = context.createContext(createdBy, reason, comment, request);
+        final UUID accountId = UUID.fromString(accountIdStr);
 
-        final PaymentMethod data = json.toPaymentMethod(accountId);
+        final Iterable<PluginProperty> pluginProperties = extractPluginProperties(pluginPropertiesString);
+        final CallContext callContext = context.createCallContextWithAccountId(accountId, createdBy, reason, comment, request);
+
+        final PaymentMethod data = json.toPaymentMethod(accountIdStr);
         final Account account = accountUserApi.getAccountById(data.getAccountId(), callContext);
 
         final boolean hasDefaultPaymentMethod = account.getPaymentMethodId() != null || isDefault;
@@ -798,15 +806,16 @@ public class AccountResource extends JaxRsResourceBase {
     @ApiOperation(value = "Retrieve account payment methods", response = PaymentMethodJson.class, responseContainer = "List")
     @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid account id supplied"),
                            @ApiResponse(code = 404, message = "Account not found")})
-    public Response getPaymentMethods(@PathParam("accountId") final String accountId,
+    public Response getPaymentMethods(@PathParam("accountId") final String accountIdStr,
                                       @QueryParam(QUERY_WITH_PLUGIN_INFO) @DefaultValue("false") final Boolean withPluginInfo,
                                       @QueryParam(QUERY_PLUGIN_PROPERTY) final List<String> pluginPropertiesString,
                                       @QueryParam(QUERY_AUDIT) @DefaultValue("NONE") final AuditMode auditMode,
                                       @javax.ws.rs.core.Context final HttpServletRequest request) throws AccountApiException, PaymentApiException {
         final Iterable<PluginProperty> pluginProperties = extractPluginProperties(pluginPropertiesString);
-        final TenantContext tenantContext = context.createContext(request);
+        final UUID accountId = UUID.fromString(accountIdStr);
+        final TenantContext tenantContext = context.createTenantContextWithAccountId(accountId, request);
 
-        final Account account = accountUserApi.getAccountById(UUID.fromString(accountId), tenantContext);
+        final Account account = accountUserApi.getAccountById(accountId, tenantContext);
         final List<PaymentMethod> methods = paymentApi.getAccountPaymentMethods(account.getId(), withPluginInfo, pluginProperties, tenantContext);
         final AccountAuditLogs accountAuditLogs = auditUserApi.getAccountAuditLogs(account.getId(), auditMode.getLevel(), tenantContext);
         final List<PaymentMethodJson> json = new ArrayList<PaymentMethodJson>(Collections2.transform(methods, new Function<PaymentMethod, PaymentMethodJson>() {
@@ -826,7 +835,7 @@ public class AccountResource extends JaxRsResourceBase {
     @ApiOperation(value = "Refresh account payment methods")
     @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid account id supplied"),
                            @ApiResponse(code = 404, message = "Account not found")})
-    public Response refreshPaymentMethods(@PathParam("accountId") final String accountId,
+    public Response refreshPaymentMethods(@PathParam("accountId") final String accountIdStr,
                                           @QueryParam(QUERY_PAYMENT_PLUGIN_NAME) final String pluginName,
                                           @QueryParam(QUERY_PLUGIN_PROPERTY) final List<String> pluginPropertiesString,
                                           @HeaderParam(HDR_CREATED_BY) final String createdBy,
@@ -834,9 +843,10 @@ public class AccountResource extends JaxRsResourceBase {
                                           @HeaderParam(HDR_COMMENT) final String comment,
                                           @javax.ws.rs.core.Context final HttpServletRequest request) throws AccountApiException, PaymentApiException {
         final Iterable<PluginProperty> pluginProperties = extractPluginProperties(pluginPropertiesString);
-        final CallContext callContext = context.createContext(createdBy, reason, comment, request);
+        final UUID accountId = UUID.fromString(accountIdStr);
+        final CallContext callContext = context.createCallContextWithAccountId(accountId, createdBy, reason, comment, request);
 
-        final Account account = accountUserApi.getAccountById(UUID.fromString(accountId), callContext);
+        final Account account = accountUserApi.getAccountById(accountId, callContext);
 
         if (pluginName != null && !pluginName.isEmpty()) {
             paymentApi.refreshPaymentMethods(account, pluginName, pluginProperties, callContext);
@@ -855,7 +865,7 @@ public class AccountResource extends JaxRsResourceBase {
     @ApiOperation(value = "Set the default payment method")
     @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid account id or payment method id supplied"),
                            @ApiResponse(code = 404, message = "Account not found")})
-    public Response setDefaultPaymentMethod(@PathParam("accountId") final String accountId,
+    public Response setDefaultPaymentMethod(@PathParam("accountId") final String accountIdStr,
                                             @PathParam("paymentMethodId") final String paymentMethodId,
                                             @QueryParam(QUERY_PAY_ALL_UNPAID_INVOICES) @DefaultValue("false") final Boolean payAllUnpaidInvoices,
                                             @QueryParam(QUERY_PLUGIN_PROPERTY) final List<String> pluginPropertiesString,
@@ -864,9 +874,10 @@ public class AccountResource extends JaxRsResourceBase {
                                             @HeaderParam(HDR_COMMENT) final String comment,
                                             @javax.ws.rs.core.Context final HttpServletRequest request) throws AccountApiException, PaymentApiException {
         final Iterable<PluginProperty> pluginProperties = extractPluginProperties(pluginPropertiesString);
-        final CallContext callContext = context.createContext(createdBy, reason, comment, request);
+        final UUID accountId = UUID.fromString(accountIdStr);
+        final CallContext callContext = context.createCallContextWithAccountId(accountId, createdBy, reason, comment, request);
 
-        final Account account = accountUserApi.getAccountById(UUID.fromString(accountId), callContext);
+        final Account account = accountUserApi.getAccountById(accountId, callContext);
         final UUID newPaymentMethodId = UUID.fromString(paymentMethodId);
         paymentApi.setDefaultPaymentMethod(account, newPaymentMethodId, pluginProperties, callContext);
 
@@ -896,7 +907,7 @@ public class AccountResource extends JaxRsResourceBase {
                                 @javax.ws.rs.core.Context final HttpServletRequest request) throws PaymentApiException {
         final UUID accountId = UUID.fromString(accountIdStr);
         final Iterable<PluginProperty> pluginProperties = extractPluginProperties(pluginPropertiesString);
-        final TenantContext tenantContext = context.createContext(request);
+        final TenantContext tenantContext = context.createTenantContextWithAccountId(accountId, request);
         final List<Payment> payments = paymentApi.getAccountPayments(accountId, withPluginInfo, withAttempts, pluginProperties, tenantContext);
         final AccountAuditLogs accountAuditLogs = auditUserApi.getAccountAuditLogs(accountId, auditMode.getLevel(), tenantContext);
         final List<PaymentJson> result = ImmutableList.copyOf(Iterables.transform(payments, new Function<Payment, PaymentJson>() {
@@ -932,7 +943,7 @@ public class AccountResource extends JaxRsResourceBase {
                                                 @HeaderParam(HDR_COMMENT) final String comment,
                                                 @javax.ws.rs.core.Context final UriInfo uriInfo,
                                                 @javax.ws.rs.core.Context final HttpServletRequest request) throws PaymentApiException, AccountApiException {
-        final CallContext callContext = context.createContext(createdBy, reason, comment, request);
+        final CallContext callContext = context.createCallContextNoAccountId(createdBy, reason, comment, request);
         final Account account = accountUserApi.getAccountByKey(externalKey, callContext);
 
         return processPayment(json, account, paymentMethodIdStr, paymentControlPluginNames, pluginPropertiesString, uriInfo, callContext, request);
@@ -963,7 +974,7 @@ public class AccountResource extends JaxRsResourceBase {
                                    @javax.ws.rs.core.Context final UriInfo uriInfo,
                                    @javax.ws.rs.core.Context final HttpServletRequest request) throws PaymentApiException, AccountApiException {
         final UUID accountId = UUID.fromString(accountIdStr);
-        final CallContext callContext = context.createContext(createdBy, reason, comment, request);
+        final CallContext callContext = context.createCallContextWithAccountId(accountId, createdBy, reason, comment, request);
         final Account account = accountUserApi.getAccountById(accountId, callContext);
 
         return processPayment(json, account, paymentMethodIdStr, paymentControlPluginNames, pluginPropertiesString, uriInfo, callContext, request);
@@ -1044,11 +1055,12 @@ public class AccountResource extends JaxRsResourceBase {
     @ApiOperation(value = "Retrieve overdue state for account", response = OverdueStateJson.class)
     @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid account id supplied"),
                            @ApiResponse(code = 404, message = "Account not found")})
-    public Response getOverdueAccount(@PathParam("accountId") final String accountId,
+    public Response getOverdueAccount(@PathParam("accountId") final String accountIdStr,
                                       @javax.ws.rs.core.Context final HttpServletRequest request) throws AccountApiException, OverdueException, OverdueApiException {
-        final TenantContext tenantContext = context.createContext(request);
+        final UUID accountId = UUID.fromString(accountIdStr);
+        final TenantContext tenantContext = context.createTenantContextWithAccountId(accountId, request);
 
-        final Account account = accountUserApi.getAccountById(UUID.fromString(accountId), tenantContext);
+        final Account account = accountUserApi.getAccountById(accountId, tenantContext);
         final OverdueState overdueState = overdueApi.getOverdueStateFor(account.getId(), tenantContext);
 
         return Response.status(Status.OK).entity(new OverdueStateJson(overdueState, paymentConfig)).build();
@@ -1065,14 +1077,14 @@ public class AccountResource extends JaxRsResourceBase {
     @Produces(APPLICATION_JSON)
     @ApiOperation(value = "Retrieve blocking states for account", response = BlockingStateJson.class, responseContainer = "List")
     @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid account id supplied")})
-    public Response getBlockingStates(@PathParam(ID_PARAM_NAME) final String id,
+    public Response getBlockingStates(@PathParam(ID_PARAM_NAME) final String accountIdStr,
                                       @QueryParam(QUERY_BLOCKING_STATE_TYPES) final List<BlockingStateType> typeFilter,
                                       @QueryParam(QUERY_BLOCKING_STATE_SVCS) final List<String> svcsFilter,
                                       @QueryParam(QUERY_AUDIT) @DefaultValue("NONE") final AuditMode auditMode,
                                       @javax.ws.rs.core.Context final HttpServletRequest request) throws EntitlementApiException {
 
-        final TenantContext tenantContext = this.context.createContext(request);
-        final UUID accountId = UUID.fromString(id);
+        final UUID accountId = UUID.fromString(accountIdStr);
+        final TenantContext tenantContext = this.context.createTenantContextWithAccountId(accountId, request);
         final Iterable<BlockingState> blockingStates = subscriptionApi.getBlockingStates(accountId, typeFilter, svcsFilter, OrderingType.ASCENDING, SubscriptionApi.ALL_EVENTS, tenantContext);
         final AccountAuditLogs accountAuditLogs = auditUserApi.getAccountAuditLogs(accountId, auditMode.getLevel(), tenantContext);
 
@@ -1115,10 +1127,11 @@ public class AccountResource extends JaxRsResourceBase {
     @Produces(APPLICATION_JSON)
     @ApiOperation(value = "Retrieve account custom fields", response = CustomFieldJson.class, responseContainer = "List")
     @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid account id supplied")})
-    public Response getCustomFields(@PathParam(ID_PARAM_NAME) final String id,
+    public Response getCustomFields(@PathParam(ID_PARAM_NAME) final String accountIdStr,
                                     @QueryParam(QUERY_AUDIT) @DefaultValue("NONE") final AuditMode auditMode,
                                     @javax.ws.rs.core.Context final HttpServletRequest request) {
-        return super.getCustomFields(UUID.fromString(id), auditMode, context.createContext(request));
+        final UUID accountId = UUID.fromString(accountIdStr);
+        return super.getCustomFields(accountId, auditMode, context.createTenantContextWithAccountId(accountId, request));
     }
 
     @TimedResource
@@ -1128,15 +1141,16 @@ public class AccountResource extends JaxRsResourceBase {
     @Produces(APPLICATION_JSON)
     @ApiOperation(value = "Add custom fields to account")
     @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid account id supplied")})
-    public Response createCustomFields(@PathParam(ID_PARAM_NAME) final String id,
+    public Response createCustomFields(@PathParam(ID_PARAM_NAME) final String accountIdStr,
                                        final List<CustomFieldJson> customFields,
                                        @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                        @HeaderParam(HDR_REASON) final String reason,
                                        @HeaderParam(HDR_COMMENT) final String comment,
                                        @javax.ws.rs.core.Context final HttpServletRequest request,
                                        @javax.ws.rs.core.Context final UriInfo uriInfo) throws CustomFieldApiException {
-        return super.createCustomFields(UUID.fromString(id), customFields, context.createContext(createdBy, reason,
-                                             comment, request), uriInfo, request);
+        final UUID accountId = UUID.fromString(accountIdStr);
+        return super.createCustomFields(accountId, customFields, context.createCallContextWithAccountId(accountId, createdBy, reason,
+                                                                                                        comment, request), uriInfo, request);
     }
 
     @TimedResource
@@ -1146,14 +1160,15 @@ public class AccountResource extends JaxRsResourceBase {
     @Produces(APPLICATION_JSON)
     @ApiOperation(value = "Remove custom fields from account")
     @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid account id supplied")})
-    public Response deleteCustomFields(@PathParam(ID_PARAM_NAME) final String id,
+    public Response deleteCustomFields(@PathParam(ID_PARAM_NAME) final String accountIdStr,
                                        @QueryParam(QUERY_CUSTOM_FIELDS) final String customFieldList,
                                        @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                        @HeaderParam(HDR_REASON) final String reason,
                                        @HeaderParam(HDR_COMMENT) final String comment,
                                        @javax.ws.rs.core.Context final HttpServletRequest request) throws CustomFieldApiException {
-        return super.deleteCustomFields(UUID.fromString(id), customFieldList,
-                                        context.createContext(createdBy, reason, comment, request));
+        final UUID accountId = UUID.fromString(accountIdStr);
+        return super.deleteCustomFields(accountId, customFieldList,
+                                        context.createCallContextWithAccountId(accountId, createdBy, reason, comment, request));
     }
 
     /*
@@ -1167,12 +1182,12 @@ public class AccountResource extends JaxRsResourceBase {
     @ApiOperation(value = "Retrieve account tags", response = TagJson.class, responseContainer = "List")
     @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid account id supplied"),
                            @ApiResponse(code = 404, message = "Account not found")})
-    public Response getTags(@PathParam(ID_PARAM_NAME) final String accountIdString,
+    public Response getTags(@PathParam(ID_PARAM_NAME) final String accountIdStr,
                             @QueryParam(QUERY_AUDIT) @DefaultValue("NONE") final AuditMode auditMode,
                             @QueryParam(QUERY_INCLUDED_DELETED) @DefaultValue("false") final Boolean includedDeleted,
                             @javax.ws.rs.core.Context final HttpServletRequest request) throws TagDefinitionApiException {
-        final UUID accountId = UUID.fromString(accountIdString);
-        return super.getTags(accountId, accountId, auditMode, includedDeleted, context.createContext(request));
+        final UUID accountId = UUID.fromString(accountIdStr);
+        return super.getTags(accountId, accountId, auditMode, includedDeleted, context.createTenantContextWithAccountId(accountId, request));
     }
 
     @TimedResource
@@ -1182,13 +1197,13 @@ public class AccountResource extends JaxRsResourceBase {
     @ApiOperation(value = "Retrieve account tags", response = TagJson.class, responseContainer = "List")
     @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid account id supplied"),
                            @ApiResponse(code = 404, message = "Account not found")})
-    public Response getAllTags(@PathParam(ID_PARAM_NAME) final String accountIdString,
+    public Response getAllTags(@PathParam(ID_PARAM_NAME) final String accountIdStr,
                                @QueryParam(QUERY_OBJECT_TYPE) final ObjectType objectType,
                                @QueryParam(QUERY_AUDIT) @DefaultValue("NONE") final AuditMode auditMode,
                                @QueryParam(QUERY_INCLUDED_DELETED) @DefaultValue("false") final Boolean includedDeleted,
                                @javax.ws.rs.core.Context final HttpServletRequest request) throws TagDefinitionApiException {
-        final UUID accountId = UUID.fromString(accountIdString);
-        final TenantContext tenantContext = context.createContext(request);
+        final UUID accountId = UUID.fromString(accountIdStr);
+        final TenantContext tenantContext = context.createTenantContextWithAccountId(accountId, request);
         final List<Tag> tags = objectType != null ?
                                tagUserApi.getTagsForAccountType(accountId, objectType, includedDeleted, tenantContext) :
                                tagUserApi.getTagsForAccount(accountId, includedDeleted, tenantContext);
@@ -1201,15 +1216,16 @@ public class AccountResource extends JaxRsResourceBase {
     @Produces(APPLICATION_JSON)
     @ApiOperation(value = "Add tags to account")
     @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid account id supplied")})
-    public Response createTags(@PathParam(ID_PARAM_NAME) final String id,
+    public Response createTags(@PathParam(ID_PARAM_NAME) final String accountIdStr,
                                @QueryParam(QUERY_TAGS) final String tagList,
                                @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                @HeaderParam(HDR_REASON) final String reason,
                                @HeaderParam(HDR_COMMENT) final String comment,
                                @javax.ws.rs.core.Context final UriInfo uriInfo,
                                @javax.ws.rs.core.Context final HttpServletRequest request) throws TagApiException {
-        return super.createTags(UUID.fromString(id), tagList, uriInfo,
-                                context.createContext(createdBy, reason, comment, request), request);
+        final UUID accountId = UUID.fromString(accountIdStr);
+        return super.createTags(accountId, tagList, uriInfo,
+                                context.createCallContextWithAccountId(accountId, createdBy, reason, comment, request), request);
     }
 
     @TimedResource
@@ -1219,13 +1235,14 @@ public class AccountResource extends JaxRsResourceBase {
     @Produces(APPLICATION_JSON)
     @ApiOperation(value = "Remove tags from account")
     @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid account id supplied or account does not have a default payment method (AUTO_PAY_OFF tag only)")})
-    public Response deleteTags(@PathParam(ID_PARAM_NAME) final String id,
+    public Response deleteTags(@PathParam(ID_PARAM_NAME) final String accountIdStr,
                                @QueryParam(QUERY_TAGS) final String tagList,
                                @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                @HeaderParam(HDR_REASON) final String reason,
                                @HeaderParam(HDR_COMMENT) final String comment,
                                @javax.ws.rs.core.Context final HttpServletRequest request) throws TagApiException, AccountApiException {
-        final CallContext callContext = context.createContext(createdBy, reason, comment, request);
+        final UUID accountId = UUID.fromString(accountIdStr);
+        final CallContext callContext = context.createCallContextWithAccountId(accountId, createdBy, reason, comment, request);
 
         // Look if there is an AUTO_PAY_OFF for that account and check if the account has a default paymentMethod
         // If not we can't remove the AUTO_PAY_OFF tag
@@ -1237,7 +1254,6 @@ public class AccountResource extends JaxRsResourceBase {
                 break;
             }
         }
-        final UUID accountId = UUID.fromString(id);
         if (isTagAutoPayOff) {
             final Account account = accountUserApi.getAccountById(accountId, callContext);
             if (account.getPaymentMethodId() == null) {
@@ -1245,7 +1261,7 @@ public class AccountResource extends JaxRsResourceBase {
             }
         }
 
-        return super.deleteTags(UUID.fromString(id), tagList, callContext);
+        return super.deleteTags(accountId, tagList, callContext);
     }
 
     /*
@@ -1258,10 +1274,10 @@ public class AccountResource extends JaxRsResourceBase {
     @Produces(APPLICATION_JSON)
     @ApiOperation(value = "Retrieve an account emails", response = AccountEmailJson.class, responseContainer = "List")
     @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid account id supplied")})
-    public Response getEmails(@PathParam(ID_PARAM_NAME) final String id,
+    public Response getEmails(@PathParam(ID_PARAM_NAME) final String accountIdStr,
                               @javax.ws.rs.core.Context final HttpServletRequest request) {
-        final UUID accountId = UUID.fromString(id);
-        final List<AccountEmail> emails = accountUserApi.getEmails(accountId, context.createContext(request));
+        final UUID accountId = UUID.fromString(accountIdStr);
+        final List<AccountEmail> emails = accountUserApi.getEmails(accountId, context.createTenantContextWithAccountId(accountId, request));
 
         final List<AccountEmailJson> emailsJson = new ArrayList<AccountEmailJson>();
         for (final AccountEmail email : emails) {
@@ -1288,9 +1304,9 @@ public class AccountResource extends JaxRsResourceBase {
         verifyNonNullOrEmpty(json, "AccountEmailJson body should be specified");
         verifyNonNullOrEmpty(json.getEmail(), "AccountEmailJson email needs to be set");
 
-        final CallContext callContext = context.createContext(createdBy, reason, comment, request);
-
         final UUID accountId = UUID.fromString(id);
+        final CallContext callContext = context.createCallContextWithAccountId(accountId, createdBy, reason, comment, request);
+
 
         // Make sure the account exist or we will confuse the history and auditing code
         accountUserApi.getAccountById(accountId, callContext);
@@ -1318,20 +1334,20 @@ public class AccountResource extends JaxRsResourceBase {
     @Produces(APPLICATION_JSON)
     @ApiOperation(value = "Delete email from account")
     @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid account id supplied")})
-    public Response removeEmail(@PathParam(ID_PARAM_NAME) final String id,
+    public Response removeEmail(@PathParam(ID_PARAM_NAME) final String accountIdStr,
                                 @PathParam("email") final String email,
                                 @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                 @HeaderParam(HDR_REASON) final String reason,
                                 @HeaderParam(HDR_COMMENT) final String comment,
                                 @javax.ws.rs.core.Context final HttpServletRequest request) {
-        final UUID accountId = UUID.fromString(id);
+        final UUID accountId = UUID.fromString(accountIdStr);
 
-        final List<AccountEmail> emails = accountUserApi.getEmails(accountId, context.createContext(request));
+        final List<AccountEmail> emails = accountUserApi.getEmails(accountId, context.createTenantContextWithAccountId(accountId, request));
         for (final AccountEmail cur : emails) {
             if (cur.getEmail().equals(email)) {
                 final AccountEmailJson accountEmailJson = new AccountEmailJson(accountId.toString(), email);
                 final AccountEmail accountEmail = accountEmailJson.toAccountEmail(cur.getId());
-                accountUserApi.removeEmail(accountId, accountEmail, context.createContext(createdBy, reason, comment, request));
+                accountUserApi.removeEmail(accountId, accountEmail, context.createCallContextWithAccountId(accountId, createdBy, reason, comment, request));
             }
         }
         return Response.status(Status.OK).build();
@@ -1353,14 +1369,15 @@ public class AccountResource extends JaxRsResourceBase {
     @ApiOperation(value = "List children accounts", response = AccountJson.class, responseContainer = "List")
     @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid parent account id supplied"),
                            @ApiResponse(code = 404, message = "Parent Account not found")})
-    public Response getChildrenAccounts(@PathParam("accountId") final String parentAccountId,
+    public Response getChildrenAccounts(@PathParam("accountId") final String parentAccountIdStr,
                                         @QueryParam(QUERY_ACCOUNT_WITH_BALANCE) @DefaultValue("false") final Boolean accountWithBalance,
                                         @QueryParam(QUERY_ACCOUNT_WITH_BALANCE_AND_CBA) @DefaultValue("false") final Boolean accountWithBalanceAndCBA,
                                         @QueryParam(QUERY_AUDIT) @DefaultValue("NONE") final AuditMode auditMode,
                                         @javax.ws.rs.core.Context final HttpServletRequest request) throws AccountApiException {
 
-        final TenantContext tenantContext = context.createContext(request);
-        final List<Account> accounts = accountUserApi.getChildrenAccounts(UUID.fromString(parentAccountId), tenantContext);
+        final UUID parentAccountId = UUID.fromString(parentAccountIdStr);
+        final TenantContext tenantContext = context.createTenantContextWithAccountId(parentAccountId, request);
+        final List<Account> accounts = accountUserApi.getChildrenAccounts(parentAccountId, tenantContext);
 
         final List<AccountJson> accountJson = new ArrayList<AccountJson>();
         for (final Account account : accounts) {
@@ -1378,15 +1395,15 @@ public class AccountResource extends JaxRsResourceBase {
     @ApiOperation(value = "Move a given child credit to the parent level")
     @ApiResponses(value = {@ApiResponse(code = 400, message = "Account does not have credit"),
                            @ApiResponse(code = 404, message = "Account not found")})
-    public Response transferChildCreditToParent(@PathParam("childAccountId") final String childAccountIdString,
+    public Response transferChildCreditToParent(@PathParam("childAccountId") final String childAccountIdStr,
                                                 @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                                 @HeaderParam(HDR_REASON) final String reason,
                                                 @HeaderParam(HDR_COMMENT) final String comment,
                                                 @javax.ws.rs.core.Context final HttpServletRequest request,
                                                 @javax.ws.rs.core.Context final UriInfo uriInfo) throws InvoiceApiException {
 
-        final CallContext callContext = context.createContext(createdBy, reason, comment, request);
-        final UUID childAccountId = UUID.fromString(childAccountIdString);
+        final UUID childAccountId = UUID.fromString(childAccountIdStr);
+        final CallContext callContext = context.createCallContextWithAccountId(childAccountId, createdBy, reason, comment, request);
 
         invoiceApi.transferChildCreditToParent(childAccountId, callContext);
         return Response.status(Response.Status.OK).build();

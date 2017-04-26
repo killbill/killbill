@@ -52,7 +52,7 @@ public class GuicyKillbillTestModule extends KillBillModule {
                                                                                                   GuicyKillbillTestSuite.getClock().getUTCNow(),
                                                                                                   GuicyKillbillTestSuite.getClock().getUTCNow());
 
-    private final CallContext callContext = internalCallContext.toCallContext(null);
+    private final CallContext callContext = internalCallContext.toCallContext(null,null);
 
     public GuicyKillbillTestModule(final KillbillConfigSource configSource) {
         super(configSource);

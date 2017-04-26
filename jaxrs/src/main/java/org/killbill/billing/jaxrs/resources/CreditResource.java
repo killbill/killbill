@@ -91,7 +91,7 @@ public class CreditResource extends JaxRsResourceBase {
                            @ApiResponse(code = 404, message = "Credit not found")})
     public Response getCredit(@PathParam("creditId") final String creditId,
                               @javax.ws.rs.core.Context final HttpServletRequest request) throws InvoiceApiException, AccountApiException {
-        final TenantContext tenantContext = context.createContext(request);
+        final TenantContext tenantContext = context.createTenantContextNoAccountId(request);
         final InvoiceItem credit = invoiceUserApi.getCreditById(UUID.fromString(creditId), tenantContext);
         final Invoice invoice = invoiceUserApi.getInvoice(credit.getInvoiceId(), tenantContext);
         final CreditJson creditJson = new CreditJson(invoice, credit);
@@ -115,7 +115,7 @@ public class CreditResource extends JaxRsResourceBase {
         verifyNonNullOrEmpty(json.getAccountId(), "CreditJson accountId needs to be set",
                              json.getCreditAmount(), "CreditJson creditAmount needs to be set");
 
-        final CallContext callContext = context.createContext(createdBy, reason, comment, request);
+        final CallContext callContext = context.createCallContextNoAccountId(createdBy, reason, comment, request);
 
         final Account account = accountUserApi.getAccountById(UUID.fromString(json.getAccountId()), callContext);
         final LocalDate effectiveDate = new LocalDate(clock.getUTCNow(), account.getTimeZone());

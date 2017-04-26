@@ -94,7 +94,7 @@ public class CatalogResource extends JaxRsResourceBase {
     @ApiOperation(value = "Retrieve the full catalog as XML", response = String.class, hidden = true)
     @ApiResponses(value = {})
     public Response getCatalogXml(@javax.ws.rs.core.Context final HttpServletRequest request) throws Exception {
-        final TenantContext tenantContext = context.createContext(request);
+        final TenantContext tenantContext = context.createTenantContextNoAccountId(request);
         return Response.status(Status.OK).entity(XMLWriter.writeXML((VersionedCatalog) catalogUserApi.getCatalog(catalogName, tenantContext), VersionedCatalog.class)).build();
     }
 
@@ -109,7 +109,7 @@ public class CatalogResource extends JaxRsResourceBase {
                                      @HeaderParam(HDR_COMMENT) final String comment,
                                      @javax.ws.rs.core.Context final HttpServletRequest request,
                                      @javax.ws.rs.core.Context final UriInfo uriInfo) throws Exception {
-        final CallContext callContext = context.createContext(createdBy, reason, comment, request);
+        final CallContext callContext = context.createCallContextNoAccountId(createdBy, reason, comment, request);
         catalogUserApi.uploadCatalog(catalogXML, callContext);
         return uriBuilder.buildResponse(uriInfo, CatalogResource.class, null, null, request);
     }
@@ -122,7 +122,7 @@ public class CatalogResource extends JaxRsResourceBase {
     public Response getCatalogJson(@QueryParam(QUERY_REQUESTED_DT) final String requestedDate,
                                    @javax.ws.rs.core.Context final HttpServletRequest request) throws Exception {
 
-        final TenantContext tenantContext = context.createContext(request);
+        final TenantContext tenantContext = context.createTenantContextNoAccountId(request);
         final DateTime catalogDateVersion = requestedDate != null ?
                                       DATE_TIME_FORMATTER.parseDateTime(requestedDate).toDateTime(DateTimeZone.UTC) :
                                       null;
@@ -164,7 +164,7 @@ public class CatalogResource extends JaxRsResourceBase {
     public Response getAvailableAddons(@QueryParam("baseProductName") final String baseProductName,
                                        @Nullable @QueryParam("priceListName") final String priceListName,
                                        @javax.ws.rs.core.Context final HttpServletRequest request) throws CatalogApiException {
-        final TenantContext tenantContext = context.createContext(request);
+        final TenantContext tenantContext = context.createTenantContextNoAccountId(request);
         final StaticCatalog catalog = catalogUserApi.getCurrentCatalog(catalogName, tenantContext);
         final List<Listing> listings = catalog.getAvailableAddOnListings(baseProductName, priceListName);
         final List<PlanDetailJson> details = new ArrayList<PlanDetailJson>();
@@ -181,7 +181,7 @@ public class CatalogResource extends JaxRsResourceBase {
     @ApiOperation(value = "Retrieve available base plans", response = PlanDetailJson.class, responseContainer = "List")
     @ApiResponses(value = {})
     public Response getAvailableBasePlans(@javax.ws.rs.core.Context final HttpServletRequest request) throws CatalogApiException {
-        final TenantContext tenantContext = context.createContext(request);
+        final TenantContext tenantContext = context.createTenantContextNoAccountId(request);
         final StaticCatalog catalog = catalogUserApi.getCurrentCatalog(catalogName, tenantContext);
         final List<Listing> listings = catalog.getAvailableBasePlanListings();
         final List<PlanDetailJson> details = new ArrayList<PlanDetailJson>();
@@ -205,7 +205,7 @@ public class CatalogResource extends JaxRsResourceBase {
                                      @HeaderParam(HDR_COMMENT) final String comment,
                                      @javax.ws.rs.core.Context final HttpServletRequest request,
                                      @javax.ws.rs.core.Context final UriInfo uriInfo) throws Exception {
-        final CallContext callContext = context.createContext(createdBy, reason, comment, request);
+        final CallContext callContext = context.createCallContextNoAccountId(createdBy, reason, comment, request);
 
         final SimplePlanDescriptor desc = new DefaultSimplePlanDescriptor(simplePlan.getPlanId(),
                                                                           simplePlan.getProductName(),

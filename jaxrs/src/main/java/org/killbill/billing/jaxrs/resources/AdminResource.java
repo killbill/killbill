@@ -157,7 +157,7 @@ public class AdminResource extends JaxRsResourceBase {
                                     @QueryParam("withBusEvents") @DefaultValue("true") final Boolean withBusEvents,
                                     @QueryParam("withNotifications") @DefaultValue("true") final Boolean withNotifications,
                                     @javax.ws.rs.core.Context final HttpServletRequest request) {
-        final TenantContext tenantContext = context.createContext(request);
+        final TenantContext tenantContext = context.createTenantContextNoAccountId(request);
         final Long tenantRecordId = recordIdApi.getRecordId(tenantContext.getTenantId(), ObjectType.TENANT, tenantContext);
         final Long accountRecordId = Strings.isNullOrEmpty(accountIdStr) ? null : recordIdApi.getRecordId(UUID.fromString(accountIdStr), ObjectType.ACCOUNT, tenantContext);
 
@@ -235,7 +235,7 @@ public class AdminResource extends JaxRsResourceBase {
                                                   @HeaderParam(HDR_COMMENT) final String comment,
                                                   @javax.ws.rs.core.Context final HttpServletRequest request) throws PaymentApiException {
 
-        final CallContext callContext = context.createContext(createdBy, reason, comment, request);
+        final CallContext callContext = context.createCallContextNoAccountId(createdBy, reason, comment, request);
 
         final Payment payment = paymentApi.getPayment(UUID.fromString(paymentIdStr), false, false, ImmutableList.<PluginProperty>of(), callContext);
 
@@ -265,7 +265,7 @@ public class AdminResource extends JaxRsResourceBase {
                                                               @HeaderParam(HDR_REASON) final String reason,
                                                               @HeaderParam(HDR_COMMENT) final String comment,
                                                               @javax.ws.rs.core.Context final HttpServletRequest request) {
-        final CallContext callContext = context.createContext(createdBy, reason, comment, request);
+        final CallContext callContext = context.createCallContextNoAccountId(createdBy, reason, comment, request);
 
         // TODO Consider adding a real invoice API post 0.18.x
         final Pagination<Tag> tags = tagUserApi.searchTags(SystemTags.PARK_TAG_DEFINITION_NAME, offset, limit, callContext);
@@ -348,8 +348,9 @@ public class AdminResource extends JaxRsResourceBase {
     @ApiResponses(value = {})
     public Response invalidatesCacheByAccount(@PathParam("accountId") final String accountIdStr,
                                               @javax.ws.rs.core.Context final HttpServletRequest request) {
-        final TenantContext tenantContext = context.createContext(request);
+
         final UUID accountId = UUID.fromString(accountIdStr);
+        final TenantContext tenantContext = context.createTenantContextWithAccountId(accountId, request);
         final Long accountRecordId = recordIdApi.getRecordId(accountId, ObjectType.ACCOUNT, tenantContext);
 
         // clear account-record-id cache by accountId (note: String!)
@@ -376,7 +377,7 @@ public class AdminResource extends JaxRsResourceBase {
                                              @javax.ws.rs.core.Context final HttpServletRequest request) throws TenantApiException {
 
         // creating Tenant Context from Request
-        final TenantContext tenantContext = context.createContext(request);
+        final TenantContext tenantContext = context.createTenantContextNoAccountId(request);
 
         final Tenant currentTenant = tenantApi.getTenantById(tenantContext.getTenantId());
 
