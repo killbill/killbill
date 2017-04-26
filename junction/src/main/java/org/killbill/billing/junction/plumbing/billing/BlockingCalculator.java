@@ -39,7 +39,7 @@ import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.catalog.api.Catalog;
 import org.killbill.billing.catalog.api.CatalogApiException;
-import org.killbill.billing.catalog.api.CatalogService;
+import org.killbill.billing.catalog.api.CatalogInternalApi;
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.catalog.api.Plan;
 import org.killbill.billing.catalog.api.PlanPhase;
@@ -51,6 +51,7 @@ import org.killbill.billing.subscription.api.SubscriptionBase;
 import org.killbill.billing.subscription.api.SubscriptionBaseTransitionType;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
@@ -62,7 +63,7 @@ public class BlockingCalculator {
     private static final AtomicLong globaltotalOrder = new AtomicLong();
 
     private final BlockingInternalApi blockingApi;
-    private final CatalogService catalogService;
+    private final CatalogInternalApi catalogInternalApi;
 
     protected static class DisabledDuration {
 
@@ -88,9 +89,9 @@ public class BlockingCalculator {
     }
 
     @Inject
-    public BlockingCalculator(final BlockingInternalApi blockingApi, final CatalogService catalogService) {
+    public BlockingCalculator(final BlockingInternalApi blockingApi, final CatalogInternalApi catalogInternalApi) {
         this.blockingApi = blockingApi;
-        this.catalogService = catalogService;
+        this.catalogInternalApi = catalogInternalApi;
     }
 
     /**
@@ -203,8 +204,10 @@ public class BlockingCalculator {
 
     protected SortedSet<BillingEvent> createNewEvents(final List<DisabledDuration> disabledDuration, final SortedSet<BillingEvent> billingEvents, final SubscriptionBase subscription, final InternalTenantContext context) throws CatalogApiException {
 
+        Preconditions.checkState(context.getAccountRecordId() != null);
+
         final SortedSet<BillingEvent> result = new TreeSet<BillingEvent>();
-        final Catalog catalog = catalogService.getFullCatalog(true, true, context);
+        final Catalog catalog = catalogInternalApi.getFullCatalog(true, true, context);
 
         for (final DisabledDuration duration : disabledDuration) {
             // The first one before the blocked duration

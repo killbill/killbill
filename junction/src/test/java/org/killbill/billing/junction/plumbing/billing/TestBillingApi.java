@@ -106,8 +106,10 @@ public class TestBillingApi extends JunctionTestSuiteNoDB {
         Mockito.when(subscriptionInternalApi.getAllTransitions(Mockito.<SubscriptionBase>any(), Mockito.<InternalTenantContext>any())).thenReturn(effectiveSubscriptionTransitions);
 
         catalog = ((MockCatalog) catalogService.getCurrentCatalog(true, true, internalCallContext));
-        // TODO The MockCatalog module returns two different things for full vs current catalog
         Mockito.when(catalogService.getFullCatalog(true, true, internalCallContext)).thenReturn(catalog);
+
+        Mockito.when(catalogInternalApi.getFullCatalog(true, true, internalCallContext)).thenReturn(catalog);
+        Mockito.when(catalogInternalApi.getCurrentCatalog(true, true, internalCallContext)).thenReturn(catalog);
         // Set a default alignment
         catalog.setBillingAlignment(BillingAlignment.ACCOUNT);
 

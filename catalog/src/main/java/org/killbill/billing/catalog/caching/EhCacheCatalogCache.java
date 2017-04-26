@@ -48,6 +48,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 
 public class EhCacheCatalogCache implements CatalogCache {
@@ -91,7 +92,17 @@ public class EhCacheCatalogCache implements CatalogCache {
     }
 
     @Override
-    public VersionedCatalog getCatalog(final boolean useDefaultCatalog, final boolean filterTemplateCatalog, final InternalTenantContext tenantContext) throws CatalogApiException {
+    public VersionedCatalog getCatalog(final boolean useDefaultCatalog, final boolean filterTemplateCatalog, final boolean internalUse, final InternalTenantContext tenantContext) throws CatalogApiException {
+
+        //
+        // This is used by Kill Bill services (subscription/invoice/... creation/change)
+        //
+        // The goal is to ensure that on such operations any catalog plugin would also receive a TenantContext that contains both tenantId AND accountID (and could therefore run some optimization to return
+        // specific pieces of catalog for certain account). In such a scenario plugin would have to make sure that Kill Bill does not cache the catalog (since this is only cached at the tenant level)
+        //
+        if (internalUse) {
+            Preconditions.checkState(tenantContext.getAccountRecordId() !=null, "Unexpected null accountRecordId in context issued from internal Kill Bill service");
+        }
 
         final VersionedCatalog pluginVersionedCatalog = getCatalogFromPlugins(tenantContext);
         if (pluginVersionedCatalog != null) {

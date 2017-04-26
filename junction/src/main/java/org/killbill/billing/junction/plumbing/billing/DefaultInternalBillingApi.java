@@ -36,12 +36,11 @@ import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.catalog.api.BillingAlignment;
 import org.killbill.billing.catalog.api.Catalog;
 import org.killbill.billing.catalog.api.CatalogApiException;
-import org.killbill.billing.catalog.api.CatalogService;
+import org.killbill.billing.catalog.api.CatalogInternalApi;
 import org.killbill.billing.catalog.api.Plan;
 import org.killbill.billing.catalog.api.PlanPhase;
 import org.killbill.billing.catalog.api.PlanPhaseSpecifier;
 import org.killbill.billing.catalog.api.StaticCatalog;
-import org.killbill.billing.entitlement.api.Entitlement.EntitlementState;
 import org.killbill.billing.entitlement.api.SubscriptionEventType;
 import org.killbill.billing.events.EffectiveSubscriptionInternalEvent;
 import org.killbill.billing.invoice.api.DryRunArguments;
@@ -62,6 +61,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Function;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.Collections2;
 import com.google.inject.Inject;
 
@@ -70,7 +70,7 @@ public class DefaultInternalBillingApi implements BillingInternalApi {
     private static final Logger log = LoggerFactory.getLogger(DefaultInternalBillingApi.class);
     private final AccountInternalApi accountApi;
     private final SubscriptionBaseInternalApi subscriptionApi;
-    private final CatalogService catalogService;
+    private final CatalogInternalApi catalogInternalApi;
     private final BlockingCalculator blockCalculator;
     private final TagInternalApi tagApi;
 
@@ -78,11 +78,11 @@ public class DefaultInternalBillingApi implements BillingInternalApi {
     public DefaultInternalBillingApi(final AccountInternalApi accountApi,
                                      final SubscriptionBaseInternalApi subscriptionApi,
                                      final BlockingCalculator blockCalculator,
-                                     final CatalogService catalogService,
+                                     final CatalogInternalApi catalogInternalApi,
                                      final TagInternalApi tagApi) {
         this.accountApi = accountApi;
         this.subscriptionApi = subscriptionApi;
-        this.catalogService = catalogService;
+        this.catalogInternalApi = catalogInternalApi;
         this.blockCalculator = blockCalculator;
         this.tagApi = tagApi;
     }
@@ -90,7 +90,7 @@ public class DefaultInternalBillingApi implements BillingInternalApi {
     @Override
     public BillingEventSet getBillingEventsForAccountAndUpdateAccountBCD(final UUID accountId, final DryRunArguments dryRunArguments, final InternalCallContext context) throws CatalogApiException, AccountApiException, SubscriptionBaseApiException {
 
-        final StaticCatalog currentCatalog = catalogService.getCurrentCatalog(true, true, context);
+        final StaticCatalog currentCatalog = catalogInternalApi.getCurrentCatalog(true, true, context);
 
         // Check to see if billing is off for the account
         final List<Tag> accountTags = tagApi.getTags(accountId, ObjectType.ACCOUNT, context);
@@ -170,7 +170,6 @@ public class DefaultInternalBillingApi implements BillingInternalApi {
         }
     }
 
-
     private void addBillingEventsForSubscription(final ImmutableAccountData account,
                                                  final List<SubscriptionBase> subscriptions,
                                                  final SubscriptionBase baseSubscription,
@@ -188,7 +187,6 @@ public class DefaultInternalBillingApi implements BillingInternalApi {
 
         for (final SubscriptionBase subscription : subscriptions) {
 
-
             final List<EffectiveSubscriptionInternalEvent> billingTransitions = subscriptionApi.getBillingTransitions(subscription, context);
             if (billingTransitions.isEmpty() ||
                 (billingTransitions.get(0).getTransitionType() != SubscriptionBaseTransitionType.CREATE &&
@@ -198,7 +196,7 @@ public class DefaultInternalBillingApi implements BillingInternalApi {
                 return;
             }
 
-            final Catalog catalog = catalogService.getFullCatalog(true, true, context);
+            final Catalog catalog = catalogInternalApi.getFullCatalog(true, true, context);
 
             Integer overridenBCD = null;
             for (final EffectiveSubscriptionInternalEvent transition : billingTransitions) {

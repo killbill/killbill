@@ -92,15 +92,25 @@ public class DefaultCatalogService implements KillbillService, CatalogService {
 
     @Override
     public Catalog getFullCatalog(final boolean useDefaultCatalog, final boolean filterTemplateCatalog, final InternalTenantContext context) throws CatalogApiException {
-        return getCatalog(useDefaultCatalog, filterTemplateCatalog, context);
+        return getCatalog(useDefaultCatalog, filterTemplateCatalog, false, context);
+    }
+
+    @Override
+    public Catalog getFullCatalogForInternalUse(final boolean useDefaultCatalog, final boolean filterTemplateCatalog, final InternalTenantContext context) throws CatalogApiException {
+        return getCatalog(useDefaultCatalog, filterTemplateCatalog, true, context);
     }
 
     @Override
     public StaticCatalog getCurrentCatalog(final boolean useDefaultCatalog, final boolean filterTemplateCatalog, final InternalTenantContext context) throws CatalogApiException {
-        return getCatalog(useDefaultCatalog, filterTemplateCatalog, context);
+        return getCatalog(useDefaultCatalog, filterTemplateCatalog, false, context);
     }
 
-    private VersionedCatalog getCatalog(final boolean useDefaultCatalog, final boolean filterTemplateCatalog, final InternalTenantContext context) throws CatalogApiException {
-        return catalogCache.getCatalog(useDefaultCatalog, filterTemplateCatalog, context);
+    @Override
+    public StaticCatalog getCurrentCatalogForInternalUse(final boolean useDefaultCatalog, final boolean filterTemplateCatalog, final InternalTenantContext context) throws CatalogApiException {
+        return getCatalog(useDefaultCatalog, filterTemplateCatalog, true, context);
+    }
+
+    private VersionedCatalog getCatalog(final boolean useDefaultCatalog, final boolean filterTemplateCatalog, final boolean internalUse, final InternalTenantContext context) throws CatalogApiException {
+        return catalogCache.getCatalog(useDefaultCatalog, filterTemplateCatalog, internalUse, context);
     }
 }

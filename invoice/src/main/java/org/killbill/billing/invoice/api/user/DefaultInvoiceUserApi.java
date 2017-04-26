@@ -38,7 +38,7 @@ import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.catalog.api.Catalog;
 import org.killbill.billing.catalog.api.CatalogApiException;
-import org.killbill.billing.catalog.api.CatalogService;
+import org.killbill.billing.catalog.api.CatalogInternalApi;
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.invoice.InvoiceDispatcher;
 import org.killbill.billing.invoice.api.DryRunArguments;
@@ -97,7 +97,7 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
     private final InternalCallContextFactory internalCallContextFactory;
     private final PersistentBus eventBus;
 
-    private final CatalogService catalogService;
+    private final CatalogInternalApi catalogInternalApi;
 
     @Inject
     public DefaultInvoiceUserApi(final InvoiceDao dao,
@@ -107,7 +107,7 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
                                  final TagInternalApi tagApi,
                                  final InvoiceApiHelper invoiceApiHelper,
                                  final HtmlInvoiceGenerator generator,
-                                 final CatalogService catalogService,
+                                 final CatalogInternalApi catalogInternalApi,
                                  final InternalCallContextFactory internalCallContextFactory) {
         this.dao = dao;
         this.dispatcher = dispatcher;
@@ -115,14 +115,13 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
         this.tagApi = tagApi;
         this.invoiceApiHelper = invoiceApiHelper;
         this.generator = generator;
-        this.catalogService = catalogService;
+        this.catalogInternalApi = catalogInternalApi;
         this.internalCallContextFactory = internalCallContextFactory;
         this.eventBus = eventBus;
     }
 
     @Override
     public List<Invoice> getInvoicesByAccount(final UUID accountId, boolean includesMigrated, final TenantContext context) {
-
 
         final InternalTenantContext internalTenantContext = internalCallContextFactory.createInternalTenantContext(accountId, context);
         final List<InvoiceModelDao> invoicesByAccount = includesMigrated ?
@@ -210,7 +209,10 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
     public Invoice getInvoiceByNumber(final Integer number, final TenantContext context) throws InvoiceApiException {
         // The account record id will be populated in the DAO
         final InternalTenantContext internalTenantContextWithoutAccountRecordId = internalCallContextFactory.createInternalTenantContextWithoutAccountRecordId(context);
-        return new DefaultInvoice(dao.getByNumber(number, internalTenantContextWithoutAccountRecordId), getCatalogSafelyForPrettyNames(internalTenantContextWithoutAccountRecordId));
+        final InvoiceModelDao invoice = dao.getByNumber(number, internalTenantContextWithoutAccountRecordId);
+
+        final InternalTenantContext internalTenantContext = internalCallContextFactory.createInternalTenantContext(invoice.getAccountId(), context);
+        return new DefaultInvoice(invoice, getCatalogSafelyForPrettyNames(internalTenantContext));
     }
 
     @Override
@@ -576,19 +578,20 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
 
     @Override
     public List<InvoiceItem> getInvoiceItemsByParentInvoice(final UUID parentInvoiceId, final TenantContext context) throws InvoiceApiException {
-        final InternalTenantContext  internalTenantContext = internalCallContextFactory.createInternalTenantContext(parentInvoiceId, ObjectType.INVOICE, context);
+        final InternalTenantContext internalTenantContext = internalCallContextFactory.createInternalTenantContext(parentInvoiceId, ObjectType.INVOICE, context);
         return ImmutableList.copyOf(Collections2.transform(dao.getInvoiceItemsByParentInvoice(parentInvoiceId, internalTenantContext),
-                                                                    new Function<InvoiceItemModelDao, InvoiceItem>() {
-            @Override
-            public InvoiceItem apply(final InvoiceItemModelDao input) {
-                return InvoiceItemFactory.fromModelDao(input);
-            }
-        }));
+                                                           new Function<InvoiceItemModelDao, InvoiceItem>() {
+                                                               @Override
+                                                               public InvoiceItem apply(final InvoiceItemModelDao input) {
+                                                                   return InvoiceItemFactory.fromModelDao(input);
+                                                               }
+                                                           }));
     }
 
     private Catalog getCatalogSafelyForPrettyNames(final InternalTenantContext internalTenantContext) {
+
         try {
-            return catalogService.getFullCatalog(true, true, internalTenantContext);
+            return catalogInternalApi.getFullCatalog(true, true, internalTenantContext);
         } catch (final CatalogApiException e) {
             log.warn(String.format("Failed to extract catalog to fill invoice item pretty names for tenantRecordId='%s', ignoring...", internalTenantContext.getTenantRecordId()), internalTenantContext.getTenantRecordId());
             return null;

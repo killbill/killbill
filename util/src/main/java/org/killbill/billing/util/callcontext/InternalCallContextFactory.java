@@ -145,13 +145,19 @@ public class InternalCallContextFactory {
         return createInternalTenantContext(tenantRecordId, accountRecordId);
     }
 
-    /**
-     * Create an internal tenant callcontext
-     *
-     * @param tenantRecordId  tenant_record_id (cannot be null)
-     * @param accountRecordId account_record_id (cannot be null for INSERT operations)
-     * @return internal tenant callcontext
-     */
+    public InternalTenantContext recreateInternalTenantContextWithAccountRecordId(final UUID objectId, final ObjectType objectType, final InternalTenantContext inputContext) {
+        final Long tenantRecordId = inputContext.getTenantRecordId();
+        final Long accountRecordId = getAccountRecordIdSafe(objectId, objectType, tenantRecordId);
+        return createInternalTenantContext(tenantRecordId, accountRecordId);
+    }
+
+        /**
+         * Create an internal tenant callcontext
+         *
+         * @param tenantRecordId  tenant_record_id (cannot be null)
+         * @param accountRecordId account_record_id (cannot be null for INSERT operations)
+         * @return internal tenant callcontext
+         */
     public InternalTenantContext createInternalTenantContext(final Long tenantRecordId, @Nullable final Long accountRecordId) {
         populateMDCContext(accountRecordId, tenantRecordId);
 

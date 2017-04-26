@@ -1,6 +1,6 @@
 /*
- * Copyright 2014 Groupon, Inc
- * Copyright 2014 The Billing Project, LLC
+ * Copyright 2014-2017 Groupon, Inc
+ * Copyright 2014-2017 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -15,18 +15,15 @@
  * under the License.
  */
 
-package org.killbill.billing.catalog.caching;
+package org.killbill.billing.catalog.api;
 
 import org.killbill.billing.callcontext.InternalTenantContext;
-import org.killbill.billing.catalog.VersionedCatalog;
-import org.killbill.billing.catalog.api.CatalogApiException;
 
-public interface CatalogCache {
+public interface CatalogInternalApi {
 
-    public void loadDefaultCatalog(final String url) throws CatalogApiException;
+    public Catalog getFullCatalog(boolean useDefaultCatalog, final boolean filterTemplateCatalog, InternalTenantContext context) throws CatalogApiException;
 
-    public VersionedCatalog getCatalog(final boolean useDefaultCatalog, final boolean filterTemplateCatalog, final boolean internalUse, InternalTenantContext tenantContext) throws CatalogApiException;
 
-    public void clearCatalog(InternalTenantContext tenantContext);
+    public StaticCatalog getCurrentCatalog(boolean useDefaultCatalog, final boolean filterTemplateCatalog, InternalTenantContext context) throws CatalogApiException;
 
 }

@@ -27,7 +27,7 @@ import org.joda.time.DateTime;
 import org.killbill.billing.ErrorCode;
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.catalog.api.CatalogApiException;
-import org.killbill.billing.catalog.api.CatalogService;
+import org.killbill.billing.catalog.api.CatalogInternalApi;
 import org.killbill.billing.subscription.api.SubscriptionApiBase;
 import org.killbill.billing.subscription.api.SubscriptionBase;
 import org.killbill.billing.subscription.api.SubscriptionBaseApiService;
@@ -45,17 +45,17 @@ import com.google.inject.Inject;
 
 public class DefaultSubscriptionBaseTimelineApi extends SubscriptionApiBase implements SubscriptionBaseTimelineApi {
 
-    private final CatalogService catalogService;
+    private final CatalogInternalApi catalogInternalApi;
     private final InternalCallContextFactory internalCallContextFactory;
 
     @Inject
-    public DefaultSubscriptionBaseTimelineApi(final CatalogService catalogService,
+    public DefaultSubscriptionBaseTimelineApi(final CatalogInternalApi catalogService,
                                               final SubscriptionBaseApiService apiService,
                                               final SubscriptionDao dao,
                                               final InternalCallContextFactory internalCallContextFactory,
                                               final Clock clock) {
         super(dao, apiService, clock, catalogService);
-        this.catalogService = catalogService;
+        this.catalogInternalApi = catalogService;
         this.internalCallContextFactory = internalCallContextFactory;
     }
 
@@ -136,7 +136,7 @@ public class DefaultSubscriptionBaseTimelineApi extends SubscriptionApiBase impl
 
         for (final SubscriptionBase cur : subscriptions) {
             if (!repairIds.contains(cur.getId())) {
-                result.add(new DefaultSubscriptionBaseTimeline((DefaultSubscriptionBase) cur, catalogService.getFullCatalog(true, true, tenantContext)));
+                result.add(new DefaultSubscriptionBaseTimeline((DefaultSubscriptionBase) cur, catalogInternalApi.getFullCatalog(true, true, tenantContext)));
             }
         }
         return result;

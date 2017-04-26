@@ -20,9 +20,13 @@ package org.killbill.billing.subscription.api.transfer;
 
 import java.util.List;
 import java.util.UUID;
+import java.util.regex.Matcher;
 
 import org.joda.time.DateTime;
 import org.killbill.billing.account.api.AccountInternalApi;
+import org.killbill.billing.catalog.api.CatalogInternalApi;
+import org.killbill.billing.catalog.api.DefaultCatalogInternalApi;
+import org.killbill.billing.catalog.override.DefaultPriceOverride;
 import org.mockito.Mockito;
 import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
@@ -66,9 +70,10 @@ public class TestDefaultSubscriptionTransferApi extends SubscriptionTestSuiteNoD
         final NonEntityDao nonEntityDao = Mockito.mock(NonEntityDao.class);
         final SubscriptionDao dao = Mockito.mock(SubscriptionDao.class);
         final CatalogService catalogService = new MockCatalogService(new MockCatalog(), cacheControllerDispatcher);
+        final CatalogInternalApi catalogInternalApiWithMockCatalogService = new DefaultCatalogInternalApi(catalogService, internalCallContextFactory);
         final SubscriptionBaseApiService apiService = Mockito.mock(SubscriptionBaseApiService.class);
         final SubscriptionBaseTimelineApi timelineApi = Mockito.mock(SubscriptionBaseTimelineApi.class);
-        transferApi = new DefaultSubscriptionBaseTransferApi(clock, dao, timelineApi, catalogService, apiService, internalCallContextFactory);
+        transferApi = new DefaultSubscriptionBaseTransferApi(clock, dao, timelineApi, catalogInternalApiWithMockCatalogService, apiService, internalCallContextFactory);
     }
 
     @Test(groups = "fast")
@@ -88,6 +93,7 @@ public class TestDefaultSubscriptionTransferApi extends SubscriptionTestSuiteNoD
 
     @Test(groups = "fast")
     public void testEventsForCancelledSubscriptionAfterTransfer() throws Exception {
+
         final DateTime subscriptionStartTime = clock.getUTCNow();
         final DateTime subscriptionCancelTime = subscriptionStartTime.plusDays(1);
         final ImmutableList<ExistingEvent> existingEvents = ImmutableList.<ExistingEvent>of(createEvent(subscriptionStartTime, SubscriptionBaseTransitionType.CREATE),

@@ -18,6 +18,7 @@
 
 package org.killbill.billing.subscription.engine.dao;
 
+import org.killbill.billing.catalog.api.CatalogInternalApi;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.skife.jdbi.v2.IDBI;
 
@@ -35,7 +36,7 @@ public class MockSubscriptionDaoSql extends DefaultSubscriptionDao {
 
     @Inject
     public MockSubscriptionDaoSql(final IDBI dbi, final Clock clock, final AddonUtils addonUtils, final NotificationQueueService notificationQueueService,
-                                  final PersistentBus eventBus, final CatalogService catalogService, final CacheControllerDispatcher cacheControllerDispatcher,
+                                  final PersistentBus eventBus, final CatalogInternalApi catalogService, final CacheControllerDispatcher cacheControllerDispatcher,
                                   final NonEntityDao nonEntityDao, final InternalCallContextFactory internalCallContextFactory) {
         super(dbi, clock, addonUtils, notificationQueueService, eventBus, catalogService, cacheControllerDispatcher, nonEntityDao, internalCallContextFactory);
     }

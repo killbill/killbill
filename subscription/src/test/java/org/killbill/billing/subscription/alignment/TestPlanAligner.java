@@ -51,7 +51,7 @@ public class TestPlanAligner extends SubscriptionTestSuiteNoDB {
     @BeforeClass(groups = "fast")
     public void beforeClass() throws Exception {
         super.beforeClass();
-        planAligner = new PlanAligner(catalogService);
+        planAligner = new PlanAligner(catalogInternalApi);
 
     }
 

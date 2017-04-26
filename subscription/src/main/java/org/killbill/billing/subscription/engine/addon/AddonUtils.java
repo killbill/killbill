@@ -23,7 +23,7 @@ import org.joda.time.DateTime;
 import org.killbill.billing.ErrorCode;
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.catalog.api.CatalogApiException;
-import org.killbill.billing.catalog.api.CatalogService;
+import org.killbill.billing.catalog.api.CatalogInternalApi;
 import org.killbill.billing.catalog.api.Plan;
 import org.killbill.billing.catalog.api.Product;
 import org.killbill.billing.catalog.api.ProductCategory;
@@ -37,24 +37,23 @@ import com.google.inject.Inject;
 
 public class AddonUtils {
 
-    private final CatalogService catalogService;
+    private final CatalogInternalApi catalogInternalApi;
 
     @Inject
-    public AddonUtils(final CatalogService catalogService) {
-        this.catalogService = catalogService;
+    public AddonUtils(final CatalogInternalApi catalogInternalApi) {
+        this.catalogInternalApi = catalogInternalApi;
     }
 
     public void checkAddonCreationRights(final DefaultSubscriptionBase baseSubscription, final Plan targetAddOnPlan, final DateTime requestedDate, final InternalTenantContext context)
             throws SubscriptionBaseApiException, CatalogApiException {
 
-
         if (baseSubscription.getState() == EntitlementState.CANCELLED ||
-            (baseSubscription.getState() == EntitlementState.PENDING &&  context.toLocalDate(baseSubscription.getStartDate()).compareTo(context.toLocalDate(requestedDate)) < 0)) {
+            (baseSubscription.getState() == EntitlementState.PENDING && context.toLocalDate(baseSubscription.getStartDate()).compareTo(context.toLocalDate(requestedDate)) < 0)) {
             throw new SubscriptionBaseApiException(ErrorCode.SUB_CREATE_AO_BP_NON_ACTIVE, targetAddOnPlan.getName());
         }
 
         final Plan currentOrPendingPlan = baseSubscription.getCurrentOrPendingPlan();
-        final Product baseProduct = catalogService.getFullCatalog(true, true, context).findProduct(currentOrPendingPlan.getProduct().getName(), requestedDate);
+        final Product baseProduct = catalogInternalApi.getFullCatalog(true, true, context).findProduct(currentOrPendingPlan.getProduct().getName(), requestedDate);
         if (isAddonIncluded(baseProduct, targetAddOnPlan)) {
             throw new SubscriptionBaseApiException(ErrorCode.SUB_CREATE_AO_ALREADY_INCLUDED,
                                                    targetAddOnPlan.getName(), currentOrPendingPlan.getProduct().getName());
@@ -68,7 +67,7 @@ public class AddonUtils {
 
     public boolean isAddonAvailableFromProdName(final String baseProductName, final Plan targetAddOnPlan, final DateTime requestedDate, final InternalTenantContext context) {
         try {
-            final Product product = catalogService.getFullCatalog(true, true, context).findProduct(baseProductName, requestedDate);
+            final Product product = catalogInternalApi.getFullCatalog(true, true, context).findProduct(baseProductName, requestedDate);
             return isAddonAvailable(product, targetAddOnPlan);
         } catch (CatalogApiException e) {
             throw new SubscriptionBaseError(e);
@@ -77,7 +76,7 @@ public class AddonUtils {
 
     public boolean isAddonAvailableFromPlanName(final String basePlanName, final Plan targetAddOnPlan, final DateTime requestedDate, final InternalTenantContext context) {
         try {
-            final Plan plan = catalogService.getFullCatalog(true, true, context).findPlan(basePlanName, requestedDate);
+            final Plan plan = catalogInternalApi.getFullCatalog(true, true, context).findPlan(basePlanName, requestedDate);
             final Product product = plan.getProduct();
             return isAddonAvailable(product, targetAddOnPlan);
         } catch (CatalogApiException e) {
@@ -85,10 +84,9 @@ public class AddonUtils {
         }
     }
 
-
     public boolean isAddonIncludedFromProdName(final String baseProductName, final Plan targetAddOnPlan, final DateTime requestedDate, final InternalTenantContext context) {
         try {
-            final Product product = catalogService.getFullCatalog(true, true, context).findProduct(baseProductName, requestedDate);
+            final Product product = catalogInternalApi.getFullCatalog(true, true, context).findProduct(baseProductName, requestedDate);
             return isAddonIncluded(product, targetAddOnPlan);
         } catch (CatalogApiException e) {
             throw new SubscriptionBaseError(e);
@@ -98,14 +96,13 @@ public class AddonUtils {
 
     public boolean isAddonIncludedFromPlanName(final String basePlanName, final Plan targetAddOnPlan, final DateTime requestedDate, final InternalTenantContext context) {
         try {
-            final Plan plan = catalogService.getFullCatalog(true, true, context).findPlan(basePlanName, requestedDate);
+            final Plan plan = catalogInternalApi.getFullCatalog(true, true, context).findPlan(basePlanName, requestedDate);
             final Product product = plan.getProduct();
             return isAddonIncluded(product, targetAddOnPlan);
         } catch (CatalogApiException e) {
             throw new SubscriptionBaseError(e);
         }
     }
-
 
     private boolean isAddonAvailable(final Product baseProduct, final Plan targetAddOnPlan) {
         final Product targetAddonProduct = targetAddOnPlan.getProduct();

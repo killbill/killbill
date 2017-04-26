@@ -23,17 +23,15 @@ import java.util.List;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
-
 import org.killbill.billing.ErrorCode;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.catalog.api.Catalog;
 import org.killbill.billing.catalog.api.CatalogApiException;
-import org.killbill.billing.catalog.api.CatalogService;
+import org.killbill.billing.catalog.api.CatalogInternalApi;
 import org.killbill.billing.catalog.api.PlanPhase;
 import org.killbill.billing.catalog.api.PlanPhaseSpecifier;
 import org.killbill.billing.catalog.api.ProductCategory;
-import org.killbill.clock.Clock;
 import org.killbill.billing.entitlement.api.Entitlement.EntitlementState;
 import org.killbill.billing.subscription.api.SubscriptionApiBase;
 import org.killbill.billing.subscription.api.SubscriptionBaseApiService;
@@ -58,6 +56,7 @@ import org.killbill.billing.subscription.exceptions.SubscriptionBaseError;
 import org.killbill.billing.util.UUIDs;
 import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
+import org.killbill.clock.Clock;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
@@ -65,15 +64,15 @@ import com.google.inject.Inject;
 
 public class DefaultSubscriptionBaseTransferApi extends SubscriptionApiBase implements SubscriptionBaseTransferApi {
 
-    private final CatalogService catalogService;
+    private final CatalogInternalApi catalogInternalApi;
     private final SubscriptionBaseTimelineApi timelineApi;
     private final InternalCallContextFactory internalCallContextFactory;
 
     @Inject
-    public DefaultSubscriptionBaseTransferApi(final Clock clock, final SubscriptionDao dao, final SubscriptionBaseTimelineApi timelineApi, final CatalogService catalogService,
+    public DefaultSubscriptionBaseTransferApi(final Clock clock, final SubscriptionDao dao, final SubscriptionBaseTimelineApi timelineApi, final CatalogInternalApi catalogInternalApi,
                                               final SubscriptionBaseApiService apiService, final InternalCallContextFactory internalCallContextFactory) {
-        super(dao, apiService, clock, catalogService);
-        this.catalogService = catalogService;
+        super(dao, apiService, clock, catalogInternalApi);
+        this.catalogInternalApi = catalogInternalApi;
         this.timelineApi = timelineApi;
         this.internalCallContextFactory = internalCallContextFactory;
     }
@@ -83,7 +82,7 @@ public class DefaultSubscriptionBaseTransferApi extends SubscriptionApiBase impl
 
         SubscriptionBaseEvent newEvent = null;
 
-        final Catalog catalog = catalogService.getFullCatalog(true, true, context);
+        final Catalog catalog = catalogInternalApi.getFullCatalog(true, true, context);
 
         final DateTime effectiveDate = existingEvent.getEffectiveDate().isBefore(transferDate) ? transferDate : existingEvent.getEffectiveDate();
 
@@ -129,7 +128,7 @@ public class DefaultSubscriptionBaseTransferApi extends SubscriptionApiBase impl
 
     @VisibleForTesting
     List<SubscriptionBaseEvent> toEvents(final List<ExistingEvent> existingEvents, final DefaultSubscriptionBase subscription,
-                                    final DateTime transferDate, final InternalTenantContext context) throws SubscriptionBaseTransferApiException {
+                                         final DateTime transferDate, final InternalTenantContext context) throws SubscriptionBaseTransferApiException {
 
         try {
             final List<SubscriptionBaseEvent> result = new LinkedList<SubscriptionBaseEvent>();
@@ -178,8 +177,8 @@ public class DefaultSubscriptionBaseTransferApi extends SubscriptionApiBase impl
 
     @Override
     public SubscriptionBaseBundle transferBundle(final UUID sourceAccountId, final UUID destAccountId,
-                                             final String bundleKey, final DateTime transferDate, final boolean transferAddOn,
-                                             final boolean cancelImmediately, final CallContext context) throws SubscriptionBaseTransferApiException {
+                                                 final String bundleKey, final DateTime transferDate, final boolean transferAddOn,
+                                                 final boolean cancelImmediately, final CallContext context) throws SubscriptionBaseTransferApiException {
         final InternalCallContext fromInternalCallContext = internalCallContextFactory.createInternalCallContext(sourceAccountId, context);
         final InternalCallContext toInternalCallContext = internalCallContextFactory.createInternalCallContext(destAccountId, context);
 

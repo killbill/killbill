@@ -21,7 +21,7 @@ import java.util.List;
 
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.catalog.api.CatalogApiException;
-import org.killbill.billing.catalog.api.CatalogService;
+import org.killbill.billing.catalog.api.CatalogInternalApi;
 import org.killbill.billing.subscription.api.user.DefaultSubscriptionBase;
 import org.killbill.billing.subscription.api.user.SubscriptionBuilder;
 import org.killbill.billing.subscription.engine.dao.SubscriptionDao;
@@ -37,13 +37,13 @@ public class SubscriptionApiBase {
 
     protected final SubscriptionBaseApiService apiService;
     protected final Clock clock;
-    protected final CatalogService catalogService;
+    protected final CatalogInternalApi catalogInternalApi;
 
-    public SubscriptionApiBase(final SubscriptionDao dao, final SubscriptionBaseApiService apiService, final Clock clock, final CatalogService catalogService) {
+    public SubscriptionApiBase(final SubscriptionDao dao, final SubscriptionBaseApiService apiService, final Clock clock, final CatalogInternalApi catalogInternalApi) {
         this.dao = dao;
         this.apiService = apiService;
         this.clock = clock;
-        this.catalogService = catalogService;
+        this.catalogInternalApi = catalogInternalApi;
     }
 
     protected List<SubscriptionBase> createSubscriptionsForApiUse(final List<SubscriptionBase> internalSubscriptions) {
@@ -62,7 +62,7 @@ public class SubscriptionApiBase {
     protected DefaultSubscriptionBase createSubscriptionForApiUse(SubscriptionBuilder builder, List<SubscriptionBaseEvent> events, final InternalTenantContext context) throws CatalogApiException {
         final DefaultSubscriptionBase subscription = new DefaultSubscriptionBase(builder, apiService, clock);
         if (events.size() > 0) {
-            subscription.rebuildTransitions(events, catalogService.getFullCatalog(true, true, context));
+            subscription.rebuildTransitions(events, catalogInternalApi.getFullCatalog(true, true, context));
         }
         return subscription;
     }

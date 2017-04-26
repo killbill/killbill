@@ -18,6 +18,7 @@ package org.killbill.billing.junction;
 
 import org.killbill.billing.GuicyKillbillTestSuiteNoDB;
 import org.killbill.billing.account.api.AccountInternalApi;
+import org.killbill.billing.catalog.api.CatalogInternalApi;
 import org.killbill.billing.catalog.api.CatalogService;
 import org.killbill.billing.entitlement.dao.BlockingStateDao;
 import org.killbill.billing.junction.glue.TestJunctionModuleNoDB;
@@ -44,6 +45,8 @@ public abstract class JunctionTestSuiteNoDB extends GuicyKillbillTestSuiteNoDB {
     protected BlockingCalculator blockingCalculator;
     @Inject
     protected CatalogService catalogService;
+    @Inject
+    protected CatalogInternalApi catalogInternalApi;
     @Inject
     protected SubscriptionBaseInternalApi subscriptionInternalApi;
     @Inject

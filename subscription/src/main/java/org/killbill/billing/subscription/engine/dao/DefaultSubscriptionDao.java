@@ -33,14 +33,14 @@ import java.util.UUID;
 import javax.annotation.Nullable;
 import javax.inject.Inject;
 
-import com.google.common.base.Preconditions;
 import org.joda.time.DateTime;
 import org.killbill.billing.ErrorCode;
+import org.killbill.billing.ObjectType;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.catalog.api.Catalog;
 import org.killbill.billing.catalog.api.CatalogApiException;
-import org.killbill.billing.catalog.api.CatalogService;
+import org.killbill.billing.catalog.api.CatalogInternalApi;
 import org.killbill.billing.catalog.api.Plan;
 import org.killbill.billing.catalog.api.ProductCategory;
 import org.killbill.billing.entitlement.api.SubscriptionApiException;
@@ -76,7 +76,6 @@ import org.killbill.billing.subscription.events.user.ApiEvent;
 import org.killbill.billing.subscription.events.user.ApiEventBuilder;
 import org.killbill.billing.subscription.events.user.ApiEventCancel;
 import org.killbill.billing.subscription.events.user.ApiEventChange;
-import org.killbill.billing.subscription.events.user.ApiEventCreate;
 import org.killbill.billing.subscription.events.user.ApiEventType;
 import org.killbill.billing.subscription.exceptions.SubscriptionBaseError;
 import org.killbill.billing.util.cache.CacheControllerDispatcher;
@@ -104,6 +103,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Function;
+import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Collections2;
@@ -119,18 +119,20 @@ public class DefaultSubscriptionDao extends EntityDaoBase<SubscriptionBundleMode
     private final NotificationQueueService notificationQueueService;
     private final AddonUtils addonUtils;
     private final PersistentBus eventBus;
-    private final CatalogService catalogService;
+    private final CatalogInternalApi catalogInternalApi;
+    private final InternalCallContextFactory internalCallContextFactory;
 
     @Inject
     public DefaultSubscriptionDao(final IDBI dbi, final Clock clock, final AddonUtils addonUtils,
-                                  final NotificationQueueService notificationQueueService, final PersistentBus eventBus, final CatalogService catalogService,
+                                  final NotificationQueueService notificationQueueService, final PersistentBus eventBus, final CatalogInternalApi catalogInternalApi,
                                   final CacheControllerDispatcher cacheControllerDispatcher, final NonEntityDao nonEntityDao, final InternalCallContextFactory internalCallContextFactory) {
         super(new EntitySqlDaoTransactionalJdbiWrapper(dbi, clock, cacheControllerDispatcher, nonEntityDao, internalCallContextFactory), BundleSqlDao.class);
         this.clock = clock;
         this.notificationQueueService = notificationQueueService;
         this.addonUtils = addonUtils;
         this.eventBus = eventBus;
-        this.catalogService = catalogService;
+        this.catalogInternalApi = catalogInternalApi;
+        this.internalCallContextFactory = internalCallContextFactory;
     }
 
     @Override
@@ -643,14 +645,13 @@ public class DefaultSubscriptionDao extends EntityDaoBase<SubscriptionBundleMode
         });
     }
 
-
     @Override
     public void changePlan(final DefaultSubscriptionBase subscription, final List<SubscriptionBaseEvent> originalInputChangeEvents, final List<DefaultSubscriptionBase> subscriptionsToBeCancelled, final List<SubscriptionBaseEvent> cancelEvents, final InternalCallContext context) {
 
         // First event is expected to be the subscription CHANGE event
-        final SubscriptionBaseEvent inputChangeEvent =  originalInputChangeEvents.get(0);
+        final SubscriptionBaseEvent inputChangeEvent = originalInputChangeEvents.get(0);
         Preconditions.checkState(inputChangeEvent.getType() == EventType.API_USER &&
-                ((ApiEvent) inputChangeEvent).getApiEventType() == ApiEventType.CHANGE);
+                                 ((ApiEvent) inputChangeEvent).getApiEventType() == ApiEventType.CHANGE);
         Preconditions.checkState(inputChangeEvent.getSubscriptionId().equals(subscription.getId()));
 
         transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<Void>() {
@@ -693,10 +694,7 @@ public class DefaultSubscriptionDao extends EntityDaoBase<SubscriptionBundleMode
                     inputChangeEvents = originalInputChangeEvents;
                 }
 
-
                 cancelFutureEventsFromTransaction(activePresentOrFutureSubscriptionEvents, entitySqlDaoWrapperFactory, false, context);
-
-
 
                 for (final SubscriptionBaseEvent cur : inputChangeEvents) {
                     createAndRefresh(transactional, new SubscriptionEventModelDao(cur), context);
@@ -765,11 +763,10 @@ public class DefaultSubscriptionDao extends EntityDaoBase<SubscriptionBundleMode
         cancelFutureEventsFromTransaction(eventModels, entitySqlDaoWrapperFactory, includingBCDChange, context);
     }
 
-
     private void cancelFutureEventsFromTransaction(final Iterable<SubscriptionEventModelDao> eventModels, final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory, final boolean includingBCDChange, final InternalCallContext context) {
         for (final SubscriptionEventModelDao cur : eventModels) {
             // Skip CREATE event (because of date equality in the query and we don't want to invalidate CREATE event that match a CANCEL event)
-            if (cur.getEventType() == EventType.API_USER && (cur.getUserType()== ApiEventType.CREATE || cur.getUserType()== ApiEventType.TRANSFER)) {
+            if (cur.getEventType() == EventType.API_USER && (cur.getUserType() == ApiEventType.CREATE || cur.getUserType() == ApiEventType.TRANSFER)) {
                 continue;
             }
 
@@ -942,8 +939,8 @@ public class DefaultSubscriptionDao extends EntityDaoBase<SubscriptionBundleMode
                     if (event.getEffectiveDate().isAfter(curDryRun.getEffectiveDate())) {
                         it.remove();
                     } else if (event.getEffectiveDate().compareTo(curDryRun.getEffectiveDate()) == 0 &&
-                            isApiChange &&
-                            (event.getType() == EventType.API_USER && (((ApiEvent) event).getApiEventType() == ApiEventType.CREATE) || ((ApiEvent) event).getApiEventType() == ApiEventType.TRANSFER)) {
+                               isApiChange &&
+                               (event.getType() == EventType.API_USER && (((ApiEvent) event).getApiEventType() == ApiEventType.CREATE) || ((ApiEvent) event).getApiEventType() == ApiEventType.TRANSFER)) {
                         it.remove();
                         swapChangeEventWithCreate = true;
                     }
@@ -1028,8 +1025,9 @@ public class DefaultSubscriptionDao extends EntityDaoBase<SubscriptionBundleMode
 
     private SubscriptionBase createSubscriptionForInternalUse(final SubscriptionBase shellSubscription, final List<SubscriptionBaseEvent> events, final InternalTenantContext context) throws CatalogApiException {
         final DefaultSubscriptionBase result = new DefaultSubscriptionBase(new SubscriptionBuilder(((DefaultSubscriptionBase) shellSubscription)), null, clock);
+
         if (!events.isEmpty()) {
-            final Catalog fullCatalog = catalogService.getFullCatalog(true, true, context);
+            final Catalog fullCatalog = getFullCatalog(result.getId(), ObjectType.SUBSCRIPTION, context);
             result.rebuildTransitions(events, fullCatalog);
         }
         return result;
@@ -1155,8 +1153,16 @@ public class DefaultSubscriptionDao extends EntityDaoBase<SubscriptionBundleMode
             allEvents.addAll(subscriptionWithNewEvent.getEvents());
         }
         allEvents.add(newEvent);
-        subscriptionWithNewEvent.rebuildTransitions(allEvents, catalogService.getFullCatalog(true, true, context));
+        subscriptionWithNewEvent.rebuildTransitions(allEvents, getFullCatalog(subscription.getId(), ObjectType.SUBSCRIPTION, context));
         return subscriptionWithNewEvent;
+    }
+
+    private Catalog getFullCatalog(final UUID objectId, final ObjectType objectType, final InternalTenantContext contextWithOrWithoutAccountId) throws CatalogApiException {
+
+        final InternalTenantContext context = contextWithOrWithoutAccountId.getAccountRecordId() == null ?
+                                              internalCallContextFactory.recreateInternalTenantContextWithAccountRecordId(objectId, objectType, contextWithOrWithoutAccountId) :
+                                              contextWithOrWithoutAccountId;
+        return catalogInternalApi.getFullCatalog(true, true, context);
     }
 
     private InternalCallContext contextWithUpdatedDate(final InternalCallContext input) {
