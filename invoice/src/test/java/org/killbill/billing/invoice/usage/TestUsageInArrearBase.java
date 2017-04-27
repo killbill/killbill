@@ -1,6 +1,6 @@
 /*
- * Copyright 2014-2016 Groupon, Inc
- * Copyright 2014-2016 The Billing Project, LLC
+ * Copyright 2014-2017 Groupon, Inc
+ * Copyright 2014-2017 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -136,7 +136,6 @@ public abstract class TestUsageInArrearBase extends InvoiceTestSuiteNoDB {
         final BillingEvent result = Mockito.mock(BillingEvent.class);
         Mockito.when(result.getCurrency()).thenReturn(Currency.BTC);
         Mockito.when(result.getBillCycleDayLocal()).thenReturn(BCD);
-        Mockito.when(result.getTimeZone()).thenReturn(DateTimeZone.UTC);
         Mockito.when(result.getEffectiveDate()).thenReturn(effectiveDate);
         Mockito.when(result.getBillingPeriod()).thenReturn(billingPeriod);
 

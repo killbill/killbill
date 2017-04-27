@@ -27,7 +27,6 @@ import java.util.UUID;
 import javax.annotation.Nullable;
 
 import org.joda.time.DateTime;
-import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDate;
 import org.killbill.billing.account.api.ImmutableAccountData;
 import org.killbill.billing.callcontext.InternalTenantContext;
@@ -70,6 +69,7 @@ public class DefaultEventsStream implements EventsStream {
     private final List<SubscriptionBase> allSubscriptionsForBundle;
     private final InternalTenantContext internalTenantContext;
     private final DateTime utcNow;
+    private final LocalDate utcToday;
     private final int defaultBillCycleDayLocal;
 
     private BlockingAggregator blockingAggregator;
@@ -100,13 +100,9 @@ public class DefaultEventsStream implements EventsStream {
         this.defaultBillCycleDayLocal = defaultBillCycleDayLocal;
         this.internalTenantContext = contextWithValidAccountRecordId;
         this.utcNow = utcNow;
+        this.utcToday = contextWithValidAccountRecordId.toLocalDate(utcNow);
 
         setup();
-    }
-
-    @Override
-    public DateTimeZone getAccountTimeZone() {
-        return account.getTimeZone();
     }
 
     @Override
@@ -462,7 +458,7 @@ public class DefaultEventsStream implements EventsStream {
         if (entitlementEffectiveEndDate != null && entitlementEffectiveEndDate.compareTo(internalTenantContext.toLocalDate(utcNow)) <= 0) {
             entitlementState = EntitlementState.CANCELLED;
         } else {
-            if (entitlementEffectiveStartDate.compareTo(new LocalDate(utcNow, account.getTimeZone())) > 0) {
+            if (entitlementEffectiveStartDate.compareTo(utcToday) > 0) {
                 entitlementState = EntitlementState.PENDING;
             } else {
                 // Gather states across all services and check if one of them is set to 'blockEntitlement'

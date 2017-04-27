@@ -280,7 +280,7 @@ public class DefaultSubscriptionApi implements SubscriptionApi {
         }
 
 
-        final LocalDate effectiveDate = new LocalDate(clock.getUTCNow(), account.getTimeZone());
+        final LocalDate effectiveDate = internalCallContext.toLocalDate(clock.getUTCNow());
         final BaseEntitlementWithAddOnsSpecifier baseEntitlementWithAddOnsSpecifier = new DefaultBaseEntitlementWithAddOnsSpecifier(
                 bundleId,
                 newExternalKey,
@@ -425,11 +425,11 @@ public class DefaultSubscriptionApi implements SubscriptionApi {
                                                                        }
                                                                    }) : filteredByTypes;
 
-            final LocalDate localDateNowInAccountTimezone = new LocalDate(clock.getUTCNow(), account.getTimeZone());
+            final LocalDate localDateNowInAccountTimezone = internalTenantContextWithValidAccountRecordId.toLocalDate(clock.getUTCNow());
             final List<BlockingState> result = new ArrayList<BlockingState>();
             for (final BlockingState cur : filteredByTypesAndSvcs) {
 
-                final LocalDate eventDate = new LocalDate(cur.getEffectiveDate(), account.getTimeZone());
+                final LocalDate eventDate = internalTenantContextWithValidAccountRecordId.toLocalDate(cur.getEffectiveDate());
                 final int comp = eventDate.compareTo(localDateNowInAccountTimezone);
                 if ((comp <= 1 && ((timeFilter & SubscriptionApi.PAST_EVENTS) == SubscriptionApi.PAST_EVENTS)) ||
                     (comp == 0 && ((timeFilter & SubscriptionApi.PRESENT_EVENTS) == SubscriptionApi.PRESENT_EVENTS)) ||

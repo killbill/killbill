@@ -32,7 +32,6 @@ import javax.annotation.Nullable;
 import javax.inject.Inject;
 
 import org.joda.time.DateTime;
-import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDate;
 import org.killbill.billing.account.api.AccountApiException;
 import org.killbill.billing.account.api.AccountInternalApi;
@@ -102,15 +101,13 @@ public class DefaultEntitlementInternalApi extends DefaultEntitlementApiBase imp
             return;
         }
 
-        int bcd = 0;
-        DateTimeZone accountTimeZone = null;
+        int bcd;
         try {
             bcd = accountApi.getBCD(entitlements.iterator().next().getAccountId(), internalCallContext);
-            accountTimeZone = accountApi.getImmutableAccountDataByRecordId(internalCallContext. getAccountRecordId(), internalCallContext).getTimeZone();
         } catch (final AccountApiException e) {
             throw new EntitlementApiException(e);
         }
-        Preconditions.checkState(bcd > 0 && accountTimeZone != null, "Unexpected condition where account info could not be retrieved");
+        Preconditions.checkState(bcd > 0, "Unexpected condition where account info could not be retrieved");
 
         final CallContext callContext = internalCallContextFactory.createCallContext(internalCallContext);
 
@@ -157,7 +154,6 @@ public class DefaultEntitlementInternalApi extends DefaultEntitlementApiBase imp
 
         final Callable<Void> preCallbacksCallback = new BulkSubscriptionBaseCancellation(subscriptions,
                                                                                          billingPolicy,
-                                                                                         accountTimeZone,
                                                                                          bcd,
                                                                                          internalCallContext);
 
@@ -190,18 +186,15 @@ public class DefaultEntitlementInternalApi extends DefaultEntitlementApiBase imp
 
         private final Iterable<SubscriptionBase> subscriptions;
         private final BillingActionPolicy billingPolicy;
-        private final DateTimeZone accountTimeZone;
         private final int accountBillCycleDayLocal;
         private final InternalCallContext callContext;
 
         public BulkSubscriptionBaseCancellation(final Iterable<SubscriptionBase> subscriptions,
                                                 final BillingActionPolicy billingPolicy,
-                                                final DateTimeZone accountTimeZone,
                                                 final int accountBillCycleDayLocal,
                                                 final InternalCallContext callContext) {
             this.subscriptions = subscriptions;
             this.billingPolicy = billingPolicy;
-            this.accountTimeZone = accountTimeZone;
             this.accountBillCycleDayLocal = accountBillCycleDayLocal;
             this.callContext = callContext;
         }

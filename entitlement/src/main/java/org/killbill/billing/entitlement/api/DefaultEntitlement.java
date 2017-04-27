@@ -297,7 +297,7 @@ public class DefaultEntitlement extends EntityBase implements Entitlement {
         // Get the latest state from disk - required to have the latest CTD
         refresh(callContext);
 
-        final LocalDate cancellationDate = getLocalDateFromEntitlementPolicy(entitlementPolicy);
+        final LocalDate cancellationDate = getLocalDateFromEntitlementPolicy(entitlementPolicy, callContext);
         return cancelEntitlementWithDate(cancellationDate, false, properties, callContext);
     }
 
@@ -450,7 +450,7 @@ public class DefaultEntitlement extends EntityBase implements Entitlement {
         // Get the latest state from disk - required to have the latest CTD
         refresh(callContext);
 
-        final LocalDate cancellationDate = getLocalDateFromEntitlementPolicy(entitlementPolicy);
+        final LocalDate cancellationDate = getLocalDateFromEntitlementPolicy(entitlementPolicy, callContext);
         return cancelEntitlementWithDateOverrideBillingPolicy(cancellationDate, billingPolicy, properties, callContext);
     }
 
@@ -515,18 +515,19 @@ public class DefaultEntitlement extends EntityBase implements Entitlement {
         return pluginExecution.executeWithPlugin(cancelEntitlementWithPlugin, pluginContext);
     }
 
-    private LocalDate getLocalDateFromEntitlementPolicy(final EntitlementActionPolicy entitlementPolicy) {
+    private LocalDate getLocalDateFromEntitlementPolicy(final EntitlementActionPolicy entitlementPolicy, final TenantContext tenantContext) {
+        final InternalTenantContext internalTenantContext = internalCallContextFactory.createInternalTenantContext(getAccountId(), tenantContext);
 
         final LocalDate cancellationDate;
         switch (entitlementPolicy) {
             case IMMEDIATE:
-                cancellationDate = clock.getToday(eventsStream.getAccountTimeZone());
+                cancellationDate = internalTenantContext.toLocalDate(clock.getUTCNow());
                 break;
             case END_OF_TERM:
                 if (getSubscriptionBase().getChargedThroughDate() != null) {
                     cancellationDate = internalTenantContext.toLocalDate(getSubscriptionBase().getChargedThroughDate());
                 } else {
-                    cancellationDate = clock.getToday(eventsStream.getAccountTimeZone());
+                    cancellationDate = internalTenantContext.toLocalDate(clock.getUTCNow());
                 }
                 break;
             default:

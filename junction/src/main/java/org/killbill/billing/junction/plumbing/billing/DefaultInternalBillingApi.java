@@ -218,7 +218,7 @@ public class DefaultInternalBillingApi implements BillingInternalApi {
                     updatedAccountBCD = true;
                 }
 
-                final BillingEvent event = new DefaultBillingEvent(account, transition, subscription, bcdLocal, account.getCurrency(), catalog);
+                final BillingEvent event = new DefaultBillingEvent(transition, subscription, bcdLocal, account.getCurrency(), catalog);
                 result.add(event);
             }
         }

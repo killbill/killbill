@@ -1,7 +1,9 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
+ * Copyright 2014-2017 Groupon, Inc
+ * Copyright 2014-2017 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -32,7 +34,7 @@ public class TestDefaultBillingStateFormatter extends OverdueTestSuiteNoDB {
     @Test(groups = "fast")
     public void testBalanceFormatting() throws Exception {
         final BillingState billingState = new BillingState(UUID.randomUUID(), 2, BigDecimal.TEN,
-                                                           new LocalDate(), DateTimeZone.UTC, UUID.randomUUID(),
+                                                           new LocalDate(), UUID.randomUUID(),
                                                            null, null);
         final DefaultBillingStateFormatter formatter = new DefaultBillingStateFormatter(billingState);
         Assert.assertEquals(formatter.getFormattedBalanceOfUnpaidInvoices(), "10.00");

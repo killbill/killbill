@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014-2016 Groupon, Inc
- * Copyright 2014-2016 The Billing Project, LLC
+ * Copyright 2014-2017 Groupon, Inc
+ * Copyright 2014-2017 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -22,9 +22,7 @@ import java.math.BigDecimal;
 import java.util.Arrays;
 import java.util.UUID;
 
-import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDate;
-
 import org.killbill.billing.payment.api.PaymentResponse;
 import org.killbill.billing.util.tag.Tag;
 
@@ -34,7 +32,6 @@ public class BillingState {
     private final int numberOfUnpaidInvoices;
     private final BigDecimal balanceOfUnpaidInvoices;
     private final LocalDate dateOfEarliestUnpaidInvoice;
-    private final DateTimeZone accountTimeZone;
     private final UUID idOfEarliestUnpaidInvoice;
     private final PaymentResponse responseForLastFailedPayment;
     private final Tag[] tags;
@@ -43,7 +40,6 @@ public class BillingState {
                         final int numberOfUnpaidInvoices,
                         final BigDecimal balanceOfUnpaidInvoices,
                         final LocalDate dateOfEarliestUnpaidInvoice,
-                        final DateTimeZone accountTimeZone,
                         final UUID idOfEarliestUnpaidInvoice,
                         final PaymentResponse responseForLastFailedPayment,
                         final Tag[] tags) {
@@ -51,7 +47,6 @@ public class BillingState {
         this.numberOfUnpaidInvoices = numberOfUnpaidInvoices;
         this.balanceOfUnpaidInvoices = balanceOfUnpaidInvoices;
         this.dateOfEarliestUnpaidInvoice = dateOfEarliestUnpaidInvoice;
-        this.accountTimeZone = accountTimeZone;
         this.idOfEarliestUnpaidInvoice = idOfEarliestUnpaidInvoice;
         this.responseForLastFailedPayment = responseForLastFailedPayment;
         this.tags = tags;
@@ -85,10 +80,6 @@ public class BillingState {
         return tags;
     }
 
-    public DateTimeZone getAccountTimeZone() {
-        return accountTimeZone;
-    }
-
     @Override
     public String toString() {
         final StringBuilder sb = new StringBuilder("BillingState{");
@@ -96,7 +87,6 @@ public class BillingState {
         sb.append(", numberOfUnpaidInvoices=").append(numberOfUnpaidInvoices);
         sb.append(", balanceOfUnpaidInvoices=").append(balanceOfUnpaidInvoices);
         sb.append(", dateOfEarliestUnpaidInvoice=").append(dateOfEarliestUnpaidInvoice);
-        sb.append(", accountTimeZone=").append(accountTimeZone);
         sb.append(", idOfEarliestUnpaidInvoice=").append(idOfEarliestUnpaidInvoice);
         sb.append(", responseForLastFailedPayment=").append(responseForLastFailedPayment);
         sb.append(", tags=").append(Arrays.toString(tags));

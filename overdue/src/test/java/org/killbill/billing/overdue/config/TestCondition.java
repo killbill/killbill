@@ -1,7 +1,9 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
+ * Copyright 2014-2017 Groupon, Inc
+ * Copyright 2014-2017 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -54,11 +56,11 @@ public class TestCondition extends OverdueTestSuiteNoDB {
         final UUID unpaidInvoiceId = UUID.randomUUID();
 
         final BillingState state0 = new BillingState(new UUID(0L, 1L), 0, BigDecimal.ZERO, new LocalDate(),
-                                                     DateTimeZone.UTC, unpaidInvoiceId, PaymentResponse.INSUFFICIENT_FUNDS, new Tag[]{});
+                                                     unpaidInvoiceId, PaymentResponse.INSUFFICIENT_FUNDS, new Tag[]{});
         final BillingState state1 = new BillingState(new UUID(0L, 1L), 1, BigDecimal.ZERO, new LocalDate(),
-                                                     DateTimeZone.UTC, unpaidInvoiceId, PaymentResponse.INSUFFICIENT_FUNDS, new Tag[]{});
+                                                     unpaidInvoiceId, PaymentResponse.INSUFFICIENT_FUNDS, new Tag[]{});
         final BillingState state2 = new BillingState(new UUID(0L, 1L), 2, BigDecimal.ZERO, new LocalDate(),
-                                                     DateTimeZone.UTC, unpaidInvoiceId, PaymentResponse.INSUFFICIENT_FUNDS, new Tag[]{});
+                                                     unpaidInvoiceId, PaymentResponse.INSUFFICIENT_FUNDS, new Tag[]{});
 
         Assert.assertTrue(!c.evaluate(state0, new LocalDate()));
         Assert.assertTrue(c.evaluate(state1, new LocalDate()));
@@ -76,11 +78,11 @@ public class TestCondition extends OverdueTestSuiteNoDB {
         final UUID unpaidInvoiceId = UUID.randomUUID();
 
         final BillingState state0 = new BillingState(new UUID(0L, 1L), 0, BigDecimal.ZERO, new LocalDate(),
-                                                     DateTimeZone.UTC, unpaidInvoiceId, PaymentResponse.INSUFFICIENT_FUNDS, new Tag[]{});
+                                                     unpaidInvoiceId, PaymentResponse.INSUFFICIENT_FUNDS, new Tag[]{});
         final BillingState state1 = new BillingState(new UUID(0L, 1L), 1, new BigDecimal("100.00"), new LocalDate(),
-                                                     DateTimeZone.UTC, unpaidInvoiceId, PaymentResponse.INSUFFICIENT_FUNDS, new Tag[]{});
+                                                     unpaidInvoiceId, PaymentResponse.INSUFFICIENT_FUNDS, new Tag[]{});
         final BillingState state2 = new BillingState(new UUID(0L, 1L), 1, new BigDecimal("200.00"), new LocalDate(),
-                                                     DateTimeZone.UTC, unpaidInvoiceId, PaymentResponse.INSUFFICIENT_FUNDS, new Tag[]{});
+                                                     unpaidInvoiceId, PaymentResponse.INSUFFICIENT_FUNDS, new Tag[]{});
 
         Assert.assertTrue(!c.evaluate(state0, new LocalDate()));
         Assert.assertTrue(c.evaluate(state1, new LocalDate()));
@@ -100,11 +102,11 @@ public class TestCondition extends OverdueTestSuiteNoDB {
         final LocalDate now = new LocalDate();
 
         final BillingState state0 = new BillingState(new UUID(0L, 1L), 0, BigDecimal.ZERO, null,
-                                                     DateTimeZone.UTC, unpaidInvoiceId, PaymentResponse.INSUFFICIENT_FUNDS, new Tag[]{});
+                                                     unpaidInvoiceId, PaymentResponse.INSUFFICIENT_FUNDS, new Tag[]{});
         final BillingState state1 = new BillingState(new UUID(0L, 1L), 1, new BigDecimal("100.00"), now.minusDays(10),
-                                                     DateTimeZone.UTC, unpaidInvoiceId, PaymentResponse.INSUFFICIENT_FUNDS, new Tag[]{});
+                                                     unpaidInvoiceId, PaymentResponse.INSUFFICIENT_FUNDS, new Tag[]{});
         final BillingState state2 = new BillingState(new UUID(0L, 1L), 1, new BigDecimal("200.00"), now.minusDays(20),
-                                                     DateTimeZone.UTC, unpaidInvoiceId, PaymentResponse.INSUFFICIENT_FUNDS, new Tag[]{});
+                                                     unpaidInvoiceId, PaymentResponse.INSUFFICIENT_FUNDS, new Tag[]{});
 
         Assert.assertTrue(!c.evaluate(state0, now));
         Assert.assertTrue(c.evaluate(state1, now));
@@ -124,11 +126,11 @@ public class TestCondition extends OverdueTestSuiteNoDB {
         final LocalDate now = new LocalDate();
 
         final BillingState state0 = new BillingState(new UUID(0L, 1L), 0, BigDecimal.ZERO, null,
-                                                     DateTimeZone.UTC, unpaidInvoiceId, PaymentResponse.LOST_OR_STOLEN_CARD, new Tag[]{});
+                                                     unpaidInvoiceId, PaymentResponse.LOST_OR_STOLEN_CARD, new Tag[]{});
         final BillingState state1 = new BillingState(new UUID(0L, 1L), 1, new BigDecimal("100.00"), now.minusDays(10),
-                                                     DateTimeZone.UTC, unpaidInvoiceId, PaymentResponse.INSUFFICIENT_FUNDS, new Tag[]{});
+                                                     unpaidInvoiceId, PaymentResponse.INSUFFICIENT_FUNDS, new Tag[]{});
         final BillingState state2 = new BillingState(new UUID(0L, 1L), 1, new BigDecimal("200.00"), now.minusDays(20),
-                                                     DateTimeZone.UTC, unpaidInvoiceId, PaymentResponse.DO_NOT_HONOR, new Tag[]{});
+                                                     unpaidInvoiceId, PaymentResponse.DO_NOT_HONOR, new Tag[]{});
 
         Assert.assertTrue(!c.evaluate(state0, now));
         Assert.assertTrue(c.evaluate(state1, now));
@@ -151,16 +153,16 @@ public class TestCondition extends OverdueTestSuiteNoDB {
 
         final UUID objectId = new UUID(0L, 1L);
         final BillingState state0 = new BillingState(objectId, 0, BigDecimal.ZERO, null,
-                                                     DateTimeZone.UTC, unpaidInvoiceId, PaymentResponse.LOST_OR_STOLEN_CARD,
+                                                     unpaidInvoiceId, PaymentResponse.LOST_OR_STOLEN_CARD,
                                                      new Tag[]{new DefaultControlTag(ControlTagType.AUTO_INVOICING_OFF, objectType, objectId, clock.getUTCNow()),
                                                              new DescriptiveTag(UUID.randomUUID(), objectType, objectId, clock.getUTCNow())});
 
         final BillingState state1 = new BillingState(objectId, 1, new BigDecimal("100.00"), now.minusDays(10),
-                                                     DateTimeZone.UTC, unpaidInvoiceId, PaymentResponse.INSUFFICIENT_FUNDS,
+                                                     unpaidInvoiceId, PaymentResponse.INSUFFICIENT_FUNDS,
                                                      new Tag[]{new DefaultControlTag(ControlTagType.OVERDUE_ENFORCEMENT_OFF, objectType, objectId, clock.getUTCNow())});
 
         final BillingState state2 = new BillingState(objectId, 1, new BigDecimal("200.00"), now.minusDays(20),
-                                                     DateTimeZone.UTC, unpaidInvoiceId,
+                                                     unpaidInvoiceId,
                                                      PaymentResponse.DO_NOT_HONOR,
                                                      new Tag[]{new DefaultControlTag(ControlTagType.OVERDUE_ENFORCEMENT_OFF, objectType, objectId, clock.getUTCNow()),
                                                              new DefaultControlTag(ControlTagType.AUTO_INVOICING_OFF, objectType, objectId, clock.getUTCNow()),

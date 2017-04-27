@@ -1,7 +1,9 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
+ * Copyright 2014-2017 Groupon, Inc
+ * Copyright 2014-2017 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -25,7 +27,6 @@ import java.util.SortedSet;
 import java.util.TreeSet;
 import java.util.UUID;
 
-import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDate;
 import org.killbill.billing.ObjectType;
 import org.killbill.billing.account.api.ImmutableAccountData;
@@ -68,7 +69,7 @@ public class BillingStateCalculator {
     }
 
     public BillingState calculateBillingState(final ImmutableAccountData account, final InternalTenantContext context) throws OverdueException {
-        final SortedSet<Invoice> unpaidInvoices = unpaidInvoicesForAccount(account.getId(), account.getTimeZone(), context);
+        final SortedSet<Invoice> unpaidInvoices = unpaidInvoicesForAccount(account.getId(), context);
 
         final int numberOfUnpaidInvoices = unpaidInvoices.size();
         final BigDecimal unpaidInvoiceBalance = sumBalance(unpaidInvoices);
@@ -83,7 +84,7 @@ public class BillingStateCalculator {
         final List<Tag> accountTags = tagApi.getTags(account.getId(), ObjectType.ACCOUNT, context);
         final Tag[] tags = accountTags.toArray(new Tag[accountTags.size()]);
 
-        return new BillingState(account.getId(), numberOfUnpaidInvoices, unpaidInvoiceBalance, dateOfEarliestUnpaidInvoice, account.getTimeZone(), idOfEarliestUnpaidInvoice, responseForLastFailedPayment, tags);
+        return new BillingState(account.getId(), numberOfUnpaidInvoices, unpaidInvoiceBalance, dateOfEarliestUnpaidInvoice, idOfEarliestUnpaidInvoice, responseForLastFailedPayment, tags);
     }
 
     // Package scope for testing
@@ -103,8 +104,8 @@ public class BillingStateCalculator {
         return sum;
     }
 
-    SortedSet<Invoice> unpaidInvoicesForAccount(final UUID accountId, final DateTimeZone accountTimeZone, final InternalTenantContext context) {
-        final Collection<Invoice> invoices = invoiceApi.getUnpaidInvoicesByAccountId(accountId, clock.getToday(accountTimeZone), context);
+    SortedSet<Invoice> unpaidInvoicesForAccount(final UUID accountId, final InternalTenantContext context) {
+        final Collection<Invoice> invoices = invoiceApi.getUnpaidInvoicesByAccountId(accountId, context.toLocalDate(clock.getUTCNow()), context);
         final SortedSet<Invoice> sortedInvoices = new TreeSet<Invoice>(new InvoiceDateComparator());
         sortedInvoices.addAll(invoices);
         return sortedInvoices;

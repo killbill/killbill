@@ -82,7 +82,7 @@ public class TestBillingStateCalculator extends OverdueTestSuiteNoDB {
     @Test(groups = "fast")
     public void testUnpaidInvoices() {
         final BillingStateCalculator calc = createBSCalc();
-        final SortedSet<Invoice> invoices = calc.unpaidInvoicesForAccount(new UUID(0L, 0L), DateTimeZone.UTC, internalCallContext);
+        final SortedSet<Invoice> invoices = calc.unpaidInvoicesForAccount(new UUID(0L, 0L), internalCallContext);
 
         Assert.assertEquals(invoices.size(), 3);
         Assert.assertEquals(BigDecimal.ZERO.compareTo(invoices.first().getBalance()), 0);
@@ -92,14 +92,14 @@ public class TestBillingStateCalculator extends OverdueTestSuiteNoDB {
     @Test(groups = "fast")
     public void testSum() {
         final BillingStateCalculator calc = createBSCalc();
-        final SortedSet<Invoice> invoices = calc.unpaidInvoicesForAccount(new UUID(0L, 0L), DateTimeZone.UTC, internalCallContext);
+        final SortedSet<Invoice> invoices = calc.unpaidInvoicesForAccount(new UUID(0L, 0L), internalCallContext);
         Assert.assertEquals(new BigDecimal("110.0").compareTo(calc.sumBalance(invoices)), 0);
     }
 
     @Test(groups = "fast")
     public void testEarliest() {
         final BillingStateCalculator calc = createBSCalc();
-        final SortedSet<Invoice> invoices = calc.unpaidInvoicesForAccount(new UUID(0L, 0L), DateTimeZone.UTC, internalCallContext);
+        final SortedSet<Invoice> invoices = calc.unpaidInvoicesForAccount(new UUID(0L, 0L), internalCallContext);
         Assert.assertEquals(calc.earliest(invoices).getInvoiceDate(), now);
     }
 }

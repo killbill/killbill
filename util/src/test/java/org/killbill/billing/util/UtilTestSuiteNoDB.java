@@ -25,6 +25,9 @@ import org.apache.shiro.mgt.SecurityManager;
 import org.apache.shiro.util.Factory;
 import org.apache.shiro.util.ThreadContext;
 import org.killbill.billing.GuicyKillbillTestSuiteNoDB;
+import org.killbill.billing.account.api.AccountInternalApi;
+import org.killbill.billing.account.api.AccountUserApi;
+import org.killbill.billing.account.api.ImmutableAccountInternalApi;
 import org.killbill.billing.security.Permission;
 import org.killbill.billing.security.api.SecurityApi;
 import org.killbill.billing.util.api.AuditUserApi;
@@ -63,6 +66,12 @@ public class UtilTestSuiteNoDB extends GuicyKillbillTestSuiteNoDB {
     protected SecurityApi securityApi;
     @Inject
     protected KillBillJndiLdapRealm killBillJndiLdapRealm;
+    @Inject
+    protected AccountUserApi accountUserApi;
+    @Inject
+    protected AccountInternalApi accountInternalApi;
+    @Inject
+    protected ImmutableAccountInternalApi immutableAccountInternalApi;
 
     @BeforeClass(groups = "fast")
     public void beforeClass() throws Exception {

@@ -560,7 +560,7 @@ public class TestBlockingCalculator extends JunctionTestSuiteNoDB {
             return new DefaultBillingEvent(subscription, effectiveDate, true, plan, planPhase, fixedPrice,
                                            currency,
                                            billingPeriod, billCycleDay,
-                                           description, totalOrdering, type, tz, null, false);
+                                           description, totalOrdering, type, null, false);
 
         } catch (final CatalogApiException e) {
             Assert.fail("", e);
@@ -633,7 +633,7 @@ public class TestBlockingCalculator extends JunctionTestSuiteNoDB {
 
         public MockBillingEvent() {
             super(subscription1, clock.getUTCNow(), true, null, null, BigDecimal.ZERO, Currency.USD, BillingPeriod.ANNUAL,
-                  4, "", 3L, SubscriptionBaseTransitionType.CREATE, DateTimeZone.UTC, null, false);
+                  4, "", 3L, SubscriptionBaseTransitionType.CREATE, null, false);
         }
     }
 

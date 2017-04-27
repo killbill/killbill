@@ -1,7 +1,9 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
+ * Copyright 2014-2017 Groupon, Inc
+ * Copyright 2014-2017 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -22,8 +24,6 @@ import java.util.List;
 import javax.annotation.Nullable;
 
 import org.joda.time.DateTime;
-import org.joda.time.DateTimeZone;
-import org.killbill.billing.account.api.ImmutableAccountData;
 import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.catalog.api.Catalog;
 import org.killbill.billing.catalog.api.CatalogApiException;
@@ -52,7 +52,6 @@ public class DefaultBillingEvent implements BillingEvent {
     private final BillingPeriod billingPeriod;
     private final SubscriptionBaseTransitionType type;
     private final Long totalOrdering;
-    private final DateTimeZone timeZone;
 
     private final List<Usage> usages;
 
@@ -60,7 +59,7 @@ public class DefaultBillingEvent implements BillingEvent {
     private final boolean isDisableEvent;
     private final PlanPhase nextPlanPhase;
 
-    public DefaultBillingEvent(final ImmutableAccountData account, final EffectiveSubscriptionInternalEvent transition, final SubscriptionBase subscription, final int billCycleDayLocal, final Currency currency, final Catalog catalog) throws CatalogApiException {
+    public DefaultBillingEvent(final EffectiveSubscriptionInternalEvent transition, final SubscriptionBase subscription, final int billCycleDayLocal, final Currency currency, final Catalog catalog) throws CatalogApiException {
 
         this.catalog = catalog;
 
@@ -87,7 +86,6 @@ public class DefaultBillingEvent implements BillingEvent {
         this.billingPeriod = getRecurringBillingPeriod(isActive ? nextPlanPhase : prevPlanPhase);
         this.type = transition.getTransitionType();
         this.totalOrdering = transition.getTotalOrdering();
-        this.timeZone = account.getTimeZone();
         this.usages = initializeUsage(isActive);
         this.isDisableEvent = false;
     }
@@ -96,7 +94,7 @@ public class DefaultBillingEvent implements BillingEvent {
                                final Plan plan, final PlanPhase planPhase, final BigDecimal fixedPrice,
                                final Currency currency,
                                final BillingPeriod billingPeriod, final int billCycleDayLocal,
-                               final String description, final long totalOrdering, final SubscriptionBaseTransitionType type, final DateTimeZone timeZone,
+                               final String description, final long totalOrdering, final SubscriptionBaseTransitionType type,
                                final Catalog catalog,
                                final boolean isDisableEvent) {
         this.catalog = catalog;
@@ -111,7 +109,6 @@ public class DefaultBillingEvent implements BillingEvent {
         this.description = description;
         this.type = type;
         this.totalOrdering = totalOrdering;
-        this.timeZone = timeZone;
         this.usages = initializeUsage(isActive);
         this.isDisableEvent = isDisableEvent;
         this.nextPlanPhase = isDisableEvent ? null : planPhase;
@@ -228,11 +225,6 @@ public class DefaultBillingEvent implements BillingEvent {
     }
 
     @Override
-    public DateTimeZone getTimeZone() {
-        return timeZone;
-    }
-
-    @Override
     public List<Usage> getUsages() {
         return usages;
     }
@@ -290,9 +282,6 @@ public class DefaultBillingEvent implements BillingEvent {
         if (subscription != null ? !subscription.equals(that.subscription) : that.subscription != null) {
             return false;
         }
-        if (timeZone != null ? !timeZone.equals(that.timeZone) : that.timeZone != null) {
-            return false;
-        }
         if (totalOrdering != null ? !totalOrdering.equals(that.totalOrdering) : that.totalOrdering != null) {
             return false;
         }
@@ -316,7 +305,6 @@ public class DefaultBillingEvent implements BillingEvent {
         result = 31 * result + (billingPeriod != null ? billingPeriod.hashCode() : 0);
         result = 31 * result + (type != null ? type.hashCode() : 0);
         result = 31 * result + (totalOrdering != null ? totalOrdering.hashCode() : 0);
-        result = 31 * result + (timeZone != null ? timeZone.hashCode() : 0);
         return result;
     }
 
