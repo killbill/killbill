@@ -8,7 +8,7 @@ In your [Mailing-List](https://groups.google.com/forum/#!forum/killbilling-users
 
 * Step by step description on how to reproduce the issue
 * [Account data dump](https://github.com/killbill/killbill/wiki/Production-troubleshooting#exporting-account-data) of an affected account
-* [System and Kill Bill information](https://github.com/killbill/killbill/wiki/Production-troubleshooting#exporting-system-information)
+* [System information](https://github.com/killbill/killbill/wiki/Production-troubleshooting#exporting-system-information)
 
 #### **Do you intend to add a new feature or change an existing one?**
 
