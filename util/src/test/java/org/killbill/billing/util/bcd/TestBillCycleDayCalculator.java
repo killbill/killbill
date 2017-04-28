@@ -22,12 +22,15 @@ import java.util.UUID;
 
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
+import org.killbill.billing.GuicyKillbillTestSuiteNoDB;
+import org.killbill.billing.account.api.Account;
 import org.killbill.billing.account.api.AccountApiException;
 import org.killbill.billing.account.api.ImmutableAccountData;
 import org.killbill.billing.catalog.api.BillingAlignment;
 import org.killbill.billing.catalog.api.Catalog;
 import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.catalog.api.Plan;
+import org.killbill.billing.mock.MockAccountBuilder;
 import org.killbill.billing.subscription.api.SubscriptionBase;
 import org.killbill.billing.subscription.api.user.SubscriptionBaseBundle;
 import org.killbill.billing.util.UtilTestSuiteNoDB;
@@ -57,7 +60,7 @@ public class TestBillCycleDayCalculator extends UtilTestSuiteNoDB {
 
         final ImmutableAccountData account = Mockito.mock(ImmutableAccountData.class);
         Mockito.when(account.getTimeZone()).thenReturn(accountTimeZone);
-        final Integer billCycleDayLocal = BillCycleDayCalculator.calculateBcdForAlignment(new HashMap<UUID, Integer>(), subscription, subscription, BillingAlignment.BUNDLE, account.getTimeZone(), 0);
+        final Integer billCycleDayLocal = BillCycleDayCalculator.calculateBcdForAlignment(new HashMap<UUID, Integer>(), subscription, subscription, BillingAlignment.BUNDLE, internalCallContext, 0);
 
         Assert.assertEquals(billCycleDayLocal, (Integer) expectedBCDUTC);
     }
@@ -68,6 +71,8 @@ public class TestBillCycleDayCalculator extends UtilTestSuiteNoDB {
         final DateTime startDateUTC = new DateTime("2012-07-16T21:17:03.000Z", DateTimeZone.UTC);
         final int bcdLocal = 16;
 
+        createAccountAndRefreshTimeAwareContext(accountTimeZone, startDateUTC);
+
         verifyBCDCalculation(accountTimeZone, startDateUTC, bcdLocal);
     }
 
@@ -76,6 +81,8 @@ public class TestBillCycleDayCalculator extends UtilTestSuiteNoDB {
         final DateTimeZone accountTimeZone = DateTimeZone.forID("Europe/Paris");
         final DateTime startDateUTC = new DateTime("2012-07-16T21:17:03.000Z", DateTimeZone.UTC);
         final int bcdLocal = 16;
+
+        createAccountAndRefreshTimeAwareContext(accountTimeZone, startDateUTC);
 
         verifyBCDCalculation(accountTimeZone, startDateUTC, bcdLocal);
     }
@@ -86,6 +93,8 @@ public class TestBillCycleDayCalculator extends UtilTestSuiteNoDB {
         final DateTime startDateUTC = new DateTime("2012-07-16T21:17:03.000Z", DateTimeZone.UTC);
         final int bcdLocal = 16;
 
+        createAccountAndRefreshTimeAwareContext(accountTimeZone, startDateUTC);
+
         verifyBCDCalculation(accountTimeZone, startDateUTC, bcdLocal);
     }
 
@@ -94,6 +103,8 @@ public class TestBillCycleDayCalculator extends UtilTestSuiteNoDB {
         final DateTimeZone accountTimeZone = DateTimeZone.forID("+0300");
         final DateTime startDateUTC = new DateTime("2012-07-16T21:17:03.000Z", DateTimeZone.UTC);
         final int bcdLocal = 17;
+
+        createAccountAndRefreshTimeAwareContext(accountTimeZone, startDateUTC);
 
         verifyBCDCalculation(accountTimeZone, startDateUTC, bcdLocal);
     }
@@ -104,6 +115,8 @@ public class TestBillCycleDayCalculator extends UtilTestSuiteNoDB {
         final DateTime startDateUTC = new DateTime("2012-07-16T21:17:03.000Z", DateTimeZone.UTC);
         final int bcdLocal = 17;
 
+        createAccountAndRefreshTimeAwareContext(accountTimeZone, startDateUTC);
+
         verifyBCDCalculation(accountTimeZone, startDateUTC, bcdLocal);
     }
 
@@ -113,6 +126,8 @@ public class TestBillCycleDayCalculator extends UtilTestSuiteNoDB {
         final DateTimeZone accountTimeZone = DateTimeZone.forID("Asia/Tokyo");
         final DateTime startDate = new DateTime("2012-07-16T21:17:03.000Z", DateTimeZone.forID("HST"));
         final int bcdLocal = 17;
+
+        createAccountAndRefreshTimeAwareContext(accountTimeZone, startDate);
 
         verifyBCDCalculation(accountTimeZone, startDate, bcdLocal);
     }
@@ -125,7 +140,24 @@ public class TestBillCycleDayCalculator extends UtilTestSuiteNoDB {
         final ImmutableAccountData account = Mockito.mock(ImmutableAccountData.class);
         Mockito.when(account.getTimeZone()).thenReturn(accountTimeZone);
 
-        final Integer bcd = BillCycleDayCalculator.calculateBcdForAlignment(new HashMap<UUID, Integer>(), subscription, subscription, BillingAlignment.SUBSCRIPTION, account.getTimeZone(), 0);
+        final Integer bcd = BillCycleDayCalculator.calculateBcdForAlignment(new HashMap<UUID, Integer>(), subscription, subscription, BillingAlignment.SUBSCRIPTION, internalCallContext, 0);
         Assert.assertEquals(bcd, (Integer) bcdLocal);
+    }
+
+    private void createAccountAndRefreshTimeAwareContext(final DateTimeZone dateTimeZone, final DateTime referenceDateTime) throws AccountApiException {
+        final Account accountData = new MockAccountBuilder().externalKey(UUID.randomUUID().toString())
+                                                            .timeZone(dateTimeZone)
+                                                            .createdDate(referenceDateTime)
+                                                            .build();
+
+        GuicyKillbillTestSuiteNoDB.createMockAccount(accountData,
+                                                     accountUserApi,
+                                                     accountInternalApi,
+                                                     immutableAccountInternalApi,
+                                                     nonEntityDao,
+                                                     clock,
+                                                     internalCallContextFactory,
+                                                     callContext,
+                                                     internalCallContext);
     }
 }

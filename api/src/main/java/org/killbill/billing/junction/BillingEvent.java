@@ -1,7 +1,9 @@
 /*
- * Copyright 2010-2011 Ning, Inc.
+ * Copyright 2010-2013 Ning, Inc.
+ * Copyright 2014-2017 Groupon, Inc
+ * Copyright 2014-2017 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -18,22 +20,16 @@ package org.killbill.billing.junction;
 
 import java.math.BigDecimal;
 import java.util.List;
-import java.util.Set;
 
 import org.joda.time.DateTime;
-import org.joda.time.DateTimeZone;
-
-import org.joda.time.LocalDate;
-import org.killbill.billing.account.api.Account;
-import org.killbill.billing.catalog.api.BillingMode;
 import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.catalog.api.Plan;
 import org.killbill.billing.catalog.api.PlanPhase;
 import org.killbill.billing.catalog.api.Usage;
-import org.killbill.billing.subscription.api.SubscriptionBaseTransitionType;
 import org.killbill.billing.subscription.api.SubscriptionBase;
+import org.killbill.billing.subscription.api.SubscriptionBaseTransitionType;
 
 public interface BillingEvent extends Comparable<BillingEvent> {
 
@@ -99,11 +95,6 @@ public interface BillingEvent extends Comparable<BillingEvent> {
      * @return a unique long indicating the ordering on which events got inserted on disk-- used for sorting only
      */
     Long getTotalOrdering();
-
-    /**
-     * @return the TimeZone of the account
-     */
-    DateTimeZone getTimeZone();
 
     /**
      *

@@ -338,7 +338,7 @@ public class EventsStreamBuilder {
 
         try {
             int accountBCD = accountInternalApi.getBCD(account.getId(), internalTenantContext);
-            int defaultAlignmentDay = subscriptionInternalApi.getDefaultBillCycleDayLocal(bcdCache, subscription, baseSubscription, createPlanPhaseSpecifier(subscription), account.getTimeZone(), accountBCD, clock.getUTCNow(), internalTenantContext);
+            int defaultAlignmentDay = subscriptionInternalApi.getDefaultBillCycleDayLocal(bcdCache, subscription, baseSubscription, createPlanPhaseSpecifier(subscription), accountBCD, clock.getUTCNow(), internalTenantContext);
             return new DefaultEventsStream(account,
                                            bundle,
                                            blockingStates,

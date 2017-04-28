@@ -26,6 +26,7 @@ import org.joda.time.LocalDate;
 import org.killbill.billing.GuicyKillbillTestSuiteNoDB;
 import org.killbill.billing.account.api.Account;
 import org.killbill.billing.account.api.AccountApiException;
+import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.entitlement.EntitlementTestSuiteNoDB;
 import org.killbill.billing.mock.MockAccountBuilder;
 import org.testng.Assert;
@@ -124,7 +125,21 @@ public class TestEntitlementDateHelper extends EntitlementTestSuiteNoDB {
         // Check that our input date is greater than now
         assertTrue(inputDateEquals.compareTo(clock.getUTCNow()) > 0);
         // And yet since the LocalDate match the function returns true
-        assertTrue(dateHelper.isBeforeOrEqualsToday(inputDateEquals, timeZoneUtcMinus8, internalCallContext));
+        assertTrue(isBeforeOrEqualsToday(inputDateEquals, timeZoneUtcMinus8, internalCallContext));
+    }
+
+    /**
+     * Check if the date portion of a date/time is before or equals at now (as returned by the clock).
+     *
+     * @param inputDate             the fully qualified DateTime
+     * @param accountTimeZone       the account timezone
+     * @param internalTenantContext the context
+     * @return true if the inputDate, once converted into a LocalDate using account timezone is less or equals than today
+     */
+    private boolean isBeforeOrEqualsToday(final DateTime inputDate, final DateTimeZone accountTimeZone, final InternalTenantContext internalTenantContext) {
+        final LocalDate localDateNowInAccountTimezone = clock.getToday(accountTimeZone);
+        final LocalDate targetDateInAccountTimezone = internalTenantContext.toLocalDate(inputDate);
+        return targetDateInAccountTimezone.compareTo(localDateNowInAccountTimezone) <= 0;
     }
 
     private void createAccount(final DateTimeZone dateTimeZone, final DateTime referenceDateTime) throws AccountApiException {

@@ -408,11 +408,6 @@ public class TestInvoiceHelper {
             }
 
             @Override
-            public DateTimeZone getTimeZone() {
-                return DateTimeZone.UTC;
-            }
-
-            @Override
             public List<Usage> getUsages() {
                 return Collections.emptyList();
             }

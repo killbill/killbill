@@ -189,7 +189,7 @@ public class TestDefaultBillingEvent extends JunctionTestSuiteNoDB {
         return new DefaultBillingEvent(sub, effectiveDate, true,
                                        shotgun, shotgunMonthly, BigDecimal.ZERO,
                                        Currency.USD, BillingPeriod.NO_BILLING_PERIOD, billCycleDay,
-                                       "Test Event 1", totalOrdering, type, DateTimeZone.UTC, null, false);
+                                       "Test Event 1", totalOrdering, type, null, false);
     }
 
     private MockPlanPhase createMockMonthlyPlanPhase(@Nullable final BigDecimal recurringRate,

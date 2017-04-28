@@ -1,7 +1,9 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
+ * Copyright 2014-2017 Groupon, Inc
+ * Copyright 2014-2017 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -382,7 +384,7 @@ public class TestUserApiCancel extends SubscriptionTestSuiteWithEmbeddedDB {
         // Move ahead a bit abd cancel START_OF_TERM
         clock.addDays(5);
         testListener.pushExpectedEvent(NextEvent.CANCEL);
-        subscription.cancelWithPolicy(BillingActionPolicy.START_OF_TERM, accountData.getTimeZone(), accountData.getBillCycleDayLocal(), callContext);
+        subscription.cancelWithPolicy(BillingActionPolicy.START_OF_TERM, accountData.getBillCycleDayLocal(), callContext);
         assertListenerStatus();
 
         subscription = (DefaultSubscriptionBase) subscriptionInternalApi.getSubscriptionFromId(subscription.getId(), internalCallContext);
@@ -409,16 +411,18 @@ public class TestUserApiCancel extends SubscriptionTestSuiteWithEmbeddedDB {
 
         // Cancel / Uncancel a few times to make sure this works and we end up on a stable state
         for (int i = 0; i < 3; i++) {
-            subscription.cancelWithPolicy(BillingActionPolicy.IMMEDIATE, null, -1, callContext);
+            subscription.cancelWithPolicy(BillingActionPolicy.IMMEDIATE, -1, callContext);
 
             subscription = (DefaultSubscriptionBase) subscriptionInternalApi.getSubscriptionFromId(subscription.getId(), internalCallContext);
             assertEquals(subscription.getState(), EntitlementState.PENDING);
 
+            testListener.pushExpectedEvents(NextEvent.UNCANCEL);
             subscription.uncancel(callContext);
+            assertListenerStatus();
         }
 
         // Now check we are on the right state (as if nothing had happened)
-        testListener.pushExpectedEvents(NextEvent.CREATE, NextEvent.UNCANCEL, NextEvent.UNCANCEL, NextEvent.UNCANCEL);
+        testListener.pushExpectedEvents(NextEvent.CREATE);
         clock.addDays(10);
         assertListenerStatus();
 
@@ -511,7 +515,7 @@ public class TestUserApiCancel extends SubscriptionTestSuiteWithEmbeddedDB {
         assertEquals(subscription.getState(), Entitlement.EntitlementState.PENDING);
         assertEquals(subscription.getStartDate().compareTo(startDate), 0);
 
-        subscription.cancelWithPolicy(BillingActionPolicy.IMMEDIATE, null, 1, callContext);
+        subscription.cancelWithPolicy(BillingActionPolicy.IMMEDIATE, 1, callContext);
 
         testListener.pushExpectedEvents(NextEvent.CREATE, NextEvent.CANCEL);
         clock.addDays(5);

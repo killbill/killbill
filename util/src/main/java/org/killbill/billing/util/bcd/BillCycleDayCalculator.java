@@ -1,6 +1,6 @@
 /*
- * Copyright 2014-2016 Groupon, Inc
- * Copyright 2014-2016 The Billing Project, LLC
+ * Copyright 2014-2017 Groupon, Inc
+ * Copyright 2014-2017 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -23,12 +23,11 @@ import java.util.UUID;
 import javax.annotation.Nullable;
 
 import org.joda.time.DateTime;
-import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDate;
+import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.catalog.api.BillingAlignment;
 import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.subscription.api.SubscriptionBase;
-import org.killbill.clock.ClockUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -36,17 +35,17 @@ public abstract class BillCycleDayCalculator {
 
     private static final Logger log = LoggerFactory.getLogger(BillCycleDayCalculator.class);
 
-    public static int calculateBcdForAlignment(@Nullable final Map<UUID, Integer> bcdCache, final SubscriptionBase subscription, final SubscriptionBase baseSubscription, final BillingAlignment alignment, final DateTimeZone accountTimeZone, final int accountBillCycleDayLocal) {
+    public static int calculateBcdForAlignment(@Nullable final Map<UUID, Integer> bcdCache, final SubscriptionBase subscription, final SubscriptionBase baseSubscription, final BillingAlignment alignment, final InternalTenantContext internalTenantContext, final int accountBillCycleDayLocal) {
         int result = 0;
         switch (alignment) {
             case ACCOUNT:
-                result = accountBillCycleDayLocal != 0 ? accountBillCycleDayLocal : calculateOrRetrieveBcdFromSubscription(bcdCache, subscription, accountTimeZone);
+                result = accountBillCycleDayLocal != 0 ? accountBillCycleDayLocal : calculateOrRetrieveBcdFromSubscription(bcdCache, subscription, internalTenantContext);
                 break;
             case BUNDLE:
-                result = calculateOrRetrieveBcdFromSubscription(bcdCache, baseSubscription, accountTimeZone);
+                result = calculateOrRetrieveBcdFromSubscription(bcdCache, baseSubscription, internalTenantContext);
                 break;
             case SUBSCRIPTION:
-                result = calculateOrRetrieveBcdFromSubscription(bcdCache, subscription, accountTimeZone);
+                result = calculateOrRetrieveBcdFromSubscription(bcdCache, subscription, internalTenantContext);
                 break;
         }
         return result;
@@ -70,16 +69,16 @@ public abstract class BillCycleDayCalculator {
         return new LocalDate(proposedDate.getYear(), proposedDate.getMonthOfYear(), proposedBillCycleDate, proposedDate.getChronology());
     }
 
-    public static LocalDate alignProposedBillCycleDate(final DateTime proposedDate, final int billingCycleDay, final BillingPeriod billingPeriod, final DateTimeZone accountTimeZone) {
-        final LocalDate proposedLocalDate = ClockUtil.toLocalDate(proposedDate, accountTimeZone);
+    public static LocalDate alignProposedBillCycleDate(final DateTime proposedDate, final int billingCycleDay, final BillingPeriod billingPeriod, final InternalTenantContext internalTenantContext) {
+        final LocalDate proposedLocalDate = internalTenantContext.toLocalDate(proposedDate);
         final LocalDate resultingLocalDate = alignProposedBillCycleDate(proposedLocalDate, billingCycleDay, billingPeriod);
         return resultingLocalDate;
     }
 
-    private static int calculateOrRetrieveBcdFromSubscription(@Nullable final Map<UUID, Integer> bcdCache, final SubscriptionBase subscription, final DateTimeZone accountTimeZone) {
+    private static int calculateOrRetrieveBcdFromSubscription(@Nullable final Map<UUID, Integer> bcdCache, final SubscriptionBase subscription, final InternalTenantContext internalTenantContext) {
         Integer result = bcdCache != null ? bcdCache.get(subscription.getId()) : null;
         if (result == null) {
-            result = calculateBcdFromSubscription(subscription, accountTimeZone);
+            result = calculateBcdFromSubscription(subscription, internalTenantContext);
             if (bcdCache != null) {
                 bcdCache.put(subscription.getId(), result);
             }
@@ -87,11 +86,11 @@ public abstract class BillCycleDayCalculator {
         return result;
     }
 
-    private static int calculateBcdFromSubscription(final SubscriptionBase subscription, final DateTimeZone accountTimeZone) {
+    private static int calculateBcdFromSubscription(final SubscriptionBase subscription, final InternalTenantContext internalTenantContext) {
         final DateTime date = subscription.getDateOfFirstRecurringNonZeroCharge();
-        final int bcdLocal = ClockUtil.toDateTime(date, accountTimeZone).getDayOfMonth();
-        log.debug("Calculated BCD: subscriptionId='{}', subscriptionStartDate='{}', accountTimeZone='{}', bcd='{}'",
-                  subscription.getId(), date.toDateTimeISO(), accountTimeZone, bcdLocal);
+        final int bcdLocal = internalTenantContext.toLocalDate(date).getDayOfMonth();
+        log.debug("Calculated BCD: subscriptionId='{}', subscriptionStartDate='{}', bcd='{}'",
+                  subscription.getId(), date.toDateTimeISO(), bcdLocal);
         return bcdLocal;
     }
 }

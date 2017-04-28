@@ -48,6 +48,8 @@ import org.testng.annotations.Test;
 
 import com.google.common.collect.ImmutableList;
 
+import static org.testng.Assert.assertEquals;
+
 public class TestWithTimeZones extends TestIntegrationBase {
 
     // Verify that recurring invoice items are correctly computed although we went through and out of daylight saving transitions
@@ -254,4 +256,155 @@ public class TestWithTimeZones extends TestIntegrationBase {
             invoiceChecker.checkChargedThroughDate(entitlement.getId(), new LocalDate("2015-03-08").plusMonths(3 + i), callContext);
         }
     }
+
+
+    @Test(groups = "slow")
+    public void testIntoDaylightSavingTransition() throws Exception {
+
+        // Daylight saving happened on March 12th.
+        //
+        // Because we use 30 days trial, we start a bit before and that way we can check that computation of BCD crossing into daylight saving works as expected.
+        //
+        final DateTimeZone tz = DateTimeZone.forID("America/Los_Angeles");
+        clock.setTime(new DateTime(2017, 3, 1, 23, 30, 0, tz));
+
+        final AccountData accountData = new MockAccountBuilder().currency(Currency.USD)
+                                                                .timeZone(tz)
+                                                                .build();
+
+        // Create account with non BCD to force junction BCD logic to activate
+        final Account account = createAccountWithNonOsgiPaymentMethod(accountData);
+
+        createBaseEntitlementAndCheckForCompletion(account.getId(), "bundleKey", "Pistol", ProductCategory.BASE, BillingPeriod.MONTHLY,  NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE);
+
+        final Account accountWithBCD = accountUserApi.getAccountById(account.getId(), callContext);
+        assertEquals(accountWithBCD.getBillCycleDayLocal().intValue(), 31);
+
+        busHandler.pushExpectedEvents(NextEvent.PHASE, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
+        clock.addDays(30);
+        assertListenerStatus();
+
+
+        final List<ExpectedInvoiceItemCheck> expectedInvoices = new ArrayList<ExpectedInvoiceItemCheck>();
+        expectedInvoices.add(new ExpectedInvoiceItemCheck(new LocalDate(2017, 3, 31), new LocalDate(2017, 4, 30), InvoiceItemType.RECURRING, new BigDecimal("29.95")));
+        invoiceChecker.checkInvoice(account.getId(), 2, callContext, expectedInvoices);
+        expectedInvoices.clear();
+    }
+
+
+
+
+    @Test(groups = "slow")
+    public void testIntoDaylightSavingTransition2() throws Exception {
+
+        //
+        // Nov 6th Transition date from DST -> ST
+        //
+        // Because we use 30 days trial, we start a bit before and that way we can check that computation of BCD crossing into daylight saving works as expected.
+        //
+        final DateTimeZone tz = DateTimeZone.forID("America/Los_Angeles");
+        clock.setTime(new DateTime(2016, 11, 5, 23, 30, 0, tz));
+
+        final AccountData accountData = new MockAccountBuilder().currency(Currency.USD)
+                                                                .timeZone(tz)
+                                                                .build();
+
+        // Create account with non BCD to force junction BCD logic to activate
+        final Account account = createAccountWithNonOsgiPaymentMethod(accountData);
+
+        clock.setTime(new DateTime(2017, 3, 1, 23, 30, 0, tz));
+
+        createBaseEntitlementAndCheckForCompletion(account.getId(), "bundleKey", "Pistol", ProductCategory.BASE, BillingPeriod.MONTHLY,  NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE);
+
+        final Account accountWithBCD = accountUserApi.getAccountById(account.getId(), callContext);
+        //
+        // Ok, it's a little bit tricky here:
+        //
+        // Intuitively we would expect a BCD of 31 (same as previous test testIntoDaylightSavingTransition1), however our implementation relies on TimeAwareContext for all TZ
+        // computation. This context stores an offset from UTC which is then used as a reference and because we created an account before Nov 6 (DST), the offest is (-7)
+        // so the result is different than previous test (where offset was -8)
+        // What 's important is the fact that BCD and invoiceDate align in such a way that:
+        // 1. we see no leading pro-ration
+        // 2. Invoice is correctly generated (don't miss it because too early or don't invoice loop)
+        //
+        assertEquals(accountWithBCD.getBillCycleDayLocal().intValue(), 1);
+
+        busHandler.pushExpectedEvents(NextEvent.PHASE, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
+        clock.addDays(30);
+        assertListenerStatus();
+
+
+        final List<ExpectedInvoiceItemCheck> expectedInvoices = new ArrayList<ExpectedInvoiceItemCheck>();
+        expectedInvoices.add(new ExpectedInvoiceItemCheck(new LocalDate(2017, 4, 1), new LocalDate(2017, 5, 1), InvoiceItemType.RECURRING, new BigDecimal("29.95")));
+        invoiceChecker.checkInvoice(account.getId(), 2, callContext, expectedInvoices);
+        expectedInvoices.clear();
+    }
+
+
+    @Test(groups = "slow")
+    public void testIntoDaylightSavingTransition3() throws Exception {
+
+        final DateTimeZone tz = DateTimeZone.forID("America/Los_Angeles");
+        clock.setTime(new DateTime(2017, 3, 1, 23, 30, 0, tz));
+
+
+        final AccountData accountData = new MockAccountBuilder().currency(Currency.USD)
+                                                                .timeZone(tz)
+                                                                .build();
+
+        // Create account with non BCD to force junction BCD logic to activate
+        final Account account = createAccountWithNonOsgiPaymentMethod(accountData);
+
+        final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("pistol-monthly-notrial",null);
+        busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT);
+        entitlementApi.createBaseEntitlement(account.getId(), spec, "bundleExternalKey", ImmutableList.<PlanPhasePriceOverride>of(), null, null, false, ImmutableList.<PluginProperty>of(), callContext);
+        assertListenerStatus();
+
+
+        busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
+        // Technically, we should see the invoice at the end of day in the account timezone, but this is not the case, the invoice comes slightly after (30')
+        // clock.setTime(new DateTime(2017, 4, 1, 23, 59, 0, tz));
+        //
+        // But this is really not very important as long as invoicing is correct
+        clock.addMonths(1);
+        // Add one hour to hit the notification date of 2017-04-02T07:30:00.000Z
+        clock.addDeltaFromReality(3600 * 1000);
+        assertListenerStatus();
+    }
+
+
+
+    @Test(groups = "slow")
+    public void testOutOfDaylightSavingTransition1() throws Exception {
+
+        // Transition out of daylight saving is set for Nov 5
+        //
+        // Because we use 30 days trial, we start a bit before and that way we can check that computation of BCD crossing out of of daylight saving works as expected.
+        //
+        final DateTimeZone tz = DateTimeZone.forID("America/Los_Angeles");
+        clock.setTime(new DateTime(2017, 11, 1, 00, 30, 0, tz));
+
+        final AccountData accountData = new MockAccountBuilder().currency(Currency.USD)
+                                                                .timeZone(tz)
+                                                                .build();
+
+        // Create account with non BCD to force junction BCD logic to activate
+        final Account account = createAccountWithNonOsgiPaymentMethod(accountData);
+
+        createBaseEntitlementAndCheckForCompletion(account.getId(), "bundleKey", "Pistol", ProductCategory.BASE, BillingPeriod.MONTHLY,  NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE);
+
+        final Account accountWithBCD = accountUserApi.getAccountById(account.getId(), callContext);
+        assertEquals(accountWithBCD.getBillCycleDayLocal().intValue(), 1);
+
+        busHandler.pushExpectedEvents(NextEvent.PHASE, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
+        clock.addDays(30);
+        assertListenerStatus();
+
+
+        final List<ExpectedInvoiceItemCheck> expectedInvoices = new ArrayList<ExpectedInvoiceItemCheck>();
+        expectedInvoices.add(new ExpectedInvoiceItemCheck(new LocalDate(2017, 12, 1), new LocalDate(2018, 1, 1), InvoiceItemType.RECURRING, new BigDecimal("29.95")));
+        invoiceChecker.checkInvoice(account.getId(), 2, callContext, expectedInvoices);
+        expectedInvoices.clear();
+    }
+
 }

@@ -1,6 +1,6 @@
 /*
- * Copyright 2014-2016 Groupon, Inc
- * Copyright 2014-2016 The Billing Project, LLC
+ * Copyright 2014-2017 Groupon, Inc
+ * Copyright 2014-2017 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -33,7 +33,6 @@ import java.util.concurrent.atomic.AtomicLong;
 import javax.annotation.Nullable;
 
 import org.joda.time.DateTime;
-import org.joda.time.DateTimeZone;
 import org.joda.time.Days;
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.catalog.api.BillingPeriod;
@@ -277,12 +276,11 @@ public class BlockingCalculator {
         final String description = "";
         final SubscriptionBaseTransitionType type = SubscriptionBaseTransitionType.START_BILLING_DISABLED;
         final Long totalOrdering = globaltotalOrder.getAndIncrement();
-        final DateTimeZone tz = previousEvent.getTimeZone();
 
         return new DefaultBillingEvent(subscription, effectiveDate, true, plan, planPhase, fixedPrice,
                                        currency,
                                        billingPeriod, billCycleDay,
-                                       description, totalOrdering, type, tz, catalog, true);
+                                       description, totalOrdering, type, catalog, true);
     }
 
     protected BillingEvent createNewReenableEvent(final DateTime odEventTime, final BillingEvent previousEvent, final Catalog catalog, final InternalTenantContext context) throws CatalogApiException {
@@ -298,12 +296,11 @@ public class BlockingCalculator {
         final BillingPeriod billingPeriod = previousEvent.getBillingPeriod();
         final SubscriptionBaseTransitionType type = SubscriptionBaseTransitionType.END_BILLING_DISABLED;
         final Long totalOrdering = globaltotalOrder.getAndIncrement();
-        final DateTimeZone tz = previousEvent.getTimeZone();
 
         return new DefaultBillingEvent(subscription, effectiveDate, true, plan, planPhase, fixedPrice,
                                        currency,
                                        billingPeriod, billCycleDay,
-                                       description, totalOrdering, type, tz, catalog, false);
+                                       description, totalOrdering, type, catalog, false);
     }
 
     protected Hashtable<UUID, List<SubscriptionBase>> createBundleSubscriptionMap(final SortedSet<BillingEvent> billingEvents) {

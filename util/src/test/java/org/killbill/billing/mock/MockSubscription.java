@@ -1,7 +1,9 @@
 /*
- * Copyright 2010-2011 Ning, Inc.
+ * Copyright 2010-2013 Ning, Inc.
+ * Copyright 2014-2017 Groupon, Inc
+ * Copyright 2014-2017 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -20,24 +22,22 @@ import java.util.List;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
-import org.joda.time.DateTimeZone;
-import org.killbill.billing.catalog.api.PlanPhasePriceOverride;
-import org.killbill.billing.catalog.api.PlanSpecifier;
-import org.mockito.Mockito;
-
 import org.killbill.billing.catalog.api.BillingActionPolicy;
 import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.catalog.api.Plan;
 import org.killbill.billing.catalog.api.PlanPhase;
+import org.killbill.billing.catalog.api.PlanPhasePriceOverride;
+import org.killbill.billing.catalog.api.PlanSpecifier;
 import org.killbill.billing.catalog.api.PriceList;
 import org.killbill.billing.catalog.api.Product;
 import org.killbill.billing.catalog.api.ProductCategory;
 import org.killbill.billing.entitlement.api.Entitlement.EntitlementSourceType;
 import org.killbill.billing.entitlement.api.Entitlement.EntitlementState;
-import org.killbill.billing.subscription.api.user.SubscriptionBaseApiException;
 import org.killbill.billing.subscription.api.SubscriptionBase;
+import org.killbill.billing.subscription.api.user.SubscriptionBaseApiException;
 import org.killbill.billing.subscription.api.user.SubscriptionBaseTransition;
 import org.killbill.billing.util.callcontext.CallContext;
+import org.mockito.Mockito;
 
 public class MockSubscription implements SubscriptionBase {
 
@@ -72,9 +72,9 @@ public class MockSubscription implements SubscriptionBase {
     }
 
     @Override
-    public boolean cancelWithPolicy(BillingActionPolicy policy, final DateTimeZone accountTimeZone, int accountBillCycleDayLocal, CallContext context)
+    public boolean cancelWithPolicy(BillingActionPolicy policy, int accountBillCycleDayLocal, CallContext context)
             throws SubscriptionBaseApiException {
-        return sub.cancelWithPolicy(policy, accountTimeZone, accountBillCycleDayLocal, context);
+        return sub.cancelWithPolicy(policy, accountBillCycleDayLocal, context);
     }
 
     @Override

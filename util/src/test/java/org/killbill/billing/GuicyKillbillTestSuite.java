@@ -126,7 +126,9 @@ public class GuicyKillbillTestSuite {
         log.info("*** Starting test {}:{}", method.getDeclaringClass().getName(), method.getName());
         log.info("***************************************************************************************************");
 
-        internalCallContext.reset();
+        if (internalCallContext != null) {
+            internalCallContext.reset();
+        }
     }
 
     @AfterMethod(alwaysRun = true)
