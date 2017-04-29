@@ -22,7 +22,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Hashtable;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -238,7 +237,7 @@ public class BlockingCalculator {
         for (final DisabledDuration duration : disabledDuration) {
             for (final BillingEvent event : filteredBillingEvents) {
                 if (duration.getEnd() == null || event.getEffectiveDate().isBefore(duration.getEnd())) {
-                    if (event.getEffectiveDate().isAfter(duration.getStart())) { //between the pair
+                    if (!event.getEffectiveDate().isBefore(duration.getStart())) { //between the pair
                         result.add(event);
                     }
                 } else { //after the last event of the pair no need to keep checking
@@ -281,9 +280,9 @@ public class BlockingCalculator {
         final SortedSet<BillingEvent> filteredBillingEvents = filter(billingEvents, subscription);
         BillingEvent result = filteredBillingEvents.first();
 
-        if (disabledDurationStart.isBefore(result.getEffectiveDate())) {
+        if (!disabledDurationStart.isAfter(result.getEffectiveDate())) {
             //This case can happen, for example, if we have an add on and the bundle goes into disabled before the add on is created
-            return result;
+            return null;
         }
 
         for (final BillingEvent event : filteredBillingEvents) {

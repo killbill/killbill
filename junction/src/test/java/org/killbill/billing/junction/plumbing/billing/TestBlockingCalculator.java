@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014-2016 Groupon, Inc
- * Copyright 2014-2016 The Billing Project, LLC
+ * Copyright 2014-2017 Groupon, Inc
+ * Copyright 2014-2017 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -203,6 +203,24 @@ public class TestBlockingCalculator extends JunctionTestSuiteNoDB {
         assertEquals(results.first(), e1);
     }
 
+    // Open with no previous event (only at the same time)
+    // -----[X-----------------------------
+    @Test(groups = "fast")
+    public void testEventsToRemoveOpenSameTime() {
+        final DateTime now = clock.getUTCNow();
+        final List<DisabledDuration> disabledDuration = new ArrayList<BlockingCalculator.DisabledDuration>();
+        final SortedSet<BillingEvent> billingEvents = new TreeSet<BillingEvent>();
+
+        disabledDuration.add(new DisabledDuration(now, null));
+        final BillingEvent e1 = createRealEvent(now, subscription1);
+        billingEvents.add(e1);
+
+        final SortedSet<BillingEvent> results = blockingCalculator.eventsToRemove(disabledDuration, billingEvents, subscription1);
+
+        assertEquals(results.size(), 1);
+        assertEquals(results.first(), e1);
+    }
+
     // Closed duration with a single previous event
     // --X--[------------]---------------------
     @Test(groups = "fast")
@@ -373,6 +391,22 @@ public class TestBlockingCalculator extends JunctionTestSuiteNoDB {
 
         disabledDuration.add(new DisabledDuration(now, null));
         billingEvents.add(createRealEvent(now.plusDays(1), subscription1));
+
+        final SortedSet<BillingEvent> results = blockingCalculator.createNewEvents(disabledDuration, billingEvents, subscription1, internalCallContext);
+
+        assertEquals(results.size(), 0);
+    }
+
+    // Open with no previous event (only at the same time)
+    // -----[X-----------------------------
+    @Test(groups = "fast")
+    public void testCreateNewEventsOpenSameTime() throws CatalogApiException {
+        final DateTime now = clock.getUTCNow();
+        final List<DisabledDuration> disabledDuration = new ArrayList<BlockingCalculator.DisabledDuration>();
+        final SortedSet<BillingEvent> billingEvents = new TreeSet<BillingEvent>();
+
+        disabledDuration.add(new DisabledDuration(now, null));
+        billingEvents.add(createRealEvent(now, subscription1));
 
         final SortedSet<BillingEvent> results = blockingCalculator.createNewEvents(disabledDuration, billingEvents, subscription1, internalCallContext);
 
@@ -756,6 +790,41 @@ public class TestBlockingCalculator extends JunctionTestSuiteNoDB {
         assertEquals(pairs.size(), 1);
         assertEquals(pairs.get(0).getStart(), now.plusDays(1));
         assertEquals(pairs.get(0).getEnd(), now.plusDays(3));
+    }
+
+    @Test(groups = "fast")
+    public void testCreateAndMergeDisablePairs() {
+        final List<BlockingState> blockingEvents = new ArrayList<BlockingState>();
+        final UUID ovdId = UUID.randomUUID();
+        final DateTime entitlementStartDate = clock.getUTCNow();
+        final DateTime blockEffectiveDate = entitlementStartDate.plusSeconds(1);
+        final DateTime unblockEffectiveDate = blockEffectiveDate.plusDays(2);
+
+        // Similar to an entitlement start event
+        blockingEvents.add(new DefaultBlockingState(ovdId, BlockingStateType.SUBSCRIPTION_BUNDLE, CLEAR_BUNDLE, "test", false, false, false, entitlementStartDate));
+        List<DisabledDuration> pairs = blockingCalculator.createBlockingDurations(blockingEvents);
+        assertEquals(pairs.size(), 0);
+
+        blockingEvents.add(new DefaultBlockingState(ovdId, BlockingStateType.SUBSCRIPTION_BUNDLE, DISABLED_BUNDLE, "test", true, true, true, blockEffectiveDate));
+
+        pairs = blockingCalculator.createBlockingDurations(blockingEvents);
+        assertEquals(pairs.size(), 1);
+        assertEquals(pairs.get(0).getStart().compareTo(blockEffectiveDate), 0);
+        assertNull(pairs.get(0).getEnd());
+
+        blockingEvents.add(new DefaultBlockingState(ovdId, BlockingStateType.SUBSCRIPTION_BUNDLE, CLEAR_BUNDLE, "test", false, false, false, unblockEffectiveDate));
+
+        pairs = blockingCalculator.createBlockingDurations(blockingEvents);
+        assertEquals(pairs.size(), 1);
+        assertEquals(pairs.get(0).getStart().compareTo(blockEffectiveDate), 0);
+        assertEquals(pairs.get(0).getEnd().compareTo(unblockEffectiveDate), 0);
+
+        blockingEvents.add(new DefaultBlockingState(ovdId, BlockingStateType.SUBSCRIPTION_BUNDLE, DISABLED_BUNDLE, "test", true, true, true, unblockEffectiveDate));
+
+        pairs = blockingCalculator.createBlockingDurations(blockingEvents);
+        assertEquals(pairs.size(), 1);
+        assertEquals(pairs.get(0).getStart().compareTo(blockEffectiveDate), 0);
+        assertNull(pairs.get(0).getEnd());
     }
 
     @Test(groups = "fast")

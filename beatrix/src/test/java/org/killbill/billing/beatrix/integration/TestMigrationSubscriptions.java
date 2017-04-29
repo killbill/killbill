@@ -1,6 +1,6 @@
 /*
- * Copyright 2014-2016 Groupon, Inc
- * Copyright 2014-2016 The Billing Project, LLC
+ * Copyright 2014-2017 Groupon, Inc
+ * Copyright 2014-2017 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -330,12 +330,9 @@ public class TestMigrationSubscriptions extends TestIntegrationBase {
         assertListenerStatus();
     }
 
-
     // Not exactly a migration test, but verifies correct behavior when using BlockingState (see https://github.com/killbill/killbill/issues/744)
-    @Test(groups = "slow", invocationCount = 1)
-    public void testBlockingStates() throws Exception {
-
-
+    @Test(groups = "slow")
+    public void testBlockingStatesV1() throws Exception {
         final DateTime initialDate = new DateTime(2017, 3, 1, 0, 1, 35, 0, DateTimeZone.UTC);
         clock.setDeltaFromReality(initialDate.getMillis() - clock.getUTCNow().getMillis());
 
@@ -350,7 +347,7 @@ public class TestMigrationSubscriptions extends TestIntegrationBase {
         clock.addDays(1);
 
         final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("pistol-monthly-notrial", null);
-        busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.NULL_INVOICE);
+        busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK);
         entitlementApi.createBaseEntitlement(account.getId(), spec, "bundleExternalKey", ImmutableList.<PlanPhasePriceOverride>of(), null, null, false, ImmutableList.<PluginProperty>of(), callContext);
         assertListenerStatus();
 
@@ -366,7 +363,34 @@ public class TestMigrationSubscriptions extends TestIntegrationBase {
         assertListenerStatus();
     }
 
+    @Test(groups = "slow")
+    public void testBlockingStatesV2() throws Exception {
+        final DateTime initialDate = new DateTime(2017, 3, 1, 0, 1, 35, 0, DateTimeZone.UTC);
+        clock.setDeltaFromReality(initialDate.getMillis() - clock.getUTCNow().getMillis());
 
+        final Account account = createAccountWithNonOsgiPaymentMethod(getAccountData(0));
+        assertNotNull(account);
+
+        final BlockingState blockingState1 = new DefaultBlockingState(account.getId(), BlockingStateType.ACCOUNT, "state1", "Service", false, false, true, null);
+        final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("pistol-monthly-notrial", null);
+
+        // Unlike the previous scenario, we create the subscription and set the blocking state at the same time
+        busHandler.pushExpectedEvents(NextEvent.BLOCK, NextEvent.CREATE, NextEvent.BLOCK);
+        subscriptionApi.addBlockingState(blockingState1, null, ImmutableList.<PluginProperty>of(), callContext);
+        entitlementApi.createBaseEntitlement(account.getId(), spec, "bundleExternalKey", ImmutableList.<PlanPhasePriceOverride>of(), null, null, false, ImmutableList.<PluginProperty>of(), callContext);
+        assertListenerStatus();
+
+        clock.addMonths(1);
+
+        busHandler.pushExpectedEvents(NextEvent.BLOCK, NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT);
+        final BlockingState blockingState2 = new DefaultBlockingState(account.getId(), BlockingStateType.ACCOUNT, "state2", "Service", false, false, false, null);
+        subscriptionApi.addBlockingState(blockingState2, null, ImmutableList.<PluginProperty>of(), callContext);
+        assertListenerStatus();
+
+        busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT);
+        clock.addMonths(1);
+        assertListenerStatus();
+    }
 
     private BaseEntitlementWithAddOnsSpecifier buildBaseEntitlementWithAddOnsSpecifier(final LocalDate entitlementMigrationDate, final LocalDate billingMigrationDate, final String externalKey, final List<EntitlementSpecifier> specifierList) {
         return new BaseEntitlementWithAddOnsSpecifier() {
