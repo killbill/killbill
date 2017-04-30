@@ -850,7 +850,7 @@ public class TestBlockingCalculator extends JunctionTestSuiteNoDB {
 
         blockingCalculator.insertBlockingEvents(billingEvents, new HashSet<UUID>(), internalCallContext);
 
-        assertEquals(billingEvents.size(), 5);
+        assertEquals(billingEvents.size(), 3);
         final List<BillingEvent> events = new ArrayList<BillingEvent>(billingEvents);
         assertEquals(events.get(0).getEffectiveDate(), new LocalDate(2012, 5, 1).toDateTimeAtStartOfDay(DateTimeZone.UTC));
         assertEquals(events.get(0).getTransitionType(), SubscriptionBaseTransitionType.CREATE);
@@ -858,9 +858,5 @@ public class TestBlockingCalculator extends JunctionTestSuiteNoDB {
         assertEquals(events.get(1).getTransitionType(), SubscriptionBaseTransitionType.PHASE);
         assertEquals(events.get(2).getEffectiveDate(), new LocalDate(2012, 7, 15).toDateTimeAtStartOfDay(DateTimeZone.UTC));
         assertEquals(events.get(2).getTransitionType(), SubscriptionBaseTransitionType.START_BILLING_DISABLED);
-        assertEquals(events.get(3).getEffectiveDate(), new LocalDate(2012, 7, 25).toDateTimeAtStartOfDay(DateTimeZone.UTC));
-        assertEquals(events.get(3).getTransitionType(), SubscriptionBaseTransitionType.END_BILLING_DISABLED);
-        assertEquals(events.get(4).getEffectiveDate(), new LocalDate(2012, 7, 25).toDateTimeAtStartOfDay(DateTimeZone.UTC));
-        assertEquals(events.get(4).getTransitionType(), SubscriptionBaseTransitionType.CHANGE);
     }
 }
