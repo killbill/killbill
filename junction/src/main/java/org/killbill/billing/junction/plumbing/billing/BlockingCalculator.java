@@ -112,8 +112,13 @@ public class BlockingCalculator {
                 final List<BlockingState> aggregateSubscriptionBlockingEvents = getAggregateBlockingEventsPerSubscription(subscription.getEndDate(), subscriptionBlockingEvents, bundleBlockingEvents, accountBlockingEvents);
                 final List<DisabledDuration> accountBlockingDurations = createBlockingDurations(aggregateSubscriptionBlockingEvents);
 
-                billingEventsToAdd.addAll(createNewEvents(accountBlockingDurations, billingEvents, subscription, context));
-                billingEventsToRemove.addAll(eventsToRemove(accountBlockingDurations, billingEvents, subscription));
+                final SortedSet<BillingEvent> subscriptionBillingEvents = filter(billingEvents, subscription);
+
+                final SortedSet<BillingEvent> newEvents = createNewEvents(accountBlockingDurations, subscriptionBillingEvents, context);
+                billingEventsToAdd.addAll(newEvents);
+
+                final SortedSet<BillingEvent> removedEvents = eventsToRemove(accountBlockingDurations, subscriptionBillingEvents);
+                billingEventsToRemove.addAll(removedEvents);
             }
         }
 
@@ -161,12 +166,11 @@ public class BlockingCalculator {
     }
 
     protected SortedSet<BillingEvent> eventsToRemove(final List<DisabledDuration> disabledDuration,
-                                                     final SortedSet<BillingEvent> billingEvents, final SubscriptionBase subscription) {
+                                                     final SortedSet<BillingEvent> subscriptionBillingEvents) {
         final SortedSet<BillingEvent> result = new TreeSet<BillingEvent>();
 
-        final SortedSet<BillingEvent> filteredBillingEvents = filter(billingEvents, subscription);
         for (final DisabledDuration duration : disabledDuration) {
-            for (final BillingEvent event : filteredBillingEvents) {
+            for (final BillingEvent event : subscriptionBillingEvents) {
                 if (duration.getEnd() == null || event.getEffectiveDate().isBefore(duration.getEnd())) {
                     if (!event.getEffectiveDate().isBefore(duration.getStart())) { //between the pair
                         result.add(event);
@@ -179,16 +183,16 @@ public class BlockingCalculator {
         return result;
     }
 
-    protected SortedSet<BillingEvent> createNewEvents(final List<DisabledDuration> disabledDuration, final SortedSet<BillingEvent> billingEvents, final SubscriptionBase subscription, final InternalTenantContext context) throws CatalogApiException {
+    protected SortedSet<BillingEvent> createNewEvents(final List<DisabledDuration> disabledDuration, final SortedSet<BillingEvent> subscriptionBillingEvents, final InternalTenantContext context) throws CatalogApiException {
 
         final SortedSet<BillingEvent> result = new TreeSet<BillingEvent>();
         final Catalog catalog = catalogService.getFullCatalog(true, true, context);
 
         for (final DisabledDuration duration : disabledDuration) {
             // The first one before the blocked duration
-            final BillingEvent precedingInitialEvent = precedingBillingEventForSubscription(duration.getStart(), billingEvents, subscription);
+            final BillingEvent precedingInitialEvent = precedingBillingEventForSubscription(duration.getStart(), subscriptionBillingEvents);
             // The last one during of before the duration
-            final BillingEvent precedingFinalEvent = precedingBillingEventForSubscription(duration.getEnd(), billingEvents, subscription);
+            final BillingEvent precedingFinalEvent = precedingBillingEventForSubscription(duration.getEnd(), subscriptionBillingEvents);
 
             if (precedingInitialEvent != null) { // there is a preceding billing event
                 result.add(createNewDisableEvent(duration.getStart(), precedingInitialEvent, catalog));
@@ -203,23 +207,23 @@ public class BlockingCalculator {
         return result;
     }
 
-    protected BillingEvent precedingBillingEventForSubscription(final DateTime disabledDurationStart, final SortedSet<BillingEvent> billingEvents, final SubscriptionBase subscription) {
-        if (disabledDurationStart == null) { //second of a pair can be null if there's no re-enabling
+    protected BillingEvent precedingBillingEventForSubscription(final DateTime disabledDurationStart, final SortedSet<BillingEvent> subscriptionBillingEvents) {
+        if (disabledDurationStart == null) {
             return null;
         }
 
-        final SortedSet<BillingEvent> filteredBillingEvents = filter(billingEvents, subscription);
-        BillingEvent result = filteredBillingEvents.first();
+        BillingEvent result = subscriptionBillingEvents.first();
 
+        // Use case where we first Block and the  create the subscription for instance
+        // (disabledDurationStart could be before start subscription or align right at the same exact time)
         if (!disabledDurationStart.isAfter(result.getEffectiveDate())) {
-            //This case can happen, for example, if we have an add on and the bundle goes into disabled before the add on is created
             return null;
         }
 
-        for (final BillingEvent event : filteredBillingEvents) {
-            if (!event.getEffectiveDate().isBefore(disabledDurationStart)) { // found it its the previous event
+        for (final BillingEvent event : subscriptionBillingEvents) {
+            if (!event.getEffectiveDate().isBefore(disabledDurationStart)) {
                 return result;
-            } else { // still looking
+            } else {
                 result = event;
             }
         }
@@ -318,7 +322,7 @@ public class BlockingCalculator {
             svcBlockingStateNesting.addBlockingState(e);
         }
 
-        Iterable<DisabledDuration> unorderedDisabledDuration = Iterables.concat(Iterables.transform(svcBlockedNesting.values(), new Function<BlockingStateNesting, List<DisabledDuration>>() {
+        final Iterable<DisabledDuration> unorderedDisabledDuration = Iterables.concat(Iterables.transform(svcBlockedNesting.values(), new Function<BlockingStateNesting, List<DisabledDuration>>() {
             @Override
             public List<DisabledDuration> apply(final BlockingStateNesting input) {
                 return input.build();
