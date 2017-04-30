@@ -749,8 +749,7 @@ public class TestBlockingCalculator extends JunctionTestSuiteNoDB {
         assertEquals(pairs.size(), 1);
         assertNotNull(pairs.get(0).getStart());
         assertEquals(pairs.get(0).getStart(), now.plusDays(1));
-        assertNotNull(pairs.get(0).getEnd());
-        assertEquals(pairs.get(0).getEnd(), now.plusDays(3));
+        assertNull(pairs.get(0).getEnd());
 
         blockingEvents = new ArrayList<BlockingState>();
         blockingEvents.add(new DefaultBlockingState(ovdId, BlockingStateType.SUBSCRIPTION_BUNDLE, CLEAR_BUNDLE, "test", false, false, false, now));
@@ -763,8 +762,7 @@ public class TestBlockingCalculator extends JunctionTestSuiteNoDB {
         assertEquals(pairs.size(), 1);
         assertNotNull(pairs.get(0).getStart());
         assertEquals(pairs.get(0).getStart(), now.plusDays(1));
-        assertNotNull(pairs.get(0).getEnd());
-        assertEquals(pairs.get(0).getEnd(), now.plusDays(4));
+        assertNull(pairs.get(0).getEnd());
 
         // Verify ordering at the same effective date doesn't matter. This is to work around nondeterministic ordering
         // behavior in ProxyBlockingStateDao#BLOCKING_STATE_ORDERING_WITH_TIES_UNHANDLED. See also TestDefaultInternalBillingApi.
