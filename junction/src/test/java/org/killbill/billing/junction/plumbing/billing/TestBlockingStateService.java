@@ -27,19 +27,33 @@ import org.killbill.billing.entitlement.api.BlockingState;
 import org.killbill.billing.entitlement.api.BlockingStateType;
 import org.killbill.billing.junction.DefaultBlockingState;
 import org.killbill.billing.junction.JunctionTestSuiteNoDB;
+import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import com.google.common.collect.ImmutableList;
 
 import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertTrue;
 
-public class TestBlockingStateNesting extends JunctionTestSuiteNoDB {
+public class TestBlockingStateService extends JunctionTestSuiteNoDB {
 
+
+    private UUID accountId;
+    private UUID bundleId;
+    private UUID subscriptionId;
+
+    @BeforeMethod(groups = "fast")
+    public void beforeMethod() throws Exception {
+       super.beforeMethod();
+        this.accountId = UUID.randomUUID();
+        this.bundleId = UUID.randomUUID();
+        this.subscriptionId = UUID.randomUUID();
+    }
 
     //
     // In all tests:
-    // * events are B(locked) or U(nblocked)
-    // * Types does not matter as we only care about nesting level (A(ccount), B(undle), S(ubscription))
+    // * Events are B(locked) or U(nblocked)
+    // * Types are (A(ccount), B(undle), S(ubscription))
 
     //             B    B     U     U
     //             |----|-----|-----|
@@ -48,7 +62,7 @@ public class TestBlockingStateNesting extends JunctionTestSuiteNoDB {
     //  Expected:  B----------------U
     //
     @Test(groups = "fast")
-    public void testZeroNestingLevel() throws Exception {
+    public void testInterlaceTypes() throws Exception {
 
         final List<BlockingState> input = new ArrayList<BlockingState>();
 
@@ -60,13 +74,14 @@ public class TestBlockingStateNesting extends JunctionTestSuiteNoDB {
         input.add(createBillingBlockingState(BlockingStateType.ACCOUNT, false, testInit.plusDays(2)));
         input.add(createBillingBlockingState(BlockingStateType.SUBSCRIPTION_BUNDLE, false, testInit.plusDays(3)));
 
-        final BlockingStateNesting test = new BlockingStateNesting();
+        final BlockingStateService test = new BlockingStateService();
         for (BlockingState cur : input) {
             test.addBlockingState(cur);
         }
         final List<DisabledDuration> result = test.build();
 
-        final List<DisabledDuration> expected = ImmutableList.of(new DisabledDuration(testInit, testInit.plusDays(3)));
+        final List<DisabledDuration> expected = ImmutableList.of(new DisabledDuration(testInit, testInit.plusDays(2)),
+                                                                 new DisabledDuration(testInit.plusDays(1), testInit.plusDays(3)));
 
         verify(result, expected);
     }
@@ -79,7 +94,7 @@ public class TestBlockingStateNesting extends JunctionTestSuiteNoDB {
     // Expected:     B-------------------
     //
     @Test(groups = "fast")
-    public void testPositiveNestingLevel() throws Exception {
+    public void testInterlaceTypesWithNoEnd() throws Exception {
 
         final List<BlockingState> input = new ArrayList<BlockingState>();
 
@@ -90,13 +105,14 @@ public class TestBlockingStateNesting extends JunctionTestSuiteNoDB {
         input.add(createBillingBlockingState(BlockingStateType.SUBSCRIPTION_BUNDLE, true, testInit.plusDays(1)));
         input.add(createBillingBlockingState(BlockingStateType.ACCOUNT, false, testInit.plusDays(2)));
 
-        final BlockingStateNesting test = new BlockingStateNesting();
+        final BlockingStateService test = new BlockingStateService();
         for (BlockingState cur : input) {
             test.addBlockingState(cur);
         }
         final List<DisabledDuration> result = test.build();
 
-        final List<DisabledDuration> expected = ImmutableList.of(new DisabledDuration(testInit, null));
+        final List<DisabledDuration> expected = ImmutableList.of(new DisabledDuration(testInit, testInit.plusDays(2)),
+                                                                 new DisabledDuration(testInit.plusDays(1), null));
 
         verify(result, expected);
     }
@@ -120,7 +136,7 @@ public class TestBlockingStateNesting extends JunctionTestSuiteNoDB {
         input.add(createBillingBlockingState(BlockingStateType.ACCOUNT, true, testInit.plusDays(2)));
         input.add(createBillingBlockingState(BlockingStateType.ACCOUNT, false, testInit.plusDays(3)));
 
-        final BlockingStateNesting test = new BlockingStateNesting();
+        final BlockingStateService test = new BlockingStateService();
         for (BlockingState cur : input) {
             test.addBlockingState(cur);
         }
@@ -152,13 +168,14 @@ public class TestBlockingStateNesting extends JunctionTestSuiteNoDB {
         input.add(createBillingBlockingState(BlockingStateType.SUBSCRIPTION_BUNDLE, false, testInit.plusDays(1)));
         input.add(createBillingBlockingState(BlockingStateType.ACCOUNT, false, testInit.plusDays(2)));
 
-        final BlockingStateNesting test = new BlockingStateNesting();
+        final BlockingStateService test = new BlockingStateService();
         for (BlockingState cur : input) {
             test.addBlockingState(cur);
         }
         final List<DisabledDuration> result = test.build();
 
-        final List<DisabledDuration> expected = ImmutableList.of(new DisabledDuration(testInit, testInit.plusDays(2)));
+        final List<DisabledDuration> expected = ImmutableList.of(new DisabledDuration(testInit, testInit.plusDays(1)),
+                                                                 new DisabledDuration(testInit, testInit.plusDays(2)));
 
         verify(result, expected);
     }
@@ -181,7 +198,7 @@ public class TestBlockingStateNesting extends JunctionTestSuiteNoDB {
         input.add(createBillingBlockingState(BlockingStateType.ACCOUNT, true, testInit));
         input.add(createBillingBlockingState(BlockingStateType.ACCOUNT, false, testInit));
 
-        final BlockingStateNesting test = new BlockingStateNesting();
+        final BlockingStateService test = new BlockingStateService();
         for (BlockingState cur : input) {
             test.addBlockingState(cur);
         }
@@ -210,7 +227,7 @@ public class TestBlockingStateNesting extends JunctionTestSuiteNoDB {
         input.add(createBillingBlockingState(BlockingStateType.ACCOUNT, true, testInit));
         input.add(createBillingBlockingState(BlockingStateType.ACCOUNT, false, testInit.plusHours(10)));
 
-        final BlockingStateNesting test = new BlockingStateNesting();
+        final BlockingStateService test = new BlockingStateService();
         for (BlockingState cur : input) {
             test.addBlockingState(cur);
         }
@@ -240,7 +257,7 @@ public class TestBlockingStateNesting extends JunctionTestSuiteNoDB {
         input.add(createBillingBlockingState(BlockingStateType.ACCOUNT, false, testInit.plusDays(1)));
         input.add(createBillingBlockingState(BlockingStateType.ACCOUNT, true, testInit.plusDays(1)));
 
-        final BlockingStateNesting test = new BlockingStateNesting();
+        final BlockingStateService test = new BlockingStateService();
         for (BlockingState cur : input) {
             test.addBlockingState(cur);
         }
@@ -271,13 +288,44 @@ public class TestBlockingStateNesting extends JunctionTestSuiteNoDB {
         input.add(createBillingBlockingState(BlockingStateType.ACCOUNT, true, testInit.plusDays(1)));
         input.add(createBillingBlockingState(BlockingStateType.ACCOUNT, false, testInit.plusDays(1)));
 
-        final BlockingStateNesting test = new BlockingStateNesting();
+        final BlockingStateService test = new BlockingStateService();
         for (BlockingState cur : input) {
             test.addBlockingState(cur);
         }
         final List<DisabledDuration> result = test.build();
 
-        final List<DisabledDuration> expected = ImmutableList.of(new DisabledDuration(testInit, null));
+        final List<DisabledDuration> expected = ImmutableList.of(new DisabledDuration(testInit, testInit.plusDays(1)));
+
+        verify(result, expected);
+    }
+
+
+    //              B       UB
+    //              |-------|
+    //              A       AA
+    //
+    //  Expected:   B--------
+    //
+    @Test(groups = "fast")
+    public void testBlockingUnblockingDatesLessThanADay4() throws Exception {
+
+        final List<BlockingState> input = new ArrayList<BlockingState>();
+
+        final DateTimeZone tz = DateTimeZone.forID("America/Los_Angeles");
+        final DateTime testInit = new DateTime(2017, 04, 29, 14, 15, 53, tz);
+        clock.setTime(testInit);
+        input.add(createBillingBlockingState(BlockingStateType.ACCOUNT, true, testInit));
+        input.add(createBillingBlockingState(BlockingStateType.ACCOUNT, false, testInit.plusDays(1)));
+        input.add(createBillingBlockingState(BlockingStateType.ACCOUNT, true, testInit.plusDays(1)));
+
+        final BlockingStateService test = new BlockingStateService();
+        for (BlockingState cur : input) {
+            test.addBlockingState(cur);
+        }
+        final List<DisabledDuration> result = test.build();
+
+        final List<DisabledDuration> expected = ImmutableList.of(new DisabledDuration(testInit, testInit.plusDays(1)),
+                                                                 new DisabledDuration(testInit.plusDays(1), null));
 
         verify(result, expected);
     }
@@ -297,17 +345,18 @@ public class TestBlockingStateNesting extends JunctionTestSuiteNoDB {
         final DateTimeZone tz = DateTimeZone.forID("America/Los_Angeles");
         final DateTime testInit = new DateTime(2017, 04, 29, 14, 15, 53, tz);
         clock.setTime(testInit);
-        input.add(createBillingBlockingState(BlockingStateType.ACCOUNT, false, testInit));
+        input.add(createBillingBlockingState(BlockingStateType.SUBSCRIPTION_BUNDLE, false, testInit));
         input.add(createBillingBlockingState(BlockingStateType.ACCOUNT, true, testInit.plusDays(1)));
-        input.add(createBillingBlockingState(BlockingStateType.ACCOUNT, true, testInit.plusDays(1)));
+        input.add(createBillingBlockingState(BlockingStateType.SUBSCRIPTION_BUNDLE, true, testInit.plusDays(2)));
 
-        final BlockingStateNesting test = new BlockingStateNesting();
+        final BlockingStateService test = new BlockingStateService();
         for (BlockingState cur : input) {
             test.addBlockingState(cur);
         }
         final List<DisabledDuration> result = test.build();
 
-        final List<DisabledDuration> expected = ImmutableList.of(new DisabledDuration(testInit.plusDays(1), null));
+        final List<DisabledDuration> expected = ImmutableList.of(new DisabledDuration(testInit.plusDays(2), null),
+                                                                 new DisabledDuration(testInit.plusDays(1), null));
 
         verify(result, expected);
     }
@@ -318,12 +367,33 @@ public class TestBlockingStateNesting extends JunctionTestSuiteNoDB {
     private void verify(final List<DisabledDuration> actual, final List<DisabledDuration> expected) {
         assertEquals(expected.size(), actual.size());
         for (int i = 0; i < actual.size(); i++) {
-            assertEquals(actual.get(i), expected.get(i));
+            boolean found = false;
+            for (int j = 0; j < expected.size(); j++) {
+                if (actual.get(i).equals(expected.get(j))) {
+                    found = true;
+                    break;
+                }
+            }
+            assertTrue(found);
         }
     }
 
     private BlockingState createBillingBlockingState(final BlockingStateType type, final boolean blockBilling, final DateTime effectiveDate) {
-        return new DefaultBlockingState(UUID.randomUUID(), type, UUID.randomUUID().toString(), "SVC", false, false, blockBilling, effectiveDate);
+        final UUID blockedId;
+        switch(type) {
+            case ACCOUNT:
+                blockedId = accountId;
+                break;
+            case SUBSCRIPTION_BUNDLE:
+                blockedId = bundleId;
+                break;
+            case SUBSCRIPTION:
+                blockedId = subscriptionId;
+                break;
+            default:
+                throw new IllegalStateException("Unexpexted type");
+        }
+        return new DefaultBlockingState(blockedId, type, UUID.randomUUID().toString(), "SVC", false, false, blockBilling, effectiveDate);
     }
 
 }

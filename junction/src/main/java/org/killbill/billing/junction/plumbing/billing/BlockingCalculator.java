@@ -308,19 +308,18 @@ public class BlockingCalculator {
             }
         }));
 
-        final Map<String, BlockingStateNesting> svcBlockedNesting = new HashMap<String, BlockingStateNesting>();
+        final Map<String, BlockingStateService> svcBlockedMap = new HashMap<String, BlockingStateService>();
         for (String svc : services) {
-            svcBlockedNesting.put(svc, new BlockingStateNesting());
+            svcBlockedMap.put(svc, new BlockingStateService());
         }
 
         for (final BlockingState e : inputBundleEvents) {
-            final BlockingStateNesting svcBlockingStateNesting = svcBlockedNesting.get(e.getService());
-            svcBlockingStateNesting.addBlockingState(e);
+            svcBlockedMap.get(e.getService()).addBlockingState(e);
         }
 
-        final Iterable<DisabledDuration> unorderedDisabledDuration = Iterables.concat(Iterables.transform(svcBlockedNesting.values(), new Function<BlockingStateNesting, List<DisabledDuration>>() {
+        final Iterable<DisabledDuration> unorderedDisabledDuration = Iterables.concat(Iterables.transform(svcBlockedMap.values(), new Function<BlockingStateService, List<DisabledDuration>>() {
             @Override
-            public List<DisabledDuration> apply(final BlockingStateNesting input) {
+            public List<DisabledDuration> apply(final BlockingStateService input) {
                 return input.build();
             }
         }));

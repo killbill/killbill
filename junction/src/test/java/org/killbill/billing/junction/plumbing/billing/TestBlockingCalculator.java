@@ -749,7 +749,8 @@ public class TestBlockingCalculator extends JunctionTestSuiteNoDB {
         assertEquals(pairs.size(), 1);
         assertNotNull(pairs.get(0).getStart());
         assertEquals(pairs.get(0).getStart(), now.plusDays(1));
-        assertNull(pairs.get(0).getEnd());
+        assertNotNull(pairs.get(0).getEnd());
+        assertEquals(pairs.get(0).getEnd(), now.plusDays(3));
 
         blockingEvents = new ArrayList<BlockingState>();
         blockingEvents.add(new DefaultBlockingState(ovdId, BlockingStateType.SUBSCRIPTION_BUNDLE, CLEAR_BUNDLE, "test", false, false, false, now));
@@ -762,7 +763,8 @@ public class TestBlockingCalculator extends JunctionTestSuiteNoDB {
         assertEquals(pairs.size(), 1);
         assertNotNull(pairs.get(0).getStart());
         assertEquals(pairs.get(0).getStart(), now.plusDays(1));
-        assertNull(pairs.get(0).getEnd());
+        assertNotNull(pairs.get(0).getEnd());
+        assertEquals(pairs.get(0).getEnd(), now.plusDays(4));
 
         // Verify ordering at the same effective date doesn't matter. This is to work around nondeterministic ordering
         // behavior in ProxyBlockingStateDao#BLOCKING_STATE_ORDERING_WITH_TIES_UNHANDLED. See also TestDefaultInternalBillingApi.
@@ -848,7 +850,7 @@ public class TestBlockingCalculator extends JunctionTestSuiteNoDB {
 
         blockingCalculator.insertBlockingEvents(billingEvents, new HashSet<UUID>(), internalCallContext);
 
-        assertEquals(billingEvents.size(), 3);
+        assertEquals(billingEvents.size(), 5);
         final List<BillingEvent> events = new ArrayList<BillingEvent>(billingEvents);
         assertEquals(events.get(0).getEffectiveDate(), new LocalDate(2012, 5, 1).toDateTimeAtStartOfDay(DateTimeZone.UTC));
         assertEquals(events.get(0).getTransitionType(), SubscriptionBaseTransitionType.CREATE);
@@ -856,5 +858,8 @@ public class TestBlockingCalculator extends JunctionTestSuiteNoDB {
         assertEquals(events.get(1).getTransitionType(), SubscriptionBaseTransitionType.PHASE);
         assertEquals(events.get(2).getEffectiveDate(), new LocalDate(2012, 7, 15).toDateTimeAtStartOfDay(DateTimeZone.UTC));
         assertEquals(events.get(2).getTransitionType(), SubscriptionBaseTransitionType.START_BILLING_DISABLED);
-    }
+        assertEquals(events.get(3).getEffectiveDate(), new LocalDate(2012, 7, 25).toDateTimeAtStartOfDay(DateTimeZone.UTC));
+        assertEquals(events.get(3).getTransitionType(), SubscriptionBaseTransitionType.END_BILLING_DISABLED);
+        assertEquals(events.get(4).getEffectiveDate(), new LocalDate(2012, 7, 25).toDateTimeAtStartOfDay(DateTimeZone.UTC));
+        assertEquals(events.get(4).getTransitionType(), SubscriptionBaseTransitionType.CHANGE);    }
 }
