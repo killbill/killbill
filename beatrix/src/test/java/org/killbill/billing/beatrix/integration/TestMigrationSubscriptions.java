@@ -333,7 +333,8 @@ public class TestMigrationSubscriptions extends TestIntegrationBase {
         assertListenerStatus();
     }
 
-    // Not exactly a migration test, but verifies correct behavior when using BlockingState (see https://github.com/killbill/killbill/issues/744)
+    // Not exactly migration tests, but verify correct behavior when using BlockingState (see https://github.com/killbill/killbill/issues/744)
+
     @Test(groups = "slow")
     public void testBlockingStatesV1() throws Exception {
         final DateTime initialDate = new DateTime(2017, 3, 1, 0, 1, 35, 0, DateTimeZone.UTC);
@@ -444,6 +445,46 @@ public class TestMigrationSubscriptions extends TestIntegrationBase {
         assertListenerStatus();
     }
 
+    @Test(groups = "slow")
+    public void testBlockingStatesV4() throws Exception {
+        final DateTime initialDate = new DateTime(2017, 3, 1, 0, 1, 35, 0, DateTimeZone.UTC);
+        clock.setDeltaFromReality(initialDate.getMillis() - clock.getUTCNow().getMillis());
+
+        final Account account = createAccountWithNonOsgiPaymentMethod(getAccountData(0));
+        assertNotNull(account);
+
+        busHandler.pushExpectedEvents(NextEvent.BLOCK);
+        final BlockingState blockingState1 = new DefaultBlockingState(account.getId(), BlockingStateType.ACCOUNT, "state1", "Service", false, false, true, null);
+        subscriptionApi.addBlockingState(blockingState1, null, ImmutableList.<PluginProperty>of(), callContext);
+        assertListenerStatus();
+
+        clock.addDays(1);
+
+        final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("pistol-monthly-notrial", null);
+        busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK);
+        final Entitlement baseEntitlement = entitlementApi.createBaseEntitlement(account.getId(), spec, "bundleExternalKey", ImmutableList.<PlanPhasePriceOverride>of(), null, null, false, ImmutableList.<PluginProperty>of(), callContext);
+        assertListenerStatus();
+
+        clock.addDays(1);
+
+        // Add an add-on while bundle is already blocked
+        final PlanPhaseSpecifier spec2 = new PlanPhaseSpecifier("cleaning-monthly", null);
+        busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK);
+        entitlementApi.addEntitlement(baseEntitlement.getBundleId(), spec2, ImmutableList.<PlanPhasePriceOverride>of(), null, null, false, ImmutableList.<PluginProperty>of(), callContext);
+        assertListenerStatus();
+
+        clock.addMonths(1);
+
+        busHandler.pushExpectedEvents(NextEvent.BLOCK, NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT);
+        final BlockingState blockingState2 = new DefaultBlockingState(account.getId(), BlockingStateType.ACCOUNT, "state2", "Service", false, false, false, null);
+        subscriptionApi.addBlockingState(blockingState2, null, ImmutableList.<PluginProperty>of(), callContext);
+        assertListenerStatus();
+
+        busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT);
+        clock.addMonths(1);
+        assertListenerStatus();
+    }
+
     private BaseEntitlementWithAddOnsSpecifier buildBaseEntitlementWithAddOnsSpecifier(final LocalDate entitlementMigrationDate, final LocalDate billingMigrationDate, final String externalKey, final List<EntitlementSpecifier> specifierList) {
         return new BaseEntitlementWithAddOnsSpecifier() {
                 @Override
@@ -472,5 +513,4 @@ public class TestMigrationSubscriptions extends TestIntegrationBase {
                 }
             };
     }
-
 }
