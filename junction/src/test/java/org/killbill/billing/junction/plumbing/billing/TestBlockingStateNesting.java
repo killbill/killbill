@@ -283,6 +283,37 @@ public class TestBlockingStateNesting extends JunctionTestSuiteNoDB {
     }
 
 
+    //              U       B    B
+    //              |-------|----|
+    //              B       A    B
+    //
+    //  Expected:           B--------
+    //
+    @Test(groups = "fast")
+    public void testStartingWithUnblock() throws Exception {
+
+        final List<BlockingState> input = new ArrayList<BlockingState>();
+
+        final DateTimeZone tz = DateTimeZone.forID("America/Los_Angeles");
+        final DateTime testInit = new DateTime(2017, 04, 29, 14, 15, 53, tz);
+        clock.setTime(testInit);
+        input.add(createBillingBlockingState(BlockingStateType.ACCOUNT, false, testInit));
+        input.add(createBillingBlockingState(BlockingStateType.ACCOUNT, true, testInit.plusDays(1)));
+        input.add(createBillingBlockingState(BlockingStateType.ACCOUNT, true, testInit.plusDays(1)));
+
+        final BlockingStateNesting test = new BlockingStateNesting();
+        for (BlockingState cur : input) {
+            test.addBlockingState(cur);
+        }
+        final List<DisabledDuration> result = test.build();
+
+        final List<DisabledDuration> expected = ImmutableList.of(new DisabledDuration(testInit.plusDays(1), null));
+
+        verify(result, expected);
+    }
+
+
+
 
     private void verify(final List<DisabledDuration> actual, final List<DisabledDuration> expected) {
         assertEquals(expected.size(), actual.size());
