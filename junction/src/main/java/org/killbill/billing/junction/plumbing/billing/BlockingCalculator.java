@@ -172,7 +172,7 @@ public class BlockingCalculator {
         for (final DisabledDuration duration : disabledDuration) {
             for (final BillingEvent event : subscriptionBillingEvents) {
                 if (duration.getEnd() == null || event.getEffectiveDate().isBefore(duration.getEnd())) {
-                    if (!event.getEffectiveDate().isBefore(duration.getStart())) { //between the pair
+                    if (!event.getEffectiveDate().isBefore(duration.getStart())) {
                         result.add(event);
                     }
                 } else { //after the last event of the pair no need to keep checking
@@ -207,28 +207,24 @@ public class BlockingCalculator {
         return result;
     }
 
+
     protected BillingEvent precedingBillingEventForSubscription(final DateTime disabledDurationStart, final SortedSet<BillingEvent> subscriptionBillingEvents) {
         if (disabledDurationStart == null) {
             return null;
         }
 
-        BillingEvent result = subscriptionBillingEvents.first();
-
-        // Use case where we first Block and the  create the subscription for instance
-        // (disabledDurationStart could be before start subscription or align right at the same exact time)
-        if (!disabledDurationStart.isAfter(result.getEffectiveDate())) {
-            return null;
-        }
-
+        // We look for the first billingEvent strictly prior our disabledDurationStart or null if none
+        BillingEvent prev = null;
         for (final BillingEvent event : subscriptionBillingEvents) {
             if (!event.getEffectiveDate().isBefore(disabledDurationStart)) {
-                return result;
+                return prev;
             } else {
-                result = event;
+                prev = event;
             }
         }
-        return result;
+        return prev;
     }
+
 
     protected SortedSet<BillingEvent> filter(final SortedSet<BillingEvent> billingEvents, final SubscriptionBase subscription) {
         final SortedSet<BillingEvent> result = new TreeSet<BillingEvent>();
