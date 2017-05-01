@@ -1,6 +1,6 @@
 /*
- * Copyright 2014-2016 Groupon, Inc
- * Copyright 2014-2016 The Billing Project, LLC
+ * Copyright 2014-2017 Groupon, Inc
+ * Copyright 2014-2017 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -17,7 +17,6 @@
 
 package org.killbill.billing.entitlement.api;
 
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -25,7 +24,6 @@ import java.util.List;
 import java.util.Map;
 
 import org.killbill.billing.callcontext.InternalTenantContext;
-import org.killbill.billing.entitlement.DefaultEntitlementService;
 import org.killbill.billing.subscription.api.SubscriptionBase;
 import org.killbill.billing.subscription.api.SubscriptionBaseTransitionType;
 import org.killbill.billing.subscription.api.user.SubscriptionBaseTransition;
@@ -42,8 +40,7 @@ import com.google.common.collect.ImmutableList;
 //
 public class SubscriptionEventOrdering extends EntitlementOrderingBase {
 
-    @VisibleForTesting
-    static final SubscriptionEventOrdering INSTANCE = new SubscriptionEventOrdering();
+    private static final SubscriptionEventOrdering INSTANCE = new SubscriptionEventOrdering();
 
     private SubscriptionEventOrdering() {}
 
@@ -63,7 +60,6 @@ public class SubscriptionEventOrdering extends EntitlementOrderingBase {
         BlockingStateOrdering.insertSorted(entitlements, internalTenantContext, result);
 
         // Final cleanups
-        reOrderSubscriptionEventsOnSameDateByType(result);
         removeOverlappingSubscriptionEvents(result);
 
         return result;
@@ -146,7 +142,8 @@ public class SubscriptionEventOrdering extends EntitlementOrderingBase {
         result.add(index, event);
     }
 
-    private SubscriptionEvent toSubscriptionEvent(final SubscriptionBaseTransition in, final SubscriptionEventType eventType, final InternalTenantContext internalTenantContext) {
+    @VisibleForTesting
+    static SubscriptionEvent toSubscriptionEvent(final SubscriptionBaseTransition in, final SubscriptionEventType eventType, final InternalTenantContext internalTenantContext) {
         return new DefaultSubscriptionEvent(in.getId(),
                                             in.getSubscriptionId(),
                                             in.getEffectiveTransitionTime(),
@@ -169,47 +166,6 @@ public class SubscriptionEventOrdering extends EntitlementOrderingBase {
                                             internalTenantContext);
     }
 
-    //
-    // All events have been inserted and should be at the right place, except that we want to ensure that events for a given subscription,
-    // and for a given time are ordered by SubscriptionEventType.
-    //
-    // All this seems a little over complicated, and one wonders why we don't just shove all events and call Collections.sort on the list prior
-    // to return:
-    // - One explanation is that we don't know the events in advance and each time the new events to be inserted are computed from the current state
-    //   of the stream, which requires ordering all along
-    // - A careful reader will notice that the algorithm is N^2, -- so that we care so much considering we have very events -- but in addition to that
-    //   the recursive path will be used very infrequently and when it is used, this will be probably just reorder with the prev event and that's it.
-    //
-    @VisibleForTesting
-    protected void reOrderSubscriptionEventsOnSameDateByType(final List<SubscriptionEvent> events) {
-        final int size = events.size();
-        for (int i = 0; i < size; i++) {
-            final SubscriptionEvent cur = events.get(i);
-            final SubscriptionEvent next = (i < (size - 1)) ? events.get(i + 1) : null;
-
-            final boolean shouldSwap = (next != null && shouldSwap(cur, next, true));
-            final boolean shouldReverseSort = (next == null || shouldSwap);
-
-            int currentIndex = i;
-            if (shouldSwap) {
-                Collections.swap(events, i, i + 1);
-            }
-            if (shouldReverseSort) {
-                while (currentIndex >= 1) {
-                    final SubscriptionEvent revCur = events.get(currentIndex);
-                    final SubscriptionEvent other = events.get(currentIndex - 1);
-                    if (shouldSwap(revCur, other, false)) {
-                        Collections.swap(events, currentIndex, currentIndex - 1);
-                    }
-                    if (revCur.getEffectiveDate().compareTo(other.getEffectiveDate()) != 0) {
-                        break;
-                    }
-                    currentIndex--;
-                }
-            }
-        }
-    }
-
     // Make sure the argument supports the remove operation - hence expect a LinkedList, not a List
     private void removeOverlappingSubscriptionEvents(final LinkedList<SubscriptionEvent> events) {
         final Iterator<SubscriptionEvent> iterator = events.iterator();
@@ -226,94 +182,6 @@ public class SubscriptionEventOrdering extends EntitlementOrderingBase {
             } else {
                 prevPerService.put(current.getServiceName(), current);
             }
-        }
-    }
-
-    private boolean shouldSwap(final SubscriptionEvent cur, final SubscriptionEvent other, final boolean isAscending) {
-        // For a given date, order by subscriptionId, and within subscription by event type
-        final int idComp = cur.getEntitlementId().compareTo(other.getEntitlementId());
-        final Integer comparison = compareSubscriptionEventsForSameEffectiveDateAndEntitlementId(cur, other);
-        return (cur.getEffectiveDate().compareTo(other.getEffectiveDate()) == 0 &&
-                ((isAscending &&
-                  ((idComp > 0) ||
-                   (idComp == 0 && comparison != null && comparison > 0))) ||
-                 (!isAscending &&
-                  ((idComp < 0) ||
-                   (idComp == 0 && comparison != null && comparison < 0)))));
-    }
-
-    private Integer compareSubscriptionEventsForSameEffectiveDateAndEntitlementId(final SubscriptionEvent first, final SubscriptionEvent second) {
-        // For consistency, make sure entitlement-service and billing-service events always happen in a
-        // deterministic order (e.g. after other services for STOP events and before for START events)
-        if ((DefaultEntitlementService.ENTITLEMENT_SERVICE_NAME.equals(first.getServiceName()) ||
-             BILLING_SERVICE_NAME.equals(first.getServiceName())) &&
-            !(DefaultEntitlementService.ENTITLEMENT_SERVICE_NAME.equals(second.getServiceName()) ||
-              BILLING_SERVICE_NAME.equals(second.getServiceName()))) {
-            // first is an entitlement-service or billing-service event, but not second
-            if (first.getSubscriptionEventType().equals(SubscriptionEventType.START_ENTITLEMENT) ||
-                first.getSubscriptionEventType().equals(SubscriptionEventType.START_BILLING) ||
-                first.getSubscriptionEventType().equals(SubscriptionEventType.RESUME_ENTITLEMENT) ||
-                first.getSubscriptionEventType().equals(SubscriptionEventType.RESUME_BILLING) ||
-                first.getSubscriptionEventType().equals(SubscriptionEventType.PHASE) ||
-                first.getSubscriptionEventType().equals(SubscriptionEventType.CHANGE)) {
-                return -1;
-            } else if (first.getSubscriptionEventType().equals(SubscriptionEventType.PAUSE_ENTITLEMENT) ||
-                       first.getSubscriptionEventType().equals(SubscriptionEventType.PAUSE_BILLING) ||
-                       first.getSubscriptionEventType().equals(SubscriptionEventType.STOP_ENTITLEMENT) ||
-                       first.getSubscriptionEventType().equals(SubscriptionEventType.STOP_BILLING)) {
-                return 1;
-            } else {
-                // Default behavior
-                return -1;
-            }
-        } else if ((DefaultEntitlementService.ENTITLEMENT_SERVICE_NAME.equals(second.getServiceName()) ||
-                    BILLING_SERVICE_NAME.equals(second.getServiceName())) &&
-                   !(DefaultEntitlementService.ENTITLEMENT_SERVICE_NAME.equals(first.getServiceName()) ||
-                     BILLING_SERVICE_NAME.equals(first.getServiceName()))) {
-            // second is an entitlement-service or billing-service event, but not first
-            if (second.getSubscriptionEventType().equals(SubscriptionEventType.START_ENTITLEMENT) ||
-                second.getSubscriptionEventType().equals(SubscriptionEventType.START_BILLING) ||
-                second.getSubscriptionEventType().equals(SubscriptionEventType.RESUME_ENTITLEMENT) ||
-                second.getSubscriptionEventType().equals(SubscriptionEventType.RESUME_BILLING) ||
-                second.getSubscriptionEventType().equals(SubscriptionEventType.PHASE) ||
-                second.getSubscriptionEventType().equals(SubscriptionEventType.CHANGE)) {
-                return 1;
-            } else if (second.getSubscriptionEventType().equals(SubscriptionEventType.PAUSE_ENTITLEMENT) ||
-                       second.getSubscriptionEventType().equals(SubscriptionEventType.PAUSE_BILLING) ||
-                       second.getSubscriptionEventType().equals(SubscriptionEventType.STOP_ENTITLEMENT) ||
-                       second.getSubscriptionEventType().equals(SubscriptionEventType.STOP_BILLING)) {
-                return -1;
-            } else {
-                // Default behavior
-                return 1;
-            }
-        } else if (first.getSubscriptionEventType().equals(SubscriptionEventType.START_ENTITLEMENT)) {
-            // START_ENTITLEMENT is always first
-            return -1;
-        } else if (second.getSubscriptionEventType().equals(SubscriptionEventType.START_ENTITLEMENT)) {
-            // START_ENTITLEMENT is always first
-            return 1;
-        } else if (first.getSubscriptionEventType().equals(SubscriptionEventType.STOP_BILLING)) {
-            // STOP_BILLING is always last
-            return 1;
-        } else if (second.getSubscriptionEventType().equals(SubscriptionEventType.STOP_BILLING)) {
-            // STOP_BILLING is always last
-            return -1;
-        } else if (first.getSubscriptionEventType().equals(SubscriptionEventType.START_BILLING)) {
-            // START_BILLING is first after START_ENTITLEMENT
-            return -1;
-        } else if (second.getSubscriptionEventType().equals(SubscriptionEventType.START_BILLING)) {
-            // START_BILLING is first after START_ENTITLEMENT
-            return 1;
-        } else if (first.getSubscriptionEventType().equals(SubscriptionEventType.STOP_ENTITLEMENT)) {
-            // STOP_ENTITLEMENT is last after STOP_BILLING
-            return 1;
-        } else if (second.getSubscriptionEventType().equals(SubscriptionEventType.STOP_ENTITLEMENT)) {
-            // STOP_ENTITLEMENT is last after STOP_BILLING
-            return -1;
-        } else {
-            // Trust the current ordering
-            return null;
         }
     }
 }
