@@ -1,6 +1,6 @@
 /*
- * Copyright 2014-2016 Groupon, Inc
- * Copyright 2014-2016 The Billing Project, LLC
+ * Copyright 2014-2017 Groupon, Inc
+ * Copyright 2014-2017 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -22,26 +22,38 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
+import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDate;
+import org.killbill.billing.ObjectType;
 import org.killbill.billing.account.api.Account;
 import org.killbill.billing.account.api.AccountData;
 import org.killbill.billing.api.TestApiListener.NextEvent;
 import org.killbill.billing.beatrix.util.InvoiceChecker.ExpectedInvoiceItemCheck;
 import org.killbill.billing.catalog.api.BillingPeriod;
+import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.catalog.api.PhaseType;
+import org.killbill.billing.catalog.api.PlanPhasePriceOverride;
 import org.killbill.billing.catalog.api.PlanPhaseSpecifier;
 import org.killbill.billing.catalog.api.PriceListSet;
 import org.killbill.billing.entitlement.api.BaseEntitlementWithAddOnsSpecifier;
+import org.killbill.billing.entitlement.api.BlockingState;
+import org.killbill.billing.entitlement.api.BlockingStateType;
 import org.killbill.billing.entitlement.api.DefaultEntitlementSpecifier;
 import org.killbill.billing.entitlement.api.Entitlement;
 import org.killbill.billing.entitlement.api.Entitlement.EntitlementState;
 import org.killbill.billing.entitlement.api.EntitlementSpecifier;
 import org.killbill.billing.invoice.api.InvoiceItemType;
+import org.killbill.billing.junction.DefaultBlockingState;
+import org.killbill.billing.mock.MockAccountBuilder;
 import org.killbill.billing.payment.api.PluginProperty;
+import org.killbill.billing.util.tag.ControlTagType;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import com.google.common.collect.ImmutableList;
+
+import static org.testng.Assert.assertNotNull;
 
 //
 // These scenarios emulate commons migrations problems (they go on verifying proper entitlement startDate, and proper billing startDate along with invoices, ..)
@@ -321,6 +333,158 @@ public class TestMigrationSubscriptions extends TestIntegrationBase {
         assertListenerStatus();
     }
 
+    // Not exactly migration tests, but verify correct behavior when using BlockingState (see https://github.com/killbill/killbill/issues/744)
+
+    @Test(groups = "slow")
+    public void testBlockingStatesV1() throws Exception {
+        final DateTime initialDate = new DateTime(2017, 3, 1, 0, 1, 35, 0, DateTimeZone.UTC);
+        clock.setDeltaFromReality(initialDate.getMillis() - clock.getUTCNow().getMillis());
+
+        final Account account = createAccountWithNonOsgiPaymentMethod(getAccountData(0));
+        assertNotNull(account);
+
+        busHandler.pushExpectedEvents(NextEvent.BLOCK);
+        final BlockingState blockingState1 = new DefaultBlockingState(account.getId(), BlockingStateType.ACCOUNT, "state1", "Service", false, false, true, null);
+        subscriptionApi.addBlockingState(blockingState1, null, ImmutableList.<PluginProperty>of(), callContext);
+        assertListenerStatus();
+
+        clock.addDays(1);
+
+        final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("pistol-monthly-notrial", null);
+        busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK);
+        entitlementApi.createBaseEntitlement(account.getId(), spec, "bundleExternalKey", ImmutableList.<PlanPhasePriceOverride>of(), null, null, false, ImmutableList.<PluginProperty>of(), callContext);
+        assertListenerStatus();
+
+        clock.addMonths(1);
+
+        busHandler.pushExpectedEvents(NextEvent.BLOCK, NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT);
+        final BlockingState blockingState2 = new DefaultBlockingState(account.getId(), BlockingStateType.ACCOUNT, "state2", "Service", false, false, false, null);
+        subscriptionApi.addBlockingState(blockingState2, null, ImmutableList.<PluginProperty>of(), callContext);
+        assertListenerStatus();
+
+        busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT);
+        clock.addMonths(1);
+        assertListenerStatus();
+    }
+
+    @Test(groups = "slow")
+    public void testBlockingStatesV2() throws Exception {
+        final DateTime initialDate = new DateTime(2017, 3, 1, 0, 1, 35, 0, DateTimeZone.UTC);
+        clock.setDeltaFromReality(initialDate.getMillis() - clock.getUTCNow().getMillis());
+
+        final Account account = createAccountWithNonOsgiPaymentMethod(getAccountData(0));
+        assertNotNull(account);
+
+        final BlockingState blockingState1 = new DefaultBlockingState(account.getId(), BlockingStateType.ACCOUNT, "state1", "Service", false, false, true, null);
+        final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("pistol-monthly-notrial", null);
+
+        // Unlike the previous scenario, we create the subscription and set the blocking state at the same time
+        busHandler.pushExpectedEvents(NextEvent.BLOCK, NextEvent.CREATE, NextEvent.BLOCK);
+        subscriptionApi.addBlockingState(blockingState1, null, ImmutableList.<PluginProperty>of(), callContext);
+        entitlementApi.createBaseEntitlement(account.getId(), spec, "bundleExternalKey", ImmutableList.<PlanPhasePriceOverride>of(), null, null, false, ImmutableList.<PluginProperty>of(), callContext);
+        assertListenerStatus();
+
+        clock.addMonths(1);
+
+        busHandler.pushExpectedEvents(NextEvent.BLOCK, NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT);
+        final BlockingState blockingState2 = new DefaultBlockingState(account.getId(), BlockingStateType.ACCOUNT, "state2", "Service", false, false, false, null);
+        subscriptionApi.addBlockingState(blockingState2, null, ImmutableList.<PluginProperty>of(), callContext);
+        assertListenerStatus();
+
+        busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT);
+        clock.addMonths(1);
+        assertListenerStatus();
+    }
+
+    @Test(groups = "slow")
+    public void testBlockingStatesV3() throws Exception {
+        final DateTimeZone timeZone = DateTimeZone.forID("America/Los_Angeles");
+
+        // 2017-03-12 00:01:35 (change to DST happens at 2am on that day)
+        final DateTime initialDate = new DateTime(2017, 3, 12, 0, 1, 35, 0, timeZone);
+        clock.setDeltaFromReality(initialDate.getMillis() - clock.getUTCNow().getMillis());
+
+        // Account in PDT
+        final AccountData accountData = new MockAccountBuilder().currency(Currency.USD)
+                                                                .timeZone(timeZone)
+                                                                .build();
+
+        final Account account = createAccountWithNonOsgiPaymentMethod(accountData);
+        assertNotNull(account);
+
+        busHandler.pushExpectedEvent(NextEvent.TAG);
+        tagUserApi.addTag(account.getId(), ObjectType.ACCOUNT, ControlTagType.AUTO_INVOICING_OFF.getId(), callContext);
+        assertListenerStatus();
+
+        final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("pistol-monthly-notrial", null);
+        busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK);
+        entitlementApi.createBaseEntitlement(account.getId(), spec, "bundleExternalKey", ImmutableList.<PlanPhasePriceOverride>of(), null, null, false, ImmutableList.<PluginProperty>of(), callContext);
+        assertListenerStatus();
+
+        // Add less than a day between the CREATE and the BLOCK, to verify invoicing behavior
+        clock.setTime(initialDate.plusHours(23).plusMinutes(30));
+
+        busHandler.pushExpectedEvents(NextEvent.BLOCK);
+        final BlockingState blockingState1 = new DefaultBlockingState(account.getId(), BlockingStateType.ACCOUNT, "state1", "Service", false, false, true, null);
+        subscriptionApi.addBlockingState(blockingState1, null, ImmutableList.<PluginProperty>of(), callContext);
+        assertListenerStatus();
+
+        busHandler.pushExpectedEvents(NextEvent.TAG, NextEvent.NULL_INVOICE);
+        tagUserApi.removeTag(account.getId(), ObjectType.ACCOUNT, ControlTagType.AUTO_INVOICING_OFF.getId(), callContext);
+        assertListenerStatus();
+
+        clock.addMonths(1);
+
+        busHandler.pushExpectedEvents(NextEvent.BLOCK, NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT);
+        final BlockingState blockingState2 = new DefaultBlockingState(account.getId(), BlockingStateType.ACCOUNT, "state2", "Service", false, false, false, null);
+        subscriptionApi.addBlockingState(blockingState2, null, ImmutableList.<PluginProperty>of(), callContext);
+        assertListenerStatus();
+
+        busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT);
+        clock.addMonths(1);
+        assertListenerStatus();
+    }
+
+    @Test(groups = "slow")
+    public void testBlockingStatesV4() throws Exception {
+        final DateTime initialDate = new DateTime(2017, 3, 1, 0, 1, 35, 0, DateTimeZone.UTC);
+        clock.setDeltaFromReality(initialDate.getMillis() - clock.getUTCNow().getMillis());
+
+        final Account account = createAccountWithNonOsgiPaymentMethod(getAccountData(0));
+        assertNotNull(account);
+
+        busHandler.pushExpectedEvents(NextEvent.BLOCK);
+        final BlockingState blockingState1 = new DefaultBlockingState(account.getId(), BlockingStateType.ACCOUNT, "state1", "Service", false, false, true, null);
+        subscriptionApi.addBlockingState(blockingState1, null, ImmutableList.<PluginProperty>of(), callContext);
+        assertListenerStatus();
+
+        clock.addDays(1);
+
+        final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("pistol-monthly-notrial", null);
+        busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK);
+        final Entitlement baseEntitlement = entitlementApi.createBaseEntitlement(account.getId(), spec, "bundleExternalKey", ImmutableList.<PlanPhasePriceOverride>of(), null, null, false, ImmutableList.<PluginProperty>of(), callContext);
+        assertListenerStatus();
+
+        clock.addDays(1);
+
+        // Add an add-on while bundle is already blocked
+        final PlanPhaseSpecifier spec2 = new PlanPhaseSpecifier("cleaning-monthly", null);
+        busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK);
+        entitlementApi.addEntitlement(baseEntitlement.getBundleId(), spec2, ImmutableList.<PlanPhasePriceOverride>of(), null, null, false, ImmutableList.<PluginProperty>of(), callContext);
+        assertListenerStatus();
+
+        clock.addMonths(1);
+
+        busHandler.pushExpectedEvents(NextEvent.BLOCK, NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT);
+        final BlockingState blockingState2 = new DefaultBlockingState(account.getId(), BlockingStateType.ACCOUNT, "state2", "Service", false, false, false, null);
+        subscriptionApi.addBlockingState(blockingState2, null, ImmutableList.<PluginProperty>of(), callContext);
+        assertListenerStatus();
+
+        busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT);
+        clock.addMonths(1);
+        assertListenerStatus();
+    }
+
     private BaseEntitlementWithAddOnsSpecifier buildBaseEntitlementWithAddOnsSpecifier(final LocalDate entitlementMigrationDate, final LocalDate billingMigrationDate, final String externalKey, final List<EntitlementSpecifier> specifierList) {
         return new BaseEntitlementWithAddOnsSpecifier() {
                 @Override
@@ -349,5 +513,4 @@ public class TestMigrationSubscriptions extends TestIntegrationBase {
                 }
             };
     }
-
 }

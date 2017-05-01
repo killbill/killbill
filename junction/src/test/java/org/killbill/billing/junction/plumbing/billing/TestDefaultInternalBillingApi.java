@@ -1,7 +1,9 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
+ * Copyright 2014-2017 Groupon, Inc
+ * Copyright 2014-2017 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -20,17 +22,14 @@ import java.util.List;
 
 import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
-import org.killbill.billing.payment.api.PluginProperty;
-import org.testng.Assert;
-import org.testng.annotations.Test;
-
+import org.joda.time.Period;
+import org.joda.time.ReadablePeriod;
+import org.joda.time.Seconds;
 import org.killbill.billing.account.api.Account;
 import org.killbill.billing.api.TestApiListener.NextEvent;
-import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.catalog.api.PlanPhaseSpecifier;
 import org.killbill.billing.catalog.api.PriceListSet;
-import org.killbill.billing.catalog.api.ProductCategory;
 import org.killbill.billing.entitlement.EntitlementService;
 import org.killbill.billing.entitlement.api.BlockingStateType;
 import org.killbill.billing.entitlement.api.DefaultEntitlementApi;
@@ -38,8 +37,11 @@ import org.killbill.billing.entitlement.api.Entitlement;
 import org.killbill.billing.junction.BillingEvent;
 import org.killbill.billing.junction.DefaultBlockingState;
 import org.killbill.billing.junction.JunctionTestSuiteWithEmbeddedDB;
+import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.subscription.api.SubscriptionBase;
 import org.killbill.billing.subscription.api.SubscriptionBaseTransitionType;
+import org.testng.Assert;
+import org.testng.annotations.Test;
 
 import com.google.common.collect.ImmutableList;
 
@@ -49,7 +51,7 @@ public class TestDefaultInternalBillingApi extends JunctionTestSuiteWithEmbedded
     // The invocationCount > 0 was to trigger an issue where events would come out-of-order randomly.
     // While the bug shouldn't occur anymore, we're keeping it just in case (the test will also try to insert the events out-of-order manually).
     // This test also checks we don't generate billing events for blocking durations less than a day (https://github.com/killbill/killbill/issues/267).
-    @Test(groups = "slow", description = "Check blocking states with same effective date are correctly handled", invocationCount = 10, enabled = false)
+    @Test(groups = "slow", description = "Check blocking states with same effective date are correctly handled", invocationCount = 10)
     public void testBlockingStatesWithSameEffectiveDate() throws Exception {
         final LocalDate initialDate = new LocalDate(2013, 8, 7);
         clock.setDay(initialDate);
@@ -187,6 +189,15 @@ public class TestDefaultInternalBillingApi extends JunctionTestSuiteWithEmbedded
     // See https://github.com/killbill/killbill/commit/92042843e38a67f75495b207385e4c1f9ca60990#commitcomment-4749967
     @Test(groups = "slow", description = "Check unblock then block states with same effective date are correctly handled", invocationCount = 10)
     public void testUnblockThenBlockBlockingStatesWithSameEffectiveDate() throws Exception {
+        testUnblockThenBlockBlockingStatesWithSimilarEffectiveDate(Seconds.ZERO);
+    }
+
+    @Test(groups = "slow", description = "Check unblock then block states with almost the same effective date are correctly handled", invocationCount = 10)
+    public void testUnblockThenBlockBlockingStatesWithAlmostSameEffectiveDate() throws Exception {
+        testUnblockThenBlockBlockingStatesWithSimilarEffectiveDate(Seconds.ONE);
+    }
+
+    private void testUnblockThenBlockBlockingStatesWithSimilarEffectiveDate(final ReadablePeriod delay) throws Exception {
         final LocalDate initialDate = new LocalDate(2013, 8, 7);
         clock.setDay(initialDate);
 
@@ -198,7 +209,10 @@ public class TestDefaultInternalBillingApi extends JunctionTestSuiteWithEmbedded
         final SubscriptionBase subscription = subscriptionInternalApi.getSubscriptionFromId(entitlement.getId(), internalCallContext);
         assertListenerStatus();
 
-        final DateTime block1Date = clock.getUTCNow();
+        final DateTime block1Date = subscription.getStartDate().plus(delay);
+        // Make sure to update the clock here, because we don't disable for periods less than a day
+        clock.setTime(block1Date);
+
         testListener.pushExpectedEvents(NextEvent.BLOCK);
         final DefaultBlockingState state1 = new DefaultBlockingState(account.getId(),
                                                                      BlockingStateType.ACCOUNT,
@@ -239,13 +253,17 @@ public class TestDefaultInternalBillingApi extends JunctionTestSuiteWithEmbedded
         clock.addDays(3);
         assertListenerStatus();
 
-        // Expected blocking duration:
-        // * 2013-08-07 to now [2013-08-07 to 2013-08-08 then 2013-08-08 to now]
         final List<BillingEvent> events = ImmutableList.<BillingEvent>copyOf(billingInternalApi.getBillingEventsForAccountAndUpdateAccountBCD(account.getId(), null, internalCallContext));
-        Assert.assertEquals(events.size(), 2);
-        Assert.assertEquals(events.get(0).getTransitionType(), SubscriptionBaseTransitionType.CREATE);
-        Assert.assertEquals(events.get(0).getEffectiveDate(), subscription.getStartDate());
-        Assert.assertEquals(events.get(1).getTransitionType(), SubscriptionBaseTransitionType.START_BILLING_DISABLED);
-        Assert.assertEquals(events.get(1).getEffectiveDate(), block1Date);
+        if (delay.toPeriod().toStandardDuration().compareTo(Period.ZERO.toStandardDuration()) == 0) {
+            Assert.assertEquals(events.size(), 0);
+        } else {
+            // Expected blocking duration:
+            // * 2013-08-07 to now [2013-08-07 to 2013-08-08 then 2013-08-08 to now]
+            Assert.assertEquals(events.size(), 2);
+            Assert.assertEquals(events.get(0).getTransitionType(), SubscriptionBaseTransitionType.CREATE);
+            Assert.assertEquals(events.get(0).getEffectiveDate(), subscription.getStartDate());
+            Assert.assertEquals(events.get(1).getTransitionType(), SubscriptionBaseTransitionType.START_BILLING_DISABLED);
+            Assert.assertEquals(events.get(1).getEffectiveDate(), block1Date);
+        }
     }
 }
