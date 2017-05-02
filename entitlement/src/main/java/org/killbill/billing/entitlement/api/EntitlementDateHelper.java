@@ -33,12 +33,12 @@ public class EntitlementDateHelper {
         this.clock = clock;
     }
 
-    public DateTime fromLocalDateAndReferenceTime(@Nullable final LocalDate requestedDate, final InternalTenantContext callContext) throws EntitlementApiException {
+    public DateTime fromLocalDateAndReferenceTime(@Nullable final LocalDate requestedDate, final DateTime now, final InternalTenantContext callContext) throws EntitlementApiException {
         return requestedDate == null ? clock.getUTCNow() : callContext.toUTCDateTime(requestedDate);
     }
 
-    public DateTime fromLocalDateAndReferenceTimeWithMinimum(@Nullable final LocalDate requestedDate, final DateTime min, final InternalTenantContext callContext) throws EntitlementApiException {
-        final DateTime candidate = fromLocalDateAndReferenceTime(requestedDate, callContext);
+    public DateTime fromLocalDateAndReferenceTimeWithMinimum(@Nullable final LocalDate requestedDate, final DateTime min, final DateTime now, final InternalTenantContext callContext) throws EntitlementApiException {
+        final DateTime candidate = fromLocalDateAndReferenceTime(requestedDate, now, callContext);
         return candidate.compareTo(min) < 0 ? min : candidate;
     }
 }

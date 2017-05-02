@@ -55,7 +55,7 @@ public class TestEntitlementDateHelper extends EntitlementTestSuiteNoDB {
         final DateTime referenceDateTime = new DateTime(2013, 1, 1, 15, 43, 25, 0, DateTimeZone.UTC);
         createAccount(DateTimeZone.UTC, referenceDateTime);
 
-        final DateTime targetDate = dateHelper.fromLocalDateAndReferenceTime(initialDate, internalCallContext);
+        final DateTime targetDate = dateHelper.fromLocalDateAndReferenceTime(initialDate, clock.getUTCNow(), internalCallContext);
         final DateTime expectedDate = new DateTime(2013, 8, 7, 15, 43, 25, 0, DateTimeZone.UTC);
         Assert.assertEquals(targetDate, expectedDate);
     }
@@ -72,7 +72,7 @@ public class TestEntitlementDateHelper extends EntitlementTestSuiteNoDB {
 
         createAccount(timeZoneUtcMinus8, referenceDateTime);
 
-        final DateTime targetDate = dateHelper.fromLocalDateAndReferenceTime(inputDate, internalCallContext);
+        final DateTime targetDate = dateHelper.fromLocalDateAndReferenceTime(inputDate, clock.getUTCNow(), internalCallContext);
 
         // Things to verify:
         // 1. Verify the resulting DateTime brings us back into the correct LocalDate (in the account timezone)
@@ -98,7 +98,7 @@ public class TestEntitlementDateHelper extends EntitlementTestSuiteNoDB {
 
         createAccount(timeZoneUtcPlus5, referenceDateTime);
 
-        final DateTime targetDate = dateHelper.fromLocalDateAndReferenceTime(inputDate, internalCallContext);
+        final DateTime targetDate = dateHelper.fromLocalDateAndReferenceTime(inputDate, clock.getUTCNow(), internalCallContext);
 
         // Things to verify:
         // 1. Verify the resulting DateTime brings us back into the correct LocalDate (in the account timezone)
