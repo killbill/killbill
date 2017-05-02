@@ -91,7 +91,7 @@ public class DefaultInternalBillingApi implements BillingInternalApi {
     @Override
     public BillingEventSet getBillingEventsForAccountAndUpdateAccountBCD(final UUID accountId, final DryRunArguments dryRunArguments, final InternalCallContext context) throws CatalogApiException, AccountApiException, SubscriptionBaseApiException {
 
-        final StaticCatalog currentCatalog = catalogInternalApi.getCurrentCatalog(true, true, context);
+        final Catalog currentCatalog =  catalogInternalApi.getFullCatalog(true, true, context);
 
         // Check to see if billing is off for the account
         final List<Tag> accountTags = tagApi.getTags(accountId, ObjectType.ACCOUNT, context);
@@ -101,13 +101,13 @@ public class DefaultInternalBillingApi implements BillingInternalApi {
         final DefaultBillingEventSet result;
 
         if (found_AUTO_INVOICING_OFF) {
-            result = new DefaultBillingEventSet(true, currentCatalog.getRecurringBillingMode()); // billing is off, we are done
+            result = new DefaultBillingEventSet(true, ((StaticCatalog) currentCatalog).getRecurringBillingMode()); // billing is off, we are done
         } else {
             final List<SubscriptionBaseBundle> bundles = subscriptionApi.getBundlesForAccount(accountId, context);
 
             final ImmutableAccountData account = accountApi.getImmutableAccountDataById(accountId, context);
-            result = new DefaultBillingEventSet(false, currentCatalog.getRecurringBillingMode());
-            addBillingEventsForBundles(bundles, account, dryRunArguments, context, result, skippedSubscriptions);
+            result = new DefaultBillingEventSet(false, ((StaticCatalog) currentCatalog).getRecurringBillingMode());
+            addBillingEventsForBundles(bundles, account, dryRunArguments, context, result, skippedSubscriptions, currentCatalog);
         }
 
         if (result.isEmpty()) {
@@ -118,7 +118,7 @@ public class DefaultInternalBillingApi implements BillingInternalApi {
         // Pretty-print the events, before and after the blocking calculator does its magic
         final StringBuilder logStringBuilder = new StringBuilder("Computed billing events for accountId='").append(accountId).append("'");
         eventsToString(logStringBuilder, result);
-        if (blockCalculator.insertBlockingEvents(result, skippedSubscriptions, context)) {
+        if (blockCalculator.insertBlockingEvents(result, skippedSubscriptions, currentCatalog, context)) {
             logStringBuilder.append("\nBilling Events After Blocking");
             eventsToString(logStringBuilder, result);
         }
@@ -134,7 +134,7 @@ public class DefaultInternalBillingApi implements BillingInternalApi {
     }
 
     private void addBillingEventsForBundles(final List<SubscriptionBaseBundle> bundles, final ImmutableAccountData account, final DryRunArguments dryRunArguments, final InternalCallContext context,
-                                            final DefaultBillingEventSet result, final Set<UUID> skipSubscriptionsSet) throws AccountApiException, CatalogApiException, SubscriptionBaseApiException {
+                                            final DefaultBillingEventSet result, final Set<UUID> skipSubscriptionsSet, final Catalog catalog) throws AccountApiException, CatalogApiException, SubscriptionBaseApiException {
 
         final boolean dryRunMode = dryRunArguments != null;
 
@@ -146,7 +146,7 @@ public class DefaultInternalBillingApi implements BillingInternalApi {
             final UUID fakeBundleId = UUIDs.randomUUID();
             final List<SubscriptionBase> subscriptions = subscriptionApi.getSubscriptionsForBundle(fakeBundleId, dryRunArguments, context);
 
-            addBillingEventsForSubscription(account, subscriptions, null, dryRunMode, context, result, skipSubscriptionsSet);
+            addBillingEventsForSubscription(account, subscriptions, null, dryRunMode, context, result, skipSubscriptionsSet, catalog);
 
         }
 
@@ -166,7 +166,7 @@ public class DefaultInternalBillingApi implements BillingInternalApi {
                 }
             } else { // billing is not off
                 final SubscriptionBase baseSubscription = !subscriptions.isEmpty() ? subscriptions.get(0) : null;
-                addBillingEventsForSubscription(account, subscriptions, baseSubscription, dryRunMode, context, result, skipSubscriptionsSet);
+                addBillingEventsForSubscription(account, subscriptions, baseSubscription, dryRunMode, context, result, skipSubscriptionsSet, catalog);
             }
         }
     }
@@ -177,7 +177,8 @@ public class DefaultInternalBillingApi implements BillingInternalApi {
                                                  final boolean dryRunMode,
                                                  final InternalCallContext context,
                                                  final DefaultBillingEventSet result,
-                                                 final Set<UUID> skipSubscriptionsSet) throws AccountApiException, CatalogApiException, SubscriptionBaseApiException {
+                                                 final Set<UUID> skipSubscriptionsSet,
+                                                 final Catalog catalog) throws AccountApiException, CatalogApiException, SubscriptionBaseApiException {
 
         // If dryRun is specified, we don't want to to update the account BCD value, so we initialize the flag updatedAccountBCD to true
         boolean updatedAccountBCD = dryRunMode;
@@ -196,8 +197,6 @@ public class DefaultInternalBillingApi implements BillingInternalApi {
                 skipSubscriptionsSet.add(subscription.getId());
                 return;
             }
-
-            final Catalog catalog = catalogInternalApi.getFullCatalog(true, true, context);
 
             Integer overridenBCD = null;
             for (final EffectiveSubscriptionInternalEvent transition : billingTransitions) {
