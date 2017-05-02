@@ -343,7 +343,8 @@ public class DefaultEntitlement extends EntityBase implements Entitlement {
 
                 final InternalCallContext contextWithValidAccountRecordId = internalCallContextFactory.createInternalCallContext(getAccountId(), callContext);
 
-                final DateTime billingEffectiveCancelDate = dateHelper.fromLocalDateAndReferenceTimeWithMinimum(billingEffectiveDate, getEventsStream().getSubscriptionBase().getStartDate(), contextWithValidAccountRecordId);
+                final DateTime now = clock.getUTCNow();
+                final DateTime billingEffectiveCancelDate = dateHelper.fromLocalDateAndReferenceTimeWithMinimum(billingEffectiveDate, getEventsStream().getSubscriptionBase().getStartDate(), now, contextWithValidAccountRecordId);
                 try {
                     if (overrideBillingEffectiveDate) {
                         getSubscriptionBase().cancelWithDate(billingEffectiveCancelDate, callContext);
@@ -354,7 +355,7 @@ public class DefaultEntitlement extends EntityBase implements Entitlement {
                     throw new EntitlementApiException(e);
                 }
 
-                final DateTime entitlementEffectiveCancelDate = dateHelper.fromLocalDateAndReferenceTimeWithMinimum(entitlementEffectiveDate, getEventsStream().getEntitlementEffectiveStartDateTime(), contextWithValidAccountRecordId);
+                final DateTime entitlementEffectiveCancelDate = dateHelper.fromLocalDateAndReferenceTimeWithMinimum(entitlementEffectiveDate, getEventsStream().getEntitlementEffectiveStartDateTime(), now, contextWithValidAccountRecordId);
                 final BlockingState newBlockingState = new DefaultBlockingState(getId(), BlockingStateType.SUBSCRIPTION, DefaultEntitlementApi.ENT_STATE_CANCELLED, EntitlementService.ENTITLEMENT_SERVICE_NAME, true, true, false, entitlementEffectiveCancelDate);
                 final Collection<NotificationEvent> notificationEvents = new ArrayList<NotificationEvent>();
                 final Collection<BlockingState> addOnsBlockingStates = computeAddOnBlockingStates(entitlementEffectiveCancelDate, notificationEvents, callContext, contextWithValidAccountRecordId);
@@ -498,7 +499,8 @@ public class DefaultEntitlement extends EntityBase implements Entitlement {
                     throw new EntitlementApiException(e);
                 }
 
-                final DateTime effectiveCancelDate = dateHelper.fromLocalDateAndReferenceTimeWithMinimum(entitlementEffectiveDate, getEventsStream().getEntitlementEffectiveStartDateTime(), contextWithValidAccountRecordId);
+                final DateTime now = clock.getUTCNow();
+                final DateTime effectiveCancelDate = dateHelper.fromLocalDateAndReferenceTimeWithMinimum(entitlementEffectiveDate, getEventsStream().getEntitlementEffectiveStartDateTime(), now, contextWithValidAccountRecordId);
                 final BlockingState newBlockingState = new DefaultBlockingState(getId(), BlockingStateType.SUBSCRIPTION, DefaultEntitlementApi.ENT_STATE_CANCELLED, EntitlementService.ENTITLEMENT_SERVICE_NAME, true, true, false, effectiveCancelDate);
                 final Collection<NotificationEvent> notificationEvents = new ArrayList<NotificationEvent>();
                 final Collection<BlockingState> addOnsBlockingStates = computeAddOnBlockingStates(effectiveCancelDate, notificationEvents, callContext, contextWithValidAccountRecordId);
@@ -646,7 +648,8 @@ public class DefaultEntitlement extends EntityBase implements Entitlement {
                 final InternalCallContext context = internalCallContextFactory.createInternalCallContext(getAccountId(), callContext);
 
 
-                final DateTime effectiveChangeDate = effectiveDate !=  null ? dateHelper.fromLocalDateAndReferenceTime(effectiveDate, context) : null;
+                final DateTime now = clock.getUTCNow();
+                final DateTime effectiveChangeDate = effectiveDate !=  null ? dateHelper.fromLocalDateAndReferenceTime(effectiveDate, now, context) : null;
 
                 final DateTime resultingEffectiveDate;
                 try {
