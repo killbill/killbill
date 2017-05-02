@@ -118,7 +118,7 @@ public class DefaultEntitlementApi extends DefaultEntitlementApiBase implements 
         this.entitlementUtils = entitlementUtils;
         this.pluginExecution = pluginExecution;
         this.securityApi = securityApi;
-        this.dateHelper = new EntitlementDateHelper(clock);
+        this.dateHelper = new EntitlementDateHelper();
     }
 
     @Override

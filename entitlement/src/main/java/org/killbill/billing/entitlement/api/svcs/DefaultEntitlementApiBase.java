@@ -110,7 +110,7 @@ public class DefaultEntitlementApiBase {
         this.eventsStreamBuilder = eventsStreamBuilder;
         this.entitlementUtils = entitlementUtils;
         this.securityApi = securityApi;
-        this.dateHelper = new EntitlementDateHelper(clock);
+        this.dateHelper = new EntitlementDateHelper();
     }
 
     public AccountEntitlements getAllEntitlementsForAccount(final InternalTenantContext tenantContext) throws EntitlementApiException {

@@ -43,7 +43,7 @@ public class TestEntitlementDateHelper extends EntitlementTestSuiteNoDB {
     public void beforeMethod() throws Exception {
         super.beforeClass();
 
-        dateHelper = new EntitlementDateHelper(clock);
+        dateHelper = new EntitlementDateHelper();
         clock.resetDeltaFromReality();
     }
 
