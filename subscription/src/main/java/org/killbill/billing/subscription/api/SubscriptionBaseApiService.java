@@ -25,6 +25,7 @@ import org.joda.time.DateTime;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.catalog.api.BillingActionPolicy;
+import org.killbill.billing.catalog.api.Catalog;
 import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.catalog.api.PhaseType;
 import org.killbill.billing.catalog.api.Plan;
@@ -42,11 +43,11 @@ import org.killbill.billing.util.callcontext.TenantContext;
 public interface SubscriptionBaseApiService {
 
     public DefaultSubscriptionBase createPlan(SubscriptionBuilder builder, Plan plan, PhaseType initialPhase,
-                                              String realPriceList, DateTime effectiveDate, DateTime processedDate,
-                                              CallContext context)
+                                              String realPriceList, DateTime effectiveDate,
+                                              Catalog catalog, CallContext context)
             throws SubscriptionBaseApiException;
 
-    public List<SubscriptionBaseWithAddOns> createPlansWithAddOns(UUID accountId, Iterable<SubscriptionAndAddOnsSpecifier> subscriptionsAndAddOns, CallContext context)
+    public List<SubscriptionBaseWithAddOns> createPlansWithAddOns(UUID accountId, Iterable<SubscriptionAndAddOnsSpecifier> subscriptionsAndAddOns, Catalog catalog, CallContext context)
             throws SubscriptionBaseApiException;
 
     public boolean cancel(DefaultSubscriptionBase subscription, CallContext context)
@@ -58,7 +59,7 @@ public interface SubscriptionBaseApiService {
     public boolean cancelWithPolicy(DefaultSubscriptionBase subscription, BillingActionPolicy policy, int accountBillCycleDayLocal, CallContext context)
             throws SubscriptionBaseApiException;
 
-    public boolean cancelWithPolicyNoValidation(Iterable<DefaultSubscriptionBase> subscriptions, BillingActionPolicy policy, int accountBillCycleDayLocal, InternalCallContext context)
+    public boolean cancelWithPolicyNoValidationAndCatalog(Iterable<DefaultSubscriptionBase> subscriptions, BillingActionPolicy policy, int accountBillCycleDayLocal, Catalog catalog, InternalCallContext context)
             throws SubscriptionBaseApiException;
 
     public boolean uncancel(DefaultSubscriptionBase subscription, CallContext context)
@@ -81,25 +82,38 @@ public interface SubscriptionBaseApiService {
                                          List<PlanPhasePriceOverride> overrides, BillingActionPolicy policy, CallContext context)
             throws SubscriptionBaseApiException;
 
-    public int handleBasePlanEvent(final DefaultSubscriptionBase subscription, final SubscriptionBaseEvent event, final CallContext context) throws CatalogApiException;
+    public int handleBasePlanEvent(final DefaultSubscriptionBase subscription, final SubscriptionBaseEvent event, Catalog fullCatalog, final CallContext context) throws CatalogApiException;
 
     public PlanChangeResult getPlanChangeResult(final DefaultSubscriptionBase subscription, PlanSpecifier spec, final DateTime effectiveDate, TenantContext context) throws SubscriptionBaseApiException;
 
     //
     // Lower level APIs for dryRun functionality
     //
-    public List<SubscriptionBaseEvent> getEventsOnCreation(UUID bundleId, UUID subscriptionId, DateTime alignStartDate, DateTime bundleStartDate,
+
+    public List<SubscriptionBaseEvent> getEventsOnCreation(UUID subscriptionId, DateTime alignStartDate, DateTime bundleStartDate,
                                                            Plan plan, PhaseType initialPhase,
-                                                           String realPriceList, DateTime effectiveDate, DateTime processedDate,
+                                                           String realPriceList, DateTime effectiveDate,
+                                                           Catalog fullCatalog,
                                                            InternalTenantContext context)
             throws CatalogApiException, SubscriptionBaseApiException;
 
+    /*
+        public List<SubscriptionBaseEvent> getEventsOnChangePlan(final DefaultSubscriptionBase subscription, final Plan newPlan,
+                                                             final String newPriceList, final DateTime effectiveDate,
+                                                             final boolean addCancellationAddOnForEventsIfRequired, final InternalTenantContext internalTenantContext) throws CatalogApiException, SubscriptionBaseApiException {
+
+     */
+
     public List<SubscriptionBaseEvent> getEventsOnChangePlan(DefaultSubscriptionBase subscription, Plan newPlan,
-                                                             String newPriceList, DateTime effectiveDate, DateTime processedDate,
-                                                             boolean addCancellationAddOnForEventsIfRequired, InternalTenantContext context)
+                                                             String newPriceList, DateTime effectiveDate,
+                                                             boolean addCancellationAddOnForEventsIfRequired,
+                                                             final Catalog fullCatalog,
+                                                             InternalTenantContext context)
             throws CatalogApiException, SubscriptionBaseApiException;
 
     public List<SubscriptionBaseEvent> getEventsOnCancelPlan(final DefaultSubscriptionBase subscription,
-                                                             final DateTime effectiveDate, final DateTime processedDate,
-                                                             final boolean addCancellationAddOnForEventsIfRequired, final InternalTenantContext internalTenantContext) throws CatalogApiException;
+                                                             final DateTime effectiveDate,
+                                                             final boolean addCancellationAddOnForEventsIfRequired,
+                                                             final Catalog fullCatalog,
+                                                             final InternalTenantContext internalTenantContext) throws CatalogApiException;
 }

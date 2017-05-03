@@ -22,7 +22,9 @@ import java.util.UUID;
 
 import org.joda.time.DateTime;
 import org.killbill.billing.callcontext.InternalCallContext;
+import org.killbill.billing.catalog.api.Catalog;
 import org.killbill.billing.catalog.api.CatalogApiException;
+import org.killbill.billing.catalog.api.CatalogInternalApi;
 import org.killbill.billing.catalog.api.ProductCategory;
 import org.killbill.billing.platform.api.LifecycleHandlerType;
 import org.killbill.billing.platform.api.LifecycleHandlerType.LifecycleLevel;
@@ -72,15 +74,19 @@ public class DefaultSubscriptionBaseService implements EventListener, Subscripti
     private final NotificationQueueService notificationQueueService;
     private final InternalCallContextFactory internalCallContextFactory;
     private final SubscriptionBaseApiService apiService;
+    private final CatalogInternalApi catalogInternalApi;
 
     private NotificationQueue subscriptionEventQueue;
 
     @Inject
-    public DefaultSubscriptionBaseService(final Clock clock, final SubscriptionDao dao, final PlanAligner planAligner,
+    public DefaultSubscriptionBaseService(final Clock clock,
+                                          final SubscriptionDao dao,
+                                          final PlanAligner planAligner,
                                           final PersistentBus eventBus,
                                           final NotificationQueueService notificationQueueService,
                                           final InternalCallContextFactory internalCallContextFactory,
-                                          final SubscriptionBaseApiService apiService) {
+                                          final SubscriptionBaseApiService apiService,
+                                          final CatalogInternalApi catalogInternalApi) {
         this.clock = clock;
         this.dao = dao;
         this.planAligner = planAligner;
@@ -88,6 +94,7 @@ public class DefaultSubscriptionBaseService implements EventListener, Subscripti
         this.notificationQueueService = notificationQueueService;
         this.internalCallContextFactory = internalCallContextFactory;
         this.apiService = apiService;
+        this.catalogInternalApi = catalogInternalApi;
     }
 
     @Override
@@ -147,7 +154,8 @@ public class DefaultSubscriptionBaseService implements EventListener, Subscripti
         }
 
         try {
-            final DefaultSubscriptionBase subscription = (DefaultSubscriptionBase) dao.getSubscriptionFromId(event.getSubscriptionId(), context);
+            final Catalog fullCatalog = catalogInternalApi.getFullCatalog(true, true, context);
+            final DefaultSubscriptionBase subscription = (DefaultSubscriptionBase) dao.getSubscriptionFromId(event.getSubscriptionId(), fullCatalog, context);
             if (subscription == null) {
                 log.warn("Error retrieving subscriptionId='{}'", event.getSubscriptionId());
                 return;
@@ -161,10 +169,10 @@ public class DefaultSubscriptionBaseService implements EventListener, Subscripti
 
             boolean eventSent = false;
             if (event.getType() == EventType.PHASE) {
-                eventSent = onPhaseEvent(subscription, event, context);
+                eventSent = onPhaseEvent(subscription, event, fullCatalog, context);
             } else if (event.getType() == EventType.API_USER && subscription.getCategory() == ProductCategory.BASE) {
                 final CallContext callContext = internalCallContextFactory.createCallContext(context);
-                eventSent = onBasePlanEvent(subscription, event, callContext);
+                eventSent = onBasePlanEvent(subscription, event, fullCatalog, callContext);
             } else if (event.getType() == EventType.BCD_UPDATE) {
                 eventSent = false;
             }
@@ -185,9 +193,9 @@ public class DefaultSubscriptionBaseService implements EventListener, Subscripti
         }
     }
 
-    private boolean onPhaseEvent(final DefaultSubscriptionBase subscription, final SubscriptionBaseEvent readyPhaseEvent, final InternalCallContext context) {
+    private boolean onPhaseEvent(final DefaultSubscriptionBase subscription, final SubscriptionBaseEvent readyPhaseEvent, final Catalog fullCatalog, final InternalCallContext context) {
         try {
-            final TimedPhase nextTimedPhase = planAligner.getNextTimedPhase(subscription, readyPhaseEvent.getEffectiveDate(), context);
+            final TimedPhase nextTimedPhase = planAligner.getNextTimedPhase(subscription, readyPhaseEvent.getEffectiveDate(), fullCatalog, context);
             final PhaseEvent nextPhaseEvent = (nextTimedPhase != null) ?
                                               PhaseEventData.createNextPhaseEvent(subscription.getId(),
                                                                                   nextTimedPhase.getPhase().getName(), nextTimedPhase.getStartPhase()) :
@@ -203,8 +211,8 @@ public class DefaultSubscriptionBaseService implements EventListener, Subscripti
         return false;
     }
 
-    private boolean onBasePlanEvent(final DefaultSubscriptionBase baseSubscription, final SubscriptionBaseEvent event, final CallContext context) throws CatalogApiException {
-        apiService.handleBasePlanEvent(baseSubscription, event, context);
+    private boolean onBasePlanEvent(final DefaultSubscriptionBase baseSubscription, final SubscriptionBaseEvent event, final Catalog fullCatalog, final CallContext context) throws CatalogApiException {
+        apiService.handleBasePlanEvent(baseSubscription, event, fullCatalog, context);
         return true;
     }
 }

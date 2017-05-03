@@ -71,19 +71,16 @@ public class DefaultSubscriptionBaseTransferApi extends SubscriptionApiBase impl
     @Inject
     public DefaultSubscriptionBaseTransferApi(final Clock clock, final SubscriptionDao dao, final SubscriptionBaseTimelineApi timelineApi, final CatalogInternalApi catalogInternalApi,
                                               final SubscriptionBaseApiService apiService, final InternalCallContextFactory internalCallContextFactory) {
-        super(dao, apiService, clock, catalogInternalApi);
+        super(dao, apiService, clock);
         this.catalogInternalApi = catalogInternalApi;
         this.timelineApi = timelineApi;
         this.internalCallContextFactory = internalCallContextFactory;
     }
 
-    private SubscriptionBaseEvent createEvent(final boolean firstEvent, final ExistingEvent existingEvent, final DefaultSubscriptionBase subscription, final DateTime transferDate, final InternalTenantContext context)
+    private SubscriptionBaseEvent createEvent(final boolean firstEvent, final ExistingEvent existingEvent, final DefaultSubscriptionBase subscription, final DateTime transferDate, final Catalog catalog, final InternalTenantContext context)
             throws CatalogApiException {
 
         SubscriptionBaseEvent newEvent = null;
-
-        final Catalog catalog = catalogInternalApi.getFullCatalog(true, true, context);
-
         final DateTime effectiveDate = existingEvent.getEffectiveDate().isBefore(transferDate) ? transferDate : existingEvent.getEffectiveDate();
 
         final PlanPhaseSpecifier spec = existingEvent.getPlanPhaseSpecifier();
@@ -128,9 +125,11 @@ public class DefaultSubscriptionBaseTransferApi extends SubscriptionApiBase impl
 
     @VisibleForTesting
     List<SubscriptionBaseEvent> toEvents(final List<ExistingEvent> existingEvents, final DefaultSubscriptionBase subscription,
-                                         final DateTime transferDate, final InternalTenantContext context) throws SubscriptionBaseTransferApiException {
+                                         final DateTime transferDate, final Catalog catalog, final InternalTenantContext context) throws SubscriptionBaseTransferApiException {
+
 
         try {
+
             final List<SubscriptionBaseEvent> result = new LinkedList<SubscriptionBaseEvent>();
 
             SubscriptionBaseEvent event = null;
@@ -145,7 +144,7 @@ public class DefaultSubscriptionBaseTransferApi extends SubscriptionApiBase impl
 
                 // Add previous event the first time if needed
                 if (prevEvent != null) {
-                    event = createEvent(firstEvent, prevEvent, subscription, transferDate, context);
+                    event = createEvent(firstEvent, prevEvent, subscription, transferDate, catalog, context);
                     if (event != null) {
                         result.add(event);
                         firstEvent = false;
@@ -153,7 +152,7 @@ public class DefaultSubscriptionBaseTransferApi extends SubscriptionApiBase impl
                     prevEvent = null;
                 }
 
-                event = createEvent(firstEvent, cur, subscription, transferDate, context);
+                event = createEvent(firstEvent, cur, subscription, transferDate, catalog, context);
                 if (event != null) {
                     result.add(event);
                     firstEvent = false;
@@ -162,7 +161,7 @@ public class DefaultSubscriptionBaseTransferApi extends SubscriptionApiBase impl
 
             // Previous loop did not get anything because transferDate is greater than effectiveDate of last event
             if (prevEvent != null) {
-                event = createEvent(firstEvent, prevEvent, subscription, transferDate, context);
+                event = createEvent(firstEvent, prevEvent, subscription, transferDate, catalog, context);
                 if (event != null) {
                     result.add(event);
                 }
@@ -182,7 +181,11 @@ public class DefaultSubscriptionBaseTransferApi extends SubscriptionApiBase impl
         final InternalCallContext fromInternalCallContext = internalCallContextFactory.createInternalCallContext(sourceAccountId, context);
         final InternalCallContext toInternalCallContext = internalCallContextFactory.createInternalCallContext(destAccountId, context);
 
+
         try {
+            final Catalog catalog = catalogInternalApi.getFullCatalog(true, true, fromInternalCallContext);
+
+
             final DateTime effectiveTransferDate = transferDate == null ? clock.getUTCNow() : transferDate;
             if (effectiveTransferDate.isAfter(clock.getUTCNow())) {
                 // The transfer event for the migrated bundle will be the first one, which cannot be in the future
@@ -191,7 +194,7 @@ public class DefaultSubscriptionBaseTransferApi extends SubscriptionApiBase impl
             }
 
             final List<SubscriptionBaseBundle> bundlesForAccountAndKey = dao.getSubscriptionBundlesForAccountAndKey(sourceAccountId, bundleKey, fromInternalCallContext);
-            final SubscriptionBaseBundle bundle = DefaultSubscriptionInternalApi.getActiveBundleForKeyNotException(bundlesForAccountAndKey, dao, clock, fromInternalCallContext);
+            final SubscriptionBaseBundle bundle = DefaultSubscriptionInternalApi.getActiveBundleForKeyNotException(bundlesForAccountAndKey, dao, clock, catalog, fromInternalCallContext);
             if (bundle == null) {
                 throw new SubscriptionBaseTransferApiException(ErrorCode.SUB_CREATE_NO_BUNDLE, bundleKey);
             }
@@ -208,7 +211,7 @@ public class DefaultSubscriptionBaseTransferApi extends SubscriptionApiBase impl
             DateTime bundleStartdate = null;
 
             for (final SubscriptionBaseTimeline cur : bundleBaseTimeline.getSubscriptions()) {
-                final DefaultSubscriptionBase oldSubscription = (DefaultSubscriptionBase) dao.getSubscriptionFromId(cur.getId(), fromInternalCallContext);
+                final DefaultSubscriptionBase oldSubscription = (DefaultSubscriptionBase) dao.getSubscriptionFromId(cur.getId(), catalog, fromInternalCallContext);
                 // Skip already cancelled subscriptions
                 if (oldSubscription.getState() == EntitlementState.CANCELLED) {
                     continue;
@@ -251,16 +254,16 @@ public class DefaultSubscriptionBaseTransferApi extends SubscriptionApiBase impl
                                                                                                             .setCategory(productCategory)
                                                                                                             .setBundleStartDate(effectiveTransferDate)
                                                                                                             .setAlignStartDate(subscriptionAlignStartDate),
-                                                                                                    ImmutableList.<SubscriptionBaseEvent>of(), fromInternalCallContext);
+                                                                                                    ImmutableList.<SubscriptionBaseEvent>of(), catalog, fromInternalCallContext);
 
-                final List<SubscriptionBaseEvent> events = toEvents(existingEvents, defaultSubscriptionBase, effectiveTransferDate, fromInternalCallContext);
+                final List<SubscriptionBaseEvent> events = toEvents(existingEvents, defaultSubscriptionBase, effectiveTransferDate, catalog, fromInternalCallContext);
                 final SubscriptionTransferData curData = new SubscriptionTransferData(defaultSubscriptionBase, events, null);
                 subscriptionTransferDataList.add(curData);
             }
             BundleTransferData bundleTransferData = new BundleTransferData(subscriptionBundleData, subscriptionTransferDataList);
 
             // Atomically cancelWithRequestedDate all subscription on old account and create new bundle, subscriptions, events for new account
-            dao.transfer(sourceAccountId, destAccountId, bundleTransferData, transferCancelDataList, fromInternalCallContext, toInternalCallContext);
+            dao.transfer(sourceAccountId, destAccountId, bundleTransferData, transferCancelDataList, catalog, fromInternalCallContext, toInternalCallContext);
 
             return bundleTransferData.getData();
         } catch (SubscriptionBaseRepairException e) {

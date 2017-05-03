@@ -36,8 +36,8 @@ public class MockSubscriptionDaoSql extends DefaultSubscriptionDao {
 
     @Inject
     public MockSubscriptionDaoSql(final IDBI dbi, final Clock clock, final AddonUtils addonUtils, final NotificationQueueService notificationQueueService,
-                                  final PersistentBus eventBus, final CatalogInternalApi catalogService, final CacheControllerDispatcher cacheControllerDispatcher,
+                                  final PersistentBus eventBus, final CacheControllerDispatcher cacheControllerDispatcher,
                                   final NonEntityDao nonEntityDao, final InternalCallContextFactory internalCallContextFactory) {
-        super(dbi, clock, addonUtils, notificationQueueService, eventBus, catalogService, cacheControllerDispatcher, nonEntityDao, internalCallContextFactory);
+        super(dbi, clock, addonUtils, notificationQueueService, eventBus,  cacheControllerDispatcher, nonEntityDao, internalCallContextFactory);
     }
 }
