@@ -18,6 +18,9 @@
 
 package org.killbill.billing.jaxrs.resources;
 
+import javax.ws.rs.DefaultValue;
+import javax.ws.rs.QueryParam;
+
 public interface JaxrsResource {
 
     public static final String API_PREFIX = "";
@@ -92,6 +95,10 @@ public interface JaxrsResource {
     public static final String QUERY_ACCOUNT_TREAT_NULL_AS_RESET = "treatNullAsReset";
 
     public static final String QUERY_ACCOUNT_ID = "accountId";
+
+    public static final String QUERY_CANCEL_ALL_SUBSCRPTIONS = "cancelAllSubscriptions";
+    public static final String QUERY_WRITE_OFF_UNPAID_INVOICES = "writeOffUnpaidInvoices";
+    public static final String QUERY_ITEM_ADJUST_UNPAID_INVOICES = "itemAdjustUnpaidInvoices";
 
     public static final String QUERY_BLOCKING_STATE_TYPES = "blockingStateTypes";
     public static final String QUERY_BLOCKING_STATE_SVCS = "blockingStateSvcs";

@@ -366,6 +366,7 @@ public class AccountResource extends JaxRsResourceBase {
         return uriBuilder.buildResponse(uriInfo, AccountResource.class, "getAccount", account.getId(), request);
     }
 
+
     @TimedResource
     @PUT
     @Consumes(APPLICATION_JSON)
@@ -392,6 +393,7 @@ public class AccountResource extends JaxRsResourceBase {
         return getAccount(accountId, false, false, new AuditMode(AuditLevel.NONE.toString()), request);
     }
 
+
     @TimedResource
     @DELETE
     @Path("/{accountId:" + UUID_PATTERN + "}")
@@ -399,9 +401,9 @@ public class AccountResource extends JaxRsResourceBase {
     @ApiOperation(value = "Delete account", hidden = true)
     @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid account id supplied")})
     public Response closeAccount(@PathParam("accountId") final String accountIdStr,
-                                 @QueryParam("cancelAllSubscriptions") @DefaultValue("false") final Boolean cancelAllSubscriptions,
-                                 @QueryParam("writeOffUnpaidInvoices") @DefaultValue("false") final Boolean writeOffUnpaidInvoices,
-                                 @QueryParam("itemAdjustUnpaidInvoices") @DefaultValue("false") final Boolean itemAdjustUnpaidInvoices,
+                                 @QueryParam(QUERY_CANCEL_ALL_SUBSCRPTIONS) @DefaultValue("false") final Boolean cancelAllSubscriptions,
+                                 @QueryParam(QUERY_WRITE_OFF_UNPAID_INVOICES) @DefaultValue("false") final Boolean writeOffUnpaidInvoices,
+                                 @QueryParam(QUERY_ITEM_ADJUST_UNPAID_INVOICES) @DefaultValue("false") final Boolean itemAdjustUnpaidInvoices,
                                  @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                  @HeaderParam(HDR_REASON) final String reason,
                                  @HeaderParam(HDR_COMMENT) final String comment,
