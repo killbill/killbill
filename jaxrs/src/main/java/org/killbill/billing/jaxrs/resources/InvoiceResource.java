@@ -474,7 +474,11 @@ public class InvoiceResource extends JaxRsResourceBase {
                                                                     callContext);
         }
 
-        return uriBuilder.buildResponse(uriInfo, InvoiceResource.class, "getInvoice", adjustmentItem.getInvoiceId(), request);
+        if (adjustmentItem == null) {
+            return Response.status(Status.NOT_FOUND).build();
+        } else {
+            return uriBuilder.buildResponse(uriInfo, InvoiceResource.class, "getInvoice", adjustmentItem.getInvoiceId(), request);
+        }
     }
 
     @TimedResource

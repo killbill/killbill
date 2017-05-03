@@ -419,7 +419,9 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
                                                                                          effectiveDate,
                                                                                          description,
                                                                                          internalCallContextFactory.createInternalCallContext(accountId, context));
-                invoice.addInvoiceItem(adjustmentItem);
+                if (adjustmentItem != null) {
+                    invoice.addInvoiceItem(adjustmentItem);
+                }
 
                 return ImmutableList.<Invoice>of(invoice);
             }
@@ -432,9 +434,9 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
                                                                                                         return InvoiceItemType.ITEM_ADJ.equals(invoiceItem.getInvoiceItemType());
                                                                                                     }
                                                                                                 });
-        Preconditions.checkState(adjustmentInvoiceItems.size() == 1, "Should have created a single adjustment item: " + adjustmentInvoiceItems);
+        Preconditions.checkState(adjustmentInvoiceItems.size() <= 1, "Should have created a single adjustment item: " + adjustmentInvoiceItems);
 
-        return adjustmentInvoiceItems.iterator().next();
+        return adjustmentInvoiceItems.iterator().hasNext() ? adjustmentInvoiceItems.iterator().next() : null;
     }
 
     @Override
