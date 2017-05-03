@@ -27,6 +27,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import javax.annotation.Nullable;
 import javax.inject.Inject;
 
 import org.joda.time.DateTime;
@@ -100,15 +101,18 @@ public class MockPaymentDao extends MockEntityDaoBase<PaymentModelDao, Payment, 
 
     @Override
     public void updatePaymentAttempt(final UUID paymentAttemptId, final UUID transactionId, final String state, final InternalCallContext context) {
-        updatePaymentAttemptWithProperties(paymentAttemptId, transactionId, state, null, context);
+        updatePaymentAttemptWithProperties(paymentAttemptId, null, transactionId, state, null, context);
     }
 
     @Override
-    public void updatePaymentAttemptWithProperties(final UUID paymentAttemptId, final UUID transactionId, final String state, final byte[] pluginProperties, final InternalCallContext context) {
+    public void updatePaymentAttemptWithProperties(final UUID paymentAttemptId, @Nullable final UUID paymentMethodId, final UUID transactionId, final String state, final byte[] pluginProperties, final InternalCallContext context) {
         boolean success = false;
         synchronized (this) {
             for (PaymentAttemptModelDao cur : attempts.values()) {
                 if (cur.getId().equals(paymentAttemptId)) {
+                    if (paymentMethodId != null) {
+                        cur.setPaymentMethodId(paymentMethodId);
+                    }
                     cur.setStateName(state);
                     cur.setTransactionId(transactionId);
                     if (pluginProperties != null) {

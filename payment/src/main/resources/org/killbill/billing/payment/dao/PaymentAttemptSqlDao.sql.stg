@@ -102,6 +102,7 @@ where id = :id
 updateAttemptWithProperties() ::= <<
 update <tableName()>
 set state_name = :stateName
+, payment_method_id = :paymentMethodId
 , transaction_id = :transactionId
 , plugin_properties = :pluginProperties
 , updated_by = :updatedBy

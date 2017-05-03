@@ -1,6 +1,6 @@
 /*
- * Copyright 2014-2015 Groupon, Inc
- * Copyright 2014-2015 The Billing Project, LLC
+ * Copyright 2014-2017 Groupon, Inc
+ * Copyright 2014-2017 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -62,7 +62,12 @@ public class DefaultControlCompleted implements EnteringStateCallback {
                                    null;
 
         // At this stage we can update the paymentAttempt state AND serialize the plugin properties. Control plugins will have had the opportunity to erase sensitive data if required.
-        retryablePaymentAutomatonRunner.getPaymentDao().updatePaymentAttemptWithProperties(attempt.getId(), transactionId, state.getName(), getSerializedProperties(), paymentStateContext.getInternalCallContext());
+        retryablePaymentAutomatonRunner.getPaymentDao().updatePaymentAttemptWithProperties(attempt.getId(),
+                                                                                           paymentStateContext.getPaymentMethodId(),
+                                                                                           transactionId,
+                                                                                           state.getName(),
+                                                                                           getSerializedProperties(),
+                                                                                           paymentStateContext.getInternalCallContext());
 
         if (retriedState.getName().equals(state.getName()) && !isUnknownTransaction()) {
             retryServiceScheduler.scheduleRetry(ObjectType.PAYMENT_ATTEMPT, attempt.getId(), attempt.getId(), attempt.getTenantRecordId(),
