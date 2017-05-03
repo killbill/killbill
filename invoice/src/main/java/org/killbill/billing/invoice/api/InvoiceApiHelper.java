@@ -151,6 +151,11 @@ public class InvoiceApiHelper {
 
         final Map<UUID, BigDecimal> output = dao.computeItemAdjustments(invoiceToBeAdjusted.getId().toString(), input, context);
 
+        // Nothing to adjust
+        if (output.get(invoiceItemId) == null) {
+            return null;
+        }
+
         // If we pass that stage, it means the validation succeeded so we just need to extract resulting amount and negate the result.
         final BigDecimal amountToAdjust = output.get(invoiceItemId).negate();
         // Finally, create the adjustment

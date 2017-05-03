@@ -355,7 +355,9 @@ public class TestDefaultEntitlementApi extends EntitlementTestSuiteWithEmbeddedD
         clock.addDays(5);
 
         testListener.pushExpectedEvents(NextEvent.BLOCK);
-        entitlementApi.pause(baseEntitlement.getBundleId(), new LocalDate(clock.getUTCNow()), ImmutableList.<PluginProperty>of(), callContext);
+        final LocalDate blockingStateDate = new LocalDate(clock.getUTCNow());
+        entitlementApi.pause(baseEntitlement.getBundleId(), blockingStateDate, ImmutableList
+                .<PluginProperty>of(), callContext);
         assertListenerStatus();
 
         // Verify blocking state
@@ -374,7 +376,8 @@ public class TestDefaultEntitlementApi extends EntitlementTestSuiteWithEmbeddedD
         // Try to add an ADD_ON, it should fail because BASE is blocked
         try {
             final PlanPhaseSpecifier spec3 = new PlanPhaseSpecifier("Telescopic-Scope", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, null);
-            entitlementApi.addEntitlement(baseEntitlement.getBundleId(), spec3, null, effectiveDateSpec1, effectiveDateSpec1, false, ImmutableList.<PluginProperty>of(), callContext);
+            entitlementApi.addEntitlement(baseEntitlement.getBundleId(), spec3, null, blockingStateDate, effectiveDateSpec1, false, ImmutableList.<PluginProperty>of(), callContext);
+            fail("Should not be able to create ADD-ON because BP is paused");
         } catch (EntitlementApiException e) {
             assertEquals(e.getCode(), ErrorCode.BLOCK_BLOCKED_ACTION.getCode());
         }

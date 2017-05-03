@@ -21,18 +21,22 @@ package org.killbill.billing.entitlement.block;
 import java.util.List;
 import java.util.UUID;
 
+import org.joda.time.DateTime;
+import org.joda.time.LocalDate;
+import org.killbill.billing.ErrorCode;
 import org.killbill.billing.account.api.Account;
+import org.killbill.billing.account.api.AccountApiException;
 import org.killbill.billing.api.TestApiListener.NextEvent;
-import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.catalog.api.PlanPhaseSpecifier;
 import org.killbill.billing.catalog.api.PriceListSet;
-import org.killbill.billing.catalog.api.ProductCategory;
 import org.killbill.billing.entitlement.EntitlementTestSuiteWithEmbeddedDB;
 import org.killbill.billing.entitlement.api.BlockingState;
 import org.killbill.billing.entitlement.api.BlockingStateType;
 import org.killbill.billing.entitlement.api.Entitlement;
 import org.killbill.billing.entitlement.api.Entitlement.EntitlementState;
+import org.killbill.billing.entitlement.api.EntitlementApiException;
+import org.killbill.billing.entitlement.api.SubscriptionApiException;
 import org.killbill.billing.junction.DefaultBlockingState;
 import org.killbill.billing.payment.api.PluginProperty;
 import org.testng.Assert;
@@ -44,6 +48,7 @@ import com.google.common.collect.Collections2;
 import com.google.common.collect.ImmutableList;
 
 import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.fail;
 
 public class TestBlockingApi extends EntitlementTestSuiteWithEmbeddedDB {
 
@@ -150,7 +155,6 @@ public class TestBlockingApi extends EntitlementTestSuiteWithEmbeddedDB {
         subscriptionApi.addBlockingState(state2, null, ImmutableList.<PluginProperty>of(), callContext);
         assertListenerStatus();
 
-
         baseEntitlement = entitlementApi.getEntitlementForId(baseEntitlement.getId(), callContext);
         assertEquals(baseEntitlement.getState(), EntitlementState.BLOCKED);
 
@@ -163,7 +167,6 @@ public class TestBlockingApi extends EntitlementTestSuiteWithEmbeddedDB {
 
         baseEntitlement = entitlementApi.getEntitlementForId(baseEntitlement.getId(), callContext);
         assertEquals(baseEntitlement.getState(), EntitlementState.BLOCKED);
-
 
         // Remove blocking at bundle level.
         clock.addDays(1);
@@ -183,7 +186,119 @@ public class TestBlockingApi extends EntitlementTestSuiteWithEmbeddedDB {
                                                                                                                            return input.getService().equals(service);
                                                                                                                        }
                                                                                                                    }));
-
         Assert.assertEquals(history.size(), 4);
     }
+
+    @Test(groups = "slow")
+    public void testCreateBaseSubscriptionOnBlockedChangeAcount() throws AccountApiException, EntitlementApiException, SubscriptionApiException {
+        final LocalDate initialDate = new LocalDate(2017, 5, 1);
+        clock.setDay(initialDate);
+
+        final Account account = createAccount(getAccountData(1));
+
+        testListener.pushExpectedEvent(NextEvent.BLOCK);
+        final BlockingState blockChangeAccount = new DefaultBlockingState(account.getId(), BlockingStateType.ACCOUNT, "State1", "Service1", true, false, false, clock.getUTCNow());
+        subscriptionApi.addBlockingState(blockChangeAccount, null, ImmutableList.<PluginProperty>of(), callContext);
+        assertListenerStatus();
+
+        // Try create subscription right now
+        try {
+            final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("shotgun-monthly", null);
+            entitlementApi.createBaseEntitlement(account.getId(), spec, "xyzqe", null, null, null, false, ImmutableList.<PluginProperty>of(), callContext);
+            fail("Should fail to create entitlement when ACCOUNT has been 'change' blocked");
+        } catch (final EntitlementApiException e) {
+            assertEquals(e.getCode(), ErrorCode.BLOCK_BLOCKED_ACTION.getCode());
+        }
+
+        // Try create subscription in the future
+        try {
+            final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("shotgun-monthly", null);
+            entitlementApi.createBaseEntitlement(account.getId(), spec, "xyzqe", null, initialDate.plusDays(3), null, false, ImmutableList.<PluginProperty>of(), callContext);
+            fail("Should fail to create entitlement when ACCOUNT has been 'change' blocked");
+        } catch (final EntitlementApiException e) {
+            assertEquals(e.getCode(), ErrorCode.BLOCK_BLOCKED_ACTION.getCode());
+        }
+
+        // Try create subscription in the past
+        final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("shotgun-monthly", null);
+        testListener.pushExpectedEvents(NextEvent.BLOCK, NextEvent.CREATE);
+        entitlementApi.createBaseEntitlement(account.getId(), spec, "xyzqe", null, initialDate.minusDays(3), null, false, ImmutableList.<PluginProperty>of(), callContext);
+        assertListenerStatus();
+    }
+
+    @Test(groups = "slow")
+    public void testCreateAOSubscriptionOnBlockedChangeAcount() throws AccountApiException, EntitlementApiException, SubscriptionApiException {
+        final LocalDate initialDate = new LocalDate(2017, 5, 1);
+        clock.setDay(initialDate);
+
+        final Account account = createAccount(getAccountData(1));
+
+        final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("shotgun-monthly", null);
+        testListener.pushExpectedEvents(NextEvent.BLOCK, NextEvent.CREATE);
+        final Entitlement entitlement = entitlementApi.createBaseEntitlement(account.getId(), spec, "xyzqe", null, initialDate.minusDays(3), null, false, ImmutableList.<PluginProperty>of(), callContext);
+        assertListenerStatus();
+
+        testListener.pushExpectedEvent(NextEvent.BLOCK);
+        final BlockingState blockChangeAccount = new DefaultBlockingState(account.getId(), BlockingStateType.ACCOUNT, "State1", "Service1", true, false, false, clock.getUTCNow());
+        subscriptionApi.addBlockingState(blockChangeAccount, null, ImmutableList.<PluginProperty>of(), callContext);
+        assertListenerStatus();
+
+        // Try create subscription right now
+        try {
+            final PlanPhaseSpecifier addOnSpec = new PlanPhaseSpecifier("Telescopic-Scope", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, null);
+            entitlementApi.addEntitlement(entitlement.getBundleId(), addOnSpec, null, null, null, false, ImmutableList.<PluginProperty>of(), callContext);
+            fail("Should fail to create ADD_ON");
+        } catch (final EntitlementApiException e) {
+            assertEquals(e.getCode(), ErrorCode.BLOCK_BLOCKED_ACTION.getCode());
+        }
+
+        // Try create subscription in the future
+        try {
+            final PlanPhaseSpecifier addOnSpec = new PlanPhaseSpecifier("Telescopic-Scope", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, null);
+            entitlementApi.addEntitlement(entitlement.getBundleId(), addOnSpec, null, initialDate.plusDays(2), null, false, ImmutableList.<PluginProperty>of(), callContext);
+            fail("Should fail to create ADD_ON");
+        } catch (final EntitlementApiException e) {
+            assertEquals(e.getCode(), ErrorCode.BLOCK_BLOCKED_ACTION.getCode());
+        }
+
+        // Try create subscription in the past
+        final PlanPhaseSpecifier addOnSpec = new PlanPhaseSpecifier("Telescopic-Scope", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, null);
+        testListener.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK);
+        entitlementApi.addEntitlement(entitlement.getBundleId(), addOnSpec, null, initialDate.minusDays(2), null, false, ImmutableList.<PluginProperty>of(), callContext);
+        assertListenerStatus();
+    }
+
+    @Test(groups = "slow")
+    public void testCreateAOSubscriptionOnFutureBlockedChangeAcount() throws AccountApiException, EntitlementApiException, SubscriptionApiException {
+        final LocalDate initialDate = new LocalDate(2017, 5, 1);
+        clock.setDay(initialDate);
+
+        final Account account = createAccount(getAccountData(1));
+
+        final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("shotgun-monthly", null);
+        testListener.pushExpectedEvents(NextEvent.BLOCK, NextEvent.CREATE);
+        final Entitlement entitlement = entitlementApi.createBaseEntitlement(account.getId(), spec, "xyzqe", null, initialDate.minusDays(3), null, false, ImmutableList.<PluginProperty>of(), callContext);
+        assertListenerStatus();
+
+        // Create future BlockingState
+        final LocalDate blockingChange = initialDate.plusDays(3);
+        final BlockingState blockChangeAccount = new DefaultBlockingState(account.getId(), BlockingStateType.ACCOUNT, "State1", "Service1", true, false, false, null);
+        subscriptionApi.addBlockingState(blockChangeAccount, blockingChange, ImmutableList.<PluginProperty>of(), callContext);
+
+        // Create ADD_ON in the future as well
+        try {
+            final PlanPhaseSpecifier addOnSpec = new PlanPhaseSpecifier("Telescopic-Scope", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, null);
+            testListener.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK);
+            entitlementApi.addEntitlement(entitlement.getBundleId(), addOnSpec, null, blockingChange, null, false, ImmutableList.<PluginProperty>of(), callContext);
+            assertListenerStatus();
+        } catch (final EntitlementApiException e) {
+            assertEquals(e.getCode(), ErrorCode.BLOCK_BLOCKED_ACTION.getCode());
+        }
+
+        // Create ADD_ON now (prior future BlockingState)
+        final PlanPhaseSpecifier addOnSpec = new PlanPhaseSpecifier("Telescopic-Scope", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, null);
+        entitlementApi.addEntitlement(entitlement.getBundleId(), addOnSpec, null, null, null, false, ImmutableList.<PluginProperty>of(), callContext);
+        assertListenerStatus();
+    }
+
 }

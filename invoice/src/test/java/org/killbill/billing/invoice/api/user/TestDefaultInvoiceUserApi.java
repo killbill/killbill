@@ -262,6 +262,9 @@ public class TestDefaultInvoiceUserApi extends InvoiceTestSuiteWithEmbeddedDB {
         // Verify the adjusted account balance
         final BigDecimal adjustedAccountBalance = invoiceUserApi.getAccountBalance(accountId, callContext);
         Assert.assertEquals(adjustedAccountBalance, adjustedInvoiceBalance);
+
+        // Verify idempotency
+        Assert.assertNull(invoiceUserApi.insertInvoiceItemAdjustment(accountId, invoiceId, invoiceItem.getId(), clock.getUTCToday(), null, callContext));
     }
 
     @Test(groups = "slow")
