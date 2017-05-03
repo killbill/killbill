@@ -34,6 +34,7 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
+import javax.annotation.Nullable;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
@@ -59,16 +60,22 @@ import org.killbill.billing.account.api.AccountData;
 import org.killbill.billing.account.api.AccountEmail;
 import org.killbill.billing.account.api.AccountUserApi;
 import org.killbill.billing.account.api.MutableAccountData;
+import org.killbill.billing.catalog.api.BillingActionPolicy;
 import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.catalog.api.Currency;
+import org.killbill.billing.catalog.api.ProductCategory;
 import org.killbill.billing.entitlement.api.BlockingState;
 import org.killbill.billing.entitlement.api.BlockingStateType;
+import org.killbill.billing.entitlement.api.Entitlement.EntitlementActionPolicy;
 import org.killbill.billing.entitlement.api.EntitlementApiException;
+import org.killbill.billing.entitlement.api.Subscription;
 import org.killbill.billing.entitlement.api.SubscriptionApi;
 import org.killbill.billing.entitlement.api.SubscriptionApiException;
 import org.killbill.billing.entitlement.api.SubscriptionBundle;
 import org.killbill.billing.invoice.api.Invoice;
 import org.killbill.billing.invoice.api.InvoiceApiException;
+import org.killbill.billing.invoice.api.InvoiceItem;
+import org.killbill.billing.invoice.api.InvoiceItemType;
 import org.killbill.billing.invoice.api.InvoicePayment;
 import org.killbill.billing.invoice.api.InvoicePaymentApi;
 import org.killbill.billing.invoice.api.InvoiceUserApi;
@@ -385,25 +392,72 @@ public class AccountResource extends JaxRsResourceBase {
         return getAccount(accountId, false, false, new AuditMode(AuditLevel.NONE.toString()), request);
     }
 
-    // Not supported
     @TimedResource
     @DELETE
     @Path("/{accountId:" + UUID_PATTERN + "}")
     @Produces(APPLICATION_JSON)
     @ApiOperation(value = "Delete account", hidden = true)
     @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid account id supplied")})
-    public Response cancelAccount(@PathParam("accountId") final String accountId,
-                                  @javax.ws.rs.core.Context final HttpServletRequest request) {
-        /*
-        try {
-            accountUserApi.cancelAccount(accountId);
-            return Response.status(Status.NO_CONTENT).build();
-        } catch (AccountApiException e) {
-            log.info(String.format("Failed to cancel account %s", accountId), e);
-            return Response.status(Status.BAD_REQUEST).build();
+    public Response closeAccount(@PathParam("accountId") final String accountIdStr,
+                                 @QueryParam("cancelAllSubscriptions") @DefaultValue("false") final Boolean cancelAllSubscriptions,
+                                 @QueryParam("writeOffUnpaidInvoices") @DefaultValue("false") final Boolean writeOffUnpaidInvoices,
+                                 @QueryParam("itemAdjustUnpaidInvoices") @DefaultValue("false") final Boolean itemAdjustUnpaidInvoices,
+                                 @HeaderParam(HDR_CREATED_BY) final String createdBy,
+                                 @HeaderParam(HDR_REASON) final String reason,
+                                 @HeaderParam(HDR_COMMENT) final String comment,
+                                 @javax.ws.rs.core.Context final HttpServletRequest request) throws SubscriptionApiException, AccountApiException, EntitlementApiException, InvoiceApiException, TagApiException {
+
+
+        final CallContext callContext = context.createContext(createdBy, reason, comment, request);
+        final UUID accountId = UUID.fromString(accountIdStr);
+
+        if (cancelAllSubscriptions) {
+            final List<SubscriptionBundle> bundles = subscriptionApi.getSubscriptionBundlesForAccountId(accountId, callContext);
+            final Iterable<Subscription> subscriptions = Iterables.concat(Iterables.transform(bundles, new Function<SubscriptionBundle, List<Subscription>>() {
+                @Override
+                public List<Subscription> apply(final SubscriptionBundle input) {
+                    return input.getSubscriptions();
+                }
+            }));
+
+            final Iterable<Subscription> toBeCancelled = Iterables.filter(subscriptions, new Predicate<Subscription>() {
+                @Override
+                public boolean apply(final Subscription input) {
+                    return input.getLastActiveProductCategory() != ProductCategory.ADD_ON;
+                }
+            });
+            for (final Subscription cur : toBeCancelled) {
+                cur.cancelEntitlementWithPolicyOverrideBillingPolicy(EntitlementActionPolicy.IMMEDIATE, BillingActionPolicy.END_OF_TERM, ImmutableList.<PluginProperty>of(), callContext);
+            }
         }
-       */
-        return Response.status(Status.INTERNAL_SERVER_ERROR).build();
+
+        final Collection<Invoice> unpaidInvoices =  writeOffUnpaidInvoices || itemAdjustUnpaidInvoices ? invoiceApi.getUnpaidInvoicesByAccountId(accountId, null, callContext) : ImmutableList.<Invoice>of();
+        if (writeOffUnpaidInvoices) {
+            for (final Invoice cur : unpaidInvoices) {
+                invoiceApi.tagInvoiceAsWrittenOff(cur.getId(), callContext);
+            }
+        } else if (itemAdjustUnpaidInvoices) {
+
+            final List<InvoiceItemType> ADJUSTABLE_TYPES = ImmutableList.<InvoiceItemType>of(InvoiceItemType.EXTERNAL_CHARGE,
+                                              InvoiceItemType.FIXED,
+                                              InvoiceItemType.RECURRING,
+                                              InvoiceItemType.TAX,
+                                              InvoiceItemType.USAGE,
+                                              InvoiceItemType.PARENT_SUMMARY);
+            final String description = comment != null ? comment : "Close Account";
+            for (final Invoice invoice : unpaidInvoices) {
+                for (InvoiceItem item : invoice.getInvoiceItems()) {
+                    if (ADJUSTABLE_TYPES.contains(item.getInvoiceItemType())) {
+                        invoiceApi.insertInvoiceItemAdjustment(accountId, invoice.getId(), item.getId(), clock.getUTCToday(), description, callContext);
+                    }
+                }
+            }
+        }
+        
+        final BlockingStateJson blockingState = new BlockingStateJson(accountIdStr, "CLOSE_ACCOUNT", "account-service", true, false, false, null, BlockingStateType.ACCOUNT, null);
+        addBlockingState(blockingState, accountIdStr, BlockingStateType.ACCOUNT, null, ImmutableList.<String>of(), createdBy, reason, comment, request);
+
+        return Response.status(Status.OK).build();
     }
 
     @TimedResource
