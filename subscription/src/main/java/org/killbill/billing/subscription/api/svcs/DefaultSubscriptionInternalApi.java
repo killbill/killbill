@@ -774,10 +774,10 @@ public class DefaultSubscriptionInternalApi extends SubscriptionApiBase implemen
                     if (dryRunArguments.getEffectiveDate() == null) {
                         BillingActionPolicy policy = dryRunArguments.getBillingActionPolicy();
                         if (policy == null) {
-
                             final Plan currentPlan = subscriptionForCancellation.getCurrentPlan();
                             final PlanPhaseSpecifier spec = new PlanPhaseSpecifier(currentPlan.getName(),
                                                                                    subscriptionForCancellation.getCurrentPhase().getPhaseType());
+                            policy = catalog.planCancelPolicy(spec, utcNow);
                         }
                         // We pass null for billingAlignment, accountTimezone, account BCD because this is not available which means that dryRun with START_OF_TERM BillingPolicy will fail
                         cancelEffectiveDate = subscriptionForCancellation.getPlanChangeEffectiveDate(policy, null, -1, context);

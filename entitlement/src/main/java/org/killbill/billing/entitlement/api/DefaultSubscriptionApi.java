@@ -187,7 +187,9 @@ public class DefaultSubscriptionApi implements SubscriptionApi {
             if (activeSubscriptionIdForKey == null) {
                 throw new SubscriptionApiException(new SubscriptionBaseApiException(ErrorCode.SUB_GET_INVALID_BUNDLE_KEY, externalKey));
             }
-            final SubscriptionBase subscriptionBase = subscriptionBaseInternalApi.getSubscriptionFromId(activeSubscriptionIdForKey, internalContext);
+
+            final InternalTenantContext internalContextWithAccountRecordId =  internalCallContextFactory.createInternalTenantContext(activeSubscriptionIdForKey, ObjectType.SUBSCRIPTION, context);
+            final SubscriptionBase subscriptionBase = subscriptionBaseInternalApi.getSubscriptionFromId(activeSubscriptionIdForKey, internalContextWithAccountRecordId);
             return getSubscriptionBundle(subscriptionBase.getBundleId(), context);
         } catch (final SubscriptionBaseApiException e) {
             throw new SubscriptionApiException(e);
