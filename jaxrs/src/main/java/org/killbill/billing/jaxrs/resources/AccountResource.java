@@ -425,7 +425,7 @@ public class AccountResource extends JaxRsResourceBase {
             final Iterable<Subscription> toBeCancelled = Iterables.filter(subscriptions, new Predicate<Subscription>() {
                 @Override
                 public boolean apply(final Subscription input) {
-                    return input.getLastActiveProductCategory() != ProductCategory.ADD_ON;
+                    return input.getLastActiveProductCategory() != ProductCategory.ADD_ON && input.getBillingEndDate() == null;
                 }
             });
             for (final Subscription cur : toBeCancelled) {
