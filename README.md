@@ -2,7 +2,7 @@
 
 Kill Bill is the Open-Source Billing & Payment Platform.
 
-Among features:
+## Among features
 
 * Subscription engine, with plans management (trial, upgrade, downgrade, etc.), support of add-ons, bundles with multiple subscriptions
 * Invoicing engine, supporting different billing alignments, recurring and one-time charges, international tax, metered billing
