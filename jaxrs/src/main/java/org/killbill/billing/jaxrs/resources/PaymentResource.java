@@ -422,7 +422,10 @@ public class PaymentResource extends ComboPaymentResource {
         verifyNonNullOrEmpty(json, "PaymentTransactionJson body should be specified");
         verifyNonNullOrEmpty(json.getAmount(), "PaymentTransactionJson amount needs to be set");
 
-        final Iterable<PluginProperty> pluginProperties = extractPluginProperties(pluginPropertiesString);
+        final Iterable<PluginProperty> pluginPropertiesFromBody = extractPluginProperties(json.getProperties());
+        final Iterable<PluginProperty> pluginPropertiesFromQuery = extractPluginProperties(pluginPropertiesString);
+        final Iterable<PluginProperty> pluginProperties = Iterables.concat(pluginPropertiesFromQuery, pluginPropertiesFromBody);
+
         final CallContext callContext = context.createContext(createdBy, reason, comment, request);
         final Payment initialPayment = getPaymentByIdOrKey(paymentIdStr, json.getPaymentExternalKey(), pluginProperties, callContext);
 
@@ -500,7 +503,10 @@ public class PaymentResource extends ComboPaymentResource {
         verifyNonNullOrEmpty(json, "PaymentTransactionJson body should be specified");
         verifyNonNullOrEmpty(json.getAmount(), "PaymentTransactionJson amount needs to be set");
 
-        final Iterable<PluginProperty> pluginProperties = extractPluginProperties(pluginPropertiesString);
+        final Iterable<PluginProperty> pluginPropertiesFromBody = extractPluginProperties(json.getProperties());
+        final Iterable<PluginProperty> pluginPropertiesFromQuery = extractPluginProperties(pluginPropertiesString);
+        final Iterable<PluginProperty> pluginProperties = Iterables.concat(pluginPropertiesFromQuery, pluginPropertiesFromBody);
+
         final CallContext callContext = context.createContext(createdBy, reason, comment, request);
         final Payment initialPayment = getPaymentByIdOrKey(paymentIdStr, json.getPaymentExternalKey(), pluginProperties, callContext);
 
@@ -573,7 +579,11 @@ public class PaymentResource extends ComboPaymentResource {
                                          final String comment,
                                          final UriInfo uriInfo,
                                          final HttpServletRequest request) throws PaymentApiException, AccountApiException {
-        final Iterable<PluginProperty> pluginProperties = extractPluginProperties(pluginPropertiesString);
+
+        final Iterable<PluginProperty> pluginPropertiesFromBody = extractPluginProperties(json != null ? json.getProperties() : null);
+        final Iterable<PluginProperty> pluginPropertiesFromQuery = extractPluginProperties(pluginPropertiesString);
+        final Iterable<PluginProperty> pluginProperties = Iterables.concat(pluginPropertiesFromQuery, pluginPropertiesFromBody);
+
         final CallContext callContext = context.createContext(createdBy, reason, comment, request);
         final Payment initialPayment = getPaymentByIdOrKey(paymentIdStr, json.getPaymentExternalKey(), pluginProperties, callContext);
 
@@ -649,7 +659,10 @@ public class PaymentResource extends ComboPaymentResource {
         verifyNonNullOrEmpty(json, "PaymentTransactionJson body should be specified");
         verifyNonNullOrEmpty(json.getAmount(), "PaymentTransactionJson amount needs to be set");
 
-        final Iterable<PluginProperty> pluginProperties = extractPluginProperties(pluginPropertiesString);
+        final Iterable<PluginProperty> pluginPropertiesFromBody = extractPluginProperties(json.getProperties());
+        final Iterable<PluginProperty> pluginPropertiesFromQuery = extractPluginProperties(pluginPropertiesString);
+        final Iterable<PluginProperty> pluginProperties = Iterables.concat(pluginPropertiesFromQuery, pluginPropertiesFromBody);
+
         final CallContext callContext = context.createContext(createdBy, reason, comment, request);
         final Payment initialPayment = getPaymentByIdOrKey(paymentIdStr, json.getPaymentExternalKey(), pluginProperties, callContext);
 
