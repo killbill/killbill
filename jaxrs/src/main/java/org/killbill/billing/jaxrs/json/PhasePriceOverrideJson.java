@@ -100,7 +100,7 @@ public class PhasePriceOverrideJson {
                      TierPriceOverrideJson tierPriceOverrideJson  = new TierPriceOverrideJson(blockPriceOverridesJson);
                      tierPriceOverridesJson.add(tierPriceOverrideJson);
              }
-            final UsagePriceOverrideJson usagePriceOverrideJson = new UsagePriceOverrideJson(usage.getName(), usage.getUsageType(),usage.getBillingMode(), tierPriceOverridesJson);
+            final UsagePriceOverrideJson usagePriceOverrideJson = new UsagePriceOverrideJson(usage.getName(), usage.getUsageType(), usage.getBillingMode(), usage.getTierBlockPolicy(), tierPriceOverridesJson);
             this.usagePriceOverrides.add(usagePriceOverrideJson);
         }
 

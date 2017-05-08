@@ -22,6 +22,7 @@ import java.util.List;
 import javax.annotation.Nullable;
 
 import org.killbill.billing.catalog.api.BillingMode;
+import org.killbill.billing.catalog.api.TierBlockPolicy;
 import org.killbill.billing.catalog.api.UsageType;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
@@ -35,16 +36,20 @@ public class UsagePriceOverrideJson {
 
     private final BillingMode billingMode;
 
+    private final TierBlockPolicy tierBlockPolicy;
+
     private final List<TierPriceOverrideJson> tierPriceOverrides;
 
     @JsonCreator
     public UsagePriceOverrideJson(@JsonProperty("usageName") final String usageName,
-                             @Nullable @JsonProperty("usageType") final UsageType usageType,
-                             @Nullable @JsonProperty("billingMode") final BillingMode billingMode,
-                             @Nullable @JsonProperty("tierPriceOverrides") final List<TierPriceOverrideJson> tierPriceOverrides ) {
+                                  @Nullable @JsonProperty("usageType") final UsageType usageType,
+                                  @Nullable @JsonProperty("billingMode") final BillingMode billingMode,
+                                  @Nullable @JsonProperty("tierBlockPolicy") final TierBlockPolicy tierBlockPolicy,
+                                  @Nullable @JsonProperty("tierPriceOverrides") final List<TierPriceOverrideJson> tierPriceOverrides) {
         this.usageName = usageName;
         this.usageType = usageType;
         this.billingMode = billingMode;
+        this.tierBlockPolicy = tierBlockPolicy;
         this.tierPriceOverrides = tierPriceOverrides;
     }
 
@@ -60,6 +65,10 @@ public class UsagePriceOverrideJson {
         return billingMode;
     }
 
+    public TierBlockPolicy getTierBlockPolicy() {
+        return tierBlockPolicy;
+    }
+
     public List<TierPriceOverrideJson> getTierPriceOverrides() {
         return tierPriceOverrides;
     }
@@ -70,6 +79,7 @@ public class UsagePriceOverrideJson {
                 "usageName='" + usageName + '\'' +
                 "usageType='" + usageType + '\'' +
                 ", billingMode=" + billingMode +
+                ", tierBlockPolicy=" + tierBlockPolicy +
                 ", tierPriceOverrides=" + tierPriceOverrides +
                 '}';
     }
@@ -94,6 +104,9 @@ public class UsagePriceOverrideJson {
         if (billingMode != null ? !billingMode.equals(that.billingMode) : that.billingMode != null) {
             return false;
         }
+        if (tierBlockPolicy != null ? !tierBlockPolicy.equals(that.tierBlockPolicy) : that.tierBlockPolicy != null) {
+            return false;
+        }
         if (tierPriceOverrides != null ? !tierPriceOverrides.equals(that.tierPriceOverrides)  : that.tierPriceOverrides != null) {
             return false;
         }
@@ -105,6 +118,7 @@ public class UsagePriceOverrideJson {
         int result = usageName != null ? usageName.hashCode() : 0;
         result = 31 * result + (usageType != null ? usageType.hashCode() : 0);
         result = 31 * result + (billingMode != null ? billingMode.hashCode() : 0);
+        result = 31 * result + (tierBlockPolicy != null ? tierBlockPolicy.hashCode() : 0);
         result = 31 * result + (tierPriceOverrides != null ? tierPriceOverrides.hashCode() : 0);
         return result;
     }
