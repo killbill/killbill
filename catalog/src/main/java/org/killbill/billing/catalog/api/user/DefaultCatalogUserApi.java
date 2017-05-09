@@ -54,7 +54,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xml.sax.SAXException;
 
-public class  DefaultCatalogUserApi implements CatalogUserApi {
+public class DefaultCatalogUserApi implements CatalogUserApi {
 
     private final Logger logger = LoggerFactory.getLogger(DefaultCatalogUserApi.class);
 
@@ -77,13 +77,23 @@ public class  DefaultCatalogUserApi implements CatalogUserApi {
 
     @Override
     public Catalog getCatalog(final String catalogName, final TenantContext tenantContext) throws CatalogApiException {
-        final InternalTenantContext internalTenantContext = internalCallContextFactory.createInternalTenantContextWithoutAccountRecordId(tenantContext);
+        final InternalTenantContext internalTenantContext;
+        if (tenantContext.getAccountId() != null) {
+            internalTenantContext = internalCallContextFactory.createInternalTenantContext(tenantContext.getAccountId(), tenantContext);
+        } else {
+            internalTenantContext = createInternalTenantContext(tenantContext);
+        }
         return catalogService.getFullCatalog(true, true, internalTenantContext);
     }
 
     @Override
     public StaticCatalog getCurrentCatalog(final String catalogName, final TenantContext tenantContext) throws CatalogApiException {
-        final InternalTenantContext internalTenantContext = createInternalTenantContext(tenantContext);
+        final InternalTenantContext internalTenantContext;
+        if (tenantContext.getAccountId() != null) {
+            internalTenantContext = internalCallContextFactory.createInternalTenantContext(tenantContext.getAccountId(), tenantContext);
+        } else {
+            internalTenantContext = createInternalTenantContext(tenantContext);
+        }
         return catalogService.getCurrentCatalog(true, true, internalTenantContext);
     }
 
@@ -103,10 +113,10 @@ public class  DefaultCatalogUserApi implements CatalogUserApi {
             if (versionedCatalog != null) {
 
                 // currentCatalog.getCatalogName() could be null if tenant was created with a default catalog
-                if (versionedCatalog.getCatalogName() !=  null && !newCatalogVersion.getCatalogName().equals(versionedCatalog.getCatalogName())) {
+                if (versionedCatalog.getCatalogName() != null && !newCatalogVersion.getCatalogName().equals(versionedCatalog.getCatalogName())) {
                     final ValidationErrors errors = new ValidationErrors();
                     errors.add(String.format("Catalog name '%s' should match previous catalog name '%s'", newCatalogVersion.getCatalogName(), versionedCatalog.getCatalogName()),
-                               new URI("dummy"), StandaloneCatalog.class, "");
+                            new URI("dummy"), StandaloneCatalog.class, "");
                     // Bummer ValidationException CTOR is private to package...
                     //final ValidationException validationException = new ValidationException(errors);
                     //throw new CatalogApiException(errors, ErrorCode.CAT_INVALID_FOR_TENANT, internalTenantContext.getTenantRecordId());
@@ -118,7 +128,7 @@ public class  DefaultCatalogUserApi implements CatalogUserApi {
                     if (c.getEffectiveDate().compareTo(newCatalogVersion.getEffectiveDate()) == 0) {
                         final ValidationErrors errors = new ValidationErrors();
                         errors.add(String.format("Catalog version for effectiveDate '%s' already exists", newCatalogVersion.getEffectiveDate()),
-                                   new URI("dummy"), StandaloneCatalog.class, "");
+                                new URI("dummy"), StandaloneCatalog.class, "");
                         // Bummer ValidationException CTOR is private to package...
                         //final ValidationException validationException = new ValidationException(errors);
                         //throw new CatalogApiException(errors, ErrorCode.CAT_INVALID_FOR_TENANT, internalTenantContext.getTenantRecordId());
@@ -158,8 +168,8 @@ public class  DefaultCatalogUserApi implements CatalogUserApi {
             final InternalTenantContext internalTenantContext = internalCallContextFactory.createInternalTenantContextWithoutAccountRecordId(callContext);
             final StandaloneCatalog currentCatalog = getCurrentStandaloneCatalogForTenant(internalTenantContext);
             final CatalogUpdater catalogUpdater = (currentCatalog != null) ?
-                                                  new CatalogUpdater(currentCatalog) :
-                                                  new CatalogUpdater(BillingMode.IN_ADVANCE, effectiveDate, null);
+                    new CatalogUpdater(currentCatalog) :
+                    new CatalogUpdater(BillingMode.IN_ADVANCE, effectiveDate, null);
 
             catalogCache.clearCatalog(internalTenantContext);
             tenantApi.updateTenantKeyValue(TenantKey.CATALOG.toString(), catalogUpdater.getCatalogXML(), callContext);
@@ -175,8 +185,8 @@ public class  DefaultCatalogUserApi implements CatalogUserApi {
             final InternalTenantContext internalTenantContext = internalCallContextFactory.createInternalTenantContextWithoutAccountRecordId(callContext);
             final StandaloneCatalog currentCatalog = getCurrentStandaloneCatalogForTenant(internalTenantContext);
             final CatalogUpdater catalogUpdater = (currentCatalog != null) ?
-                                                  new CatalogUpdater(currentCatalog) :
-                                                  new CatalogUpdater(BillingMode.IN_ADVANCE, effectiveDate, descriptor.getCurrency());
+                    new CatalogUpdater(currentCatalog) :
+                    new CatalogUpdater(BillingMode.IN_ADVANCE, effectiveDate, descriptor.getCurrency());
 
             catalogUpdater.addSimplePlanDescriptor(descriptor);
 
