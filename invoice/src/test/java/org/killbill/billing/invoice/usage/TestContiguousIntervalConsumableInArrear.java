@@ -276,4 +276,35 @@ public class TestContiguousIntervalConsumableInArrear extends TestUsageInArrearB
         Assert.assertEquals(rolledUpUsage.get(1).getRolledUpUnits().get(1).getAmount(), new Long(21L));
     }
 
+
+
+    @Test(groups = "fast", description="See https://github.com/killbill/killbill/issues/706")
+    public void testWithRawUsageStartDateAfterEndDate() throws CatalogApiException {
+
+        final LocalDate startDate = new LocalDate(2014, 10, 16);
+        final LocalDate endDate = startDate;
+        final LocalDate targetDate = endDate;
+
+        final LocalDate rawUsageStartDate = new LocalDate(2015, 10, 16);
+
+        final List<RawUsage> rawUsages = new ArrayList<RawUsage>();
+        rawUsages.add(new DefaultRawUsage(subscriptionId, startDate, "unit", 130L));
+
+        final DefaultTieredBlock block = createDefaultTieredBlock("unit", 100, 10, BigDecimal.ONE);
+        final DefaultTier tier = createDefaultTierWithBlocks(block);
+        final DefaultUsage usage = createConsumableInArrearUsage(usageName, BillingPeriod.MONTHLY, tier);
+
+
+        final BillingEvent event1 = createMockBillingEvent(startDate.toDateTimeAtStartOfDay(DateTimeZone.UTC),BillingPeriod.MONTHLY, Collections.<Usage>emptyList());
+        final BillingEvent event2 = createMockBillingEvent(new LocalDate(2014, 10, 16).toDateTimeAtStartOfDay(DateTimeZone.UTC), BillingPeriod.MONTHLY, Collections.<Usage>emptyList());
+
+
+        final ContiguousIntervalUsageInArrear intervalConsumableInArrear = new ContiguousIntervalUsageInArrear(usage, accountId, invoiceId, rawUsages, targetDate, rawUsageStartDate, internalCallContext);
+        intervalConsumableInArrear.addBillingEvent(event1);
+        intervalConsumableInArrear.addBillingEvent(event2);
+
+        final ContiguousIntervalUsageInArrear res = intervalConsumableInArrear.build(true);
+        assertEquals(res.getTransitionTimes().size(), 0);
+    }
+
 }
