@@ -19,6 +19,7 @@ package org.killbill.billing.jaxrs;
 
 import java.math.BigDecimal;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -617,6 +618,29 @@ public class TestPayment extends TestJaxrsBase {
     }
 
     @Test(groups = "slow")
+    public void testComboAuthorizationControlWithNullPaymentMethodId() throws Exception {
+        final Account accountJson = createAccount();
+
+        // Non-default payment method
+        final PaymentMethod paymentMethod = createPaymentMethod(accountJson, false);
+        mockPaymentControlProviderPlugin.setAdjustedPaymentMethodId(paymentMethod.getPaymentMethodId());
+
+        accountJson.setAccountId(null);
+        final String paymentExternalKey = UUID.randomUUID().toString();
+
+        final PaymentTransaction authTransactionJson = new PaymentTransaction();
+        authTransactionJson.setPaymentExternalKey(paymentExternalKey);
+        authTransactionJson.setAmount(BigDecimal.TEN);
+        authTransactionJson.setTransactionType("AUTHORIZE");
+        final ComboPaymentTransaction comboPaymentTransaction = new ComboPaymentTransaction(accountJson, null, authTransactionJson, ImmutableList.<PluginProperty>of(), ImmutableList.<PluginProperty>of());
+
+        final Payment payment = killBillClient.createPayment(comboPaymentTransaction, ImmutableList.<String>of(MockPaymentControlProviderPlugin.PLUGIN_NAME), ImmutableMap.<String, String>of(), requestOptions);
+        verifyComboPayment(payment, paymentExternalKey, BigDecimal.TEN, BigDecimal.ZERO, BigDecimal.ZERO, 1, 1);
+
+        assertEquals(killBillClient.getPayment(payment.getPaymentId(), false, true, ImmutableMap.<String, String>of(), AuditLevel.NONE, requestOptions).getPaymentAttempts().size(), 1);
+    }
+
+    @Test(groups = "slow")
     public void testComboAuthorizationControlPluginException() throws Exception {
         final Account accountJson = getAccount();
         accountJson.setAccountId(null);
@@ -799,7 +823,7 @@ public class TestPayment extends TestJaxrsBase {
         assertEquals(payment.getRefundedAmount().compareTo(refundedAmount), 0);
         assertEquals(payment.getTransactions().size(), nbTransactions);
 
-        final Payments Payments = killBillClient.getPayments();
+        final Payments Payments = killBillClient.getPayments(requestOptions);
         assertEquals(Payments.size(), paymentNb);
         assertEquals(Payments.get(paymentNb - 1), payment);
     }

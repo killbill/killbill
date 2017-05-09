@@ -20,6 +20,7 @@ package org.killbill.billing.payment.core;
 import java.util.Set;
 import java.util.UUID;
 
+import javax.annotation.Nullable;
 import javax.inject.Inject;
 
 import org.killbill.billing.ErrorCode;
@@ -45,9 +46,11 @@ public class PaymentPluginServiceRegistration {
         return pluginRegistry.getAllServices();
     }
 
-    public PaymentMethodModelDao getPaymentMethodById(final UUID paymentMethodId, final boolean includedDeleted, final InternalTenantContext context) throws PaymentApiException {
+    public PaymentMethodModelDao getPaymentMethodById(@Nullable final UUID paymentMethodId, final boolean includedDeleted, final InternalTenantContext context) throws PaymentApiException {
         final PaymentMethodModelDao paymentMethodModel;
-        if (includedDeleted) {
+        if (paymentMethodId == null) {
+            paymentMethodModel = null;
+        } else if (includedDeleted) {
             paymentMethodModel = paymentDao.getPaymentMethodIncludedDeleted(paymentMethodId, context);
         } else {
             paymentMethodModel = paymentDao.getPaymentMethod(paymentMethodId, context);

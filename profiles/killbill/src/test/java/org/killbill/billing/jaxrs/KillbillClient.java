@@ -29,6 +29,7 @@ import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.catalog.api.PriceListSet;
 import org.killbill.billing.catalog.api.ProductCategory;
 import org.killbill.billing.client.KillBillClient;
+import org.killbill.billing.client.KillBillClientException;
 import org.killbill.billing.client.KillBillHttpClient;
 import org.killbill.billing.client.RequestOptions;
 import org.killbill.billing.client.model.Account;
@@ -119,11 +120,16 @@ public abstract class KillbillClient extends GuicyKillbillTestSuiteWithEmbeddedD
     protected Account createAccountWithExternalPaymentMethod() throws Exception {
         final Account input = createAccount();
 
+        createPaymentMethod(input, true);
+
+        return killBillClient.getAccount(input.getExternalKey(), requestOptions);
+    }
+
+    protected PaymentMethod createPaymentMethod(final Account input, final boolean isDefault) throws KillBillClientException {
         final PaymentMethodPluginDetail info = new PaymentMethodPluginDetail();
         final PaymentMethod paymentMethodJson = new PaymentMethod(null, UUIDs.randomUUID().toString(), input.getAccountId(),
-                                                                  true, ExternalPaymentProviderPlugin.PLUGIN_NAME, info);
-        killBillClient.createPaymentMethod(paymentMethodJson, requestOptions);
-        return killBillClient.getAccount(input.getExternalKey(), requestOptions);
+                                                                  isDefault, ExternalPaymentProviderPlugin.PLUGIN_NAME, info);
+        return killBillClient.createPaymentMethod(paymentMethodJson, requestOptions);
     }
 
     protected Account createAccount() throws Exception {

@@ -1,6 +1,6 @@
 /*
- * Copyright 2014-2015 Groupon, Inc
- * Copyright 2014-2015 The Billing Project, LLC
+ * Copyright 2014-2017 Groupon, Inc
+ * Copyright 2014-2017 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -16,6 +16,8 @@
  */
 
 package org.killbill.billing.payment.provider;
+
+import java.util.UUID;
 
 import org.joda.time.DateTime;
 import org.killbill.billing.payment.api.PluginProperty;
@@ -33,6 +35,7 @@ public class MockPaymentControlProviderPlugin implements PaymentControlPluginApi
 
     public static final String PLUGIN_NAME = "MOCK_RETRY_PLUGIN";
 
+    private UUID adjustedPaymentMethodId;
     private boolean isAborted;
     private DateTime nextRetryDate;
     private Exception exception;
@@ -40,6 +43,11 @@ public class MockPaymentControlProviderPlugin implements PaymentControlPluginApi
     private boolean priorCallExecuted;
     private boolean onSuccessCallExecuted;
     private boolean onFailureCallExecuted;
+
+    public MockPaymentControlProviderPlugin setAdjustedPaymentMethodId(final UUID adjustedPaymentMethodId) {
+        this.adjustedPaymentMethodId = adjustedPaymentMethodId;
+        return this;
+    }
 
     public MockPaymentControlProviderPlugin setAborted(final boolean isAborted) {
         this.isAborted = isAborted;
@@ -69,7 +77,7 @@ public class MockPaymentControlProviderPlugin implements PaymentControlPluginApi
         } else if (exception instanceof RuntimeException) {
             throw (RuntimeException) exception;
         }
-        return new DefaultPriorPaymentControlResult(isAborted);
+        return new DefaultPriorPaymentControlResult(isAborted, adjustedPaymentMethodId, null, null, null);
     }
 
     @Override

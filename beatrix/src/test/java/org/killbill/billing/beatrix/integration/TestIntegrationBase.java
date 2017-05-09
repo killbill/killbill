@@ -435,7 +435,6 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB {
                 .isNotifiedForInvoices(false)
                 .externalKey(UUID.randomUUID().toString().substring(1, 8))
                 .currency(Currency.USD)
-                .paymentMethodId(UUID.randomUUID())
                 .timeZone(DateTimeZone.UTC);
         if (billingDay != null) {
             builder.billingCycleDayLocal(billingDay);

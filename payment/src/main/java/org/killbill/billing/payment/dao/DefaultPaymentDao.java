@@ -126,14 +126,14 @@ public class DefaultPaymentDao extends EntityDaoBase<PaymentModelDao, Payment, P
     }
 
     @Override
-    public void updatePaymentAttemptWithProperties(final UUID paymentAttemptId, final UUID transactionId, final String state, final byte[] pluginProperties, final InternalCallContext context) {
+    public void updatePaymentAttemptWithProperties(final UUID paymentAttemptId, final UUID paymentMethodId, final UUID transactionId, final String state, final byte[] pluginProperties, final InternalCallContext context) {
         transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<Void>() {
 
             @Override
             public Void inTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory) throws Exception {
                 final String transactionIdStr = transactionId != null ? transactionId.toString() : null;
                 final PaymentAttemptSqlDao transactional = entitySqlDaoWrapperFactory.become(PaymentAttemptSqlDao.class);
-                transactional.updateAttemptWithProperties(paymentAttemptId.toString(), transactionIdStr, state, pluginProperties, contextWithUpdatedDate(context));
+                transactional.updateAttemptWithProperties(paymentAttemptId.toString(), paymentMethodId == null ? null : paymentMethodId.toString(), transactionIdStr, state, pluginProperties, contextWithUpdatedDate(context));
                 return null;
             }
         });
