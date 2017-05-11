@@ -668,16 +668,16 @@ public class TestInvoiceDao extends InvoiceTestSuiteWithEmbeddedDB {
         final RecurringInvoiceItem item2 = new RecurringInvoiceItem(invoice.getId(), accountId, bundleId, UUID.randomUUID(), "test plan", "test phase B", startDate,
                                                                     endDate, amount, amount, Currency.USD);
         invoiceUtil.createInvoiceItem(item2, context);
-        BigDecimal balancePriorRefund = invoiceDao.getAccountBalance(accountId, context);
-        assertEquals(balancePriorRefund.compareTo(new BigDecimal("20.00")), 0);
+        BigDecimal accountBalance = invoiceDao.getAccountBalance(accountId, context);
+        assertEquals(accountBalance.compareTo(new BigDecimal("20.00")), 0);
 
         // Pay the whole thing
         final UUID paymentId = UUID.randomUUID();
         final BigDecimal payment1 = amount;
         final InvoicePayment payment = new DefaultInvoicePayment(InvoicePaymentType.ATTEMPT, paymentId, invoice.getId(), new DateTime(), payment1, Currency.USD, Currency.USD, null, true);
         invoiceUtil.createPayment(payment, context);
-        balancePriorRefund = invoiceDao.getAccountBalance(accountId, context);
-        assertEquals(balancePriorRefund.compareTo(new BigDecimal("0.00")), 0);
+        accountBalance = invoiceDao.getAccountBalance(accountId, context);
+        assertEquals(accountBalance.compareTo(new BigDecimal("0.00")), 0);
 
         // Repair the item (And add CBA item that should be generated)
         final InvoiceItem repairItem = new RepairAdjInvoiceItem(invoice.getId(), accountId, startDate, endDate, amount.negate(), Currency.USD, item2.getId());
@@ -691,13 +691,13 @@ public class TestInvoiceDao extends InvoiceTestSuiteWithEmbeddedDB {
         itemAdjustment.put(item2.getId(), null);
 
         invoiceDao.createRefund(paymentId, refundAmount, true, itemAdjustment, UUID.randomUUID().toString(), context);
-        balancePriorRefund = invoiceDao.getAccountBalance(accountId, context);
+        accountBalance = invoiceDao.getAccountBalance(accountId, context);
 
         final boolean partialRefund = refundAmount.compareTo(amount) < 0;
         final BigDecimal cba = invoiceDao.getAccountCBA(accountId, context);
         final InvoiceModelDao savedInvoice = invoiceDao.getById(invoice.getId(), context);
 
-        final BigDecimal expectedCba = balancePriorRefund.compareTo(BigDecimal.ZERO) < 0 ? balancePriorRefund.negate() : BigDecimal.ZERO;
+        final BigDecimal expectedCba = accountBalance.compareTo(BigDecimal.ZERO) < 0 ? accountBalance.negate() : BigDecimal.ZERO;
         assertEquals(cba.compareTo(expectedCba), 0);
 
         // Let's re-calculate them from invoice
@@ -706,12 +706,12 @@ public class TestInvoiceDao extends InvoiceTestSuiteWithEmbeddedDB {
 
         if (partialRefund) {
             // IB = 20 (rec) - 20 (repair) + 20 (cba) - (20 -7) = 7;  AB = IB - CBA = 7 - 20 = -13
-            assertEquals(balancePriorRefund.compareTo(new BigDecimal("-13.0")), 0);
+            assertEquals(accountBalance.compareTo(new BigDecimal("-13.0")), 0);
             assertEquals(savedInvoice.getInvoiceItems().size(), 4);
             assertEquals(balanceAfterRefund.compareTo(new BigDecimal("-13.0")), 0);
             assertEquals(cbaAfterRefund.compareTo(expectedCba), 0);
         } else {
-            assertEquals(balancePriorRefund.compareTo(new BigDecimal("0.0")), 0);
+            assertEquals(accountBalance.compareTo(new BigDecimal("0.0")), 0);
             assertEquals(savedInvoice.getInvoiceItems().size(), 4);
             assertEquals(balanceAfterRefund.compareTo(BigDecimal.ZERO), 0);
             assertEquals(cbaAfterRefund.compareTo(expectedCba), 0);
