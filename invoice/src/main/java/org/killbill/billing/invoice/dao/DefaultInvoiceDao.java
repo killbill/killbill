@@ -439,8 +439,13 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
                 BigDecimal accountBalance = BigDecimal.ZERO;
                 final List<InvoiceModelDao> invoices = invoiceDaoHelper.getAllInvoicesByAccountFromTransaction(invoicesTags, entitySqlDaoWrapperFactory, context);
                 for (final InvoiceModelDao cur : invoices) {
-                    accountBalance = accountBalance.add((new DefaultInvoice(cur)).getBalance());
-                    cba = cba.add(InvoiceModelDaoHelper.getCBAAmount(cur));
+
+                    final DefaultInvoice curInvoice = new DefaultInvoice(cur);
+                    final boolean ignoreForAccountBalanceComputation =  (curInvoice.getStatus().equals(InvoiceStatus.DRAFT) || curInvoice.hasZeroParentBalance());
+                    if (!ignoreForAccountBalanceComputation) {
+                        accountBalance = accountBalance.add(InvoiceModelDaoHelper.getBalance(cur));
+                        cba = cba.add(InvoiceModelDaoHelper.getCBAAmount(cur));
+                    }
                 }
                 return accountBalance.subtract(cba);
             }

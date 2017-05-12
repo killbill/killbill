@@ -364,6 +364,10 @@ public class TestDefaultInvoiceUserApi extends InvoiceTestSuiteWithEmbeddedDB {
         Assert.assertEquals(creditInvoice.getStatus(), InvoiceStatus.DRAFT);
         Assert.assertEquals(creditInvoiceItem.getInvoiceId(), creditInvoice.getId());
 
+        // Verify DRAFT invoice is not taken into consideration when computing accountBalance
+        final BigDecimal accountBalance2 = invoiceUserApi.getAccountBalance(accountId, callContext);
+        Assert.assertEquals(accountBalance2, accountBalance);
+
         // move invoice from DRAFT to COMMITTED
         invoiceUserApi.commitInvoice(creditInvoice.getId(), callContext);
         creditInvoice = invoiceUserApi.getInvoice(invoiceId, callContext);
