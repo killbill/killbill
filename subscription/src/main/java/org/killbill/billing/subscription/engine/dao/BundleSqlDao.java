@@ -31,9 +31,9 @@ import org.killbill.billing.subscription.engine.dao.model.SubscriptionBundleMode
 import org.killbill.billing.util.audit.ChangeType;
 import org.killbill.billing.util.entity.dao.Audited;
 import org.killbill.billing.util.entity.dao.EntitySqlDao;
-import org.killbill.billing.util.entity.dao.EntitySqlDaoStringTemplate;
+import org.killbill.commons.jdbi.template.KillBillSqlDaoStringTemplate;
 
-@EntitySqlDaoStringTemplate
+@KillBillSqlDaoStringTemplate
 public interface BundleSqlDao extends EntitySqlDao<SubscriptionBundleModelDao, SubscriptionBaseBundle> {
 
     @SqlUpdate

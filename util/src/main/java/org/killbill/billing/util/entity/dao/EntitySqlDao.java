@@ -32,6 +32,7 @@ import org.killbill.billing.util.dao.AuditSqlDao;
 import org.killbill.billing.util.dao.HistorySqlDao;
 import org.killbill.billing.util.entity.Entity;
 import org.killbill.commons.jdbi.statement.SmartFetchSize;
+import org.killbill.commons.jdbi.template.KillBillSqlDaoStringTemplate;
 import org.skife.jdbi.v2.sqlobject.Bind;
 import org.skife.jdbi.v2.sqlobject.BindBean;
 import org.skife.jdbi.v2.sqlobject.SqlQuery;
@@ -40,7 +41,7 @@ import org.skife.jdbi.v2.sqlobject.customizers.Define;
 import org.skife.jdbi.v2.sqlobject.mixins.CloseMe;
 import org.skife.jdbi.v2.sqlobject.mixins.Transactional;
 
-@EntitySqlDaoStringTemplate
+@KillBillSqlDaoStringTemplate
 public interface EntitySqlDao<M extends EntityModelDao<E>, E extends Entity> extends AuditSqlDao, HistorySqlDao<M, E>, Transactional<EntitySqlDao<M, E>>, CloseMe {
 
     @SqlUpdate

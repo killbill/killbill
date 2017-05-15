@@ -28,14 +28,14 @@ import org.killbill.billing.invoice.api.Invoice;
 import org.killbill.billing.util.audit.ChangeType;
 import org.killbill.billing.util.entity.dao.Audited;
 import org.killbill.billing.util.entity.dao.EntitySqlDao;
-import org.killbill.billing.util.entity.dao.EntitySqlDaoStringTemplate;
+import org.killbill.commons.jdbi.template.KillBillSqlDaoStringTemplate;
 import org.killbill.billing.util.tag.dao.UUIDCollectionBinder;
 import org.skife.jdbi.v2.sqlobject.Bind;
 import org.skife.jdbi.v2.sqlobject.BindBean;
 import org.skife.jdbi.v2.sqlobject.SqlQuery;
 import org.skife.jdbi.v2.sqlobject.SqlUpdate;
 
-@EntitySqlDaoStringTemplate
+@KillBillSqlDaoStringTemplate
 public interface InvoiceSqlDao extends EntitySqlDao<InvoiceModelDao, Invoice> {
 
     @SqlQuery

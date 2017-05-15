@@ -24,14 +24,14 @@ import java.util.List;
 
 import javax.annotation.Nullable;
 
-import org.killbill.billing.util.entity.dao.EntitySqlDaoStringTemplate;
+import org.killbill.commons.jdbi.template.KillBillSqlDaoStringTemplate;
 import org.killbill.billing.util.validation.DefaultColumnInfo;
 import org.skife.jdbi.v2.StatementContext;
 import org.skife.jdbi.v2.sqlobject.Bind;
 import org.skife.jdbi.v2.sqlobject.SqlQuery;
 import org.skife.jdbi.v2.tweak.ResultSetMapper;
 
-@EntitySqlDaoStringTemplate
+@KillBillSqlDaoStringTemplate
 public interface DatabaseSchemaSqlDao {
 
     @SqlQuery

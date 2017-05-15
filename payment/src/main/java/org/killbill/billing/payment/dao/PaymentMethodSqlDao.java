@@ -33,10 +33,10 @@ import org.killbill.billing.payment.api.PaymentMethod;
 import org.killbill.billing.util.audit.ChangeType;
 import org.killbill.billing.util.entity.dao.Audited;
 import org.killbill.billing.util.entity.dao.EntitySqlDao;
-import org.killbill.billing.util.entity.dao.EntitySqlDaoStringTemplate;
+import org.killbill.commons.jdbi.template.KillBillSqlDaoStringTemplate;
 import org.skife.jdbi.v2.sqlobject.customizers.Define;
 
-@EntitySqlDaoStringTemplate
+@KillBillSqlDaoStringTemplate
 public interface PaymentMethodSqlDao extends EntitySqlDao<PaymentMethodModelDao, PaymentMethod> {
 
     @SqlUpdate

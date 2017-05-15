@@ -24,7 +24,7 @@ import org.killbill.billing.util.UtilTestSuiteWithEmbeddedDB;
 import org.killbill.billing.util.entity.Entity;
 import org.killbill.billing.util.entity.dao.EntityModelDao;
 import org.killbill.billing.util.entity.dao.EntitySqlDao;
-import org.killbill.billing.util.entity.dao.EntitySqlDaoStringTemplate;
+import org.killbill.commons.jdbi.template.KillBillSqlDaoStringTemplate;
 
 public class TestStringTemplateInheritanceWithJdbi extends UtilTestSuiteWithEmbeddedDB {
 
@@ -32,7 +32,7 @@ public class TestStringTemplateInheritanceWithJdbi extends UtilTestSuiteWithEmbe
 
     private static interface KombuchaModelDao extends EntityModelDao<Kombucha> {}
 
-    @EntitySqlDaoStringTemplate("/org/killbill/billing/util/dao/Kombucha.sql.stg")
+    @KillBillSqlDaoStringTemplate("/org/killbill/billing/util/dao/Kombucha.sql.stg")
     private static interface KombuchaSqlDao extends EntitySqlDao<KombuchaModelDao, Kombucha> {
 
         @SqlQuery

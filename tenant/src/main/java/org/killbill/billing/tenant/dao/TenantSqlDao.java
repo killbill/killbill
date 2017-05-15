@@ -24,9 +24,9 @@ import org.skife.jdbi.v2.sqlobject.SqlQuery;
 
 import org.killbill.billing.tenant.api.Tenant;
 import org.killbill.billing.util.entity.dao.EntitySqlDao;
-import org.killbill.billing.util.entity.dao.EntitySqlDaoStringTemplate;
+import org.killbill.commons.jdbi.template.KillBillSqlDaoStringTemplate;
 
-@EntitySqlDaoStringTemplate
+@KillBillSqlDaoStringTemplate
 public interface TenantSqlDao extends EntitySqlDao<TenantModelDao, Tenant> {
 
     @SqlQuery

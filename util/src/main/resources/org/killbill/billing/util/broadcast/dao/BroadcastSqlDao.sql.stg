@@ -29,6 +29,10 @@ allTableValues() ::= <<
 , <tableValues()>
 >>
 
+defaultOrderBy(prefix) ::= <<
+order by <prefix>record_id ASC
+>>
+
 create() ::= <<
 insert into <tableName()> (
 <tableFields()>

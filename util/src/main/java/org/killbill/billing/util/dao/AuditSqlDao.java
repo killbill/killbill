@@ -21,6 +21,7 @@ package org.killbill.billing.util.dao;
 import java.util.Iterator;
 import java.util.List;
 
+import org.killbill.commons.jdbi.template.KillBillSqlDaoStringTemplate;
 import org.skife.jdbi.v2.sqlobject.Bind;
 import org.skife.jdbi.v2.sqlobject.BindBean;
 import org.skife.jdbi.v2.sqlobject.SqlQuery;
@@ -34,7 +35,6 @@ import org.killbill.billing.util.audit.dao.AuditLogModelDao;
 import org.killbill.billing.util.cache.Cachable;
 import org.killbill.billing.util.cache.Cachable.CacheType;
 import org.killbill.billing.util.cache.CachableKey;
-import org.killbill.billing.util.entity.dao.EntitySqlDaoStringTemplate;
 
 /**
  * Note 1: cache invalidation has to happen for audit logs (which is tricky in the multi-nodes scenario).
@@ -45,7 +45,7 @@ import org.killbill.billing.util.entity.dao.EntitySqlDaoStringTemplate;
  * <p/>
  * Note 2: in the queries below, tableName always refers to the TableName enum, not the actual table name (TableName.getTableName()).
  */
-@EntitySqlDaoStringTemplate("/org/killbill/billing/util/entity/dao/EntitySqlDao.sql.stg")
+@KillBillSqlDaoStringTemplate("/org/killbill/billing/util/entity/dao/EntitySqlDao.sql.stg")
 // Note: @RegisterMapper annotation won't work here as we build the SqlObject via EntitySqlDao (annotations won't be inherited for JDBI)
 public interface AuditSqlDao {
 

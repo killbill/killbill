@@ -27,13 +27,13 @@ import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.util.callcontext.InternalTenantContextBinder;
 import org.killbill.billing.util.entity.Entity;
 import org.killbill.billing.util.entity.dao.EntitySqlDao;
-import org.killbill.billing.util.entity.dao.EntitySqlDaoStringTemplate;
+import org.killbill.commons.jdbi.template.KillBillSqlDaoStringTemplate;
 import org.skife.jdbi.v2.sqlobject.Bind;
 import org.skife.jdbi.v2.sqlobject.BindBean;
 import org.skife.jdbi.v2.sqlobject.SqlBatch;
 import org.skife.jdbi.v2.sqlobject.SqlQuery;
 
-@EntitySqlDaoStringTemplate
+@KillBillSqlDaoStringTemplate
 public interface RolledUpUsageSqlDao extends EntitySqlDao<RolledUpUsageModelDao, Entity> {
 
     @SqlBatch
