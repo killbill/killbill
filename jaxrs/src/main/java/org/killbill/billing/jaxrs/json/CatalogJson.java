@@ -174,7 +174,6 @@ public class CatalogJson {
         if (tieredBlocks != null && tieredBlocks.length > 0) {
             for (int i=0; i < tieredBlocks.length; i++) {
                 tieredBlocksJson.add(new TieredBlockJson(tieredBlocks[i].getUnit().getName(),
-                                                         tieredBlocks[i].getUnit().getPrettyName(),
                                                          tieredBlocks[i].getSize().toString(),
                                                          tieredBlocks[i].getMax().toString(),
                                                          buildPrices(tieredBlocks[i].getPrice())));
@@ -461,30 +460,24 @@ public class CatalogJson {
     }
 
     public static class TieredBlockJson {
-        private final String name;
-        private final String prettyName;
+        private final String unit;
         private final String size;
         private final String max;
         private final List<PriceJson> prices;
 
         @JsonCreator
-        public TieredBlockJson(@JsonProperty("name") final String name,
-                               @JsonProperty("prettyName") final String prettyName,
+        public TieredBlockJson(@JsonProperty("unit") final String unit,
                                @JsonProperty("size") final String size,
                                @JsonProperty("max") final String max,
                                @JsonProperty("prices") final List<PriceJson> prices) {
-            this.name = name;
-            this.prettyName = prettyName;
+            this.unit = unit;
             this.size = size;
             this.max = max;
             this.prices = prices;
         }
 
-        public String getName() {
-            return name;
-        }
-        public String getPrettyName() {
-            return prettyName;
+        public String getUnit() {
+            return unit;
         }
         public String getSize() {
             return size;
@@ -499,8 +492,7 @@ public class CatalogJson {
         @Override
         public String toString() {
             final StringBuilder sb = new StringBuilder("TieredBlockJson{");
-            sb.append("name='").append(name).append('\'');
-            sb.append("prettyName='").append(prettyName).append('\'');
+            sb.append("unit='").append(unit).append('\'');
             sb.append(", size=").append(size);
             sb.append(", max=").append(max);
             sb.append(", prices=").append(prices);
@@ -519,10 +511,7 @@ public class CatalogJson {
 
             final TieredBlockJson blockJson = (TieredBlockJson) o;
 
-            if (name != null ? !name.equals(blockJson.name) : blockJson.name != null) {
-                return false;
-            }
-            if (prettyName != null ? !prettyName.equals(blockJson.prettyName) : blockJson.prettyName != null) {
+            if (unit != null ? !unit.equals(blockJson.unit) : blockJson.unit != null) {
                 return false;
             }
             if (size != null ? !size.equals(blockJson.size) : blockJson.size != null) {
@@ -540,8 +529,7 @@ public class CatalogJson {
 
         @Override
         public int hashCode() {
-            int result = name != null ? name.hashCode() : 0;
-            result = 31 * result + (prettyName != null ? prettyName.hashCode() : 0);
+            int result = unit != null ? unit.hashCode() : 0;
             result = 31 * result + (size != null ? size.hashCode() : 0);
             result = 31 * result + (max != null ? max.hashCode() : 0);
             result = 31 * result + (prices != null ? prices.hashCode() : 0);

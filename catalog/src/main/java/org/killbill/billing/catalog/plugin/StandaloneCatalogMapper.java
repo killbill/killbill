@@ -358,7 +358,6 @@ public class StandaloneCatalogMapper {
     private DefaultUnit toDefaultUnit(final Unit input) {
         final DefaultUnit result = new DefaultUnit();
         result.setName(input.getName());
-        result.setPrettyName(input.getPrettyName());
         return result;
     }
 
