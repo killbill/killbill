@@ -28,8 +28,8 @@ import java.util.List;
 import java.util.Map;
 
 import org.joda.time.DateTime;
+import org.killbill.billing.catalog.VersionedCatalog;
 import org.killbill.billing.catalog.api.BillingPeriod;
-import org.killbill.billing.catalog.api.Catalog;
 import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.catalog.api.CurrencyValueNull;
@@ -45,6 +45,7 @@ import org.killbill.billing.catalog.api.Product;
 import org.killbill.billing.catalog.api.Tier;
 import org.killbill.billing.catalog.api.TieredBlock;
 import org.killbill.billing.catalog.api.TimeUnit;
+import org.killbill.billing.catalog.api.Unit;
 import org.killbill.billing.catalog.api.Usage;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
@@ -58,6 +59,7 @@ public class CatalogJson {
     private final String name;
     private final Date effectiveDate;
     private final List<Currency> currencies;
+    private final List<UnitJson> units;
     private final List<ProductJson> products;
     private final List<PriceListJson> priceLists;
 
@@ -65,21 +67,30 @@ public class CatalogJson {
     public CatalogJson(@JsonProperty("name") final String name,
                        @JsonProperty("effectiveDate") final Date effectiveDate,
                        @JsonProperty("currencies") final List<Currency> currencies,
+                       @JsonProperty("units") final List<UnitJson> units,
                        @JsonProperty("products") final List<ProductJson> products,
                        @JsonProperty("priceLists") final List<PriceListJson> priceLists) {
         this.name = name;
         this.effectiveDate = effectiveDate;
         this.currencies = currencies;
+        this.units = units;
         this.products = products;
         this.priceLists = priceLists;
     }
 
 
-    public CatalogJson(final Catalog catalog, final DateTime requestedDate) throws CatalogApiException {
+    public CatalogJson(final VersionedCatalog catalog, final DateTime requestedDate) throws CatalogApiException {
         name = catalog.getCatalogName();
         effectiveDate = catalog.getStandaloneCatalogEffectiveDate(requestedDate);
         currencies = Arrays.asList(catalog.getSupportedCurrencies(requestedDate));
         priceLists = new ArrayList<PriceListJson>();
+
+        List<UnitJson> units = new ArrayList<UnitJson>();
+        for (final Unit unit : catalog.getUnits(requestedDate)) {
+            final UnitJson unitJson = new UnitJson(unit.getName(), unit.getPrettyName());
+            units.add(unitJson);
+        }
+        this.units = units;
 
         final Collection<Plan> plans = catalog.getPlans(requestedDate);
         final Map<String, ProductJson> productMap = new HashMap<String, ProductJson>();
@@ -220,6 +231,10 @@ public class CatalogJson {
         return currencies;
     }
 
+    public List<UnitJson> getUnits() {
+        return units;
+    }
+
     public List<PriceListJson> getPriceLists() {
         return priceLists;
     }
@@ -230,6 +245,7 @@ public class CatalogJson {
         sb.append("name='").append(name).append('\'');
         sb.append(", effectiveDate='").append(effectiveDate).append('\'');
         sb.append(", currencies='").append(currencies).append('\'');
+        sb.append(", units='").append(units).append('\'');
         sb.append(", products=").append(products);
         sb.append(", priceLists=").append(priceLists);
         sb.append('}');
@@ -256,6 +272,9 @@ public class CatalogJson {
         if (currencies != null ? !currencies.equals(that.currencies) : that.currencies != null) {
             return false;
         }
+        if (units != null ? !units.equals(that.units) : that.units != null) {
+            return false;
+        }
         if (products != null ? !products.equals(that.products) : that.products != null) {
             return false;
         }
@@ -271,8 +290,58 @@ public class CatalogJson {
         int result = name != null ? name.hashCode() : 0;
         result = 31 * result + (effectiveDate != null ? effectiveDate.hashCode() : 0);
         result = 31 * result + (currencies != null ? currencies.hashCode() : 0);
+        result = 31 * result + (units != null ? units.hashCode() : 0);
         result = 31 * result + (products != null ? products.hashCode() : 0);
         return result;
+    }
+
+    public static class UnitJson {
+
+        private final String name;
+        private final String prettyName;
+
+        @JsonCreator
+        public UnitJson(@JsonProperty("name") final String name,
+                        @JsonProperty("prettyName") final String prettyName) {
+            this.name = name;
+            this.prettyName = prettyName;
+        }
+
+        public String getName() {
+            return name;
+        }
+
+        public String getPrettyName() {
+            return prettyName;
+        }
+
+        @Override
+        public String toString() {
+            final StringBuilder sb = new StringBuilder("UnitJson{");
+            sb.append("name='").append(name).append('\'');
+            sb.append(", prettyName='").append(prettyName).append('\'');
+            sb.append('}');
+            return sb.toString();
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+
+            UnitJson unitJson = (UnitJson) o;
+
+            if (name != null ? !name.equals(unitJson.name) : unitJson.name != null) return false;
+            return prettyName != null ? prettyName.equals(unitJson.prettyName) : unitJson.prettyName == null;
+        }
+
+        @Override
+        public int hashCode() {
+            int result = name != null ? name.hashCode() : 0;
+            result = 31 * result + (prettyName != null ? prettyName.hashCode() : 0);
+            return result;
+        }
+
     }
 
     public static class ProductJson {
