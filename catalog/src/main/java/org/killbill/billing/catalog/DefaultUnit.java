@@ -60,11 +60,10 @@ public class DefaultUnit extends ValidatingConfig<StandaloneCatalog> implements 
     public void initialize(final StandaloneCatalog catalog, final URI sourceURI) {
         super.initialize(catalog, sourceURI);
         CatalogSafetyInitializer.initializeNonRequiredNullFieldsWithDefaultValue(this);
-        if(prettyName == null){
+        if (prettyName == null) {
             this.prettyName = name;
         }
     }
-
 
     public DefaultUnit setName(final String name) {
         this.name = name;
