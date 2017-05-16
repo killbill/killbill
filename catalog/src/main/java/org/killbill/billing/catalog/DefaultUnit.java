@@ -73,7 +73,6 @@ public class DefaultUnit extends ValidatingConfig<StandaloneCatalog> implements 
     public DefaultUnit setPrettyName(final String prettyName) {
         this.prettyName = prettyName;
         return this;
-
     }
 
     @Override
