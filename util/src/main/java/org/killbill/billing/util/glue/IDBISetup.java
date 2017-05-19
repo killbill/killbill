@@ -22,14 +22,21 @@ import java.lang.reflect.Type;
 import java.util.List;
 
 import org.killbill.billing.lifecycle.ServiceFinder;
+import org.killbill.billing.util.broadcast.dao.BroadcastModelDao;
 import org.killbill.billing.util.dao.AuditLogModelDaoMapper;
 import org.killbill.billing.util.dao.EntityHistoryModelDaoMapperFactory;
 import org.killbill.billing.util.dao.RecordIdIdMappingsMapper;
 import org.killbill.billing.util.entity.Entity;
 import org.killbill.billing.util.entity.dao.EntitySqlDao;
+import org.killbill.billing.util.nodes.dao.NodeInfoModelDao;
+import org.killbill.billing.util.security.shiro.dao.RolesPermissionsModelDao;
 import org.killbill.billing.util.security.shiro.dao.SessionModelDao;
+import org.killbill.billing.util.security.shiro.dao.UserModelDao;
+import org.killbill.billing.util.security.shiro.dao.UserRolesModelDao;
 import org.killbill.billing.util.validation.dao.DatabaseSchemaSqlDao;
+import org.killbill.bus.dao.BusEventModelDao;
 import org.killbill.commons.jdbi.mapper.LowerToCamelBeanMapperFactory;
+import org.killbill.notificationq.dao.NotificationEventModelDao;
 import org.skife.jdbi.v2.ResultSetMapperFactory;
 import org.skife.jdbi.v2.sqlobject.customizers.RegisterMapper;
 import org.skife.jdbi.v2.tweak.ResultSetMapper;
@@ -42,6 +49,13 @@ public class IDBISetup {
     public static List<? extends ResultSetMapperFactory> mapperFactoriesToRegister() {
         final Builder<ResultSetMapperFactory> builder = ImmutableList.<ResultSetMapperFactory>builder();
         builder.add(new LowerToCamelBeanMapperFactory(SessionModelDao.class));
+        builder.add(new LowerToCamelBeanMapperFactory(BroadcastModelDao.class));
+        builder.add(new LowerToCamelBeanMapperFactory(NodeInfoModelDao.class));
+        builder.add(new LowerToCamelBeanMapperFactory(UserModelDao.class));
+        builder.add(new LowerToCamelBeanMapperFactory(UserRolesModelDao.class));
+        builder.add(new LowerToCamelBeanMapperFactory(RolesPermissionsModelDao.class));
+        builder.add(new LowerToCamelBeanMapperFactory(BusEventModelDao.class));
+        builder.add(new LowerToCamelBeanMapperFactory(NotificationEventModelDao.class));
 
         final ServiceFinder<EntitySqlDao> serviceFinder = new ServiceFinder<EntitySqlDao>(IDBISetup.class.getClassLoader(), EntitySqlDao.class.getName());
         for (final Class<? extends EntitySqlDao> sqlObjectType : serviceFinder.getServices()) {
