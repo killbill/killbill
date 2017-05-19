@@ -1,6 +1,3 @@
-group CatalogOverridePlanPhaseSqlDao;
-
-
 tableName() ::= "catalog_override_plan_phase"
 
 
@@ -36,7 +33,7 @@ allTableValues() ::= <<
 
 create() ::= <<
 insert into <tableName()> (
-<tableFields()>
+<tableFields("")>
 )
 values (
 <tableValues()>
@@ -45,7 +42,7 @@ values (
 >>
 
 getByRecordId() ::= <<
-select <allTableFields()>
+select <allTableFields("")>
 from
 <tableName()>
 where record_id = :recordId

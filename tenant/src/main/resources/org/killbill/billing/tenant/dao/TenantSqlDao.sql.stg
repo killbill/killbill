@@ -1,4 +1,4 @@
-group TenantDaoSql: EntitySqlDao;
+import "org/killbill/billing/util/entity/dao/EntitySqlDao.sql.stg"
 
 tableName() ::= "tenants"
 
@@ -23,7 +23,7 @@ tableValues() ::= <<
 
 /* No account_record_id field */
 accountRecordIdFieldWithComma(prefix) ::= ""
-accountRecordIdValueWithComma(prefix) ::= ""
+accountRecordIdValueWithComma() ::= ""
 
 /* No tenant_record_id field */
 tenantRecordIdFieldWithComma(prefix) ::= ""
@@ -33,8 +33,8 @@ CHECK_TENANT(prefix) ::= "1 = 1"
 /* Override default create call to include secrets */
 create() ::= <<
 insert into <tableName()> (
-  <idField()>
-, <tableFields()>
+  <idField("")>
+, <tableFields("")>
 , api_secret
 , api_salt
 )

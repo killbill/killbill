@@ -70,7 +70,7 @@
         </dependency>
         <dependency>
             <groupId>org.antlr</groupId>
-            <artifactId>stringtemplate</artifactId>
+            <artifactId>ST4</artifactId>
             <scope>runtime</scope>
         </dependency>
         <dependency>

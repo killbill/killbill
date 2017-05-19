@@ -1,4 +1,4 @@
-group InvoiceDao: EntitySqlDao;
+import "org/killbill/billing/util/entity/dao/EntitySqlDao.sql.stg"
 
 tableName() ::= "invoices"
 
@@ -59,16 +59,16 @@ updateStatus() ::= <<
     UPDATE <tableName()>
     SET status = :status
     WHERE id = :id
-    <AND_CHECK_TENANT()>;
+    <AND_CHECK_TENANT("")>;
 >>
 
 getParentDraftInvoice() ::= <<
-  SELECT <allTableFields()>
+  SELECT <allTableFields("")>
     FROM <tableName()>
    WHERE account_id = :accountId
      AND status = 'DRAFT'
-   <AND_CHECK_TENANT()>
-   <defaultOrderBy()>
+   <AND_CHECK_TENANT("")>
+   <defaultOrderBy("")>
 >>
 
 getByIds(ids) ::= <<

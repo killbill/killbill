@@ -1,4 +1,4 @@
-group InvoiceItemSqlDao: EntitySqlDao;
+import "org/killbill/billing/util/entity/dao/EntitySqlDao.sql.stg"
 
 tableName() ::= "invoice_items"
 
@@ -46,27 +46,27 @@ tableValues() ::= <<
 
 
 getInvoiceItemsByInvoice() ::= <<
-  SELECT <allTableFields()>
+  SELECT <allTableFields("")>
   FROM <tableName()>
   WHERE invoice_id = :invoiceId
-  <AND_CHECK_TENANT()>
+  <AND_CHECK_TENANT("")>
   ;
 >>
 
 getInvoiceItemsBySubscription() ::= <<
-  SELECT <allTableFields()>
+  SELECT <allTableFields("")>
   FROM <tableName()>
   WHERE subscription_id = :subscriptionId
-  <AND_CHECK_TENANT()>
+  <AND_CHECK_TENANT("")>
   ;
 >>
 
 getAdjustedOrRepairedInvoiceItemsByLinkedId() ::= <<
-  SELECT <allTableFields()>
+  SELECT <allTableFields("")>
   FROM <tableName()>
   WHERE linked_item_id = :linkedItemId
   AND type IN ('ITEM_ADJ', 'REPAIR_ADJ')
-  <AND_CHECK_TENANT()>
+  <AND_CHECK_TENANT("")>
   ;
 >>
 
@@ -74,7 +74,7 @@ updateAmount() ::= <<
     UPDATE <tableName()>
     SET amount = :amount
     WHERE id = :id
-    <AND_CHECK_TENANT()>;
+    <AND_CHECK_TENANT("")>;
 >>
 
 getInvoiceItemsByParentInvoice() ::= <<
@@ -83,7 +83,7 @@ getInvoiceItemsByParentInvoice() ::= <<
   INNER JOIN invoice_parent_children invRel ON invRel.child_invoice_id = items.invoice_id
   WHERE invRel.parent_invoice_id = :parentInvoiceId
   <AND_CHECK_TENANT("items.")>
-  <defaultOrderBy()>
+  <defaultOrderBy("")>
   ;
 >>
 
