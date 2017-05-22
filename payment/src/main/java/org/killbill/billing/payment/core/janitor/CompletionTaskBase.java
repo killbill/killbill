@@ -18,6 +18,7 @@
 package org.killbill.billing.payment.core.janitor;
 
 import java.io.IOException;
+import java.util.Iterator;
 
 import org.killbill.billing.account.api.AccountApiException;
 import org.killbill.billing.account.api.AccountInternalApi;
@@ -86,16 +87,25 @@ abstract class CompletionTaskBase<T> implements Runnable {
             log.info("Janitor was requested to stop");
             return;
         }
-        final Iterable<T> items = getItemsForIteration();
-        for (final T item : items) {
-            if (isStopped) {
-                log.info("Janitor was requested to stop");
-                return;
+
+        final Iterator<T> iterator = getItemsForIteration().iterator();
+        try {
+            while (iterator.hasNext()) {
+                final T item = iterator.next();
+                if (isStopped) {
+                    log.info("Janitor was requested to stop");
+                    return;
+                }
+                try {
+                    doIteration(item);
+                } catch (final Exception e) {
+                    log.warn(e.getMessage());
+                }
             }
-            try {
-                doIteration(item);
-            } catch (final IllegalStateException e) {
-                log.warn(e.getMessage());
+        } finally {
+            // In case the loop stops early, make sure to close the underlying DB connection
+            while (iterator.hasNext()) {
+                iterator.next();
             }
         }
     }
