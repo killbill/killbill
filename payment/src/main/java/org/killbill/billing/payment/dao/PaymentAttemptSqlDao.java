@@ -30,7 +30,7 @@ import org.killbill.billing.util.entity.dao.Audited;
 import org.killbill.billing.util.entity.dao.EntitySqlDao;
 import org.killbill.commons.jdbi.template.KillBillSqlDaoStringTemplate;
 import org.skife.jdbi.v2.sqlobject.Bind;
-import org.skife.jdbi.v2.sqlobject.BindBean;
+import org.killbill.commons.jdbi.binder.SmartBindBean;
 import org.skife.jdbi.v2.sqlobject.SqlQuery;
 import org.skife.jdbi.v2.sqlobject.SqlUpdate;
 import org.skife.jdbi.v2.sqlobject.customizers.Define;
@@ -43,7 +43,7 @@ public interface PaymentAttemptSqlDao extends EntitySqlDao<PaymentAttemptModelDa
     void updateAttempt(@Bind("id") final String attemptId,
                        @Bind("transactionId") final String transactionId,
                        @Bind("stateName") final String stateName,
-                       @BindBean final InternalCallContext context);
+                       @SmartBindBean final InternalCallContext context);
 
     @SqlUpdate
     @Audited(ChangeType.UPDATE)
@@ -52,15 +52,15 @@ public interface PaymentAttemptSqlDao extends EntitySqlDao<PaymentAttemptModelDa
                                      @Bind("transactionId") final String transactionId,
                                      @Bind("stateName") final String stateName,
                                      @Bind("pluginProperties") final byte[] pluginProperties,
-                                     @BindBean final InternalCallContext context);
+                                     @SmartBindBean final InternalCallContext context);
 
     @SqlQuery
     List<PaymentAttemptModelDao> getByTransactionExternalKey(@Bind("transactionExternalKey") final String transactionExternalKey,
-                                                             @BindBean final InternalTenantContext context);
+                                                             @SmartBindBean final InternalTenantContext context);
 
     @SqlQuery
     List<PaymentAttemptModelDao> getByPaymentExternalKey(@Bind("paymentExternalKey") final String paymentExternalKey,
-                                                         @BindBean final InternalTenantContext context);
+                                                         @SmartBindBean final InternalTenantContext context);
 
     @SqlQuery
     Long getCountByStateNameAcrossTenants(@Bind("stateName") final String stateName,

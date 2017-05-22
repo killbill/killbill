@@ -32,7 +32,7 @@ import org.killbill.billing.util.entity.dao.Audited;
 import org.killbill.billing.util.entity.dao.EntitySqlDao;
 import org.killbill.commons.jdbi.template.KillBillSqlDaoStringTemplate;
 import org.skife.jdbi.v2.sqlobject.Bind;
-import org.skife.jdbi.v2.sqlobject.BindBean;
+import org.killbill.commons.jdbi.binder.SmartBindBean;
 import org.skife.jdbi.v2.sqlobject.SqlQuery;
 import org.skife.jdbi.v2.sqlobject.SqlUpdate;
 import org.skife.jdbi.v2.sqlobject.customizers.Define;
@@ -49,11 +49,11 @@ public interface TransactionSqlDao extends EntitySqlDao<PaymentTransactionModelD
                                    @Bind("transactionStatus") final String transactionStatus,
                                    @Bind("gatewayErrorCode") final String gatewayErrorCode,
                                    @Bind("gatewayErrorMsg") final String gatewayErrorMsg,
-                                   @BindBean final InternalCallContext context);
+                                   @SmartBindBean final InternalCallContext context);
 
     @SqlQuery
     List<PaymentTransactionModelDao> getPaymentTransactionsByExternalKey(@Bind("transactionExternalKey") final String transactionExternalKey,
-                                                                         @BindBean final InternalTenantContext context);
+                                                                         @SmartBindBean final InternalTenantContext context);
 
     @SqlQuery
     Long getCountByTransactionStatusPriorDateAcrossTenants(@TransactionStatusCollectionBinder final Collection<String> statuses,
@@ -70,7 +70,7 @@ public interface TransactionSqlDao extends EntitySqlDao<PaymentTransactionModelD
 
     @SqlQuery
     public List<PaymentTransactionModelDao> getByPaymentId(@Bind("paymentId") final UUID paymentId,
-                                                           @BindBean final InternalTenantContext context);
+                                                           @SmartBindBean final InternalTenantContext context);
 }
 
 

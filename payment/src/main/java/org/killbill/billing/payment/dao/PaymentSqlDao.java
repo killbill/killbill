@@ -30,7 +30,7 @@ import org.killbill.billing.util.entity.dao.EntitySqlDao;
 import org.killbill.commons.jdbi.template.KillBillSqlDaoStringTemplate;
 import org.killbill.commons.jdbi.statement.SmartFetchSize;
 import org.skife.jdbi.v2.sqlobject.Bind;
-import org.skife.jdbi.v2.sqlobject.BindBean;
+import org.killbill.commons.jdbi.binder.SmartBindBean;
 import org.skife.jdbi.v2.sqlobject.SqlQuery;
 import org.skife.jdbi.v2.sqlobject.SqlUpdate;
 import org.skife.jdbi.v2.sqlobject.customizers.Define;
@@ -41,24 +41,24 @@ public interface PaymentSqlDao extends EntitySqlDao<PaymentModelDao, Payment> {
     @SqlUpdate
     @Audited(ChangeType.UPDATE)
     void updatePaymentForNewTransaction(@Bind("id") final String paymentId,
-                                        @BindBean final InternalCallContext context);
+                                        @SmartBindBean final InternalCallContext context);
 
     @SqlUpdate
     @Audited(ChangeType.UPDATE)
     Object updatePaymentStateName(@Bind("id") final String paymentId,
                                   @Bind("stateName") final String stateName,
-                                  @BindBean final InternalCallContext context);
+                                  @SmartBindBean final InternalCallContext context);
 
     @SqlUpdate
     @Audited(ChangeType.UPDATE)
     Object updateLastSuccessPaymentStateName(@Bind("id") final String paymentId,
                                              @Bind("stateName") final String stateName,
                                              @Bind("lastSuccessStateName") final String lastSuccessStateName,
-                                             @BindBean final InternalCallContext context);
+                                             @SmartBindBean final InternalCallContext context);
 
     @SqlQuery
     public PaymentModelDao getPaymentByExternalKey(@Bind("externalKey") final String externalKey,
-                                                   @BindBean final InternalTenantContext context);
+                                                   @SmartBindBean final InternalTenantContext context);
 
     @SqlQuery
     public List<PaymentModelDao> getPaymentsByStatesAcrossTenants(@StateCollectionBinder final Collection<String> states,
@@ -72,11 +72,11 @@ public interface PaymentSqlDao extends EntitySqlDao<PaymentModelDao, Payment> {
                                                    @Bind("offset") final Long offset,
                                                    @Bind("rowCount") final Long rowCount,
                                                    @Define("ordering") final String ordering,
-                                                   @BindBean final InternalTenantContext context);
+                                                   @SmartBindBean final InternalTenantContext context);
 
     @SqlQuery
     public Long getSearchByStateCount(@PaymentStateCollectionBinder final Collection<String> paymentStates,
-                                      @BindBean final InternalTenantContext context);
+                                      @SmartBindBean final InternalTenantContext context);
 
     @SqlQuery
     @SmartFetchSize(shouldStream = true)
@@ -84,9 +84,9 @@ public interface PaymentSqlDao extends EntitySqlDao<PaymentModelDao, Payment> {
                                                      @Bind("offset") final Long offset,
                                                      @Bind("rowCount") final Long rowCount,
                                                      @Define("ordering") final String ordering,
-                                                     @BindBean final InternalTenantContext context);
+                                                     @SmartBindBean final InternalTenantContext context);
 
     @SqlQuery
     public Long getCountByPluginName(@Bind("pluginName") final String pluginName,
-                                     @BindBean final InternalTenantContext context);
+                                     @SmartBindBean final InternalTenantContext context);
 }

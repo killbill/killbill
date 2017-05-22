@@ -23,7 +23,7 @@ import java.util.List;
 
 import org.killbill.commons.jdbi.template.KillBillSqlDaoStringTemplate;
 import org.skife.jdbi.v2.sqlobject.Bind;
-import org.skife.jdbi.v2.sqlobject.BindBean;
+import org.killbill.commons.jdbi.binder.SmartBindBean;
 import org.skife.jdbi.v2.sqlobject.SqlQuery;
 import org.skife.jdbi.v2.sqlobject.SqlUpdate;
 import org.skife.jdbi.v2.sqlobject.customizers.Define;
@@ -50,28 +50,28 @@ import org.killbill.billing.util.cache.CachableKey;
 public interface AuditSqlDao {
 
     @SqlUpdate
-    public void insertAuditFromTransaction(@BindBean final EntityAudit audit,
-                                           @BindBean final InternalCallContext context);
+    public void insertAuditFromTransaction(@SmartBindBean final EntityAudit audit,
+                                           @SmartBindBean final InternalCallContext context);
 
     @SqlQuery
     @SmartFetchSize(shouldStream = true)
-    public Iterator<AuditLogModelDao> getAuditLogsForAccountRecordId(@BindBean final InternalTenantContext context);
+    public Iterator<AuditLogModelDao> getAuditLogsForAccountRecordId(@SmartBindBean final InternalTenantContext context);
 
     @SqlQuery
     @SmartFetchSize(shouldStream = true)
     public Iterator<AuditLogModelDao> getAuditLogsForTableNameAndAccountRecordId(@Bind("tableName") final String tableName,
-                                                                                 @BindBean final InternalTenantContext context);
+                                                                                 @SmartBindBean final InternalTenantContext context);
 
     @SqlQuery
     @Cachable(CacheType.AUDIT_LOG)
     public List<AuditLogModelDao> getAuditLogsForTargetRecordId(@CachableKey(1) @Bind("tableName") final String tableName,
                                                                 @CachableKey(2) @Bind("targetRecordId") final long targetRecordId,
-                                                                @BindBean final InternalTenantContext context);
+                                                                @SmartBindBean final InternalTenantContext context);
 
     @SqlQuery
     @Cachable(CacheType.AUDIT_LOG_VIA_HISTORY)
     public List<AuditLogModelDao> getAuditLogsViaHistoryForTargetRecordId(@CachableKey(1) @Bind("tableName") final String historyTableName, /* Uppercased - used to find entries in audit_log table */
                                                                           @CachableKey(2) @Define("historyTableName") final String actualHistoryTableName, /* Actual table name, used in the inner join query */
                                                                           @CachableKey(3) @Bind("targetRecordId") final long targetRecordId,
-                                                                          @BindBean final InternalTenantContext context);
+                                                                          @SmartBindBean final InternalTenantContext context);
 }

@@ -30,7 +30,7 @@ import org.killbill.billing.util.entity.dao.Audited;
 import org.killbill.billing.util.entity.dao.EntitySqlDao;
 import org.killbill.commons.jdbi.template.KillBillSqlDaoStringTemplate;
 import org.skife.jdbi.v2.sqlobject.Bind;
-import org.skife.jdbi.v2.sqlobject.BindBean;
+import org.killbill.commons.jdbi.binder.SmartBindBean;
 import org.skife.jdbi.v2.sqlobject.SqlQuery;
 import org.skife.jdbi.v2.sqlobject.SqlUpdate;
 
@@ -41,20 +41,20 @@ public interface BlockingStateSqlDao extends EntitySqlDao<BlockingStateModelDao,
     public abstract BlockingStateModelDao getBlockingStateForService(@Bind("blockableId") UUID blockableId,
                                                                      @Bind("service") String serviceName,
                                                                      @Bind("effectiveDate") Date effectiveDate,
-                                                                     @BindBean final InternalTenantContext context);
+                                                                     @SmartBindBean final InternalTenantContext context);
 
     @SqlQuery
     public abstract List<BlockingStateModelDao> getBlockingState(@Bind("blockableId") UUID blockableId,
                                                                  @Bind("effectiveDate") Date effectiveDate,
-                                                                 @BindBean final InternalTenantContext context);
+                                                                 @SmartBindBean final InternalTenantContext context);
 
     @SqlQuery
     public abstract List<BlockingStateModelDao> getBlockingHistoryForService(@Bind("blockableId") UUID blockableId,
                                                                              @Bind("service") String serviceName,
-                                                                             @BindBean final InternalTenantContext context);
+                                                                             @SmartBindBean final InternalTenantContext context);
 
     @SqlUpdate
     @Audited(ChangeType.UPDATE)
     public void unactiveEvent(@Bind("id") String id,
-                              @BindBean final InternalCallContext context);
+                              @SmartBindBean final InternalCallContext context);
 }

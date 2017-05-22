@@ -27,7 +27,7 @@ import org.killbill.billing.util.entity.dao.EntitySqlDao;
 import org.killbill.commons.jdbi.template.KillBillSqlDaoStringTemplate;
 import org.killbill.billing.util.tag.dao.UUIDCollectionBinder;
 import org.skife.jdbi.v2.sqlobject.Bind;
-import org.skife.jdbi.v2.sqlobject.BindBean;
+import org.killbill.commons.jdbi.binder.SmartBindBean;
 import org.skife.jdbi.v2.sqlobject.SqlQuery;
 
 @KillBillSqlDaoStringTemplate
@@ -35,11 +35,11 @@ public interface InvoiceParentChildrenSqlDao extends EntitySqlDao<InvoiceParentC
 
     @SqlQuery
     List<InvoiceParentChildModelDao> getChildInvoicesByParentInvoiceId(@Bind("parentInvoiceId") final String parentInvoiceId,
-                                                                       @BindBean final InternalTenantContext context);
+                                                                       @SmartBindBean final InternalTenantContext context);
 
     @SqlQuery
     List<InvoiceParentChildModelDao> getParentChildMappingsByChildInvoiceIds(@UUIDCollectionBinder final Collection<String> childInvoiceIds,
-                                                                             @BindBean final InternalTenantContext context);
+                                                                             @SmartBindBean final InternalTenantContext context);
 
 }
 

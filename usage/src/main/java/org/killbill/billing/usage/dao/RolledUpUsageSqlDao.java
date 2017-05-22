@@ -29,7 +29,7 @@ import org.killbill.billing.util.entity.Entity;
 import org.killbill.billing.util.entity.dao.EntitySqlDao;
 import org.killbill.commons.jdbi.template.KillBillSqlDaoStringTemplate;
 import org.skife.jdbi.v2.sqlobject.Bind;
-import org.skife.jdbi.v2.sqlobject.BindBean;
+import org.killbill.commons.jdbi.binder.SmartBindBean;
 import org.skife.jdbi.v2.sqlobject.SqlBatch;
 import org.skife.jdbi.v2.sqlobject.SqlQuery;
 
@@ -37,7 +37,7 @@ import org.skife.jdbi.v2.sqlobject.SqlQuery;
 public interface RolledUpUsageSqlDao extends EntitySqlDao<RolledUpUsageModelDao, Entity> {
 
     @SqlBatch
-    void create(@BindBean Iterable<RolledUpUsageModelDao> usages,
+    void create(@SmartBindBean Iterable<RolledUpUsageModelDao> usages,
                 @InternalTenantContextBinder final InternalCallContext context);
 
     @SqlQuery

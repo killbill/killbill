@@ -20,7 +20,7 @@ import java.util.List;
 import java.util.UUID;
 
 import org.skife.jdbi.v2.sqlobject.Bind;
-import org.skife.jdbi.v2.sqlobject.BindBean;
+import org.killbill.commons.jdbi.binder.SmartBindBean;
 import org.skife.jdbi.v2.sqlobject.SqlQuery;
 import org.skife.jdbi.v2.sqlobject.SqlUpdate;
 
@@ -37,10 +37,10 @@ public interface AccountEmailSqlDao extends EntitySqlDao<AccountEmailModelDao, A
 
     @SqlUpdate
     @Audited(ChangeType.DELETE)
-    public void markEmailAsDeleted(@BindBean final AccountEmailModelDao accountEmail,
-                                   @BindBean final InternalCallContext context);
+    public void markEmailAsDeleted(@SmartBindBean final AccountEmailModelDao accountEmail,
+                                   @SmartBindBean final InternalCallContext context);
 
     @SqlQuery
     public List<AccountEmailModelDao> getEmailByAccountId(@Bind("accountId") final UUID accountId,
-                                                          @BindBean final InternalTenantContext context);
+                                                          @SmartBindBean final InternalTenantContext context);
 }

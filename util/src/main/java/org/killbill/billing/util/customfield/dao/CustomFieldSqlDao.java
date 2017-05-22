@@ -20,7 +20,7 @@ import java.util.List;
 import java.util.UUID;
 
 import org.skife.jdbi.v2.sqlobject.Bind;
-import org.skife.jdbi.v2.sqlobject.BindBean;
+import org.killbill.commons.jdbi.binder.SmartBindBean;
 import org.skife.jdbi.v2.sqlobject.SqlQuery;
 import org.skife.jdbi.v2.sqlobject.SqlUpdate;
 
@@ -39,10 +39,10 @@ public interface CustomFieldSqlDao extends EntitySqlDao<CustomFieldModelDao, Cus
     @SqlUpdate
     @Audited(ChangeType.DELETE)
     void markTagAsDeleted(@Bind("id") String customFieldId,
-                          @BindBean InternalCallContext context);
+                          @SmartBindBean InternalCallContext context);
 
     @SqlQuery
     List<CustomFieldModelDao> getCustomFieldsForObject(@Bind("objectId") UUID objectId,
                                                        @Bind("objectType") ObjectType objectType,
-                                                       @BindBean InternalTenantContext internalTenantContext);
+                                                       @SmartBindBean InternalTenantContext internalTenantContext);
 }

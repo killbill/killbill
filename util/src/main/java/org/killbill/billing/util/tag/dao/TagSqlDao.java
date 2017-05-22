@@ -20,7 +20,7 @@ import java.util.List;
 import java.util.UUID;
 
 import org.skife.jdbi.v2.sqlobject.Bind;
-import org.skife.jdbi.v2.sqlobject.BindBean;
+import org.killbill.commons.jdbi.binder.SmartBindBean;
 import org.skife.jdbi.v2.sqlobject.SqlQuery;
 import org.skife.jdbi.v2.sqlobject.SqlUpdate;
 
@@ -39,15 +39,15 @@ public interface TagSqlDao extends EntitySqlDao<TagModelDao, Tag> {
     @SqlUpdate
     @Audited(ChangeType.DELETE)
     void markTagAsDeleted(@Bind("id") String tagId,
-                          @BindBean InternalCallContext context);
+                          @SmartBindBean InternalCallContext context);
 
     @SqlQuery
     List<TagModelDao> getTagsForObject(@Bind("objectId") UUID objectId,
                                        @Bind("objectType") ObjectType objectType,
-                                       @BindBean InternalTenantContext internalTenantContext);
+                                       @SmartBindBean InternalTenantContext internalTenantContext);
 
     @SqlQuery
     List<TagModelDao> getTagsForObjectIncludedDeleted(@Bind("objectId") UUID objectId,
                                                       @Bind("objectType") ObjectType objectType,
-                                                      @BindBean InternalTenantContext internalTenantContext);
+                                                      @SmartBindBean InternalTenantContext internalTenantContext);
 }

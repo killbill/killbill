@@ -20,7 +20,7 @@ import java.util.Date;
 import java.util.List;
 
 import org.skife.jdbi.v2.sqlobject.Bind;
-import org.skife.jdbi.v2.sqlobject.BindBean;
+import org.killbill.commons.jdbi.binder.SmartBindBean;
 import org.skife.jdbi.v2.sqlobject.SqlQuery;
 import org.skife.jdbi.v2.sqlobject.SqlUpdate;
 
@@ -38,11 +38,11 @@ public interface SubscriptionSqlDao extends EntitySqlDao<SubscriptionModelDao, S
 
     @SqlQuery
     public List<SubscriptionModelDao> getSubscriptionsFromBundleId(@Bind("bundleId") String bundleId,
-                                                                   @BindBean final InternalTenantContext context);
+                                                                   @SmartBindBean final InternalTenantContext context);
 
     @SqlUpdate
     @Audited(ChangeType.UPDATE)
     public void updateChargedThroughDate(@Bind("id") String id, @Bind("chargedThroughDate") Date chargedThroughDate,
-                                         @BindBean final InternalCallContext context);
+                                         @SmartBindBean final InternalCallContext context);
 
 }
