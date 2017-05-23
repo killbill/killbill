@@ -32,6 +32,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
 import javax.annotation.Nullable;
 
@@ -83,6 +84,8 @@ import com.google.common.collect.Iterables;
 public class EntitySqlDaoWrapperInvocationHandler<S extends EntitySqlDao<M, E>, M extends EntityModelDao<E>, E extends Entity> implements InvocationHandler {
 
     private final Logger logger = LoggerFactory.getLogger(EntitySqlDaoWrapperInvocationHandler.class);
+
+    private final Map<String, Annotation[][]> parameterAnnotationsByMethod = new ConcurrentHashMap<String, Annotation[][]>();
 
     private final Class<S> sqlDaoClass;
     private final S sqlDao;
@@ -227,7 +230,7 @@ public class EntitySqlDaoWrapperInvocationHandler<S extends EntitySqlDao<M, E>, 
         if (cache != null && objectType != null) {
             // Find all arguments marked with @CachableKey
             final Map<Integer, Object> keyPieces = new LinkedHashMap<Integer, Object>();
-            final Annotation[][] annotations = method.getParameterAnnotations();
+            final Annotation[][] annotations = getAnnotations(method);
             for (int i = 0; i < annotations.length; i++) {
                 for (int j = 0; j < annotations[i].length; j++) {
                     final Annotation annotation = annotations[i][j];
@@ -408,7 +411,8 @@ public class EntitySqlDaoWrapperInvocationHandler<S extends EntitySqlDao<M, E>, 
     }
 
     private List<String> retrieveEntityIdsFromArguments(final Method method, final Object[] args) {
-        final Annotation[][] parameterAnnotations = method.getParameterAnnotations();
+        final Annotation[][] parameterAnnotations = getAnnotations(method);
+
         int i = -1;
         for (final Object arg : args) {
             i++;
@@ -436,6 +440,19 @@ public class EntitySqlDaoWrapperInvocationHandler<S extends EntitySqlDao<M, E>, 
             }
         }
         return ImmutableList.<String>of();
+    }
+
+    private Annotation[][] getAnnotations(final Method method) {
+        // Expensive to compute
+        final String methodString = method.toString();
+
+        // Method.getParameterAnnotations() generates lots of garbage objects
+        Annotation[][] parameterAnnotations = parameterAnnotationsByMethod.get(methodString);
+        if (parameterAnnotations == null) {
+            parameterAnnotations = method.getParameterAnnotations();
+            parameterAnnotationsByMethod.put(methodString, parameterAnnotations);
+        }
+        return parameterAnnotations;
     }
 
     private Builder<String> extractEntityIdsFromBatchArgument(final Iterable arg) {
