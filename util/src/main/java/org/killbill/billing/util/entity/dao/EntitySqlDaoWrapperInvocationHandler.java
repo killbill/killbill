@@ -52,7 +52,6 @@ import org.killbill.billing.util.dao.EntityHistoryModelDao;
 import org.killbill.billing.util.dao.NonEntityDao;
 import org.killbill.billing.util.dao.TableName;
 import org.killbill.billing.util.entity.Entity;
-import org.killbill.billing.util.tag.dao.UUIDCollectionBinder;
 import org.killbill.clock.Clock;
 import org.killbill.commons.profiling.Profiling;
 import org.killbill.commons.profiling.Profiling.WithProfilingCallback;
@@ -63,6 +62,7 @@ import org.skife.jdbi.v2.StatementContext;
 import org.skife.jdbi.v2.exceptions.DBIException;
 import org.skife.jdbi.v2.exceptions.StatementException;
 import org.skife.jdbi.v2.sqlobject.Bind;
+import org.skife.jdbi.v2.unstable.BindIn;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -434,7 +434,7 @@ public class EntitySqlDaoWrapperInvocationHandler<S extends EntitySqlDao<M, E>, 
             for (final Annotation annotation : parameterAnnotations[i]) {
                 if (arg instanceof String && Bind.class.equals(annotation.annotationType()) && ("id").equals(((Bind) annotation).value())) {
                     return ImmutableList.<String>of((String) arg);
-                } else if (arg instanceof Collection && UUIDCollectionBinder.class.equals(annotation.annotationType())) {
+                } else if (arg instanceof Collection && BindIn.class.equals(annotation.annotationType()) && ("ids").equals(((BindIn) annotation).value())) {
                     return ImmutableList.<String>copyOf((Collection) arg);
                 }
             }

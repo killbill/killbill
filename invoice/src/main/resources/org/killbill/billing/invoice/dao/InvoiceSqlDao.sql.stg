@@ -75,7 +75,7 @@ getByIds(ids) ::= <<
 select
   <allTableFields("t.")>
 from <tableName()> t
-where <idField("t.")> in (<ids: {id | :id_<i0>}; separator="," >)
+where <idField("t.")> in (<ids>)
 <AND_CHECK_TENANT("t.")>
 ;
 >>

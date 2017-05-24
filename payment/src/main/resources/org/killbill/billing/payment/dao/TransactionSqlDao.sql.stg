@@ -89,7 +89,7 @@ from <tableName()>
 where
 created_date >= :createdAfterDate
 and created_date \< :createdBeforeDate
-and transaction_status in (<statuses: {status | :status_<i0>}; separator="," >)
+and transaction_status in (<statuses>)
 order by <recordIdField("")> <ordering>
 limit :rowCount offset :offset
 ;
@@ -102,7 +102,7 @@ from <tableName()>
 where
 created_date >= :createdAfterDate
 and created_date \< :createdBeforeDate
-and transaction_status in (<statuses: {status | :status_<i0>}; separator="," >)
+and transaction_status in (<statuses>)
 ;
 >>
 

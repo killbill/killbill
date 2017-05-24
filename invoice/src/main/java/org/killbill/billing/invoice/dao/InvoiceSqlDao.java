@@ -28,12 +28,12 @@ import org.killbill.billing.invoice.api.Invoice;
 import org.killbill.billing.util.audit.ChangeType;
 import org.killbill.billing.util.entity.dao.Audited;
 import org.killbill.billing.util.entity.dao.EntitySqlDao;
-import org.killbill.commons.jdbi.template.KillBillSqlDaoStringTemplate;
-import org.killbill.billing.util.tag.dao.UUIDCollectionBinder;
-import org.skife.jdbi.v2.sqlobject.Bind;
 import org.killbill.commons.jdbi.binder.SmartBindBean;
+import org.killbill.commons.jdbi.template.KillBillSqlDaoStringTemplate;
+import org.skife.jdbi.v2.sqlobject.Bind;
 import org.skife.jdbi.v2.sqlobject.SqlQuery;
 import org.skife.jdbi.v2.sqlobject.SqlUpdate;
+import org.skife.jdbi.v2.unstable.BindIn;
 
 @KillBillSqlDaoStringTemplate
 public interface InvoiceSqlDao extends EntitySqlDao<InvoiceModelDao, Invoice> {
@@ -57,7 +57,7 @@ public interface InvoiceSqlDao extends EntitySqlDao<InvoiceModelDao, Invoice> {
                                           @SmartBindBean final InternalTenantContext context);
 
     @SqlQuery
-    List<InvoiceModelDao> getByIds(@UUIDCollectionBinder final Collection<String> invoiceIds,
+    List<InvoiceModelDao> getByIds(@BindIn("ids") final Collection<String> invoiceIds,
                                    @SmartBindBean final InternalTenantContext context);
 }
 

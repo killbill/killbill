@@ -1,6 +1,6 @@
 /*
- * Copyright 2014-2016 Groupon, Inc
- * Copyright 2014-2016 The Billing Project, LLC
+ * Copyright 2014-2017 Groupon, Inc
+ * Copyright 2014-2017 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -19,16 +19,15 @@ package org.killbill.billing.invoice.dao;
 
 import java.util.Collection;
 import java.util.List;
-import java.util.UUID;
 
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.invoice.api.InvoiceParentChild;
 import org.killbill.billing.util.entity.dao.EntitySqlDao;
-import org.killbill.commons.jdbi.template.KillBillSqlDaoStringTemplate;
-import org.killbill.billing.util.tag.dao.UUIDCollectionBinder;
-import org.skife.jdbi.v2.sqlobject.Bind;
 import org.killbill.commons.jdbi.binder.SmartBindBean;
+import org.killbill.commons.jdbi.template.KillBillSqlDaoStringTemplate;
+import org.skife.jdbi.v2.sqlobject.Bind;
 import org.skife.jdbi.v2.sqlobject.SqlQuery;
+import org.skife.jdbi.v2.unstable.BindIn;
 
 @KillBillSqlDaoStringTemplate
 public interface InvoiceParentChildrenSqlDao extends EntitySqlDao<InvoiceParentChildModelDao, InvoiceParentChild> {
@@ -38,7 +37,7 @@ public interface InvoiceParentChildrenSqlDao extends EntitySqlDao<InvoiceParentC
                                                                        @SmartBindBean final InternalTenantContext context);
 
     @SqlQuery
-    List<InvoiceParentChildModelDao> getParentChildMappingsByChildInvoiceIds(@UUIDCollectionBinder final Collection<String> childInvoiceIds,
+    List<InvoiceParentChildModelDao> getParentChildMappingsByChildInvoiceIds(@BindIn("ids") final Collection<String> childInvoiceIds,
                                                                              @SmartBindBean final InternalTenantContext context);
 
 }

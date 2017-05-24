@@ -1,6 +1,6 @@
 /*
- * Copyright 2014-2016 Groupon, Inc
- * Copyright 2014-2016 The Billing Project, LLC
+ * Copyright 2014-2017 Groupon, Inc
+ * Copyright 2014-2017 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -30,12 +30,13 @@ import org.killbill.billing.payment.api.PaymentTransaction;
 import org.killbill.billing.util.audit.ChangeType;
 import org.killbill.billing.util.entity.dao.Audited;
 import org.killbill.billing.util.entity.dao.EntitySqlDao;
+import org.killbill.commons.jdbi.binder.SmartBindBean;
 import org.killbill.commons.jdbi.template.KillBillSqlDaoStringTemplate;
 import org.skife.jdbi.v2.sqlobject.Bind;
-import org.killbill.commons.jdbi.binder.SmartBindBean;
 import org.skife.jdbi.v2.sqlobject.SqlQuery;
 import org.skife.jdbi.v2.sqlobject.SqlUpdate;
 import org.skife.jdbi.v2.sqlobject.customizers.Define;
+import org.skife.jdbi.v2.unstable.BindIn;
 
 @KillBillSqlDaoStringTemplate
 public interface TransactionSqlDao extends EntitySqlDao<PaymentTransactionModelDao, PaymentTransaction> {
@@ -56,12 +57,12 @@ public interface TransactionSqlDao extends EntitySqlDao<PaymentTransactionModelD
                                                                          @SmartBindBean final InternalTenantContext context);
 
     @SqlQuery
-    Long getCountByTransactionStatusPriorDateAcrossTenants(@TransactionStatusCollectionBinder final Collection<String> statuses,
+    Long getCountByTransactionStatusPriorDateAcrossTenants(@BindIn("statuses") final Collection<String> statuses,
                                                            @Bind("createdBeforeDate") final Date createdBeforeDate,
                                                            @Bind("createdAfterDate") final Date createdAfterDate);
 
     @SqlQuery
-    Iterator<PaymentTransactionModelDao> getByTransactionStatusPriorDateAcrossTenants(@TransactionStatusCollectionBinder final Collection<String> statuses,
+    Iterator<PaymentTransactionModelDao> getByTransactionStatusPriorDateAcrossTenants(@BindIn("statuses") final Collection<String> statuses,
                                                                                       @Bind("createdBeforeDate") final Date createdBeforeDate,
                                                                                       @Bind("createdAfterDate") final Date createdAfterDate,
                                                                                       @Bind("offset") final Long offset,

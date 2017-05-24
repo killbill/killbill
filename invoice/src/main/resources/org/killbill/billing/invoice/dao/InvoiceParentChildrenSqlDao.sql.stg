@@ -39,7 +39,7 @@ getChildInvoicesByParentInvoiceId() ::= <<
 getParentChildMappingsByChildInvoiceIds(ids) ::= <<
    SELECT <allTableFields("")>
    FROM <tableName()>
-   WHERE child_invoice_id in (<ids: {id | :id_<i0>}; separator="," >)
+   WHERE child_invoice_id in (<ids>)
    <AND_CHECK_TENANT("")>
    <defaultOrderBy("")>
  >>
