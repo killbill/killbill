@@ -1,4 +1,4 @@
-group SubscriptionSqlDao: EntitySqlDao;
+import "org/killbill/billing/util/entity/dao/EntitySqlDao.sql.stg"
 
 tableName() ::= "subscriptions"
 
@@ -31,11 +31,11 @@ tableValues() ::= <<
 
 getSubscriptionsFromBundleId() ::= <<
 select
-<allTableFields()>
+<allTableFields("")>
 from <tableName()>
 where bundle_id = :bundleId
-<AND_CHECK_TENANT()>
-<defaultOrderBy()>
+<AND_CHECK_TENANT("")>
+<defaultOrderBy("")>
 ;
 >>
 
@@ -46,6 +46,6 @@ charged_through_date = :chargedThroughDate
 , updated_by = :createdBy
 , updated_date = :updatedDate
 where id = :id
-<AND_CHECK_TENANT()>
+<AND_CHECK_TENANT("")>
 ;
 >>

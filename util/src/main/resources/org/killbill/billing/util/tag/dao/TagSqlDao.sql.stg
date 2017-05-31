@@ -1,4 +1,4 @@
-group TagDao: EntitySqlDao;
+import "org/killbill/billing/util/entity/dao/EntitySqlDao.sql.stg"
 
 tableName() ::= "tags"
 

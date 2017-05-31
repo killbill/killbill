@@ -1,4 +1,4 @@
-group TagDefinitionDao: EntitySqlDao;
+import "org/killbill/billing/util/entity/dao/EntitySqlDao.sql.stg"
 
 tableName() ::= "tag_definitions"
 
@@ -63,7 +63,7 @@ select
   <allTableFields("t.")>
 from <tableName()> t
 where t.is_active
-and <idField("t.")> in (<ids: {id | :id_<i0>}; separator="," >)
+and <idField("t.")> in (<ids>)
 <AND_CHECK_TENANT("t.")>
 ;
 >>

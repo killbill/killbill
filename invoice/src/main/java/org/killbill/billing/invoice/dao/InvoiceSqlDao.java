@@ -28,36 +28,36 @@ import org.killbill.billing.invoice.api.Invoice;
 import org.killbill.billing.util.audit.ChangeType;
 import org.killbill.billing.util.entity.dao.Audited;
 import org.killbill.billing.util.entity.dao.EntitySqlDao;
-import org.killbill.billing.util.entity.dao.EntitySqlDaoStringTemplate;
-import org.killbill.billing.util.tag.dao.UUIDCollectionBinder;
+import org.killbill.commons.jdbi.binder.SmartBindBean;
+import org.killbill.commons.jdbi.template.KillBillSqlDaoStringTemplate;
 import org.skife.jdbi.v2.sqlobject.Bind;
-import org.skife.jdbi.v2.sqlobject.BindBean;
 import org.skife.jdbi.v2.sqlobject.SqlQuery;
 import org.skife.jdbi.v2.sqlobject.SqlUpdate;
+import org.skife.jdbi.v2.unstable.BindIn;
 
-@EntitySqlDaoStringTemplate
+@KillBillSqlDaoStringTemplate
 public interface InvoiceSqlDao extends EntitySqlDao<InvoiceModelDao, Invoice> {
 
     @SqlQuery
     List<InvoiceModelDao> getInvoicesBySubscription(@Bind("subscriptionId") final String subscriptionId,
-                                                    @BindBean final InternalTenantContext context);
+                                                    @SmartBindBean final InternalTenantContext context);
 
     @SqlQuery
     UUID getInvoiceIdByPaymentId(@Bind("paymentId") final String paymentId,
-                                 @BindBean final InternalTenantContext context);
+                                 @SmartBindBean final InternalTenantContext context);
 
     @SqlUpdate
     @Audited(ChangeType.UPDATE)
     void updateStatus(@Bind("id") String invoiceId,
                       @Bind("status") String status,
-                      @BindBean final InternalCallContext context);
+                      @SmartBindBean final InternalCallContext context);
 
     @SqlQuery
     InvoiceModelDao getParentDraftInvoice(@Bind("accountId") final String parentAccountId,
-                                          @BindBean final InternalTenantContext context);
+                                          @SmartBindBean final InternalTenantContext context);
 
     @SqlQuery
-    List<InvoiceModelDao> getByIds(@UUIDCollectionBinder final Collection<String> invoiceIds,
-                                   @BindBean final InternalTenantContext context);
+    List<InvoiceModelDao> getByIds(@BindIn("ids") final Collection<String> invoiceIds,
+                                   @SmartBindBean final InternalTenantContext context);
 }
 

@@ -1,5 +1,3 @@
-group BroadcastSqlDao;
-
 tableName() ::= "service_broadcasts"
 
 
@@ -29,9 +27,13 @@ allTableValues() ::= <<
 , <tableValues()>
 >>
 
+defaultOrderBy(prefix) ::= <<
+order by <prefix>record_id ASC
+>>
+
 create() ::= <<
 insert into <tableName()> (
-<tableFields()>
+<tableFields("")>
 )
 values (
 <tableValues()>

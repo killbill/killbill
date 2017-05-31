@@ -1,4 +1,4 @@
-group InvoicePayment: EntitySqlDao;
+import "org/killbill/billing/util/entity/dao/EntitySqlDao.sql.stg"
 
 tableName() ::= "invoice_payments"
 
@@ -45,41 +45,41 @@ AND payment_id IS NOT NULL
 >>
 
 getByPaymentId() ::= <<
-  SELECT <allTableFields()>
+  SELECT <allTableFields("")>
   FROM <tableName()>
   WHERE payment_id = :paymentId
-  <AND_CHECK_TENANT()>
-  <defaultOrderBy()>
+  <AND_CHECK_TENANT("")>
+  <defaultOrderBy("")>
   ;
 >>
 
 getPaymentForCookieId() ::= <<
-  SELECT <allTableFields()>
+  SELECT <allTableFields("")>
   FROM <tableName()>
   WHERE payment_cookie_id = :paymentCookieId
-  <AND_CHECK_TENANT()>
-  <defaultOrderBy()>
+  <AND_CHECK_TENANT("")>
+  <defaultOrderBy("")>
   LIMIT 1
   ;
 >>
 
 getAllPaymentsForInvoiceIncludedInit() ::= <<
-  SELECT <allTableFields()>
+  SELECT <allTableFields("")>
   FROM <tableName()>
   WHERE invoice_id = :invoiceId
-  <AND_CHECK_TENANT()>
-  <defaultOrderBy()>
+  <AND_CHECK_TENANT("")>
+  <defaultOrderBy("")>
   ;
 >>
 
 
 
 getInvoicePayments() ::= <<
-    SELECT <allTableFields()>
+    SELECT <allTableFields("")>
     FROM <tableName()>
     WHERE payment_id = :paymentId
-    <AND_CHECK_TENANT()>
-    <defaultOrderBy()>
+    <AND_CHECK_TENANT("")>
+    <defaultOrderBy("")>
     ;
 >>
 
@@ -88,7 +88,7 @@ getRemainingAmountPaid() ::= <<
     FROM <tableName()>
     WHERE (id = :invoicePaymentId OR linked_invoice_payment_id = :invoicePaymentId)
     AND success
-    <AND_CHECK_TENANT()>
+    <AND_CHECK_TENANT("")>
     ;
 >>
 
@@ -114,12 +114,12 @@ getChargeBacksByAccountId() ::= <<
 >>
 
 getChargebacksByPaymentId() ::= <<
-    SELECT <allTableFields()>
+    SELECT <allTableFields("")>
     FROM <tableName()>
     WHERE type = 'CHARGED_BACK'
     AND linked_invoice_payment_id IN (SELECT id FROM invoice_payments WHERE payment_id = :paymentId)
     AND success
-    <AND_CHECK_TENANT()>
+    <AND_CHECK_TENANT("")>
     ;
 >>
 

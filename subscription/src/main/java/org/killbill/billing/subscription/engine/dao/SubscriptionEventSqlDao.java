@@ -26,34 +26,34 @@ import org.killbill.billing.subscription.events.SubscriptionBaseEvent;
 import org.killbill.billing.util.audit.ChangeType;
 import org.killbill.billing.util.entity.dao.Audited;
 import org.killbill.billing.util.entity.dao.EntitySqlDao;
-import org.killbill.billing.util.entity.dao.EntitySqlDaoStringTemplate;
+import org.killbill.commons.jdbi.template.KillBillSqlDaoStringTemplate;
 import org.skife.jdbi.v2.sqlobject.Bind;
-import org.skife.jdbi.v2.sqlobject.BindBean;
+import org.killbill.commons.jdbi.binder.SmartBindBean;
 import org.skife.jdbi.v2.sqlobject.SqlQuery;
 import org.skife.jdbi.v2.sqlobject.SqlUpdate;
 
-@EntitySqlDaoStringTemplate
+@KillBillSqlDaoStringTemplate
 public interface SubscriptionEventSqlDao extends EntitySqlDao<SubscriptionEventModelDao, SubscriptionBaseEvent> {
 
     @SqlUpdate
     @Audited(ChangeType.UPDATE)
     public void unactiveEvent(@Bind("id") String id,
-                              @BindBean final InternalCallContext context);
+                              @SmartBindBean final InternalCallContext context);
 
     @SqlQuery
     public List<SubscriptionEventModelDao> getFutureActiveEventForSubscription(@Bind("subscriptionId") String subscriptionId,
                                                                                @Bind("now") Date now,
-                                                                               @BindBean final InternalTenantContext context);
+                                                                               @SmartBindBean final InternalTenantContext context);
 
     @SqlQuery
     public List<SubscriptionEventModelDao> getFutureOrPresentActiveEventForSubscription(@Bind("subscriptionId") String subscriptionId,
                                                                                         @Bind("now") Date now,
-                                                                                        @BindBean final InternalTenantContext context);
+                                                                                        @SmartBindBean final InternalTenantContext context);
 
     @SqlQuery
     public List<SubscriptionEventModelDao> getActiveEventsForSubscription(@Bind("subscriptionId") String subscriptionId,
-                                                                          @BindBean final InternalTenantContext context);
+                                                                          @SmartBindBean final InternalTenantContext context);
 
     @SqlQuery
-    public List<SubscriptionEventModelDao> getFutureActiveEventsForAccount(@Bind("now") Date now, @BindBean final InternalTenantContext context);
+    public List<SubscriptionEventModelDao> getFutureActiveEventsForAccount(@Bind("now") Date now, @SmartBindBean final InternalTenantContext context);
 }

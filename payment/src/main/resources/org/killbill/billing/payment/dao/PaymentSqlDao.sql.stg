@@ -1,4 +1,4 @@
-group PaymentSqlDao: EntitySqlDao;
+import "org/killbill/billing/util/entity/dao/EntitySqlDao.sql.stg"
 
 tableName() ::= "payments"
 
@@ -41,7 +41,7 @@ update <tableName()>
 set updated_by = :updatedBy
 , updated_date = :updatedDate
 where id = :id
-<AND_CHECK_TENANT()>
+<AND_CHECK_TENANT("")>
 ;
 >>
 
@@ -51,7 +51,7 @@ set state_name = :stateName
 , updated_by = :updatedBy
 , updated_date = :updatedDate
 where id = :id
-<AND_CHECK_TENANT()>
+<AND_CHECK_TENANT("")>
 ;
 >>
 
@@ -62,7 +62,7 @@ set state_name = :stateName
 , updated_by = :updatedBy
 , updated_date = :updatedDate
 where id = :id
-<AND_CHECK_TENANT()>
+<AND_CHECK_TENANT("")>
 ;
 >>
 
@@ -71,7 +71,7 @@ select
 <allTableFields("")>
 from <tableName()>
 where external_key = :externalKey
-<AND_CHECK_TENANT()>
+<AND_CHECK_TENANT("")>
 ;
 >>
 
@@ -87,12 +87,12 @@ select
 <allTableFields("t.")>
 from <tableName()> t
 join (
-  select <recordIdField()>
+  select <recordIdField("")>
   from <tableName()>
-  where state_name in (<states: {state | :state_<i0>}; separator="," >)
-  <AND_CHECK_TENANT()>
-  <andCheckSoftDeletionWithComma()>
-  order by <recordIdField()> <ordering>
+  where state_name in (<states>)
+  <AND_CHECK_TENANT("")>
+  <andCheckSoftDeletionWithComma("")>
+  order by <recordIdField("")> <ordering>
   limit :rowCount offset :offset
 ) optimization on <recordIdField("optimization.")> = <recordIdField("t.")>
 order by <recordIdField("t.")> <ordering>
@@ -103,7 +103,7 @@ getSearchByStateCount(states) ::= <<
 select
   count(1) as count
 from <tableName()> t
-where t.state_name in (<states: {state | :state_<i0>}; separator="," >)
+where t.state_name in (<states>)
 <andCheckSoftDeletionWithComma("t.")>
 <AND_CHECK_TENANT("t.")>
 ;
@@ -138,7 +138,7 @@ from <tableName()> t
 where
 created_date >= :createdAfterDate
 and created_date \< :createdBeforeDate
-and state_name in (<states: {state | :state_<i0>}; separator="," >)
+and state_name in (<states>)
 limit :limit
 ;
 >>

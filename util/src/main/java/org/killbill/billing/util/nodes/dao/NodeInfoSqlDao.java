@@ -20,17 +20,17 @@ package org.killbill.billing.util.nodes.dao;
 import java.util.Date;
 import java.util.List;
 
-import org.killbill.billing.util.entity.dao.EntitySqlDaoStringTemplate;
+import org.killbill.commons.jdbi.template.KillBillSqlDaoStringTemplate;
 import org.skife.jdbi.v2.sqlobject.Bind;
-import org.skife.jdbi.v2.sqlobject.BindBean;
+import org.killbill.commons.jdbi.binder.SmartBindBean;
 import org.skife.jdbi.v2.sqlobject.SqlQuery;
 import org.skife.jdbi.v2.sqlobject.SqlUpdate;
 
-@EntitySqlDaoStringTemplate
+@KillBillSqlDaoStringTemplate
 public interface NodeInfoSqlDao {
 
     @SqlUpdate
-    public void create(@BindBean final NodeInfoModelDao nodeInfo);
+    public void create(@SmartBindBean final NodeInfoModelDao nodeInfo);
 
     @SqlUpdate
     public void updateNodeInfo(@Bind("nodeName") final String nodeName, @Bind("nodeInfo") final String nodeInfo, @Bind("updatedDate") final Date updatedDate);

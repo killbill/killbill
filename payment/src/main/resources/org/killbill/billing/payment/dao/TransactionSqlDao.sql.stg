@@ -1,4 +1,4 @@
-group TransactionSqlDao: EntitySqlDao;
+import "org/killbill/billing/util/entity/dao/EntitySqlDao.sql.stg"
 
 tableName() ::= "payment_transactions"
 
@@ -51,8 +51,8 @@ select
 <allTableFields("")>
 from <tableName()>
 where transaction_external_key = :transactionExternalKey
-<AND_CHECK_TENANT()>
-<defaultOrderBy()>
+<AND_CHECK_TENANT("")>
+<defaultOrderBy("")>
 ;
 >>
 
@@ -68,29 +68,29 @@ set transaction_status = :transactionStatus
 , updated_by = :updatedBy
 , updated_date = :updatedDate
 where id = :id
-<AND_CHECK_TENANT()>
+<AND_CHECK_TENANT("")>
 ;
 >>
 
 getByPaymentId() ::= <<
-select <allTableFields()>
+select <allTableFields("")>
 from <tableName()>
 where payment_id = :paymentId
-<AND_CHECK_TENANT()>
-<defaultOrderBy()>
+<AND_CHECK_TENANT("")>
+<defaultOrderBy("")>
 ;
 >>
 
 
 /* Does not include AND_CHECK_TENANT() since this is a global operation */
 getByTransactionStatusPriorDateAcrossTenants(statuses, ordering) ::= <<
-select <allTableFields()>
+select <allTableFields("")>
 from <tableName()>
 where
 created_date >= :createdAfterDate
 and created_date \< :createdBeforeDate
-and transaction_status in (<statuses: {status | :status_<i0>}; separator="," >)
-order by <recordIdField()> <ordering>
+and transaction_status in (<statuses>)
+order by <recordIdField("")> <ordering>
 limit :rowCount offset :offset
 ;
 >>
@@ -102,7 +102,7 @@ from <tableName()>
 where
 created_date >= :createdAfterDate
 and created_date \< :createdBeforeDate
-and transaction_status in (<statuses: {status | :status_<i0>}; separator="," >)
+and transaction_status in (<statuses>)
 ;
 >>
 

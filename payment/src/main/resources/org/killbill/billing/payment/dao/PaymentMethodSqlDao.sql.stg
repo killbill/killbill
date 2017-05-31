@@ -1,6 +1,4 @@
-group PaymentMethodSqlDao: EntitySqlDao;
-
-
+import "org/killbill/billing/util/entity/dao/EntitySqlDao.sql.stg"
 
 tableName() ::= "payment_methods"
 
@@ -36,7 +34,7 @@ set is_active = false
 , updated_by = :updatedBy
 , updated_date = :updatedDate
 where  id = :id
-<AND_CHECK_TENANT()>
+<AND_CHECK_TENANT("")>
 ;
 >>
 
@@ -46,51 +44,51 @@ set is_active = true
 , updated_by = :updatedBy
 , updated_date = :updatedDate
 where  id = :id
-<AND_CHECK_TENANT()>
+<AND_CHECK_TENANT("")>
 ;
 >>
 
 getByExternalKey() ::= <<
-select <allTableFields()>
+select <allTableFields("")>
 from <tableName()>
 where external_key = :externalKey
-<andCheckSoftDeletionWithComma()>
-<AND_CHECK_TENANT()>
+<andCheckSoftDeletionWithComma("")>
+<AND_CHECK_TENANT("")>
 ;
 >>
 
 getPaymentMethodByExternalKeyIncludedDeleted() ::= <<
-select <allTableFields()>
+select <allTableFields("")>
 from <tableName()>
 where external_key = :externalKey
-<AND_CHECK_TENANT()>
+<AND_CHECK_TENANT("")>
 ;
 >>
 
 getPaymentMethodIncludedDelete(accountId) ::= <<
-select <allTableFields()>
+select <allTableFields("")>
 from <tableName()>
 where id = :id
-<AND_CHECK_TENANT()>
+<AND_CHECK_TENANT("")>
 ;
 >>
 
 getForAccount() ::= <<
 select
-<allTableFields()>
+<allTableFields("")>
 from <tableName()>
-where <accountRecordIdField()> = :accountRecordId
-<andCheckSoftDeletionWithComma()>
-<AND_CHECK_TENANT()>
+where <accountRecordIdField("")> = :accountRecordId
+<andCheckSoftDeletionWithComma("")>
+<AND_CHECK_TENANT("")>
 ;
 >>
 
 getForAccountIncludedDelete() ::= <<
 select
-<allTableFields()>
+<allTableFields("")>
 from <tableName()>
-where <accountRecordIdField()> = :accountRecordId
-<AND_CHECK_TENANT()>
+where <accountRecordIdField("")> = :accountRecordId
+<AND_CHECK_TENANT("")>
 ;
 >>
 

@@ -1,6 +1,3 @@
-group EntitySqlDao;
-
-
 /******************   To override in each EntitySqlDao template file *****************************/
 
 tableName() ::= ""
@@ -152,10 +149,10 @@ select
 <allTableFields("t.")>
 from <tableName()> t
 join (
-  select <recordIdField()>
+  select <recordIdField("")>
   from <tableName()>
-  where <CHECK_TENANT()>
-  <andCheckSoftDeletionWithComma()>
+  where <CHECK_TENANT("")>
+  <andCheckSoftDeletionWithComma("")>
   order by <orderBy> <ordering>
   limit :rowCount offset :offset
 ) optimization on <recordIdField("optimization.")> = <recordIdField("t.")>
@@ -292,10 +289,10 @@ where (<searchQuery("t.")>)
 
 create() ::= <<
 insert into <tableName()> (
-  <idField()>
-, <tableFields()>
-<accountRecordIdFieldWithComma()>
-<tenantRecordIdFieldWithComma()>
+  <idField("")>
+, <tableFields("")>
+<accountRecordIdFieldWithComma("")>
+<tenantRecordIdFieldWithComma("")>
 )
 values (
   <idValue()>
@@ -338,7 +335,7 @@ auditTableValues() ::= <<
 
 getHistoryForTargetRecordId() ::= <<
 select
-  <idField()>
+  <idField("")>
 , <historyTableFields("t.")>
 <accountRecordIdFieldWithComma("t.")>
 <tenantRecordIdFieldWithComma("t.")>
@@ -351,10 +348,10 @@ order by <recordIdField("t.")> ASC
 
 addHistoryFromTransaction() ::= <<
 insert into <historyTableName()> (
-  <idField()>
-, <historyTableFields()>
-<accountRecordIdFieldWithComma()>
-<tenantRecordIdFieldWithComma()>
+  <idField("")>
+, <historyTableFields("")>
+<accountRecordIdFieldWithComma("")>
+<tenantRecordIdFieldWithComma("")>
 )
 values (
   <idValue()>
@@ -368,7 +365,7 @@ values (
 
 insertAuditFromTransaction() ::= <<
 insert into <auditTableName()> (
-<auditTableFields()>
+<auditTableFields("")>
 )
 values (
 <auditTableValues()>

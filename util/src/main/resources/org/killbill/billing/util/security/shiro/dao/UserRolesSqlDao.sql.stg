@@ -1,5 +1,3 @@
-group UserRolesSqlDao;
-
 tableName() ::= "user_roles"
 
 tableFields(prefix) ::= <<
@@ -36,7 +34,7 @@ allTableValues() ::= <<
 
 create() ::= <<
 insert into <tableName()> (
-<tableFields()>
+<tableFields("")>
 )
 values (
 <tableValues()>
@@ -45,7 +43,7 @@ values (
 >>
 
 getByRecordId() ::= <<
-select <allTableFields()>
+select <allTableFields("")>
 from <tableName()>
 where record_id = :recordId
 and is_active
@@ -53,7 +51,7 @@ and is_active
 >>
 
 getByUsername() ::= <<
-select <allTableFields()>
+select <allTableFields("")>
 from <tableName()>
 where username = :username
 and is_active

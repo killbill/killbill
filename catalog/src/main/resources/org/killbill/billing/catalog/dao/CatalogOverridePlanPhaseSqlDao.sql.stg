@@ -1,6 +1,3 @@
-group CatalogOverridePlanPhaseSqlDao;
-
-
 tableName() ::= "catalog_override_plan_phase"
 
 
@@ -36,7 +33,7 @@ allTableValues() ::= <<
 
 create() ::= <<
 insert into <tableName()> (
-<tableFields()>
+<tableFields("")>
 )
 values (
 <tableValues()>
@@ -45,7 +42,7 @@ values (
 >>
 
 getByRecordId() ::= <<
-select <allTableFields()>
+select <allTableFields("")>
 from
 <tableName()>
 where record_id = :recordId
@@ -62,7 +59,7 @@ from (select
       from
       <tableName()>
       where
-      concat_ws(',', phase_number, phase_def_record_id) in (<keys: {key | :key_<i0>}; separator="," >)
+      concat_ws(',', phase_number, phase_def_record_id) in (<keys>)
       and tenant_record_id = :tenantRecordId
       group by target_plan_def_record_id) tmp
 where

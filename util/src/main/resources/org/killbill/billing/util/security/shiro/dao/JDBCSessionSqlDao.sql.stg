@@ -1,5 +1,3 @@
-group JDBCSessionSqlDao;
-
 read() ::= <<
 select
   record_id

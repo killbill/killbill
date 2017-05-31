@@ -32,6 +32,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
 import javax.annotation.Nullable;
 
@@ -51,7 +52,6 @@ import org.killbill.billing.util.dao.EntityHistoryModelDao;
 import org.killbill.billing.util.dao.NonEntityDao;
 import org.killbill.billing.util.dao.TableName;
 import org.killbill.billing.util.entity.Entity;
-import org.killbill.billing.util.tag.dao.UUIDCollectionBinder;
 import org.killbill.clock.Clock;
 import org.killbill.commons.profiling.Profiling;
 import org.killbill.commons.profiling.Profiling.WithProfilingCallback;
@@ -62,6 +62,7 @@ import org.skife.jdbi.v2.StatementContext;
 import org.skife.jdbi.v2.exceptions.DBIException;
 import org.skife.jdbi.v2.exceptions.StatementException;
 import org.skife.jdbi.v2.sqlobject.Bind;
+import org.skife.jdbi.v2.unstable.BindIn;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -83,6 +84,8 @@ import com.google.common.collect.Iterables;
 public class EntitySqlDaoWrapperInvocationHandler<S extends EntitySqlDao<M, E>, M extends EntityModelDao<E>, E extends Entity> implements InvocationHandler {
 
     private final Logger logger = LoggerFactory.getLogger(EntitySqlDaoWrapperInvocationHandler.class);
+
+    private final Map<String, Annotation[][]> parameterAnnotationsByMethod = new ConcurrentHashMap<String, Annotation[][]>();
 
     private final Class<S> sqlDaoClass;
     private final S sqlDao;
@@ -227,7 +230,7 @@ public class EntitySqlDaoWrapperInvocationHandler<S extends EntitySqlDao<M, E>, 
         if (cache != null && objectType != null) {
             // Find all arguments marked with @CachableKey
             final Map<Integer, Object> keyPieces = new LinkedHashMap<Integer, Object>();
-            final Annotation[][] annotations = method.getParameterAnnotations();
+            final Annotation[][] annotations = getAnnotations(method);
             for (int i = 0; i < annotations.length; i++) {
                 for (int j = 0; j < annotations[i].length; j++) {
                     final Annotation annotation = annotations[i][j];
@@ -408,7 +411,8 @@ public class EntitySqlDaoWrapperInvocationHandler<S extends EntitySqlDao<M, E>, 
     }
 
     private List<String> retrieveEntityIdsFromArguments(final Method method, final Object[] args) {
-        final Annotation[][] parameterAnnotations = method.getParameterAnnotations();
+        final Annotation[][] parameterAnnotations = getAnnotations(method);
+
         int i = -1;
         for (final Object arg : args) {
             i++;
@@ -430,12 +434,25 @@ public class EntitySqlDaoWrapperInvocationHandler<S extends EntitySqlDao<M, E>, 
             for (final Annotation annotation : parameterAnnotations[i]) {
                 if (arg instanceof String && Bind.class.equals(annotation.annotationType()) && ("id").equals(((Bind) annotation).value())) {
                     return ImmutableList.<String>of((String) arg);
-                } else if (arg instanceof Collection && UUIDCollectionBinder.class.equals(annotation.annotationType())) {
+                } else if (arg instanceof Collection && BindIn.class.equals(annotation.annotationType()) && ("ids").equals(((BindIn) annotation).value())) {
                     return ImmutableList.<String>copyOf((Collection) arg);
                 }
             }
         }
         return ImmutableList.<String>of();
+    }
+
+    private Annotation[][] getAnnotations(final Method method) {
+        // Expensive to compute
+        final String methodString = method.toString();
+
+        // Method.getParameterAnnotations() generates lots of garbage objects
+        Annotation[][] parameterAnnotations = parameterAnnotationsByMethod.get(methodString);
+        if (parameterAnnotations == null) {
+            parameterAnnotations = method.getParameterAnnotations();
+            parameterAnnotationsByMethod.put(methodString, parameterAnnotations);
+        }
+        return parameterAnnotations;
     }
 
     private Builder<String> extractEntityIdsFromBatchArgument(final Iterable arg) {
