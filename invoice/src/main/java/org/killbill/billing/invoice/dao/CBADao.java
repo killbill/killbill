@@ -64,7 +64,7 @@ public class CBADao {
         if (balance.compareTo(BigDecimal.ZERO) < 0) {
             // Current balance is negative, we need to generate a credit (positive CBA amount)
             return buildCBAItem(invoice, balance, context);
-        } else if (balance.compareTo(BigDecimal.ZERO) > 0 && invoice.getStatus() == InvoiceStatus.COMMITTED) {
+        } else if (balance.compareTo(BigDecimal.ZERO) > 0 && invoice.getStatus() == InvoiceStatus.COMMITTED && !invoice.isWrittenOff()) {
             // Current balance is positive and the invoice is COMMITTED, we need to use some of the existing if available (negative CBA amount)
             // PERF: in some codepaths, the CBA maybe have already been computed
             BigDecimal accountCBA = accountCBAOrNull;
@@ -86,7 +86,7 @@ public class CBADao {
     private BigDecimal getInvoiceBalance(final InvoiceModelDao invoice) {
 
         final InvoiceModelDao parentInvoice = invoice.getParentInvoice();
-        if ((parentInvoice != null) && (InvoiceModelDaoHelper.getBalance(parentInvoice).compareTo(BigDecimal.ZERO) == 0)) {
+        if ((parentInvoice != null) && (InvoiceModelDaoHelper.getRawBalanceForRegularInvoice(parentInvoice).compareTo(BigDecimal.ZERO) == 0)) {
             final Iterable<InvoiceItemModelDao> items = Iterables.filter(parentInvoice.getInvoiceItems(), new Predicate<InvoiceItemModelDao>() {
                 @Override
                 public boolean apply(@Nullable final InvoiceItemModelDao input) {
@@ -105,7 +105,7 @@ public class CBADao {
 
         }
 
-        return InvoiceModelDaoHelper.getBalance(invoice);
+        return InvoiceModelDaoHelper.getRawBalanceForRegularInvoice(invoice);
     }
 
     // We let the code below rehydrate the invoice before we can add the CBA item

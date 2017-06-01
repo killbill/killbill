@@ -127,7 +127,7 @@ public class TestInvoiceDao extends InvoiceTestSuiteWithEmbeddedDB {
         assertTrue(thisInvoice.getInvoiceDate().compareTo(invoiceDate) == 0);
         assertEquals(thisInvoice.getCurrency(), Currency.USD);
         assertEquals(thisInvoice.getInvoiceItems().size(), 0);
-        assertTrue(InvoiceModelDaoHelper.getBalance(thisInvoice).compareTo(BigDecimal.ZERO) == 0);
+        assertTrue(InvoiceModelDaoHelper.getRawBalanceForRegularInvoice(thisInvoice).compareTo(BigDecimal.ZERO) == 0);
     }
 
     @Test(groups = "slow")
@@ -147,7 +147,7 @@ public class TestInvoiceDao extends InvoiceTestSuiteWithEmbeddedDB {
 
         final InvoiceModelDao savedInvoice = invoiceDao.getById(invoiceId, context);
         assertNotNull(savedInvoice);
-        assertEquals(InvoiceModelDaoHelper.getBalance(savedInvoice).compareTo(new BigDecimal("21.00")), 0);
+        assertEquals(InvoiceModelDaoHelper.getRawBalanceForRegularInvoice(savedInvoice).compareTo(new BigDecimal("21.00")), 0);
         assertEquals(savedInvoice.getInvoiceItems().size(), 1);
 
         final BigDecimal paymentAmount = new BigDecimal("11.00");
@@ -159,7 +159,7 @@ public class TestInvoiceDao extends InvoiceTestSuiteWithEmbeddedDB {
         final InvoiceModelDao retrievedInvoice = invoiceDao.getById(invoiceId, context);
         assertNotNull(retrievedInvoice);
         assertEquals(retrievedInvoice.getInvoiceItems().size(), 1);
-        assertEquals(InvoiceModelDaoHelper.getBalance(retrievedInvoice).compareTo(new BigDecimal("10.00")), 0);
+        assertEquals(InvoiceModelDaoHelper.getRawBalanceForRegularInvoice(retrievedInvoice).compareTo(new BigDecimal("10.00")), 0);
     }
 
     @Test(groups = "slow")
@@ -983,7 +983,7 @@ public class TestInvoiceDao extends InvoiceTestSuiteWithEmbeddedDB {
         assertEquals(invoices.size(), 1);
 
         final InvoiceModelDao invoice = invoices.get(0);
-        assertTrue(InvoiceModelDaoHelper.getBalance(invoice).compareTo(BigDecimal.ZERO) == 0);
+        assertTrue(InvoiceModelDaoHelper.getRawBalanceForRegularInvoice(invoice).compareTo(BigDecimal.ZERO) == 0);
         final List<InvoiceItemModelDao> invoiceItems = invoice.getInvoiceItems();
         assertEquals(invoiceItems.size(), 2);
         boolean foundCredit = false;
@@ -1058,7 +1058,7 @@ public class TestInvoiceDao extends InvoiceTestSuiteWithEmbeddedDB {
         assertEquals(invoices.size(), 1);
 
         final InvoiceModelDao invoice = invoices.get(0);
-        assertTrue(InvoiceModelDaoHelper.getBalance(invoice).compareTo(expectedBalance) == 0);
+        assertTrue(InvoiceModelDaoHelper.getRawBalanceForRegularInvoice(invoice).compareTo(expectedBalance) == 0);
         final List<InvoiceItemModelDao> invoiceItems = invoice.getInvoiceItems();
         assertEquals(invoiceItems.size(), expectCBA ? 3 : 2);
         boolean foundCredit = false;
@@ -1236,10 +1236,10 @@ public class TestInvoiceDao extends InvoiceTestSuiteWithEmbeddedDB {
         invoiceUtil.createInvoice(invoice2, context);
 
         final InvoiceModelDao savedInvoice1 = invoiceDao.getById(invoice1.getId(), context);
-        assertEquals(InvoiceModelDaoHelper.getBalance(savedInvoice1), KillBillMoney.of(TEN, savedInvoice1.getCurrency()));
+        assertEquals(InvoiceModelDaoHelper.getRawBalanceForRegularInvoice(savedInvoice1), KillBillMoney.of(TEN, savedInvoice1.getCurrency()));
 
         final InvoiceModelDao savedInvoice2 = invoiceDao.getById(invoice2.getId(), context);
-        assertEquals(InvoiceModelDaoHelper.getBalance(savedInvoice2), KillBillMoney.of(FIVE, savedInvoice2.getCurrency()));
+        assertEquals(InvoiceModelDaoHelper.getRawBalanceForRegularInvoice(savedInvoice2), KillBillMoney.of(FIVE, savedInvoice2.getCurrency()));
     }
 
     @Test(groups = "slow")
@@ -1388,7 +1388,7 @@ public class TestInvoiceDao extends InvoiceTestSuiteWithEmbeddedDB {
 
         assertNotNull(savedInvoice);
         assertEquals(savedInvoice.getInvoiceItems().size(), 2);
-        assertEquals(InvoiceModelDaoHelper.getBalance(savedInvoice).compareTo(cheapAmount), 0);
+        assertEquals(InvoiceModelDaoHelper.getRawBalanceForRegularInvoice(savedInvoice).compareTo(cheapAmount), 0);
     }
 
     @Test(groups = "slow")

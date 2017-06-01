@@ -861,7 +861,7 @@ public class InvoiceDispatcher {
 
         if (parentInvoiceModelDao == null) {
             throw new InvoiceApiException(ErrorCode.INVOICE_MISSING_PARENT_INVOICE, childInvoiceModelDao.getId());
-        } else if (InvoiceModelDaoHelper.getBalance(parentInvoiceModelDao).compareTo(BigDecimal.ZERO) == 0) {
+        } else if (InvoiceModelDaoHelper.getRawBalanceForRegularInvoice(parentInvoiceModelDao).compareTo(BigDecimal.ZERO) == 0) {
             // ignore item adjustments for paid invoices.
             return;
         }

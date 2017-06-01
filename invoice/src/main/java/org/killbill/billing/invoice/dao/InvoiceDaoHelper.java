@@ -175,9 +175,10 @@ public class InvoiceDaoHelper {
             @Override
             public boolean apply(final InvoiceModelDao in) {
                 final InvoiceModelDao invoice = (in.getParentInvoice() == null) ? in : in.getParentInvoice();
-                final BigDecimal balance = InvoiceModelDaoHelper.getBalance(invoice);
+                final BigDecimal balance = InvoiceModelDaoHelper.getRawBalanceForRegularInvoice(invoice);
                 log.debug("Computed balance={} for invoice={}", balance, in);
-                return InvoiceStatus.COMMITTED.equals(in.getStatus()) && (balance.compareTo(BigDecimal.ZERO) >= 1) &&
+                return InvoiceStatus.COMMITTED.equals(in.getStatus()) &&
+                       (balance.compareTo(BigDecimal.ZERO) >= 1 && !in.isWrittenOff()) &&
                        (upToDate == null || in.getTargetDate() == null || !in.getTargetDate().isAfter(upToDate));
             }
         });
