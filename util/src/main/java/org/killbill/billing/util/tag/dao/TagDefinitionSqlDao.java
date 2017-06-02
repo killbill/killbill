@@ -1,7 +1,9 @@
 /*
- * Copyright 2010-2011 Ning, Inc.
+ * Copyright 2010-2013 Ning, Inc.
+ * Copyright 2014-2017 Groupon, Inc
+ * Copyright 2014-2017 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -19,36 +21,36 @@ package org.killbill.billing.util.tag.dao;
 import java.util.Collection;
 import java.util.List;
 
-import org.skife.jdbi.v2.sqlobject.Bind;
-import org.skife.jdbi.v2.sqlobject.BindBean;
-import org.skife.jdbi.v2.sqlobject.SqlQuery;
-import org.skife.jdbi.v2.sqlobject.SqlUpdate;
-
-import org.killbill.billing.util.audit.ChangeType;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
+import org.killbill.billing.util.audit.ChangeType;
 import org.killbill.billing.util.entity.dao.Audited;
 import org.killbill.billing.util.entity.dao.EntitySqlDao;
-import org.killbill.billing.util.entity.dao.EntitySqlDaoStringTemplate;
 import org.killbill.billing.util.tag.TagDefinition;
+import org.killbill.commons.jdbi.binder.SmartBindBean;
+import org.killbill.commons.jdbi.template.KillBillSqlDaoStringTemplate;
+import org.skife.jdbi.v2.sqlobject.Bind;
+import org.skife.jdbi.v2.sqlobject.SqlQuery;
+import org.skife.jdbi.v2.sqlobject.SqlUpdate;
+import org.skife.jdbi.v2.unstable.BindIn;
 
-@EntitySqlDaoStringTemplate
+@KillBillSqlDaoStringTemplate
 public interface TagDefinitionSqlDao extends EntitySqlDao<TagDefinitionModelDao, TagDefinition> {
 
     @SqlQuery
     public TagDefinitionModelDao getByName(@Bind("name") final String definitionName,
-                                           @BindBean final InternalTenantContext context);
+                                           @SmartBindBean final InternalTenantContext context);
 
     @SqlUpdate
     @Audited(ChangeType.DELETE)
     public void markTagDefinitionAsDeleted(@Bind("id") final String definitionId,
-                                           @BindBean final InternalCallContext context);
+                                           @SmartBindBean final InternalCallContext context);
 
     @SqlQuery
     public int tagDefinitionUsageCount(@Bind("id") final String definitionId,
-                                       @BindBean final InternalTenantContext context);
+                                       @SmartBindBean final InternalTenantContext context);
 
     @SqlQuery
-    public List<TagDefinitionModelDao> getByIds(@UUIDCollectionBinder final Collection<String> definitionIds,
-                                                @BindBean final InternalTenantContext context);
+    public List<TagDefinitionModelDao> getByIds(@BindIn("ids") final Collection<String> definitionIds,
+                                                @SmartBindBean final InternalTenantContext context);
 }

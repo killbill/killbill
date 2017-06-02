@@ -69,13 +69,10 @@ public abstract class InvoiceCalculatorUtils {
                InvoiceItemType.RECURRING.equals(invoiceItem.getInvoiceItemType());
     }
 
-    public static BigDecimal computeInvoiceBalance(final Currency currency,
-                                                   @Nullable final Iterable<InvoiceItem> invoiceItems,
-                                                   @Nullable final Iterable<InvoicePayment> invoicePayments,
-                                                   boolean writtenOffOrMigrated) {
-        if (writtenOffOrMigrated) {
-            return BigDecimal.ZERO;
-        }
+    public static BigDecimal computeRawInvoiceBalance(final Currency currency,
+                                                      @Nullable final Iterable<InvoiceItem> invoiceItems,
+                                                      @Nullable final Iterable<InvoicePayment> invoicePayments) {
+
 
         final BigDecimal amountPaid = computeInvoiceAmountPaid(currency, invoicePayments)
                 .add(computeInvoiceAmountRefunded(currency, invoicePayments));

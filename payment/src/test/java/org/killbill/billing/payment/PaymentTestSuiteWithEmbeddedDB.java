@@ -33,7 +33,9 @@ import org.killbill.billing.payment.core.PaymentPluginServiceRegistration;
 import org.killbill.billing.payment.core.PaymentProcessor;
 import org.killbill.billing.payment.core.janitor.IncompletePaymentTransactionTask;
 import org.killbill.billing.payment.core.janitor.Janitor;
+import org.killbill.billing.payment.core.sm.PaymentControlStateMachineHelper;
 import org.killbill.billing.payment.core.sm.PaymentStateMachineHelper;
+import org.killbill.billing.payment.core.sm.PluginControlPaymentAutomatonRunner;
 import org.killbill.billing.payment.dao.PaymentDao;
 import org.killbill.billing.payment.glue.PaymentModule;
 import org.killbill.billing.payment.glue.TestPaymentModuleWithEmbeddedDB;
@@ -103,6 +105,10 @@ public abstract class PaymentTestSuiteWithEmbeddedDB extends GuicyKillbillTestSu
     protected IncompletePaymentTransactionTask incompletePaymentTransactionTask;
     @Inject
     protected GlobalLocker locker;
+    @Inject
+    protected PluginControlPaymentAutomatonRunner pluginControlPaymentAutomatonRunner;
+    @Inject
+    protected PaymentControlStateMachineHelper paymentControlStateMachineHelper;
 
     @Override
     protected KillbillConfigSource getConfigSource() {

@@ -54,9 +54,6 @@ public class DefaultUserDao implements UserDao {
         this.dbi = dbi;
         this.clock = clock;
         this.securityConfig = securityConfig;
-        ((DBI) dbi).registerMapper(new LowerToCamelBeanMapperFactory(UserModelDao.class));
-        ((DBI) dbi).registerMapper(new LowerToCamelBeanMapperFactory(UserRolesModelDao.class));
-        ((DBI) dbi).registerMapper(new LowerToCamelBeanMapperFactory(RolesPermissionsModelDao.class));
     }
 
     @Override

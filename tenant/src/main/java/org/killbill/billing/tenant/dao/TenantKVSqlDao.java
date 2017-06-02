@@ -24,32 +24,32 @@ import org.killbill.billing.tenant.api.TenantKV;
 import org.killbill.billing.util.audit.ChangeType;
 import org.killbill.billing.util.entity.dao.Audited;
 import org.killbill.billing.util.entity.dao.EntitySqlDao;
-import org.killbill.billing.util.entity.dao.EntitySqlDaoStringTemplate;
+import org.killbill.commons.jdbi.template.KillBillSqlDaoStringTemplate;
 import org.skife.jdbi.v2.sqlobject.Bind;
-import org.skife.jdbi.v2.sqlobject.BindBean;
+import org.killbill.commons.jdbi.binder.SmartBindBean;
 import org.skife.jdbi.v2.sqlobject.SqlQuery;
 import org.skife.jdbi.v2.sqlobject.SqlUpdate;
 
-@EntitySqlDaoStringTemplate
+@KillBillSqlDaoStringTemplate
 public interface TenantKVSqlDao extends EntitySqlDao<TenantKVModelDao, TenantKV> {
 
     @SqlQuery
     public List<TenantKVModelDao> getTenantValueForKey(@Bind("tenantKey") final String key,
-                                                       @BindBean final InternalTenantContext context);
+                                                       @SmartBindBean final InternalTenantContext context);
 
 
     @SqlQuery
     public List<TenantKVModelDao> searchTenantKeyValues(@Bind("tenantKeyPrefix") final String tenantKeyPrefix,
-                                                       @BindBean final InternalTenantContext context);
+                                                       @SmartBindBean final InternalTenantContext context);
 
     @SqlUpdate
     @Audited(ChangeType.DELETE)
     public void markTenantKeyAsDeleted(@Bind("id")final String id,
-                                       @BindBean final InternalCallContext context);
+                                       @SmartBindBean final InternalCallContext context);
 
     @SqlUpdate
     @Audited(ChangeType.UPDATE)
     public Object updateTenantValueKey(@Bind("id") final String id,
                                        @Bind("tenantValue") final String tenantValue,
-                                       @BindBean final InternalCallContext context);
+                                       @SmartBindBean final InternalCallContext context);
 }

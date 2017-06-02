@@ -1,4 +1,4 @@
-group BundleSqlDao: EntitySqlDao;
+import "org/killbill/billing/util/entity/dao/EntitySqlDao.sql.stg"
 
 tableName() ::= "bundles"
 
@@ -32,7 +32,7 @@ last_sys_update_date = :lastSysUpdateDate
 , updated_by = :createdBy
 , updated_date = :updatedDate
 where id = :id
-<AND_CHECK_TENANT()>
+<AND_CHECK_TENANT("")>
 ;
 >>
 
@@ -43,38 +43,38 @@ external_key = :externalKey
 , updated_by = :createdBy
 , updated_date = :updatedDate
 where id = :id
-<AND_CHECK_TENANT()>
+<AND_CHECK_TENANT("")>
 ;
 >>
 
 getBundlesForKey() ::= <<
-select <allTableFields()>
+select <allTableFields("")>
 from bundles
 where
 external_key = :externalKey
-<AND_CHECK_TENANT()>
-<defaultOrderBy()>
+<AND_CHECK_TENANT("")>
+<defaultOrderBy("")>
 ;
 >>
 
 getBundlesFromAccountAndKey() ::= <<
-select <allTableFields()>
+select <allTableFields("")>
 from bundles
 where
 external_key = :externalKey
 and account_id = :accountId
-<AND_CHECK_TENANT()>
-<defaultOrderBy()>
+<AND_CHECK_TENANT("")>
+<defaultOrderBy("")>
 ;
 >>
 
 getBundleFromAccount() ::= <<
-select <allTableFields()>
+select <allTableFields("")>
 from bundles
 where
 account_id = :accountId
-<AND_CHECK_TENANT()>
-<defaultOrderBy()>
+<AND_CHECK_TENANT("")>
+<defaultOrderBy("")>
 ;
 >>
 

@@ -18,8 +18,6 @@ package org.killbill.billing.invoice.dao;
 
 import java.math.BigDecimal;
 
-import javax.annotation.Nullable;
-
 import org.killbill.billing.invoice.api.InvoiceItem;
 import org.killbill.billing.invoice.api.InvoicePayment;
 import org.killbill.billing.invoice.calculator.InvoiceCalculatorUtils;
@@ -33,22 +31,25 @@ public class InvoiceModelDaoHelper {
 
     private InvoiceModelDaoHelper() {}
 
-    public static BigDecimal getBalance(final InvoiceModelDao invoiceModelDao) {
-        return InvoiceCalculatorUtils.computeInvoiceBalance(invoiceModelDao.getCurrency(),
-                                                            Iterables.transform(invoiceModelDao.getInvoiceItems(), new Function<InvoiceItemModelDao, InvoiceItem>() {
-                                                                @Override
-                                                                public InvoiceItem apply(final InvoiceItemModelDao input) {
-                                                                    return InvoiceItemFactory.fromModelDao(input);
-                                                                }
-                                                            }),
-                                                            Iterables.transform(invoiceModelDao.getInvoicePayments(), new Function<InvoicePaymentModelDao, InvoicePayment>() {
-                                                                @Nullable
-                                                                @Override
-                                                                public InvoicePayment apply(final InvoicePaymentModelDao input) {
-                                                                    return new DefaultInvoicePayment(input);
-                                                                }
-                                                            }),
-                                                            invoiceModelDao.isMigrated() || invoiceModelDao.isWrittenOff());
+    public static BigDecimal getRawBalanceForRegularInvoice(final InvoiceModelDao invoiceModelDao) {
+
+        if (invoiceModelDao.isMigrated()) {
+            return BigDecimal.ZERO;
+        }
+
+        return InvoiceCalculatorUtils.computeRawInvoiceBalance(invoiceModelDao.getCurrency(),
+                                                               Iterables.transform(invoiceModelDao.getInvoiceItems(), new Function<InvoiceItemModelDao, InvoiceItem>() {
+                                                                   @Override
+                                                                   public InvoiceItem apply(final InvoiceItemModelDao input) {
+                                                                       return InvoiceItemFactory.fromModelDao(input);
+                                                                   }
+                                                               }),
+                                                               Iterables.transform(invoiceModelDao.getInvoicePayments(), new Function<InvoicePaymentModelDao, InvoicePayment>() {
+                                                                   @Override
+                                                                   public InvoicePayment apply(final InvoicePaymentModelDao input) {
+                                                                       return new DefaultInvoicePayment(input);
+                                                                   }
+                                                               }));
     }
 
     public static BigDecimal getCBAAmount(final InvoiceModelDao invoiceModelDao) {

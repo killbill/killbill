@@ -1,5 +1,3 @@
-group CatalogOverridePhaseDefinitionSqlDao;
-
 tableName() ::= "catalog_override_phase_definition"
 
 
@@ -39,7 +37,7 @@ allTableValues() ::= <<
 
 create() ::= <<
 insert into <tableName()> (
-<tableFields()>
+<tableFields("")>
 )
 values (
 <tableValues()>
@@ -48,7 +46,7 @@ values (
 >>
 
 getByRecordId() ::= <<
-select <allTableFields()>
+select <allTableFields("")>
 from <tableName()>
 where record_id = :recordId
 and tenant_record_id = :tenantRecordId
@@ -56,7 +54,7 @@ and tenant_record_id = :tenantRecordId
 >>
 
 getByAttributes() ::= <<
-select <allTableFields()>
+select <allTableFields("")>
 from <tableName()>
 where parent_phase_name = :parentPhaseName
 and currency = :currency

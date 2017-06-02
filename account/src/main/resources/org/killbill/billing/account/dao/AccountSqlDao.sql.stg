@@ -1,4 +1,4 @@
-group AccountSqlDao: EntitySqlDao;
+import "org/killbill/billing/util/entity/dao/EntitySqlDao.sql.stg"
 
 tableName() ::= "accounts"
 
@@ -64,7 +64,7 @@ tableValues() ::= <<
 
 /** The accounts table doesn't have an account_record_id column (it's the record_id) **/
 accountRecordIdFieldWithComma(prefix) ::= ""
-accountRecordIdValueWithComma(prefix) ::= ""
+accountRecordIdValueWithComma() ::= ""
 
 update() ::= <<
 update accounts set
@@ -91,7 +91,7 @@ update accounts set
 , updated_date = :updatedDate
 , updated_by = :updatedBy
 where id = :id
-<AND_CHECK_TENANT()>
+<AND_CHECK_TENANT("")>
 ;
 >>
 
@@ -101,19 +101,19 @@ updatePaymentMethod() ::= <<
     SET payment_method_id = :paymentMethodId
     , updated_date = :updatedDate
     , updated_by = :updatedBy
-    WHERE id = :id <AND_CHECK_TENANT()>;
+    WHERE id = :id <AND_CHECK_TENANT("")>;
 >>
 
 getAccountByKey() ::= <<
-    select <allTableFields()>
+    select <allTableFields("")>
     from accounts
-    where external_key = :externalKey <AND_CHECK_TENANT()>;
+    where external_key = :externalKey <AND_CHECK_TENANT("")>;
 >>
 
 getBCD() ::= <<
     select billing_cycle_day_local
     from accounts
-    where id = :id <AND_CHECK_TENANT()>;
+    where id = :id <AND_CHECK_TENANT("")>;
 >>
 
 searchQuery(prefix) ::= <<
@@ -130,50 +130,50 @@ select
 <allTableFields("t.")>
 from <tableName()> t
 join (
-  select distinct <recordIdField()>
+  select distinct <recordIdField("")>
   from (
     (
-      select <recordIdField()>
+      select <recordIdField("")>
       from <tableName()>
-      where <idField()> = :searchKey
-      <andCheckSoftDeletionWithComma()>
-      <AND_CHECK_TENANT()>
+      where <idField("")> = :searchKey
+      <andCheckSoftDeletionWithComma("")>
+      <AND_CHECK_TENANT("")>
       limit 1
     )
     union all
     (
-      select <recordIdField()>
+      select <recordIdField("")>
       from <tableName()>
       where name = :searchKey
-      <andCheckSoftDeletionWithComma()>
-      <AND_CHECK_TENANT()>
+      <andCheckSoftDeletionWithComma("")>
+      <AND_CHECK_TENANT("")>
       limit 1
     )
     union all
     (
-      select <recordIdField()>
+      select <recordIdField("")>
       from <tableName()>
       where email = :searchKey
-      <andCheckSoftDeletionWithComma()>
-      <AND_CHECK_TENANT()>
+      <andCheckSoftDeletionWithComma("")>
+      <AND_CHECK_TENANT("")>
       limit 1
     )
     union all
     (
-      select <recordIdField()>
+      select <recordIdField("")>
       from <tableName()>
       where external_key = :searchKey
-      <andCheckSoftDeletionWithComma()>
-      <AND_CHECK_TENANT()>
+      <andCheckSoftDeletionWithComma("")>
+      <AND_CHECK_TENANT("")>
       limit 1
     )
     union all
     (
-      select <recordIdField()>
+      select <recordIdField("")>
       from <tableName()>
       where company_name = :searchKey
-      <andCheckSoftDeletionWithComma()>
-      <AND_CHECK_TENANT()>
+      <andCheckSoftDeletionWithComma("")>
+      <AND_CHECK_TENANT("")>
       limit 1
     )
   ) search_with_idx
@@ -185,14 +185,14 @@ limit 1
 getIdFromKey() ::= <<
     SELECT id
     FROM accounts
-    WHERE external_key = :externalKey <AND_CHECK_TENANT()>;
+    WHERE external_key = :externalKey <AND_CHECK_TENANT("")>;
 >>
 
 getAccountsByParentId() ::= <<
-    select <allTableFields()>
+    select <allTableFields("")>
     from accounts
     where parent_account_id = :parentAccountId
-    <AND_CHECK_TENANT()>
-    <defaultOrderBy()>
+    <AND_CHECK_TENANT("")>
+    <defaultOrderBy("")>
     ;
 >>

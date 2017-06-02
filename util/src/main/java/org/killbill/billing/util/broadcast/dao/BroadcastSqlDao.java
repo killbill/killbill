@@ -19,17 +19,17 @@ package org.killbill.billing.util.broadcast.dao;
 
 import java.util.List;
 
-import org.killbill.billing.util.entity.dao.EntitySqlDaoStringTemplate;
+import org.killbill.commons.jdbi.template.KillBillSqlDaoStringTemplate;
 import org.skife.jdbi.v2.sqlobject.Bind;
-import org.skife.jdbi.v2.sqlobject.BindBean;
+import org.killbill.commons.jdbi.binder.SmartBindBean;
 import org.skife.jdbi.v2.sqlobject.SqlQuery;
 import org.skife.jdbi.v2.sqlobject.SqlUpdate;
 
-@EntitySqlDaoStringTemplate
+@KillBillSqlDaoStringTemplate
 public interface BroadcastSqlDao {
 
     @SqlUpdate
-    public void create(@BindBean final BroadcastModelDao broadcastModelDao);
+    public void create(@SmartBindBean final BroadcastModelDao broadcastModelDao);
 
     @SqlQuery
     public List<BroadcastModelDao> getLatestEntries(@Bind("recordId") final Long recordId);

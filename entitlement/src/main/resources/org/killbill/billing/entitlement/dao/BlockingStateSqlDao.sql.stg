@@ -1,5 +1,4 @@
-group BlockingStateSqlDao: EntitySqlDao;
-
+import "org/killbill/billing/util/entity/dao/EntitySqlDao.sql.stg"
 
 tableName() ::= "blocking_states"
 
@@ -45,14 +44,14 @@ tableValues() ::= <<
 
 getBlockingStateForService() ::= <<
 select
-<allTableFields()>
+<allTableFields("")>
 from
 <tableName()>
 where blockable_id = :blockableId
 and service = :service
 and effective_date \<= :effectiveDate
 and is_active
-<AND_CHECK_TENANT()>
+<AND_CHECK_TENANT("")>
 -- We want the current state, hence the order desc and limit 1
 order by effective_date desc, record_id desc
 limit 1
@@ -71,7 +70,7 @@ getBlockingState() ::= <<
          where blockable_id = :blockableId
          and effective_date \<= :effectiveDate
          and is_active
-         <AND_CHECK_TENANT()>
+         <AND_CHECK_TENANT("")>
          group by service
  ) tmp
  on t.record_id = tmp.record_id
@@ -81,14 +80,14 @@ getBlockingState() ::= <<
 
 getBlockingHistoryForService() ::= <<
 select
-<allTableFields()>
+<allTableFields("")>
 from
 <tableName()>
 where blockable_id = :blockableId
 and service = :service
 and is_active
-<AND_CHECK_TENANT()>
-<defaultOrderBy()>
+<AND_CHECK_TENANT("")>
+<defaultOrderBy("")>
 ;
 >>
 
@@ -97,6 +96,6 @@ update
 <tableName()>
 set is_active = false
 where id = :id
-<AND_CHECK_TENANT()>
+<AND_CHECK_TENANT("")>
 ;
 >>

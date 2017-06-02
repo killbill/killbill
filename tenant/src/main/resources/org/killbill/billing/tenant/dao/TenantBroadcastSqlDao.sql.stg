@@ -1,4 +1,4 @@
-group TenantBroadcastSqlDao: EntitySqlDao;
+import "org/killbill/billing/util/entity/dao/EntitySqlDao.sql.stg"
 
 tableName() ::= "tenant_broadcasts"
 
@@ -26,7 +26,7 @@ tableValues() ::= <<
 
 /* No account_record_id field */
 accountRecordIdFieldWithComma(prefix) ::= ""
-accountRecordIdValueWithComma(prefix) ::= ""
+accountRecordIdValueWithComma() ::= ""
 
 
 getLatestEntries() ::= <<

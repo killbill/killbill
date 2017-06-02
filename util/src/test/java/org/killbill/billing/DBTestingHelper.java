@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014 Groupon, Inc
- * Copyright 2014 The Billing Project, LLC
+ * Copyright 2014-2017 Groupon, Inc
+ * Copyright 2014-2017 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -24,14 +24,13 @@ import java.util.Enumeration;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.killbill.billing.platform.test.PlatformDBTestingHelper;
-import org.killbill.billing.util.dao.AuditLogModelDaoMapper;
-import org.killbill.billing.util.dao.RecordIdIdMappingsMapper;
+import org.killbill.billing.util.glue.IDBISetup;
 import org.killbill.billing.util.io.IOUtils;
-import org.killbill.billing.util.security.shiro.dao.SessionModelDao;
 import org.killbill.commons.embeddeddb.EmbeddedDB;
-import org.killbill.commons.jdbi.mapper.LowerToCamelBeanMapperFactory;
 import org.skife.jdbi.v2.DBI;
 import org.skife.jdbi.v2.IDBI;
+import org.skife.jdbi.v2.ResultSetMapperFactory;
+import org.skife.jdbi.v2.tweak.ResultSetMapper;
 
 import com.google.common.base.MoreObjects;
 
@@ -58,9 +57,13 @@ public class DBTestingHelper extends PlatformDBTestingHelper {
         final DBI dbi = (DBI) super.getDBI();
         // Register KB specific mappers
         if (initialized.compareAndSet(false, true)) {
-            dbi.registerMapper(new AuditLogModelDaoMapper());
-            dbi.registerMapper(new RecordIdIdMappingsMapper());
-            dbi.registerMapper(new LowerToCamelBeanMapperFactory(SessionModelDao.class));
+            for (final ResultSetMapperFactory resultSetMapperFactory : IDBISetup.mapperFactoriesToRegister()) {
+                dbi.registerMapper(resultSetMapperFactory);
+            }
+
+            for (final ResultSetMapper resultSetMapper : IDBISetup.mappersToRegister()) {
+                dbi.registerMapper(resultSetMapper);
+            }
         }
         return dbi;
     }

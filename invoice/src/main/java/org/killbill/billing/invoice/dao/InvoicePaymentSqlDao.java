@@ -27,47 +27,47 @@ import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.invoice.api.InvoicePayment;
 import org.killbill.billing.util.entity.dao.EntitySqlDao;
-import org.killbill.billing.util.entity.dao.EntitySqlDaoStringTemplate;
+import org.killbill.commons.jdbi.template.KillBillSqlDaoStringTemplate;
 import org.skife.jdbi.v2.sqlobject.Bind;
-import org.skife.jdbi.v2.sqlobject.BindBean;
+import org.killbill.commons.jdbi.binder.SmartBindBean;
 import org.skife.jdbi.v2.sqlobject.SqlQuery;
 import org.skife.jdbi.v2.sqlobject.SqlUpdate;
 
-@EntitySqlDaoStringTemplate
+@KillBillSqlDaoStringTemplate
 public interface InvoicePaymentSqlDao extends EntitySqlDao<InvoicePaymentModelDao, InvoicePayment> {
 
 
     @SqlQuery
     public List<InvoicePaymentModelDao> getByPaymentId(@Bind("paymentId") final String paymentId,
-                                                       @BindBean final InternalTenantContext context);
+                                                       @SmartBindBean final InternalTenantContext context);
 
     @SqlQuery
     public List<InvoicePaymentModelDao> getAllPaymentsForInvoiceIncludedInit(@Bind("invoiceId") final String invoiceId,
-                                                              @BindBean final InternalTenantContext context);
+                                                              @SmartBindBean final InternalTenantContext context);
 
     @SqlQuery
     List<InvoicePaymentModelDao> getInvoicePayments(@Bind("paymentId") final String paymentId,
-                                                    @BindBean final InternalTenantContext context);
+                                                    @SmartBindBean final InternalTenantContext context);
 
     @SqlQuery
     InvoicePaymentModelDao getPaymentForCookieId(@Bind("paymentCookieId") final String paymentCookieId,
-                                                 @BindBean final InternalTenantContext context);
+                                                 @SmartBindBean final InternalTenantContext context);
 
     @SqlQuery
     BigDecimal getRemainingAmountPaid(@Bind("invoicePaymentId") final String invoicePaymentId,
-                                      @BindBean final InternalTenantContext context);
+                                      @SmartBindBean final InternalTenantContext context);
 
     @SqlQuery
     UUID getAccountIdFromInvoicePaymentId(@Bind("invoicePaymentId") final String invoicePaymentId,
-                                          @BindBean final InternalTenantContext context);
+                                          @SmartBindBean final InternalTenantContext context);
 
     @SqlQuery
     List<InvoicePaymentModelDao> getChargeBacksByAccountId(@Bind("accountId") final String accountId,
-                                                           @BindBean final InternalTenantContext context);
+                                                           @SmartBindBean final InternalTenantContext context);
 
     @SqlQuery
     List<InvoicePaymentModelDao> getChargebacksByPaymentId(@Bind("paymentId") final String paymentId,
-                                                           @BindBean final InternalTenantContext context);
+                                                           @SmartBindBean final InternalTenantContext context);
 
     @SqlUpdate
     void updateAttempt(@Bind("recordId") Long recordId,
@@ -79,5 +79,5 @@ public interface InvoicePaymentSqlDao extends EntitySqlDao<InvoicePaymentModelDa
                        @Bind("paymentCookieId") final String paymentCookieId,
                        @Bind("linkedInvoicePaymentId") final String linkedInvoicePaymentId,
                        @Bind("success") final boolean success,
-                       @BindBean final InternalTenantContext context);
+                       @SmartBindBean final InternalTenantContext context);
 }

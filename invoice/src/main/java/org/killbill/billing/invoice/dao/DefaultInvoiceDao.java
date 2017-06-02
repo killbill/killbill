@@ -439,7 +439,21 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
                 BigDecimal accountBalance = BigDecimal.ZERO;
                 final List<InvoiceModelDao> invoices = invoiceDaoHelper.getAllInvoicesByAccountFromTransaction(invoicesTags, entitySqlDaoWrapperFactory, context);
                 for (final InvoiceModelDao cur : invoices) {
-                    accountBalance = accountBalance.add((new DefaultInvoice(cur)).getBalance());
+
+                    // Skip DRAFT invoices
+                    if (cur.getStatus().equals(InvoiceStatus.DRAFT)) {
+                        continue;
+                    }
+
+                    final boolean hasZeroParentBalance =
+                            cur.getParentInvoice() != null &&
+                            (cur.getParentInvoice().isWrittenOff() ||
+                             cur.getParentInvoice().getStatus() == InvoiceStatus.DRAFT ||
+                             InvoiceModelDaoHelper.getRawBalanceForRegularInvoice(cur.getParentInvoice()).compareTo(BigDecimal.ZERO) == 0);
+
+
+                    // invoices that are WRITTEN_OFF or paid children invoices are excluded from balance computation but the cba summation needs to be included
+                    accountBalance = cur.isWrittenOff() || hasZeroParentBalance ? BigDecimal.ZERO : accountBalance.add(InvoiceModelDaoHelper.getRawBalanceForRegularInvoice(cur));
                     cba = cba.add(InvoiceModelDaoHelper.getCBAAmount(cur));
                 }
                 return accountBalance.subtract(cba);
@@ -865,7 +879,10 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
 
                 // Retrieve the invoice and make sure it belongs to the right account
                 final InvoiceModelDao invoice = transactional.getById(invoiceId.toString(), context);
-                if (invoice == null || !invoice.getAccountId().equals(accountId)) {
+                if (invoice == null ||
+                    !invoice.getAccountId().equals(accountId) ||
+                    invoice.isMigrated() ||
+                    invoice.getStatus() == InvoiceStatus.DRAFT) {
                     throw new InvoiceApiException(ErrorCode.INVOICE_NOT_FOUND, invoiceId);
                 }
 
@@ -884,7 +901,7 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
 
                 // Verify the final invoice balance is not negative
                 invoiceDaoHelper.populateChildren(invoice, invoicesTags, entitySqlDaoWrapperFactory, context);
-                if (InvoiceModelDaoHelper.getBalance(invoice).compareTo(BigDecimal.ZERO) < 0) {
+                if (InvoiceModelDaoHelper.getRawBalanceForRegularInvoice(invoice).compareTo(BigDecimal.ZERO) < 0) {
                     throw new InvoiceApiException(ErrorCode.INVOICE_WOULD_BE_NEGATIVE);
                 }
 
@@ -1089,9 +1106,10 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
 
     private void notifyBusOfInvoiceCreation(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory, final InvoiceModelDao invoice, final InternalCallContext context) {
         try {
-            final BigDecimal balance = InvoiceModelDaoHelper.getBalance(invoice);
+            // This is called for a new COMMITTED invoice (which cannot be writtenOff as it does not exist yet, so rawBalance == balance)
+            final BigDecimal rawBalance = InvoiceModelDaoHelper.getRawBalanceForRegularInvoice(invoice);
             final DefaultInvoiceCreationEvent event = new DefaultInvoiceCreationEvent(invoice.getId(), invoice.getAccountId(),
-                                                                                                            balance, invoice.getCurrency(),
+                                                                                      rawBalance, invoice.getCurrency(),
                                                                                                             context.getAccountRecordId(), context.getTenantRecordId(),
                                                                                                             context.getUserToken());
             eventBus.postFromTransaction(event, entitySqlDaoWrapperFactory.getHandle().getConnection());

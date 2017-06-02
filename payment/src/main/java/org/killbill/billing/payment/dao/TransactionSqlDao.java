@@ -1,6 +1,6 @@
 /*
- * Copyright 2014-2016 Groupon, Inc
- * Copyright 2014-2016 The Billing Project, LLC
+ * Copyright 2014-2017 Groupon, Inc
+ * Copyright 2014-2017 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -30,14 +30,15 @@ import org.killbill.billing.payment.api.PaymentTransaction;
 import org.killbill.billing.util.audit.ChangeType;
 import org.killbill.billing.util.entity.dao.Audited;
 import org.killbill.billing.util.entity.dao.EntitySqlDao;
-import org.killbill.billing.util.entity.dao.EntitySqlDaoStringTemplate;
+import org.killbill.commons.jdbi.binder.SmartBindBean;
+import org.killbill.commons.jdbi.template.KillBillSqlDaoStringTemplate;
 import org.skife.jdbi.v2.sqlobject.Bind;
-import org.skife.jdbi.v2.sqlobject.BindBean;
 import org.skife.jdbi.v2.sqlobject.SqlQuery;
 import org.skife.jdbi.v2.sqlobject.SqlUpdate;
 import org.skife.jdbi.v2.sqlobject.customizers.Define;
+import org.skife.jdbi.v2.unstable.BindIn;
 
-@EntitySqlDaoStringTemplate
+@KillBillSqlDaoStringTemplate
 public interface TransactionSqlDao extends EntitySqlDao<PaymentTransactionModelDao, PaymentTransaction> {
 
     @SqlUpdate
@@ -49,19 +50,19 @@ public interface TransactionSqlDao extends EntitySqlDao<PaymentTransactionModelD
                                    @Bind("transactionStatus") final String transactionStatus,
                                    @Bind("gatewayErrorCode") final String gatewayErrorCode,
                                    @Bind("gatewayErrorMsg") final String gatewayErrorMsg,
-                                   @BindBean final InternalCallContext context);
+                                   @SmartBindBean final InternalCallContext context);
 
     @SqlQuery
     List<PaymentTransactionModelDao> getPaymentTransactionsByExternalKey(@Bind("transactionExternalKey") final String transactionExternalKey,
-                                                                         @BindBean final InternalTenantContext context);
+                                                                         @SmartBindBean final InternalTenantContext context);
 
     @SqlQuery
-    Long getCountByTransactionStatusPriorDateAcrossTenants(@TransactionStatusCollectionBinder final Collection<String> statuses,
+    Long getCountByTransactionStatusPriorDateAcrossTenants(@BindIn("statuses") final Collection<String> statuses,
                                                            @Bind("createdBeforeDate") final Date createdBeforeDate,
                                                            @Bind("createdAfterDate") final Date createdAfterDate);
 
     @SqlQuery
-    Iterator<PaymentTransactionModelDao> getByTransactionStatusPriorDateAcrossTenants(@TransactionStatusCollectionBinder final Collection<String> statuses,
+    Iterator<PaymentTransactionModelDao> getByTransactionStatusPriorDateAcrossTenants(@BindIn("statuses") final Collection<String> statuses,
                                                                                       @Bind("createdBeforeDate") final Date createdBeforeDate,
                                                                                       @Bind("createdAfterDate") final Date createdAfterDate,
                                                                                       @Bind("offset") final Long offset,
@@ -70,7 +71,7 @@ public interface TransactionSqlDao extends EntitySqlDao<PaymentTransactionModelD
 
     @SqlQuery
     public List<PaymentTransactionModelDao> getByPaymentId(@Bind("paymentId") final UUID paymentId,
-                                                           @BindBean final InternalTenantContext context);
+                                                           @SmartBindBean final InternalTenantContext context);
 }
 
 

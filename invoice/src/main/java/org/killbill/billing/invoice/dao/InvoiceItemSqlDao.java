@@ -27,38 +27,38 @@ import org.killbill.billing.invoice.api.InvoiceItem;
 import org.killbill.billing.util.audit.ChangeType;
 import org.killbill.billing.util.entity.dao.Audited;
 import org.killbill.billing.util.entity.dao.EntitySqlDao;
-import org.killbill.billing.util.entity.dao.EntitySqlDaoStringTemplate;
+import org.killbill.commons.jdbi.template.KillBillSqlDaoStringTemplate;
 import org.skife.jdbi.v2.sqlobject.Bind;
-import org.skife.jdbi.v2.sqlobject.BindBean;
+import org.killbill.commons.jdbi.binder.SmartBindBean;
 import org.skife.jdbi.v2.sqlobject.SqlQuery;
 import org.skife.jdbi.v2.sqlobject.SqlUpdate;
 
-@EntitySqlDaoStringTemplate
+@KillBillSqlDaoStringTemplate
 public interface InvoiceItemSqlDao extends EntitySqlDao<InvoiceItemModelDao, InvoiceItem> {
 
     @SqlQuery
     List<InvoiceItemModelDao> getInvoiceItemsByInvoice(@Bind("invoiceId") final String invoiceId,
-                                                       @BindBean final InternalTenantContext context);
+                                                       @SmartBindBean final InternalTenantContext context);
 
     @SqlQuery
     List<InvoiceItemModelDao> getInvoiceItemsBySubscription(@Bind("subscriptionId") final String subscriptionId,
-                                                            @BindBean final InternalTenantContext context);
+                                                            @SmartBindBean final InternalTenantContext context);
 
 
     @SqlQuery
     List<InvoiceItemModelDao> getAdjustedOrRepairedInvoiceItemsByLinkedId(@Bind("linkedItemId") final String linkedItemId,
-                                                            @BindBean final InternalTenantContext context);
+                                                            @SmartBindBean final InternalTenantContext context);
 
     @SqlUpdate
     @Audited(ChangeType.UPDATE)
     void updateAmount(@Bind("id") String invoiceItemId,
                       @Bind("amount")BigDecimal amount,
-                      @BindBean final InternalCallContext context);
+                      @SmartBindBean final InternalCallContext context);
 
     @SqlQuery
     List<InvoiceItemModelDao> getInvoiceItemsByParentInvoice(@Bind("parentInvoiceId") final String parentInvoiceId,
-                                                             @BindBean final InternalTenantContext context);
+                                                             @SmartBindBean final InternalTenantContext context);
 
     @SqlQuery
-    BigDecimal getAccountCBA(@BindBean final InternalTenantContext context);
+    BigDecimal getAccountCBA(@SmartBindBean final InternalTenantContext context);
 }

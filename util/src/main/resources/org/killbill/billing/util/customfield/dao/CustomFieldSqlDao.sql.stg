@@ -1,4 +1,4 @@
-group CustomFieldSqlDao: EntitySqlDao;
+import "org/killbill/billing/util/entity/dao/EntitySqlDao.sql.stg"
 
 andCheckSoftDeletionWithComma(prefix) ::= "and <prefix>is_active"
 
@@ -41,14 +41,14 @@ where <idField("")> = :id
 
 getCustomFieldsForObject() ::= <<
 select
-<allTableFields()>
+<allTableFields("")>
 from <tableName()>
 where
 object_id = :objectId
 and object_type = :objectType
 and is_active
-<AND_CHECK_TENANT()>
-<defaultOrderBy()>
+<AND_CHECK_TENANT("")>
+<defaultOrderBy("")>
 ;
 >>
 

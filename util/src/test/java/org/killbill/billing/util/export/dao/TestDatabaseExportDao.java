@@ -1,7 +1,9 @@
 /*
- * Copyright 2010-2012 Ning, Inc.
+ * Copyright 2010-2013 Ning, Inc.
+ * Copyright 2014-2017 Groupon, Inc
+ * Copyright 2014-2017 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -30,6 +32,8 @@ import org.killbill.billing.util.UtilTestSuiteWithEmbeddedDB;
 import org.killbill.billing.util.api.DatabaseExportOutputStream;
 import org.killbill.billing.util.validation.dao.DatabaseSchemaDao;
 
+import com.ning.compress.lzf.LZFEncoder;
+
 public class TestDatabaseExportDao extends UtilTestSuiteWithEmbeddedDB {
 
     @Test(groups = "slow")
@@ -48,6 +52,7 @@ public class TestDatabaseExportDao extends UtilTestSuiteWithEmbeddedDB {
         final Date updatedDate = new Date(382910622000L);
         final String updatedBy = UUID.randomUUID().toString().substring(0, 4);
 
+        final byte[] properties = LZFEncoder.encode(new byte[] { 'c', 'a', 'f', 'e' });
         final String tableNameA = "test_database_export_dao_a";
         final String tableNameB = "test_database_export_dao_b";
         dbi.withHandle(new HandleCallback<Void>() {
@@ -56,6 +61,7 @@ public class TestDatabaseExportDao extends UtilTestSuiteWithEmbeddedDB {
                 handle.execute("drop table if exists " + tableNameA);
                 handle.execute("create table " + tableNameA + "(record_id serial unique," +
                                "a_column char default 'a'," +
+                               "blob_column mediumblob," +
                                "account_record_id bigint /*! unsigned */ not null," +
                                "tenant_record_id bigint /*! unsigned */ not null default 0," +
                                "primary key(record_id));");
@@ -65,8 +71,8 @@ public class TestDatabaseExportDao extends UtilTestSuiteWithEmbeddedDB {
                                "account_record_id bigint /*! unsigned */ not null," +
                                "tenant_record_id bigint /*! unsigned */ not null default 0," +
                                "primary key(record_id));");
-                handle.execute("insert into " + tableNameA + " (account_record_id, tenant_record_id) values (?, ?)",
-                               internalCallContext.getAccountRecordId(), internalCallContext.getTenantRecordId());
+                handle.execute("insert into " + tableNameA + " (blob_column, account_record_id, tenant_record_id) values (?, ?, ?)",
+                               properties, internalCallContext.getAccountRecordId(), internalCallContext.getTenantRecordId());
                 handle.execute("insert into " + tableNameB + " (account_record_id, tenant_record_id) values (?, ?)",
                                internalCallContext.getAccountRecordId(), internalCallContext.getTenantRecordId());
 
@@ -83,8 +89,8 @@ public class TestDatabaseExportDao extends UtilTestSuiteWithEmbeddedDB {
         Assert.assertEquals(newDump, "-- accounts record_id|id|external_key|email|name|first_name_length|currency|billing_cycle_day_local|payment_method_id|time_zone|locale|address1|address2|company_name|city|state_or_province|country|postal_code|phone|migrated|is_notified_for_invoices|created_date|created_by|updated_date|updated_by|tenant_record_id\n" +
                                      String.format("%s|%s||%s|%s|%s||||||||||||||false|%s|%s|%s|%s|%s|%s", internalCallContext.getAccountRecordId(), accountId, accountEmail, accountName, firstNameLength,
                                                    isNotifiedForInvoices, "1970-05-24T18:33:02.000+0000", createdBy, "1982-02-18T20:03:42.000+0000", updatedBy, internalCallContext.getTenantRecordId()) + "\n" +
-                                     "-- " + tableNameA + " record_id|a_column|account_record_id|tenant_record_id\n" +
-                                     "1|a|" + internalCallContext.getAccountRecordId() + "|" + internalCallContext.getTenantRecordId() + "\n" +
+                                     "-- " + tableNameA + " record_id|a_column|blob_column|account_record_id|tenant_record_id\n" +
+                                     "1|a|WlYAAARjYWZl|" + internalCallContext.getAccountRecordId() + "|" + internalCallContext.getTenantRecordId() + "\n" +
                                      "-- " + tableNameB + " record_id|b_column|account_record_id|tenant_record_id\n" +
                                      "1|b|" + internalCallContext.getAccountRecordId() + "|" + internalCallContext.getTenantRecordId() + "\n");
 

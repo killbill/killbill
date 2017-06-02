@@ -1,6 +1,6 @@
 /*
- * Copyright 2014-2015 Groupon, Inc
- * Copyright 2014-2015 The Billing Project, LLC
+ * Copyright 2014-2017 Groupon, Inc
+ * Copyright 2014-2017 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -21,15 +21,16 @@ import java.util.Collection;
 
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
-import org.killbill.billing.util.entity.dao.EntitySqlDaoStringTemplate;
 import org.killbill.commons.jdbi.binder.SmartBindBean;
+import org.killbill.commons.jdbi.template.KillBillSqlDaoStringTemplate;
 import org.skife.jdbi.v2.sqlobject.Bind;
 import org.skife.jdbi.v2.sqlobject.SqlQuery;
 import org.skife.jdbi.v2.sqlobject.SqlUpdate;
 import org.skife.jdbi.v2.sqlobject.mixins.CloseMe;
 import org.skife.jdbi.v2.sqlobject.mixins.Transactional;
+import org.skife.jdbi.v2.unstable.BindIn;
 
-@EntitySqlDaoStringTemplate
+@KillBillSqlDaoStringTemplate
 public interface CatalogOverridePlanPhaseSqlDao extends Transactional<CatalogOverridePlanPhaseSqlDao>, CloseMe {
 
     @SqlUpdate
@@ -41,7 +42,7 @@ public interface CatalogOverridePlanPhaseSqlDao extends Transactional<CatalogOve
                                                           @SmartBindBean final InternalTenantContext context);
 
     @SqlQuery
-    public Long getTargetPlanDefinition(@PlanPhaseKeysCollectionBinder final Collection<String> concatPhaseNumAndPhaseDefRecordId,
+    public Long getTargetPlanDefinition(@BindIn("keys") final Collection<String> concatPhaseNumAndPhaseDefRecordId,
                                         @Bind("targetCount") final Integer targetCount,
                                         @SmartBindBean final InternalTenantContext context);
 

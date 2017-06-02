@@ -1,5 +1,3 @@
-group NonEntitySqlDao;
-
 getRecordIdFromObject(tableName) ::= <<
 select
   record_id

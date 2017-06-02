@@ -39,8 +39,6 @@ public class DefaultBroadcastDao implements BroadcastDao {
     public DefaultBroadcastDao(final IDBI dbi, final Clock clock) {
         this.dbi = dbi;
         this.clock = clock;
-        ((DBI) dbi).registerMapper(new LowerToCamelBeanMapperFactory(BroadcastModelDao.class));
-
     }
 
     @Override

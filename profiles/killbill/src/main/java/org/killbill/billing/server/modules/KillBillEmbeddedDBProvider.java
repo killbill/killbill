@@ -34,6 +34,7 @@ public class KillBillEmbeddedDBProvider extends EmbeddedDBProvider {
         final Collection<String> ddlFiles = new LinkedList<String>();
         for (final String module : new String[]{"account",
                                                 "beatrix",
+                                                "catalog",
                                                 "entitlement",
                                                 "invoice",
                                                 "payment",

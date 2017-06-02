@@ -316,7 +316,7 @@ public class TestInvoiceHelper {
 
     public void verifyInvoice(final UUID invoiceId, final double balance, final double cbaAmount, final InternalTenantContext context) throws InvoiceApiException {
         final InvoiceModelDao invoice = invoiceDao.getById(invoiceId, context);
-        Assert.assertEquals(InvoiceModelDaoHelper.getBalance(invoice).doubleValue(), balance);
+        Assert.assertEquals(InvoiceModelDaoHelper.getRawBalanceForRegularInvoice(invoice).doubleValue(), balance);
         Assert.assertEquals(InvoiceModelDaoHelper.getCBAAmount(invoice).doubleValue(), cbaAmount);
     }
 

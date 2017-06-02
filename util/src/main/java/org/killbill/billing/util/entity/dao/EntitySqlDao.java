@@ -32,40 +32,41 @@ import org.killbill.billing.util.dao.AuditSqlDao;
 import org.killbill.billing.util.dao.HistorySqlDao;
 import org.killbill.billing.util.entity.Entity;
 import org.killbill.commons.jdbi.statement.SmartFetchSize;
+import org.killbill.commons.jdbi.template.KillBillSqlDaoStringTemplate;
 import org.skife.jdbi.v2.sqlobject.Bind;
-import org.skife.jdbi.v2.sqlobject.BindBean;
+import org.killbill.commons.jdbi.binder.SmartBindBean;
 import org.skife.jdbi.v2.sqlobject.SqlQuery;
 import org.skife.jdbi.v2.sqlobject.SqlUpdate;
 import org.skife.jdbi.v2.sqlobject.customizers.Define;
 import org.skife.jdbi.v2.sqlobject.mixins.CloseMe;
 import org.skife.jdbi.v2.sqlobject.mixins.Transactional;
 
-@EntitySqlDaoStringTemplate
+@KillBillSqlDaoStringTemplate
 public interface EntitySqlDao<M extends EntityModelDao<E>, E extends Entity> extends AuditSqlDao, HistorySqlDao<M, E>, Transactional<EntitySqlDao<M, E>>, CloseMe {
 
     @SqlUpdate
     @Audited(ChangeType.INSERT)
-    public Object create(@BindBean final M entity,
-                         @BindBean final InternalCallContext context) throws EntityPersistenceException;
+    public Object create(@SmartBindBean final M entity,
+                         @SmartBindBean final InternalCallContext context) throws EntityPersistenceException;
 
     @SqlQuery
     public M getById(@Bind("id") final String id,
-                     @BindBean final InternalTenantContext context);
+                     @SmartBindBean final InternalTenantContext context);
 
     @SqlQuery
     public M getByRecordId(@Bind("recordId") final Long recordId,
-                           @BindBean final InternalTenantContext context);
+                           @SmartBindBean final InternalTenantContext context);
 
     @SqlQuery
-    public List<M> getByAccountRecordId(@BindBean final InternalTenantContext context);
+    public List<M> getByAccountRecordId(@SmartBindBean final InternalTenantContext context);
 
     @SqlQuery
-    public List<M> getByAccountRecordIdIncludedDeleted(@BindBean final InternalTenantContext context);
+    public List<M> getByAccountRecordIdIncludedDeleted(@SmartBindBean final InternalTenantContext context);
 
     @SqlQuery
     @Cachable(CacheType.RECORD_ID)
     public Long getRecordId(@CachableKey(1) @Bind("id") final String id,
-                            @BindBean final InternalTenantContext context);
+                            @SmartBindBean final InternalTenantContext context);
 
     @SqlQuery
     @SmartFetchSize(shouldStream = true)
@@ -74,16 +75,16 @@ public interface EntitySqlDao<M extends EntityModelDao<E>, E extends Entity> ext
                               @Bind("offset") final Long offset,
                               @Bind("rowCount") final Long rowCount,
                               @Define("ordering") final String ordering,
-                              @BindBean final InternalTenantContext context);
+                              @SmartBindBean final InternalTenantContext context);
 
     @SqlQuery
     public Long getSearchCount(@Bind("searchKey") final String searchKey,
                                @Bind("likeSearchKey") final String likeSearchKey,
-                               @BindBean final InternalTenantContext context);
+                               @SmartBindBean final InternalTenantContext context);
 
     @SqlQuery
     @SmartFetchSize(shouldStream = true)
-    public Iterator<M> getAll(@BindBean final InternalTenantContext context);
+    public Iterator<M> getAll(@SmartBindBean final InternalTenantContext context);
 
     @SqlQuery
     @SmartFetchSize(shouldStream = true)
@@ -91,11 +92,11 @@ public interface EntitySqlDao<M extends EntityModelDao<E>, E extends Entity> ext
                            @Bind("rowCount") final Long rowCount,
                            @Define("orderBy") final String orderBy,
                            @Define("ordering") final String ordering,
-                           @BindBean final InternalTenantContext context);
+                           @SmartBindBean final InternalTenantContext context);
 
     @SqlQuery
-    public Long getCount(@BindBean final InternalTenantContext context);
+    public Long getCount(@SmartBindBean final InternalTenantContext context);
 
     @SqlUpdate
-    public void test(@BindBean final InternalTenantContext context);
+    public void test(@SmartBindBean final InternalTenantContext context);
 }

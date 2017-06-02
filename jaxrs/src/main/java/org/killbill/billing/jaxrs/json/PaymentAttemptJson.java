@@ -1,5 +1,6 @@
 /*
- * Copyright 2016 The Billing Project, LLC
+ * Copyright 2014-2017 Groupon, Inc
+ * Copyright 2014-2017 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -85,13 +86,14 @@ public class PaymentAttemptJson extends JsonBase {
 
     public PaymentAttemptJson(final PaymentAttempt paymentAttempt, final String paymentExternalKey, @Nullable final List<AuditLog> attemptsLogs) {
         this(paymentAttempt.getAccountId().toString(),
-             paymentAttempt.getPaymentMethodId().toString(),
+             // Could be null if aborted in the priorCall
+             paymentAttempt.getPaymentMethodId() != null ? paymentAttempt.getPaymentMethodId().toString() : null,
              paymentExternalKey,
              paymentAttempt.getTransactionId() != null ? paymentAttempt.getTransactionId().toString() : null,
              paymentAttempt.getTransactionExternalKey(),
              paymentAttempt.getTransactionType().toString(),
              paymentAttempt.getEffectiveDate(),
-             paymentAttempt.getStateName() != null ? paymentAttempt.getStateName() : null,
+             paymentAttempt.getStateName(),
              paymentAttempt.getAmount(),
              paymentAttempt.getCurrency() != null ? paymentAttempt.getCurrency().toString() : null,
              paymentAttempt.getPluginName(),
