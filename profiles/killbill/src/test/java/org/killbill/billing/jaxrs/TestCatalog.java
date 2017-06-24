@@ -32,6 +32,7 @@ import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.catalog.api.ProductCategory;
 import org.killbill.billing.catalog.api.TimeUnit;
 import org.killbill.billing.client.KillBillClientException;
+import org.killbill.billing.client.KillBillHttpClient;
 import org.killbill.billing.client.RequestOptions;
 import org.killbill.billing.client.model.Catalog;
 import org.killbill.billing.client.model.Plan;
@@ -40,10 +41,13 @@ import org.killbill.billing.client.model.Product;
 import org.killbill.billing.client.model.SimplePlan;
 import org.killbill.billing.client.model.Tenant;
 import org.killbill.billing.client.model.Usage;
+import org.killbill.billing.jaxrs.json.AdminPaymentJson;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
+import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Multimap;
 import com.google.common.io.Resources;
 
 public class TestCatalog extends TestJaxrsBase {
@@ -222,6 +226,24 @@ public class TestCatalog extends TestJaxrsBase {
         Assert.assertEquals(catalogsJson.get(0).getPriceLists().get(0).getPlans().size(), 2);
     }
 
+    @Test(groups = "slow")
+    public void testCatalogDeletionInTestMode() throws Exception {
 
+        killBillClient.addSimplePan(new SimplePlan("something-monthly", "Something", ProductCategory.BASE, Currency.USD, BigDecimal.TEN, BillingPeriod.MONTHLY, 0, TimeUnit.UNLIMITED, ImmutableList.<String>of()), requestOptions);
+        List<Catalog> catalogsJson = killBillClient.getJSONCatalog(requestOptions);
+        Assert.assertEquals(catalogsJson.size(), 1);
 
+        final String uri = "/1.0/kb/test/catalog";
+
+        final Multimap result = HashMultimap.create();
+        result.put(KillBillHttpClient.AUDIT_OPTION_CREATED_BY, createdBy);
+        result.put(KillBillHttpClient.AUDIT_OPTION_REASON, reason);
+        result.put(KillBillHttpClient.AUDIT_OPTION_COMMENT, comment);
+        killBillHttpClient.doDelete(uri, requestOptions);
+
+        // Verify that we see no catalog -- and in particular not the KB default catalog
+        catalogsJson = killBillClient.getJSONCatalog(requestOptions);
+        Assert.assertEquals(catalogsJson.size(), 0);
+
+    }
 }
