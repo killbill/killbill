@@ -233,7 +233,7 @@ public class TestResource extends JaxRsResourceBase {
                                   @javax.ws.rs.core.Context final UriInfo uriInfo,
                                   @javax.ws.rs.core.Context final HttpServletRequest request) throws TenantApiException, CatalogApiException {
 
-        final CallContext callContext = context.createContext(createdBy, reason, comment, request);
+        final CallContext callContext = context.createCallContextNoAccountId(createdBy, reason, comment, request);
 
         // remove for all tenants-- otherwise we need to convert the callContext into an internalTenantContext to get the key
         cacheControllerDispatcher.getCacheController(CacheType.TENANT_CATALOG).removeAll();
