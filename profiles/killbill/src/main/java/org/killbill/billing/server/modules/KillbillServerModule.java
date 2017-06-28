@@ -31,12 +31,14 @@ import org.killbill.billing.jaxrs.resources.AccountResource;
 import org.killbill.billing.jaxrs.resources.AdminResource;
 import org.killbill.billing.jaxrs.resources.BundleResource;
 import org.killbill.billing.jaxrs.resources.CatalogResource;
+import org.killbill.billing.jaxrs.resources.ComboPaymentResource;
 import org.killbill.billing.jaxrs.resources.CreditResource;
 import org.killbill.billing.jaxrs.resources.CustomFieldResource;
 import org.killbill.billing.jaxrs.resources.ExportResource;
 import org.killbill.billing.jaxrs.resources.InvoicePaymentResource;
 import org.killbill.billing.jaxrs.resources.InvoiceResource;
 import org.killbill.billing.jaxrs.resources.NodesInfoResource;
+import org.killbill.billing.jaxrs.resources.OverdueResource;
 import org.killbill.billing.jaxrs.resources.PaymentGatewayResource;
 import org.killbill.billing.jaxrs.resources.PaymentMethodResource;
 import org.killbill.billing.jaxrs.resources.PaymentResource;
@@ -182,29 +184,31 @@ public class KillbillServerModule extends KillbillPlatformModule {
 
     protected void configureResources() {
         bind(AccountResource.class).asEagerSingleton();
+        bind(AdminResource.class).asEagerSingleton();
         bind(BundleResource.class).asEagerSingleton();
         bind(CatalogResource.class).asEagerSingleton();
+        bind(ComboPaymentResource.class).asEagerSingleton();
         bind(CreditResource.class).asEagerSingleton();
         bind(CustomFieldResource.class).asEagerSingleton();
         bind(ExportResource.class).asEagerSingleton();
         bind(InvoicePaymentResource.class).asEagerSingleton();
         bind(InvoiceResource.class).asEagerSingleton();
-        bind(KillbillEventHandler.class).asEagerSingleton();
+        bind(NodesInfoResource.class).asEagerSingleton();
+        bind(OverdueResource.class).asEagerSingleton();
         bind(PaymentGatewayResource.class).asEagerSingleton();
         bind(PaymentMethodResource.class).asEagerSingleton();
         bind(PaymentResource.class).asEagerSingleton();
+        bind(PluginInfoResource.class).asEagerSingleton();
         bind(PluginResource.class).asEagerSingleton();
         bind(SecurityResource.class).asEagerSingleton();
         bind(SubscriptionResource.class).asEagerSingleton();
         bind(TagDefinitionResource.class).asEagerSingleton();
         bind(TagResource.class).asEagerSingleton();
         bind(TenantResource.class).asEagerSingleton();
-        bind(TestResource.class).asEagerSingleton();
         bind(TransactionResource.class).asEagerSingleton();
         bind(UsageResource.class).asEagerSingleton();
-        bind(AdminResource.class).asEagerSingleton();
-        bind(PluginInfoResource.class).asEagerSingleton();
-        bind(NodesInfoResource.class).asEagerSingleton();
+
+        bind(KillbillEventHandler.class).asEagerSingleton();
     }
 
     protected void configureFilters() {
