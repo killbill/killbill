@@ -292,13 +292,13 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
                                                      final FutureAccountNotifications callbackDateTimePerSubscriptions,
                                                      final InternalCallContext context) {
         final Collection<UUID> createdInvoiceIds = new HashSet<UUID>();
-        final Collection<UUID> adjustedInvoiceIds = new HashSet<UUID>();
+        final Collection<UUID> modifiedInvoiceIds = new HashSet<UUID>();
         final Collection<UUID> committedInvoiceIds = new HashSet<UUID>();
 
-        final Collection<UUID> uniqueInvoiceIds = new HashSet<UUID>();
+        final Collection<UUID> invoiceIdsReferencedFromItems = new HashSet<UUID>();
         for (final InvoiceModelDao invoiceModelDao : invoices) {
             for (final InvoiceItemModelDao invoiceItemModelDao : invoiceModelDao.getInvoiceItems()) {
-                uniqueInvoiceIds.add(invoiceItemModelDao.getInvoiceId());
+                invoiceIdsReferencedFromItems.add(invoiceItemModelDao.getInvoiceId());
             }
         }
 
@@ -319,24 +319,19 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
                 final List<InvoiceItemModelDao> createdInvoiceItems = new LinkedList<InvoiceItemModelDao>();
                 for (final InvoiceModelDao invoiceModelDao : invoices) {
                     invoiceByInvoiceId.put(invoiceModelDao.getId(), invoiceModelDao);
-                    final boolean isRealInvoice = uniqueInvoiceIds.remove(invoiceModelDao.getId());
+                    final boolean isNotShellInvoice = invoiceIdsReferencedFromItems.remove(invoiceModelDao.getId());
 
-                    // Create the invoice if needed
-                    if (invoiceSqlDao.getById(invoiceModelDao.getId().toString(), context) == null) {
-                        // We only want to insert that invoice if there are real invoiceItems associated to it -- if not, this is just
-                        // a shell invoice and we only need to insert the invoiceItems -- for the already existing invoices
-                        if (isRealInvoice) {
-                            createAndRefresh(invoiceSqlDao, invoiceModelDao, context);
-                            createdInvoiceIds.add(invoiceModelDao.getId());
-                        }
+                    // Create the invoice if this is not a shell invoice and it does not already exist
+                    if (isNotShellInvoice && invoiceSqlDao.getById(invoiceModelDao.getId().toString(), context) == null) {
+                        createAndRefresh(invoiceSqlDao, invoiceModelDao, context);
+                        createdInvoiceIds.add(invoiceModelDao.getId());
                     }
 
                     // Create the invoice items if needed (note: they may not necessarily belong to that invoice)
                     for (final InvoiceItemModelDao invoiceItemModelDao : invoiceModelDao.getInvoiceItems()) {
                         if (transInvoiceItemSqlDao.getById(invoiceItemModelDao.getId().toString(), context) == null) {
                             createdInvoiceItems.add(createInvoiceItemFromTransaction(transInvoiceItemSqlDao, invoiceItemModelDao, context));
-
-                            adjustedInvoiceIds.add(invoiceItemModelDao.getInvoiceId());
+                            modifiedInvoiceIds.add(invoiceItemModelDao.getInvoiceId());
                         }
                     }
 
@@ -355,7 +350,7 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
                     }
                 }
 
-                for (final UUID adjustedInvoiceId : adjustedInvoiceIds) {
+                for (final UUID adjustedInvoiceId : modifiedInvoiceIds) {
                     final boolean newInvoice = createdInvoiceIds.contains(adjustedInvoiceId);
                     if (newInvoice) {
                         // New invoice, so no associated payment yet: no need to refresh the invoice state
@@ -371,7 +366,6 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
                         notifyBusOfInvoiceAdjustment(entitySqlDaoWrapperFactory, adjustedInvoiceId, accountId, context.getUserToken(), context);
                     }
                 }
-
                 return createdInvoiceItems;
             }
         });
