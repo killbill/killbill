@@ -223,7 +223,6 @@ public class TestResource extends JaxRsResourceBase {
 
     @DELETE
     @Path("/catalog")
-    @Produces(APPLICATION_JSON)
     @ApiOperation(value = "Delete all versions for a per tenant catalog")
     @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid subscription id supplied"),
                            @ApiResponse(code = 404, message = "Entitlement not found")})
