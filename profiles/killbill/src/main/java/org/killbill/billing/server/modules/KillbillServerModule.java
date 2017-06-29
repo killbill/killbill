@@ -187,7 +187,6 @@ public class KillbillServerModule extends KillbillPlatformModule {
         bind(AdminResource.class).asEagerSingleton();
         bind(BundleResource.class).asEagerSingleton();
         bind(CatalogResource.class).asEagerSingleton();
-        bind(ComboPaymentResource.class).asEagerSingleton();
         bind(CreditResource.class).asEagerSingleton();
         bind(CustomFieldResource.class).asEagerSingleton();
         bind(ExportResource.class).asEagerSingleton();
