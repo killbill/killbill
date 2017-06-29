@@ -22,6 +22,7 @@ import java.util.List;
 import javax.annotation.Nullable;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
+import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.HeaderParam;
 import javax.ws.rs.POST;
@@ -49,9 +50,12 @@ import org.killbill.billing.jaxrs.json.SimplePlanJson;
 import org.killbill.billing.jaxrs.util.Context;
 import org.killbill.billing.jaxrs.util.JaxrsUriBuilder;
 import org.killbill.billing.payment.api.PaymentApi;
+import org.killbill.billing.tenant.api.TenantApiException;
+import org.killbill.billing.tenant.api.TenantKV.TenantKey;
 import org.killbill.billing.util.api.AuditUserApi;
 import org.killbill.billing.util.api.CustomFieldUserApi;
 import org.killbill.billing.util.api.TagUserApi;
+import org.killbill.billing.util.cache.Cachable.CacheType;
 import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.TenantContext;
 import org.killbill.clock.Clock;
@@ -62,6 +66,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
@@ -219,5 +224,20 @@ public class CatalogResource extends JaxRsResourceBase {
         catalogUserApi.addSimplePlan(desc, clock.getUTCNow(), callContext);
         return uriBuilder.buildResponse(uriInfo, CatalogResource.class, null, null, request);
     }
+
+
+    @DELETE
+    @ApiOperation(value = "Delete all versions for a per tenant catalog")
+    @ApiResponses(value = {})
+    public Response deleteCatalog(@HeaderParam(HDR_CREATED_BY) final String createdBy,
+                                  @HeaderParam(HDR_REASON) final String reason,
+                                  @HeaderParam(HDR_COMMENT) final String comment,
+                                  @javax.ws.rs.core.Context final UriInfo uriInfo,
+                                  @javax.ws.rs.core.Context final HttpServletRequest request) throws TenantApiException, CatalogApiException {
+        final CallContext callContext = context.createCallContextNoAccountId(createdBy, reason, comment, request);
+        catalogUserApi.deleteCatalog(callContext);
+        return Response.status(Status.OK).build();
+    }
+
 
 }

@@ -44,9 +44,11 @@ import org.killbill.billing.catalog.caching.CatalogCache;
 import org.killbill.billing.tenant.api.TenantApiException;
 import org.killbill.billing.tenant.api.TenantKV.TenantKey;
 import org.killbill.billing.tenant.api.TenantUserApi;
+import org.killbill.billing.util.cache.Cachable.CacheType;
 import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.billing.util.callcontext.TenantContext;
+import org.killbill.clock.Clock;
 import org.killbill.xmlloader.ValidationErrors;
 import org.killbill.xmlloader.ValidationException;
 import org.killbill.xmlloader.XMLLoader;
@@ -62,16 +64,19 @@ public class DefaultCatalogUserApi implements CatalogUserApi {
     private final InternalCallContextFactory internalCallContextFactory;
     private final TenantUserApi tenantApi;
     private final CatalogCache catalogCache;
+    private final Clock clock;
 
 
     @Inject
     public DefaultCatalogUserApi(final CatalogService catalogService,
                                  final TenantUserApi tenantApi,
                                  final CatalogCache catalogCache,
+                                 final Clock clock,
                                  final InternalCallContextFactory internalCallContextFactory) {
         this.catalogService = catalogService;
         this.tenantApi = tenantApi;
         this.catalogCache = catalogCache;
+        this.clock = clock;
         this.internalCallContextFactory = internalCallContextFactory;
     }
 
@@ -197,6 +202,18 @@ public class DefaultCatalogUserApi implements CatalogUserApi {
         }
     }
 
+    @Override
+    public void deleteCatalog(final CallContext callContext) throws CatalogApiException {
+
+        final InternalTenantContext internalTenantContext = internalCallContextFactory.createInternalTenantContextWithoutAccountRecordId(callContext);
+        try {
+            catalogCache.clearCatalog(internalTenantContext);
+            tenantApi.deleteTenantKey(TenantKey.CATALOG.toString(), callContext);
+            createDefaultEmptyCatalog(clock.getUTCNow(), callContext);
+        } catch (final TenantApiException e) {
+            throw new CatalogApiException(e);
+        }
+    }
 
     private StandaloneCatalog getCurrentStandaloneCatalogForTenant(final InternalTenantContext internalTenantContext) throws CatalogApiException {
         final VersionedCatalog versionedCatalog = (VersionedCatalog) catalogService.getCurrentCatalog(false, false, internalTenantContext);

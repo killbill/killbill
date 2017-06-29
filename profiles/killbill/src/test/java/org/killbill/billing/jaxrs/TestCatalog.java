@@ -232,13 +232,7 @@ public class TestCatalog extends TestJaxrsBase {
         List<Catalog> catalogsJson = killBillClient.getJSONCatalog(requestOptions);
         Assert.assertEquals(catalogsJson.size(), 1);
 
-        final String uri = "/1.0/kb/test/catalog";
-
-        final Multimap result = HashMultimap.create();
-        result.put(KillBillHttpClient.AUDIT_OPTION_CREATED_BY, createdBy);
-        result.put(KillBillHttpClient.AUDIT_OPTION_REASON, reason);
-        result.put(KillBillHttpClient.AUDIT_OPTION_COMMENT, comment);
-        killBillHttpClient.doDelete(uri, requestOptions);
+        killBillClient.deleteCatalog(requestOptions);
 
         // Verify that we see no catalog -- and in particular not the KB default catalog
         catalogsJson = killBillClient.getJSONCatalog(requestOptions);

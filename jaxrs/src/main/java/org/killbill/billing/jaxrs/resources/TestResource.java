@@ -221,31 +221,6 @@ public class TestResource extends JaxRsResourceBase {
 
 
 
-    @DELETE
-    @Path("/catalog")
-    @ApiOperation(value = "Delete all versions for a per tenant catalog")
-    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid subscription id supplied"),
-                           @ApiResponse(code = 404, message = "Entitlement not found")})
-    public Response deleteCatalog(@HeaderParam(HDR_CREATED_BY) final String createdBy,
-                                  @HeaderParam(HDR_REASON) final String reason,
-                                  @HeaderParam(HDR_COMMENT) final String comment,
-                                  @javax.ws.rs.core.Context final UriInfo uriInfo,
-                                  @javax.ws.rs.core.Context final HttpServletRequest request) throws TenantApiException, CatalogApiException {
-
-        final CallContext callContext = context.createCallContextNoAccountId(createdBy, reason, comment, request);
-
-        // remove for all tenants-- otherwise we need to convert the callContext into an internalTenantContext to get the key
-        cacheControllerDispatcher.getCacheController(CacheType.TENANT_CATALOG).removeAll();
-        // Soft delete the current entry
-        tenantApi.deleteTenantKey(TenantKey.CATALOG.toString(), callContext);
-
-        // Recreate default entry so that user does not default to KB default catalog
-        catalogUserApi.createDefaultEmptyCatalog(clock.getUTCNow(),callContext);
-
-        return Response.status(Status.OK).build();
-    }
-
-
     private boolean waitForNotificationToComplete(final ServletRequest request, final Long timeoutSec) {
         final TenantContext tenantContext = context.createTenantContextNoAccountId(request);
         final Long tenantRecordId = recordIdApi.getRecordId(tenantContext.getTenantId(), ObjectType.TENANT, tenantContext);
