@@ -37,14 +37,12 @@ import javax.ws.rs.core.UriInfo;
 import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.subject.Subject;
 import org.killbill.billing.account.api.AccountUserApi;
-import org.killbill.billing.jaxrs.glue.JaxrsConfigExtended;
 import org.killbill.billing.jaxrs.json.RoleDefinitionJson;
 import org.killbill.billing.jaxrs.json.SubjectJson;
 import org.killbill.billing.jaxrs.json.UserRolesJson;
 import org.killbill.billing.jaxrs.util.Context;
 import org.killbill.billing.jaxrs.util.JaxrsUriBuilder;
 import org.killbill.billing.payment.api.PaymentApi;
-import org.killbill.billing.platform.api.KillbillConfigSource;
 import org.killbill.billing.security.Permission;
 import org.killbill.billing.security.SecurityApiException;
 import org.killbill.billing.security.api.SecurityApi;
@@ -71,7 +69,6 @@ import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 public class SecurityResource extends JaxRsResourceBase {
 
     private final SecurityApi securityApi;
-    private final boolean isKillBillInTestMode;
 
     @Inject
     public SecurityResource(final SecurityApi securityApi,
@@ -82,10 +79,8 @@ public class SecurityResource extends JaxRsResourceBase {
                             final AccountUserApi accountUserApi,
                             final PaymentApi paymentApi,
                             final Clock clock,
-                            final JaxrsConfigExtended jaxrsConfig,
                             final Context context) {
         super(uriBuilder, tagUserApi, customFieldUserApi, auditUserApi, accountUserApi, paymentApi, null, clock, context);
-        this.isKillBillInTestMode = jaxrsConfig.isTestModeEnabled();
         this.securityApi = securityApi;
     }
 
@@ -99,9 +94,6 @@ public class SecurityResource extends JaxRsResourceBase {
         // The getCurrentUserPermissions takes a TenantContext which is not used because permissions are cross tenants (at this point)
         final TenantContext nullTenantContext = null;
         final Set<Permission> permissions = securityApi.getCurrentUserPermissions(nullTenantContext);
-        if (!isKillBillInTestMode) {
-            permissions.remove(Permission.TEST_AVAILABLE);
-        }
         final List<String> json = ImmutableList.<String>copyOf(Iterables.<Permission, String>transform(permissions, Functions.toStringFunction()));
         return Response.status(Status.OK).entity(json).build();
     }
@@ -188,16 +180,14 @@ public class SecurityResource extends JaxRsResourceBase {
     @Path("/users/{username:" + ANYTHING_PATTERN + "}")
     @ApiOperation(value = "Invalidate an existing user")
     public Response invalidateUser(@PathParam("username") final String username,
-                                    @HeaderParam(HDR_CREATED_BY) final String createdBy,
-                                    @HeaderParam(HDR_REASON) final String reason,
-                                    @HeaderParam(HDR_COMMENT) final String comment,
-                                    @javax.ws.rs.core.Context final HttpServletRequest request,
-                                    @javax.ws.rs.core.Context final UriInfo uriInfo) throws SecurityApiException {
+                                   @HeaderParam(HDR_CREATED_BY) final String createdBy,
+                                   @HeaderParam(HDR_REASON) final String reason,
+                                   @HeaderParam(HDR_COMMENT) final String comment,
+                                   @javax.ws.rs.core.Context final HttpServletRequest request,
+                                   @javax.ws.rs.core.Context final UriInfo uriInfo) throws SecurityApiException {
         securityApi.invalidateUser(username, context.createCallContextNoAccountId(createdBy, reason, comment, request));
         return Response.status(Status.NO_CONTENT).build();
     }
-
-
 
     @TimedResource
     @POST

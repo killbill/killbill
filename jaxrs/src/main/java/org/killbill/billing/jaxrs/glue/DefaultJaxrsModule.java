@@ -25,7 +25,6 @@ import org.killbill.billing.platform.api.KillbillConfigSource;
 import org.killbill.billing.util.config.definition.JaxrsConfig;
 import org.killbill.billing.util.glue.KillBillModule;
 import org.skife.config.ConfigurationObjectFactory;
-import org.skife.config.TimeSpan;
 
 public class DefaultJaxrsModule extends KillBillModule {
 
@@ -37,47 +36,10 @@ public class DefaultJaxrsModule extends KillBillModule {
     protected void configure() {
         final ConfigurationObjectFactory factory = new ConfigurationObjectFactory(skifeConfigSource);
         final JaxrsConfig jaxrsConfig = factory.build(JaxrsConfig.class);
-        final JaxrsConfigExtended jaxrsConfigExt = new DefaultJaxrsConfigExtended(jaxrsConfig, Boolean.valueOf(skifeConfigSource.getString("org.killbill.server.test.mode")));
-        bind(JaxrsConfig.class).toInstance(jaxrsConfigExt);
-        bind(JaxrsConfigExtended.class).toInstance(jaxrsConfigExt);
+        bind(JaxrsConfig.class).toInstance(jaxrsConfig);
         bind(JaxrsUriBuilder.class).asEagerSingleton();
         bind(JaxrsExecutors.class).asEagerSingleton();
         bind(JaxrsService.class).to(DefaultJaxrsService.class).asEagerSingleton();
-    }
-
-    private final static class DefaultJaxrsConfigExtended implements JaxrsConfigExtended {
-
-        private final boolean isTestModeEnabled;
-        private final JaxrsConfig delegate;
-
-        public DefaultJaxrsConfigExtended(final JaxrsConfig delegate, final boolean isTestModeEnabled) {
-            this.delegate = delegate;
-            this.isTestModeEnabled = isTestModeEnabled;
-        }
-        @Override
-        public boolean isTestModeEnabled() {
-            return isTestModeEnabled;
-        }
-        @Override
-        public int getJaxrsThreadNb() {
-            return delegate.getJaxrsThreadNb();
-        }
-        @Override
-        public TimeSpan getJaxrsTimeout() {
-            return delegate.getJaxrsTimeout();
-        }
-        @Override
-        public boolean isJaxrsLocationFullUrl() {
-            return delegate.isJaxrsLocationFullUrl();
-        }
-        @Override
-        public boolean isJaxrsLocationUseForwardHeaders() {
-            return delegate.isJaxrsLocationUseForwardHeaders();
-        }
-        @Override
-        public String getJaxrsLocationHost() {
-            return delegate.getJaxrsLocationHost();
-        }
     }
 
 }
