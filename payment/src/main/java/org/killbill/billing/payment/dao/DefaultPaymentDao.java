@@ -500,6 +500,16 @@ public class DefaultPaymentDao extends EntityDaoBase<PaymentModelDao, Payment, P
         });
     }
 
+    public List<PaymentMethodModelDao> getPaymentMethodsIncludedDeleted(final InternalTenantContext context) {
+        return transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<List<PaymentMethodModelDao>>() {
+            @Override
+            public List<PaymentMethodModelDao> inTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory) throws Exception {
+                return entitySqlDaoWrapperFactory.become(PaymentMethodSqlDao.class).getForAccountIncludedDelete(context);
+            }
+        });
+    }
+
+
     @Override
     public Pagination<PaymentMethodModelDao> searchPaymentMethods(final String searchKey, final Long offset, final Long limit, final InternalTenantContext context) {
         return paginationHelper.getPagination(PaymentMethodSqlDao.class,

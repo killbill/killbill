@@ -151,6 +151,13 @@ public class TestPaymentApi extends PaymentTestSuiteWithEmbeddedDB {
 
         paymentApi.deletePaymentMethod(account, paymentMethodId, true, false, ImmutableList.<PluginProperty>of(), callContext);
 
+        List<PaymentMethod> paymentMethods = paymentApi.getAccountPaymentMethods(account.getId(), false, false, ImmutableList.<PluginProperty>of(), callContext);
+        assertEquals(paymentMethods.size(), 0);
+
+
+        paymentMethods = paymentApi.getAccountPaymentMethods(account.getId(), true, false, ImmutableList.<PluginProperty>of(), callContext);
+        assertEquals(paymentMethods.size(), 1);
+
         checkPaymentMethodPagination(paymentMethodId, baseNbRecords, true);
     }
 

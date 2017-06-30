@@ -197,12 +197,14 @@ public class PaymentMethodProcessor extends ProcessorBase {
         }
     }
 
-    public List<PaymentMethod> getPaymentMethods(final boolean withPluginInfo, final Iterable<PluginProperty> properties, final InternalTenantContext context) throws PaymentApiException {
-        return getPaymentMethods(withPluginInfo, properties, buildTenantContext(context), context);
+    public List<PaymentMethod> getPaymentMethods(final boolean includedInactive, final boolean withPluginInfo, final Iterable<PluginProperty> properties, final InternalTenantContext context) throws PaymentApiException {
+        return getPaymentMethods(includedInactive, withPluginInfo, properties, buildTenantContext(context), context);
     }
 
-    public List<PaymentMethod> getPaymentMethods(final boolean withPluginInfo, final Iterable<PluginProperty> properties, final TenantContext tenantContext, final InternalTenantContext context) throws PaymentApiException {
-        final List<PaymentMethodModelDao> paymentMethodModels = paymentDao.getPaymentMethods(context);
+    public List<PaymentMethod> getPaymentMethods(final boolean includedInactive, final boolean withPluginInfo, final Iterable<PluginProperty> properties, final TenantContext tenantContext, final InternalTenantContext context) throws PaymentApiException {
+        final List<PaymentMethodModelDao> paymentMethodModels = includedInactive ?
+                                                                paymentDao.getPaymentMethodsIncludedDeleted(context) :
+                                                                paymentDao.getPaymentMethods(context);
         if (paymentMethodModels.isEmpty()) {
             return Collections.emptyList();
         }
@@ -357,8 +359,8 @@ public class PaymentMethodProcessor extends ProcessorBase {
                                   );
     }
 
-    public PaymentMethod getExternalPaymentMethod(final Iterable<PluginProperty> properties, final TenantContext tenantContext, final InternalTenantContext context) throws PaymentApiException {
-        final List<PaymentMethod> paymentMethods = getPaymentMethods(false, properties, tenantContext, context);
+    private PaymentMethod getExternalPaymentMethod(final Iterable<PluginProperty> properties, final TenantContext tenantContext, final InternalTenantContext context) throws PaymentApiException {
+        final List<PaymentMethod> paymentMethods = getPaymentMethods(false, false, properties, tenantContext, context);
         for (final PaymentMethod paymentMethod : paymentMethods) {
             if (ExternalPaymentProviderPlugin.PLUGIN_NAME.equals(paymentMethod.getPluginName())) {
                 return paymentMethod;

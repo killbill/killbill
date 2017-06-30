@@ -863,6 +863,7 @@ public class AccountResource extends JaxRsResourceBase {
     public Response getPaymentMethods(@PathParam("accountId") final String accountIdStr,
                                       @QueryParam(QUERY_WITH_PLUGIN_INFO) @DefaultValue("false") final Boolean withPluginInfo,
                                       @QueryParam(QUERY_PLUGIN_PROPERTY) final List<String> pluginPropertiesString,
+                                      @QueryParam(QUERY_INCLUDED_DELETED) @DefaultValue("false") final Boolean includedDeleted,
                                       @QueryParam(QUERY_AUDIT) @DefaultValue("NONE") final AuditMode auditMode,
                                       @javax.ws.rs.core.Context final HttpServletRequest request) throws AccountApiException, PaymentApiException {
         final Iterable<PluginProperty> pluginProperties = extractPluginProperties(pluginPropertiesString);
@@ -870,7 +871,7 @@ public class AccountResource extends JaxRsResourceBase {
         final TenantContext tenantContext = context.createTenantContextWithAccountId(accountId, request);
 
         final Account account = accountUserApi.getAccountById(accountId, tenantContext);
-        final List<PaymentMethod> methods = paymentApi.getAccountPaymentMethods(account.getId(), withPluginInfo, pluginProperties, tenantContext);
+        final List<PaymentMethod> methods = paymentApi.getAccountPaymentMethods(account.getId(), includedDeleted, withPluginInfo, pluginProperties, tenantContext);
         final AccountAuditLogs accountAuditLogs = auditUserApi.getAccountAuditLogs(account.getId(), auditMode.getLevel(), tenantContext);
         final List<PaymentMethodJson> json = new ArrayList<PaymentMethodJson>(Collections2.transform(methods, new Function<PaymentMethod, PaymentMethodJson>() {
             @Override

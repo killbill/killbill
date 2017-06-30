@@ -163,7 +163,7 @@ public class TestPaymentApiNoDB extends PaymentTestSuiteNoDB {
 
     @Test(groups = "fast")
     public void testPaymentMethods() throws Exception {
-        List<PaymentMethod> methods = paymentApi.getAccountPaymentMethods(account.getId(), false, PLUGIN_PROPERTIES, callContext);
+        List<PaymentMethod> methods = paymentApi.getAccountPaymentMethods(account.getId(), false, false, PLUGIN_PROPERTIES, callContext);
         assertEquals(methods.size(), 1);
 
         final PaymentMethod initDefaultMethod = methods.get(0);
@@ -172,7 +172,7 @@ public class TestPaymentApiNoDB extends PaymentTestSuiteNoDB {
         final PaymentMethodPlugin newPaymentMethod = new DefaultNoOpPaymentMethodPlugin(UUID.randomUUID().toString(), true, null);
         account = testHelper.addTestPaymentMethod(account, newPaymentMethod, PLUGIN_PROPERTIES);
 
-        methods = paymentApi.getAccountPaymentMethods(account.getId(), false, PLUGIN_PROPERTIES, callContext);
+        methods = paymentApi.getAccountPaymentMethods(account.getId(), false, false, PLUGIN_PROPERTIES, callContext);
         assertEquals(methods.size(), 2);
 
         boolean failed = false;
@@ -184,13 +184,14 @@ public class TestPaymentApiNoDB extends PaymentTestSuiteNoDB {
         assertTrue(failed);
 
         paymentApi.deletePaymentMethod(account, initDefaultMethod.getId(), true, false, PLUGIN_PROPERTIES, callContext);
-        methods = paymentApi.getAccountPaymentMethods(account.getId(), false, PLUGIN_PROPERTIES, callContext);
+        methods = paymentApi.getAccountPaymentMethods(account.getId(), false, false, PLUGIN_PROPERTIES, callContext);
         assertEquals(methods.size(), 1);
 
         // NOW retry with default payment method with special flag
         paymentApi.deletePaymentMethod(account, account.getPaymentMethodId(), true, false, PLUGIN_PROPERTIES, callContext);
 
-        methods = paymentApi.getAccountPaymentMethods(account.getId(), false, PLUGIN_PROPERTIES, callContext);
+        methods = paymentApi.getAccountPaymentMethods(account.getId(), false, false, PLUGIN_PROPERTIES, callContext);
         assertEquals(methods.size(), 0);
+
     }
 }

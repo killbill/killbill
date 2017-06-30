@@ -87,7 +87,7 @@ public abstract class ComboPaymentResource extends JaxRsResourceBase {
         }
 
         // Get all payment methods for account
-        final List<PaymentMethod> accountPaymentMethods = paymentApi.getAccountPaymentMethods(account.getId(), false, ImmutableList.<PluginProperty>of(), callContext);
+        final List<PaymentMethod> accountPaymentMethods = paymentApi.getAccountPaymentMethods(account.getId(), false, false, ImmutableList.<PluginProperty>of(), callContext);
 
         // If we were specified a paymentMethod id and we find it, we return it
         if (paymentMethodJson.getPaymentMethodId() != null) {

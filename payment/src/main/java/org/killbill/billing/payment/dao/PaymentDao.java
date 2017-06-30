@@ -91,6 +91,8 @@ public interface PaymentDao extends EntityDao<PaymentModelDao, Payment, PaymentA
 
     public List<PaymentMethodModelDao> getPaymentMethods(InternalTenantContext context);
 
+    public List<PaymentMethodModelDao> getPaymentMethodsIncludedDeleted(InternalTenantContext context);
+
     public Pagination<PaymentMethodModelDao> getPaymentMethods(String pluginName, Long offset, Long limit, InternalTenantContext context);
 
     public Pagination<PaymentMethodModelDao> searchPaymentMethods(String searchKey, Long offset, Long limit, InternalTenantContext context);

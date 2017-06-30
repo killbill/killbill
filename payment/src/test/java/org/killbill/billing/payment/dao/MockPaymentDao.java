@@ -381,6 +381,11 @@ public class MockPaymentDao extends MockEntityDaoBase<PaymentModelDao, Payment, 
     }
 
     @Override
+    public List<PaymentMethodModelDao> getPaymentMethodsIncludedDeleted(final InternalTenantContext context) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
     public Pagination<PaymentMethodModelDao> getPaymentMethods(final String pluginName, final Long offset, final Long limit, final InternalTenantContext context) {
         throw new UnsupportedOperationException();
     }
