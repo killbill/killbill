@@ -48,6 +48,7 @@ import org.killbill.billing.jaxrs.util.JaxrsUriBuilder;
 import org.killbill.billing.payment.api.Payment;
 import org.killbill.billing.payment.api.PaymentApi;
 import org.killbill.billing.payment.api.PaymentApiException;
+import org.killbill.billing.payment.api.PaymentOptions;
 import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.payment.api.TransactionStatus;
 import org.killbill.billing.util.api.AuditUserApi;
@@ -119,6 +120,7 @@ public class TransactionResource extends JaxRsResourceBase {
                            @ApiResponse(code = 404, message = "Account or Payment not found")})
     public Response notifyStateChanged(final PaymentTransactionJson json,
                                        @PathParam("transactionId") final String transactionIdStr,
+                                       @QueryParam(QUERY_PAYMENT_CONTROL_PLUGIN_NAME) final List<String> paymentControlPluginNames,
                                        @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                        @HeaderParam(HDR_REASON) final String reason,
                                        @HeaderParam(HDR_COMMENT) final String comment,
@@ -128,6 +130,7 @@ public class TransactionResource extends JaxRsResourceBase {
         verifyNonNullOrEmpty(json.getPaymentId(), "PaymentTransactionJson paymentId needs to be set",
                              json.getStatus(), "PaymentTransactionJson status needs to be set");
 
+        final PaymentOptions paymentOptions = createControlPluginApiPaymentOptions(paymentControlPluginNames);
         final CallContext callContext = context.createContext(createdBy, reason, comment, request);
 
         final UUID paymentId = UUID.fromString(json.getPaymentId());
@@ -135,7 +138,8 @@ public class TransactionResource extends JaxRsResourceBase {
         final Account account = accountUserApi.getAccountById(payment.getAccountId(), callContext);
 
         final boolean success = TransactionStatus.SUCCESS.name().equals(json.getStatus());
-        final Payment result = paymentApi.notifyPendingTransactionOfStateChanged(account, UUID.fromString(transactionIdStr), success, callContext);
+        final Payment result = paymentApi.notifyPendingTransactionOfStateChangedWithPaymentControl(account, UUID.fromString(transactionIdStr), success, paymentOptions, callContext);
+
         return uriBuilder.buildResponse(uriInfo, PaymentResource.class, "getPayment", result.getId(), request);
     }
 
