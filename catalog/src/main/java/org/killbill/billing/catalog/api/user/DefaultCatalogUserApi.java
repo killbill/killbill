@@ -207,8 +207,8 @@ public class DefaultCatalogUserApi implements CatalogUserApi {
 
         final InternalTenantContext internalTenantContext = internalCallContextFactory.createInternalTenantContextWithoutAccountRecordId(callContext);
         try {
-            catalogCache.clearCatalog(internalTenantContext);
             tenantApi.deleteTenantKey(TenantKey.CATALOG.toString(), callContext);
+            catalogCache.clearCatalog(internalTenantContext);
             createDefaultEmptyCatalog(clock.getUTCNow(), callContext);
         } catch (final TenantApiException e) {
             throw new CatalogApiException(e);
