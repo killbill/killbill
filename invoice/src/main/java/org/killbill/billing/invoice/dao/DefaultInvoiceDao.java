@@ -339,8 +339,6 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
                     if (InvoiceStatus.COMMITTED.equals(invoiceModelDao.getStatus())) {
                         committedInvoiceIds.add(invoiceModelDao.getId());
 
-                        notifyOfFutureBillingEvents(entitySqlDaoWrapperFactory, invoiceModelDao.getAccountId(), callbackDateTimePerSubscriptions, context);
-
                         if (wasInvoiceCreated) {
                             notifyBusOfInvoiceCreation(entitySqlDaoWrapperFactory, invoiceModelDao, context);
                         }
@@ -348,6 +346,8 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
                         // Commit queue
                         notifyOfParentInvoiceCreation(entitySqlDaoWrapperFactory, invoiceModelDao, context);
                     }
+
+                    notifyOfFutureBillingEvents(entitySqlDaoWrapperFactory, invoiceModelDao.getAccountId(), callbackDateTimePerSubscriptions, context);
                 }
 
                 for (final UUID adjustedInvoiceId : modifiedInvoiceIds) {

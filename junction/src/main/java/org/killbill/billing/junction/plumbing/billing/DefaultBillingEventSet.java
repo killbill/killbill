@@ -41,11 +41,13 @@ public class DefaultBillingEventSet extends TreeSet<BillingEvent> implements Sor
     private static final long serialVersionUID = 1L;
 
     private final boolean accountAutoInvoiceOff;
+    private final boolean accountAutoInvoiceDraft;
     private final List<UUID> subscriptionIdsWithAutoInvoiceOff;
     private final BillingMode recurringBillingMode;
 
-    public DefaultBillingEventSet(final boolean accountAutoInvoiceOff, final BillingMode recurringBillingMode) {
+    public DefaultBillingEventSet(final boolean accountAutoInvoiceOff, final boolean accountAutoInvoiceDraft, final BillingMode recurringBillingMode) {
         this.accountAutoInvoiceOff = accountAutoInvoiceOff;
+        this.accountAutoInvoiceDraft = accountAutoInvoiceDraft;
         this.recurringBillingMode = recurringBillingMode;
         this.subscriptionIdsWithAutoInvoiceOff = new ArrayList<UUID>();
     }
@@ -53,6 +55,11 @@ public class DefaultBillingEventSet extends TreeSet<BillingEvent> implements Sor
     @Override
     public boolean isAccountAutoInvoiceOff() {
         return accountAutoInvoiceOff;
+    }
+
+    @Override
+    public boolean isAccountAutoInvoiceDraft() {
+        return accountAutoInvoiceDraft;
     }
 
     @Override

@@ -39,6 +39,7 @@ import org.killbill.billing.invoice.dao.InvoiceModelDao;
 import org.killbill.billing.invoice.dao.InvoicePaymentModelDao;
 import org.killbill.billing.util.UUIDs;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
 import com.google.common.collect.Collections2;
 
@@ -60,11 +61,8 @@ public class DefaultInvoice extends EntityBase implements Invoice, Cloneable {
     private final Invoice parentInvoice;
 
 
-    // Used to create a new invoice
-    public DefaultInvoice(final UUID accountId, final LocalDate invoiceDate, final LocalDate targetDate, final Currency currency) {
-        this(UUIDs.randomUUID(), accountId, null, invoiceDate, targetDate, currency, false, InvoiceStatus.COMMITTED);
-    }
 
+    // Used to create a new invoice
     public DefaultInvoice(final UUID accountId, final LocalDate invoiceDate, final LocalDate targetDate, final Currency currency, final InvoiceStatus status) {
         this(UUIDs.randomUUID(), accountId, null, invoiceDate, targetDate, currency, false, status);
     }
@@ -72,6 +70,11 @@ public class DefaultInvoice extends EntityBase implements Invoice, Cloneable {
     public DefaultInvoice(final UUID invoiceId, final UUID accountId, @Nullable final Integer invoiceNumber, final LocalDate invoiceDate,
                           final LocalDate targetDate, final Currency currency, final boolean isMigrationInvoice, final InvoiceStatus status) {
         this(invoiceId, null, accountId, invoiceNumber, invoiceDate, targetDate, currency, currency, isMigrationInvoice, false, status, false, null);
+    }
+
+    @VisibleForTesting
+    public DefaultInvoice(final UUID accountId, final LocalDate invoiceDate, final LocalDate targetDate, final Currency currency) {
+        this(UUIDs.randomUUID(), accountId, null, invoiceDate, targetDate, currency, false, InvoiceStatus.COMMITTED);
     }
 
     // This CTOR is used to return an existing invoice and must include everything (items, payments, tags,..)

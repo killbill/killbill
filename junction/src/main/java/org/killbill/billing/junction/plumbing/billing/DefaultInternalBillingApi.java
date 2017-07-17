@@ -26,8 +26,6 @@ import java.util.Set;
 import java.util.SortedSet;
 import java.util.UUID;
 
-import javax.annotation.Nullable;
-
 import org.killbill.billing.ObjectType;
 import org.killbill.billing.account.api.AccountApiException;
 import org.killbill.billing.account.api.AccountInternalApi;
@@ -62,8 +60,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Function;
-import com.google.common.base.Preconditions;
+import com.google.common.base.Predicate;
 import com.google.common.collect.Collections2;
+import com.google.common.collect.Iterables;
 import com.google.inject.Inject;
 
 public class DefaultInternalBillingApi implements BillingInternalApi {
@@ -96,17 +95,18 @@ public class DefaultInternalBillingApi implements BillingInternalApi {
         // Check to see if billing is off for the account
         final List<Tag> accountTags = tagApi.getTags(accountId, ObjectType.ACCOUNT, context);
         final boolean found_AUTO_INVOICING_OFF = is_AUTO_INVOICING_OFF(accountTags);
+        final boolean found_INVOICING_DRAFT = is_AUTO_INVOICING_DRAFT(accountTags);
 
         final Set<UUID> skippedSubscriptions = new HashSet<UUID>();
         final DefaultBillingEventSet result;
 
         if (found_AUTO_INVOICING_OFF) {
-            result = new DefaultBillingEventSet(true, ((StaticCatalog) currentCatalog).getRecurringBillingMode()); // billing is off, we are done
+            result = new DefaultBillingEventSet(true, found_INVOICING_DRAFT, ((StaticCatalog) currentCatalog).getRecurringBillingMode()); // billing is off, we are done
         } else {
             final List<SubscriptionBaseBundle> bundles = subscriptionApi.getBundlesForAccount(accountId, context);
 
             final ImmutableAccountData account = accountApi.getImmutableAccountDataById(accountId, context);
-            result = new DefaultBillingEventSet(false, ((StaticCatalog) currentCatalog).getRecurringBillingMode());
+            result = new DefaultBillingEventSet(false, found_INVOICING_DRAFT, ((StaticCatalog) currentCatalog).getRecurringBillingMode());
             addBillingEventsForBundles(bundles, account, dryRunArguments, context, result, skippedSubscriptions, currentCatalog);
         }
 
@@ -244,11 +244,19 @@ public class DefaultInternalBillingApi implements BillingInternalApi {
 
     private boolean is_AUTO_INVOICING_OFF(final List<Tag> tags) {
         return ControlTagType.isAutoInvoicingOff(Collections2.transform(tags, new Function<Tag, UUID>() {
-            @Nullable
             @Override
-            public UUID apply(@Nullable final Tag tag) {
+            public UUID apply(final Tag tag) {
                 return tag.getTagDefinitionId();
             }
         }));
+    }
+
+    private boolean is_AUTO_INVOICING_DRAFT(final List<Tag> tags) {
+        return Iterables.any(tags, new Predicate<Tag>() {
+            @Override
+            public boolean apply(final Tag input) {
+                return input.getTagDefinitionId().equals(ControlTagType.AUTO_INVOICING_DRAFT.getId());
+            }
+        });
     }
 }

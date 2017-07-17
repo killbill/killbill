@@ -1060,6 +1060,33 @@ public class TestDefaultInvoiceGenerator extends InvoiceTestSuiteNoDB {
         assertTrue(invoice3.getBalance().compareTo(FIFTEEN.multiply(TWO).add(TWELVE)) == 0);
     }
 
+    @Test(groups = "fast")
+    public void testAutoInvoiceDraftAccount() throws Exception {
+        final MockBillingEventSet events = new MockBillingEventSet();
+        events.setAccountAutoInvoiceDraft(true);
+
+        final SubscriptionBase sub = createSubscription();
+        final LocalDate startDate = invoiceUtil.buildDate(2011, 9, 1);
+
+        final Plan plan = new MockPlan();
+        final BigDecimal rate1 = TEN;
+        final PlanPhase phase = createMockMonthlyPlanPhase(rate1);
+
+        final BillingEvent event = createBillingEvent(sub.getId(), sub.getBundleId(), startDate, plan, phase, 1);
+        events.add(event);
+
+        final LocalDate targetDate = invoiceUtil.buildDate(2011, 10, 3);
+        final UUID accountId = UUID.randomUUID();
+        final InvoiceWithMetadata invoiceWithMetadata = generator.generateInvoice(account, events, null, targetDate, Currency.USD, internalCallContext);
+
+        assertNotNull(invoiceWithMetadata.getInvoice());
+        assertEquals(invoiceWithMetadata.getInvoice().getStatus(), InvoiceStatus.DRAFT);
+        assertEquals(invoiceWithMetadata.getInvoice().getInvoiceItems().size(), 2);
+
+    }
+
+
+
     @Test(groups = "fast", description = "https://github.com/killbill/killbill/issues/654")
     public void testCancelEOTWithFullItemAdjustment() throws CatalogApiException, InvoiceApiException {
         final BigDecimal rate = new BigDecimal("39.95");

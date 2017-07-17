@@ -35,6 +35,7 @@ import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.invoice.api.Invoice;
 import org.killbill.billing.invoice.api.InvoiceApiException;
 import org.killbill.billing.invoice.api.InvoiceItem;
+import org.killbill.billing.invoice.api.InvoiceStatus;
 import org.killbill.billing.invoice.generator.InvoiceWithMetadata.SubscriptionFutureNotificationDates;
 import org.killbill.billing.invoice.model.DefaultInvoice;
 import org.killbill.billing.junction.BillingEventSet;
@@ -77,7 +78,8 @@ public class DefaultInvoiceGenerator implements InvoiceGenerator {
         final LocalDate adjustedTargetDate = adjustTargetDate(existingInvoices, targetDate);
 
         final LocalDate invoiceDate = context.toLocalDate(context.getCreatedDate());
-        final DefaultInvoice invoice = new DefaultInvoice(account.getId(), invoiceDate, adjustedTargetDate, targetCurrency);
+        final InvoiceStatus invoiceStatus = events.isAccountAutoInvoiceDraft() ? InvoiceStatus.DRAFT : InvoiceStatus.COMMITTED;
+        final DefaultInvoice invoice = new DefaultInvoice(account.getId(), invoiceDate, adjustedTargetDate, targetCurrency, invoiceStatus);
         final UUID invoiceId = invoice.getId();
         final Map<UUID, SubscriptionFutureNotificationDates> perSubscriptionFutureNotificationDates = new HashMap<UUID, SubscriptionFutureNotificationDates>();
 

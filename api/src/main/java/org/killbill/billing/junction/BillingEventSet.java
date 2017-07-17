@@ -30,6 +30,8 @@ public interface BillingEventSet extends SortedSet<BillingEvent> {
 
     public boolean isAccountAutoInvoiceOff();
 
+    public boolean isAccountAutoInvoiceDraft();
+
     public BillingMode getRecurringBillingMode();
 
     public List<UUID> getSubscriptionIdsWithAutoInvoiceOff();

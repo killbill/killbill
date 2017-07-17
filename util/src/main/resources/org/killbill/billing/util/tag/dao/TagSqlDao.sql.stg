@@ -102,6 +102,11 @@ userAndSystemTagDefinitions() ::= <<
   , \'Indicates that this is a partner account\' description
   union
   select
+    \'00000000-0000-0000-0000-000000000008\' id
+  , \'AUTO_INVOICING_DRAFT\' as name
+  , \'Generate account invoices in DRAFT mode.\' description
+  union
+  select
     \'00000000-0000-0001-0000-000000000001\' id
   , \'__PARK__\' as name
   , \'Accounts with invalid invoicing state\' description

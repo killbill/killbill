@@ -23,9 +23,6 @@ import java.util.List;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
-import org.testng.annotations.BeforeMethod;
-import org.testng.annotations.Test;
-
 import org.killbill.billing.ObjectType;
 import org.killbill.billing.account.api.Account;
 import org.killbill.billing.api.TestApiListener.NextEvent;
@@ -33,12 +30,15 @@ import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.catalog.api.ProductCategory;
 import org.killbill.billing.entitlement.api.DefaultEntitlement;
 import org.killbill.billing.invoice.api.Invoice;
+import org.killbill.billing.invoice.api.InvoiceStatus;
 import org.killbill.billing.invoice.api.InvoiceUserApi;
 import org.killbill.billing.util.api.TagApiException;
 import org.killbill.billing.util.api.TagDefinitionApiException;
 import org.killbill.billing.util.api.TagUserApi;
 import org.killbill.billing.util.tag.ControlTagType;
 import org.killbill.billing.util.tag.Tag;
+import org.testng.annotations.BeforeMethod;
+import org.testng.annotations.Test;
 
 import com.google.inject.Inject;
 
@@ -145,12 +145,70 @@ public class TestIntegrationWithAutoInvoiceOffTag extends TestIntegrationBase {
         assertEquals(invoices.size(), 3); // Only one additional invoice generated
     }
 
+
+    @Test(groups = "slow")
+    public void testAutoInvoiceDraftAccount() throws Exception {
+        clock.setTime(new DateTime(2017, 6, 16, 18, 24, 42, 0));
+        add_AUTO_INVOICING_DRAFT_Tag(account.getId(), ObjectType.ACCOUNT);
+
+        final DefaultEntitlement bpEntitlement = createBaseEntitlementAndCheckForCompletion(account.getId(), "externalKey", productName, ProductCategory.BASE, term, NextEvent.CREATE, NextEvent.BLOCK);
+        assertNotNull(bpEntitlement);
+
+        List<Invoice> invoices = invoiceApi.getInvoicesByAccount(account.getId(), false, callContext);
+        assertEquals(invoices.size(), 1);
+        final Invoice trialInvoice = invoices.get(0);
+        assertEquals(trialInvoice.getStatus(), InvoiceStatus.DRAFT);
+
+        busHandler.pushExpectedEvent(NextEvent.INVOICE);
+        invoiceApi.commitInvoice(trialInvoice.getId(), callContext);
+        assertListenerStatus();
+
+        // Move out of TRIAL
+        busHandler.pushExpectedEvents(NextEvent.PHASE);
+        clock.addDays(30);
+        assertListenerStatus();
+
+        invoices = invoiceApi.getInvoicesByAccount(account.getId(), false, callContext);
+        assertEquals(invoices.size(), 2);
+
+        final Invoice firstNonTrialInvoice = invoices.get(1);
+        assertEquals(firstNonTrialInvoice.getStatus(), InvoiceStatus.DRAFT);
+
+        busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT);
+        invoiceApi.commitInvoice(firstNonTrialInvoice.getId(), callContext);
+        assertListenerStatus();
+
+
+        busHandler.pushExpectedEvents(NextEvent.TAG);
+        remove_AUTO_INVOICING_DRAFT_Tag(account.getId(), ObjectType.ACCOUNT);
+        assertListenerStatus();
+
+        busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
+        clock.addMonths(1);
+        assertListenerStatus();
+
+        invoices = invoiceApi.getInvoicesByAccount(account.getId(), false, callContext);
+        assertEquals(invoices.size(), 3);
+    }
+
+    private void add_AUTO_INVOICING_DRAFT_Tag(final UUID id, final ObjectType type) throws TagDefinitionApiException, TagApiException {
+        add_account_Tag(id, ControlTagType.AUTO_INVOICING_DRAFT, type);
+    }
+
     private void add_AUTO_INVOICING_OFF_Tag(final UUID id, final ObjectType type) throws TagDefinitionApiException, TagApiException {
+        add_account_Tag(id, ControlTagType.AUTO_INVOICING_OFF, type);
+    }
+
+    private void add_account_Tag(final UUID id, final ControlTagType controlTagType, final ObjectType type) throws TagDefinitionApiException, TagApiException {
         busHandler.pushExpectedEvent(NextEvent.TAG);
-        tagApi.addTag(id, type, ControlTagType.AUTO_INVOICING_OFF.getId(), callContext);
+        tagApi.addTag(id, type, controlTagType.getId(), callContext);
         assertListenerStatus();
         final List<Tag> tags = tagApi.getTagsForObject(id, type, false, callContext);
         assertEquals(tags.size(), 1);
+    }
+
+    private void remove_AUTO_INVOICING_DRAFT_Tag(final UUID id, final ObjectType type) throws TagDefinitionApiException, TagApiException {
+        tagApi.removeTag(id, type, ControlTagType.AUTO_INVOICING_DRAFT.getId(), callContext);
     }
 
     private void remove_AUTO_INVOICING_OFF_Tag(final UUID id, final ObjectType type) throws TagDefinitionApiException, TagApiException {
