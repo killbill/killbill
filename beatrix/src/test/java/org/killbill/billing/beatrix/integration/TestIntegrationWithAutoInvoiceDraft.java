@@ -106,9 +106,7 @@ public class TestIntegrationWithAutoInvoiceDraft extends TestIntegrationBase {
         assertListenerStatus();
 
 
-        busHandler.pushExpectedEvents(NextEvent.TAG);
         remove_AUTO_INVOICING_DRAFT_Tag(account.getId(), ObjectType.ACCOUNT);
-        assertListenerStatus();
 
         busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
         clock.addMonths(1);
@@ -167,9 +165,7 @@ public class TestIntegrationWithAutoInvoiceDraft extends TestIntegrationBase {
         final BigDecimal accountBalance = invoiceApi.getAccountBalance(account.getId(), callContext);
         assertEquals(accountBalance.compareTo(BigDecimal.ZERO), 0);
 
-        busHandler.pushExpectedEvents(NextEvent.TAG);
         remove_AUTO_INVOICING_DRAFT_Tag(account.getId(), ObjectType.ACCOUNT);
-        assertListenerStatus();
 
         busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
         clock.addMonths(1);
@@ -197,23 +193,6 @@ public class TestIntegrationWithAutoInvoiceDraft extends TestIntegrationBase {
         final BigDecimal accountBalance2 = invoiceApi.getAccountBalance(account.getId(), callContext);
         assertEquals(accountBalance2.compareTo(BigDecimal.ZERO), 0);
 
-    }
-
-
-    private void add_AUTO_INVOICING_DRAFT_Tag(final UUID id, final ObjectType type) throws TagDefinitionApiException, TagApiException {
-        add_account_Tag(id, ControlTagType.AUTO_INVOICING_DRAFT, type);
-    }
-
-    private void add_account_Tag(final UUID id, final ControlTagType controlTagType, final ObjectType type) throws TagDefinitionApiException, TagApiException {
-        busHandler.pushExpectedEvent(NextEvent.TAG);
-        tagApi.addTag(id, type, controlTagType.getId(), callContext);
-        assertListenerStatus();
-        final List<Tag> tags = tagApi.getTagsForObject(id, type, false, callContext);
-        assertEquals(tags.size(), 1);
-    }
-
-    private void remove_AUTO_INVOICING_DRAFT_Tag(final UUID id, final ObjectType type) throws TagDefinitionApiException, TagApiException {
-        tagApi.removeTag(id, type, ControlTagType.AUTO_INVOICING_DRAFT.getId(), callContext);
     }
 
 }

@@ -799,18 +799,43 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB {
     }
 
     protected void add_AUTO_PAY_OFF_Tag(final UUID id, final ObjectType type) throws TagDefinitionApiException, TagApiException {
-        busHandler.pushExpectedEvent(NextEvent.TAG);
-        tagUserApi.addTag(id, type, ControlTagType.AUTO_PAY_OFF.getId(), callContext);
-        assertListenerStatus();
+        add_account_Tag(id, ControlTagType.AUTO_PAY_OFF, type);
+    }
 
+    protected void add_AUTO_INVOICING_OFF_Tag(final UUID id, final ObjectType type) throws TagDefinitionApiException, TagApiException {
+        add_account_Tag(id, ControlTagType.AUTO_INVOICING_OFF, type);
+    }
+
+    protected void add_AUTO_INVOICING_DRAFT_Tag(final UUID id, final ObjectType type) throws TagDefinitionApiException, TagApiException {
+        add_account_Tag(id, ControlTagType.AUTO_INVOICING_DRAFT, type);
+    }
+
+    private void add_account_Tag(final UUID id, final ControlTagType controlTagType, final ObjectType type) throws TagDefinitionApiException, TagApiException {
+        busHandler.pushExpectedEvent(NextEvent.TAG);
+        tagUserApi.addTag(id, type, controlTagType.getId(), callContext);
+        assertListenerStatus();
         final List<Tag> tags = tagUserApi.getTagsForObject(id, type, false, callContext);
         assertEquals(tags.size(), 1);
     }
 
     protected void remove_AUTO_PAY_OFF_Tag(final UUID id, final ObjectType type, final NextEvent... additionalEvents) throws TagDefinitionApiException, TagApiException {
+        remove_account_Tag(id, ControlTagType.AUTO_PAY_OFF, type, additionalEvents);
+    }
+
+
+    protected void remove_AUTO_INVOICING_OFF_Tag(final UUID id, final ObjectType type, final NextEvent... additionalEvents) throws TagDefinitionApiException, TagApiException {
+        remove_account_Tag(id, ControlTagType.AUTO_INVOICING_OFF, type, additionalEvents);
+    }
+
+    protected void remove_AUTO_INVOICING_DRAFT_Tag(final UUID id, final ObjectType type, final NextEvent... additionalEvents) throws TagDefinitionApiException, TagApiException {
+        remove_account_Tag(id, ControlTagType.AUTO_INVOICING_DRAFT, type, additionalEvents);
+    }
+
+
+    private  void remove_account_Tag(final UUID id, final ControlTagType controlTagType, final ObjectType type, final NextEvent... additionalEvents) throws TagDefinitionApiException, TagApiException {
         busHandler.pushExpectedEvent(NextEvent.TAG);
         busHandler.pushExpectedEvents(additionalEvents);
-        tagUserApi.removeTag(id, type, ControlTagType.AUTO_PAY_OFF.getId(), callContext);
+        tagUserApi.removeTag(id, type, controlTagType.getId(), callContext);
         assertListenerStatus();
     }
 

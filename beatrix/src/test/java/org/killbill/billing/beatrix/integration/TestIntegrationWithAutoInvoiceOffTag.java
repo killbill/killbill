@@ -92,9 +92,7 @@ public class TestIntegrationWithAutoInvoiceOffTag extends TestIntegrationBase {
         invoices = invoiceApi.getInvoicesByAccount(account.getId(), false, callContext);
         assertEquals(invoices.size(), 0);
 
-        busHandler.pushExpectedEvents(NextEvent.TAG, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
-        remove_AUTO_INVOICING_OFF_Tag(account.getId(), ObjectType.ACCOUNT);
-        assertListenerStatus();
+        remove_AUTO_INVOICING_OFF_Tag(account.getId(), ObjectType.ACCOUNT, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
 
         invoices = invoiceApi.getInvoicesByAccount(account.getId(), false, callContext);
         assertEquals(invoices.size(), 1);
@@ -145,19 +143,4 @@ public class TestIntegrationWithAutoInvoiceOffTag extends TestIntegrationBase {
         assertEquals(invoices.size(), 3); // Only one additional invoice generated
     }
 
-    private void add_AUTO_INVOICING_OFF_Tag(final UUID id, final ObjectType type) throws TagDefinitionApiException, TagApiException {
-        add_account_Tag(id, ControlTagType.AUTO_INVOICING_OFF, type);
-    }
-
-    private void add_account_Tag(final UUID id, final ControlTagType controlTagType, final ObjectType type) throws TagDefinitionApiException, TagApiException {
-        busHandler.pushExpectedEvent(NextEvent.TAG);
-        tagApi.addTag(id, type, controlTagType.getId(), callContext);
-        assertListenerStatus();
-        final List<Tag> tags = tagApi.getTagsForObject(id, type, false, callContext);
-        assertEquals(tags.size(), 1);
-    }
-
-    private void remove_AUTO_INVOICING_OFF_Tag(final UUID id, final ObjectType type) throws TagDefinitionApiException, TagApiException {
-        tagApi.removeTag(id, type, ControlTagType.AUTO_INVOICING_OFF.getId(), callContext);
-    }
 }
