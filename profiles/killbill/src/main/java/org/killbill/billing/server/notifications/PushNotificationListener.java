@@ -113,6 +113,10 @@ public class PushNotificationListener {
         }
     }
 
+    public void shutdown() {
+        httpClient.close();
+    }
+
     private void dispatchCallback(final UUID tenantId, final ExtBusEvent event, final Iterable<String> callbacks) throws IOException {
         final NotificationJson notification = new NotificationJson(event);
         final String body = mapper.writeValueAsString(notification);

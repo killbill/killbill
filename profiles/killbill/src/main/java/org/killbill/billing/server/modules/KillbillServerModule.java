@@ -134,8 +134,13 @@ public class KillbillServerModule extends KillbillPlatformModule {
     }
 
     @Override
-    protected void configureEmbeddedDB() {
-        bind(EmbeddedDB.class).toProvider(KillBillEmbeddedDBProvider.class).asEagerSingleton();
+    protected void configureEmbeddedDBs() {
+        mainEmbeddedDB = new KillBillEmbeddedDBProvider(daoConfig).get();
+        bind(EmbeddedDB.class).toInstance(mainEmbeddedDB);
+
+        // Same database, but different pool: clone the object so the shutdown sequence cleans the pool properly
+        shiroEmbeddedDB = new KillBillEmbeddedDBProvider(daoConfig).get();
+        bind(EmbeddedDB.class).annotatedWith(Names.named(SHIRO_DATA_SOURCE_ID_NAMED)).toInstance(shiroEmbeddedDB);
     }
 
     @Override
