@@ -1,465 +1,169 @@
-<?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<!--
-  ~ Copyright 2010-2013 Ning, Inc.
-  ~
-  ~ Ning licenses this file to you under the Apache License, version 2.0
-  ~ (the "License"); you may not use this file except in compliance with the
-  ~ License.  You may obtain a copy of the License at:
-  ~
-  ~    http://www.apache.org/licenses/LICENSE-2.0
-  ~
-  ~ Unless required by applicable law or agreed to in writing, software
-  ~ distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
-  ~ WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the
-  ~ License for the specific language governing permissions and limitations
-  ~ under the License.
-  -->
-
-<!-- Use cases covered so far: Tiered Product (Pistol/Shotgun/Assault-Rifle) 
-	Multiple changeEvent plan policies Multiple PlanAlignment (see below, trial 
-	add-on alignments and rescue discount package) Product transition rules Add 
-	on (Scopes, Hoster) Multi-pack addon (Extra-Ammo) Addon Trial aligned to 
-	base plan (holster-monthly-regular) Addon Trial aligned to creation (holster-monthly-special) 
-	Rescue discount package (assault-rifle-annual-rescue) Plan phase with a reccurring 
-	and a one off (refurbish-maintenance) Phan with more than 2 phase (gunclub 
-	discount plans) Use Cases to do: Tiered Add On Riskfree period -->
-<catalog xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:noNamespaceSchemaLocation="CatalogSchema.xsd ">
-
-    <effectiveDate>2011-01-01T00:00:00+00:00</effectiveDate>
-    <catalogName>Firearms</catalogName>
-
+<?xml version="1.0" encoding="UTF-8"?>
+<catalog xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="CatalogSchema.xsd">
+    <effectiveDate>2012-06-06T00:00:00Z</effectiveDate>
+    <catalogName>HootsuiteCatalog</catalogName>
     <recurringBillingMode>IN_ADVANCE</recurringBillingMode>
-
     <currencies>
         <currency>USD</currency>
+        <currency>AUD</currency>
         <currency>EUR</currency>
         <currency>GBP</currency>
+        <currency>JPY</currency>
+        <currency>BRL</currency>
+        <currency>INR</currency>
+        <currency>ZAR</currency>
     </currencies>
-
-    <units>
-        <unit name="bullets"/>
-    </units>
-
+    <units />
     <products>
-        <product name="Blowdart">
+        <product name="FREE">
             <category>BASE</category>
-        </product>
-        <product name="Pistol">
-            <category>BASE</category>
+            <included />
             <available>
-                <addonProduct>Cleaning</addonProduct>
-                <addonProduct>Bullets</addonProduct>
-                <addonProduct>Refurbish-Maintenance</addonProduct>
             </available>
+            <limits />
         </product>
-        <product name="Shotgun">
+        <product name="PROFESSIONAL_PLAN">
             <category>BASE</category>
-            <included>
-                <addonProduct>Cleaning</addonProduct>
-            </included>
+            <included />
             <available>
-                <addonProduct>Telescopic-Scope</addonProduct>
-                <addonProduct>Laser-Scope</addonProduct>
-                <addonProduct>Holster</addonProduct>
-                <addonProduct>Bullets</addonProduct>
             </available>
+            <limits />
         </product>
-        <product name="Assault-Rifle">
+        <product name="TEAM3S">
             <category>BASE</category>
-            <included>
-                <addonProduct>Telescopic-Scope</addonProduct>
-                <addonProduct>Cleaning</addonProduct>
-            </included>
+            <included />
             <available>
-                <addonProduct>Laser-Scope</addonProduct>
-                <addonProduct>Bullets</addonProduct>
             </available>
-        </product>
-        <product name="Cleaning">
-            <category>ADD_ON</category>
-        </product>
-        <product name="Telescopic-Scope">
-            <category>ADD_ON</category>
-        </product>
-        <product name="Laser-Scope">
-            <category>ADD_ON</category>
-        </product>
-        <product name="Holster">
-            <category>ADD_ON</category>
-        </product>
-        <product name="Extra-Ammo">
-            <category>ADD_ON</category>
-        </product>
-        <product name="Refurbish-Maintenance">
-            <category>ADD_ON</category>
-        </product>
-        <product name="Bullets">
-            <category>ADD_ON</category>
+            <limits />
         </product>
     </products>
-
     <rules>
         <changePolicy>
             <changePolicyCase>
-                <phaseType>TRIAL</phaseType>
                 <policy>IMMEDIATE</policy>
-            </changePolicyCase>
-            <changePolicyCase>
-                <toPriceList>rescue</toPriceList>
-                <policy>END_OF_TERM</policy>
-            </changePolicyCase>
-            <changePolicyCase>
-                <toProduct>Assault-Rifle</toProduct>
-                <policy>IMMEDIATE</policy>
-            </changePolicyCase>
-            <changePolicyCase>
-                <fromProduct>Pistol</fromProduct>
-                <toProduct>Shotgun</toProduct>
-                <policy>IMMEDIATE</policy>
-            </changePolicyCase>
-            <changePolicyCase>
-                <fromBillingPeriod>MONTHLY</fromBillingPeriod>
-                <toBillingPeriod>ANNUAL</toBillingPeriod>
-                <policy>IMMEDIATE</policy>
-            </changePolicyCase>
-            <changePolicyCase>
-                <fromBillingPeriod>ANNUAL</fromBillingPeriod>
-                <toBillingPeriod>MONTHLY</toBillingPeriod>
-                <policy>END_OF_TERM</policy>
-            </changePolicyCase>
-            <changePolicyCase>
-                <policy>END_OF_TERM</policy>
             </changePolicyCase>
         </changePolicy>
         <changeAlignment>
-            <changeAlignmentCase>
-                <toPriceList>rescue</toPriceList>
-                <alignment>CHANGE_OF_PLAN</alignment>
-            </changeAlignmentCase>
-            <changeAlignmentCase>
-                <fromPriceList>rescue</fromPriceList>
-                <toPriceList>rescue</toPriceList>
-                <alignment>CHANGE_OF_PRICELIST</alignment>
-            </changeAlignmentCase>
             <changeAlignmentCase>
                 <alignment>START_OF_SUBSCRIPTION</alignment>
             </changeAlignmentCase>
         </changeAlignment>
         <cancelPolicy>
             <cancelPolicyCase>
-                <phaseType>TRIAL</phaseType>
                 <policy>IMMEDIATE</policy>
-            </cancelPolicyCase>
-            <cancelPolicyCase>
-                <policy>END_OF_TERM</policy>
             </cancelPolicyCase>
         </cancelPolicy>
         <createAlignment>
-            <createAlignmentCase>
-                <product>Laser-Scope</product>
-                <alignment>START_OF_SUBSCRIPTION</alignment>
-            </createAlignmentCase>
             <createAlignmentCase>
                 <alignment>START_OF_BUNDLE</alignment>
             </createAlignmentCase>
         </createAlignment>
         <billingAlignment>
             <billingAlignmentCase>
-                <productCategory>ADD_ON</productCategory>
-                <alignment>BUNDLE</alignment>
-            </billingAlignmentCase>
-            <billingAlignmentCase>
-                <billingPeriod>ANNUAL</billingPeriod>
-                <alignment>SUBSCRIPTION</alignment>
-            </billingAlignmentCase>
-            <billingAlignmentCase>
                 <alignment>ACCOUNT</alignment>
             </billingAlignmentCase>
         </billingAlignment>
         <priceList>
             <priceListCase>
-                <fromPriceList>rescue</fromPriceList>
                 <toPriceList>DEFAULT</toPriceList>
             </priceListCase>
         </priceList>
     </rules>
-
     <plans>
-        <plan name="blowdart-monthly-notrial">
-            <product>Blowdart</product>
+        <plan name="FREE-monthly">
+            <product>FREE</product>
+            <initialPhases />
             <finalPhase type="EVERGREEN">
                 <duration>
                     <unit>UNLIMITED</unit>
+                    <number>-1</number>
                 </duration>
                 <recurring>
                     <billingPeriod>MONTHLY</billingPeriod>
                     <recurringPrice>
                         <price>
-                            <currency>USD</currency>
-                            <value>29.95</value>
+                            <currency>AUD</currency>
+                            <value>0.00</value>
+                        </price>
+                        <price>
+                            <currency>BRL</currency>
+                            <value>0.00</value>
                         </price>
                         <price>
                             <currency>EUR</currency>
-                            <value>29.95</value>
+                            <value>0.00</value>
                         </price>
                         <price>
                             <currency>GBP</currency>
-                            <value>29.95</value>
+                            <value>0.00</value>
                         </price>
-                    </recurringPrice>
-                </recurring>
-            </finalPhase>
-        </plan>
-
-        <plan name="pistol-monthly-notrial">
-            <product>Pistol</product>
-            <finalPhase type="EVERGREEN">
-                <duration>
-                    <unit>UNLIMITED</unit>
-                </duration>
-                <recurring>
-                    <billingPeriod>MONTHLY</billingPeriod>
-                    <recurringPrice>
+                        <price>
+                            <currency>INR</currency>
+                            <value>0.00</value>
+                        </price>
+                        <price>
+                            <currency>JPY</currency>
+                            <value>0.00</value>
+                        </price>
                         <price>
                             <currency>USD</currency>
-                            <value>19.95</value>
+                            <value>0.00</value>
                         </price>
                         <price>
-                            <currency>EUR</currency>
-                            <value>19.95</value>
-                        </price>
-                        <price>
-                            <currency>GBP</currency>
-                            <value>19.95</value>
+                            <currency>ZAR</currency>
+                            <value>0.00</value>
                         </price>
                     </recurringPrice>
                 </recurring>
+                <usages />
             </finalPhase>
+            <plansAllowedInBundle>-1</plansAllowedInBundle>
         </plan>
-        <plan name="blowdart-monthly">
-            <product>Blowdart</product>
+        <plan name="PROFESSIONAL-monthly-29.00-gen1">
+            <product>PROFESSIONAL_PLAN</product>
             <initialPhases>
                 <phase type="TRIAL">
                     <duration>
                         <unit>DAYS</unit>
                         <number>30</number>
                     </duration>
-                    <fixed>
+                    <fixed type="ONE_TIME">
                         <fixedPrice>
-                        </fixedPrice>
-                    </fixed>
-                </phase>
-                <phase type="DISCOUNT">
-                    <duration>
-                        <unit>MONTHS</unit>
-                        <number>6</number>
-                    </duration>
-                    <recurring>
-                        <billingPeriod>MONTHLY</billingPeriod>
-                        <recurringPrice>
                             <price>
                                 <currency>USD</currency>
-                                <value>9.95</value>
+                                <value>0</value>
+                            </price>
+                            <price>
+                                <currency>AUD</currency>
+                                <value>0</value>
                             </price>
                             <price>
                                 <currency>EUR</currency>
-                                <value>9.95</value>
+                                <value>0</value>
                             </price>
                             <price>
                                 <currency>GBP</currency>
-                                <value>9.95</value>
+                                <value>0</value>
                             </price>
-                        </recurringPrice>
-                    </recurring>
-                </phase>
-            </initialPhases>
-            <finalPhase type="EVERGREEN">
-                <duration>
-                    <unit>UNLIMITED</unit>
-                </duration>
-                <recurring>
-                    <billingPeriod>MONTHLY</billingPeriod>
-                    <recurringPrice>
-                        <price>
-                            <currency>USD</currency>
-                            <value>29.95</value>
-                        </price>
-                        <price>
-                            <currency>EUR</currency>
-                            <value>29.95</value>
-                        </price>
-                        <price>
-                            <currency>GBP</currency>
-                            <value>29.95</value>
-                        </price>
-                    </recurringPrice>
-                </recurring>
-            </finalPhase>
-        </plan>
-        <plan name="pistol-weekly">
-            <product>Pistol</product>
-            <initialPhases>
-                <phase type="TRIAL">
-                    <duration>
-                        <unit>DAYS</unit>
-                        <number>30</number>
-                    </duration>
-                    <fixed>
-                        <fixedPrice>
+                            <price>
+                                <currency>JPY</currency>
+                                <value>0</value>
+                            </price>
+                            <price>
+                                <currency>BRL</currency>
+                                <value>0</value>
+                            </price>
+                            <price>
+                                <currency>INR</currency>
+                                <value>0</value>
+                            </price>
+                            <price>
+                                <currency>ZAR</currency>
+                                <value>0</value>
+                            </price>
                         </fixedPrice>
                     </fixed>
-                </phase>
-            </initialPhases>
-            <finalPhase type="EVERGREEN">
-                <duration>
-                    <unit>UNLIMITED</unit>
-                </duration>
-                <recurring>
-                    <billingPeriod>WEEKLY</billingPeriod>
-                    <recurringPrice>
-                        <price>
-                            <currency>GBP</currency>
-                            <value>29.95</value>
-                        </price>
-                        <price>
-                            <currency>EUR</currency>
-                            <value>29.95</value>
-                        </price>
-                        <price>
-                            <currency>USD</currency>
-                            <value>29.95</value>
-                        </price>
-                    </recurringPrice>
-                </recurring>
-            </finalPhase>
-        </plan>
-        <plan name="pistol-thirty-days">
-            <product>Pistol</product>
-            <initialPhases>
-                <phase type="TRIAL">
-                    <duration>
-                        <unit>DAYS</unit>
-                        <number>30</number>
-                    </duration>
-                    <fixed>
-                        <fixedPrice>
-                        </fixedPrice>
-                    </fixed>
-                </phase>
-            </initialPhases>
-            <finalPhase type="EVERGREEN">
-                <duration>
-                    <unit>UNLIMITED</unit>
-                </duration>
-                <recurring>
-                    <billingPeriod>THIRTY_DAYS</billingPeriod>
-                    <recurringPrice>
-                        <price>
-                            <currency>GBP</currency>
-                            <value>29.95</value>
-                        </price>
-                        <price>
-                            <currency>EUR</currency>
-                            <value>29.95</value>
-                        </price>
-                        <price>
-                            <currency>USD</currency>
-                            <value>29.95</value>
-                        </price>
-                    </recurringPrice>
-                </recurring>
-            </finalPhase>
-        </plan>
-        <plan name="pistol-monthly">
-            <product>Pistol</product>
-            <initialPhases>
-                <phase type="TRIAL">
-                    <duration>
-                        <unit>DAYS</unit>
-                        <number>30</number>
-                    </duration>
-                    <fixed>
-                        <fixedPrice>
-                        </fixedPrice>
-                    </fixed>
-                </phase>
-            </initialPhases>
-            <finalPhase type="EVERGREEN">
-                <duration>
-                    <unit>UNLIMITED</unit>
-                </duration>
-                <recurring>
-                    <billingPeriod>MONTHLY</billingPeriod>
-                    <recurringPrice>
-                        <price>
-                            <currency>GBP</currency>
-                            <value>29.95</value>
-                        </price>
-                        <price>
-                            <currency>EUR</currency>
-                            <value>29.95</value>
-                        </price>
-                        <price>
-                            <currency>USD</currency>
-                            <value>29.95</value>
-                        </price>
-                    </recurringPrice>
-                </recurring>
-            </finalPhase>
-        </plan>
-
-        <plan name="pistol-monthly-fixedterm">
-            <product>Pistol</product>
-            <initialPhases>
-                <phase type="TRIAL">
-                    <duration>
-                        <unit>DAYS</unit>
-                        <number>30</number>
-                    </duration>
-                    <fixed>
-                        <fixedPrice>
-                        </fixedPrice>
-                    </fixed>
-                </phase>
-            </initialPhases>
-            <finalPhase type="FIXEDTERM">
-                <duration>
-                    <unit>MONTHS</unit>
-                    <number>12</number>
-                </duration>
-                <recurring>
-                    <billingPeriod>MONTHLY</billingPeriod>
-                    <recurringPrice>
-                        <price>
-                            <currency>GBP</currency>
-                            <value>29.95</value>
-                        </price>
-                        <price>
-                            <currency>EUR</currency>
-                            <value>29.95</value>
-                        </price>
-                        <price>
-                            <currency>USD</currency>
-                            <value>29.95</value>
-                        </price>
-                    </recurringPrice>
-                </recurring>
-            </finalPhase>
-        </plan>
-
-        <plan name="shotgun-monthly">
-            <product>Shotgun</product>
-            <initialPhases>
-                <phase type="TRIAL">
-                    <duration>
-                        <unit>DAYS</unit>
-                        <number>30</number>
-                    </duration>
-                    <fixed>
-                        <fixedPrice>
-                        </fixedPrice>
-                    </fixed>
+                    <usages />
                 </phase>
             </initialPhases>
             <finalPhase type="EVERGREEN">
@@ -471,871 +175,144 @@
                     <billingPeriod>MONTHLY</billingPeriod>
                     <recurringPrice>
                         <price>
-                            <currency>USD</currency>
-                            <value>249.95</value>
+                            <currency>AUD</currency>
+                            <value>38.00</value>
+                        </price>
+                        <price>
+                            <currency>BRL</currency>
+                            <value>219.00</value>
                         </price>
                         <price>
                             <currency>EUR</currency>
-                            <value>149.95</value>
+                            <value>29.00</value>
                         </price>
                         <price>
                             <currency>GBP</currency>
-                            <value>169.95</value>
-                        </price>
-                    </recurringPrice>
-                </recurring>
-            </finalPhase>
-        </plan>
-        <plan name="assault-rifle-monthly">
-            <product>Assault-Rifle</product>
-            <initialPhases>
-                <phase type="TRIAL">
-                    <duration>
-                        <unit>DAYS</unit>
-                        <number>30</number>
-                    </duration>
-                    <fixed>
-                        <fixedPrice>
-                        </fixedPrice>
-                    </fixed>
-                </phase>
-            </initialPhases>
-            <finalPhase type="EVERGREEN">
-                <duration>
-                    <unit>UNLIMITED</unit>
-                </duration>
-                <recurring>
-                    <billingPeriod>MONTHLY</billingPeriod>
-                    <recurringPrice>
-                        <price>
-                            <currency>USD</currency>
-                            <value>599.95</value>
+                            <value>25.00</value>
                         </price>
                         <price>
-                            <currency>EUR</currency>
-                            <value>349.95</value>
+                            <currency>INR</currency>
+                            <value>1680.00</value>
                         </price>
                         <price>
-                            <currency>GBP</currency>
-                            <value>399.95</value>
-                        </price>
-                    </recurringPrice>
-                </recurring>
-            </finalPhase>
-        </plan>
-        <plan name="pistol-quarterly">
-            <product>Pistol</product>
-            <initialPhases>
-                <phase type="TRIAL">
-                    <duration>
-                        <unit>DAYS</unit>
-                        <number>30</number>
-                    </duration>
-                    <fixed>
-                        <fixedPrice>
-                        </fixedPrice>
-                    </fixed>
-                </phase>
-            </initialPhases>
-            <finalPhase type="EVERGREEN">
-                <duration>
-                    <unit>UNLIMITED</unit>
-                </duration>
-                <recurring>
-                    <billingPeriod>QUARTERLY</billingPeriod>
-                    <recurringPrice>
-                        <price>
-                            <currency>GBP</currency>
-                            <value>69.95</value>
-                        </price>
-                        <price>
-                            <currency>EUR</currency>
-                            <value>69.95</value>
+                            <currency>JPY</currency>
+                            <value>3200.00</value>
                         </price>
                         <price>
                             <currency>USD</currency>
-                            <value>69.95</value>
+                            <value>29.00</value>
+                        </price>
+                        <price>
+                            <currency>ZAR</currency>
+                            <value>438.00</value>
                         </price>
                     </recurringPrice>
                 </recurring>
-            </finalPhase>
-        </plan>
-        <plan name="pistol-annual">
-            <product>Pistol</product>
-            <initialPhases>
-                <phase type="TRIAL">
-                    <duration>
-                        <unit>DAYS</unit>
-                        <number>30</number>
-                    </duration>
-                    <fixed>
-                        <fixedPrice>
-                        </fixedPrice>
-                    </fixed>
-                </phase>
-            </initialPhases>
-            <finalPhase type="EVERGREEN">
-                <duration>
-                    <unit>UNLIMITED</unit>
-                </duration>
-                <recurring>
-                    <billingPeriod>ANNUAL</billingPeriod>
-                    <recurringPrice>
-                        <price>
-                            <currency>USD</currency>
-                            <value>199.95</value>
-                        </price>
-                        <price>
-                            <currency>EUR</currency>
-                            <value>199.95</value>
-                        </price>
-                        <price>
-                            <currency>GBP</currency>
-                            <value>199.95</value>
-                        </price>
-                    </recurringPrice>
-                </recurring>
-            </finalPhase>
-        </plan>
-        <plan name="shotgun-annual">
-            <product>Shotgun</product>
-            <initialPhases>
-                <phase type="TRIAL">
-                    <duration>
-                        <unit>DAYS</unit>
-                        <number>30</number>
-                    </duration>
-                    <fixed>
-                        <fixedPrice>
-                        </fixedPrice>
-                    </fixed>
-                </phase>
-            </initialPhases>
-            <finalPhase type="EVERGREEN">
-                <duration>
-                    <unit>UNLIMITED</unit>
-                </duration>
-                <recurring>
-                    <billingPeriod>ANNUAL</billingPeriod>
-                    <recurringPrice>
-                        <price>
-                            <currency>USD</currency>
-                            <value>2399.95</value>
-                        </price>
-                        <price>
-                            <currency>EUR</currency>
-                            <value>1499.95</value>
-                        </price>
-                        <price>
-                            <currency>GBP</currency>
-                            <value>1699.95</value>
-                        </price>
-                    </recurringPrice>
-                </recurring>
-            </finalPhase>
-        </plan>
-        <plan name="assault-rifle-annual">
-            <product>Assault-Rifle</product>
-            <initialPhases>
-                <phase type="TRIAL">
-                    <duration>
-                        <unit>DAYS</unit>
-                        <number>30</number>
-                    </duration>
-                    <fixed>
-                        <fixedPrice>
-                        </fixedPrice>
-                    </fixed>
-                </phase>
-            </initialPhases>
-            <finalPhase type="EVERGREEN">
-                <duration>
-                    <unit>UNLIMITED</unit>
-                </duration>
-                <recurring>
-                    <billingPeriod>ANNUAL</billingPeriod>
-                    <recurringPrice>
-                        <price>
-                            <currency>USD</currency>
-                            <value>5999.95</value>
-                        </price>
-                        <price>
-                            <currency>EUR</currency>
-                            <value>3499.95</value>
-                        </price>
-                        <price>
-                            <currency>GBP</currency>
-                            <value>3999.95</value>
-                        </price>
-                    </recurringPrice>
-                </recurring>
-            </finalPhase>
-        </plan>
-        <plan name="pistol-annual-gunclub-discount">
-            <product>Pistol</product>
-            <initialPhases>
-                <phase type="TRIAL">
-                    <duration>
-                        <unit>DAYS</unit>
-                        <number>30</number>
-                    </duration>
-                    <fixed>
-                        <fixedPrice>
-                        </fixedPrice>
-                    </fixed>
-                </phase>
-                <phase type="DISCOUNT">
-                    <duration>
-                        <unit>MONTHS</unit>
-                        <number>6</number>
-                    </duration>
-                    <recurring>
-                        <billingPeriod>MONTHLY</billingPeriod>
-                        <recurringPrice>
-                            <price>
-                                <currency>USD</currency>
-                                <value>9.95</value>
-                            </price>
-                            <price>
-                                <currency>EUR</currency>
-                                <value>9.95</value>
-                            </price>
-                            <price>
-                                <currency>GBP</currency>
-                                <value>9.95</value>
-                            </price>
-                        </recurringPrice>
-                    </recurring>
-                </phase>
-            </initialPhases>
-            <finalPhase type="EVERGREEN">
-                <duration>
-                    <unit>UNLIMITED</unit>
-                </duration>
-                <recurring>
-                    <billingPeriod>ANNUAL</billingPeriod>
-                    <recurringPrice>
-                        <price>
-                            <currency>USD</currency>
-                            <value>199.95</value>
-                        </price>
-                        <price>
-                            <currency>EUR</currency>
-                            <value>199.95</value>
-                        </price>
-                        <price>
-                            <currency>GBP</currency>
-                            <value>199.95</value>
-                        </price>
-                    </recurringPrice>
-                </recurring>
-            </finalPhase>
-        </plan>
-        <plan name="pistol-annual-gunclub-discount-notrial">
-            <product>Pistol</product>
-            <initialPhases>
-                <phase type="DISCOUNT">
-                    <duration>
-                        <unit>MONTHS</unit>
-                        <number>6</number>
-                    </duration>
-                    <recurring>
-                        <billingPeriod>MONTHLY</billingPeriod>
-                        <recurringPrice>
-                            <price>
-                                <currency>USD</currency>
-                                <value>9.95</value>
-                            </price>
-                            <price>
-                                <currency>EUR</currency>
-                                <value>9.95</value>
-                            </price>
-                            <price>
-                                <currency>GBP</currency>
-                                <value>9.95</value>
-                            </price>
-                        </recurringPrice>
-                    </recurring>
-                </phase>
-            </initialPhases>
-            <finalPhase type="EVERGREEN">
-                <duration>
-                    <unit>UNLIMITED</unit>
-                </duration>
-                <recurring>
-                    <billingPeriod>ANNUAL</billingPeriod>
-                    <recurringPrice>
-                        <price>
-                            <currency>USD</currency>
-                            <value>199.95</value>
-                        </price>
-                        <price>
-                            <currency>EUR</currency>
-                            <value>199.95</value>
-                        </price>
-                        <price>
-                            <currency>GBP</currency>
-                            <value>199.95</value>
-                        </price>
-                    </recurringPrice>
-                </recurring>
-            </finalPhase>
-        </plan>
-        <plan name="shotgun-annual-gunclub-discount">
-            <product>Shotgun</product>
-            <initialPhases>
-                <phase type="TRIAL">
-                    <duration>
-                        <unit>DAYS</unit>
-                        <number>30</number>
-                    </duration>
-                    <fixed>
-                        <fixedPrice>
-                        </fixedPrice>
-                    </fixed>
-                </phase>
-                <phase type="DISCOUNT">
-                    <duration>
-                        <unit>MONTHS</unit>
-                        <number>6</number>
-                    </duration>
-                    <recurring>
-                        <billingPeriod>MONTHLY</billingPeriod>
-                        <recurringPrice>
-                            <price>
-                                <currency>USD</currency>
-                                <value>19.95</value>
-                            </price>
-                            <price>
-                                <currency>EUR</currency>
-                                <value>49.95</value>
-                            </price>
-                            <price>
-                                <currency>GBP</currency>
-                                <value>69.95</value>
-                            </price>
-                        </recurringPrice>
-                    </recurring>
-                </phase>
-            </initialPhases>
-            <finalPhase type="EVERGREEN">
-                <duration>
-                    <unit>UNLIMITED</unit>
-                </duration>
-                <recurring>
-                    <billingPeriod>ANNUAL</billingPeriod>
-                    <recurringPrice>
-                        <price>
-                            <currency>USD</currency>
-                            <value>2399.95</value>
-                        </price>
-                        <price>
-                            <currency>EUR</currency>
-                            <value>1499.95</value>
-                        </price>
-                        <price>
-                            <currency>GBP</currency>
-                            <value>1699.95</value>
-                        </price>
-                    </recurringPrice>
-                </recurring>
-            </finalPhase>
-        </plan>
-        <plan name="assault-rifle-annual-gunclub-discount">
-            <product>Assault-Rifle</product>
-            <initialPhases>
-                <phase type="TRIAL">
-                    <duration>
-                        <unit>DAYS</unit>
-                        <number>30</number>
-                    </duration>
-                    <fixed>
-                        <fixedPrice>
-                        </fixedPrice>
-                    </fixed>
-                </phase>
-                <phase type="DISCOUNT">
-                    <duration>
-                        <unit>MONTHS</unit>
-                        <number>6</number>
-                    </duration>
-                    <recurring>
-                        <billingPeriod>MONTHLY</billingPeriod>
-                        <recurringPrice>
-                            <price>
-                                <currency>USD</currency>
-                                <value>99.95</value>
-                            </price>
-                            <price>
-                                <currency>EUR</currency>
-                                <value>99.95</value>
-                            </price>
-                            <price>
-                                <currency>GBP</currency>
-                                <value>99.95</value>
-                            </price>
-                        </recurringPrice>
-                    </recurring>
-                </phase>
-            </initialPhases>
-            <finalPhase type="EVERGREEN">
-                <duration>
-                    <unit>UNLIMITED</unit>
-                </duration>
-                <recurring>
-                    <billingPeriod>ANNUAL</billingPeriod>
-                    <recurringPrice>
-                        <price>
-                            <currency>USD</currency>
-                            <value>5999.95</value>
-                        </price>
-                        <price>
-                            <currency>EUR</currency>
-                            <value>3499.95</value>
-                        </price>
-                        <price>
-                            <currency>GBP</currency>
-                            <value>3999.95</value>
-                        </price>
-                    </recurringPrice>
-                </recurring>
-            </finalPhase>
-        </plan>
-        <plan name="laser-scope-monthly">
-            <product>Laser-Scope</product>
-            <initialPhases>
-                <phase type="DISCOUNT">
-                    <duration>
-                        <unit>MONTHS</unit>
-                        <number>1</number>
-                    </duration>
-                    <recurring>
-                        <billingPeriod>MONTHLY</billingPeriod>
-                        <recurringPrice>
-                            <price>
-                                <currency>USD</currency>
-                                <value>999.95</value>
-                            </price>
-                            <price>
-                                <currency>EUR</currency>
-                                <value>499.95</value>
-                            </price>
-                            <price>
-                                <currency>GBP</currency>
-                                <value>999.95</value>
-                            </price>
-                        </recurringPrice>
-                    </recurring>
-                </phase>
-            </initialPhases>
-            <finalPhase type="EVERGREEN">
-                <duration>
-                    <unit>UNLIMITED</unit>
-                </duration>
-                <recurring>
-                    <billingPeriod>MONTHLY</billingPeriod>
-                    <recurringPrice>
-                        <price>
-                            <currency>USD</currency>
-                            <value>1999.95</value>
-                        </price>
-                        <price>
-                            <currency>EUR</currency>
-                            <value>1499.95</value>
-                        </price>
-                        <price>
-                            <currency>GBP</currency>
-                            <value>1999.95</value>
-                        </price>
-                    </recurringPrice>
-                </recurring>
-            </finalPhase>
-            <plansAllowedInBundle>2</plansAllowedInBundle>
-        </plan>
-        <plan name="cleaning-monthly">
-            <product>Cleaning</product>
-            <finalPhase type="EVERGREEN">
-                <duration>
-                    <unit>UNLIMITED</unit>
-                </duration>
-                <recurring>
-                    <billingPeriod>MONTHLY</billingPeriod>
-                    <recurringPrice>
-                        <price>
-                            <currency>USD</currency>
-                            <value>2.95</value>
-                        </price>
-                        <price>
-                            <currency>EUR</currency>
-                            <value>1.95</value>
-                        </price>
-                        <price>
-                            <currency>GBP</currency>
-                            <value>0.95</value>
-                        </price>
-                    </recurringPrice>
-                </recurring>
-            </finalPhase>
-        </plan>
-        <plan name="telescopic-scope-monthly">
-            <product>Telescopic-Scope</product>
-            <initialPhases>
-                <phase type="DISCOUNT">
-                    <duration>
-                        <unit>MONTHS</unit>
-                        <number>1</number>
-                    </duration>
-                    <recurring>
-                        <billingPeriod>MONTHLY</billingPeriod>
-                        <recurringPrice>
-                            <price>
-                                <currency>USD</currency>
-                                <value>399.95</value>
-                            </price>
-                            <price>
-                                <currency>EUR</currency>
-                                <value>299.95</value>
-                            </price>
-                            <price>
-                                <currency>GBP</currency>
-                                <value>399.95</value>
-                            </price>
-                        </recurringPrice>
-                    </recurring>
-                </phase>
-            </initialPhases>
-            <finalPhase type="EVERGREEN">
-                <duration>
-                    <unit>UNLIMITED</unit>
-                </duration>
-                <recurring>
-                    <billingPeriod>MONTHLY</billingPeriod>
-                    <recurringPrice>
-                        <price>
-                            <currency>USD</currency>
-                            <value>999.95</value>
-                        </price>
-                        <price>
-                            <currency>EUR</currency>
-                            <value>499.95</value>
-                        </price>
-                        <price>
-                            <currency>GBP</currency>
-                            <value>999.95</value>
-                        </price>
-                    </recurringPrice>
-                </recurring>
-            </finalPhase>
-        </plan>
-        <plan name="extra-ammo-monthly">
-            <product>Extra-Ammo</product>
-            <finalPhase type="EVERGREEN">
-                <duration>
-                    <unit>UNLIMITED</unit>
-                </duration>
-                <recurring>
-                    <billingPeriod>MONTHLY</billingPeriod>
-                    <recurringPrice>
-                        <price>
-                            <currency>USD</currency>
-                            <value>999.95</value>
-                        </price>
-                        <price>
-                            <currency>EUR</currency>
-                            <value>499.95</value>
-                        </price>
-                        <price>
-                            <currency>GBP</currency>
-                            <value>999.95</value>
-                        </price>
-                    </recurringPrice>
-                </recurring>
+                <usages />
             </finalPhase>
             <plansAllowedInBundle>-1</plansAllowedInBundle>
-            <!-- arbitrary number of these (multipack) -->
         </plan>
-        <plan name="holster-monthly-regular">
-            <product>Holster</product>
+        <plan name="TEAM3S-monthly-149.00-gen1">
+            <product>TEAM3S</product>
             <initialPhases>
                 <phase type="TRIAL">
                     <duration>
                         <unit>DAYS</unit>
                         <number>30</number>
                     </duration>
-                    <fixed>
+                    <fixed type="ONE_TIME">
                         <fixedPrice>
-                        </fixedPrice>
-                    </fixed>
-                </phase>
-            </initialPhases>
-            <finalPhase type="EVERGREEN">
-                <duration>
-                    <unit>UNLIMITED</unit>
-                </duration>
-                <recurring>
-                    <billingPeriod>MONTHLY</billingPeriod>
-                    <recurringPrice>
-                        <price>
-                            <currency>USD</currency>
-                            <value>199.95</value>
-                        </price>
-                        <price>
-                            <currency>EUR</currency>
-                            <value>199.95</value>
-                        </price>
-                        <price>
-                            <currency>GBP</currency>
-                            <value>199.95</value>
-                        </price>
-                    </recurringPrice>
-                </recurring>
-            </finalPhase>
-        </plan>
-        <plan name="holster-monthly-special">
-            <product>Holster</product>
-            <initialPhases>
-                <phase type="TRIAL">
-                    <duration>
-                        <unit>DAYS</unit>
-                        <number>30</number>
-                    </duration>
-                    <fixed>
-                        <fixedPrice>
-                        </fixedPrice>
-                    </fixed>
-                </phase>
-            </initialPhases>
-            <finalPhase type="EVERGREEN">
-                <duration>
-                    <unit>UNLIMITED</unit>
-                </duration>
-                <recurring>
-                    <billingPeriod>ANNUAL</billingPeriod>
-                    <recurringPrice>
-                        <price>
-                            <currency>USD</currency>
-                            <value>199.95</value>
-                        </price>
-                        <price>
-                            <currency>EUR</currency>
-                            <value>199.95</value>
-                        </price>
-                        <price>
-                            <currency>GBP</currency>
-                            <value>199.95</value>
-                        </price>
-                    </recurringPrice>
-                </recurring>
-            </finalPhase>
-        </plan>
-        <plan name="assault-rifle-annual-rescue">
-            <product>Assault-Rifle</product>
-            <initialPhases>
-                <phase type="DISCOUNT">
-                    <duration>
-                        <unit>YEARS</unit>
-                        <number>1</number>
-                    </duration>
-                    <recurring>
-                        <billingPeriod>ANNUAL</billingPeriod>
-                        <recurringPrice>
                             <price>
                                 <currency>USD</currency>
-                                <value>5999.95</value>
+                                <value>0</value>
+                            </price>
+                            <price>
+                                <currency>AUD</currency>
+                                <value>0</value>
                             </price>
                             <price>
                                 <currency>EUR</currency>
-                                <value>3499.95</value>
+                                <value>0</value>
                             </price>
                             <price>
                                 <currency>GBP</currency>
-                                <value>3999.95</value>
+                                <value>0</value>
                             </price>
-                        </recurringPrice>
-                    </recurring>
+                            <price>
+                                <currency>JPY</currency>
+                                <value>0</value>
+                            </price>
+                            <price>
+                                <currency>BRL</currency>
+                                <value>0</value>
+                            </price>
+                            <price>
+                                <currency>INR</currency>
+                                <value>0</value>
+                            </price>
+                            <price>
+                                <currency>ZAR</currency>
+                                <value>0</value>
+                            </price>
+                        </fixedPrice>
+                    </fixed>
+                    <usages />
                 </phase>
             </initialPhases>
             <finalPhase type="EVERGREEN">
                 <duration>
                     <unit>UNLIMITED</unit>
+                    <number>-1</number>
                 </duration>
-                <recurring>
-                    <billingPeriod>ANNUAL</billingPeriod>
-                    <recurringPrice>
-                        <price>
-                            <currency>USD</currency>
-                            <value>5999.95</value>
-                        </price>
-                        <price>
-                            <currency>EUR</currency>
-                            <value>3499.95</value>
-                        </price>
-                        <price>
-                            <currency>GBP</currency>
-                            <value>3999.95</value>
-                        </price>
-                    </recurringPrice>
-                </recurring>
-            </finalPhase>
-        </plan>
-        <plan name="refurbish-maintenance">
-            <product>Refurbish-Maintenance</product>
-            <finalPhase type="FIXEDTERM">
-                <duration>
-                    <unit>MONTHS</unit>
-                    <number>12</number>
-                </duration>
-                <fixed>
-                    <fixedPrice>
-                        <price>
-                            <currency>USD</currency>
-                            <value>599.95</value>
-                        </price>
-                        <price>
-                            <currency>EUR</currency>
-                            <value>599.95</value>
-                        </price>
-                        <price>
-                            <currency>GBP</currency>
-                            <value>599.95</value>
-                        </price>
-                    </fixedPrice>
-                </fixed>
                 <recurring>
                     <billingPeriod>MONTHLY</billingPeriod>
                     <recurringPrice>
                         <price>
-                            <currency>USD</currency>
-                            <value>199.95</value>
+                            <currency>AUD</currency>
+                            <value>195.00</value>
+                        </price>
+                        <price>
+                            <currency>BRL</currency>
+                            <value>715.00</value>
                         </price>
                         <price>
                             <currency>EUR</currency>
-                            <value>199.95</value>
+                            <value>149.00</value>
                         </price>
                         <price>
                             <currency>GBP</currency>
-                            <value>199.95</value>
+                            <value>119.00</value>
+                        </price>
+                        <price>
+                            <currency>INR</currency>
+                            <value>8850.00</value>
+                        </price>
+                        <price>
+                            <currency>JPY</currency>
+                            <value>16500.00</value>
+                        </price>
+                        <price>
+                            <currency>USD</currency>
+                            <value>149.00</value>
+                        </price>
+                        <price>
+                            <currency>ZAR</currency>
+                            <value>2145.00</value>
                         </price>
                     </recurringPrice>
                 </recurring>
-            </finalPhase>
-        </plan>
-        <plan name="bullets-usage-in-arrear">
-            <product>Bullets</product>
-            <finalPhase type="EVERGREEN">
-                <duration>
-                    <unit>UNLIMITED</unit>
-                </duration>
-                <usages>
-                    <usage name="bullets-usage-in-arrear-usage" billingMode="IN_ARREAR" usageType="CONSUMABLE">
-                        <billingPeriod>MONTHLY</billingPeriod>
-                        <tiers>
-                            <tier>
-                                <blocks>
-                                    <tieredBlock>
-                                        <unit>bullets</unit>
-                                        <size>100</size>
-                                        <prices>
-                                            <price>
-                                                <currency>USD</currency>
-                                                <value>2.95</value>
-                                            </price>
-                                            <price>
-                                                <currency>EUR</currency>
-                                                <value>1.95</value>
-                                            </price>
-                                            <price>
-                                                <currency>GBP</currency>
-                                                <value>0.95</value>
-                                            </price>
-                                        </prices>
-                                        <max>10</max>
-                                    </tieredBlock>
-                                </blocks>
-                            </tier>
-                            <tier>
-                                <blocks>
-                                    <tieredBlock>
-                                        <unit>bullets</unit>
-                                        <size>1000</size>
-                                        <prices>
-                                            <price>
-                                                <currency>USD</currency>
-                                                <value>5.95</value>
-                                            </price>
-                                            <price>
-                                                <currency>EUR</currency>
-                                                <value>4.95</value>
-                                            </price>
-                                            <price>
-                                                <currency>GBP</currency>
-                                                <value>3.95</value>
-                                            </price>
-                                        </prices>
-                                        <max>100</max>
-                                    </tieredBlock>
-                                </blocks>
-                            </tier>
-                        </tiers>
-                    </usage>
-                </usages>
+                <usages />
             </finalPhase>
             <plansAllowedInBundle>-1</plansAllowedInBundle>
-            <!-- arbitrary number of these (multipack) -->
         </plan>
     </plans>
     <priceLists>
         <defaultPriceList name="DEFAULT">
             <plans>
-                <plan>pistol-weekly</plan>
-                <plan>pistol-thirty-days</plan>
-                <plan>blowdart-monthly</plan>
-                <plan>pistol-monthly</plan>
-                <plan>shotgun-monthly</plan>
-                <plan>assault-rifle-monthly</plan>
-                <plan>pistol-annual</plan>
-                <plan>pistol-quarterly</plan>
-                <plan>shotgun-annual</plan>
-                <plan>assault-rifle-annual</plan>
-                <plan>laser-scope-monthly</plan>
-                <plan>telescopic-scope-monthly</plan>
-                <plan>cleaning-monthly</plan>
-                <plan>extra-ammo-monthly</plan>
-                <plan>holster-monthly-regular</plan>
-                <plan>refurbish-maintenance</plan>
-                <plan>bullets-usage-in-arrear</plan>
-                <plan>holster-monthly-special</plan>
+                <plan>PROFESSIONAL-monthly-29.00-gen1</plan>
+                <plan>FREE-monthly</plan>
+                <plan>TEAM3S-monthly-149.00-gen1</plan>
             </plans>
         </defaultPriceList>
-        <childPriceList name="gunclubDiscount">
-            <plans>
-                <plan>pistol-annual-gunclub-discount</plan>
-                <plan>shotgun-annual-gunclub-discount</plan>
-                <plan>assault-rifle-annual-gunclub-discount</plan>
-            </plans>
-        </childPriceList>
-        <childPriceList name="gunclubDiscountNoTrial">
-            <plans>
-                <plan>pistol-annual-gunclub-discount-notrial</plan>
-            </plans>
-        </childPriceList>
-        <childPriceList name="rescue">
-            <plans>
-                <plan>assault-rifle-annual-rescue</plan>
-            </plans>
-        </childPriceList>
-        <childPriceList name="fixedTerm">
-            <plans>
-                <plan>pistol-monthly-fixedterm</plan>
-            </plans>
-        </childPriceList>
-        <childPriceList name="notrial">
-            <plans>
-                <plan>blowdart-monthly-notrial</plan>
-                <plan>pistol-monthly-notrial</plan>
-
-            </plans>
-        </childPriceList>
     </priceLists>
-
 </catalog>
