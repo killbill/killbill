@@ -1370,4 +1370,96 @@ public class TestIntegrationParentInvoice extends TestIntegrationBase {
         // loading children items from non parent account should return empty list
         assertEquals(invoiceUserApi.getInvoiceItemsByParentInvoice(childInvoices.get(1).getId(), callContext).size(), 0);
     }
+
+
+
+    @Test(groups = "slow")
+    public void testWithEarlyCommitParentInvoice() throws Exception {
+
+        final int billingDay = 14;
+        final DateTime initialCreationDate = new DateTime(2015, 5, 15, 0, 0, 0, 0, testTimeZone);
+
+        // set clock to the initial start date
+        clock.setTime(initialCreationDate);
+
+        log.info("Beginning test with BCD of " + billingDay);
+        final Account parentAccount = createAccountWithNonOsgiPaymentMethod(getAccountData(billingDay));
+        final Account childAccount = createAccountWithNonOsgiPaymentMethod(getChildAccountData(billingDay, parentAccount.getId(), true));
+
+        DefaultEntitlement baseEntitlementChild = createBaseEntitlementAndCheckForCompletion(childAccount.getId(), "bundleKey1", "Pistol", ProductCategory.BASE, BillingPeriod.MONTHLY, NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE);
+
+        // Moving a day the NotificationQ calls the commitInvoice. No payment is expected.
+        busHandler.pushExpectedEvents(NextEvent.INVOICE);
+        clock.addDays(1);
+        assertListenerStatus();
+
+        // Move through time and verify new parent Invoice. No payments are expected yet.
+        busHandler.pushExpectedEvents(NextEvent.PHASE, NextEvent.INVOICE);
+        clock.addDays(29);
+        assertListenerStatus();
+
+        List<Invoice> childInvoices = invoiceUserApi.getInvoicesByAccount(childAccount.getId(), false, callContext);
+        assertEquals(childInvoices.size(), 2);
+
+        // check parent Invoice with child plan amount
+        List<Invoice> parentInvoices = invoiceUserApi.getInvoicesByAccount(parentAccount.getId(), false, callContext);
+        assertEquals(parentInvoices.size(), 2);
+
+        Invoice parentInvoice = parentInvoices.get(1);
+        assertEquals(parentInvoice.getNumberOfItems(), 1);
+        assertEquals(parentInvoice.getStatus(), InvoiceStatus.DRAFT);
+        assertTrue(parentInvoice.isParentInvoice());
+        // balance is 0 because parent invoice status is DRAFT
+        assertEquals(parentInvoice.getBalance().compareTo(BigDecimal.ZERO), 0);
+        assertEquals(parentInvoice.getInvoiceItems().get(0).getAmount().compareTo(BigDecimal.valueOf(29.95)), 0);
+
+
+        // Move clock 3 hours ahead
+        clock.addDeltaFromReality(3 * 3600 * 1000);
+
+        // Commit parent invoice prior end of the day
+        busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
+        invoiceUserApi.commitInvoice(parentInvoice.getId(), callContext);
+        assertListenerStatus();
+
+
+        // Create an ADD_ON for the child
+        DefaultEntitlement aoEntitlementChild = addAOEntitlementAndCheckForCompletion(baseEntitlementChild.getBundleId(), "Refurbish-Maintenance", ProductCategory.ADD_ON, BillingPeriod.MONTHLY,
+                                                                                      NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE);
+
+
+        childInvoices = invoiceUserApi.getInvoicesByAccount(childAccount.getId(), false, callContext);
+        assertEquals(childInvoices.size(), 3);
+
+        parentInvoices = invoiceUserApi.getInvoicesByAccount(parentAccount.getId(), false, callContext);
+        assertEquals(parentInvoices.size(), 3);
+
+
+        parentInvoice = parentInvoices.get(2);
+        assertEquals(parentInvoice.getNumberOfItems(), 1);
+        assertEquals(parentInvoice.getStatus(), InvoiceStatus.DRAFT);
+        assertTrue(parentInvoice.isParentInvoice());
+        // balance is 0 because parent invoice status is DRAFT
+        assertEquals(parentInvoice.getBalance().compareTo(BigDecimal.ZERO), 0);
+        assertEquals(parentInvoice.getInvoiceItems().get(0).getAmount().compareTo(BigDecimal.valueOf(799.90)), 0);
+
+
+        // Moving a day the NotificationQ calls the commitInvoice.
+        busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
+        clock.addDays(1);
+        assertListenerStatus();
+
+        parentInvoices = invoiceUserApi.getInvoicesByAccount(parentAccount.getId(), false, callContext);
+        assertEquals(parentInvoices.size(), 3);
+
+        parentInvoice = parentInvoices.get(2);
+        assertEquals(parentInvoice.getStatus(), InvoiceStatus.COMMITTED);
+        assertTrue(parentInvoice.isParentInvoice());
+        assertEquals(parentInvoice.getChargedAmount().compareTo(BigDecimal.valueOf(799.90)), 0);
+        assertEquals(parentInvoice.getCreditedAmount().compareTo(BigDecimal.ZERO), 0);
+
+
+    }
+
+
 }

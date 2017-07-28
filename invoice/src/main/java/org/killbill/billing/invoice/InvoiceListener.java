@@ -21,6 +21,7 @@ package org.killbill.billing.invoice;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
+import org.killbill.billing.ErrorCode;
 import org.killbill.billing.account.api.Account;
 import org.killbill.billing.account.api.AccountApiException;
 import org.killbill.billing.account.api.AccountInternalApi;
@@ -149,7 +150,10 @@ public class InvoiceListener {
             final InternalCallContext context = internalCallContextFactory.createInternalCallContext(tenantRecordId, accountRecordId, "Commit Invoice", CallOrigin.INTERNAL, UserType.SYSTEM, userToken);
             invoiceApi.commitInvoice(invoiceId, context);
         } catch (InvoiceApiException e) {
-            log.error(e.getMessage());
+            // In case we commit parent invoice earlier we expect to see an INVOICE_INVALID_STATUS status
+            if (ErrorCode.INVOICE_INVALID_STATUS.getCode() != e.getCode()) {
+                log.error(e.getMessage());
+            }
         }
     }
 
