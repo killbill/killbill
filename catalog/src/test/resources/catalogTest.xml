@@ -15,13 +15,13 @@
   ~ under the License.
   -->
 
-<!-- Use cases covered so far: Tiered Product (Pistol/Shotgun/Assault-Rifle)
-	Multiple changeEvent plan policies Multiple PlanAlignment (see below, trial
-	add-on alignments and rescue discount package) Product transition rules Add
-	on (Scopes, Hoster) Multi-pack addon (Extra-Ammo) Addon Trial aligned to
-	base plan (holster-monthly-regular) Addon Trial aligned to creation (holster-monthly-special)
-	Rescue discount package (assault-rifle-annual-rescue) Plan phase with a reccurring
-	and a one off (refurbish-maintenance) Phan with more than 2 phase (gunclub
+<!-- Use cases covered so far: Tiered Product (Pistol/Shotgun/Assault-Rifle) 
+	Multiple changeEvent plan policies Multiple PlanAlignment (see below, trial 
+	add-on alignments and rescue discount package) Product transition rules Add 
+	on (Scopes, Hoster) Multi-pack addon (Extra-Ammo) Addon Trial aligned to 
+	base plan (holster-monthly-regular) Addon Trial aligned to creation (holster-monthly-special) 
+	Rescue discount package (assault-rifle-annual-rescue) Plan phase with a reccurring 
+	and a one off (refurbish-maintenance) Phan with more than 2 phase (gunclub 
 	discount plans) Use Cases to do: Tiered Add On Riskfree period -->
 <catalog xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:noNamespaceSchemaLocation="CatalogSchema.xsd ">
