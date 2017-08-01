@@ -61,6 +61,7 @@ import org.killbill.billing.payment.api.PaymentApiException;
 import org.killbill.billing.payment.api.PaymentTransaction;
 import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.payment.api.TransactionStatus;
+import org.killbill.billing.server.healthchecks.KillbillHealthcheck;
 import org.killbill.billing.tenant.api.Tenant;
 import org.killbill.billing.tenant.api.TenantApiException;
 import org.killbill.billing.tenant.api.TenantUserApi;
@@ -115,6 +116,7 @@ public class AdminResource extends JaxRsResourceBase {
     private final RecordIdApi recordIdApi;
     private final PersistentBus persistentBus;
     private final NotificationQueueService notificationQueueService;
+    private final KillbillHealthcheck killbillHealthcheck;
 
     @Inject
     public AdminResource(final JaxrsUriBuilder uriBuilder,
@@ -130,6 +132,7 @@ public class AdminResource extends JaxRsResourceBase {
                          final RecordIdApi recordIdApi,
                          final PersistentBus persistentBus,
                          final NotificationQueueService notificationQueueService,
+                         final KillbillHealthcheck killbillHealthcheck,
                          final Clock clock,
                          final Context context) {
         super(uriBuilder, tagUserApi, customFieldUserApi, auditUserApi, accountUserApi, paymentApi, null, clock, context);
@@ -140,6 +143,7 @@ public class AdminResource extends JaxRsResourceBase {
         this.cacheControllerDispatcher = cacheControllerDispatcher;
         this.persistentBus = persistentBus;
         this.notificationQueueService = notificationQueueService;
+        this.killbillHealthcheck = killbillHealthcheck;
     }
 
     @GET
@@ -418,6 +422,26 @@ public class AdminResource extends JaxRsResourceBase {
         final CacheController<Long, Catalog> tenantCatalogCacheController = cacheControllerDispatcher.getCacheController(CacheType.TENANT_CATALOG);
         tenantCatalogCacheController.remove(tenantRecordId);
 
+        return Response.status(Status.OK).build();
+    }
+
+    @POST
+    @Path("/" + HEALTHCHECK)
+    @Produces(APPLICATION_JSON)
+    @ApiOperation(value = "Put the host out of rotation")
+    @ApiResponses(value = {})
+    public Response putInRotation(@javax.ws.rs.core.Context final HttpServletRequest request) {
+        killbillHealthcheck.putInRotation();
+        return Response.status(Status.OK).build();
+    }
+
+    @DELETE
+    @Path("/" + HEALTHCHECK)
+    @Produces(APPLICATION_JSON)
+    @ApiOperation(value = "Put the host out of rotation")
+    @ApiResponses(value = {})
+    public Response putOutOfRotation(@javax.ws.rs.core.Context final HttpServletRequest request) {
+        killbillHealthcheck.putOutOfRotation();
         return Response.status(Status.OK).build();
     }
 

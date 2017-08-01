@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014 Groupon, Inc
- * Copyright 2014 The Billing Project, LLC
+ * Copyright 2014-2017 Groupon, Inc
+ * Copyright 2014-2017 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -27,7 +27,6 @@ import java.util.UUID;
 
 import org.joda.time.DateTime;
 import org.killbill.billing.catalog.api.BillingPeriod;
-import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.catalog.api.ProductCategory;
 import org.killbill.billing.catalog.api.TimeUnit;
@@ -41,7 +40,6 @@ import org.killbill.billing.client.model.Product;
 import org.killbill.billing.client.model.SimplePlan;
 import org.killbill.billing.client.model.Tenant;
 import org.killbill.billing.client.model.Usage;
-import org.killbill.billing.jaxrs.json.AdminPaymentJson;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
@@ -153,12 +151,12 @@ public class TestCatalog extends TestJaxrsBase {
         Assert.assertEquals(foundBasePlans, allBasePlans);
     }
 
-    @Test(groups = "slow", description = "Try to retrieve a json version of the catalog with an invalid date",
-            expectedExceptions = KillBillClientException.class,
-            expectedExceptionsMessageRegExp = "There is no catalog version that applies for the given date.*")
+    @Test(groups = "slow", description = "Try to retrieve a json version of the catalog with an invalid date")
     public void testCatalogInvalidDate() throws Exception {
         final List<Catalog> catalogsJson = killBillClient.getJSONCatalog(DateTime.parse("2008-01-01"), requestOptions);
-        Assert.fail();
+        Assert.assertEquals(catalogsJson.size(), 1);
+        // Return the oldest catalog
+        Assert.assertEquals(catalogsJson.get(0).getEffectiveDate().compareTo(new DateTime(2011, 1, 1, 0, 0).toDate()), 0);
     }
 
     @Test(groups = "slow", description = "Can create a simple Plan into a per-tenant catalog")

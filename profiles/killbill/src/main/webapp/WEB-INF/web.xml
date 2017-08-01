@@ -53,6 +53,13 @@
         <filter-name>guiceFilter</filter-name>
         <url-pattern>/*</url-pattern>
     </filter-mapping>
+
+    <context-param>
+        <!-- We want to make sure the Logback shutdown happens last -->
+        <param-name>logbackDisableServletContainerInitializer</param-name>
+        <param-value>true</param-value>
+    </context-param>
+
     <listener>
         <!-- Jersey insists on using java.util.logging (JUL) -->
         <listener-class>org.killbill.commons.skeleton.listeners.JULServletContextListener</listener-class>
