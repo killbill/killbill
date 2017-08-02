@@ -695,10 +695,10 @@ public class TestOverdueIntegration extends TestOverdueBase {
 
         // 2012-05-06 => Create an external charge on a new invoice
         addDaysAndCheckForCompletion(5);
-        final InvoiceItem externalCharge = new ExternalChargeInvoiceItem(null, account.getId(), bundle.getId(), "For overdue", new LocalDate(2012, 5, 6), BigDecimal.TEN, Currency.USD);
+        final InvoiceItem externalCharge = new ExternalChargeInvoiceItem(null, account.getId(), bundle.getId(), "For overdue", new LocalDate(2012, 5, 6), new LocalDate(2012, 6, 6), BigDecimal.TEN, Currency.USD);
         invoiceUserApi.insertExternalCharges(account.getId(), clock.getUTCToday(), ImmutableList.<InvoiceItem>of(externalCharge), false, callContext).get(0);
         assertListenerStatus();
-        invoiceChecker.checkInvoice(account.getId(), 2, callContext, new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 6), null, InvoiceItemType.EXTERNAL_CHARGE, BigDecimal.TEN));
+        invoiceChecker.checkInvoice(account.getId(), 2, callContext, new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 6), new LocalDate(2012, 6, 6), InvoiceItemType.EXTERNAL_CHARGE, BigDecimal.TEN));
 
         // 2012-05-31 => DAY 30 have to get out of trial before first payment
         addDaysAndCheckForCompletion(25, NextEvent.PHASE, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);

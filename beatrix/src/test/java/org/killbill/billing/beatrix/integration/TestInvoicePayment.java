@@ -453,9 +453,14 @@ public class TestInvoicePayment extends TestIntegrationBase {
         clock.setDay(new LocalDate(2012, 4, 1));
 
         busHandler.pushExpectedEvents(NextEvent.INVOICE);
-        final InvoiceItem externalCharge = new ExternalChargeInvoiceItem(null, account.getId(), null, "Initial external charge", clock.getUTCToday(), BigDecimal.TEN, Currency.USD);
+        final LocalDate startDate = clock.getUTCToday();
+        final LocalDate endDate = startDate.plusDays(5);
+        final InvoiceItem externalCharge = new ExternalChargeInvoiceItem(null, account.getId(), null, "Initial external charge", startDate, endDate, BigDecimal.TEN, Currency.USD);
         final InvoiceItem item1 = invoiceUserApi.insertExternalCharges(account.getId(), clock.getUTCToday(), ImmutableList.<InvoiceItem>of(externalCharge), true, callContext).get(0);
         assertListenerStatus();
+        // Verify service period for external charge -- seee #151
+        assertEquals(item1.getStartDate().compareTo(startDate), 0);
+        assertEquals(item1.getEndDate().compareTo(endDate), 0);
 
         // Trigger first partial payment ($4) on first invoice
         final Invoice invoice = invoiceUserApi.getInvoice(item1.getInvoiceId(), callContext);

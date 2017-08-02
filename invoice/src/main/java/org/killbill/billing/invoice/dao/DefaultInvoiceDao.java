@@ -1216,6 +1216,7 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
                                                                                  null,
                                                                                  chargeDescription,
                                                                                  childCreatedDate.toLocalDate(),
+                                                                                 childCreatedDate.toLocalDate(),
                                                                                  accountCBA,
                                                                                  childAccount.getCurrency());
                 invoiceForExternalCharge.addInvoiceItem(externalChargeItem);

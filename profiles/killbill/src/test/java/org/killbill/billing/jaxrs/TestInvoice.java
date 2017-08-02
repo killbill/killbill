@@ -446,6 +446,12 @@ public class TestInvoice extends TestJaxrsBase {
         externalCharge.setAmount(chargeAmount);
         externalCharge.setCurrency(accountJson.getCurrency());
         externalCharge.setDescription(UUID.randomUUID().toString());
+
+        final LocalDate startDate = clock.getUTCToday();
+        externalCharge.setStartDate(startDate);
+        final LocalDate endDate = startDate.plusDays(10);
+        externalCharge.setEndDate(endDate);
+
         final List<InvoiceItem> createdExternalCharges = killBillClient.createExternalCharges(ImmutableList.of(externalCharge), clock.getUTCToday(), false, true, requestOptions);
         assertEquals(createdExternalCharges.size(), 1);
         final Invoice invoiceWithItems = killBillClient.getInvoice(createdExternalCharges.get(0).getInvoiceId(), true, false, requestOptions);
@@ -453,6 +459,8 @@ public class TestInvoice extends TestJaxrsBase {
         assertEquals(invoiceWithItems.getItems().size(), 1);
         assertEquals(invoiceWithItems.getItems().get(0).getDescription(), externalCharge.getDescription());
         assertNull(invoiceWithItems.getItems().get(0).getBundleId());
+        assertEquals(invoiceWithItems.getItems().get(0).getStartDate().compareTo(startDate), 0);
+        assertEquals(invoiceWithItems.getItems().get(0).getEndDate().compareTo(endDate), 0);
 
         // Verify the total number of invoices
         assertEquals(killBillClient.getInvoicesForAccount(accountJson.getAccountId(), requestOptions).size(), 3);

@@ -30,18 +30,18 @@ import org.killbill.billing.util.UUIDs;
 public class ExternalChargeInvoiceItem extends InvoiceItemBase {
 
     public ExternalChargeInvoiceItem(final UUID invoiceId, final UUID accountId, @Nullable final UUID bundleId, @Nullable final String description,
-                                     final LocalDate effectiveDate, final BigDecimal amount, final Currency currency) {
-        this(UUIDs.randomUUID(), invoiceId, accountId, bundleId, description, effectiveDate, amount, currency);
+                                     final LocalDate startDate, final LocalDate endDate, final BigDecimal amount, final Currency currency) {
+        this(UUIDs.randomUUID(), invoiceId, accountId, bundleId, description, startDate, endDate, amount, currency);
     }
 
     public ExternalChargeInvoiceItem(final UUID id, final UUID invoiceId, final UUID accountId, @Nullable final UUID bundleId,
-                                     @Nullable final String description, final LocalDate effectiveDate, final BigDecimal amount, final Currency currency) {
-        this(id, null, invoiceId, accountId, bundleId, description, effectiveDate, amount, currency);
+                                     @Nullable final String description, final LocalDate startDate, final LocalDate endDate, final BigDecimal amount, final Currency currency) {
+        this(id, null, invoiceId, accountId, bundleId, description, startDate, endDate, amount, currency);
     }
 
     public ExternalChargeInvoiceItem(final UUID id, @Nullable final DateTime createdDate, final UUID invoiceId, final UUID accountId, @Nullable final UUID bundleId,
-                                     @Nullable final String description, final LocalDate effectiveDate, final BigDecimal amount, final Currency currency) {
-        super(id, createdDate, invoiceId, accountId, bundleId, null, description, effectiveDate, null, amount, null, currency, null);
+                                     @Nullable final String description, final LocalDate startDate, final LocalDate endDate, final BigDecimal amount, final Currency currency) {
+        super(id, createdDate, invoiceId, accountId, bundleId, null, description, startDate, endDate, amount, null, currency, null);
     }
 
     @Override

@@ -311,7 +311,7 @@ public class TestIntegrationInvoice extends TestIntegrationBase {
         // add create external charge
         final LocalDate date = clock.getToday(account.getTimeZone());
         final List<InvoiceItem> invoiceItemList = new ArrayList<InvoiceItem>();
-        ExternalChargeInvoiceItem item = new ExternalChargeInvoiceItem(null, account.getId(), subscription.getBundleId(), "", date, BigDecimal.TEN, account.getCurrency());
+        ExternalChargeInvoiceItem item = new ExternalChargeInvoiceItem(null, account.getId(), subscription.getBundleId(), "", date, date, BigDecimal.TEN, account.getCurrency());
         invoiceItemList.add(item);
         final List<InvoiceItem> draftInvoiceItems = invoiceUserApi.insertExternalCharges(account.getId(), date, invoiceItemList, false, callContext);
 

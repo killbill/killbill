@@ -75,6 +75,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Function;
+import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.collect.Collections2;
@@ -267,7 +268,7 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
         }
 
         return new ExternalChargeInvoiceItem(externalChargeItem.getId(), externalChargeItem.getInvoiceId(), externalChargeItem.getAccountId(),
-                                             externalChargeItem.getDescription(), externalChargeItem.getStartDate(),
+                                             externalChargeItem.getDescription(), externalChargeItem.getStartDate(), externalChargeItem.getEndDate(),
                                              externalChargeItem.getAmount(), externalChargeItem.getCurrency());
     }
 
@@ -310,13 +311,17 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
                         invoiceForExternalCharge = existingInvoicesForExternalCharges.get(invoiceIdForExternalCharge);
                     }
 
+                    final LocalDate startDate = MoreObjects.firstNonNull(charge.getStartDate(), effectiveDate);
+                    final LocalDate endDate = MoreObjects.firstNonNull(charge.getEndDate(), effectiveDate);
+
                     final InvoiceItem externalCharge = new ExternalChargeInvoiceItem(UUIDs.randomUUID(),
                                                                                      context.getCreatedDate(),
                                                                                      invoiceForExternalCharge.getId(),
                                                                                      accountId,
                                                                                      charge.getBundleId(),
                                                                                      charge.getDescription(),
-                                                                                     effectiveDate,
+                                                                                     startDate,
+                                                                                     endDate,
                                                                                      charge.getAmount(),
                                                                                      charge.getCurrency());
                     invoiceForExternalCharge.addInvoiceItem(externalCharge);
