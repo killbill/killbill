@@ -39,6 +39,7 @@ import org.killbill.billing.catalog.api.TimeUnit;
 import org.killbill.billing.catalog.api.user.DefaultSimplePlanDescriptor;
 import org.killbill.xmlloader.XMLLoader;
 import org.killbill.xmlloader.XMLWriter;
+import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import com.google.common.collect.ImmutableList;
@@ -255,6 +256,59 @@ public class TestCatalogUpdater extends CatalogTestSuiteNoDB {
         desc = new DefaultSimplePlanDescriptor("standard-monthly", "Standard", ProductCategory.BASE, Currency.USD, BigDecimal.TEN, BillingPeriod.MONTHLY, 30, TimeUnit.DAYS, ImmutableList.<String>of());
         addBadSimplePlanDescriptor(catalogUpdater, desc);
     }
+
+
+    @Test(groups = "fast")
+    public void testPlanWithNonFinalFixedTermPhase() throws Exception {
+
+
+        final StandaloneCatalog catalog = XMLLoader.getObjectFromString(Resources.getResource("SpyCarBasic.xml").toExternalForm(), StandaloneCatalog.class);
+
+        final MutableStaticCatalog mutableCatalog = new DefaultMutableStaticCatalog(catalog);
+
+        final DefaultProduct newProduct = new DefaultProduct();
+        newProduct.setName("Something");
+        newProduct.setCatagory(ProductCategory.BASE);
+        newProduct.initialize((StandaloneCatalog) mutableCatalog, null);
+        mutableCatalog.addProduct(newProduct);
+
+
+        final DefaultPlanPhase trialPhase = new DefaultPlanPhase();
+        trialPhase.setPhaseType(PhaseType.TRIAL);
+        trialPhase.setDuration(new DefaultDuration().setUnit(TimeUnit.DAYS).setNumber(14));
+        trialPhase.setFixed(new DefaultFixed().setFixedPrice(new DefaultInternationalPrice().setPrices(new DefaultPrice[]{new DefaultPrice().setCurrency(Currency.USD).setValue(BigDecimal.ZERO)})));
+
+        // Add a Plan with a FIXEDTERM phase
+        final DefaultPlanPhase fixedTermPhase = new DefaultPlanPhase();
+        fixedTermPhase.setPhaseType(PhaseType.FIXEDTERM);
+        fixedTermPhase.setDuration(new DefaultDuration().setUnit(TimeUnit.MONTHS).setNumber(3));
+        fixedTermPhase.setRecurring(new DefaultRecurring().setBillingPeriod(BillingPeriod.MONTHLY).setRecurringPrice(new DefaultInternationalPrice().setPrices(new DefaultPrice[]{new DefaultPrice().setCurrency(Currency.USD).setValue(BigDecimal.TEN)})));
+
+
+        final DefaultPlanPhase evergreenPhase = new DefaultPlanPhase();
+        evergreenPhase.setPhaseType(PhaseType.EVERGREEN);
+        evergreenPhase.setDuration(new DefaultDuration().setUnit(TimeUnit.MONTHS).setNumber(1));
+        evergreenPhase.setRecurring(new DefaultRecurring().setBillingPeriod(BillingPeriod.MONTHLY).setRecurringPrice(new DefaultInternationalPrice().setPrices(new DefaultPrice[]{new DefaultPrice().setCurrency(Currency.USD).setValue(BigDecimal.TEN)})));
+
+
+        final DefaultPlan newPlan = new DefaultPlan();
+        newPlan.setName("something-with-fixed-term");
+        newPlan.setPriceListName(DefaultPriceListSet.DEFAULT_PRICELIST_NAME);
+        newPlan.setProduct(newProduct);
+        newPlan.setInitialPhases(new DefaultPlanPhase[] {trialPhase, fixedTermPhase});
+        newPlan.setFinalPhase(fixedTermPhase);
+        mutableCatalog.addPlan(newPlan);
+        newPlan.initialize((StandaloneCatalog) mutableCatalog, new URI("dummy"));
+
+        final String newCatalogStr = XMLWriter.writeXML((StandaloneCatalog) mutableCatalog, StandaloneCatalog.class);
+        final StandaloneCatalog newCatalog =  XMLLoader.getObjectFromStream(new URI("dummy"), new ByteArrayInputStream(newCatalogStr.getBytes(Charset.forName("UTF-8"))), StandaloneCatalog.class);
+
+        final DefaultPlan targetPlan = newCatalog.findCurrentPlan("something-with-fixed-term");
+        Assert.assertEquals(targetPlan.getInitialPhases().length, 2);
+        Assert.assertEquals(targetPlan.getInitialPhases()[1].getPhaseType(), PhaseType.FIXEDTERM);
+
+    }
+
 
 
     @Test(groups = "fast")

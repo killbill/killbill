@@ -246,7 +246,7 @@ public class DefaultPlan extends ValidatingConfig<StandaloneCatalog> implements 
 
         for (final DefaultPlanPhase cur : initialPhases) {
             cur.validate(catalog, errors);
-            if (cur.getPhaseType() == PhaseType.EVERGREEN || cur.getPhaseType() == PhaseType.FIXEDTERM) {
+            if (cur.getPhaseType() == PhaseType.EVERGREEN) {
                 errors.add(new ValidationError(String.format("Initial Phase %s of plan %s cannot be of type %s",
                                                              cur.getName(), name, cur.getPhaseType()),
                                                catalog.getCatalogURI(), DefaultPlan.class, ""));
