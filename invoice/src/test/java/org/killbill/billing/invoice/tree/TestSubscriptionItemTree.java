@@ -1493,6 +1493,32 @@ public class TestSubscriptionItemTree extends InvoiceTestSuiteNoDB {
         Assert.assertEquals(previousExistingSize, 3);
     }
 
+    @Test(groups = "fast")
+    public void testWithFreeRecurring() {
+        final LocalDate startDate = new LocalDate(2012, 8, 1);
+        final LocalDate endDate = new LocalDate(2012, 9, 1);
+
+        final BigDecimal monthlyRate1 = new BigDecimal("12.00");
+        final BigDecimal monthlyRate2 = new BigDecimal("24.00");
+
+        final SubscriptionItemTree tree = new SubscriptionItemTree(subscriptionId, invoiceId);
+        final InvoiceItem freeMonthly = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, startDate, endDate, BigDecimal.ZERO, BigDecimal.ZERO, currency);
+        tree.addItem(freeMonthly);
+        final InvoiceItem payingMonthly1 = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, startDate, endDate, monthlyRate1, monthlyRate1, currency);
+        tree.addItem(payingMonthly1);
+        tree.flatten(true);
+
+        final InvoiceItem proposedPayingMonthly2 = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, startDate, endDate, monthlyRate2, monthlyRate2, currency);
+        tree.mergeProposedItem(proposedPayingMonthly2);
+        tree.buildForMerge();
+
+        final List<InvoiceItem> expectedResult = Lists.newLinkedList();
+        expectedResult.add(proposedPayingMonthly2);
+        final InvoiceItem repair = new RepairAdjInvoiceItem(invoiceId, accountId, startDate, endDate, monthlyRate1.negate(), currency, payingMonthly1.getId());
+        expectedResult.add(repair);
+        verifyResult(tree.getView(), expectedResult);
+    }
+
     private void printTreeJSON(final SubscriptionItemTree tree) throws IOException {
         final ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
         tree.getRoot().jsonSerializeTree(OBJECT_MAPPER, outputStream);
