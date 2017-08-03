@@ -77,7 +77,7 @@ public class RetryableSubscriber extends RetryableHandler {
 
         public SubscriberQueueHandler() {}
 
-        public void subscribe(final Class<? extends BusEvent> busEventClass, final SubscriberAction<? extends BusEvent> action) {
+        public <B extends BusEvent> void subscribe(final Class<B> busEventClass, final SubscriberAction<B> action) {
             actions.put(busEventClass, action);
         }
 

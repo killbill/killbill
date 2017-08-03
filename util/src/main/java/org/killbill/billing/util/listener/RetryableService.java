@@ -146,11 +146,8 @@ public abstract class RetryableService {
 
     private DateTime computeRetryDate(final RetryException retryException, final DateTime initialEventDateTime, final int retryNb) {
         final List<Period> retrySchedule = retryException.getRetrySchedule();
-        if (retrySchedule == null) {
+        if (retrySchedule == null || retryNb > retrySchedule.size()) {
             return null;
-        }
-        if (retryNb > retrySchedule.size()) {
-            return initialEventDateTime.plusDays(retryNb - retrySchedule.size());
         } else {
             final Period nextDelay = retrySchedule.get(retryNb - 1);
             return initialEventDateTime.plus(nextDelay);

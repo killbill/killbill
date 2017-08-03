@@ -42,6 +42,10 @@ public class RetryException extends RuntimeException {
         this(e, null);
     }
 
+    public RetryException(@Nullable final List<Period> retrySchedule) {
+        this(null, retrySchedule);
+    }
+
     public RetryException(final Exception e, @Nullable final List<Period> retrySchedule) {
         super(e);
         this.retrySchedule = retrySchedule != null ? retrySchedule : DEFAULT_RETRY_SCHEDULE;
