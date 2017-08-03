@@ -557,7 +557,7 @@ public class TestWithBCDUpdate extends TestIntegrationBase {
     }
 
     @Test(groups = "slow")
-    public void testBCDChangeFromFreePlanToPayingPlanWithTrialAndCHANGE_OF_PLANPolicy() throws Exception {
+    public void testBCDChangeFromFreePlanToPayingPlanWithTrialAndCHANGE_OF_PLANPolicy30DaysMonth() throws Exception {
         final DateTime initialDate = new DateTime(2016, 4, 1, 0, 13, 42, 0, testTimeZone);
         clock.setTime(initialDate);
 
@@ -616,6 +616,65 @@ public class TestWithBCDUpdate extends TestIntegrationBase {
 
         invoiceChecker.checkInvoice(account.getId(), 5, callContext,
                                     new ExpectedInvoiceItemCheck(new LocalDate(2016, 6, 15), new LocalDate(2016, 7, 15), InvoiceItemType.RECURRING, new BigDecimal("29.95")));
+    }
+
+    @Test(groups = "slow")
+    public void testBCDChangeFromFreePlanToPayingPlanWithTrialAndCHANGE_OF_PLANPolicy31DaysMonth() throws Exception {
+        final DateTime initialDate = new DateTime(2016, 5, 1, 0, 13, 42, 0, testTimeZone);
+        clock.setTime(initialDate);
+
+        final Account account = createAccountWithNonOsgiPaymentMethod(getAccountData(0));
+        assertNotNull(account);
+
+        final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("Blowdart", BillingPeriod.MONTHLY, "notrial", null);
+
+        // Price override of $0
+        final List<PlanPhasePriceOverride> overrides = new ArrayList<PlanPhasePriceOverride>();
+        overrides.add(new DefaultPlanPhasePriceOverride("blowdart-monthly-notrial-evergreen", account.getCurrency(), null, BigDecimal.ZERO));
+        busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE);
+        // BP creation : Will set Account BCD to the first (DateOfFirstRecurringNonZeroCharge is the subscription start date in this case)
+        final Entitlement baseEntitlement = entitlementApi.createBaseEntitlement(account.getId(), spec, "bundleExternalKey", overrides, null, null, false, ImmutableList.<PluginProperty>of(), callContext);
+        assertListenerStatus();
+
+        invoiceChecker.checkInvoice(account.getId(), 1, callContext,
+                                    new ExpectedInvoiceItemCheck(new LocalDate(2016, 5, 1), new LocalDate(2016, 6, 1), InvoiceItemType.RECURRING, BigDecimal.ZERO));
+
+        // 2016-5-15
+        clock.addDays(14);
+
+        // Set next BCD to be the 14
+        subscriptionBaseInternalApi.updateBCD(baseEntitlement.getId(), 14, null, internalCallContext);
+        // No bus event, no invoice expected
+        assertListenerStatus();
+
+        // Change to the paying plan (alignment is CHANGE_OF_PLAN: we end up in TRIAL)
+        // Extra NULL_INVOICE event because invoice computes a future notification effective right away
+        final PlanPhaseSpecifier specWithTrial = new PlanPhaseSpecifier("Blowdart", BillingPeriod.MONTHLY, "trial", null);
+        busHandler.pushExpectedEvents(NextEvent.CHANGE, NextEvent.NULL_INVOICE, NextEvent.INVOICE);
+        baseEntitlement.changePlanOverrideBillingPolicy(specWithTrial, ImmutableList.<PlanPhasePriceOverride>of(), clock.getUTCToday(), BillingActionPolicy.IMMEDIATE, ImmutableList.<PluginProperty>of(), callContext);
+        assertListenerStatus();
+
+        // Trial invoice (with re-alignment invoice item from free plan)
+        invoiceChecker.checkInvoice(account.getId(), 2, callContext,
+                                    new ExpectedInvoiceItemCheck(new LocalDate(2016, 5, 1), new LocalDate(2016, 5, 15), InvoiceItemType.RECURRING, BigDecimal.ZERO),
+                                    new ExpectedInvoiceItemCheck(new LocalDate(2016, 5, 15), null, InvoiceItemType.FIXED, BigDecimal.ZERO));
+
+        // Verify next month (extra null invoice because of the original notification set on the 1st)
+        busHandler.pushExpectedEvents(NextEvent.BCD_CHANGE, NextEvent.PHASE, NextEvent.NULL_INVOICE, NextEvent.NULL_INVOICE, NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT);
+        clock.addMonths(1);
+        assertListenerStatus();
+
+        // First paying invoice
+        invoiceChecker.checkInvoice(account.getId(), 3, callContext,
+                                    new ExpectedInvoiceItemCheck(new LocalDate(2016, 6, 14), new LocalDate(2016, 7, 14), InvoiceItemType.RECURRING, new BigDecimal("29.95")));
+
+        // Verify next month
+        busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT);
+        clock.addMonths(1);
+        assertListenerStatus();
+
+        invoiceChecker.checkInvoice(account.getId(), 4, callContext,
+                                    new ExpectedInvoiceItemCheck(new LocalDate(2016, 7, 14), new LocalDate(2016, 8, 14), InvoiceItemType.RECURRING, new BigDecimal("29.95")));
     }
 
     private void testBCDChangeFromFreePlanToPayingPlan(final PlanSpecifier toSpec) throws Exception {
