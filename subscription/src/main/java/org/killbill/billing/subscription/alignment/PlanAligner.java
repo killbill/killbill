@@ -165,7 +165,11 @@ public class PlanAligner extends BaseAligner {
                                                                                subscription.getBundleStartDate(),
                                                                                pendingOrLastPlanTransition.getNextPlan(),
                                                                                pendingOrLastPlanTransition.getNextPhase().getPhaseType(),
-                                                                               effectiveDate,
+                                                                               // Use the catalog version at subscription creation time: this allows
+                                                                               // for PHASE events and uncancel operations for plans/products/pricelists already retired
+                                                                               // This is no 100% correct in a scenario where the catalog was updated and the alignment rules changed since
+                                                                               // See https://github.com/killbill/killbill/issues/784
+                                                                               subscription.getAlignStartDate(),
                                                                                context);
                     return getTimedPhase(timedPhases, effectiveDate, WhichPhase.NEXT);
                 case CHANGE:
