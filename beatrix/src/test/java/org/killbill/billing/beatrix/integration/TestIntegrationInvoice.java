@@ -1,6 +1,6 @@
 /*
- * Copyright 2014-2016 Groupon, Inc
- * Copyright 2014-2016 The Billing Project, LLC
+ * Copyright 2014-2017 Groupon, Inc
+ * Copyright 2014-2017 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -30,6 +30,7 @@ import org.killbill.billing.ObjectType;
 import org.killbill.billing.account.api.Account;
 import org.killbill.billing.api.TestApiListener.NextEvent;
 import org.killbill.billing.beatrix.util.InvoiceChecker.ExpectedInvoiceItemCheck;
+import org.killbill.billing.catalog.DefaultPlanPhasePriceOverride;
 import org.killbill.billing.catalog.api.BillingActionPolicy;
 import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.catalog.api.PlanPhasePriceOverride;
@@ -38,7 +39,6 @@ import org.killbill.billing.catalog.api.PriceListSet;
 import org.killbill.billing.catalog.api.ProductCategory;
 import org.killbill.billing.entitlement.api.DefaultEntitlement;
 import org.killbill.billing.entitlement.api.Entitlement;
-import org.killbill.billing.entitlement.api.EntitlementApiException;
 import org.killbill.billing.entitlement.api.SubscriptionEventType;
 import org.killbill.billing.invoice.api.DryRunArguments;
 import org.killbill.billing.invoice.api.DryRunType;
@@ -50,14 +50,12 @@ import org.killbill.billing.invoice.model.ExternalChargeInvoiceItem;
 import org.killbill.billing.payment.api.Payment;
 import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.subscription.api.user.DefaultSubscriptionBase;
-import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import com.google.common.collect.ImmutableList;
 
 import static com.tc.util.Assert.fail;
 import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertNull;
 import static org.testng.Assert.assertTrue;
 
 public class TestIntegrationInvoice extends TestIntegrationBase {
@@ -506,4 +504,65 @@ public class TestIntegrationInvoice extends TestIntegrationBase {
 
     }
 
+    @Test(groups = "slow", description = "https://github.com/killbill/killbill/issues/783")
+    public void testIntegrationWithRecurringFreePlan() throws Exception {
+        final DateTime initialCreationDate = new DateTime(2017, 1, 1, 0, 0, 0, 0, testTimeZone);
+        // set clock to the initial start date
+        clock.setTime(initialCreationDate);
+
+        final Account account = createAccountWithNonOsgiPaymentMethod(getAccountData(1));
+
+        final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("Blowdart", BillingPeriod.MONTHLY, "notrial", null);
+
+        // Price override of $0
+        final List<PlanPhasePriceOverride> overrides = new ArrayList<PlanPhasePriceOverride>();
+        overrides.add(new DefaultPlanPhasePriceOverride("blowdart-monthly-notrial-evergreen", account.getCurrency(), null, BigDecimal.ZERO));
+        busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE);
+        final Entitlement entitlement = entitlementApi.createBaseEntitlement(account.getId(), spec, "bundleExternalKey", overrides, null, null, false, ImmutableList.<PluginProperty>of(), callContext);
+        assertListenerStatus();
+
+        invoiceChecker.checkInvoice(account.getId(), 1, callContext,
+                                    new ExpectedInvoiceItemCheck(new LocalDate(2017, 1, 1), new LocalDate(2017, 2, 1), InvoiceItemType.RECURRING, BigDecimal.ZERO));
+
+        // 2017-02-01
+        busHandler.pushExpectedEvents(NextEvent.INVOICE);
+        clock.addMonths(1);
+        assertListenerStatus();
+
+        invoiceChecker.checkInvoice(account.getId(), 2, callContext,
+                                    new ExpectedInvoiceItemCheck(new LocalDate(2017, 2, 1), new LocalDate(2017, 3, 1), InvoiceItemType.RECURRING, BigDecimal.ZERO));
+
+        // Do the change mid-month so the repair triggers the bug in https://github.com/killbill/killbill/issues/783
+        entitlement.changePlanWithDate(spec, ImmutableList.<PlanPhasePriceOverride>of(), new LocalDate("2017-02-15"), ImmutableList.<PluginProperty>of(), callContext);
+        assertListenerStatus();
+
+        // 2017-02-15
+        busHandler.pushExpectedEvents(NextEvent.CHANGE, NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT);
+        clock.addDays(15);
+        assertListenerStatus();
+
+        // Note: no repair
+        invoiceChecker.checkInvoice(account.getId(), 2, callContext,
+                                    new ExpectedInvoiceItemCheck(new LocalDate(2017, 2, 1), new LocalDate(2017, 3, 1), InvoiceItemType.RECURRING, BigDecimal.ZERO));
+
+        invoiceChecker.checkInvoice(account.getId(), 3, callContext,
+                                    new ExpectedInvoiceItemCheck(new LocalDate(2017, 2, 1), new LocalDate(2017, 2, 15), InvoiceItemType.RECURRING, BigDecimal.ZERO),
+                                    new ExpectedInvoiceItemCheck(new LocalDate(2017, 2, 15), new LocalDate(2017, 3, 1), InvoiceItemType.RECURRING, new BigDecimal("14.98")));
+
+        // 2017-03-01
+        busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT);
+        clock.addDays(15);
+        assertListenerStatus();
+
+        invoiceChecker.checkInvoice(account.getId(), 4, callContext,
+                                    new ExpectedInvoiceItemCheck(new LocalDate(2017, 3, 1), new LocalDate(2017, 4, 1), InvoiceItemType.RECURRING, new BigDecimal("29.95")));
+
+        // 2017-04-01
+        busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT);
+        clock.addMonths(1);
+        assertListenerStatus();
+
+        invoiceChecker.checkInvoice(account.getId(), 5, callContext,
+                                    new ExpectedInvoiceItemCheck(new LocalDate(2017, 4, 1), new LocalDate(2017, 5, 1), InvoiceItemType.RECURRING, new BigDecimal("29.95")));
+    }
 }
