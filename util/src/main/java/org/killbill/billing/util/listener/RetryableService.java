@@ -131,7 +131,7 @@ public abstract class RetryableService {
                               final int retryNb) {
         final DateTime effectiveDate = computeRetryDate(exception, originalEffectiveDate, retryNb);
         if (effectiveDate == null) {
-            log.warn("Error processing event, NOT scheduling retry for event='{}', retryNb='{}'", originalNotificationEvent, effectiveDate, retryNb, exception);
+            log.warn("Error processing event, NOT scheduling retry for event='{}', retryNb='{}'", originalNotificationEvent, retryNb, exception);
             return;
         }
         log.warn("Error processing event, scheduling retry for event='{}', effectiveDate='{}', retryNb='{}'", originalNotificationEvent, effectiveDate, retryNb, exception);
