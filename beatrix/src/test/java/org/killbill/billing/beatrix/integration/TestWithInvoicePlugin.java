@@ -42,11 +42,11 @@ import org.killbill.billing.invoice.api.InvoiceItemType;
 import org.killbill.billing.invoice.model.TaxInvoiceItem;
 import org.killbill.billing.invoice.notification.DefaultNextBillingDateNotifier;
 import org.killbill.billing.invoice.plugin.api.InvoicePluginApi;
+import org.killbill.billing.invoice.plugin.api.InvoicePluginApiRetryException;
 import org.killbill.billing.osgi.api.OSGIServiceDescriptor;
 import org.killbill.billing.osgi.api.OSGIServiceRegistration;
 import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.util.callcontext.CallContext;
-import org.killbill.billing.util.listener.RetryException;
 import org.killbill.billing.util.listener.RetryableService;
 import org.killbill.notificationq.api.NotificationEventWithMetadata;
 import org.killbill.notificationq.api.NotificationQueue;
@@ -253,7 +253,7 @@ public class TestWithInvoicePlugin extends TestIntegrationBase {
         @Override
         public List<InvoiceItem> getAdditionalInvoiceItems(final Invoice invoice, final boolean isDryRun, final Iterable<PluginProperty> pluginProperties, final CallContext callContext) {
             if (shouldThrowException) {
-                throw new RetryException();
+                throw new InvoicePluginApiRetryException();
             }
             return ImmutableList.<InvoiceItem>of(createTaxInvoiceItem(invoice));
         }

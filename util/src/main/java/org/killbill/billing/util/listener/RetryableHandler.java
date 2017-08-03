@@ -21,6 +21,7 @@ import java.util.UUID;
 
 import org.joda.time.DateTime;
 import org.killbill.billing.callcontext.InternalCallContext;
+import org.killbill.billing.invoice.plugin.api.InvoicePluginApiRetryException;
 import org.killbill.billing.util.callcontext.CallOrigin;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.billing.util.callcontext.UserType;
@@ -51,7 +52,7 @@ public class RetryableHandler implements NotificationQueueHandler {
     public void handleReadyNotification(final NotificationEvent notificationEvent, final DateTime eventDateTime, final UUID userToken, final Long searchKey1, final Long searchKey2) {
         try {
             handlerDelegate.handleReadyNotification(notificationEvent, eventDateTime, userToken, searchKey1, searchKey2);
-        } catch (final RetryException e) {
+        } catch (final InvoicePluginApiRetryException e) {
             // Let the retry queue handle the exception
             final InternalCallContext internalCallContext = internalCallContextFactory.createInternalCallContext(searchKey2,
                                                                                                                  searchKey1,

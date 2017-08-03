@@ -24,6 +24,7 @@ import java.util.UUID;
 import org.joda.time.DateTime;
 import org.joda.time.Period;
 import org.killbill.billing.callcontext.InternalCallContext;
+import org.killbill.billing.invoice.plugin.api.InvoicePluginApiRetryException;
 import org.killbill.billing.util.callcontext.CallOrigin;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.billing.util.callcontext.UserType;
@@ -86,7 +87,7 @@ public abstract class RetryableService {
                                                                          userToken,
                                                                          searchKey1,
                                                                          searchKey2);
-                        } catch (final RetryException e) {
+                        } catch (final InvoicePluginApiRetryException e) {
                             final InternalCallContext internalCallContext = internalCallContextFactory.createInternalCallContext(searchKey2,
                                                                                                                                  searchKey1,
                                                                                                                                  "RetryableService",
@@ -124,7 +125,7 @@ public abstract class RetryableService {
         }
     }
 
-    public void scheduleRetry(final RetryException exception,
+    public void scheduleRetry(final InvoicePluginApiRetryException exception,
                               final QueueEvent originalNotificationEvent,
                               final DateTime originalEffectiveDate,
                               final InternalCallContext context,
@@ -144,8 +145,8 @@ public abstract class RetryableService {
         }
     }
 
-    private DateTime computeRetryDate(final RetryException retryException, final DateTime initialEventDateTime, final int retryNb) {
-        final List<Period> retrySchedule = retryException.getRetrySchedule();
+    private DateTime computeRetryDate(final InvoicePluginApiRetryException invoicePluginApiRetryException, final DateTime initialEventDateTime, final int retryNb) {
+        final List<Period> retrySchedule = invoicePluginApiRetryException.getRetrySchedule();
         if (retrySchedule == null || retryNb > retrySchedule.size()) {
             return null;
         } else {

@@ -30,6 +30,7 @@ import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.events.BusInternalEvent;
 import org.killbill.billing.events.ControlTagCreationInternalEvent;
 import org.killbill.billing.events.ControlTagDeletionInternalEvent;
+import org.killbill.billing.invoice.plugin.api.InvoicePluginApiRetryException;
 import org.killbill.billing.util.UtilTestSuiteWithEmbeddedDB;
 import org.killbill.billing.util.listener.RetryableSubscriber.SubscriberAction;
 import org.killbill.billing.util.listener.RetryableSubscriber.SubscriberQueueHandler;
@@ -186,7 +187,7 @@ public class TestRetryableService extends UtilTestSuiteWithEmbeddedDB {
                                                  @Override
                                                  public void run(final ControlTagCreationInternalEvent event) {
                                                      if (throwRetryableException) {
-                                                         throw new RetryException(RETRY_SCHEDULE);
+                                                         throw new InvoicePluginApiRetryException(RETRY_SCHEDULE);
                                                      } else if (throwOtherException) {
                                                          throw new IllegalArgumentException("EXPECTED");
                                                      } else {
