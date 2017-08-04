@@ -128,37 +128,6 @@ public class TestInvoiceFlagBehaviors extends InvoiceTestSuiteWithEmbeddedDB {
         assertEquals(accountCBA2.compareTo(BigDecimal.ZERO), 0);
     }
 
-    @Test(groups = "slow", description = "Verify invoice/account balance with a WRITTEN_OFF invoice. Verify account credit is not added to a previously WRITTEN_OFF invoice." )
-    public void testWrittenOffInvoiceWithAccountCredit2() throws Exception {
-
-        // Add credit on the account
-        invoiceUserApi.insertCredit(accountId, BigDecimal.TEN, null, accountCurrency, true, null, callContext);
-
-        final BigDecimal accountBalance0 = invoiceUserApi.getAccountBalance(accountId, callContext);
-        assertEquals(accountBalance0.compareTo(new BigDecimal("-10.0")), 0);
-
-        final BigDecimal accountCBA0 = invoiceUserApi.getAccountCBA(accountId, callContext);
-        assertEquals(accountCBA0.compareTo(BigDecimal.TEN), 0);
-
-        // Create new invoice with one charge and expect account credit to be used
-        final List<InvoiceItem> items = invoiceUserApi.insertExternalCharges(accountId, clock.getUTCToday(), ImmutableList.<InvoiceItem>of(new ExternalChargeInvoiceItem(UUID.randomUUID(), clock.getUTCNow(), null, accountId, null, null, null, null, new BigDecimal("4.0"), accountCurrency)), true, callContext);
-        assertEquals(items.size(), 1);
-
-        // Tag invoice with WRITTEN_OFF
-        final UUID invoiceId = items.get(0).getInvoiceId();
-        tagUserApi.addTag(invoiceId, ObjectType.INVOICE, ControlTagType.WRITTEN_OFF.getId(), callContext);
-
-        // Add another charge on the **same invoice** => Because it is WRITTEN_OFF, we expect the CBA logic to not apply any credit
-        final List<InvoiceItem> items2 = invoiceUserApi.insertExternalCharges(accountId, clock.getUTCToday(), ImmutableList.<InvoiceItem>of(new ExternalChargeInvoiceItem(UUID.randomUUID(), clock.getUTCNow(), invoiceId, accountId, null, null, null, null, new BigDecimal("10.0"), accountCurrency)), true, callContext);
-        assertEquals(items2.size(), 1);
-
-        final BigDecimal accountBalance2 = invoiceUserApi.getAccountBalance(accountId, callContext);
-        assertEquals(accountBalance2.compareTo(new BigDecimal("-6.00")), 0);
-
-        final BigDecimal accountCBA2 = invoiceUserApi.getAccountCBA(accountId, callContext);
-        assertEquals(accountCBA2.compareTo(new BigDecimal("6.00")), 0);
-    }
-
 
     @Test(groups = "slow", description = "Verify invoice/account balance with migrated invoice. Verify account credit is not consumed and that invoice/account balance does not take into account migrated invoice.")
     public void testMigratedInvoiceWithAccountCredit() throws Exception {
