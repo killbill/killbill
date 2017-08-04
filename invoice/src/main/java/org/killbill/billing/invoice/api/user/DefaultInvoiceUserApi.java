@@ -306,6 +306,9 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
                     } else {
                         if (existingInvoicesForExternalCharges.get(invoiceIdForExternalCharge) == null) {
                             final Invoice existingInvoiceForExternalCharge = getInvoice(invoiceIdForExternalCharge, context);
+                            if (InvoiceStatus.COMMITTED.equals(existingInvoiceForExternalCharge.getStatus())) {
+                                throw new InvoiceApiException(ErrorCode.INVOICE_ALREADY_COMMITTED, existingInvoiceForExternalCharge.getId());
+                            }
                             existingInvoicesForExternalCharges.put(invoiceIdForExternalCharge, existingInvoiceForExternalCharge);
                         }
                         invoiceForExternalCharge = existingInvoicesForExternalCharges.get(invoiceIdForExternalCharge);

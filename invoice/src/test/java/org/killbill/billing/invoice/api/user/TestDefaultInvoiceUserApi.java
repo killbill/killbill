@@ -27,6 +27,7 @@ import javax.annotation.Nullable;
 import org.killbill.billing.ErrorCode;
 import org.killbill.billing.ObjectType;
 import org.killbill.billing.account.api.Account;
+import org.killbill.billing.api.TestApiListener.NextEvent;
 import org.killbill.billing.callcontext.DefaultCallContext;
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.invoice.InvoiceTestSuiteWithEmbeddedDB;
@@ -35,6 +36,7 @@ import org.killbill.billing.invoice.api.InvoiceApiException;
 import org.killbill.billing.invoice.api.InvoiceItem;
 import org.killbill.billing.invoice.api.InvoiceItemType;
 import org.killbill.billing.invoice.api.InvoiceStatus;
+import org.killbill.billing.invoice.api.InvoiceUserApi;
 import org.killbill.billing.invoice.model.ExternalChargeInvoiceItem;
 import org.killbill.billing.util.api.TagApiException;
 import org.killbill.billing.util.callcontext.CallContext;
@@ -373,5 +375,20 @@ public class TestDefaultInvoiceUserApi extends InvoiceTestSuiteWithEmbeddedDB {
         creditInvoice = invoiceUserApi.getInvoice(invoiceId, callContext);
         Assert.assertEquals(creditInvoice.getStatus(), InvoiceStatus.COMMITTED);
 
+        try {
+            final InvoiceItem externalCharge = new ExternalChargeInvoiceItem(invoiceId, accountId, null, "Initial external charge", clock.getUTCToday(), new BigDecimal("12.33"), accountCurrency);
+            invoiceUserApi.insertExternalCharges(accountId, clock.getUTCToday(), ImmutableList.of(externalCharge), true, callContext);
+            Assert.fail("Should fail to add external charge on already committed invoice");
+        } catch (final InvoiceApiException e) {
+            Assert.assertEquals(e.getCode(), ErrorCode.INVOICE_ALREADY_COMMITTED.getCode());
+        }
+
+        try {
+            invoiceUserApi.insertCreditForInvoice(accountId, invoiceId, creditAmount,
+                                                  clock.getUTCToday(), accountCurrency, null, callContext);
+            Assert.fail("Should fail to add credit on already committed invoice");
+        } catch (final InvoiceApiException e) {
+            Assert.assertEquals(e.getCode(), ErrorCode.INVOICE_ALREADY_COMMITTED.getCode());
+        }
     }
 }

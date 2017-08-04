@@ -206,6 +206,9 @@ public abstract class InvoiceItemBase extends EntityBase implements InvoiceItem 
 
         final InvoiceItemBase that = (InvoiceItemBase) o;
 
+        if (getInvoiceItemType() != null ? !getInvoiceItemType().equals(that.getInvoiceItemType()) : that.getInvoiceItemType() != null) {
+            return false;
+        }
         if (accountId != null ? !accountId.equals(that.accountId) : that.accountId != null) {
             return false;
         }
