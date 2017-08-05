@@ -315,7 +315,7 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
                     }
 
                     final LocalDate startDate = MoreObjects.firstNonNull(charge.getStartDate(), effectiveDate);
-                    final LocalDate endDate = MoreObjects.firstNonNull(charge.getEndDate(), effectiveDate);
+                    final LocalDate endDate = charge.getEndDate();
 
                     final InvoiceItem externalCharge = new ExternalChargeInvoiceItem(UUIDs.randomUUID(),
                                                                                      context.getCreatedDate(),
