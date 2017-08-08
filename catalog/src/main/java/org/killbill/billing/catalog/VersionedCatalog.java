@@ -181,8 +181,11 @@ public class VersionedCatalog extends ValidatingConfig<VersionedCatalog> impleme
                 }
             }
 
+
+            final boolean initialVersion = (i == 0);
             final DateTime catalogEffectiveDate = CatalogDateHelper.toUTCDateTime(c.getEffectiveDate());
-            if (!subscriptionStartDate.isBefore(catalogEffectiveDate)) { // Its a new subscription this plan always applies
+            if (initialVersion || // Prevent issue with time granularity -- see #760
+                !subscriptionStartDate.isBefore(catalogEffectiveDate)) { // It's a new subscription this plan always applies
                 return new CatalogPlanEntry(c, plan);
             } else { //Its an existing subscription
                 if (plan.getEffectiveDateForExistingSubscriptions() != null) { //if it is null any change to this does not apply to existing subscriptions

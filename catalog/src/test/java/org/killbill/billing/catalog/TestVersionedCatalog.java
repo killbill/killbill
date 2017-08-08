@@ -48,15 +48,9 @@ public class TestVersionedCatalog extends CatalogTestSuiteNoDB {
         final DateTime dt214 = new DateTime("2011-02-14T00:01:00+00:00");
         final DateTime dt3 = new DateTime("2011-03-03T00:01:00+00:00");
 
-        // New subscription
-        try {
-            vc.findPlan("pistol-monthly", dt0, dt0);
-            Assert.fail("Exception should have been thrown there are no plans for this date");
-        } catch (CatalogApiException e) {
-            // Expected behaviour
-            log.error("Expected exception", e);
+        // We find it although the date provided is too early because we default to first catalog version
+        final Plan newSubPlan0 = vc.findPlan("pistol-monthly", dt0, dt0);
 
-        }
         final Plan newSubPlan1 = vc.findPlan("pistol-monthly", dt1, dt1);
         final Plan newSubPlan2 = vc.findPlan("pistol-monthly", dt2, dt2);
         final Plan newSubPlan214 = vc.findPlan("pistol-monthly", dt214, dt214);
