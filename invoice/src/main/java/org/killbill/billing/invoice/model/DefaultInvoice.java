@@ -284,6 +284,11 @@ public class DefaultInvoice extends EntityBase implements Invoice, Cloneable {
 
     @Override
     public UUID getParentAccountId() {
+        return parentInvoice != null ? parentInvoice.getAccountId() : null;
+    }
+
+    @Override
+    public UUID getParentInvoiceId() {
         return parentInvoice != null ? parentInvoice.getId() : null;
     }
 

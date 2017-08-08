@@ -1135,6 +1135,10 @@ public class TestIntegrationParentInvoice extends TestIntegrationBase {
         assertEquals(invoiceUserApi.getAccountBalance(childAccount.getId(), callContext).compareTo(new BigDecimal("249.95")), 0);
 
 
+        // Verify Invoice apis getParentAccountId/getParentInvoiceId
+        assertEquals(childInvoices.get(1).getParentAccountId(), parentAccount.getId());
+        assertEquals(childInvoices.get(1).getParentInvoiceId(), parentInvoice.getId());
+
         try {
             final List<PluginProperty> properties = new ArrayList<PluginProperty>();
             final PluginProperty prop1 = new PluginProperty(InvoicePaymentControlPluginApi.PROP_IPCD_INVOICE_ID, childInvoices.get(1).getId().toString(), false);

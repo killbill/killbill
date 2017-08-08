@@ -227,5 +227,10 @@ public class MockInvoice extends EntityBase implements Invoice {
     public UUID getParentAccountId() {
         return null;
     }
+
+    @Override
+    public UUID getParentInvoiceId() {
+        return null;
+    }
 }
 
