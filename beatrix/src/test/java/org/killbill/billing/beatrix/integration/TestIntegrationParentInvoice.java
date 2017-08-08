@@ -18,10 +18,13 @@
 package org.killbill.billing.beatrix.integration;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
+import org.killbill.billing.ErrorCode;
 import org.killbill.billing.ObjectType;
 import org.killbill.billing.account.api.Account;
 import org.killbill.billing.account.api.DefaultAccount;
@@ -39,7 +42,10 @@ import org.killbill.billing.invoice.api.InvoiceItem;
 import org.killbill.billing.invoice.api.InvoiceItemType;
 import org.killbill.billing.invoice.api.InvoiceStatus;
 import org.killbill.billing.payment.api.Payment;
+import org.killbill.billing.payment.api.PaymentApiException;
 import org.killbill.billing.payment.api.PluginProperty;
+import org.killbill.billing.payment.invoice.InvoicePaymentControlPluginApi;
+import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import com.google.common.collect.ImmutableList;
@@ -1127,6 +1133,18 @@ public class TestIntegrationParentInvoice extends TestIntegrationBase {
         // TODO Should we automatically adjust the invoice at the parent level or should it be the responsibility of the user?
         assertEquals(invoiceUserApi.getAccountBalance(parentAccount.getId(), callContext).compareTo(new BigDecimal("249.95")), 0);
         assertEquals(invoiceUserApi.getAccountBalance(childAccount.getId(), callContext).compareTo(new BigDecimal("249.95")), 0);
+
+
+        try {
+            final List<PluginProperty> properties = new ArrayList<PluginProperty>();
+            final PluginProperty prop1 = new PluginProperty(InvoicePaymentControlPluginApi.PROP_IPCD_INVOICE_ID, childInvoices.get(1).getId().toString(), false);
+            properties.add(prop1);
+            paymentApi.createPurchaseWithPaymentControl(childAccount, childAccount.getPaymentMethodId(), null, childInvoices.get(1).getBalance(), childInvoices.get(1).getCurrency(), UUID.randomUUID().toString(),
+                                                        UUID.randomUUID().toString(), properties, PAYMENT_OPTIONS, callContext);
+            Assert.fail("Payment should fail, invoice belongs to parent");
+        } catch (final PaymentApiException e) {
+            assertEquals(ErrorCode.PAYMENT_PLUGIN_API_ABORTED.getCode(), e.getCode());
+        }
 
         final int nbDaysBeforeRetry = paymentConfig.getPaymentFailureRetryDays(internalCallContext).get(0);
 

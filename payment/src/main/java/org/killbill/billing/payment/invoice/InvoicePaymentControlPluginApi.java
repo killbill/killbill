@@ -321,11 +321,16 @@ public final class InvoicePaymentControlPluginApi implements PaymentControlPlugi
                 return new DefaultPriorPaymentControlResult(true);
             }
 
+
             // Get account and check if it is child and payment is delegated to parent => abort
+
             final AccountData accountData = accountApi.getAccountById(invoice.getAccountId(), internalContext);
-            if ((accountData != null) && (accountData.getParentAccountId() != null) && accountData.isPaymentDelegatedToParent()) {
+            if (((accountData != null) && (accountData.getParentAccountId() != null) && accountData.isPaymentDelegatedToParent()) || // Valid when we initially create the child invoice (even if parent invoice does not exist yet)
+                (invoice.getParentAccountId() != null))  { // Valid after we have unparented the child
                 return new DefaultPriorPaymentControlResult(true);
             }
+
+
             final BigDecimal requestedAmount = validateAndComputePaymentAmount(invoice, paymentControlPluginContext.getAmount(), paymentControlPluginContext.isApiPayment());
 
             final boolean isAborted = requestedAmount.compareTo(BigDecimal.ZERO) == 0;
