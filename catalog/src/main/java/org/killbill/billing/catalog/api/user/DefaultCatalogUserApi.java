@@ -22,6 +22,7 @@ import java.io.InputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
 
+import javax.annotation.Nullable;
 import javax.inject.Inject;
 import javax.xml.bind.JAXBException;
 import javax.xml.transform.TransformerException;
@@ -47,6 +48,7 @@ import org.killbill.billing.tenant.api.TenantUserApi;
 import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.billing.util.callcontext.TenantContext;
+import org.killbill.clock.Clock;
 import org.killbill.xmlloader.ValidationErrors;
 import org.killbill.xmlloader.ValidationException;
 import org.killbill.xmlloader.XMLLoader;
@@ -62,16 +64,19 @@ public class  DefaultCatalogUserApi implements CatalogUserApi {
     private final InternalCallContextFactory internalCallContextFactory;
     private final TenantUserApi tenantApi;
     private final CatalogCache catalogCache;
+    private final Clock clock;
 
 
     @Inject
     public DefaultCatalogUserApi(final CatalogService catalogService,
                                  final TenantUserApi tenantApi,
                                  final CatalogCache catalogCache,
+                                 final Clock clock,
                                  final InternalCallContextFactory internalCallContextFactory) {
         this.catalogService = catalogService;
         this.tenantApi = tenantApi;
         this.catalogCache = catalogCache;
+        this.clock = clock;
         this.internalCallContextFactory = internalCallContextFactory;
     }
 
@@ -152,14 +157,14 @@ public class  DefaultCatalogUserApi implements CatalogUserApi {
 
 
     @Override
-    public void createDefaultEmptyCatalog(final DateTime effectiveDate, final CallContext callContext) throws CatalogApiException {
+    public void createDefaultEmptyCatalog(@Nullable final DateTime effectiveDate, final CallContext callContext) throws CatalogApiException {
 
         try {
             final InternalTenantContext internalTenantContext = internalCallContextFactory.createInternalTenantContextWithoutAccountRecordId(callContext);
             final StandaloneCatalog currentCatalog = getCurrentStandaloneCatalogForTenant(internalTenantContext);
             final CatalogUpdater catalogUpdater = (currentCatalog != null) ?
                                                   new CatalogUpdater(currentCatalog) :
-                                                  new CatalogUpdater(BillingMode.IN_ADVANCE, effectiveDate, null);
+                                                  new CatalogUpdater(BillingMode.IN_ADVANCE, getSafeFirstCatalogEffectiveDate(effectiveDate), null);
 
             catalogCache.clearCatalog(internalTenantContext);
             tenantApi.updateTenantKeyValue(TenantKey.CATALOG.toString(), catalogUpdater.getCatalogXML(), callContext);
@@ -169,14 +174,14 @@ public class  DefaultCatalogUserApi implements CatalogUserApi {
     }
 
     @Override
-    public void addSimplePlan(final SimplePlanDescriptor descriptor, final DateTime effectiveDate, final CallContext callContext) throws CatalogApiException {
+    public void addSimplePlan(final SimplePlanDescriptor descriptor, @Nullable final DateTime effectiveDate, final CallContext callContext) throws CatalogApiException {
 
         try {
             final InternalTenantContext internalTenantContext = internalCallContextFactory.createInternalTenantContextWithoutAccountRecordId(callContext);
             final StandaloneCatalog currentCatalog = getCurrentStandaloneCatalogForTenant(internalTenantContext);
             final CatalogUpdater catalogUpdater = (currentCatalog != null) ?
                                                   new CatalogUpdater(currentCatalog) :
-                                                  new CatalogUpdater(BillingMode.IN_ADVANCE, effectiveDate, descriptor.getCurrency());
+                                                  new CatalogUpdater(BillingMode.IN_ADVANCE, getSafeFirstCatalogEffectiveDate(effectiveDate), descriptor.getCurrency());
 
             catalogUpdater.addSimplePlanDescriptor(descriptor);
 
@@ -186,6 +191,14 @@ public class  DefaultCatalogUserApi implements CatalogUserApi {
             throw new CatalogApiException(e);
         }
     }
+
+    private DateTime getSafeFirstCatalogEffectiveDate(@Nullable final DateTime input) {
+        // The effectiveDate for the initial version does not matter too much
+        // Because of #760, we want to make that client passing a approximate date (e.g today.toDateTimeAtStartOfDay()) will find the version
+        final DateTime catalogEffectiveDate = clock.getUTCNow().minusDays(1);
+        return (input == null || input.isAfter(catalogEffectiveDate)) ? catalogEffectiveDate : input;
+    }
+
 
 
     private StandaloneCatalog getCurrentStandaloneCatalogForTenant(final InternalTenantContext internalTenantContext) throws CatalogApiException {

@@ -216,7 +216,7 @@ public class CatalogResource extends JaxRsResourceBase {
                                                                           simplePlan.getTrialLength(),
                                                                           simplePlan.getTrialTimeUnit(),
                                                                           simplePlan.getAvailableBaseProducts());
-        catalogUserApi.addSimplePlan(desc, clock.getUTCNow(), callContext);
+        catalogUserApi.addSimplePlan(desc, null, callContext);
         return uriBuilder.buildResponse(uriInfo, CatalogResource.class, null, null, request);
     }
 
