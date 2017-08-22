@@ -87,4 +87,23 @@ public interface SecurityConfig extends KillbillConfig {
     @Default("false")
     @Description("Whether to ignore SSL certificates checks")
     public boolean disableShiroLDAPSSLCheck();
+
+    // Okta realm
+
+    @Config("org.killbill.security.okta.url")
+    @DefaultNull
+    @Description("Okta org full url")
+    public String getShiroOktaUrl();
+
+    @Config("org.killbill.security.okta.apiToken")
+    @DefaultNull
+    @Description("Okta API token")
+    public String getShiroOktaAPIToken();
+
+    @Config("org.killbill.security.okta.permissionsByGroup")
+    @Default("admin = *:*\n" +
+             "finance = invoice:*, payment:*\n" +
+             "support = entitlement:*, invoice:item_adjust")
+    @Description("Okta permissions by Okta group")
+    public String getShiroOktaPermissionsByGroup();
 }

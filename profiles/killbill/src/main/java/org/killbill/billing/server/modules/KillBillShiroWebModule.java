@@ -44,6 +44,7 @@ import org.killbill.billing.util.glue.KillBillShiroModule;
 import org.killbill.billing.util.security.shiro.dao.JDBCSessionDao;
 import org.killbill.billing.util.security.shiro.realm.KillBillJdbcRealm;
 import org.killbill.billing.util.security.shiro.realm.KillBillJndiLdapRealm;
+import org.killbill.billing.util.security.shiro.realm.KillBillOktaRealm;
 import org.skife.config.ConfigSource;
 import org.skife.config.ConfigurationObjectFactory;
 
@@ -86,6 +87,9 @@ public class KillBillShiroWebModule extends ShiroWebModuleWith435 {
         bindRealm().to(KillBillJdbcRealm.class).asEagerSingleton();
         if (KillBillShiroModule.isLDAPEnabled()) {
             bindRealm().to(KillBillJndiLdapRealm.class).asEagerSingleton();
+        }
+        if (KillBillShiroModule.isOktaEnabled()) {
+            bindRealm().to(KillBillOktaRealm.class).asEagerSingleton();
         }
 
         bindListener(new AbstractMatcher<TypeLiteral<?>>() {
