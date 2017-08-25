@@ -241,8 +241,11 @@ public abstract class JaxRsResourceBase implements JaxrsResource {
 
     protected Response getCustomFields(final UUID id, final AuditMode auditMode, final TenantContext context) {
         final List<CustomField> fields = customFieldUserApi.getCustomFieldsForObject(id, getObjectType(), context);
+        return createCustomFieldResponse(fields, auditMode, context);
+    }
 
-        final List<CustomFieldJson> result = new LinkedList<CustomFieldJson>();
+    protected Response createCustomFieldResponse(final Iterable<CustomField> fields, final AuditMode auditMode, final TenantContext context) {
+        final Collection<CustomFieldJson> result = new LinkedList<CustomFieldJson>();
         for (final CustomField cur : fields) {
             // TODO PIERRE - Bulk API
             final List<AuditLog> auditLogs = auditUserApi.getAuditLogs(cur.getId(), ObjectType.CUSTOM_FIELD, auditMode.getLevel(), context);
