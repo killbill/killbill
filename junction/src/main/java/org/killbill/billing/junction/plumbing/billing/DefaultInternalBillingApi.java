@@ -96,17 +96,18 @@ public class DefaultInternalBillingApi implements BillingInternalApi {
         final List<Tag> accountTags = tagApi.getTags(accountId, ObjectType.ACCOUNT, context);
         final boolean found_AUTO_INVOICING_OFF = is_AUTO_INVOICING_OFF(accountTags);
         final boolean found_INVOICING_DRAFT = is_AUTO_INVOICING_DRAFT(accountTags);
+        final boolean found_INVOICING_REUSE_DRAFT = is_AUTO_INVOICING_REUSE_DRAFT(accountTags);
 
         final Set<UUID> skippedSubscriptions = new HashSet<UUID>();
         final DefaultBillingEventSet result;
 
         if (found_AUTO_INVOICING_OFF) {
-            result = new DefaultBillingEventSet(true, found_INVOICING_DRAFT, ((StaticCatalog) currentCatalog).getRecurringBillingMode()); // billing is off, we are done
+            result = new DefaultBillingEventSet(true, found_INVOICING_DRAFT, found_INVOICING_REUSE_DRAFT, ((StaticCatalog) currentCatalog).getRecurringBillingMode()); // billing is off, we are done
         } else {
             final List<SubscriptionBaseBundle> bundles = subscriptionApi.getBundlesForAccount(accountId, context);
 
             final ImmutableAccountData account = accountApi.getImmutableAccountDataById(accountId, context);
-            result = new DefaultBillingEventSet(false, found_INVOICING_DRAFT, ((StaticCatalog) currentCatalog).getRecurringBillingMode());
+            result = new DefaultBillingEventSet(false, found_INVOICING_DRAFT, found_INVOICING_REUSE_DRAFT, ((StaticCatalog) currentCatalog).getRecurringBillingMode());
             addBillingEventsForBundles(bundles, account, dryRunArguments, context, result, skippedSubscriptions, currentCatalog);
         }
 
@@ -259,4 +260,15 @@ public class DefaultInternalBillingApi implements BillingInternalApi {
             }
         });
     }
+
+    private boolean is_AUTO_INVOICING_REUSE_DRAFT(final List<Tag> tags) {
+        return Iterables.any(tags, new Predicate<Tag>() {
+            @Override
+            public boolean apply(final Tag input) {
+                return input.getTagDefinitionId().equals(ControlTagType.AUTO_INVOICING_REUSE_DRAFT.getId());
+            }
+        });
+    }
+
+
 }

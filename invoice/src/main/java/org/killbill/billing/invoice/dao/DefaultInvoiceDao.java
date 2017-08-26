@@ -276,6 +276,17 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
     }
 
     @Override
+    public InvoiceModelDao getEarliestDraftInvoiceByAccount(final InternalTenantContext context) {
+        return transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<InvoiceModelDao>() {
+            @Override
+            public InvoiceModelDao inTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory) throws Exception {
+                final InvoiceSqlDao invoiceDao = entitySqlDaoWrapperFactory.become(InvoiceSqlDao.class);
+                return invoiceDao.getEarliestDraftInvoiceByAccount(context);
+            }
+        });
+    }
+
+    @Override
     public void createInvoice(final InvoiceModelDao invoice,
                               final FutureAccountNotifications callbackDateTimePerSubscriptions,
                               final InternalCallContext context) {
@@ -291,9 +302,14 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
     private List<InvoiceItemModelDao> createInvoices(final Iterable<InvoiceModelDao> invoices,
                                                      final FutureAccountNotifications callbackDateTimePerSubscriptions,
                                                      final InternalCallContext context) {
+        // Track invoices that are being created
         final Collection<UUID> createdInvoiceIds = new HashSet<UUID>();
-        final Collection<UUID> modifiedInvoiceIds = new HashSet<UUID>();
-        final Collection<UUID> committedInvoiceIds = new HashSet<UUID>();
+        // Track invoices that already exist but are being committed -- AUTO_INVOICING_REUSE_DRAFT mode
+        final Collection<UUID> committedReusedInvoiceId = new HashSet<UUID>();
+        // Track all invoices that are referenced through all invoiceItems
+        final Collection<UUID> allInvoiceIds = new HashSet<UUID>();
+        // Track invoices that are committed but were not created or reused -- to sent the InvoiceAdjustment bus event
+        final Collection<UUID> adjustedCommittedInvoiceIds = new HashSet<UUID>();
 
         final Collection<UUID> invoiceIdsReferencedFromItems = new HashSet<UUID>();
         for (final InvoiceModelDao invoiceModelDao : invoices) {
@@ -321,28 +337,36 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
                     invoiceByInvoiceId.put(invoiceModelDao.getId(), invoiceModelDao);
                     final boolean isNotShellInvoice = invoiceIdsReferencedFromItems.remove(invoiceModelDao.getId());
 
-                    // Create the invoice if this is not a shell invoice and it does not already exist
-                    if (isNotShellInvoice && invoiceSqlDao.getById(invoiceModelDao.getId().toString(), context) == null) {
-                        createAndRefresh(invoiceSqlDao, invoiceModelDao, context);
-                        createdInvoiceIds.add(invoiceModelDao.getId());
+                    final InvoiceModelDao invoiceOnDisk = invoiceSqlDao.getById(invoiceModelDao.getId().toString(), context);
+                    if (isNotShellInvoice) {
+                        // Create the invoice if this is not a shell invoice and it does not already exist
+                        if (invoiceOnDisk == null) {
+                            createAndRefresh(invoiceSqlDao, invoiceModelDao, context);
+                            createdInvoiceIds.add(invoiceModelDao.getId());
+                        } else if (invoiceOnDisk.getStatus() == InvoiceStatus.DRAFT && invoiceModelDao.getStatus() == InvoiceStatus.COMMITTED) {
+                            invoiceSqlDao.updateStatus(invoiceModelDao.getId().toString(), InvoiceStatus.COMMITTED.toString(), context);
+                            committedReusedInvoiceId.add(invoiceModelDao.getId());
+                        }
                     }
 
                     // Create the invoice items if needed (note: they may not necessarily belong to that invoice)
                     for (final InvoiceItemModelDao invoiceItemModelDao : invoiceModelDao.getInvoiceItems()) {
                         if (transInvoiceItemSqlDao.getById(invoiceItemModelDao.getId().toString(), context) == null) {
                             createdInvoiceItems.add(createInvoiceItemFromTransaction(transInvoiceItemSqlDao, invoiceItemModelDao, context));
-                            modifiedInvoiceIds.add(invoiceItemModelDao.getInvoiceId());
+                            allInvoiceIds.add(invoiceItemModelDao.getInvoiceId());
                         }
                     }
 
-                    final boolean wasInvoiceCreated = createdInvoiceIds.contains(invoiceModelDao.getId());
+                    final boolean wasInvoiceCreatedOrCommitted = createdInvoiceIds.contains(invoiceModelDao.getId()) ||
+                                                       committedReusedInvoiceId.contains(invoiceModelDao.getId());
                     if (InvoiceStatus.COMMITTED.equals(invoiceModelDao.getStatus())) {
-                        committedInvoiceIds.add(invoiceModelDao.getId());
 
-                        if (wasInvoiceCreated) {
+                        if (wasInvoiceCreatedOrCommitted) {
                             notifyBusOfInvoiceCreation(entitySqlDaoWrapperFactory, invoiceModelDao, context);
+                        } else {
+                            adjustedCommittedInvoiceIds.add(invoiceModelDao.getId());
                         }
-                    } else if (wasInvoiceCreated && invoiceModelDao.isParentInvoice()) {
+                    } else if (wasInvoiceCreatedOrCommitted && invoiceModelDao.isParentInvoice()) {
                         // Commit queue
                         notifyOfParentInvoiceCreation(entitySqlDaoWrapperFactory, invoiceModelDao, context);
                     }
@@ -351,7 +375,7 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
                     notifyOfFutureBillingEvents(entitySqlDaoWrapperFactory, invoiceModelDao.getAccountId(), callbackDateTimePerSubscriptions, context);
                 }
 
-                for (final UUID adjustedInvoiceId : modifiedInvoiceIds) {
+                for (final UUID adjustedInvoiceId : allInvoiceIds) {
                     final boolean newInvoice = createdInvoiceIds.contains(adjustedInvoiceId);
                     if (newInvoice) {
                         // New invoice, so no associated payment yet: no need to refresh the invoice state
@@ -362,7 +386,7 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
                         cbaDao.doCBAComplexityFromTransaction(adjustedInvoiceId, invoicesTags, entitySqlDaoWrapperFactory, context);
                     }
 
-                    if (committedInvoiceIds.contains(adjustedInvoiceId) && !newInvoice) {
+                    if (adjustedCommittedInvoiceIds.contains(adjustedInvoiceId)) {
                         // Notify the bus since the balance of the invoice changed (only if the invoice is COMMITTED)
                         notifyBusOfInvoiceAdjustment(entitySqlDaoWrapperFactory, adjustedInvoiceId, accountId, context.getUserToken(), context);
                     }

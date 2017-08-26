@@ -36,6 +36,7 @@ public class MockBillingEventSet extends TreeSet<BillingEvent> implements Billin
 
     private boolean isAccountInvoiceOff;
     private boolean isAccountAutoInvoiceDraft;
+    private boolean isAccountAutoInvoiceReuseDraft;
 
     private List<UUID> subscriptionIdsWithAutoInvoiceOff;
 
@@ -43,6 +44,7 @@ public class MockBillingEventSet extends TreeSet<BillingEvent> implements Billin
         super();
         this.isAccountInvoiceOff = false;
         this.isAccountAutoInvoiceDraft = false;
+        this.isAccountAutoInvoiceReuseDraft = false;
         this.subscriptionIdsWithAutoInvoiceOff = new ArrayList<UUID>();
     }
 
@@ -58,6 +60,11 @@ public class MockBillingEventSet extends TreeSet<BillingEvent> implements Billin
     @Override
     public boolean isAccountAutoInvoiceDraft() {
         return isAccountAutoInvoiceDraft;
+    }
+
+    @Override
+    public boolean isAccountAutoInvoiceReuseDraft() {
+        return isAccountAutoInvoiceReuseDraft;
     }
 
     @Override

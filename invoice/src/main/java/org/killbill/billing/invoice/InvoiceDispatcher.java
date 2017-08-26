@@ -382,7 +382,16 @@ public class InvoiceDispatcher {
                                                                                                 }));
 
             final Currency targetCurrency = account.getCurrency();
-            final InvoiceWithMetadata invoiceWithMetadata = generator.generateInvoice(account, billingEvents, invoices, targetDate, targetCurrency, context);
+
+            final UUID targetInvoiceId;
+            if (billingEvents.isAccountAutoInvoiceReuseDraft()) {
+                final InvoiceModelDao earliestDraftInvoice = invoiceDao.getEarliestDraftInvoiceByAccount(context);
+                targetInvoiceId = earliestDraftInvoice != null  ? earliestDraftInvoice.getId() : null;
+            } else {
+                targetInvoiceId = null;
+            }
+
+            final InvoiceWithMetadata invoiceWithMetadata = generator.generateInvoice(account, billingEvents, invoices, targetInvoiceId, targetDate, targetCurrency, context);
             final DefaultInvoice invoice = invoiceWithMetadata.getInvoice();
 
             // Compute future notifications

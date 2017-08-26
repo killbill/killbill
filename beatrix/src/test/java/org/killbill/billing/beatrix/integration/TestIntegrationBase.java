@@ -810,12 +810,15 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB {
         add_account_Tag(id, ControlTagType.AUTO_INVOICING_DRAFT, type);
     }
 
+    protected void add_AUTO_INVOICING_REUSE_DRAFT_Tag(final UUID id, final ObjectType type) throws TagDefinitionApiException, TagApiException {
+        add_account_Tag(id, ControlTagType.AUTO_INVOICING_REUSE_DRAFT, type);
+    }
+
     private void add_account_Tag(final UUID id, final ControlTagType controlTagType, final ObjectType type) throws TagDefinitionApiException, TagApiException {
         busHandler.pushExpectedEvent(NextEvent.TAG);
         tagUserApi.addTag(id, type, controlTagType.getId(), callContext);
         assertListenerStatus();
-        final List<Tag> tags = tagUserApi.getTagsForObject(id, type, false, callContext);
-        assertEquals(tags.size(), 1);
+        tagUserApi.getTagsForObject(id, type, false, callContext);
     }
 
     protected void remove_AUTO_PAY_OFF_Tag(final UUID id, final ObjectType type, final NextEvent... additionalEvents) throws TagDefinitionApiException, TagApiException {

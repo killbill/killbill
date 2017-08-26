@@ -66,10 +66,13 @@ public class DefaultInvoiceGenerator implements InvoiceGenerator {
      * adjusts target date to the maximum invoice target date, if future invoices exist
      */
     @Override
-    public InvoiceWithMetadata generateInvoice(final ImmutableAccountData account, @Nullable final BillingEventSet events,
+    public InvoiceWithMetadata generateInvoice(final ImmutableAccountData account,
+                                               @Nullable final BillingEventSet events,
                                                @Nullable final List<Invoice> existingInvoices,
+                                               @Nullable final UUID targetInvoiceId,
                                                final LocalDate targetDate,
-                                               final Currency targetCurrency, final InternalCallContext context) throws InvoiceApiException {
+                                               final Currency targetCurrency,
+                                               final InternalCallContext context) throws InvoiceApiException {
         if ((events == null) || (events.size() == 0) || events.isAccountAutoInvoiceOff()) {
             return new InvoiceWithMetadata(null, ImmutableMap.<UUID, SubscriptionFutureNotificationDates>of());
         }
@@ -79,14 +82,16 @@ public class DefaultInvoiceGenerator implements InvoiceGenerator {
 
         final LocalDate invoiceDate = context.toLocalDate(context.getCreatedDate());
         final InvoiceStatus invoiceStatus = events.isAccountAutoInvoiceDraft() ? InvoiceStatus.DRAFT : InvoiceStatus.COMMITTED;
-        final DefaultInvoice invoice = new DefaultInvoice(account.getId(), invoiceDate, adjustedTargetDate, targetCurrency, invoiceStatus);
-        final UUID invoiceId = invoice.getId();
+        final DefaultInvoice invoice = targetInvoiceId != null ?
+                                       new DefaultInvoice(targetInvoiceId, account.getId(), null, invoiceDate, adjustedTargetDate, targetCurrency, false, invoiceStatus) :
+                                       new DefaultInvoice(account.getId(), invoiceDate, adjustedTargetDate, targetCurrency, invoiceStatus);
+
         final Map<UUID, SubscriptionFutureNotificationDates> perSubscriptionFutureNotificationDates = new HashMap<UUID, SubscriptionFutureNotificationDates>();
 
-        final List<InvoiceItem> fixedAndRecurringItems = recurringInvoiceItemGenerator.generateItems(account, invoiceId, events, existingInvoices, adjustedTargetDate, targetCurrency, perSubscriptionFutureNotificationDates, context);
+        final List<InvoiceItem> fixedAndRecurringItems = recurringInvoiceItemGenerator.generateItems(account, invoice.getId(), events, existingInvoices, adjustedTargetDate, targetCurrency, perSubscriptionFutureNotificationDates, context);
         invoice.addInvoiceItems(fixedAndRecurringItems);
 
-        final List<InvoiceItem> usageItems = usageInvoiceItemGenerator.generateItems(account, invoiceId, events, existingInvoices, adjustedTargetDate, targetCurrency, perSubscriptionFutureNotificationDates, context);
+        final List<InvoiceItem> usageItems = usageInvoiceItemGenerator.generateItems(account, invoice.getId(), events, existingInvoices, adjustedTargetDate, targetCurrency, perSubscriptionFutureNotificationDates, context);
         invoice.addInvoiceItems(usageItems);
 
 
