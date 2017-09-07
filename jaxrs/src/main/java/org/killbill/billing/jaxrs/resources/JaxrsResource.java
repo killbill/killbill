@@ -221,6 +221,7 @@ public interface JaxrsResource {
     public static final String TAGS = "tags";
     public static final String TAGS_PATH = PREFIX + "/" + TAGS;
 
+    public static final String ALL_CUSTOM_FIELDS = "allCustomFields";
     public static final String CUSTOM_FIELDS = "customFields";
     public static final String CUSTOM_FIELDS_PATH = PREFIX + "/" + CUSTOM_FIELDS;
 

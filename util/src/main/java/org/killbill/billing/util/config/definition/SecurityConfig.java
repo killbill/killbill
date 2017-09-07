@@ -41,6 +41,11 @@ public interface SecurityConfig extends KillbillConfig {
     @Description("LDAP server's User DN format (e.g. uid={0},ou=users,dc=mycompany,dc=com)")
     public String getShiroLDAPUserDnTemplate();
 
+    @Config("org.killbill.security.ldap.dnSearchTemplate")
+    @DefaultNull
+    @Description("LDAP server's DN search template (e.g. sAMAccountName={0}) for search-then-bind authentication (in case a static DN format template isn't enough)")
+    public String getShiroLDAPDnSearchTemplate();
+
     @Config("org.killbill.security.ldap.searchBase")
     @DefaultNull
     @Description("LDAP search base to use")
@@ -87,4 +92,28 @@ public interface SecurityConfig extends KillbillConfig {
     @Default("false")
     @Description("Whether to ignore SSL certificates checks")
     public boolean disableShiroLDAPSSLCheck();
+
+    @Config("org.killbill.security.ldap.followReferrals")
+    @Default("false")
+    @Description("Whether to follow referrals")
+    public boolean followShiroLDAPReferrals();
+
+    // Okta realm
+
+    @Config("org.killbill.security.okta.url")
+    @DefaultNull
+    @Description("Okta org full url")
+    public String getShiroOktaUrl();
+
+    @Config("org.killbill.security.okta.apiToken")
+    @DefaultNull
+    @Description("Okta API token")
+    public String getShiroOktaAPIToken();
+
+    @Config("org.killbill.security.okta.permissionsByGroup")
+    @Default("admin = *:*\n" +
+             "finance = invoice:*, payment:*\n" +
+             "support = entitlement:*, invoice:item_adjust")
+    @Description("Okta permissions by Okta group")
+    public String getShiroOktaPermissionsByGroup();
 }

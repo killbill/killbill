@@ -28,6 +28,7 @@ import org.killbill.billing.util.config.definition.RbacConfig;
 import org.killbill.billing.util.security.shiro.dao.JDBCSessionDao;
 import org.killbill.billing.util.security.shiro.realm.KillBillJdbcRealm;
 import org.killbill.billing.util.security.shiro.realm.KillBillJndiLdapRealm;
+import org.killbill.billing.util.security.shiro.realm.KillBillOktaRealm;
 import org.skife.config.ConfigSource;
 import org.skife.config.ConfigurationObjectFactory;
 
@@ -38,11 +39,16 @@ import com.google.inject.binder.AnnotatedBindingBuilder;
 public class KillBillShiroModule extends ShiroModule {
 
     public static final String KILLBILL_LDAP_PROPERTY = "killbill.server.ldap";
+    public static final String KILLBILL_OKTA_PROPERTY = "killbill.server.okta";
     public static final String KILLBILL_RBAC_PROPERTY = "killbill.server.rbac";
 
 
     public static boolean isLDAPEnabled() {
         return Boolean.parseBoolean(System.getProperty(KILLBILL_LDAP_PROPERTY, "false"));
+    }
+
+    public static boolean isOktaEnabled() {
+        return Boolean.parseBoolean(System.getProperty(KILLBILL_OKTA_PROPERTY, "false"));
     }
 
     public static boolean isRBACEnabled() {
@@ -78,6 +84,12 @@ public class KillBillShiroModule extends ShiroModule {
     protected void configureLDAPRealm() {
         if (isLDAPEnabled()) {
             bindRealm().to(KillBillJndiLdapRealm.class).asEagerSingleton();
+        }
+    }
+
+    protected void configureOktaRealm() {
+        if (isOktaEnabled()) {
+            bindRealm().to(KillBillOktaRealm.class).asEagerSingleton();
         }
     }
 
