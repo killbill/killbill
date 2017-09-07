@@ -1202,7 +1202,8 @@ public class AccountResource extends JaxRsResourceBase {
                                        @QueryParam(QUERY_AUDIT) @DefaultValue("NONE") final AuditMode auditMode,
                                        @javax.ws.rs.core.Context final HttpServletRequest request) {
         final UUID accountId = UUID.fromString(accountIdString);
-        final TenantContext tenantContext = context.createContext(request);
+
+        final TenantContext tenantContext = context.createTenantContextWithAccountId(accountId, request);
         final List<CustomField> customFields = objectType != null ?
                                                customFieldUserApi.getCustomFieldsForAccountType(accountId, objectType, tenantContext) :
                                                customFieldUserApi.getCustomFieldsForAccount(accountId, tenantContext);
