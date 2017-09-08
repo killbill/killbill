@@ -1118,7 +1118,7 @@ public class TestDefaultInvoiceGenerator extends InvoiceTestSuiteNoDB {
 
         // Cancel EOT and Add the item adjustment
         final BillingEvent event2 = invoiceUtil.createMockBillingEvent(account, sub, endDate.toDateTimeAtStartOfDay(),
-                                                                       null, phase,
+                                                                       plan, phase,
                                                                        ZERO, null, Currency.USD, BillingPeriod.NO_BILLING_PERIOD, 9,
                                                                        BillingMode.IN_ADVANCE, "Cancel", 2L,
                                                                        SubscriptionBaseTransitionType.CANCEL);

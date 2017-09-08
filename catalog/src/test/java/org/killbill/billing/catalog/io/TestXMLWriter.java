@@ -36,6 +36,7 @@ import org.killbill.billing.catalog.DefaultRecurring;
 import org.killbill.billing.catalog.StandaloneCatalog;
 import org.killbill.billing.catalog.StandaloneCatalogWithPriceOverride;
 import org.killbill.billing.catalog.VersionedCatalog;
+import org.killbill.billing.catalog.api.BillingMode;
 import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.catalog.api.MutableStaticCatalog;
@@ -111,6 +112,7 @@ public class TestXMLWriter extends CatalogTestSuiteNoDB {
         newPlan.setProduct(newProduct);
         newPlan.setInitialPhases(new DefaultPlanPhase[]{trialPhase});
         newPlan.setFinalPhase(evergreenPhase);
+        newPlan.setRecurringBillingMode(BillingMode.IN_ADVANCE);
         // TODO Ordering breaks
         mutableCatalog.addPlan(newPlan);
         newPlan.initialize((StandaloneCatalog) mutableCatalog, new URI("dummy"));

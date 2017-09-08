@@ -21,6 +21,7 @@ import java.util.Iterator;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
+import org.killbill.billing.catalog.api.BillingMode;
 import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.catalog.api.PhaseType;
@@ -40,6 +41,11 @@ public class MockPlan implements Plan {
     public MockPlan(final String name, final Product product) {
         this.name = name;
         this.product = product;
+    }
+
+    @Override
+    public BillingMode getRecurringBillingMode() {
+        return BillingMode.IN_ADVANCE;
     }
 
     @Override

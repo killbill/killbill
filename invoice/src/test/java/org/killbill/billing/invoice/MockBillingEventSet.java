@@ -68,11 +68,6 @@ public class MockBillingEventSet extends TreeSet<BillingEvent> implements Billin
     }
 
     @Override
-    public BillingMode getRecurringBillingMode() {
-        return BillingMode.IN_ADVANCE;
-    }
-
-    @Override
     public List<UUID> getSubscriptionIdsWithAutoInvoiceOff() {
         return subscriptionIdsWithAutoInvoiceOff;
     }

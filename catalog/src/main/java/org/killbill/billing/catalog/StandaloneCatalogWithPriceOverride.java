@@ -49,7 +49,6 @@ public class StandaloneCatalogWithPriceOverride extends StandaloneCatalog implem
         // Initialize from input catalog
         setCatalogName(catalog.getCatalogName());
         setEffectiveDate(catalog.getEffectiveDate());
-        setRecurringBillingMode(catalog.getRecurringBillingMode());
         setProducts(catalog.getCurrentProducts());
         setPlans(catalog.getCurrentPlans());
         setPriceLists(catalog.getPriceLists());

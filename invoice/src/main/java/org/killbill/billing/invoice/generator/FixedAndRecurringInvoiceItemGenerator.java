@@ -141,11 +141,11 @@ public class FixedAndRecurringInvoiceItemGenerator extends InvoiceItemGenerator 
             if (!events.getSubscriptionIdsWithAutoInvoiceOff().
                     contains(thisEvent.getSubscription().getId())) { // don't consider events for subscriptions that have auto_invoice_off
                 final BillingEvent adjustedNextEvent = (thisEvent.getSubscription().getId() == nextEvent.getSubscription().getId()) ? nextEvent : null;
-                final List<InvoiceItem> newProposedItems = processRecurringEvent(invoiceId, accountId, thisEvent, adjustedNextEvent, targetDate, currency, invoiceItemGeneratorLogger, events.getRecurringBillingMode(), perSubscriptionFutureNotificationDate, internalCallContext);
+                final List<InvoiceItem> newProposedItems = processRecurringEvent(invoiceId, accountId, thisEvent, adjustedNextEvent, targetDate, currency, invoiceItemGeneratorLogger, thisEvent.getPlan().getRecurringBillingMode(), perSubscriptionFutureNotificationDate, internalCallContext);
                 proposedItems.addAll(newProposedItems);
             }
         }
-        final List<InvoiceItem> newProposedItems = processRecurringEvent(invoiceId, accountId, nextEvent, null, targetDate, currency, invoiceItemGeneratorLogger, events.getRecurringBillingMode(), perSubscriptionFutureNotificationDate, internalCallContext);
+        final List<InvoiceItem> newProposedItems = processRecurringEvent(invoiceId, accountId, nextEvent, null, targetDate, currency, invoiceItemGeneratorLogger, nextEvent.getPlan().getRecurringBillingMode(), perSubscriptionFutureNotificationDate, internalCallContext);
 
         proposedItems.addAll(newProposedItems);
 

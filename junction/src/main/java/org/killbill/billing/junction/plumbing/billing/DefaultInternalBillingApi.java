@@ -102,12 +102,12 @@ public class DefaultInternalBillingApi implements BillingInternalApi {
         final DefaultBillingEventSet result;
 
         if (found_AUTO_INVOICING_OFF) {
-            result = new DefaultBillingEventSet(true, found_INVOICING_DRAFT, found_INVOICING_REUSE_DRAFT, ((StaticCatalog) currentCatalog).getRecurringBillingMode()); // billing is off, we are done
+            result = new DefaultBillingEventSet(true, found_INVOICING_DRAFT, found_INVOICING_REUSE_DRAFT); // billing is off, we are done
         } else {
             final List<SubscriptionBaseBundle> bundles = subscriptionApi.getBundlesForAccount(accountId, context);
 
             final ImmutableAccountData account = accountApi.getImmutableAccountDataById(accountId, context);
-            result = new DefaultBillingEventSet(false, found_INVOICING_DRAFT, found_INVOICING_REUSE_DRAFT, ((StaticCatalog) currentCatalog).getRecurringBillingMode());
+            result = new DefaultBillingEventSet(false, found_INVOICING_DRAFT, found_INVOICING_REUSE_DRAFT);
             addBillingEventsForBundles(bundles, account, dryRunArguments, context, result, skippedSubscriptions, currentCatalog);
         }
 

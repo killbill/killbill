@@ -24,15 +24,11 @@ import org.killbill.billing.catalog.plugin.api.VersionedPluginCatalog;
 public class TestModelVersionedPluginCatalog implements VersionedPluginCatalog {
     private final String catalogName;
 
-    private final BillingMode billingMode;
-
     private final Iterable<StandalonePluginCatalog> standalonePluginCatalogs;
 
     public TestModelVersionedPluginCatalog(final String catalogName,
-                                      final BillingMode billingMode,
                                       final Iterable<StandalonePluginCatalog> standalonePluginCatalogs) {
         this.catalogName = catalogName;
-        this.billingMode = billingMode;
         this.standalonePluginCatalogs = standalonePluginCatalogs;
     }
 
@@ -41,10 +37,6 @@ public class TestModelVersionedPluginCatalog implements VersionedPluginCatalog {
         return catalogName;
     }
 
-    @Override
-    public BillingMode getRecurringBillingMode() {
-        return billingMode;
-    }
 
     @Override
     public Iterable<StandalonePluginCatalog> getStandalonePluginCatalogs() {

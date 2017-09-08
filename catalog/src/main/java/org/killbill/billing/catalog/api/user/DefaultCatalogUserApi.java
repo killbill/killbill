@@ -175,7 +175,7 @@ public class DefaultCatalogUserApi implements CatalogUserApi {
             final StandaloneCatalog currentCatalog = getCurrentStandaloneCatalogForTenant(internalTenantContext);
             final CatalogUpdater catalogUpdater = (currentCatalog != null) ?
                                                   new CatalogUpdater(currentCatalog) :
-                                                  new CatalogUpdater(BillingMode.IN_ADVANCE, getSafeFirstCatalogEffectiveDate(effectiveDate), null);
+                                                  new CatalogUpdater(getSafeFirstCatalogEffectiveDate(effectiveDate), null);
 
             catalogCache.clearCatalog(internalTenantContext);
             tenantApi.updateTenantKeyValue(TenantKey.CATALOG.toString(), catalogUpdater.getCatalogXML(), callContext);
@@ -192,7 +192,7 @@ public class DefaultCatalogUserApi implements CatalogUserApi {
             final StandaloneCatalog currentCatalog = getCurrentStandaloneCatalogForTenant(internalTenantContext);
             final CatalogUpdater catalogUpdater = (currentCatalog != null) ?
                                                   new CatalogUpdater(currentCatalog) :
-                                                  new CatalogUpdater(BillingMode.IN_ADVANCE, getSafeFirstCatalogEffectiveDate(effectiveDate), descriptor.getCurrency());
+                                                  new CatalogUpdater(getSafeFirstCatalogEffectiveDate(effectiveDate), descriptor.getCurrency());
             catalogUpdater.addSimplePlanDescriptor(descriptor);
 
             catalogCache.clearCatalog(internalTenantContext);

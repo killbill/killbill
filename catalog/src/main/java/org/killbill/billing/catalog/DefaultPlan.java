@@ -40,6 +40,7 @@ import javax.xml.bind.annotation.XmlIDREF;
 
 import org.joda.time.DateTime;
 import org.killbill.billing.ErrorCode;
+import org.killbill.billing.catalog.api.BillingMode;
 import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.catalog.api.PhaseType;
@@ -76,6 +77,10 @@ public class DefaultPlan extends ValidatingConfig<StandaloneCatalog> implements 
     @XmlIDREF
     private DefaultProduct product;
 
+    // In order to support older versions where recurringBillingMode is defined at the StandaloneCatalog level, we don't require that field.
+    @XmlElement(required = false)
+    private BillingMode recurringBillingMode;
+
     @XmlElementWrapper(name = "initialPhases", required = false)
     @XmlElement(name = "phase", required = false)
     private DefaultPlanPhase[] initialPhases;
@@ -108,6 +113,7 @@ public class DefaultPlan extends ValidatingConfig<StandaloneCatalog> implements 
         }
         this.finalPhase = new DefaultPlanPhase(this, in.getFinalPhase(), overrides[overrides.length - 1]);
         this.priceListName = in.getPriceListName();
+        this.recurringBillingMode = in.getRecurringBillingMode();
     }
 
     @Override
@@ -115,6 +121,10 @@ public class DefaultPlan extends ValidatingConfig<StandaloneCatalog> implements 
         return effectiveDateForExistingSubscriptions;
     }
 
+    @Override
+    public BillingMode getRecurringBillingMode() {
+        return recurringBillingMode;
+    }
 
     @Override
     public DefaultPlanPhase[] getInitialPhases() {
@@ -204,6 +214,10 @@ public class DefaultPlan extends ValidatingConfig<StandaloneCatalog> implements 
             p.setPlan(this);
             p.initialize(catalog, sourceURI);
         }
+        if (recurringBillingMode == null) {
+            this.recurringBillingMode = catalog.getRecurringBillingMode();
+        }
+
         this.priceListName = this.priceListName != null ? this.priceListName : findPriceListForPlan(catalog);
     }
 
@@ -215,6 +229,10 @@ public class DefaultPlan extends ValidatingConfig<StandaloneCatalog> implements 
                                                          effectiveDateForExistingSubscriptions,
                                                          catalog.getEffectiveDate()),
                                            catalog.getCatalogURI(), DefaultPlan.class, ""));
+        }
+
+        if (recurringBillingMode == null) {
+            errors.add(new ValidationError(String.format("Invalid reccuring billingMode for plan '%s'", name), catalog.getCatalogURI(), DefaultPlan.class, ""));
         }
 
         if (product == null) {
@@ -281,6 +299,11 @@ public class DefaultPlan extends ValidatingConfig<StandaloneCatalog> implements 
 
     public DefaultPlan setPlansAllowedInBundle(final Integer plansAllowedInBundle) {
         this.plansAllowedInBundle = plansAllowedInBundle;
+        return this;
+    }
+
+    public DefaultPlan setRecurringBillingMode(final BillingMode billingMode) {
+        this.recurringBillingMode = billingMode;
         return this;
     }
 

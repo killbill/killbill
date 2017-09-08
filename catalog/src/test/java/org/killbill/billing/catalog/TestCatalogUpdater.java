@@ -56,7 +56,7 @@ public class TestCatalogUpdater extends CatalogTestSuiteNoDB {
 
         final DateTime now = clock.getUTCNow();
 
-        final CatalogUpdater catalogUpdater = new CatalogUpdater(BillingMode.IN_ADVANCE, now, null);
+        final CatalogUpdater catalogUpdater = new CatalogUpdater(now, null);
         final String catalogXML = catalogUpdater.getCatalogXML();
         final StandaloneCatalog catalog = XMLLoader.getObjectFromStream(new URI("dummy"), new ByteArrayInputStream(catalogXML.getBytes(Charset.forName("UTF-8"))), StandaloneCatalog.class);
         assertEquals(catalog.getCurrentPlans().size(), 0);
@@ -68,7 +68,7 @@ public class TestCatalogUpdater extends CatalogTestSuiteNoDB {
         final DateTime now = clock.getUTCNow();
         final SimplePlanDescriptor desc = new DefaultSimplePlanDescriptor("foo-monthly", "Foo", ProductCategory.BASE, Currency.EUR, BigDecimal.TEN, BillingPeriod.MONTHLY, 0, TimeUnit.UNLIMITED, ImmutableList.<String>of());
 
-        final CatalogUpdater catalogUpdater = new CatalogUpdater(BillingMode.IN_ADVANCE, now, desc.getCurrency());
+        final CatalogUpdater catalogUpdater = new CatalogUpdater(now, desc.getCurrency());
 
         catalogUpdater.addSimplePlanDescriptor(desc);
 
@@ -109,7 +109,7 @@ public class TestCatalogUpdater extends CatalogTestSuiteNoDB {
         final DateTime now = clock.getUTCNow();
         final SimplePlanDescriptor desc = new DefaultSimplePlanDescriptor("foo-monthly", "Foo", ProductCategory.BASE, Currency.EUR, BigDecimal.TEN, BillingPeriod.MONTHLY, 14, TimeUnit.DAYS, ImmutableList.<String>of());
 
-        final CatalogUpdater catalogUpdater = new CatalogUpdater(BillingMode.IN_ADVANCE, now, desc.getCurrency());
+        final CatalogUpdater catalogUpdater = new CatalogUpdater(now, desc.getCurrency());
 
         catalogUpdater.addSimplePlanDescriptor(desc);
 
@@ -328,7 +328,6 @@ public class TestCatalogUpdater extends CatalogTestSuiteNoDB {
                                    "<catalog>\n" +
                                    "    <effectiveDate>2013-02-08T00:00:00Z</effectiveDate>\n" +
                                    "    <catalogName>SpyCarBasic</catalogName>\n" +
-                                   "    <recurringBillingMode>IN_ADVANCE</recurringBillingMode>\n" +
                                    "    <currencies>\n" +
                                    "        <currency>USD</currency>\n" +
                                    "        <currency>GBP</currency>\n" +
@@ -432,6 +431,7 @@ public class TestCatalogUpdater extends CatalogTestSuiteNoDB {
                                    "        </plan>\n" +
                                    "        <plan name=\"sports-monthly\" prettyName=\"sports-monthly\">\n" +
                                    "            <product>Sports</product>\n" +
+                                   "            <recurringBillingMode>IN_ADVANCE</recurringBillingMode>\n" +
                                    "            <initialPhases>\n" +
                                    "                <phase type=\"TRIAL\">\n" +
                                    "                    <duration>\n" +
@@ -468,6 +468,7 @@ public class TestCatalogUpdater extends CatalogTestSuiteNoDB {
                                    "        </plan>\n" +
                                    "        <plan name=\"standard-monthly\" prettyName=\"standard-monthly\">\n" +
                                    "            <product>Standard</product>\n" +
+                                   "            <recurringBillingMode>IN_ADVANCE</recurringBillingMode>\n" +
                                    "            <initialPhases>\n" +
                                    "                <phase type=\"TRIAL\">\n" +
                                    "                    <duration>\n" +
@@ -504,6 +505,7 @@ public class TestCatalogUpdater extends CatalogTestSuiteNoDB {
                                    "        </plan>\n" +
                                    "        <plan name=\"super-monthly\" prettyName=\"super-monthly\">\n" +
                                    "            <product>Super</product>\n" +
+                                   "            <recurringBillingMode>IN_ADVANCE</recurringBillingMode>\n" +
                                    "            <initialPhases>\n" +
                                    "                <phase type=\"TRIAL\">\n" +
                                    "                    <duration>\n" +

@@ -1476,6 +1476,7 @@ public class TestInvoiceDao extends InvoiceTestSuiteWithEmbeddedDB {
 
         final Plan plan = Mockito.mock(Plan.class);
         Mockito.when(plan.getName()).thenReturn("plan");
+        Mockito.when(plan.getRecurringBillingMode()).thenReturn(BillingMode.IN_ADVANCE);
 
         final PlanPhase phase1 = Mockito.mock(PlanPhase.class);
         Mockito.when(phase1.getName()).thenReturn("plan-phase1");
@@ -1505,6 +1506,7 @@ public class TestInvoiceDao extends InvoiceTestSuiteWithEmbeddedDB {
 
         final Plan plan = Mockito.mock(Plan.class);
         Mockito.when(plan.getName()).thenReturn("plan");
+        Mockito.when(plan.getRecurringBillingMode()).thenReturn(BillingMode.IN_ADVANCE);
 
         final PlanPhase phase1 = Mockito.mock(PlanPhase.class);
         Mockito.when(phase1.getName()).thenReturn("plan-phase1");
