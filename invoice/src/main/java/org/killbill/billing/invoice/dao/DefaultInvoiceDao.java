@@ -318,7 +318,7 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
             }
         }
 
-        if (Iterables.<InvoiceModelDao>isEmpty(invoices)) {
+        if (Iterables.isEmpty(invoices)) {
             return ImmutableList.<InvoiceItemModelDao>of();
         }
         final UUID accountId = invoices.iterator().next().getAccountId();

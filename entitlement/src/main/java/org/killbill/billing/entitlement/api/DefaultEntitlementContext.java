@@ -65,7 +65,7 @@ public class DefaultEntitlementContext implements EntitlementContext {
     private static <T> Iterable<T> merge(final Iterable<T> prevValues, final Iterable<T> newValues) {
         // Be lenient if a plugin returns an empty list (default behavior for Ruby plugins): at this point,
         // we know the isAborted flag hasn't been set, so let's assume the user actually wants to use the previous list
-        if (newValues != null && !Iterables.<BaseEntitlementWithAddOnsSpecifier>isEmpty(newValues)) {
+        if (newValues != null && !Iterables.isEmpty(newValues)) {
             return newValues;
         } else {
             return prevValues;
