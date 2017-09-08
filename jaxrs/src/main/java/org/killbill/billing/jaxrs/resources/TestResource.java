@@ -268,7 +268,7 @@ public class TestResource extends JaxRsResourceBase {
 
     private boolean areAllBusEventsProcessed(final Long tenantRecordId) {
         final Iterable<BusEventWithMetadata<BusEvent>> availableBusEventForSearchKey2 = persistentBus.getAvailableOrInProcessingBusEventsForSearchKey2(null, tenantRecordId);
-        final int nbBusEvents = Iterables.<BusEventWithMetadata<BusEvent>>size(availableBusEventForSearchKey2);
+        final int nbBusEvents = Iterables.size(availableBusEventForSearchKey2);
         if (nbBusEvents != 0) {
             log.info("TestResource: at least {} more bus event(s) to process", nbBusEvents);
         }

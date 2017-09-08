@@ -227,7 +227,7 @@ public class InvoiceDaoHelper {
     }
 
     public void populateChildren(final Iterable<InvoiceModelDao> invoices, final List<Tag> invoicesTags, final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory, final InternalTenantContext context) {
-        if (Iterables.<InvoiceModelDao>isEmpty(invoices)) {
+        if (Iterables.isEmpty(invoices)) {
             return;
         }
 
@@ -242,7 +242,7 @@ public class InvoiceDaoHelper {
                                                                                                       return !invoice.isParentInvoice();
                                                                                                   }
                                                                                               });
-        if (!Iterables.<InvoiceModelDao>isEmpty(nonParentInvoices)) {
+        if (!Iterables.isEmpty(nonParentInvoices)) {
             setParentInvoice(nonParentInvoices,
                              invoicesTags,
                              entitySqlDaoWrapperFactory,
