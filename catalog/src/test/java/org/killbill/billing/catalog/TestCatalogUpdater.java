@@ -328,6 +328,7 @@ public class TestCatalogUpdater extends CatalogTestSuiteNoDB {
                                    "<catalog>\n" +
                                    "    <effectiveDate>2013-02-08T00:00:00Z</effectiveDate>\n" +
                                    "    <catalogName>SpyCarBasic</catalogName>\n" +
+                                   "    <recurringBillingMode>IN_ADVANCE</recurringBillingMode>\n" +
                                    "    <currencies>\n" +
                                    "        <currency>USD</currency>\n" +
                                    "        <currency>GBP</currency>\n" +
@@ -394,6 +395,7 @@ public class TestCatalogUpdater extends CatalogTestSuiteNoDB {
                                    "    <plans>\n" +
                                    "        <plan name=\"dynamic-annual\" prettyName=\"dynamic-annual\">\n" +
                                    "            <product>Dynamic</product>\n" +
+                                   "            <recurringBillingMode>IN_ADVANCE</recurringBillingMode>\n" +
                                    "            <initialPhases>\n" +
                                    "                <phase type=\"TRIAL\">\n" +
                                    "                    <duration>\n" +
