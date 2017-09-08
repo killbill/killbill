@@ -50,6 +50,6 @@ public class OverdueAsyncBusPoster extends DefaultOverduePosterBase {
         // Note that this is slightly incorrect because we could for instance already have a REFRESH and insert a CLEAR, but if that were the case,
         // if means overdue state would change very rapidly and the behavior would anyway be non deterministic
         // Note: don't use isEmpty() to go through all results to close the connection
-        return Iterables.<NotificationEventWithMetadata<T>>size(futureNotifications) == 0;
+        return Iterables.size(futureNotifications) == 0;
     }
 }

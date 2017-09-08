@@ -608,7 +608,7 @@ public class PaymentProcessor extends ProcessorBase {
             }
         }
 
-        Preconditions.checkState(Iterables.<PaymentTransactionModelDao>size(completionCandidates) <= 1, "There should be at most one completion candidate");
+        Preconditions.checkState(Iterables.size(completionCandidates) <= 1, "There should be at most one completion candidate");
         return Iterables.<PaymentTransactionModelDao>getLast(completionCandidates, null);
     }
 

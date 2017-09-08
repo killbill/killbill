@@ -41,7 +41,7 @@ public class JDBCSessionDao extends CachingSessionDAO {
 
     private final JDBCSessionSqlDao jdbcSessionSqlDao;
 
-    private final Cache<Serializable, Boolean> noUpdateSessionsCache = CacheBuilder.<Serializable, Boolean>newBuilder().expireAfterWrite(5, TimeUnit.SECONDS).build();
+    private final Cache<Serializable, Boolean> noUpdateSessionsCache = CacheBuilder.newBuilder().expireAfterWrite(5, TimeUnit.SECONDS).build();
 
     @Inject
     public JDBCSessionDao(final IDBI dbi) {

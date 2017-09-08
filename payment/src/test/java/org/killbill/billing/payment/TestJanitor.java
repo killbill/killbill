@@ -525,7 +525,7 @@ public class TestJanitor extends PaymentTestSuiteWithEmbeddedDB {
 
     private int getPendingNotificationCnt(final InternalCallContext internalCallContext) {
         try {
-            return Iterables.<NotificationEventWithMetadata>size(notificationQueueService.getNotificationQueue(DefaultPaymentService.SERVICE_NAME, Janitor.QUEUE_NAME).getFutureOrInProcessingNotificationForSearchKeys(internalCallContext.getAccountRecordId(), internalCallContext.getTenantRecordId()));
+            return Iterables.size(notificationQueueService.getNotificationQueue(DefaultPaymentService.SERVICE_NAME, Janitor.QUEUE_NAME).getFutureOrInProcessingNotificationForSearchKeys(internalCallContext.getAccountRecordId(), internalCallContext.getTenantRecordId()));
         } catch (final Exception e) {
             fail("Test failed ", e);
         }
