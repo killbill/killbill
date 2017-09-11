@@ -322,11 +322,19 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
                                                                                      invoiceForExternalCharge.getId(),
                                                                                      accountId,
                                                                                      charge.getBundleId(),
+                                                                                     charge.getSubscriptionId(),
+                                                                                     charge.getPlanName(),
+                                                                                     charge.getPhaseName(),
+                                                                                     charge.getPrettyPlanName(),
+                                                                                     charge.getPrettyPhaseName(),
                                                                                      charge.getDescription(),
                                                                                      startDate,
                                                                                      endDate,
                                                                                      charge.getAmount(),
-                                                                                     charge.getCurrency());
+                                                                                     charge.getRate(),
+                                                                                     charge.getCurrency(),
+                                                                                     charge.getLinkedItemId());
+
                     invoiceForExternalCharge.addInvoiceItem(externalCharge);
                 }
 
