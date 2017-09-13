@@ -34,16 +34,8 @@ matrix:
     - env: PHASE="-Ptravis,jdk17" JDK=openjdk8
     - env: PHASE="-Ptravis,jdk18" JDK=oraclejdk8
     - env: PHASE="-Ptravis,jdk18" JDK=openjdk8
-    - env: PHASE="-Pmysql,jdk16" JDK=oraclejdk8
-    - env: PHASE="-Pmysql,jdk16" JDK=openjdk8
-    - env: PHASE="-Pmysql,jdk17" JDK=oraclejdk8
-    - env: PHASE="-Pmysql,jdk17" JDK=openjdk8
     - env: PHASE="-Pmysql,jdk18" JDK=oraclejdk8
     - env: PHASE="-Pmysql,jdk18" JDK=openjdk8
-    - env: PHASE="-Ppostgresql,jdk16" JDK=oraclejdk8
-    - env: PHASE="-Ppostgresql,jdk16" JDK=openjdk8
-    - env: PHASE="-Ppostgresql,jdk17" JDK=oraclejdk8
-    - env: PHASE="-Ppostgresql,jdk17" JDK=openjdk8
     - env: PHASE="-Ppostgresql,jdk18" JDK=oraclejdk8
     - env: PHASE="-Ppostgresql,jdk18" JDK=openjdk8
   fast_finish: true
