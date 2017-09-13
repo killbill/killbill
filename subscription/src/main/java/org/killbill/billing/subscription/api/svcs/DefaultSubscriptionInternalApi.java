@@ -381,37 +381,8 @@ public class DefaultSubscriptionInternalApi extends SubscriptionApiBase implemen
     @Override
     public SubscriptionBaseBundle createBundleForAccount(final UUID accountId, final String bundleKey, final InternalCallContext context) throws SubscriptionBaseApiException {
 
-        final List<SubscriptionBaseBundle> existingBundles = dao.getSubscriptionBundlesForKey(bundleKey, context);
-
-        //
-        // Because the creation of the SubscriptionBundle is not atomic (with creation of Subscription/SubscriptionEvent), we verify if we were left
-        // with an empty SubscriptionBaseBundle form a past failing operation (See #684). We only allow reuse if such SubscriptionBaseBundle is fully
-        // empty (and don't allow use case where all Subscription are cancelled, which is the condition for that key to be re-used)
-        // Such condition should have been checked upstream (to decide whether that key is valid or not)
-        //
-        final SubscriptionBaseBundle existingBundleForAccount = Iterables.tryFind(existingBundles, new Predicate<SubscriptionBaseBundle>() {
-            @Override
-            public boolean apply(final SubscriptionBaseBundle input) {
-                return input.getAccountId().equals(accountId);
-            }
-        }).orNull();
-
-        // If Bundle already exists, and there is 0 Subscription, we reuse
-        if (existingBundleForAccount != null) {
-            try {
-                final Map<UUID, List<SubscriptionBase>> accountSubscriptions = dao.getSubscriptionsForAccount(context);
-                final List<SubscriptionBase> subscriptions = accountSubscriptions.get(existingBundleForAccount.getId());
-                if (subscriptions == null || subscriptions.size() == 0) {
-                    return existingBundleForAccount;
-                }
-            } catch (final CatalogApiException e) {
-                throw new SubscriptionBaseApiException(e);
-            }
-        }
-
         final DateTime now = clock.getUTCNow();
-        final DateTime originalCreatedDate = !existingBundles.isEmpty() ? existingBundles.get(0).getCreatedDate() : now;
-        final DefaultSubscriptionBaseBundle bundle = new DefaultSubscriptionBaseBundle(bundleKey, accountId, now, originalCreatedDate, now, now);
+        final DefaultSubscriptionBaseBundle bundle = new DefaultSubscriptionBaseBundle(bundleKey, accountId, now, now, now, now);
 
         if (null != bundleKey && bundleKey.length() > 255) {
             throw new SubscriptionBaseApiException(ErrorCode.EXTERNAL_KEY_LIMIT_EXCEEDED);
