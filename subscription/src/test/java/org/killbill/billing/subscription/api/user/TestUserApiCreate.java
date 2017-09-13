@@ -20,6 +20,7 @@ import java.util.List;
 
 import org.joda.time.DateTime;
 import org.joda.time.Interval;
+import org.killbill.billing.ErrorCode;
 import org.killbill.billing.api.TestApiListener.NextEvent;
 import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.catalog.api.PhaseType;
@@ -62,6 +63,15 @@ public class TestUserApiCreate extends SubscriptionTestSuiteWithEmbeddedDB {
         assertListenerStatus();
         assertNotNull(subscription);
 
+
+        // Verify we can't create a second bundle with the same key
+        try {
+            subscriptionInternalApi.createBundleForAccount(bundle.getAccountId(), DefaultSubscriptionTestInitializer.DEFAULT_BUNDLE_KEY, internalCallContext);
+            Assert.fail("Should not be able to create a bundle with same externalKey");
+        } catch (final SubscriptionBaseApiException e) {
+            Assert.assertEquals(e.getCode(), ErrorCode.SUB_CREATE_ACTIVE_BUNDLE_KEY_EXISTS.getCode());
+        }
+
         testListener.pushExpectedEvent(NextEvent.CANCEL);
         subscription.cancelWithDate(clock.getUTCNow(), callContext);
         assertListenerStatus();
@@ -69,6 +79,7 @@ public class TestUserApiCreate extends SubscriptionTestSuiteWithEmbeddedDB {
         final SubscriptionBaseBundle newBundle = subscriptionInternalApi.createBundleForAccount(bundle.getAccountId(), DefaultSubscriptionTestInitializer.DEFAULT_BUNDLE_KEY, internalCallContext);
         assertNotNull(newBundle);
         assertEquals(newBundle.getOriginalCreatedDate().compareTo(bundle.getCreatedDate()), 0);
+
 
         testListener.pushExpectedEvents(NextEvent.CREATE, NextEvent.PHASE);
         final DefaultSubscriptionBase newSubscription = (DefaultSubscriptionBase) subscriptionInternalApi.createSubscription(newBundle.getId(),
