@@ -259,16 +259,17 @@ public class DefaultSubscriptionDao extends EntityDaoBase<SubscriptionBundleMode
     @Override
     public SubscriptionBaseBundle createSubscriptionBundle(final DefaultSubscriptionBaseBundle bundle, final InternalCallContext context) throws SubscriptionBaseApiException {
 
+
         return transactionalSqlDao.execute(SubscriptionBaseApiException.class, new EntitySqlDaoTransactionWrapper<SubscriptionBaseBundle>() {
-            @Override
-            public SubscriptionBaseBundle inTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory) throws Exception {
-                final List<SubscriptionBundleModelDao> existingBundles = entitySqlDaoWrapperFactory.become(BundleSqlDao.class).getBundlesForKey(bundle.getExternalKey(), context);
-                //
-                // Because the creation of the SubscriptionBundle is not atomic (with creation of Subscription/SubscriptionEvent), we verify if we were left
-                // with an empty SubscriptionBaseBundle form a past failing operation (See #684). We only allow reuse if such SubscriptionBaseBundle is fully
-                // empty (and don't allow use case where all Subscription are cancelled, which is the condition for that key to be re-used)
-                // Such condition should have been checked upstream (to decide whether that key is valid or not)
-                //
+
+            //
+            // Because the creation of the SubscriptionBundle is not atomic (with creation of Subscription/SubscriptionEvent), we verify if we were left
+            // with an empty SubscriptionBaseBundle form a past failing operation (See #684). We only allow reuse if such SubscriptionBaseBundle is fully
+            // empty (and don't allow use case where all Subscription are cancelled, which is the condition for that key to be re-used)
+            // Such condition should have been checked upstream (to decide whether that key is valid or not)
+            //
+
+            private SubscriptionBaseBundle findExistingUnusedBundleForExternalKeyAndAccount(final List<SubscriptionBundleModelDao> existingBundles, final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory) {
                 final SubscriptionBundleModelDao existingBundleForAccount = Iterables.tryFind(existingBundles, new Predicate<SubscriptionBundleModelDao>() {
                     @Override
                     public boolean apply(final SubscriptionBundleModelDao input) {
@@ -276,19 +277,37 @@ public class DefaultSubscriptionDao extends EntityDaoBase<SubscriptionBundleMode
                     }
                 }).orNull();
 
-                // If Bundle already exists, and there is 0 Subscription, we reuse
+                // If Bundle already exists, and there is 0 Subscription associated with this bundle, we reuse
                 if (existingBundleForAccount != null) {
                     final List<SubscriptionModelDao> accountSubscriptions = entitySqlDaoWrapperFactory.become(SubscriptionSqlDao.class).getByAccountRecordId(context);
-                    if (accountSubscriptions == null || accountSubscriptions.size() == 0) {
+                    if (accountSubscriptions == null ||
+                        ! Iterables.any(accountSubscriptions, new Predicate<SubscriptionModelDao>() {
+                        @Override
+                        public boolean apply(final SubscriptionModelDao input) {
+                            return input.getBundleId().equals(existingBundleForAccount.getId());
+                        }
+                    })) {
                         return SubscriptionBundleModelDao.toSubscriptionbundle(existingBundleForAccount);
                     }
+                }
+                return null;
+            }
+
+
+            @Override
+            public SubscriptionBaseBundle inTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory) throws Exception {
+                final List<SubscriptionBundleModelDao> existingBundles = entitySqlDaoWrapperFactory.become(BundleSqlDao.class).getBundlesForKey(bundle.getExternalKey(), context);
+
+                final SubscriptionBaseBundle unusedBundle = findExistingUnusedBundleForExternalKeyAndAccount(existingBundles, entitySqlDaoWrapperFactory);
+                if (unusedBundle != null) {
+                    return unusedBundle;
                 }
 
                 for (SubscriptionBundleModelDao cur : existingBundles) {
                     final List<SubscriptionModelDao> subscriptions = entitySqlDaoWrapperFactory.become(SubscriptionSqlDao.class).getSubscriptionsFromBundleId(cur.getId().toString(), context);
                     final Iterable<SubscriptionModelDao> filtered = subscriptions != null ? Iterables.filter(subscriptions, new Predicate<SubscriptionModelDao>() {
                         @Override
-                        public boolean apply(@Nullable final SubscriptionModelDao input) {
+                        public boolean apply(final SubscriptionModelDao input) {
                             return input.getCategory() != ProductCategory.ADD_ON;
                         }
                     }) : ImmutableList.<SubscriptionModelDao>of();
