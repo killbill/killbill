@@ -323,7 +323,7 @@ public class DefaultSubscriptionBaseApiService implements SubscriptionBaseApiSer
 
     @Override
     public DateTime dryRunChangePlan(final DefaultSubscriptionBase subscription,
-                                     final PlanSpecifier spec,
+                                     final PlanPhaseSpecifier spec,
                                      @Nullable final DateTime requestedDateWithMs,
                                      @Nullable final BillingActionPolicy requestedPolicy,
                                      final TenantContext context) throws SubscriptionBaseApiException {
@@ -345,7 +345,7 @@ public class DefaultSubscriptionBaseApiService implements SubscriptionBaseApiSer
     }
 
     @Override
-    public DateTime changePlan(final DefaultSubscriptionBase subscription, final PlanSpecifier spec, final List<PlanPhasePriceOverride> overrides, final CallContext context) throws SubscriptionBaseApiException {
+    public DateTime changePlan(final DefaultSubscriptionBase subscription, final PlanPhaseSpecifier spec, final List<PlanPhasePriceOverride> overrides, final CallContext context) throws SubscriptionBaseApiException {
         final DateTime now = clock.getUTCNow();
 
         validateSubscriptionState(subscription, null);
@@ -364,7 +364,7 @@ public class DefaultSubscriptionBaseApiService implements SubscriptionBaseApiSer
     }
 
     @Override
-    public DateTime changePlanWithRequestedDate(final DefaultSubscriptionBase subscription, final PlanSpecifier spec, final List<PlanPhasePriceOverride> overrides,
+    public DateTime changePlanWithRequestedDate(final DefaultSubscriptionBase subscription, final PlanPhaseSpecifier spec, final List<PlanPhasePriceOverride> overrides,
                                                 final DateTime requestedDateWithMs, final CallContext context) throws SubscriptionBaseApiException {
         final DateTime effectiveDate = dryRunChangePlan(subscription, spec, requestedDateWithMs, null, context);
         validateEffectiveDate(subscription, effectiveDate);
@@ -380,7 +380,7 @@ public class DefaultSubscriptionBaseApiService implements SubscriptionBaseApiSer
     }
 
     @Override
-    public DateTime changePlanWithPolicy(final DefaultSubscriptionBase subscription, final PlanSpecifier spec, final List<PlanPhasePriceOverride> overrides, final BillingActionPolicy policy, final CallContext context) throws SubscriptionBaseApiException {
+    public DateTime changePlanWithPolicy(final DefaultSubscriptionBase subscription, final PlanPhaseSpecifier spec, final List<PlanPhasePriceOverride> overrides, final BillingActionPolicy policy, final CallContext context) throws SubscriptionBaseApiException {
 
         final DateTime effectiveDate = dryRunChangePlan(subscription, spec, null, policy, context);
 
@@ -412,7 +412,7 @@ public class DefaultSubscriptionBaseApiService implements SubscriptionBaseApiSer
     }
 
     private void doChangePlan(final DefaultSubscriptionBase subscription,
-                              final PlanSpecifier spec,
+                              final PlanPhaseSpecifier spec,
                               final List<PlanPhasePriceOverride> overrides,
                               final DateTime effectiveDate,
                               final CallContext context) throws SubscriptionBaseApiException, CatalogApiException {
@@ -423,16 +423,7 @@ public class DefaultSubscriptionBaseApiService implements SubscriptionBaseApiSer
         final Catalog fullCatalog = catalogInternalApi.getFullCatalog(true, true, internalCallContext);
         final Plan newPlan = fullCatalog.createOrFindPlan(spec, overridesWithContext, effectiveDate, subscription.getStartDate());
 
-        final PhaseType initialPhaseType;
-        if (overrides != null &&
-            overrides.size() == 1 &&
-            overrides.get(0).getPlanPhaseSpecifier() != null &&
-            overrides.get(0).getCurrency() == null) {
-            initialPhaseType = overrides.get(0).getPlanPhaseSpecifier().getPhaseType();
-        } else {
-            initialPhaseType = null;
-        }
-
+        final PhaseType initialPhaseType = spec.getPhaseType();
         if (ProductCategory.ADD_ON.toString().equalsIgnoreCase(newPlan.getProduct().getCategory().toString())) {
             if (newPlan.getPlansAllowedInBundle() != -1
                 && newPlan.getPlansAllowedInBundle() > 0

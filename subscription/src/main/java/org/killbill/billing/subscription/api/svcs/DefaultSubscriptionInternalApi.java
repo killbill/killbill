@@ -592,7 +592,7 @@ public class DefaultSubscriptionInternalApi extends SubscriptionApiBase implemen
 
     @Override
     public DateTime getDryRunChangePlanEffectiveDate(final SubscriptionBase subscription,
-                                                     final PlanSpecifier spec,
+                                                     final PlanPhaseSpecifier spec,
                                                      final DateTime requestedDateWithMs,
                                                      final BillingActionPolicy requestedPolicy,
                                                      final List<PlanPhasePriceOverride> overrides,

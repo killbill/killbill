@@ -40,6 +40,7 @@ import org.killbill.billing.catalog.api.PhaseType;
 import org.killbill.billing.catalog.api.Plan;
 import org.killbill.billing.catalog.api.PlanPhase;
 import org.killbill.billing.catalog.api.PlanPhasePriceOverride;
+import org.killbill.billing.catalog.api.PlanPhaseSpecifier;
 import org.killbill.billing.catalog.api.PlanSpecifier;
 import org.killbill.billing.catalog.api.PriceList;
 import org.killbill.billing.catalog.api.Product;
@@ -273,19 +274,19 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
     }
 
     @Override
-    public DateTime changePlan(final PlanSpecifier spec,
+    public DateTime changePlan(final PlanPhaseSpecifier spec,
                                final List<PlanPhasePriceOverride> overrides, final CallContext context) throws SubscriptionBaseApiException {
         return apiService.changePlan(this, spec, overrides, context);
     }
 
     @Override
-    public DateTime changePlanWithDate(final PlanSpecifier spec, final List<PlanPhasePriceOverride> overrides,
+    public DateTime changePlanWithDate(final PlanPhaseSpecifier spec, final List<PlanPhasePriceOverride> overrides,
                                        final DateTime requestedDate, final CallContext context) throws SubscriptionBaseApiException {
         return apiService.changePlanWithRequestedDate(this, spec, overrides, requestedDate, context);
     }
 
     @Override
-    public DateTime changePlanWithPolicy(final PlanSpecifier spec,
+    public DateTime changePlanWithPolicy(final PlanPhaseSpecifier spec,
                                          final List<PlanPhasePriceOverride> overrides, final BillingActionPolicy policy, final CallContext context) throws SubscriptionBaseApiException {
         return apiService.changePlanWithPolicy(this, spec, overrides, policy, context);
     }

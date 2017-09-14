@@ -678,7 +678,7 @@ public class TestWithBCDUpdate extends TestIntegrationBase {
                                     new ExpectedInvoiceItemCheck(new LocalDate(2016, 7, 14), new LocalDate(2016, 8, 14), InvoiceItemType.RECURRING, new BigDecimal("29.95")));
     }
 
-    private void testBCDChangeFromFreePlanToPayingPlan(final PlanSpecifier toSpec) throws Exception {
+    private void testBCDChangeFromFreePlanToPayingPlan(final PlanPhaseSpecifier toSpec) throws Exception {
         final DateTime initialDate = new DateTime(2016, 4, 1, 0, 13, 42, 0, testTimeZone);
         clock.setTime(initialDate);
 

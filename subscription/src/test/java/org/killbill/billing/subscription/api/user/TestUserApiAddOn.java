@@ -20,8 +20,6 @@ import java.util.List;
 
 import org.joda.time.DateTime;
 import org.joda.time.Interval;
-import org.testng.annotations.Test;
-
 import org.killbill.billing.api.TestApiListener.NextEvent;
 import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.catalog.api.CatalogApiException;
@@ -30,6 +28,7 @@ import org.killbill.billing.catalog.api.PhaseType;
 import org.killbill.billing.catalog.api.Plan;
 import org.killbill.billing.catalog.api.PlanAlignmentCreate;
 import org.killbill.billing.catalog.api.PlanPhase;
+import org.killbill.billing.catalog.api.PlanPhaseSpecifier;
 import org.killbill.billing.catalog.api.PlanSpecifier;
 import org.killbill.billing.catalog.api.PriceListSet;
 import org.killbill.billing.catalog.api.ProductCategory;
@@ -38,6 +37,7 @@ import org.killbill.billing.entitlement.api.EntitlementAOStatusDryRun;
 import org.killbill.billing.entitlement.api.EntitlementAOStatusDryRun.DryRunChangeReason;
 import org.killbill.billing.subscription.SubscriptionTestSuiteWithEmbeddedDB;
 import org.killbill.billing.subscription.api.SubscriptionBaseTransitionType;
+import org.testng.annotations.Test;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertFalse;
@@ -311,7 +311,7 @@ public class TestUserApiAddOn extends SubscriptionTestSuiteWithEmbeddedDB {
 
         testListener.pushExpectedEvent(NextEvent.CHANGE);
         testListener.pushExpectedEvent(NextEvent.CANCEL);
-        baseSubscription.changePlan(new PlanSpecifier(newBaseProduct, newBaseTerm, newBasePriceList), null, callContext);
+        baseSubscription.changePlan(new PlanPhaseSpecifier(newBaseProduct, newBaseTerm, newBasePriceList, null), null, callContext);
         assertListenerStatus();
 
         // REFETCH AO SUBSCRIPTION AND CHECK THIS CANCELLED
@@ -367,7 +367,7 @@ public class TestUserApiAddOn extends SubscriptionTestSuiteWithEmbeddedDB {
         assertEquals(aoStatus.get(0).getPriceList(), aoSubscription.getCurrentPriceList().getName());
         assertEquals(aoStatus.get(0).getReason(), DryRunChangeReason.AO_NOT_AVAILABLE_IN_NEW_PLAN);
 
-        baseSubscription.changePlan(new PlanSpecifier(newBaseProduct, newBaseTerm, newBasePriceList), null, callContext);
+        baseSubscription.changePlan(new PlanPhaseSpecifier(newBaseProduct, newBaseTerm, newBasePriceList), null, callContext);
 
         // REFETCH AO SUBSCRIPTION AND CHECK THIS IS ACTIVE
         aoSubscription = (DefaultSubscriptionBase) subscriptionInternalApi.getSubscriptionFromId(aoSubscription.getId(), internalCallContext);
