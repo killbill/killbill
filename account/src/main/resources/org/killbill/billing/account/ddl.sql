@@ -4,7 +4,7 @@ DROP TABLE IF EXISTS accounts;
 CREATE TABLE accounts (
     record_id serial unique,
     id varchar(36) NOT NULL,
-    external_key varchar(255) NULL,
+    external_key varchar(255) NOT NULL,
     email varchar(128) DEFAULT NULL,
     name varchar(100) DEFAULT NULL,
     first_name_length int DEFAULT NULL,
@@ -46,7 +46,7 @@ CREATE TABLE account_history (
     record_id serial unique,
     id varchar(36) NOT NULL,
     target_record_id bigint /*! unsigned */ not null,
-    external_key varchar(255) NULL,
+    external_key varchar(255) NOT NULL,
     email varchar(128) DEFAULT NULL,
     name varchar(100) DEFAULT NULL,
     first_name_length int DEFAULT NULL,
