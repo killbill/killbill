@@ -70,15 +70,8 @@ public class TestOverdueConfig extends OverdueTestSuiteNoDB {
         final DefaultOverdueConfig c = XMLLoader.getObjectFromStreamNoValidation(is, DefaultOverdueConfig.class);
         Assert.assertEquals(c.getOverdueStatesAccount().size(), 2);
 
-        Assert.assertNull(c.getOverdueStatesAccount().getStates()[1].getEmailNotification());
-
         Assert.assertNotNull(c.getOverdueStatesAccount().getInitialReevaluationInterval());
         Assert.assertEquals(c.getOverdueStatesAccount().getInitialReevaluationInterval().getDays(), 1);
-
-        final EmailNotification secondNotification = c.getOverdueStatesAccount().getStates()[0].getEmailNotification();
-        Assert.assertEquals(secondNotification.getSubject(), "ToTo");
-        Assert.assertEquals(secondNotification.getTemplateName(), "Titi");
-        Assert.assertFalse(secondNotification.isHTML());
 
         Assert.assertEquals(c.getOverdueStatesAccount().getFirstState().getName(), "OD1");
     }

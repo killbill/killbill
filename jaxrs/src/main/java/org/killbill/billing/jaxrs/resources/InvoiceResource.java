@@ -73,7 +73,6 @@ import org.killbill.billing.invoice.api.DryRunType;
 import org.killbill.billing.invoice.api.Invoice;
 import org.killbill.billing.invoice.api.InvoiceApiException;
 import org.killbill.billing.invoice.api.InvoiceItem;
-import org.killbill.billing.invoice.api.InvoiceNotifier;
 import org.killbill.billing.invoice.api.InvoicePayment;
 import org.killbill.billing.invoice.api.InvoiceUserApi;
 import org.killbill.billing.jaxrs.json.CustomFieldJson;
@@ -136,7 +135,6 @@ public class InvoiceResource extends JaxRsResourceBase {
     private static final String LOCALE_PARAM_NAME = "locale";
 
     private final InvoiceUserApi invoiceApi;
-    private final InvoiceNotifier invoiceNotifier;
     private final TenantUserApi tenantApi;
     private final Locale defaultLocale;
 
@@ -151,7 +149,6 @@ public class InvoiceResource extends JaxRsResourceBase {
     public InvoiceResource(final AccountUserApi accountUserApi,
                            final InvoiceUserApi invoiceApi,
                            final PaymentApi paymentApi,
-                           final InvoiceNotifier invoiceNotifier,
                            final Clock clock,
                            final JaxrsUriBuilder uriBuilder,
                            final TagUserApi tagUserApi,
@@ -161,7 +158,6 @@ public class InvoiceResource extends JaxRsResourceBase {
                            final Context context) {
         super(uriBuilder, tagUserApi, customFieldUserApi, auditUserApi, accountUserApi, paymentApi, null, clock, context);
         this.invoiceApi = invoiceApi;
-        this.invoiceNotifier = invoiceNotifier;
         this.tenantApi = tenantApi;
         this.defaultLocale = Locale.getDefault();
     }
@@ -341,11 +337,10 @@ public class InvoiceResource extends JaxRsResourceBase {
 
         final Account account = accountUserApi.getAccountById(accountId, callContext);
         final Iterable<InvoiceItem> sanitizedInvoiceItems = validateSanitizeAndTranformInputItems(account.getCurrency(), items);
-        final LocalDate resolvedTargetDate =  toLocalDateDefaultToday(account, targetDate, callContext);
+        final LocalDate resolvedTargetDate = toLocalDateDefaultToday(account, targetDate, callContext);
         final UUID invoiceId = invoiceApi.createMigrationInvoice(accountId, resolvedTargetDate, sanitizedInvoiceItems, callContext);
         return uriBuilder.buildResponse(uriInfo, InvoiceResource.class, "getInvoice", invoiceId, request);
     }
-
 
     @TimedResource
     @POST
@@ -663,7 +658,6 @@ public class InvoiceResource extends JaxRsResourceBase {
                              payment.getPurchasedAmount(), "InvoicePaymentJson purchasedAmount needs to be set");
         Preconditions.checkArgument(!externalPayment || payment.getPaymentMethodId() == null, "InvoicePaymentJson should not contain a paymentMethodId when this is an external payment");
 
-
         final Iterable<PluginProperty> pluginProperties = extractPluginProperties(pluginPropertiesString);
         final CallContext callContext = context.createCallContextNoAccountId(createdBy, reason, comment, request);
 
@@ -678,34 +672,6 @@ public class InvoiceResource extends JaxRsResourceBase {
         return result != null ?
                uriBuilder.buildResponse(uriInfo, InvoicePaymentResource.class, "getInvoicePayment", result.getId(), request) :
                Response.status(Status.NO_CONTENT).build();
-    }
-
-    @TimedResource
-    @POST
-    @Path("/{invoiceId:" + UUID_PATTERN + "}/" + EMAIL_NOTIFICATIONS)
-    @Consumes(APPLICATION_JSON)
-    @Produces(APPLICATION_JSON)
-    @ApiOperation(value = "Trigger an email notification for invoice")
-    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid invoice id supplied"),
-                           @ApiResponse(code = 404, message = "Account or invoice not found")})
-    public Response triggerEmailNotificationForInvoice(@PathParam("invoiceId") final String invoiceId,
-                                                       @HeaderParam(HDR_CREATED_BY) final String createdBy,
-                                                       @HeaderParam(HDR_REASON) final String reason,
-                                                       @HeaderParam(HDR_COMMENT) final String comment,
-                                                       @javax.ws.rs.core.Context final HttpServletRequest request) throws InvoiceApiException, AccountApiException {
-        final CallContext callContext = context.createCallContextNoAccountId(createdBy, reason, comment, request);
-
-        final Invoice invoice = invoiceApi.getInvoice(UUID.fromString(invoiceId), callContext);
-        if (invoice == null) {
-            throw new InvoiceApiException(ErrorCode.INVOICE_NOT_FOUND, invoiceId);
-        }
-
-        final Account account = accountUserApi.getAccountById(invoice.getAccountId(), callContext);
-
-        // Send the email (synchronous send)
-        invoiceNotifier.notify(account, invoice, callContext);
-
-        return Response.status(Status.OK).build();
     }
 
     @TimedResource

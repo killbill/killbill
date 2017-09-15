@@ -25,14 +25,12 @@ import org.killbill.billing.mock.glue.MockTenantModule;
 import org.killbill.billing.platform.api.KillbillConfigSource;
 import org.killbill.billing.subscription.api.SubscriptionBaseInternalApi;
 import org.killbill.billing.usage.glue.UsageModule;
-import org.killbill.billing.util.email.EmailModule;
 import org.killbill.billing.util.email.templates.TemplateModule;
 import org.killbill.billing.util.glue.CacheModule;
 import org.killbill.billing.util.glue.CallContextModule;
 import org.killbill.billing.util.glue.ConfigModule;
 import org.killbill.billing.util.glue.CustomFieldModule;
 import org.killbill.billing.util.glue.MemoryGlobalLockerModule;
-import org.killbill.billing.util.glue.TagStoreModule;
 import org.mockito.Mockito;
 
 public class TestInvoiceModule extends DefaultInvoiceModule {
@@ -56,7 +54,6 @@ public class TestInvoiceModule extends DefaultInvoiceModule {
         install(new CacheModule(configSource));
         install(new ConfigModule(configSource));
         install(new TemplateModule(configSource));
-        install(new EmailModule(configSource));
         install(new MockTenantModule(configSource));
 
 

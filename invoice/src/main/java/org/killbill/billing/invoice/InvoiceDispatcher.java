@@ -61,7 +61,6 @@ import org.killbill.billing.invoice.api.Invoice;
 import org.killbill.billing.invoice.api.InvoiceApiException;
 import org.killbill.billing.invoice.api.InvoiceItem;
 import org.killbill.billing.invoice.api.InvoiceItemType;
-import org.killbill.billing.invoice.api.InvoiceNotifier;
 import org.killbill.billing.invoice.api.InvoiceStatus;
 import org.killbill.billing.invoice.api.user.DefaultInvoiceNotificationInternalEvent;
 import org.killbill.billing.invoice.api.user.DefaultNullInvoiceEvent;
@@ -134,7 +133,6 @@ public class InvoiceDispatcher {
     private final SubscriptionBaseInternalApi subscriptionApi;
     private final InvoiceDao invoiceDao;
     private final InternalCallContextFactory internalCallContextFactory;
-    private final InvoiceNotifier invoiceNotifier;
     private final InvoicePluginDispatcher invoicePluginDispatcher;
     private final GlobalLocker locker;
     private final PersistentBus eventBus;
@@ -150,7 +148,6 @@ public class InvoiceDispatcher {
                              final SubscriptionBaseInternalApi SubscriptionApi,
                              final InvoiceDao invoiceDao,
                              final InternalCallContextFactory internalCallContextFactory,
-                             final InvoiceNotifier invoiceNotifier,
                              final InvoicePluginDispatcher invoicePluginDispatcher,
                              final GlobalLocker locker,
                              final PersistentBus eventBus,
@@ -164,7 +161,6 @@ public class InvoiceDispatcher {
         this.accountApi = accountApi;
         this.invoiceDao = invoiceDao;
         this.internalCallContextFactory = internalCallContextFactory;
-        this.invoiceNotifier = invoiceNotifier;
         this.invoicePluginDispatcher = invoicePluginDispatcher;
         this.locker = locker;
         this.eventBus = eventBus;
@@ -210,7 +206,7 @@ public class InvoiceDispatcher {
             return processAccountFromNotificationOrBusEvent(accountId, targetDate, dryRunArguments, context);
         } catch (final SubscriptionBaseApiException e) {
             log.warn("Failed handling SubscriptionBase change.",
-                      new InvoiceApiException(ErrorCode.INVOICE_NO_ACCOUNT_ID_FOR_SUBSCRIPTION_ID, subscriptionId.toString()));
+                     new InvoiceApiException(ErrorCode.INVOICE_NO_ACCOUNT_ID_FOR_SUBSCRIPTION_ID, subscriptionId.toString()));
             return null;
         }
     }
@@ -386,7 +382,7 @@ public class InvoiceDispatcher {
             final UUID targetInvoiceId;
             if (billingEvents.isAccountAutoInvoiceReuseDraft()) {
                 final InvoiceModelDao earliestDraftInvoice = invoiceDao.getEarliestDraftInvoiceByAccount(context);
-                targetInvoiceId = earliestDraftInvoice != null  ? earliestDraftInvoice.getId() : null;
+                targetInvoiceId = earliestDraftInvoice != null ? earliestDraftInvoice.getId() : null;
             } else {
                 targetInvoiceId = null;
             }
@@ -463,10 +459,6 @@ public class InvoiceDispatcher {
 
                 setChargedThroughDates(invoice.getInvoiceItems(FixedPriceInvoiceItem.class), invoice.getInvoiceItems(RecurringInvoiceItem.class), context);
 
-                if (InvoiceStatus.COMMITTED.equals(invoice.getStatus())) {
-                    notifyAccountIfEnabled(account, invoice, isRealInvoiceWithNonEmptyItems, context);
-                }
-
             }
             return invoice;
         } catch (final AccountApiException e) {
@@ -522,12 +514,12 @@ public class InvoiceDispatcher {
 
     private List<InvoiceItemModelDao> transformToInvoiceModelDao(final List<InvoiceItem> invoiceItems) {
         return Lists.transform(invoiceItems,
-                                   new Function<InvoiceItem, InvoiceItemModelDao>() {
-                                       @Override
-                                       public InvoiceItemModelDao apply(final InvoiceItem input) {
-                                           return new InvoiceItemModelDao(input);
-                                       }
-                                   });
+                               new Function<InvoiceItem, InvoiceItemModelDao>() {
+                                   @Override
+                                   public InvoiceItemModelDao apply(final InvoiceItem input) {
+                                       return new InvoiceItemModelDao(input);
+                                   }
+                               });
     }
 
     private Set<UUID> getUniqueInvoiceIds(final Invoice invoice) {
@@ -568,18 +560,6 @@ public class InvoiceDispatcher {
             invoiceDao.setFutureAccountNotificationsForEmptyInvoice(account.getId(), futureAccountNotifications, context);
         }
         return isThereAnyItemsLeft;
-    }
-
-    private void notifyAccountIfEnabled(final ImmutableAccountData account, final Invoice invoice, final boolean isRealInvoiceWithNonEmptyItems, final InternalCallContext context) throws InvoiceApiException, AccountApiException {
-        // Ideally we would retrieve the cached version, all the invoice code has been modified to only use ImmutableAccountData, except for the
-        // isNotifiedForInvoice piece that should probably live outside of invoice code anyways... (see https://github.com/killbill/killbill-email-notifications-plugin)
-        final Account fullAccount = accountApi.getAccountById(account.getId(), context);
-
-        if (fullAccount.isNotifiedForInvoices() && isRealInvoiceWithNonEmptyItems) {
-            // Need to re-hydrate the invoice object to get the invoice number (record id)
-            // API_FIX InvoiceNotifier public API?
-            invoiceNotifier.notify(fullAccount, new DefaultInvoice(invoiceDao.getById(invoice.getId(), context)), buildTenantContext(context));
-        }
     }
 
     private InvoiceItem computeCBAOnExistingInvoice(final Invoice invoice, final InternalCallContext context) throws InvoiceApiException {
@@ -835,14 +815,17 @@ public class InvoiceDispatcher {
     private boolean shouldIgnoreChildInvoice(final Invoice childInvoice, final BigDecimal childInvoiceAmount) {
 
         switch (childInvoiceAmount.compareTo(BigDecimal.ZERO)) {
-            case -1 :
+            case -1:
                 // do nothing if child invoice has negative amount because it's a credit and it will be use in next invoice
                 return true;
-            case 1 : return false;
-            case 0 :
+            case 1:
+                return false;
+            case 0:
                 // only ignore if amount == 0 and any item is not FIXED or RECURRING
                 for (InvoiceItem item : childInvoice.getInvoiceItems()) {
-                    if (item.getInvoiceItemType().equals(InvoiceItemType.FIXED) || item.getInvoiceItemType().equals(InvoiceItemType.RECURRING)) return false;
+                    if (item.getInvoiceItemType().equals(InvoiceItemType.FIXED) || item.getInvoiceItemType().equals(InvoiceItemType.RECURRING)) {
+                        return false;
+                    }
                 }
         }
 

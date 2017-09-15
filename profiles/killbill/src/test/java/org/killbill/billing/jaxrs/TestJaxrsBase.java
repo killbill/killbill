@@ -37,13 +37,10 @@ import org.killbill.billing.GuicyKillbillTestWithEmbeddedDBModule;
 import org.killbill.billing.api.TestApiListener;
 import org.killbill.billing.client.KillBillClient;
 import org.killbill.billing.client.KillBillHttpClient;
-import org.killbill.billing.client.RequestOptions;
 import org.killbill.billing.client.model.Payment;
 import org.killbill.billing.client.model.PaymentTransaction;
 import org.killbill.billing.client.model.Tenant;
-import org.killbill.billing.invoice.api.InvoiceNotifier;
 import org.killbill.billing.invoice.glue.DefaultInvoiceModule;
-import org.killbill.billing.invoice.notification.NullInvoiceNotifier;
 import org.killbill.billing.jetty.HttpServer;
 import org.killbill.billing.jetty.HttpServerConfig;
 import org.killbill.billing.lifecycle.glue.BusModule;
@@ -145,10 +142,6 @@ public class TestJaxrsBase extends KillbillClient {
             super(configSource);
         }
 
-        @Override
-        protected void installInvoiceNotifier() {
-            bind(InvoiceNotifier.class).to(NullInvoiceNotifier.class).asEagerSingleton();
-        }
     }
 
     private final class PaymentMockModule extends PaymentModule {
