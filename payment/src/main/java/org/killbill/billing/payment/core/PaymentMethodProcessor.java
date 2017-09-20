@@ -23,6 +23,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 
 import javax.annotation.Nullable;
@@ -33,12 +34,17 @@ import org.killbill.billing.account.api.AccountApiException;
 import org.killbill.billing.account.api.AccountInternalApi;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
+import org.killbill.billing.control.plugin.api.PaymentApiType;
+import org.killbill.billing.control.plugin.api.PaymentControlApiException;
+import org.killbill.billing.control.plugin.api.PriorPaymentControlResult;
 import org.killbill.billing.invoice.api.InvoiceInternalApi;
 import org.killbill.billing.payment.api.DefaultPaymentMethod;
 import org.killbill.billing.payment.api.PaymentApiException;
 import org.killbill.billing.payment.api.PaymentMethod;
 import org.killbill.billing.payment.api.PaymentMethodPlugin;
 import org.killbill.billing.payment.api.PluginProperty;
+import org.killbill.billing.payment.core.sm.control.ControlPluginRunner;
+import org.killbill.billing.payment.core.sm.control.PaymentControlApiAbortException;
 import org.killbill.billing.payment.dao.PaymentDao;
 import org.killbill.billing.payment.dao.PaymentMethodModelDao;
 import org.killbill.billing.payment.dispatcher.PluginDispatcher;
@@ -50,6 +56,7 @@ import org.killbill.billing.payment.provider.DefaultNoOpPaymentMethodPlugin;
 import org.killbill.billing.payment.provider.DefaultPaymentMethodInfoPlugin;
 import org.killbill.billing.payment.provider.ExternalPaymentProviderPlugin;
 import org.killbill.billing.tag.TagInternalApi;
+import org.killbill.billing.util.PluginProperties;
 import org.killbill.billing.util.UUIDs;
 import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
@@ -65,6 +72,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Function;
+import com.google.common.base.Joiner;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Predicate;
 import com.google.common.collect.Collections2;
@@ -80,8 +88,11 @@ import static org.killbill.billing.util.entity.dao.DefaultPaginationHelper.getEn
 public class PaymentMethodProcessor extends ProcessorBase {
 
     private static final Logger log = LoggerFactory.getLogger(PaymentMethodProcessor.class);
+    private static final Joiner JOINER = Joiner.on(", ");
 
     private final PluginDispatcher<UUID> uuidPluginNotificationDispatcher;
+
+    private final ControlPluginRunner controlPluginRunner;
 
     private final PaymentConfig paymentConfig;
 
@@ -94,11 +105,13 @@ public class PaymentMethodProcessor extends ProcessorBase {
                                   final GlobalLocker locker,
                                   final PaymentConfig paymentConfig,
                                   final PaymentExecutors executors,
+                                  final ControlPluginRunner controlPluginRunner,
                                   final InternalCallContextFactory internalCallContextFactory,
                                   final Clock clock) {
         super(paymentPluginServiceRegistration, accountInternalApi, paymentDao, tagUserApi, locker, internalCallContextFactory, invoiceApi, clock);
         final long paymentPluginTimeoutSec = TimeUnit.SECONDS.convert(paymentConfig.getPaymentPluginTimeout().getPeriod(), paymentConfig.getPaymentPluginTimeout().getUnit());
         this.paymentConfig = paymentConfig;
+        this.controlPluginRunner = controlPluginRunner;
         this.uuidPluginNotificationDispatcher = new PluginDispatcher<UUID>(paymentPluginTimeoutSec, executors);
     }
 
@@ -145,7 +158,6 @@ public class PaymentMethodProcessor extends ProcessorBase {
                                                                                                             return PluginDispatcher.createPluginDispatcherReturnType(pm.getId());
                                                                                                         }
 
-
                                                                                                         private void validateUniqueExternalPaymentMethod(final UUID accountId, final String pluginName) throws PaymentApiException {
                                                                                                             if (ExternalPaymentProviderPlugin.PLUGIN_NAME.equals(pluginName)) {
                                                                                                                 final List<PaymentMethodModelDao> accountPaymentMethods = paymentDao.getPaymentMethods(context);
@@ -162,6 +174,119 @@ public class PaymentMethodProcessor extends ProcessorBase {
                                                                                                     }),
                                              uuidPluginNotificationDispatcher);
     }
+
+    public UUID addPaymentMethodWithControl(final String paymentMethodExternalKey, final String paymentPluginServiceName, final Account account,
+                                            final boolean setDefault, final PaymentMethodPlugin paymentMethodProps, final Iterable<PluginProperty> properties,
+                                            final List<String> paymentControlPluginNames, final CallContext callContext, final InternalCallContext context) throws PaymentApiException {
+        final Iterable<PluginProperty> mergedProperties = PluginProperties.merge(paymentMethodProps.getProperties(), properties);
+        return executeWithPaymentMethodControl(paymentPluginServiceName, account, mergedProperties, paymentControlPluginNames, callContext, uuidPluginNotificationDispatcher, new WithPaymentMethodControlCallback<UUID>() {
+            @Override
+            public UUID doPaymentMethodApiOperation(final String adjustedPaymentPluginServiceName, final Iterable<PluginProperty> adjustedPluginProperties) throws PaymentApiException {
+                if (adjustedPaymentPluginServiceName == null) {
+                    return addPaymentMethod(paymentMethodExternalKey, paymentPluginServiceName, account, setDefault, paymentMethodProps, properties, callContext, context);
+                } else {
+                    return addPaymentMethod(paymentMethodExternalKey, adjustedPaymentPluginServiceName, account, setDefault, paymentMethodProps, properties, callContext, context);
+                }
+            }
+        });
+    }
+
+
+    private interface WithPaymentMethodControlCallback<T> {
+        T doPaymentMethodApiOperation(final String adjustedPluginName, final Iterable<PluginProperty> adjustedPluginProperties) throws PaymentApiException;
+    }
+
+    private <T> T executeWithPaymentMethodControl(final String paymentPluginServiceName,
+                                                  final Account account,
+                                                  final Iterable<PluginProperty> properties,
+                                                  final List<String> paymentControlPluginNames,
+                                                  final CallContext callContext,
+                                                  final PluginDispatcher<T> pluginDispatcher,
+                                                  final WithPaymentMethodControlCallback<T> callback) throws PaymentApiException {
+
+        return dispatchWithExceptionHandling(account,
+                                             JOINER.join(paymentControlPluginNames),
+                                             new Callable<PluginDispatcherReturnType<T>>() {
+                                                 @Override
+                                                 public PluginDispatcherReturnType<T> call() throws Exception {
+                                                     final PriorPaymentControlResult priorCallResult;
+                                                     try {
+                                                         priorCallResult = controlPluginRunner.executePluginPriorCalls(account,
+                                                                                                                       null,
+                                                                                                                       paymentPluginServiceName,
+                                                                                                                       null,
+                                                                                                                       null,
+                                                                                                                       null,
+                                                                                                                       null,
+                                                                                                                       null,
+                                                                                                                       PaymentApiType.PAYMENT_METHOD,
+                                                                                                                       null,
+                                                                                                                       null,
+                                                                                                                       null,
+                                                                                                                       null,
+                                                                                                                       null,
+                                                                                                                       null,
+                                                                                                                       true,
+                                                                                                                       paymentControlPluginNames,
+                                                                                                                       properties,
+                                                                                                                       callContext);
+
+                                                     } catch (final PaymentControlApiAbortException e) {
+                                                         throw new PaymentApiException(ErrorCode.PAYMENT_PLUGIN_API_ABORTED, e.getPluginName());
+                                                     } catch (final PaymentControlApiException e) {
+                                                         throw new PaymentApiException(e, ErrorCode.PAYMENT_PLUGIN_EXCEPTION, e);
+                                                     }
+
+                                                     try {
+                                                         final T result = callback.doPaymentMethodApiOperation(priorCallResult.getAdjustedPluginName(), priorCallResult.getAdjustedPluginProperties());
+                                                         controlPluginRunner.executePluginOnSuccessCalls(account,
+                                                                                                         null,
+                                                                                                         priorCallResult.getAdjustedPluginName(),
+                                                                                                         null,
+                                                                                                         null,
+                                                                                                         null,
+                                                                                                         null,
+                                                                                                         null,
+                                                                                                         PaymentApiType.PAYMENT_METHOD,
+                                                                                                         null,
+                                                                                                         null,
+                                                                                                         null,
+                                                                                                         null,
+                                                                                                         null,
+                                                                                                         null,
+                                                                                                         true,
+                                                                                                         paymentControlPluginNames,
+                                                                                                         priorCallResult.getAdjustedPluginProperties(),
+                                                                                                         callContext);
+                                                         return PluginDispatcher.createPluginDispatcherReturnType(result);
+                                                     } catch (final PaymentApiException e) {
+                                                         controlPluginRunner.executePluginOnFailureCalls(account,
+                                                                                                         null,
+                                                                                                         priorCallResult.getAdjustedPluginName(),
+                                                                                                         null,
+                                                                                                         null,
+                                                                                                         null,
+                                                                                                         null,
+                                                                                                         null,
+                                                                                                         PaymentApiType.PAYMENT_METHOD,
+                                                                                                         null,
+                                                                                                         null,
+                                                                                                         null,
+                                                                                                         null,
+                                                                                                         null,
+                                                                                                         null,
+                                                                                                         true,
+                                                                                                         paymentControlPluginNames,
+                                                                                                         priorCallResult.getAdjustedPluginProperties(),
+                                                                                                         callContext);
+                                                         throw e;
+                                                     }
+                                                 }
+                                             },
+                                             pluginDispatcher);
+    }
+
+
 
     private String retrieveActualPaymentMethodExternalKey(final Account account, final PaymentMethod pm, final PaymentPluginApi pluginApi, final Iterable<PluginProperty> properties, final TenantContext callContext, final InternalCallContext context) {
         // If the user specified an external key, use it

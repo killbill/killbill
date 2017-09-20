@@ -645,6 +645,28 @@ public class TestPaymentApiWithControl extends PaymentTestSuiteWithEmbeddedDB {
                                               Currency.USD);
     }
 
+    @Test(groups = "slow")
+    public void testAddPaymentMethodWithControl() throws PaymentApiException {
+        final PaymentMethodPlugin paymentMethodInfo = new DefaultNoOpPaymentMethodPlugin(UUID.randomUUID().toString(), false, null);
+        testPaymentControlPluginApi.setNewPaymentMethodName(MockPaymentProviderPlugin.PLUGIN_NAME);
+        final UUID newPaymentMethodId = paymentApi.addPaymentMethodWithPaymentControl(account, null, "SomeDummyValueToBeChanged", false, paymentMethodInfo, ImmutableList.<PluginProperty>of(), PAYMENT_OPTIONS, callContext);
+
+
+        final PaymentMethod paymentMethod = paymentApi.getPaymentMethodById(newPaymentMethodId, false, false, ImmutableList.<PluginProperty>of(), callContext);
+        Assert.assertEquals(paymentMethod.getPluginName(), MockPaymentProviderPlugin.PLUGIN_NAME);
+
+        final Payment payment = paymentApi.createAuthorizationWithPaymentControl(account, newPaymentMethodId, null, BigDecimal.TEN, Currency.USD, UUID.randomUUID().toString(),
+                                                                                 UUID.randomUUID().toString(), ImmutableList.<PluginProperty>of(), PAYMENT_OPTIONS, callContext);
+        Assert.assertEquals(payment.getPaymentMethodId(), newPaymentMethodId);
+
+        verifyOnSuccess(payment.getId(),
+                        payment.getExternalKey(),
+                        payment.getTransactions().get(0).getId(),
+                        payment.getTransactions().get(0).getExternalKey(),
+                        BigDecimal.TEN,
+                        Currency.USD);
+    }
+
     private void verifyPriorAndOnSuccess(final UUID paymentId,
                                          final String paymentExternalKey,
                                          final UUID paymentTransactionId,
@@ -830,6 +852,7 @@ public class TestPaymentApiWithControl extends PaymentTestSuiteWithEmbeddedDB {
         public static final String PLUGIN_NAME = "TEST_CONTROL_API_PLUGIN_NAME";
 
         private UUID newPaymentMethodId;
+        private String newPaymentMethodName;
 
         private UUID actualPriorCallPaymentId;
         private String actualPriorCallPaymentExternalKey;
@@ -854,6 +877,10 @@ public class TestPaymentApiWithControl extends PaymentTestSuiteWithEmbeddedDB {
 
         public void setNewPaymentMethodId(final UUID newPaymentMethodId) {
             this.newPaymentMethodId = newPaymentMethodId;
+        }
+
+        public void setNewPaymentMethodName(final String newPaymentMethodName) {
+            this.newPaymentMethodName = newPaymentMethodName;
         }
 
         public UUID getActualPriorCallPaymentId() {
@@ -956,6 +983,11 @@ public class TestPaymentApiWithControl extends PaymentTestSuiteWithEmbeddedDB {
                 @Override
                 public UUID getAdjustedPaymentMethodId() {
                     return newPaymentMethodId;
+                }
+
+                @Override
+                public String getAdjustedPluginName() {
+                    return newPaymentMethodName;
                 }
 
                 @Override

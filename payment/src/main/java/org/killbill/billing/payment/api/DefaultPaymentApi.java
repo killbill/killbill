@@ -991,6 +991,17 @@ public class DefaultPaymentApi extends DefaultApiBase implements PaymentApi {
     }
 
     @Override
+    public UUID addPaymentMethodWithPaymentControl(final Account account, final String paymentMethodExternalKey, final String pluginName, final boolean setDefault, final PaymentMethodPlugin paymentMethodInfo, final Iterable<PluginProperty> properties, final PaymentOptions paymentOptions, final CallContext context) throws PaymentApiException {
+        final List<String> paymentControlPluginNames = toPaymentControlPluginNames(paymentOptions, context);
+        if (paymentControlPluginNames.isEmpty()) {
+            return addPaymentMethod(account, paymentMethodExternalKey, pluginName, setDefault, paymentMethodInfo, properties, context);
+        }
+
+        return paymentMethodProcessor.addPaymentMethodWithControl(paymentMethodExternalKey, pluginName, account, setDefault, paymentMethodInfo, properties,
+                                                                  paymentControlPluginNames, context, internalCallContextFactory.createInternalCallContext(account.getId(), context));
+    }
+
+    @Override
     public List<PaymentMethod> getAccountPaymentMethods(final UUID accountId, final boolean includedInactive, final boolean withPluginInfo, final Iterable<PluginProperty> properties, final TenantContext context)
             throws PaymentApiException {
         return paymentMethodProcessor.getPaymentMethods(includedInactive, withPluginInfo, properties, context, internalCallContextFactory.createInternalTenantContext(accountId, context));
