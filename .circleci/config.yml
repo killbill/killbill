@@ -1,6 +1,6 @@
 defaults: &defaults
   docker:
-      - image: killbill/kbbuild:0.1.0
+      - image: killbill/kbbuild:latest
   working_directory: ~/repo
   environment:
     MAVEN_OPTS: -Xmx2048m
@@ -11,16 +11,9 @@ jobs:
     <<: *defaults
     steps:
       - checkout
-
-      # Download and cache dependencies
       - restore_cache:
-          keys:
-          - v1-dependencies-{{ checksum "pom.xml" }}
-          # fallback to using the latest cache if no exact match is found
-          - v1-dependencies-
-
-      - run: mvn -DskipTests=true install dependency:go-offline
-
+          key: v1-dependencies-{{ checksum "pom.xml" }}
+      - run: mvn -DskipTests=true clean install dependency:go-offline
       - save_cache:
           paths:
             - ~/.m2
@@ -32,21 +25,66 @@ jobs:
       - checkout
       - restore_cache:
           key: v1-dependencies-{{ checksum "pom.xml" }}
-      - run: mvn test -Ptravis
+      - run: mvn clean install -Ptravis
+      - run:
+          name: Save test results
+          command: |
+            mkdir -p ~/junit/
+            find . -type f -regex ".*/target/surefire-reports/.*xml" -exec cp {} ~/junit/ \;
+          when: always
+      - store_test_results:
+          path: ~/junit
+      - store_artifacts:
+          path: ~/junit
   test-mysql:
     <<: *defaults
     steps:
       - checkout
       - restore_cache:
           key: v1-dependencies-{{ checksum "pom.xml" }}
-      - run: mvn test -Pmysql
+      - run:
+          name: Setup MySQL
+          command: |
+            sudo /etc/init.d/mysql start
+            echo 'create database killbill' | mysql -h localhost -uroot -proot
+            curl -s http://docs.killbill.io/0.18/ddl.sql | mysql -h localhost -uroot -proot -D killbill
+      - run: mvn clean install -Plocaltest-mysql
+      - run:
+          name: Save test results
+          command: |
+            mkdir -p ~/junit/
+            find . -type f -regex ".*/target/surefire-reports/.*xml" -exec cp {} ~/junit/ \;
+          when: always
+      - store_test_results:
+          path: ~/junit
+      - store_artifacts:
+          path: ~/junit
   test-postgresql:
     <<: *defaults
     steps:
       - checkout
       - restore_cache:
           key: v1-dependencies-{{ checksum "pom.xml" }}
-      - run: mvn test -Ppostgresql
+      - run:
+          name: Setup PostgreSQL
+          command: |
+            sudo /etc/init.d/postgresql start
+            sudo -i -u postgres
+            echo 'create database killbill' | psql
+            curl https://raw.githubusercontent.com/killbill/killbill/killbill-0.18.0/util/src/main/resources/org/killbill/billing/util/ddl-postgresql.sql | psql -d killbill
+            curl -s http://docs.killbill.io/0.18/ddl.sql | psql -d killbill
+            echo "alter user postgres with password 'postgres'" | psql
+      - run: mvn clean install -Plocaltest-postgresql
+      - run:
+          name: Save test results
+          command: |
+            mkdir -p ~/junit/
+            find . -type f -regex ".*/target/surefire-reports/.*xml" -exec cp {} ~/junit/ \;
+          when: always
+      - store_test_results:
+          path: ~/junit
+      - store_artifacts:
+          path: ~/junit
 
 workflows:
   version: 2
