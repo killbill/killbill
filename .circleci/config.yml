@@ -33,3 +33,32 @@ jobs:
       - restore_cache:
           key: v1-dependencies-{{ checksum "pom.xml" }}
       - run: mvn test -Ptravis
+  test-mysql:
+    <<: *defaults
+    steps:
+      - checkout
+      - restore_cache:
+          key: v1-dependencies-{{ checksum "pom.xml" }}
+      - run: mvn test -Pmysql
+  test-postgresql:
+    <<: *defaults
+    steps:
+      - checkout
+      - restore_cache:
+          key: v1-dependencies-{{ checksum "pom.xml" }}
+      - run: mvn test -Ppostgresql
+
+workflows:
+  version: 2
+  build-and-test:
+    jobs:
+      - build
+      - test-h2:
+          requires:
+            - build
+      - test-mysql:
+          requires:
+            - build
+      - test-postgresql:
+          requires:
+            - build
