@@ -1,0 +1,35 @@
+defaults: &defaults
+  docker:
+      - image: killbill/kbbuild:0.1.0
+  working_directory: ~/repo
+  environment:
+    MAVEN_OPTS: -Xmx2048m
+
+version: 2
+jobs:
+  build:
+    <<: *defaults
+    steps:
+      - checkout
+
+      # Download and cache dependencies
+      - restore_cache:
+          keys:
+          - v1-dependencies-{{ checksum "pom.xml" }}
+          # fallback to using the latest cache if no exact match is found
+          - v1-dependencies-
+
+      - run: mvn -DskipTests=true install dependency:go-offline
+
+      - save_cache:
+          paths:
+            - ~/.m2
+          key: v1-dependencies-{{ checksum "pom.xml" }}
+
+  test-h2:
+    <<: *defaults
+    steps:
+      - checkout
+      - restore_cache:
+          key: v1-dependencies-{{ checksum "pom.xml" }}
+      - run: mvn test -Ptravis
