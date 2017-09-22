@@ -53,9 +53,11 @@ public class TestInternalCallContextFactory extends UtilTestSuiteWithEmbeddedDB 
                                "    id varchar(36) NOT NULL,\n" +
                                "    account_id varchar(36) NOT NULL,\n" +
                                "    invoice_date date NOT NULL,\n" +
-                               "    target_date date NOT NULL,\n" +
+                               "    target_date date,\n" +
                                "    currency varchar(3) NOT NULL,\n" +
+                               "    status varchar(15) NOT NULL DEFAULT 'COMMITTED',\n" +
                                "    migrated bool NOT NULL,\n" +
+                               "    parent_invoice bool NOT NULL DEFAULT FALSE,\n" +
                                "    created_by varchar(50) NOT NULL,\n" +
                                "    created_date datetime NOT NULL,\n" +
                                "    account_record_id bigint /*! unsigned */ not null,\n" +
