@@ -64,7 +64,7 @@ jobs:
     <<: *defaults
     docker:
       - image: killbill/kbbuild:0.1.0
-      - image: killbill/postgres:0.18
+      - image: killbill/postgresql:0.18
         environment:
         - POSTGRES_PASSWORD=postgres
     steps:
