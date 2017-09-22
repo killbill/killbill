@@ -49,6 +49,9 @@ jobs:
       - checkout
       - restore_cache:
           key: v1-dependencies-{{ checksum "pom.xml" }}
+      - run:
+          name: Setup latest DDL
+          command: ./bin/db-helper -a create --driver mysql -u root -p root -t
       - run: mvn clean install -Plocaltest-mysql
       - run:
           name: Save test results
@@ -71,6 +74,9 @@ jobs:
       - checkout
       - restore_cache:
           key: v1-dependencies-{{ checksum "pom.xml" }}
+      - run:
+          name: Setup latest DDL
+          command: ./bin/db-helper -a create --driver postgres -u postgres -p postgres -t
       - run: mvn clean install -Plocaltest-postgresql
       - run:
           name: Save test results
