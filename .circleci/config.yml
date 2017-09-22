@@ -1,6 +1,4 @@
 defaults: &defaults
-  docker:
-      - image: killbill/kbbuild:latest
   working_directory: ~/repo
   environment:
     MAVEN_OPTS: -Xmx2048m
@@ -9,6 +7,8 @@ version: 2
 jobs:
   build:
     <<: *defaults
+    docker:
+      - image: killbill/kbbuild:0.1.0
     steps:
       - checkout
       - restore_cache:
@@ -21,6 +21,8 @@ jobs:
 
   test-h2:
     <<: *defaults
+    docker:
+      - image: killbill/kbbuild:0.1.0
     steps:
       - checkout
       - restore_cache:
@@ -38,16 +40,15 @@ jobs:
           path: ~/junit
   test-mysql:
     <<: *defaults
+    docker:
+      - image: killbill/kbbuild:0.1.0
+      - image: killbill/mariadb:0.18
+        environment:
+        - MYSQL_ROOT_PASSWORD=root
     steps:
       - checkout
       - restore_cache:
           key: v1-dependencies-{{ checksum "pom.xml" }}
-      - run:
-          name: Setup MySQL
-          command: |
-            sudo /etc/init.d/mysql start
-            echo 'create database killbill' | mysql -h localhost -uroot -proot
-            curl -s http://docs.killbill.io/0.18/ddl.sql | mysql -h localhost -uroot -proot -D killbill
       - run: mvn clean install -Plocaltest-mysql
       - run:
           name: Save test results
@@ -61,19 +62,15 @@ jobs:
           path: ~/junit
   test-postgresql:
     <<: *defaults
+    docker:
+      - image: killbill/kbbuild:0.1.0
+      - image: killbill/postgres:0.18
+        environment:
+        - POSTGRES_PASSWORD=postgres
     steps:
       - checkout
       - restore_cache:
           key: v1-dependencies-{{ checksum "pom.xml" }}
-      - run:
-          name: Setup PostgreSQL
-          command: |
-            sudo /etc/init.d/postgresql start
-            sudo -i -u postgres
-            echo 'create database killbill' | psql
-            curl https://raw.githubusercontent.com/killbill/killbill/killbill-0.18.0/util/src/main/resources/org/killbill/billing/util/ddl-postgresql.sql | psql -d killbill
-            curl -s http://docs.killbill.io/0.18/ddl.sql | psql -d killbill
-            echo "alter user postgres with password 'postgres'" | psql
       - run: mvn clean install -Plocaltest-postgresql
       - run:
           name: Save test results
