@@ -633,8 +633,8 @@ public class PaymentMethodProcessor extends ProcessorBase {
                     for (final PaymentMethodInfoPlugin cur : pluginPms) {
                         // If the kbPaymentId is NULL, the plugin does not know about it, so we create a new UUID
                         final UUID paymentMethodId = cur.getPaymentMethodId() != null ? cur.getPaymentMethodId() : UUIDs.randomUUID();
-                        // TODO paymentMethod externalKey seems broken here.
-                        final PaymentMethod input = new DefaultPaymentMethod(paymentMethodId, paymentMethodId.toString(), account.getId(), pluginName);
+                        final String externalKey = cur.getExternalPaymentMethodId() != null ? cur.getExternalPaymentMethodId() : paymentMethodId.toString();
+                        final PaymentMethod input = new DefaultPaymentMethod(paymentMethodId, externalKey, account.getId(), pluginName);
                         final PaymentMethodModelDao pmModel = new PaymentMethodModelDao(input.getId(), input.getExternalKey(), input.getCreatedDate(), input.getUpdatedDate(),
                                                                                         input.getAccountId(), input.getPluginName(), input.isActive());
                         finalPaymentMethods.add(pmModel);
