@@ -51,7 +51,7 @@ jobs:
           key: v1-dependencies-{{ checksum "pom.xml" }}
       - run:
           name: Setup latest DDL
-          command: ./bin/db-helper -a create --driver mysql -u root -p root -t
+          command: ./bin/db-helper -a create --driver mysql -u root -p root -t yes -h 127.0.0.1
       - run: mvn clean install -Plocaltest-mysql
       - run:
           name: Save test results
@@ -76,7 +76,7 @@ jobs:
           key: v1-dependencies-{{ checksum "pom.xml" }}
       - run:
           name: Setup latest DDL
-          command: ./bin/db-helper -a create --driver postgres -u postgres -p postgres -t
+          command: ./bin/db-helper -a create --driver postgres -u postgres -p postgres -t yes
       - run: mvn clean install -Plocaltest-postgresql
       - run:
           name: Save test results
