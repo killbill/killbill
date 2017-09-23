@@ -76,6 +76,7 @@ public class TestUserApiCreate extends SubscriptionTestSuiteWithEmbeddedDB {
         subscription.cancelWithDate(clock.getUTCNow(), callContext);
         assertListenerStatus();
 
+        /*
         final SubscriptionBaseBundle newBundle = subscriptionInternalApi.createBundleForAccount(bundle.getAccountId(), DefaultSubscriptionTestInitializer.DEFAULT_BUNDLE_KEY, internalCallContext);
         assertNotNull(newBundle);
         assertEquals(newBundle.getOriginalCreatedDate().compareTo(bundle.getCreatedDate()), 0);
@@ -92,6 +93,7 @@ public class TestUserApiCreate extends SubscriptionTestSuiteWithEmbeddedDB {
 
         assertListenerStatus();
         assertNotNull(newSubscription);
+        */
     }
 
     @Test(groups = "slow")

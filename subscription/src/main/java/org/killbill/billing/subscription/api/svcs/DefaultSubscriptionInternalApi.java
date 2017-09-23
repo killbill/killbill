@@ -46,7 +46,6 @@ import org.killbill.billing.catalog.api.PlanPhase;
 import org.killbill.billing.catalog.api.PlanPhasePriceOverride;
 import org.killbill.billing.catalog.api.PlanPhasePriceOverridesWithCallContext;
 import org.killbill.billing.catalog.api.PlanPhaseSpecifier;
-import org.killbill.billing.catalog.api.PlanSpecifier;
 import org.killbill.billing.catalog.api.ProductCategory;
 import org.killbill.billing.entitlement.api.BaseEntitlementWithAddOnsSpecifier;
 import org.killbill.billing.entitlement.api.Entitlement.EntitlementState;
@@ -399,7 +398,8 @@ public class DefaultSubscriptionInternalApi extends SubscriptionApiBase implemen
 
     @Override
     public List<SubscriptionBaseBundle> getBundlesForAccountAndKey(final UUID accountId, final String bundleKey, final InternalTenantContext context) throws SubscriptionBaseApiException {
-        return dao.getSubscriptionBundlesForAccountAndKey(accountId, bundleKey, context);
+        final SubscriptionBaseBundle subscriptionBundlesForAccountAndKey = dao.getSubscriptionBundlesForAccountAndKey(accountId, bundleKey, context);
+        return subscriptionBundlesForAccountAndKey != null ? ImmutableList.of(subscriptionBundlesForAccountAndKey) : ImmutableList.<SubscriptionBaseBundle>of();
     }
 
     @Override
@@ -424,7 +424,7 @@ public class DefaultSubscriptionInternalApi extends SubscriptionApiBase implemen
                                               new Function<SubscriptionBundleModelDao, SubscriptionBaseBundle>() {
                                                   @Override
                                                   public SubscriptionBaseBundle apply(final SubscriptionBundleModelDao bundleModelDao) {
-                                                      return SubscriptionBundleModelDao.toSubscriptionbundle(bundleModelDao);
+                                                      return SubscriptionBundleModelDao.toSubscriptionBundle(bundleModelDao);
                                                   }
                                               }
                                              );
@@ -442,7 +442,7 @@ public class DefaultSubscriptionInternalApi extends SubscriptionApiBase implemen
                                               new Function<SubscriptionBundleModelDao, SubscriptionBaseBundle>() {
                                                   @Override
                                                   public SubscriptionBaseBundle apply(final SubscriptionBundleModelDao bundleModelDao) {
-                                                      return SubscriptionBundleModelDao.toSubscriptionbundle(bundleModelDao);
+                                                      return SubscriptionBundleModelDao.toSubscriptionBundle(bundleModelDao);
                                                   }
                                               }
                                              );

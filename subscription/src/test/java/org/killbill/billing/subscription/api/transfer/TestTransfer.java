@@ -64,7 +64,7 @@ public class TestTransfer extends SubscriptionTestSuiteWithEmbeddedDB {
         final Account account2 = createAccount(accountData2);
         finalNewAccountId = account2.getId();
 
-        // internal context will be configured for newAccountId
+        // internal context will be configured for accountId
         final AccountData accountData = subscriptionTestInitializer.initAccountData();
         final Account account = createAccount(accountData);
         newAccountId = account.getId();

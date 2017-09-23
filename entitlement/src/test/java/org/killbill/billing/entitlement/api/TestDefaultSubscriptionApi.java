@@ -134,6 +134,9 @@ public class TestDefaultSubscriptionApi extends EntitlementTestSuiteWithEmbedded
         entitlement.cancelEntitlementWithDate(new LocalDate(clock.getUTCNow(), account.getTimeZone()), true, ImmutableList.<PluginProperty>of(), callContext);
         assertListenerStatus();
 
+        // Update the bundle externalKey associated with previously cancelled  subscription, so we can reuse it
+        subscriptionApi.updateExternalKey(bundles.get(0).getId(), "kbtest-123:" + externalKey, callContext);
+
         try {
             subscriptionApi.getActiveSubscriptionBundleForExternalKey(externalKey, callContext);
             Assert.fail("Expected getActiveSubscriptionBundleForExternalKey to fail after cancellation");

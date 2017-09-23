@@ -918,7 +918,7 @@ public class TestIntegrationParentInvoice extends TestIntegrationBase {
         clock.setTime(date);
         assertListenerStatus();
 
-        createBaseEntitlementAndCheckForCompletion(childAccount.getId(), "bundleKey1", "Shotgun", ProductCategory.BASE, BillingPeriod.MONTHLY, NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE);
+        createBaseEntitlementAndCheckForCompletion(childAccount.getId(), "bundleKey2", "Shotgun", ProductCategory.BASE, BillingPeriod.MONTHLY, NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE);
 
         // Move through time and verify new parent Invoice.
         busHandler.pushExpectedEvents(NextEvent.PHASE, NextEvent.INVOICE, NextEvent.INVOICE);

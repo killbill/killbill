@@ -510,40 +510,7 @@ public class TestIntegration extends TestIntegrationBase {
         checkNoMoreInvoiceToGenerate(account);
     }
 
-    @Test(groups = "slow")
-    public void testCreateMultipleBPWithSameExternalKey() throws Exception {
-        final DateTime initialDate = new DateTime(2012, 4, 25, 0, 13, 42, 0, testTimeZone);
-        clock.setDeltaFromReality(initialDate.getMillis() - clock.getUTCNow().getMillis());
-
-        final Account account = createAccountWithNonOsgiPaymentMethod(getAccountData(25));
-        assertNotNull(account);
-
-        final String productName = "Shotgun";
-        final BillingPeriod term = BillingPeriod.MONTHLY;
-
-        final DefaultEntitlement baseEntitlement = createBaseEntitlementAndCheckForCompletion(account.getId(), "bundleKey", productName, ProductCategory.BASE, term, NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE);
-        final SubscriptionBundle initialBundle = subscriptionApi.getActiveSubscriptionBundleForExternalKey("bundleKey", callContext);
-
-        busHandler.pushExpectedEvents(NextEvent.BLOCK, NextEvent.CANCEL, NextEvent.NULL_INVOICE);
-        baseEntitlement.cancelEntitlementWithPolicy(EntitlementActionPolicy.IMMEDIATE, ImmutableList.<PluginProperty>of(), callContext);
-        assertListenerStatus();
-
-        final String newProductName = "Pistol";
-        final DefaultEntitlement newBaseEntitlement = createBaseEntitlementAndCheckForCompletion(account.getId(), "bundleKey", newProductName, ProductCategory.BASE, term, NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE);
-
-        final SubscriptionBundle newBundle = subscriptionApi.getActiveSubscriptionBundleForExternalKey("bundleKey", callContext);
-
-        assertNotEquals(initialBundle.getId(), newBundle.getId());
-        assertEquals(initialBundle.getAccountId(), newBundle.getAccountId());
-        assertEquals(initialBundle.getExternalKey(), newBundle.getExternalKey());
-
-        final Entitlement refreshedBseEntitlement = entitlementApi.getEntitlementForId(baseEntitlement.getId(), callContext);
-
-        assertEquals(refreshedBseEntitlement.getState(), EntitlementState.CANCELLED);
-        assertEquals(newBaseEntitlement.getState(), EntitlementState.ACTIVE);
-
-        checkNoMoreInvoiceToGenerate(account);
-    }
+   
 
     @Test(groups = "slow")
     public void testWithPauseResume() throws Exception {

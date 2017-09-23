@@ -268,7 +268,7 @@ public class DefaultSubscriptionApi implements SubscriptionApi {
 
         logUpdateExternalKey(log, bundleId, newExternalKey);
 
-        final InternalCallContext internalCallContext = internalCallContextFactory.createInternalCallContextWithoutAccountRecordId(callContext);
+        final InternalCallContext internalCallContext = internalCallContextFactory.createInternalCallContext(bundleId, ObjectType.BUNDLE, callContext);
 
         final SubscriptionBaseBundle bundle;
         final ImmutableAccountData account;
