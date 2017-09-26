@@ -34,6 +34,7 @@ import org.killbill.billing.beatrix.integration.BeatrixIntegrationModule;
 import org.killbill.billing.beatrix.util.InvoiceChecker.ExpectedInvoiceItemCheck;
 import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.catalog.api.Currency;
+import org.killbill.billing.catalog.api.PlanPhaseSpecifier;
 import org.killbill.billing.catalog.api.PlanSpecifier;
 import org.killbill.billing.catalog.api.PriceListSet;
 import org.killbill.billing.catalog.api.ProductCategory;
@@ -1195,7 +1196,7 @@ public class TestOverdueIntegration extends TestOverdueBase {
     private void checkChangePlanWithOverdueState(final Entitlement entitlement, final boolean shouldFail, final boolean expectedPayment) {
         if (shouldFail) {
             try {
-                entitlement.changePlan(new PlanSpecifier("Pistol", term, PriceListSet.DEFAULT_PRICELIST_NAME), null, ImmutableList.<PluginProperty>of(), callContext);
+                entitlement.changePlan(new PlanPhaseSpecifier("Pistol", term, PriceListSet.DEFAULT_PRICELIST_NAME), null, ImmutableList.<PluginProperty>of(), callContext);
             } catch (EntitlementApiException e) {
                 assertTrue(e.getCause() instanceof BlockingApiException || e.getCode() == ErrorCode.SUB_CHANGE_NON_ACTIVE.getCode(),
                            String.format("Cause is %s, message is %s", e.getCause(), e.getMessage()));

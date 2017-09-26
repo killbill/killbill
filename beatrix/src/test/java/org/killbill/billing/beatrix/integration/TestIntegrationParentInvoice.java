@@ -18,10 +18,13 @@
 package org.killbill.billing.beatrix.integration;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
+import org.killbill.billing.ErrorCode;
 import org.killbill.billing.ObjectType;
 import org.killbill.billing.account.api.Account;
 import org.killbill.billing.account.api.DefaultAccount;
@@ -30,6 +33,7 @@ import org.killbill.billing.api.TestApiListener.NextEvent;
 import org.killbill.billing.catalog.api.BillingActionPolicy;
 import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.catalog.api.Currency;
+import org.killbill.billing.catalog.api.PlanPhaseSpecifier;
 import org.killbill.billing.catalog.api.PlanSpecifier;
 import org.killbill.billing.catalog.api.ProductCategory;
 import org.killbill.billing.entitlement.api.DefaultEntitlement;
@@ -39,7 +43,10 @@ import org.killbill.billing.invoice.api.InvoiceItem;
 import org.killbill.billing.invoice.api.InvoiceItemType;
 import org.killbill.billing.invoice.api.InvoiceStatus;
 import org.killbill.billing.payment.api.Payment;
+import org.killbill.billing.payment.api.PaymentApiException;
 import org.killbill.billing.payment.api.PluginProperty;
+import org.killbill.billing.payment.invoice.InvoicePaymentControlPluginApi;
+import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import com.google.common.collect.ImmutableList;
@@ -180,7 +187,7 @@ public class TestIntegrationParentInvoice extends TestIntegrationBase {
 
         // upgrade plan
         busHandler.pushExpectedEvents(NextEvent.CHANGE, NextEvent.INVOICE);
-        baseEntitlementChild.changePlanWithDate(new PlanSpecifier("Shotgun", BillingPeriod.MONTHLY, baseEntitlementChild.getLastActivePriceList().getName()), null, null,null, callContext);
+        baseEntitlementChild.changePlanWithDate(new PlanPhaseSpecifier("Shotgun", BillingPeriod.MONTHLY, baseEntitlementChild.getLastActivePriceList().getName()), null, null, null, callContext);
         assertListenerStatus();
 
         // check parent invoice. Expected to have the same invoice item with the amount updated
@@ -1127,6 +1134,22 @@ public class TestIntegrationParentInvoice extends TestIntegrationBase {
         // TODO Should we automatically adjust the invoice at the parent level or should it be the responsibility of the user?
         assertEquals(invoiceUserApi.getAccountBalance(parentAccount.getId(), callContext).compareTo(new BigDecimal("249.95")), 0);
         assertEquals(invoiceUserApi.getAccountBalance(childAccount.getId(), callContext).compareTo(new BigDecimal("249.95")), 0);
+
+
+        // Verify Invoice apis getParentAccountId/getParentInvoiceId
+        assertEquals(childInvoices.get(1).getParentAccountId(), parentAccount.getId());
+        assertEquals(childInvoices.get(1).getParentInvoiceId(), parentInvoice.getId());
+
+        try {
+            final List<PluginProperty> properties = new ArrayList<PluginProperty>();
+            final PluginProperty prop1 = new PluginProperty(InvoicePaymentControlPluginApi.PROP_IPCD_INVOICE_ID, childInvoices.get(1).getId().toString(), false);
+            properties.add(prop1);
+            paymentApi.createPurchaseWithPaymentControl(childAccount, childAccount.getPaymentMethodId(), null, childInvoices.get(1).getBalance(), childInvoices.get(1).getCurrency(), UUID.randomUUID().toString(),
+                                                        UUID.randomUUID().toString(), properties, PAYMENT_OPTIONS, callContext);
+            Assert.fail("Payment should fail, invoice belongs to parent");
+        } catch (final PaymentApiException e) {
+            assertEquals(ErrorCode.PAYMENT_PLUGIN_API_ABORTED.getCode(), e.getCode());
+        }
 
         final int nbDaysBeforeRetry = paymentConfig.getPaymentFailureRetryDays(internalCallContext).get(0);
 

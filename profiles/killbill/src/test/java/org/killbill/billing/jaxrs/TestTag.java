@@ -79,9 +79,6 @@ public class TestTag extends TestJaxrsBase {
         List<TagDefinition> objFromJson = killBillClient.getTagDefinitions(requestOptions);
         final int sizeSystemTag = objFromJson.isEmpty() ? 0 : objFromJson.size();
 
-        for (final TagDefinition cur : objFromJson) {
-            Assert.assertFalse(SystemTags.isSystemTag(cur.getId()));
-        }
 
         final TagDefinition inputBlue = new TagDefinition(null, false, "blue", "relaxing color", ImmutableList.<ObjectType>of());
         killBillClient.createTagDefinition(inputBlue, requestOptions);

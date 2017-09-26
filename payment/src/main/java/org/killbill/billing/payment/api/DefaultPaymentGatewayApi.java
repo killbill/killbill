@@ -147,6 +147,7 @@ public class DefaultPaymentGatewayApi extends DefaultApiBase implements PaymentG
                                                                                                                        null,
                                                                                                                        null,
                                                                                                                        null,
+                                                                                                                       null,
                                                                                                                        PaymentApiType.HPP,
                                                                                                                        null,
                                                                                                                        HPPType.BUILD_FORM_DESCRIPTOR,
@@ -174,6 +175,7 @@ public class DefaultPaymentGatewayApi extends DefaultApiBase implements PaymentG
                                                                                                          null,
                                                                                                          null,
                                                                                                          null,
+                                                                                                         null,
                                                                                                          PaymentApiType.HPP,
                                                                                                          null,
                                                                                                          HPPType.BUILD_FORM_DESCRIPTOR,
@@ -189,6 +191,7 @@ public class DefaultPaymentGatewayApi extends DefaultApiBase implements PaymentG
                                                      } catch (final PaymentApiException e) {
                                                          controlPluginRunner.executePluginOnFailureCalls(account,
                                                                                                          paymentMethodId,
+                                                                                                         null,
                                                                                                          null,
                                                                                                          null,
                                                                                                          null,

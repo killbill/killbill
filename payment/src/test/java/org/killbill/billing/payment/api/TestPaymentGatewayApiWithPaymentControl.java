@@ -257,7 +257,7 @@ public class TestPaymentGatewayApiWithPaymentControl extends PaymentTestSuiteNoD
 
         @Override
         public PriorPaymentControlResult priorCall(final PaymentControlContext paymentControlContext, final Iterable<PluginProperty> properties) throws PaymentControlApiException {
-            return new DefaultPriorPaymentControlResult(aborted, account.getPaymentMethodId(), null, null, getAdjustedProperties(properties, newPriorCallProperties, removedPriorCallProperties));
+            return new DefaultPriorPaymentControlResult(aborted, account.getPaymentMethodId(), null, null, null, getAdjustedProperties(properties, newPriorCallProperties, removedPriorCallProperties));
         }
 
         @Override

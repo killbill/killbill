@@ -48,6 +48,8 @@ public interface InvoiceDao extends EntityDao<InvoiceModelDao, Invoice, InvoiceA
     public void setFutureAccountNotificationsForEmptyInvoice(final UUID accountId, final FutureAccountNotifications callbackDateTimePerSubscriptions,
                                                              final InternalCallContext context);
 
+    InvoiceModelDao getEarliestDraftInvoiceByAccount(InternalTenantContext context);
+
     InvoiceModelDao getByNumber(Integer number, InternalTenantContext context) throws InvoiceApiException;
 
     List<InvoiceModelDao> getInvoicesByAccount(InternalTenantContext context);

@@ -57,7 +57,6 @@ import org.killbill.billing.invoice.api.DryRunType;
 import org.killbill.billing.invoice.api.Invoice;
 import org.killbill.billing.invoice.api.InvoiceApiException;
 import org.killbill.billing.invoice.api.InvoiceItem;
-import org.killbill.billing.invoice.api.InvoiceNotifier;
 import org.killbill.billing.invoice.api.InvoicePayment;
 import org.killbill.billing.invoice.dao.InvoiceDao;
 import org.killbill.billing.invoice.dao.InvoiceItemModelDao;
@@ -68,7 +67,6 @@ import org.killbill.billing.invoice.dao.InvoicePaymentModelDao;
 import org.killbill.billing.invoice.dao.InvoicePaymentSqlDao;
 import org.killbill.billing.invoice.dao.InvoiceSqlDao;
 import org.killbill.billing.invoice.generator.InvoiceGenerator;
-import org.killbill.billing.invoice.notification.NullInvoiceNotifier;
 import org.killbill.billing.junction.BillingEvent;
 import org.killbill.billing.junction.BillingEventSet;
 import org.killbill.billing.junction.BillingInternalApi;
@@ -211,9 +209,8 @@ public class TestInvoiceHelper {
 
         Mockito.when(billingApi.getBillingEventsForAccountAndUpdateAccountBCD(Mockito.<UUID>any(), Mockito.<DryRunArguments>any(), Mockito.<InternalCallContext>any())).thenReturn(events);
 
-        final InvoiceNotifier invoiceNotifier = new NullInvoiceNotifier();
         final InvoiceDispatcher dispatcher = new InvoiceDispatcher(generator, accountApi, billingApi, subscriptionApi,
-                                                                   invoiceDao, internalCallContextFactory, invoiceNotifier, invoicePluginDispatcher, locker, busService.getBus(),
+                                                                   invoiceDao, internalCallContextFactory, invoicePluginDispatcher, locker, busService.getBus(),
                                                                    null, invoiceConfig, clock, parkedAccountsManager);
 
         Invoice invoice = dispatcher.processAccountFromNotificationOrBusEvent(account.getId(), targetDate, new DryRunFutureDateArguments(), internalCallContext);

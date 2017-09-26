@@ -88,6 +88,7 @@ public abstract class OperationControlCallback extends OperationCallbackBase<Pay
 
                 final PaymentControlContext paymentControlContext = new DefaultPaymentControlContext(paymentStateContext.getAccount(),
                                                                                                      paymentStateContext.getPaymentMethodId(),
+                                                                                                     null,
                                                                                                      paymentStateControlContext.getAttemptId(),
                                                                                                      paymentStateContext.getPaymentId(),
                                                                                                      paymentStateContext.getPaymentExternalKey(),
@@ -123,6 +124,7 @@ public abstract class OperationControlCallback extends OperationCallbackBase<Pay
                     success = transaction.getTransactionStatus() == TransactionStatus.SUCCESS || transaction.getTransactionStatus() == TransactionStatus.PENDING;
                     final PaymentControlContext updatedPaymentControlContext = new DefaultPaymentControlContext(paymentStateContext.getAccount(),
                                                                                                                 paymentStateContext.getPaymentMethodId(),
+                                                                                                                null,
                                                                                                                 paymentStateControlContext.getAttemptId(),
                                                                                                                 result.getId(),
                                                                                                                 result.getExternalKey(),
@@ -173,6 +175,7 @@ public abstract class OperationControlCallback extends OperationCallbackBase<Pay
 
         final PriorPaymentControlResult result = controlPluginRunner.executePluginPriorCalls(paymentStateContext.getAccount(),
                                                                                              paymentControlContextArg.getPaymentMethodId(),
+                                                                                             null,
                                                                                              paymentStateControlContext.getAttemptId(),
                                                                                              paymentStateContext.getPaymentId(),
                                                                                              paymentStateContext.getPaymentExternalKey(),
@@ -199,6 +202,7 @@ public abstract class OperationControlCallback extends OperationCallbackBase<Pay
         // paymentId, paymentExternalKey, transactionAmount, transaction currency are extracted from  paymentControlContext which was update from the operation result.
         final OnSuccessPaymentControlResult result = controlPluginRunner.executePluginOnSuccessCalls(paymentStateContext.getAccount(),
                                                                                                      paymentStateContext.getPaymentMethodId(),
+                                                                                                     null,
                                                                                                      paymentStateControlContext.getAttemptId(),
                                                                                                      paymentControlContext.getPaymentId(),
                                                                                                      paymentControlContext.getPaymentExternalKey(),
@@ -230,6 +234,7 @@ public abstract class OperationControlCallback extends OperationCallbackBase<Pay
 
         final OnFailurePaymentControlResult result = controlPluginRunner.executePluginOnFailureCalls(paymentStateContext.getAccount(),
                                                                                                      paymentControlContext.getPaymentMethodId(),
+                                                                                                     null,
                                                                                                      paymentStateControlContext.getAttemptId(),
                                                                                                      paymentControlContext.getPaymentId(),
                                                                                                      paymentControlContext.getPaymentExternalKey(),

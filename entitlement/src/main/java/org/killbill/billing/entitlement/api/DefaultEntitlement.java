@@ -37,6 +37,7 @@ import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.catalog.api.Plan;
 import org.killbill.billing.catalog.api.PlanPhase;
 import org.killbill.billing.catalog.api.PlanPhasePriceOverride;
+import org.killbill.billing.catalog.api.PlanPhaseSpecifier;
 import org.killbill.billing.catalog.api.PlanSpecifier;
 import org.killbill.billing.catalog.api.PriceList;
 import org.killbill.billing.catalog.api.Product;
@@ -540,7 +541,7 @@ public class DefaultEntitlement extends EntityBase implements Entitlement {
 
 
     @Override
-    public Entitlement changePlan(final PlanSpecifier spec, final List<PlanPhasePriceOverride> overrides, final Iterable<PluginProperty> properties, final CallContext callContext) throws EntitlementApiException {
+    public Entitlement changePlan(final PlanPhaseSpecifier spec, final List<PlanPhasePriceOverride> overrides, final Iterable<PluginProperty> properties, final CallContext callContext) throws EntitlementApiException {
 
         logChangePlan(log, this, spec, overrides, null, null);
 
@@ -611,7 +612,7 @@ public class DefaultEntitlement extends EntityBase implements Entitlement {
     }
 
     @Override
-    public Entitlement changePlanWithDate(final PlanSpecifier spec, final List<PlanPhasePriceOverride> overrides, @Nullable final LocalDate effectiveDate, final Iterable<PluginProperty> properties, final CallContext callContext) throws EntitlementApiException {
+    public Entitlement changePlanWithDate(final PlanPhaseSpecifier spec, final List<PlanPhasePriceOverride> overrides, @Nullable final LocalDate effectiveDate, final Iterable<PluginProperty> properties, final CallContext callContext) throws EntitlementApiException {
 
         logChangePlan(log, this, spec, overrides, effectiveDate, null);
 
@@ -688,7 +689,7 @@ public class DefaultEntitlement extends EntityBase implements Entitlement {
     }
 
     @Override
-    public Entitlement changePlanOverrideBillingPolicy(final PlanSpecifier spec, final List<PlanPhasePriceOverride> overrides, final LocalDate unused, final BillingActionPolicy actionPolicy, final Iterable<PluginProperty> properties, final CallContext callContext) throws EntitlementApiException {
+    public Entitlement changePlanOverrideBillingPolicy(final PlanPhaseSpecifier spec, final List<PlanPhasePriceOverride> overrides, final LocalDate unused, final BillingActionPolicy actionPolicy, final Iterable<PluginProperty> properties, final CallContext callContext) throws EntitlementApiException {
 
         logChangePlan(log, this, spec, overrides, null, actionPolicy);
 

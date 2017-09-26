@@ -32,6 +32,7 @@ import org.killbill.billing.subscription.api.transfer.TransferCancelData;
 import org.killbill.billing.subscription.api.user.DefaultSubscriptionBase;
 import org.killbill.billing.subscription.api.user.DefaultSubscriptionBaseBundle;
 import org.killbill.billing.subscription.api.user.DefaultSubscriptionBaseWithAddOns;
+import org.killbill.billing.subscription.api.user.SubscriptionBaseApiException;
 import org.killbill.billing.subscription.api.user.SubscriptionBaseBundle;
 import org.killbill.billing.subscription.engine.dao.model.SubscriptionBundleModelDao;
 import org.killbill.billing.subscription.events.SubscriptionBaseEvent;
@@ -53,7 +54,7 @@ public interface SubscriptionDao extends EntityDao<SubscriptionBundleModelDao, S
 
     public SubscriptionBaseBundle getSubscriptionBundleFromId(UUID bundleId, InternalTenantContext context);
 
-    public SubscriptionBaseBundle createSubscriptionBundle(DefaultSubscriptionBaseBundle bundle, InternalCallContext context);
+    public SubscriptionBaseBundle createSubscriptionBundle(DefaultSubscriptionBaseBundle bundle, final Catalog catalog, InternalCallContext context) throws SubscriptionBaseApiException;
 
     public SubscriptionBase getSubscriptionFromId(UUID subscriptionId, final Catalog catalog, InternalTenantContext context) throws CatalogApiException;
 

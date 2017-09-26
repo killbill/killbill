@@ -46,7 +46,6 @@ import org.killbill.billing.tenant.glue.DefaultTenantModule;
 import org.killbill.billing.usage.glue.UsageModule;
 import org.killbill.billing.util.config.definition.InvoiceConfig;
 import org.killbill.billing.util.config.definition.PaymentConfig;
-import org.killbill.billing.util.email.EmailModule;
 import org.killbill.billing.util.email.templates.TemplateModule;
 import org.killbill.billing.util.glue.AuditModule;
 import org.killbill.billing.util.glue.BroadcastModule;
@@ -88,7 +87,6 @@ public class BeatrixIntegrationModule extends KillBillModule {
         install(new GlobalLockerModule(configSource));
         install(new CacheModule(configSource));
         install(new ConfigModule(configSource));
-        install(new EmailModule(configSource));
         install(new CallContextModule(configSource));
         install(new TagStoreModule(configSource));
         install(new CustomFieldModule(configSource));

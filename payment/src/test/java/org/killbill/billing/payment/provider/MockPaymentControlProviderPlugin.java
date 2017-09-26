@@ -77,7 +77,7 @@ public class MockPaymentControlProviderPlugin implements PaymentControlPluginApi
         } else if (exception instanceof RuntimeException) {
             throw (RuntimeException) exception;
         }
-        return new DefaultPriorPaymentControlResult(isAborted, adjustedPaymentMethodId, null, null, null);
+        return new DefaultPriorPaymentControlResult(isAborted, adjustedPaymentMethodId, null, null, null, null);
     }
 
     @Override

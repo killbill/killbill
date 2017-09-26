@@ -68,15 +68,17 @@ public class CatalogUpdater {
 
     public CatalogUpdater(final StandaloneCatalog standaloneCatalog) {
         this.catalog = new DefaultMutableStaticCatalog(standaloneCatalog);
+        this.catalog.setRecurringBillingMode(BillingMode.IN_ADVANCE);
+
     }
 
-    public CatalogUpdater(final BillingMode billingMode, final DateTime effectiveDate, final Currency... currencies) {
+    public CatalogUpdater(final DateTime effectiveDate, final Currency... currencies) {
 
         final DefaultPriceList defaultPriceList = new DefaultPriceList().setName(PriceListSet.DEFAULT_PRICELIST_NAME);
         final StandaloneCatalog tmp = new StandaloneCatalog()
                 .setCatalogName(DEFAULT_CATALOG_NAME)
                 .setEffectiveDate(effectiveDate.toDate())
-                .setRecurringBillingMode(billingMode)
+                .setRecurringBillingMode(BillingMode.IN_ADVANCE)
                 .setProducts(ImmutableList.<Product>of())
                 .setPlans(ImmutableList.<Plan>of())
                 .setPriceLists(new DefaultPriceListSet(defaultPriceList, new DefaultPriceList[0]))
@@ -132,6 +134,7 @@ public class CatalogUpdater {
             plan.setName(desc.getPlanId());
             plan.setPriceListName(PriceListSet.DEFAULT_PRICELIST_NAME);
             plan.setProduct(product);
+            plan.setRecurringBillingMode(catalog.getRecurringBillingMode());
 
             if (desc.getTrialLength() > 0 && desc.getTrialTimeUnit() != TimeUnit.UNLIMITED) {
                 final DefaultPlanPhase trialPhase = new DefaultPlanPhase();

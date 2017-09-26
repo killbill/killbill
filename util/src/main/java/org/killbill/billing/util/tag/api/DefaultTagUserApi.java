@@ -75,7 +75,7 @@ public class DefaultTagUserApi implements TagUserApi {
 
     @Override
     public List<TagDefinition> getTagDefinitions(final TenantContext context) {
-        return ImmutableList.<TagDefinition>copyOf(Collections2.transform(tagDefinitionDao.getTagDefinitions(false, internalCallContextFactory.createInternalTenantContextWithoutAccountRecordId(context)),
+        return ImmutableList.<TagDefinition>copyOf(Collections2.transform(tagDefinitionDao.getTagDefinitions(true, internalCallContextFactory.createInternalTenantContextWithoutAccountRecordId(context)),
                                                                           new Function<TagDefinitionModelDao, TagDefinition>() {
                                                                               @Override
                                                                               public TagDefinition apply(final TagDefinitionModelDao input) {

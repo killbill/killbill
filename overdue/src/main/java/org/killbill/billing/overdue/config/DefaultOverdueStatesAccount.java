@@ -16,6 +16,9 @@
 
 package org.killbill.billing.overdue.config;
 
+import java.util.List;
+
+import javax.xml.bind.annotation.XmlAnyElement;
 import javax.xml.bind.annotation.XmlElement;
 
 import org.joda.time.Period;
@@ -31,6 +34,7 @@ public class DefaultOverdueStatesAccount extends DefaultOverdueStateSet implemen
     @SuppressWarnings("unchecked")
     @XmlElement(required = true, name = "state")
     private DefaultOverdueState[] accountOverdueStates = new DefaultOverdueState[0];
+
 
     @Override
     public DefaultOverdueState[] getStates() {

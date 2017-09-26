@@ -18,8 +18,11 @@
 
 package org.killbill.billing.overdue.config;
 
+import java.util.List;
+
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlAnyElement;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlID;
@@ -68,6 +71,7 @@ public class DefaultOverdueState extends ValidatingConfig<DefaultOverdueConfig> 
     @XmlElement(required = false, name = "autoReevaluationInterval")
     private DefaultDuration autoReevaluationInterval;
 
+    @Deprecated // Not used, just kept for config compatibility
     @XmlElement(required = false, name = "enterStateEmailNotification")
     private DefaultEmailNotification enterStateEmailNotification;
 
@@ -174,10 +178,6 @@ public class DefaultOverdueState extends ValidatingConfig<DefaultOverdueConfig> 
         return errors;
     }
 
-    @Override
-    public EmailNotification getEmailNotification() {
-        return enterStateEmailNotification;
-    }
 
     @Override
     public String toString() {
@@ -190,7 +190,6 @@ public class DefaultOverdueState extends ValidatingConfig<DefaultOverdueConfig> 
         sb.append(", subscriptionCancellationPolicy=").append(subscriptionCancellationPolicy);
         sb.append(", isClearState=").append(isClearState);
         sb.append(", autoReevaluationInterval=").append(autoReevaluationInterval);
-        sb.append(", enterStateEmailNotification=").append(enterStateEmailNotification);
         sb.append('}');
         return sb.toString();
     }

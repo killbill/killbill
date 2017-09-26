@@ -66,6 +66,11 @@ modules.xml
 .idea/vcs.xml
 .idea/dbnavigator.xml
 
+# Eclipse metadata
+.classpath
+.project
+.settings/
+
 #
 # https://github.com/github/gitignore/blob/master/Java.gitignore
 #

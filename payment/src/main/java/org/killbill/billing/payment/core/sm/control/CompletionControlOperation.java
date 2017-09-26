@@ -67,6 +67,7 @@ public class CompletionControlOperation extends OperationControlCallback {
                 final PaymentTransactionModelDao transaction = paymentStateContext.getPaymentTransactionModelDao();
                 final PaymentControlContext updatedPaymentControlContext = new DefaultPaymentControlContext(paymentStateContext.getAccount(),
                                                                                                             paymentStateContext.getPaymentMethodId(),
+                                                                                                            null,
                                                                                                             paymentStateControlContext.getAttemptId(),
                                                                                                             transaction.getPaymentId(),
                                                                                                             paymentStateContext.getPaymentExternalKey(),

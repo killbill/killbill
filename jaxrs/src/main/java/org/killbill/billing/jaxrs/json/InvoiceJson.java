@@ -56,6 +56,8 @@ public class InvoiceJson extends JsonBase {
     private final List<CreditJson> credits;
     private final String status;
     private final Boolean isParentInvoice;
+    private final String parentInvoiceId;
+    private final String parentAccountId;
 
     @JsonCreator
     public InvoiceJson(@JsonProperty("amount") final BigDecimal amount,
@@ -73,6 +75,8 @@ public class InvoiceJson extends JsonBase {
                        @JsonProperty("credits") final List<CreditJson> credits,
                        @JsonProperty("items") final List<InvoiceItemJson> items,
                        @JsonProperty("isParentInvoice") final Boolean isParentInvoice,
+                       @JsonProperty("parentInvoiceId") final String parentInvoiceId,
+                       @JsonProperty("parentAccountId") final String parentAccountId,
                        @JsonProperty("auditLogs") @Nullable final List<AuditLogJson> auditLogs) {
         super(auditLogs);
         this.amount = amount;
@@ -90,6 +94,8 @@ public class InvoiceJson extends JsonBase {
         this.credits = credits;
         this.items = items;
         this.isParentInvoice = isParentInvoice;
+        this.parentInvoiceId = parentInvoiceId;
+        this.parentAccountId = parentAccountId;
     }
 
     public InvoiceJson(final Invoice input) {
@@ -99,7 +105,10 @@ public class InvoiceJson extends JsonBase {
     public InvoiceJson(final Invoice input, final String bundleKeys, final List<CreditJson> credits, final List<AuditLog> auditLogs) {
         this(input.getChargedAmount(), input.getCurrency().toString(), input.getStatus().toString(), input.getCreditedAmount(), input.getRefundedAmount(),
              input.getId().toString(), input.getInvoiceDate(), input.getTargetDate(), String.valueOf(input.getInvoiceNumber()),
-             input.getBalance(), input.getAccountId().toString(), bundleKeys, credits, null, input.isParentInvoice(), toAuditLogJson(auditLogs));
+             input.getBalance(), input.getAccountId().toString(), bundleKeys, credits, null, input.isParentInvoice(),
+             input.getParentInvoiceId() != null ? input.getParentInvoiceId().toString() : null,
+             input.getParentAccountId() != null ? input.getParentAccountId().toString() : null,
+             toAuditLogJson(auditLogs));
     }
 
     public InvoiceJson(final Invoice input, final boolean withItems, final List<InvoiceItem> childItems, @Nullable final AccountAuditLogs accountAuditLogs) {
@@ -133,6 +142,9 @@ public class InvoiceJson extends JsonBase {
         this.bundleKeys = null;
         this.credits = null;
         this.isParentInvoice = input.isParentInvoice();
+        this.parentInvoiceId = input.getParentInvoiceId() != null ? input.getParentInvoiceId().toString() : null;
+        this.parentAccountId = input.getParentAccountId() != null ? input.getParentAccountId().toString() : null;
+
     }
 
     public BigDecimal getAmount() {
@@ -195,6 +207,14 @@ public class InvoiceJson extends JsonBase {
         return isParentInvoice;
     }
 
+    public String getParentInvoiceId() {
+        return parentInvoiceId;
+    }
+
+    public String getParentAccountId() {
+        return parentAccountId;
+    }
+
     @Override
     public String toString() {
         return "InvoiceJson{" +
@@ -213,6 +233,8 @@ public class InvoiceJson extends JsonBase {
                ", bundleKeys='" + bundleKeys + '\'' +
                ", credits=" + credits +
                ", isParentInvoice=" + isParentInvoice +
+               ", parentInvoiceId=" + parentInvoiceId +
+               ", parentAccountId=" + parentAccountId +
                '}';
     }
 
@@ -272,7 +294,12 @@ public class InvoiceJson extends JsonBase {
         if (isParentInvoice != null ? !isParentInvoice.equals(that.isParentInvoice) : that.isParentInvoice != null) {
             return false;
         }
-
+        if (parentInvoiceId != null ? !parentInvoiceId.equals(that.parentInvoiceId) : that.parentInvoiceId != null) {
+            return false;
+        }
+        if (parentAccountId != null ? !parentAccountId.equals(that.parentAccountId) : that.parentAccountId != null) {
+            return false;
+        }
         return true;
     }
 
@@ -293,6 +320,8 @@ public class InvoiceJson extends JsonBase {
         result = 31 * result + (bundleKeys != null ? bundleKeys.hashCode() : 0);
         result = 31 * result + (credits != null ? credits.hashCode() : 0);
         result = 31 * result + (isParentInvoice != null ? isParentInvoice.hashCode() : 0);
+        result = 31 * result + (parentInvoiceId != null ? parentInvoiceId.hashCode() : 0);
+        result = 31 * result + (parentAccountId != null ? parentAccountId.hashCode() : 0);
         return result;
     }
 }

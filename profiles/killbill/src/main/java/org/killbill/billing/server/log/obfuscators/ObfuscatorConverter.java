@@ -45,6 +45,7 @@ import com.google.common.collect.ImmutableList;
 public class ObfuscatorConverter extends ClassicConverter {
 
     private final Collection<Obfuscator> obfuscators = ImmutableList.<Obfuscator>of(new ConfigMagicObfuscator(),
+                                                                                    new LoggingFilterObfuscator(),
                                                                                     new PatternObfuscator(),
                                                                                     new LuhnMaskingObfuscator());
 

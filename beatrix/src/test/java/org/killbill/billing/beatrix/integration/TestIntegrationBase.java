@@ -716,9 +716,9 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB {
                     // Need to fetch again to get latest CTD updated from the system
                     Entitlement refreshedEntitlement = entitlementApi.getEntitlementForId(entitlement.getId(), callContext);
                     if (billingPolicy == null) {
-                        refreshedEntitlement = refreshedEntitlement.changePlan(new PlanSpecifier(productName, billingPeriod, priceList), null, ImmutableList.<PluginProperty>of(), callContext);
+                        refreshedEntitlement = refreshedEntitlement.changePlan(new PlanPhaseSpecifier(productName, billingPeriod, priceList), null, ImmutableList.<PluginProperty>of(), callContext);
                     } else {
-                        refreshedEntitlement = refreshedEntitlement.changePlanOverrideBillingPolicy(new PlanSpecifier(productName, billingPeriod, priceList), null, null, billingPolicy, ImmutableList.<PluginProperty>of(), callContext);
+                        refreshedEntitlement = refreshedEntitlement.changePlanOverrideBillingPolicy(new PlanPhaseSpecifier(productName, billingPeriod, priceList), null, null, billingPolicy, ImmutableList.<PluginProperty>of(), callContext);
                     }
                     return refreshedEntitlement;
                 } catch (final EntitlementApiException e) {
@@ -810,12 +810,15 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB {
         add_account_Tag(id, ControlTagType.AUTO_INVOICING_DRAFT, type);
     }
 
+    protected void add_AUTO_INVOICING_REUSE_DRAFT_Tag(final UUID id, final ObjectType type) throws TagDefinitionApiException, TagApiException {
+        add_account_Tag(id, ControlTagType.AUTO_INVOICING_REUSE_DRAFT, type);
+    }
+
     private void add_account_Tag(final UUID id, final ControlTagType controlTagType, final ObjectType type) throws TagDefinitionApiException, TagApiException {
         busHandler.pushExpectedEvent(NextEvent.TAG);
         tagUserApi.addTag(id, type, controlTagType.getId(), callContext);
         assertListenerStatus();
-        final List<Tag> tags = tagUserApi.getTagsForObject(id, type, false, callContext);
-        assertEquals(tags.size(), 1);
+        tagUserApi.getTagsForObject(id, type, false, callContext);
     }
 
     protected void remove_AUTO_PAY_OFF_Tag(final UUID id, final ObjectType type, final NextEvent... additionalEvents) throws TagDefinitionApiException, TagApiException {

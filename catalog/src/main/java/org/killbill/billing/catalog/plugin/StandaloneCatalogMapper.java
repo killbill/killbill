@@ -44,7 +44,6 @@ import org.killbill.billing.catalog.DefaultTieredBlock;
 import org.killbill.billing.catalog.DefaultUnit;
 import org.killbill.billing.catalog.DefaultUsage;
 import org.killbill.billing.catalog.StandaloneCatalog;
-import org.killbill.billing.catalog.api.BillingMode;
 import org.killbill.billing.catalog.api.Block;
 import org.killbill.billing.catalog.api.CurrencyValueNull;
 import org.killbill.billing.catalog.api.Duration;
@@ -91,16 +90,13 @@ import com.google.common.collect.Iterables;
 public class StandaloneCatalogMapper {
 
     private final String catalogName;
-    private final BillingMode recurringBillingMode;
-
     private Map<String, Product> tmpDefaultProducts;
     private Map<String, Plan> tmpDefaultPlans;
     private DefaultPriceListSet tmpDefaultPriceListSet;
     private Map<String, DefaultPriceList> tmpDefaultPriceListMap;
 
-    public StandaloneCatalogMapper(final String catalogName, final BillingMode recurringBillingMode) {
+    public StandaloneCatalogMapper(final String catalogName) {
         this.catalogName = catalogName;
-        this.recurringBillingMode = recurringBillingMode;
         this.tmpDefaultProducts = null;
         this.tmpDefaultPlans = null;
         this.tmpDefaultPriceListMap = new HashMap<String, DefaultPriceList>();
@@ -114,7 +110,6 @@ public class StandaloneCatalogMapper {
         result.setProducts(toDefaultProducts(pluginCatalog.getProducts()));
         result.setPlans(toDefaultPlans(pluginCatalog.getPlans()));
         result.setPriceLists(toDefaultPriceListSet(pluginCatalog.getDefaultPriceList(), pluginCatalog.getChildrenPriceList()));
-        result.setRecurringBillingMode(recurringBillingMode);
         result.setSupportedCurrencies(toArray(pluginCatalog.getCurrencies()));
         result.setUnits(toDefaultUnits(pluginCatalog.getUnits()));
         result.setPlanRules(toDefaultPlanRules(pluginCatalog.getPlanRules()));
@@ -403,6 +398,7 @@ public class StandaloneCatalogMapper {
         final DefaultPlan result = new DefaultPlan();
         result.setName(input.getName());
         result.setPrettyName(input.getPrettyName());
+        result.setRecurringBillingMode(input.getRecurringBillingMode());
         result.setEffectiveDateForExistingSubscriptions(input.getEffectiveDateForExistingSubscriptions());
         result.setFinalPhase(toDefaultPlanPhase(input.getFinalPhase()));
         result.setInitialPhases(toDefaultPlanPhases(ImmutableList.copyOf(input.getInitialPhases())));

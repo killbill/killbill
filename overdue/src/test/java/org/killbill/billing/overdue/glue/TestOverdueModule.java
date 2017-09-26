@@ -40,7 +40,6 @@ import org.killbill.billing.overdue.caching.OverdueConfigCache;
 import org.killbill.billing.overdue.wrapper.OverdueWrapper;
 import org.killbill.billing.platform.api.KillbillConfigSource;
 import org.killbill.billing.tenant.api.TenantInternalApi.CacheInvalidationCallback;
-import org.killbill.billing.util.email.EmailModule;
 import org.killbill.billing.util.email.templates.TemplateModule;
 import org.killbill.billing.util.glue.AuditModule;
 import org.killbill.billing.util.glue.CacheModule;
@@ -66,7 +65,6 @@ public class TestOverdueModule extends DefaultOverdueModule {
         install(new ConfigModule(configSource));
         install(new CallContextModule(configSource));
         install(new CustomFieldModule(configSource));
-        install(new EmailModule(configSource));
         install(new MockAccountModule(configSource));
         install(new MockEntitlementModule(configSource, new ApplicatorBlockingApi()));
         install(new MockInvoiceModule(configSource));

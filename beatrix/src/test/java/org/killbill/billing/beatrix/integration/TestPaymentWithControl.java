@@ -271,6 +271,12 @@ public class TestPaymentWithControl extends TestIntegrationBase {
                 public UUID getAdjustedPaymentMethodId() {
                     return adjustedPaymentMethodId;
                 }
+
+                @Override
+                public String getAdjustedPluginName() {
+                    return null;
+                }
+
                 @Override
                 public Iterable<PluginProperty> getAdjustedPluginProperties() {
                     return null;

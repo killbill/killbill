@@ -37,6 +37,7 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.UriInfo;
 
+import org.joda.time.DateTime;
 import org.killbill.billing.ObjectType;
 import org.killbill.billing.account.api.AccountUserApi;
 import org.killbill.billing.callcontext.DefaultCallContext;
@@ -140,10 +141,12 @@ public class TenantResource extends JaxRsResourceBase {
         if (!useGlobalDefault) {
             final CallContext callContext = new DefaultCallContext(null, tenant.getId(), createdBy, CallOrigin.EXTERNAL,
                                                                    UserType.CUSTOMER, Context.getOrCreateUserToken(), clock);
-            catalogUserApi.createDefaultEmptyCatalog(clock.getUTCNow(),callContext);
+
+            catalogUserApi.createDefaultEmptyCatalog(null, callContext);
         }
         return uriBuilder.buildResponse(uriInfo, TenantResource.class, "getTenant", tenant.getId(), request);
     }
+
 
     @TimedResource
     @POST
@@ -420,4 +423,5 @@ public class TenantResource extends JaxRsResourceBase {
     protected ObjectType getObjectType() {
         return ObjectType.TENANT;
     }
+
 }

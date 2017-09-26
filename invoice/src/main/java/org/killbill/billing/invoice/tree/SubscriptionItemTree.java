@@ -1,7 +1,9 @@
 /*
  * Copyright 2010-2014 Ning, Inc.
+ * Copyright 2014-2017 Groupon, Inc
+ * Copyright 2014-2017 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -16,11 +18,10 @@
 
 package org.killbill.billing.invoice.tree;
 
+import java.math.BigDecimal;
 import java.util.Comparator;
-import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 
 import javax.annotation.Nullable;
@@ -44,8 +45,8 @@ public class SubscriptionItemTree {
 
     private final List<Item> items = new LinkedList<Item>();
     private final List<Item> existingFullyAdjustedItems = new LinkedList<Item>();
-    private final List<InvoiceItem> existingFixedItems = new LinkedList<InvoiceItem>();
-    private final Map<LocalDate, InvoiceItem> remainingFixedItems = new HashMap<LocalDate, InvoiceItem>();
+    private final List<InvoiceItem> existingIgnoredItems = new LinkedList<InvoiceItem>();
+    private final List<InvoiceItem> remainingIgnoredItems = new LinkedList<InvoiceItem>();
     private final List<InvoiceItem> pendingItemAdj = new LinkedList<InvoiceItem>();
 
     private final UUID targetInvoiceId;
@@ -91,7 +92,12 @@ public class SubscriptionItemTree {
 
         switch (invoiceItem.getInvoiceItemType()) {
             case RECURRING:
-                root.addExistingItem(new ItemsNodeInterval(root, new Item(invoiceItem, targetInvoiceId, ItemAction.ADD)));
+                if (invoiceItem.getAmount().compareTo(BigDecimal.ZERO) == 0) {
+                    // Nothing to repair -- https://github.com/killbill/killbill/issues/783
+                    existingIgnoredItems.add(invoiceItem);
+                } else {
+                    root.addExistingItem(new ItemsNodeInterval(root, new Item(invoiceItem, targetInvoiceId, ItemAction.ADD)));
+                }
                 break;
 
             case REPAIR_ADJ:
@@ -99,7 +105,7 @@ public class SubscriptionItemTree {
                 break;
 
             case FIXED:
-                existingFixedItems.add(invoiceItem);
+                existingIgnoredItems.add(invoiceItem);
                 break;
 
             case ITEM_ADJ:
@@ -158,6 +164,17 @@ public class SubscriptionItemTree {
     public void mergeProposedItem(final InvoiceItem invoiceItem) {
         Preconditions.checkState(!isBuilt, "Tree already built, unable to add new invoiceItem=%s", invoiceItem);
 
+        // Check if it was an existing item ignored for tree purposes (e.g. FIXED or $0 RECURRING, both of which aren't repaired)
+        final InvoiceItem existingItem = Iterables.tryFind(existingIgnoredItems, new Predicate<InvoiceItem>() {
+            @Override
+            public boolean apply(final InvoiceItem input) {
+                return input.matches(invoiceItem);
+            }
+        }).orNull();
+        if (existingItem != null) {
+            return;
+        }
+
         switch (invoiceItem.getInvoiceItemType()) {
             case RECURRING:
                 // merged means we've either matched the proposed to an existing, or triggered a repair
@@ -168,15 +185,7 @@ public class SubscriptionItemTree {
                 break;
 
             case FIXED:
-                final InvoiceItem existingItem = Iterables.tryFind(existingFixedItems, new Predicate<InvoiceItem>() {
-                    @Override
-                    public boolean apply(final InvoiceItem input) {
-                        return input.matches(invoiceItem);
-                    }
-                }).orNull();
-                if (existingItem == null) {
-                    remainingFixedItems.put(invoiceItem.getStartDate(), invoiceItem);
-                }
+                remainingIgnoredItems.add(invoiceItem);
                 break;
 
             default:
@@ -204,7 +213,7 @@ public class SubscriptionItemTree {
     public List<InvoiceItem> getView() {
 
         final List<InvoiceItem> tmp = new LinkedList<InvoiceItem>();
-        tmp.addAll(remainingFixedItems.values());
+        tmp.addAll(remainingIgnoredItems);
         tmp.addAll(Collections2.filter(Collections2.transform(items, new Function<Item, InvoiceItem>() {
             @Override
             public InvoiceItem apply(final Item input) {
@@ -278,8 +287,8 @@ public class SubscriptionItemTree {
         sb.append(", isMerged=").append(isMerged);
         sb.append(", items=").append(items);
         sb.append(", existingFullyAdjustedItems=").append(existingFullyAdjustedItems);
-        sb.append(", existingFixedItems=").append(existingFixedItems);
-        sb.append(", remainingFixedItems=").append(remainingFixedItems);
+        sb.append(", existingIgnoredItems=").append(existingIgnoredItems);
+        sb.append(", remainingIgnoredItems=").append(remainingIgnoredItems);
         sb.append(", pendingItemAdj=").append(pendingItemAdj);
         sb.append('}');
         return sb.toString();

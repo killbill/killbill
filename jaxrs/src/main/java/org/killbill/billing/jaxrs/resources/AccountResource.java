@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014-2016 Groupon, Inc
- * Copyright 2014-2016 The Billing Project, LLC
+ * Copyright 2014-2017 Groupon, Inc
+ * Copyright 2014-2017 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -121,6 +121,7 @@ import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.TenantContext;
 import org.killbill.billing.util.config.definition.JaxrsConfig;
 import org.killbill.billing.util.config.definition.PaymentConfig;
+import org.killbill.billing.util.customfield.CustomField;
 import org.killbill.billing.util.entity.Pagination;
 import org.killbill.billing.util.tag.ControlTagType;
 import org.killbill.billing.util.tag.Tag;
@@ -820,6 +821,7 @@ public class AccountResource extends JaxRsResourceBase {
                                         @PathParam("accountId") final String accountIdStr,
                                         @QueryParam(QUERY_PAYMENT_METHOD_IS_DEFAULT) @DefaultValue("false") final Boolean isDefault,
                                         @QueryParam(QUERY_PAY_ALL_UNPAID_INVOICES) @DefaultValue("false") final Boolean payAllUnpaidInvoices,
+                                        @QueryParam(QUERY_PAYMENT_CONTROL_PLUGIN_NAME) final List<String> paymentControlPluginNames,
                                         @QueryParam(QUERY_PLUGIN_PROPERTY) final List<String> pluginPropertiesString,
                                         @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                         @HeaderParam(HDR_REASON) final String reason,
@@ -844,7 +846,9 @@ public class AccountResource extends JaxRsResourceBase {
             return Response.status(Status.BAD_REQUEST).build();
         }
 
-        final UUID paymentMethodId = paymentApi.addPaymentMethod(account, data.getExternalKey(), data.getPluginName(), isDefault, data.getPluginDetail(), pluginProperties, callContext);
+
+        final PaymentOptions paymentOptions = createControlPluginApiPaymentOptions(paymentControlPluginNames);
+        final UUID paymentMethodId = paymentApi.addPaymentMethodWithPaymentControl(account, data.getExternalKey(), data.getPluginName(), isDefault, data.getPluginDetail(), pluginProperties, paymentOptions, callContext);
         if (payAllUnpaidInvoices && unpaidInvoices.size() > 0) {
             for (final Invoice invoice : unpaidInvoices) {
                 createPurchaseForInvoice(account, invoice.getId(), invoice.getBalance(), paymentMethodId, false, null, null, pluginProperties, callContext);
@@ -1187,6 +1191,26 @@ public class AccountResource extends JaxRsResourceBase {
                                     @javax.ws.rs.core.Context final HttpServletRequest request) {
         final UUID accountId = UUID.fromString(accountIdStr);
         return super.getCustomFields(accountId, auditMode, context.createTenantContextWithAccountId(accountId, request));
+    }
+
+    @TimedResource
+    @GET
+    @Path("/{accountId:" + UUID_PATTERN + "}/" + ALL_CUSTOM_FIELDS)
+    @Produces(APPLICATION_JSON)
+    @ApiOperation(value = "Retrieve account customFields", response = CustomFieldJson.class, responseContainer = "List")
+    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid account id supplied"),
+                           @ApiResponse(code = 404, message = "Account not found")})
+    public Response getAllCustomFields(@PathParam(ID_PARAM_NAME) final String accountIdString,
+                                       @QueryParam(QUERY_OBJECT_TYPE) final ObjectType objectType,
+                                       @QueryParam(QUERY_AUDIT) @DefaultValue("NONE") final AuditMode auditMode,
+                                       @javax.ws.rs.core.Context final HttpServletRequest request) {
+        final UUID accountId = UUID.fromString(accountIdString);
+
+        final TenantContext tenantContext = context.createTenantContextWithAccountId(accountId, request);
+        final List<CustomField> customFields = objectType != null ?
+                                               customFieldUserApi.getCustomFieldsForAccountType(accountId, objectType, tenantContext) :
+                                               customFieldUserApi.getCustomFieldsForAccount(accountId, tenantContext);
+        return createCustomFieldResponse(customFields, auditMode, tenantContext);
     }
 
     @TimedResource

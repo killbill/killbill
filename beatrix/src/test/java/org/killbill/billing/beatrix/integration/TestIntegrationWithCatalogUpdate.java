@@ -116,7 +116,7 @@ public class TestIntegrationWithCatalogUpdate extends TestIntegrationBase {
 
         // Change Plan to the newly added Plan and verify correct default rules behavior (IMMEDIATE change)
         busHandler.pushExpectedEvents(NextEvent.CHANGE, NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT);
-        baseEntitlement.changePlan(new PlanSpecifier("SuperFoo", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME), null, ImmutableList.<PluginProperty>of(), testCallContext);
+        baseEntitlement.changePlan(new PlanPhaseSpecifier("SuperFoo", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME), null, ImmutableList.<PluginProperty>of(), testCallContext);
         assertListenerStatus();
 
         invoiceChecker.checkInvoice(account.getId(), 2, testCallContext,

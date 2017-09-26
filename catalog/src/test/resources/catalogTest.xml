@@ -143,6 +143,11 @@
                 <alignment>CHANGE_OF_PRICELIST</alignment>
             </changeAlignmentCase>
             <changeAlignmentCase>
+                <fromPriceList>notrial</fromPriceList>
+                <toPriceList>trial</toPriceList>
+                <alignment>CHANGE_OF_PLAN</alignment>
+            </changeAlignmentCase>
+            <changeAlignmentCase>
                 <alignment>START_OF_SUBSCRIPTION</alignment>
             </changeAlignmentCase>
         </changeAlignment>
@@ -272,6 +277,43 @@
                             </price>
                         </recurringPrice>
                     </recurring>
+                </phase>
+            </initialPhases>
+            <finalPhase type="EVERGREEN">
+                <duration>
+                    <unit>UNLIMITED</unit>
+                </duration>
+                <recurring>
+                    <billingPeriod>MONTHLY</billingPeriod>
+                    <recurringPrice>
+                        <price>
+                            <currency>USD</currency>
+                            <value>29.95</value>
+                        </price>
+                        <price>
+                            <currency>EUR</currency>
+                            <value>29.95</value>
+                        </price>
+                        <price>
+                            <currency>GBP</currency>
+                            <value>29.95</value>
+                        </price>
+                    </recurringPrice>
+                </recurring>
+            </finalPhase>
+        </plan>
+        <plan name="blowdart-monthly-trial">
+            <product>Blowdart</product>
+            <initialPhases>
+                <phase type="TRIAL">
+                    <duration>
+                        <unit>DAYS</unit>
+                        <number>30</number>
+                    </duration>
+                    <fixed>
+                        <fixedPrice>
+                        </fixedPrice>
+                    </fixed>
                 </phase>
             </initialPhases>
             <finalPhase type="EVERGREEN">
@@ -1333,7 +1375,11 @@
             <plans>
                 <plan>blowdart-monthly-notrial</plan>
                 <plan>pistol-monthly-notrial</plan>
-
+            </plans>
+        </childPriceList>
+        <childPriceList name="trial">
+            <plans>
+                <plan>blowdart-monthly-trial</plan>
             </plans>
         </childPriceList>
     </priceLists>

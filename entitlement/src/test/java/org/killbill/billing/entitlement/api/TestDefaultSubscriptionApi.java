@@ -498,7 +498,7 @@ public class TestDefaultSubscriptionApi extends EntitlementTestSuiteWithEmbedded
         assertListenerStatus();
 
         try {
-            entitlement.changePlan(new PlanSpecifier("Assault-Rifle", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME), null, ImmutableList.<PluginProperty>of(), callContext);
+            entitlement.changePlan(new PlanPhaseSpecifier("Assault-Rifle", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME), null, ImmutableList.<PluginProperty>of(), callContext);
             fail();
         } catch (final EntitlementApiException e) {
             assertEquals(e.getCode(), ErrorCode.BLOCK_BLOCKED_ACTION.getCode());
@@ -507,7 +507,7 @@ public class TestDefaultSubscriptionApi extends EntitlementTestSuiteWithEmbedded
         }
 
         try {
-            entitlement.changePlanWithDate(new PlanSpecifier("Assault-Rifle", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME), null, clock.getUTCToday(), ImmutableList.<PluginProperty>of(), callContext);
+            entitlement.changePlanWithDate(new PlanPhaseSpecifier("Assault-Rifle", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME), null, clock.getUTCToday(), ImmutableList.<PluginProperty>of(), callContext);
             fail();
         } catch (final EntitlementApiException e) {
             assertEquals(e.getCode(), ErrorCode.BLOCK_BLOCKED_ACTION.getCode());
