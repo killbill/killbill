@@ -77,6 +77,10 @@ import com.google.inject.util.Modules;
 
 public class TestJaxrsBase extends KillbillClient {
 
+    protected final int DEFAULT_CONNECT_TIMEOUT_SEC = 10;
+    protected final int DEFAULT_READ_TIMEOUT_SEC = 60;
+    protected final int DEFAULT_REQUEST_TIMEOUT_SEC = DEFAULT_READ_TIMEOUT_SEC;
+
     protected static final String PLUGIN_NAME = "noop";
 
     @Inject
@@ -168,7 +172,12 @@ public class TestJaxrsBase extends KillbillClient {
                                                     username,
                                                     password,
                                                     apiKey,
-                                                    apiSecret);
+                                                    apiSecret,
+                                                    null,
+                                                    null,
+                                                    DEFAULT_CONNECT_TIMEOUT_SEC * 1000,
+                                                    DEFAULT_READ_TIMEOUT_SEC * 1000,
+                                                    DEFAULT_REQUEST_TIMEOUT_SEC * 1000);
         killBillClient = new KillBillClient(killBillHttpClient);
     }
 

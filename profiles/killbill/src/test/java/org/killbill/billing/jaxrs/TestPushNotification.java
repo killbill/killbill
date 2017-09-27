@@ -75,7 +75,7 @@ public class TestPushNotification extends TestJaxrsBase {
     }
 
     private boolean waitForCallbacksToComplete() throws InterruptedException {
-        long remainingMs = 30000;
+        long remainingMs = DEFAULT_REQUEST_TIMEOUT_SEC * 1000;
         do {
             if (callbackCompleted) {
                 break;
