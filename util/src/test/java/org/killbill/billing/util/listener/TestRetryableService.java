@@ -32,13 +32,15 @@ import org.killbill.billing.events.ControlTagCreationInternalEvent;
 import org.killbill.billing.events.ControlTagDeletionInternalEvent;
 import org.killbill.billing.invoice.plugin.api.InvoicePluginApiRetryException;
 import org.killbill.billing.util.UtilTestSuiteWithEmbeddedDB;
-import org.killbill.billing.util.listener.RetryableSubscriber.SubscriberAction;
-import org.killbill.billing.util.listener.RetryableSubscriber.SubscriberQueueHandler;
 import org.killbill.billing.util.tag.DefaultTagDefinition;
 import org.killbill.billing.util.tag.api.user.DefaultControlTagCreationEvent;
 import org.killbill.notificationq.api.NotificationEventWithMetadata;
 import org.killbill.notificationq.api.NotificationQueue;
 import org.killbill.notificationq.api.NotificationQueueService.NoSuchNotificationQueue;
+import org.killbill.queue.retry.RetryableService;
+import org.killbill.queue.retry.RetryableSubscriber;
+import org.killbill.queue.retry.RetryableSubscriber.SubscriberAction;
+import org.killbill.queue.retry.RetryableSubscriber.SubscriberQueueHandler;
 import org.mockito.Mockito;
 import org.testng.Assert;
 import org.testng.annotations.AfterMethod;
@@ -173,7 +175,7 @@ public class TestRetryableService extends UtilTestSuiteWithEmbeddedDB {
         private boolean throwOtherException = false;
 
         public TestListener() {
-            super(queueService, internalCallContextFactory);
+            super(queueService);
 
             subscriberQueueHandler.subscribe(ControlTagDeletionInternalEvent.class,
                                              new SubscriberAction<ControlTagDeletionInternalEvent>() {
@@ -195,7 +197,7 @@ public class TestRetryableService extends UtilTestSuiteWithEmbeddedDB {
                                                      }
                                                  }
                                              });
-            this.retryableSubscriber = new RetryableSubscriber(clock, this, subscriberQueueHandler, internalCallContextFactory);
+            this.retryableSubscriber = new RetryableSubscriber(clock, this, subscriberQueueHandler);
 
             initialize(TEST_LISTENER, subscriberQueueHandler);
             start();

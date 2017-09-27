@@ -39,13 +39,13 @@ import org.killbill.billing.subscription.api.SubscriptionBaseTransitionType;
 import org.killbill.billing.util.callcontext.CallOrigin;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.billing.util.callcontext.UserType;
-import org.killbill.billing.util.listener.RetryableService;
-import org.killbill.billing.util.listener.RetryableSubscriber;
-import org.killbill.billing.util.listener.RetryableSubscriber.SubscriberAction;
-import org.killbill.billing.util.listener.RetryableSubscriber.SubscriberQueueHandler;
 import org.killbill.clock.Clock;
 import org.killbill.notificationq.api.NotificationQueueService;
 import org.killbill.notificationq.api.NotificationQueueService.NoSuchNotificationQueue;
+import org.killbill.queue.retry.RetryableService;
+import org.killbill.queue.retry.RetryableSubscriber;
+import org.killbill.queue.retry.RetryableSubscriber.SubscriberAction;
+import org.killbill.queue.retry.RetryableSubscriber.SubscriberQueueHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -73,7 +73,7 @@ public class InvoiceListener extends RetryableService implements InvoiceListener
                            final InvoiceInternalApi invoiceApi,
                            final NotificationQueueService notificationQueueService,
                            final Clock clock) {
-        super(notificationQueueService, internalCallContextFactory);
+        super(notificationQueueService);
         this.dispatcher = dispatcher;
         this.internalCallContextFactory = internalCallContextFactory;
         this.invoiceApi = invoiceApi;
@@ -155,7 +155,7 @@ public class InvoiceListener extends RetryableService implements InvoiceListener
                                                  }
                                              }
                                          });
-        this.retryableSubscriber = new RetryableSubscriber(clock, this, subscriberQueueHandler, internalCallContextFactory);
+        this.retryableSubscriber = new RetryableSubscriber(clock, this, subscriberQueueHandler);
     }
 
     @Override

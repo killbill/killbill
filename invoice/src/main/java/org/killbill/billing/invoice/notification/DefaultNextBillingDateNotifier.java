@@ -27,8 +27,6 @@ import org.killbill.billing.subscription.api.SubscriptionBase;
 import org.killbill.billing.subscription.api.SubscriptionBaseInternalApi;
 import org.killbill.billing.subscription.api.user.SubscriptionBaseApiException;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
-import org.killbill.billing.util.listener.RetryableHandler;
-import org.killbill.billing.util.listener.RetryableService;
 import org.killbill.clock.Clock;
 import org.killbill.notificationq.api.NotificationEvent;
 import org.killbill.notificationq.api.NotificationQueue;
@@ -36,6 +34,8 @@ import org.killbill.notificationq.api.NotificationQueueService;
 import org.killbill.notificationq.api.NotificationQueueService.NoSuchNotificationQueue;
 import org.killbill.notificationq.api.NotificationQueueService.NotificationQueueAlreadyExists;
 import org.killbill.notificationq.api.NotificationQueueService.NotificationQueueHandler;
+import org.killbill.queue.retry.RetryableHandler;
+import org.killbill.queue.retry.RetryableService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -61,7 +61,7 @@ public class DefaultNextBillingDateNotifier extends RetryableService implements 
                                           final SubscriptionBaseInternalApi subscriptionApi,
                                           final InvoiceListener listener,
                                           final InternalCallContextFactory internalCallContextFactory) {
-        super(notificationQueueService, internalCallContextFactory);
+        super(notificationQueueService);
         this.clock = clock;
         this.notificationQueueService = notificationQueueService;
         this.subscriptionApi = subscriptionApi;
@@ -101,7 +101,7 @@ public class DefaultNextBillingDateNotifier extends RetryableService implements 
             }
         };
 
-        final NotificationQueueHandler retryableHandler = new RetryableHandler(clock, this, notificationQueueHandler, internalCallContextFactory);
+        final NotificationQueueHandler retryableHandler = new RetryableHandler(clock, this, notificationQueueHandler);
         nextBillingQueue = notificationQueueService.createNotificationQueue(DefaultInvoiceService.INVOICE_SERVICE_NAME,
                                                                             NEXT_BILLING_DATE_NOTIFIER_QUEUE,
                                                                             retryableHandler);
