@@ -26,6 +26,7 @@ import org.killbill.billing.invoice.ParkedAccountsManager;
 import org.killbill.billing.invoice.api.DefaultInvoiceService;
 import org.killbill.billing.invoice.api.InvoiceApiHelper;
 import org.killbill.billing.invoice.api.InvoiceInternalApi;
+import org.killbill.billing.invoice.api.InvoiceListenerService;
 import org.killbill.billing.invoice.api.InvoicePaymentApi;
 import org.killbill.billing.invoice.api.InvoiceService;
 import org.killbill.billing.invoice.api.InvoiceUserApi;
@@ -99,8 +100,9 @@ public class DefaultInvoiceModule extends KillBillModule implements InvoiceModul
         bind(InvoiceConfig.class).to(MultiTenantInvoiceConfig.class).asEagerSingleton();
     }
 
-    protected void installInvoiceService() {
+    protected void installInvoiceServices() {
         bind(InvoiceService.class).to(DefaultInvoiceService.class).asEagerSingleton();
+        bind(InvoiceListenerService.class).to(InvoiceListener.class).asEagerSingleton();
     }
 
     protected void installResourceBundleFactory() {
@@ -143,7 +145,7 @@ public class DefaultInvoiceModule extends KillBillModule implements InvoiceModul
         installConfig();
 
         installInvoicePluginApi();
-        installInvoiceService();
+        installInvoiceServices();
         installNotifiers();
         installInvoiceDispatcher();
         installInvoiceListener();
