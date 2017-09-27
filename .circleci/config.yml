@@ -13,6 +13,19 @@ jobs:
       - checkout
       - restore_cache:
           key: v1-dependencies-{{ checksum "pom.xml" }}
+      - run:
+          name: Setup dependencies
+          command: |
+            if [ "${CIRCLE_BRANCH}" == "work-for-release-0.19.x" ]; then
+              for i in killbill-oss-parent killbill-api killbill-plugin-api killbill-commons killbill-platform
+                echo "*** Setting up $i"
+                mkdir -p /home/killbill/$i
+                git clone https://github.com/killbill/$i.git /home/killbill/$i
+                pushd /home/killbill/$i
+                mvn clean install -DskipTests=true
+                popd
+              done
+            fi
       - run: mvn -DskipTests=true clean install dependency:go-offline
       - save_cache:
           paths:
@@ -93,13 +106,29 @@ workflows:
   version: 2
   build-and-test:
     jobs:
-      - build
+      - build:
+          filters:
+            branches:
+              only:
+                - master
+                - work-for-release-0.19.x
       - test-h2:
           requires:
             - build
+          filters:
+            branches:
+              only: master
       - test-mysql:
           requires:
             - build
+          filters:
+            branches:
+              only:
+                - master
+                - work-for-release-0.19.x
       - test-postgresql:
           requires:
             - build
+          filters:
+            branches:
+              only: master
