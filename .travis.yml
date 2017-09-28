@@ -8,6 +8,7 @@ cache:
 dist: trusty
 
 before_install:
+  - grep -q -z '<artifactId>killbill-oss-parent</artifactId>[[:space:]]\+<groupId>org.kill-bill.billing</groupId>[[:space:]]\+<version>[0-9\.]*-SNAPSHOT</version>' pom.xml && echo "killbill-oss-parent SNAPSHOT has been found, exiting." && exit 0 || true
   - echo "<settings><profiles><profile><repositories><repository><id>central</id><name>bintray</name><url>http://jcenter.bintray.com</url></repository></repositories><id>bintray</id></profile></profiles><activeProfiles><activeProfile>bintray</activeProfile></activeProfiles></settings>" > /var/tmp/settings.xml
   - mvn -N io.takari:maven:wrapper -Dmaven=3.3.9
 
@@ -22,23 +23,9 @@ notifications:
   email:
     - kill-bill-commits@googlegroups.com
 
-env:
-  global:
-    - MAVEN_OPTS="-Xmx512m -XX:MaxPermSize=192m"
-
 matrix:
   include:
-    - env: PHASE="-Ptravis,jdk16" JDK=oraclejdk8
-    - env: PHASE="-Ptravis,jdk16" JDK=openjdk8
-    - env: PHASE="-Ptravis,jdk17" JDK=oraclejdk8
-    - env: PHASE="-Ptravis,jdk17" JDK=openjdk8
-    - env: PHASE="-Ptravis,jdk18" JDK=oraclejdk8
     - env: PHASE="-Ptravis,jdk18" JDK=openjdk8
-    - env: PHASE="-Pmysql,jdk18" JDK=oraclejdk8
     - env: PHASE="-Pmysql,jdk18" JDK=openjdk8
-    - env: PHASE="-Ppostgresql,jdk18" JDK=oraclejdk8
     - env: PHASE="-Ppostgresql,jdk18" JDK=openjdk8
   fast_finish: true
-
-after_success:
-  - '[ "${TRAVIS_PULL_REQUEST}" = "false" ] && echo "<settings><servers><server><id>sonatype-nexus-snapshots</id><username>\${env.OSSRH_USER}</username><password>\${env.OSSRH_PASS}</password></server></servers></settings>" > ~/settings.xml && mvn deploy -DskipTests=true --settings ~/settings.xml | egrep "WARN|ERR|\[INFO\]\ ---|Upload" | egrep -v "[0-9]+/[0-9]+ [kKmM]B" ; rm -f ~/settings.xml'
