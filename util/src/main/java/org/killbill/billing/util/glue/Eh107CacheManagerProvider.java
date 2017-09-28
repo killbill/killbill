@@ -39,6 +39,7 @@ import com.codahale.metrics.MetricRegistry;
 public class Eh107CacheManagerProvider extends CacheProviderBase implements Provider<CacheManager> {
 
     private static final Logger logger = LoggerFactory.getLogger(Eh107CacheManagerProvider.class);
+    private static final EhcacheLoggingListener ehcacheLoggingListener = new EhcacheLoggingListener();
 
     private final Set<BaseCacheLoader> cacheLoaders;
 
@@ -66,7 +67,9 @@ public class Eh107CacheManagerProvider extends CacheProviderBase implements Prov
             cacheManager = cachingProvider.getCacheManager();
         }
 
-        cacheManager.unwrap(InternalCacheManager.class).registerListener(new EhcacheLoggingListener());
+        // Make sure we start from a clean state - this is mainly useful for tests
+        cacheManager.unwrap(InternalCacheManager.class).deregisterListener(ehcacheLoggingListener);
+        cacheManager.unwrap(InternalCacheManager.class).registerListener(ehcacheLoggingListener);
 
         for (final BaseCacheLoader<?, ?> cacheLoader : cacheLoaders) {
             createCache(cacheManager,
