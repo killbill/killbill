@@ -27,6 +27,7 @@ import javax.cache.spi.CachingProvider;
 import javax.inject.Inject;
 import javax.inject.Provider;
 
+import org.ehcache.core.spi.store.InternalCacheManager;
 import org.killbill.billing.util.cache.BaseCacheLoader;
 import org.killbill.billing.util.config.definition.EhCacheConfig;
 import org.slf4j.Logger;
@@ -64,6 +65,8 @@ public class Eh107CacheManagerProvider extends CacheProviderBase implements Prov
             logger.error("Unable to read ehcache.xml, using default configuration", e);
             cacheManager = cachingProvider.getCacheManager();
         }
+
+        cacheManager.unwrap(InternalCacheManager.class).registerListener(new EhcacheLoggingListener());
 
         for (final BaseCacheLoader<?, ?> cacheLoader : cacheLoaders) {
             createCache(cacheManager,
