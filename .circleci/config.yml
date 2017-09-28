@@ -17,7 +17,7 @@ jobs:
           name: Setup dependencies
           command: |
             if [ "${CIRCLE_BRANCH}" == "work-for-release-0.19.x" ]; then
-              for i in killbill-oss-parent killbill-api killbill-plugin-api killbill-commons killbill-platform
+              for i in killbill-oss-parent killbill-api killbill-plugin-api killbill-commons killbill-platform; do
                 echo "*** Setting up $i"
                 mkdir -p /home/killbill/$i
                 git clone https://github.com/killbill/$i.git /home/killbill/$i
