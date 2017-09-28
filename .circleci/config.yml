@@ -112,12 +112,15 @@ workflows:
               only:
                 - master
                 - work-for-release-0.19.x
+                - circle-ci-experiment
       - test-h2:
           requires:
             - build
           filters:
             branches:
-              only: master
+              only:
+                - master
+                - circle-ci-experiment
       - test-mysql:
           requires:
             - build
@@ -126,9 +129,12 @@ workflows:
               only:
                 - master
                 - work-for-release-0.19.x
+                - circle-ci-experiment
       - test-postgresql:
           requires:
             - build
           filters:
             branches:
-              only: master
+              only:
+                - master
+                - circle-ci-experiment
