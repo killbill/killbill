@@ -47,7 +47,7 @@ CREATE OR REPLACE FUNCTION hour(ts TIMESTAMP WITH TIME ZONE) RETURNS INTEGER AS 
 $$ LANGUAGE plpgsql IMMUTABLE;
 
 /* Alter 'serial' columns to 'bigint' because 'serial' is 32bit in PG while 64bit in MySQL */
-CREATE OR REPLACE FUNCTION update_serial_to_bigserial_oncreate()
+CREATE OR REPLACE FUNCTION update_serial_to_bigint_oncreate()
         RETURNS event_trigger LANGUAGE plpgsql AS $$
 DECLARE
     r record;
