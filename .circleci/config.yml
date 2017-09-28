@@ -12,25 +12,28 @@ jobs:
     steps:
       - checkout
       - restore_cache:
-          key: v1-dependencies-{{ checksum "pom.xml" }}
+          key: v1-dependencies-{{ .Branch }}-{{ checksum "pom.xml" }}
       - run:
           name: Setup dependencies
           command: |
-            if [ "${CIRCLE_BRANCH}" == "work-for-release-0.19.x" ]; then
+            if [ "${CIRCLE_BRANCH}" != "master" ]; then
               for i in killbill-oss-parent killbill-api killbill-plugin-api killbill-commons killbill-platform; do
-                echo "*** Setting up $i"
-                mkdir -p /home/killbill/$i
-                git clone https://github.com/killbill/$i.git /home/killbill/$i
-                pushd /home/killbill/$i
-                mvn clean install -DskipTests=true
-                popd
+                if [ -n "$(git ls-remote --heads https://github.com/killbill/$i.git ${CIRCLE_BRANCH})" ]; then
+                  echo "*** Setting up $i"
+                  mkdir -p /home/killbill/$i
+                  git clone https://github.com/killbill/$i.git /home/killbill/$i
+                  pushd /home/killbill/$i
+                  git checkout -b ${CIRCLE_BRANCH} origin/${CIRCLE_BRANCH}
+                  mvn clean install -DskipTests=true
+                  popd
+                fi
               done
             fi
       - run: mvn -DskipTests=true clean install dependency:go-offline
       - save_cache:
           paths:
             - ~/.m2
-          key: v1-dependencies-{{ checksum "pom.xml" }}
+          key: v1-dependencies-{{ .Branch }}-{{ checksum "pom.xml" }}
 
   test-h2:
     <<: *defaults
@@ -39,7 +42,7 @@ jobs:
     steps:
       - checkout
       - restore_cache:
-          key: v1-dependencies-{{ checksum "pom.xml" }}
+          key: v1-dependencies-{{ .Branch }}-{{ checksum "pom.xml" }}
       - run: mvn clean install -Ptravis
       - run:
           name: Save test results
@@ -61,7 +64,7 @@ jobs:
     steps:
       - checkout
       - restore_cache:
-          key: v1-dependencies-{{ checksum "pom.xml" }}
+          key: v1-dependencies-{{ .Branch }}-{{ checksum "pom.xml" }}
       - run:
           name: Setup latest DDL
           command: ./bin/db-helper -a create --driver mysql -u root -p root -t yes -h 127.0.0.1
@@ -86,7 +89,7 @@ jobs:
     steps:
       - checkout
       - restore_cache:
-          key: v1-dependencies-{{ checksum "pom.xml" }}
+          key: v1-dependencies-{{ .Branch }}-{{ checksum "pom.xml" }}
       - run:
           name: Setup latest DDL
           command: ./bin/db-helper -a create --driver postgres -u postgres -p postgres -t yes
@@ -101,6 +104,54 @@ jobs:
           path: ~/junit
       - store_artifacts:
           path: ~/junit
+
+  integration-tests:
+    <<: *defaults
+    docker:
+      - image: killbill/kbbuild:0.1.0
+      - image: killbill/mariadb:0.18
+        environment:
+        - MYSQL_ROOT_PASSWORD=root
+    steps:
+      - checkout
+      - restore_cache:
+          key: v1-dependencies-{{ .Branch }}-{{ checksum "pom.xml" }}
+      - run:
+          name: Setup latest DDL
+          command: ./bin/db-helper -a create --driver mysql -u root -p root -t yes -h 127.0.0.1
+      - run:
+          name: Setup Kill Bill
+          command: |
+            mvn clean install -DskipTests=true
+            ./bin/start-server -s &
+            count=0
+            until $(curl --output /dev/null --silent --fail http://127.0.0.1:8080/1.0/healthcheck); do
+              if [[ "$count" == "25" ]]; then
+                exit 1
+              fi
+              (( count++ ))
+
+              printf '.'
+              sleep 5
+            done
+      - run:
+          name: Run integration tests
+          command: |
+            mkdir -p /home/killbill/killbill-integration-tests
+            git clone https://github.com/killbill/killbill-integration-tests.git /home/killbill/killbill-integration-tests
+            pushd /home/killbill/killbill-integration-tests
+            if [ "${CIRCLE_BRANCH}" != "master" ]; then
+              if [ -n "$(git ls-remote --heads https://github.com/killbill/killbill-integration-tests.git ${CIRCLE_BRANCH})" ]; then
+                git checkout -b ${CIRCLE_BRANCH} origin/${CIRCLE_BRANCH}
+              fi
+            fi
+            bundle install
+            bundle exec rake test:core | tee /tmp/test-results/test.txt 2>&1
+            popd
+      - store_test_results:
+          path: /tmp/test-results
+      - store_artifacts:
+          path: /tmp/test-results
 
 workflows:
   version: 2
@@ -137,4 +188,15 @@ workflows:
             branches:
               only:
                 - master
+                - circle-ci-experiment
+      - integration-tests:
+          requires:
+            - test-h2
+            - test-mysql
+            - test-postgresql
+          filters:
+            branches:
+              only:
+                - master
+                - work-for-release-0.19.x
                 - circle-ci-experiment
