@@ -51,6 +51,7 @@ import org.killbill.notificationq.api.NotificationEventWithMetadata;
 import org.killbill.notificationq.api.NotificationQueue;
 import org.killbill.notificationq.api.NotificationQueueService;
 import org.killbill.notificationq.api.NotificationQueueService.NoSuchNotificationQueue;
+import org.killbill.queue.retry.RetryNotificationEvent;
 import org.killbill.queue.retry.RetryableService;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
@@ -112,11 +113,12 @@ public class TestWithInvoicePlugin extends TestIntegrationBase {
         assertEquals(invoiceUserApi.getInvoicesByAccount(account.getId(), false, callContext).size(), 0);
 
         // Verify bus event has moved to the retry service (can't easily check the timestamp unfortunately)
-        checkRetryBusEvents();
+        // No future notification at this point (FIXED item, the PHASE event is the trigger for the next one)
+        checkRetryBusEvents(1, 0);
 
         // Add 5'
         clock.addDeltaFromReality(5 * 60 * 1000);
-        checkRetryBusEvents();
+        checkRetryBusEvents(2, 0);
 
         // Fix invoice plugin
         testInvoicePluginApi.shouldThrowException = false;
@@ -156,11 +158,12 @@ public class TestWithInvoicePlugin extends TestIntegrationBase {
         assertEquals(invoiceUserApi.getInvoicesByAccount(account.getId(), false, callContext).size(), 2);
 
         // Verify notification has moved to the retry service
-        checkRetryNotifications("2012-06-01T00:05:00");
+        checkRetryNotifications("2012-06-01T00:05:00", 1);
 
         // Add 5'
         clock.addDeltaFromReality(5 * 60 * 1000);
-        checkRetryNotifications("2012-06-01T00:15:00");
+        // Verify there are no notification duplicates
+        checkRetryNotifications("2012-06-01T00:15:00", 1);
 
         // Fix invoice plugin
         testInvoicePluginApi.shouldThrowException = false;
@@ -188,7 +191,7 @@ public class TestWithInvoicePlugin extends TestIntegrationBase {
         assertEquals(invoiceUserApi.getInvoicesByAccount(account.getId(), false, callContext).size(), 3);
 
         // Verify notification has moved to the retry service
-        checkRetryNotifications("2012-07-01T00:05:00");
+        checkRetryNotifications("2012-07-01T00:05:00", 1);
 
         testInvoicePluginApi.shouldThrowException = false;
 
@@ -200,20 +203,19 @@ public class TestWithInvoicePlugin extends TestIntegrationBase {
         assertEquals(invoiceUserApi.getInvoicesByAccount(account.getId(), false, callContext).size(), 4);
     }
 
-    private void checkRetryBusEvents() throws NoSuchNotificationQueue {
+    private void checkRetryBusEvents(final int retryNb, final int expectedFutureInvoiceNotifications) throws NoSuchNotificationQueue {
         // Verify notification(s) moved to the retry queue
         Awaitility.await().atMost(5, TimeUnit.SECONDS).until(new Callable<Boolean>() {
             @Override
             public Boolean call() throws Exception {
                 final List<NotificationEventWithMetadata> futureInvoiceRetryableBusEvents = getFutureInvoiceRetryableBusEvents();
-                return futureInvoiceRetryableBusEvents.size() == 1;
+                return futureInvoiceRetryableBusEvents.size() == 1 && ((RetryNotificationEvent) futureInvoiceRetryableBusEvents.get(0).getEvent()).getRetryNb() == retryNb;
             }
         });
-        assertEquals(getFutureInvoiceRetryableBusEvents().size(), 1);
-        assertEquals(getFutureInvoiceNotifications().size(), 0);
+        assertEquals(getFutureInvoiceNotifications().size(), expectedFutureInvoiceNotifications);
     }
 
-    private void checkRetryNotifications(final String retryDateTime) throws NoSuchNotificationQueue {
+    private void checkRetryNotifications(final String retryDateTime, final int expectedFutureInvoiceNotifications) throws NoSuchNotificationQueue {
         // Verify notification(s) moved to the retry queue
         Awaitility.await().atMost(5, TimeUnit.SECONDS).until(new Callable<Boolean>() {
             @Override
@@ -222,8 +224,7 @@ public class TestWithInvoicePlugin extends TestIntegrationBase {
                 return futureInvoiceRetryableNotifications.size() == 1 && futureInvoiceRetryableNotifications.get(0).getEffectiveDate().compareTo(new DateTime(retryDateTime, DateTimeZone.UTC)) == 0;
             }
         });
-        assertEquals(getFutureInvoiceRetryableNotifications().size(), 1);
-        assertEquals(getFutureInvoiceNotifications().size(), 0);
+        assertEquals(getFutureInvoiceNotifications().size(), expectedFutureInvoiceNotifications);
     }
 
     private void checkNotificationsNoRetry(final int main) throws NoSuchNotificationQueue {
