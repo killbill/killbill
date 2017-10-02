@@ -364,54 +364,38 @@ public class InvoiceDispatcher {
 
     private Invoice processAccountWithLockAndInputTargetDate(final UUID accountId, final LocalDate targetDate,
                                                              final BillingEventSet billingEvents, final boolean isDryRun, final InternalCallContext context) throws InvoiceApiException {
+        final ImmutableAccountData account;
         try {
-            final ImmutableAccountData account = accountApi.getImmutableAccountDataById(accountId, context);
+            account = accountApi.getImmutableAccountDataById(accountId, context);
+        } catch (final AccountApiException e) {
+            log.error("Unable to generate invoice for accountId='{}', a future notification has NOT been recorded", accountId, e);
+            return null;
+        }
 
-            final List<Invoice> invoices = billingEvents.isAccountAutoInvoiceOff() ?
-                                           ImmutableList.<Invoice>of() :
-                                           ImmutableList.<Invoice>copyOf(Collections2.transform(invoiceDao.getInvoicesByAccount(context),
-                                                                                                new Function<InvoiceModelDao, Invoice>() {
-                                                                                                    @Override
-                                                                                                    public Invoice apply(final InvoiceModelDao input) {
-                                                                                                        return new DefaultInvoice(input);
-                                                                                                    }
-                                                                                                }));
+        final InvoiceWithMetadata invoiceWithMetadata = generateKillBillInvoice(account, targetDate, billingEvents, context);
+        final DefaultInvoice invoice = invoiceWithMetadata.getInvoice();
 
-            final Currency targetCurrency = account.getCurrency();
+        // Compute future notifications
+        final FutureAccountNotifications futureAccountNotifications = createNextFutureNotificationDate(invoiceWithMetadata, context);
 
-            final UUID targetInvoiceId;
-            if (billingEvents.isAccountAutoInvoiceReuseDraft()) {
-                final InvoiceModelDao earliestDraftInvoice = invoiceDao.getEarliestDraftInvoiceByAccount(context);
-                targetInvoiceId = earliestDraftInvoice != null ? earliestDraftInvoice.getId() : null;
+        // If invoice comes back null, there is nothing new to generate, we can bail early
+        if (invoice == null) {
+            if (isDryRun) {
+                log.info("Generated null dryRun invoice for accountId='{}', targetDate='{}'", accountId, targetDate);
             } else {
-                targetInvoiceId = null;
+                log.info("Generated null invoice for accountId='{}', targetDate='{}'", accountId, targetDate);
+
+                final BusInternalEvent event = new DefaultNullInvoiceEvent(accountId, clock.getUTCToday(),
+                                                                           context.getAccountRecordId(), context.getTenantRecordId(), context.getUserToken());
+
+                commitInvoiceAndSetFutureNotifications(account, null, futureAccountNotifications, context);
+                postEvent(event);
             }
+            return null;
+        }
 
-            final InvoiceWithMetadata invoiceWithMetadata = generator.generateInvoice(account, billingEvents, invoices, targetInvoiceId, targetDate, targetCurrency, context);
-            final DefaultInvoice invoice = invoiceWithMetadata.getInvoice();
-
-            // Compute future notifications
-            final FutureAccountNotifications futureAccountNotifications = createNextFutureNotificationDate(invoiceWithMetadata, context);
-
-            //
-
-            // If invoice comes back null, there is nothing new to generate, we can bail early
-            //
-            if (invoice == null) {
-                if (isDryRun) {
-                    log.info("Generated null dryRun invoice for accountId='{}', targetDate='{}'", accountId, targetDate);
-                } else {
-                    log.info("Generated null invoice for accountId='{}', targetDate='{}'", accountId, targetDate);
-
-                    final BusInternalEvent event = new DefaultNullInvoiceEvent(accountId, clock.getUTCToday(),
-                                                                               context.getAccountRecordId(), context.getTenantRecordId(), context.getUserToken());
-
-                    commitInvoiceAndSetFutureNotifications(account, null, futureAccountNotifications, context);
-                    postEvent(event);
-                }
-                return null;
-            }
-
+        boolean success = false;
+        try {
             // Generate missing credit (> 0 for generation and < 0 for use) prior we call the plugin
             final InvoiceItem cbaItemPreInvoicePlugins = computeCBAOnExistingInvoice(invoice, context);
             DefaultInvoice tmpInvoiceForInvoicePlugins = invoice;
@@ -453,21 +437,47 @@ public class InvoiceDispatcher {
                 invoiceModelDao.addInvoiceItems(invoiceItemModelDaos);
 
                 // Commit invoice on disk
-                final boolean isThereAnyItemsLeft = commitInvoiceAndSetFutureNotifications(account, invoiceModelDao, futureAccountNotifications, context);
+                commitInvoiceAndSetFutureNotifications(account, invoiceModelDao, futureAccountNotifications, context);
+                success = true;
 
-                final boolean isRealInvoiceWithNonEmptyItems = isThereAnyItemsLeft ? isRealInvoiceWithItems : false;
-
-                setChargedThroughDates(invoice.getInvoiceItems(FixedPriceInvoiceItem.class), invoice.getInvoiceItems(RecurringInvoiceItem.class), context);
-
+                try {
+                    setChargedThroughDates(invoice.getInvoiceItems(FixedPriceInvoiceItem.class), invoice.getInvoiceItems(RecurringInvoiceItem.class), context);
+                } catch (final SubscriptionBaseApiException e) {
+                    log.error("Failed handling SubscriptionBase change.", e);
+                    return null;
+                }
             }
-            return invoice;
-        } catch (final AccountApiException e) {
-            log.error("Failed handling SubscriptionBase change.", e);
-            return null;
-        } catch (final SubscriptionBaseApiException e) {
-            log.error("Failed handling SubscriptionBase change.", e);
-            return null;
+        } finally {
+            // Make sure we always set future notifications in case of errors
+            if (!isDryRun && !success) {
+                commitInvoiceAndSetFutureNotifications(account, null, futureAccountNotifications, context);
+            }
         }
+
+        return invoice;
+    }
+
+    private InvoiceWithMetadata generateKillBillInvoice(final ImmutableAccountData account, final LocalDate targetDate, final BillingEventSet billingEvents, final InternalCallContext context) throws InvoiceApiException {
+        final List<Invoice> invoices = billingEvents.isAccountAutoInvoiceOff() ?
+                                       ImmutableList.<Invoice>of() :
+                                       ImmutableList.<Invoice>copyOf(Collections2.transform(invoiceDao.getInvoicesByAccount(context),
+                                                                                            new Function<InvoiceModelDao, Invoice>() {
+                                                                                                @Override
+                                                                                                public Invoice apply(final InvoiceModelDao input) {
+                                                                                                    return new DefaultInvoice(input);
+                                                                                                }
+                                                                                            }));
+        final Currency targetCurrency = account.getCurrency();
+
+        final UUID targetInvoiceId;
+        if (billingEvents.isAccountAutoInvoiceReuseDraft()) {
+            final InvoiceModelDao earliestDraftInvoice = invoiceDao.getEarliestDraftInvoiceByAccount(context);
+            targetInvoiceId = earliestDraftInvoice != null ? earliestDraftInvoice.getId() : null;
+        } else {
+            targetInvoiceId = null;
+        }
+
+        return generator.generateInvoice(account, billingEvents, invoices, targetInvoiceId, targetDate, targetCurrency, context);
     }
 
     private FutureAccountNotifications createNextFutureNotificationDate(final InvoiceWithMetadata invoiceWithMetadata, final InternalCallContext context) {
@@ -549,17 +559,16 @@ public class InvoiceDispatcher {
         log.info(tmp.toString());
     }
 
-    private boolean commitInvoiceAndSetFutureNotifications(final ImmutableAccountData account,
-                                                           @Nullable final InvoiceModelDao invoiceModelDao,
-                                                           final FutureAccountNotifications futureAccountNotifications,
-                                                           final InternalCallContext context) throws SubscriptionBaseApiException, InvoiceApiException {
+    private void commitInvoiceAndSetFutureNotifications(final ImmutableAccountData account,
+                                                        @Nullable final InvoiceModelDao invoiceModelDao,
+                                                        final FutureAccountNotifications futureAccountNotifications,
+                                                        final InternalCallContext context) {
         final boolean isThereAnyItemsLeft = invoiceModelDao != null && !invoiceModelDao.getInvoiceItems().isEmpty();
         if (isThereAnyItemsLeft) {
             invoiceDao.createInvoice(invoiceModelDao, futureAccountNotifications, context);
         } else {
             invoiceDao.setFutureAccountNotificationsForEmptyInvoice(account.getId(), futureAccountNotifications, context);
         }
-        return isThereAnyItemsLeft;
     }
 
     private InvoiceItem computeCBAOnExistingInvoice(final Invoice invoice, final InternalCallContext context) throws InvoiceApiException {
