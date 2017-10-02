@@ -123,10 +123,7 @@ public class TestPublicBus extends TestIntegrationBase {
         TODO modify sequence to allow optional registration of publicListener
          */
 
-        try {
-            DBTestingHelper.get().getInstance().cleanupAllTables();
-        } catch (final Exception ignored) {
-        }
+        cleanupAllTables();
 
         log.debug("RESET TEST FRAMEWORK");
 

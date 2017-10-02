@@ -318,13 +318,9 @@ public class TestWithFakeKPMPlugin extends TestIntegrationBase {
 
     @BeforeMethod(groups = "slow")
     public void beforeMethod() throws Exception {
-
-        try {
-            DBTestingHelper.get().getInstance().cleanupAllTables();
-        } catch (final Exception ignored) {
-        }
-
         log.debug("RESET TEST FRAMEWORK");
+
+        cleanupAllTables();
 
         clock.resetDeltaFromReality();
         busHandler.reset();

@@ -69,8 +69,9 @@ public class TestOverdueCheckNotifier extends OverdueTestSuiteWithEmbeddedDB {
     @Override
     @BeforeMethod(groups = "slow")
     public void beforeMethod() throws Exception {
-        //super.beforeMethod();
         // We override the parent method on purpose, because we want to register a different OverdueCheckNotifier
+
+        cleanupAllTables();
 
         mockDispatcher = new OverdueDispatcherMock(internalCallContextFactory);
         notifierForMock = new OverdueCheckNotifier(notificationQueueService, overdueProperties, internalCallContextFactory, mockDispatcher);
