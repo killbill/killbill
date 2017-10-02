@@ -113,7 +113,7 @@ public class DefaultEventsStream implements EventsStream {
                               @Nullable final SubscriptionBase subscription) {
         for (final Object object : new Object[]{account, bundle, baseSubscription, subscription}) {
             Preconditions.checkNotNull(object,
-                                       "accountId='%s%, bundleId='%s', baseSubscriptionId='%s', subscriptionId='%s'",
+                                       "accountId='%s', bundleId='%s', baseSubscriptionId='%s', subscriptionId='%s'",
                                        account != null ? account.getId() : null,
                                        bundle != null ? bundle.getId() : null,
                                        baseSubscription != null ? baseSubscription.getId() : null,
