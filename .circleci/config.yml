@@ -67,7 +67,18 @@ jobs:
           key: v1-dependencies-{{ .Branch }}-{{ checksum "pom.xml" }}
       - run:
           name: Setup latest DDL
-          command: ./bin/db-helper -a create --driver mysql -u root -p root -t yes -h 127.0.0.1
+          command: |
+            count=0
+            until mysqladmin ping -h 127.0.0.1 -u root --password=root --silent; do
+              if [[ "$count" == "25" ]]; then
+                exit 1
+              fi
+              (( count++ ))
+
+              printf '.'
+              sleep 5
+            done
+            ./bin/db-helper -a create --driver mysql -u root -p root -t yes -h 127.0.0.1
       - run: mvn clean install -Plocaltest-mysql
       - run:
           name: Save test results
