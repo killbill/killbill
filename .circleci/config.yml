@@ -135,16 +135,6 @@ jobs:
           command: |
             mvn clean install -DskipTests=true
             nohup ./bin/start-server -s || true
-            count=0
-            until $(curl --output /dev/null --silent --fail http://127.0.0.1:8080/1.0/healthcheck); do
-              if [[ "$count" == "25" ]]; then
-                exit 1
-              fi
-              (( count++ ))
-
-              printf '.'
-              sleep 5
-            done
       - run:
           name: Run integration tests
           command: |
@@ -157,6 +147,16 @@ jobs:
               fi
             fi
             bundle install
+            count=0
+            until $(curl --output /dev/null --silent --fail http://127.0.0.1:8080/1.0/healthcheck); do
+              if [[ "$count" == "25" ]]; then
+                exit 1
+              fi
+              (( count++ ))
+
+              printf '.'
+              sleep 5
+            done
             bundle exec rake test:core | tee /tmp/test-results/test.txt 2>&1
             popd
       - store_test_results:
