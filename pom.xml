@@ -21,7 +21,7 @@
     <parent>
         <artifactId>killbill-oss-parent</artifactId>
         <groupId>org.kill-bill.billing</groupId>
-        <version>0.140.41</version>
+        <version>0.140.42</version>
     </parent>
     <artifactId>killbill</artifactId>
     <version>0.18.14-SNAPSHOT</version>
@@ -59,14 +59,4 @@
     <properties>
         <killbill.version>${project.version}</killbill.version>
     </properties>
-    <dependencyManagement>
-        <dependencies>
-            <dependency>
-                <groupId>org.testng</groupId>
-                <artifactId>testng</artifactId>
-                <version>6.12</version>
-                <scope>test</scope>
-            </dependency>
-        </dependencies>
-    </dependencyManagement>
 </project>
