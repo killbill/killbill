@@ -64,12 +64,6 @@ public class TestIntegrationInvoiceWithRepairLogic extends TestIntegrationBase {
     @Inject
     protected InvoiceDao invoiceDao;
 
-
-    @AfterMethod(groups = "slow")
-    public void afterMethod() throws Exception {
-        super.afterMethod();
-    }
-
     @Test(groups = "slow")
     public void testSimplePartialRepairWithItemAdjustment() throws Exception {
         // We take april as it has 30 days (easier to play with BCD)

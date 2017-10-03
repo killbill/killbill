@@ -32,13 +32,15 @@ public class FlakyRetryAnalyzer implements IRetryAnalyzer {
             return false;
         }
 
-        if (count < MAX_RETRIES) {
+        if (shouldRetry()) {
             count++;
             return true;
         } else {
-            // Don't fail the build (flaky test), mark it as SKIPPED
-            iTestResult.setStatus(ITestResult.SKIP);
             return false;
         }
+    }
+
+    public boolean shouldRetry() {
+        return count < MAX_RETRIES;
     }
 }
