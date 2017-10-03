@@ -134,7 +134,7 @@ jobs:
           name: Setup Kill Bill
           command: |
             mvn clean install -DskipTests=true
-            nohup ./bin/start-server -s || true
+            nohup ./bin/start-server -s &
       - run:
           name: Run integration tests
           command: |
