@@ -68,6 +68,7 @@ jobs:
       - run:
           name: Setup latest DDL
           command: |
+            set +e
             count=0
             until mysqladmin ping -h 127.0.0.1 -u root --password=root --silent; do
               if [[ "$count" == "25" ]]; then
@@ -78,6 +79,8 @@ jobs:
               printf '.'
               sleep 5
             done
+
+            set -e
             ./bin/db-helper -a create --driver mysql -u root -p root -t yes -h 127.0.0.1
       - run: mvn clean install -Plocaltest-mysql
       - run:
@@ -131,13 +134,13 @@ jobs:
           name: Setup latest DDL
           command: ./bin/db-helper -a create --driver mysql -u root -p root -t yes -h 127.0.0.1
       - run:
-          name: Setup Kill Bill
-          command: |
-            mvn clean install -DskipTests=true
-            nohup ./bin/start-server -s &
-      - run:
           name: Run integration tests
           command: |
+            set +e
+
+            mvn clean install -DskipTests=true
+            nohup ./bin/start-server -s &
+
             mkdir -p /home/killbill/killbill-integration-tests
             git clone https://github.com/killbill/killbill-integration-tests.git /home/killbill/killbill-integration-tests
             pushd /home/killbill/killbill-integration-tests
@@ -147,6 +150,7 @@ jobs:
               fi
             fi
             bundle install
+
             count=0
             until $(curl --output /dev/null --silent --fail http://127.0.0.1:8080/1.0/healthcheck); do
               if [[ "$count" == "25" ]]; then
@@ -157,8 +161,9 @@ jobs:
               printf '.'
               sleep 5
             done
+
+            set -e
             bundle exec rake test:core | tee /tmp/test-results/test.txt 2>&1
-            popd
       - store_test_results:
           path: /tmp/test-results
       - store_artifacts:
