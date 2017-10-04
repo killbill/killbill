@@ -123,20 +123,15 @@ public abstract class UtilTestSuiteWithEmbeddedDB extends GuicyKillbillTestSuite
 
         eventBus.start();
         eventBus.register(eventsListener);
-
-        // Make sure we start with a clean state
-        assertListenerStatus();
     }
 
     @AfterMethod(groups = "slow")
     public void afterMethod() throws Exception {
-        // Make sure we finish in a clean state
-        assertListenerStatus();
-
         eventBus.unregister(eventsListener);
         eventBus.stop();
     }
 
+    @Override
     protected void assertListenerStatus() {
         eventsListener.assertListenerStatus();
     }

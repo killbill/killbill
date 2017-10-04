@@ -36,6 +36,8 @@ import org.killbill.clock.ClockMock;
 import org.skife.config.ConfigSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.testng.IHookCallBack;
+import org.testng.IHookable;
 import org.testng.ITestResult;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
@@ -44,7 +46,7 @@ import org.testng.annotations.Listeners;
 import com.google.common.collect.ImmutableMap;
 
 @Listeners(FlakyInvokedMethodListener.class)
-public class GuicyKillbillTestSuite {
+public class GuicyKillbillTestSuite implements IHookable {
 
     // Use the simple name here to save screen real estate
     protected static final Logger log = LoggerFactory.getLogger(KillbillTestSuite.class.getSimpleName());
@@ -144,6 +146,24 @@ public class GuicyKillbillTestSuite {
         if (!hasFailed && !result.isSuccess()) {
             hasFailed = true;
         }
+    }
+
+    // Note: assertions should not be run in before / after hooks, as the associated test result won't be correctly updated.
+    // Use this wrapper instead.
+    @Override
+    public void run(final IHookCallBack callBack, final ITestResult testResult) {
+        // Make sure we start with a clean state
+        assertListenerStatus();
+
+        // Run the actual test
+        callBack.runTestMethod(testResult);
+
+        // Make sure we finish in a clean state
+        assertListenerStatus();
+    }
+
+    protected void assertListenerStatus() {
+        // No-op
     }
 
     public boolean hasFailed() {

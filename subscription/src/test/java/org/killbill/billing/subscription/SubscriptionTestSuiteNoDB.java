@@ -151,6 +151,7 @@ public class SubscriptionTestSuiteNoDB extends GuicyKillbillTestSuiteNoDB {
         subscriptionTestInitializer.stopTestFramework(testListener, busService, subscriptionBaseService);
     }
 
+    @Override
     protected void assertListenerStatus() {
         testListener.assertListenerStatus();
     }

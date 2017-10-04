@@ -137,9 +137,6 @@ public class TestPublicBus extends TestIntegrationBase {
         paymentPlugin.clear();
 
         this.externalBusCount = new AtomicInteger(0);
-
-        // Make sure we start with a clean state
-        assertListenerStatus();
     }
 
     @AfterMethod(groups = "slow")

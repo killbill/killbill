@@ -299,6 +299,7 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
 
     protected ConfigurableInvoiceConfig invoiceConfig;
 
+    @Override
     protected void assertListenerStatus() {
         busHandler.assertListenerStatus();
     }
@@ -344,20 +345,6 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
         log.debug("afterMethod callcontext classLoader = " + (Thread.currentThread().getContextClassLoader() != null ? Thread.currentThread().getContextClassLoader().toString() : "null"));
 
         log.debug("DONE WITH TEST");
-    }
-
-    // Note: assertions should not be run in before / after hooks, as the associated test result won't be correctly updated.
-    // Use this wrapper instead.
-    @Override
-    public void run(final IHookCallBack callBack, final ITestResult testResult) {
-        // Make sure we start with a clean state
-        assertListenerStatus();
-
-        // Run the actual test
-        callBack.runTestMethod(testResult);
-
-        // Make sure we finish in a clean state
-        assertListenerStatus();
     }
 
     protected void checkNoMoreInvoiceToGenerate(final Account account) {

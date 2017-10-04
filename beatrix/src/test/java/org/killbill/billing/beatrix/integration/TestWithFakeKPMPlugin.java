@@ -330,9 +330,6 @@ public class TestWithFakeKPMPlugin extends TestIntegrationBase {
         externalBus.register(new FakeKPMPlugin());
 
         lifecycle.fireStartupSequencePostEventRegistration();
-
-        // Make sure we start with a clean state
-        assertListenerStatus();
     }
 
     @Test(groups = "slow")
