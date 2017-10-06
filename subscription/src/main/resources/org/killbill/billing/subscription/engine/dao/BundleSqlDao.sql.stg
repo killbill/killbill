@@ -61,7 +61,7 @@ set b.external_key = concat('kb', '<prefix>', '-', t.record_id, ':', t.external_
 ;
 >>
 
-getBundlesForKey() ::= <<
+getBundlesForLikeKey() ::= <<
 select <allTableFields("")>
 from bundles
 where

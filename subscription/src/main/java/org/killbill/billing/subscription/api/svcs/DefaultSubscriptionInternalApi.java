@@ -284,7 +284,7 @@ public class DefaultSubscriptionInternalApi extends SubscriptionApiBase implemen
     }
 
     @Override
-    public List<SubscriptionBaseWithAddOns> createBaseSubscriptionsWithAddOns(final UUID accountId, final Iterable<BaseEntitlementWithAddOnsSpecifier> baseEntitlementWithAddOnsSpecifier, final InternalCallContext context) throws SubscriptionBaseApiException {
+    public List<SubscriptionBaseWithAddOns> createBaseSubscriptionsWithAddOns(final UUID accountId, final Iterable<BaseEntitlementWithAddOnsSpecifier> baseEntitlementWithAddOnsSpecifier, final boolean renameCancelledBundleIfExist, final InternalCallContext context) throws SubscriptionBaseApiException {
         try {
             final Catalog catalog = catalogInternalApi.getFullCatalog(true, true, context);
             final CallContext callContext = internalCallContextFactory.createCallContext(context);
@@ -300,7 +300,7 @@ public class DefaultSubscriptionInternalApi extends SubscriptionApiBase implemen
 
                 final SubscriptionBaseBundle bundle;
                 if (isBaseSpecifierExists) {
-                    bundle = createBundleForAccount(accountId, entitlementWithAddOnsSpecifier.getExternalKey(), context);
+                    bundle = createBundleForAccount(accountId, entitlementWithAddOnsSpecifier.getExternalKey(), renameCancelledBundleIfExist, context);
                 } else {
                     final List<SubscriptionBaseBundle> existingBundles = dao.getSubscriptionBundlesForKey(entitlementWithAddOnsSpecifier.getExternalKey(), context);
                     final SubscriptionBaseBundle tmp = getActiveBundleForKeyNotException(existingBundles, dao, clock, catalog, context);
@@ -381,7 +381,7 @@ public class DefaultSubscriptionInternalApi extends SubscriptionApiBase implemen
     }
 
     @Override
-    public SubscriptionBaseBundle createBundleForAccount(final UUID accountId, final String bundleKey, final InternalCallContext context) throws SubscriptionBaseApiException {
+    public SubscriptionBaseBundle createBundleForAccount(final UUID accountId, final String bundleKey, final boolean renameCancelledBundleIfExist, final InternalCallContext context) throws SubscriptionBaseApiException {
 
         final DateTime now = clock.getUTCNow();
         final DefaultSubscriptionBaseBundle bundle = new DefaultSubscriptionBaseBundle(bundleKey, accountId, now, now, now, now);
@@ -390,7 +390,7 @@ public class DefaultSubscriptionInternalApi extends SubscriptionApiBase implemen
         }
         try {
             final Catalog catalog = catalogInternalApi.getFullCatalog(true, true, context);
-            return dao.createSubscriptionBundle(bundle, catalog, context);
+            return dao.createSubscriptionBundle(bundle, catalog, renameCancelledBundleIfExist, context);
         } catch (final CatalogApiException e) {
             throw new  SubscriptionBaseApiException(e);
         }

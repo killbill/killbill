@@ -84,7 +84,7 @@ public class TestCatalogRetireElements extends TestIntegrationBase {
 
         final PlanPhaseSpecifier spec = new PlanPhaseSpecifier(productName, term, PriceListSet.DEFAULT_PRICELIST_NAME, null);
         try {
-            entitlementApi.createBaseEntitlement(account.getId(), spec, "externalKey2", null, null, null, false, ImmutableList.<PluginProperty>of(), callContext);
+            entitlementApi.createBaseEntitlement(account.getId(), spec, "externalKey2", null, null, null, false, true, ImmutableList.<PluginProperty>of(), callContext);
             fail(); // force to fail is there is not an exception
         } catch (final EntitlementApiException e) {
             assertEquals(e.getCode(), ErrorCode.CAT_PLAN_NOT_FOUND.getCode());
@@ -143,7 +143,7 @@ public class TestCatalogRetireElements extends TestIntegrationBase {
 
         final PlanPhaseSpecifier spec = new PlanPhaseSpecifier(productName, term, PriceListSet.DEFAULT_PRICELIST_NAME, null);
         try {
-            entitlementApi.createBaseEntitlement(account.getId(), spec, "externalKey2", null, null, null, false, ImmutableList.<PluginProperty>of(), callContext);
+            entitlementApi.createBaseEntitlement(account.getId(), spec, "externalKey2", null, null, null, false, true, ImmutableList.<PluginProperty>of(), callContext);
             fail(); // force to fail is there is not an exception
         } catch (final EntitlementApiException e) {
             assertEquals(e.getCode(), ErrorCode.CAT_PLAN_NOT_FOUND.getCode());
@@ -182,7 +182,7 @@ public class TestCatalogRetireElements extends TestIntegrationBase {
         final PlanPhaseSpecifier spec1 = new PlanPhaseSpecifier(productName, term, "DEFAULT", null);
 
         busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE);
-        Entitlement bpEntitlement = entitlementApi.createBaseEntitlement(account.getId(), spec1, "externalKey", null, null, null, false, ImmutableList.<PluginProperty>of(), callContext);
+        Entitlement bpEntitlement = entitlementApi.createBaseEntitlement(account.getId(), spec1, "externalKey", null, null, null, false, true, ImmutableList.<PluginProperty>of(), callContext);
         assertListenerStatus();
 
         assertNotNull(bpEntitlement);
@@ -241,7 +241,7 @@ public class TestCatalogRetireElements extends TestIntegrationBase {
         // Catalog v3 should start now.
 
         try {
-            entitlementApi.createBaseEntitlement(account.getId(), spec2, "externalKey2", null, null, null, false, ImmutableList.<PluginProperty>of(), callContext);
+            entitlementApi.createBaseEntitlement(account.getId(), spec2, "externalKey2", null, null, null, false, true, ImmutableList.<PluginProperty>of(), callContext);
             fail(); // force to fail is there is not an exception
         } catch (final EntitlementApiException e) {
             assertEquals(e.getCode(), ErrorCode.CAT_NO_SUCH_PRODUCT.getCode());
@@ -272,7 +272,7 @@ public class TestCatalogRetireElements extends TestIntegrationBase {
         final PlanPhaseSpecifier spec1 = new PlanPhaseSpecifier(productName, term, "DEFAULT", null);
 
         busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE);
-        Entitlement bpEntitlement = entitlementApi.createBaseEntitlement(account.getId(), spec1, "externalKey", null, null, null, false, ImmutableList.<PluginProperty>of(), callContext);
+        Entitlement bpEntitlement = entitlementApi.createBaseEntitlement(account.getId(), spec1, "externalKey", null, null, null, false, true, ImmutableList.<PluginProperty>of(), callContext);
         assertListenerStatus();
 
         assertNotNull(bpEntitlement);
@@ -341,7 +341,7 @@ public class TestCatalogRetireElements extends TestIntegrationBase {
         // Catalog v3 should start now.
 
         try {
-            entitlementApi.createBaseEntitlement(account.getId(), spec2, "externalKey2", null, null, null, false, ImmutableList.<PluginProperty>of(), callContext);
+            entitlementApi.createBaseEntitlement(account.getId(), spec2, "externalKey2", null, null, null, false, true, ImmutableList.<PluginProperty>of(), callContext);
             fail(); // force to fail is there is not an exception
         } catch (final EntitlementApiException e) {
             assertEquals(e.getCode(), ErrorCode.CAT_NO_SUCH_PRODUCT.getCode());
@@ -394,7 +394,7 @@ public class TestCatalogRetireElements extends TestIntegrationBase {
 
         final PlanPhaseSpecifier spec = new PlanPhaseSpecifier(productName, term, PriceListSet.DEFAULT_PRICELIST_NAME, null);
         try {
-            entitlementApi.createBaseEntitlement(account.getId(), spec, "externalKey2", null, null, null, false, ImmutableList.<PluginProperty>of(), callContext);
+            entitlementApi.createBaseEntitlement(account.getId(), spec, "externalKey2", null, null, null, false, true, ImmutableList.<PluginProperty>of(), callContext);
             fail(); // force to fail is there is not an exception
         } catch (final EntitlementApiException e) {
             assertTrue(e.getLocalizedMessage().startsWith("Could not find any product named 'Pistol'"));
@@ -430,7 +430,7 @@ public class TestCatalogRetireElements extends TestIntegrationBase {
         final PlanPhaseSpecifier spec = new PlanPhaseSpecifier(productName, term, "SpecialDiscount", null);
 
         busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE);
-        final Entitlement bpEntitlement = entitlementApi.createBaseEntitlement(account.getId(), spec, "externalKey", null, null, null, false, ImmutableList.<PluginProperty>of(), callContext);
+        final Entitlement bpEntitlement = entitlementApi.createBaseEntitlement(account.getId(), spec, "externalKey", null, null, null, false, true, ImmutableList.<PluginProperty>of(), callContext);
         assertListenerStatus();
 
         assertNotNull(bpEntitlement);
@@ -449,7 +449,7 @@ public class TestCatalogRetireElements extends TestIntegrationBase {
         // PriceList "SpecialDiscount" at this point.
 
         try {
-            entitlementApi.createBaseEntitlement(account.getId(), spec, "externalKey2", null, null, null, false, ImmutableList.<PluginProperty>of(), callContext);
+            entitlementApi.createBaseEntitlement(account.getId(), spec, "externalKey2", null, null, null, false, true, ImmutableList.<PluginProperty>of(), callContext);
             fail(); // force to fail is there is not an exception
         } catch (final EntitlementApiException e) {
             assertTrue(e.getLocalizedMessage().startsWith("Could not find any product named 'Pistol'"));

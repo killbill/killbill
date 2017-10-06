@@ -79,7 +79,7 @@ public class DefaultSubscriptionTestInitializer implements SubscriptionTestIniti
     }
 
     public SubscriptionBaseBundle initBundle(final UUID accountId, final SubscriptionBaseInternalApi subscriptionApi, final InternalCallContext callContext) throws Exception {
-        final SubscriptionBaseBundle bundle = subscriptionApi.createBundleForAccount(accountId, DEFAULT_BUNDLE_KEY, callContext);
+        final SubscriptionBaseBundle bundle = subscriptionApi.createBundleForAccount(accountId, DEFAULT_BUNDLE_KEY, true, callContext);
         assertNotNull(bundle);
         return bundle;
     }

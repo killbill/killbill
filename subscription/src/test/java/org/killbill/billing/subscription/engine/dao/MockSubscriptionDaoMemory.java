@@ -174,7 +174,7 @@ public class MockSubscriptionDaoMemory extends MockEntityDaoBase<SubscriptionBun
     }
 
     @Override
-    public SubscriptionBaseBundle createSubscriptionBundle(final DefaultSubscriptionBaseBundle bundle, final Catalog catalog, final InternalCallContext context) {
+    public SubscriptionBaseBundle createSubscriptionBundle(final DefaultSubscriptionBaseBundle bundle, final Catalog catalog, final boolean renameCancelledBundleIfExist, final InternalCallContext context) {
         bundles.add(bundle);
         mockNonEntityDao.addTenantRecordIdMapping(bundle.getId(), context);
         return getSubscriptionBundleFromId(bundle.getId(), context);

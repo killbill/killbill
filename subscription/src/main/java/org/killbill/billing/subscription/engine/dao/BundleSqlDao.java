@@ -64,6 +64,6 @@ public interface BundleSqlDao extends EntitySqlDao<SubscriptionBundleModelDao, S
                                                                  @SmartBindBean final InternalTenantContext context);
 
     @SqlQuery
-    public List<SubscriptionBundleModelDao> getBundlesForKey(@Bind("externalKey") String externalKey,
-                                                             @SmartBindBean final InternalTenantContext context);
+    public List<SubscriptionBundleModelDao> getBundlesForLikeKey(@Bind("externalKey") String externalKey,
+                                                                 @SmartBindBean final InternalTenantContext context);
 }

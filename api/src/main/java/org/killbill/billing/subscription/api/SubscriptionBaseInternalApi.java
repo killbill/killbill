@@ -47,11 +47,11 @@ public interface SubscriptionBaseInternalApi {
                                                final boolean isMigrated, InternalCallContext context) throws SubscriptionBaseApiException;
 
     public List<SubscriptionBaseWithAddOns> createBaseSubscriptionsWithAddOns(UUID accountId, Iterable<BaseEntitlementWithAddOnsSpecifier> baseEntitlementWithAddOnsSpecifier,
-                                                                              InternalCallContext contextWithValidAccountRecordId) throws SubscriptionBaseApiException;
+                                                                              boolean renameCancelledBundleIfExist, InternalCallContext contextWithValidAccountRecordId) throws SubscriptionBaseApiException;
 
     public void cancelBaseSubscriptions(Iterable<SubscriptionBase> subscriptions, BillingActionPolicy policy, int accountBillCycleDayLocal, InternalCallContext context) throws SubscriptionBaseApiException;
 
-    public SubscriptionBaseBundle createBundleForAccount(UUID accountId, String bundleName, InternalCallContext context)
+    public SubscriptionBaseBundle createBundleForAccount(UUID accountId, String bundleName, boolean renameCancelledBundleIfExist, InternalCallContext context)
             throws SubscriptionBaseApiException;
 
     public List<SubscriptionBaseBundle> getBundlesForAccountAndKey(UUID accountId, String bundleKey, InternalTenantContext context)

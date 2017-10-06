@@ -75,14 +75,14 @@ public class TestSubscriptionDao extends SubscriptionTestSuiteWithEmbeddedDB {
         final DateTime createdDate = startDate.plusSeconds(10);
 
         final DefaultSubscriptionBaseBundle bundleDef = new DefaultSubscriptionBaseBundle(externalKey, accountId, startDate, startDate, createdDate, createdDate);
-        final SubscriptionBaseBundle bundle = dao.createSubscriptionBundle(bundleDef, catalog, internalCallContext);
+        final SubscriptionBaseBundle bundle = dao.createSubscriptionBundle(bundleDef, catalog, true, internalCallContext);
 
         final List<SubscriptionBaseBundle> result = dao.getSubscriptionBundlesForKey(externalKey, internalCallContext);
         assertEquals(result.size(), 1);
         assertEquals(result.get(0).getExternalKey(), bundle.getExternalKey());
 
         // Operation succeeds but nothing new got created because bundle is empty
-        dao.createSubscriptionBundle(bundleDef, catalog, internalCallContext);
+        dao.createSubscriptionBundle(bundleDef, catalog, true, internalCallContext);
         final List<SubscriptionBaseBundle> result2 = dao.getSubscriptionBundlesForKey(externalKey, internalCallContext);
         assertEquals(result2.size(), 1);
 
@@ -110,7 +110,7 @@ public class TestSubscriptionDao extends SubscriptionTestSuiteWithEmbeddedDB {
 
         // Operation Should now fail
         try {
-            dao.createSubscriptionBundle(bundleDef, catalog, internalCallContext);
+            dao.createSubscriptionBundle(bundleDef, catalog, true, internalCallContext);
             Assert.fail("Should fail to create new subscription bundle with existing key");
         } catch (SubscriptionBaseApiException e) {
             assertEquals(ErrorCode.SUB_CREATE_ACTIVE_BUNDLE_KEY_EXISTS.getCode(), e.getCode());
@@ -125,7 +125,7 @@ public class TestSubscriptionDao extends SubscriptionTestSuiteWithEmbeddedDB {
         final DateTime createdDate = startDate.plusSeconds(10);
 
         final DefaultSubscriptionBaseBundle bundleDef = new DefaultSubscriptionBaseBundle(externalKey, accountId, startDate, startDate, createdDate, createdDate);
-        final SubscriptionBaseBundle bundle = dao.createSubscriptionBundle(bundleDef, catalog, internalCallContext);
+        final SubscriptionBaseBundle bundle = dao.createSubscriptionBundle(bundleDef, catalog, true, internalCallContext);
 
         final List<SubscriptionBaseBundle> result = dao.getSubscriptionBundlesForKey(externalKey, internalCallContext);
         assertEquals(result.size(), 1);
@@ -138,7 +138,7 @@ public class TestSubscriptionDao extends SubscriptionTestSuiteWithEmbeddedDB {
 
         // Create new bundle with original key, verify all results show original key, stripping down internal prefix
         final DefaultSubscriptionBaseBundle bundleDef2 = new DefaultSubscriptionBaseBundle(externalKey, accountId, startDate, startDate, createdDate, createdDate);
-        final SubscriptionBaseBundle bundle2 = dao.createSubscriptionBundle(bundleDef2, catalog, internalCallContext);
+        final SubscriptionBaseBundle bundle2 = dao.createSubscriptionBundle(bundleDef2, catalog, true, internalCallContext);
         final List<SubscriptionBaseBundle> result3 = dao.getSubscriptionBundlesForKey(externalKey, internalCallContext);
         assertEquals(result3.size(), 2);
         assertEquals(result3.get(0).getExternalKey(), bundle2.getExternalKey());
@@ -154,7 +154,7 @@ public class TestSubscriptionDao extends SubscriptionTestSuiteWithEmbeddedDB {
 
         // Create bundle one more time
         final DefaultSubscriptionBaseBundle bundleDef3 = new DefaultSubscriptionBaseBundle(externalKey, accountId, startDate, startDate, createdDate, createdDate);
-        final SubscriptionBaseBundle bundle3 = dao.createSubscriptionBundle(bundleDef3, catalog, internalCallContext);
+        final SubscriptionBaseBundle bundle3 = dao.createSubscriptionBundle(bundleDef3, catalog, true, internalCallContext);
         final List<SubscriptionBaseBundle> result5 = dao.getSubscriptionBundlesForKey(externalKey, internalCallContext);
         assertEquals(result5.size(), 3);
         assertEquals(result5.get(0).getExternalKey(), bundle2.getExternalKey());
