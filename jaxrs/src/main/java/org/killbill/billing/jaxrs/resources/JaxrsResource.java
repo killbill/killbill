@@ -263,6 +263,7 @@ public interface JaxrsResource {
     public static final String PAUSE = "pause";
     public static final String RESUME = "resume";
     public static final String BLOCK = "block";
+    public static final String RENAME_KEY = "renameKey";
 
     public static final String AUTHORIZATION = "authorization";
     public static final String CAPTURE = "capture";
