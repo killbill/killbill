@@ -45,6 +45,7 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 
 import static org.testng.Assert.assertEquals;
@@ -68,6 +69,32 @@ public class TestInvoicePayment extends TestJaxrsBase {
         final InvoicePayment paymentJson = setupScenarioWithPayment();
         final Payment retrievedPaymentJson = killBillClient.getPayment(paymentJson.getPaymentId(), false, requestOptions);
         Assert.assertTrue(retrievedPaymentJson.equals((Payment) paymentJson));
+    }
+
+
+    @Test(groups = "slow")
+    public void testInvoicePaymentCompletion() throws Exception {
+        mockPaymentProviderPlugin.makeNextPaymentPending();
+
+        final InvoicePayment paymentJson = setupScenarioWithPayment();
+
+        final Payment retrievedPaymentJson = killBillClient.getPayment(paymentJson.getPaymentId(), false, requestOptions);
+        Assert.assertTrue(retrievedPaymentJson.equals((Payment) paymentJson));
+        Assert.assertEquals(retrievedPaymentJson.getTransactions().size(), 1);
+        Assert.assertEquals(retrievedPaymentJson.getTransactions().get(0).getStatus(), "PENDING");
+
+        final PaymentTransaction completeTransactionByPaymentId = new PaymentTransaction();
+        completeTransactionByPaymentId.setPaymentId(retrievedPaymentJson.getPaymentId());
+
+        final Account accountWithBalance = killBillClient.getAccount(paymentJson.getAccountId(), true, false, requestOptions);
+        Assert.assertTrue(accountWithBalance.getAccountBalance().compareTo(BigDecimal.ZERO) > 0);
+
+        final Payment completedPayment = killBillClient.completeInvoicePayment(completeTransactionByPaymentId, null, ImmutableMap.<String, String>of(), requestOptions);
+        Assert.assertEquals(completedPayment.getTransactions().get(0).getStatus(), "SUCCESS");
+
+        final Account accountWithBalance2 = killBillClient.getAccount(paymentJson.getAccountId(), true, false, requestOptions);
+        Assert.assertEquals(accountWithBalance2.getAccountBalance().compareTo(BigDecimal.ZERO), 0);
+
     }
 
     @Test(groups = "slow", description = "Can create a full refund with no adjustment")
