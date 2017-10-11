@@ -1014,6 +1014,16 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB {
         }
 
         @Override
+        public List<String> getInvoicePluginNames() {
+            return defaultInvoiceConfig.getInvoicePluginNames();
+        }
+
+        @Override
+        public List<String> getInvoicePluginNames(final InternalTenantContext tenantContext) {
+            return defaultInvoiceConfig.getInvoicePluginNames();
+        }
+
+        @Override
         public boolean isEmailNotificationsEnabled() {
             return defaultInvoiceConfig.isEmailNotificationsEnabled();
         }

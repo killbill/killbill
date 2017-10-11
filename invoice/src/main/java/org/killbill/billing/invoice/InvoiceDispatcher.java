@@ -363,20 +363,20 @@ public class InvoiceDispatcher {
     }
 
     private Invoice processAccountWithLockAndInputTargetDate(final UUID accountId, final LocalDate targetDate,
-                                                             final BillingEventSet billingEvents, final boolean isDryRun, final InternalCallContext context) throws InvoiceApiException {
+                                                             final BillingEventSet billingEvents, final boolean isDryRun, final InternalCallContext internalCallContext) throws InvoiceApiException {
         final ImmutableAccountData account;
         try {
-            account = accountApi.getImmutableAccountDataById(accountId, context);
+            account = accountApi.getImmutableAccountDataById(accountId, internalCallContext);
         } catch (final AccountApiException e) {
             log.error("Unable to generate invoice for accountId='{}', a future notification has NOT been recorded", accountId, e);
             return null;
         }
 
-        final InvoiceWithMetadata invoiceWithMetadata = generateKillBillInvoice(account, targetDate, billingEvents, context);
+        final InvoiceWithMetadata invoiceWithMetadata = generateKillBillInvoice(account, targetDate, billingEvents, internalCallContext);
         final DefaultInvoice invoice = invoiceWithMetadata.getInvoice();
 
         // Compute future notifications
-        final FutureAccountNotifications futureAccountNotifications = createNextFutureNotificationDate(invoiceWithMetadata, context);
+        final FutureAccountNotifications futureAccountNotifications = createNextFutureNotificationDate(invoiceWithMetadata, internalCallContext);
 
         // If invoice comes back null, there is nothing new to generate, we can bail early
         if (invoice == null) {
@@ -386,9 +386,9 @@ public class InvoiceDispatcher {
                 log.info("Generated null invoice for accountId='{}', targetDate='{}'", accountId, targetDate);
 
                 final BusInternalEvent event = new DefaultNullInvoiceEvent(accountId, clock.getUTCToday(),
-                                                                           context.getAccountRecordId(), context.getTenantRecordId(), context.getUserToken());
+                                                                           internalCallContext.getAccountRecordId(), internalCallContext.getTenantRecordId(), internalCallContext.getUserToken());
 
-                commitInvoiceAndSetFutureNotifications(account, null, futureAccountNotifications, context);
+                commitInvoiceAndSetFutureNotifications(account, null, futureAccountNotifications, internalCallContext);
                 postEvent(event);
             }
             return null;
@@ -397,7 +397,7 @@ public class InvoiceDispatcher {
         boolean success = false;
         try {
             // Generate missing credit (> 0 for generation and < 0 for use) prior we call the plugin
-            final InvoiceItem cbaItemPreInvoicePlugins = computeCBAOnExistingInvoice(invoice, context);
+            final InvoiceItem cbaItemPreInvoicePlugins = computeCBAOnExistingInvoice(invoice, internalCallContext);
             DefaultInvoice tmpInvoiceForInvoicePlugins = invoice;
             if (cbaItemPreInvoicePlugins != null) {
                 tmpInvoiceForInvoicePlugins = (DefaultInvoice) tmpInvoiceForInvoicePlugins.clone();
@@ -406,8 +406,8 @@ public class InvoiceDispatcher {
             //
             // Ask external invoice plugins if additional items (tax, etc) shall be added to the invoice
             //
-            final CallContext callContext = buildCallContext(context);
-            final List<InvoiceItem> additionalInvoiceItemsFromPlugins = invoicePluginDispatcher.getAdditionalInvoiceItems(tmpInvoiceForInvoicePlugins, isDryRun, callContext);
+            final CallContext callContext = buildCallContext(internalCallContext);
+            final List<InvoiceItem> additionalInvoiceItemsFromPlugins = invoicePluginDispatcher.getAdditionalInvoiceItems(tmpInvoiceForInvoicePlugins, isDryRun, callContext, internalCallContext);
             if (additionalInvoiceItemsFromPlugins.isEmpty()) {
                 // PERF: avoid re-computing the CBA if no change was made
                 if (cbaItemPreInvoicePlugins != null) {
@@ -416,7 +416,7 @@ public class InvoiceDispatcher {
             } else {
                 invoice.addInvoiceItems(additionalInvoiceItemsFromPlugins);
                 // Use credit after we call the plugin (https://github.com/killbill/killbill/issues/637)
-                final InvoiceItem cbaItemPostInvoicePlugins = computeCBAOnExistingInvoice(invoice, context);
+                final InvoiceItem cbaItemPostInvoicePlugins = computeCBAOnExistingInvoice(invoice, internalCallContext);
                 if (cbaItemPostInvoicePlugins != null) {
                     invoice.addInvoiceItem(cbaItemPostInvoicePlugins);
                 }
@@ -437,11 +437,11 @@ public class InvoiceDispatcher {
                 invoiceModelDao.addInvoiceItems(invoiceItemModelDaos);
 
                 // Commit invoice on disk
-                commitInvoiceAndSetFutureNotifications(account, invoiceModelDao, futureAccountNotifications, context);
+                commitInvoiceAndSetFutureNotifications(account, invoiceModelDao, futureAccountNotifications, internalCallContext);
                 success = true;
 
                 try {
-                    setChargedThroughDates(invoice.getInvoiceItems(FixedPriceInvoiceItem.class), invoice.getInvoiceItems(RecurringInvoiceItem.class), context);
+                    setChargedThroughDates(invoice.getInvoiceItems(FixedPriceInvoiceItem.class), invoice.getInvoiceItems(RecurringInvoiceItem.class), internalCallContext);
                 } catch (final SubscriptionBaseApiException e) {
                     log.error("Failed handling SubscriptionBase change.", e);
                     return null;
@@ -450,7 +450,7 @@ public class InvoiceDispatcher {
         } finally {
             // Make sure we always set future notifications in case of errors
             if (!isDryRun && !success) {
-                commitInvoiceAndSetFutureNotifications(account, null, futureAccountNotifications, context);
+                commitInvoiceAndSetFutureNotifications(account, null, futureAccountNotifications, internalCallContext);
             }
         }
 

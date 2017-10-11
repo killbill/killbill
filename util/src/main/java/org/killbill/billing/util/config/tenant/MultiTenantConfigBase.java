@@ -108,7 +108,11 @@ public abstract class MultiTenantConfigBase {
 
     private List<String> getTokens(final Method method, final String value) {
         final Separator separator = method.getAnnotation(Separator.class);
-        return ImmutableList.copyOf(value.split(separator == null ? Separator.DEFAULT : separator.value()));
+        if (value == null || value.isEmpty()) {
+            return ImmutableList.of();
+        } else {
+            return ImmutableList.copyOf(value.split(separator == null ? Separator.DEFAULT : separator.value()));
+        }
     }
 
     protected Method getConfigStaticMethod(final String methodName) {

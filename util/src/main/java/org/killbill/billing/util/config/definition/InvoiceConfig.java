@@ -17,6 +17,8 @@
 
 package org.killbill.billing.util.config.definition;
 
+import java.util.List;
+
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.skife.config.Config;
 import org.skife.config.Default;
@@ -80,6 +82,16 @@ public interface InvoiceConfig extends KillbillConfig {
     @Default("50")
     @Description("Maximum number of times the system will retry to grab global lock (with a 100ms wait each time)")
     int getMaxGlobalLockRetries();
+
+    @Config("org.killbill.invoice.plugin")
+    @Default("")
+    @Description("Default invoice plugin names")
+    List<String> getInvoicePluginNames();
+
+    @Config("org.killbill.invoice.plugin")
+    @Default("")
+    @Description("Default invoice plugin names")
+    List<String> getInvoicePluginNames(@Param("dummy") final InternalTenantContext tenantContext);
 
     @Config("org.killbill.invoice.emailNotificationsEnabled")
     @Default("false")

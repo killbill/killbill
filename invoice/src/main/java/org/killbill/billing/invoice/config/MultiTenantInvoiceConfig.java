@@ -17,6 +17,8 @@
 
 package org.killbill.billing.invoice.config;
 
+import java.util.List;
+
 import javax.inject.Inject;
 import javax.inject.Named;
 
@@ -116,6 +118,20 @@ public class MultiTenantInvoiceConfig extends MultiTenantConfigBase implements I
     @Override
     public int getMaxGlobalLockRetries() {
         return staticConfig.getMaxGlobalLockRetries();
+    }
+
+    @Override
+    public List<String> getInvoicePluginNames() {
+        return staticConfig.getInvoicePluginNames();
+    }
+
+    @Override
+    public List<String> getInvoicePluginNames(final InternalTenantContext tenantContext) {
+        final String result = getStringTenantConfig("getInvoicePluginNames", tenantContext);
+        if (result != null) {
+            return convertToListString(result, "getInvoicePluginNames");
+        }
+        return getInvoicePluginNames();
     }
 
     @Override
