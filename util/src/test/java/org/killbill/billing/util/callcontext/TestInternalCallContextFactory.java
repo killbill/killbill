@@ -53,9 +53,11 @@ public class TestInternalCallContextFactory extends UtilTestSuiteWithEmbeddedDB 
                                "    id varchar(36) NOT NULL,\n" +
                                "    account_id varchar(36) NOT NULL,\n" +
                                "    invoice_date date NOT NULL,\n" +
-                               "    target_date date NOT NULL,\n" +
+                               "    target_date date,\n" +
                                "    currency varchar(3) NOT NULL,\n" +
+                               "    status varchar(15) NOT NULL DEFAULT 'COMMITTED',\n" +
                                "    migrated bool NOT NULL,\n" +
+                               "    parent_invoice bool NOT NULL DEFAULT FALSE,\n" +
                                "    created_by varchar(50) NOT NULL,\n" +
                                "    created_date datetime NOT NULL,\n" +
                                "    account_record_id bigint /*! unsigned */ not null,\n" +
@@ -86,8 +88,8 @@ public class TestInternalCallContextFactory extends UtilTestSuiteWithEmbeddedDB 
             @Override
             public Void withHandle(final Handle handle) throws Exception {
                 // Note: we always create an accounts table, see MysqlTestingHelper
-                handle.execute("insert into accounts (record_id, id, email, name, first_name_length, is_notified_for_invoices, created_date, created_by, updated_date, updated_by) values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-                               accountRecordId, accountId.toString(), "yo@t.com", "toto", 4, false, new Date(), "i", new Date(), "j");
+                handle.execute("insert into accounts (record_id, id, email, name, first_name_length, time_zone, is_notified_for_invoices, created_date, created_by, updated_date, updated_by) values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                               accountRecordId, accountId.toString(), "yo@t.com", "toto", 4, "UTC", false, new Date(), "i", new Date(), "j");
                 return null;
             }
         });

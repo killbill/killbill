@@ -1,0 +1,219 @@
+defaults: &defaults
+  working_directory: ~/repo
+  environment:
+    MAVEN_OPTS: -server -showversion -XX:+PrintCommandLineFlags -XX:+UseCodeCacheFlushing -Xms1024M -Xmx2048M -XX:+CMSClassUnloadingEnabled -XX:-OmitStackTraceInFastThrow -XX:+UseParNewGC -XX:+UseConcMarkSweepGC -XX:+CMSConcurrentMTEnabled -XX:+CMSParallelRemarkEnabled -XX:+UseCMSInitiatingOccupancyOnly -XX:CMSInitiatingOccupancyFraction=70 -XX:+ScavengeBeforeFullGC -XX:+CMSScavengeBeforeRemark -XX:NewSize=600m -XX:MaxNewSize=900m -XX:SurvivorRatio=10 -XX:+DisableExplicitGC -Djava.security.egd=file:/dev/./urandom
+
+version: 2
+jobs:
+  build:
+    <<: *defaults
+    docker:
+      - image: killbill/kbbuild:0.1.0
+    steps:
+      - checkout
+      - restore_cache:
+          key: v1-dependencies-{{ .Branch }}-{{ checksum "pom.xml" }}
+      - run:
+          name: Setup dependencies
+          command: |
+            if [ "${CIRCLE_BRANCH}" != "master" ]; then
+              for i in killbill-oss-parent killbill-api killbill-plugin-api killbill-commons killbill-platform; do
+                if [ -n "$(git ls-remote --heads https://github.com/killbill/$i.git ${CIRCLE_BRANCH})" ]; then
+                  echo "*** Setting up $i"
+                  mkdir -p /home/killbill/$i
+                  git clone https://github.com/killbill/$i.git /home/killbill/$i
+                  pushd /home/killbill/$i
+                  git checkout -b ${CIRCLE_BRANCH} origin/${CIRCLE_BRANCH}
+                  mvn clean install -DskipTests=true
+                  popd
+                fi
+              done
+            fi
+      - run: mvn -DskipTests=true clean install dependency:go-offline
+      - save_cache:
+          paths:
+            - ~/.m2
+          key: v1-dependencies-{{ .Branch }}-{{ checksum "pom.xml" }}
+
+  test-h2:
+    <<: *defaults
+    docker:
+      - image: killbill/kbbuild:0.1.0
+    steps:
+      - checkout
+      - restore_cache:
+          key: v1-dependencies-{{ .Branch }}-{{ checksum "pom.xml" }}
+      - run: mvn clean install -Ptravis
+      - run:
+          name: Save test results
+          command: |
+            mkdir -p ~/junit/
+            find . -type f -regex ".*/target/surefire-reports/.*xml" -exec cp {} ~/junit/ \;
+          when: always
+      - store_test_results:
+          path: ~/junit
+      - store_artifacts:
+          path: ~/junit
+  test-mysql:
+    <<: *defaults
+    docker:
+      - image: killbill/kbbuild:0.1.0
+      - image: killbill/mariadb:0.18
+        environment:
+        - MYSQL_ROOT_PASSWORD=root
+    steps:
+      - checkout
+      - restore_cache:
+          key: v1-dependencies-{{ .Branch }}-{{ checksum "pom.xml" }}
+      - run:
+          name: Setup latest DDL
+          command: |
+            set +e
+            count=0
+            until mysqladmin ping -h 127.0.0.1 -u root --password=root --silent; do
+              if [[ "$count" == "25" ]]; then
+                exit 1
+              fi
+              (( count++ ))
+
+              printf '.'
+              sleep 5
+            done
+
+            set -e
+            ./bin/db-helper -a create --driver mysql -u root -p root -t yes -h 127.0.0.1
+      - run: mvn clean install -Plocaltest-mysql
+      - run:
+          name: Save test results
+          command: |
+            mkdir -p ~/junit/
+            find . -type f -regex ".*/target/surefire-reports/.*xml" -exec cp {} ~/junit/ \;
+          when: always
+      - store_test_results:
+          path: ~/junit
+      - store_artifacts:
+          path: ~/junit
+  test-postgresql:
+    <<: *defaults
+    docker:
+      - image: killbill/kbbuild:0.1.0
+      - image: killbill/postgresql:0.18
+        environment:
+        - POSTGRES_PASSWORD=postgres
+    steps:
+      - checkout
+      - restore_cache:
+          key: v1-dependencies-{{ .Branch }}-{{ checksum "pom.xml" }}
+      - run:
+          name: Setup latest DDL
+          command: ./bin/db-helper -a create --driver postgres -u postgres -p postgres -t yes
+      - run: mvn clean install -Plocaltest-postgresql
+      - run:
+          name: Save test results
+          command: |
+            mkdir -p ~/junit/
+            find . -type f -regex ".*/target/surefire-reports/.*xml" -exec cp {} ~/junit/ \;
+          when: always
+      - store_test_results:
+          path: ~/junit
+      - store_artifacts:
+          path: ~/junit
+
+  integration-tests:
+    <<: *defaults
+    docker:
+      - image: killbill/kbbuild:0.1.0
+      - image: killbill/mariadb:0.18
+        environment:
+        - MYSQL_ROOT_PASSWORD=root
+    steps:
+      - checkout
+      - restore_cache:
+          key: v1-dependencies-{{ .Branch }}-{{ checksum "pom.xml" }}
+      - run:
+          name: Setup latest DDL
+          command: ./bin/db-helper -a create --driver mysql -u root -p root -t yes -h 127.0.0.1
+      - run:
+          name: Run integration tests
+          command: |
+            set +e
+
+            mvn clean install -DskipTests=true
+            nohup ./bin/start-server -s &
+
+            mkdir -p /home/killbill/killbill-integration-tests
+            git clone https://github.com/killbill/killbill-integration-tests.git /home/killbill/killbill-integration-tests
+            pushd /home/killbill/killbill-integration-tests
+            if [ "${CIRCLE_BRANCH}" != "master" ]; then
+              if [ -n "$(git ls-remote --heads https://github.com/killbill/killbill-integration-tests.git ${CIRCLE_BRANCH})" ]; then
+                git checkout -b ${CIRCLE_BRANCH} origin/${CIRCLE_BRANCH}
+              fi
+            fi
+            bundle install
+
+            count=0
+            until $(curl --output /dev/null --silent --fail http://127.0.0.1:8080/1.0/healthcheck); do
+              if [[ "$count" == "25" ]]; then
+                exit 1
+              fi
+              (( count++ ))
+
+              printf '.'
+              sleep 5
+            done
+
+            set -e
+            mkdir -p /tmp/test-results
+            bundle exec rake test:core | tee /tmp/test-results/test.txt 2>&1
+      - store_test_results:
+          path: /tmp/test-results
+      - store_artifacts:
+          path: /tmp/test-results
+
+workflows:
+  version: 2
+  build-and-test:
+    jobs:
+      - build:
+          filters:
+            branches:
+              only:
+                - master
+                - work-for-release-0.19.x
+                - circle-ci-experiment
+      - test-h2:
+          requires:
+            - build
+          filters:
+            branches:
+              only:
+                - master
+                - circle-ci-experiment
+      - test-mysql:
+          requires:
+            - build
+          filters:
+            branches:
+              only:
+                - master
+                - work-for-release-0.19.x
+                - circle-ci-experiment
+      - test-postgresql:
+          requires:
+            - build
+          filters:
+            branches:
+              only:
+                - master
+                - circle-ci-experiment
+      - integration-tests:
+          requires:
+            - test-h2
+            - test-mysql
+            - test-postgresql
+          filters:
+            branches:
+              only:
+                - master
+                - work-for-release-0.19.x
+                - circle-ci-experiment

@@ -79,14 +79,16 @@ public class DBTestingHelper extends PlatformDBTestingHelper {
                                "CREATE TABLE accounts (\n" +
                                "    record_id serial unique,\n" +
                                "    id varchar(36) NOT NULL,\n" +
-                               "    external_key varchar(128) NULL,\n" +
-                               "    email varchar(128) NOT NULL,\n" +
-                               "    name varchar(100) NOT NULL,\n" +
-                               "    first_name_length int NOT NULL,\n" +
+                               "    external_key varchar(255) NULL,\n" +
+                               "    email varchar(128) DEFAULT NULL,\n" +
+                               "    name varchar(100) DEFAULT NULL,\n" +
+                               "    first_name_length int DEFAULT NULL,\n" +
                                "    currency varchar(3) DEFAULT NULL,\n" +
                                "    billing_cycle_day_local int DEFAULT NULL,\n" +
+                               "    parent_account_id varchar(36) DEFAULT NULL,\n" +
+                               "    is_payment_delegated_to_parent boolean DEFAULT FALSE,\n" +
                                "    payment_method_id varchar(36) DEFAULT NULL,\n" +
-                               "    time_zone varchar(50) DEFAULT NULL,\n" +
+                               "    time_zone varchar(50) NOT NULL,\n" +
                                "    locale varchar(5) DEFAULT NULL,\n" +
                                "    address1 varchar(100) DEFAULT NULL,\n" +
                                "    address2 varchar(100) DEFAULT NULL,\n" +
@@ -96,6 +98,7 @@ public class DBTestingHelper extends PlatformDBTestingHelper {
                                "    country varchar(50) DEFAULT NULL,\n" +
                                "    postal_code varchar(16) DEFAULT NULL,\n" +
                                "    phone varchar(25) DEFAULT NULL,\n" +
+                               "    notes varchar(4096) DEFAULT NULL,\n" +
                                "    migrated boolean default false,\n" +
                                "    is_notified_for_invoices boolean NOT NULL,\n" +
                                "    created_date datetime NOT NULL,\n" +
@@ -109,7 +112,7 @@ public class DBTestingHelper extends PlatformDBTestingHelper {
                                "CREATE TABLE tenants (\n" +
                                "    record_id serial unique,\n" +
                                "    id varchar(36) NOT NULL,\n" +
-                               "    external_key varchar(128) NULL,\n" +
+                               "    external_key varchar(255) NULL,\n" +
                                "    api_key varchar(128) NULL,\n" +
                                "    api_secret varchar(128) NULL,\n" +
                                "    api_salt varchar(128) NULL,\n" +
@@ -125,9 +128,10 @@ public class DBTestingHelper extends PlatformDBTestingHelper {
                                "CREATE TABLE bundles (\n" +
                                "    record_id serial unique,\n" +
                                "    id varchar(36) NOT NULL,\n" +
-                               "    external_key varchar(64) NOT NULL,\n" +
+                               "    external_key varchar(255) NOT NULL,\n" +
                                "    account_id varchar(36) NOT NULL,\n" +
                                "    last_sys_update_date datetime,\n" +
+                               "    original_created_date datetime NOT NULL,\n" +
                                "    created_by varchar(50) NOT NULL,\n" +
                                "    created_date datetime NOT NULL,\n" +
                                "    updated_by varchar(50) NOT NULL,\n" +
@@ -144,9 +148,8 @@ public class DBTestingHelper extends PlatformDBTestingHelper {
                                "    category varchar(32) NOT NULL,\n" +
                                "    start_date datetime NOT NULL,\n" +
                                "    bundle_start_date datetime NOT NULL,\n" +
-                               "    active_version int DEFAULT 1,\n" +
                                "    charged_through_date datetime DEFAULT NULL,\n" +
-                               "    paid_through_date datetime DEFAULT NULL,\n" +
+                               "    migrated bool NOT NULL default FALSE,\n" +
                                "    created_by varchar(50) NOT NULL,\n" +
                                "    created_date datetime NOT NULL,\n" +
                                "    updated_by varchar(50) NOT NULL,\n" +
@@ -162,12 +165,10 @@ public class DBTestingHelper extends PlatformDBTestingHelper {
                                "    record_id serial unique,\n" +
                                "    id varchar(36) NOT NULL,\n" +
                                "    account_id varchar(36) NOT NULL,\n" +
-                               "    invoice_id varchar(36) NOT NULL,\n" +
                                "    payment_method_id varchar(36) NOT NULL,\n" +
-                               "    amount numeric(15,9),\n" +
-                               "    currency varchar(3),\n" +
-                               "    effective_date datetime,\n" +
-                               "    payment_status varchar(50),\n" +
+                               "    external_key varchar(255) NOT NULL,\n" +
+                               "    state_name varchar(64) DEFAULT NULL,\n" +
+                               "    last_success_state_name varchar(64) DEFAULT NULL,\n" +
                                "    created_by varchar(50) NOT NULL,\n" +
                                "    created_date datetime NOT NULL,\n" +
                                "    updated_by varchar(50) NOT NULL,\n" +

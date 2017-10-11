@@ -29,6 +29,7 @@ import java.util.UUID;
 import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
 import org.killbill.billing.ErrorCode;
+import org.killbill.billing.api.FlakyRetryAnalyzer;
 import org.killbill.billing.api.TestApiListener.NextEvent;
 import org.killbill.billing.beatrix.integration.BeatrixIntegrationModule;
 import org.killbill.billing.beatrix.util.InvoiceChecker.ExpectedInvoiceItemCheck;
@@ -953,7 +954,8 @@ public class TestOverdueIntegration extends TestOverdueBase {
         checkODState(OverdueWrapper.CLEAR_STATE_NAME);
     }
 
-    @Test(groups = "slow", description = "Test overdue state with number of unpaid invoices condition")
+    // Flaky, see https://github.com/killbill/killbill/issues/782
+    @Test(groups = "slow", description = "Test overdue state with number of unpaid invoices condition", retryAnalyzer = FlakyRetryAnalyzer.class)
     public void testOverdueStateWithNumberOfUnpaidInvoicesCondition() throws Exception {
         // 2012-05-01T00:03:42.000Z
         clock.setTime(new DateTime(2012, 5, 1, 0, 3, 42, 0));
@@ -1025,7 +1027,8 @@ public class TestOverdueIntegration extends TestOverdueBase {
         checkODState(OverdueWrapper.CLEAR_STATE_NAME);
     }
 
-    @Test(groups = "slow", description = "Test overdue state with total unpaid invoice balance condition")
+    // Flaky, see https://github.com/killbill/killbill/issues/782
+    @Test(groups = "slow", description = "Test overdue state with total unpaid invoice balance condition", retryAnalyzer = FlakyRetryAnalyzer.class)
     public void testOverdueStateWithTotalUnpaidInvoiceBalanceCondition() throws Exception {
         // 2012-05-01T00:03:42.000Z
         clock.setTime(new DateTime(2012, 5, 1, 0, 3, 42, 0));

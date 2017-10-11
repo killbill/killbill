@@ -24,13 +24,10 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.joda.time.DateTime;
-import org.killbill.billing.DBTestingHelper;
 import org.killbill.billing.account.api.Account;
 import org.killbill.billing.api.TestApiListener.NextEvent;
-import org.killbill.billing.beatrix.extbus.DefaultBusExternalEvent;
 import org.killbill.billing.callcontext.DefaultCallContext;
 import org.killbill.billing.catalog.api.BillingPeriod;
-import org.killbill.billing.catalog.api.PriceListSet;
 import org.killbill.billing.catalog.api.ProductCategory;
 import org.killbill.billing.entitlement.api.DefaultEntitlement;
 import org.killbill.billing.notification.plugin.api.ExtBusEvent;
@@ -46,11 +43,6 @@ import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.CallOrigin;
 import org.killbill.billing.util.callcontext.UserType;
 import org.killbill.billing.util.jackson.ObjectMapper;
-import org.killbill.billing.util.nodes.NodeCommand;
-import org.killbill.billing.util.nodes.NodeCommandMetadata;
-import org.killbill.billing.util.nodes.NodeCommandProperty;
-import org.killbill.billing.util.nodes.PluginNodeCommandMetadata;
-import org.killbill.billing.util.nodes.SystemNodeCommandType;
 import org.testng.Assert;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
@@ -58,12 +50,11 @@ import org.testng.annotations.Test;
 
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonMappingException;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.eventbus.Subscribe;
 
-import static org.awaitility.Awaitility.await;
 import static java.util.concurrent.TimeUnit.SECONDS;
+import static org.awaitility.Awaitility.await;
 import static org.testng.Assert.assertNotNull;
 
 public class TestPublicBus extends TestIntegrationBase {
@@ -123,10 +114,7 @@ public class TestPublicBus extends TestIntegrationBase {
         TODO modify sequence to allow optional registration of publicListener
          */
 
-        try {
-            DBTestingHelper.get().getInstance().cleanupAllTables();
-        } catch (final Exception ignored) {
-        }
+        cleanupAllTables();
 
         log.debug("RESET TEST FRAMEWORK");
 
@@ -149,9 +137,6 @@ public class TestPublicBus extends TestIntegrationBase {
         paymentPlugin.clear();
 
         this.externalBusCount = new AtomicInteger(0);
-
-        // Make sure we start with a clean state
-        assertListenerStatus();
     }
 
     @AfterMethod(groups = "slow")

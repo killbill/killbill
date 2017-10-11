@@ -58,13 +58,4 @@ public class TenantTestSuiteWithEmbeddedDb extends GuicyKillbillTestSuiteWithEmb
         final Injector injector = Guice.createInjector(new TestTenantModuleWithEmbeddedDB(configSource));
         injector.injectMembers(this);
     }
-
-    @BeforeMethod(groups = "slow")
-    public void beforeMethod() throws Exception {
-        super.beforeMethod();
-    }
-
-    @AfterMethod(groups = "slow")
-    public void afterMethod() {
-    }
 }

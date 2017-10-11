@@ -115,6 +115,11 @@ public class TestJanitor extends PaymentTestSuiteWithEmbeddedDB {
                               );
     }
 
+    @Override
+    protected void assertListenerStatus() {
+        testListener.assertListenerStatus();
+    }
+
     @BeforeClass(groups = "slow")
     protected void beforeClass() throws Exception {
         super.beforeClass();
@@ -133,15 +138,11 @@ public class TestJanitor extends PaymentTestSuiteWithEmbeddedDB {
         eventBus.register(testListener);
         mockPaymentProviderPlugin.clear();
         account = testHelper.createTestAccount("bobo@gmail.com", true);
-
-        testListener.assertListenerStatus();
     }
 
     @AfterMethod(groups = "slow")
     public void afterMethod() throws Exception {
         retryService.stop();
-
-        testListener.assertListenerStatus();
 
         eventBus.unregister(handler);
         eventBus.unregister(testListener);
