@@ -96,6 +96,7 @@ public class TestDefaultAuditDao extends UtilTestSuiteWithEmbeddedDB {
         eventsListener.pushExpectedEvent(NextEvent.TAG_DEFINITION);
         final TagDefinitionModelDao tagDefinition = tagDefinitionDao.create(UUID.randomUUID().toString().substring(0, 5),
                                                                             UUID.randomUUID().toString().substring(0, 5),
+                                                                            ObjectType.ACCOUNT.name(),
                                                                             internalCallContext);
         assertListenerStatus();
 

@@ -18,6 +18,7 @@ package org.killbill.billing.util.tag.api;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 import org.killbill.billing.ErrorCode;
@@ -45,6 +46,7 @@ import org.killbill.billing.util.tag.dao.TagModelDao;
 import org.killbill.billing.util.tag.dao.TagModelDaoHelper;
 
 import com.google.common.base.Function;
+import com.google.common.base.Joiner;
 import com.google.common.collect.Collections2;
 import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
@@ -52,6 +54,8 @@ import com.google.inject.Inject;
 import static org.killbill.billing.util.entity.dao.DefaultPaginationHelper.getEntityPaginationNoException;
 
 public class DefaultTagUserApi implements TagUserApi {
+
+    private static final Joiner JOINER = Joiner.on(",");
 
     private static final Function<TagModelDao, Tag> TAG_MODEL_DAO_TAG_FUNCTION = new Function<TagModelDao, Tag>() {
         @Override
@@ -85,11 +89,11 @@ public class DefaultTagUserApi implements TagUserApi {
     }
 
     @Override
-    public TagDefinition createTagDefinition(final String definitionName, final String description, final CallContext context) throws TagDefinitionApiException {
+    public TagDefinition createTagDefinition(final String definitionName, final String description, final Set<ObjectType> applicableObjectTypes, final CallContext context) throws TagDefinitionApiException {
         if (definitionName.matches(".*[A-Z].*")) {
             throw new TagDefinitionApiException(ErrorCode.TAG_DEFINITION_HAS_UPPERCASE, definitionName);
         }
-        final TagDefinitionModelDao tagDefinitionModelDao = tagDefinitionDao.create(definitionName, description, internalCallContextFactory.createInternalCallContextWithoutAccountRecordId(context));
+        final TagDefinitionModelDao tagDefinitionModelDao = tagDefinitionDao.create(definitionName, description, JOINER.join(applicableObjectTypes), internalCallContextFactory.createInternalCallContextWithoutAccountRecordId(context));
         return new DefaultTagDefinition(tagDefinitionModelDao, TagModelDaoHelper.isControlTag(tagDefinitionModelDao.getName()));
     }
 

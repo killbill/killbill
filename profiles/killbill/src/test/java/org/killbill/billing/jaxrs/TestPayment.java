@@ -26,6 +26,7 @@ import java.util.UUID;
 
 import javax.annotation.Nullable;
 
+import org.killbill.billing.ObjectType;
 import org.killbill.billing.client.KillBillClientException;
 import org.killbill.billing.client.RequestOptions;
 import org.killbill.billing.client.model.Account;
@@ -696,7 +697,7 @@ public class TestPayment extends TestJaxrsBase {
     public void testGetTagsForPaymentTransaction() throws Exception {
         UUID tagDefinitionId = UUID.randomUUID();
         String tagDefinitionName = "payment-transaction";
-        TagDefinition tagDefinition = new TagDefinition(tagDefinitionId, false, tagDefinitionName, "description", null);
+        TagDefinition tagDefinition = new TagDefinition(tagDefinitionId, false, tagDefinitionName, "description",  ImmutableList.<ObjectType>of(ObjectType.TRANSACTION));
         final TagDefinition createdTagDefinition = killBillClient.createTagDefinition(tagDefinition, requestOptions);
 
         final Account account = createAccountWithDefaultPaymentMethod();
@@ -719,7 +720,7 @@ public class TestPayment extends TestJaxrsBase {
     public void testCreateTagForPaymentTransaction() throws Exception {
         UUID tagDefinitionId = UUID.randomUUID();
         String tagDefinitionName = "payment-transaction";
-        TagDefinition tagDefinition = new TagDefinition(tagDefinitionId, false, tagDefinitionName, "description", null);
+        TagDefinition tagDefinition = new TagDefinition(tagDefinitionId, false, tagDefinitionName, "description", ImmutableList.<ObjectType>of(ObjectType.TRANSACTION));
         final TagDefinition createdTagDefinition = killBillClient.createTagDefinition(tagDefinition, requestOptions);
 
         final Account account = createAccountWithDefaultPaymentMethod();

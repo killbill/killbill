@@ -184,7 +184,7 @@ public class TestAccountDao extends AccountTestSuiteWithEmbeddedDB {
     @Test(groups = "slow", description = "Test Account DAO: tags")
     public void testTags() throws TagApiException, TagDefinitionApiException {
         final AccountModelDao account = createTestAccount();
-        final TagDefinitionModelDao tagDefinition = tagDefinitionDao.create(UUID.randomUUID().toString().substring(0, 4), UUID.randomUUID().toString(), internalCallContext);
+        final TagDefinitionModelDao tagDefinition = tagDefinitionDao.create(UUID.randomUUID().toString().substring(0, 4), UUID.randomUUID().toString(), ObjectType.ACCOUNT.name(), internalCallContext);
         final Tag tag = new DescriptiveTag(tagDefinition.getId(), ObjectType.ACCOUNT, account.getId(), internalCallContext.getCreatedDate());
         tagDao.create(new TagModelDao(tag), internalCallContext);
 

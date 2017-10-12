@@ -52,6 +52,7 @@ import org.killbill.billing.util.tag.TagDefinition;
 import org.killbill.clock.Clock;
 import org.killbill.commons.metrics.TimedResource;
 
+import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import io.swagger.annotations.Api;
@@ -129,8 +130,11 @@ public class TagDefinitionResource extends JaxRsResourceBase {
         verifyNonNullOrEmpty(json, "TagDefinitionJson body should be specified");
         verifyNonNullOrEmpty(json.getName(), "TagDefinition name needs to be set",
                              json.getDescription(), "TagDefinition description needs to be set");
+        Preconditions.checkArgument(json.getApplicableObjectTypes() != null &&
+                                    !json.getApplicableObjectTypes().isEmpty(), "Applicable object types must be set");
 
-        final TagDefinition createdTagDef = tagUserApi.createTagDefinition(json.getName(), json.getDescription(), context.createCallContextNoAccountId(createdBy, reason, comment, request));
+
+        final TagDefinition createdTagDef = tagUserApi.createTagDefinition(json.getName(), json.getDescription(), TagDefinitionJson.toObjectType(json.getApplicableObjectTypes()), context.createCallContextNoAccountId(createdBy, reason, comment, request));
         return uriBuilder.buildResponse(uriInfo, TagDefinitionResource.class, "getTagDefinition", createdTagDef.getId(), request);
     }
 

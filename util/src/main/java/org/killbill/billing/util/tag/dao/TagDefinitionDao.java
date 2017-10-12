@@ -34,7 +34,7 @@ public interface TagDefinitionDao extends EntityDao<TagDefinitionModelDao, TagDe
 
     public List<TagDefinitionModelDao> getByIds(Collection<UUID> definitionIds, InternalTenantContext context);
 
-    public TagDefinitionModelDao create(String definitionName, String description, InternalCallContext context) throws TagDefinitionApiException;
+    public TagDefinitionModelDao create(String definitionName, String description, String tagDefinitionObjectTypes, InternalCallContext context) throws TagDefinitionApiException;
 
     public void deleteById(UUID definitionId, InternalCallContext context) throws TagDefinitionApiException;
 }
