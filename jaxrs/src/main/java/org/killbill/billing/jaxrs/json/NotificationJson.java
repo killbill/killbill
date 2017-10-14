@@ -33,23 +33,27 @@ public class NotificationJson {
     private final String objectType;
     @ApiModelProperty(dataType = "java.util.UUID")
     private final String objectId;
+    private String metaData;
 
     @JsonCreator
     public NotificationJson(@JsonProperty("eventType") final String eventType,
                             @JsonProperty("accountId") final String accountId,
                             @JsonProperty("objectType") final String objectType,
-                            @JsonProperty("objectId") final String objectId) {
+                            @JsonProperty("objectId") final String objectId,
+                            @JsonProperty("metaData") final String metaData) {
         this.eventType = eventType;
         this.accountId = accountId;
         this.objectType = objectType;
         this.objectId = objectId;
+        this.metaData = metaData;
     }
 
     public NotificationJson(final ExtBusEvent event) {
         this(event.getEventType().toString(),
              event.getAccountId() != null ? event.getAccountId().toString() : null,
              event.getObjectType().toString(),
-             event.getObjectId() != null ? event.getObjectId().toString() : null);
+             event.getObjectId() != null ? event.getObjectId().toString() : null,
+             event.getMetaData());
     }
 
     public String getEventType() {
@@ -66,5 +70,9 @@ public class NotificationJson {
 
     public String getObjectId() {
         return objectId;
+    }
+
+    public String getMetaData() {
+        return metaData;
     }
 }

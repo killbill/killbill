@@ -34,6 +34,7 @@ import org.eclipse.jetty.servlet.ServletHolder;
 import org.killbill.billing.client.KillBillClientException;
 import org.killbill.billing.client.model.TenantKey;
 import org.killbill.billing.jaxrs.json.NotificationJson;
+import org.killbill.billing.notification.plugin.api.ExtBusEventType;
 import org.killbill.billing.server.notifications.PushNotificationListener;
 import org.killbill.billing.tenant.api.TenantKV;
 import org.slf4j.Logger;
@@ -140,8 +141,7 @@ public class TestPushNotification extends TestJaxrsBase {
         final String callback = "http://127.0.0.1:" + SERVER_PORT + CALLBACK_ENDPOINT;
         final TenantKey result0 = killBillClient.registerCallbackNotificationForTenant(callback, requestOptions);
 
-        assertAllCallbacksCompleted();
-        Assert.assertTrue(callbackCompletedWithError); // expected true because is not an ACCOUNT_CREATION event
+        Assert.assertTrue(waitForCallbacksToComplete());
 
         Assert.assertEquals(result0.getKey(), TenantKV.TenantKey.PUSH_NOTIFICATION_CB.toString());
         Assert.assertEquals(result0.getValues().size(), 1);
@@ -321,14 +321,12 @@ public class TestPushNotification extends TestJaxrsBase {
         public CallmebackServlet(final TestPushNotification test) {
             this.test = test;
             this.receivedCalls = new AtomicInteger(0);
-            this.withError = false;
         }
 
         @Override
         protected void doPost(final HttpServletRequest request, final HttpServletResponse response) throws ServletException, IOException {
             final int current = receivedCalls.incrementAndGet();
             final String body = CharStreams.toString(new InputStreamReader(request.getInputStream(), "UTF-8"));
-            withError = false;
 
             log.info("CallmebackServlet received {} calls , current = {} at {}", current, body, getClock().getUTCNow());
 
@@ -343,22 +341,31 @@ public class TestPushNotification extends TestJaxrsBase {
 
             log.info("Got body {}", body);
 
-            try {
-                final NotificationJson notification = objectMapper.readValue(body, NotificationJson.class);
-                Assert.assertEquals(notification.getEventType(), "ACCOUNT_CREATION");
-                Assert.assertEquals(notification.getObjectType(), "ACCOUNT");
-                Assert.assertNotNull(notification.getObjectId());
-                Assert.assertNotNull(notification.getAccountId());
-                Assert.assertEquals(notification.getObjectId(), notification.getAccountId());
+            final NotificationJson notification = objectMapper.readValue(body, NotificationJson.class);
 
-                test.retrieveAccountWithAsserts(notification.getObjectId());
-
-                Assert.assertEquals(request.getHeader(PushNotificationListener.HTTP_HEADER_CONTENT_TYPE), PushNotificationListener.CONTENT_TYPE_JSON);
-            } catch (final AssertionError e) {
-                withError = true;
+            final ExtBusEventType type = ExtBusEventType.valueOf(notification.getEventType());
+            switch (type) {
+                case TENANT_CONFIG_CHANGE:
+                    Assert.assertEquals(notification.getEventType(), "TENANT_CONFIG_CHANGE");
+                    Assert.assertEquals(notification.getObjectType(), "TENANT_KVS");
+                    Assert.assertNotNull(notification.getObjectId());
+                    Assert.assertNull(notification.getAccountId());
+                    Assert.assertNotNull(notification.getMetaData());
+                    Assert.assertEquals(notification.getMetaData(), "PUSH_NOTIFICATION_CB");
+                    break;
+                case ACCOUNT_CREATION:
+                    Assert.assertEquals(notification.getEventType(), "ACCOUNT_CREATION");
+                    Assert.assertEquals(notification.getObjectType(), "ACCOUNT");
+                    Assert.assertNotNull(notification.getObjectId());
+                    Assert.assertNotNull(notification.getAccountId());
+                    Assert.assertEquals(notification.getObjectId(), notification.getAccountId());
+                    break;
             }
 
-            stopServerWhenComplete(current, withError);
+            test.retrieveAccountWithAsserts(notification.getObjectId());
+
+            Assert.assertEquals(request.getHeader(PushNotificationListener.HTTP_HEADER_CONTENT_TYPE), PushNotificationListener.CONTENT_TYPE_JSON);
+            stopServerWhenComplete(current, false);
         }
 
         private void stopServerWhenComplete(final int current, final boolean withError) {
