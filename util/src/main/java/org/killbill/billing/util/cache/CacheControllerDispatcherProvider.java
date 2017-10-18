@@ -31,6 +31,8 @@ import org.killbill.billing.util.cache.Cachable.CacheType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.base.Preconditions;
+
 // Build the abstraction layer between EhCache and Kill Bill
 public class CacheControllerDispatcherProvider implements Provider<CacheControllerDispatcher> {
 
@@ -57,6 +59,7 @@ public class CacheControllerDispatcherProvider implements Provider<CacheControll
                 logger.warn("Cache for cacheName='{}' not configured - check your ehcache.xml", cacheLoader.getCacheType().getCacheName());
                 continue;
             }
+            Preconditions.checkState(!cache.isClosed(), "Cache '%s' should not be closed", cacheType.getCacheName());
 
             final CacheController<Object, Object> ehCacheBasedCacheController = new EhCacheBasedCacheController<Object, Object>(cache, cacheLoader);
             cacheControllers.put(cacheType, ehCacheBasedCacheController);

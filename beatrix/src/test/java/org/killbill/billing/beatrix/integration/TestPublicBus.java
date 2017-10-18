@@ -24,7 +24,6 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.joda.time.DateTime;
-import org.killbill.billing.DBTestingHelper;
 import org.killbill.billing.account.api.Account;
 import org.killbill.billing.api.TestApiListener.NextEvent;
 import org.killbill.billing.callcontext.DefaultCallContext;
@@ -81,10 +80,7 @@ public class TestPublicBus extends TestIntegrationBase {
         TODO modify sequence to allow optional registration of publicListener
          */
 
-        try {
-            DBTestingHelper.get().getInstance().cleanupAllTables();
-        } catch (final Exception ignored) {
-        }
+        cleanupAllTables();
 
         log.debug("RESET TEST FRAMEWORK");
 
@@ -107,9 +103,6 @@ public class TestPublicBus extends TestIntegrationBase {
         paymentPlugin.clear();
 
         this.externalBusCount = new AtomicInteger(0);
-
-        // Make sure we start with a clean state
-        assertListenerStatus();
     }
 
     @AfterMethod(groups = "slow")

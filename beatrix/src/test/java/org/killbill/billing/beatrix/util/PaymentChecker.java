@@ -93,7 +93,7 @@ public class PaymentChecker {
         final PaymentTransaction transaction = getPurchaseTransaction(payment);
         Assert.assertTrue(transaction.getAmount().compareTo(expected.getAmount()) == 0, "Actual amount " + transaction.getAmount() + ", expected amount " + expected.getAmount());
         Assert.assertEquals(transaction.getTransactionStatus(), expected.getStatus());
-        Assert.assertEquals(transaction.getEffectiveDate().toLocalDate().compareTo(expected.getPaymentDate()), 0);
+        Assert.assertEquals(transaction.getEffectiveDate().toLocalDate().compareTo(expected.getPaymentDate()), 0, "Actual date " + transaction.getEffectiveDate() + ", expected date " + expected.getPaymentDate());
 
         auditChecker.checkPaymentCreated(payment, context);
     }

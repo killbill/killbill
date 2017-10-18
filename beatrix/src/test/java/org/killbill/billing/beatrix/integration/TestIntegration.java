@@ -421,49 +421,6 @@ public class TestIntegration extends TestIntegrationBase {
         checkNoMoreInvoiceToGenerate(account);
     }
 
-    @Test(groups = {"stress"}, enabled = false)
-    public void stressTest() throws Exception {
-        final int maxIterations = 100;
-        for (int curIteration = 0; curIteration < maxIterations; curIteration++) {
-            if (curIteration != 0) {
-                beforeMethod();
-            }
-
-            log.info("################################  ITERATION " + curIteration + "  #########################");
-            afterMethod();
-            beforeMethod();
-            testBasePlanCompleteWithBillingDayInPast();
-            Thread.sleep(1000);
-            afterMethod();
-            beforeMethod();
-            testBasePlanCompleteWithBillingDayAlignedWithTrial();
-            Thread.sleep(1000);
-            afterMethod();
-            beforeMethod();
-            testBasePlanCompleteWithBillingDayInFuture();
-            if (curIteration < maxIterations - 1) {
-                afterMethod();
-                Thread.sleep(1000);
-            }
-        }
-    }
-
-    @Test(groups = {"stress"}, enabled = false)
-    public void stressTestDebug() throws Exception {
-        final int maxIterations = 100;
-        for (int curIteration = 0; curIteration < maxIterations; curIteration++) {
-            log.info("################################  ITERATION " + curIteration + "  #########################");
-            if (curIteration != 0) {
-                beforeMethod();
-            }
-            testAddonsWithMultipleAlignments();
-            if (curIteration < maxIterations - 1) {
-                afterMethod();
-                Thread.sleep(1000);
-            }
-        }
-    }
-
     @Test(groups = "slow")
     public void testAddonsWithMultipleAlignments() throws Exception {
         final DateTime initialDate = new DateTime(2012, 4, 25, 0, 13, 42, 0, testTimeZone);
