@@ -58,3 +58,16 @@ where role_name = :roleName
 and is_active
 ;
 >>
+
+unactiveEvent() ::= <<
+update <tableName()>
+set
+is_active = false
+, updated_by = :createdBy
+, updated_date = :createdDate
+where
+record_id = :recordId
+<AND_CHECK_TENANT("")>
+;
+>>
+

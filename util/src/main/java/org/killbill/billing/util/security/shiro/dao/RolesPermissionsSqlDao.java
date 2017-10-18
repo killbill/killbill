@@ -19,6 +19,10 @@ package org.killbill.billing.util.security.shiro.dao;
 
 import java.util.List;
 
+import org.joda.time.DateTime;
+import org.killbill.billing.callcontext.InternalCallContext;
+import org.killbill.billing.util.audit.ChangeType;
+import org.killbill.billing.util.entity.dao.Audited;
 import org.killbill.commons.jdbi.template.KillBillSqlDaoStringTemplate;
 import org.killbill.commons.jdbi.binder.SmartBindBean;
 import org.skife.jdbi.v2.sqlobject.Bind;
@@ -37,4 +41,12 @@ public interface RolesPermissionsSqlDao extends Transactional<RolesPermissionsSq
 
     @SqlUpdate
     public void create(@SmartBindBean final RolesPermissionsModelDao rolesPermissions);
+
+    @SqlUpdate
+    @Audited(ChangeType.UPDATE)
+    public void unactiveEvent(@Bind("recordId") final Long recordId,
+                              @Bind("createdDate")  final DateTime createdDate,
+                              @Bind("createdBy")  final String createdBy);
+
+
 }

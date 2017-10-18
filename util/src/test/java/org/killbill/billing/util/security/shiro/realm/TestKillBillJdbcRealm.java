@@ -19,6 +19,8 @@ package org.killbill.billing.util.security.shiro.realm;
 
 import java.util.List;
 
+import javax.validation.constraints.AssertTrue;
+
 import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.authc.AuthenticationException;
 import org.apache.shiro.authc.AuthenticationToken;
@@ -178,6 +180,33 @@ public class TestKillBillJdbcRealm extends UtilTestSuiteWithEmbeddedDB {
             Assert.fail("Subject should not have rights to create tag definitions");
         } catch (AuthorizationException e) {
         }
+    }
+
+    @Test(groups = "slow")
+    public void testUpdateRoleDefinition() throws SecurityApiException {
+
+        final String username = "siskiyou";
+        final String password = "siskiyou33";
+
+        securityApi.addRoleDefinition("original", ImmutableList.of("account:*", "invoice", "tag:create_tag_definition"), callContext);
+        securityApi.addUserRoles(username, password, ImmutableList.of("restricted"), callContext);
+
+        final AuthenticationToken goodToken = new UsernamePasswordToken(username, password);
+
+        final List<String> roleDefinition = securityApi.getRoleDefinition("original", callContext);
+        Assert.assertEquals(roleDefinition.size(), 3);
+        Assert.assertTrue(roleDefinition.contains("account:*"));
+        Assert.assertTrue(roleDefinition.contains("invoice:*"));
+        Assert.assertTrue(roleDefinition.contains("tag:create_tag_definition"));
+
+        securityApi.updateRoleDefinition("original", ImmutableList.of("account:*", "payment", "tag:create_tag_definition", "entitlement:create"), callContext);
+
+        final List<String> updatedRoleDefinition = securityApi.getRoleDefinition("original", callContext);
+        Assert.assertEquals(updatedRoleDefinition.size(), 4);
+        Assert.assertTrue(updatedRoleDefinition.contains("account:*"));
+        Assert.assertTrue(updatedRoleDefinition.contains("payment:*"));
+        Assert.assertTrue(updatedRoleDefinition.contains("tag:create_tag_definition"));
+        Assert.assertTrue(updatedRoleDefinition.contains("entitlement:create"));
 
     }
 
