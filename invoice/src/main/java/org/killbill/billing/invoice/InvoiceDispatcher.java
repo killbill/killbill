@@ -467,17 +467,21 @@ public class InvoiceDispatcher {
                                                                                                     return new DefaultInvoice(input);
                                                                                                 }
                                                                                             }));
-        final Currency targetCurrency = account.getCurrency();
-
         final UUID targetInvoiceId;
+        // Filter out DRAFT invoices for computation  of existing items unless Account is in AUTO_INVOICING_REUSE_DRAFT
         if (billingEvents.isAccountAutoInvoiceReuseDraft()) {
-            final InvoiceModelDao earliestDraftInvoice = invoiceDao.getEarliestDraftInvoiceByAccount(context);
-            targetInvoiceId = earliestDraftInvoice != null ? earliestDraftInvoice.getId() : null;
+            final Invoice existingDraft = Iterables.tryFind(invoices, new Predicate<Invoice>() {
+                @Override
+                public boolean apply(final Invoice input) {
+                    return input.getStatus() == InvoiceStatus.DRAFT;
+                }
+            }).orNull();
+            targetInvoiceId = existingDraft != null ? existingDraft.getId() : null;
         } else {
             targetInvoiceId = null;
         }
 
-        return generator.generateInvoice(account, billingEvents, invoices, targetInvoiceId, targetDate, targetCurrency, context);
+        return generator.generateInvoice(account, billingEvents, invoices, targetInvoiceId, targetDate, account.getCurrency(), context);
     }
 
     private FutureAccountNotifications createNextFutureNotificationDate(final InvoiceWithMetadata invoiceWithMetadata, final InternalCallContext context) {

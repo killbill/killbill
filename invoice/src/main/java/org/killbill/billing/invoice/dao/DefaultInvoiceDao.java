@@ -276,17 +276,6 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
     }
 
     @Override
-    public InvoiceModelDao getEarliestDraftInvoiceByAccount(final InternalTenantContext context) {
-        return transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<InvoiceModelDao>() {
-            @Override
-            public InvoiceModelDao inTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory) throws Exception {
-                final InvoiceSqlDao invoiceDao = entitySqlDaoWrapperFactory.become(InvoiceSqlDao.class);
-                return invoiceDao.getEarliestDraftInvoiceByAccount(context);
-            }
-        });
-    }
-
-    @Override
     public void createInvoice(final InvoiceModelDao invoice,
                               final FutureAccountNotifications callbackDateTimePerSubscriptions,
                               final InternalCallContext context) {

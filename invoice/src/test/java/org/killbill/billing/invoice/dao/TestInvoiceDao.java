@@ -501,41 +501,6 @@ public class TestInvoiceDao extends InvoiceTestSuiteWithEmbeddedDB {
         assertEquals(invoices.size(), 0);
     }
 
-    @Test(groups = "slow")
-    public void testGetEarliestDraftInvoiceByAccount() throws EntityPersistenceException {
-        final UUID accountId = account.getId();
-
-        InvoiceModelDao result;
-        result = invoiceDao.getEarliestDraftInvoiceByAccount(context);
-        assertNull(result);
-
-        final LocalDate targetDate1 = new LocalDate(2011, 10, 6);
-        final Invoice invoice1 = new DefaultInvoice(accountId, clock.getUTCToday(), targetDate1, Currency.USD, InvoiceStatus.DRAFT);
-        invoiceUtil.createInvoice(invoice1, context);
-
-        result = invoiceDao.getEarliestDraftInvoiceByAccount(context);
-        assertNotNull(result);
-        assertEquals(result.getId(), invoice1.getId());
-
-        final LocalDate targetDate2 = new LocalDate(2011, 12, 6);
-        final Invoice invoice2 = new DefaultInvoice(accountId, clock.getUTCToday(), targetDate2, Currency.USD);
-        invoiceUtil.createInvoice(invoice2, context);
-
-        result = invoiceDao.getEarliestDraftInvoiceByAccount(context);
-        assertNotNull(result);
-        assertEquals(result.getId(), invoice1.getId());
-
-
-        final LocalDate targetDate3 = new LocalDate(2011, 10, 6);
-        final Invoice invoice3 = new DefaultInvoice(accountId, clock.getUTCToday(), targetDate3, Currency.USD, InvoiceStatus.DRAFT);
-        invoiceUtil.createInvoice(invoice3, context);
-
-        result = invoiceDao.getEarliestDraftInvoiceByAccount(context);
-        assertNotNull(result);
-        assertEquals(result.getId(), invoice1.getId());
-    }
-
-
 
     @Test(groups = "slow")
     public void testAccountBalance() throws EntityPersistenceException {

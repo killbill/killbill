@@ -83,7 +83,7 @@ public class FixedAndRecurringInvoiceItemGenerator extends InvoiceItemGenerator 
     }
 
     public List<InvoiceItem> generateItems(final ImmutableAccountData account, final UUID invoiceId, final BillingEventSet eventSet,
-                                           @Nullable final List<Invoice> existingInvoices, final LocalDate targetDate,
+                                           @Nullable final Iterable<Invoice> existingInvoices, final LocalDate targetDate,
                                            final Currency targetCurrency, final Map<UUID, SubscriptionFutureNotificationDates> perSubscriptionFutureNotificationDate,
                                            final InternalCallContext internalCallContext) throws InvoiceApiException {
         final Multimap<UUID, LocalDate> createdItemsPerDayPerSubscription = LinkedListMultimap.<UUID, LocalDate>create();
@@ -105,7 +105,7 @@ public class FixedAndRecurringInvoiceItemGenerator extends InvoiceItemGenerator 
 
         // Generate list of proposed invoice items based on billing events from junction-- proposed items are ALL items since beginning of time
         final List<InvoiceItem> proposedItems = new ArrayList<InvoiceItem>();
-        processRecurringBillingEvents(invoiceId, account.getId(), eventSet, targetDate, targetCurrency, proposedItems, perSubscriptionFutureNotificationDate, existingInvoices, internalCallContext);
+        processRecurringBillingEvents(invoiceId, account.getId(), eventSet, targetDate, targetCurrency, proposedItems, perSubscriptionFutureNotificationDate, internalCallContext);
         processFixedBillingEvents(invoiceId, account.getId(), eventSet, targetDate, targetCurrency, proposedItems, internalCallContext);
 
         try {
@@ -124,7 +124,6 @@ public class FixedAndRecurringInvoiceItemGenerator extends InvoiceItemGenerator 
     private void processRecurringBillingEvents(final UUID invoiceId, final UUID accountId, final BillingEventSet events,
                                                final LocalDate targetDate, final Currency currency, final List<InvoiceItem> proposedItems,
                                                final Map<UUID, SubscriptionFutureNotificationDates> perSubscriptionFutureNotificationDate,
-                                               @Nullable final List<Invoice> existingInvoices,
                                                final InternalCallContext internalCallContext) throws InvoiceApiException {
         if (events.isEmpty()) {
             return;

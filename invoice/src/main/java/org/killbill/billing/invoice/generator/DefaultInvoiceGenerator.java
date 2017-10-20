@@ -43,7 +43,10 @@ import org.killbill.billing.util.config.definition.InvoiceConfig;
 import org.killbill.clock.Clock;
 
 import com.google.common.base.Objects;
+import com.google.common.base.Preconditions;
+import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Iterables;
 import com.google.inject.Inject;
 
 public class DefaultInvoiceGenerator implements InvoiceGenerator {
@@ -68,7 +71,7 @@ public class DefaultInvoiceGenerator implements InvoiceGenerator {
     @Override
     public InvoiceWithMetadata generateInvoice(final ImmutableAccountData account,
                                                @Nullable final BillingEventSet events,
-                                               @Nullable final List<Invoice> existingInvoices,
+                                               @Nullable final Iterable<Invoice> existingInvoices,
                                                @Nullable final UUID targetInvoiceId,
                                                final LocalDate targetDate,
                                                final Currency targetCurrency,
@@ -94,6 +97,16 @@ public class DefaultInvoiceGenerator implements InvoiceGenerator {
         final List<InvoiceItem> usageItems = usageInvoiceItemGenerator.generateItems(account, invoice.getId(), events, existingInvoices, adjustedTargetDate, targetCurrency, perSubscriptionFutureNotificationDates, context);
         invoice.addInvoiceItems(usageItems);
 
+        if (targetInvoiceId != null) {
+            final Invoice originalInvoice = Iterables.tryFind(existingInvoices, new Predicate<Invoice>() {
+                @Override
+                public boolean apply(final Invoice input) {
+                    return input.getId().equals(targetInvoiceId);
+                }
+            }).orNull();
+            Preconditions.checkNotNull(originalInvoice);
+            invoice.addInvoiceItems(originalInvoice.getInvoiceItems());
+        }
 
         return new InvoiceWithMetadata(invoice.getInvoiceItems().isEmpty() ? null : invoice, perSubscriptionFutureNotificationDates);
     }
@@ -106,7 +119,7 @@ public class DefaultInvoiceGenerator implements InvoiceGenerator {
         }
     }
 
-    private LocalDate adjustTargetDate(final List<Invoice> existingInvoices, final LocalDate targetDate) {
+    private LocalDate adjustTargetDate(final Iterable<Invoice> existingInvoices, final LocalDate targetDate) {
         if (existingInvoices == null) {
             return targetDate;
         }
