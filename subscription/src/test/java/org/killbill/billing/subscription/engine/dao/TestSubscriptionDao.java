@@ -24,6 +24,7 @@ import org.joda.time.DateTime;
 import org.killbill.billing.ErrorCode;
 import org.killbill.billing.account.api.Account;
 import org.killbill.billing.account.api.AccountData;
+import org.killbill.billing.api.TestApiListener.NextEvent;
 import org.killbill.billing.catalog.DefaultPriceListSet;
 import org.killbill.billing.catalog.api.ProductCategory;
 import org.killbill.billing.subscription.SubscriptionTestSuiteWithEmbeddedDB;
@@ -106,7 +107,9 @@ public class TestSubscriptionDao extends SubscriptionTestSuiteWithEmbeddedDB {
         final SubscriptionBaseEvent creationEvent = new ApiEventCreate(createBuilder);
 
         final DefaultSubscriptionBase subscription = new DefaultSubscriptionBase(builder);
+        testListener.pushExpectedEvents(NextEvent.CREATE);
         dao.createSubscription(subscription, ImmutableList.of(creationEvent), catalog, internalCallContext);
+        assertListenerStatus();
 
         // Operation Should now fail
         try {
