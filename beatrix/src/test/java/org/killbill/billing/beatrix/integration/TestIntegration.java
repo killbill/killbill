@@ -82,7 +82,7 @@ public class TestIntegration extends TestIntegrationBase {
                                                              SubscriptionEventType.START_BILLING, null, null, null, null);
         Invoice dryRunInvoice = invoiceUserApi.triggerInvoiceGeneration(account.getId(), clock.getUTCToday(), dryRun, callContext);
         expectedInvoices.add(new ExpectedInvoiceItemCheck(new LocalDate(2012, 4, 1), null, InvoiceItemType.FIXED, new BigDecimal("0")));
-        invoiceChecker.checkInvoiceNoAudits(dryRunInvoice, callContext, expectedInvoices);
+        invoiceChecker.checkInvoiceNoAudits(dryRunInvoice, expectedInvoices);
 
         final DefaultEntitlement bpSubscription = createBaseEntitlementAndCheckForCompletion(account.getId(), "bundleKey", "Shotgun", ProductCategory.BASE, BillingPeriod.MONTHLY, NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE);
         // Check bundle after BP got created otherwise we get an error from auditApi.
@@ -97,7 +97,7 @@ public class TestIntegration extends TestIntegrationBase {
                                          SubscriptionEventType.START_BILLING, null, bpSubscription.getBundleId(), null, null);
         dryRunInvoice = invoiceUserApi.triggerInvoiceGeneration(account.getId(), clock.getUTCToday(), dryRun, callContext);
         expectedInvoices.add(new ExpectedInvoiceItemCheck(new LocalDate(2012, 4, 1), new LocalDate(2012, 5, 1), InvoiceItemType.RECURRING, new BigDecimal("399.95")));
-        invoiceChecker.checkInvoiceNoAudits(dryRunInvoice, callContext, expectedInvoices);
+        invoiceChecker.checkInvoiceNoAudits(dryRunInvoice, expectedInvoices);
 
         addAOEntitlementAndCheckForCompletion(bpSubscription.getBundleId(), "Telescopic-Scope", ProductCategory.ADD_ON, BillingPeriod.MONTHLY, NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
 
@@ -116,7 +116,7 @@ public class TestIntegration extends TestIntegrationBase {
         // The second invoice should be adjusted for the AO (we paid for the full period) and since we paid we should also see a CBA
         expectedInvoices.add(new ExpectedInvoiceItemCheck(new LocalDate(2012, 4, 1), new LocalDate(2012, 4, 1), InvoiceItemType.CBA_ADJ, new BigDecimal("399.95"),
                                                           false /* Avoid checking dates for CBA because code is using context and context createdDate is wrong  in the test as we reset the clock too late, bummer... */ ));
-        invoiceChecker.checkInvoiceNoAudits(dryRunInvoice, callContext, expectedInvoices);
+        invoiceChecker.checkInvoiceNoAudits(dryRunInvoice, expectedInvoices);
 
 
         cancelEntitlementAndCheckForCompletion(bpSubscription, NextEvent.BLOCK, NextEvent.BLOCK, NextEvent.CANCEL, NextEvent.CANCEL, NextEvent.INVOICE);
@@ -157,7 +157,7 @@ public class TestIntegration extends TestIntegrationBase {
                                                              subscription.getId(), subscription.getBundleId(), null, null);
         Invoice dryRunInvoice = invoiceUserApi.triggerInvoiceGeneration(account.getId(), clock.getUTCToday(), dryRun, callContext);
         expectedInvoices.add(new ExpectedInvoiceItemCheck(initialCreationDate.toLocalDate(), null, InvoiceItemType.FIXED, new BigDecimal("0")));
-        invoiceChecker.checkInvoiceNoAudits(dryRunInvoice, callContext, expectedInvoices);
+        invoiceChecker.checkInvoiceNoAudits(dryRunInvoice, expectedInvoices);
 
 
         clock.addDeltaFromReality(1000); // Make sure CHANGE does not collide with CREATE
@@ -181,7 +181,7 @@ public class TestIntegration extends TestIntegrationBase {
 
         // Verify first next targetDate
         dryRunInvoice = invoiceUserApi.triggerInvoiceGeneration(account.getId(), new LocalDate(nextDate, testTimeZone), dryRun, callContext);
-        invoiceChecker.checkInvoiceNoAudits(dryRunInvoice, callContext, expectedInvoices);
+        invoiceChecker.checkInvoiceNoAudits(dryRunInvoice, expectedInvoices);
 
 
         setDateAndCheckForCompletion(nextDate, NextEvent.PHASE, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
@@ -207,7 +207,7 @@ public class TestIntegration extends TestIntegrationBase {
         dryRunInvoice = invoiceUserApi.triggerInvoiceGeneration(account.getId(), new LocalDate(nextDate, testTimeZone), dryRun, callContext);
         expectedInvoices.add(new ExpectedInvoiceItemCheck(new LocalDate(2012, 3, 31), new LocalDate(2012, 4, 30), InvoiceItemType.RECURRING, new BigDecimal("29.95")));
 
-        invoiceChecker.checkInvoiceNoAudits(dryRunInvoice, callContext, expectedInvoices);
+        invoiceChecker.checkInvoiceNoAudits(dryRunInvoice, expectedInvoices);
 
         addDaysAndCheckForCompletion(31, NextEvent.CHANGE, NextEvent.NULL_INVOICE, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
         invoiceChecker.checkInvoice(account.getId(), invoiceItemCount++, callContext, expectedInvoices);

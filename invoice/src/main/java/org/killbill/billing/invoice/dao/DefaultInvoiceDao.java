@@ -39,8 +39,10 @@ import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.entity.EntityPersistenceException;
+import org.killbill.billing.invoice.InvoiceDispatcher;
 import org.killbill.billing.invoice.InvoiceDispatcher.FutureAccountNotifications;
 import org.killbill.billing.invoice.InvoiceDispatcher.FutureAccountNotifications.SubscriptionNotification;
+import org.killbill.billing.invoice.InvoicePluginDispatcher;
 import org.killbill.billing.invoice.api.DefaultInvoicePaymentErrorEvent;
 import org.killbill.billing.invoice.api.DefaultInvoicePaymentInfoEvent;
 import org.killbill.billing.invoice.api.Invoice;
@@ -340,9 +342,14 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
 
                     // Create the invoice items if needed (note: they may not necessarily belong to that invoice)
                     for (final InvoiceItemModelDao invoiceItemModelDao : invoiceModelDao.getInvoiceItems()) {
-                        if (transInvoiceItemSqlDao.getById(invoiceItemModelDao.getId().toString(), context) == null) {
+                        final InvoiceItemModelDao existingInvoiceItem = transInvoiceItemSqlDao.getById(invoiceItemModelDao.getId().toString(), context);
+                        if (existingInvoiceItem == null) {
                             createdInvoiceItems.add(createInvoiceItemFromTransaction(transInvoiceItemSqlDao, invoiceItemModelDao, context));
                             allInvoiceIds.add(invoiceItemModelDao.getInvoiceId());
+                        } else if (InvoicePluginDispatcher.ALLOWED_INVOICE_ITEM_TYPES.contains(invoiceItemModelDao.getType()) &&
+                                   (invoiceItemModelDao.getAmount().compareTo(existingInvoiceItem.getAmount()) != 0)) {
+                            Preconditions.checkState(existingInvoiceItem.getCurrency() == invoiceItemModelDao.getCurrency());
+                            transInvoiceItemSqlDao.updateAmount(invoiceItemModelDao.getId().toString(), invoiceItemModelDao.getAmount(), context);
                         }
                     }
 

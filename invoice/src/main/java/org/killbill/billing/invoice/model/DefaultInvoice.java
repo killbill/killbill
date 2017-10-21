@@ -142,6 +142,10 @@ public class DefaultInvoice extends EntityBase implements Invoice, Cloneable {
         return invoiceItems.add(item);
     }
 
+    public boolean removeInvoiceItem(final  InvoiceItem item) {
+        return invoiceItems.remove(item);
+    }
+
     @Override
     public boolean addInvoiceItems(final Collection<InvoiceItem> items) {
         return this.invoiceItems.addAll(items);

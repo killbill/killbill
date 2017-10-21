@@ -18,9 +18,11 @@
 package org.killbill.billing.beatrix.integration;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.inject.Inject;
 
@@ -38,6 +40,7 @@ import org.killbill.billing.invoice.api.DryRunType;
 import org.killbill.billing.invoice.api.Invoice;
 import org.killbill.billing.invoice.api.InvoiceItem;
 import org.killbill.billing.invoice.api.InvoiceItemType;
+import org.killbill.billing.invoice.model.ExternalChargeInvoiceItem;
 import org.killbill.billing.invoice.model.TaxInvoiceItem;
 import org.killbill.billing.invoice.plugin.api.InvoicePluginApi;
 import org.killbill.billing.osgi.api.OSGIServiceDescriptor;
@@ -49,6 +52,7 @@ import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.tag.ControlTagType;
 import org.killbill.billing.util.tag.Tag;
 import org.testng.annotations.BeforeClass;
+import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import com.google.common.collect.ImmutableList;
@@ -83,6 +87,12 @@ public class TestWithTaxItems extends TestIntegrationBase {
                 return "TaxInvoicePluginApi";
             }
         }, testInvoicePluginApi);
+    }
+
+    @BeforeMethod(groups = "slow")
+    public void beforeMethod() throws Exception {
+        super.beforeMethod();
+        testInvoicePluginApi.reset();
     }
 
     private void add_AUTO_INVOICING_OFF_Tag(final UUID id) throws TagDefinitionApiException, TagApiException {
@@ -133,7 +143,7 @@ public class TestWithTaxItems extends TestIntegrationBase {
         assertListenerStatus();
 
         // Make sure TestInvoicePluginApi will return an additional TAX item
-        testInvoicePluginApi.addTaxItem();
+        testInvoicePluginApi.addTaxItem(UUID.randomUUID(), BigDecimal.ONE);
 
         // Remove AUTO_INVOICING_OFF => Invoice + Payment
         remove_AUTO_INVOICING_OFF_Tag(account.getId(), NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
@@ -149,7 +159,7 @@ public class TestWithTaxItems extends TestIntegrationBase {
         assertListenerStatus();
 
         // Make sure TestInvoicePluginApi will return an additional TAX item
-        testInvoicePluginApi.addTaxItem();
+        testInvoicePluginApi.addTaxItem(UUID.randomUUID(), BigDecimal.ONE);
 
         // Remove AUTO_INVOICING_OFF => Invoice + Payment
         remove_AUTO_INVOICING_OFF_Tag(account.getId(), NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
@@ -171,11 +181,10 @@ public class TestWithTaxItems extends TestIntegrationBase {
         assertListenerStatus();
 
         // Make sure TestInvoicePluginApi will return an additional TAX item
-        testInvoicePluginApi.addTaxItem();
+        testInvoicePluginApi.addTaxItem(UUID.randomUUID(), BigDecimal.ONE);
 
         // Remove AUTO_INVOICING_OFF => Invoice + Payment
         remove_AUTO_INVOICING_OFF_Tag(account.getId(), NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
-
 
         invoiceChecker.checkInvoice(account.getId(), 3, callContext,
                                     new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 1), new LocalDate(2012, 6, 1), InvoiceItemType.RECURRING, new BigDecimal("249.95")),
@@ -205,6 +214,7 @@ public class TestWithTaxItems extends TestIntegrationBase {
         invoiceChecker.checkInvoice(account.getId(), 1, callContext, new ExpectedInvoiceItemCheck(new LocalDate(2012, 4, 1), null, InvoiceItemType.FIXED, new BigDecimal("0")));
         subscriptionChecker.checkSubscriptionCreated(bpSubscription.getId(), internalCallContext);
 
+
         busHandler.pushExpectedEvents(NextEvent.INVOICE);
         invoiceUserApi.insertCredit(account.getId(), new BigDecimal("100"), clock.getUTCToday(), account.getCurrency(), true, "VIP", callContext);
         assertListenerStatus();
@@ -214,17 +224,17 @@ public class TestWithTaxItems extends TestIntegrationBase {
                                     new ExpectedInvoiceItemCheck(new LocalDate(2012, 4, 1), new LocalDate(2012, 4, 1), InvoiceItemType.CREDIT_ADJ, new BigDecimal("-100")));
 
         // Make sure TestInvoicePluginApi will return an additional TAX item
-        testInvoicePluginApi.addTaxItem();
+        testInvoicePluginApi.addTaxItem(UUID.randomUUID(), BigDecimal.ONE);
 
         // Verify dry-run scenario
         final Invoice dryRunInvoice = invoiceUserApi.triggerInvoiceGeneration(account.getId(), new LocalDate(2012, 5, 1), new TestDryRunArguments(DryRunType.TARGET_DATE), callContext);
-        invoiceChecker.checkInvoiceNoAudits(dryRunInvoice, callContext,
+        invoiceChecker.checkInvoiceNoAudits(dryRunInvoice,
                                             ImmutableList.<ExpectedInvoiceItemCheck>of(new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 1), new LocalDate(2012, 6, 1), InvoiceItemType.RECURRING, new BigDecimal("29.95")),
                                                                                        new ExpectedInvoiceItemCheck(new LocalDate(2012, 4, 1), null, InvoiceItemType.TAX, new BigDecimal("1.0")),
                                                                                        new ExpectedInvoiceItemCheck(new LocalDate(2012, 4, 1), new LocalDate(2012, 4, 1), InvoiceItemType.CBA_ADJ, new BigDecimal("-30.95"))));
 
         // Make sure TestInvoicePluginApi will return an additional TAX item
-        testInvoicePluginApi.addTaxItem();
+        testInvoicePluginApi.addTaxItem(UUID.randomUUID(), BigDecimal.ONE);
 
         // Move to Evergreen PHASE to verify non-dry-run scenario
         busHandler.pushExpectedEvents(NextEvent.PHASE, NextEvent.INVOICE);
@@ -237,26 +247,77 @@ public class TestWithTaxItems extends TestIntegrationBase {
                                     new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 1), new LocalDate(2012, 5, 1), InvoiceItemType.CBA_ADJ, new BigDecimal("-30.95")));
     }
 
+    @Test(groups = "slow")
+    public void testUpdateTaxItems() throws Exception {
+
+        clock.setDay(new LocalDate(2012, 4, 1));
+
+        final AccountData accountData = getAccountData(1);
+        final Account account = createAccountWithNonOsgiPaymentMethod(accountData);
+
+        // Create original subscription (Trial PHASE) -> $0 invoice.
+        final DefaultEntitlement bpSubscription = createBaseEntitlementAndCheckForCompletion(account.getId(), "bundleKey", "Pistol", ProductCategory.BASE, BillingPeriod.MONTHLY, NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE);
+        invoiceChecker.checkInvoice(account.getId(), 1, callContext, new ExpectedInvoiceItemCheck(new LocalDate(2012, 4, 1), null, InvoiceItemType.FIXED, new BigDecimal("0")));
+        subscriptionChecker.checkSubscriptionCreated(bpSubscription.getId(), internalCallContext);
+
+        // Add tags to keep DRAFT invoices and reuse them
+        add_AUTO_INVOICING_DRAFT_Tag(account.getId(), ObjectType.ACCOUNT);
+        add_AUTO_INVOICING_REUSE_DRAFT_Tag(account.getId(), ObjectType.ACCOUNT);
+
+        // Make sure TestInvoicePluginApi will return an additional TAX item
+        final UUID invoiceTaxItemId = UUID.randomUUID();
+        testInvoicePluginApi.addTaxItem(invoiceTaxItemId, BigDecimal.ONE);
+
+        // Insert external charge autoCommit = false => Invoice will be in DRAFT
+        final List<InvoiceItem> items = invoiceUserApi.insertExternalCharges(account.getId(), clock.getUTCNow().toLocalDate(), ImmutableList.<InvoiceItem>of(new ExternalChargeInvoiceItem(null, account.getId(), null, "foo", new LocalDate(2012, 4, 1), null, new BigDecimal("33.80"), account.getCurrency())), false, callContext);
+
+        // Make sure TestInvoicePluginApi **update** the original TAX item
+        testInvoicePluginApi.addTaxItem(invoiceTaxItemId, new BigDecimal("12.45"));
+
+        // Move to Evergreen PHASE, but invoice remains in DRAFT mode
+        busHandler.pushExpectedEvents(NextEvent.PHASE /*, NextEvent.INVOICE */);
+        clock.addDays(30);
+        assertListenerStatus();
+
+        final List<Invoice> accountInvoices = invoiceUserApi.getInvoicesByAccount(account.getId(), false, callContext);
+        assertEquals(accountInvoices.size(), 2);
+
+        // Commit invoice
+        busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT);
+        invoiceUserApi.commitInvoice(accountInvoices.get(1).getId(), callContext);
+        assertListenerStatus();
+
+        invoiceChecker.checkInvoice(account.getId(), 2, callContext,
+                                    new ExpectedInvoiceItemCheck(new LocalDate(2012, 4, 1), null, InvoiceItemType.EXTERNAL_CHARGE, new BigDecimal("33.80")),
+                                    new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 1), new LocalDate(2012, 6, 1), InvoiceItemType.RECURRING, new BigDecimal("29.95")),
+                                    new ExpectedInvoiceItemCheck(new LocalDate(2012, 4, 1), null, InvoiceItemType.TAX, new BigDecimal("12.45")));
+
+    }
+
     public class TestInvoicePluginApi implements InvoicePluginApi {
 
-        AtomicBoolean addTaxItem;
+        private final Map<UUID, BigDecimal> taxItems;
 
         public TestInvoicePluginApi() {
-            this.addTaxItem = new AtomicBoolean();
+            taxItems = new HashMap<UUID, BigDecimal>();
         }
 
         @Override
         public List<InvoiceItem> getAdditionalInvoiceItems(final Invoice invoice, final boolean isDryRun, final Iterable<PluginProperty> pluginProperties, final CallContext callContext) {
-            return addTaxItem.compareAndSet(true, false) ? ImmutableList.<InvoiceItem>of(createTaxInvoiceItem(invoice)) : ImmutableList.<InvoiceItem>of();
+            final List<InvoiceItem> result = new ArrayList<InvoiceItem>();
+            for (UUID itemId : taxItems.keySet()) {
+                result.add(new TaxInvoiceItem(itemId, invoice.getId(), invoice.getAccountId(), null, "Tax Item", clock.getUTCNow().toLocalDate(), taxItems.get(itemId), invoice.getCurrency()));
+            }
+            taxItems.clear();
+            return result;
         }
 
-        private InvoiceItem createTaxInvoiceItem(final Invoice invoice) {
-            return new TaxInvoiceItem(invoice.getId(), invoice.getAccountId(), null, "Tax Item", clock.getUTCNow().toLocalDate(), BigDecimal.ONE, invoice.getCurrency());
+        public void reset() {
+            taxItems.clear();
         }
 
-        public void addTaxItem() {
-            this.addTaxItem.set(true);
+        public void addTaxItem(final UUID invoiceItemId, final BigDecimal amount) {
+            taxItems.put(invoiceItemId, amount);
         }
-
     }
 }

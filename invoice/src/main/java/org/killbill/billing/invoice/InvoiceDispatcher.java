@@ -414,7 +414,21 @@ public class InvoiceDispatcher {
                     invoice.addInvoiceItem(cbaItemPreInvoicePlugins);
                 }
             } else {
-                invoice.addInvoiceItems(additionalInvoiceItemsFromPlugins);
+
+                // Add or update items from generated invoice
+                for (final InvoiceItem cur : additionalInvoiceItemsFromPlugins) {
+                    final InvoiceItem exitingItem = Iterables.tryFind(tmpInvoiceForInvoicePlugins.getInvoiceItems(), new Predicate<InvoiceItem>() {
+                        @Override
+                        public boolean apply(final InvoiceItem input) {
+                            return input.getInvoiceItemType().equals(cur.getInvoiceItemType());
+                        }
+                    }).orNull();
+                    if (exitingItem != null) {
+                        invoice.removeInvoiceItem(exitingItem);
+                    }
+                    invoice.addInvoiceItem(cur);
+                }
+
                 // Use credit after we call the plugin (https://github.com/killbill/killbill/issues/637)
                 final InvoiceItem cbaItemPostInvoicePlugins = computeCBAOnExistingInvoice(invoice, internalCallContext);
                 if (cbaItemPostInvoicePlugins != null) {

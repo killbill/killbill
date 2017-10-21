@@ -47,7 +47,7 @@ public class InvoicePluginDispatcher {
 
     private static final Logger log = LoggerFactory.getLogger(InvoicePluginDispatcher.class);
 
-    private static final Collection<InvoiceItemType> ALLOWED_INVOICE_ITEM_TYPES = ImmutableList.<InvoiceItemType>of(InvoiceItemType.EXTERNAL_CHARGE,
+    public static final Collection<InvoiceItemType> ALLOWED_INVOICE_ITEM_TYPES = ImmutableList.<InvoiceItemType>of(InvoiceItemType.EXTERNAL_CHARGE,
                                                                                                                     InvoiceItemType.ITEM_ADJ,
                                                                                                                     InvoiceItemType.CREDIT_ADJ,
                                                                                                                     InvoiceItemType.TAX);

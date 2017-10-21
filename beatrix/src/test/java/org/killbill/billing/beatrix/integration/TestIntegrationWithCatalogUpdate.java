@@ -40,7 +40,6 @@ import org.killbill.billing.catalog.api.CatalogUserApi;
 import org.killbill.billing.catalog.api.Plan;
 import org.killbill.billing.catalog.api.PlanPhasePriceOverride;
 import org.killbill.billing.catalog.api.PlanPhaseSpecifier;
-import org.killbill.billing.catalog.api.PlanSpecifier;
 import org.killbill.billing.catalog.api.PriceListSet;
 import org.killbill.billing.catalog.api.ProductCategory;
 import org.killbill.billing.catalog.api.SimplePlanDescriptor;
@@ -248,7 +247,7 @@ public class TestIntegrationWithCatalogUpdate extends TestIntegrationBase {
 
         final List<ExpectedInvoiceItemCheck> expectedInvoices = new ArrayList<ExpectedInvoiceItemCheck>();
         expectedInvoices.add(new ExpectedInvoiceItemCheck(new LocalDate(2016, 6, 1), new LocalDate(2016, 7, 1), InvoiceItemType.RECURRING, BigDecimal.TEN));
-        invoiceChecker.checkInvoiceNoAudits(invoices.get(0), callContext, expectedInvoices);
+        invoiceChecker.checkInvoiceNoAudits(invoices.get(0), expectedInvoices);
 
         int invoiceSize = 2;
         LocalDate startDate = new LocalDate(2016, 7, 1);
@@ -265,7 +264,7 @@ public class TestIntegrationWithCatalogUpdate extends TestIntegrationBase {
             assertEquals(invoices.size(), invoiceSize);
 
             expectedInvoices.add(new ExpectedInvoiceItemCheck(startDate, endDate, InvoiceItemType.RECURRING, BigDecimal.TEN));
-            invoiceChecker.checkInvoiceNoAudits(invoices.get(invoices.size() - 1), callContext, expectedInvoices);
+            invoiceChecker.checkInvoiceNoAudits(invoices.get(invoices.size() - 1), expectedInvoices);
 
             startDate = endDate;
             invoiceSize++;

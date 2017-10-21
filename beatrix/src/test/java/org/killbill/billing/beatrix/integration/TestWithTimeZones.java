@@ -81,7 +81,7 @@ public class TestWithTimeZones extends TestIntegrationBase {
                                                                    SubscriptionEventType.START_BILLING, null, null, null, null);
         final Invoice dryRunInvoice = invoiceUserApi.triggerInvoiceGeneration(account.getId(), clock.getUTCToday(), dryRun, callContext);
         expectedInvoices.add(new ExpectedInvoiceItemCheck(new LocalDate(2015, 9, 1), null, InvoiceItemType.FIXED, new BigDecimal("0")));
-        invoiceChecker.checkInvoiceNoAudits(dryRunInvoice, callContext, expectedInvoices);
+        invoiceChecker.checkInvoiceNoAudits(dryRunInvoice, expectedInvoices);
 
         final DefaultEntitlement bpSubscription = createBaseEntitlementAndCheckForCompletion(account.getId(), "bundleKey", "Shotgun", ProductCategory.BASE, BillingPeriod.MONTHLY, NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE);
         // Check bundle after BP got created otherwise we get an error from auditApi.

@@ -80,7 +80,7 @@ public class TestInvoiceSystemDisabling extends TestIntegrationBase {
         assertListenerStatus();
         final ImmutableList<ExpectedInvoiceItemCheck> expected = ImmutableList.<ExpectedInvoiceItemCheck>of(new ExpectedInvoiceItemCheck(new LocalDate(2012, 4, 1), null, InvoiceItemType.FIXED, BigDecimal.ZERO),
                                                                                                             new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 1), new LocalDate(2012, 6, 1), InvoiceItemType.RECURRING, new BigDecimal("249.95")));
-        invoiceChecker.checkInvoiceNoAudits(invoice, callContext, expected);
+        invoiceChecker.checkInvoiceNoAudits(invoice, expected);
 
         // Still parked
         Assert.assertTrue(parkedAccountsManager.isParked(internalCallContext));
