@@ -47,6 +47,7 @@ public class TestDefaultTagDefinitionDao extends UtilTestSuiteWithEmbeddedDB {
         final TagDefinitionModelDao createdTagDefinition = tagDefinitionDao.create(definitionName, description, ObjectType.ACCOUNT.name(), internalCallContext);
         Assert.assertEquals(createdTagDefinition.getName(), definitionName);
         Assert.assertEquals(createdTagDefinition.getDescription(), description);
+        Assert.assertEquals(createdTagDefinition.getApplicableObjectTypes(), ObjectType.ACCOUNT.name());
         assertListenerStatus();
 
         // Make sure we can retrieve it via the DAO

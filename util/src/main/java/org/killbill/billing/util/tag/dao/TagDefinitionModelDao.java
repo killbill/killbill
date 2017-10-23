@@ -52,7 +52,7 @@ public class TagDefinitionModelDao extends EntityModelDaoBase implements EntityM
     }
 
     public TagDefinitionModelDao(final DateTime createdDate, final String name, final String description, String applicableObjectTypes) {
-        this(UUID.randomUUID(), createdDate, createdDate, name, description, applicableObjectTypes);
+        this(UUIDs.randomUUID(), createdDate, createdDate, name, description, applicableObjectTypes);
     }
 
 
