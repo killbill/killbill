@@ -18,12 +18,9 @@
 package org.killbill.billing.payment.core.janitor;
 
 import java.math.BigDecimal;
-import java.util.List;
 import java.util.UUID;
 
-import org.joda.time.DateTime;
 import org.killbill.billing.account.api.Account;
-import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.payment.PaymentTestSuiteWithEmbeddedDB;
 import org.killbill.billing.payment.api.Payment;
@@ -31,14 +28,12 @@ import org.killbill.billing.payment.api.PaymentApiException;
 import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.payment.api.TransactionStatus;
 import org.killbill.billing.payment.api.TransactionType;
-import org.killbill.billing.payment.core.sm.PaymentStateMachineHelper;
 import org.killbill.billing.payment.dao.PaymentModelDao;
 import org.killbill.billing.payment.dao.PaymentTransactionModelDao;
 import org.killbill.billing.payment.plugin.api.PaymentPluginStatus;
 import org.killbill.billing.payment.plugin.api.PaymentTransactionInfoPlugin;
 import org.killbill.billing.payment.provider.DefaultNoOpPaymentInfoPlugin;
 import org.killbill.billing.payment.provider.MockPaymentProviderPlugin;
-import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.billing.util.globallocker.LockerType;
 import org.killbill.commons.locker.GlobalLock;
 import org.killbill.commons.locker.LockFailedException;
