@@ -29,6 +29,8 @@ import org.killbill.billing.util.api.TagDefinitionApiException;
 import org.killbill.billing.util.entity.dao.MockEntityDaoBase;
 import org.killbill.billing.util.tag.TagDefinition;
 
+import com.google.common.collect.ImmutableList;
+
 public class MockTagDefinitionDao extends MockEntityDaoBase<TagDefinitionModelDao, TagDefinition, TagDefinitionApiException> implements TagDefinitionDao {
 
     private final Map<String, TagDefinitionModelDao> tags = new ConcurrentHashMap<String, TagDefinitionModelDao>();
@@ -44,9 +46,9 @@ public class MockTagDefinitionDao extends MockEntityDaoBase<TagDefinitionModelDa
     }
 
     @Override
-    public TagDefinitionModelDao create(final String definitionName, final String description,
+    public TagDefinitionModelDao create(final String definitionName, final String description, final String tagDefinitionObjectTypes,
                                         final InternalCallContext context) throws TagDefinitionApiException {
-        final TagDefinitionModelDao tag = new TagDefinitionModelDao(null, definitionName, description);
+        final TagDefinitionModelDao tag = new TagDefinitionModelDao(null, definitionName, description, tagDefinitionObjectTypes);
 
         tags.put(tag.getId().toString(), tag);
         return tag;

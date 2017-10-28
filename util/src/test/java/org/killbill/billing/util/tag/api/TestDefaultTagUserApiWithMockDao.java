@@ -17,6 +17,7 @@
 
 package org.killbill.billing.util.tag.api;
 
+import org.killbill.billing.ObjectType;
 import org.killbill.billing.callcontext.DefaultCallContext;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.util.UtilTestSuiteNoDB;
@@ -30,6 +31,8 @@ import org.killbill.billing.util.tag.dao.TagDefinitionModelDao;
 import org.mockito.Mockito;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
+
+import com.google.common.collect.ImmutableSet;
 
 import static org.testng.Assert.assertEquals;
 
@@ -50,17 +53,17 @@ public class TestDefaultTagUserApiWithMockDao extends UtilTestSuiteNoDB {
 
     @Test(groups = "fast", expectedExceptions = TagDefinitionApiException.class, expectedExceptionsMessageRegExp = "The tag definition name must be in lowercase .*")
     public void testCreateTagDefinitionWithMiddleUpperCase() throws Exception {
-        tagUserApi.createTagDefinition("inVaLid", "description", context);
+        tagUserApi.createTagDefinition("inVaLid", "description", ImmutableSet.<ObjectType>of(ObjectType.ACCOUNT), context);
     }
 
     @Test(groups = "fast", expectedExceptions = TagDefinitionApiException.class, expectedExceptionsMessageRegExp = "The tag definition name must be in lowercase .*")
     public void testCreateTagDefinitionWithFrontUpperCase() throws Exception {
-        tagUserApi.createTagDefinition("Invalid", "description", context);
+        tagUserApi.createTagDefinition("Invalid", "description", ImmutableSet.<ObjectType>of(ObjectType.ACCOUNT), context);
     }
 
     @Test(groups = "fast", expectedExceptions = TagDefinitionApiException.class, expectedExceptionsMessageRegExp = "The tag definition name must be in lowercase .*")
     public void testCreateTagDefinitionWithBackUpperCase() throws Exception {
-        tagUserApi.createTagDefinition("invaliD", "description", context);
+        tagUserApi.createTagDefinition("invaliD", "description", ImmutableSet.<ObjectType>of(ObjectType.ACCOUNT), context);
     }
 
     @Test(groups = "fast")
@@ -68,8 +71,9 @@ public class TestDefaultTagUserApiWithMockDao extends UtilTestSuiteNoDB {
         final String tagDefinitionName = "lowercase";
         final TagDefinitionModelDao tagDefinitionModelDao = new TagDefinitionModelDao();
         tagDefinitionModelDao.setName(tagDefinitionName);
-        Mockito.when(tagDefinitionDao.create(Mockito.anyString(), Mockito.anyString(), Mockito.any(InternalCallContext.class))).thenReturn(tagDefinitionModelDao);
-        final TagDefinition tagDefinition = tagUserApi.createTagDefinition(tagDefinitionName, "description", context);
+        tagDefinitionModelDao.setApplicableObjectTypes(ObjectType.ACCOUNT.name());
+        Mockito.when(tagDefinitionDao.create(Mockito.anyString(), Mockito.anyString(), Mockito.anyString(), Mockito.any(InternalCallContext.class))).thenReturn(tagDefinitionModelDao);
+        final TagDefinition tagDefinition = tagUserApi.createTagDefinition(tagDefinitionName, "description", ImmutableSet.<ObjectType>of(ObjectType.ACCOUNT), context);
         assertEquals(tagDefinitionName, tagDefinition.getName());
     }
 }

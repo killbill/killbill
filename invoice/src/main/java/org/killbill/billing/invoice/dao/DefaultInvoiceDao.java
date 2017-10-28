@@ -41,6 +41,7 @@ import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.entity.EntityPersistenceException;
 import org.killbill.billing.invoice.InvoiceDispatcher.FutureAccountNotifications;
 import org.killbill.billing.invoice.InvoiceDispatcher.FutureAccountNotifications.SubscriptionNotification;
+import org.killbill.billing.invoice.InvoicePluginDispatcher;
 import org.killbill.billing.invoice.api.DefaultInvoicePaymentErrorEvent;
 import org.killbill.billing.invoice.api.DefaultInvoicePaymentInfoEvent;
 import org.killbill.billing.invoice.api.Invoice;
@@ -276,17 +277,6 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
     }
 
     @Override
-    public InvoiceModelDao getEarliestDraftInvoiceByAccount(final InternalTenantContext context) {
-        return transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<InvoiceModelDao>() {
-            @Override
-            public InvoiceModelDao inTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory) throws Exception {
-                final InvoiceSqlDao invoiceDao = entitySqlDaoWrapperFactory.become(InvoiceSqlDao.class);
-                return invoiceDao.getEarliestDraftInvoiceByAccount(context);
-            }
-        });
-    }
-
-    @Override
     public void createInvoice(final InvoiceModelDao invoice,
                               final FutureAccountNotifications callbackDateTimePerSubscriptions,
                               final InternalCallContext context) {
@@ -351,9 +341,15 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
 
                     // Create the invoice items if needed (note: they may not necessarily belong to that invoice)
                     for (final InvoiceItemModelDao invoiceItemModelDao : invoiceModelDao.getInvoiceItems()) {
-                        if (transInvoiceItemSqlDao.getById(invoiceItemModelDao.getId().toString(), context) == null) {
+                        final InvoiceItemModelDao existingInvoiceItem = transInvoiceItemSqlDao.getById(invoiceItemModelDao.getId().toString(), context);
+                        if (existingInvoiceItem == null) {
                             createdInvoiceItems.add(createInvoiceItemFromTransaction(transInvoiceItemSqlDao, invoiceItemModelDao, context));
                             allInvoiceIds.add(invoiceItemModelDao.getInvoiceId());
+                        } else if (InvoicePluginDispatcher.ALLOWED_INVOICE_ITEM_TYPES.contains(invoiceItemModelDao.getType()) &&
+                                   (invoiceItemModelDao.getAmount().compareTo(existingInvoiceItem.getAmount()) != 0)) {
+                            checkAgainstExistingInvoiceItemState(existingInvoiceItem, invoiceItemModelDao);
+
+                            transInvoiceItemSqlDao.updateAmount(invoiceItemModelDao.getId().toString(), invoiceItemModelDao.getAmount(), context);
                         }
                     }
 
@@ -1307,4 +1303,49 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
     private List<Tag> getInvoicesTags(final InternalTenantContext context) {
         return tagInternalApi.getTagsForAccountType(ObjectType.INVOICE, false, context);
     }
+
+    private static void checkAgainstExistingInvoiceItemState(final InvoiceItemModelDao existingInvoiceItem, final InvoiceItemModelDao inputInvoiceItem) {
+        Preconditions.checkState(existingInvoiceItem.getAccountId().equals(inputInvoiceItem.getAccountId()), String.format("Unexpected account ID '%s' for invoice item '%s'",
+                                                                                                                           inputInvoiceItem.getAccountId(), existingInvoiceItem.getId()));
+        if (existingInvoiceItem.getChildAccountId() != null) {
+            Preconditions.checkState(existingInvoiceItem.getChildAccountId().equals(inputInvoiceItem.getChildAccountId()), String.format("Unexpected child account ID '%s' for invoice item '%s'",
+                                                                                                                                         inputInvoiceItem.getChildAccountId(), existingInvoiceItem.getId()));
+        }
+        Preconditions.checkState(existingInvoiceItem.getInvoiceId().equals(inputInvoiceItem.getInvoiceId()), String.format("Unexpected invoice ID '%s' for invoice item '%s'",
+                                                                                                                           inputInvoiceItem.getInvoiceId(), existingInvoiceItem.getId()));
+        if (existingInvoiceItem.getBundleId() != null) {
+            Preconditions.checkState(existingInvoiceItem.getBundleId().equals(inputInvoiceItem.getBundleId()), String.format("Unexpected bundle ID '%s' for invoice item '%s'",
+                                                                                                                             inputInvoiceItem.getBundleId(), existingInvoiceItem.getId()));
+        }
+        if (existingInvoiceItem.getSubscriptionId() != null) {
+            Preconditions.checkState(existingInvoiceItem.getSubscriptionId().equals(inputInvoiceItem.getSubscriptionId()), String.format("Unexpected subscription ID '%s' for invoice item '%s'",
+                                                                                                                                         inputInvoiceItem.getSubscriptionId(), existingInvoiceItem.getId()));
+        }
+        if (existingInvoiceItem.getPlanName() != null) {
+            Preconditions.checkState(existingInvoiceItem.getPlanName().equals(inputInvoiceItem.getPlanName()), String.format("Unexpected plan name '%s' for invoice item '%s'",
+                                                                                                                             inputInvoiceItem.getPlanName(), existingInvoiceItem.getId()));
+        }
+        if (existingInvoiceItem.getPhaseName() != null) {
+            Preconditions.checkState(existingInvoiceItem.getPhaseName().equals(inputInvoiceItem.getPhaseName()), String.format("Unexpected phase name '%s' for invoice item '%s'",
+                                                                                                                               inputInvoiceItem.getPhaseName(), existingInvoiceItem.getId()));
+        }
+        if (existingInvoiceItem.getUsageName() != null) {
+            Preconditions.checkState(existingInvoiceItem.getUsageName().equals(inputInvoiceItem.getUsageName()), String.format("Unexpected usage name '%s' for invoice item '%s'",
+                                                                                                                               inputInvoiceItem.getUsageName(), existingInvoiceItem.getId()));
+        }
+        if (existingInvoiceItem.getStartDate() != null) {
+            Preconditions.checkState(existingInvoiceItem.getStartDate().equals(inputInvoiceItem.getStartDate()), String.format("Unexpected startDate '%s' for invoice item '%s'",
+                                                                                                                               inputInvoiceItem.getStartDate(), existingInvoiceItem.getId()));
+        }
+        if (existingInvoiceItem.getEndDate() != null) {
+            Preconditions.checkState(existingInvoiceItem.getEndDate().equals(inputInvoiceItem.getEndDate()), String.format("Unexpected endDate '%s' for invoice item '%s'",
+                                                                                                                           inputInvoiceItem.getEndDate(), existingInvoiceItem.getId()));
+        }
+
+        Preconditions.checkState(existingInvoiceItem.getCurrency() == inputInvoiceItem.getCurrency(), String.format("Unexpected currency '%s' for invoice item '%s'",
+                                                                                                                    inputInvoiceItem.getCurrency(), existingInvoiceItem.getId()));
+        Preconditions.checkState(existingInvoiceItem.getType() == inputInvoiceItem.getType(), String.format("Unexpected item type '%s' for invoice item '%s'",
+                                                                                                            inputInvoiceItem.getType(), existingInvoiceItem.getId()));
+    }
+
 }

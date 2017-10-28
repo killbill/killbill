@@ -35,12 +35,10 @@ import javax.inject.Inject;
 
 import org.joda.time.DateTime;
 import org.killbill.billing.ErrorCode;
-import org.killbill.billing.ObjectType;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.catalog.api.Catalog;
 import org.killbill.billing.catalog.api.CatalogApiException;
-import org.killbill.billing.catalog.api.CatalogInternalApi;
 import org.killbill.billing.catalog.api.Plan;
 import org.killbill.billing.catalog.api.ProductCategory;
 import org.killbill.billing.entitlement.api.Entitlement.EntitlementState;
@@ -140,17 +138,12 @@ public class DefaultSubscriptionDao extends EntityDaoBase<SubscriptionBundleMode
     }
 
     @Override
-    public List<SubscriptionBaseBundle> getSubscriptionBundlesForAccountAndKey(final UUID accountId, final String bundleKey, final InternalTenantContext context) {
-        return transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<List<SubscriptionBaseBundle>>() {
+    public SubscriptionBaseBundle getSubscriptionBundlesForAccountAndKey(final UUID accountId, final String bundleKey, final InternalTenantContext context) {
+        return transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<SubscriptionBaseBundle>() {
             @Override
-            public List<SubscriptionBaseBundle> inTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory) throws Exception {
-                final List<SubscriptionBundleModelDao> models = entitySqlDaoWrapperFactory.become(BundleSqlDao.class).getBundlesFromAccountAndKey(accountId.toString(), bundleKey, context);
-                return new ArrayList<SubscriptionBaseBundle>(Collections2.transform(models, new Function<SubscriptionBundleModelDao, SubscriptionBaseBundle>() {
-                    @Override
-                    public SubscriptionBaseBundle apply(@Nullable final SubscriptionBundleModelDao input) {
-                        return SubscriptionBundleModelDao.toSubscriptionbundle(input);
-                    }
-                }));
+            public SubscriptionBaseBundle inTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory) throws Exception {
+                final SubscriptionBundleModelDao input = entitySqlDaoWrapperFactory.become(BundleSqlDao.class).getBundlesFromAccountAndKey(accountId.toString(), bundleKey, context);
+                return SubscriptionBundleModelDao.toSubscriptionBundle(input);
             }
         });
     }
@@ -165,7 +158,7 @@ public class DefaultSubscriptionDao extends EntityDaoBase<SubscriptionBundleMode
                 return new ArrayList<SubscriptionBaseBundle>(Collections2.transform(models, new Function<SubscriptionBundleModelDao, SubscriptionBaseBundle>() {
                     @Override
                     public SubscriptionBaseBundle apply(@Nullable final SubscriptionBundleModelDao input) {
-                        return SubscriptionBundleModelDao.toSubscriptionbundle(input);
+                        return SubscriptionBundleModelDao.toSubscriptionBundle(input);
                     }
                 }));
             }
@@ -178,21 +171,22 @@ public class DefaultSubscriptionDao extends EntityDaoBase<SubscriptionBundleMode
             @Override
             public SubscriptionBaseBundle inTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory) throws Exception {
                 final SubscriptionBundleModelDao model = entitySqlDaoWrapperFactory.become(BundleSqlDao.class).getById(bundleId.toString(), context);
-                return SubscriptionBundleModelDao.toSubscriptionbundle(model);
+                return SubscriptionBundleModelDao.toSubscriptionBundle(model);
             }
         });
     }
 
     @Override
     public List<SubscriptionBaseBundle> getSubscriptionBundlesForKey(final String bundleKey, final InternalTenantContext context) {
+
         return transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<List<SubscriptionBaseBundle>>() {
             @Override
             public List<SubscriptionBaseBundle> inTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory) throws Exception {
-                final List<SubscriptionBundleModelDao> models = entitySqlDaoWrapperFactory.become(BundleSqlDao.class).getBundlesForKey(bundleKey, context);
+                final List<SubscriptionBundleModelDao> models = entitySqlDaoWrapperFactory.become(BundleSqlDao.class).getBundlesForLikeKey(bundleKey, context);
                 return new ArrayList<SubscriptionBaseBundle>(Collections2.transform(models, new Function<SubscriptionBundleModelDao, SubscriptionBaseBundle>() {
                     @Override
                     public SubscriptionBaseBundle apply(@Nullable final SubscriptionBundleModelDao input) {
-                        return SubscriptionBundleModelDao.toSubscriptionbundle(input);
+                        return SubscriptionBundleModelDao.toSubscriptionBundle(input);
                     }
                 }));
             }
@@ -226,7 +220,7 @@ public class DefaultSubscriptionDao extends EntityDaoBase<SubscriptionBundleMode
 
                 final BundleSqlDao bundleSqlDao = entitySqlDaoWrapperFactory.become(BundleSqlDao.class);
 
-                final List<SubscriptionBundleModelDao> bundles = bundleSqlDao.getBundlesForKey(bundleKey, context);
+                final List<SubscriptionBundleModelDao> bundles = bundleSqlDao.getBundlesForLikeKey(bundleKey, context);
 
                 final Collection<UUID> nonAOSubscriptionIdsForKey = new LinkedList<UUID>();
                 final SubscriptionSqlDao subscriptionSqlDao = entitySqlDaoWrapperFactory.become(SubscriptionSqlDao.class);
@@ -257,7 +251,7 @@ public class DefaultSubscriptionDao extends EntityDaoBase<SubscriptionBundleMode
     }
 
     @Override
-    public SubscriptionBaseBundle createSubscriptionBundle(final DefaultSubscriptionBaseBundle bundle, final Catalog catalog, final InternalCallContext context) throws SubscriptionBaseApiException {
+    public SubscriptionBaseBundle createSubscriptionBundle(final DefaultSubscriptionBaseBundle bundle, final Catalog catalog, final boolean renameCancelledBundleIfExist, final InternalCallContext context) throws SubscriptionBaseApiException {
 
 
         return transactionalSqlDao.execute(SubscriptionBaseApiException.class, new EntitySqlDaoTransactionWrapper<SubscriptionBaseBundle>() {
@@ -273,8 +267,11 @@ public class DefaultSubscriptionDao extends EntityDaoBase<SubscriptionBundleMode
                 final SubscriptionBundleModelDao existingBundleForAccount = Iterables.tryFind(existingBundles, new Predicate<SubscriptionBundleModelDao>() {
                     @Override
                     public boolean apply(final SubscriptionBundleModelDao input) {
-                        return input.getAccountId().equals(bundle.getAccountId());
+                        return input.getAccountId().equals(bundle.getAccountId()) &&
+                               // We look for strict equality ignoring tsf items with keys 'kbtsf-343453:'
+                               bundle.getExternalKey().equals(input.getExternalKey());
                     }
+
                 }).orNull();
 
                 // If Bundle already exists, and there is 0 Subscription associated with this bundle, we reuse
@@ -287,7 +284,7 @@ public class DefaultSubscriptionDao extends EntityDaoBase<SubscriptionBundleMode
                             return input.getBundleId().equals(existingBundleForAccount.getId());
                         }
                     })) {
-                        return SubscriptionBundleModelDao.toSubscriptionbundle(existingBundleForAccount);
+                        return SubscriptionBundleModelDao.toSubscriptionBundle(existingBundleForAccount);
                     }
                 }
                 return null;
@@ -296,12 +293,13 @@ public class DefaultSubscriptionDao extends EntityDaoBase<SubscriptionBundleMode
 
             @Override
             public SubscriptionBaseBundle inTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory) throws Exception {
-                final List<SubscriptionBundleModelDao> existingBundles = entitySqlDaoWrapperFactory.become(BundleSqlDao.class).getBundlesForKey(bundle.getExternalKey(), context);
+                final List<SubscriptionBundleModelDao> existingBundles = entitySqlDaoWrapperFactory.become(BundleSqlDao.class).getBundlesForLikeKey(bundle.getExternalKey(), context);
 
                 final SubscriptionBaseBundle unusedBundle = findExistingUnusedBundleForExternalKeyAndAccount(existingBundles, entitySqlDaoWrapperFactory);
                 if (unusedBundle != null) {
                     return unusedBundle;
                 }
+                final BundleSqlDao bundleSqlDao = entitySqlDaoWrapperFactory.become(BundleSqlDao.class);
 
                 for (SubscriptionBundleModelDao cur : existingBundles) {
                     final List<SubscriptionModelDao> subscriptions = entitySqlDaoWrapperFactory.become(SubscriptionSqlDao.class).getSubscriptionsFromBundleId(cur.getId().toString(), context);
@@ -316,7 +314,13 @@ public class DefaultSubscriptionDao extends EntityDaoBase<SubscriptionBundleMode
                             final SubscriptionBase s = buildSubscription(SubscriptionModelDao.toSubscription(f, cur.getExternalKey()), catalog, context);
                             if (s.getState() != EntitlementState.CANCELLED) {
                                 throw new SubscriptionBaseApiException(ErrorCode.SUB_CREATE_ACTIVE_BUNDLE_KEY_EXISTS, bundle.getExternalKey());
-                            }
+                            } else if (renameCancelledBundleIfExist) {
+                                // Note that if bundle belongs to a different account, context is not the context for this target account,
+                                // but the underlying sql operation does not use the account info
+                                bundleSqlDao.renameBundleExternalKey(bundle.getExternalKey(), "cncl", context);
+                            } /* else {
+                                Code will throw SQLIntegrityConstraintViolationException because of unique constraint on externalKey; might be worth having an ErrorCode just for that
+                            } */
                         } catch (CatalogApiException e) {
                             throw new SubscriptionBaseApiException(e);
                         }
@@ -328,9 +332,8 @@ public class DefaultSubscriptionDao extends EntityDaoBase<SubscriptionBundleMode
                 if (!existingBundles.isEmpty()) {
                     model.setOriginalCreatedDate(existingBundles.get(0).getCreatedDate());
                 }
-                final BundleSqlDao bundleSqlDao = entitySqlDaoWrapperFactory.become(BundleSqlDao.class);
                 final SubscriptionBundleModelDao result = createAndRefresh(bundleSqlDao, model, context);
-                return SubscriptionBundleModelDao.toSubscriptionbundle(result);
+                return SubscriptionBundleModelDao.toSubscriptionBundle(result);
             }
         });
     }
@@ -1043,13 +1046,18 @@ public class DefaultSubscriptionDao extends EntityDaoBase<SubscriptionBundleMode
         transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<Void>() {
             @Override
             public Void inTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory) throws Exception {
-                final SubscriptionEventSqlDao transactional = entitySqlDaoWrapperFactory.become(SubscriptionEventSqlDao.class);
 
                 // Cancel the subscriptions for the old bundle
                 for (final TransferCancelData cancel : transferCancelData) {
                     cancelSubscriptionFromTransaction(cancel.getSubscription(), cancel.getCancelEvent(), entitySqlDaoWrapperFactory, catalog, fromContext, 0);
                 }
 
+
+                // Rename externalKey from source bundle
+                final BundleSqlDao bundleSqlDao = entitySqlDaoWrapperFactory.become(BundleSqlDao.class);
+                bundleSqlDao.renameBundleExternalKey(bundleTransferData.getData().getExternalKey(), "tsf", fromContext);
+
+                final SubscriptionEventSqlDao transactional = entitySqlDaoWrapperFactory.become(SubscriptionEventSqlDao.class);
                 transferBundleDataFromTransaction(bundleTransferData, transactional, entitySqlDaoWrapperFactory, toContext);
                 return null;
             }
@@ -1181,8 +1189,8 @@ public class DefaultSubscriptionDao extends EntityDaoBase<SubscriptionBundleMode
 
         final DefaultSubscriptionBaseBundle bundleData = bundleTransferData.getData();
 
-        final List<SubscriptionBundleModelDao> existingBundleModels = transBundleDao.getBundlesFromAccountAndKey(bundleData.getAccountId().toString(), bundleData.getExternalKey(), context);
-        if (!existingBundleModels.isEmpty()) {
+        final SubscriptionBundleModelDao existingBundleForAccount = transBundleDao.getBundlesFromAccountAndKey(bundleData.getAccountId().toString(), bundleData.getExternalKey(), context);
+        if (existingBundleForAccount != null) {
             log.warn("Bundle already exists for accountId='{}', bundleExternalKey='{}'", bundleData.getAccountId(), bundleData.getExternalKey());
             return;
         }

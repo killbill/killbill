@@ -32,6 +32,7 @@ import com.codahale.metrics.Metric;
 import com.codahale.metrics.MetricFilter;
 import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.jcache.JCacheGaugeSet;
+import com.google.common.base.Preconditions;
 
 abstract class CacheProviderBase {
 
@@ -61,6 +62,7 @@ abstract class CacheProviderBase {
         final MutableConfiguration<K, V> configuration = new MutableConfiguration<K, V>().setTypes(keyType, valueType)
                                                                                          .setStoreByValue(false); // Store by reference to avoid copying large objects (e.g. catalog)
         final Cache<K, V> cache = cacheManager.createCache(cacheName, configuration);
+        Preconditions.checkState(!cache.isClosed(), "Cache '%s' should not be closed", cacheName);
 
         // Re-create the metrics to support dynamically created caches (e.g. for Shiro)
         metricRegistry.removeMatching(new MetricFilter() {

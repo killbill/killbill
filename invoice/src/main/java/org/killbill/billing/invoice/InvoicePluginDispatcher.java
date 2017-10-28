@@ -21,10 +21,12 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Set;
 
 import javax.inject.Inject;
 
 import org.killbill.billing.ErrorCode;
+import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.invoice.api.Invoice;
 import org.killbill.billing.invoice.api.InvoiceApiException;
 import org.killbill.billing.invoice.api.InvoiceItem;
@@ -34,36 +36,42 @@ import org.killbill.billing.invoice.plugin.api.InvoicePluginApi;
 import org.killbill.billing.osgi.api.OSGIServiceRegistration;
 import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.util.callcontext.CallContext;
+import org.killbill.billing.util.config.definition.InvoiceConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 
 public class InvoicePluginDispatcher {
 
     private static final Logger log = LoggerFactory.getLogger(InvoicePluginDispatcher.class);
 
-    private static final Collection<InvoiceItemType> ALLOWED_INVOICE_ITEM_TYPES = ImmutableList.<InvoiceItemType>of(InvoiceItemType.EXTERNAL_CHARGE,
+    public static final Collection<InvoiceItemType> ALLOWED_INVOICE_ITEM_TYPES = ImmutableList.<InvoiceItemType>of(InvoiceItemType.EXTERNAL_CHARGE,
                                                                                                                     InvoiceItemType.ITEM_ADJ,
                                                                                                                     InvoiceItemType.CREDIT_ADJ,
                                                                                                                     InvoiceItemType.TAX);
 
     private final OSGIServiceRegistration<InvoicePluginApi> pluginRegistry;
+    private final InvoiceConfig invoiceConfig;
+
 
     @Inject
-    public InvoicePluginDispatcher(final OSGIServiceRegistration<InvoicePluginApi> pluginRegistry) {
+    public InvoicePluginDispatcher(final OSGIServiceRegistration<InvoicePluginApi> pluginRegistry,
+                                   final InvoiceConfig invoiceConfig) {
         this.pluginRegistry = pluginRegistry;
+        this.invoiceConfig = invoiceConfig;
     }
 
     //
     // If we have multiple plugins there is a question of plugin ordering and also a 'product' questions to decide whether
     // subsequent plugins should have access to items added by previous plugins
     //
-    public List<InvoiceItem> getAdditionalInvoiceItems(final Invoice originalInvoice, final boolean isDryRun, final CallContext callContext) throws InvoiceApiException {
+    public List<InvoiceItem> getAdditionalInvoiceItems(final Invoice originalInvoice, final boolean isDryRun, final CallContext callContext, final InternalTenantContext tenantContext) throws InvoiceApiException {
         // We clone the original invoice so plugins don't remove/add items
         final Invoice clonedInvoice = (Invoice) ((DefaultInvoice) originalInvoice).clone();
         final List<InvoiceItem> additionalInvoiceItems = new LinkedList<InvoiceItem>();
-        final List<InvoicePluginApi> invoicePlugins = getInvoicePlugins();
+        final List<InvoicePluginApi> invoicePlugins = getInvoicePlugins(tenantContext);
         for (final InvoicePluginApi invoicePlugin : invoicePlugins) {
             final List<InvoiceItem> items = invoicePlugin.getAdditionalInvoiceItems(clonedInvoice, isDryRun, ImmutableList.<PluginProperty>of(), callContext);
             if (items != null) {
@@ -83,11 +91,34 @@ public class InvoicePluginDispatcher {
         }
     }
 
-    private List<InvoicePluginApi> getInvoicePlugins() {
+    private List<InvoicePluginApi> getInvoicePlugins(final InternalTenantContext tenantContext) {
+
+
+        final Collection<String> resultingPluginList = getResultingPluginNameList(tenantContext);
+
         final List<InvoicePluginApi> invoicePlugins = new ArrayList<InvoicePluginApi>();
-        for (final String name : pluginRegistry.getAllServices()) {
-            invoicePlugins.add(pluginRegistry.getServiceForName(name));
+        for (final String name : resultingPluginList) {
+            final InvoicePluginApi serviceForName = pluginRegistry.getServiceForName(name);
+            invoicePlugins.add(serviceForName);
         }
         return invoicePlugins;
+    }
+
+    @VisibleForTesting
+    final Collection<String> getResultingPluginNameList(final InternalTenantContext tenantContext) {
+        final List<String> configuredPlugins = invoiceConfig.getInvoicePluginNames(tenantContext);
+        final Set<String> registeredPlugins = pluginRegistry.getAllServices();
+        // No configuration, we return undeterministic list of registered plugins
+        if (configuredPlugins == null || configuredPlugins.isEmpty()) {
+            return registeredPlugins;
+        } else {
+            final List<String> result  =  new ArrayList<String>(configuredPlugins.size());
+            for (final String name : configuredPlugins) {
+                if (pluginRegistry.getServiceForName(name) != null) {
+                    result.add(name);
+                }
+            }
+            return result;
+        }
     }
 }

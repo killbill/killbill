@@ -71,7 +71,7 @@ public class UsageInvoiceItemGenerator extends InvoiceItemGenerator {
     public List<InvoiceItem> generateItems(final ImmutableAccountData account,
                                            final UUID invoiceId,
                                            final BillingEventSet eventSet,
-                                           @Nullable final List<Invoice> existingInvoices,
+                                           @Nullable final Iterable<Invoice> existingInvoices,
                                            final LocalDate targetDate,
                                            final Currency targetCurrency,
                                            final Map<UUID, SubscriptionFutureNotificationDates> perSubscriptionFutureNotificationDates,
@@ -170,8 +170,8 @@ public class UsageInvoiceItemGenerator extends InvoiceItemGenerator {
         }
     }
 
-    private Map<UUID, List<InvoiceItem>> extractPerSubscriptionExistingInArrearUsageItems(final Map<String, Usage> knownUsage, @Nullable final List<Invoice> existingInvoices) {
-        if (existingInvoices == null || existingInvoices.isEmpty()) {
+    private Map<UUID, List<InvoiceItem>> extractPerSubscriptionExistingInArrearUsageItems(final Map<String, Usage> knownUsage, @Nullable final Iterable<Invoice> existingInvoices) {
+        if (existingInvoices == null || Iterables.isEmpty(existingInvoices)) {
             return ImmutableMap.of();
         }
 

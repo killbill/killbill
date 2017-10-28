@@ -71,16 +71,6 @@ getParentDraftInvoice() ::= <<
    <defaultOrderBy("")>
 >>
 
-getEarliestDraftInvoiceByAccount() ::= <<
-  SELECT <allTableFields("")>
-    FROM <tableName()>
-   WHERE <accountRecordIdField("")> = :accountRecordId
-     AND status = 'DRAFT'
-   <AND_CHECK_TENANT("")>
-   <defaultOrderBy("")>
-   limit 1
-;
->>
 
 getByIds(ids) ::= <<
 select

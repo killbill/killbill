@@ -17,6 +17,7 @@
 package org.killbill.billing.jaxrs.json;
 
 import java.util.List;
+import java.util.Set;
 
 import javax.annotation.Nullable;
 
@@ -29,6 +30,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Function;
 import com.google.common.collect.Collections2;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import io.swagger.annotations.ApiModelProperty;
 
 public class TagDefinitionJson extends JsonBase {
@@ -40,14 +42,14 @@ public class TagDefinitionJson extends JsonBase {
     private final String name;
     @ApiModelProperty(required = true)
     private final String description;
-    private final List<String> applicableObjectTypes;
+    private final Set<String> applicableObjectTypes;
 
     @JsonCreator
     public TagDefinitionJson(@JsonProperty("id") final String id,
                              @JsonProperty("isControlTag") final Boolean isControlTag,
                              @JsonProperty("name") final String name,
                              @JsonProperty("description") @Nullable final String description,
-                             @JsonProperty("applicableObjectTypes") @Nullable final List<String> applicableObjectTypes,
+                             @JsonProperty("applicableObjectTypes") @Nullable final Set<String> applicableObjectTypes,
                              @JsonProperty("auditLogs") @Nullable final List<AuditLogJson> auditLogs) {
         super(auditLogs);
         this.id = id;
@@ -62,7 +64,7 @@ public class TagDefinitionJson extends JsonBase {
              tagDefinition.isControlTag(),
              tagDefinition.getName(),
              tagDefinition.getDescription(),
-             ImmutableList.<String>copyOf(Collections2.transform(tagDefinition.getApplicableObjectTypes(), new Function<ObjectType, String>() {
+             ImmutableSet.<String>copyOf(Collections2.transform(tagDefinition.getApplicableObjectTypes(), new Function<ObjectType, String>() {
                  @Override
                  public String apply(@Nullable final ObjectType input) {
                      if (input == null) {
@@ -92,7 +94,7 @@ public class TagDefinitionJson extends JsonBase {
         return description;
     }
 
-    public List<String> getApplicableObjectTypes() {
+    public Set<String> getApplicableObjectTypes() {
         return applicableObjectTypes;
     }
 
@@ -155,5 +157,14 @@ public class TagDefinitionJson extends JsonBase {
         result = 31 * result + (description != null ? description.hashCode() : 0);
         result = 31 * result + (applicableObjectTypes != null ? applicableObjectTypes.hashCode() : 0);
         return result;
+    }
+
+    public static Set<ObjectType> toObjectType(final Set<String> applicableObjectTypes) {
+        return ImmutableSet.copyOf(Collections2.transform(applicableObjectTypes, new Function<String, ObjectType>() {
+            @Override
+            public ObjectType apply(final String input) {
+                return ObjectType.valueOf(input);
+            }
+        }));
     }
 }

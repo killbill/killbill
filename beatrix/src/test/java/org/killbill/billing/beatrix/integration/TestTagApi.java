@@ -35,6 +35,9 @@ import org.killbill.billing.util.tag.ControlTagType;
 import org.killbill.billing.util.tag.Tag;
 import org.killbill.billing.util.tag.TagDefinition;
 
+import com.google.common.collect.ImmutableSet;
+
+import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
 
 public class TestTagApi extends TestIntegrationBase {
@@ -95,8 +98,13 @@ public class TestTagApi extends TestIntegrationBase {
         // Create a new tag definition
         //
         busHandler.pushExpectedEvents(NextEvent.TAG_DEFINITION);
-        final TagDefinition tagDefinition = tagUserApi.createTagDefinition("foo", "foo desc", callContext);
+        final TagDefinition tagDefinition = tagUserApi.createTagDefinition("foo", "foo desc", ImmutableSet.<ObjectType>of(ObjectType.ACCOUNT, ObjectType.INVOICE), callContext);
         assertListenerStatus();
+
+        final TagDefinition tagDefinition2 = tagUserApi.getTagDefinition(tagDefinition.getId(), callContext);
+        assertEquals(tagDefinition2.getApplicableObjectTypes().size(), 2);
+        assertEquals(tagDefinition2.getApplicableObjectTypes().get(0), ObjectType.ACCOUNT);
+        assertEquals(tagDefinition2.getApplicableObjectTypes().get(1), ObjectType.INVOICE);
 
         //
         // Add 2 Tags on the invoice (1 invoice tag and 1 user tag)

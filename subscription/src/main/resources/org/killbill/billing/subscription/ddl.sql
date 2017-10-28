@@ -65,7 +65,7 @@ CREATE TABLE bundles (
     PRIMARY KEY(record_id)
 ) /*! CHARACTER SET utf8 COLLATE utf8_bin */;
 CREATE UNIQUE INDEX bundles_id ON bundles(id);
-CREATE INDEX bundles_key ON bundles(external_key);
+CREATE UNIQUE INDEX bundles_external_key ON bundles(external_key, tenant_record_id);
 CREATE INDEX bundles_account ON bundles(account_id);
 CREATE INDEX bundles_tenant_account_record_id ON bundles(tenant_record_id, account_record_id);
 

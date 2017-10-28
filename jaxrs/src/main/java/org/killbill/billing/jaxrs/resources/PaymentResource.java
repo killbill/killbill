@@ -17,7 +17,6 @@
 
 package org.killbill.billing.jaxrs.resources;
 
-import java.math.BigDecimal;
 import java.net.URI;
 import java.util.HashMap;
 import java.util.List;
@@ -59,9 +58,7 @@ import org.killbill.billing.payment.api.Payment;
 import org.killbill.billing.payment.api.PaymentApi;
 import org.killbill.billing.payment.api.PaymentApiException;
 import org.killbill.billing.payment.api.PaymentOptions;
-import org.killbill.billing.payment.api.PaymentTransaction;
 import org.killbill.billing.payment.api.PluginProperty;
-import org.killbill.billing.payment.api.TransactionStatus;
 import org.killbill.billing.payment.api.TransactionType;
 import org.killbill.billing.util.api.AuditUserApi;
 import org.killbill.billing.util.api.CustomFieldApiException;
@@ -263,8 +260,10 @@ public class PaymentResource extends ComboPaymentResource {
                                         @HeaderParam(HDR_COMMENT) final String comment,
                                         @javax.ws.rs.core.Context final UriInfo uriInfo,
                                         @javax.ws.rs.core.Context final HttpServletRequest request) throws PaymentApiException, AccountApiException {
-        return completeTransactionInternal(json, paymentIdStr, paymentControlPluginNames, pluginPropertiesString, createdBy, reason, comment, uriInfo, request);
+        return completeTransactionInternalWithoutPayment(json, paymentIdStr, paymentControlPluginNames, pluginPropertiesString, createdBy, reason, comment, uriInfo, request);
     }
+
+
 
     @TimedResource(name = "completeTransaction")
     @PUT
@@ -286,7 +285,7 @@ public class PaymentResource extends ComboPaymentResource {
                                                      @HeaderParam(HDR_COMMENT) final String comment,
                                                      @javax.ws.rs.core.Context final UriInfo uriInfo,
                                                      @javax.ws.rs.core.Context final HttpServletRequest request) throws PaymentApiException, AccountApiException {
-        return completeTransactionInternal(json, null, paymentControlPluginNames, pluginPropertiesString, createdBy, reason, comment, uriInfo, request);
+        return completeTransactionInternalWithoutPayment(json, null, paymentControlPluginNames, pluginPropertiesString, createdBy, reason, comment, uriInfo, request);
     }
 
 
@@ -294,71 +293,6 @@ public class PaymentResource extends ComboPaymentResource {
 
 
 
-    private Response completeTransactionInternal(final PaymentTransactionJson json,
-                                                 @Nullable final String paymentIdStr,
-                                                 final List<String> paymentControlPluginNames,
-                                                 final Iterable<String> pluginPropertiesString,
-                                                 final String createdBy,
-                                                 final String reason,
-                                                 final String comment,
-                                                 final UriInfo uriInfo,
-                                                 final HttpServletRequest request) throws PaymentApiException, AccountApiException {
-
-        final Iterable<PluginProperty> pluginPropertiesFromBody = extractPluginProperties(json.getProperties());
-
-        final Iterable<PluginProperty> pluginPropertiesFromQuery = extractPluginProperties(pluginPropertiesString);
-
-        final Iterable<PluginProperty> pluginProperties = Iterables.concat(pluginPropertiesFromQuery, pluginPropertiesFromBody);
-
-        final CallContext callContext = context.createCallContextNoAccountId(createdBy, reason, comment, request);
-        final Payment initialPayment = getPaymentByIdOrKey(paymentIdStr, json == null ? null : json.getPaymentExternalKey(), pluginProperties, callContext);
-
-        final Account account = accountUserApi.getAccountById(initialPayment.getAccountId(), callContext);
-        final BigDecimal amount = json == null ? null : json.getAmount();
-        final Currency currency = json == null || json.getCurrency() == null ? null : Currency.valueOf(json.getCurrency());
-
-        final PaymentTransaction pendingOrSuccessTransaction = lookupPendingOrSuccessTransaction(initialPayment,
-                                                                                                 json != null ? json.getTransactionId() : null,
-                                                                                                 json != null ? json.getTransactionExternalKey() : null,
-                                                                                                 json != null ? json.getTransactionType() : null);
-        // If transaction was already completed, return early (See #626)
-        if (pendingOrSuccessTransaction.getTransactionStatus() == TransactionStatus.SUCCESS) {
-            return uriBuilder.buildResponse(uriInfo, PaymentResource.class, "getPayment", pendingOrSuccessTransaction.getPaymentId(), request);
-        }
-
-
-        final PaymentTransaction pendingTransaction = pendingOrSuccessTransaction;
-        final PaymentOptions paymentOptions = createControlPluginApiPaymentOptions(paymentControlPluginNames);
-        final Payment result;
-        switch (pendingTransaction.getTransactionType()) {
-            case AUTHORIZE:
-                result = paymentApi.createAuthorizationWithPaymentControl(account, initialPayment.getPaymentMethodId(), initialPayment.getId(), amount, currency,
-                                                                 initialPayment.getExternalKey(), pendingTransaction.getExternalKey(),
-                                                                 pluginProperties, paymentOptions, callContext);
-                break;
-            case CAPTURE:
-                result = paymentApi.createCaptureWithPaymentControl(account, initialPayment.getId(), amount, currency, pendingTransaction.getExternalKey(),
-                                                           pluginProperties, paymentOptions, callContext);
-                break;
-            case PURCHASE:
-                result = paymentApi.createPurchaseWithPaymentControl(account, initialPayment.getPaymentMethodId(), initialPayment.getId(), amount, currency,
-                                                            initialPayment.getExternalKey(), pendingTransaction.getExternalKey(),
-                                                            pluginProperties, paymentOptions, callContext);
-                break;
-            case CREDIT:
-                result = paymentApi.createCreditWithPaymentControl(account, initialPayment.getPaymentMethodId(), initialPayment.getId(), amount, currency,
-                                                          initialPayment.getExternalKey(), pendingTransaction.getExternalKey(),
-                                                          pluginProperties, paymentOptions, callContext);
-                break;
-            case REFUND:
-                result = paymentApi.createRefundWithPaymentControl(account, initialPayment.getId(), amount, currency,
-                                                          pendingTransaction.getExternalKey(), pluginProperties, paymentOptions, callContext);
-                break;
-            default:
-                return Response.status(Status.PRECONDITION_FAILED).entity("TransactionType " + pendingTransaction.getTransactionType() + " cannot be completed").build();
-        }
-        return createPaymentResponse(uriInfo, result, pendingTransaction.getTransactionType(), pendingTransaction.getExternalKey(), request);
-    }
 
     @TimedResource(name = "captureAuthorization")
     @POST
@@ -950,4 +884,27 @@ public class PaymentResource extends ComboPaymentResource {
     protected ObjectType getObjectType() {
         return ObjectType.PAYMENT;
     }
+
+    private Response completeTransactionInternalWithoutPayment(final PaymentTransactionJson json,
+                                                               @Nullable final String paymentIdStr,
+                                                               final List<String> paymentControlPluginNames,
+                                                               final Iterable<String> pluginPropertiesString,
+                                                               final String createdBy,
+                                                               final String reason,
+                                                               final String comment,
+                                                               final UriInfo uriInfo,
+                                                               final HttpServletRequest request) throws PaymentApiException, AccountApiException {
+
+        final Iterable<PluginProperty> pluginPropertiesFromBody = extractPluginProperties(json.getProperties());
+
+        final Iterable<PluginProperty> pluginPropertiesFromQuery = extractPluginProperties(pluginPropertiesString);
+
+        final Iterable<PluginProperty> pluginProperties = Iterables.concat(pluginPropertiesFromQuery, pluginPropertiesFromBody);
+
+        final CallContext callContextNoAccountId = context.createCallContextNoAccountId(createdBy, reason, comment, request);
+        final Payment initialPayment = getPaymentByIdOrKey(paymentIdStr, json == null ? null : json.getPaymentExternalKey(), pluginProperties, callContextNoAccountId);
+
+        return completeTransactionInternal(json, initialPayment, paymentControlPluginNames, pluginProperties, callContextNoAccountId, createdBy, reason, comment, uriInfo, request);
+    }
+
 }

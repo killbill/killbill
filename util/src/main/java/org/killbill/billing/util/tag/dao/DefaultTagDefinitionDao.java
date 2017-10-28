@@ -22,6 +22,7 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 import org.killbill.billing.BillingExceptionBase;
@@ -58,6 +59,7 @@ public class DefaultTagDefinitionDao extends EntityDaoBase<TagDefinitionModelDao
 
     private final TagEventBuilder tagEventBuilder;
     private final PersistentBus bus;
+
 
     @Inject
     public DefaultTagDefinitionDao(final IDBI dbi, final TagEventBuilder tagEventBuilder, final PersistentBus bus, final Clock clock,
@@ -134,7 +136,7 @@ public class DefaultTagDefinitionDao extends EntityDaoBase<TagDefinitionModelDao
     }
 
     @Override
-    public TagDefinitionModelDao create(final String definitionName, final String description,
+    public TagDefinitionModelDao create(final String definitionName, final String description, final String tagDefinitionObjectTypes,
                                         final InternalCallContext context) throws TagDefinitionApiException {
         // Make sure a invoice tag with this name don't already exist
         if (TagModelDaoHelper.isControlTag(definitionName)) {
@@ -154,7 +156,7 @@ public class DefaultTagDefinitionDao extends EntityDaoBase<TagDefinitionModelDao
                     }
 
                     // Create it
-                    final TagDefinitionModelDao tagDefinition = new TagDefinitionModelDao(context.getCreatedDate(), definitionName, description);
+                    final TagDefinitionModelDao tagDefinition = new TagDefinitionModelDao(context.getCreatedDate(), definitionName, description, tagDefinitionObjectTypes);
                     createAndRefresh(tagDefinitionSqlDao, tagDefinition, context);
 
                     // Post an event to the bus

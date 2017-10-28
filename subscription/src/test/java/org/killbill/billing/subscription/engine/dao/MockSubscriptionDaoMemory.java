@@ -163,18 +163,18 @@ public class MockSubscriptionDaoMemory extends MockEntityDaoBase<SubscriptionBun
     }
 
     @Override
-    public List<SubscriptionBaseBundle> getSubscriptionBundlesForAccountAndKey(final UUID accountId, final String bundleKey, final InternalTenantContext context) {
+    public SubscriptionBaseBundle getSubscriptionBundlesForAccountAndKey(final UUID accountId, final String bundleKey, final InternalTenantContext context) {
         final List<SubscriptionBaseBundle> results = new ArrayList<SubscriptionBaseBundle>();
         for (final SubscriptionBaseBundle cur : bundles) {
             if (cur.getExternalKey().equals(bundleKey) && cur.getAccountId().equals(accountId)) {
-                results.add(cur);
+                return cur;
             }
         }
-        return results;
+        return null;
     }
 
     @Override
-    public SubscriptionBaseBundle createSubscriptionBundle(final DefaultSubscriptionBaseBundle bundle, final Catalog catalog, final InternalCallContext context) {
+    public SubscriptionBaseBundle createSubscriptionBundle(final DefaultSubscriptionBaseBundle bundle, final Catalog catalog, final boolean renameCancelledBundleIfExist, final InternalCallContext context) {
         bundles.add(bundle);
         mockNonEntityDao.addTenantRecordIdMapping(bundle.getId(), context);
         return getSubscriptionBundleFromId(bundle.getId(), context);

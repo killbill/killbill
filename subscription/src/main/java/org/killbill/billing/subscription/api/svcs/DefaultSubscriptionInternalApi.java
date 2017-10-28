@@ -46,7 +46,6 @@ import org.killbill.billing.catalog.api.PlanPhase;
 import org.killbill.billing.catalog.api.PlanPhasePriceOverride;
 import org.killbill.billing.catalog.api.PlanPhasePriceOverridesWithCallContext;
 import org.killbill.billing.catalog.api.PlanPhaseSpecifier;
-import org.killbill.billing.catalog.api.PlanSpecifier;
 import org.killbill.billing.catalog.api.ProductCategory;
 import org.killbill.billing.entitlement.api.BaseEntitlementWithAddOnsSpecifier;
 import org.killbill.billing.entitlement.api.Entitlement.EntitlementState;
@@ -285,7 +284,7 @@ public class DefaultSubscriptionInternalApi extends SubscriptionApiBase implemen
     }
 
     @Override
-    public List<SubscriptionBaseWithAddOns> createBaseSubscriptionsWithAddOns(final UUID accountId, final Iterable<BaseEntitlementWithAddOnsSpecifier> baseEntitlementWithAddOnsSpecifier, final InternalCallContext context) throws SubscriptionBaseApiException {
+    public List<SubscriptionBaseWithAddOns> createBaseSubscriptionsWithAddOns(final UUID accountId, final Iterable<BaseEntitlementWithAddOnsSpecifier> baseEntitlementWithAddOnsSpecifier, final boolean renameCancelledBundleIfExist, final InternalCallContext context) throws SubscriptionBaseApiException {
         try {
             final Catalog catalog = catalogInternalApi.getFullCatalog(true, true, context);
             final CallContext callContext = internalCallContextFactory.createCallContext(context);
@@ -301,7 +300,7 @@ public class DefaultSubscriptionInternalApi extends SubscriptionApiBase implemen
 
                 final SubscriptionBaseBundle bundle;
                 if (isBaseSpecifierExists) {
-                    bundle = createBundleForAccount(accountId, entitlementWithAddOnsSpecifier.getExternalKey(), context);
+                    bundle = createBundleForAccount(accountId, entitlementWithAddOnsSpecifier.getExternalKey(), renameCancelledBundleIfExist, context);
                 } else {
                     final List<SubscriptionBaseBundle> existingBundles = dao.getSubscriptionBundlesForKey(entitlementWithAddOnsSpecifier.getExternalKey(), context);
                     final SubscriptionBaseBundle tmp = getActiveBundleForKeyNotException(existingBundles, dao, clock, catalog, context);
@@ -382,7 +381,7 @@ public class DefaultSubscriptionInternalApi extends SubscriptionApiBase implemen
     }
 
     @Override
-    public SubscriptionBaseBundle createBundleForAccount(final UUID accountId, final String bundleKey, final InternalCallContext context) throws SubscriptionBaseApiException {
+    public SubscriptionBaseBundle createBundleForAccount(final UUID accountId, final String bundleKey, final boolean renameCancelledBundleIfExist, final InternalCallContext context) throws SubscriptionBaseApiException {
 
         final DateTime now = clock.getUTCNow();
         final DefaultSubscriptionBaseBundle bundle = new DefaultSubscriptionBaseBundle(bundleKey, accountId, now, now, now, now);
@@ -391,7 +390,7 @@ public class DefaultSubscriptionInternalApi extends SubscriptionApiBase implemen
         }
         try {
             final Catalog catalog = catalogInternalApi.getFullCatalog(true, true, context);
-            return dao.createSubscriptionBundle(bundle, catalog, context);
+            return dao.createSubscriptionBundle(bundle, catalog, renameCancelledBundleIfExist, context);
         } catch (final CatalogApiException e) {
             throw new  SubscriptionBaseApiException(e);
         }
@@ -399,7 +398,8 @@ public class DefaultSubscriptionInternalApi extends SubscriptionApiBase implemen
 
     @Override
     public List<SubscriptionBaseBundle> getBundlesForAccountAndKey(final UUID accountId, final String bundleKey, final InternalTenantContext context) throws SubscriptionBaseApiException {
-        return dao.getSubscriptionBundlesForAccountAndKey(accountId, bundleKey, context);
+        final SubscriptionBaseBundle subscriptionBundlesForAccountAndKey = dao.getSubscriptionBundlesForAccountAndKey(accountId, bundleKey, context);
+        return subscriptionBundlesForAccountAndKey != null ? ImmutableList.of(subscriptionBundlesForAccountAndKey) : ImmutableList.<SubscriptionBaseBundle>of();
     }
 
     @Override
@@ -424,7 +424,7 @@ public class DefaultSubscriptionInternalApi extends SubscriptionApiBase implemen
                                               new Function<SubscriptionBundleModelDao, SubscriptionBaseBundle>() {
                                                   @Override
                                                   public SubscriptionBaseBundle apply(final SubscriptionBundleModelDao bundleModelDao) {
-                                                      return SubscriptionBundleModelDao.toSubscriptionbundle(bundleModelDao);
+                                                      return SubscriptionBundleModelDao.toSubscriptionBundle(bundleModelDao);
                                                   }
                                               }
                                              );
@@ -442,7 +442,7 @@ public class DefaultSubscriptionInternalApi extends SubscriptionApiBase implemen
                                               new Function<SubscriptionBundleModelDao, SubscriptionBaseBundle>() {
                                                   @Override
                                                   public SubscriptionBaseBundle apply(final SubscriptionBundleModelDao bundleModelDao) {
-                                                      return SubscriptionBundleModelDao.toSubscriptionbundle(bundleModelDao);
+                                                      return SubscriptionBundleModelDao.toSubscriptionBundle(bundleModelDao);
                                                   }
                                               }
                                              );

@@ -193,11 +193,12 @@ public class DefaultSubscriptionBaseTransferApi extends SubscriptionApiBase impl
                 throw new SubscriptionBaseTransferApiException(ErrorCode.SUB_TRANSFER_INVALID_EFF_DATE, effectiveTransferDate);
             }
 
-            final List<SubscriptionBaseBundle> bundlesForAccountAndKey = dao.getSubscriptionBundlesForAccountAndKey(sourceAccountId, bundleKey, fromInternalCallContext);
-            final SubscriptionBaseBundle bundle = DefaultSubscriptionInternalApi.getActiveBundleForKeyNotException(bundlesForAccountAndKey, dao, clock, catalog, fromInternalCallContext);
+            final SubscriptionBaseBundle bundleForAccountAndKey = dao.getSubscriptionBundlesForAccountAndKey(sourceAccountId, bundleKey, fromInternalCallContext);
+            final SubscriptionBaseBundle bundle = DefaultSubscriptionInternalApi.getActiveBundleForKeyNotException(ImmutableList.of(bundleForAccountAndKey), dao, clock, catalog, fromInternalCallContext);
             if (bundle == null) {
                 throw new SubscriptionBaseTransferApiException(ErrorCode.SUB_CREATE_NO_BUNDLE, bundleKey);
             }
+
 
             // Get the bundle timeline for the old account
             final BundleBaseTimeline bundleBaseTimeline = timelineApi.getBundleTimeline(bundle, context);
@@ -260,7 +261,7 @@ public class DefaultSubscriptionBaseTransferApi extends SubscriptionApiBase impl
                 final SubscriptionTransferData curData = new SubscriptionTransferData(defaultSubscriptionBase, events, null);
                 subscriptionTransferDataList.add(curData);
             }
-            BundleTransferData bundleTransferData = new BundleTransferData(subscriptionBundleData, subscriptionTransferDataList);
+            final BundleTransferData bundleTransferData = new BundleTransferData(subscriptionBundleData, subscriptionTransferDataList);
 
             // Atomically cancelWithRequestedDate all subscription on old account and create new bundle, subscriptions, events for new account
             dao.transfer(sourceAccountId, destAccountId, bundleTransferData, transferCancelDataList, catalog, fromInternalCallContext, toInternalCallContext);

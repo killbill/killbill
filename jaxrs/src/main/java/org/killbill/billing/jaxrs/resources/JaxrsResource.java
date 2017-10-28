@@ -143,6 +143,8 @@ public interface JaxrsResource {
     public static final String QUERY_BUNDLE_TRANSFER_CANCEL_IMM = "cancelImmediately";
     public static final String QUERY_BUNDLES_FILTER = "bundlesFilter";
 
+    public static final String QUERY_BUNDLES_RENAME_KEY_IF_EXIST_UNUSED = "renameKeyIfExistsAndUnused";
+
     public static final String QUERY_DELETE_DEFAULT_PM_WITH_AUTO_PAY_OFF = "deleteDefaultPmWithAutoPayOff";
 
     public static final String QUERY_FORCE_DEFAULT_PM_DELETION = "forceDefaultPmDeletion";
@@ -261,6 +263,7 @@ public interface JaxrsResource {
     public static final String PAUSE = "pause";
     public static final String RESUME = "resume";
     public static final String BLOCK = "block";
+    public static final String RENAME_KEY = "renameKey";
 
     public static final String AUTHORIZATION = "authorization";
     public static final String CAPTURE = "capture";

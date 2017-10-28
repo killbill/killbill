@@ -76,7 +76,7 @@ public class TestUserApiError extends SubscriptionTestSuiteNoDB {
 
     @Test(groups = "fast")
     public void testCreateSubscriptionAddOnNotAvailable() throws SubscriptionBaseApiException {
-        final SubscriptionBaseBundle aoBundle = subscriptionInternalApi.createBundleForAccount(bundle.getAccountId(), "myAOBundle", internalCallContext);
+        final SubscriptionBaseBundle aoBundle = subscriptionInternalApi.createBundleForAccount(bundle.getAccountId(), "myAOBundle", true, internalCallContext);
         mockNonEntityDao.addTenantRecordIdMapping(aoBundle.getId(), internalCallContext);
         mockNonEntityDao.addAccountRecordIdMapping(aoBundle.getId(), internalCallContext);
 
@@ -86,7 +86,7 @@ public class TestUserApiError extends SubscriptionTestSuiteNoDB {
 
     @Test(groups = "fast")
     public void testCreateSubscriptionAddOnIncluded() throws SubscriptionBaseApiException {
-        final SubscriptionBaseBundle aoBundle = subscriptionInternalApi.createBundleForAccount(bundle.getAccountId(), "myAOBundle", internalCallContext);
+        final SubscriptionBaseBundle aoBundle = subscriptionInternalApi.createBundleForAccount(bundle.getAccountId(), "myAOBundle", true, internalCallContext);
         mockNonEntityDao.addTenantRecordIdMapping(aoBundle.getId(), internalCallContext);
         mockNonEntityDao.addAccountRecordIdMapping(aoBundle.getId(), internalCallContext);
 

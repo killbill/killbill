@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014-2016 Groupon, Inc
- * Copyright 2014-2016 The Billing Project, LLC
+ * Copyright 2014-2017 Groupon, Inc
+ * Copyright 2014-2017 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -23,6 +23,7 @@ import java.util.UUID;
 
 import javax.inject.Inject;
 
+import org.killbill.billing.api.FlakyInvokedMethodListener;
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.callcontext.MutableInternalCallContext;
 import org.killbill.billing.platform.api.KillbillConfigSource;
@@ -35,13 +36,17 @@ import org.killbill.clock.ClockMock;
 import org.skife.config.ConfigSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.testng.IHookCallBack;
+import org.testng.IHookable;
 import org.testng.ITestResult;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
+import org.testng.annotations.Listeners;
 
 import com.google.common.collect.ImmutableMap;
 
-public class GuicyKillbillTestSuite {
+@Listeners(FlakyInvokedMethodListener.class)
+public class GuicyKillbillTestSuite implements IHookable {
 
     // Use the simple name here to save screen real estate
     protected static final Logger log = LoggerFactory.getLogger(KillbillTestSuite.class.getSimpleName());
@@ -141,6 +146,24 @@ public class GuicyKillbillTestSuite {
         if (!hasFailed && !result.isSuccess()) {
             hasFailed = true;
         }
+    }
+
+    // Note: assertions should not be run in before / after hooks, as the associated test result won't be correctly updated.
+    // Use this wrapper instead.
+    @Override
+    public void run(final IHookCallBack callBack, final ITestResult testResult) {
+        // Make sure we start with a clean state
+        assertListenerStatus();
+
+        // Run the actual test
+        callBack.runTestMethod(testResult);
+
+        // Make sure we finish in a clean state
+        assertListenerStatus();
+    }
+
+    protected void assertListenerStatus() {
+        // No-op
     }
 
     public boolean hasFailed() {

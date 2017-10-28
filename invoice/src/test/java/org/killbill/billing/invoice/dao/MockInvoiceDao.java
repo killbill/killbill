@@ -81,11 +81,6 @@ public class MockInvoiceDao extends MockEntityDaoBase<InvoiceModelDao, Invoice, 
     }
 
     @Override
-    public InvoiceModelDao getEarliestDraftInvoiceByAccount(final InternalTenantContext context) {
-        return null;
-    }
-
-    @Override
     public List<InvoiceItemModelDao> createInvoices(final List<InvoiceModelDao> invoiceModelDaos, final InternalCallContext context) {
         synchronized (monitor) {
             final List<InvoiceItemModelDao> createdItems = new LinkedList<InvoiceItemModelDao>();
