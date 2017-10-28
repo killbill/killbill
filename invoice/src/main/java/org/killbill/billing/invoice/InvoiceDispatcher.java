@@ -420,7 +420,7 @@ public class InvoiceDispatcher {
                     final InvoiceItem exitingItem = Iterables.tryFind(tmpInvoiceForInvoicePlugins.getInvoiceItems(), new Predicate<InvoiceItem>() {
                         @Override
                         public boolean apply(final InvoiceItem input) {
-                            return input.getInvoiceItemType().equals(cur.getInvoiceItemType());
+                            return input.getId().equals(cur.getId());
                         }
                     }).orNull();
                     if (exitingItem != null) {

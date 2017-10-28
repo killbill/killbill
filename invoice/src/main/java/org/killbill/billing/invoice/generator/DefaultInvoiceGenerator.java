@@ -104,7 +104,7 @@ public class DefaultInvoiceGenerator implements InvoiceGenerator {
                     return input.getId().equals(targetInvoiceId);
                 }
             }).orNull();
-            Preconditions.checkNotNull(originalInvoice);
+            Preconditions.checkNotNull(originalInvoice, "Expecting to find an existing invoice matching the targetInvoiceId");
             invoice.addInvoiceItems(originalInvoice.getInvoiceItems());
         }
 

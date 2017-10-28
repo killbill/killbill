@@ -171,7 +171,7 @@ public class UsageInvoiceItemGenerator extends InvoiceItemGenerator {
     }
 
     private Map<UUID, List<InvoiceItem>> extractPerSubscriptionExistingInArrearUsageItems(final Map<String, Usage> knownUsage, @Nullable final Iterable<Invoice> existingInvoices) {
-        if (existingInvoices == null || !existingInvoices.iterator().hasNext()) {
+        if (existingInvoices == null || Iterables.isEmpty(existingInvoices)) {
             return ImmutableMap.of();
         }
 
