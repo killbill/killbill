@@ -175,7 +175,8 @@ public class IncompletePaymentTransactionTask extends CompletionTaskBase<Payment
         final Boolean result = doJanitorOperationWithAccountLock(new JanitorIterationCallback() {
             @Override
             public Boolean doIteration() {
-                return updatePaymentAndTransactionInternal(payment, null, null, paymentTransaction, paymentTransactionInfoPlugin, internalTenantContext);
+                final PaymentTransactionModelDao refreshedPaymentTransaction = paymentDao.getPaymentTransaction(paymentTransaction.getId(), internalTenantContext);
+                return updatePaymentAndTransactionInternal(payment, null, null, refreshedPaymentTransaction, paymentTransactionInfoPlugin, internalTenantContext);
             }
         }, internalTenantContext);
         return result != null && result;
