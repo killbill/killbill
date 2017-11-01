@@ -89,6 +89,11 @@ public class MockSubscription implements SubscriptionBase {
     }
 
     @Override
+    public boolean undoChangePlan(final CallContext context) throws SubscriptionBaseApiException {
+        return sub.undoChangePlan(context);
+    }
+
+    @Override
     public DateTime changePlanWithDate(final PlanPhaseSpecifier spec, final List<PlanPhasePriceOverride> overrides, final DateTime requestedDate,
                                        final CallContext context) throws SubscriptionBaseApiException {
         return sub.changePlanWithDate(spec, overrides, requestedDate, context);

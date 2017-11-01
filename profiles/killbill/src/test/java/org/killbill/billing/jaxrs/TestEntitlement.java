@@ -669,8 +669,61 @@ public class TestEntitlement extends TestJaxrsBase {
         Assert.assertEquals(newEntitlementJson.getBillingPeriod(), BillingPeriod.MONTHLY);
         Assert.assertEquals(newEntitlementJson.getPriceList(), DefaultPriceListSet.DEFAULT_PRICELIST_NAME);
         Assert.assertEquals(newEntitlementJson.getPlanName(), "pistol-monthly");
+    }
+
+    @Test(groups = "slow", description = "Can changePlan and undo changePlan on a subscription")
+    public void testEntitlementUndoChangePlan() throws Exception {
+        final DateTime initialDate = new DateTime(2012, 4, 25, 0, 3, 42, 0);
+        clock.setDeltaFromReality(initialDate.getMillis() - clock.getUTCNow().getMillis());
+
+        final Account accountJson = createAccountWithDefaultPaymentMethod();
+
+        final String productName = "Shotgun";
+        final BillingPeriod term = BillingPeriod.MONTHLY;
+
+        final Subscription entitlementJson = createEntitlement(accountJson.getAccountId(), "99999", productName,
+                                                               ProductCategory.BASE, term, true);
+
+
+
+        // Change plan in the future
+        final String newProductName = "Assault-Rifle";
+
+        final Subscription newInput = new Subscription();
+        newInput.setAccountId(entitlementJson.getAccountId());
+        newInput.setSubscriptionId(entitlementJson.getSubscriptionId());
+        newInput.setProductName(newProductName);
+        newInput.setProductCategory(ProductCategory.BASE);
+        newInput.setBillingPeriod(entitlementJson.getBillingPeriod());
+        newInput.setPriceList(entitlementJson.getPriceList());
+
+        Subscription  refreshedSubscription = killBillClient.updateSubscription(newInput, new LocalDate(2012, 4, 28),  null, CALL_COMPLETION_TIMEOUT_SEC, requestOptions);
+        Assert.assertNotNull(refreshedSubscription);
+
+
+        final Interval it = new Interval(clock.getUTCNow(), clock.getUTCNow().plusDays(1));
+        clock.addDeltaFromReality(it.toDurationMillis());
+
+        killBillClient.undoChangePlan(refreshedSubscription.getSubscriptionId(), requestOptions);
+
+        // MOVE AFTER TRIAL
+        final Interval it2 = new Interval(clock.getUTCNow(), clock.getUTCNow().plusDays(30));
+        clock.addDeltaFromReality(it2.toDurationMillis());
+
+        crappyWaitForLackOfProperSynchonization();
+
+        // Retrieves to check EndDate
+        refreshedSubscription = killBillClient.getSubscription(entitlementJson.getSubscriptionId(), requestOptions);
+        Assert.assertEquals(refreshedSubscription.getPriceOverrides().size(), 2);
+        Assert.assertEquals(refreshedSubscription.getPriceOverrides().get(0).getPhaseName(), "shotgun-monthly-trial");
+        Assert.assertEquals(refreshedSubscription.getPriceOverrides().get(0).getFixedPrice(), BigDecimal.ZERO);
+        Assert.assertNull(refreshedSubscription.getPriceOverrides().get(0).getRecurringPrice());
+        Assert.assertEquals(refreshedSubscription.getPriceOverrides().get(1).getPhaseName(), "shotgun-monthly-evergreen");
+        Assert.assertNull(refreshedSubscription.getPriceOverrides().get(1).getFixedPrice());
+        Assert.assertEquals(refreshedSubscription.getPriceOverrides().get(1).getRecurringPrice(), new BigDecimal("249.95"));
 
     }
+
 
 
 }

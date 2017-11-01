@@ -377,6 +377,7 @@ public class MockSubscriptionDaoMemory extends MockEntityDaoBase<SubscriptionBun
         cancelSubscriptions(subscriptionsToBeCancelled, cancelEvents, catalog, context);
     }
 
+
     private void insertEvent(final SubscriptionBaseEvent event, final InternalCallContext context) {
         synchronized (events) {
             events.add(event);
@@ -432,10 +433,20 @@ public class MockSubscriptionDaoMemory extends MockEntityDaoBase<SubscriptionBun
 
     @Override
     public void uncancelSubscription(final DefaultSubscriptionBase subscription, final List<SubscriptionBaseEvent> uncancelEvents,
-                                     final Catalog catalog, final InternalCallContext context) {
+                                     final InternalCallContext context) {
+        undoPendingOperation(subscription, uncancelEvents, ApiEventType.CANCEL, context);
+    }
+        @Override
+    public void undoChangePlan(final DefaultSubscriptionBase subscription, final List<SubscriptionBaseEvent> undoChangePlanEvents, final InternalCallContext context) {
+            undoPendingOperation(subscription, undoChangePlanEvents, ApiEventType.CHANGE, context);
+    }
+
+
+    private void undoPendingOperation(final DefaultSubscriptionBase subscription, final List<SubscriptionBaseEvent> inputEvents,
+                                     final ApiEventType  targetType, final InternalCallContext context) {
 
         synchronized (events) {
-            boolean foundCancel = false;
+            boolean foundEvent = false;
             final Iterator<SubscriptionBaseEvent> it = events.descendingIterator();
             while (it.hasNext()) {
                 final SubscriptionBaseEvent cur = it.next();
@@ -443,14 +454,14 @@ public class MockSubscriptionDaoMemory extends MockEntityDaoBase<SubscriptionBun
                     continue;
                 }
                 if (cur.getType() == EventType.API_USER &&
-                    ((ApiEvent) cur).getApiEventType() == ApiEventType.CANCEL) {
+                    ((ApiEvent) cur).getApiEventType() == targetType) {
                     it.remove();
-                    foundCancel = true;
+                    foundEvent = true;
                     break;
                 }
             }
-            if (foundCancel) {
-                for (final SubscriptionBaseEvent cur : uncancelEvents) {
+            if (foundEvent) {
+                for (final SubscriptionBaseEvent cur : inputEvents) {
                     insertEvent(cur, context);
                 }
             }

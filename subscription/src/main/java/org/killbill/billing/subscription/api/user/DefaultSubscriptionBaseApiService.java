@@ -68,6 +68,7 @@ import org.killbill.billing.subscription.events.user.ApiEventChange;
 import org.killbill.billing.subscription.events.user.ApiEventCreate;
 import org.killbill.billing.subscription.events.user.ApiEventType;
 import org.killbill.billing.subscription.events.user.ApiEventUncancel;
+import org.killbill.billing.subscription.events.user.ApiEventUndoChange;
 import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.billing.util.callcontext.TenantContext;
@@ -281,7 +282,7 @@ public class DefaultSubscriptionBaseApiService implements SubscriptionBaseApiSer
 
     @Override
     public boolean uncancel(final DefaultSubscriptionBase subscription, final CallContext context) throws SubscriptionBaseApiException {
-        if (!subscription.isSubscriptionFutureCancelled()) {
+        if (!subscription.isFutureCancelled()) {
             throw new SubscriptionBaseApiException(ErrorCode.SUB_UNCANCEL_BAD_STATE, subscription.getId().toString());
         }
         try {
@@ -313,7 +314,7 @@ public class DefaultSubscriptionBaseApiService implements SubscriptionBaseApiSer
                 uncancelEvents.add(nextPhaseEvent);
             }
 
-            dao.uncancelSubscription(subscription, uncancelEvents, fullCatalog, internalCallContext);
+            dao.uncancelSubscription(subscription, uncancelEvents, internalCallContext);
             subscription.rebuildTransitions(dao.getEventsForSubscription(subscription.getId(), internalCallContext), fullCatalog);
             return true;
         } catch (final CatalogApiException e) {
@@ -552,6 +553,48 @@ public class DefaultSubscriptionBaseApiService implements SubscriptionBaseApiSer
     }
 
     @Override
+    public boolean undoChangePlan(final DefaultSubscriptionBase subscription, final CallContext context) throws SubscriptionBaseApiException {
+        if (!subscription.isPendingChangePlan()) {
+            throw new SubscriptionBaseApiException(ErrorCode.SUB_UNDO_CHANGE_BAD_STATE, subscription.getId().toString());
+        }
+        try {
+
+            final InternalCallContext internalCallContext = createCallContextFromBundleId(subscription.getBundleId(), context);
+            final Catalog fullCatalog = catalogInternalApi.getFullCatalog(true, true, internalCallContext);
+
+            final DateTime now = clock.getUTCNow();
+            final SubscriptionBaseEvent undoChangePlanEvent = new ApiEventUndoChange(new ApiEventBuilder()
+                                                                                     .setSubscriptionId(subscription.getId())
+                                                                                     .setEffectiveDate(now)
+                                                                                     .setFromDisk(true));
+
+            final List<SubscriptionBaseEvent> undoChangePlanEvents = new ArrayList<SubscriptionBaseEvent>();
+            undoChangePlanEvents.add(undoChangePlanEvent);
+
+            //
+            // Used to compute effective for next phase (which was set unactive during cancellation).
+            // In case of a pending subscription we don't want to pass an effective date prior the CREATE event as we would end up with the wrong
+            // transition in PlanAligner (next transition would be CREATE instead of potential next PHASE)
+            //
+            final DateTime planAlignerEffectiveDate = subscription.getState() == EntitlementState.PENDING ? subscription.getStartDate() : now;
+
+            final TimedPhase nextTimedPhase = planAligner.getNextTimedPhase(subscription, planAlignerEffectiveDate, fullCatalog, internalCallContext);
+            final PhaseEvent nextPhaseEvent = (nextTimedPhase != null) ?
+                                              PhaseEventData.createNextPhaseEvent(subscription.getId(), nextTimedPhase.getPhase().getName(), nextTimedPhase.getStartPhase()) :
+                                              null;
+            if (nextPhaseEvent != null) {
+                undoChangePlanEvents.add(nextPhaseEvent);
+            }
+
+            dao.undoChangePlan(subscription, undoChangePlanEvents, internalCallContext);
+            subscription.rebuildTransitions(dao.getEventsForSubscription(subscription.getId(), internalCallContext), fullCatalog);
+            return true;
+        } catch (final CatalogApiException e) {
+            throw new SubscriptionBaseApiException(e);
+        }
+    }
+
+    @Override
     public int handleBasePlanEvent(final DefaultSubscriptionBase subscription, final SubscriptionBaseEvent event, final Catalog catalog, final CallContext context) throws CatalogApiException {
 
         final InternalCallContext internalCallContext = createCallContextFromBundleId(subscription.getBundleId(), context);
@@ -628,7 +671,7 @@ public class DefaultSubscriptionBaseApiService implements SubscriptionBaseApiSer
         if (effectiveDate != null && effectiveDate.compareTo(subscription.getStartDate()) < 0) {
             throw new SubscriptionBaseApiException(ErrorCode.SUB_CHANGE_NON_ACTIVE, subscription.getId(), currentState);
         }
-        if (subscription.isSubscriptionFutureCancelled()) {
+        if (subscription.isFutureCancelled()) {
             throw new SubscriptionBaseApiException(ErrorCode.SUB_CHANGE_FUTURE_CANCELLED, subscription.getId());
         }
     }

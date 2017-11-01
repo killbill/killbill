@@ -592,4 +592,44 @@ public class TestUserApiChangePlan extends SubscriptionTestSuiteWithEmbeddedDB {
         assertEquals(refreshedSubscription.getAllTransitions().get(1).getTransitionType(), SubscriptionBaseTransitionType.CHANGE);
         assertEquals(refreshedSubscription.getAllTransitions().get(2).getTransitionType(), SubscriptionBaseTransitionType.PHASE);
     }
+
+    @Test(groups = "slow")
+    public void testUndoChangePlan() throws SubscriptionBaseApiException {
+
+        final DefaultSubscriptionBase subscription = testUtil.createSubscription(bundle, "Shotgun", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME);
+
+        clock.setTime(clock.getUTCNow().plusSeconds(1));
+
+        // Change plan in the future
+        final DateTime targetDate = clock.getUTCNow().plusDays(3);
+        subscription.changePlanWithDate(new PlanPhaseSpecifier("Pistol", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME), null, targetDate, callContext);assertListenerStatus();
+
+        DefaultSubscriptionBase refreshedSubscription = (DefaultSubscriptionBase) subscriptionInternalApi.getSubscriptionFromId(subscription.getId(), internalCallContext);
+        assertEquals(refreshedSubscription.getAllTransitions().size(), 3);
+        assertEquals(refreshedSubscription.getAllTransitions().get(0).getTransitionType(), SubscriptionBaseTransitionType.CREATE);
+        assertEquals(refreshedSubscription.getAllTransitions().get(1).getTransitionType(), SubscriptionBaseTransitionType.CHANGE);
+        assertEquals(refreshedSubscription.getAllTransitions().get(2).getTransitionType(), SubscriptionBaseTransitionType.PHASE);
+
+        clock.addDays(1);
+
+        testListener.pushExpectedEvent(NextEvent.UNDO_CHANGE);
+        subscription.undoChangePlan(callContext);
+        assertListenerStatus();
+
+        // No CHANGE_PLAN
+        clock.addDays(3);
+        assertListenerStatus();
+
+        // Verify PHASE event for Pistol is actif
+        testListener.pushExpectedEvent(NextEvent.PHASE);
+        clock.addDays(26);
+        assertListenerStatus();
+
+
+        refreshedSubscription = (DefaultSubscriptionBase) subscriptionInternalApi.getSubscriptionFromId(subscription.getId(), internalCallContext);
+        assertEquals(refreshedSubscription.getAllTransitions().size(), 2);
+        assertEquals(refreshedSubscription.getAllTransitions().get(0).getTransitionType(), SubscriptionBaseTransitionType.CREATE);
+        assertEquals(refreshedSubscription.getAllTransitions().get(1).getTransitionType(), SubscriptionBaseTransitionType.PHASE);
+
+    }
 }

@@ -106,6 +106,7 @@ public class TestApiListener {
         CREATE,
         TRANSFER,
         CHANGE,
+        UNDO_CHANGE,
         CANCEL,
         UNCANCEL,
         PAUSE,
@@ -162,6 +163,10 @@ public class TestApiListener {
                 break;
             case CHANGE:
                 assertEqualsNicely(NextEvent.CHANGE);
+                notifyIfStackEmpty();
+                break;
+            case UNDO_CHANGE:
+                assertEqualsNicely(NextEvent.UNDO_CHANGE);
                 notifyIfStackEmpty();
                 break;
             case UNCANCEL:

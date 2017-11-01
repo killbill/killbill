@@ -58,6 +58,9 @@ public interface SubscriptionBase extends Entity, Blockable {
     public DateTime changePlan(final PlanPhaseSpecifier spec, final List<PlanPhasePriceOverride> overrides, final CallContext context)
             throws SubscriptionBaseApiException;
 
+    public boolean undoChangePlan(final CallContext context)
+            throws SubscriptionBaseApiException;
+
     // Return the effective date of the change
     public DateTime changePlanWithDate(final PlanPhaseSpecifier spec, final List<PlanPhasePriceOverride> overrides, final DateTime requestedDate, final CallContext context)
             throws SubscriptionBaseApiException;

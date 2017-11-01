@@ -499,7 +499,7 @@ public class SubscriptionResource extends JaxRsResourceBase {
 
     @TimedResource
     @PUT
-    @Path("/{subscriptionId:" + UUID_PATTERN + "}/uncancel")
+    @Path("/{subscriptionId:" + UUID_PATTERN + "}/" + UNDO_CANCEL)
     @Produces(APPLICATION_JSON)
     @ApiOperation(value = "Un-cancel an entitlement")
     @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid subscription id supplied"),
@@ -514,6 +514,26 @@ public class SubscriptionResource extends JaxRsResourceBase {
         final UUID uuid = UUID.fromString(subscriptionId);
         final Entitlement current = entitlementApi.getEntitlementForId(uuid, context.createCallContextNoAccountId(createdBy, reason, comment, request));
         current.uncancelEntitlement(pluginProperties, context.createCallContextNoAccountId(createdBy, reason, comment, request));
+        return Response.status(Status.OK).build();
+    }
+
+    @TimedResource
+    @PUT
+    @Path("/{subscriptionId:" + UUID_PATTERN + "}/" + UNDO_CHANGE_PLAN)
+    @Produces(APPLICATION_JSON)
+    @ApiOperation(value = "Undo a pending change plan on an entitlement")
+    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid subscription id supplied"),
+                           @ApiResponse(code = 404, message = "Entitlement not found")})
+    public Response undoChangeEntitlementPlan(@PathParam("subscriptionId") final String subscriptionId,
+                                            @QueryParam(QUERY_PLUGIN_PROPERTY) final List<String> pluginPropertiesString,
+                                            @HeaderParam(HDR_CREATED_BY) final String createdBy,
+                                            @HeaderParam(HDR_REASON) final String reason,
+                                            @HeaderParam(HDR_COMMENT) final String comment,
+                                            @javax.ws.rs.core.Context final HttpServletRequest request) throws EntitlementApiException {
+        final Iterable<PluginProperty> pluginProperties = extractPluginProperties(pluginPropertiesString);
+        final UUID uuid = UUID.fromString(subscriptionId);
+        final Entitlement current = entitlementApi.getEntitlementForId(uuid, context.createCallContextNoAccountId(createdBy, reason, comment, request));
+        current.undoChangePlan(pluginProperties, context.createCallContextNoAccountId(createdBy, reason, comment, request));
         return Response.status(Status.OK).build();
     }
 

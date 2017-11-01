@@ -260,6 +260,10 @@ public interface JaxrsResource {
 
     public static final String CBA_REBALANCING = "cbaRebalancing";
 
+
+    public static final String UNDO_CHANGE_PLAN = "undoChangePlan";
+    public static final String UNDO_CANCEL = "uncancel";
+
     public static final String PAUSE = "pause";
     public static final String RESUME = "resume";
     public static final String BLOCK = "block";

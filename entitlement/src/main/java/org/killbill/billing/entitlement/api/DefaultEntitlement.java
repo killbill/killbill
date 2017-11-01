@@ -52,6 +52,7 @@ import org.killbill.billing.entitlement.engine.core.EntitlementNotificationKey;
 import org.killbill.billing.entitlement.engine.core.EntitlementNotificationKeyAction;
 import org.killbill.billing.entitlement.engine.core.EntitlementUtils;
 import org.killbill.billing.entitlement.engine.core.EventsStreamBuilder;
+import org.killbill.billing.entitlement.logging.EntitlementLoggingHelper;
 import org.killbill.billing.entitlement.plugin.api.EntitlementContext;
 import org.killbill.billing.entitlement.plugin.api.OperationType;
 import org.killbill.billing.entity.EntityBase;
@@ -80,6 +81,7 @@ import com.google.common.collect.ImmutableList;
 import static org.killbill.billing.entitlement.logging.EntitlementLoggingHelper.logCancelEntitlement;
 import static org.killbill.billing.entitlement.logging.EntitlementLoggingHelper.logChangePlan;
 import static org.killbill.billing.entitlement.logging.EntitlementLoggingHelper.logUncancelEntitlement;
+import static org.killbill.billing.entitlement.logging.EntitlementLoggingHelper.logUndoChangePlan;
 import static org.killbill.billing.entitlement.logging.EntitlementLoggingHelper.logUpdateBCD;
 
 public class DefaultEntitlement extends EntityBase implements Entitlement {
@@ -393,7 +395,7 @@ public class DefaultEntitlement extends EntityBase implements Entitlement {
                 false);
         final List<BaseEntitlementWithAddOnsSpecifier> baseEntitlementWithAddOnsSpecifierList = new ArrayList<BaseEntitlementWithAddOnsSpecifier>();
         baseEntitlementWithAddOnsSpecifierList.add(baseEntitlementWithAddOnsSpecifier);
-        final EntitlementContext pluginContext = new DefaultEntitlementContext(OperationType.UNCANCEL_SUBSCRIPTION,
+        final EntitlementContext pluginContext = new DefaultEntitlementContext(OperationType.UNDO_PENDING_SUBSCRIPTION_OPERATION,
                                                                                getAccountId(),
                                                                                null,
                                                                                baseEntitlementWithAddOnsSpecifierList,
@@ -609,6 +611,51 @@ public class DefaultEntitlement extends EntityBase implements Entitlement {
             }
         };
         return pluginExecution.executeWithPlugin(changePlanWithPlugin, pluginContext);
+    }
+
+    @Override
+    public void undoChangePlan(final Iterable<PluginProperty> properties, final CallContext callContext) throws EntitlementApiException {
+
+        logUndoChangePlan(log, this);
+
+        checkForPermissions(Permission.ENTITLEMENT_CAN_CHANGE_PLAN, callContext);
+
+        // Get the latest state from disk
+        refresh(callContext);
+
+        final BaseEntitlementWithAddOnsSpecifier baseEntitlementWithAddOnsSpecifier = new DefaultBaseEntitlementWithAddOnsSpecifier(
+                getBundleId(),
+                getExternalKey(),
+                null,
+                null,
+                null,
+                false);
+        final List<BaseEntitlementWithAddOnsSpecifier> baseEntitlementWithAddOnsSpecifierList = new ArrayList<BaseEntitlementWithAddOnsSpecifier>();
+        baseEntitlementWithAddOnsSpecifierList.add(baseEntitlementWithAddOnsSpecifier);
+        final EntitlementContext pluginContext = new DefaultEntitlementContext(OperationType.UNDO_PENDING_SUBSCRIPTION_OPERATION,
+                                                                               getAccountId(),
+                                                                               null,
+                                                                               baseEntitlementWithAddOnsSpecifierList,
+                                                                               null,
+                                                                               properties,
+                                                                               callContext);
+
+        final WithEntitlementPlugin<Void> undoChangePlanEntitlementWithPlugin = new WithEntitlementPlugin<Void>() {
+
+            @Override
+            public Void doCall(final EntitlementApi entitlementApi, final EntitlementContext updatedPluginContext) throws EntitlementApiException {
+
+                try {
+                    getSubscriptionBase().undoChangePlan(callContext);
+                } catch (final SubscriptionBaseApiException e) {
+                    throw new EntitlementApiException(e);
+                }
+                return null;
+            }
+        };
+
+        pluginExecution.executeWithPlugin(undoChangePlanEntitlementWithPlugin, pluginContext);
+
     }
 
     @Override

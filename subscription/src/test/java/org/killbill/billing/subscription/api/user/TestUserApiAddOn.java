@@ -115,13 +115,13 @@ public class TestUserApiAddOn extends SubscriptionTestSuiteWithEmbeddedDB {
         aoSubscription.cancel(callContext);
         aoSubscription = (DefaultSubscriptionBase) subscriptionInternalApi.getSubscriptionFromId(aoSubscription.getId(), internalCallContext);
         assertEquals(aoSubscription.getState(), EntitlementState.ACTIVE);
-        assertTrue(aoSubscription.isSubscriptionFutureCancelled());
+        assertTrue(aoSubscription.isFutureCancelled());
 
         // CANCEL BASE NOW
         baseSubscription.cancel(callContext);
         baseSubscription = (DefaultSubscriptionBase) subscriptionInternalApi.getSubscriptionFromId(baseSubscription.getId(), internalCallContext);
         assertEquals(baseSubscription.getState(), EntitlementState.ACTIVE);
-        assertTrue(baseSubscription.isSubscriptionFutureCancelled());
+        assertTrue(baseSubscription.isFutureCancelled());
 
         aoSubscription = (DefaultSubscriptionBase) subscriptionInternalApi.getSubscriptionFromId(aoSubscription.getId(), internalCallContext);
         List<SubscriptionBaseTransition> aoTransitions = aoSubscription.getAllTransitions();
@@ -183,7 +183,7 @@ public class TestUserApiAddOn extends SubscriptionTestSuiteWithEmbeddedDB {
         // REFETCH AO SUBSCRIPTION AND CHECK THIS IS ACTIVE
         aoSubscription = (DefaultSubscriptionBase) subscriptionInternalApi.getSubscriptionFromId(aoSubscription.getId(), internalCallContext);
         assertEquals(aoSubscription.getState(), EntitlementState.ACTIVE);
-        assertTrue(aoSubscription.isSubscriptionFutureCancelled());
+        assertTrue(aoSubscription.isFutureCancelled());
 
         // MOVE AFTER CANCELLATION
         testListener.pushExpectedEvent(NextEvent.CANCEL);
@@ -237,7 +237,7 @@ public class TestUserApiAddOn extends SubscriptionTestSuiteWithEmbeddedDB {
         // REFETCH AO SUBSCRIPTION AND CHECK THIS IS ACTIVE
         aoSubscription = (DefaultSubscriptionBase) subscriptionInternalApi.getSubscriptionFromId(aoSubscription.getId(), internalCallContext);
         assertEquals(aoSubscription.getState(), EntitlementState.ACTIVE);
-        assertTrue(aoSubscription.isSubscriptionFutureCancelled());
+        assertTrue(aoSubscription.isFutureCancelled());
 
         testListener.pushExpectedEvent(NextEvent.UNCANCEL);
         baseSubscription = (DefaultSubscriptionBase) subscriptionInternalApi.getSubscriptionFromId(baseSubscription.getId(), internalCallContext);
@@ -246,7 +246,7 @@ public class TestUserApiAddOn extends SubscriptionTestSuiteWithEmbeddedDB {
 
         aoSubscription = (DefaultSubscriptionBase) subscriptionInternalApi.getSubscriptionFromId(aoSubscription.getId(), internalCallContext);
         assertEquals(aoSubscription.getState(), EntitlementState.ACTIVE);
-        assertFalse(aoSubscription.isSubscriptionFutureCancelled());
+        assertFalse(aoSubscription.isFutureCancelled());
 
         // CANCEL AGAIN
         it = new Interval(clock.getUTCNow(), clock.getUTCNow().plusDays(1));
@@ -256,11 +256,11 @@ public class TestUserApiAddOn extends SubscriptionTestSuiteWithEmbeddedDB {
         baseSubscription.cancel(callContext);
         baseSubscription = (DefaultSubscriptionBase) subscriptionInternalApi.getSubscriptionFromId(baseSubscription.getId(), internalCallContext);
         assertEquals(baseSubscription.getState(), EntitlementState.ACTIVE);
-        assertTrue(baseSubscription.isSubscriptionFutureCancelled());
+        assertTrue(baseSubscription.isFutureCancelled());
 
         aoSubscription = (DefaultSubscriptionBase) subscriptionInternalApi.getSubscriptionFromId(aoSubscription.getId(), internalCallContext);
         assertEquals(aoSubscription.getState(), EntitlementState.ACTIVE);
-        assertTrue(aoSubscription.isSubscriptionFutureCancelled());
+        assertTrue(aoSubscription.isFutureCancelled());
         assertListenerStatus();
     }
 
@@ -372,7 +372,7 @@ public class TestUserApiAddOn extends SubscriptionTestSuiteWithEmbeddedDB {
         // REFETCH AO SUBSCRIPTION AND CHECK THIS IS ACTIVE
         aoSubscription = (DefaultSubscriptionBase) subscriptionInternalApi.getSubscriptionFromId(aoSubscription.getId(), internalCallContext);
         assertEquals(aoSubscription.getState(), EntitlementState.ACTIVE);
-        assertTrue(aoSubscription.isSubscriptionFutureCancelled());
+        assertTrue(aoSubscription.isFutureCancelled());
 
         // MOVE AFTER CHANGE
         testListener.pushExpectedEvent(NextEvent.CHANGE);

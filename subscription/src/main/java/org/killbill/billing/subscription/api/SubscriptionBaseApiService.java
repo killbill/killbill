@@ -117,4 +117,6 @@ public interface SubscriptionBaseApiService {
                                                              final boolean addCancellationAddOnForEventsIfRequired,
                                                              final Catalog fullCatalog,
                                                              final InternalTenantContext internalTenantContext) throws CatalogApiException;
+
+    boolean undoChangePlan(DefaultSubscriptionBase defaultSubscriptionBase, CallContext context) throws SubscriptionBaseApiException;
 }

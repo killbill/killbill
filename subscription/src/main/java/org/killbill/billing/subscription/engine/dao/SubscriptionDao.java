@@ -92,9 +92,11 @@ public interface SubscriptionDao extends EntityDao<SubscriptionBundleModelDao, S
 
     public void cancelSubscriptions(List<DefaultSubscriptionBase> subscriptions, List<SubscriptionBaseEvent> cancelEvents, final Catalog catalog, InternalCallContext context);
 
-    public void uncancelSubscription(DefaultSubscriptionBase subscription, List<SubscriptionBaseEvent> uncancelEvents, final Catalog catalog, InternalCallContext context);
+    public void uncancelSubscription(DefaultSubscriptionBase subscription, List<SubscriptionBaseEvent> uncancelEvents, InternalCallContext context);
 
     public void changePlan(DefaultSubscriptionBase subscription, List<SubscriptionBaseEvent> changeEvents, List<DefaultSubscriptionBase> subscriptionsToBeCancelled, List<SubscriptionBaseEvent> cancelEvents, final Catalog catalog, InternalCallContext context);
+
+    public void undoChangePlan(DefaultSubscriptionBase subscription, List<SubscriptionBaseEvent> undoChangePlanEvents, InternalCallContext context);
 
     public void transfer(UUID srcAccountId, UUID destAccountId, BundleTransferData data, List<TransferCancelData> transferCancelData, final Catalog catalog, InternalCallContext fromContext, InternalCallContext toContext);
 

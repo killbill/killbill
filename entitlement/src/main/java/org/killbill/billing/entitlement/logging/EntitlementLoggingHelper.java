@@ -214,6 +214,16 @@ public abstract class EntitlementLoggingHelper {
         }
     }
 
+    public static void logUndoChangePlan(final Logger log, final Entitlement entitlement) {
+        if (log.isInfoEnabled()) {
+            final StringBuilder logLine = new StringBuilder("Undo Entitlement Change Plan: ")
+                    .append(" id = '")
+                    .append(entitlement.getId())
+                    .append("'");
+            log.info(logLine.toString());
+        }
+    }
+
     public static void logChangePlan(final Logger log, final Entitlement entitlement, final PlanSpecifier spec,
                                      final List<PlanPhasePriceOverride> overrides, final LocalDate entitlementEffectiveDate, final BillingActionPolicy actionPolicy) {
         if (log.isInfoEnabled()) {

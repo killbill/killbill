@@ -41,7 +41,6 @@ import org.killbill.billing.catalog.api.Plan;
 import org.killbill.billing.catalog.api.PlanPhase;
 import org.killbill.billing.catalog.api.PlanPhasePriceOverride;
 import org.killbill.billing.catalog.api.PlanPhaseSpecifier;
-import org.killbill.billing.catalog.api.PlanSpecifier;
 import org.killbill.billing.catalog.api.PriceList;
 import org.killbill.billing.catalog.api.Product;
 import org.killbill.billing.catalog.api.ProductCategory;
@@ -280,6 +279,11 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
     }
 
     @Override
+    public boolean undoChangePlan(final CallContext context) throws SubscriptionBaseApiException {
+        return apiService.undoChangePlan(this, context);
+    }
+
+    @Override
     public DateTime changePlanWithDate(final PlanPhaseSpecifier spec, final List<PlanPhasePriceOverride> overrides,
                                        final DateTime requestedDate, final CallContext context) throws SubscriptionBaseApiException {
         return apiService.changePlanWithRequestedDate(this, spec, overrides, requestedDate, context);
@@ -501,10 +505,10 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
                 prev = curData;
             }
         }
-        // Since UNCANCEL are not part of the transitions, we compute a new 'UNCANCEL' transition based on the event right before that UNCANCEL
-        // This is used to be able to send a bus event for uncancellation
-        if (prev != null && event.getType() == EventType.API_USER && ((ApiEvent) event).getApiEventType() == ApiEventType.UNCANCEL) {
-            final SubscriptionBaseTransitionData withSeq = new SubscriptionBaseTransitionData((SubscriptionBaseTransitionData) prev, EventType.API_USER, ApiEventType.UNCANCEL, seqId);
+        // Since UNCANCEL/UNDO_CHANGE are not part of the transitions, we compute a new transition based on the event right before
+        // This is used to be able to send a bus event for uncancellation/undo_change
+        if (prev != null && event.getType() == EventType.API_USER && (((ApiEvent) event).getApiEventType() == ApiEventType.UNCANCEL || ((ApiEvent) event).getApiEventType() == ApiEventType.UNDO_CHANGE)) {
+            final SubscriptionBaseTransitionData withSeq = new SubscriptionBaseTransitionData(prev, EventType.API_USER, ((ApiEvent) event).getApiEventType(), seqId);
             return withSeq;
         }
         return null;
@@ -569,9 +573,17 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
         throw new SubscriptionBaseError(String.format("Failed to find InitialTransitionForCurrentPlan id = %s", getId()));
     }
 
-    public boolean isSubscriptionFutureCancelled() {
+    public boolean isFutureCancelled() {
         return getFutureEndDate() != null;
     }
+
+
+    public boolean isPendingChangePlan() {
+        final SubscriptionBaseTransition pendingTransition = getPendingTransition();
+        return pendingTransition != null && pendingTransition.getTransitionType() == SubscriptionBaseTransitionType.CHANGE;
+    }
+
+
 
     public DateTime getPlanChangeEffectiveDate(final BillingActionPolicy policy, @Nullable final BillingAlignment alignment, @Nullable final Integer accountBillCycleDayLocal, final InternalTenantContext context) {
 
@@ -733,6 +745,7 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
                             nextPhaseName = null;
                             break;
                         case UNCANCEL:
+                        case UNDO_CHANGE:
                         default:
                             throw new SubscriptionBaseError(String.format(
                                     "Unexpected UserEvent type = %s", userEV
