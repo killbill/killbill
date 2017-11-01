@@ -40,6 +40,7 @@ import org.testng.annotations.Test;
 
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 
 public class TestKillBillJdbcRealm extends UtilTestSuiteWithEmbeddedDB {
@@ -206,6 +207,8 @@ public class TestKillBillJdbcRealm extends UtilTestSuiteWithEmbeddedDB {
         Assert.assertTrue(updatedRoleDefinition.contains("tag:create_tag_definition"));
         Assert.assertTrue(updatedRoleDefinition.contains("entitlement:create"));
 
+        securityApi.updateRoleDefinition("original", ImmutableList.<String>of(), callContext);
+        Assert.assertEquals(securityApi.getRoleDefinition("original", callContext).size(), 0);
     }
 
     private void testInvalidPermissionScenario(final List<String> permissions) {
