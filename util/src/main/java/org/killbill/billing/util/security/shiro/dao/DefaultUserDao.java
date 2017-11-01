@@ -123,11 +123,10 @@ public class DefaultUserDao implements UserDao {
             public Void inTransaction(final Handle handle, final TransactionStatus status) throws Exception {
                 final RolesPermissionsSqlDao rolesPermissionsSqlDao = handle.attach(RolesPermissionsSqlDao.class);
                 final List<RolesPermissionsModelDao> existingPermissions = rolesPermissionsSqlDao.getByRoleName(role);
-                if (existingPermissions.isEmpty()) {
-                    throw new SecurityApiException(ErrorCode.SECURITY_INVALID_ROLE, role);
-                }
-
-                final Iterable<RolesPermissionsModelDao> toBeDeleted = Iterables.filter(existingPermissions, new Predicate<RolesPermissionsModelDao>() {
+                // A empty list of permissions means we should remove all current permissions
+                final Iterable<RolesPermissionsModelDao> toBeDeleted = existingPermissions.isEmpty() ?
+                                                                       existingPermissions :
+                                                                       Iterables.filter(existingPermissions, new Predicate<RolesPermissionsModelDao>() {
                     @Override
                     public boolean apply(final RolesPermissionsModelDao input) {
                         return !permissions.contains(input.getPermission());

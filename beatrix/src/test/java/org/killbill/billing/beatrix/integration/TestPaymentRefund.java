@@ -57,7 +57,9 @@ import com.google.common.base.Function;
 import com.google.common.base.Predicate;
 import com.google.common.collect.Collections2;
 
+import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
+import static org.testng.Assert.assertTrue;
 import static org.testng.Assert.fail;
 
 public class TestPaymentRefund extends TestIntegrationBase {
@@ -83,6 +85,15 @@ public class TestPaymentRefund extends TestIntegrationBase {
         // Although we don't adjust the invoice, the invoicing system sends an event because invoice balance changes and overdue system-- in particular-- needs to know about it.
         refundPaymentAndCheckForCompletion(account, payment, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
         refundChecker.checkRefund(payment.getId(), callContext, new ExpectedRefundCheck(payment.getId(), false, new BigDecimal("233.82"), Currency.USD, initialCreationDate.toLocalDate()));
+
+
+        final Invoice invoiceRefreshed =  invoiceUserApi.getInvoice(invoice.getId(), callContext);
+        assertTrue(invoiceRefreshed.getBalance().compareTo(new BigDecimal("233.82")) == 0);
+
+        final BigDecimal accountBalance = invoiceUserApi.getAccountBalance(account.getId(), callContext);
+        assertTrue(accountBalance.compareTo(new BigDecimal("233.82")) == 0);
+
+
     }
 
     @Test(groups = "slow")
@@ -155,6 +166,13 @@ public class TestPaymentRefund extends TestIntegrationBase {
         setDateAndCheckForCompletion(new DateTime(2012, 3, 2, 23, 59, 0, 0, testTimeZone), NextEvent.PHASE, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
         invoice = invoiceChecker.checkInvoice(account.getId(), ++invoiceItemCount, callContext, new ExpectedInvoiceItemCheck(new LocalDate(2012, 3, 2),
                                                                                                                              new LocalDate(2012, 3, 31), InvoiceItemType.RECURRING, new BigDecimal("233.82")));
+
+        assertTrue(invoice.getChargedAmount().compareTo(new BigDecimal("233.82")) == 0);
+        assertTrue(invoice.getBalance().compareTo(BigDecimal.ZERO) == 0);
+
+        final BigDecimal accountBalance = invoiceUserApi.getAccountBalance(account.getId(), callContext);
+        assertTrue(accountBalance.compareTo(BigDecimal.ZERO) == 0);
+
         payment = paymentChecker.checkPayment(account.getId(), 1, callContext, new ExpectedPaymentCheck(new LocalDate(2012, 3, 2), new BigDecimal("233.82"), TransactionStatus.SUCCESS, invoice.getId(), Currency.USD));
 
         // Filter and extract UUId from all Recuring invoices
