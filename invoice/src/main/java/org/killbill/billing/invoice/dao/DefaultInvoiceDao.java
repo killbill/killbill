@@ -342,6 +342,8 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
                     // Create the invoice items if needed (note: they may not necessarily belong to that invoice)
                     for (final InvoiceItemModelDao invoiceItemModelDao : invoiceModelDao.getInvoiceItems()) {
                         final InvoiceItemModelDao existingInvoiceItem = transInvoiceItemSqlDao.getById(invoiceItemModelDao.getId().toString(), context);
+                        // Because of AUTO_INVOICING_REUSE_DRAFT we expect an invoice were items might already exist.
+                        // Also for ALLOWED_INVOICE_ITEM_TYPES, we expect plugins to potentially modify the amount
                         if (existingInvoiceItem == null) {
                             createdInvoiceItems.add(createInvoiceItemFromTransaction(transInvoiceItemSqlDao, invoiceItemModelDao, context));
                             allInvoiceIds.add(invoiceItemModelDao.getInvoiceId());
