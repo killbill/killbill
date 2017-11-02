@@ -620,7 +620,7 @@ public class TestUserApiChangePlan extends SubscriptionTestSuiteWithEmbeddedDB {
         clock.addDays(3);
         assertListenerStatus();
 
-        // Verify PHASE event for Pistol is actif
+        // Verify PHASE event for Shotgun is active
         testListener.pushExpectedEvent(NextEvent.PHASE);
         clock.addDays(26);
         assertListenerStatus();
