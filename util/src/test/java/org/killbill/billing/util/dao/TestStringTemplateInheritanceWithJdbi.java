@@ -16,28 +16,12 @@
 
 package org.killbill.billing.util.dao;
 
-import org.skife.jdbi.v2.sqlobject.SqlQuery;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import org.killbill.billing.util.UtilTestSuiteWithEmbeddedDB;
-import org.killbill.billing.util.entity.Entity;
-import org.killbill.billing.util.entity.dao.EntityModelDao;
-import org.killbill.billing.util.entity.dao.EntitySqlDao;
-import org.killbill.commons.jdbi.template.KillBillSqlDaoStringTemplate;
 
 public class TestStringTemplateInheritanceWithJdbi extends UtilTestSuiteWithEmbeddedDB {
-
-    private static interface Kombucha extends Entity {}
-
-    private static interface KombuchaModelDao extends EntityModelDao<Kombucha> {}
-
-    @KillBillSqlDaoStringTemplate("/org/killbill/billing/util/dao/Kombucha.sql.stg")
-    private static interface KombuchaSqlDao extends EntitySqlDao<KombuchaModelDao, Kombucha> {
-
-        @SqlQuery
-        public boolean isIsTimeForKombucha();
-    }
 
     @Test(groups = "slow")
     public void testInheritQueries() throws Exception {
