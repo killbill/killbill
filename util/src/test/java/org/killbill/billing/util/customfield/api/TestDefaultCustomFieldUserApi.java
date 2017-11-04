@@ -23,11 +23,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import org.killbill.billing.ErrorCode;
 import org.killbill.billing.ObjectType;
 import org.killbill.billing.account.api.ImmutableAccountData;
 import org.killbill.billing.api.TestApiListener.NextEvent;
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.util.UtilTestSuiteWithEmbeddedDB;
+import org.killbill.billing.util.api.CustomFieldApiException;
 import org.killbill.billing.util.customfield.CustomField;
 import org.killbill.billing.util.customfield.StringCustomField;
 import org.killbill.billing.util.entity.Pagination;
@@ -35,16 +37,20 @@ import org.mockito.Mockito;
 import org.skife.jdbi.v2.Handle;
 import org.skife.jdbi.v2.tweak.HandleCallback;
 import org.testng.Assert;
+import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import com.google.common.collect.ImmutableList;
 
 public class TestDefaultCustomFieldUserApi extends UtilTestSuiteWithEmbeddedDB {
 
-    @Test(groups = "slow")
-    public void testSaveCustomFieldWithAccountRecordId() throws Exception {
-        final UUID accountId = UUID.randomUUID();
-        final Long accountRecordId = 19384012L;
+    final UUID accountId = UUID.randomUUID();
+    final Long accountRecordId = 19384012L;
+
+    @Override
+    @BeforeMethod(groups = "slow")
+    public void beforeMethod() throws Exception {
+        super.beforeMethod();
 
         final ImmutableAccountData immutableAccountData = Mockito.mock(ImmutableAccountData.class);
         Mockito.when(immutableAccountInternalApi.getImmutableAccountDataByRecordId(Mockito.<Long>eq(accountRecordId), Mockito.<InternalTenantContext>any())).thenReturn(immutableAccountData);
@@ -59,6 +65,39 @@ public class TestDefaultCustomFieldUserApi extends UtilTestSuiteWithEmbeddedDB {
                 return null;
             }
         });
+    }
+
+    @Test(groups = "slow")
+    public void testCustomFieldBasic() throws Exception {
+
+        final CustomField customField1 = new StringCustomField("some123", "some 456", ObjectType.ACCOUNT, accountId, callContext.getCreatedDate());
+        final CustomField customField2 = new StringCustomField("other123", "other 456", ObjectType.ACCOUNT, accountId, callContext.getCreatedDate());
+        eventsListener.pushExpectedEvents(NextEvent.CUSTOM_FIELD, NextEvent.CUSTOM_FIELD);
+        customFieldUserApi.addCustomFields(ImmutableList.<CustomField>of(customField1, customField2), callContext);
+        assertListenerStatus();
+
+        // Verify operation is indeed transaction, and nothing was inserted
+        final CustomField customField3 = new StringCustomField("qrqrq123", "qrqrq 456", ObjectType.ACCOUNT, accountId, callContext.getCreatedDate());
+        try {
+            customFieldUserApi.addCustomFields(ImmutableList.<CustomField>of(customField3, customField1), callContext);
+        } catch (CustomFieldApiException e) {
+            Assert.assertEquals(e.getCode(), ErrorCode.CUSTOM_FIELD_ALREADY_EXISTS.getCode());
+        }
+
+        List<CustomField> all = customFieldUserApi.getCustomFieldsForAccount(accountId, callContext);
+        Assert.assertEquals(all.size(), 2);
+
+        eventsListener.pushExpectedEvent(NextEvent.CUSTOM_FIELD);
+        customFieldUserApi.addCustomFields(ImmutableList.<CustomField>of(customField3), callContext);
+        assertListenerStatus();
+
+        all = customFieldUserApi.getCustomFieldsForAccount(accountId, callContext);
+        Assert.assertEquals(all.size(), 3);
+    }
+
+
+        @Test(groups = "slow")
+    public void testSaveCustomFieldWithAccountRecordId() throws Exception {
 
         checkPagination(0);
 

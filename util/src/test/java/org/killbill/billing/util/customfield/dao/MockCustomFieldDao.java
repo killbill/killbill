@@ -52,6 +52,7 @@ public class MockCustomFieldDao extends MockEntityDaoBase<CustomFieldModelDao, C
         throw new UnsupportedOperationException();
     }
 
+
     @Override
     public Pagination<CustomFieldModelDao> searchCustomFields(final String searchKey, final Long offset, final Long limit, final InternalTenantContext context) {
         throw new UnsupportedOperationException();

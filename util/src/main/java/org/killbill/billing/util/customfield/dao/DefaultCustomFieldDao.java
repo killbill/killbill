@@ -24,37 +24,38 @@ import java.util.UUID;
 
 import javax.annotation.Nullable;
 
-import org.killbill.billing.util.callcontext.InternalCallContextFactory;
-import org.killbill.billing.util.entity.dao.DefaultPaginationSqlDaoHelper.Ordering;
-import org.skife.jdbi.v2.IDBI;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import org.killbill.billing.BillingExceptionBase;
 import org.killbill.billing.ErrorCode;
 import org.killbill.billing.ObjectType;
-import org.killbill.bus.api.PersistentBus;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
-import org.killbill.clock.Clock;
 import org.killbill.billing.events.BusInternalEvent;
 import org.killbill.billing.util.api.CustomFieldApiException;
 import org.killbill.billing.util.audit.ChangeType;
 import org.killbill.billing.util.cache.CacheControllerDispatcher;
+import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.billing.util.customfield.CustomField;
 import org.killbill.billing.util.customfield.api.DefaultCustomFieldCreationEvent;
 import org.killbill.billing.util.customfield.api.DefaultCustomFieldDeletionEvent;
 import org.killbill.billing.util.dao.NonEntityDao;
 import org.killbill.billing.util.entity.Pagination;
+import org.killbill.billing.util.entity.dao.DefaultPaginationSqlDaoHelper.Ordering;
 import org.killbill.billing.util.entity.dao.DefaultPaginationSqlDaoHelper.PaginationIteratorBuilder;
 import org.killbill.billing.util.entity.dao.EntityDaoBase;
+import org.killbill.billing.util.entity.dao.EntitySqlDao;
 import org.killbill.billing.util.entity.dao.EntitySqlDaoTransactionWrapper;
 import org.killbill.billing.util.entity.dao.EntitySqlDaoTransactionalJdbiWrapper;
 import org.killbill.billing.util.entity.dao.EntitySqlDaoWrapperFactory;
+import org.killbill.bus.api.PersistentBus;
+import org.killbill.clock.Clock;
+import org.skife.jdbi.v2.IDBI;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Predicate;
 import com.google.common.collect.Collections2;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Iterables;
 import com.google.inject.Inject;
 
 public class DefaultCustomFieldDao extends EntityDaoBase<CustomFieldModelDao, CustomField, CustomFieldApiException> implements CustomFieldDao {
@@ -123,6 +124,18 @@ public class DefaultCustomFieldDao extends EntityDaoBase<CustomFieldModelDao, Cu
     @Override
     protected CustomFieldApiException generateAlreadyExistsException(final CustomFieldModelDao entity, final InternalCallContext context) {
         return new CustomFieldApiException(ErrorCode.CUSTOM_FIELD_ALREADY_EXISTS, entity.getId());
+    }
+
+    @Override
+    protected boolean checkEntityAlreadyExists(final EntitySqlDao<CustomFieldModelDao, CustomField> transactional, final CustomFieldModelDao entity, final InternalCallContext context) {
+        return Iterables.find(transactional.getByAccountRecordId(context),
+                              new Predicate<CustomFieldModelDao>() {
+                                  @Override
+                                  public boolean apply(final CustomFieldModelDao existingCustomField) {
+                                      return entity.isSame(existingCustomField);
+                                  }
+                              },
+                              null) != null;
     }
 
     @Override
