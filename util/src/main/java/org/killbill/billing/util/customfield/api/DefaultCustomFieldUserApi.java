@@ -92,7 +92,7 @@ public class DefaultCustomFieldUserApi implements CustomFieldUserApi {
             final Iterable<CustomFieldModelDao> transformed = Iterables.transform(customFields, new Function<CustomField, CustomFieldModelDao>() {
                 @Override
                 public CustomFieldModelDao apply(final CustomField input) {
-                    return new CustomFieldModelDao(context.getCreatedDate(), input.getFieldName(), input.getFieldValue(), input.getObjectId(), input.getObjectType());
+                    return new CustomFieldModelDao(input.getId(), context.getCreatedDate(), context.getCreatedDate(), input.getFieldName(), input.getFieldValue(), input.getObjectId(), input.getObjectType());
                 }
             });
             ((DefaultCustomFieldDao) customFieldDao).create(transformed, internalCallContext);
@@ -101,9 +101,15 @@ public class DefaultCustomFieldUserApi implements CustomFieldUserApi {
 
     @Override
     public void removeCustomFields(final List<CustomField> customFields, final CallContext context) throws CustomFieldApiException {
-        // TODO make it transactional
-        for (final CustomField cur : customFields) {
-            customFieldDao.deleteCustomField(cur.getId(), internalCallContextFactory.createInternalCallContext(cur.getObjectId(), cur.getObjectType(), context));
+        if (!customFields.isEmpty()) {
+            final InternalCallContext internalCallContext = internalCallContextFactory.createInternalCallContext(customFields.get(0).getObjectId(), customFields.get(0).getObjectType(), context);
+            final Iterable<UUID> curstomFieldIds = Iterables.transform(customFields, new Function<CustomField, UUID>() {
+                @Override
+                public UUID apply(final CustomField input) {
+                    return input.getId();
+                }
+            });
+            customFieldDao.deleteCustomFields(curstomFieldIds, internalCallContext);
         }
     }
 

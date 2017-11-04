@@ -76,7 +76,7 @@ public class TestDefaultCustomFieldUserApi extends UtilTestSuiteWithEmbeddedDB {
         customFieldUserApi.addCustomFields(ImmutableList.<CustomField>of(customField1, customField2), callContext);
         assertListenerStatus();
 
-        // Verify operation is indeed transaction, and nothing was inserted
+        // Verify operation is indeed transactional, and nothing was inserted
         final CustomField customField3 = new StringCustomField("qrqrq123", "qrqrq 456", ObjectType.ACCOUNT, accountId, callContext.getCreatedDate());
         try {
             customFieldUserApi.addCustomFields(ImmutableList.<CustomField>of(customField3, customField1), callContext);
@@ -93,6 +93,18 @@ public class TestDefaultCustomFieldUserApi extends UtilTestSuiteWithEmbeddedDB {
 
         all = customFieldUserApi.getCustomFieldsForAccount(accountId, callContext);
         Assert.assertEquals(all.size(), 3);
+
+        eventsListener.pushExpectedEvents(NextEvent.CUSTOM_FIELD, NextEvent.CUSTOM_FIELD);
+        customFieldUserApi.removeCustomFields(ImmutableList.of(customField1, customField3), callContext);
+        assertListenerStatus();
+
+        all = customFieldUserApi.getCustomFieldsForAccount(accountId, callContext);
+        Assert.assertEquals(all.size(), 1);
+        Assert.assertEquals(all.get(0).getId(), customField2.getId());
+        Assert.assertEquals(all.get(0).getObjectId(), accountId);
+        Assert.assertEquals(all.get(0).getObjectType(), ObjectType.ACCOUNT);
+        Assert.assertEquals(all.get(0).getFieldName(), customField2.getFieldName());
+        Assert.assertEquals(all.get(0).getFieldValue(), customField2.getFieldValue());
     }
 
 
