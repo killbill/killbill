@@ -32,6 +32,7 @@ import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.HeaderParam;
 import javax.ws.rs.POST;
+import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
@@ -307,6 +308,25 @@ public class PaymentMethodResource extends JaxRsResourceBase {
         return super.createCustomFields(UUID.fromString(paymentMethodId), customFields,
                                         context.createCallContextNoAccountId(createdBy, reason, comment, request), uriInfo, request);
     }
+
+
+    @TimedResource
+    @PUT
+    @Path("/{paymentMethodId:" + UUID_PATTERN + "}/" + CUSTOM_FIELDS)
+    @Consumes(APPLICATION_JSON)
+    @Produces(APPLICATION_JSON)
+    @ApiOperation(value = "Modify custom fields to payment method")
+    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid payment method id supplied")})
+    public Response modifyCustomFields(@PathParam("paymentMethodId") final String paymentMethodId,
+                                       final List<CustomFieldJson> customFields,
+                                       @HeaderParam(HDR_CREATED_BY) final String createdBy,
+                                       @HeaderParam(HDR_REASON) final String reason,
+                                       @HeaderParam(HDR_COMMENT) final String comment,
+                                       @javax.ws.rs.core.Context final HttpServletRequest request) throws CustomFieldApiException {
+        return super.modifyCustomFields(UUID.fromString(paymentMethodId), customFields,
+                                        context.createCallContextNoAccountId(createdBy, reason, comment, request));
+    }
+
 
     @TimedResource
     @DELETE

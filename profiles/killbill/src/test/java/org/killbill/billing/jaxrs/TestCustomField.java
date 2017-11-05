@@ -31,9 +31,40 @@ import org.killbill.billing.util.api.AuditLevel;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
+import com.google.common.collect.ImmutableList;
+
 public class TestCustomField extends TestJaxrsBase {
 
-    @Test(groups = "slow", description = "Can paginate through all custom fields")
+
+    @Test(groups = "slow", description = "Can create/modify/delete custom fields")
+    public void testBasicCustomFields() throws Exception {
+        final Account account = createAccount();
+        final CustomField customField = new CustomField();
+        customField.setName("MyName");
+        customField.setValue("InitialValue");
+        killBillClient.createAccountCustomField(account.getAccountId(), customField, requestOptions);
+
+        CustomFields allCustomFields = killBillClient.getCustomFields(requestOptions);
+        Assert.assertEquals(allCustomFields.size(), 1);
+        Assert.assertEquals(allCustomFields.get(0).getName(), "MyName");
+        Assert.assertEquals(allCustomFields.get(0).getValue(), "InitialValue");
+
+        final CustomField customFieldModified = new CustomField();
+        customFieldModified.setCustomFieldId(allCustomFields.get(0).getCustomFieldId());
+        customFieldModified.setValue("NewValue");
+        killBillClient.modifyAccountCustomFields(account.getAccountId(), ImmutableList.of(customFieldModified), requestOptions);
+
+        allCustomFields = killBillClient.getCustomFields(requestOptions);
+        Assert.assertEquals(allCustomFields.size(), 1);
+        Assert.assertEquals(allCustomFields.get(0).getName(), "MyName");
+        Assert.assertEquals(allCustomFields.get(0).getValue(), "NewValue");
+
+        killBillClient.deleteAccountCustomField(account.getAccountId(), allCustomFields.get(0).getCustomFieldId(), requestOptions);
+        allCustomFields = killBillClient.getCustomFields(requestOptions);
+        Assert.assertEquals(allCustomFields.size(), 0);
+    }
+
+        @Test(groups = "slow", description = "Can paginate through all custom fields")
     public void testCustomFieldsPagination() throws Exception {
         final Account account = createAccount();
         for (int i = 0; i < 5; i++) {

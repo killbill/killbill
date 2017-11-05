@@ -38,4 +38,6 @@ public interface CustomFieldDao extends EntityDao<CustomFieldModelDao, CustomFie
     public List<CustomFieldModelDao> getCustomFieldsForAccount(final InternalTenantContext context);
 
     void deleteCustomFields(Iterable<UUID> customFieldIds, InternalCallContext context) throws CustomFieldApiException;
+
+    void updateCustomFields(Iterable<CustomFieldModelDao> customFieldIds, InternalCallContext context) throws CustomFieldApiException;
 }

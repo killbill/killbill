@@ -1232,6 +1232,25 @@ public class AccountResource extends JaxRsResourceBase {
                                                                                                         comment, request), uriInfo, request);
     }
 
+
+    @TimedResource
+    @PUT
+    @Path("/{accountId:" + UUID_PATTERN + "}/" + CUSTOM_FIELDS)
+    @Consumes(APPLICATION_JSON)
+    @Produces(APPLICATION_JSON)
+    @ApiOperation(value = "Modify custom fields to account")
+    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid account id supplied")})
+    public Response modifyCustomFields(@PathParam(ID_PARAM_NAME) final String accountIdStr,
+                                       final List<CustomFieldJson> customFields,
+                                       @HeaderParam(HDR_CREATED_BY) final String createdBy,
+                                       @HeaderParam(HDR_REASON) final String reason,
+                                       @HeaderParam(HDR_COMMENT) final String comment,
+                                       @javax.ws.rs.core.Context final HttpServletRequest request) throws CustomFieldApiException {
+        final UUID accountId = UUID.fromString(accountIdStr);
+        return super.modifyCustomFields(accountId, customFields, context.createCallContextWithAccountId(accountId, createdBy, reason,
+                                                                                                        comment, request));
+    }
+
     @TimedResource
     @DELETE
     @Path("/{accountId:" + UUID_PATTERN + "}/" + CUSTOM_FIELDS)

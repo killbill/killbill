@@ -108,6 +108,42 @@ public class TestDefaultCustomFieldUserApi extends UtilTestSuiteWithEmbeddedDB {
     }
 
 
+    @Test(groups = "slow")
+    public void testCustomFieldUpdate() throws Exception {
+
+        final CustomField customField1 = new StringCustomField("gtqre", "value1", ObjectType.ACCOUNT, accountId, callContext.getCreatedDate());
+        eventsListener.pushExpectedEvents(NextEvent.CUSTOM_FIELD);
+        customFieldUserApi.addCustomFields(ImmutableList.<CustomField>of(customField1), callContext);
+        assertListenerStatus();
+
+        final CustomField update1 = new StringCustomField(customField1.getId(), customField1.getFieldName(), "value2", customField1.getObjectType(), customField1.getObjectId(), callContext.getCreatedDate());
+        customFieldUserApi.updateCustomFields(ImmutableList.of(update1), callContext);
+
+        List<CustomField> all = customFieldUserApi.getCustomFieldsForAccount(accountId, callContext);
+        Assert.assertEquals(all.size(), 1);
+        Assert.assertEquals(all.get(0).getId(), update1.getId());
+        Assert.assertEquals(all.get(0).getObjectType(), update1.getObjectType());
+        Assert.assertEquals(all.get(0).getObjectId(), update1.getObjectId());
+        Assert.assertEquals(all.get(0).getFieldName(), update1.getFieldName());
+        Assert.assertEquals(all.get(0).getFieldValue(), "value2");
+
+        try {
+            customFieldUserApi.updateCustomFields(ImmutableList.<CustomField>of(new StringCustomField("gtqre", "value1", ObjectType.ACCOUNT, accountId, callContext.getCreatedDate())), callContext);
+            Assert.fail("Updating custom field should fail");
+        } catch (final CustomFieldApiException e) {
+            Assert.assertEquals(e.getCode(), ErrorCode.CUSTOM_FIELD_DOES_NOT_EXISTS_FOR_ID.getCode());
+        }
+
+        try {
+            customFieldUserApi.updateCustomFields(ImmutableList.<CustomField>of(new StringCustomField(customField1.getId(), "wrongName", "value2", customField1.getObjectType(), customField1.getObjectId(), callContext.getCreatedDate())), callContext);
+            Assert.fail("Updating custom field should fail");
+        } catch (final CustomFieldApiException e) {
+            Assert.assertEquals(e.getCode(), ErrorCode.CUSTOM_FIELD_INVALID_UPDATE.getCode());
+        }
+
+    }
+
+
         @Test(groups = "slow")
     public void testSaveCustomFieldWithAccountRecordId() throws Exception {
 

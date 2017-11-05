@@ -38,6 +38,14 @@ where <idField("")> = :id
 ;
 >>
 
+updateValue() ::= <<
+update <tableName()>
+set field_value = :fieldValue
+where <idField("")> = :id
+<AND_CHECK_TENANT("")>
+;
+>>
+
 
 getCustomFieldsForObject() ::= <<
 select

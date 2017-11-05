@@ -58,6 +58,11 @@ public class MockCustomFieldDao extends MockEntityDaoBase<CustomFieldModelDao, C
     }
 
     @Override
+    public void updateCustomFields(final Iterable<CustomFieldModelDao> customFieldIds, final InternalCallContext context) throws CustomFieldApiException {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
     public Pagination<CustomFieldModelDao> searchCustomFields(final String searchKey, final Long offset, final Long limit, final InternalTenantContext context) {
         throw new UnsupportedOperationException();
     }

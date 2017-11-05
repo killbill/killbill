@@ -124,6 +124,44 @@ public class DefaultCustomFieldDao extends EntityDaoBase<CustomFieldModelDao, Cu
     }
 
     @Override
+    public void updateCustomFields(final Iterable<CustomFieldModelDao> customFieldIds, final InternalCallContext context) throws CustomFieldApiException {
+
+        transactionalSqlDao.execute(CustomFieldApiException.class, new EntitySqlDaoTransactionWrapper<Void>() {
+
+            private void validateCustomField(final CustomFieldModelDao input,  @Nullable CustomFieldModelDao existing) throws CustomFieldApiException {
+                if (existing == null) {
+                    throw new CustomFieldApiException(ErrorCode.CUSTOM_FIELD_DOES_NOT_EXISTS_FOR_ID, input.getId());
+                }
+                if (input.getObjectId() != null & !input.getObjectId().equals(existing.getObjectId())) {
+                    throw new CustomFieldApiException(ErrorCode.CUSTOM_FIELD_INVALID_UPDATE, input.getId(), input.getObjectId(), "ObjectId");
+                }
+                if (input.getObjectType() != null && input.getObjectType() != existing.getObjectType()) {
+                    throw new CustomFieldApiException(ErrorCode.CUSTOM_FIELD_INVALID_UPDATE, input.getId(), input.getObjectType(), "ObjectType");
+                }
+                if (input.getFieldName() != null && !input.getFieldName().equals(existing.getFieldName())) {
+                    throw new CustomFieldApiException(ErrorCode.CUSTOM_FIELD_INVALID_UPDATE, input.getId(), input.getFieldName(), "FieldName");
+                }
+            }
+
+            @Override
+            public Void inTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory) throws Exception {
+                final CustomFieldSqlDao sqlDao = entitySqlDaoWrapperFactory.become(CustomFieldSqlDao.class);
+
+                for (final CustomFieldModelDao cur : customFieldIds) {
+                    final CustomFieldModelDao customField = sqlDao.getById(cur.getId().toString(), context);
+
+                    validateCustomField(cur, customField);
+
+                    sqlDao.updateValue(cur.getId().toString(), cur.getFieldValue(), context);
+                    postBusEventFromTransaction(customField, customField, ChangeType.UPDATE, entitySqlDaoWrapperFactory, context);
+
+                }
+                return null;
+            }
+        });
+    }
+
+    @Override
     protected CustomFieldApiException generateAlreadyExistsException(final CustomFieldModelDao entity, final InternalCallContext context) {
         return new CustomFieldApiException(ErrorCode.CUSTOM_FIELD_ALREADY_EXISTS, entity.getId());
     }

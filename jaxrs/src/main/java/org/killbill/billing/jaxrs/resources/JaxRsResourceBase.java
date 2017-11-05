@@ -268,6 +268,23 @@ public abstract class JaxRsResourceBase implements JaxrsResource {
         return uriBuilder.buildResponse(uriInfo, this.getClass(), "getCustomFields", id, request);
     }
 
+
+    protected Response modifyCustomFields(final UUID id,
+                                          final List<CustomFieldJson> customFields,
+                                          final CallContext context) throws CustomFieldApiException {
+        final LinkedList<CustomField> input = new LinkedList<CustomField>();
+        for (final CustomFieldJson cur : customFields) {
+            verifyNonNullOrEmpty(cur.getCustomFieldId(), "CustomFieldJson id needs to be set");
+            verifyNonNullOrEmpty(cur.getValue(), "CustomFieldJson value needs to be set");
+            input.add(new StringCustomField(UUID.fromString(cur.getCustomFieldId()), cur.getName(), cur.getValue(), getObjectType(), id, context.getCreatedDate()));
+        }
+
+        customFieldUserApi.updateCustomFields(input, context);
+        return Response.status(Response.Status.OK).build();
+    }
+
+
+
     /**
      * @param id              the if of the object for which the custom fields apply
      * @param customFieldList a comma separated list of custom field ids or null if they should all be removed

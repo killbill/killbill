@@ -100,6 +100,21 @@ public class DefaultCustomFieldUserApi implements CustomFieldUserApi {
     }
 
     @Override
+    public void updateCustomFields(final List<CustomField> customFields, final CallContext context) throws CustomFieldApiException {
+        if (!customFields.isEmpty()) {
+            final InternalCallContext internalCallContext = internalCallContextFactory.createInternalCallContext(customFields.get(0).getObjectId(), customFields.get(0).getObjectType(), context);
+            final Iterable<CustomFieldModelDao> customFieldIds = Iterables.transform(customFields, new Function<CustomField, CustomFieldModelDao>() {
+                @Override
+                public CustomFieldModelDao apply(final CustomField input) {
+                    return new CustomFieldModelDao(input.getId(), internalCallContext.getCreatedDate(), internalCallContext.getUpdatedDate(), input.getFieldName(), input.getFieldValue(), input.getObjectId(), input.getObjectType());
+                }
+            });
+            customFieldDao.updateCustomFields(customFieldIds, internalCallContext);
+
+        }
+    }
+
+    @Override
     public void removeCustomFields(final List<CustomField> customFields, final CallContext context) throws CustomFieldApiException {
         if (!customFields.isEmpty()) {
             final InternalCallContext internalCallContext = internalCallContextFactory.createInternalCallContext(customFields.get(0).getObjectId(), customFields.get(0).getObjectType(), context);

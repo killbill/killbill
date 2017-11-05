@@ -324,6 +324,26 @@ public class BundleResource extends JaxRsResourceBase {
     }
 
     @TimedResource
+    @PUT
+    @Path("/{bundleId:" + UUID_PATTERN + "}/" + CUSTOM_FIELDS)
+    @Consumes(APPLICATION_JSON)
+    @Produces(APPLICATION_JSON)
+    @ApiOperation(value = "Modify custom fields to bundle")
+    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid bundle id supplied")})
+    public Response modifyCustomFields(@PathParam(ID_PARAM_NAME) final String id,
+                                       final List<CustomFieldJson> customFields,
+                                       @HeaderParam(HDR_CREATED_BY) final String createdBy,
+                                       @HeaderParam(HDR_REASON) final String reason,
+                                       @HeaderParam(HDR_COMMENT) final String comment,
+                                       @javax.ws.rs.core.Context final HttpServletRequest request) throws CustomFieldApiException {
+        return super.modifyCustomFields(UUID.fromString(id), customFields,
+                                        context.createCallContextNoAccountId(createdBy, reason, comment, request));
+    }
+
+
+
+
+    @TimedResource
     @DELETE
     @Path("/{bundleId:" + UUID_PATTERN + "}/" + CUSTOM_FIELDS)
     @Consumes(APPLICATION_JSON)
