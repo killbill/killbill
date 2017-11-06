@@ -645,6 +645,7 @@ public class InvoiceResource extends JaxRsResourceBase {
     @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid account id or invoice id supplied"),
                            @ApiResponse(code = 404, message = "Account not found")})
     public Response createInstantPayment(final InvoicePaymentJson payment,
+                                         @PathParam("invoiceId") final String invoiceId,
                                          @QueryParam(QUERY_PAYMENT_EXTERNAL) @DefaultValue("false") final Boolean externalPayment,
                                          @QueryParam(QUERY_PLUGIN_PROPERTY) final List<String> pluginPropertiesString,
                                          @HeaderParam(HDR_CREATED_BY) final String createdBy,
@@ -665,10 +666,8 @@ public class InvoiceResource extends JaxRsResourceBase {
         final UUID paymentMethodId = externalPayment ? null :
                                      (payment.getPaymentMethodId() != null ? UUID.fromString(payment.getPaymentMethodId()) : account.getPaymentMethodId());
 
-        final UUID invoiceId = UUID.fromString(payment.getTargetInvoiceId());
-
-        final Payment result = createPurchaseForInvoice(account, invoiceId, payment.getPurchasedAmount(), paymentMethodId, externalPayment,
-                                                        (payment.getPaymentExternalKey() != null) ? payment.getPaymentExternalKey() : null, null, pluginProperties, callContext);
+        final Payment result = createPurchaseForInvoice(account, UUID.fromString(invoiceId), payment.getPurchasedAmount(), paymentMethodId, externalPayment,
+                                                        payment.getPaymentExternalKey(), null, pluginProperties, callContext);
         return result != null ?
                uriBuilder.buildResponse(uriInfo, InvoicePaymentResource.class, "getInvoicePayment", result.getId(), request) :
                Response.status(Status.NO_CONTENT).build();
