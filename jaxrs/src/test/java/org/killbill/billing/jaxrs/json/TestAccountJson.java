@@ -18,6 +18,7 @@ package org.killbill.billing.jaxrs.json;
 
 import java.util.UUID;
 
+import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.testng.Assert;
 import org.testng.annotations.Test;
@@ -39,6 +40,7 @@ public class TestAccountJson extends JaxrsTestSuiteNoDB {
         final Integer billCycleDayLocal = 6;
         final String currency = UUID.randomUUID().toString();
         final String paymentMethodId = UUID.randomUUID().toString();
+        final DateTime referenceTime = new DateTime();
         final String timeZone = UUID.randomUUID().toString();
         final String address1 = UUID.randomUUID().toString();
         final String address2 = UUID.randomUUID().toString();
@@ -56,7 +58,7 @@ public class TestAccountJson extends JaxrsTestSuiteNoDB {
 
         final AccountJson accountJson = new AccountJson(accountId, name, length, externalKey,
                                                         email, billCycleDayLocal, currency, parentAccountId, true, paymentMethodId,
-                                                        timeZone, address1, address2, postalCode, company, city, state,
+                                                        referenceTime, timeZone, address1, address2, postalCode, company, city, state,
                                                         country, locale, phone, notes, isMigrated, isNotifiedForInvoice, null, null, null);
         Assert.assertEquals(accountJson.getAccountId(), accountId);
         Assert.assertEquals(accountJson.getName(), name);

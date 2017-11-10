@@ -434,6 +434,7 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
                 .isNotifiedForInvoices(false)
                 .externalKey(UUID.randomUUID().toString().substring(1, 8))
                 .currency(Currency.USD)
+                .referenceTime(clock.getUTCNow())
                 .timeZone(DateTimeZone.UTC);
         if (billingDay != null) {
             builder.billingCycleDayLocal(billingDay);
@@ -452,6 +453,7 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
                                        .billingCycleDayLocal(billingDay)
                                        .currency(Currency.USD)
                                        .paymentMethodId(UUID.randomUUID())
+                                       .referenceTime(clock.getUTCNow())
                                        .timeZone(DateTimeZone.UTC)
                                        .parentAccountId(parentAccountId)
                                        .isPaymentDelegatedToParent(isPaymentDelegatedToParent)

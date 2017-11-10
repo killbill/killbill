@@ -20,7 +20,10 @@ package org.killbill.billing.account.api.user;
 
 import java.util.UUID;
 
+import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
+import org.joda.time.format.DateTimeFormatter;
+import org.joda.time.format.ISODateTimeFormat;
 import org.killbill.billing.account.api.AccountData;
 import org.killbill.billing.account.dao.AccountModelDao;
 import org.killbill.billing.catalog.api.Currency;
@@ -33,6 +36,8 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Strings;
 
 public class DefaultAccountCreationEvent extends BusEventBase implements AccountCreationInternalEvent {
+
+    private static final DateTimeFormatter DATE_TIME_FORMATTER = ISODateTimeFormat.dateTimeParser();
 
     private final UUID id;
     private final AccountData data;
@@ -113,6 +118,7 @@ public class DefaultAccountCreationEvent extends BusEventBase implements Account
         private final UUID parentAccountId;
         private final Boolean isPaymentDelegatedToParent;
         private final UUID paymentMethodId;
+        private final String referenceTime;
         private final String timeZone;
         private final String locale;
         private final String address1;
@@ -137,6 +143,7 @@ public class DefaultAccountCreationEvent extends BusEventBase implements Account
                  d.getParentAccountId(),
                  d.getIsPaymentDelegatedToParent(),
                  d.getPaymentMethodId(),
+                 d.getReferenceTime() != null ? d.getReferenceTime().toString() : null,
                  d.getTimeZone() != null ? d.getTimeZone().getID() : null,
                  d.getLocale(),
                  d.getAddress1(),
@@ -162,6 +169,7 @@ public class DefaultAccountCreationEvent extends BusEventBase implements Account
                                   @JsonProperty("parentAccountId") final UUID parentAccountId,
                                   @JsonProperty("isPaymentDelegatedToParent") final Boolean isPaymentDelegatedToParent,
                                   @JsonProperty("paymentMethodId") final UUID paymentMethodId,
+                                  @JsonProperty("referenceTime") final String referenceTime,
                                   @JsonProperty("timeZone") final String timeZone,
                                   @JsonProperty("locale") final String locale,
                                   @JsonProperty("address1") final String address1,
@@ -184,6 +192,7 @@ public class DefaultAccountCreationEvent extends BusEventBase implements Account
             this.parentAccountId = parentAccountId;
             this.isPaymentDelegatedToParent = isPaymentDelegatedToParent;
             this.paymentMethodId = paymentMethodId;
+            this.referenceTime = referenceTime;
             this.timeZone = timeZone;
             this.locale = locale;
             this.address1 = address1;
@@ -315,6 +324,11 @@ public class DefaultAccountCreationEvent extends BusEventBase implements Account
         }
 
         @Override
+        public DateTime getReferenceTime() {
+            return DATE_TIME_FORMATTER.parseDateTime(referenceTime);
+        }
+
+        @Override
         @JsonIgnore
         public Boolean isMigrated() {
             return isMigrated;
@@ -414,10 +428,12 @@ public class DefaultAccountCreationEvent extends BusEventBase implements Account
             if (stateOrProvince != null ? !stateOrProvince.equals(that.stateOrProvince) : that.stateOrProvince != null) {
                 return false;
             }
+            if (referenceTime != null ? referenceTime.compareTo(that.referenceTime) != 0 : that.referenceTime != null) {
+                return false;
+            }
             if (timeZone != null ? !timeZone.equals(that.timeZone) : that.timeZone != null) {
                 return false;
             }
-
             return true;
         }
 
@@ -432,6 +448,7 @@ public class DefaultAccountCreationEvent extends BusEventBase implements Account
             result = 31 * result + (parentAccountId != null ? parentAccountId.hashCode() : 0);
             result = 31 * result + (isPaymentDelegatedToParent != null ? isPaymentDelegatedToParent.hashCode() : 0);
             result = 31 * result + (paymentMethodId != null ? paymentMethodId.hashCode() : 0);
+            result = 31 * result + (referenceTime != null ? referenceTime.hashCode() : 0);
             result = 31 * result + (timeZone != null ? timeZone.hashCode() : 0);
             result = 31 * result + (locale != null ? locale.hashCode() : 0);
             result = 31 * result + (address1 != null ? address1.hashCode() : 0);

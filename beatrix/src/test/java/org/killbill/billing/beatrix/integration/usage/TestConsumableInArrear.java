@@ -189,6 +189,7 @@ public class TestConsumableInArrear extends TestIntegrationBase {
                                                                 .billingCycleDayLocal(1)
                                                                 .currency(Currency.USD)
                                                                 .paymentMethodId(UUID.randomUUID())
+                                                                .referenceTime(clock.getUTCNow())
                                                                 .timeZone(tz)
                                                                 .build();
         final Account account = createAccountWithNonOsgiPaymentMethod(accountData);

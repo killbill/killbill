@@ -146,6 +146,7 @@ public class TestPaymentHelper {
         Mockito.when(accountData.isNotifiedForInvoices()).thenReturn(false);
         Mockito.when(accountData.getTimeZone()).thenReturn(DateTimeZone.UTC);
         Mockito.when(accountData.getCreatedDate()).thenReturn(clock.getUTCNow());
+        Mockito.when(accountData.getReferenceTime()).thenReturn(clock.getUTCNow());
 
         Account account;
         if (isFastTest()) {

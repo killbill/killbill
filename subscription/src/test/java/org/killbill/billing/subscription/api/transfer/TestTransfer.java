@@ -60,12 +60,12 @@ public class TestTransfer extends SubscriptionTestSuiteWithEmbeddedDB {
         // Note: this will cleanup all tables
         super.beforeMethod();
 
-        final AccountData accountData2 = subscriptionTestInitializer.initAccountData();
+        final AccountData accountData2 = subscriptionTestInitializer.initAccountData(clock);
         final Account account2 = createAccount(accountData2);
         finalNewAccountId = account2.getId();
 
         // internal context will be configured for accountId
-        final AccountData accountData = subscriptionTestInitializer.initAccountData();
+        final AccountData accountData = subscriptionTestInitializer.initAccountData(clock);
         final Account account = createAccount(accountData);
         newAccountId = account.getId();
     }

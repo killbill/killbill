@@ -116,7 +116,7 @@ public class GuicyKillbillTestSuite implements IHookable {
         final InternalTenantContext tmp = internalCallContextFactory.createInternalTenantContext(accountId, callContext);
         internalCallContext.setAccountRecordId(tmp.getAccountRecordId());
         internalCallContext.setFixedOffsetTimeZone(tmp.getFixedOffsetTimeZone());
-        internalCallContext.setReferenceTime(tmp.getReferenceTime());
+        internalCallContext.setReferenceTime(tmp.getReferenceLocalTime());
         internalCallContext.setCreatedDate(clock.getUTCNow());
         internalCallContext.setUpdatedDate(clock.getUTCNow());
     }

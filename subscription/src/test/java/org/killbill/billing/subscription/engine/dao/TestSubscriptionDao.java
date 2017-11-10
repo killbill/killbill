@@ -57,7 +57,7 @@ public class TestSubscriptionDao extends SubscriptionTestSuiteWithEmbeddedDB {
         super.beforeMethod();
 
         // internal context will be configured for accountId
-        final AccountData accountData = subscriptionTestInitializer.initAccountData();
+        final AccountData accountData = subscriptionTestInitializer.initAccountData(clock);
         final Account account = createAccount(accountData);
         accountId = account.getId();
     }

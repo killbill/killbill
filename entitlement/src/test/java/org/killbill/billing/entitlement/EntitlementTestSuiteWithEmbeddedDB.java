@@ -260,6 +260,7 @@ public class EntitlementTestSuiteWithEmbeddedDB extends GuicyKillbillTestSuiteWi
     }
 
     protected AccountData getAccountData(final int billingDay) {
+
         return new MockAccountBuilder().name(UUID.randomUUID().toString().substring(1, 8))
                                        .firstNameLength(6)
                                        .email(UUID.randomUUID().toString().substring(1, 8))
@@ -270,6 +271,7 @@ public class EntitlementTestSuiteWithEmbeddedDB extends GuicyKillbillTestSuiteWi
                                        .billingCycleDayLocal(billingDay)
                                        .currency(Currency.USD)
                                        .paymentMethodId(UUID.randomUUID())
+                                       .referenceTime(clock.getUTCNow())
                                        .timeZone(DateTimeZone.UTC)
                                        .build();
     }

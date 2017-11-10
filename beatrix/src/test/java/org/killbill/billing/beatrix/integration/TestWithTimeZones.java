@@ -70,6 +70,7 @@ public class TestWithTimeZones extends TestIntegrationBase {
                                                                 .billingCycleDayLocal(1)
                                                                 .currency(Currency.USD)
                                                                 .paymentMethodId(UUID.randomUUID())
+                                                                .referenceTime(clock.getUTCNow())
                                                                 .timeZone(tz)
                                                                 .build();
         final Account account = createAccountWithNonOsgiPaymentMethod(accountData);
@@ -129,6 +130,7 @@ public class TestWithTimeZones extends TestIntegrationBase {
                                                                 .billingCycleDayLocal(1)
                                                                 .currency(Currency.USD)
                                                                 .paymentMethodId(UUID.randomUUID())
+                                                                .referenceTime(clock.getUTCNow())
                                                                 .timeZone(tz)
                                                                 .build();
         final Account account = createAccountWithNonOsgiPaymentMethod(accountData);
@@ -174,6 +176,7 @@ public class TestWithTimeZones extends TestIntegrationBase {
                                                                 .billingCycleDayLocal(1)
                                                                 .currency(Currency.USD)
                                                                 .paymentMethodId(UUID.randomUUID())
+                                                                .referenceTime(clock.getUTCNow())
                                                                 .timeZone(tz)
                                                                 .build();
         final Account account = createAccountWithNonOsgiPaymentMethod(accountData);
@@ -207,6 +210,7 @@ public class TestWithTimeZones extends TestIntegrationBase {
         clock.setTime(new DateTime(2015, 3, 7, 2, 0, 0, tz));
 
         final AccountData accountData = new MockAccountBuilder().currency(Currency.USD)
+                                                                .referenceTime(clock.getUTCNow())
                                                                 .timeZone(tz)
                                                                 .build();
         final Account account = createAccountWithNonOsgiPaymentMethod(accountData);
@@ -269,6 +273,7 @@ public class TestWithTimeZones extends TestIntegrationBase {
         clock.setTime(new DateTime(2017, 3, 1, 23, 30, 0, tz));
 
         final AccountData accountData = new MockAccountBuilder().currency(Currency.USD)
+                                                                .referenceTime(clock.getUTCNow())
                                                                 .timeZone(tz)
                                                                 .build();
 
@@ -306,6 +311,7 @@ public class TestWithTimeZones extends TestIntegrationBase {
         clock.setTime(new DateTime(2016, 11, 5, 23, 30, 0, tz));
 
         final AccountData accountData = new MockAccountBuilder().currency(Currency.USD)
+                                                                .referenceTime(clock.getUTCNow())
                                                                 .timeZone(tz)
                                                                 .build();
 
@@ -350,6 +356,7 @@ public class TestWithTimeZones extends TestIntegrationBase {
 
         final AccountData accountData = new MockAccountBuilder().currency(Currency.USD)
                                                                 .timeZone(tz)
+                                                                .referenceTime(clock.getUTCNow())
                                                                 .build();
 
         // Create account with non BCD to force junction BCD logic to activate
@@ -386,6 +393,7 @@ public class TestWithTimeZones extends TestIntegrationBase {
 
         final AccountData accountData = new MockAccountBuilder().currency(Currency.USD)
                                                                 .timeZone(tz)
+                                                                .referenceTime(clock.getUTCNow())
                                                                 .build();
 
         // Create account with non BCD to force junction BCD logic to activate

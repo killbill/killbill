@@ -37,6 +37,7 @@ import org.killbill.billing.subscription.api.SubscriptionBaseService;
 import org.killbill.billing.subscription.api.user.SubscriptionBaseBundle;
 import org.killbill.billing.subscription.engine.core.DefaultSubscriptionBaseService;
 import org.killbill.billing.util.UUIDs;
+import org.killbill.clock.Clock;
 import org.killbill.clock.ClockMock;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -60,7 +61,7 @@ public class DefaultSubscriptionTestInitializer implements SubscriptionTestIniti
         return catalog;
     }
 
-    public AccountData initAccountData() {
+    public AccountData initAccountData(final Clock clock) {
         final AccountData accountData = new MockAccountBuilder().name(UUIDs.randomUUID().toString().substring(1, 8))
                                                                 .firstNameLength(6)
                                                                 .email(UUIDs.randomUUID().toString().substring(1, 8))
@@ -71,6 +72,7 @@ public class DefaultSubscriptionTestInitializer implements SubscriptionTestIniti
                                                                 .billingCycleDayLocal(1)
                                                                 .currency(Currency.USD)
                                                                 .paymentMethodId(UUIDs.randomUUID())
+                                                                .referenceTime(clock.getUTCNow())
                                                                 .timeZone(DateTimeZone.forID("Europe/Paris"))
                                                                 .build();
 

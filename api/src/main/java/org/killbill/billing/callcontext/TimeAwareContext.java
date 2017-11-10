@@ -29,18 +29,18 @@ public class TimeAwareContext {
 
     private final DateTimeZone fixedOffsetTimeZone;
     private final DateTime referenceDateTime;
-    private final LocalTime referenceTime;
+    private final LocalTime referenceLocalTime;
 
     public TimeAwareContext(@Nullable final DateTimeZone fixedOffsetTimeZone, @Nullable final DateTime referenceDateTime) {
         this.fixedOffsetTimeZone = fixedOffsetTimeZone;
         this.referenceDateTime = referenceDateTime;
-        this.referenceTime = computeReferenceTime(referenceDateTime);
+        this.referenceLocalTime = computeReferenceTime(referenceDateTime);
     }
 
     public DateTime toUTCDateTime(final LocalDate localDate) {
         validateContext();
 
-        return ClockUtil.toUTCDateTime(localDate, getReferenceTime(), getFixedOffsetTimeZone());
+        return ClockUtil.toUTCDateTime(localDate, getReferenceLocalTime(), getFixedOffsetTimeZone());
     }
 
     public LocalDate toLocalDate(final DateTime dateTime) {
@@ -50,8 +50,8 @@ public class TimeAwareContext {
     }
 
     private void validateContext() {
-        if (getFixedOffsetTimeZone() == null || getReferenceTime() == null) {
-            throw new IllegalArgumentException(String.format("Context mis-configured: fixedOffsetTimeZone=%s, referenceTime=%s", getFixedOffsetTimeZone(), getReferenceTime()));
+        if (getFixedOffsetTimeZone() == null || getReferenceLocalTime() == null) {
+            throw new IllegalArgumentException(String.format("Context mis-configured: fixedOffsetTimeZone=%s, referenceLocalTime=%s", getFixedOffsetTimeZone(), getReferenceLocalTime()));
         }
     }
 
@@ -72,7 +72,7 @@ public class TimeAwareContext {
     }
 
     //@VisibleForTesting
-    public LocalTime getReferenceTime() {
-        return referenceTime;
+    public LocalTime getReferenceLocalTime() {
+        return referenceLocalTime;
     }
 }

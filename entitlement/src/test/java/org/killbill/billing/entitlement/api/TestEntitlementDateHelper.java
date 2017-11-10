@@ -145,6 +145,7 @@ public class TestEntitlementDateHelper extends EntitlementTestSuiteNoDB {
     private void createAccount(final DateTimeZone dateTimeZone, final DateTime referenceDateTime) throws AccountApiException {
         final Account accountData = new MockAccountBuilder().externalKey(UUID.randomUUID().toString())
                                                             .timeZone(dateTimeZone)
+                                                            .referenceTime(referenceDateTime)
                                                             .createdDate(referenceDateTime)
                                                             .build();
 

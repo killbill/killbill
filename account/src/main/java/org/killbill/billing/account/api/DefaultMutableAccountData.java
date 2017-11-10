@@ -20,6 +20,7 @@ package org.killbill.billing.account.api;
 
 import java.util.UUID;
 
+import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.killbill.billing.catalog.api.Currency;
 
@@ -37,6 +38,7 @@ public class DefaultMutableAccountData implements MutableAccountData {
     private Boolean isPaymentDelegatedToParent;
     private int billCycleDayLocal;
     private UUID paymentMethodId;
+    private DateTime referenceTime;
     private DateTimeZone timeZone;
     private String locale;
     private String address1;
@@ -54,8 +56,8 @@ public class DefaultMutableAccountData implements MutableAccountData {
     public DefaultMutableAccountData(final String externalKey, final String email, final String name,
                                      final int firstNameLength, final Currency currency,
                                      final UUID parentAccountId, final Boolean isPaymentDelegatedToParent,
-                                     final int billCycleDayLocal, final UUID paymentMethodId, final DateTimeZone timeZone,
-                                     final String locale, final String address1, final String address2,
+                                     final int billCycleDayLocal, final UUID paymentMethodId, final DateTime referenceTime,
+                                     final DateTimeZone timeZone, final String locale, final String address1, final String address2,
                                      final String companyName, final String city, final String stateOrProvince,
                                      final String country, final String postalCode, final String phone,
                                      final String notes, final boolean isMigrated, final boolean isNotifiedForInvoices) {
@@ -68,6 +70,7 @@ public class DefaultMutableAccountData implements MutableAccountData {
         this.isPaymentDelegatedToParent = isPaymentDelegatedToParent;
         this.billCycleDayLocal = billCycleDayLocal;
         this.paymentMethodId = paymentMethodId;
+        this.referenceTime = referenceTime;
         this.timeZone = timeZone;
         this.locale = locale;
         this.address1 = address1;
@@ -93,6 +96,7 @@ public class DefaultMutableAccountData implements MutableAccountData {
         this.isPaymentDelegatedToParent = accountData.isPaymentDelegatedToParent();
         this.billCycleDayLocal = accountData.getBillCycleDayLocal() == null ? DEFAULT_BILLING_CYCLE_DAY_LOCAL : accountData.getBillCycleDayLocal();
         this.paymentMethodId = accountData.getPaymentMethodId();
+        this.referenceTime = accountData.getReferenceTime();
         this.timeZone = accountData.getTimeZone();
         this.locale = accountData.getLocale();
         this.address1 = accountData.getAddress1();
@@ -174,8 +178,19 @@ public class DefaultMutableAccountData implements MutableAccountData {
     }
 
     @Override
+    public DateTime getReferenceTime() {
+        return referenceTime;
+    }
+
+
+    @Override
     public void setPaymentMethodId(final UUID paymentMethodId) {
         this.paymentMethodId = paymentMethodId;
+    }
+
+    @Override
+    public void setReferenceTime(final DateTime dateTime) {
+        this.referenceTime = referenceTime;
     }
 
     @Override
