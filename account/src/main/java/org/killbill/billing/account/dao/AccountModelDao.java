@@ -135,8 +135,8 @@ public class AccountModelDao extends EntityModelDaoBase implements TimeZoneAware
     }
 
 
-    public AccountModelDao(final AccountData account, final DateTime createdDate) {
-        this(UUIDs.randomUUID(), createdDate, createdDate, account);
+    public AccountModelDao(final AccountData account) {
+        this(UUIDs.randomUUID(), null, null, account);
     }
 
 

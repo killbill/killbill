@@ -91,7 +91,6 @@ public abstract class AccountTestUtils {
         final String email = UUID.randomUUID().toString().substring(0, 4) + '@' + UUID.randomUUID().toString().substring(0, 4);
         final String name = UUID.randomUUID().toString();
         final String locale = Locale.GERMANY.toString();
-        //final DateTime referenceTime = billCycleDayLocal
         final DateTimeZone timeZone = DateTimeZone.forID("America/Los_Angeles");
         final int firstNameLength = name.length();
         final Currency currency = Currency.MXN;
