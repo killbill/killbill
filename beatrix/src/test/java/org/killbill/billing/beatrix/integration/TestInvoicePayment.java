@@ -1073,7 +1073,7 @@ public class TestInvoicePayment extends TestIntegrationBase {
                                                         UUID.randomUUID().toString(), properties, PAYMENT_OPTIONS, callContext);
             Assert.fail("The payment should not succeed (and yet it will repair the broken state....)");
         } catch (final PaymentApiException expected) {
-            Assert.assertEquals(expected.getCode(), ErrorCode.PAYMENT_PLUGIN_EXCEPTION.getCode());
+            Assert.assertEquals(expected.getCode(), ErrorCode.PAYMENT_PLUGIN_API_ABORTED.getCode());
         }
         assertListenerStatus();
 
