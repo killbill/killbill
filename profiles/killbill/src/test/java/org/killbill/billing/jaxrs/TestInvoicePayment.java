@@ -24,6 +24,8 @@ import java.util.List;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
+import org.killbill.billing.catalog.api.BillingPeriod;
+import org.killbill.billing.catalog.api.ProductCategory;
 import org.killbill.billing.client.KillBillClientException;
 import org.killbill.billing.client.model.Account;
 import org.killbill.billing.client.model.Invoice;
@@ -36,10 +38,12 @@ import org.killbill.billing.client.model.Payment;
 import org.killbill.billing.client.model.PaymentMethod;
 import org.killbill.billing.client.model.PaymentTransaction;
 import org.killbill.billing.client.model.Payments;
+import org.killbill.billing.client.model.Subscription;
 import org.killbill.billing.osgi.api.OSGIServiceRegistration;
 import org.killbill.billing.payment.api.TransactionType;
 import org.killbill.billing.payment.plugin.api.PaymentPluginApi;
 import org.killbill.billing.payment.provider.MockPaymentProviderPlugin;
+import org.killbill.billing.util.tag.ControlTagType;
 import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
@@ -50,6 +54,8 @@ import com.google.inject.Inject;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
+import static org.testng.Assert.assertNull;
+import static org.testng.Assert.assertTrue;
 
 public class TestInvoicePayment extends TestJaxrsBase {
 
@@ -63,6 +69,9 @@ public class TestInvoicePayment extends TestJaxrsBase {
         super.beforeMethod();
         mockPaymentProviderPlugin = (MockPaymentProviderPlugin) registry.getServiceForName(PLUGIN_NAME);
     }
+
+
+
 
     @Test(groups = "slow")
     public void testRetrievePayment() throws Exception {
@@ -252,7 +261,7 @@ public class TestInvoicePayment extends TestJaxrsBase {
             Assert.assertTrue(paymentsPage.get(0).equals((Payment) allPayments.get(i)));
             paymentsPage = paymentsPage.getNext();
         }
-        Assert.assertNull(paymentsPage);
+        assertNull(paymentsPage);
     }
 
     @Test(groups = "slow")
@@ -285,6 +294,55 @@ public class TestInvoicePayment extends TestJaxrsBase {
         for (final InvoicePayment cur : invoicePayments) {
             assertEquals(cur.getTargetInvoiceId(), invoice.getInvoiceId());
         }
+    }
+
+
+    @Test(groups = "slow")
+    public void testManualInvoicePayment() throws Exception {
+
+        final Account accountJson = createAccountWithDefaultPaymentMethod();
+        assertNotNull(accountJson);
+
+        // Disable automatic payments
+        killBillClient.createAccountTag(accountJson.getAccountId(), ControlTagType.AUTO_PAY_OFF.getId(), requestOptions);
+
+        // Add a bundle, subscription and move the clock to get the first invoice
+        final Subscription subscriptionJson = createEntitlement(accountJson.getAccountId(), UUID.randomUUID().toString(), "Shotgun",
+                                                                ProductCategory.BASE, BillingPeriod.MONTHLY, true);
+        assertNotNull(subscriptionJson);
+        clock.addDays(32);
+        crappyWaitForLackOfProperSynchonization();
+
+        final List<Invoice> invoices = killBillClient.getInvoicesForAccount(accountJson.getAccountId(), requestOptions);
+        assertEquals(invoices.size(), 2);
+
+
+        final InvoicePayment invoicePayment1 = new InvoicePayment();
+        invoicePayment1.setPurchasedAmount(invoices.get(1).getBalance().add(BigDecimal.TEN));
+        invoicePayment1.setAccountId(accountJson.getAccountId());
+        invoicePayment1.setTargetInvoiceId(invoices.get(1).getInvoiceId());
+
+        // Pay too too much => 400
+        try {
+            killBillClient.createInvoicePayment(invoicePayment1, false, requestOptions);
+        } catch (final KillBillClientException e) {
+            assertTrue(true);
+        }
+
+
+        final InvoicePayment invoicePayment2 = new InvoicePayment();
+        invoicePayment2.setPurchasedAmount(invoices.get(1).getBalance());
+        invoicePayment2.setAccountId(accountJson.getAccountId());
+        invoicePayment2.setTargetInvoiceId(invoices.get(1).getInvoiceId());
+
+        // Just right, Yah! => 201
+        final InvoicePayment result2 = killBillClient.createInvoicePayment(invoicePayment2, false, requestOptions);
+        assertEquals(result2.getTransactions().size(), 1);
+        assertTrue(result2.getTransactions().get(0).getAmount().compareTo(invoices.get(1).getBalance()) == 0);
+
+        // Already paid -> 204
+        final InvoicePayment result3 = killBillClient.createInvoicePayment(invoicePayment2, false, requestOptions);
+        assertNull(result3);
     }
 
     private BigDecimal getFractionOfAmount(final BigDecimal amount) {

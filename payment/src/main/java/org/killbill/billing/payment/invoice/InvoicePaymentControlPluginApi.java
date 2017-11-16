@@ -334,14 +334,6 @@ public final class InvoicePaymentControlPluginApi implements PaymentControlPlugi
             // Is remaining amount > 0 ?
             final BigDecimal requestedAmount = validateAndComputePaymentAmount(invoice, paymentControlPluginContext.getAmount(), paymentControlPluginContext.isApiPayment());
             if (requestedAmount.compareTo(BigDecimal.ZERO) <= 0) {
-                if (paymentControlPluginContext.isApiPayment()) {
-                    throw new PaymentControlApiException("Abort purchase call: ", new PaymentApiException(ErrorCode.PAYMENT_PLUGIN_EXCEPTION,
-                                                                                                          String.format("Aborted Payment for invoice %s : invoice balance is = %s, requested payment amount is = %s",
-                                                                                                                        invoice.getId(),
-                                                                                                                        invoice.getBalance(),
-                                                                                                                        paymentControlPluginContext.getAmount())));
-
-                }
                 return new DefaultPriorPaymentControlResult(true);
             }
 
@@ -654,23 +646,25 @@ public final class InvoicePaymentControlPluginApi implements PaymentControlPlugi
         return false;
     }
 
-    private BigDecimal validateAndComputePaymentAmount(final Invoice invoice, @Nullable final BigDecimal inputAmount, final boolean isApiPayment) {
+    private BigDecimal validateAndComputePaymentAmount(final Invoice invoice, @Nullable final BigDecimal inputAmount, final boolean isApiPayment) throws PaymentControlApiException {
 
         if (invoice.getBalance().compareTo(BigDecimal.ZERO) <= 0) {
             log.info("invoiceId='{}' has already been paid", invoice.getId());
             return BigDecimal.ZERO;
         }
+
         if (isApiPayment &&
             inputAmount != null &&
             invoice.getBalance().compareTo(inputAmount) < 0) {
-            log.info("invoiceId='{}' has a balance='{}' < retry paymentAmount='{}'", invoice.getId(), invoice.getBalance().floatValue(), inputAmount.floatValue());
-            return BigDecimal.ZERO;
+            log.info("invoiceId='{}' has a balance='{}' < paymentAmount='{}'", invoice.getId(), invoice.getBalance().floatValue(), inputAmount.floatValue());
+            throw new PaymentControlApiException("Abort purchase call: ", new PaymentApiException(ErrorCode.PAYMENT_PLUGIN_EXCEPTION,
+                                                                                                  String.format("Invalid amount '%s' for invoice '%s': invoice balance is = '%s'",
+                                                                                                                inputAmount,
+                                                                                                                invoice.getId(),
+                                                                                                                invoice.getBalance())));
         }
-        if (inputAmount == null) {
-            return invoice.getBalance();
-        } else {
-            return invoice.getBalance().compareTo(inputAmount) < 0 ? invoice.getBalance() : inputAmount;
-        }
+
+        return (inputAmount == null || invoice.getBalance().compareTo(inputAmount) < 0) ? invoice.getBalance() : inputAmount;
     }
 
     private boolean insert_AUTO_PAY_OFF_ifRequired(final PaymentControlContext paymentControlContext, final BigDecimal computedAmount) {

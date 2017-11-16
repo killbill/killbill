@@ -568,8 +568,11 @@ public abstract class JaxRsResourceBase implements JaxrsResource {
             return paymentApi.createPurchaseWithPaymentControl(account, paymentMethodId, null, amountToPay, account.getCurrency(), paymentExternalKey, transactionExternalKey,
                                                                properties, createInvoicePaymentControlPluginApiPaymentOptions(externalPayment), callContext);
         } catch (final PaymentApiException e) {
-            if (e.getCode() == ErrorCode.PAYMENT_PLUGIN_EXCEPTION.getCode() &&
-                e.getMessage().contains("Aborted Payment for invoice")) {
+
+            if (e.getCode() == ErrorCode.PAYMENT_PLUGIN_EXCEPTION.getCode() /* &&
+                e.getMessage().contains("Invalid amount") */) { /* Plugin received bad input */
+                throw e;
+            } else if (e.getCode() == ErrorCode.PAYMENT_PLUGIN_API_ABORTED.getCode()) { /* Plugin aborted the call (e.g invoice already paid) */
                 return null;
             }
             throw e;
