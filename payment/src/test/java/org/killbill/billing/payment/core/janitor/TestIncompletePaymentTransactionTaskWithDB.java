@@ -69,6 +69,7 @@ public class TestIncompletePaymentTransactionTaskWithDB extends PaymentTestSuite
                                                           null,
                                                           BigDecimal.TEN,
                                                           Currency.EUR,
+                                                          null,
                                                           UUID.randomUUID().toString(),
                                                           UUID.randomUUID().toString(),
                                                           ImmutableList.<PluginProperty>of(new PluginProperty(MockPaymentProviderPlugin.PLUGIN_PROPERTY_PAYMENT_PLUGIN_STATUS_OVERRIDE, PaymentPluginStatus.PENDING.toString(), false)),

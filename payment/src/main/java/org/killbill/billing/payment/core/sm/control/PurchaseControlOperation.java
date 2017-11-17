@@ -44,6 +44,7 @@ public class PurchaseControlOperation extends OperationControlCallback {
                                                paymentStateControlContext.getPaymentId(),
                                                paymentStateControlContext.getAmount(),
                                                paymentStateControlContext.getCurrency(),
+                                               paymentStateControlContext.getEffectiveDate(),
                                                paymentStateControlContext.getPaymentExternalKey(),
                                                paymentStateControlContext.getPaymentTransactionExternalKey(),
                                                paymentStateControlContext.getPaymentIdForNewPayment(),

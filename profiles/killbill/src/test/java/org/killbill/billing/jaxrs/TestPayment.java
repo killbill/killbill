@@ -26,6 +26,7 @@ import java.util.UUID;
 
 import javax.annotation.Nullable;
 
+import org.joda.time.DateTime;
 import org.killbill.billing.ObjectType;
 import org.killbill.billing.client.KillBillClientException;
 import org.killbill.billing.client.RequestOptions;
@@ -63,6 +64,7 @@ import com.google.inject.Inject;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertFalse;
+import static org.testng.Assert.assertTrue;
 import static org.testng.Assert.fail;
 
 public class TestPayment extends TestJaxrsBase {
@@ -103,6 +105,25 @@ public class TestPayment extends TestJaxrsBase {
     public void tearDown() throws Exception {
         mockPaymentProviderPlugin.clear();
     }
+
+    @Test(groups = "slow")
+    public void testWithTransactionEffectiveDate() throws Exception {
+        final Account account = createAccountWithDefaultPaymentMethod();
+
+
+        final PaymentTransaction authTransaction = new PaymentTransaction();
+        authTransaction.setAmount(BigDecimal.ONE);
+        authTransaction.setCurrency(account.getCurrency());
+        authTransaction.setTransactionType(TransactionType.AUTHORIZE.name());
+        final DateTime effectiveDate = new DateTime(2018, 9,4, 3,5,35);
+        authTransaction.setEffectiveDate(effectiveDate);
+
+        final Payment payment = killBillClient.createPayment(account.getAccountId(), account.getPaymentMethodId(), authTransaction,
+                                                             ImmutableMap.<String, String>of(), requestOptions);
+        final PaymentTransaction paymentTransaction = payment.getTransactions().get(0);
+        assertTrue(paymentTransaction.getEffectiveDate().compareTo(effectiveDate) == 0);
+    }
+
 
     @Test(groups = "slow")
     public void testWithFailedPayment() throws Exception {

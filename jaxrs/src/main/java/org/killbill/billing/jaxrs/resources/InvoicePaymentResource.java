@@ -195,11 +195,11 @@ public class InvoicePaymentResource extends JaxRsResourceBase {
             Iterables.addAll(pluginPropertiesForExternalRefund, pluginProperties);
             pluginPropertiesForExternalRefund.add(new PluginProperty("IPCD_PAYMENT_ID", paymentUuid, false));
 
-            result = paymentApi.createCreditWithPaymentControl(account, externalPaymentMethodId, null, json.getAmount(), account.getCurrency(),
+            result = paymentApi.createCreditWithPaymentControl(account, externalPaymentMethodId, null, json.getAmount(), account.getCurrency(), json.getEffectiveDate(),
                                                                paymentExternalKey, transactionExternalKey, pluginPropertiesForExternalRefund,
                                                                createInvoicePaymentControlPluginApiPaymentOptions(true), callContext);
         } else {
-            result = paymentApi.createRefundWithPaymentControl(account, payment.getId(), json.getAmount(), account.getCurrency(), transactionExternalKey,
+            result = paymentApi.createRefundWithPaymentControl(account, payment.getId(), json.getAmount(), account.getCurrency(), json.getEffectiveDate(), transactionExternalKey,
                                                                pluginProperties, createInvoicePaymentControlPluginApiPaymentOptions(false), callContext);
         }
 
@@ -230,7 +230,7 @@ public class InvoicePaymentResource extends JaxRsResourceBase {
         final Account account = accountUserApi.getAccountById(payment.getAccountId(), callContext);
         final String transactionExternalKey = json.getTransactionExternalKey() != null ? json.getTransactionExternalKey() : UUIDs.randomUUID().toString();
 
-        final Payment result = paymentApi.createChargebackWithPaymentControl(account, payment.getId(), json.getAmount(), account.getCurrency(),
+        final Payment result = paymentApi.createChargebackWithPaymentControl(account, payment.getId(), json.getAmount(), account.getCurrency(), json.getEffectiveDate(),
                                                                                    transactionExternalKey, createInvoicePaymentControlPluginApiPaymentOptions(false), callContext);
         return uriBuilder.buildResponse(uriInfo, InvoicePaymentResource.class, "getInvoicePayment", result.getId(), request);
     }
@@ -258,7 +258,7 @@ public class InvoicePaymentResource extends JaxRsResourceBase {
         final Payment payment = paymentApi.getPayment(paymentUuid, false, false, ImmutableList.<PluginProperty>of(), callContext);
         final Account account = accountUserApi.getAccountById(payment.getAccountId(), callContext);
 
-        final Payment result = paymentApi.createChargebackReversalWithPaymentControl(account, payment.getId(), json.getTransactionExternalKey(), createInvoicePaymentControlPluginApiPaymentOptions(false), callContext);
+        final Payment result = paymentApi.createChargebackReversalWithPaymentControl(account, payment.getId(), json.getEffectiveDate(), json.getTransactionExternalKey(), createInvoicePaymentControlPluginApiPaymentOptions(false), callContext);
         return uriBuilder.buildResponse(uriInfo, InvoicePaymentResource.class, "getInvoicePayment", result.getId(), request);
     }
 

@@ -60,8 +60,9 @@ public class PaymentStateControlContext extends PaymentStateContext {
                                       @Nullable final UUID paymentMethodId,
                                       final BigDecimal amount,
                                       final Currency currency,
+                                      final DateTime effectiveDate,
                                       final Iterable<PluginProperty> properties, final InternalCallContext internalCallContext, final CallContext callContext) {
-        super(isApiPayment, paymentId, transactionId, null, paymentExternalKey, paymentTransactionExternalKey, transactionType, account, paymentMethodId, amount, currency, null, null, true, null, properties, internalCallContext, callContext);
+        super(isApiPayment, paymentId, transactionId, null, paymentExternalKey, paymentTransactionExternalKey, transactionType, account, paymentMethodId, amount, currency, effectiveDate, null, null, true, null, properties, internalCallContext, callContext);
         this.paymentControlPluginNames = paymentControlPluginNames;
         this.isSuccess = isSuccess;
     }

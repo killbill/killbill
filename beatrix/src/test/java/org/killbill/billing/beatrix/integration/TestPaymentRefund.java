@@ -117,7 +117,7 @@ public class TestPaymentRefund extends TestIntegrationBase {
         final PluginProperty prop1 = new PluginProperty(InvoicePaymentControlPluginApi.PROP_IPCD_REFUND_WITH_ADJUSTMENTS, "true", false);
         properties.add(prop1);
         try {
-            paymentApi.createRefundWithPaymentControl(account, payment.getId(), payment.getPurchasedAmount(), payment.getCurrency(), UUID.randomUUID().toString(),
+            paymentApi.createRefundWithPaymentControl(account, payment.getId(), payment.getPurchasedAmount(), payment.getCurrency(), null, UUID.randomUUID().toString(),
                                                              properties, PAYMENT_OPTIONS, callContext);
             fail("Refund with invoice adjustment should now throw an Exception");
         } catch (final PaymentApiException e) {
@@ -137,7 +137,7 @@ public class TestPaymentRefund extends TestIntegrationBase {
 
         // try to create a refund for a payment with its payment method deleted
         busHandler.pushExpectedEvent(NextEvent.PAYMENT);
-        paymentApi.createRefund(account, payment.getId(), payment.getPurchasedAmount(), payment.getCurrency(),
+        paymentApi.createRefund(account, payment.getId(), payment.getPurchasedAmount(), payment.getCurrency(), null,
                                 UUID.randomUUID().toString(), PLUGIN_PROPERTIES, callContext);
         assertListenerStatus();
     }

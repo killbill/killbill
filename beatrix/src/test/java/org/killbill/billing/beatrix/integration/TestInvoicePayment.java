@@ -1069,7 +1069,7 @@ public class TestInvoicePayment extends TestIntegrationBase {
         final PluginProperty prop1 = new PluginProperty(InvoicePaymentControlPluginApi.PROP_IPCD_INVOICE_ID, updateInvoice2.getId().toString(), false);
         properties.add(prop1);
         try {
-            paymentApi.createPurchaseWithPaymentControl(account, account.getPaymentMethodId(), null, updateInvoice2.getBalance(), updateInvoice2.getCurrency(), UUID.randomUUID().toString(),
+            paymentApi.createPurchaseWithPaymentControl(account, account.getPaymentMethodId(), null, updateInvoice2.getBalance(), updateInvoice2.getCurrency(), null, UUID.randomUUID().toString(),
                                                         UUID.randomUUID().toString(), properties, PAYMENT_OPTIONS, callContext);
             Assert.fail("The payment should not succeed (and yet it will repair the broken state....)");
         } catch (final PaymentApiException expected) {

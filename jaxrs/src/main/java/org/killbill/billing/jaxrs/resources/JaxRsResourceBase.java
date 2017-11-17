@@ -417,26 +417,26 @@ public abstract class JaxRsResourceBase implements JaxrsResource {
         final Payment result;
         switch (pendingTransaction.getTransactionType()) {
             case AUTHORIZE:
-                result = paymentApi.createAuthorizationWithPaymentControl(account, initialPayment.getPaymentMethodId(), initialPayment.getId(), amount, currency,
+                result = paymentApi.createAuthorizationWithPaymentControl(account, initialPayment.getPaymentMethodId(), initialPayment.getId(), amount, currency, null,
                                                                           initialPayment.getExternalKey(), pendingTransaction.getExternalKey(),
                                                                           pluginProperties, paymentOptions, callContext);
                 break;
             case CAPTURE:
-                result = paymentApi.createCaptureWithPaymentControl(account, initialPayment.getId(), amount, currency, pendingTransaction.getExternalKey(),
+                result = paymentApi.createCaptureWithPaymentControl(account, initialPayment.getId(), amount, currency, null, pendingTransaction.getExternalKey(),
                                                                     pluginProperties, paymentOptions, callContext);
                 break;
             case PURCHASE:
-                result = paymentApi.createPurchaseWithPaymentControl(account, initialPayment.getPaymentMethodId(), initialPayment.getId(), amount, currency,
+                result = paymentApi.createPurchaseWithPaymentControl(account, initialPayment.getPaymentMethodId(), initialPayment.getId(), amount, currency, null,
                                                                      initialPayment.getExternalKey(), pendingTransaction.getExternalKey(),
                                                                      pluginProperties, paymentOptions, callContext);
                 break;
             case CREDIT:
-                result = paymentApi.createCreditWithPaymentControl(account, initialPayment.getPaymentMethodId(), initialPayment.getId(), amount, currency,
+                result = paymentApi.createCreditWithPaymentControl(account, initialPayment.getPaymentMethodId(), initialPayment.getId(), amount, currency, null,
                                                                    initialPayment.getExternalKey(), pendingTransaction.getExternalKey(),
                                                                    pluginProperties, paymentOptions, callContext);
                 break;
             case REFUND:
-                result = paymentApi.createRefundWithPaymentControl(account, initialPayment.getId(), amount, currency,
+                result = paymentApi.createRefundWithPaymentControl(account, initialPayment.getId(), amount, currency, null,
                                                                    pendingTransaction.getExternalKey(), pluginProperties, paymentOptions, callContext);
                 break;
             default:
@@ -565,7 +565,7 @@ public abstract class JaxRsResourceBase implements JaxrsResource {
                                                                   invoiceId.toString(), false);
         properties.add(invoiceProperty);
         try {
-            return paymentApi.createPurchaseWithPaymentControl(account, paymentMethodId, null, amountToPay, account.getCurrency(), paymentExternalKey, transactionExternalKey,
+            return paymentApi.createPurchaseWithPaymentControl(account, paymentMethodId, null, amountToPay, account.getCurrency(), null, paymentExternalKey, transactionExternalKey,
                                                                properties, createInvoicePaymentControlPluginApiPaymentOptions(externalPayment), callContext);
         } catch (final PaymentApiException e) {
 

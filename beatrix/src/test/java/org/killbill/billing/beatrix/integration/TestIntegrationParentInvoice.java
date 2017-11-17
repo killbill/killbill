@@ -1144,7 +1144,7 @@ public class TestIntegrationParentInvoice extends TestIntegrationBase {
             final List<PluginProperty> properties = new ArrayList<PluginProperty>();
             final PluginProperty prop1 = new PluginProperty(InvoicePaymentControlPluginApi.PROP_IPCD_INVOICE_ID, childInvoices.get(1).getId().toString(), false);
             properties.add(prop1);
-            paymentApi.createPurchaseWithPaymentControl(childAccount, childAccount.getPaymentMethodId(), null, childInvoices.get(1).getBalance(), childInvoices.get(1).getCurrency(), UUID.randomUUID().toString(),
+            paymentApi.createPurchaseWithPaymentControl(childAccount, childAccount.getPaymentMethodId(), null, childInvoices.get(1).getBalance(), childInvoices.get(1).getCurrency(), null, UUID.randomUUID().toString(),
                                                         UUID.randomUUID().toString(), properties, PAYMENT_OPTIONS, callContext);
             Assert.fail("Payment should fail, invoice belongs to parent");
         } catch (final PaymentApiException e) {

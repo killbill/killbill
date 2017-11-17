@@ -123,7 +123,7 @@ public class PaymentBusEventHandler {
                             null,
                             paymentControlPluginNames);
 
-            payment = pluginControlPaymentProcessor.createPurchase(false, account, account.getPaymentMethodId(), null, amountToBePaid, account.getCurrency(), null, null, properties, paymentControlPluginNames, callContext, internalContext);
+            payment = pluginControlPaymentProcessor.createPurchase(false, account, account.getPaymentMethodId(), null, amountToBePaid, account.getCurrency(), null, null, null, properties, paymentControlPluginNames, callContext, internalContext);
 
             paymentTransaction = payment.getTransactions().get(payment.getTransactions().size() - 1);
         } catch (final AccountApiException e) {

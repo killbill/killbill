@@ -23,6 +23,7 @@ import java.util.UUID;
 
 import javax.annotation.Nullable;
 
+import org.joda.time.DateTime;
 import org.killbill.automaton.OperationResult;
 import org.killbill.billing.account.api.Account;
 import org.killbill.billing.callcontext.InternalCallContext;
@@ -75,21 +76,23 @@ public class PaymentStateContext {
     private final InternalCallContext internalCallContext;
     private final CallContext callContext;
     private final boolean isApiPayment;
+    private final DateTime effectiveDate;
 
     @VisibleForTesting
     public PaymentStateContext(final boolean isApiPayment, @Nullable final UUID paymentId, @Nullable final String paymentTransactionExternalKey, final TransactionType transactionType,
-                               final Account account, @Nullable final UUID paymentMethodId, final BigDecimal amount, final Currency currency,
+                               final Account account, @Nullable final UUID paymentMethodId, final BigDecimal amount, final Currency currency, final DateTime effectiveDate,
                                final boolean shouldLockAccountAndDispatch, final Iterable<PluginProperty> properties,
                                final InternalCallContext internalCallContext, final CallContext callContext) {
         this(isApiPayment, paymentId, null, null, null, paymentTransactionExternalKey, transactionType, account, paymentMethodId,
-             amount, currency, null, null, shouldLockAccountAndDispatch, null, properties, internalCallContext, callContext);
+             amount, currency, effectiveDate, null, null, shouldLockAccountAndDispatch, null, properties, internalCallContext, callContext);
     }
 
     // Used to create new payment and transactions
     public PaymentStateContext(final boolean isApiPayment, @Nullable final UUID paymentId, final UUID transactionId, @Nullable final UUID attemptId, @Nullable final String paymentExternalKey,
                                @Nullable final String paymentTransactionExternalKey, final TransactionType transactionType,
-                               final Account account, @Nullable final UUID paymentMethodId, final BigDecimal amount, final Currency currency,
-                               @Nullable final UUID paymentIdForNewPayment, @Nullable final UUID paymentTransactionIdForNewPaymentTransaction, final boolean shouldLockAccountAndDispatch, final OperationResult overridePluginOperationResult, final Iterable<PluginProperty> properties,
+                               final Account account, @Nullable final UUID paymentMethodId, final BigDecimal amount, final Currency currency, final DateTime effectiveDate,
+                               @Nullable final UUID paymentIdForNewPayment, @Nullable final UUID paymentTransactionIdForNewPaymentTransaction, final boolean shouldLockAccountAndDispatch,
+                               final OperationResult overridePluginOperationResult, final Iterable<PluginProperty> properties,
                                final InternalCallContext internalCallContext, final CallContext callContext) {
         this.isApiPayment = isApiPayment;
         this.paymentId = paymentId;
@@ -102,6 +105,7 @@ public class PaymentStateContext {
         this.paymentMethodId = paymentMethodId;
         this.amount = amount;
         this.currency = currency;
+        this.effectiveDate = effectiveDate;
         this.paymentIdForNewPayment = paymentIdForNewPayment;
         this.paymentTransactionIdForNewPaymentTransaction = paymentTransactionIdForNewPaymentTransaction;
         this.shouldLockAccountAndDispatch = shouldLockAccountAndDispatch;
@@ -210,6 +214,10 @@ public class PaymentStateContext {
 
     public Currency getCurrency() {
         return currency;
+    }
+
+    public DateTime getEffectiveDate() {
+        return effectiveDate;
     }
 
     public TransactionType getTransactionType() {

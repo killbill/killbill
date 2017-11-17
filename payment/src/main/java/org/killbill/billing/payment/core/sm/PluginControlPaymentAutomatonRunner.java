@@ -25,6 +25,7 @@ import javax.annotation.Nullable;
 import javax.inject.Inject;
 import javax.inject.Named;
 
+import org.joda.time.DateTime;
 import org.killbill.automaton.MissingEntryException;
 import org.killbill.automaton.Operation.OperationCallback;
 import org.killbill.automaton.OperationException;
@@ -118,6 +119,7 @@ public class PluginControlPaymentAutomatonRunner extends PaymentAutomatonRunner 
                        final String paymentTransactionExternalKey,
                        @Nullable final BigDecimal amount,
                        @Nullable final Currency currency,
+                       @Nullable final DateTime effectiveDate,
                        final Iterable<PluginProperty> properties,
                        @Nullable final List<String> paymentControlPluginNames,
                        final CallContext callContext,
@@ -135,6 +137,7 @@ public class PluginControlPaymentAutomatonRunner extends PaymentAutomatonRunner 
                    paymentTransactionExternalKey,
                    amount,
                    currency,
+                   effectiveDate,
                    properties,
                    paymentControlPluginNames,
                    callContext,
@@ -153,6 +156,7 @@ public class PluginControlPaymentAutomatonRunner extends PaymentAutomatonRunner 
                        final String paymentTransactionExternalKey,
                        @Nullable final BigDecimal amount,
                        @Nullable final Currency currency,
+                       @Nullable final DateTime effectiveDate,
                        final Iterable<PluginProperty> properties,
                        @Nullable final List<String> paymentControlPluginNames,
                        final CallContext callContext,
@@ -170,6 +174,7 @@ public class PluginControlPaymentAutomatonRunner extends PaymentAutomatonRunner 
                    paymentTransactionExternalKey,
                    amount,
                    currency,
+                   effectiveDate,
                    properties,
                    paymentControlPluginNames,
                    callContext,
@@ -187,6 +192,7 @@ public class PluginControlPaymentAutomatonRunner extends PaymentAutomatonRunner 
                        final String paymentTransactionExternalKey,
                        @Nullable final BigDecimal amount,
                        @Nullable final Currency currency,
+                       @Nullable final DateTime effectiveDate,
                        final Iterable<PluginProperty> properties,
                        @Nullable final List<String> paymentControlPluginNames,
                        final CallContext callContext, final InternalCallContext internalCallContext) throws PaymentApiException {
@@ -203,6 +209,7 @@ public class PluginControlPaymentAutomatonRunner extends PaymentAutomatonRunner 
                    paymentTransactionExternalKey,
                    amount,
                    currency,
+                   effectiveDate,
                    properties,
                    paymentControlPluginNames,
                    callContext,
@@ -222,6 +229,7 @@ public class PluginControlPaymentAutomatonRunner extends PaymentAutomatonRunner 
                        final String paymentTransactionExternalKey,
                        @Nullable final BigDecimal amount,
                        @Nullable final Currency currency,
+                       @Nullable final DateTime effectiveDate,
                        final Iterable<PluginProperty> properties,
                        @Nullable final List<String> paymentControlPluginNames,
                        final CallContext callContext, final InternalCallContext internalCallContext) throws PaymentApiException {
@@ -236,6 +244,7 @@ public class PluginControlPaymentAutomatonRunner extends PaymentAutomatonRunner 
                                                                              paymentTransactionExternalKey,
                                                                              amount,
                                                                              currency,
+                                                                             effectiveDate,
                                                                              properties,
                                                                              paymentControlPluginNames,
                                                                              callContext,
@@ -289,11 +298,11 @@ public class PluginControlPaymentAutomatonRunner extends PaymentAutomatonRunner 
 
     @VisibleForTesting
     PaymentStateControlContext createContext(final boolean isApiPayment, final Boolean isSuccess, final TransactionType transactionType, final Account account, @Nullable final UUID paymentMethodId,
-                                             @Nullable final UUID paymentId, @Nullable final String paymentExternalKey,@Nullable final UUID transactionId, final String paymentTransactionExternalKey,
-                                             @Nullable final BigDecimal amount, @Nullable final Currency currency, final Iterable<PluginProperty> properties,
+                                             @Nullable final UUID paymentId, @Nullable final String paymentExternalKey, @Nullable final UUID transactionId, final String paymentTransactionExternalKey,
+                                             @Nullable final BigDecimal amount, @Nullable final Currency currency, @Nullable final DateTime effectiveDate, final Iterable<PluginProperty> properties,
                                              final List<String> paymentControlPluginNames, final CallContext callContext, final InternalCallContext internalCallContext) throws PaymentApiException {
         return new PaymentStateControlContext(paymentControlPluginNames, isApiPayment, isSuccess, paymentId, paymentExternalKey, transactionId, paymentTransactionExternalKey, transactionType, account,
-                                              paymentMethodId, amount, currency, properties, internalCallContext, callContext);
+                                              paymentMethodId, amount, currency, effectiveDate, properties, internalCallContext, callContext);
     }
 
     @VisibleForTesting

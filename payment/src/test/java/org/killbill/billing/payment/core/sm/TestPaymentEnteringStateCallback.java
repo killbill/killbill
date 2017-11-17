@@ -65,6 +65,7 @@ public class TestPaymentEnteringStateCallback extends PaymentTestSuiteWithEmbedd
                                                       UUID.randomUUID(),
                                                       new BigDecimal("192.3920111"),
                                                       Currency.BRL,
+                                                      null,
                                                       false,
                                                       ImmutableList.<PluginProperty>of(),
                                                       internalCallContext,

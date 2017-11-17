@@ -367,7 +367,7 @@ public class PaymentResource extends ComboPaymentResource {
 
         final PaymentOptions paymentOptions = createControlPluginApiPaymentOptions(paymentControlPluginNames);
 
-        final Payment payment = paymentApi.createCaptureWithPaymentControl(account, initialPayment.getId(), json.getAmount(), currency,
+        final Payment payment = paymentApi.createCaptureWithPaymentControl(account, initialPayment.getId(), json.getAmount(), currency, json.getEffectiveDate(),
                                                          json.getTransactionExternalKey(), pluginProperties, paymentOptions, callContext);
         return createPaymentResponse(uriInfo, payment, TransactionType.CAPTURE, json.getTransactionExternalKey(), request);
     }
@@ -448,7 +448,7 @@ public class PaymentResource extends ComboPaymentResource {
 
         final PaymentOptions paymentOptions = createControlPluginApiPaymentOptions(paymentControlPluginNames);
 
-        final Payment payment = paymentApi.createRefundWithPaymentControl(account, initialPayment.getId(), json.getAmount(), currency,
+        final Payment payment = paymentApi.createRefundWithPaymentControl(account, initialPayment.getId(), json.getAmount(), currency, json.getEffectiveDate(),
                                                         json.getTransactionExternalKey(), pluginProperties, paymentOptions, callContext);
 
         return createPaymentResponse(uriInfo, payment, TransactionType.REFUND, json.getTransactionExternalKey(), request);
@@ -524,7 +524,7 @@ public class PaymentResource extends ComboPaymentResource {
         final String transactionExternalKey = json != null ? json.getTransactionExternalKey() : null;
         final PaymentOptions paymentOptions = createControlPluginApiPaymentOptions(paymentControlPluginNames);
 
-        final Payment payment = paymentApi.createVoidWithPaymentControl(account, initialPayment.getId(), transactionExternalKey,
+        final Payment payment = paymentApi.createVoidWithPaymentControl(account, initialPayment.getId(), json.getEffectiveDate(), transactionExternalKey,
                                                                         pluginProperties, paymentOptions, callContext);
         return createPaymentResponse(uriInfo, payment, TransactionType.VOID, json.getTransactionExternalKey(), request);
     }
@@ -603,7 +603,7 @@ public class PaymentResource extends ComboPaymentResource {
 
         final PaymentOptions paymentOptions = createControlPluginApiPaymentOptions(paymentControlPluginNames);
 
-        final Payment payment = paymentApi.createChargebackWithPaymentControl(account, initialPayment.getId(), json.getAmount(), currency,
+        final Payment payment = paymentApi.createChargebackWithPaymentControl(account, initialPayment.getId(), json.getAmount(), currency, json.getEffectiveDate(),
                                                             json.getTransactionExternalKey(), paymentOptions, callContext);
         return createPaymentResponse(uriInfo, payment, TransactionType.CHARGEBACK, json.getTransactionExternalKey(), request);
     }
@@ -678,7 +678,7 @@ public class PaymentResource extends ComboPaymentResource {
 
         final PaymentOptions paymentOptions = createControlPluginApiPaymentOptions(paymentControlPluginNames);
 
-        final Payment payment = paymentApi.createChargebackReversalWithPaymentControl(account, initialPayment.getId(), json.getTransactionExternalKey(), paymentOptions, callContext);
+        final Payment payment = paymentApi.createChargebackReversalWithPaymentControl(account, initialPayment.getId(), json.getEffectiveDate(), json.getTransactionExternalKey(), paymentOptions, callContext);
         return createPaymentResponse(uriInfo, payment, TransactionType.CHARGEBACK, json.getTransactionExternalKey(), request);
     }
 
@@ -722,17 +722,17 @@ public class PaymentResource extends ComboPaymentResource {
         final UUID paymentId = null; // If we need to specify a paymentId (e.g 3DS authorization, we can use regular API, no need for combo call)
         switch (transactionType) {
             case AUTHORIZE:
-                result = paymentApi.createAuthorizationWithPaymentControl(account, paymentMethodId, paymentId, paymentTransactionJson.getAmount(), currency,
+                result = paymentApi.createAuthorizationWithPaymentControl(account, paymentMethodId, paymentId, paymentTransactionJson.getAmount(), currency, paymentTransactionJson.getEffectiveDate(),
                                                                           paymentTransactionJson.getPaymentExternalKey(), paymentTransactionJson.getTransactionExternalKey(),
                                                                           transactionPluginProperties, paymentOptions, callContext);
                 break;
             case PURCHASE:
-                result = paymentApi.createPurchaseWithPaymentControl(account, paymentMethodId, paymentId, paymentTransactionJson.getAmount(), currency,
+                result = paymentApi.createPurchaseWithPaymentControl(account, paymentMethodId, paymentId, paymentTransactionJson.getAmount(), currency, paymentTransactionJson.getEffectiveDate(),
                                                                      paymentTransactionJson.getPaymentExternalKey(), paymentTransactionJson.getTransactionExternalKey(),
                                                                      transactionPluginProperties, paymentOptions, callContext);
                 break;
             case CREDIT:
-                result = paymentApi.createCreditWithPaymentControl(account, paymentMethodId, paymentId, paymentTransactionJson.getAmount(), currency,
+                result = paymentApi.createCreditWithPaymentControl(account, paymentMethodId, paymentId, paymentTransactionJson.getAmount(), currency, paymentTransactionJson.getEffectiveDate(),
                                                                    paymentTransactionJson.getPaymentExternalKey(), paymentTransactionJson.getTransactionExternalKey(),
                                                                    transactionPluginProperties, paymentOptions, callContext);
                 break;

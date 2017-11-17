@@ -120,7 +120,7 @@ public class TestPaymentWithControl extends TestIntegrationBase {
         testPaymentControlWithControl.setAdjustedPaymentMethodId(paymentMethodId);
 
         busHandler.pushExpectedEvents(NextEvent.PAYMENT);
-        final Payment payment = paymentApi.createAuthorizationWithPaymentControl(account, null, null, BigDecimal.ONE, account.getCurrency(), null, null,
+        final Payment payment = paymentApi.createAuthorizationWithPaymentControl(account, null, null, BigDecimal.ONE, account.getCurrency(), null, null, null,
                                                                                  properties, paymentOptions, callContext);
         assertListenerStatus();
 
@@ -145,7 +145,7 @@ public class TestPaymentWithControl extends TestIntegrationBase {
         paymentPlugin.makeNextPaymentFailWithError();
 
         busHandler.pushExpectedEvents(NextEvent.PAYMENT_ERROR);
-        final Payment payment = paymentApi.createAuthorizationWithPaymentControl(account, null, null, BigDecimal.ONE, account.getCurrency(), null, null,
+        final Payment payment = paymentApi.createAuthorizationWithPaymentControl(account, null, null, BigDecimal.ONE, account.getCurrency(), null, null, null,
                                                                                  properties, paymentOptions, callContext);
         assertListenerStatus();
 
@@ -163,7 +163,7 @@ public class TestPaymentWithControl extends TestIntegrationBase {
         final Account account = createAccountWithNonOsgiPaymentMethod(accountData);
 
         busHandler.pushExpectedEvents(NextEvent.PAYMENT);
-        final Payment payment = paymentApi.createAuthorizationWithPaymentControl(account, account.getPaymentMethodId(), null, BigDecimal.ONE, account.getCurrency(), null, null,
+        final Payment payment = paymentApi.createAuthorizationWithPaymentControl(account, account.getPaymentMethodId(), null, BigDecimal.ONE, account.getCurrency(), null, null, null,
                                                                                  properties, paymentOptions, callContext);
         assertListenerStatus();
 
@@ -176,7 +176,7 @@ public class TestPaymentWithControl extends TestIntegrationBase {
         Assert.assertEquals(paymentWithAttempts.getTransactions().get(0).getId().toString(), paymentWithAttempts.getPaymentAttempts().get(0).getTransactionExternalKey());
 
         busHandler.pushExpectedEvents(NextEvent.PAYMENT);
-        paymentApi.createCaptureWithPaymentControl(account, payment.getId(), BigDecimal.ONE, account.getCurrency(), null, properties, paymentOptions, callContext);
+        paymentApi.createCaptureWithPaymentControl(account, payment.getId(), BigDecimal.ONE, account.getCurrency(), null, null, properties, paymentOptions, callContext);
         assertListenerStatus();
 
         paymentWithAttempts = paymentApi.getPayment(payment.getId(), false, true, ImmutableList.<PluginProperty>of(), callContext);
@@ -198,7 +198,7 @@ public class TestPaymentWithControl extends TestIntegrationBase {
         final String paymentTransactionExternalKey = "something-that-is-not-a-uuid-2";
 
         busHandler.pushExpectedEvents(NextEvent.PAYMENT);
-        final Payment payment = paymentApi.createAuthorizationWithPaymentControl(account, account.getPaymentMethodId(), null, BigDecimal.ONE, account.getCurrency(), paymentExternalKey, paymentTransactionExternalKey,
+        final Payment payment = paymentApi.createAuthorizationWithPaymentControl(account, account.getPaymentMethodId(), null, BigDecimal.ONE, account.getCurrency(), null, paymentExternalKey, paymentTransactionExternalKey,
                                                                                  properties, paymentOptions, callContext);
         assertListenerStatus();
 
@@ -215,7 +215,7 @@ public class TestPaymentWithControl extends TestIntegrationBase {
         final String paymentTransactionExternalKey2 = "something-that-is-not-a-uuid-3";
 
         busHandler.pushExpectedEvents(NextEvent.PAYMENT);
-        paymentApi.createVoidWithPaymentControl(account, payment.getId(), paymentTransactionExternalKey2, properties, paymentOptions, callContext);
+        paymentApi.createVoidWithPaymentControl(account, payment.getId(), null, paymentTransactionExternalKey2, properties, paymentOptions, callContext);
         assertListenerStatus();
 
         paymentWithAttempts = paymentApi.getPayment(payment.getId(), false, true, ImmutableList.<PluginProperty>of(), callContext);

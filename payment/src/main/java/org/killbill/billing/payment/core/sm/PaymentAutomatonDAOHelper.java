@@ -215,7 +215,7 @@ public class PaymentAutomatonDAOHelper {
     private PaymentTransactionModelDao buildNewPaymentTransactionModelDao(final UUID paymentId) {
         final DateTime createdDate = utcNow;
         final DateTime updatedDate = utcNow;
-        final DateTime effectiveDate = utcNow;
+        final DateTime effectiveDate = paymentStateContext.getEffectiveDate() != null ? paymentStateContext.getEffectiveDate() : utcNow;
         final String gatewayErrorCode = null;
         final String gatewayErrorMsg = null;
 
