@@ -325,6 +325,7 @@ public class TestInvoicePayment extends TestJaxrsBase {
         // Pay too too much => 400
         try {
             killBillClient.createInvoicePayment(invoicePayment1, false, requestOptions);
+            Assert.fail("InvoicePayment call should fail with 400");
         } catch (final KillBillClientException e) {
             assertTrue(true);
         }
