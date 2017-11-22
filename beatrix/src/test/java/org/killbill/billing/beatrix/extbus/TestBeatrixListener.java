@@ -63,7 +63,6 @@ import org.killbill.bus.api.BusEvent;
 import org.killbill.bus.api.PersistentBus;
 import org.killbill.bus.api.PersistentBus.EventBusException;
 import org.mockito.ArgumentCaptor;
-import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
@@ -75,7 +74,6 @@ import static org.mockito.Matchers.anyObject;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -108,13 +106,15 @@ public class TestBeatrixListener {
     private static final String BROADCAST_EVENT_JSON = "{\"key\":\"value\"}";
 
     private BeatrixListener beatrixListener;
-    private PersistentBus externalBus = mock(PersistentBus.class);
-    private InternalCallContextFactory internalCallContextFactory = mock(InternalCallContextFactory.class);
+    private PersistentBus externalBus;
+    private InternalCallContextFactory internalCallContextFactory;
     private TenantContext tenantContext;
     private ObjectMapper objectMapper;
 
     @BeforeMethod(groups = "fast")
     public void setUp() throws Exception {
+        externalBus = mock(PersistentBus.class);
+        internalCallContextFactory = mock(InternalCallContextFactory.class);
         beatrixListener = new BeatrixListener(externalBus, internalCallContextFactory);
 
         objectMapper = mock(ObjectMapper.class);
@@ -138,11 +138,6 @@ public class TestBeatrixListener {
         tenantContext = mock(TenantContext.class);
         when(tenantContext.getTenantId()).thenReturn(TENANT_ID);
         when(internalCallContextFactory.createTenantContext(internalContext)).thenReturn(tenantContext);
-    }
-
-    @AfterMethod(groups = "fast")
-    public void tearDown() throws Exception {
-        reset(externalBus);
     }
 
     @Test(groups = "fast")
