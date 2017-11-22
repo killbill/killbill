@@ -82,7 +82,7 @@ import static org.mockito.Mockito.when;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNull;
 
-public class BeatrixListenerTest {
+public class TestBeatrixListener {
 
     private static final Long SEARCH_KEY_2 = 9L;
     private static final Long SEARCH_KEY_1 = 10L;
@@ -113,7 +113,7 @@ public class BeatrixListenerTest {
     private TenantContext tenantContext;
     private ObjectMapper objectMapper;
 
-    @BeforeMethod
+    @BeforeMethod(groups = "fast")
     public void setUp() throws Exception {
         beatrixListener = new BeatrixListener(externalBus, internalCallContextFactory);
 
@@ -140,7 +140,7 @@ public class BeatrixListenerTest {
         when(internalCallContextFactory.createTenantContext(internalContext)).thenReturn(tenantContext);
     }
 
-    @AfterMethod
+    @AfterMethod(groups = "fast")
     public void tearDown() throws Exception {
         reset(externalBus);
     }
