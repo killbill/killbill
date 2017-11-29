@@ -36,6 +36,7 @@ import com.ning.compress.lzf.LZFEncoder;
 
 public class TestDatabaseExportDao extends UtilTestSuiteWithEmbeddedDB {
 
+
     @Test(groups = "slow")
     public void testExportSimpleData() throws Exception {
         // Empty database
@@ -78,17 +79,18 @@ public class TestDatabaseExportDao extends UtilTestSuiteWithEmbeddedDB {
                                internalCallContext.getAccountRecordId(), internalCallContext.getTenantRecordId());
 
                 // Add row in accounts table
-                handle.execute("insert into accounts (record_id, id, email, name, first_name_length, time_zone, is_notified_for_invoices, created_date, created_by, updated_date, updated_by, tenant_record_id) " +
-                               "values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-                               internalCallContext.getAccountRecordId(), accountId, accountEmail, accountName, firstNameLength, timeZone, isNotifiedForInvoices, createdDate, createdBy, updatedDate, updatedBy, internalCallContext.getTenantRecordId());
+                handle.execute("insert into accounts (record_id, id, external_key, email, name, first_name_length, reference_time, time_zone, is_notified_for_invoices, created_date, created_by, updated_date, updated_by, tenant_record_id) " +
+                               "values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                               internalCallContext.getAccountRecordId(), accountId, accountId, accountEmail, accountName, firstNameLength, createdDate, timeZone, isNotifiedForInvoices, createdDate, createdBy, updatedDate, updatedBy, internalCallContext.getTenantRecordId());
                 return null;
             }
         });
 
         // Verify new dump
         final String newDump = getDump();
-        Assert.assertEquals(newDump, "-- accounts record_id|id|external_key|email|name|first_name_length|currency|billing_cycle_day_local|parent_account_id|is_payment_delegated_to_parent|payment_method_id|time_zone|locale|address1|address2|company_name|city|state_or_province|country|postal_code|phone|notes|migrated|is_notified_for_invoices|created_date|created_by|updated_date|updated_by|tenant_record_id\n" +
-                                     String.format("%s|%s||%s|%s|%s||||false||%s|||||||||||false|%s|%s|%s|%s|%s|%s", internalCallContext.getAccountRecordId(), accountId, accountEmail, accountName, firstNameLength, timeZone,
+
+        Assert.assertEquals(newDump, "-- accounts record_id|id|external_key|email|name|first_name_length|currency|billing_cycle_day_local|parent_account_id|is_payment_delegated_to_parent|payment_method_id|reference_time|time_zone|locale|address1|address2|company_name|city|state_or_province|country|postal_code|phone|notes|migrated|is_notified_for_invoices|created_date|created_by|updated_date|updated_by|tenant_record_id\n" +
+                                     String.format("%s|%s|%s|%s|%s|%s||||false||%s|%s|||||||||||false|%s|%s|%s|%s|%s|%s", internalCallContext.getAccountRecordId(), accountId, accountId, accountEmail, accountName, firstNameLength, "1970-05-24T18:33:02.000+0000", timeZone,
                                                    isNotifiedForInvoices, "1970-05-24T18:33:02.000+0000", createdBy, "1982-02-18T20:03:42.000+0000", updatedBy, internalCallContext.getTenantRecordId()) + "\n" +
                                      "-- " + tableNameA + " record_id|a_column|blob_column|account_record_id|tenant_record_id\n" +
                                      "1|a|WlYAAARjYWZl|" + internalCallContext.getAccountRecordId() + "|" + internalCallContext.getTenantRecordId() + "\n" +
