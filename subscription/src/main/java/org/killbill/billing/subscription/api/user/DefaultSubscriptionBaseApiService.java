@@ -349,7 +349,7 @@ public class DefaultSubscriptionBaseApiService implements SubscriptionBaseApiSer
     public DateTime changePlan(final DefaultSubscriptionBase subscription, final PlanPhaseSpecifier spec, final List<PlanPhasePriceOverride> overrides, final CallContext context) throws SubscriptionBaseApiException {
         final DateTime now = clock.getUTCNow();
 
-        validateSubscriptionState(subscription, null);
+        validateSubscriptionStateForChangePlan(subscription, null);
 
         final PlanChangeResult planChangeResult = getPlanChangeResult(subscription, spec, now, context);
         final DateTime effectiveDate = dryRunChangePlan(subscription, spec, null, planChangeResult.getPolicy(), context);
@@ -369,7 +369,7 @@ public class DefaultSubscriptionBaseApiService implements SubscriptionBaseApiSer
                                                 final DateTime requestedDateWithMs, final CallContext context) throws SubscriptionBaseApiException {
         final DateTime effectiveDate = dryRunChangePlan(subscription, spec, requestedDateWithMs, null, context);
         validateEffectiveDate(subscription, effectiveDate);
-        validateSubscriptionState(subscription, requestedDateWithMs);
+        validateSubscriptionStateForChangePlan(subscription, requestedDateWithMs);
 
         try {
             doChangePlan(subscription, spec, overrides, effectiveDate, context);
@@ -385,7 +385,7 @@ public class DefaultSubscriptionBaseApiService implements SubscriptionBaseApiSer
 
         final DateTime effectiveDate = dryRunChangePlan(subscription, spec, null, policy, context);
 
-        validateSubscriptionState(subscription, effectiveDate);
+        validateSubscriptionStateForChangePlan(subscription, effectiveDate);
         try {
             doChangePlan(subscription, spec, overrides, effectiveDate, context);
         } catch (final CatalogApiException e) {
@@ -503,7 +503,7 @@ public class DefaultSubscriptionBaseApiService implements SubscriptionBaseApiSer
 
         final TimedPhase currentTimedPhase = planAligner.getCurrentTimedPhaseOnChange(subscription, newPlan, effectiveDate, initialPhaseType, fullCatalog, internalTenantContext);
 
-        validateSubscriptionState(subscription, effectiveDate);
+        validateSubscriptionStateForChangePlan(subscription, effectiveDate);
 
         final SubscriptionBaseEvent changeEvent = new ApiEventChange(new ApiEventBuilder()
                                                                              .setSubscriptionId(subscription.getId())
@@ -666,9 +666,12 @@ public class DefaultSubscriptionBaseApiService implements SubscriptionBaseApiSer
         }
     }
 
-    private void validateSubscriptionState(final DefaultSubscriptionBase subscription, @Nullable final DateTime effectiveDate) throws SubscriptionBaseApiException {
+    private void validateSubscriptionStateForChangePlan(final DefaultSubscriptionBase subscription, @Nullable final DateTime effectiveDate) throws SubscriptionBaseApiException {
+
         final EntitlementState currentState = subscription.getState();
-        if (effectiveDate != null && effectiveDate.compareTo(subscription.getStartDate()) < 0) {
+        if (currentState == EntitlementState.CANCELLED ||
+            // We don't look for PENDING because as long as change is after startDate, we want to allow it.
+            effectiveDate != null && effectiveDate.compareTo(subscription.getStartDate()) < 0) {
             throw new SubscriptionBaseApiException(ErrorCode.SUB_CHANGE_NON_ACTIVE, subscription.getId(), currentState);
         }
         if (subscription.isFutureCancelled()) {

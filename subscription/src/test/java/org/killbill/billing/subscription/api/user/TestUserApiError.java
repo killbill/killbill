@@ -114,6 +114,7 @@ public class TestUserApiError extends SubscriptionTestSuiteNoDB {
         subscription.cancelWithDate(clock.getUTCNow(), callContext);
         try {
             subscription.changePlanWithDate(new PlanPhaseSpecifier("Pistol", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME), null, clock.getUTCNow(), callContext);
+            Assert.fail("Exception expected, error code: " + ErrorCode.SUB_CHANGE_NON_ACTIVE);
         } catch (final SubscriptionBaseApiException e) {
             assertEquals(e.getCode(), ErrorCode.SUB_CHANGE_NON_ACTIVE.getCode());
         }
@@ -125,7 +126,7 @@ public class TestUserApiError extends SubscriptionTestSuiteNoDB {
 
         try {
             subscription.changePlanWithPolicy(new PlanPhaseSpecifier("Pistol", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME), null, BillingActionPolicy.ILLEGAL, callContext);
-            Assert.fail();
+            Assert.fail("Call changePlanWithPolicy should have failed");
         } catch (final SubscriptionBaseError error) {
             assertTrue(true);
             assertEquals(subscriptionInternalApi.getSubscriptionFromId(subscription.getId(), internalCallContext).getCurrentPlan().getRecurringBillingPeriod(), BillingPeriod.ANNUAL);
@@ -160,6 +161,7 @@ public class TestUserApiError extends SubscriptionTestSuiteNoDB {
         subscription.cancelWithPolicy(BillingActionPolicy.END_OF_TERM, -1, callContext);
         try {
             subscription.changePlanWithDate(new PlanPhaseSpecifier("Pistol", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME), null, clock.getUTCNow(), callContext);
+            Assert.fail("Exception expected, error code: " + ErrorCode.SUB_CHANGE_FUTURE_CANCELLED);
         } catch (final SubscriptionBaseApiException e) {
             assertEquals(e.getCode(), ErrorCode.SUB_CHANGE_FUTURE_CANCELLED.getCode());
         }
@@ -173,6 +175,7 @@ public class TestUserApiError extends SubscriptionTestSuiteNoDB {
 
         try {
             subscription.uncancel(callContext);
+            Assert.fail("Exception expected, error code: " + ErrorCode.SUB_UNCANCEL_BAD_STATE);
         } catch (final SubscriptionBaseApiException e) {
             assertEquals(e.getCode(), ErrorCode.SUB_UNCANCEL_BAD_STATE.getCode());
         }
