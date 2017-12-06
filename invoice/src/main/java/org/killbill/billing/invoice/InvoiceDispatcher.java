@@ -259,6 +259,7 @@ public class InvoiceDispatcher {
         return null;
     }
 
+
     private Invoice processAccountWithLock(final boolean parkedAccount,
                                            final UUID accountId,
                                            @Nullable final LocalDate inputTargetDateMaybeNull,
@@ -268,7 +269,7 @@ public class InvoiceDispatcher {
         final boolean upcomingInvoiceDryRun = isDryRun && DryRunType.UPCOMING_INVOICE.equals(dryRunArguments.getDryRunType());
 
         LocalDate inputTargetDate = inputTargetDateMaybeNull;
-        // A null inputTargetDate is only allowed in dryRun mode to have the system compute it
+        // A null inputTargetDate is only allowed in UPCOMING_INVOICE dryRun mode to have the system compute it
         if (inputTargetDate == null && !upcomingInvoiceDryRun) {
             inputTargetDate = clock.getUTCToday();
         }
@@ -280,28 +281,42 @@ public class InvoiceDispatcher {
             if (billingEvents.isEmpty()) {
                 return null;
             }
-            final Iterable<UUID> filteredSubscriptionIdsForDryRun = getFilteredSubscriptionIdsForDryRun(dryRunArguments, billingEvents);
-            final List<LocalDate> candidateTargetDates = (inputTargetDate != null) ?
-                                                         ImmutableList.<LocalDate>of(inputTargetDate) :
-                                                         getUpcomingInvoiceCandidateDates(filteredSubscriptionIdsForDryRun, context);
-            for (final LocalDate curTargetDate : candidateTargetDates) {
-                final Invoice invoice = processAccountWithLockAndInputTargetDate(accountId, curTargetDate, billingEvents, isDryRun, context);
-                if (invoice != null) {
-                    filterInvoiceItemsForDryRun(filteredSubscriptionIdsForDryRun, invoice);
 
-                    if (!isDryRun && parkedAccount) {
-                        try {
-                            log.info("Illegal invoicing state fixed for accountId='{}', unparking account", accountId);
-                            parkedAccountsManager.unparkAccount(accountId, context);
-                        } catch (final TagApiException ignored) {
-                            log.warn("Unable to unpark account", ignored);
-                        }
+            final List<Invoice> existingInvoices = billingEvents.isAccountAutoInvoiceOff() ?
+                                                   ImmutableList.<Invoice>of() :
+                                                   ImmutableList.<Invoice>copyOf(Collections2.transform(invoiceDao.getInvoicesByAccount(context),
+                                                                                                        new Function<InvoiceModelDao, Invoice>() {
+                                                                                                            @Override
+                                                                                                            public Invoice apply(final InvoiceModelDao input) {
+                                                                                                                return new DefaultInvoice(input);
+                                                                                                            }
+                                                                                                        }));
+            Invoice invoice = null;
+            if (!isDryRun) {
+                invoice = processAccountWithLockAndInputTargetDate(accountId, inputTargetDate, billingEvents, existingInvoices, false, context);
+                if (parkedAccount) {
+                    try {
+                        log.info("Illegal invoicing state fixed for accountId='{}', unparking account", accountId);
+                        parkedAccountsManager.unparkAccount(accountId, context);
+                    } catch (final TagApiException ignored) {
+                        log.warn("Unable to unpark account", ignored);
                     }
-
-                    return invoice;
                 }
+            } else {
+
+                final Iterable<UUID> filteredSubscriptionIdsForDryRun = getFilteredSubscriptionIdsForDryRun(dryRunArguments, billingEvents);
+                final List<LocalDate> candidateTargetDates = (inputTargetDate != null) ?
+                                                             ImmutableList.<LocalDate>of(inputTargetDate) :
+                                                             getUpcomingInvoiceCandidateDates(filteredSubscriptionIdsForDryRun, context);
+
+                if (dryRunArguments.getDryRunType() == DryRunType.UPCOMING_INVOICE) {
+                    invoice = processDryRun_UPCOMING_INVOICE_Invoice(accountId, candidateTargetDates, billingEvents, existingInvoices, context);
+                }  else /* DryRunType.TARGET_DATE */ {
+                    invoice = processDryRun_TARGET_DATE_Invoice(accountId, inputTargetDate, candidateTargetDates, billingEvents, existingInvoices, context);
+                }
+                filterInvoiceItemsForDryRun(filteredSubscriptionIdsForDryRun, invoice);
             }
-            return null;
+            return invoice;
         } catch (final CatalogApiException e) {
             log.warn("Failed to retrieve BillingEvents for accountId='{}', dryRunArguments='{}'", accountId, dryRunArguments, e);
             return null;
@@ -319,6 +334,40 @@ public class InvoiceDispatcher {
             throw e;
         }
     }
+
+    private Invoice processDryRun_UPCOMING_INVOICE_Invoice(final UUID accountId, final List<LocalDate> candidateTargetDates, final BillingEventSet billingEvents, final List<Invoice> existingInvoices, final InternalCallContext context) throws InvoiceApiException {
+        for (final LocalDate curTargetDate : candidateTargetDates) {
+            final Invoice invoice = processAccountWithLockAndInputTargetDate(accountId, curTargetDate, billingEvents, existingInvoices, true, context);
+            if (invoice != null) {
+                return invoice;
+            }
+        }
+        return null;
+    }
+
+
+    private Invoice processDryRun_TARGET_DATE_Invoice(final UUID accountId, final LocalDate targetDate, final List<LocalDate> upcomingTargetDates, final BillingEventSet billingEvents, final List<Invoice> existingInvoices, final InternalCallContext context) throws InvoiceApiException {
+
+        LocalDate prevLocalDate = null;
+        for (final LocalDate cur : upcomingTargetDates) {
+            if (cur.compareTo(targetDate) < 0) {
+                prevLocalDate = cur;
+            }
+        }
+
+        Invoice additionalInvoice = null;
+        if (prevLocalDate != null) {
+            additionalInvoice = processAccountWithLockAndInputTargetDate(accountId, prevLocalDate, billingEvents, existingInvoices, true, context);
+        }
+
+        final List<Invoice> augmentedExistingInvoices = additionalInvoice != null ?
+                                                        new ImmutableList.Builder().addAll(existingInvoices).add(additionalInvoice).build() :
+                                                        existingInvoices;
+
+        return processAccountWithLockAndInputTargetDate(accountId, targetDate, billingEvents, augmentedExistingInvoices, true, context);
+    }
+
+
 
     private void parkAccount(final UUID accountId, final InternalCallContext context) {
         try {
@@ -366,23 +415,18 @@ public class InvoiceDispatcher {
         });
     }
 
-    private Invoice processAccountWithLockAndInputTargetDate(final UUID accountId, final LocalDate targetDate,
-                                                             final BillingEventSet billingEvents, final boolean isDryRun, final InternalCallContext context) throws InvoiceApiException {
+    private Invoice processAccountWithLockAndInputTargetDate(final UUID accountId,
+                                                             final LocalDate targetDate,
+                                                             final BillingEventSet billingEvents,
+                                                             final List<Invoice> existingInvoices,
+                                                             final boolean isDryRun,
+                                                             final InternalCallContext context) throws InvoiceApiException {
         try {
             final ImmutableAccountData account = accountApi.getImmutableAccountDataById(accountId, context);
 
-            final List<Invoice> invoices = billingEvents.isAccountAutoInvoiceOff() ?
-                                           ImmutableList.<Invoice>of() :
-                                           ImmutableList.<Invoice>copyOf(Collections2.transform(invoiceDao.getInvoicesByAccount(context),
-                                                                                                new Function<InvoiceModelDao, Invoice>() {
-                                                                                                    @Override
-                                                                                                    public Invoice apply(final InvoiceModelDao input) {
-                                                                                                        return new DefaultInvoice(input);
-                                                                                                    }
-                                                                                                }));
 
             final Currency targetCurrency = account.getCurrency();
-            final InvoiceWithMetadata invoiceWithMetadata = generator.generateInvoice(account, billingEvents, invoices, targetDate, targetCurrency, context);
+            final InvoiceWithMetadata invoiceWithMetadata = generator.generateInvoice(account, billingEvents, existingInvoices, targetDate, targetCurrency, context);
             final DefaultInvoice invoice = invoiceWithMetadata.getInvoice();
 
             // Compute future notifications
