@@ -305,9 +305,7 @@ public class InvoiceDispatcher {
             } else {
 
                 final Iterable<UUID> filteredSubscriptionIdsForDryRun = getFilteredSubscriptionIdsForDryRun(dryRunArguments, billingEvents);
-                final List<LocalDate> candidateTargetDates = (inputTargetDate != null) ?
-                                                             ImmutableList.<LocalDate>of(inputTargetDate) :
-                                                             getUpcomingInvoiceCandidateDates(filteredSubscriptionIdsForDryRun, context);
+                final List<LocalDate> candidateTargetDates = getUpcomingInvoiceCandidateDates(filteredSubscriptionIdsForDryRun, context);
 
                 if (dryRunArguments.getDryRunType() == DryRunType.UPCOMING_INVOICE) {
                     invoice = processDryRun_UPCOMING_INVOICE_Invoice(accountId, candidateTargetDates, billingEvents, existingInvoices, context);
@@ -348,6 +346,7 @@ public class InvoiceDispatcher {
 
     private Invoice processDryRun_TARGET_DATE_Invoice(final UUID accountId, final LocalDate targetDate, final List<LocalDate> upcomingTargetDates, final BillingEventSet billingEvents, final List<Invoice> existingInvoices, final InternalCallContext context) throws InvoiceApiException {
 
+        // Look for first invoice notification date prior our targetDate
         LocalDate prevLocalDate = null;
         for (final LocalDate cur : upcomingTargetDates) {
             if (cur.compareTo(targetDate) < 0) {
@@ -355,6 +354,7 @@ public class InvoiceDispatcher {
             }
         }
 
+        // Generate a dryRun invoice for such date if required in such a way that dryRun invoice on our targetDate only contains items that we expect to see
         Invoice additionalInvoice = null;
         if (prevLocalDate != null) {
             additionalInvoice = processAccountWithLockAndInputTargetDate(accountId, prevLocalDate, billingEvents, existingInvoices, true, context);
@@ -364,7 +364,9 @@ public class InvoiceDispatcher {
                                                         new ImmutableList.Builder().addAll(existingInvoices).add(additionalInvoice).build() :
                                                         existingInvoices;
 
-        return processAccountWithLockAndInputTargetDate(accountId, targetDate, billingEvents, augmentedExistingInvoices, true, context);
+        final Invoice targetInvoice = processAccountWithLockAndInputTargetDate(accountId, targetDate, billingEvents, augmentedExistingInvoices, true, context);
+        // If our targetDate -- user specified -- did not align with any boundary, we return previous 'additionalInvoice' invoice
+        return targetInvoice != null ? targetInvoice : additionalInvoice;
     }
 
 
