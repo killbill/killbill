@@ -183,9 +183,10 @@ public class TestIntegrationDryRunInvoice extends TestIntegrationBase {
         invoiceChecker.checkInvoice(account.getId(), invoiceItemCount++, callContext, expectedInvoices);
         expectedInvoices.clear();
 
-        // We test first the next expected invoice for a specific subscription: We can see the targetDate is 2015-2-14 and not 2015-2-1
+        // We test first the next expected invoice for a specific subscription: We can see the targetDate is 2015-2-14 and not 2015-2-1, however we do see both recurring items
         final DryRunArguments dryRunWIthSubscription = new TestDryRunArguments(DryRunType.UPCOMING_INVOICE, null, null, null, null, null, null, subscriptionMonthly.getId(), null, null, null);
         expectedInvoices.add(new ExpectedInvoiceItemCheck(new LocalDate(2015, 2, 14), new LocalDate(2015, 3, 14), InvoiceItemType.RECURRING, new BigDecimal("249.95")));
+        expectedInvoices.add(new ExpectedInvoiceItemCheck(new LocalDate(2015, 2, 1), new LocalDate(2016, 2, 1), InvoiceItemType.RECURRING, new BigDecimal("2399.95")));
         dryRunInvoice = invoiceUserApi.triggerInvoiceGeneration(account.getId(), null, dryRunWIthSubscription, callContext);
         assertEquals(dryRunInvoice.getTargetDate(), new LocalDate(2015, 2, 14));
         invoiceChecker.checkInvoiceNoAudits(dryRunInvoice, callContext, expectedInvoices);

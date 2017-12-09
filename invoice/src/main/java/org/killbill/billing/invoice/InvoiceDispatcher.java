@@ -314,9 +314,6 @@ public class InvoiceDispatcher {
                 }  else /* DryRunType.TARGET_DATE */ {
                     invoice = processDryRun_TARGET_DATE_Invoice(accountId, inputTargetDate, candidateTargetDates, billingEvents, existingInvoices, context);
                 }
-                if (invoice != null) {
-                    filterInvoiceItemsForDryRun(filteredSubscriptionIdsForDryRun, invoice);
-                }
             }
             return invoice;
         } catch (final CatalogApiException e) {
