@@ -282,6 +282,8 @@ public class InvoiceDispatcher {
                 return null;
             }
 
+            // Avoid pulling all invoices when AUTO_INVOICING_OFF is set since we will disable invoicing later
+            // (Note that we can't return right away as we send a NullInvoice event)
             final List<Invoice> existingInvoices = billingEvents.isAccountAutoInvoiceOff() ?
                                                    ImmutableList.<Invoice>of() :
                                                    ImmutableList.<Invoice>copyOf(Collections2.transform(invoiceDao.getInvoicesByAccount(context),
@@ -312,7 +314,9 @@ public class InvoiceDispatcher {
                 }  else /* DryRunType.TARGET_DATE */ {
                     invoice = processDryRun_TARGET_DATE_Invoice(accountId, inputTargetDate, candidateTargetDates, billingEvents, existingInvoices, context);
                 }
-                filterInvoiceItemsForDryRun(filteredSubscriptionIdsForDryRun, invoice);
+                if (invoice != null) {
+                    filterInvoiceItemsForDryRun(filteredSubscriptionIdsForDryRun, invoice);
+                }
             }
             return invoice;
         } catch (final CatalogApiException e) {
@@ -736,16 +740,26 @@ public class InvoiceDispatcher {
 
             final Collection<DateTime> effectiveDates = new LinkedList<DateTime>();
             for (final NotificationEventWithMetadata<NextBillingDateNotificationKey> input : futureNotifications) {
-                final boolean isEventForSubscription = !filteredSubscriptionIds.iterator().hasNext() || Iterables.contains(filteredSubscriptionIds, input.getEvent().getUuidKey());
+
+                // If we don't specify a filter list of subscriptionIds, we look at all events.
+                boolean isEventForSubscription = !filteredSubscriptionIds.iterator().hasNext();
+                // If we specify a filter, we keep the date if at least one of the subscriptions from the event list matches one of the subscription from our filter list
+                if (filteredSubscriptionIds.iterator().hasNext()) {
+                    for (final UUID curSubscriptionId : filteredSubscriptionIds) {
+                        if (Iterables.contains(input.getEvent().getUuidKeys(), curSubscriptionId)) {
+                            isEventForSubscription = true;
+                            break;
+                        }
+                    }
+                }
+
 
                 final boolean isEventDryRunForNotifications = input.getEvent().isDryRunForInvoiceNotification() != null ?
                                                               input.getEvent().isDryRunForInvoiceNotification() : false;
                 if (isEventForSubscription && !isEventDryRunForNotifications) {
                     effectiveDates.add(input.getEffectiveDate());
                 }
-
             }
-
             return effectiveDates;
         } catch (final NoSuchNotificationQueue noSuchNotificationQueue) {
             throw new IllegalStateException(noSuchNotificationQueue);

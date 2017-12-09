@@ -23,20 +23,34 @@ import org.killbill.notificationq.DefaultUUIDNotificationKey;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Iterables;
 
 public class NextBillingDateNotificationKey extends DefaultUUIDNotificationKey {
 
     private Boolean isDryRunForInvoiceNotification;
     private DateTime targetDate;
+    private final Iterable<UUID> uuidKeys;
 
     @JsonCreator
-    public NextBillingDateNotificationKey(@JsonProperty("uuidKey") final UUID uuidKey,
+    public NextBillingDateNotificationKey(@Deprecated @JsonProperty("uuidKey") final UUID uuidKey,
+                                          @JsonProperty("uuidKeys") final Iterable<UUID> uuidKeys,
                                           @JsonProperty("targetDate") final DateTime targetDate,
                                           @JsonProperty("isDryRunForInvoiceNotification") final Boolean isDryRunForInvoiceNotification) {
         super(uuidKey);
+        this.uuidKeys = uuidKeys;
         this.targetDate = targetDate;
         this.isDryRunForInvoiceNotification = isDryRunForInvoiceNotification;
     }
+
+    public NextBillingDateNotificationKey(NextBillingDateNotificationKey existing,
+                                          final Iterable<UUID> newUUIDKeys){
+        super(null);
+        this.uuidKeys = ImmutableList.copyOf(Iterables.concat(existing.getUuidKeys(), newUUIDKeys));
+        this.targetDate = existing.getTargetDate();
+        this.isDryRunForInvoiceNotification = existing.isDryRunForInvoiceNotification();
+    }
+
 
     @JsonProperty("isDryRunForInvoiceNotification")
     public Boolean isDryRunForInvoiceNotification() {
@@ -45,5 +59,14 @@ public class NextBillingDateNotificationKey extends DefaultUUIDNotificationKey {
 
     public DateTime getTargetDate() {
         return targetDate;
+    }
+
+    public final Iterable<UUID> getUuidKeys() {
+        // Deprecated mode
+        if (uuidKeys == null || !uuidKeys.iterator().hasNext()) {
+            return ImmutableList.of(getUuidKey());
+        } else {
+            return uuidKeys;
+        }
     }
 }

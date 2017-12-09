@@ -31,6 +31,8 @@ import org.killbill.notificationq.api.NotificationQueue;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
+import com.google.common.collect.ImmutableList;
+
 import static org.awaitility.Awaitility.await;
 import static java.util.concurrent.TimeUnit.MINUTES;
 
@@ -47,7 +49,7 @@ public class TestNextBillingDateNotifier extends InvoiceTestSuiteWithEmbeddedDB 
 
         final NotificationQueue nextBillingQueue = notificationQueueService.getNotificationQueue(DefaultInvoiceService.INVOICE_SERVICE_NAME, DefaultNextBillingDateNotifier.NEXT_BILLING_DATE_NOTIFIER_QUEUE);
 
-        nextBillingQueue.recordFutureNotification(now, new NextBillingDateNotificationKey(subscriptionId, now, Boolean.FALSE), internalCallContext.getUserToken(), accountRecordId, internalCallContext.getTenantRecordId());
+        nextBillingQueue.recordFutureNotification(now, new NextBillingDateNotificationKey(null, ImmutableList.<UUID>of(subscriptionId), now, Boolean.FALSE), internalCallContext.getUserToken(), accountRecordId, internalCallContext.getTenantRecordId());
 
         // Move time in the future after the notification effectiveDate
         clock.setDeltaFromReality(3000);
