@@ -24,6 +24,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -53,7 +54,6 @@ import org.killbill.billing.entitlement.api.SubscriptionEventType;
 import org.killbill.billing.events.BusInternalEvent;
 import org.killbill.billing.events.EffectiveSubscriptionInternalEvent;
 import org.killbill.billing.events.InvoiceNotificationInternalEvent;
-import org.killbill.billing.invoice.InvoiceDispatcher.FutureAccountNotifications.SubscriptionNotification;
 import org.killbill.billing.invoice.api.DefaultInvoiceService;
 import org.killbill.billing.invoice.api.DryRunArguments;
 import org.killbill.billing.invoice.api.DryRunType;
@@ -115,6 +115,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.collect.Collections2;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Ordering;
@@ -522,45 +523,70 @@ public class InvoiceDispatcher {
     }
 
     private FutureAccountNotifications createNextFutureNotificationDate(final InvoiceWithMetadata invoiceWithMetadata, final InternalCallContext context) {
-        final Map<UUID, List<SubscriptionNotification>> result = new HashMap<UUID, List<SubscriptionNotification>>();
+
+        final Map<LocalDate, Set<UUID>> notificationListForTrigger = new HashMap<LocalDate, Set<UUID>>();
 
         for (final UUID subscriptionId : invoiceWithMetadata.getPerSubscriptionFutureNotificationDates().keySet()) {
 
-            final List<SubscriptionNotification> perSubscriptionNotifications = new ArrayList<SubscriptionNotification>();
-
             final SubscriptionFutureNotificationDates subscriptionFutureNotificationDates = invoiceWithMetadata.getPerSubscriptionFutureNotificationDates().get(subscriptionId);
-            // Add next recurring date if any
+
             if (subscriptionFutureNotificationDates.getNextRecurringDate() != null) {
-                perSubscriptionNotifications.add(new SubscriptionNotification(context.toUTCDateTime(subscriptionFutureNotificationDates.getNextRecurringDate()), true));
+                Set<UUID> subscriptionsForDates = notificationListForTrigger.get(subscriptionFutureNotificationDates.getNextRecurringDate());
+                if (subscriptionsForDates == null) {
+                    subscriptionsForDates = new HashSet<UUID>();
+                    notificationListForTrigger.put(subscriptionFutureNotificationDates.getNextRecurringDate(), subscriptionsForDates);
+                }
+                subscriptionsForDates.add(subscriptionId);
             }
-            // Add next usage dates if any
+
+
             if (subscriptionFutureNotificationDates.getNextUsageDates() != null) {
                 for (final UsageDef usageDef : subscriptionFutureNotificationDates.getNextUsageDates().keySet()) {
+
                     final LocalDate nextNotificationDateForUsage = subscriptionFutureNotificationDates.getNextUsageDates().get(usageDef);
-                    final DateTime subscriptionUsageCallbackDate = nextNotificationDateForUsage != null ? context.toUTCDateTime(nextNotificationDateForUsage) : null;
-                    perSubscriptionNotifications.add(new SubscriptionNotification(subscriptionUsageCallbackDate, true));
+                    Set<UUID> subscriptionsForDates = notificationListForTrigger.get(nextNotificationDateForUsage);
+                    if (subscriptionsForDates == null) {
+                        subscriptionsForDates = new HashSet<UUID>();
+                        notificationListForTrigger.put(nextNotificationDateForUsage, subscriptionsForDates);
+                    }
+                    subscriptionsForDates.add(subscriptionId);
                 }
-            }
-            if (!perSubscriptionNotifications.isEmpty()) {
-                result.put(subscriptionId, perSubscriptionNotifications);
             }
         }
 
-        // If dryRunNotification is enabled we also need to fetch the upcoming PHASE dates (we add SubscriptionNotification with isForInvoiceNotificationTrigger = false)
-        final boolean isInvoiceNotificationEnabled = invoiceConfig.getDryRunNotificationSchedule(context).getMillis() > 0;
+        final long dryRunNotificationTime = invoiceConfig.getDryRunNotificationSchedule(context).getMillis();
+        final boolean isInvoiceNotificationEnabled = dryRunNotificationTime > 0;
+
+        final Map<LocalDate, Set<UUID>> notificationListForDryRun  = isInvoiceNotificationEnabled ? new HashMap<LocalDate, Set<UUID>>() : ImmutableMap.<LocalDate, Set<UUID>>of();
         if (isInvoiceNotificationEnabled) {
-            final Map<UUID, DateTime> upcomingPhasesForSubscriptions = subscriptionApi.getNextFutureEventForSubscriptions(ImmutableList.<SubscriptionBaseTransitionType>of(SubscriptionBaseTransitionType.PHASE), context);
-            for (final UUID cur : upcomingPhasesForSubscriptions.keySet()) {
-                final DateTime curDate = upcomingPhasesForSubscriptions.get(cur);
-                List<SubscriptionNotification> resultValue = result.get(cur);
-                if (resultValue == null) {
-                    resultValue = new ArrayList<SubscriptionNotification>();
+            for (final LocalDate curDate : notificationListForTrigger.keySet()) {
+                final LocalDate curDryRunDate = context.toLocalDate(context.toUTCDateTime(curDate).minus(dryRunNotificationTime));
+                Set<UUID> subscriptionsForDryRunDates = notificationListForDryRun.get(curDryRunDate);
+                if (subscriptionsForDryRunDates == null) {
+                    subscriptionsForDryRunDates = new HashSet<UUID>();
+                    notificationListForDryRun.put(curDryRunDate, subscriptionsForDryRunDates);
                 }
-                resultValue.add(new SubscriptionNotification(curDate, false));
-                result.put(cur, resultValue);
+                subscriptionsForDryRunDates.addAll(notificationListForDryRun.get(curDate));
             }
+
+
+            final Map<UUID, DateTime> upcomingPhasesForSubscriptions = isInvoiceNotificationEnabled ?
+                                                                       subscriptionApi.getNextFutureEventForSubscriptions(ImmutableList.<SubscriptionBaseTransitionType>of(SubscriptionBaseTransitionType.PHASE), context) :
+                                                                       ImmutableMap.<UUID, DateTime>of();
+
+
+             for (UUID curId : upcomingPhasesForSubscriptions.keySet()) {
+                 final LocalDate curDryRunDate = context.toLocalDate(upcomingPhasesForSubscriptions.get(curId).minus(dryRunNotificationTime));
+                 Set<UUID> subscriptionsForDryRunDates = notificationListForDryRun.get(curDryRunDate);
+                 if (subscriptionsForDryRunDates == null) {
+                     subscriptionsForDryRunDates = new HashSet<UUID>();
+                     notificationListForDryRun.put(curDryRunDate, subscriptionsForDryRunDates);
+                 }
+                 subscriptionsForDryRunDates.add(curId);
+             }
         }
-        return new FutureAccountNotifications(result);
+
+        return new FutureAccountNotifications(notificationListForTrigger, notificationListForDryRun);
     }
 
     private List<InvoiceItemModelDao> transformToInvoiceModelDao(final List<InvoiceItem> invoiceItems) {
@@ -692,33 +718,25 @@ public class InvoiceDispatcher {
 
     public static class FutureAccountNotifications {
 
-        private final Map<UUID, List<SubscriptionNotification>> notifications;
 
-        public FutureAccountNotifications(final Map<UUID, List<SubscriptionNotification>> notifications) {
-            this.notifications = notifications;
+        private final Map<LocalDate, Set<UUID>> notificationListForTrigger;
+        private final Map<LocalDate, Set<UUID>> notificationListForDryRun;
+
+        public FutureAccountNotifications() {
+            this(ImmutableMap.<LocalDate, Set<UUID>>of(), ImmutableMap.<LocalDate, Set<UUID>>of());
         }
 
-        public Map<UUID, List<SubscriptionNotification>> getNotifications() {
-            return notifications;
+        public FutureAccountNotifications(final Map<LocalDate, Set<UUID>> notificationListForTrigger, final Map<LocalDate, Set<UUID>> notificationListForDryRun) {
+            this.notificationListForTrigger = notificationListForTrigger;
+            this.notificationListForDryRun = notificationListForDryRun;
         }
 
-        public static class SubscriptionNotification {
+        public Map<LocalDate, Set<UUID>> getNotificationsForTrigger() {
+            return notificationListForTrigger;
+        }
 
-            private final DateTime effectiveDate;
-            private final boolean isForNotificationTrigger;
-
-            public SubscriptionNotification(final DateTime effectiveDate, final boolean isForNotificationTrigger) {
-                this.effectiveDate = effectiveDate;
-                this.isForNotificationTrigger = isForNotificationTrigger;
-            }
-
-            public DateTime getEffectiveDate() {
-                return effectiveDate;
-            }
-
-            public boolean isForInvoiceNotificationTrigger() {
-                return isForNotificationTrigger;
-            }
+        public Map<LocalDate, Set<UUID>> getNotificationsForDryRun() {
+            return notificationListForDryRun;
         }
     }
 
