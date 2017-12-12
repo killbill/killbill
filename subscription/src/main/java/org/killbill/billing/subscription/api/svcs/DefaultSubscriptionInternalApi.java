@@ -776,22 +776,8 @@ public class DefaultSubscriptionInternalApi extends SubscriptionApiBase implemen
     }
 
     @Override
-    public Map<UUID, DateTime> getNextFutureEventForSubscriptions(final SubscriptionBaseTransitionType eventType, final InternalCallContext internalCallContext) {
-        final Iterable<SubscriptionBaseEvent> events = dao.getFutureEventsForAccount(internalCallContext);
-        final Iterable<SubscriptionBaseEvent> filteredEvents = Iterables.filter(events, new Predicate<SubscriptionBaseEvent>() {
-            @Override
-            public boolean apply(final SubscriptionBaseEvent input) {
-                switch (input.getType()) {
-                    case PHASE:
-                        return eventType == SubscriptionBaseTransitionType.PHASE;
-                    case BCD_UPDATE:
-                        return eventType == SubscriptionBaseTransitionType.BCD_CHANGE;
-                    case API_USER:
-                    default:
-                        return true;
-                }
-            }
-        });
+    public Map<UUID, DateTime> getNextFutureEventForSubscriptions(final List<SubscriptionBaseTransitionType> eventTypes, final InternalCallContext internalCallContext) {
+        final Iterable<SubscriptionBaseEvent> filteredEvents = dao.getFutureEventsForAccount(eventTypes, internalCallContext);
         final Map<UUID, DateTime> result = filteredEvents.iterator().hasNext() ? new HashMap<UUID, DateTime>() : ImmutableMap.<UUID, DateTime>of();
         for (final SubscriptionBaseEvent cur : filteredEvents) {
             final DateTime targetDate = result.get(cur.getSubscriptionId());

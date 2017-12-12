@@ -530,13 +530,28 @@ public class DefaultSubscriptionDao extends EntityDaoBase<SubscriptionBundleMode
     }
 
     @Override
-    public Iterable<SubscriptionBaseEvent> getFutureEventsForAccount(final InternalTenantContext context) {
+    public Iterable<SubscriptionBaseEvent> getFutureEventsForAccount(final List<SubscriptionBaseTransitionType> eventTypes, final InternalTenantContext context) {
+
+
         return transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<Iterable<SubscriptionBaseEvent>>() {
             @Override
             public Iterable<SubscriptionBaseEvent> inTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory) throws Exception {
                 final SubscriptionEventSqlDao transactional = entitySqlDaoWrapperFactory.become(SubscriptionEventSqlDao.class);
                 final List<SubscriptionEventModelDao> activeEvents = transactional.getFutureActiveEventsForAccount(clock.getUTCNow().toDate(), context);
-                return Iterables.transform(activeEvents, new Function<SubscriptionEventModelDao, SubscriptionBaseEvent>() {
+
+                final Iterable<SubscriptionEventModelDao> filteredActiveEvents = Iterables.filter(activeEvents, new Predicate<SubscriptionEventModelDao>() {
+                    @Override
+                    public boolean apply(final SubscriptionEventModelDao input) {
+                        for (final SubscriptionBaseTransitionType e : eventTypes) {
+                            if (input.isOfSubscriptionBaseTransitionType(e)) {
+                                return true;
+                            }
+                        }
+                        return false;
+                    }
+                });
+
+                return Iterables.transform(filteredActiveEvents, new Function<SubscriptionEventModelDao, SubscriptionBaseEvent>() {
 
                     @Override
                     public SubscriptionBaseEvent apply(final SubscriptionEventModelDao input) {

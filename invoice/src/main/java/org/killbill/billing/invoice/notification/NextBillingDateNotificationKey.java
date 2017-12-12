@@ -24,6 +24,7 @@ import org.killbill.notificationq.DefaultUUIDNotificationKey;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 
 public class NextBillingDateNotificationKey extends DefaultUUIDNotificationKey {
@@ -44,13 +45,12 @@ public class NextBillingDateNotificationKey extends DefaultUUIDNotificationKey {
     }
 
     public NextBillingDateNotificationKey(NextBillingDateNotificationKey existing,
-                                          final Iterable<UUID> newUUIDKeys){
+                                          final Iterable<UUID> newUUIDKeys) {
         super(null);
-        this.uuidKeys = ImmutableList.copyOf(Iterables.concat(existing.getUuidKeys(), newUUIDKeys));
+        this.uuidKeys = ImmutableSet.copyOf(Iterables.concat(existing.getUuidKeys(), newUUIDKeys));
         this.targetDate = existing.getTargetDate();
         this.isDryRunForInvoiceNotification = existing.isDryRunForInvoiceNotification();
     }
-
 
     @JsonProperty("isDryRunForInvoiceNotification")
     public Boolean isDryRunForInvoiceNotification() {

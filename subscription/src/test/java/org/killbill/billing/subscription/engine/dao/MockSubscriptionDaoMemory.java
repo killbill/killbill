@@ -38,6 +38,7 @@ import org.killbill.billing.catalog.api.TimeUnit;
 import org.killbill.billing.dao.MockNonEntityDao;
 import org.killbill.billing.entitlement.api.SubscriptionApiException;
 import org.killbill.billing.subscription.api.SubscriptionBase;
+import org.killbill.billing.subscription.api.SubscriptionBaseTransitionType;
 import org.killbill.billing.subscription.api.SubscriptionBaseWithAddOns;
 import org.killbill.billing.subscription.api.transfer.BundleTransferData;
 import org.killbill.billing.subscription.api.transfer.TransferCancelData;
@@ -471,6 +472,11 @@ public class MockSubscriptionDaoMemory extends MockEntityDaoBase<SubscriptionBun
         return null;
     }
 
+    @Override
+    public Iterable<SubscriptionBaseEvent> getFutureEventsForAccount(final List<SubscriptionBaseTransitionType> eventTypes, final InternalTenantContext context) {
+        return null;
+    }
+
     private void recordFutureNotificationFromTransaction(final EntitySqlDaoWrapperFactory transactionalDao, final DateTime effectiveDate,
                                                          final NotificationEvent notificationKey, final InternalCallContext context) {
         try {
@@ -499,10 +505,6 @@ public class MockSubscriptionDaoMemory extends MockEntityDaoBase<SubscriptionBun
         }
     }
 
-    @Override
-    public Iterable<SubscriptionBaseEvent> getFutureEventsForAccount(final InternalTenantContext context) {
-        return null;
-    }
 
     @Override
     public void transfer(final UUID srcAccountId, final UUID destAccountId, final BundleTransferData data,

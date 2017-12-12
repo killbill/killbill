@@ -293,7 +293,7 @@ public class InvoiceDispatcher {
                                                                                                                 return new DefaultInvoice(input);
                                                                                                             }
                                                                                                         }));
-            Invoice invoice = null;
+            Invoice invoice;
             if (!isDryRun) {
                 invoice = processAccountWithLockAndInputTargetDate(accountId, inputTargetDate, billingEvents, existingInvoices, false, context);
                 if (parkedAccount) {
@@ -304,15 +304,19 @@ public class InvoiceDispatcher {
                         log.warn("Unable to unpark account", ignored);
                     }
                 }
-            } else {
-
-                final Iterable<UUID> filteredSubscriptionIdsForDryRun = getFilteredSubscriptionIdsForDryRun(dryRunArguments, billingEvents);
-                final List<LocalDate> candidateTargetDates = getUpcomingInvoiceCandidateDates(filteredSubscriptionIdsForDryRun, context);
-
+            } else /* Dry run use cases */ {
                 if (dryRunArguments.getDryRunType() == DryRunType.UPCOMING_INVOICE) {
-                    invoice = processDryRun_UPCOMING_INVOICE_Invoice(accountId, candidateTargetDates, billingEvents, existingInvoices, context);
+
+                    final Iterable<UUID> filteredSubscriptionIdsForDryRun = getFilteredSubscriptionIdsFor_UPCOMING_INVOICE_DryRun(dryRunArguments, billingEvents);
+                    final List<LocalDate> candidateTargetDates = getUpcomingInvoiceCandidateDates(filteredSubscriptionIdsForDryRun, context);
+
+                    if (Iterables.isEmpty(filteredSubscriptionIdsForDryRun)) {
+                        invoice = processDryRun_UPCOMING_INVOICE_Invoice(accountId, candidateTargetDates, billingEvents, existingInvoices, context);
+                    } else {
+                        invoice = processDryRun_UPCOMING_INVOICE_FILTERING_Invoice(accountId, candidateTargetDates, billingEvents, existingInvoices, context);
+                    }
                 }  else /* DryRunType.TARGET_DATE */ {
-                    invoice = processDryRun_TARGET_DATE_Invoice(accountId, inputTargetDate, candidateTargetDates, billingEvents, existingInvoices, context);
+                    invoice = processDryRun_TARGET_DATE_Invoice(accountId, inputTargetDate, billingEvents, existingInvoices, context);
                 }
             }
             return invoice;
@@ -345,21 +349,22 @@ public class InvoiceDispatcher {
     }
 
 
-    private Invoice processDryRun_TARGET_DATE_Invoice(final UUID accountId, final LocalDate targetDate, final List<LocalDate> upcomingTargetDates, final BillingEventSet billingEvents, final List<Invoice> existingInvoices, final InternalCallContext context) throws InvoiceApiException {
-
-        // Look for first invoice notification date prior our targetDate
-        LocalDate prevLocalDate = null;
-        for (final LocalDate cur : upcomingTargetDates) {
-            if (cur.compareTo(targetDate) < 0) {
-                prevLocalDate = cur;
+    private Invoice processDryRun_UPCOMING_INVOICE_FILTERING_Invoice(final UUID accountId, final List<LocalDate> candidateTargetDates, final BillingEventSet billingEvents, final List<Invoice> existingInvoices, final InternalCallContext context) throws InvoiceApiException {
+        for (final LocalDate curTargetDate : candidateTargetDates) {
+            final Invoice invoice = processDryRun_TARGET_DATE_Invoice(accountId, curTargetDate, billingEvents, existingInvoices, context);
+            if (invoice != null) {
+                return invoice;
             }
         }
+        return null;
+    }
+
+
+    private Invoice processDryRun_TARGET_DATE_Invoice(final UUID accountId, final LocalDate targetDate, final BillingEventSet billingEvents, final List<Invoice> existingInvoices, final InternalCallContext context) throws InvoiceApiException {
+
 
         // Generate a dryRun invoice for such date if required in such a way that dryRun invoice on our targetDate only contains items that we expect to see
-        Invoice additionalInvoice = null;
-        if (prevLocalDate != null) {
-            additionalInvoice = processAccountWithLockAndInputTargetDate(accountId, prevLocalDate, billingEvents, existingInvoices, true, context);
-        }
+        final Invoice additionalInvoice = processAccountWithLockAndInputTargetDate(accountId, targetDate.minusDays(1), billingEvents, existingInvoices, true, context);
 
         final List<Invoice> augmentedExistingInvoices = additionalInvoice != null ?
                                                         new ImmutableList.Builder().addAll(existingInvoices).add(additionalInvoice).build() :
@@ -394,7 +399,7 @@ public class InvoiceDispatcher {
         }
     }
 
-    private Iterable<UUID> getFilteredSubscriptionIdsForDryRun(@Nullable final DryRunArguments dryRunArguments, final BillingEventSet billingEvents) {
+    private Iterable<UUID> getFilteredSubscriptionIdsFor_UPCOMING_INVOICE_DryRun(@Nullable final DryRunArguments dryRunArguments, final BillingEventSet billingEvents) {
         if (dryRunArguments == null ||
             !dryRunArguments.getDryRunType().equals(DryRunType.UPCOMING_INVOICE) ||
             (dryRunArguments.getSubscriptionId() == null && dryRunArguments.getBundleId() == null)) {
@@ -544,7 +549,7 @@ public class InvoiceDispatcher {
         // If dryRunNotification is enabled we also need to fetch the upcoming PHASE dates (we add SubscriptionNotification with isForInvoiceNotificationTrigger = false)
         final boolean isInvoiceNotificationEnabled = invoiceConfig.getDryRunNotificationSchedule(context).getMillis() > 0;
         if (isInvoiceNotificationEnabled) {
-            final Map<UUID, DateTime> upcomingPhasesForSubscriptions = subscriptionApi.getNextFutureEventForSubscriptions(SubscriptionBaseTransitionType.PHASE, context);
+            final Map<UUID, DateTime> upcomingPhasesForSubscriptions = subscriptionApi.getNextFutureEventForSubscriptions(ImmutableList.<SubscriptionBaseTransitionType>of(SubscriptionBaseTransitionType.PHASE), context);
             for (final UUID cur : upcomingPhasesForSubscriptions.keySet()) {
                 final DateTime curDate = upcomingPhasesForSubscriptions.get(cur);
                 List<SubscriptionNotification> resultValue = result.get(cur);
@@ -717,10 +722,35 @@ public class InvoiceDispatcher {
         }
     }
 
+
+
     private List<LocalDate> getUpcomingInvoiceCandidateDates(final Iterable<UUID> filteredSubscriptionIds, final InternalCallContext internalCallContext) {
         final Iterable<DateTime> nextScheduledInvoiceDates = getNextScheduledInvoiceEffectiveDate(filteredSubscriptionIds, internalCallContext);
-        final Iterable<DateTime> nextScheduledSubscriptionsEventDates = subscriptionApi.getFutureNotificationsForAccount(internalCallContext);
-        return Lists.<DateTime, LocalDate>transform(UPCOMING_NOTIFICATION_DATE_ORDERING.sortedCopy(Iterables.<DateTime>concat(nextScheduledInvoiceDates, nextScheduledSubscriptionsEventDates)),
+
+        // Events that are prone to trigger an invoice
+        // TODO we can't specify START_BILLING_DISABLED and END_BILLING_DISABLED as those are generated by junction
+        final ImmutableList<SubscriptionBaseTransitionType> eventTypes = ImmutableList.<SubscriptionBaseTransitionType>of(SubscriptionBaseTransitionType.CREATE,
+                                                                                                                          SubscriptionBaseTransitionType.CHANGE,
+                                                                                                                          SubscriptionBaseTransitionType.CANCEL,
+                                                                                                                          SubscriptionBaseTransitionType.PHASE,
+                                                                                                                          SubscriptionBaseTransitionType.BCD_CHANGE);
+
+        final Map<UUID, DateTime> nextScheduledSubscriptionsEventMap = subscriptionApi.getNextFutureEventForSubscriptions(eventTypes, internalCallContext);
+
+        final Iterable<DateTime> nextScheduledSubscriptionsEvents;
+        if (!Iterables.isEmpty(filteredSubscriptionIds)) {
+            List<DateTime> tmp = new ArrayList<DateTime>();
+            for (final UUID curSubscriptionId : nextScheduledSubscriptionsEventMap.keySet()) {
+                if (Iterables.contains(filteredSubscriptionIds, curSubscriptionId)) {
+                    tmp.add(nextScheduledSubscriptionsEventMap.get(curSubscriptionId));
+                }
+            }
+            nextScheduledSubscriptionsEvents = tmp;
+        } else {
+            nextScheduledSubscriptionsEvents = nextScheduledSubscriptionsEventMap.values();
+        }
+
+        return Lists.<DateTime, LocalDate>transform(UPCOMING_NOTIFICATION_DATE_ORDERING.sortedCopy(Iterables.<DateTime>concat(nextScheduledInvoiceDates, nextScheduledSubscriptionsEvents)),
                                                     new Function<DateTime, LocalDate>() {
                                                         @Override
                                                         public LocalDate apply(final DateTime input) {
@@ -739,9 +769,9 @@ public class InvoiceDispatcher {
             for (final NotificationEventWithMetadata<NextBillingDateNotificationKey> input : futureNotifications) {
 
                 // If we don't specify a filter list of subscriptionIds, we look at all events.
-                boolean isEventForSubscription = !filteredSubscriptionIds.iterator().hasNext();
+                boolean isEventForSubscription = Iterables.isEmpty(filteredSubscriptionIds);
                 // If we specify a filter, we keep the date if at least one of the subscriptions from the event list matches one of the subscription from our filter list
-                if (filteredSubscriptionIds.iterator().hasNext()) {
+                if (!Iterables.isEmpty(filteredSubscriptionIds)) {
                     for (final UUID curSubscriptionId : filteredSubscriptionIds) {
                         if (Iterables.contains(input.getEvent().getUuidKeys(), curSubscriptionId)) {
                             isEventForSubscription = true;
