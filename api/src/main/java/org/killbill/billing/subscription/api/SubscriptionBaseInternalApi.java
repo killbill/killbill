@@ -93,8 +93,6 @@ public interface SubscriptionBaseInternalApi {
 
     public void updateExternalKey(UUID bundleId, String newExternalKey, InternalCallContext context);
 
-    public Iterable<DateTime> getFutureNotificationsForAccount(InternalCallContext context);
-
     public Map<UUID, DateTime> getNextFutureEventForSubscriptions(final List<SubscriptionBaseTransitionType> eventTypes, final InternalCallContext internalCallContext);
 
 

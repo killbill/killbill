@@ -219,7 +219,6 @@ public class TestInvoiceHelper {
                                                                    invoiceDao, internalCallContextFactory, invoiceNotifier, invoicePluginDispatcher, locker, busService.getBus(),
                                                                    notificationQueueService, invoiceConfig, clock, parkedAccountsManager);
 
-        Mockito.when(subscriptionApi.getFutureNotificationsForAccount(Mockito.<InternalCallContext>any())).thenReturn(ImmutableList.<DateTime>of());
         Invoice invoice = dispatcher.processAccountFromNotificationOrBusEvent(account.getId(), targetDate, new DryRunFutureDateArguments(), internalCallContext);
         Assert.assertNotNull(invoice);
 
