@@ -19,6 +19,7 @@ package org.killbill.billing.subscription.engine.dao.model;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
+import org.killbill.billing.subscription.api.SubscriptionBaseTransitionType;
 import org.killbill.billing.subscription.events.EventBaseBuilder;
 import org.killbill.billing.subscription.events.SubscriptionBaseEvent;
 import org.killbill.billing.subscription.events.SubscriptionBaseEvent.EventType;
@@ -35,7 +36,6 @@ import org.killbill.billing.util.entity.dao.EntityModelDao;
 import org.killbill.billing.util.entity.dao.EntityModelDaoBase;
 
 public class SubscriptionEventModelDao extends EntityModelDaoBase implements EntityModelDao<SubscriptionBaseEvent> {
-
     private long totalOrdering;
     private EventType eventType;
     private ApiEventType userType;
@@ -214,6 +214,29 @@ public class SubscriptionEventModelDao extends EntityModelDaoBase implements Ent
             throw new SubscriptionBaseError(String.format("Can't figure out event %s", src.getEventType()));
         }
         return result;
+    }
+
+    public boolean isOfSubscriptionBaseTransitionType(final SubscriptionBaseTransitionType type) {
+        switch(type) {
+            case CREATE:
+                return eventType == EventType.API_USER && userType == ApiEventType.CREATE;
+            case TRANSFER:
+                return eventType == EventType.API_USER && userType == ApiEventType.TRANSFER;
+            case CHANGE:
+                return eventType == EventType.API_USER && userType == ApiEventType.CHANGE;
+            case CANCEL:
+                return eventType == EventType.API_USER && userType == ApiEventType.CANCEL;
+            case UNCANCEL:
+                return eventType == EventType.API_USER && userType == ApiEventType.UNCANCEL;
+            case PHASE:
+                return eventType == EventType.PHASE;
+            case BCD_CHANGE:
+                return eventType == EventType.BCD_UPDATE;
+            case START_BILLING_DISABLED:
+            case END_BILLING_DISABLED:
+            default:
+                return false;
+        }
     }
 
     @Override

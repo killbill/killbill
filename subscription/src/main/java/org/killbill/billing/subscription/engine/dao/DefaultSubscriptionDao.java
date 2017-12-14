@@ -530,24 +530,6 @@ public class DefaultSubscriptionDao extends EntityDaoBase<SubscriptionBundleMode
     }
 
     @Override
-    public Iterable<SubscriptionBaseEvent> getFutureEventsForAccount(final InternalTenantContext context) {
-        return transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<Iterable<SubscriptionBaseEvent>>() {
-            @Override
-            public Iterable<SubscriptionBaseEvent> inTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory) throws Exception {
-                final SubscriptionEventSqlDao transactional = entitySqlDaoWrapperFactory.become(SubscriptionEventSqlDao.class);
-                final List<SubscriptionEventModelDao> activeEvents = transactional.getFutureActiveEventsForAccount(clock.getUTCNow().toDate(), context);
-                return Iterables.transform(activeEvents, new Function<SubscriptionEventModelDao, SubscriptionBaseEvent>() {
-
-                    @Override
-                    public SubscriptionBaseEvent apply(final SubscriptionEventModelDao input) {
-                        return SubscriptionEventModelDao.toSubscriptionEvent(input);
-                    }
-                });
-            }
-        });
-    }
-
-    @Override
     public List<SubscriptionBaseEvent> getPendingEventsForSubscription(final UUID subscriptionId, final InternalTenantContext context) {
         final Date now = clock.getUTCNow().toDate();
 

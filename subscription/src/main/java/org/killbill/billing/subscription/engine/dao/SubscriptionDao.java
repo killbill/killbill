@@ -25,6 +25,7 @@ import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.entitlement.api.SubscriptionApiException;
 import org.killbill.billing.subscription.api.SubscriptionBase;
+import org.killbill.billing.subscription.api.SubscriptionBaseTransitionType;
 import org.killbill.billing.subscription.api.SubscriptionBaseWithAddOns;
 import org.killbill.billing.subscription.api.transfer.BundleTransferData;
 import org.killbill.billing.subscription.api.transfer.TransferCancelData;
@@ -74,8 +75,6 @@ public interface SubscriptionDao extends EntityDao<SubscriptionBundleModelDao, S
     public void createNextPhaseEvent(DefaultSubscriptionBase subscription, SubscriptionBaseEvent readyPhaseEvent, SubscriptionBaseEvent nextPhase, InternalCallContext context);
 
     public SubscriptionBaseEvent getEventById(UUID eventId, InternalTenantContext context);
-
-    public Iterable<SubscriptionBaseEvent> getFutureEventsForAccount(InternalTenantContext context);
 
     public List<SubscriptionBaseEvent> getEventsForSubscription(UUID subscriptionId, InternalTenantContext context);
 
