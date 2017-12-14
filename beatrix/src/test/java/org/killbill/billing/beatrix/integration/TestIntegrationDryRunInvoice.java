@@ -20,22 +20,27 @@ package org.killbill.billing.beatrix.integration;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
 import org.killbill.billing.ErrorCode;
 import org.killbill.billing.account.api.Account;
+import org.killbill.billing.account.api.AccountData;
 import org.killbill.billing.api.TestApiListener.NextEvent;
 import org.killbill.billing.beatrix.util.InvoiceChecker.ExpectedInvoiceItemCheck;
+import org.killbill.billing.beatrix.util.PaymentChecker.ExpectedPaymentCheck;
 import org.killbill.billing.catalog.DefaultPlanPhasePriceOverride;
 import org.killbill.billing.catalog.api.BillingActionPolicy;
 import org.killbill.billing.catalog.api.BillingPeriod;
+import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.catalog.api.PlanPhasePriceOverride;
 import org.killbill.billing.catalog.api.PlanPhaseSpecifier;
 import org.killbill.billing.catalog.api.PriceListSet;
 import org.killbill.billing.catalog.api.ProductCategory;
 import org.killbill.billing.entitlement.api.DefaultEntitlement;
 import org.killbill.billing.entitlement.api.Entitlement;
+import org.killbill.billing.entitlement.api.Entitlement.EntitlementState;
 import org.killbill.billing.entitlement.api.SubscriptionEventType;
 import org.killbill.billing.invoice.api.DryRunArguments;
 import org.killbill.billing.invoice.api.DryRunType;
@@ -43,13 +48,16 @@ import org.killbill.billing.invoice.api.Invoice;
 import org.killbill.billing.invoice.api.InvoiceApiException;
 import org.killbill.billing.invoice.api.InvoiceItemType;
 import org.killbill.billing.payment.api.PluginProperty;
+import org.killbill.billing.payment.api.TransactionStatus;
 import org.killbill.billing.subscription.api.user.DefaultSubscriptionBase;
+import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import com.google.common.collect.ImmutableList;
 
 import static com.tc.util.Assert.fail;
 import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertNotNull;
 
 public class TestIntegrationDryRunInvoice extends TestIntegrationBase {
 
@@ -492,6 +500,128 @@ public class TestIntegrationDryRunInvoice extends TestIntegrationBase {
         assertEquals(dryRunInvoice.getTargetDate(), new LocalDate(2015, 2, 1));
         invoiceChecker.checkInvoiceNoAudits(dryRunInvoice, callContext, expectedInvoices);
         expectedInvoices.clear();
+
+    }
+
+
+    @Test(groups = "slow")
+    public void testDryRunWithAOs() throws Exception {
+        final LocalDate initialDate = new LocalDate(2017, 12, 1);
+        clock.setDay(initialDate);
+
+        // Create account with non BCD to force junction BCD logic to activate
+        final Account account = createAccountWithNonOsgiPaymentMethod(getAccountData(null));
+
+
+        // No CREATE event as this is set in the future
+        busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
+        final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("pistol-monthly-notrial", null);
+        final Entitlement baseEntitlement = entitlementApi.createBaseEntitlement(account.getId(), spec, account.getExternalKey(), null, null, null, false, ImmutableList.<PluginProperty>of(), callContext);
+        assertListenerStatus();
+
+        final DefaultEntitlement aoEntitlement  = addAOEntitlementAndCheckForCompletion(baseEntitlement.getBundleId(), "Refurbish-Maintenance", ProductCategory.ADD_ON, BillingPeriod.MONTHLY, NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
+
+        busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
+        clock.addMonths(1);
+        assertListenerStatus();
+
+        final List<ExpectedInvoiceItemCheck> expectedInvoices = new ArrayList<ExpectedInvoiceItemCheck>();
+        expectedInvoices.add(new ExpectedInvoiceItemCheck(new LocalDate(2018, 2, 1), new LocalDate(2018, 3, 1), InvoiceItemType.RECURRING, new BigDecimal("19.95")));
+        expectedInvoices.add(new ExpectedInvoiceItemCheck(new LocalDate(2018, 2, 1), new LocalDate(2018, 3, 1), InvoiceItemType.RECURRING, new BigDecimal("199.95")));
+
+        // Specify AO subscriptionId filter
+        final DryRunArguments dryRunUpcomingInvoiceWithFilterArg1 = new TestDryRunArguments(DryRunType.UPCOMING_INVOICE, null, null, null, null, null, null, aoEntitlement.getId(), null, null, null);
+        Invoice dryRunInvoice = invoiceUserApi.triggerInvoiceGeneration(account.getId(), null, dryRunUpcomingInvoiceWithFilterArg1, callContext);
+        assertEquals(dryRunInvoice.getTargetDate(), new LocalDate(2018, 2, 1));
+        invoiceChecker.checkInvoiceNoAudits(dryRunInvoice, callContext, expectedInvoices);
+
+        // Specify BP subscriptionId filter
+        final DryRunArguments dryRunUpcomingInvoiceWithFilterArg2 = new TestDryRunArguments(DryRunType.UPCOMING_INVOICE, null, null, null, null, null, null, baseEntitlement.getId(), null, null, null);
+        dryRunInvoice = invoiceUserApi.triggerInvoiceGeneration(account.getId(), null, dryRunUpcomingInvoiceWithFilterArg2, callContext);
+        assertEquals(dryRunInvoice.getTargetDate(), new LocalDate(2018, 2, 1));
+        invoiceChecker.checkInvoiceNoAudits(dryRunInvoice, callContext, expectedInvoices);
+
+        // Specify bundleId filter
+        final DryRunArguments dryRunUpcomingInvoiceWithFilterArg3 = new TestDryRunArguments(DryRunType.UPCOMING_INVOICE, null, null, null, null, null, null, null, baseEntitlement.getBundleId(), null, null);
+        dryRunInvoice = invoiceUserApi.triggerInvoiceGeneration(account.getId(), null, dryRunUpcomingInvoiceWithFilterArg3, callContext);
+        assertEquals(dryRunInvoice.getTargetDate(), new LocalDate(2018, 2, 1));
+        invoiceChecker.checkInvoiceNoAudits(dryRunInvoice, callContext, expectedInvoices);
+
+    }
+
+
+
+    @Test(groups = "slow")
+    public void testDryRunWithUpcomingSubscriptionEvents() throws Exception {
+
+        final DateTime initialDate = new DateTime(2017, 11, 1, 0, 3, 42, 0, testTimeZone);
+
+        // set clock to the initial start date
+        clock.setDeltaFromReality(initialDate.getMillis() - clock.getUTCNow().getMillis());
+
+        final Account account = createAccountWithNonOsgiPaymentMethod(getAccountData(1));
+
+        final String productName = "Shotgun";
+        final BillingPeriod term = BillingPeriod.MONTHLY;
+
+        final DefaultEntitlement baseEntitlement = createBaseEntitlementAndCheckForCompletion(account.getId(), "bundleKey", productName, ProductCategory.BASE, term, NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE);
+        assertNotNull(baseEntitlement);
+
+        // Verify the next invoice based on the PHASE event is correctly seen in the dryRun scenario
+        final List<ExpectedInvoiceItemCheck> expectedInvoices = new ArrayList<ExpectedInvoiceItemCheck>();
+        expectedInvoices.add(new ExpectedInvoiceItemCheck(new LocalDate(2017, 12, 1), new LocalDate(2018, 1, 1), InvoiceItemType.RECURRING, new BigDecimal("249.95")));
+        Invoice dryRunInvoice = invoiceUserApi.triggerInvoiceGeneration(account.getId(), null, DRY_RUN_UPCOMING_INVOICE_ARG, callContext);
+        invoiceChecker.checkInvoiceNoAudits(dryRunInvoice, callContext, expectedInvoices);
+        expectedInvoices.clear();
+
+
+        busHandler.pushExpectedEvents(NextEvent.PHASE, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
+        clock.addDays(30);
+        assertListenerStatus();
+
+        invoiceChecker.checkInvoice(account.getId(), 2, callContext, new ExpectedInvoiceItemCheck(new LocalDate(2017, 12, 1), new LocalDate(2018, 1, 1), InvoiceItemType.RECURRING, new BigDecimal("249.95")));
+
+        // Future pause the subscription
+        LocalDate effectivePauseDate = new LocalDate(2017, 12, 15);
+        entitlementApi.pause(baseEntitlement.getBundleId(), effectivePauseDate, ImmutableList.<PluginProperty>of(), callContext);
+
+        // Verify the next invoice based on the PAUSE event is correctly seen in the dryRun scenario
+        expectedInvoices.add(new ExpectedInvoiceItemCheck(new LocalDate(2017, 12, 15), new LocalDate(2018, 1, 1), InvoiceItemType.REPAIR_ADJ, new BigDecimal("-137.07")));
+        expectedInvoices.add(new ExpectedInvoiceItemCheck(new LocalDate(2017, 12, 1), new LocalDate(2017, 12, 1), InvoiceItemType.CBA_ADJ, new BigDecimal("137.07")));
+        dryRunInvoice = invoiceUserApi.triggerInvoiceGeneration(account.getId(), null, DRY_RUN_UPCOMING_INVOICE_ARG, callContext);
+        invoiceChecker.checkInvoiceNoAudits(dryRunInvoice, callContext, expectedInvoices);
+        expectedInvoices.clear();
+
+        // Hit the pause effective date 2017-12-15)
+        busHandler.pushExpectedEvents(NextEvent.BLOCK, NextEvent.INVOICE);
+        clock.addDays(14);
+        assertListenerStatus();
+
+        // Unfortunately we can't reuse *exactly the items from the dryRun invoice because the effective date for the CBA is set with current date.
+        expectedInvoices.add(new ExpectedInvoiceItemCheck(new LocalDate(2017, 12, 15), new LocalDate(2018, 1, 1), InvoiceItemType.REPAIR_ADJ, new BigDecimal("-137.07")));
+        expectedInvoices.add(new ExpectedInvoiceItemCheck(new LocalDate(2017, 12, 15), new LocalDate(2017, 12, 15), InvoiceItemType.CBA_ADJ, new BigDecimal("137.07")));
+        invoiceChecker.checkInvoice(account.getId(), 3, callContext, expectedInvoices);
+        expectedInvoices.clear();
+
+        // Future resume the subscription
+        LocalDate effectiveResumeDate = new LocalDate(2017, 12, 25);
+        entitlementApi.resume(baseEntitlement.getBundleId(), effectiveResumeDate, ImmutableList.<PluginProperty>of(), callContext);
+
+        // Verify the next invoice based on the RESUME event is correctly seen in the dryRun scenario
+        expectedInvoices.add(new ExpectedInvoiceItemCheck(new LocalDate(2017, 12, 25), new LocalDate(2018, 1, 1), InvoiceItemType.RECURRING, new BigDecimal("56.44")));
+        expectedInvoices.add(new ExpectedInvoiceItemCheck(new LocalDate(2017, 12, 15), new LocalDate(2017, 12, 15), InvoiceItemType.CBA_ADJ, new BigDecimal("-56.44")));
+        dryRunInvoice = invoiceUserApi.triggerInvoiceGeneration(account.getId(), null, DRY_RUN_UPCOMING_INVOICE_ARG, callContext);
+        invoiceChecker.checkInvoiceNoAudits(dryRunInvoice, callContext, expectedInvoices);
+        expectedInvoices.clear();
+
+
+        busHandler.pushExpectedEvents(NextEvent.BLOCK, NextEvent.INVOICE);
+        clock.addDays(10);
+        assertListenerStatus();
+
+        invoiceChecker.checkInvoice(account.getId(), 4, callContext,
+                                    new ExpectedInvoiceItemCheck(new LocalDate(2017, 12, 25), new LocalDate(2018, 1, 1), InvoiceItemType.RECURRING, new BigDecimal("56.44")),
+                                    new ExpectedInvoiceItemCheck(new LocalDate(2017, 12, 25), new LocalDate(2017, 12, 25), InvoiceItemType.CBA_ADJ, new BigDecimal("-56.44")));
 
     }
 
