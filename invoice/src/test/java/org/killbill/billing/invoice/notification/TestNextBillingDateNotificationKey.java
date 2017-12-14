@@ -24,24 +24,49 @@ import org.killbill.billing.util.jackson.ObjectMapper;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Iterables;
+
 public class TestNextBillingDateNotificationKey {
 
     private static final ObjectMapper mapper = new ObjectMapper();
 
     @Test(groups = "fast")
-    public void testBasic() throws Exception {
+    public void testBasicWithUUIDKey() throws Exception {
 
         final UUID uuidKey = UUID.randomUUID();
         final DateTime targetDate = new DateTime();
         final Boolean isDryRunForInvoiceNotification = Boolean.FALSE;
 
-        final NextBillingDateNotificationKey key = new NextBillingDateNotificationKey(uuidKey, targetDate, isDryRunForInvoiceNotification);
+        final NextBillingDateNotificationKey key = new NextBillingDateNotificationKey(uuidKey, null, targetDate, isDryRunForInvoiceNotification);
         final String json = mapper.writeValueAsString(key);
 
         final NextBillingDateNotificationKey result = mapper.readValue(json, NextBillingDateNotificationKey.class);
         Assert.assertEquals(result.getUuidKey(), uuidKey);
         Assert.assertEquals(result.getTargetDate().compareTo(targetDate), 0);
         Assert.assertEquals(result.isDryRunForInvoiceNotification(), isDryRunForInvoiceNotification);
+    }
+
+
+    @Test(groups = "fast")
+    public void testBasicWithUUIDKeys() throws Exception {
+
+        final UUID uuidKey1 = UUID.randomUUID();
+        final UUID uuidKey2 = UUID.randomUUID();
+        final DateTime targetDate = new DateTime();
+        final Boolean isDryRunForInvoiceNotification = Boolean.FALSE;
+
+        final NextBillingDateNotificationKey key = new NextBillingDateNotificationKey(null, ImmutableList.of(uuidKey1, uuidKey2), targetDate, isDryRunForInvoiceNotification);
+        final String json = mapper.writeValueAsString(key);
+
+        final NextBillingDateNotificationKey result = mapper.readValue(json, NextBillingDateNotificationKey.class);
+        Assert.assertNull(result.getUuidKey());
+        Assert.assertEquals(result.getTargetDate().compareTo(targetDate), 0);
+        Assert.assertEquals(result.isDryRunForInvoiceNotification(), isDryRunForInvoiceNotification);
+        Assert.assertNotNull(result.getUuidKeys());
+
+        Assert.assertTrue(Iterables.contains(result.getUuidKeys(), uuidKey1));
+        Assert.assertTrue(Iterables.contains(result.getUuidKeys(), uuidKey2));
     }
 
     @Test(groups = "fast")
@@ -51,6 +76,10 @@ public class TestNextBillingDateNotificationKey {
         Assert.assertEquals(result.getUuidKey().toString(), "a38c363f-b25b-4287-8ebc-55964e116d2f");
         Assert.assertNull(result.getTargetDate());
         Assert.assertNull(result.isDryRunForInvoiceNotification());
+
+        // Compatibility mode : Although the  uuidKeys is not in the json, we verify the getter return the right result
+        Assert.assertNotNull(result.getUuidKeys());
+        Assert.assertEquals(result.getUuidKeys().iterator().next().toString(), "a38c363f-b25b-4287-8ebc-55964e116d2f");
 
     }
 }

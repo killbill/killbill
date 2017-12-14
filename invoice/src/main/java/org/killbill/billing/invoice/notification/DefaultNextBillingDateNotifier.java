@@ -83,20 +83,21 @@ public class DefaultNextBillingDateNotifier extends RetryableService implements 
 
                 // Just to ensure compatibility with json that might not have that targetDate field (old versions < 0.13.6)
                 final DateTime targetDate = key.getTargetDate() != null ? key.getTargetDate() : eventDate;
+                final UUID firstSubscriptionId = key.getUuidKeys().iterator().next();
                 try {
-                    final SubscriptionBase subscription = subscriptionApi.getSubscriptionFromId(key.getUuidKey(), internalCallContextFactory.createInternalTenantContext(tenantRecordId, accountRecordId));
+                    final SubscriptionBase subscription = subscriptionApi.getSubscriptionFromId(firstSubscriptionId, internalCallContextFactory.createInternalTenantContext(tenantRecordId, accountRecordId));
                     if (subscription == null) {
-                        log.warn("Unable to retrieve subscriptionId='{}' for event {}", key.getUuidKey(), key);
+                        log.warn("Unable to retrieve subscriptionId='{}' for event {}", firstSubscriptionId, key);
                         return;
                     }
                     if (key.isDryRunForInvoiceNotification() != null && // Just to ensure compatibility with json that might not have that field (old versions < 0.13.6)
                         key.isDryRunForInvoiceNotification()) {
-                        processEventForInvoiceNotification(key.getUuidKey(), targetDate, userToken, accountRecordId, tenantRecordId);
+                        processEventForInvoiceNotification(firstSubscriptionId, targetDate, userToken, accountRecordId, tenantRecordId);
                     } else {
-                        processEventForInvoiceGeneration(key.getUuidKey(), targetDate, userToken, accountRecordId, tenantRecordId);
+                        processEventForInvoiceGeneration(firstSubscriptionId, targetDate, userToken, accountRecordId, tenantRecordId);
                     }
-                } catch (final SubscriptionBaseApiException e) {
-                    log.warn("Error retrieving subscriptionId='{}'", key.getUuidKey(), e);
+                } catch (SubscriptionBaseApiException e) {
+                    log.warn("Error retrieving subscriptionId='{}'", firstSubscriptionId, e);
                 }
             }
         };

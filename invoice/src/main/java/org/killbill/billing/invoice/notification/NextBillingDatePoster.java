@@ -27,8 +27,8 @@ import org.killbill.billing.util.entity.dao.EntitySqlDaoWrapperFactory;
 public interface NextBillingDatePoster {
 
     void insertNextBillingNotificationFromTransaction(EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory, UUID accountId,
-                                                      UUID subscriptionId, DateTime futureNotificationTime, InternalCallContext internalCallContext);
+                                                      Iterable<UUID> subscriptionId, DateTime futureNotificationTime, InternalCallContext internalCallContext);
 
     void insertNextBillingDryRunNotificationFromTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory, final UUID accountId,
-                                                            final UUID subscriptionId, final DateTime futureNotificationTime, final DateTime targetDate, final InternalCallContext internalCallContext);
+                                                            final Iterable<UUID> subscriptionId, final DateTime futureNotificationTime, final DateTime targetDate, final InternalCallContext internalCallContext);
 }
