@@ -59,7 +59,6 @@ import org.killbill.billing.subscription.api.SubscriptionApiBase;
 import org.killbill.billing.subscription.api.SubscriptionBase;
 import org.killbill.billing.subscription.api.SubscriptionBaseApiService;
 import org.killbill.billing.subscription.api.SubscriptionBaseInternalApi;
-import org.killbill.billing.subscription.api.SubscriptionBaseTransitionType;
 import org.killbill.billing.subscription.api.SubscriptionBaseWithAddOns;
 import org.killbill.billing.subscription.api.user.DefaultEffectiveSubscriptionEvent;
 import org.killbill.billing.subscription.api.user.DefaultSubscriptionBase;
@@ -97,7 +96,6 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
 import com.google.common.collect.Collections2;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 import com.google.inject.Inject;
 
@@ -749,19 +747,6 @@ public class DefaultSubscriptionInternalApi extends SubscriptionApiBase implemen
         } else {
             return tmp;
         }
-    }
-
-    @Override
-    public Map<UUID, DateTime> getNextFutureEventForSubscriptions(final List<SubscriptionBaseTransitionType> eventTypes, final InternalCallContext internalCallContext) {
-        final Iterable<SubscriptionBaseEvent> filteredEvents = dao.getFutureEventsForAccount(eventTypes, internalCallContext);
-        final Map<UUID, DateTime> result = filteredEvents.iterator().hasNext() ? new HashMap<UUID, DateTime>() : ImmutableMap.<UUID, DateTime>of();
-        for (final SubscriptionBaseEvent cur : filteredEvents) {
-            final DateTime targetDate = result.get(cur.getSubscriptionId());
-            if (targetDate == null || targetDate.compareTo(cur.getEffectiveDate()) > 0) {
-                result.put(cur.getSubscriptionId(), cur.getEffectiveDate());
-            }
-        }
-        return result;
     }
 
     @Override

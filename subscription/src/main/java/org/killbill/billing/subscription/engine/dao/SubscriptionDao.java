@@ -76,8 +76,6 @@ public interface SubscriptionDao extends EntityDao<SubscriptionBundleModelDao, S
 
     public SubscriptionBaseEvent getEventById(UUID eventId, InternalTenantContext context);
 
-    public Iterable<SubscriptionBaseEvent> getFutureEventsForAccount(List<SubscriptionBaseTransitionType> eventTypes, InternalTenantContext context);
-
     public List<SubscriptionBaseEvent> getEventsForSubscription(UUID subscriptionId, InternalTenantContext context);
 
     public List<SubscriptionBaseEvent> getPendingEventsForSubscription(UUID subscriptionId, InternalTenantContext context);

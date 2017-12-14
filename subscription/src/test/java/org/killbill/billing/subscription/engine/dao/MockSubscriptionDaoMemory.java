@@ -38,14 +38,12 @@ import org.killbill.billing.catalog.api.TimeUnit;
 import org.killbill.billing.dao.MockNonEntityDao;
 import org.killbill.billing.entitlement.api.SubscriptionApiException;
 import org.killbill.billing.subscription.api.SubscriptionBase;
-import org.killbill.billing.subscription.api.SubscriptionBaseTransitionType;
 import org.killbill.billing.subscription.api.SubscriptionBaseWithAddOns;
 import org.killbill.billing.subscription.api.transfer.BundleTransferData;
 import org.killbill.billing.subscription.api.transfer.TransferCancelData;
 import org.killbill.billing.subscription.api.user.DefaultEffectiveSubscriptionEvent;
 import org.killbill.billing.subscription.api.user.DefaultSubscriptionBase;
 import org.killbill.billing.subscription.api.user.DefaultSubscriptionBaseBundle;
-import org.killbill.billing.subscription.api.user.DefaultSubscriptionBaseWithAddOns;
 import org.killbill.billing.subscription.api.user.SubscriptionBaseBundle;
 import org.killbill.billing.subscription.api.user.SubscriptionBaseTransitionData;
 import org.killbill.billing.subscription.api.user.SubscriptionBuilder;
@@ -71,9 +69,6 @@ import org.killbill.notificationq.api.NotificationQueueService.NoSuchNotificatio
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Function;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Iterables;
 import com.google.inject.Inject;
 
 public class MockSubscriptionDaoMemory extends MockEntityDaoBase<SubscriptionBundleModelDao, SubscriptionBaseBundle, SubscriptionApiException> implements SubscriptionDao {
@@ -469,11 +464,6 @@ public class MockSubscriptionDaoMemory extends MockEntityDaoBase<SubscriptionBun
                 }
             }
         }
-        return null;
-    }
-
-    @Override
-    public Iterable<SubscriptionBaseEvent> getFutureEventsForAccount(final List<SubscriptionBaseTransitionType> eventTypes, final InternalTenantContext context) {
         return null;
     }
 
