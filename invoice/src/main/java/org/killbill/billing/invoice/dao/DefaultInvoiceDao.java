@@ -989,10 +989,12 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
         }
 
         final long dryRunNotificationTime = invoiceConfig.getDryRunNotificationSchedule(internalCallContext).getMillis();
-        for (final LocalDate notificationDate : callbackDateTimePerSubscriptions.getNotificationsForDryRun().keySet()) {
-            final DateTime notificationDateTime = internalCallContext.toUTCDateTime(notificationDate);
-            final Set<UUID> subscriptionIds = callbackDateTimePerSubscriptions.getNotificationsForDryRun().get(notificationDate);
-            nextBillingDatePoster.insertNextBillingDryRunNotificationFromTransaction(entitySqlDaoWrapperFactory, accountId, subscriptionIds, notificationDateTime, notificationDateTime.plusMillis((int) dryRunNotificationTime), internalCallContext);
+        if (dryRunNotificationTime > 0) {
+            for (final LocalDate notificationDate : callbackDateTimePerSubscriptions.getNotificationsForDryRun().keySet()) {
+                final DateTime notificationDateTime = internalCallContext.toUTCDateTime(notificationDate);
+                final Set<UUID> subscriptionIds = callbackDateTimePerSubscriptions.getNotificationsForDryRun().get(notificationDate);
+                nextBillingDatePoster.insertNextBillingDryRunNotificationFromTransaction(entitySqlDaoWrapperFactory, accountId, subscriptionIds, notificationDateTime, notificationDateTime.plusMillis((int) dryRunNotificationTime), internalCallContext);
+            }
         }
     }
 

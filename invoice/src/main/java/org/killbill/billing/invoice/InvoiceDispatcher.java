@@ -351,7 +351,7 @@ public class InvoiceDispatcher {
         } catch (final NoSuchNotificationQueue e) {
             // Should not happen, notificationQ is only used for dry run mode
             if (!isDryRun) {
-                log.warn("Illegal invoicing state detected for accountId='{}', dryRunArguments='{}', parking account", accountId, dryRunArguments, e);
+                log.warn("Missing notification queue, accountId='{}', dryRunArguments='{}', parking account", accountId, dryRunArguments, e);
                 parkAccount(accountId, context);
             }
             throw new InvoiceApiException(ErrorCode.UNEXPECTED_ERROR, "Failed to retrieve future notifications from notificationQ");
@@ -405,6 +405,8 @@ public class InvoiceDispatcher {
         for (final LocalDate cur : allCandidateTargetDates) {
             if (cur.compareTo(targetDate) < 0) {
                 prevLocalDate = cur;
+            } else {
+                break;
             }
         }
 
