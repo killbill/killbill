@@ -214,7 +214,7 @@ public class TestInvoiceHelper {
 
         final InvoiceDispatcher dispatcher = new InvoiceDispatcher(generator, accountApi, billingApi, subscriptionApi,
                                                                    invoiceDao, internalCallContextFactory, invoicePluginDispatcher, locker, busService.getBus(),
-                                                                   null, invoiceConfig, clock, parkedAccountsManager);
+                                                                   notificationQueueService, invoiceConfig, clock, parkedAccountsManager);
 
         Invoice invoice = dispatcher.processAccountFromNotificationOrBusEvent(account.getId(), targetDate, new DryRunFutureDateArguments(), internalCallContext);
         Assert.assertNotNull(invoice);
