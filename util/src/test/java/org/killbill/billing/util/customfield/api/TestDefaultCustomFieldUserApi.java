@@ -68,6 +68,20 @@ public class TestDefaultCustomFieldUserApi extends UtilTestSuiteWithEmbeddedDB {
     }
 
     @Test(groups = "slow")
+    public void testCustomFieldNoId() throws Exception {
+        // Verify that when coming from a plugin, the id isn't required
+        final CustomField customField = Mockito.mock(CustomField.class);
+        Mockito.when(customField.getObjectId()).thenReturn(accountId);
+        Mockito.when(customField.getObjectType()).thenReturn(ObjectType.ACCOUNT);
+        Mockito.when(customField.getFieldName()).thenReturn(UUID.randomUUID().toString());
+        Mockito.when(customField.getFieldValue()).thenReturn(UUID.randomUUID().toString());
+
+        eventsListener.pushExpectedEvents(NextEvent.CUSTOM_FIELD);
+        customFieldUserApi.addCustomFields(ImmutableList.<CustomField>of(customField), callContext);
+        assertListenerStatus();
+    }
+
+    @Test(groups = "slow")
     public void testCustomFieldBasic() throws Exception {
 
         final CustomField customField1 = new StringCustomField("some123", "some 456", ObjectType.ACCOUNT, accountId, callContext.getCreatedDate());

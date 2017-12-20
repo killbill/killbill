@@ -92,7 +92,13 @@ public class DefaultCustomFieldUserApi implements CustomFieldUserApi {
             final Iterable<CustomFieldModelDao> transformed = Iterables.transform(customFields, new Function<CustomField, CustomFieldModelDao>() {
                 @Override
                 public CustomFieldModelDao apply(final CustomField input) {
-                    return new CustomFieldModelDao(input.getId(), context.getCreatedDate(), context.getCreatedDate(), input.getFieldName(), input.getFieldValue(), input.getObjectId(), input.getObjectType());
+                    // Respect user-specified ID
+                    // TODO See https://github.com/killbill/killbill/issues/35
+                    if (input.getId() != null) {
+                        return new CustomFieldModelDao(input.getId(), context.getCreatedDate(), context.getCreatedDate(), input.getFieldName(), input.getFieldValue(), input.getObjectId(), input.getObjectType());
+                    } else {
+                        return new CustomFieldModelDao(context.getCreatedDate(), input.getFieldName(), input.getFieldValue(), input.getObjectId(), input.getObjectType());
+                    }
                 }
             });
             ((DefaultCustomFieldDao) customFieldDao).create(transformed, internalCallContext);
