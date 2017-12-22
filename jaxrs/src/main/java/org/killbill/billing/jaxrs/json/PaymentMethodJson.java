@@ -37,8 +37,10 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Function;
 import com.google.common.collect.Collections2;
+import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 
+@ApiModel(value="PaymentMethod")
 public class PaymentMethodJson extends JsonBase {
 
     private final String externalKey;
@@ -240,6 +242,8 @@ public class PaymentMethodJson extends JsonBase {
         return result;
     }
 
+
+    @ApiModel(value="PaymentMethodPluginDetail")
     public static class PaymentMethodPluginDetailJson {
 
         private final String externalPaymentMethodId;

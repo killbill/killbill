@@ -41,8 +41,10 @@ import org.killbill.billing.util.audit.AuditLog;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 
+@ApiModel(value="Subscription")
 public class SubscriptionJson extends JsonBase {
 
     @ApiModelProperty(dataType = "java.util.UUID")
@@ -79,6 +81,7 @@ public class SubscriptionJson extends JsonBase {
     private final List<EventSubscriptionJson> events;
     private final List<PhasePriceOverrideJson> priceOverrides;
 
+    @ApiModel(value="EventSubscription")
     public static class EventSubscriptionJson extends JsonBase {
 
         private final String eventId;

@@ -34,8 +34,10 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Function;
 import com.google.common.collect.Collections2;
 import com.google.common.collect.ImmutableList;
+import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 
+@ApiModel(value="InvoiceItem")
 public class InvoiceItemJson extends JsonBase {
 
     @ApiModelProperty(dataType = "java.util.UUID", required = true)
@@ -64,6 +66,7 @@ public class InvoiceItemJson extends JsonBase {
     private final LocalDate endDate;
     private final BigDecimal amount;
     private final String currency;
+    @ApiModelProperty(hidden = true)
     private List<InvoiceItemJson> childItems;
 
     @JsonCreator

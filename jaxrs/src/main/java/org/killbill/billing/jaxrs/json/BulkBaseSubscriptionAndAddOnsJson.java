@@ -22,8 +22,10 @@ import javax.annotation.Nullable;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 
+@ApiModel(value="BulkBaseSubscriptionAndAddOns")
 public class BulkBaseSubscriptionAndAddOnsJson {
 
     @ApiModelProperty(required = true)

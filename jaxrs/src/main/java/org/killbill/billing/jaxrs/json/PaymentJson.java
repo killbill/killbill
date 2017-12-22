@@ -32,8 +32,10 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
+import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 
+@ApiModel(value="Payment")
 public class PaymentJson extends JsonBase {
 
     @ApiModelProperty(dataType = "java.util.UUID")

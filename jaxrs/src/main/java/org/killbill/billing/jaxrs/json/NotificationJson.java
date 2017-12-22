@@ -20,11 +20,14 @@ import org.killbill.billing.notification.plugin.api.ExtBusEvent;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 
 /*
  * Use to communicate back with client after they registered a callback
  */
+
+@ApiModel(value="Notification")
 public class NotificationJson {
 
     private final String eventType;

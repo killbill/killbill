@@ -23,8 +23,10 @@ import org.killbill.billing.payment.plugin.api.HostedPaymentPageFormDescriptor;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 
+@ApiModel(value="HostedPaymentPageFormDescriptor")
 public class HostedPaymentPageFormDescriptorJson extends JsonBase {
 
     @ApiModelProperty(dataType = "java.util.UUID")

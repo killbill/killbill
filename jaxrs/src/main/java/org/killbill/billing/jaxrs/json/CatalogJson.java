@@ -53,7 +53,10 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
+import io.swagger.annotations.ApiModel;
+import io.swagger.annotations.ApiModelProperty;
 
+@ApiModel(value="Catalog")
 public class CatalogJson {
 
     private final String name;
@@ -295,6 +298,7 @@ public class CatalogJson {
         return result;
     }
 
+    @ApiModel(value="Unit")
     public static class UnitJson {
 
         private final String name;
@@ -344,6 +348,7 @@ public class CatalogJson {
 
     }
 
+    @ApiModel(value="Product")
     public static class ProductJson {
 
         private final String type;
@@ -450,6 +455,7 @@ public class CatalogJson {
         }
     }
 
+    @ApiModel(value="Plan")
     public static class PlanJson {
 
         private final String name;
@@ -528,6 +534,7 @@ public class CatalogJson {
         }
     }
 
+    @ApiModel(value="TieredBlock")
     public static class TieredBlockJson {
         private final String unit;
         private final String size;
@@ -606,6 +613,7 @@ public class CatalogJson {
         }
     }
 
+    @ApiModel(value="Limit")
     public static class LimitJson {
         private final String unit;
         private final String max;
@@ -673,6 +681,7 @@ public class CatalogJson {
         }
     }
 
+    @ApiModel(value="Tier")
     public static class TierJson {
         private final List<TieredBlockJson> blocks;
         private final List<LimitJson> limits;
@@ -751,6 +760,7 @@ public class CatalogJson {
         }
     }
 
+    @ApiModel(value="Usage")
     public static class UsageJson {
         private final String billingPeriod;
         private final List<TierJson> tiers;
@@ -807,6 +817,7 @@ public class CatalogJson {
         }
     }
 
+    @ApiModel(value="Phase")
     public static class PhaseJson {
 
         private final String type;
@@ -897,6 +908,8 @@ public class CatalogJson {
         }
     }
 
+
+    @ApiModel(value="Price")
     public static class PriceJson {
 
         private final String currency;
@@ -959,6 +972,7 @@ public class CatalogJson {
         }
     }
 
+    @ApiModel(value="PriceList")
     public static class PriceListJson {
 
         private String name;
@@ -1024,6 +1038,7 @@ public class CatalogJson {
 
     }
 
+    @ApiModel(value="Duration")
     public static class DurationJson {
 
         private final TimeUnit unit;

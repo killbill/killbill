@@ -31,8 +31,10 @@ import com.google.common.base.Function;
 import com.google.common.collect.Collections2;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 
+@ApiModel(value="TagDefinition")
 public class TagDefinitionJson extends JsonBase {
 
     @ApiModelProperty(dataType = "java.util.UUID")

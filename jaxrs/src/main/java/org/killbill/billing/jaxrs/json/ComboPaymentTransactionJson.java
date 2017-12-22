@@ -23,7 +23,9 @@ import javax.annotation.Nullable;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import io.swagger.annotations.ApiModel;
 
+@ApiModel(value="ComboPaymentTransaction")
 public class ComboPaymentTransactionJson extends ComboPaymentJson {
 
     private final PaymentTransactionJson transaction;

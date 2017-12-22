@@ -27,8 +27,10 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
+import io.swagger.annotations.ApiModel;
 
 // Doesn't extend JsonBase (no audit logs)
+@ApiModel(value="BillingException")
 public class BillingExceptionJson {
 
     private final String className;

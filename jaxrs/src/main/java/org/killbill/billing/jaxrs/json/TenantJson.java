@@ -21,8 +21,10 @@ import org.killbill.billing.tenant.api.TenantData;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 
+@ApiModel(value="Tenant")
 public class TenantJson extends JsonBase {
 
     @ApiModelProperty(dataType = "java.util.UUID")

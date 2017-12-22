@@ -27,8 +27,10 @@ import org.killbill.billing.util.tag.TagDefinition;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 
+@ApiModel(value="Tag")
 public class TagJson extends JsonBase {
 
     @ApiModelProperty(dataType = "java.util.UUID")

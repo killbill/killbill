@@ -23,8 +23,11 @@ import org.killbill.billing.account.api.AccountEmail;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 
+
+@ApiModel(value="AccountEmail")
 public class AccountEmailJson extends JsonBase {
 
     @ApiModelProperty(dataType = "java.util.UUID")

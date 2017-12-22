@@ -27,7 +27,9 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Function;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
+import io.swagger.annotations.ApiModel;
 
+@ApiModel(value="PluginInfo")
 public class PluginInfoJson {
 
     private final String bundleSymbolicName;
@@ -105,6 +107,7 @@ public class PluginInfoJson {
         return services;
     }
 
+    @ApiModel(value="PluginServiceInfo")
     public static class PluginServiceInfoJson {
 
         private final String serviceTypeName;

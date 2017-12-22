@@ -31,7 +31,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 
-@ApiModel(description = "Payment attempt")
+@ApiModel(value="PaymentAttempt")
 public class PaymentAttemptJson extends JsonBase {
 
     @ApiModelProperty(dataType = "java.util.UUID")

@@ -31,8 +31,10 @@ import com.google.common.base.Function;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
+import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 
+@ApiModel(value="SubscriptionUsageRecord")
 public class SubscriptionUsageRecordJson {
 
     @ApiModelProperty(dataType = "java.util.UUID", required = true)
@@ -63,6 +65,7 @@ public class SubscriptionUsageRecordJson {
         return trackingId;
     }
 
+    @ApiModel(value="UnitUsageRecord")
     public static class UnitUsageRecordJson {
 
         private final String unitType;
@@ -94,6 +97,7 @@ public class SubscriptionUsageRecordJson {
         }
     }
 
+    @ApiModel(value="UsageRecord")
     public static class UsageRecordJson {
 
         private final LocalDate recordDate;

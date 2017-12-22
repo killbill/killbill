@@ -28,8 +28,10 @@ import org.killbill.billing.util.audit.AccountAuditLogs;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 
+@ApiModel(value="BundleTimeline")
 public class BundleTimelineJson extends JsonBase {
 
     @ApiModelProperty(dataType = "java.util.UUID")

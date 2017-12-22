@@ -30,8 +30,10 @@ import org.killbill.billing.util.audit.AccountAuditLogs;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 
+@ApiModel(value="InvoicePayment")
 public class InvoicePaymentJson extends PaymentJson {
 
     @ApiModelProperty(dataType = "java.util.UUID")

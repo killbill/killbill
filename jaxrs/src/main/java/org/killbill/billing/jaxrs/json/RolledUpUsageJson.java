@@ -27,8 +27,10 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
+import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 
+@ApiModel(value="RolledUpUsage")
 public class RolledUpUsageJson {
 
     @ApiModelProperty(dataType = "java.util.UUID")
@@ -73,6 +75,7 @@ public class RolledUpUsageJson {
         return rolledUpUnits;
     }
 
+    @ApiModel(value="RolledUpUnit")
     public static class RolledUpUnitJson {
 
         private final String unitType;

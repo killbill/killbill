@@ -35,8 +35,10 @@ import org.killbill.billing.util.audit.AccountAuditLogs;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Strings;
+import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 
+@ApiModel(value="Account")
 public class AccountJson extends JsonBase {
 
     @ApiModelProperty(dataType = "java.util.UUID")
