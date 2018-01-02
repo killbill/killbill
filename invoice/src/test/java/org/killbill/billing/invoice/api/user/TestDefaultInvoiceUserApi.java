@@ -287,8 +287,8 @@ public class TestDefaultInvoiceUserApi extends InvoiceTestSuiteWithEmbeddedDB {
         Assert.assertEquals(adjustedAccountBalance, adjustedInvoiceBalance);
 
         // Verify future invoice generation
-        final Invoice invoice = invoiceUtil.generateInvoice(account.getId(), clock.getUTCToday().plusMonths(1), new DryRunFutureDateArguments(), internalCallContext);
-        Assert.assertNotNull(invoice);
+        invoiceUtil.generateInvoice(account.getId(), null, new DryRunFutureDateArguments(), internalCallContext);
+        // Invoice may or may not be generated, but there is no exception
     }
 
     @Test(groups = "slow")

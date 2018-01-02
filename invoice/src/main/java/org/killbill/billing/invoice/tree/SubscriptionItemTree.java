@@ -124,8 +124,7 @@ public class SubscriptionItemTree {
         Preconditions.checkState(!isBuilt);
 
         for (final InvoiceItem item : pendingItemAdj) {
-
-            // if the linked item was ignore, ignore this adjustment too
+            // If the linked item was ignored, ignore this adjustment too
             final InvoiceItem ignoredLinkedItem = Iterables.tryFind(existingIgnoredItems, new Predicate<InvoiceItem>() {
                 @Override
                 public boolean apply(final InvoiceItem input) {
