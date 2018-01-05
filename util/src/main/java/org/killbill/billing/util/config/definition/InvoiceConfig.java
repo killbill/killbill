@@ -103,6 +103,16 @@ public interface InvoiceConfig extends KillbillConfig {
     @Description("Whether the invoicing system is enabled")
     boolean isInvoicingSystemEnabled();
 
+    @Config("org.killbill.invoice.parent.commit.local.utc.time")
+    @Default("23:59:59.999")
+    @Description("UTC Time when parent invoice gets committed")
+    String getParentAutoCommitUtcTime();
+
+    @Config("org.killbill.invoice.parent.commit.local.utc.time")
+    @Default("23:59:59.999")
+    @Description("UTC Time when parent invoice gets committed")
+    String getParentAutoCommitUtcTime(@Param("dummy") final InternalTenantContext tenantContext);
+
     @Config("org.killbill.invoice.enabled")
     @Default("true")
     @Description("Whether the invoicing system is enabled")

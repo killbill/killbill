@@ -140,6 +140,20 @@ public class MultiTenantInvoiceConfig extends MultiTenantConfigBase implements I
     }
 
     @Override
+    public String getParentAutoCommitUtcTime() {
+        return staticConfig.getParentAutoCommitUtcTime();
+    }
+
+    @Override
+    public String getParentAutoCommitUtcTime(final InternalTenantContext tenantContext) {
+        final String result = getStringTenantConfig("getParentAutoCommitUtcTime", tenantContext);
+        if (result != null) {
+            return result;
+        }
+        return getParentAutoCommitUtcTime();
+    }
+
+    @Override
     public boolean isInvoicingSystemEnabled(final InternalTenantContext tenantContext) {
         final String result = getStringTenantConfig("isInvoicingSystemEnabled", tenantContext);
         if (result != null) {

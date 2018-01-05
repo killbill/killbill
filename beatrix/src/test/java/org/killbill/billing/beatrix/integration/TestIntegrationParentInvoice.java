@@ -19,8 +19,11 @@ package org.killbill.billing.beatrix.integration;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.UUID;
+
+import javax.inject.Inject;
 
 import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
@@ -34,18 +37,23 @@ import org.killbill.billing.catalog.api.BillingActionPolicy;
 import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.catalog.api.PlanPhaseSpecifier;
-import org.killbill.billing.catalog.api.PlanSpecifier;
 import org.killbill.billing.catalog.api.ProductCategory;
 import org.killbill.billing.entitlement.api.DefaultEntitlement;
+import org.killbill.billing.invoice.api.DefaultInvoiceService;
 import org.killbill.billing.invoice.api.Invoice;
 import org.killbill.billing.invoice.api.InvoiceApiException;
 import org.killbill.billing.invoice.api.InvoiceItem;
 import org.killbill.billing.invoice.api.InvoiceItemType;
 import org.killbill.billing.invoice.api.InvoiceStatus;
+import org.killbill.billing.invoice.notification.ParentInvoiceCommitmentNotifier;
 import org.killbill.billing.payment.api.Payment;
 import org.killbill.billing.payment.api.PaymentApiException;
 import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.payment.invoice.InvoicePaymentControlPluginApi;
+import org.killbill.notificationq.api.NotificationEvent;
+import org.killbill.notificationq.api.NotificationEventWithMetadata;
+import org.killbill.notificationq.api.NotificationQueue;
+import org.killbill.notificationq.api.NotificationQueueService;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
@@ -57,6 +65,9 @@ import static org.testng.Assert.assertNull;
 import static org.testng.Assert.assertTrue;
 
 public class TestIntegrationParentInvoice extends TestIntegrationBase {
+
+    @Inject
+    private NotificationQueueService notificationQueueService;
 
     @Test(groups = "slow")
     public void testParentInvoiceGeneration() throws Exception {
@@ -84,6 +95,15 @@ public class TestIntegrationParentInvoice extends TestIntegrationBase {
         assertEquals(parentInvoice.getStatus(), InvoiceStatus.DRAFT);
         assertTrue(parentInvoice.isParentInvoice());
         assertEquals(parentInvoice.getBalance().compareTo(BigDecimal.ZERO), 0);
+
+        // Verify the notification exists and the efective time matches the default configuration '23:59:59'
+        final NotificationQueue notificationQueue = notificationQueueService.getNotificationQueue(DefaultInvoiceService.INVOICE_SERVICE_NAME, ParentInvoiceCommitmentNotifier.PARENT_INVOICE_COMMITMENT_NOTIFIER_QUEUE);
+        final Iterable<NotificationEventWithMetadata<NotificationEvent>> events = notificationQueue.getFutureNotificationForSearchKey2(new DateTime(2050, 5, 15, 0, 0, 0, 0, testTimeZone), internalCallContext.getTenantRecordId());
+        //
+        final Iterator<NotificationEventWithMetadata<NotificationEvent>> metadataEventIterator = events.iterator();
+        assertTrue(metadataEventIterator.hasNext());
+        final NotificationEventWithMetadata<NotificationEvent> notificationEvent = metadataEventIterator.next();
+        assertTrue(notificationEvent.getEffectiveDate().compareTo(new DateTime(2015, 5, 15, 23, 59, 59, 0, testTimeZone)) == 0);
 
         // Moving a day the NotificationQ calls the commitInvoice. No payment is expected
         busHandler.pushExpectedEvents(NextEvent.INVOICE);
