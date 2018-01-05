@@ -33,6 +33,7 @@ import javax.annotation.Nullable;
 
 import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
+import org.joda.time.LocalTime;
 import org.killbill.billing.ErrorCode;
 import org.killbill.billing.ObjectType;
 import org.killbill.billing.account.api.Account;
@@ -1137,8 +1138,15 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
     private void notifyOfParentInvoiceCreation(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory,
                                                final InvoiceModelDao parentInvoice,
                                                final InternalCallContext context) {
-        final DateTime futureNotificationDate = parentInvoice.getCreatedDate().withTimeAtStartOfDay().plusDays(1);
-        parentInvoiceCommitmentPoster.insertParentInvoiceFromTransactionInternal(entitySqlDaoWrapperFactory, parentInvoice.getId(), futureNotificationDate, context);
+        final DateTime now = clock.getUTCNow();
+        final LocalTime localTime = LocalTime.parse(invoiceConfig.getParentAutoCommitUtcTime(context));
+
+        DateTime targetFutureNotificationDate = now.withTime(localTime);
+        while (targetFutureNotificationDate.compareTo(now) < 0) {
+            targetFutureNotificationDate = targetFutureNotificationDate.plusDays(1);
+        }
+
+        parentInvoiceCommitmentPoster.insertParentInvoiceFromTransactionInternal(entitySqlDaoWrapperFactory, parentInvoice.getId(), targetFutureNotificationDate, context);
     }
 
     @Override

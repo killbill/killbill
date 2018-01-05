@@ -1035,6 +1035,16 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
         }
 
         @Override
+        public String getParentAutoCommitUtcTime() {
+            return defaultInvoiceConfig.getParentAutoCommitUtcTime();
+        }
+
+        @Override
+        public String getParentAutoCommitUtcTime(final InternalTenantContext tenantContext) {
+            return defaultInvoiceConfig.getParentAutoCommitUtcTime();
+        }
+
+        @Override
         public boolean isInvoicingSystemEnabled(final InternalTenantContext tenantContext) {
             return isInvoicingSystemEnabled();
         }
