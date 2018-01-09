@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014-2016 Groupon, Inc
- * Copyright 2014-2016 The Billing Project, LLC
+ * Copyright 2014-2018 Groupon, Inc
+ * Copyright 2014-2018 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -31,6 +31,7 @@ import org.killbill.billing.api.TestApiListener.NextEvent;
 import org.killbill.billing.callcontext.DefaultCallContext;
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.invoice.InvoiceTestSuiteWithEmbeddedDB;
+import org.killbill.billing.invoice.TestInvoiceHelper.DryRunFutureDateArguments;
 import org.killbill.billing.invoice.api.Invoice;
 import org.killbill.billing.invoice.api.InvoiceApiException;
 import org.killbill.billing.invoice.api.InvoiceItem;
@@ -237,7 +238,22 @@ public class TestDefaultInvoiceUserApi extends InvoiceTestSuiteWithEmbeddedDB {
     }
 
     @Test(groups = "slow")
-    public void testAdjustPartialInvoiceItem() throws Exception {
+    public void testAdjustPartialRecurringInvoiceItem() throws Exception {
+        testAdjustPartialInvoiceItem(true);
+    }
+
+    @Test(groups = "slow", description = "https://github.com/killbill/killbill/pull/831")
+    public void testAdjustPartialFixedInvoiceItem() throws Exception {
+        testAdjustPartialInvoiceItem(false);
+    }
+
+    private void testAdjustPartialInvoiceItem(final boolean recurring) throws Exception {
+        final Account account = invoiceUtil.createAccount(callContext);
+        final UUID accountId = account.getId();
+        final BigDecimal fixedPrice = recurring ? null : BigDecimal.ONE;
+        final BigDecimal recurringPrice = !recurring ? null : BigDecimal.ONE;
+        final UUID invoiceId = invoiceUtil.generateRegularInvoice(account, fixedPrice, recurringPrice, null, callContext);
+
         final InvoiceItem invoiceItem = invoiceUserApi.getInvoice(invoiceId, callContext).getInvoiceItems().get(0);
         // Verify we picked a non zero item
         Assert.assertEquals(invoiceItem.getAmount().compareTo(BigDecimal.ZERO), 1);
@@ -269,6 +285,10 @@ public class TestDefaultInvoiceUserApi extends InvoiceTestSuiteWithEmbeddedDB {
         // Verify the adjusted account balance
         final BigDecimal adjustedAccountBalance = invoiceUserApi.getAccountBalance(accountId, callContext);
         Assert.assertEquals(adjustedAccountBalance, adjustedInvoiceBalance);
+
+        // Verify future invoice generation
+        invoiceUtil.generateInvoice(account.getId(), null, new DryRunFutureDateArguments(), internalCallContext);
+        // Invoice may or may not be generated, but there is no exception
     }
 
     @Test(groups = "slow")

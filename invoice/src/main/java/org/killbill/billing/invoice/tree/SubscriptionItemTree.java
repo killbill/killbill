@@ -124,9 +124,18 @@ public class SubscriptionItemTree {
         Preconditions.checkState(!isBuilt);
 
         for (final InvoiceItem item : pendingItemAdj) {
-            final Item fullyAdjustedItem = root.addAdjustment(item, targetInvoiceId);
-            if (fullyAdjustedItem != null) {
-                existingFullyAdjustedItems.add(fullyAdjustedItem);
+            // If the linked item was ignored, ignore this adjustment too
+            final InvoiceItem ignoredLinkedItem = Iterables.tryFind(existingIgnoredItems, new Predicate<InvoiceItem>() {
+                @Override
+                public boolean apply(final InvoiceItem input) {
+                    return input.getId().equals(item.getLinkedItemId());
+                }
+            }).orNull();
+            if (ignoredLinkedItem == null) {
+                final Item fullyAdjustedItem = root.addAdjustment(item, targetInvoiceId);
+                if (fullyAdjustedItem != null) {
+                    existingFullyAdjustedItems.add(fullyAdjustedItem);
+                }
             }
         }
         pendingItemAdj.clear();
