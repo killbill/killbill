@@ -84,7 +84,9 @@ public class KillBillShiroWebModule extends ShiroWebModuleWith435 {
 
         // Note: order matters (the first successful match will win, see below)
         bindRealm().toProvider(IniRealmProvider.class).asEagerSingleton();
-        bindRealm().to(KillBillJdbcRealm.class).asEagerSingleton();
+        if (KillBillShiroModule.isJDBCEnabled()) {
+            bindRealm().to(KillBillJdbcRealm.class).asEagerSingleton();
+        }
         if (KillBillShiroModule.isLDAPEnabled()) {
             bindRealm().to(KillBillJndiLdapRealm.class).asEagerSingleton();
         }
