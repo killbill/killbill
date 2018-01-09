@@ -680,11 +680,6 @@ public class PaymentMethodProcessor extends ProcessorBase {
 
     private void updateDefaultPaymentMethodIfNeeded(final String pluginName, final Account account, @Nullable final UUID defaultPluginPaymentMethodId, final InternalCallContext context) throws PaymentApiException, AccountApiException {
 
-        // If the plugin does not have a default payment gateway, we keep the current default payment method in KB account as it is.
-        if (defaultPluginPaymentMethodId == null) {
-            return;
-        }
-
         // Some gateways have the concept of default payment methods. Kill Bill has also its own default payment method
         // and is authoritative on this matter. However, if the default payment method is associated with a given plugin,
         // and if the default payment method in that plugin has changed, we will reflect this change in Kill Bill as well.
