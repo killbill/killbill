@@ -38,10 +38,15 @@ import com.google.inject.binder.AnnotatedBindingBuilder;
 // See org.killbill.billing.server.modules.KillBillShiroWebModule for Kill Bill server.
 public class KillBillShiroModule extends ShiroModule {
 
+    public static final String KILLBILL_JDBC_PROPERTY = "killbill.server.jdbc";
     public static final String KILLBILL_LDAP_PROPERTY = "killbill.server.ldap";
     public static final String KILLBILL_OKTA_PROPERTY = "killbill.server.okta";
     public static final String KILLBILL_RBAC_PROPERTY = "killbill.server.rbac";
 
+
+    public static boolean isJDBCEnabled() {
+        return Boolean.parseBoolean(System.getProperty(KILLBILL_JDBC_PROPERTY, "true"));
+    }
 
     public static boolean isLDAPEnabled() {
         return Boolean.parseBoolean(System.getProperty(KILLBILL_LDAP_PROPERTY, "false"));
@@ -78,7 +83,9 @@ public class KillBillShiroModule extends ShiroModule {
     }
 
     protected void configureJDBCRealm() {
-        bindRealm().to(KillBillJdbcRealm.class).asEagerSingleton();
+        if(isJDBCEnabled()) {
+            bindRealm().to(KillBillJdbcRealm.class).asEagerSingleton();
+        }
     }
 
     protected void configureLDAPRealm() {

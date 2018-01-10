@@ -25,6 +25,7 @@ import org.apache.shiro.config.ConfigurationException;
 import org.apache.shiro.config.IniSecurityManagerFactory;
 import org.apache.shiro.mgt.DefaultSecurityManager;
 import org.apache.shiro.mgt.SecurityManager;
+import org.apache.shiro.realm.AuthorizingRealm;
 import org.apache.shiro.realm.Realm;
 import org.apache.shiro.realm.text.IniRealm;
 import org.apache.shiro.util.Factory;
@@ -32,8 +33,8 @@ import org.killbill.billing.util.config.definition.SecurityConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-// Really Provider<IniRealm>, but avoid an extra cast below
-public class IniRealmProvider implements Provider<IniRealm> {
+// Really Provider<AuthorizingRealm>, but avoid an extra cast below
+public class IniRealmProvider implements Provider<AuthorizingRealm> {
 
     private static final Logger log = LoggerFactory.getLogger(IniRealmProvider.class);
 
@@ -45,7 +46,7 @@ public class IniRealmProvider implements Provider<IniRealm> {
     }
 
     @Override
-    public IniRealm get() {
+    public AuthorizingRealm get() {
         try {
             final Factory<SecurityManager> factory = new IniSecurityManagerFactory(securityConfig.getShiroResourcePath());
             // TODO Pierre hack - lame cast here, but we need to have Shiro go through its reflection magic
@@ -54,22 +55,22 @@ public class IniRealmProvider implements Provider<IniRealm> {
             final DefaultSecurityManager securityManager = (DefaultSecurityManager) factory.getInstance();
             final Collection<Realm> realms = securityManager.getRealms();
 
-            IniRealm iniRealm = null;
+            AuthorizingRealm authorizingRealm = null;
             if (realms == null || realms.isEmpty()) {
-                iniRealm = new IniRealm(securityConfig.getShiroResourcePath());
+                authorizingRealm = new IniRealm(securityConfig.getShiroResourcePath());
             } else {
                 for (final Realm cur : realms) {
-                    if (cur instanceof IniRealm) {
-                        iniRealm = (IniRealm) cur;
+                    if (cur instanceof AuthorizingRealm) {
+                        authorizingRealm = (AuthorizingRealm) cur;
                         break;
                     }
                 }
             }
-            if (iniRealm != null) {
+            if (authorizingRealm != null) {
                 // See JavaDoc warning: https://shiro.apache.org/static/1.2.3/apidocs/org/apache/shiro/realm/AuthenticatingRealm.html
-                iniRealm.setAuthenticationCachingEnabled(true);
+                authorizingRealm.setAuthenticationCachingEnabled(true);
 
-                return iniRealm;
+                return authorizingRealm;
             } else {
                 throw new ConfigurationException();
             }
