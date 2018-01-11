@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014-2017 Groupon, Inc
- * Copyright 2014-2017 The Billing Project, LLC
+ * Copyright 2014-2018 Groupon, Inc
+ * Copyright 2014-2018 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -38,9 +38,9 @@ import org.killbill.billing.server.security.KillBillWebSessionManager;
 import org.killbill.billing.server.security.KillbillJdbcTenantRealm;
 import org.killbill.billing.util.config.definition.RbacConfig;
 import org.killbill.billing.util.glue.EhcacheShiroManagerProvider;
-import org.killbill.billing.util.glue.IniRealmProvider;
 import org.killbill.billing.util.glue.JDBCSessionDaoProvider;
 import org.killbill.billing.util.glue.KillBillShiroModule;
+import org.killbill.billing.util.glue.RealmsFromShiroIniProvider;
 import org.killbill.billing.util.security.shiro.dao.JDBCSessionDao;
 import org.killbill.billing.util.security.shiro.realm.KillBillJdbcRealm;
 import org.killbill.billing.util.security.shiro.realm.KillBillJndiLdapRealm;
@@ -82,8 +82,6 @@ public class KillBillShiroWebModule extends ShiroWebModuleWith435 {
         final RbacConfig config = new ConfigurationObjectFactory(configSource).build(RbacConfig.class);
         bind(RbacConfig.class).toInstance(config);
 
-        // Note: order matters (the first successful match will win, see below)
-        bindRealm().toProvider(IniRealmProvider.class).asEagerSingleton();
         bindRealm().to(KillBillJdbcRealm.class).asEagerSingleton();
         if (KillBillShiroModule.isLDAPEnabled()) {
             bindRealm().to(KillBillJndiLdapRealm.class).asEagerSingleton();
@@ -133,7 +131,7 @@ public class KillBillShiroWebModule extends ShiroWebModuleWith435 {
         }
     }
 
-    private static final class DefaultWebSecurityManagerTypeListener implements TypeListener {
+    private final class DefaultWebSecurityManagerTypeListener implements TypeListener {
 
         @Override
         public <I> void hear(final TypeLiteral<I> typeLiteral, final TypeEncounter<I> typeEncounter) {
@@ -144,7 +142,7 @@ public class KillBillShiroWebModule extends ShiroWebModuleWith435 {
                     if (webSecurityManager.getAuthenticator() instanceof ModularRealmAuthenticator) {
                         final ModularRealmAuthenticator authenticator = (ModularRealmAuthenticator) webSecurityManager.getAuthenticator();
                         authenticator.setAuthenticationStrategy(new FirstSuccessfulStrategyWith540());
-                        webSecurityManager.setAuthenticator(new ModularRealmAuthenticatorWith540(authenticator));
+                        webSecurityManager.setAuthenticator(new ModularRealmAuthenticatorWith540(RealmsFromShiroIniProvider.get(configSource), authenticator));
                     }
                 }
             });
