@@ -29,7 +29,7 @@ import org.slf4j.LoggerFactory;
 
 /**
  * Fix for https://issues.apache.org/jira/browse/SHIRO-540
- * Support for multiple Realms defined in shiro.ini (bindRealm().toInstance(...) makes Guice throw a ClassCastException?!)
+ * Support for additional realms non injected
  */
 public class ModularRealmAuthenticatorWith540 extends ModularRealmAuthenticator {
 

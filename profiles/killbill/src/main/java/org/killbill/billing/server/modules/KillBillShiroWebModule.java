@@ -18,6 +18,9 @@
 
 package org.killbill.billing.server.modules;
 
+import java.util.Collection;
+import java.util.LinkedList;
+
 import javax.servlet.ServletContext;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
@@ -25,8 +28,10 @@ import javax.servlet.http.HttpServletRequest;
 
 import org.apache.shiro.authc.pam.ModularRealmAuthenticator;
 import org.apache.shiro.authc.pam.ModularRealmAuthenticatorWith540;
+import org.apache.shiro.authz.ModularRealmAuthorizer;
 import org.apache.shiro.cache.CacheManager;
 import org.apache.shiro.guice.web.ShiroWebModuleWith435;
+import org.apache.shiro.realm.Realm;
 import org.apache.shiro.session.mgt.SessionManager;
 import org.apache.shiro.web.filter.authc.BasicHttpAuthenticationFilter;
 import org.apache.shiro.web.mgt.DefaultWebSecurityManager;
@@ -139,10 +144,21 @@ public class KillBillShiroWebModule extends ShiroWebModuleWith435 {
                 @Override
                 public void afterInjection(final Object o) {
                     final DefaultWebSecurityManager webSecurityManager = (DefaultWebSecurityManager) o;
+
+                    // Other realms have been injected by Guice (bindRealm().toInstance(...) makes Guice throw a ClassCastException?!)
+                    final Collection<Realm> realmsFromShiroIni = RealmsFromShiroIniProvider.get(configSource);
+
+                    if (webSecurityManager.getAuthorizer() instanceof ModularRealmAuthorizer) {
+                        final ModularRealmAuthorizer modularRealmAuthorizer = (ModularRealmAuthorizer) webSecurityManager.getAuthorizer();
+                        final Collection<Realm> realms = new LinkedList<Realm>(realmsFromShiroIni);
+                        realms.addAll(modularRealmAuthorizer.getRealms());
+                        modularRealmAuthorizer.setRealms(realms);
+                    }
+
                     if (webSecurityManager.getAuthenticator() instanceof ModularRealmAuthenticator) {
                         final ModularRealmAuthenticator authenticator = (ModularRealmAuthenticator) webSecurityManager.getAuthenticator();
                         authenticator.setAuthenticationStrategy(new FirstSuccessfulStrategyWith540());
-                        webSecurityManager.setAuthenticator(new ModularRealmAuthenticatorWith540(RealmsFromShiroIniProvider.get(configSource), authenticator));
+                        webSecurityManager.setAuthenticator(new ModularRealmAuthenticatorWith540(realmsFromShiroIni, authenticator));
                     }
                 }
             });
