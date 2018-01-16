@@ -30,13 +30,14 @@ import org.killbill.billing.lifecycle.api.BusService;
 import org.killbill.billing.subscription.api.SubscriptionBaseInternalApi;
 import org.killbill.billing.subscription.api.SubscriptionBaseService;
 import org.killbill.billing.subscription.api.user.SubscriptionBaseBundle;
+import org.killbill.clock.Clock;
 import org.killbill.clock.ClockMock;
 
 public interface SubscriptionTestInitializer {
 
     public Catalog initCatalog(final CatalogService catalogService, final InternalTenantContext context) throws Exception;
 
-    public AccountData initAccountData();
+    public AccountData initAccountData(Clock clock);
 
     public SubscriptionBaseBundle initBundle(final UUID accountId, final SubscriptionBaseInternalApi subscriptionApi, final InternalCallContext callContext) throws Exception;
 

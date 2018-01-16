@@ -82,10 +82,11 @@ public class InvoiceApiHelper {
 
             final Iterable<Invoice> invoicesForPlugins = withAccountLock.prepareInvoices();
 
+            final InternalCallContext internalCallContext = internalCallContextFactory.createInternalCallContext(accountId, context);
             final List<InvoiceModelDao> invoiceModelDaos = new LinkedList<InvoiceModelDao>();
             for (final Invoice invoiceForPlugin : invoicesForPlugins) {
                 // Call plugin
-                final List<InvoiceItem> additionalInvoiceItems = invoicePluginDispatcher.getAdditionalInvoiceItems(invoiceForPlugin, isDryRun, context);
+                final List<InvoiceItem> additionalInvoiceItems = invoicePluginDispatcher.getAdditionalInvoiceItems(invoiceForPlugin, isDryRun, context, internalCallContext);
                 invoiceForPlugin.addInvoiceItems(additionalInvoiceItems);
 
                 // Transformation to InvoiceModelDao
@@ -98,7 +99,6 @@ public class InvoiceApiHelper {
                 invoiceModelDaos.add(invoiceModelDao);
             }
 
-            final InternalCallContext internalCallContext = internalCallContextFactory.createInternalCallContext(accountId, context);
             final List<InvoiceItemModelDao> createdInvoiceItems = dao.createInvoices(invoiceModelDaos, internalCallContext);
             return fromInvoiceItemModelDao(createdInvoiceItems);
         } catch (final LockFailedException e) {
@@ -150,6 +150,11 @@ public class InvoiceApiHelper {
         input.put(invoiceItemId, positiveAdjAmount);
 
         final Map<UUID, BigDecimal> output = dao.computeItemAdjustments(invoiceToBeAdjusted.getId().toString(), input, context);
+
+        // Nothing to adjust
+        if (output.get(invoiceItemId) == null) {
+            return null;
+        }
 
         // If we pass that stage, it means the validation succeeded so we just need to extract resulting amount and negate the result.
         final BigDecimal amountToAdjust = output.get(invoiceItemId).negate();

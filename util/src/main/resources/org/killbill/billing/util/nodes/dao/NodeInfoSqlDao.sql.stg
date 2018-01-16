@@ -1,5 +1,3 @@
-group NodeInfoSqlDao;
-
 tableName() ::= "node_infos"
 
 tableFields(prefix) ::= <<
@@ -31,7 +29,7 @@ allTableValues() ::= <<
 
 create() ::= <<
 insert into <tableName()> (
-<tableFields()>
+<tableFields("")>
 )
 values (
 <tableValues()>
@@ -40,7 +38,7 @@ values (
 >>
 
 getByNodeName() ::= <<
-select <allTableFields()>
+select <allTableFields("")>
 from <tableName()>
 where node_name = :nodeName
 and is_active
@@ -48,7 +46,7 @@ and is_active
 >>
 
 getAll() ::= <<
-select <allTableFields()>
+select <allTableFields("")>
 from <tableName()>
 where is_active
 order by node_name asc

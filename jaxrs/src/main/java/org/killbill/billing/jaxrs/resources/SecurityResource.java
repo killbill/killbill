@@ -180,16 +180,14 @@ public class SecurityResource extends JaxRsResourceBase {
     @Path("/users/{username:" + ANYTHING_PATTERN + "}")
     @ApiOperation(value = "Invalidate an existing user")
     public Response invalidateUser(@PathParam("username") final String username,
-                                    @HeaderParam(HDR_CREATED_BY) final String createdBy,
-                                    @HeaderParam(HDR_REASON) final String reason,
-                                    @HeaderParam(HDR_COMMENT) final String comment,
-                                    @javax.ws.rs.core.Context final HttpServletRequest request,
-                                    @javax.ws.rs.core.Context final UriInfo uriInfo) throws SecurityApiException {
+                                   @HeaderParam(HDR_CREATED_BY) final String createdBy,
+                                   @HeaderParam(HDR_REASON) final String reason,
+                                   @HeaderParam(HDR_COMMENT) final String comment,
+                                   @javax.ws.rs.core.Context final HttpServletRequest request,
+                                   @javax.ws.rs.core.Context final UriInfo uriInfo) throws SecurityApiException {
         securityApi.invalidateUser(username, context.createCallContextNoAccountId(createdBy, reason, comment, request));
         return Response.status(Status.NO_CONTENT).build();
     }
-
-
 
     @TimedResource
     @POST
@@ -206,4 +204,22 @@ public class SecurityResource extends JaxRsResourceBase {
         securityApi.addRoleDefinition(json.getRole(), json.getPermissions(), context.createCallContextNoAccountId(createdBy, reason, comment, request));
         return Response.status(Status.CREATED).build();
     }
+
+
+    @TimedResource
+    @PUT
+    @Consumes(APPLICATION_JSON)
+    @Produces(APPLICATION_JSON)
+    @Path("/roles")
+    @ApiOperation(value = "Update a new role definition)")
+    public Response updateRoleDefinition(final RoleDefinitionJson json,
+                                    @HeaderParam(HDR_CREATED_BY) final String createdBy,
+                                    @HeaderParam(HDR_REASON) final String reason,
+                                    @HeaderParam(HDR_COMMENT) final String comment,
+                                    @javax.ws.rs.core.Context final HttpServletRequest request,
+                                    @javax.ws.rs.core.Context final UriInfo uriInfo) throws SecurityApiException {
+        securityApi.updateRoleDefinition(json.getRole(), json.getPermissions(), context.createCallContextNoAccountId(createdBy, reason, comment, request));
+        return Response.status(Status.OK).build();
+    }
+
 }

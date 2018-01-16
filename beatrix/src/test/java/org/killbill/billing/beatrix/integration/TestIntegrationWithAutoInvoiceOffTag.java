@@ -23,9 +23,6 @@ import java.util.List;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
-import org.testng.annotations.BeforeMethod;
-import org.testng.annotations.Test;
-
 import org.killbill.billing.ObjectType;
 import org.killbill.billing.account.api.Account;
 import org.killbill.billing.api.TestApiListener.NextEvent;
@@ -33,12 +30,15 @@ import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.catalog.api.ProductCategory;
 import org.killbill.billing.entitlement.api.DefaultEntitlement;
 import org.killbill.billing.invoice.api.Invoice;
+import org.killbill.billing.invoice.api.InvoiceStatus;
 import org.killbill.billing.invoice.api.InvoiceUserApi;
 import org.killbill.billing.util.api.TagApiException;
 import org.killbill.billing.util.api.TagDefinitionApiException;
 import org.killbill.billing.util.api.TagUserApi;
 import org.killbill.billing.util.tag.ControlTagType;
 import org.killbill.billing.util.tag.Tag;
+import org.testng.annotations.BeforeMethod;
+import org.testng.annotations.Test;
 
 import com.google.inject.Inject;
 
@@ -92,9 +92,7 @@ public class TestIntegrationWithAutoInvoiceOffTag extends TestIntegrationBase {
         invoices = invoiceApi.getInvoicesByAccount(account.getId(), false, callContext);
         assertEquals(invoices.size(), 0);
 
-        busHandler.pushExpectedEvents(NextEvent.TAG, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
-        remove_AUTO_INVOICING_OFF_Tag(account.getId(), ObjectType.ACCOUNT);
-        assertListenerStatus();
+        remove_AUTO_INVOICING_OFF_Tag(account.getId(), ObjectType.ACCOUNT, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
 
         invoices = invoiceApi.getInvoicesByAccount(account.getId(), false, callContext);
         assertEquals(invoices.size(), 1);
@@ -145,15 +143,4 @@ public class TestIntegrationWithAutoInvoiceOffTag extends TestIntegrationBase {
         assertEquals(invoices.size(), 3); // Only one additional invoice generated
     }
 
-    private void add_AUTO_INVOICING_OFF_Tag(final UUID id, final ObjectType type) throws TagDefinitionApiException, TagApiException {
-        busHandler.pushExpectedEvent(NextEvent.TAG);
-        tagApi.addTag(id, type, ControlTagType.AUTO_INVOICING_OFF.getId(), callContext);
-        assertListenerStatus();
-        final List<Tag> tags = tagApi.getTagsForObject(id, type, false, callContext);
-        assertEquals(tags.size(), 1);
-    }
-
-    private void remove_AUTO_INVOICING_OFF_Tag(final UUID id, final ObjectType type) throws TagDefinitionApiException, TagApiException {
-        tagApi.removeTag(id, type, ControlTagType.AUTO_INVOICING_OFF.getId(), callContext);
-    }
 }

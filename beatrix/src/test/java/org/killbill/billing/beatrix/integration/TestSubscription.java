@@ -30,7 +30,6 @@ import org.killbill.billing.api.TestApiListener.NextEvent;
 import org.killbill.billing.beatrix.util.InvoiceChecker.ExpectedInvoiceItemCheck;
 import org.killbill.billing.catalog.api.BillingActionPolicy;
 import org.killbill.billing.catalog.api.BillingPeriod;
-import org.killbill.billing.catalog.api.PlanPhase;
 import org.killbill.billing.catalog.api.PlanPhaseSpecifier;
 import org.killbill.billing.catalog.api.PriceListSet;
 import org.killbill.billing.catalog.api.ProductCategory;
@@ -105,7 +104,7 @@ public class TestSubscription extends TestIntegrationBase {
         TestDryRunArguments dryRun = new TestDryRunArguments(DryRunType.SUBSCRIPTION_ACTION, productName, ProductCategory.BASE, BillingPeriod.MONTHLY, null, null,
                                                              SubscriptionEventType.CHANGE, bpEntitlement.getId(), bpEntitlement.getBundleId(), null, BillingActionPolicy.IMMEDIATE);
         Invoice dryRunInvoice = invoiceUserApi.triggerInvoiceGeneration(account.getId(), clock.getUTCToday(), dryRun, callContext);
-        invoiceChecker.checkInvoiceNoAudits(dryRunInvoice, callContext, toBeChecked);
+        invoiceChecker.checkInvoiceNoAudits(dryRunInvoice, toBeChecked);
 
         changeEntitlementAndCheckForCompletion(bpEntitlement, productName, BillingPeriod.MONTHLY, BillingActionPolicy.IMMEDIATE, NextEvent.CHANGE, NextEvent.INVOICE);
 
@@ -236,7 +235,7 @@ public class TestSubscription extends TestIntegrationBase {
                                       NextEvent.INVOICE,
                                       NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT
                                      );
-        final List<Entitlement> allEntitlements = entitlementApi.createBaseEntitlementsWithAddOns(account.getId(), entitlementWithAddOnsSpecifierList, ImmutableList.<PluginProperty>of(), callContext);
+        final List<Entitlement> allEntitlements = entitlementApi.createBaseEntitlementsWithAddOns(account.getId(), entitlementWithAddOnsSpecifierList, true, ImmutableList.<PluginProperty>of(), callContext);
         assertListenerStatus();
         checkNoMoreInvoiceToGenerate(account);
 
@@ -320,7 +319,7 @@ public class TestSubscription extends TestIntegrationBase {
                                       NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT
                                      );
 
-        final List<Entitlement> entitlements = entitlementApi.createBaseEntitlementsWithAddOns(account.getId(), entitlementWithAddOnsSpecifierList, ImmutableList.<PluginProperty>of(), callContext);
+        final List<Entitlement> entitlements = entitlementApi.createBaseEntitlementsWithAddOns(account.getId(), entitlementWithAddOnsSpecifierList, true, ImmutableList.<PluginProperty>of(), callContext);
         assertListenerStatus();
 
         Assert.assertEquals(entitlements.size(), 5);
@@ -355,7 +354,7 @@ public class TestSubscription extends TestIntegrationBase {
         final BaseEntitlementWithAddOnsSpecifier cartSpecifierA = new DefaultBaseEntitlementWithAddOnsSpecifier(null, externalKeyA, specifierListA, null, null, false);
         entitlementWithAddOnsSpecifierList.add(cartSpecifierA);
 
-        entitlementApi.createBaseEntitlementsWithAddOns(account.getId(), entitlementWithAddOnsSpecifierList, ImmutableList.<PluginProperty>of(), callContext);
+        entitlementApi.createBaseEntitlementsWithAddOns(account.getId(), entitlementWithAddOnsSpecifierList, true, ImmutableList.<PluginProperty>of(), callContext);
     }
 
     @Test(groups = "slow")
@@ -442,7 +441,7 @@ public class TestSubscription extends TestIntegrationBase {
         final LocalDate futureDate = new LocalDate(2015, 10, 1);
 
         // No CREATE event as this is set in the future
-        final Entitlement createdEntitlement = entitlementApi.createBaseEntitlement(account.getId(), spec, account.getExternalKey(), null, futureDate, futureDate, false, ImmutableList.<PluginProperty>of(), callContext);
+        final Entitlement createdEntitlement = entitlementApi.createBaseEntitlement(account.getId(), spec, account.getExternalKey(), null, futureDate, futureDate, false, true, ImmutableList.<PluginProperty>of(), callContext);
         assertEquals(createdEntitlement.getEffectiveStartDate().compareTo(futureDate), 0);
         assertEquals(createdEntitlement.getEffectiveEndDate(), null);
         assertListenerStatus();
@@ -474,7 +473,7 @@ public class TestSubscription extends TestIntegrationBase {
         final LocalDate futureDate = new LocalDate(2015, 10, 1);
 
         // No CREATE event as this is set in the future
-        final Entitlement createdEntitlement = entitlementApi.createBaseEntitlement(account.getId(), spec, account.getExternalKey(), null, futureDate, futureDate, false, ImmutableList.<PluginProperty>of(), callContext);
+        final Entitlement createdEntitlement = entitlementApi.createBaseEntitlement(account.getId(), spec, account.getExternalKey(), null, futureDate, futureDate, false, true, ImmutableList.<PluginProperty>of(), callContext);
         assertEquals(createdEntitlement.getState(), EntitlementState.PENDING);
         assertEquals(createdEntitlement.getEffectiveStartDate().compareTo(futureDate), 0);
         assertEquals(createdEntitlement.getEffectiveEndDate(), null);
@@ -518,7 +517,7 @@ public class TestSubscription extends TestIntegrationBase {
         final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("Shotgun", BillingPeriod.ANNUAL, PriceListSet.DEFAULT_PRICELIST_NAME, null);
 
         busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE);
-        final Entitlement createdEntitlement = entitlementApi.createBaseEntitlement(account.getId(), spec, account.getExternalKey(), null, initialDate, initialDate, false, ImmutableList.<PluginProperty>of(), callContext);
+        final Entitlement createdEntitlement = entitlementApi.createBaseEntitlement(account.getId(), spec, account.getExternalKey(), null, initialDate, initialDate, false, true, ImmutableList.<PluginProperty>of(), callContext);
         assertEquals(createdEntitlement.getEffectiveStartDate().compareTo(initialDate), 0);
         assertEquals(createdEntitlement.getEffectiveEndDate(), null);
         assertListenerStatus();
@@ -547,7 +546,7 @@ public class TestSubscription extends TestIntegrationBase {
         final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("Shotgun", BillingPeriod.ANNUAL, PriceListSet.DEFAULT_PRICELIST_NAME, null);
 
         busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE);
-        final Entitlement createdEntitlement = entitlementApi.createBaseEntitlement(account.getId(), spec, account.getExternalKey(), null, initialDate, initialDate, false, ImmutableList.<PluginProperty>of(), callContext);
+        final Entitlement createdEntitlement = entitlementApi.createBaseEntitlement(account.getId(), spec, account.getExternalKey(), null, initialDate, initialDate, false, true, ImmutableList.<PluginProperty>of(), callContext);
         assertEquals(createdEntitlement.getEffectiveStartDate().compareTo(initialDate), 0);
         assertEquals(createdEntitlement.getEffectiveEndDate(), null);
         assertListenerStatus();

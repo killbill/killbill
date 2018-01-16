@@ -57,6 +57,7 @@ import org.skife.jdbi.v2.IDBI;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
 
@@ -81,6 +82,14 @@ public class DefaultAccountDao extends EntityDaoBase<AccountModelDao, Account, A
 
     @Override
     public void create(final AccountModelDao entity, final InternalCallContext context) throws AccountApiException {
+
+        // We don't enforce the created_date for the Account because it is extracted from context
+        // so, if there is no referenceTime specified we have to set it from the InternalCallContext#created_date
+        //
+        if (entity.getReferenceTime() == null) {
+            entity.setReferenceTime(context.getCreatedDate());
+        }
+
         final AccountModelDao refreshedEntity = transactionalSqlDao.execute(getCreateEntitySqlDaoTransactionWrapper(entity, context));
         // Populate the caches only after the transaction has been committed, in case of rollbacks
         transactionalSqlDao.populateCaches(refreshedEntity);

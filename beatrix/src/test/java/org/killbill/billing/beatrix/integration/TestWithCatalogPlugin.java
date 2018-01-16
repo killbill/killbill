@@ -207,7 +207,7 @@ public class TestWithCatalogPlugin extends TestIntegrationBase {
         public VersionedPluginCatalog getVersionedPluginCatalog(final Iterable<PluginProperty> properties, final TenantContext tenantContext) {
             nbVersionedPluginCatalogApiCalls++;
             Assert.assertNotNull(versionedCatalog, "test did not initialize plugin catalog");
-            return new TestModelVersionedPluginCatalog(versionedCatalog.getCatalogName(), versionedCatalog.getRecurringBillingMode(), toStandalonePluginCatalogs(versionedCatalog.getVersions()));
+            return new TestModelVersionedPluginCatalog(versionedCatalog.getCatalogName(), toStandalonePluginCatalogs(versionedCatalog.getVersions()));
         }
 
         public void addCatalogVersion(final String catalogResource) throws Exception {

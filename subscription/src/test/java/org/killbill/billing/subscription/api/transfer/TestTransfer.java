@@ -28,7 +28,7 @@ import org.killbill.billing.api.TestApiListener.NextEvent;
 import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.catalog.api.PhaseType;
 import org.killbill.billing.catalog.api.Plan;
-import org.killbill.billing.catalog.api.PlanSpecifier;
+import org.killbill.billing.catalog.api.PlanPhaseSpecifier;
 import org.killbill.billing.catalog.api.PriceListSet;
 import org.killbill.billing.catalog.api.Product;
 import org.killbill.billing.entitlement.api.Entitlement.EntitlementState;
@@ -60,16 +60,15 @@ public class TestTransfer extends SubscriptionTestSuiteWithEmbeddedDB {
         // Note: this will cleanup all tables
         super.beforeMethod();
 
-        final AccountData accountData2 = subscriptionTestInitializer.initAccountData();
+        final AccountData accountData2 = subscriptionTestInitializer.initAccountData(clock);
         final Account account2 = createAccount(accountData2);
         finalNewAccountId = account2.getId();
 
-        // internal context will be configured for newAccountId
-        final AccountData accountData = subscriptionTestInitializer.initAccountData();
+        // internal context will be configured for accountId
+        final AccountData accountData = subscriptionTestInitializer.initAccountData(clock);
         final Account account = createAccount(accountData);
         newAccountId = account.getId();
     }
-
 
     @Test(groups = "slow")
     public void testTransferBPInTrialWithNoCTD() throws Exception {
@@ -267,7 +266,7 @@ public class TestTransfer extends SubscriptionTestSuiteWithEmbeddedDB {
         final String newBaseProduct1 = "Assault-Rifle";
         final BillingPeriod newBaseTerm1 = BillingPeriod.ANNUAL;
         testListener.pushExpectedEvent(NextEvent.CHANGE);
-        newBaseSubscription.changePlan(new PlanSpecifier(newBaseProduct1, newBaseTerm1, basePriceList), null, callContext);
+        newBaseSubscription.changePlan(new PlanPhaseSpecifier(newBaseProduct1, newBaseTerm1, basePriceList), null, callContext);
         assertListenerStatus();
 
         newPlan = newBaseSubscription.getCurrentPlan();
@@ -283,7 +282,7 @@ public class TestTransfer extends SubscriptionTestSuiteWithEmbeddedDB {
 
         final String newBaseProduct2 = "Pistol";
         final BillingPeriod newBaseTerm2 = BillingPeriod.ANNUAL;
-        newBaseSubscriptionWithCtd.changePlan(new PlanSpecifier(newBaseProduct2, newBaseTerm2, basePriceList), null, callContext);
+        newBaseSubscriptionWithCtd.changePlan(new PlanPhaseSpecifier(newBaseProduct2, newBaseTerm2, basePriceList), null, callContext);
 
         newPlan = newBaseSubscriptionWithCtd.getCurrentPlan();
         assertEquals(newPlan.getProduct().getName(), newBaseProduct1);

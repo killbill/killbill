@@ -564,7 +564,7 @@ public class TestPaymentDao extends PaymentTestSuiteWithEmbeddedDB {
         properties.add(new PluginProperty("prop2", "value2", false));
 
         final byte [] serializedProperties = PluginPropertySerializer.serialize(properties);
-        paymentDao.updatePaymentAttemptWithProperties(rehydratedAttempt.getId(), transactionId, newStateName, serializedProperties, internalCallContext);
+        paymentDao.updatePaymentAttemptWithProperties(rehydratedAttempt.getId(), rehydratedAttempt.getPaymentMethodId(), transactionId, newStateName, serializedProperties, internalCallContext);
         final PaymentAttemptModelDao attempt2 = paymentDao.getPaymentAttempt(rehydratedAttempt.getId(), internalCallContext);
         assertEquals(attempt2.getStateName(), newStateName);
         assertEquals(attempt2.getTransactionId(), transactionId);

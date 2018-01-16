@@ -1,6 +1,6 @@
 /*
- * Copyright 2014-2016 Groupon, Inc
- * Copyright 2014-2016 The Billing Project, LLC
+ * Copyright 2014-2017 Groupon, Inc
+ * Copyright 2014-2017 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -39,6 +39,7 @@ import org.killbill.billing.control.plugin.api.PriorPaymentControlResult;
 import org.killbill.billing.osgi.api.OSGIServiceDescriptor;
 import org.killbill.billing.osgi.api.OSGIServiceRegistration;
 import org.killbill.billing.payment.api.Payment;
+import org.killbill.billing.payment.api.PaymentMethodPlugin;
 import org.killbill.billing.payment.api.PaymentOptions;
 import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.payment.api.TransactionType;
@@ -108,13 +109,61 @@ public class TestPaymentWithControl extends TestIntegrationBase {
     }
 
     @Test(groups = "slow")
+    public void testAuthSuccessWithPaymentControlNullPaymentMethodId() throws Exception {
+        final AccountData accountData = getAccountData(1);
+        final Account account = accountUserApi.createAccount(accountData, callContext);
+
+        // Add non-default payment method
+        final PaymentMethodPlugin info = createPaymentMethodPlugin();
+        final UUID paymentMethodId = paymentApi.addPaymentMethod(account, UUID.randomUUID().toString(), BeatrixIntegrationModule.NON_OSGI_PLUGIN_NAME, false, info, PLUGIN_PROPERTIES, callContext);
+
+        testPaymentControlWithControl.setAdjustedPaymentMethodId(paymentMethodId);
+
+        busHandler.pushExpectedEvents(NextEvent.PAYMENT);
+        final Payment payment = paymentApi.createAuthorizationWithPaymentControl(account, null, null, BigDecimal.ONE, account.getCurrency(), null, null, null,
+                                                                                 properties, paymentOptions, callContext);
+        assertListenerStatus();
+
+        final Payment paymentWithAttempts = paymentApi.getPayment(payment.getId(), false, true, ImmutableList.<PluginProperty>of(), callContext);
+        Assert.assertEquals(paymentWithAttempts.getPaymentMethodId(), paymentMethodId);
+        Assert.assertEquals(paymentWithAttempts.getPaymentAttempts().size(), 1);
+        Assert.assertEquals(paymentWithAttempts.getPaymentAttempts().get(0).getPaymentMethodId(), paymentMethodId);
+        Assert.assertEquals(paymentWithAttempts.getPaymentAttempts().get(0).getStateName(), "SUCCESS");
+    }
+
+    @Test(groups = "slow")
+    public void testAuthFailureWithPaymentControlNullPaymentMethodId() throws Exception {
+        final AccountData accountData = getAccountData(1);
+        final Account account = accountUserApi.createAccount(accountData, callContext);
+
+        // Add non-default payment method
+        final PaymentMethodPlugin info = createPaymentMethodPlugin();
+        final UUID paymentMethodId = paymentApi.addPaymentMethod(account, UUID.randomUUID().toString(), BeatrixIntegrationModule.NON_OSGI_PLUGIN_NAME, false, info, PLUGIN_PROPERTIES, callContext);
+
+        testPaymentControlWithControl.setAdjustedPaymentMethodId(paymentMethodId);
+
+        paymentPlugin.makeNextPaymentFailWithError();
+
+        busHandler.pushExpectedEvents(NextEvent.PAYMENT_ERROR);
+        final Payment payment = paymentApi.createAuthorizationWithPaymentControl(account, null, null, BigDecimal.ONE, account.getCurrency(), null, null, null,
+                                                                                 properties, paymentOptions, callContext);
+        assertListenerStatus();
+
+        final Payment paymentWithAttempts = paymentApi.getPayment(payment.getId(), false, true, ImmutableList.<PluginProperty>of(), callContext);
+        Assert.assertEquals(paymentWithAttempts.getPaymentMethodId(), paymentMethodId);
+        Assert.assertEquals(paymentWithAttempts.getPaymentAttempts().size(), 1);
+        Assert.assertEquals(paymentWithAttempts.getPaymentAttempts().get(0).getPaymentMethodId(), paymentMethodId);
+        Assert.assertEquals(paymentWithAttempts.getPaymentAttempts().get(0).getStateName(), "ABORTED");
+    }
+
+    @Test(groups = "slow")
     public void testAuthCaptureWithPaymentControl() throws Exception {
 
         final AccountData accountData = getAccountData(1);
         final Account account = createAccountWithNonOsgiPaymentMethod(accountData);
 
         busHandler.pushExpectedEvents(NextEvent.PAYMENT);
-        final Payment payment = paymentApi.createAuthorizationWithPaymentControl(account, account.getPaymentMethodId(), null, BigDecimal.ONE, account.getCurrency(), null, null,
+        final Payment payment = paymentApi.createAuthorizationWithPaymentControl(account, account.getPaymentMethodId(), null, BigDecimal.ONE, account.getCurrency(), null, null, null,
                                                                                  properties, paymentOptions, callContext);
         assertListenerStatus();
 
@@ -127,7 +176,7 @@ public class TestPaymentWithControl extends TestIntegrationBase {
         Assert.assertEquals(paymentWithAttempts.getTransactions().get(0).getId().toString(), paymentWithAttempts.getPaymentAttempts().get(0).getTransactionExternalKey());
 
         busHandler.pushExpectedEvents(NextEvent.PAYMENT);
-        paymentApi.createCaptureWithPaymentControl(account, payment.getId(), BigDecimal.ONE, account.getCurrency(), null, properties, paymentOptions, callContext);
+        paymentApi.createCaptureWithPaymentControl(account, payment.getId(), BigDecimal.ONE, account.getCurrency(), null, null, properties, paymentOptions, callContext);
         assertListenerStatus();
 
         paymentWithAttempts = paymentApi.getPayment(payment.getId(), false, true, ImmutableList.<PluginProperty>of(), callContext);
@@ -149,7 +198,7 @@ public class TestPaymentWithControl extends TestIntegrationBase {
         final String paymentTransactionExternalKey = "something-that-is-not-a-uuid-2";
 
         busHandler.pushExpectedEvents(NextEvent.PAYMENT);
-        final Payment payment = paymentApi.createAuthorizationWithPaymentControl(account, account.getPaymentMethodId(), null, BigDecimal.ONE, account.getCurrency(), paymentExternalKey, paymentTransactionExternalKey,
+        final Payment payment = paymentApi.createAuthorizationWithPaymentControl(account, account.getPaymentMethodId(), null, BigDecimal.ONE, account.getCurrency(), null, paymentExternalKey, paymentTransactionExternalKey,
                                                                                  properties, paymentOptions, callContext);
         assertListenerStatus();
 
@@ -166,7 +215,7 @@ public class TestPaymentWithControl extends TestIntegrationBase {
         final String paymentTransactionExternalKey2 = "something-that-is-not-a-uuid-3";
 
         busHandler.pushExpectedEvents(NextEvent.PAYMENT);
-        paymentApi.createVoidWithPaymentControl(account, payment.getId(), paymentTransactionExternalKey2, properties, paymentOptions, callContext);
+        paymentApi.createVoidWithPaymentControl(account, payment.getId(), null, paymentTransactionExternalKey2, properties, paymentOptions, callContext);
         assertListenerStatus();
 
         paymentWithAttempts = paymentApi.getPayment(payment.getId(), false, true, ImmutableList.<PluginProperty>of(), callContext);
@@ -184,6 +233,8 @@ public class TestPaymentWithControl extends TestIntegrationBase {
 
         private final Map<String, Integer> calls;
 
+        private UUID adjustedPaymentMethodId = null;
+
         public TestPaymentControlPluginApi() {
             calls = new HashMap<String, Integer>();
         }
@@ -194,6 +245,11 @@ public class TestPaymentWithControl extends TestIntegrationBase {
 
         public void reset() {
             calls.clear();
+            adjustedPaymentMethodId = null;
+        }
+
+        public void setAdjustedPaymentMethodId(final UUID adjustedPaymentMethodId) {
+            this.adjustedPaymentMethodId = adjustedPaymentMethodId;
         }
 
         @Override
@@ -213,8 +269,14 @@ public class TestPaymentWithControl extends TestIntegrationBase {
                 }
                 @Override
                 public UUID getAdjustedPaymentMethodId() {
+                    return adjustedPaymentMethodId;
+                }
+
+                @Override
+                public String getAdjustedPluginName() {
                     return null;
                 }
+
                 @Override
                 public Iterable<PluginProperty> getAdjustedPluginProperties() {
                     return null;

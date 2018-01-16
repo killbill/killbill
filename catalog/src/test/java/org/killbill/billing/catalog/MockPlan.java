@@ -18,6 +18,7 @@ package org.killbill.billing.catalog;
 
 import java.util.Collection;
 
+import org.killbill.billing.catalog.api.BillingMode;
 import org.killbill.billing.catalog.api.Plan;
 
 import com.google.common.collect.ImmutableList;
@@ -94,6 +95,7 @@ public class MockPlan extends DefaultPlan {
         setFinalPhase(finalPhase);
         setInitialPhases(planPhases);
         setPlansAllowedInBundle(plansAllowedInBundle);
+        setRecurringBillingMode(BillingMode.IN_ADVANCE);
 
         finalPhase.setPlan(this);
         for (final DefaultPlanPhase pp : planPhases) {
@@ -113,7 +115,7 @@ public class MockPlan extends DefaultPlan {
         setName("Test");
         setProduct(MockProduct.createBicycle());
         setFinalPhase(mockPlanPhase);
-
+        setRecurringBillingMode(BillingMode.IN_ADVANCE);
         mockPlanPhase.setPlan(this);
     }
 
@@ -122,6 +124,7 @@ public class MockPlan extends DefaultPlan {
         setProduct(new MockProduct());
         setFinalPhase(new MockPlanPhase(this));
         setInitialPhases(null);
+        setRecurringBillingMode(BillingMode.IN_ADVANCE);
         setPlansAllowedInBundle(1);
     }
 

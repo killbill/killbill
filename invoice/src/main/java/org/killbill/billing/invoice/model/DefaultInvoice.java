@@ -39,6 +39,7 @@ import org.killbill.billing.invoice.dao.InvoiceModelDao;
 import org.killbill.billing.invoice.dao.InvoicePaymentModelDao;
 import org.killbill.billing.util.UUIDs;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
 import com.google.common.collect.Collections2;
 
@@ -60,11 +61,8 @@ public class DefaultInvoice extends EntityBase implements Invoice, Cloneable {
     private final Invoice parentInvoice;
 
 
-    // Used to create a new invoice
-    public DefaultInvoice(final UUID accountId, final LocalDate invoiceDate, final LocalDate targetDate, final Currency currency) {
-        this(UUIDs.randomUUID(), accountId, null, invoiceDate, targetDate, currency, false, InvoiceStatus.COMMITTED);
-    }
 
+    // Used to create a new invoice
     public DefaultInvoice(final UUID accountId, final LocalDate invoiceDate, final LocalDate targetDate, final Currency currency, final InvoiceStatus status) {
         this(UUIDs.randomUUID(), accountId, null, invoiceDate, targetDate, currency, false, status);
     }
@@ -72,6 +70,11 @@ public class DefaultInvoice extends EntityBase implements Invoice, Cloneable {
     public DefaultInvoice(final UUID invoiceId, final UUID accountId, @Nullable final Integer invoiceNumber, final LocalDate invoiceDate,
                           final LocalDate targetDate, final Currency currency, final boolean isMigrationInvoice, final InvoiceStatus status) {
         this(invoiceId, null, accountId, invoiceNumber, invoiceDate, targetDate, currency, currency, isMigrationInvoice, false, status, false, null);
+    }
+
+    @VisibleForTesting
+    public DefaultInvoice(final UUID accountId, final LocalDate invoiceDate, final LocalDate targetDate, final Currency currency) {
+        this(UUIDs.randomUUID(), accountId, null, invoiceDate, targetDate, currency, false, InvoiceStatus.COMMITTED);
     }
 
     // This CTOR is used to return an existing invoice and must include everything (items, payments, tags,..)
@@ -137,6 +140,10 @@ public class DefaultInvoice extends EntityBase implements Invoice, Cloneable {
     @Override
     public boolean addInvoiceItem(final InvoiceItem item) {
         return invoiceItems.add(item);
+    }
+
+    public boolean removeInvoiceItem(final  InvoiceItem item) {
+        return invoiceItems.remove(item);
     }
 
     @Override
@@ -251,12 +258,17 @@ public class DefaultInvoice extends EntityBase implements Invoice, Cloneable {
 
     @Override
     public BigDecimal getBalance() {
-        return getStatus().equals(InvoiceStatus.DRAFT) || hasZeroParentBalance() ?
-               BigDecimal.ZERO :
-               InvoiceCalculatorUtils.computeInvoiceBalance(currency, invoiceItems, payments, isWrittenOff() || isMigrationInvoice());
+        if (isWrittenOff() ||
+            isMigrationInvoice() ||
+            getStatus() == InvoiceStatus.DRAFT ||
+            hasZeroParentBalance()) {
+            return BigDecimal.ZERO;
+        } else {
+            return InvoiceCalculatorUtils.computeRawInvoiceBalance(currency, invoiceItems, payments);
+        }
     }
 
-    private boolean hasZeroParentBalance() {
+    public boolean hasZeroParentBalance() {
         return (parentInvoice != null) && (parentInvoice.getBalance().compareTo(BigDecimal.ZERO) == 0);
     }
 
@@ -272,6 +284,16 @@ public class DefaultInvoice extends EntityBase implements Invoice, Cloneable {
     @Override
     public boolean isParentInvoice() {
         return isParentInvoice;
+    }
+
+    @Override
+    public UUID getParentAccountId() {
+        return parentInvoice != null ? parentInvoice.getAccountId() : null;
+    }
+
+    @Override
+    public UUID getParentInvoiceId() {
+        return parentInvoice != null ? parentInvoice.getId() : null;
     }
 
     @Override

@@ -29,11 +29,13 @@ import java.util.UUID;
 import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
 import org.killbill.billing.ErrorCode;
+import org.killbill.billing.api.FlakyRetryAnalyzer;
 import org.killbill.billing.api.TestApiListener.NextEvent;
 import org.killbill.billing.beatrix.integration.BeatrixIntegrationModule;
 import org.killbill.billing.beatrix.util.InvoiceChecker.ExpectedInvoiceItemCheck;
 import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.catalog.api.Currency;
+import org.killbill.billing.catalog.api.PlanPhaseSpecifier;
 import org.killbill.billing.catalog.api.PlanSpecifier;
 import org.killbill.billing.catalog.api.PriceListSet;
 import org.killbill.billing.catalog.api.ProductCategory;
@@ -695,10 +697,10 @@ public class TestOverdueIntegration extends TestOverdueBase {
 
         // 2012-05-06 => Create an external charge on a new invoice
         addDaysAndCheckForCompletion(5);
-        final InvoiceItem externalCharge = new ExternalChargeInvoiceItem(null, account.getId(), bundle.getId(), "For overdue", new LocalDate(2012, 5, 6), BigDecimal.TEN, Currency.USD);
+        final InvoiceItem externalCharge = new ExternalChargeInvoiceItem(null, account.getId(), bundle.getId(), "For overdue", new LocalDate(2012, 5, 6), new LocalDate(2012, 6, 6), BigDecimal.TEN, Currency.USD);
         invoiceUserApi.insertExternalCharges(account.getId(), clock.getUTCToday(), ImmutableList.<InvoiceItem>of(externalCharge), false, callContext).get(0);
         assertListenerStatus();
-        invoiceChecker.checkInvoice(account.getId(), 2, callContext, new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 6), null, InvoiceItemType.EXTERNAL_CHARGE, BigDecimal.TEN));
+        invoiceChecker.checkInvoice(account.getId(), 2, callContext, new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 6), new LocalDate(2012, 6, 6), InvoiceItemType.EXTERNAL_CHARGE, BigDecimal.TEN));
 
         // 2012-05-31 => DAY 30 have to get out of trial before first payment
         addDaysAndCheckForCompletion(25, NextEvent.PHASE, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
@@ -953,7 +955,8 @@ public class TestOverdueIntegration extends TestOverdueBase {
         checkODState(OverdueWrapper.CLEAR_STATE_NAME);
     }
 
-    @Test(groups = "slow", description = "Test overdue state with number of unpaid invoices condition")
+    // Flaky, see https://github.com/killbill/killbill/issues/782
+    @Test(groups = "slow", description = "Test overdue state with number of unpaid invoices condition", retryAnalyzer = FlakyRetryAnalyzer.class)
     public void testOverdueStateWithNumberOfUnpaidInvoicesCondition() throws Exception {
         // 2012-05-01T00:03:42.000Z
         clock.setTime(new DateTime(2012, 5, 1, 0, 3, 42, 0));
@@ -1025,7 +1028,8 @@ public class TestOverdueIntegration extends TestOverdueBase {
         checkODState(OverdueWrapper.CLEAR_STATE_NAME);
     }
 
-    @Test(groups = "slow", description = "Test overdue state with total unpaid invoice balance condition")
+    // Flaky, see https://github.com/killbill/killbill/issues/782
+    @Test(groups = "slow", description = "Test overdue state with total unpaid invoice balance condition", retryAnalyzer = FlakyRetryAnalyzer.class)
     public void testOverdueStateWithTotalUnpaidInvoiceBalanceCondition() throws Exception {
         // 2012-05-01T00:03:42.000Z
         clock.setTime(new DateTime(2012, 5, 1, 0, 3, 42, 0));
@@ -1195,7 +1199,7 @@ public class TestOverdueIntegration extends TestOverdueBase {
     private void checkChangePlanWithOverdueState(final Entitlement entitlement, final boolean shouldFail, final boolean expectedPayment) {
         if (shouldFail) {
             try {
-                entitlement.changePlan(new PlanSpecifier("Pistol", term, PriceListSet.DEFAULT_PRICELIST_NAME), null, ImmutableList.<PluginProperty>of(), callContext);
+                entitlement.changePlan(new PlanPhaseSpecifier("Pistol", term, PriceListSet.DEFAULT_PRICELIST_NAME), null, ImmutableList.<PluginProperty>of(), callContext);
             } catch (EntitlementApiException e) {
                 assertTrue(e.getCause() instanceof BlockingApiException || e.getCode() == ErrorCode.SUB_CHANGE_NON_ACTIVE.getCode(),
                            String.format("Cause is %s, message is %s", e.getCause(), e.getMessage()));

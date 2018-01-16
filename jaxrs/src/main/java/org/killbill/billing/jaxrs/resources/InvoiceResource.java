@@ -73,7 +73,6 @@ import org.killbill.billing.invoice.api.DryRunType;
 import org.killbill.billing.invoice.api.Invoice;
 import org.killbill.billing.invoice.api.InvoiceApiException;
 import org.killbill.billing.invoice.api.InvoiceItem;
-import org.killbill.billing.invoice.api.InvoiceNotifier;
 import org.killbill.billing.invoice.api.InvoicePayment;
 import org.killbill.billing.invoice.api.InvoiceUserApi;
 import org.killbill.billing.jaxrs.json.CustomFieldJson;
@@ -136,7 +135,6 @@ public class InvoiceResource extends JaxRsResourceBase {
     private static final String LOCALE_PARAM_NAME = "locale";
 
     private final InvoiceUserApi invoiceApi;
-    private final InvoiceNotifier invoiceNotifier;
     private final TenantUserApi tenantApi;
     private final Locale defaultLocale;
 
@@ -151,7 +149,6 @@ public class InvoiceResource extends JaxRsResourceBase {
     public InvoiceResource(final AccountUserApi accountUserApi,
                            final InvoiceUserApi invoiceApi,
                            final PaymentApi paymentApi,
-                           final InvoiceNotifier invoiceNotifier,
                            final Clock clock,
                            final JaxrsUriBuilder uriBuilder,
                            final TagUserApi tagUserApi,
@@ -161,7 +158,6 @@ public class InvoiceResource extends JaxRsResourceBase {
                            final Context context) {
         super(uriBuilder, tagUserApi, customFieldUserApi, auditUserApi, accountUserApi, paymentApi, null, clock, context);
         this.invoiceApi = invoiceApi;
-        this.invoiceNotifier = invoiceNotifier;
         this.tenantApi = tenantApi;
         this.defaultLocale = Locale.getDefault();
     }
@@ -341,11 +337,10 @@ public class InvoiceResource extends JaxRsResourceBase {
 
         final Account account = accountUserApi.getAccountById(accountId, callContext);
         final Iterable<InvoiceItem> sanitizedInvoiceItems = validateSanitizeAndTranformInputItems(account.getCurrency(), items);
-        final LocalDate resolvedTargetDate =  toLocalDateDefaultToday(account, targetDate, callContext);
+        final LocalDate resolvedTargetDate = toLocalDateDefaultToday(account, targetDate, callContext);
         final UUID invoiceId = invoiceApi.createMigrationInvoice(accountId, resolvedTargetDate, sanitizedInvoiceItems, callContext);
         return uriBuilder.buildResponse(uriInfo, InvoiceResource.class, "getInvoice", invoiceId, request);
     }
-
 
     @TimedResource
     @POST
@@ -479,7 +474,11 @@ public class InvoiceResource extends JaxRsResourceBase {
                                                                     callContext);
         }
 
-        return uriBuilder.buildResponse(uriInfo, InvoiceResource.class, "getInvoice", adjustmentItem.getInvoiceId(), request);
+        if (adjustmentItem == null) {
+            return Response.status(Status.NOT_FOUND).build();
+        } else {
+            return uriBuilder.buildResponse(uriInfo, InvoiceResource.class, "getInvoice", adjustmentItem.getInvoiceId(), request);
+        }
     }
 
     @TimedResource
@@ -646,6 +645,7 @@ public class InvoiceResource extends JaxRsResourceBase {
     @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid account id or invoice id supplied"),
                            @ApiResponse(code = 404, message = "Account not found")})
     public Response createInstantPayment(final InvoicePaymentJson payment,
+                                         @PathParam("invoiceId") final String invoiceId,
                                          @QueryParam(QUERY_PAYMENT_EXTERNAL) @DefaultValue("false") final Boolean externalPayment,
                                          @QueryParam(QUERY_PLUGIN_PROPERTY) final List<String> pluginPropertiesString,
                                          @HeaderParam(HDR_CREATED_BY) final String createdBy,
@@ -659,7 +659,6 @@ public class InvoiceResource extends JaxRsResourceBase {
                              payment.getPurchasedAmount(), "InvoicePaymentJson purchasedAmount needs to be set");
         Preconditions.checkArgument(!externalPayment || payment.getPaymentMethodId() == null, "InvoicePaymentJson should not contain a paymentMethodId when this is an external payment");
 
-
         final Iterable<PluginProperty> pluginProperties = extractPluginProperties(pluginPropertiesString);
         final CallContext callContext = context.createCallContextNoAccountId(createdBy, reason, comment, request);
 
@@ -667,41 +666,11 @@ public class InvoiceResource extends JaxRsResourceBase {
         final UUID paymentMethodId = externalPayment ? null :
                                      (payment.getPaymentMethodId() != null ? UUID.fromString(payment.getPaymentMethodId()) : account.getPaymentMethodId());
 
-        final UUID invoiceId = UUID.fromString(payment.getTargetInvoiceId());
-
-        final Payment result = createPurchaseForInvoice(account, invoiceId, payment.getPurchasedAmount(), paymentMethodId, externalPayment,
-                                                        (payment.getPaymentExternalKey() != null) ? payment.getPaymentExternalKey() : null, null, pluginProperties, callContext);
+        final Payment result = createPurchaseForInvoice(account, UUID.fromString(invoiceId), payment.getPurchasedAmount(), paymentMethodId, externalPayment,
+                                                        payment.getPaymentExternalKey(), null, pluginProperties, callContext);
         return result != null ?
                uriBuilder.buildResponse(uriInfo, InvoicePaymentResource.class, "getInvoicePayment", result.getId(), request) :
                Response.status(Status.NO_CONTENT).build();
-    }
-
-    @TimedResource
-    @POST
-    @Path("/{invoiceId:" + UUID_PATTERN + "}/" + EMAIL_NOTIFICATIONS)
-    @Consumes(APPLICATION_JSON)
-    @Produces(APPLICATION_JSON)
-    @ApiOperation(value = "Trigger an email notification for invoice")
-    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid invoice id supplied"),
-                           @ApiResponse(code = 404, message = "Account or invoice not found")})
-    public Response triggerEmailNotificationForInvoice(@PathParam("invoiceId") final String invoiceId,
-                                                       @HeaderParam(HDR_CREATED_BY) final String createdBy,
-                                                       @HeaderParam(HDR_REASON) final String reason,
-                                                       @HeaderParam(HDR_COMMENT) final String comment,
-                                                       @javax.ws.rs.core.Context final HttpServletRequest request) throws InvoiceApiException, AccountApiException {
-        final CallContext callContext = context.createCallContextNoAccountId(createdBy, reason, comment, request);
-
-        final Invoice invoice = invoiceApi.getInvoice(UUID.fromString(invoiceId), callContext);
-        if (invoice == null) {
-            throw new InvoiceApiException(ErrorCode.INVOICE_NOT_FOUND, invoiceId);
-        }
-
-        final Account account = accountUserApi.getAccountById(invoice.getAccountId(), callContext);
-
-        // Send the email (synchronous send)
-        invoiceNotifier.notify(account, invoice, callContext);
-
-        return Response.status(Status.OK).build();
     }
 
     @TimedResource
@@ -929,6 +898,24 @@ public class InvoiceResource extends JaxRsResourceBase {
                                        @javax.ws.rs.core.Context final UriInfo uriInfo) throws CustomFieldApiException {
         return super.createCustomFields(UUID.fromString(id), customFields,
                                         context.createCallContextNoAccountId(createdBy, reason, comment, request), uriInfo, request);
+    }
+
+
+    @TimedResource
+    @PUT
+    @Path("/{invoiceId:" + UUID_PATTERN + "}/" + CUSTOM_FIELDS)
+    @Consumes(APPLICATION_JSON)
+    @Produces(APPLICATION_JSON)
+    @ApiOperation(value = "Modify custom fields to invoice")
+    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid invoice id supplied")})
+    public Response modifyCustomFields(@PathParam(ID_PARAM_NAME) final String id,
+                                       final List<CustomFieldJson> customFields,
+                                       @HeaderParam(HDR_CREATED_BY) final String createdBy,
+                                       @HeaderParam(HDR_REASON) final String reason,
+                                       @HeaderParam(HDR_COMMENT) final String comment,
+                                       @javax.ws.rs.core.Context final HttpServletRequest request) throws CustomFieldApiException {
+        return super.modifyCustomFields(UUID.fromString(id), customFields,
+                                        context.createCallContextNoAccountId(createdBy, reason, comment, request));
     }
 
     @TimedResource

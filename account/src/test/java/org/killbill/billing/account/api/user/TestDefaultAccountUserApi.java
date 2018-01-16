@@ -138,7 +138,7 @@ public class TestDefaultAccountUserApi extends AccountTestSuiteWithEmbeddedDB {
 
         // Update the address and leave other fields null
         final MutableAccountData mutableAccountData = new DefaultMutableAccountData(null, null, null, 0, null, null, false, 0, null,
-                                                                                    null, null, null, null, null, null,
+                                                                                    clock.getUTCNow(), null, null, null, null, null, null,
                                                                                     null, null, null, null, null, false, false);
         final String newAddress1 = UUID.randomUUID().toString();
         mutableAccountData.setAddress1(newAddress1);

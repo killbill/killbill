@@ -1,4 +1,4 @@
-group InvoiceParentChildrenSqlDao: EntitySqlDao;
+import "org/killbill/billing/util/entity/dao/EntitySqlDao.sql.stg"
 
 tableName() ::= "invoice_parent_children"
 
@@ -29,17 +29,17 @@ allTableValues() ::= <<
 >>
 
 getChildInvoicesByParentInvoiceId() ::= <<
-   SELECT <allTableFields()>
+   SELECT <allTableFields("")>
    FROM <tableName()>
    WHERE parent_invoice_id = :parentInvoiceId
-   <AND_CHECK_TENANT()>
-   <defaultOrderBy()>
+   <AND_CHECK_TENANT("")>
+   <defaultOrderBy("")>
  >>
 
 getParentChildMappingsByChildInvoiceIds(ids) ::= <<
-   SELECT <allTableFields()>
+   SELECT <allTableFields("")>
    FROM <tableName()>
-   WHERE child_invoice_id in (<ids: {id | :id_<i0>}; separator="," >)
-   <AND_CHECK_TENANT()>
-   <defaultOrderBy()>
+   WHERE child_invoice_id in (<ids>)
+   <AND_CHECK_TENANT("")>
+   <defaultOrderBy("")>
  >>

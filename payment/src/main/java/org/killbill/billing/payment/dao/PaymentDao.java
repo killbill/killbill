@@ -41,7 +41,7 @@ public interface PaymentDao extends EntityDao<PaymentModelDao, Payment, PaymentA
 
     public void updatePaymentAttempt(UUID paymentAttemptId, UUID transactionId, String state, InternalCallContext context);
 
-    public void updatePaymentAttemptWithProperties(UUID paymentAttemptId, UUID transactionId, String state, final byte[] pluginProperties, InternalCallContext context);
+    public void updatePaymentAttemptWithProperties(UUID paymentAttemptId, UUID paymentMethodId, UUID transactionId, String state, final byte[] pluginProperties, InternalCallContext context);
 
     public Pagination<PaymentAttemptModelDao> getPaymentAttemptsByStateAcrossTenants(String stateName, DateTime createdBeforeDate, final Long offset, final Long limit);
 
@@ -90,6 +90,8 @@ public interface PaymentDao extends EntityDao<PaymentModelDao, Payment, PaymentA
     public PaymentMethodModelDao getPaymentMethodByExternalKeyIncludedDeleted(String paymentMethodExternalKey, InternalTenantContext context);
 
     public List<PaymentMethodModelDao> getPaymentMethods(InternalTenantContext context);
+
+    public List<PaymentMethodModelDao> getPaymentMethodsIncludedDeleted(InternalTenantContext context);
 
     public Pagination<PaymentMethodModelDao> getPaymentMethods(String pluginName, Long offset, Long limit, InternalTenantContext context);
 

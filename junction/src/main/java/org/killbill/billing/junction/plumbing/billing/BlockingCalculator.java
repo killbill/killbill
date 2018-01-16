@@ -33,7 +33,6 @@ import java.util.concurrent.atomic.AtomicLong;
 import javax.annotation.Nullable;
 
 import org.joda.time.DateTime;
-import org.joda.time.Days;
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.catalog.api.Catalog;
@@ -51,10 +50,13 @@ import org.killbill.billing.subscription.api.SubscriptionBaseTransitionType;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Function;
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Ordering;
 import com.google.inject.Inject;
 
 public class BlockingCalculator {
@@ -62,35 +64,10 @@ public class BlockingCalculator {
     private static final AtomicLong globaltotalOrder = new AtomicLong();
 
     private final BlockingInternalApi blockingApi;
-    private final CatalogInternalApi catalogInternalApi;
-
-    protected static class DisabledDuration {
-
-        private final DateTime start;
-        private DateTime end;
-
-        public DisabledDuration(final DateTime start, final DateTime end) {
-            this.start = start;
-            this.end = end;
-        }
-
-        public DateTime getStart() {
-            return start;
-        }
-
-        public DateTime getEnd() {
-            return end;
-        }
-
-        public void setEnd(final DateTime end) {
-            this.end = end;
-        }
-    }
 
     @Inject
-    public BlockingCalculator(final BlockingInternalApi blockingApi, final CatalogInternalApi catalogInternalApi) {
+    public BlockingCalculator(final BlockingInternalApi blockingApi) {
         this.blockingApi = blockingApi;
-        this.catalogInternalApi = catalogInternalApi;
     }
 
     /**
@@ -98,7 +75,7 @@ public class BlockingCalculator {
      *
      * @param billingEvents the original list of billing events to update (without overdue events)
      */
-    public boolean insertBlockingEvents(final SortedSet<BillingEvent> billingEvents, final Set<UUID> skippedSubscriptions, final InternalTenantContext context) throws CatalogApiException {
+    public boolean insertBlockingEvents(final SortedSet<BillingEvent> billingEvents, final Set<UUID> skippedSubscriptions, final Catalog catalog, final InternalTenantContext context) throws CatalogApiException {
         if (billingEvents.size() <= 0) {
             return false;
         }
@@ -134,8 +111,13 @@ public class BlockingCalculator {
                 final List<BlockingState> aggregateSubscriptionBlockingEvents = getAggregateBlockingEventsPerSubscription(subscription.getEndDate(), subscriptionBlockingEvents, bundleBlockingEvents, accountBlockingEvents);
                 final List<DisabledDuration> accountBlockingDurations = createBlockingDurations(aggregateSubscriptionBlockingEvents);
 
-                billingEventsToAdd.addAll(createNewEvents(accountBlockingDurations, billingEvents, subscription, context));
-                billingEventsToRemove.addAll(eventsToRemove(accountBlockingDurations, billingEvents, subscription));
+                final SortedSet<BillingEvent> subscriptionBillingEvents = filter(billingEvents, subscription);
+
+                final SortedSet<BillingEvent> newEvents = createNewEvents(accountBlockingDurations, subscriptionBillingEvents, catalog, context);
+                billingEventsToAdd.addAll(newEvents);
+
+                final SortedSet<BillingEvent> removedEvents = eventsToRemove(accountBlockingDurations, subscriptionBillingEvents);
+                billingEventsToRemove.addAll(removedEvents);
             }
         }
 
@@ -183,14 +165,13 @@ public class BlockingCalculator {
     }
 
     protected SortedSet<BillingEvent> eventsToRemove(final List<DisabledDuration> disabledDuration,
-                                                     final SortedSet<BillingEvent> billingEvents, final SubscriptionBase subscription) {
+                                                     final SortedSet<BillingEvent> subscriptionBillingEvents) {
         final SortedSet<BillingEvent> result = new TreeSet<BillingEvent>();
 
-        final SortedSet<BillingEvent> filteredBillingEvents = filter(billingEvents, subscription);
         for (final DisabledDuration duration : disabledDuration) {
-            for (final BillingEvent event : filteredBillingEvents) {
+            for (final BillingEvent event : subscriptionBillingEvents) {
                 if (duration.getEnd() == null || event.getEffectiveDate().isBefore(duration.getEnd())) {
-                    if (event.getEffectiveDate().isAfter(duration.getStart())) { //between the pair
+                    if (!event.getEffectiveDate().isBefore(duration.getStart())) {
                         result.add(event);
                     }
                 } else { //after the last event of the pair no need to keep checking
@@ -201,21 +182,20 @@ public class BlockingCalculator {
         return result;
     }
 
-    protected SortedSet<BillingEvent> createNewEvents(final List<DisabledDuration> disabledDuration, final SortedSet<BillingEvent> billingEvents, final SubscriptionBase subscription, final InternalTenantContext context) throws CatalogApiException {
+    protected SortedSet<BillingEvent> createNewEvents(final List<DisabledDuration> disabledDuration, final SortedSet<BillingEvent> subscriptionBillingEvents, final Catalog catalog, final InternalTenantContext context) throws CatalogApiException {
 
         Preconditions.checkState(context.getAccountRecordId() != null);
 
         final SortedSet<BillingEvent> result = new TreeSet<BillingEvent>();
-        final Catalog catalog = catalogInternalApi.getFullCatalog(true, true, context);
 
         for (final DisabledDuration duration : disabledDuration) {
             // The first one before the blocked duration
-            final BillingEvent precedingInitialEvent = precedingBillingEventForSubscription(duration.getStart(), billingEvents, subscription);
+            final BillingEvent precedingInitialEvent = precedingBillingEventForSubscription(duration.getStart(), subscriptionBillingEvents);
             // The last one during of before the duration
-            final BillingEvent precedingFinalEvent = precedingBillingEventForSubscription(duration.getEnd(), billingEvents, subscription);
+            final BillingEvent precedingFinalEvent = precedingBillingEventForSubscription(duration.getEnd(), subscriptionBillingEvents);
 
             if (precedingInitialEvent != null) { // there is a preceding billing event
-                result.add(createNewDisableEvent(duration.getStart(), precedingInitialEvent, catalog, context));
+                result.add(createNewDisableEvent(duration.getStart(), precedingInitialEvent, catalog));
                 if (duration.getEnd() != null) { // no second event in the pair means they are still disabled (no re-enable)
                     result.add(createNewReenableEvent(duration.getEnd(), precedingFinalEvent, catalog, context));
                 }
@@ -227,43 +207,40 @@ public class BlockingCalculator {
         return result;
     }
 
-    protected BillingEvent precedingBillingEventForSubscription(final DateTime datetime, final SortedSet<BillingEvent> billingEvents, final SubscriptionBase subscription) {
-        if (datetime == null) { //second of a pair can be null if there's no re-enabling
+
+    protected BillingEvent precedingBillingEventForSubscription(final DateTime disabledDurationStart, final SortedSet<BillingEvent> subscriptionBillingEvents) {
+        if (disabledDurationStart == null) {
             return null;
         }
 
-        final SortedSet<BillingEvent> filteredBillingEvents = filter(billingEvents, subscription);
-        BillingEvent result = filteredBillingEvents.first();
-
-        if (datetime.isBefore(result.getEffectiveDate())) {
-            //This case can happen, for example, if we have an add on and the bundle goes into disabled before the add on is created
-            return null;
-        }
-
-        for (final BillingEvent event : filteredBillingEvents) {
-            if (!event.getEffectiveDate().isBefore(datetime)) { // found it its the previous event
-                return result;
-            } else { // still looking
-                result = event;
+        // We look for the first billingEvent strictly prior our disabledDurationStart or null if none
+        BillingEvent prev = null;
+        for (final BillingEvent event : subscriptionBillingEvents) {
+            if (!event.getEffectiveDate().isBefore(disabledDurationStart)) {
+                return prev;
+            } else {
+                prev = event;
             }
         }
-        return result;
+        return prev;
     }
+
 
     protected SortedSet<BillingEvent> filter(final SortedSet<BillingEvent> billingEvents, final SubscriptionBase subscription) {
         final SortedSet<BillingEvent> result = new TreeSet<BillingEvent>();
         for (final BillingEvent event : billingEvents) {
-            if (event.getSubscription() == subscription) {
+            if (event.getSubscription().getId().equals(subscription.getId())) {
                 result.add(event);
             }
         }
         return result;
     }
 
-    protected BillingEvent createNewDisableEvent(final DateTime odEventTime, final BillingEvent previousEvent, final Catalog catalog, final InternalTenantContext context) throws CatalogApiException {
+    protected BillingEvent createNewDisableEvent(final DateTime disabledDurationStart, final BillingEvent previousEvent, final Catalog catalog) throws CatalogApiException {
+
         final int billCycleDay = previousEvent.getBillCycleDayLocal();
         final SubscriptionBase subscription = previousEvent.getSubscription();
-        final DateTime effectiveDate = odEventTime;
+        final DateTime effectiveDate = disabledDurationStart;
         final PlanPhase planPhase = previousEvent.getPlanPhase();
         final Plan plan = previousEvent.getPlan();
 
@@ -320,55 +297,54 @@ public class BlockingCalculator {
     }
 
     // In ascending order
-    protected List<DisabledDuration> createBlockingDurations(final Iterable<BlockingState> overdueBundleEvents) {
-        final List<DisabledDuration> result = new ArrayList<BlockingCalculator.DisabledDuration>();
-        // Earliest blocking event
-        BlockingState first = null;
+    protected List<DisabledDuration> createBlockingDurations(final Iterable<BlockingState> inputBundleEvents) {
 
-        int blockedNesting = 0;
-        BlockingState lastOne = null;
-        for (final BlockingState e : overdueBundleEvents) {
-            lastOne = e;
-            if (e.isBlockBilling() && blockedNesting == 0) {
-                // First blocking event of contiguous series of blocking events
-                first = e;
-                blockedNesting++;
-            } else if (e.isBlockBilling() && blockedNesting > 0) {
-                // Nest blocking states
-                blockedNesting++;
-            } else if (!e.isBlockBilling() && blockedNesting > 0) {
-                blockedNesting--;
-                if (blockedNesting == 0) {
-                    // End of the interval
-                    addDisabledDuration(result, first, e);
-                    first = null;
+        final List<DisabledDuration> result = new ArrayList<DisabledDuration>();
+
+        final Set<String> services = ImmutableSet.copyOf(Iterables.transform(inputBundleEvents, new Function<BlockingState, String>() {
+            @Override
+            public String apply(final BlockingState input) {
+                return input.getService();
+            }
+        }));
+
+        final Map<String, BlockingStateService> svcBlockedMap = new HashMap<String, BlockingStateService>();
+        for (String svc : services) {
+            svcBlockedMap.put(svc, new BlockingStateService());
+        }
+
+        for (final BlockingState e : inputBundleEvents) {
+            svcBlockedMap.get(e.getService()).addBlockingState(e);
+        }
+
+        final Iterable<DisabledDuration> unorderedDisabledDuration = Iterables.concat(Iterables.transform(svcBlockedMap.values(), new Function<BlockingStateService, List<DisabledDuration>>() {
+            @Override
+            public List<DisabledDuration> apply(final BlockingStateService input) {
+                return input.build();
+            }
+        }));
+
+        final List<DisabledDuration> sortedDisabledDuration = Ordering.natural().sortedCopy(unorderedDisabledDuration);
+
+        DisabledDuration prevDuration = null;
+        for (DisabledDuration d : sortedDisabledDuration) {
+            // isDisjoint
+            if (prevDuration == null) {
+                prevDuration = d;
+            } else {
+                if (prevDuration.isDisjoint(d)) {
+                    result.add(prevDuration);
+                    prevDuration = d;
+                } else {
+                    prevDuration = DisabledDuration.mergeDuration(prevDuration, d);
                 }
             }
         }
-
-        if (first != null) { // found a transition to disabled with no terminating event
-            addDisabledDuration(result, first, lastOne.isBlockBilling() ? null : lastOne);
+        if (prevDuration != null) {
+            result.add(prevDuration);
         }
 
         return result;
-    }
-
-    private void addDisabledDuration(final List<DisabledDuration> result, final BlockingState firstBlocking, @Nullable final BlockingState firstNonBlocking) {
-        final DisabledDuration lastOne;
-        if (!result.isEmpty()) {
-            lastOne = result.get(result.size() - 1);
-        } else {
-            lastOne = null;
-        }
-
-        final DateTime startDate = firstBlocking.getEffectiveDate();
-        final DateTime endDate = firstNonBlocking == null ? null : firstNonBlocking.getEffectiveDate();
-        if (lastOne != null && lastOne.getEnd().compareTo(startDate) == 0) {
-            lastOne.setEnd(endDate);
-        } else if (endDate == null || Days.daysBetween(startDate, endDate).getDays() >= 1) {
-            // Don't disable for periods less than a day (see https://github.com/killbill/killbill/issues/267)
-            result.add(new DisabledDuration(startDate, endDate));
-        }
     }
 
     @VisibleForTesting

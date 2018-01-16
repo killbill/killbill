@@ -1,7 +1,9 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
+ * Copyright 2014-2017 Groupon, Inc
+ * Copyright 2014-2017 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -16,19 +18,23 @@
 
 package org.killbill.billing.subscription.api.user;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
+
+import javax.inject.Inject;
+
 import org.joda.time.DateTime;
 import org.joda.time.Interval;
 import org.joda.time.LocalDate;
 import org.killbill.billing.ErrorCode;
 import org.killbill.billing.api.TestApiListener.NextEvent;
-import org.killbill.billing.catalog.api.BillingActionPolicy;
 import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.catalog.api.Duration;
 import org.killbill.billing.catalog.api.PhaseType;
 import org.killbill.billing.catalog.api.Plan;
 import org.killbill.billing.catalog.api.PlanPhase;
 import org.killbill.billing.catalog.api.PlanPhaseSpecifier;
-import org.killbill.billing.catalog.api.PlanSpecifier;
 import org.killbill.billing.catalog.api.PriceListSet;
 import org.killbill.billing.catalog.api.ProductCategory;
 import org.killbill.billing.entitlement.api.Entitlement;
@@ -49,14 +55,8 @@ import org.skife.jdbi.v2.tweak.HandleCallback;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
-import javax.inject.Inject;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
-
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
-import static org.testng.Assert.assertNull;
 import static org.testng.Assert.assertTrue;
 import static org.testng.Assert.fail;
 
@@ -104,7 +104,7 @@ public class TestUserApiChangePlan extends SubscriptionTestSuiteWithEmbeddedDB {
 
             // CHANGE PLAN
             testListener.pushExpectedEvent(NextEvent.CHANGE);
-            subscription.changePlan(new PlanSpecifier(toProd, toTerm, toPlanSet), null, callContext);
+            subscription.changePlan(new PlanPhaseSpecifier(toProd, toTerm, toPlanSet), null, callContext);
             assertListenerStatus();
 
             // CHECK CHANGE PLAN
@@ -145,7 +145,7 @@ public class TestUserApiChangePlan extends SubscriptionTestSuiteWithEmbeddedDB {
 
         // RE READ SUBSCRIPTION + CHANGE PLAN
         subscription = (DefaultSubscriptionBase) subscriptionInternalApi.getSubscriptionFromId(subscription.getId(), internalCallContext);
-        subscription.changePlan(new PlanSpecifier(toProd, toTerm, toPlanSet), null, callContext);
+        subscription.changePlan(new PlanPhaseSpecifier(toProd, toTerm, toPlanSet), null, callContext);
         assertListenerStatus();
 
         // CHECK CHANGE PLAN
@@ -188,7 +188,7 @@ public class TestUserApiChangePlan extends SubscriptionTestSuiteWithEmbeddedDB {
         clock.addDeltaFromReality(it.toDurationMillis());
 
         // CHANGE PLAN IMM
-        subscription.changePlan(new PlanSpecifier(toProd, toTerm, toPlanSet), null, callContext);
+        subscription.changePlan(new PlanPhaseSpecifier(toProd, toTerm, toPlanSet), null, callContext);
         checkChangePlan(subscription, toProd, ProductCategory.BASE, toTerm, PhaseType.TRIAL);
 
         assertListenerStatus();
@@ -242,7 +242,7 @@ public class TestUserApiChangePlan extends SubscriptionTestSuiteWithEmbeddedDB {
 
         // CHANGE PLAN
         currentTime = clock.getUTCNow();
-        subscription.changePlan(new PlanSpecifier(toProd, toTerm, toPlanSet), null, callContext);
+        subscription.changePlan(new PlanPhaseSpecifier(toProd, toTerm, toPlanSet), null, callContext);
 
         checkChangePlan(subscription, fromProd, ProductCategory.BASE, fromTerm, PhaseType.EVERGREEN);
 
@@ -308,12 +308,12 @@ public class TestUserApiChangePlan extends SubscriptionTestSuiteWithEmbeddedDB {
         subscription = (DefaultSubscriptionBase) subscriptionInternalApi.getSubscriptionFromId(subscription.getId(), internalCallContext);
 
         // CHANGE EOT
-        subscription.changePlan(new PlanSpecifier("Pistol", BillingPeriod.MONTHLY, "gunclubDiscount"), null, callContext);
+        subscription.changePlan(new PlanPhaseSpecifier("Pistol", BillingPeriod.MONTHLY, "gunclubDiscount"), null, callContext);
         assertListenerStatus();
 
         // CHANGE
         testListener.pushExpectedEvent(NextEvent.CHANGE);
-        subscription.changePlan(new PlanSpecifier("Assault-Rifle", BillingPeriod.ANNUAL, "gunclubDiscount"), null, callContext);
+        subscription.changePlan(new PlanPhaseSpecifier("Assault-Rifle", BillingPeriod.ANNUAL, "gunclubDiscount"), null, callContext);
         assertListenerStatus();
 
         final Plan currentPlan = subscription.getCurrentPlan();
@@ -350,11 +350,11 @@ public class TestUserApiChangePlan extends SubscriptionTestSuiteWithEmbeddedDB {
         subscription = (DefaultSubscriptionBase) subscriptionInternalApi.getSubscriptionFromId(subscription.getId(), internalCallContext);
 
         // CHANGE EOT
-        subscription.changePlan(new PlanSpecifier("Shotgun", BillingPeriod.MONTHLY, "gunclubDiscount"), null, callContext);
+        subscription.changePlan(new PlanPhaseSpecifier("Shotgun", BillingPeriod.MONTHLY, "gunclubDiscount"), null, callContext);
         assertListenerStatus();
 
         // CHANGE EOT
-        subscription.changePlan(new PlanSpecifier("Pistol", BillingPeriod.ANNUAL, "gunclubDiscount"), null, callContext);
+        subscription.changePlan(new PlanPhaseSpecifier("Pistol", BillingPeriod.ANNUAL, "gunclubDiscount"), null, callContext);
         assertListenerStatus();
 
         // CHECK NO CHANGE OCCURED YET
@@ -416,7 +416,7 @@ public class TestUserApiChangePlan extends SubscriptionTestSuiteWithEmbeddedDB {
 
         // CHANGE IMMEDIATE TO A 3 PHASES PLAN
         testListener.pushExpectedEvent(NextEvent.CHANGE);
-        subscription.changePlan(new PlanSpecifier("Assault-Rifle", BillingPeriod.ANNUAL, "gunclubDiscount"), null, callContext);
+        subscription.changePlan(new PlanPhaseSpecifier("Assault-Rifle", BillingPeriod.ANNUAL, "gunclubDiscount"), null, callContext);
         assertListenerStatus();
 
         // CHECK EVERYTHING LOOKS CORRECT
@@ -470,13 +470,12 @@ public class TestUserApiChangePlan extends SubscriptionTestSuiteWithEmbeddedDB {
         DefaultSubscriptionBase aoSubscription = testUtil.createSubscription(bundle, aoProduct, aoTerm, aoPriceList);
 
         try {
-            aoSubscription.changePlanWithDate(new PlanSpecifier(baseProduct, baseTerm, basePriceList), null, clock.getUTCNow(), callContext);
+            aoSubscription.changePlanWithDate(new PlanPhaseSpecifier(baseProduct, baseTerm, basePriceList), null, clock.getUTCNow(), callContext);
             Assert.fail("Should not allow plan change across product type");
         } catch (final SubscriptionBaseApiException e) {
             Assert.assertEquals(e.getCode(), ErrorCode.SUB_CHANGE_INVALID.getCode());
         }
     }
-
 
     @Test(groups = "slow")
     public void testChangePlanOnPendingSubscription() throws SubscriptionBaseApiException {
@@ -493,9 +492,8 @@ public class TestUserApiChangePlan extends SubscriptionTestSuiteWithEmbeddedDB {
 
         final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("Pistol", baseTerm, basePriceList, null);
 
-
         // First try with default api (no date -> IMM) => Call should fail because subscription is PENDING
-        final DryRunArguments dryRunArguments1  = testUtil.createDryRunArguments(subscription.getId(), subscription.getBundleId(), spec, null, SubscriptionEventType.CHANGE, null);
+        final DryRunArguments dryRunArguments1 = testUtil.createDryRunArguments(subscription.getId(), subscription.getBundleId(), spec, null, SubscriptionEventType.CHANGE, null);
         final List<SubscriptionBase> result1 = subscriptionInternalApi.getSubscriptionsForBundle(bundle.getId(), dryRunArguments1, internalCallContext);
 
         // Check we are seeing the right PENDING transition (pistol-monthly), not the START but the CHANGE on the same date
@@ -504,7 +502,7 @@ public class TestUserApiChangePlan extends SubscriptionTestSuiteWithEmbeddedDB {
 
         // Second try with date prior to startDate => Call should fail because subscription is PENDING
         try {
-            final DryRunArguments dryRunArguments2  = testUtil.createDryRunArguments(subscription.getId(), subscription.getBundleId(), spec, new LocalDate(startDate.minusDays(1)), SubscriptionEventType.CHANGE, null);
+            final DryRunArguments dryRunArguments2 = testUtil.createDryRunArguments(subscription.getId(), subscription.getBundleId(), spec, new LocalDate(startDate.minusDays(1)), SubscriptionEventType.CHANGE, null);
             subscriptionInternalApi.getSubscriptionsForBundle(bundle.getId(), dryRunArguments2, internalCallContext);
             fail("Change plan should have failed : subscription PENDING");
         } catch (final SubscriptionBaseApiException e) {
@@ -518,11 +516,10 @@ public class TestUserApiChangePlan extends SubscriptionTestSuiteWithEmbeddedDB {
         }
 
         // Third try with date equals to startDate  Call should succeed, but no event because action in future
-        final DryRunArguments dryRunArguments3  = testUtil.createDryRunArguments(subscription.getId(), subscription.getBundleId(), spec, internalCallContext.toLocalDate(startDate), SubscriptionEventType.CHANGE, null);
+        final DryRunArguments dryRunArguments3 = testUtil.createDryRunArguments(subscription.getId(), subscription.getBundleId(), spec, internalCallContext.toLocalDate(startDate), SubscriptionEventType.CHANGE, null);
         final List<SubscriptionBase> result2 = subscriptionInternalApi.getSubscriptionsForBundle(bundle.getId(), dryRunArguments3, internalCallContext);
         // Check we are seeing the right PENDING transition (pistol-monthly), not the START but the CHANGE on the same date
         assertEquals(((DefaultSubscriptionBase) result2.get(0)).getCurrentOrPendingPlan().getName(), "pistol-monthly");
-
 
         // To spice up the test, we insert manually an additional CHANGE event on the exact same dateas the CREATE to verify that code will also invalidate such event when doing the changePlanXX
 
@@ -540,7 +537,7 @@ public class TestUserApiChangePlan extends SubscriptionTestSuiteWithEmbeddedDB {
             }
         });
 
-        final DefaultSubscriptionBase refreshed1 =  (DefaultSubscriptionBase) subscriptionInternalApi.getSubscriptionFromId(subscription.getId(), internalCallContext);
+        final DefaultSubscriptionBase refreshed1 = (DefaultSubscriptionBase) subscriptionInternalApi.getSubscriptionFromId(subscription.getId(), internalCallContext);
         assertEquals(refreshed1.getEvents().size(), subscription.getEvents().size() + 1);
 
         subscription.changePlanWithDate(spec, null, startDate, callContext);
@@ -559,4 +556,80 @@ public class TestUserApiChangePlan extends SubscriptionTestSuiteWithEmbeddedDB {
         assertEquals(subscription2.getEvents().size(), subscription.getEvents().size());
     }
 
+    @Test(groups = "slow")
+    public void testChangePlanOnCreate() throws SubscriptionBaseApiException {
+        final DefaultSubscriptionBase subscription = testUtil.createSubscription(bundle, "Shotgun", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME);
+
+        // CHANGE PLAN IMMEDIATELY: the CHANGE event will be transformed into a CREATE
+        testListener.pushExpectedEvent(NextEvent.CREATE);
+        subscription.changePlanWithDate(new PlanPhaseSpecifier("Pistol", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME), null, subscription.getStartDate(), callContext);
+        assertListenerStatus();
+
+        checkChangePlan(subscription, "Pistol", ProductCategory.BASE, BillingPeriod.MONTHLY, PhaseType.TRIAL);
+
+        final SubscriptionBase refreshedSubscription = subscriptionInternalApi.getSubscriptionFromId(subscription.getId(), internalCallContext);
+        assertEquals(refreshedSubscription.getAllTransitions().size(), 2);
+        assertEquals(refreshedSubscription.getAllTransitions().get(0).getTransitionType(), SubscriptionBaseTransitionType.CREATE);
+        assertEquals(refreshedSubscription.getAllTransitions().get(1).getTransitionType(), SubscriptionBaseTransitionType.PHASE);
+    }
+
+    @Test(groups = "slow")
+    public void testChangePlanRightAfterCreate() throws SubscriptionBaseApiException {
+        final DefaultSubscriptionBase subscription = testUtil.createSubscription(bundle, "Shotgun", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME);
+
+        clock.setTime(clock.getUTCNow().plusSeconds(1));
+
+        // CHANGE PLAN ALMOST IMMEDIATELY
+        testListener.pushExpectedEvent(NextEvent.CHANGE);
+        subscription.changePlan(new PlanPhaseSpecifier("Pistol", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME), null, callContext);
+        assertListenerStatus();
+
+        checkChangePlan(subscription, "Pistol", ProductCategory.BASE, BillingPeriod.MONTHLY, PhaseType.TRIAL);
+
+        final SubscriptionBase refreshedSubscription = subscriptionInternalApi.getSubscriptionFromId(subscription.getId(), internalCallContext);
+        assertEquals(refreshedSubscription.getAllTransitions().size(), 3);
+        assertEquals(refreshedSubscription.getAllTransitions().get(0).getTransitionType(), SubscriptionBaseTransitionType.CREATE);
+        assertEquals(refreshedSubscription.getAllTransitions().get(1).getTransitionType(), SubscriptionBaseTransitionType.CHANGE);
+        assertEquals(refreshedSubscription.getAllTransitions().get(2).getTransitionType(), SubscriptionBaseTransitionType.PHASE);
+    }
+
+    @Test(groups = "slow")
+    public void testUndoChangePlan() throws SubscriptionBaseApiException {
+
+        final DefaultSubscriptionBase subscription = testUtil.createSubscription(bundle, "Shotgun", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME);
+
+        clock.setTime(clock.getUTCNow().plusSeconds(1));
+
+        // Change plan in the future
+        final DateTime targetDate = clock.getUTCNow().plusDays(3);
+        subscription.changePlanWithDate(new PlanPhaseSpecifier("Pistol", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME), null, targetDate, callContext);assertListenerStatus();
+
+        DefaultSubscriptionBase refreshedSubscription = (DefaultSubscriptionBase) subscriptionInternalApi.getSubscriptionFromId(subscription.getId(), internalCallContext);
+        assertEquals(refreshedSubscription.getAllTransitions().size(), 3);
+        assertEquals(refreshedSubscription.getAllTransitions().get(0).getTransitionType(), SubscriptionBaseTransitionType.CREATE);
+        assertEquals(refreshedSubscription.getAllTransitions().get(1).getTransitionType(), SubscriptionBaseTransitionType.CHANGE);
+        assertEquals(refreshedSubscription.getAllTransitions().get(2).getTransitionType(), SubscriptionBaseTransitionType.PHASE);
+
+        clock.addDays(1);
+
+        testListener.pushExpectedEvent(NextEvent.UNDO_CHANGE);
+        subscription.undoChangePlan(callContext);
+        assertListenerStatus();
+
+        // No CHANGE_PLAN
+        clock.addDays(3);
+        assertListenerStatus();
+
+        // Verify PHASE event for Shotgun is active
+        testListener.pushExpectedEvent(NextEvent.PHASE);
+        clock.addDays(26);
+        assertListenerStatus();
+
+
+        refreshedSubscription = (DefaultSubscriptionBase) subscriptionInternalApi.getSubscriptionFromId(subscription.getId(), internalCallContext);
+        assertEquals(refreshedSubscription.getAllTransitions().size(), 2);
+        assertEquals(refreshedSubscription.getAllTransitions().get(0).getTransitionType(), SubscriptionBaseTransitionType.CREATE);
+        assertEquals(refreshedSubscription.getAllTransitions().get(1).getTransitionType(), SubscriptionBaseTransitionType.PHASE);
+
+    }
 }

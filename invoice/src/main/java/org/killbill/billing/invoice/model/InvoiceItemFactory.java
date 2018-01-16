@@ -80,7 +80,7 @@ public class InvoiceItemFactory {
         final InvoiceItem item;
         switch (type) {
             case EXTERNAL_CHARGE:
-                item = new ExternalChargeInvoiceItem(id, createdDate, invoiceId, accountId, bundleId, description, startDate, amount, currency);
+                item = new ExternalChargeInvoiceItem(id, createdDate, invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, prettyPlanName, prettyPlanPhaseName, description, startDate, endDate, amount, rate, currency, linkedItemId);
                 break;
             case FIXED:
                 item = new FixedPriceInvoiceItem(id, createdDate, invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, prettyPlanName, prettyPlanPhaseName, description, startDate, amount, currency);

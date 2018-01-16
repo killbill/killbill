@@ -110,7 +110,7 @@ public class DefaultEntitlementApiBase {
         this.eventsStreamBuilder = eventsStreamBuilder;
         this.entitlementUtils = entitlementUtils;
         this.securityApi = securityApi;
-        this.dateHelper = new EntitlementDateHelper(clock);
+        this.dateHelper = new EntitlementDateHelper();
     }
 
     public AccountEntitlements getAllEntitlementsForAccount(final InternalTenantContext tenantContext) throws EntitlementApiException {
@@ -209,7 +209,8 @@ public class DefaultEntitlementApiBase {
 
     private UUID blockUnblockBundle(final UUID bundleId, final String stateName, final String serviceName, @Nullable final LocalDate localEffectiveDate, boolean blockBilling, boolean blockEntitlement, boolean blockChange, @Nullable final SubscriptionBase inputBaseSubscription, final InternalCallContext internalCallContext)
             throws EntitlementApiException {
-        final DateTime effectiveDate = dateHelper.fromLocalDateAndReferenceTime(localEffectiveDate, internalCallContext);
+        final DateTime now = clock.getUTCNow();
+        final DateTime effectiveDate = dateHelper.fromLocalDateAndReferenceTime(localEffectiveDate, now, internalCallContext);
         final BlockingState state = new DefaultBlockingState(bundleId, BlockingStateType.SUBSCRIPTION_BUNDLE, stateName, serviceName, blockChange, blockEntitlement, blockBilling, effectiveDate);
         entitlementUtils.setBlockingStatesAndPostBlockingTransitionEvent(ImmutableList.<BlockingState>of(state), bundleId, internalCallContext);
         return state.getId();

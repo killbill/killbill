@@ -16,10 +16,12 @@
 
 package org.killbill.billing.util.tag.dao;
 
+import java.io.ObjectOutput;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
+import org.killbill.billing.ObjectType;
 import org.testng.Assert;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
@@ -42,9 +44,10 @@ public class TestDefaultTagDefinitionDao extends UtilTestSuiteWithEmbeddedDB {
 
         // Make sure we can create a tag definition
         eventsListener.pushExpectedEvent(NextEvent.TAG_DEFINITION);
-        final TagDefinitionModelDao createdTagDefinition = tagDefinitionDao.create(definitionName, description, internalCallContext);
+        final TagDefinitionModelDao createdTagDefinition = tagDefinitionDao.create(definitionName, description, ObjectType.ACCOUNT.name(), internalCallContext);
         Assert.assertEquals(createdTagDefinition.getName(), definitionName);
         Assert.assertEquals(createdTagDefinition.getDescription(), description);
+        Assert.assertEquals(createdTagDefinition.getApplicableObjectTypes(), ObjectType.ACCOUNT.name());
         assertListenerStatus();
 
         // Make sure we can retrieve it via the DAO

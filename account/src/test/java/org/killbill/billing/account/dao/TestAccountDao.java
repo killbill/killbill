@@ -65,7 +65,7 @@ public class TestAccountDao extends AccountTestSuiteWithEmbeddedDB {
         final String email = UUID.randomUUID().toString();
         final String name = UUID.randomUUID().toString();
         final AccountData accountData = new DefaultMutableAccountData(null, email, name, 0, null, null, false,
-                                                                      0, null, null, null, null,
+                                                                      0, null, clock.getUTCNow(), null, null, null,
                                                                       null, null, null, null, null,
                                                                       null, null, null, false, true);
         final AccountModelDao account = new AccountModelDao(UUID.randomUUID(), accountData);
@@ -184,7 +184,7 @@ public class TestAccountDao extends AccountTestSuiteWithEmbeddedDB {
     @Test(groups = "slow", description = "Test Account DAO: tags")
     public void testTags() throws TagApiException, TagDefinitionApiException {
         final AccountModelDao account = createTestAccount();
-        final TagDefinitionModelDao tagDefinition = tagDefinitionDao.create(UUID.randomUUID().toString().substring(0, 4), UUID.randomUUID().toString(), internalCallContext);
+        final TagDefinitionModelDao tagDefinition = tagDefinitionDao.create(UUID.randomUUID().toString().substring(0, 4), UUID.randomUUID().toString(), ObjectType.ACCOUNT.name(), internalCallContext);
         final Tag tag = new DescriptiveTag(tagDefinition.getId(), ObjectType.ACCOUNT, account.getId(), internalCallContext.getCreatedDate());
         tagDao.create(new TagModelDao(tag), internalCallContext);
 

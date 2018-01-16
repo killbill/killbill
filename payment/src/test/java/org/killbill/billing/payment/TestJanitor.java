@@ -115,6 +115,11 @@ public class TestJanitor extends PaymentTestSuiteWithEmbeddedDB {
                               );
     }
 
+    @Override
+    protected void assertListenerStatus() {
+        testListener.assertListenerStatus();
+    }
+
     @BeforeClass(groups = "slow")
     protected void beforeClass() throws Exception {
         super.beforeClass();
@@ -133,15 +138,11 @@ public class TestJanitor extends PaymentTestSuiteWithEmbeddedDB {
         eventBus.register(testListener);
         mockPaymentProviderPlugin.clear();
         account = testHelper.createTestAccount("bobo@gmail.com", true);
-
-        testListener.assertListenerStatus();
     }
 
     @AfterMethod(groups = "slow")
     public void afterMethod() throws Exception {
         retryService.stop();
-
-        testListener.assertListenerStatus();
 
         eventBus.unregister(handler);
         eventBus.unregister(testListener);
@@ -175,7 +176,7 @@ public class TestJanitor extends PaymentTestSuiteWithEmbeddedDB {
                                                             Currency.USD));
 
         testListener.pushExpectedEvent(NextEvent.PAYMENT);
-        final Payment payment = paymentApi.createPurchaseWithPaymentControl(account, account.getPaymentMethodId(), null, requestedAmount, Currency.USD, paymentExternalKey, transactionExternalKey,
+        final Payment payment = paymentApi.createPurchaseWithPaymentControl(account, account.getPaymentMethodId(), null, requestedAmount, Currency.USD, null, paymentExternalKey, transactionExternalKey,
                                                                             createPropertiesForInvoice(invoice), INVOICE_PAYMENT, callContext);
         testListener.assertListenerStatus();
         assertEquals(payment.getTransactions().size(), 1);
@@ -231,7 +232,7 @@ public class TestJanitor extends PaymentTestSuiteWithEmbeddedDB {
         invoice.addInvoiceItem(invoiceItem);
 
         testListener.pushExpectedEvent(NextEvent.PAYMENT);
-        final Payment payment = paymentApi.createPurchaseWithPaymentControl(account, account.getPaymentMethodId(), null, requestedAmount, Currency.USD, paymentExternalKey, transactionExternalKey,
+        final Payment payment = paymentApi.createPurchaseWithPaymentControl(account, account.getPaymentMethodId(), null, requestedAmount, Currency.USD, null, paymentExternalKey, transactionExternalKey,
                                                                             createPropertiesForInvoice(invoice), INVOICE_PAYMENT, callContext);
         testListener.assertListenerStatus();
 
@@ -242,7 +243,7 @@ public class TestJanitor extends PaymentTestSuiteWithEmbeddedDB {
         refundProperties.add(refundIdsProp);
 
         testListener.pushExpectedEvent(NextEvent.PAYMENT);
-        final Payment payment2 = paymentApi.createRefundWithPaymentControl(account, payment.getId(), null, Currency.USD, transactionExternalKey2,
+        final Payment payment2 = paymentApi.createRefundWithPaymentControl(account, payment.getId(), null, Currency.USD, null, transactionExternalKey2,
                                                                            refundProperties, INVOICE_PAYMENT, callContext);
         testListener.assertListenerStatus();
 
@@ -280,7 +281,7 @@ public class TestJanitor extends PaymentTestSuiteWithEmbeddedDB {
         final String transactionExternalKey = "lkjdsf";
 
         testListener.pushExpectedEvent(NextEvent.PAYMENT);
-        final Payment payment = paymentApi.createAuthorization(account, account.getPaymentMethodId(), null, requestedAmount, account.getCurrency(), paymentExternalKey,
+        final Payment payment = paymentApi.createAuthorization(account, account.getPaymentMethodId(), null, requestedAmount, account.getCurrency(), null, paymentExternalKey,
                                                                transactionExternalKey, ImmutableList.<PluginProperty>of(), callContext);
         testListener.assertListenerStatus();
 
@@ -312,7 +313,7 @@ public class TestJanitor extends PaymentTestSuiteWithEmbeddedDB {
         // Make sure the state as seen by the plugin will be in PaymentPluginStatus.ERROR, which will be returned later to Janitor
         mockPaymentProviderPlugin.makeNextPaymentFailWithError();
         testListener.pushExpectedEvent(NextEvent.PAYMENT_ERROR);
-        final Payment payment = paymentApi.createAuthorization(account, account.getPaymentMethodId(), null, requestedAmount, account.getCurrency(), paymentExternalKey,
+        final Payment payment = paymentApi.createAuthorization(account, account.getPaymentMethodId(), null, requestedAmount, account.getCurrency(), null, paymentExternalKey,
                                                                transactionExternalKey, ImmutableList.<PluginProperty>of(), callContext);
         testListener.assertListenerStatus();
 
@@ -354,7 +355,7 @@ public class TestJanitor extends PaymentTestSuiteWithEmbeddedDB {
         mockPaymentProviderPlugin.makeNextPaymentFailWithException();
         try {
             testListener.pushExpectedEvent(NextEvent.PAYMENT_PLUGIN_ERROR);
-            paymentApi.createAuthorization(account, account.getPaymentMethodId(), null, requestedAmount, account.getCurrency(), paymentExternalKey,
+            paymentApi.createAuthorization(account, account.getPaymentMethodId(), null, requestedAmount, account.getCurrency(), null, paymentExternalKey,
                                            transactionExternalKey, ImmutableList.<PluginProperty>of(), callContext);
         } catch (PaymentApiException ignore) {
             testListener.assertListenerStatus();
@@ -390,7 +391,7 @@ public class TestJanitor extends PaymentTestSuiteWithEmbeddedDB {
         final String transactionExternalKey = "4jhjj2";
 
         testListener.pushExpectedEvent(NextEvent.PAYMENT);
-        final Payment payment = paymentApi.createAuthorization(account, account.getPaymentMethodId(), null, requestedAmount, account.getCurrency(), paymentExternalKey,
+        final Payment payment = paymentApi.createAuthorization(account, account.getPaymentMethodId(), null, requestedAmount, account.getCurrency(), null, paymentExternalKey,
                                                                transactionExternalKey, ImmutableList.<PluginProperty>of(), callContext);
         testListener.assertListenerStatus();
 
@@ -421,7 +422,7 @@ public class TestJanitor extends PaymentTestSuiteWithEmbeddedDB {
         final String transactionExternalKey = "hoho!";
 
         testListener.pushExpectedEvent(NextEvent.PAYMENT);
-        final Payment payment = paymentApi.createAuthorization(account, account.getPaymentMethodId(), null, requestedAmount, account.getCurrency(), paymentExternalKey,
+        final Payment payment = paymentApi.createAuthorization(account, account.getPaymentMethodId(), null, requestedAmount, account.getCurrency(), null, paymentExternalKey,
                                                                transactionExternalKey, ImmutableList.<PluginProperty>of(), callContext);
         testListener.assertListenerStatus();
 
@@ -525,7 +526,7 @@ public class TestJanitor extends PaymentTestSuiteWithEmbeddedDB {
 
     private int getPendingNotificationCnt(final InternalCallContext internalCallContext) {
         try {
-            return Iterables.<NotificationEventWithMetadata>size(notificationQueueService.getNotificationQueue(DefaultPaymentService.SERVICE_NAME, Janitor.QUEUE_NAME).getFutureOrInProcessingNotificationForSearchKeys(internalCallContext.getAccountRecordId(), internalCallContext.getTenantRecordId()));
+            return Iterables.size(notificationQueueService.getNotificationQueue(DefaultPaymentService.SERVICE_NAME, Janitor.QUEUE_NAME).getFutureOrInProcessingNotificationForSearchKeys(internalCallContext.getAccountRecordId(), internalCallContext.getTenantRecordId()));
         } catch (final Exception e) {
             fail("Test failed ", e);
         }

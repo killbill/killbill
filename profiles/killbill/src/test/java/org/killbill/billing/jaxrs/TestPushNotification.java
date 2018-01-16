@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014-2015 Groupon, Inc
- * Copyright 2014-2015 The Billing Project, LLC
+ * Copyright 2014-2017 Groupon, Inc
+ * Copyright 2014-2017 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -34,6 +34,7 @@ import org.eclipse.jetty.servlet.ServletHolder;
 import org.killbill.billing.client.KillBillClientException;
 import org.killbill.billing.client.model.TenantKey;
 import org.killbill.billing.jaxrs.json.NotificationJson;
+import org.killbill.billing.notification.plugin.api.ExtBusEventType;
 import org.killbill.billing.server.notifications.PushNotificationListener;
 import org.killbill.billing.tenant.api.TenantKV;
 import org.slf4j.Logger;
@@ -74,8 +75,16 @@ public class TestPushNotification extends TestJaxrsBase {
         callbackServer.stopServer();
     }
 
+    private void assertAllCallbacksCompleted() throws InterruptedException {
+        final boolean waitForCallbacksToComplete = waitForCallbacksToComplete();
+        if (!waitForCallbacksToComplete) {
+            printThreadDump();
+        }
+        Assert.assertTrue(waitForCallbacksToComplete, "Fail to see push notification callbacks");
+    }
+
     private boolean waitForCallbacksToComplete() throws InterruptedException {
-        long remainingMs = 30000;
+        long remainingMs = DEFAULT_REQUEST_TIMEOUT_SEC * 1000;
         do {
             if (callbackCompleted) {
                 break;
@@ -107,10 +116,7 @@ public class TestPushNotification extends TestJaxrsBase {
         // Create account to trigger a push notification
         createAccount();
 
-        final boolean success = waitForCallbacksToComplete();
-        if (!success) {
-            Assert.fail("Fail to see push notification callbacks after 5 sec");
-        }
+        assertAllCallbacksCompleted();
 
         if (callbackCompletedWithError) {
             Assert.fail("Assertion during callback failed...");
@@ -136,7 +142,6 @@ public class TestPushNotification extends TestJaxrsBase {
         final TenantKey result0 = killBillClient.registerCallbackNotificationForTenant(callback, requestOptions);
 
         Assert.assertTrue(waitForCallbacksToComplete());
-        Assert.assertTrue(callbackCompletedWithError); // expected true because is not an ACCOUNT_CREATION event
 
         Assert.assertEquals(result0.getKey(), TenantKV.TenantKey.PUSH_NOTIFICATION_CB.toString());
         Assert.assertEquals(result0.getValues().size(), 1);
@@ -167,7 +172,7 @@ public class TestPushNotification extends TestJaxrsBase {
         // Create account to trigger a push notification
         createAccount();
 
-        Assert.assertTrue(waitForCallbacksToComplete());
+        assertAllCallbacksCompleted();
         Assert.assertTrue(callbackCompletedWithError);
 
         resetCallbackStatusProperties();
@@ -175,7 +180,7 @@ public class TestPushNotification extends TestJaxrsBase {
         // move clock 15 minutes and get 1st retry
         clock.addDeltaFromReality(900000);
 
-        Assert.assertTrue(waitForCallbacksToComplete());
+        assertAllCallbacksCompleted();
         Assert.assertTrue(callbackCompletedWithError);
 
         resetCallbackStatusProperties();
@@ -183,7 +188,7 @@ public class TestPushNotification extends TestJaxrsBase {
         // move clock an hour and get 2nd retry
         clock.addDeltaFromReality(3600000);
 
-        Assert.assertTrue(waitForCallbacksToComplete());
+        assertAllCallbacksCompleted();
         Assert.assertTrue(callbackCompletedWithError);
 
         resetCallbackStatusProperties();
@@ -194,7 +199,7 @@ public class TestPushNotification extends TestJaxrsBase {
         // move clock a day, get 3rd retry and wait for a success push notification
         clock.addDays(1);
 
-        Assert.assertTrue(waitForCallbacksToComplete());
+        assertAllCallbacksCompleted();
         Assert.assertFalse(callbackCompletedWithError);
 
         unregisterTenantForCallback(callback);
@@ -221,7 +226,7 @@ public class TestPushNotification extends TestJaxrsBase {
         // Create account to trigger a push notification
         createAccount();
 
-        Assert.assertTrue(waitForCallbacksToComplete());
+        assertAllCallbacksCompleted();
         Assert.assertTrue(callbackCompletedWithError);
 
         resetCallbackStatusProperties();
@@ -229,7 +234,7 @@ public class TestPushNotification extends TestJaxrsBase {
         // move clock 15 minutes and get 1st retry
         clock.addDeltaFromReality(900000);
 
-        Assert.assertTrue(waitForCallbacksToComplete());
+        assertAllCallbacksCompleted();
         Assert.assertTrue(callbackCompletedWithError);
 
         resetCallbackStatusProperties();
@@ -237,7 +242,7 @@ public class TestPushNotification extends TestJaxrsBase {
         // move clock an hour and get 2nd retry
         clock.addDeltaFromReality(3600000);
 
-        Assert.assertTrue(waitForCallbacksToComplete());
+        assertAllCallbacksCompleted();
         Assert.assertTrue(callbackCompletedWithError);
 
         resetCallbackStatusProperties();
@@ -245,7 +250,7 @@ public class TestPushNotification extends TestJaxrsBase {
         // move clock a day and get 3rd retry
         clock.addDays(1);
 
-        Assert.assertTrue(waitForCallbacksToComplete());
+        assertAllCallbacksCompleted();
         Assert.assertTrue(callbackCompletedWithError);
 
         resetCallbackStatusProperties();
@@ -253,7 +258,7 @@ public class TestPushNotification extends TestJaxrsBase {
         // move clock a day and get 4rd retry
         clock.addDays(2);
 
-        Assert.assertTrue(waitForCallbacksToComplete());
+        assertAllCallbacksCompleted();
         Assert.assertTrue(callbackCompletedWithError);
         resetCallbackStatusProperties();
 
@@ -316,14 +321,12 @@ public class TestPushNotification extends TestJaxrsBase {
         public CallmebackServlet(final TestPushNotification test) {
             this.test = test;
             this.receivedCalls = new AtomicInteger(0);
-            this.withError = false;
         }
 
         @Override
         protected void doPost(final HttpServletRequest request, final HttpServletResponse response) throws ServletException, IOException {
             final int current = receivedCalls.incrementAndGet();
             final String body = CharStreams.toString(new InputStreamReader(request.getInputStream(), "UTF-8"));
-            withError = false;
 
             log.info("CallmebackServlet received {} calls , current = {} at {}", current, body, getClock().getUTCNow());
 
@@ -338,22 +341,31 @@ public class TestPushNotification extends TestJaxrsBase {
 
             log.info("Got body {}", body);
 
-            try {
-                final NotificationJson notification = objectMapper.readValue(body, NotificationJson.class);
-                Assert.assertEquals(notification.getEventType(), "ACCOUNT_CREATION");
-                Assert.assertEquals(notification.getObjectType(), "ACCOUNT");
-                Assert.assertNotNull(notification.getObjectId());
-                Assert.assertNotNull(notification.getAccountId());
-                Assert.assertEquals(notification.getObjectId(), notification.getAccountId());
+            final NotificationJson notification = objectMapper.readValue(body, NotificationJson.class);
 
-                test.retrieveAccountWithAsserts(notification.getObjectId());
-
-                Assert.assertEquals(request.getHeader(PushNotificationListener.HTTP_HEADER_CONTENT_TYPE), PushNotificationListener.CONTENT_TYPE_JSON);
-            } catch (final AssertionError e) {
-                withError = true;
+            final ExtBusEventType type = ExtBusEventType.valueOf(notification.getEventType());
+            switch (type) {
+                case TENANT_CONFIG_CHANGE:
+                    Assert.assertEquals(notification.getEventType(), "TENANT_CONFIG_CHANGE");
+                    Assert.assertEquals(notification.getObjectType(), "TENANT_KVS");
+                    Assert.assertNotNull(notification.getObjectId());
+                    Assert.assertNull(notification.getAccountId());
+                    Assert.assertNotNull(notification.getMetaData());
+                    Assert.assertEquals(notification.getMetaData(), "PUSH_NOTIFICATION_CB");
+                    break;
+                case ACCOUNT_CREATION:
+                    Assert.assertEquals(notification.getEventType(), "ACCOUNT_CREATION");
+                    Assert.assertEquals(notification.getObjectType(), "ACCOUNT");
+                    Assert.assertNotNull(notification.getObjectId());
+                    Assert.assertNotNull(notification.getAccountId());
+                    Assert.assertEquals(notification.getObjectId(), notification.getAccountId());
+                    break;
             }
 
-            stopServerWhenComplete(current, withError);
+            test.retrieveAccountWithAsserts(notification.getObjectId());
+
+            Assert.assertEquals(request.getHeader(PushNotificationListener.HTTP_HEADER_CONTENT_TYPE), PushNotificationListener.CONTENT_TYPE_JSON);
+            stopServerWhenComplete(current, false);
         }
 
         private void stopServerWhenComplete(final int current, final boolean withError) {

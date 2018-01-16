@@ -73,7 +73,7 @@ public class TestEntitlementUtils extends EntitlementTestSuiteWithEmbeddedDB {
         // Create base entitlement
         testListener.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK);
         final PlanPhaseSpecifier baseSpec = new PlanPhaseSpecifier("Shotgun", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, null);
-        baseEntitlement = (DefaultEntitlement) entitlementApi.createBaseEntitlement(account.getId(), baseSpec, account.getExternalKey(), null, null, null, false, ImmutableList.<PluginProperty>of(), callContext);
+        baseEntitlement = (DefaultEntitlement) entitlementApi.createBaseEntitlement(account.getId(), baseSpec, account.getExternalKey(), null, null, null, false, true, ImmutableList.<PluginProperty>of(), callContext);
         assertListenerStatus();
 
         // Add ADD_ON
@@ -232,7 +232,7 @@ public class TestEntitlementUtils extends EntitlementTestSuiteWithEmbeddedDB {
     @Test(groups = "slow", description = "Verify add-ons blocking states are added for EOT change plans")
     public void testChangePlanEOT() throws Exception {
         // Change plan EOT to Assault-Rifle (Telescopic-Scope is included)
-        final DefaultEntitlement changedBaseEntitlement = (DefaultEntitlement) baseEntitlement.changePlanWithDate(new PlanSpecifier("Assault-Rifle", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME), null, new LocalDate(2013, 10, 7), ImmutableList.<PluginProperty>of(), callContext);
+        final DefaultEntitlement changedBaseEntitlement = (DefaultEntitlement) baseEntitlement.changePlanWithDate(new PlanPhaseSpecifier("Assault-Rifle", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME), null, new LocalDate(2013, 10, 7), ImmutableList.<PluginProperty>of(), callContext);
         // No blocking event (EOT)
         assertListenerStatus();
 
@@ -271,7 +271,7 @@ public class TestEntitlementUtils extends EntitlementTestSuiteWithEmbeddedDB {
         assertListenerStatus();
 
         // Change plan EOT to Assault-Rifle (Telescopic-Scope is included)
-        final DefaultEntitlement changedBaseEntitlement = (DefaultEntitlement) baseEntitlement.changePlanWithDate(new PlanSpecifier("Assault-Rifle", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME), null, new LocalDate(2013, 10, 7), ImmutableList.<PluginProperty>of(), callContext);
+        final DefaultEntitlement changedBaseEntitlement = (DefaultEntitlement) baseEntitlement.changePlanWithDate(new PlanPhaseSpecifier("Assault-Rifle", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME), null, new LocalDate(2013, 10, 7), ImmutableList.<PluginProperty>of(), callContext);
         // No blocking event (EOT)
         assertListenerStatus();
 
@@ -290,7 +290,7 @@ public class TestEntitlementUtils extends EntitlementTestSuiteWithEmbeddedDB {
 
         // Change plan IMM (upgrade) to Assault-Rifle (Telescopic-Scope is included)
         testListener.pushExpectedEvents(NextEvent.CHANGE, NextEvent.CANCEL, NextEvent.BLOCK);
-        final DefaultEntitlement changedBaseEntitlement = (DefaultEntitlement) baseEntitlement.changePlan(new PlanSpecifier("Assault-Rifle", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME), null, ImmutableList.<PluginProperty>of(), callContext);
+        final DefaultEntitlement changedBaseEntitlement = (DefaultEntitlement) baseEntitlement.changePlan(new PlanPhaseSpecifier("Assault-Rifle", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME), null, ImmutableList.<PluginProperty>of(), callContext);
         assertListenerStatus();
 
         // We need to add a 1s delay before invoking the eventsStreamBuilder in the checks below, because

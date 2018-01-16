@@ -20,9 +20,9 @@ import java.util.UUID;
 
 import org.joda.time.DateTime;
 
-import org.killbill.clock.Clock;
 import org.killbill.billing.util.callcontext.CallOrigin;
 import org.killbill.billing.util.callcontext.UserType;
+import org.killbill.clock.Clock;
 
 public class DefaultCallContext extends CallContextBase {
 

@@ -52,6 +52,7 @@ import org.killbill.billing.ObjectType;
 import org.killbill.billing.account.api.Account;
 import org.killbill.billing.account.api.AccountApiException;
 import org.killbill.billing.account.api.AccountUserApi;
+import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.entitlement.api.BlockingState;
 import org.killbill.billing.entitlement.api.BlockingStateType;
 import org.killbill.billing.entitlement.api.EntitlementApiException;
@@ -64,6 +65,7 @@ import org.killbill.billing.jaxrs.json.BillingExceptionJson.StackTraceElementJso
 import org.killbill.billing.jaxrs.json.BlockingStateJson;
 import org.killbill.billing.jaxrs.json.CustomFieldJson;
 import org.killbill.billing.jaxrs.json.JsonBase;
+import org.killbill.billing.jaxrs.json.PaymentTransactionJson;
 import org.killbill.billing.jaxrs.json.PluginPropertyJson;
 import org.killbill.billing.jaxrs.json.TagJson;
 import org.killbill.billing.jaxrs.util.Context;
@@ -118,7 +120,6 @@ public abstract class JaxRsResourceBase implements JaxrsResource {
 
     // Catalog API don't quite support multiple catalogs per tenant
     protected static final String catalogName = "unused";
-
 
     protected static final ObjectMapper mapper = new ObjectMapper();
 
@@ -183,9 +184,6 @@ public abstract class JaxRsResourceBase implements JaxrsResource {
         return Response.status(Status.OK).build();
     }
 
-
-
-
     protected Response getTags(final UUID accountId, final UUID taggedObjectId, final AuditMode auditMode, final boolean includeDeleted, final TenantContext context) throws TagDefinitionApiException {
         final List<Tag> tags = tagUserApi.getTagsForObject(taggedObjectId, getObjectType(), includeDeleted, context);
         return createTagResponse(accountId, tags, auditMode, context);
@@ -207,7 +205,6 @@ public abstract class JaxRsResourceBase implements JaxrsResource {
         }
         return Response.status(Response.Status.OK).entity(result).build();
     }
-
 
     protected Response createTags(final UUID id,
                                   final String tagList,
@@ -241,8 +238,11 @@ public abstract class JaxRsResourceBase implements JaxrsResource {
 
     protected Response getCustomFields(final UUID id, final AuditMode auditMode, final TenantContext context) {
         final List<CustomField> fields = customFieldUserApi.getCustomFieldsForObject(id, getObjectType(), context);
+        return createCustomFieldResponse(fields, auditMode, context);
+    }
 
-        final List<CustomFieldJson> result = new LinkedList<CustomFieldJson>();
+    protected Response createCustomFieldResponse(final Iterable<CustomField> fields, final AuditMode auditMode, final TenantContext context) {
+        final Collection<CustomFieldJson> result = new LinkedList<CustomFieldJson>();
         for (final CustomField cur : fields) {
             // TODO PIERRE - Bulk API
             final List<AuditLog> auditLogs = auditUserApi.getAuditLogs(cur.getId(), ObjectType.CUSTOM_FIELD, auditMode.getLevel(), context);
@@ -267,6 +267,23 @@ public abstract class JaxRsResourceBase implements JaxrsResource {
         customFieldUserApi.addCustomFields(input, context);
         return uriBuilder.buildResponse(uriInfo, this.getClass(), "getCustomFields", id, request);
     }
+
+
+    protected Response modifyCustomFields(final UUID id,
+                                          final List<CustomFieldJson> customFields,
+                                          final CallContext context) throws CustomFieldApiException {
+        final LinkedList<CustomField> input = new LinkedList<CustomField>();
+        for (final CustomFieldJson cur : customFields) {
+            verifyNonNullOrEmpty(cur.getCustomFieldId(), "CustomFieldJson id needs to be set");
+            verifyNonNullOrEmpty(cur.getValue(), "CustomFieldJson value needs to be set");
+            input.add(new StringCustomField(UUID.fromString(cur.getCustomFieldId()), cur.getName(), cur.getValue(), getObjectType(), id, context.getCreatedDate()));
+        }
+
+        customFieldUserApi.updateCustomFields(input, context);
+        return Response.status(Response.Status.OK).build();
+    }
+
+
 
     /**
      * @param id              the if of the object for which the custom fields apply
@@ -350,17 +367,88 @@ public abstract class JaxRsResourceBase implements JaxrsResource {
     }
 
     protected void validatePaymentMethodForAccount(final UUID accountId, final UUID paymentMethodId, final CallContext callContext) throws PaymentApiException {
-        if (paymentMethodId == null) {
-            throw new PaymentApiException(ErrorCode.PAYMENT_NO_DEFAULT_PAYMENT_METHOD, accountId);
-        }
-        final PaymentMethod paymentMethod = paymentApi.getPaymentMethodById(paymentMethodId, false, false, ImmutableList.<PluginProperty>of(), callContext);
-        if (!paymentMethod.getAccountId().equals(accountId)) {
-            throw new PaymentApiException(ErrorCode.PAYMENT_NO_SUCH_PAYMENT_METHOD, paymentMethodId);
+        if (paymentMethodId != null) {
+            final PaymentMethod paymentMethod = paymentApi.getPaymentMethodById(paymentMethodId, false, false, ImmutableList.<PluginProperty>of(), callContext);
+            if (!paymentMethod.getAccountId().equals(accountId)) {
+                throw new PaymentApiException(ErrorCode.PAYMENT_NO_SUCH_PAYMENT_METHOD, paymentMethodId);
+            }
         }
     }
 
+    protected Payment getPaymentByIdOrKey(@Nullable final String paymentIdStr, @Nullable final String externalKey, final Iterable<PluginProperty> pluginProperties, final TenantContext tenantContext) throws PaymentApiException {
+        Preconditions.checkArgument(paymentIdStr != null || externalKey != null, "Need to set either paymentId or payment externalKey");
+        if (paymentIdStr != null) {
+            final UUID paymentId = UUID.fromString(paymentIdStr);
+            return paymentApi.getPayment(paymentId, false, false, pluginProperties, tenantContext);
+        } else {
+            return paymentApi.getPaymentByExternalKey(externalKey, false, false, pluginProperties, tenantContext);
+        }
+    }
+
+
+    protected Response completeTransactionInternal(final PaymentTransactionJson json,
+                                                   final Payment initialPayment,
+                                                   final List<String> paymentControlPluginNames,
+                                                   final Iterable<PluginProperty> pluginProperties,
+                                                   final TenantContext contextNoAccountId,
+                                                   final String createdBy,
+                                                   final String reason,
+                                                   final String comment,
+                                                   final UriInfo uriInfo,
+                                                   final HttpServletRequest request) throws PaymentApiException, AccountApiException {
+
+        final Account account = accountUserApi.getAccountById(initialPayment.getAccountId(), contextNoAccountId);
+        final BigDecimal amount = json == null ? null : json.getAmount();
+        final Currency currency = json == null || json.getCurrency() == null ? null : Currency.valueOf(json.getCurrency());
+
+        final CallContext callContext = context.createCallContextWithAccountId(account.getId(), createdBy, reason, comment, request);
+
+        final PaymentTransaction pendingOrSuccessTransaction = lookupPendingOrSuccessTransaction(initialPayment,
+                                                                                                 json != null ? json.getTransactionId() : null,
+                                                                                                 json != null ? json.getTransactionExternalKey() : null,
+                                                                                                 json != null ? json.getTransactionType() : null);
+        // If transaction was already completed, return early (See #626)
+        if (pendingOrSuccessTransaction.getTransactionStatus() == TransactionStatus.SUCCESS) {
+            return uriBuilder.buildResponse(uriInfo, PaymentResource.class, "getPayment", pendingOrSuccessTransaction.getPaymentId(), request);
+        }
+
+        final PaymentTransaction pendingTransaction = pendingOrSuccessTransaction;
+        final PaymentOptions paymentOptions = createControlPluginApiPaymentOptions(paymentControlPluginNames);
+        final Payment result;
+        switch (pendingTransaction.getTransactionType()) {
+            case AUTHORIZE:
+                result = paymentApi.createAuthorizationWithPaymentControl(account, initialPayment.getPaymentMethodId(), initialPayment.getId(), amount, currency, null,
+                                                                          initialPayment.getExternalKey(), pendingTransaction.getExternalKey(),
+                                                                          pluginProperties, paymentOptions, callContext);
+                break;
+            case CAPTURE:
+                result = paymentApi.createCaptureWithPaymentControl(account, initialPayment.getId(), amount, currency, null, pendingTransaction.getExternalKey(),
+                                                                    pluginProperties, paymentOptions, callContext);
+                break;
+            case PURCHASE:
+                result = paymentApi.createPurchaseWithPaymentControl(account, initialPayment.getPaymentMethodId(), initialPayment.getId(), amount, currency, null,
+                                                                     initialPayment.getExternalKey(), pendingTransaction.getExternalKey(),
+                                                                     pluginProperties, paymentOptions, callContext);
+                break;
+            case CREDIT:
+                result = paymentApi.createCreditWithPaymentControl(account, initialPayment.getPaymentMethodId(), initialPayment.getId(), amount, currency, null,
+                                                                   initialPayment.getExternalKey(), pendingTransaction.getExternalKey(),
+                                                                   pluginProperties, paymentOptions, callContext);
+                break;
+            case REFUND:
+                result = paymentApi.createRefundWithPaymentControl(account, initialPayment.getId(), amount, currency, null,
+                                                                   pendingTransaction.getExternalKey(), pluginProperties, paymentOptions, callContext);
+                break;
+            default:
+                return Response.status(Status.PRECONDITION_FAILED).entity("TransactionType " + pendingTransaction.getTransactionType() + " cannot be completed").build();
+        }
+        return createPaymentResponse(uriInfo, result, pendingTransaction.getTransactionType(), pendingTransaction.getExternalKey(), request);
+
+    }
+
+
     protected PaymentTransaction lookupPendingOrSuccessTransaction(final Payment initialPayment, @Nullable final String transactionId, @Nullable final String transactionExternalKey, @Nullable final String transactionType) throws PaymentApiException {
-        final Collection<PaymentTransaction> pendingTransaction  =  Collections2.filter(initialPayment.getTransactions(), new Predicate<PaymentTransaction>() {
+        final Collection<PaymentTransaction> pendingTransaction = Collections2.filter(initialPayment.getTransactions(), new Predicate<PaymentTransaction>() {
             @Override
             public boolean apply(final PaymentTransaction input) {
                 if (input.getTransactionStatus() != TransactionStatus.PENDING && input.getTransactionStatus() != TransactionStatus.SUCCESS) {
@@ -477,11 +565,14 @@ public abstract class JaxRsResourceBase implements JaxrsResource {
                                                                   invoiceId.toString(), false);
         properties.add(invoiceProperty);
         try {
-            return paymentApi.createPurchaseWithPaymentControl(account, paymentMethodId, null, amountToPay, account.getCurrency(), paymentExternalKey, transactionExternalKey,
+            return paymentApi.createPurchaseWithPaymentControl(account, paymentMethodId, null, amountToPay, account.getCurrency(), null, paymentExternalKey, transactionExternalKey,
                                                                properties, createInvoicePaymentControlPluginApiPaymentOptions(externalPayment), callContext);
         } catch (final PaymentApiException e) {
-            if (e.getCode() == ErrorCode.PAYMENT_PLUGIN_EXCEPTION.getCode() &&
-                e.getMessage().contains("Aborted Payment for invoice")) {
+
+            if (e.getCode() == ErrorCode.PAYMENT_PLUGIN_EXCEPTION.getCode() /* &&
+                e.getMessage().contains("Invalid amount") */) { /* Plugin received bad input */
+                throw e;
+            } else if (e.getCode() == ErrorCode.PAYMENT_PLUGIN_API_ABORTED.getCode()) { /* Plugin aborted the call (e.g invoice already paid) */
                 return null;
             }
             throw e;

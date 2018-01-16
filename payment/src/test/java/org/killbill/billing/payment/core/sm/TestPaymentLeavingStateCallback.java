@@ -114,6 +114,7 @@ public class TestPaymentLeavingStateCallback extends PaymentTestSuiteWithEmbedde
                                                       Currency.BRL,
                                                       null,
                                                       null,
+                                                      null,
                                                       false,
                                                       null, ImmutableList.<PluginProperty>of(),
                                                       internalCallContext,

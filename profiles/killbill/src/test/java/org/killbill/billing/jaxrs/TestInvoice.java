@@ -27,6 +27,7 @@ import java.util.UUID;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDate;
+import org.killbill.billing.api.FlakyRetryAnalyzer;
 import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.catalog.api.ProductCategory;
 import org.killbill.billing.client.KillBillClientException;
@@ -446,6 +447,12 @@ public class TestInvoice extends TestJaxrsBase {
         externalCharge.setAmount(chargeAmount);
         externalCharge.setCurrency(accountJson.getCurrency());
         externalCharge.setDescription(UUID.randomUUID().toString());
+
+        final LocalDate startDate = clock.getUTCToday();
+        externalCharge.setStartDate(startDate);
+        final LocalDate endDate = startDate.plusDays(10);
+        externalCharge.setEndDate(endDate);
+
         final List<InvoiceItem> createdExternalCharges = killBillClient.createExternalCharges(ImmutableList.of(externalCharge), clock.getUTCToday(), false, true, requestOptions);
         assertEquals(createdExternalCharges.size(), 1);
         final Invoice invoiceWithItems = killBillClient.getInvoice(createdExternalCharges.get(0).getInvoiceId(), true, false, requestOptions);
@@ -453,6 +460,8 @@ public class TestInvoice extends TestJaxrsBase {
         assertEquals(invoiceWithItems.getItems().size(), 1);
         assertEquals(invoiceWithItems.getItems().get(0).getDescription(), externalCharge.getDescription());
         assertNull(invoiceWithItems.getItems().get(0).getBundleId());
+        assertEquals(invoiceWithItems.getItems().get(0).getStartDate().compareTo(startDate), 0);
+        assertEquals(invoiceWithItems.getItems().get(0).getEndDate().compareTo(endDate), 0);
 
         // Verify the total number of invoices
         assertEquals(killBillClient.getInvoicesForAccount(accountJson.getAccountId(), requestOptions).size(), 3);
@@ -493,7 +502,8 @@ public class TestInvoice extends TestJaxrsBase {
         assertEquals(killBillClient.getInvoicesForAccount(accountJson.getAccountId(), requestOptions).size(), 3);
     }
 
-    @Test(groups = "slow", description = "Can create multiple external charges with same invoice and external keys")
+    // Flaky, see https://github.com/killbill/killbill/issues/801
+    @Test(groups = "slow", description = "Can create multiple external charges with same invoice and external keys", retryAnalyzer = FlakyRetryAnalyzer.class)
     public void testExternalChargesWithSameInvoiceAndExternalKeys() throws Exception {
         final Account accountJson = createAccountWithPMBundleAndSubscriptionAndWaitForFirstInvoice();
 
@@ -588,98 +598,6 @@ public class TestInvoice extends TestJaxrsBase {
 
         // Verify the total number of invoices
         assertEquals(killBillClient.getInvoicesForAccount(accountJson.getAccountId(), requestOptions).size(), 3);
-    }
-
-    @Test(groups = "slow", description = "Can create an external charge on an existing invoice")
-    public void testExternalChargeOnExistingInvoice() throws Exception {
-        final Account accountJson = createAccountNoPMBundleAndSubscriptionAndWaitForFirstInvoice();
-
-        // Get the invoices
-        final List<Invoice> invoices = killBillClient.getInvoicesForAccount(accountJson.getAccountId(), true, false, requestOptions);
-        // 2 invoices but look for the non zero dollar one
-        assertEquals(invoices.size(), 2);
-        final UUID invoiceId = invoices.get(1).getInvoiceId();
-        final BigDecimal originalInvoiceAmount = invoices.get(1).getAmount();
-        final int originalNumberOfItemsForInvoice = invoices.get(1).getItems().size();
-
-        // Post an external charge
-        final BigDecimal chargeAmount = BigDecimal.TEN;
-        final InvoiceItem externalCharge = new InvoiceItem();
-        externalCharge.setAccountId(accountJson.getAccountId());
-        externalCharge.setAmount(chargeAmount);
-        externalCharge.setCurrency(accountJson.getCurrency());
-        externalCharge.setInvoiceId(invoiceId);
-        final List<InvoiceItem> createdExternalCharges = killBillClient.createExternalCharges(ImmutableList.of(externalCharge), clock.getUTCToday(), false, true, requestOptions);
-        assertEquals(createdExternalCharges.size(), 1);
-        final Invoice invoiceWithItems = killBillClient.getInvoice(createdExternalCharges.get(0).getInvoiceId(), true, false, requestOptions);
-        assertEquals(invoiceWithItems.getItems().size(), originalNumberOfItemsForInvoice + 1);
-        assertNull(invoiceWithItems.getItems().get(originalNumberOfItemsForInvoice).getBundleId());
-
-        // Verify the new invoice balance
-        final Invoice adjustedInvoice = killBillClient.getInvoice(invoiceId, requestOptions);
-        final BigDecimal adjustedInvoiceBalance = originalInvoiceAmount.add(chargeAmount.setScale(2, RoundingMode.HALF_UP));
-        assertEquals(adjustedInvoice.getBalance().compareTo(adjustedInvoiceBalance), 0);
-    }
-
-    @Test(groups = "slow", description = "Can create an external charge on an existing invoice and trigger a payment")
-    public void testExternalChargeOnExistingInvoiceWithAutomaticPayment() throws Exception {
-        final Account accountJson = createAccountWithPMBundleAndSubscriptionAndWaitForFirstInvoice();
-
-        // Get the invoices
-        final List<Invoice> invoices = killBillClient.getInvoicesForAccount(accountJson.getAccountId(), true, false, requestOptions);
-        // 2 invoices but look for the non zero dollar one
-        assertEquals(invoices.size(), 2);
-        final UUID invoiceId = invoices.get(1).getInvoiceId();
-        final int originalNumberOfItemsForInvoice = invoices.get(1).getItems().size();
-
-        // Post an external charge
-        final BigDecimal chargeAmount = BigDecimal.TEN;
-        final InvoiceItem externalCharge = new InvoiceItem();
-        externalCharge.setAccountId(accountJson.getAccountId());
-        externalCharge.setAmount(chargeAmount);
-        externalCharge.setCurrency(accountJson.getCurrency());
-        externalCharge.setInvoiceId(invoiceId);
-        final List<InvoiceItem> createdExternalCharges = killBillClient.createExternalCharges(ImmutableList.of(externalCharge), clock.getUTCToday(), true, true, requestOptions);
-        assertEquals(createdExternalCharges.size(), 1);
-        final Invoice invoiceWithItems = killBillClient.getInvoice(createdExternalCharges.get(0).getInvoiceId(), true,false, requestOptions);
-        assertEquals(invoiceWithItems.getItems().size(), originalNumberOfItemsForInvoice + 1);
-        assertNull(invoiceWithItems.getItems().get(originalNumberOfItemsForInvoice).getBundleId());
-
-        // Verify the new invoice balance
-        final Invoice adjustedInvoice = killBillClient.getInvoice(invoiceId, requestOptions);
-        assertEquals(adjustedInvoice.getBalance().compareTo(BigDecimal.ZERO), 0);
-    }
-
-    @Test(groups = "slow", description = "Can create an external charge for a bundle on an existing invoice")
-    public void testExternalChargeForBundleOnExistingInvoice() throws Exception {
-        final Account accountJson = createAccountNoPMBundleAndSubscriptionAndWaitForFirstInvoice();
-
-        // Get the invoices
-        final List<Invoice> invoices = killBillClient.getInvoicesForAccount(accountJson.getAccountId(), true, false, requestOptions);
-        // 2 invoices but look for the non zero dollar one
-        assertEquals(invoices.size(), 2);
-        final UUID invoiceId = invoices.get(1).getInvoiceId();
-        final BigDecimal originalInvoiceAmount = invoices.get(1).getAmount();
-        final int originalNumberOfItemsForInvoice = invoices.get(1).getItems().size();
-
-        // Post an external charge
-        final BigDecimal chargeAmount = BigDecimal.TEN;
-        final UUID bundleId = UUID.randomUUID();
-        final InvoiceItem externalCharge = new InvoiceItem();
-        externalCharge.setAccountId(accountJson.getAccountId());
-        externalCharge.setAmount(chargeAmount);
-        externalCharge.setCurrency(accountJson.getCurrency());
-        externalCharge.setInvoiceId(invoiceId);
-        externalCharge.setBundleId(bundleId);
-        final List<InvoiceItem> createdExternalCharges = killBillClient.createExternalCharges(ImmutableList.<InvoiceItem>of(externalCharge), clock.getUTCToday(), false, true, requestOptions);
-        final Invoice invoiceWithItems = killBillClient.getInvoice(createdExternalCharges.get(0).getInvoiceId(), true,false, requestOptions);
-        assertEquals(invoiceWithItems.getItems().size(), originalNumberOfItemsForInvoice + 1);
-        assertEquals(invoiceWithItems.getItems().get(originalNumberOfItemsForInvoice).getBundleId(), bundleId);
-
-        // Verify the new invoice balance
-        final Invoice adjustedInvoice = killBillClient.getInvoice(invoiceId, requestOptions);
-        final BigDecimal adjustedInvoiceBalance = originalInvoiceAmount.add(chargeAmount.setScale(2, RoundingMode.HALF_UP));
-        assertEquals(adjustedInvoice.getBalance().compareTo(adjustedInvoiceBalance), 0);
     }
 
     @Test(groups = "slow", description = "Can paginate and search through all invoices")

@@ -87,7 +87,7 @@ public abstract class ComboPaymentResource extends JaxRsResourceBase {
         }
 
         // Get all payment methods for account
-        final List<PaymentMethod> accountPaymentMethods = paymentApi.getAccountPaymentMethods(account.getId(), false, ImmutableList.<PluginProperty>of(), callContext);
+        final List<PaymentMethod> accountPaymentMethods = paymentApi.getAccountPaymentMethods(account.getId(), false, false, ImmutableList.<PluginProperty>of(), callContext);
 
         // If we were specified a paymentMethod id and we find it, we return it
         if (paymentMethodJson.getPaymentMethodId() != null) {
@@ -123,13 +123,4 @@ public abstract class ComboPaymentResource extends JaxRsResourceBase {
                                            paymentData.getPluginDetail(), pluginProperties, callContext);
     }
 
-    protected Payment getPaymentByIdOrKey(@Nullable final String paymentIdStr, @Nullable final String externalKey, final Iterable<PluginProperty> pluginProperties, final TenantContext tenantContext) throws PaymentApiException {
-        Preconditions.checkArgument(paymentIdStr != null || externalKey != null, "Need to set either paymentId or payment externalKey");
-        if (paymentIdStr != null) {
-            final UUID paymentId = UUID.fromString(paymentIdStr);
-            return paymentApi.getPayment(paymentId, false, false, pluginProperties, tenantContext);
-        } else {
-            return paymentApi.getPaymentByExternalKey(externalKey, false, false, pluginProperties, tenantContext);
-        }
-    }
 }

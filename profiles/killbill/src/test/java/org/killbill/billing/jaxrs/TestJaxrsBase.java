@@ -18,6 +18,9 @@
 
 package org.killbill.billing.jaxrs;
 
+import java.lang.management.ManagementFactory;
+import java.lang.management.ThreadInfo;
+import java.lang.management.ThreadMXBean;
 import java.util.EventListener;
 import java.util.Iterator;
 import java.util.List;
@@ -37,13 +40,10 @@ import org.killbill.billing.GuicyKillbillTestWithEmbeddedDBModule;
 import org.killbill.billing.api.TestApiListener;
 import org.killbill.billing.client.KillBillClient;
 import org.killbill.billing.client.KillBillHttpClient;
-import org.killbill.billing.client.RequestOptions;
 import org.killbill.billing.client.model.Payment;
 import org.killbill.billing.client.model.PaymentTransaction;
 import org.killbill.billing.client.model.Tenant;
-import org.killbill.billing.invoice.api.InvoiceNotifier;
 import org.killbill.billing.invoice.glue.DefaultInvoiceModule;
-import org.killbill.billing.invoice.notification.NullInvoiceNotifier;
 import org.killbill.billing.jetty.HttpServer;
 import org.killbill.billing.jetty.HttpServerConfig;
 import org.killbill.billing.lifecycle.glue.BusModule;
@@ -61,6 +61,8 @@ import org.killbill.billing.util.config.definition.SecurityConfig;
 import org.killbill.bus.api.PersistentBus;
 import org.killbill.commons.jdbi.guice.DaoConfig;
 import org.skife.config.ConfigurationObjectFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.AfterSuite;
 import org.testng.annotations.BeforeClass;
@@ -76,6 +78,12 @@ import com.google.inject.Module;
 import com.google.inject.util.Modules;
 
 public class TestJaxrsBase extends KillbillClient {
+
+    private static final Logger log = LoggerFactory.getLogger(TestJaxrsBase.class);
+
+    protected final int DEFAULT_CONNECT_TIMEOUT_SEC = 10;
+    protected final int DEFAULT_READ_TIMEOUT_SEC = 60;
+    protected final int DEFAULT_REQUEST_TIMEOUT_SEC = DEFAULT_READ_TIMEOUT_SEC;
 
     protected static final String PLUGIN_NAME = "noop";
 
@@ -145,10 +153,6 @@ public class TestJaxrsBase extends KillbillClient {
             super(configSource);
         }
 
-        @Override
-        protected void installInvoiceNotifier() {
-            bind(InvoiceNotifier.class).to(NullInvoiceNotifier.class).asEagerSingleton();
-        }
     }
 
     private final class PaymentMockModule extends PaymentModule {
@@ -168,7 +172,12 @@ public class TestJaxrsBase extends KillbillClient {
                                                     username,
                                                     password,
                                                     apiKey,
-                                                    apiSecret);
+                                                    apiSecret,
+                                                    null,
+                                                    null,
+                                                    DEFAULT_CONNECT_TIMEOUT_SEC * 1000,
+                                                    DEFAULT_READ_TIMEOUT_SEC * 1000,
+                                                    DEFAULT_REQUEST_TIMEOUT_SEC * 1000);
         killBillClient = new KillBillClient(killBillHttpClient);
     }
 
@@ -294,4 +303,24 @@ public class TestJaxrsBase extends KillbillClient {
         })));
     }
 
+    protected void printThreadDump() {
+        final StringBuilder dump = new StringBuilder("Thread dump:\n");
+        final ThreadMXBean threadMXBean = ManagementFactory.getThreadMXBean();
+        final ThreadInfo[] threadInfos = threadMXBean.getThreadInfo(threadMXBean.getAllThreadIds(), 100);
+        for (final ThreadInfo threadInfo : threadInfos) {
+            dump.append('"');
+            dump.append(threadInfo.getThreadName());
+            dump.append("\" ");
+            final Thread.State state = threadInfo.getThreadState();
+            dump.append("\n   java.lang.Thread.State: ");
+            dump.append(state);
+            final StackTraceElement[] stackTraceElements = threadInfo.getStackTrace();
+            for (final StackTraceElement stackTraceElement : stackTraceElements) {
+                dump.append("\n        at ");
+                dump.append(stackTraceElement);
+            }
+            dump.append("\n\n");
+        }
+        log.warn(dump.toString());
+    }
 }

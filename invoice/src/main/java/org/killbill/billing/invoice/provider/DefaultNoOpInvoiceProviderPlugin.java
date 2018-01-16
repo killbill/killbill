@@ -30,11 +30,8 @@ import com.google.inject.Inject;
 
 public class DefaultNoOpInvoiceProviderPlugin implements NoOpInvoicePluginApi {
 
-    private final Clock clock;
-
     @Inject
-    public DefaultNoOpInvoiceProviderPlugin(final Clock clock) {
-        this.clock = clock;
+    public DefaultNoOpInvoiceProviderPlugin() {
     }
 
     @Override

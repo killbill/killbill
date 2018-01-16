@@ -65,7 +65,7 @@ public class StandaloneCatalog extends ValidatingConfig<StandaloneCatalog> imple
     @XmlElement(required = true)
     private String catalogName;
 
-    @XmlElement(required = true)
+    @XmlElement(required = false)
     private BillingMode recurringBillingMode;
 
     @XmlElementWrapper(name = "currencies", required = true)
@@ -112,11 +112,6 @@ public class StandaloneCatalog extends ValidatingConfig<StandaloneCatalog> imple
     @Override
     public Date getEffectiveDate() {
         return effectiveDate;
-    }
-
-    @Override
-    public BillingMode getRecurringBillingMode() {
-        return recurringBillingMode;
     }
 
     /* (non-Javadoc)
@@ -316,6 +311,9 @@ public class StandaloneCatalog extends ValidatingConfig<StandaloneCatalog> imple
         }
     }
 
+    public BillingMode getRecurringBillingMode() {
+        return recurringBillingMode;
+    }
 
     //////////////////////////////////////////////////////////////////////////////
     //

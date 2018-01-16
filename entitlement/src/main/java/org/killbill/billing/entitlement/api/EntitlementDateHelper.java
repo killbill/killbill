@@ -27,18 +27,15 @@ import org.killbill.clock.Clock;
 
 public class EntitlementDateHelper {
 
-    private final Clock clock;
-
-    public EntitlementDateHelper(final Clock clock) {
-        this.clock = clock;
+    public EntitlementDateHelper() {
     }
 
-    public DateTime fromLocalDateAndReferenceTime(@Nullable final LocalDate requestedDate, final InternalTenantContext callContext) throws EntitlementApiException {
-        return requestedDate == null ? clock.getUTCNow() : callContext.toUTCDateTime(requestedDate);
+    public DateTime fromLocalDateAndReferenceTime(@Nullable final LocalDate requestedDate, final DateTime now, final InternalTenantContext callContext) throws EntitlementApiException {
+        return requestedDate == null ? now : callContext.toUTCDateTime(requestedDate);
     }
 
-    public DateTime fromLocalDateAndReferenceTimeWithMinimum(@Nullable final LocalDate requestedDate, final DateTime min, final InternalTenantContext callContext) throws EntitlementApiException {
-        final DateTime candidate = fromLocalDateAndReferenceTime(requestedDate, callContext);
+    public DateTime fromLocalDateAndReferenceTimeWithMinimum(@Nullable final LocalDate requestedDate, final DateTime min, final DateTime now, final InternalTenantContext callContext) throws EntitlementApiException {
+        final DateTime candidate = fromLocalDateAndReferenceTime(requestedDate, now, callContext);
         return candidate.compareTo(min) < 0 ? min : candidate;
     }
 }

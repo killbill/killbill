@@ -324,6 +324,26 @@ public class BundleResource extends JaxRsResourceBase {
     }
 
     @TimedResource
+    @PUT
+    @Path("/{bundleId:" + UUID_PATTERN + "}/" + CUSTOM_FIELDS)
+    @Consumes(APPLICATION_JSON)
+    @Produces(APPLICATION_JSON)
+    @ApiOperation(value = "Modify custom fields to bundle")
+    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid bundle id supplied")})
+    public Response modifyCustomFields(@PathParam(ID_PARAM_NAME) final String id,
+                                       final List<CustomFieldJson> customFields,
+                                       @HeaderParam(HDR_CREATED_BY) final String createdBy,
+                                       @HeaderParam(HDR_REASON) final String reason,
+                                       @HeaderParam(HDR_COMMENT) final String comment,
+                                       @javax.ws.rs.core.Context final HttpServletRequest request) throws CustomFieldApiException {
+        return super.modifyCustomFields(UUID.fromString(id), customFields,
+                                        context.createCallContextNoAccountId(createdBy, reason, comment, request));
+    }
+
+
+
+
+    @TimedResource
     @DELETE
     @Path("/{bundleId:" + UUID_PATTERN + "}/" + CUSTOM_FIELDS)
     @Consumes(APPLICATION_JSON)
@@ -390,6 +410,35 @@ public class BundleResource extends JaxRsResourceBase {
         final UUID newBundleId = entitlementApi.transferEntitlementsOverrideBillingPolicy(bundle.getAccountId(), UUID.fromString(json.getAccountId()), bundle.getExternalKey(), inputLocalDate, policy, pluginProperties, callContext);
         return uriBuilder.buildResponse(uriInfo, BundleResource.class, "getBundle", newBundleId, request);
     }
+
+
+    @TimedResource
+    @PUT
+    @Path("/{bundleId:" + UUID_PATTERN + "}/" + RENAME_KEY)
+    @Consumes(APPLICATION_JSON)
+    @ApiOperation(value = "Update a bundle externalKey")
+    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid argumnent supplied"),
+                           @ApiResponse(code = 404, message = "Bundle not found")})
+    public Response renameExternalKey(final BundleJson json,
+                                      @PathParam(ID_PARAM_NAME) final String id,
+                                      /* @QueryParam(QUERY_PLUGIN_PROPERTY) final List<String> pluginPropertiesString, */
+                                      @HeaderParam(HDR_CREATED_BY) final String createdBy,
+                                      @HeaderParam(HDR_REASON) final String reason,
+                                      @HeaderParam(HDR_COMMENT) final String comment,
+                                      @javax.ws.rs.core.Context final UriInfo uriInfo,
+                                      @javax.ws.rs.core.Context final HttpServletRequest request) throws EntitlementApiException {
+
+        verifyNonNullOrEmpty(json, "BundleJson body should be specified");
+        verifyNonNullOrEmpty(json.getExternalKey(), "BundleJson externalKey needs to be set");
+
+        final UUID bundleId = UUID.fromString(id);
+
+        final CallContext callContext = context.createCallContextNoAccountId(createdBy, reason, comment, request);
+        subscriptionApi.updateExternalKey(bundleId, json.getExternalKey(), callContext);
+        return uriBuilder.buildResponse(uriInfo, BundleResource.class, "getBundle", bundleId, request);
+    }
+
+
 
     @TimedResource
     @POST

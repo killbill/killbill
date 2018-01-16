@@ -219,6 +219,7 @@ public class TestPluginOperation extends PaymentTestSuiteNoDB {
                                                                                 Currency.BRL,
                                                                                 null,
                                                                                 null,
+                                                                                null,
                                                                                 shouldLockAccount,
                                                                                 null,
                                                                                 ImmutableList.<PluginProperty>of(),

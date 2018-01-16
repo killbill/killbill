@@ -50,7 +50,7 @@ public class ChargebackInitiated extends PaymentLeavingStateCallback {
                                                                                           ImmutableList.<PaymentTransactionModelDao>of();
             final Iterable<PaymentTransactionModelDao> existingPaymentTransactionsForTransactionIdOrKey = filterExistingPaymentTransactionsForTransactionIdOrKey(paymentTransactionsForCurrentPayment, paymentStateContext.getTransactionId(), paymentStateContext.getPaymentTransactionExternalKey());
 
-            if (Iterables.<PaymentTransactionModelDao>isEmpty(existingPaymentTransactionsForTransactionIdOrKey)) {
+            if (Iterables.isEmpty(existingPaymentTransactionsForTransactionIdOrKey)) {
                 // Chargeback reversals can only happen after a successful chargeback
                 throw new OperationException(new PaymentApiException(ErrorCode.PAYMENT_NO_SUCH_SUCCESS_PAYMENT, paymentStateContext.getPaymentId()));
             }

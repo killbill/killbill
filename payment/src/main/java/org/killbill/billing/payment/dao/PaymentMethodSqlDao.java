@@ -22,7 +22,7 @@ import java.util.Iterator;
 import java.util.List;
 
 import org.skife.jdbi.v2.sqlobject.Bind;
-import org.skife.jdbi.v2.sqlobject.BindBean;
+import org.killbill.commons.jdbi.binder.SmartBindBean;
 import org.skife.jdbi.v2.sqlobject.SqlQuery;
 import org.skife.jdbi.v2.sqlobject.SqlUpdate;
 
@@ -33,37 +33,37 @@ import org.killbill.billing.payment.api.PaymentMethod;
 import org.killbill.billing.util.audit.ChangeType;
 import org.killbill.billing.util.entity.dao.Audited;
 import org.killbill.billing.util.entity.dao.EntitySqlDao;
-import org.killbill.billing.util.entity.dao.EntitySqlDaoStringTemplate;
+import org.killbill.commons.jdbi.template.KillBillSqlDaoStringTemplate;
 import org.skife.jdbi.v2.sqlobject.customizers.Define;
 
-@EntitySqlDaoStringTemplate
+@KillBillSqlDaoStringTemplate
 public interface PaymentMethodSqlDao extends EntitySqlDao<PaymentMethodModelDao, PaymentMethod> {
 
     @SqlUpdate
     @Audited(ChangeType.UPDATE)
     void markPaymentMethodAsDeleted(@Bind("id") final String paymentMethodId,
-                                    @BindBean final InternalCallContext context);
+                                    @SmartBindBean final InternalCallContext context);
 
     @SqlUpdate
     @Audited(ChangeType.UPDATE)
     void unmarkPaymentMethodAsDeleted(@Bind("id") final String paymentMethodId,
-                                      @BindBean final InternalCallContext context);
+                                      @SmartBindBean final InternalCallContext context);
 
     @SqlQuery
-    PaymentMethodModelDao getByExternalKey(@Bind("externalKey") String paymentMethodExternalKey, @BindBean InternalTenantContext context);
+    PaymentMethodModelDao getByExternalKey(@Bind("externalKey") String paymentMethodExternalKey, @SmartBindBean InternalTenantContext context);
 
     @SqlQuery
-    PaymentMethodModelDao getPaymentMethodByExternalKeyIncludedDeleted(@Bind("externalKey") String paymentMethodExternalKey, @BindBean InternalTenantContext context);
+    PaymentMethodModelDao getPaymentMethodByExternalKeyIncludedDeleted(@Bind("externalKey") String paymentMethodExternalKey, @SmartBindBean InternalTenantContext context);
 
     @SqlQuery
     PaymentMethodModelDao getPaymentMethodIncludedDelete(@Bind("id") final String paymentMethodId,
-                                                         @BindBean final InternalTenantContext context);
+                                                         @SmartBindBean final InternalTenantContext context);
 
     @SqlQuery
-    List<PaymentMethodModelDao> getForAccount(@BindBean final InternalTenantContext context);
+    List<PaymentMethodModelDao> getForAccount(@SmartBindBean final InternalTenantContext context);
 
     @SqlQuery
-    List<PaymentMethodModelDao> getForAccountIncludedDelete(@BindBean final InternalTenantContext context);
+    List<PaymentMethodModelDao> getForAccountIncludedDelete(@SmartBindBean final InternalTenantContext context);
 
     @SqlQuery
     @SmartFetchSize(shouldStream = true)
@@ -71,10 +71,10 @@ public interface PaymentMethodSqlDao extends EntitySqlDao<PaymentMethodModelDao,
                                                            @Bind("offset") final Long offset,
                                                            @Bind("rowCount") final Long rowCount,
                                                            @Define("ordering") final String ordering,
-                                                           @BindBean final InternalTenantContext context);
+                                                           @SmartBindBean final InternalTenantContext context);
 
     @SqlQuery
     public Long getCountByPluginName(@Bind("pluginName") final String pluginName,
-                                     @BindBean final InternalTenantContext context);
+                                     @SmartBindBean final InternalTenantContext context);
 
 }

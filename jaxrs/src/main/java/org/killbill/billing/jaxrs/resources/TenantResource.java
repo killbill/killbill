@@ -37,6 +37,7 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.UriInfo;
 
+import org.joda.time.DateTime;
 import org.killbill.billing.ObjectType;
 import org.killbill.billing.account.api.AccountUserApi;
 import org.killbill.billing.callcontext.DefaultCallContext;
@@ -125,7 +126,7 @@ public class TenantResource extends JaxRsResourceBase {
     @ApiOperation(value = "Create a tenant")
     @ApiResponses(value = {@ApiResponse(code = 500, message = "Tenant already exists")})
     public Response createTenant(final TenantJson json,
-                                 @QueryParam(QUERY_TENANT_USE_GLOBAL_DEFAULT) @DefaultValue("true") final Boolean useGlobalDefault,
+                                 @QueryParam(QUERY_TENANT_USE_GLOBAL_DEFAULT) @DefaultValue("false") final Boolean useGlobalDefault,
                                  @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                  @HeaderParam(HDR_REASON) final String reason,
                                  @HeaderParam(HDR_COMMENT) final String comment,
@@ -140,10 +141,12 @@ public class TenantResource extends JaxRsResourceBase {
         if (!useGlobalDefault) {
             final CallContext callContext = new DefaultCallContext(null, tenant.getId(), createdBy, CallOrigin.EXTERNAL,
                                                                    UserType.CUSTOMER, Context.getOrCreateUserToken(), clock);
-            catalogUserApi.createDefaultEmptyCatalog(clock.getUTCNow(),callContext);
+
+            catalogUserApi.createDefaultEmptyCatalog(null, callContext);
         }
         return uriBuilder.buildResponse(uriInfo, TenantResource.class, "getTenant", tenant.getId(), request);
     }
+
 
     @TimedResource
     @POST
@@ -420,4 +423,5 @@ public class TenantResource extends JaxRsResourceBase {
     protected ObjectType getObjectType() {
         return ObjectType.TENANT;
     }
+
 }

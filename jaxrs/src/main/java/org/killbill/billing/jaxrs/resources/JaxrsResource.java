@@ -18,6 +18,9 @@
 
 package org.killbill.billing.jaxrs.resources;
 
+import javax.ws.rs.DefaultValue;
+import javax.ws.rs.QueryParam;
+
 public interface JaxrsResource {
 
     public static final String API_PREFIX = "";
@@ -93,6 +96,10 @@ public interface JaxrsResource {
 
     public static final String QUERY_ACCOUNT_ID = "accountId";
 
+    public static final String QUERY_CANCEL_ALL_SUBSCRIPTIONS = "cancelAllSubscriptions";
+    public static final String QUERY_WRITE_OFF_UNPAID_INVOICES = "writeOffUnpaidInvoices";
+    public static final String QUERY_ITEM_ADJUST_UNPAID_INVOICES = "itemAdjustUnpaidInvoices";
+
     public static final String QUERY_BLOCKING_STATE_TYPES = "blockingStateTypes";
     public static final String QUERY_BLOCKING_STATE_SVCS = "blockingStateSvcs";
 
@@ -135,6 +142,8 @@ public interface JaxrsResource {
     public static final String QUERY_BUNDLE_TRANSFER_ADDON = "transferAddOn";
     public static final String QUERY_BUNDLE_TRANSFER_CANCEL_IMM = "cancelImmediately";
     public static final String QUERY_BUNDLES_FILTER = "bundlesFilter";
+
+    public static final String QUERY_BUNDLES_RENAME_KEY_IF_EXIST_UNUSED = "renameKeyIfExistsAndUnused";
 
     public static final String QUERY_DELETE_DEFAULT_PM_WITH_AUTO_PAY_OFF = "deleteDefaultPmWithAutoPayOff";
 
@@ -214,6 +223,7 @@ public interface JaxrsResource {
     public static final String TAGS = "tags";
     public static final String TAGS_PATH = PREFIX + "/" + TAGS;
 
+    public static final String ALL_CUSTOM_FIELDS = "allCustomFields";
     public static final String CUSTOM_FIELDS = "customFields";
     public static final String CUSTOM_FIELDS_PATH = PREFIX + "/" + CUSTOM_FIELDS;
 
@@ -250,9 +260,14 @@ public interface JaxrsResource {
 
     public static final String CBA_REBALANCING = "cbaRebalancing";
 
+
+    public static final String UNDO_CHANGE_PLAN = "undoChangePlan";
+    public static final String UNDO_CANCEL = "uncancel";
+
     public static final String PAUSE = "pause";
     public static final String RESUME = "resume";
     public static final String BLOCK = "block";
+    public static final String RENAME_KEY = "renameKey";
 
     public static final String AUTHORIZATION = "authorization";
     public static final String CAPTURE = "capture";
@@ -278,6 +293,7 @@ public interface JaxrsResource {
     public static final String TRANSFER_CREDIT = "transferCredit";
 
     public static final String CACHE = "cache";
+    public static final String HEALTHCHECK = "healthcheck";
 
     public static final String QUERY_INCLUDED_DELETED = "includedDeleted";
 

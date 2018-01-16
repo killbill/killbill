@@ -57,7 +57,6 @@ import org.killbill.billing.invoice.api.DryRunType;
 import org.killbill.billing.invoice.api.Invoice;
 import org.killbill.billing.invoice.api.InvoiceApiException;
 import org.killbill.billing.invoice.api.InvoiceItem;
-import org.killbill.billing.invoice.api.InvoiceNotifier;
 import org.killbill.billing.invoice.api.InvoicePayment;
 import org.killbill.billing.invoice.dao.InvoiceDao;
 import org.killbill.billing.invoice.dao.InvoiceItemModelDao;
@@ -68,7 +67,6 @@ import org.killbill.billing.invoice.dao.InvoicePaymentModelDao;
 import org.killbill.billing.invoice.dao.InvoicePaymentSqlDao;
 import org.killbill.billing.invoice.dao.InvoiceSqlDao;
 import org.killbill.billing.invoice.generator.InvoiceGenerator;
-import org.killbill.billing.invoice.notification.NullInvoiceNotifier;
 import org.killbill.billing.junction.BillingEvent;
 import org.killbill.billing.junction.BillingEventSet;
 import org.killbill.billing.junction.BillingInternalApi;
@@ -86,6 +84,7 @@ import org.killbill.billing.util.currency.KillBillMoney;
 import org.killbill.billing.util.dao.NonEntityDao;
 import org.killbill.clock.Clock;
 import org.killbill.commons.locker.GlobalLocker;
+import org.killbill.notificationq.api.NotificationQueueService;
 import org.mockito.Mockito;
 import org.skife.jdbi.v2.IDBI;
 import org.testng.Assert;
@@ -163,6 +162,7 @@ public class TestInvoiceHelper {
     private final MutableInternalCallContext internalCallContext;
     private final InternalCallContextFactory internalCallContextFactory;
     private final InvoiceConfig invoiceConfig;
+    private final NotificationQueueService notificationQueueService;
     // Low level SqlDao used by the tests to directly insert rows
     private final InvoicePaymentSqlDao invoicePaymentSqlDao;
     private final InvoiceItemSqlDao invoiceItemSqlDao;
@@ -172,7 +172,7 @@ public class TestInvoiceHelper {
     @Inject
     public TestInvoiceHelper(final InvoiceGenerator generator, final IDBI dbi,
                              final BillingInternalApi billingApi, final AccountInternalApi accountApi, final ImmutableAccountInternalApi immutableAccountApi, final InvoicePluginDispatcher invoicePluginDispatcher, final AccountUserApi accountUserApi, final SubscriptionBaseInternalApi subscriptionApi, final BusService busService,
-                             final InvoiceDao invoiceDao, final GlobalLocker locker, final Clock clock, final NonEntityDao nonEntityDao, final CacheControllerDispatcher cacheControllerDispatcher, final MutableInternalCallContext internalCallContext, final InvoiceConfig invoiceConfig,
+                             final InvoiceDao invoiceDao, final GlobalLocker locker, final Clock clock, final NonEntityDao nonEntityDao, final NotificationQueueService notificationQueueService, final MutableInternalCallContext internalCallContext, final InvoiceConfig invoiceConfig,
                              final ParkedAccountsManager parkedAccountsManager, final InternalCallContextFactory internalCallContextFactory) {
         this.generator = generator;
         this.billingApi = billingApi;
@@ -186,6 +186,7 @@ public class TestInvoiceHelper {
         this.locker = locker;
         this.clock = clock;
         this.nonEntityDao = nonEntityDao;
+        this.notificationQueueService = notificationQueueService;
         this.parkedAccountsManager = parkedAccountsManager;
         this.internalCallContext = internalCallContext;
         this.internalCallContextFactory = internalCallContextFactory;
@@ -211,10 +212,9 @@ public class TestInvoiceHelper {
 
         Mockito.when(billingApi.getBillingEventsForAccountAndUpdateAccountBCD(Mockito.<UUID>any(), Mockito.<DryRunArguments>any(), Mockito.<InternalCallContext>any())).thenReturn(events);
 
-        final InvoiceNotifier invoiceNotifier = new NullInvoiceNotifier();
         final InvoiceDispatcher dispatcher = new InvoiceDispatcher(generator, accountApi, billingApi, subscriptionApi,
-                                                                   invoiceDao, internalCallContextFactory, invoiceNotifier, invoicePluginDispatcher, locker, busService.getBus(),
-                                                                   null, invoiceConfig, clock, parkedAccountsManager);
+                                                                   invoiceDao, internalCallContextFactory, invoicePluginDispatcher, locker, busService.getBus(),
+                                                                   notificationQueueService, invoiceConfig, clock, parkedAccountsManager);
 
         Invoice invoice = dispatcher.processAccountFromNotificationOrBusEvent(account.getId(), targetDate, new DryRunFutureDateArguments(), internalCallContext);
         Assert.assertNotNull(invoice);
@@ -316,7 +316,7 @@ public class TestInvoiceHelper {
 
     public void verifyInvoice(final UUID invoiceId, final double balance, final double cbaAmount, final InternalTenantContext context) throws InvoiceApiException {
         final InvoiceModelDao invoice = invoiceDao.getById(invoiceId, context);
-        Assert.assertEquals(InvoiceModelDaoHelper.getBalance(invoice).doubleValue(), balance);
+        Assert.assertEquals(InvoiceModelDaoHelper.getRawBalanceForRegularInvoice(invoice).doubleValue(), balance);
         Assert.assertEquals(InvoiceModelDaoHelper.getCBAAmount(invoice).doubleValue(), cbaAmount);
     }
 

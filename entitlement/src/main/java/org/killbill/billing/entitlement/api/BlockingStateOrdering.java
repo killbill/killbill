@@ -1,6 +1,6 @@
 /*
- * Copyright 2014-2016 Groupon, Inc
- * Copyright 2014-2016 The Billing Project, LLC
+ * Copyright 2014-2017 Groupon, Inc
+ * Copyright 2014-2017 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -19,6 +19,7 @@ package org.killbill.billing.entitlement.api;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -42,6 +43,7 @@ import org.killbill.billing.entitlement.block.BlockingChecker.BlockingAggregator
 import org.killbill.billing.entitlement.block.DefaultBlockingChecker.DefaultBlockingAggregator;
 import org.killbill.billing.junction.DefaultBlockingState;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
@@ -53,13 +55,13 @@ import com.google.common.collect.Sets;
 // Given an event stream (across one or multiple entitlements), insert the blocking events at the right place
 public class BlockingStateOrdering extends EntitlementOrderingBase {
 
-    private static final BlockingStateOrdering INSTANCE = new BlockingStateOrdering();
+    @VisibleForTesting
+    static final BlockingStateOrdering INSTANCE = new BlockingStateOrdering();
 
     private BlockingStateOrdering() {}
 
     public static void insertSorted(final Iterable<Entitlement> entitlements, final InternalTenantContext internalTenantContext, final LinkedList<SubscriptionEvent> inputAndOutputResult) {
         INSTANCE.computeEvents(entitlements, internalTenantContext, inputAndOutputResult);
-
     }
 
     private void computeEvents(final Iterable<Entitlement> entitlements, final InternalTenantContext internalTenantContext, final LinkedList<SubscriptionEvent> inputAndOutputResult) {
@@ -70,6 +72,14 @@ public class BlockingStateOrdering extends EntitlementOrderingBase {
             Preconditions.checkState(entitlement instanceof DefaultEntitlement, "Entitlement %s is not a DefaultEntitlement", entitlement);
             blockingStates.addAll(((DefaultEntitlement) entitlement).getEventsStream().getBlockingStates());
         }
+
+        computeEvents(new LinkedList<UUID>(allEntitlementUUIDs), blockingStates, internalTenantContext, inputAndOutputResult);
+    }
+
+    @VisibleForTesting
+    void computeEvents(final LinkedList<UUID> allEntitlementUUIDs, final Collection<BlockingState> blockingStates, final InternalTenantContext internalTenantContext, final LinkedList<SubscriptionEvent> inputAndOutputResult) {
+        // Make sure the ordering is stable
+        Collections.sort(allEntitlementUUIDs);
 
         final SupportForOlderVersionThan_0_17_X backwardCompatibleContext = new SupportForOlderVersionThan_0_17_X(inputAndOutputResult, blockingStates);
 
@@ -107,12 +117,7 @@ public class BlockingStateOrdering extends EntitlementOrderingBase {
                     shouldContinue = false;
                     break;
                 case 0:
-                    // In case of exact same date, we want to make sure that a START_ENTITLEMENT event gets correctly populated when the STOP_BILLING is also on the same date
-                    if (currentBlockingState.getStateName().equals(DefaultEntitlementApi.ENT_STATE_START) && cur.getSubscriptionEventType() != SubscriptionEventType.STOP_BILLING) {
-                        shouldContinue = false;
-                    } else {
-                        shouldContinue = true;
-                    }
+                    shouldContinue = compareBlockingStateWithNextSubscriptionEvent(currentBlockingState, cur) > 0;
                     break;
                 case 1:
                     shouldContinue = true;
@@ -169,7 +174,73 @@ public class BlockingStateOrdering extends EntitlementOrderingBase {
                 outputNewEvents.add(toSubscriptionEvent(prevNext[0], prevNext[1], targetEntitlementId, currentBlockingState, t, internalTenantContext));
             }
         }
+
         return index;
+    }
+
+    private int compareBlockingStateWithNextSubscriptionEvent(final BlockingState blockingState, final SubscriptionEvent next) {
+        final String serviceName = blockingState.getService();
+
+        // For consistency, make sure entitlement-service and billing-service events always happen in a
+        // deterministic order (e.g. after other services for STOP events and before for START events)
+        if ((DefaultEntitlementService.ENTITLEMENT_SERVICE_NAME.equals(serviceName) ||
+             BILLING_SERVICE_NAME.equals(serviceName) ||
+             ENT_BILLING_SERVICE_NAME.equals(serviceName)) &&
+            !(DefaultEntitlementService.ENTITLEMENT_SERVICE_NAME.equals(next.getServiceName()) ||
+              BILLING_SERVICE_NAME.equals(next.getServiceName()) ||
+              ENT_BILLING_SERVICE_NAME.equals(next.getServiceName()))) {
+            // first is an entitlement-service or billing-service event, but not second
+            if (blockingState.isBlockBilling() || blockingState.isBlockEntitlement()) {
+                // PAUSE_ and STOP_ events go last
+                return 1;
+            } else {
+                return -1;
+            }
+        } else if ((DefaultEntitlementService.ENTITLEMENT_SERVICE_NAME.equals(next.getServiceName()) ||
+                    BILLING_SERVICE_NAME.equals(next.getServiceName()) ||
+                    ENT_BILLING_SERVICE_NAME.equals(next.getServiceName())) &&
+                   !(DefaultEntitlementService.ENTITLEMENT_SERVICE_NAME.equals(serviceName) ||
+                     BILLING_SERVICE_NAME.equals(serviceName) ||
+                     ENT_BILLING_SERVICE_NAME.equals(serviceName))) {
+            // second is an entitlement-service or billing-service event, but not first
+            if (next.getSubscriptionEventType().equals(SubscriptionEventType.START_ENTITLEMENT) ||
+                next.getSubscriptionEventType().equals(SubscriptionEventType.START_BILLING) ||
+                next.getSubscriptionEventType().equals(SubscriptionEventType.RESUME_ENTITLEMENT) ||
+                next.getSubscriptionEventType().equals(SubscriptionEventType.RESUME_BILLING) ||
+                next.getSubscriptionEventType().equals(SubscriptionEventType.PHASE) ||
+                next.getSubscriptionEventType().equals(SubscriptionEventType.CHANGE)) {
+                return 1;
+            } else if (next.getSubscriptionEventType().equals(SubscriptionEventType.PAUSE_ENTITLEMENT) ||
+                       next.getSubscriptionEventType().equals(SubscriptionEventType.PAUSE_BILLING) ||
+                       next.getSubscriptionEventType().equals(SubscriptionEventType.STOP_ENTITLEMENT) ||
+                       next.getSubscriptionEventType().equals(SubscriptionEventType.STOP_BILLING)) {
+                return -1;
+            } else {
+                // Default behavior
+                return 1;
+            }
+        } else if (isStartEntitlement(blockingState)) {
+            // START_ENTITLEMENT is always first
+            return -1;
+        } else if (next.getSubscriptionEventType().equals(SubscriptionEventType.START_ENTITLEMENT)) {
+            // START_ENTITLEMENT is always first
+            return 1;
+        } else if (next.getSubscriptionEventType().equals(SubscriptionEventType.STOP_BILLING)) {
+            // STOP_BILLING is always last
+            return -1;
+        } else if (next.getSubscriptionEventType().equals(SubscriptionEventType.START_BILLING)) {
+            // START_BILLING is first after START_ENTITLEMENT
+            return 1;
+        } else if (isStopEntitlement(blockingState)) {
+            // STOP_ENTITLEMENT is last after STOP_BILLING
+            return 1;
+        } else if (next.getSubscriptionEventType().equals(SubscriptionEventType.STOP_ENTITLEMENT)) {
+            // STOP_ENTITLEMENT is last after STOP_BILLING
+            return -1;
+        } else {
+            // Trust the current ordering
+            return 1;
+        }
     }
 
     // Extract prev and next events in the stream events for that particular target subscription from the insertionEvent
@@ -390,11 +461,11 @@ public class BlockingStateOrdering extends EntitlementOrderingBase {
                                                                               bs.getEffectiveDate());
 
             final List<SubscriptionEventType> result = new ArrayList<SubscriptionEventType>(4);
-            if (fixedBlockingState.getStateName().equals(DefaultEntitlementApi.ENT_STATE_START)) {
+            if (isStartEntitlement(fixedBlockingState)) {
                 isEntitlementStarted = true;
                 result.add(SubscriptionEventType.START_ENTITLEMENT);
                 return result;
-            } else if (fixedBlockingState.getStateName().equals(DefaultEntitlementApi.ENT_STATE_CANCELLED)) {
+            } else if (isStopEntitlement(fixedBlockingState)) {
                 isEntitlementStopped = true;
                 result.add(SubscriptionEventType.STOP_ENTITLEMENT);
                 return result;
@@ -448,6 +519,16 @@ public class BlockingStateOrdering extends EntitlementOrderingBase {
             }
             return aggrBefore;
         }
+    }
+
+    private static boolean isStartEntitlement(final BlockingState blockingState) {
+        return DefaultEntitlementService.ENTITLEMENT_SERVICE_NAME.equals(blockingState.getService()) &&
+               DefaultEntitlementApi.ENT_STATE_START.equals(blockingState.getStateName());
+    }
+
+    private static boolean isStopEntitlement(final BlockingState blockingState) {
+        return DefaultEntitlementService.ENTITLEMENT_SERVICE_NAME.equals(blockingState.getService()) &&
+               DefaultEntitlementApi.ENT_STATE_CANCELLED.equals(blockingState.getStateName());
     }
 
     //

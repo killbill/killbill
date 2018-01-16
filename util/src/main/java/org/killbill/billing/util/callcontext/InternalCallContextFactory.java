@@ -262,7 +262,7 @@ public class InternalCallContextFactory {
     public InternalCallContext createInternalCallContext(final TimeZoneAwareEntity accountModelDao, final Long accountRecordId, final InternalCallContext context) {
         // See DefaultImmutableAccountData implementation
         final DateTimeZone fixedOffsetTimeZone = AccountDateTimeUtils.getFixedOffsetTimeZone(accountModelDao);
-        final DateTime referenceTime = AccountDateTimeUtils.getReferenceDateTime(accountModelDao);
+        final DateTime referenceTime = accountModelDao.getReferenceTime();
         populateMDCContext(accountRecordId, context.getTenantRecordId());
         return new InternalCallContext(context, accountRecordId, fixedOffsetTimeZone, referenceTime, clock.getUTCNow());
     }

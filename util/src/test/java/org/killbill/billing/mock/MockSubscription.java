@@ -27,6 +27,7 @@ import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.catalog.api.Plan;
 import org.killbill.billing.catalog.api.PlanPhase;
 import org.killbill.billing.catalog.api.PlanPhasePriceOverride;
+import org.killbill.billing.catalog.api.PlanPhaseSpecifier;
 import org.killbill.billing.catalog.api.PlanSpecifier;
 import org.killbill.billing.catalog.api.PriceList;
 import org.killbill.billing.catalog.api.Product;
@@ -83,18 +84,23 @@ public class MockSubscription implements SubscriptionBase {
     }
 
     @Override
-    public DateTime changePlan(final PlanSpecifier spec, final List<PlanPhasePriceOverride> overrides, final CallContext context) throws SubscriptionBaseApiException {
+    public DateTime changePlan(final PlanPhaseSpecifier spec, final List<PlanPhasePriceOverride> overrides, final CallContext context) throws SubscriptionBaseApiException {
         return sub.changePlan(spec, overrides, context);
     }
 
     @Override
-    public DateTime changePlanWithDate(final PlanSpecifier spec, final List<PlanPhasePriceOverride> overrides, final DateTime requestedDate,
+    public boolean undoChangePlan(final CallContext context) throws SubscriptionBaseApiException {
+        return sub.undoChangePlan(context);
+    }
+
+    @Override
+    public DateTime changePlanWithDate(final PlanPhaseSpecifier spec, final List<PlanPhasePriceOverride> overrides, final DateTime requestedDate,
                                        final CallContext context) throws SubscriptionBaseApiException {
         return sub.changePlanWithDate(spec, overrides, requestedDate, context);
     }
 
     @Override
-    public DateTime changePlanWithPolicy(final PlanSpecifier spec,
+    public DateTime changePlanWithPolicy(final PlanPhaseSpecifier spec,
                                          final List<PlanPhasePriceOverride> overrides, final BillingActionPolicy policy, final CallContext context) throws SubscriptionBaseApiException {
         return sub.changePlanWithPolicy(spec, overrides, policy, context);
     }

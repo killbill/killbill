@@ -24,6 +24,7 @@ import org.testng.annotations.Test;
 import org.killbill.billing.jaxrs.JaxrsTestSuiteNoDB;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 
 public class TestTagDefinitionJson extends JaxrsTestSuiteNoDB {
 
@@ -33,7 +34,7 @@ public class TestTagDefinitionJson extends JaxrsTestSuiteNoDB {
         final Boolean isControlTag = true;
         final String name = UUID.randomUUID().toString();
         final String description = UUID.randomUUID().toString();
-        final ImmutableList<String> applicableObjectTypes = ImmutableList.<String>of(UUID.randomUUID().toString());
+        final ImmutableSet<String> applicableObjectTypes = ImmutableSet.<String>of(UUID.randomUUID().toString());
         final TagDefinitionJson tagDefinitionJson = new TagDefinitionJson(id, isControlTag, name, description, applicableObjectTypes, null);
         Assert.assertEquals(tagDefinitionJson.getId(), id);
         Assert.assertEquals(tagDefinitionJson.isControlTag(), isControlTag);

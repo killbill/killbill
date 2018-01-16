@@ -101,7 +101,6 @@ public class DefaultAccountUserApi extends DefaultAccountApiBase implements Acco
         }
 
         final AccountModelDao account = new AccountModelDao(data);
-
         if (null != account.getExternalKey() && account.getExternalKey().length() > 255) {
             throw new AccountApiException(ErrorCode.EXTERNAL_KEY_LIMIT_EXCEEDED);
         }
@@ -166,7 +165,7 @@ public class DefaultAccountUserApi extends DefaultAccountApiBase implements Acco
 
         input.validateAccountUpdateInput(currentAccount, true);
 
-        final AccountModelDao updatedAccountModelDao = new AccountModelDao(currentAccount.getId(), input);
+        final AccountModelDao updatedAccountModelDao = new AccountModelDao(currentAccount.getId(),  input);
 
         accountDao.update(updatedAccountModelDao, internalCallContextFactory.createInternalCallContext(updatedAccountModelDao.getId(), context));
     }

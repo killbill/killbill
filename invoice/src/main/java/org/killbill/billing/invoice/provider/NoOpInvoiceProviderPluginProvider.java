@@ -45,7 +45,7 @@ public class NoOpInvoiceProviderPluginProvider implements Provider<DefaultNoOpIn
     @Override
     public DefaultNoOpInvoiceProviderPlugin get() {
 
-        final DefaultNoOpInvoiceProviderPlugin plugin = new DefaultNoOpInvoiceProviderPlugin(clock);
+        final DefaultNoOpInvoiceProviderPlugin plugin = new DefaultNoOpInvoiceProviderPlugin();
         final OSGIServiceDescriptor desc = new OSGIServiceDescriptor() {
             @Override
             public String getPluginSymbolicName() {

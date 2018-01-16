@@ -47,11 +47,11 @@ public interface SubscriptionBaseInternalApi {
                                                final boolean isMigrated, InternalCallContext context) throws SubscriptionBaseApiException;
 
     public List<SubscriptionBaseWithAddOns> createBaseSubscriptionsWithAddOns(UUID accountId, Iterable<BaseEntitlementWithAddOnsSpecifier> baseEntitlementWithAddOnsSpecifier,
-                                                                              InternalCallContext contextWithValidAccountRecordId) throws SubscriptionBaseApiException;
+                                                                              boolean renameCancelledBundleIfExist, InternalCallContext contextWithValidAccountRecordId) throws SubscriptionBaseApiException;
 
     public void cancelBaseSubscriptions(Iterable<SubscriptionBase> subscriptions, BillingActionPolicy policy, int accountBillCycleDayLocal, InternalCallContext context) throws SubscriptionBaseApiException;
 
-    public SubscriptionBaseBundle createBundleForAccount(UUID accountId, String bundleName, InternalCallContext context)
+    public SubscriptionBaseBundle createBundleForAccount(UUID accountId, String bundleName, boolean renameCancelledBundleIfExist, InternalCallContext context)
             throws SubscriptionBaseApiException;
 
     public List<SubscriptionBaseBundle> getBundlesForAccountAndKey(UUID accountId, String bundleKey, InternalTenantContext context)
@@ -86,17 +86,12 @@ public interface SubscriptionBaseInternalApi {
 
     public List<EffectiveSubscriptionInternalEvent> getBillingTransitions(SubscriptionBase subscription, InternalTenantContext context);
 
-    public DateTime getDryRunChangePlanEffectiveDate(SubscriptionBase subscription, PlanSpecifier spec, DateTime requestedDate, BillingActionPolicy policy, List<PlanPhasePriceOverride> overrides, InternalCallContext context) throws SubscriptionBaseApiException, CatalogApiException;
+    public DateTime getDryRunChangePlanEffectiveDate(SubscriptionBase subscription, PlanPhaseSpecifier spec, DateTime requestedDate, BillingActionPolicy policy, List<PlanPhasePriceOverride> overrides, InternalCallContext context) throws SubscriptionBaseApiException, CatalogApiException;
 
     public List<EntitlementAOStatusDryRun> getDryRunChangePlanStatus(UUID subscriptionId, @Nullable String baseProductName,
                                                                      DateTime requestedDate, InternalTenantContext context) throws SubscriptionBaseApiException;
 
     public void updateExternalKey(UUID bundleId, String newExternalKey, InternalCallContext context);
-
-    public Iterable<DateTime> getFutureNotificationsForAccount(InternalCallContext context);
-
-    public Map<UUID, DateTime> getNextFutureEventForSubscriptions(final SubscriptionBaseTransitionType eventType, final InternalCallContext internalCallContext);
-
 
     public void updateBCD(final UUID subscriptionId, final int bcd, @Nullable final LocalDate effectiveFromDate, final InternalCallContext internalCallContext) throws SubscriptionBaseApiException;
 

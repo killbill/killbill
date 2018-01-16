@@ -27,12 +27,15 @@ import org.killbill.billing.entitlement.glue.DefaultEntitlementModule;
 import org.killbill.billing.invoice.glue.DefaultInvoiceModule;
 import org.killbill.billing.jaxrs.glue.DefaultJaxrsModule;
 import org.killbill.billing.jaxrs.resources.AccountResource;
+import org.killbill.billing.jaxrs.resources.AdminResource;
+import org.killbill.billing.jaxrs.resources.CreditResource;
 import org.killbill.billing.jaxrs.resources.CustomFieldResource;
 import org.killbill.billing.jaxrs.resources.ExportResource;
-import org.killbill.billing.jaxrs.resources.InvoicePaymentResource;
+import org.killbill.billing.jaxrs.resources.NodesInfoResource;
 import org.killbill.billing.jaxrs.resources.PaymentGatewayResource;
 import org.killbill.billing.jaxrs.resources.PaymentMethodResource;
 import org.killbill.billing.jaxrs.resources.PaymentResource;
+import org.killbill.billing.jaxrs.resources.PluginInfoResource;
 import org.killbill.billing.jaxrs.resources.PluginResource;
 import org.killbill.billing.jaxrs.resources.SecurityResource;
 import org.killbill.billing.jaxrs.resources.TagDefinitionResource;
@@ -49,7 +52,6 @@ import org.killbill.billing.server.config.KillbillServerConfig;
 import org.killbill.billing.subscription.glue.DefaultSubscriptionModule;
 import org.killbill.billing.tenant.glue.DefaultTenantModule;
 import org.killbill.billing.usage.glue.UsageModule;
-import org.killbill.billing.util.email.EmailModule;
 import org.killbill.billing.util.email.templates.TemplateModule;
 import org.killbill.billing.util.glue.AuditModule;
 import org.killbill.billing.util.glue.BroadcastModule;
@@ -59,9 +61,9 @@ import org.killbill.billing.util.glue.ConfigModule;
 import org.killbill.billing.util.glue.CustomFieldModule;
 import org.killbill.billing.util.glue.ExportModule;
 import org.killbill.billing.util.glue.GlobalLockerModule;
-import org.killbill.billing.util.glue.NodesModule;
 import org.killbill.billing.util.glue.KillBillShiroAopModule;
 import org.killbill.billing.util.glue.KillbillApiAopModule;
+import org.killbill.billing.util.glue.NodesModule;
 import org.killbill.billing.util.glue.NonEntityDaoModule;
 import org.killbill.billing.util.glue.RecordIdModule;
 import org.killbill.billing.util.glue.SecurityModule;
@@ -109,25 +111,29 @@ public class KillpayServerModule extends KillbillServerModule {
         install(new DefaultJaxrsModule(configSource));
         // TODO Dependencies for AccountResource
         install(new DefaultOverdueModule(configSource));
-        install(new EmailModule(configSource));
     }
 
     @Override
     protected void configureResources() {
         bind(AccountResource.class).asEagerSingleton();
+        bind(AdminResource.class).asEagerSingleton();
+        bind(CreditResource.class).asEagerSingleton();
         bind(CustomFieldResource.class).asEagerSingleton();
         bind(ExportResource.class).asEagerSingleton();
-        bind(InvoicePaymentResource.class).asEagerSingleton();
+        bind(NodesInfoResource.class).asEagerSingleton();
         bind(KillbillEventHandler.class).asEagerSingleton();
         bind(PaymentGatewayResource.class).asEagerSingleton();
         bind(PaymentMethodResource.class).asEagerSingleton();
         bind(PaymentResource.class).asEagerSingleton();
         bind(PluginResource.class).asEagerSingleton();
+        bind(PluginInfoResource.class).asEagerSingleton();
         bind(SecurityResource.class).asEagerSingleton();
         bind(TagDefinitionResource.class).asEagerSingleton();
         bind(TagResource.class).asEagerSingleton();
         bind(TenantResource.class).asEagerSingleton();
         bind(TestResource.class).asEagerSingleton();
         bind(TransactionResource.class).asEagerSingleton();
+
+        bind(KillbillEventHandler.class).asEagerSingleton();
     }
 }

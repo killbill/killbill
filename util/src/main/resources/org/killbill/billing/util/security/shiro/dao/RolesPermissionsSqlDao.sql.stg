@@ -1,6 +1,3 @@
-group RolesPermissionsSqlDao;
-
-
 tableName() ::= "roles_permissions"
 
 tableFields(prefix) ::= <<
@@ -37,7 +34,7 @@ allTableValues() ::= <<
 
 create() ::= <<
 insert into <tableName()> (
-<tableFields()>
+<tableFields("")>
 )
 values (
 <tableValues()>
@@ -46,7 +43,7 @@ values (
 >>
 
 getByRecordId() ::= <<
-select <allTableFields()>
+select <allTableFields("")>
 from <tableName()>
 where record_id = :recordId
 and is_active
@@ -55,9 +52,22 @@ and is_active
 
 
 getByRoleName() ::= <<
-select <allTableFields()>
+select <allTableFields("")>
 from <tableName()>
 where role_name = :roleName
 and is_active
 ;
 >>
+
+unactiveEvent() ::= <<
+update <tableName()>
+set
+is_active = false
+, updated_by = :createdBy
+, updated_date = :createdDate
+where
+record_id = :recordId
+<AND_CHECK_TENANT("")>
+;
+>>
+

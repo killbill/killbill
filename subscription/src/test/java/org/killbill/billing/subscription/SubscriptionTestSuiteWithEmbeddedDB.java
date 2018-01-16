@@ -112,19 +112,13 @@ public class SubscriptionTestSuiteWithEmbeddedDB extends GuicyKillbillTestSuiteW
         subscriptionTestInitializer.startTestFramework(testListener, clock, busService, subscriptionBaseService);
 
         this.catalog = subscriptionTestInitializer.initCatalog(catalogService, internalCallContext);
-        this.accountData = subscriptionTestInitializer.initAccountData();
+        this.accountData = subscriptionTestInitializer.initAccountData(clock);
         final Account account = createAccount(accountData);
         this.bundle = subscriptionTestInitializer.initBundle(account.getId(), subscriptionInternalApi, internalCallContext);
-
-        // Make sure we start with a clean state
-        assertListenerStatus();
     }
 
     @AfterMethod(groups = "slow")
     public void afterMethod() throws Exception {
-        // Make sure we finish in a clean state
-        assertListenerStatus();
-
         subscriptionTestInitializer.stopTestFramework(testListener, busService, subscriptionBaseService);
     }
 
@@ -136,6 +130,7 @@ public class SubscriptionTestSuiteWithEmbeddedDB extends GuicyKillbillTestSuiteW
         return account;
     }
 
+    @Override
     protected void assertListenerStatus() {
         testListener.assertListenerStatus();
     }

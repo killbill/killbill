@@ -103,7 +103,7 @@ public class TestPaymentPluginProperties extends TestJaxrsBase {
             for (org.killbill.billing.payment.api.PluginProperty input : properties) {
                 boolean found  = false;
                 for (org.killbill.billing.payment.api.PluginProperty expect : expectedProperties) {
-                    if (expect.getKey().equals(input.getKey()) && expect.getValue().equals(expect.getValue())) {
+                    if (expect.getKey().equals(input.getKey()) && expect.getValue().equals(input.getValue())) {
                         found = true;
                         break;
                     }
@@ -111,10 +111,10 @@ public class TestPaymentPluginProperties extends TestJaxrsBase {
                 Assert.assertTrue(found);
             }
 
-            for (org.killbill.billing.payment.api.PluginProperty expect : properties) {
+            for (org.killbill.billing.payment.api.PluginProperty expect : expectedProperties) {
                 boolean found  = false;
-                for (org.killbill.billing.payment.api.PluginProperty input : expectedProperties) {
-                    if (expect.getKey().equals(input.getKey()) && expect.getValue().equals(expect.getValue())) {
+                for (org.killbill.billing.payment.api.PluginProperty input : properties) {
+                    if (expect.getKey().equals(input.getKey()) && expect.getValue().equals(input.getValue())) {
                         found = true;
                         break;
                     }
@@ -227,9 +227,25 @@ public class TestPaymentPluginProperties extends TestJaxrsBase {
         params.putAll(KillBillHttpClient.CONTROL_PLUGIN_NAME, ImmutableList.<String>of(PluginPropertiesVerificator.PLUGIN_NAME));
 
         final RequestOptions requestOptionsWithParams = basicRequestOptions.extend()
-                                                          .withQueryParams(params).build();
+                                                                           .withQueryParams(params).build();
 
         killBillClient.completePayment(completeTransactionByPaymentId, queryProperties, requestOptionsWithParams);
+
+        //Capture the payment
+        final PaymentTransaction captureTransaction = new PaymentTransaction();
+        captureTransaction.setPaymentId(initialPayment.getPaymentId());
+        captureTransaction.setProperties(bodyProperties);
+        captureTransaction.setAmount(BigDecimal.TEN);
+        captureTransaction.setCurrency(account.getCurrency());
+        killBillClient.captureAuthorization(captureTransaction, ImmutableList.<String>of(PluginPropertiesVerificator.PLUGIN_NAME), queryProperties, requestOptions);
+
+        //Refund the payment
+        final PaymentTransaction refundTransaction = new PaymentTransaction();
+        refundTransaction.setPaymentId(initialPayment.getPaymentId());
+        refundTransaction.setProperties(bodyProperties);
+        refundTransaction.setAmount(BigDecimal.TEN);
+        refundTransaction.setCurrency(account.getCurrency());
+        killBillClient.refundPayment(refundTransaction, ImmutableList.<String>of(PluginPropertiesVerificator.PLUGIN_NAME), queryProperties, requestOptions);
     }
 
     private Payment createVerifyTransaction(final Account account,

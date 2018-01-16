@@ -37,6 +37,7 @@ import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.catalog.api.Plan;
 import org.killbill.billing.catalog.api.PlanPhase;
 import org.killbill.billing.catalog.api.PlanPhasePriceOverride;
+import org.killbill.billing.catalog.api.PlanPhaseSpecifier;
 import org.killbill.billing.catalog.api.PlanSpecifier;
 import org.killbill.billing.catalog.api.PriceList;
 import org.killbill.billing.catalog.api.Product;
@@ -51,6 +52,7 @@ import org.killbill.billing.entitlement.engine.core.EntitlementNotificationKey;
 import org.killbill.billing.entitlement.engine.core.EntitlementNotificationKeyAction;
 import org.killbill.billing.entitlement.engine.core.EntitlementUtils;
 import org.killbill.billing.entitlement.engine.core.EventsStreamBuilder;
+import org.killbill.billing.entitlement.logging.EntitlementLoggingHelper;
 import org.killbill.billing.entitlement.plugin.api.EntitlementContext;
 import org.killbill.billing.entitlement.plugin.api.OperationType;
 import org.killbill.billing.entity.EntityBase;
@@ -79,6 +81,7 @@ import com.google.common.collect.ImmutableList;
 import static org.killbill.billing.entitlement.logging.EntitlementLoggingHelper.logCancelEntitlement;
 import static org.killbill.billing.entitlement.logging.EntitlementLoggingHelper.logChangePlan;
 import static org.killbill.billing.entitlement.logging.EntitlementLoggingHelper.logUncancelEntitlement;
+import static org.killbill.billing.entitlement.logging.EntitlementLoggingHelper.logUndoChangePlan;
 import static org.killbill.billing.entitlement.logging.EntitlementLoggingHelper.logUpdateBCD;
 
 public class DefaultEntitlement extends EntityBase implements Entitlement {
@@ -343,7 +346,8 @@ public class DefaultEntitlement extends EntityBase implements Entitlement {
 
                 final InternalCallContext contextWithValidAccountRecordId = internalCallContextFactory.createInternalCallContext(getAccountId(), callContext);
 
-                final DateTime billingEffectiveCancelDate = dateHelper.fromLocalDateAndReferenceTimeWithMinimum(billingEffectiveDate, getEventsStream().getSubscriptionBase().getStartDate(), contextWithValidAccountRecordId);
+                final DateTime now = clock.getUTCNow();
+                final DateTime billingEffectiveCancelDate = dateHelper.fromLocalDateAndReferenceTimeWithMinimum(billingEffectiveDate, getEventsStream().getSubscriptionBase().getStartDate(), now, contextWithValidAccountRecordId);
                 try {
                     if (overrideBillingEffectiveDate) {
                         getSubscriptionBase().cancelWithDate(billingEffectiveCancelDate, callContext);
@@ -354,7 +358,7 @@ public class DefaultEntitlement extends EntityBase implements Entitlement {
                     throw new EntitlementApiException(e);
                 }
 
-                final DateTime entitlementEffectiveCancelDate = dateHelper.fromLocalDateAndReferenceTimeWithMinimum(entitlementEffectiveDate, getEventsStream().getEntitlementEffectiveStartDateTime(), contextWithValidAccountRecordId);
+                final DateTime entitlementEffectiveCancelDate = dateHelper.fromLocalDateAndReferenceTimeWithMinimum(entitlementEffectiveDate, getEventsStream().getEntitlementEffectiveStartDateTime(), now, contextWithValidAccountRecordId);
                 final BlockingState newBlockingState = new DefaultBlockingState(getId(), BlockingStateType.SUBSCRIPTION, DefaultEntitlementApi.ENT_STATE_CANCELLED, EntitlementService.ENTITLEMENT_SERVICE_NAME, true, true, false, entitlementEffectiveCancelDate);
                 final Collection<NotificationEvent> notificationEvents = new ArrayList<NotificationEvent>();
                 final Collection<BlockingState> addOnsBlockingStates = computeAddOnBlockingStates(entitlementEffectiveCancelDate, notificationEvents, callContext, contextWithValidAccountRecordId);
@@ -391,7 +395,7 @@ public class DefaultEntitlement extends EntityBase implements Entitlement {
                 false);
         final List<BaseEntitlementWithAddOnsSpecifier> baseEntitlementWithAddOnsSpecifierList = new ArrayList<BaseEntitlementWithAddOnsSpecifier>();
         baseEntitlementWithAddOnsSpecifierList.add(baseEntitlementWithAddOnsSpecifier);
-        final EntitlementContext pluginContext = new DefaultEntitlementContext(OperationType.UNCANCEL_SUBSCRIPTION,
+        final EntitlementContext pluginContext = new DefaultEntitlementContext(OperationType.UNDO_PENDING_SUBSCRIPTION_OPERATION,
                                                                                getAccountId(),
                                                                                null,
                                                                                baseEntitlementWithAddOnsSpecifierList,
@@ -498,7 +502,8 @@ public class DefaultEntitlement extends EntityBase implements Entitlement {
                     throw new EntitlementApiException(e);
                 }
 
-                final DateTime effectiveCancelDate = dateHelper.fromLocalDateAndReferenceTimeWithMinimum(entitlementEffectiveDate, getEventsStream().getEntitlementEffectiveStartDateTime(), contextWithValidAccountRecordId);
+                final DateTime now = clock.getUTCNow();
+                final DateTime effectiveCancelDate = dateHelper.fromLocalDateAndReferenceTimeWithMinimum(entitlementEffectiveDate, getEventsStream().getEntitlementEffectiveStartDateTime(), now, contextWithValidAccountRecordId);
                 final BlockingState newBlockingState = new DefaultBlockingState(getId(), BlockingStateType.SUBSCRIPTION, DefaultEntitlementApi.ENT_STATE_CANCELLED, EntitlementService.ENTITLEMENT_SERVICE_NAME, true, true, false, effectiveCancelDate);
                 final Collection<NotificationEvent> notificationEvents = new ArrayList<NotificationEvent>();
                 final Collection<BlockingState> addOnsBlockingStates = computeAddOnBlockingStates(effectiveCancelDate, notificationEvents, callContext, contextWithValidAccountRecordId);
@@ -538,7 +543,7 @@ public class DefaultEntitlement extends EntityBase implements Entitlement {
 
 
     @Override
-    public Entitlement changePlan(final PlanSpecifier spec, final List<PlanPhasePriceOverride> overrides, final Iterable<PluginProperty> properties, final CallContext callContext) throws EntitlementApiException {
+    public Entitlement changePlan(final PlanPhaseSpecifier spec, final List<PlanPhasePriceOverride> overrides, final Iterable<PluginProperty> properties, final CallContext callContext) throws EntitlementApiException {
 
         logChangePlan(log, this, spec, overrides, null, null);
 
@@ -609,7 +614,52 @@ public class DefaultEntitlement extends EntityBase implements Entitlement {
     }
 
     @Override
-    public Entitlement changePlanWithDate(final PlanSpecifier spec, final List<PlanPhasePriceOverride> overrides, @Nullable final LocalDate effectiveDate, final Iterable<PluginProperty> properties, final CallContext callContext) throws EntitlementApiException {
+    public void undoChangePlan(final Iterable<PluginProperty> properties, final CallContext callContext) throws EntitlementApiException {
+
+        logUndoChangePlan(log, this);
+
+        checkForPermissions(Permission.ENTITLEMENT_CAN_CHANGE_PLAN, callContext);
+
+        // Get the latest state from disk
+        refresh(callContext);
+
+        final BaseEntitlementWithAddOnsSpecifier baseEntitlementWithAddOnsSpecifier = new DefaultBaseEntitlementWithAddOnsSpecifier(
+                getBundleId(),
+                getExternalKey(),
+                null,
+                null,
+                null,
+                false);
+        final List<BaseEntitlementWithAddOnsSpecifier> baseEntitlementWithAddOnsSpecifierList = new ArrayList<BaseEntitlementWithAddOnsSpecifier>();
+        baseEntitlementWithAddOnsSpecifierList.add(baseEntitlementWithAddOnsSpecifier);
+        final EntitlementContext pluginContext = new DefaultEntitlementContext(OperationType.UNDO_PENDING_SUBSCRIPTION_OPERATION,
+                                                                               getAccountId(),
+                                                                               null,
+                                                                               baseEntitlementWithAddOnsSpecifierList,
+                                                                               null,
+                                                                               properties,
+                                                                               callContext);
+
+        final WithEntitlementPlugin<Void> undoChangePlanEntitlementWithPlugin = new WithEntitlementPlugin<Void>() {
+
+            @Override
+            public Void doCall(final EntitlementApi entitlementApi, final EntitlementContext updatedPluginContext) throws EntitlementApiException {
+
+                try {
+                    getSubscriptionBase().undoChangePlan(callContext);
+                } catch (final SubscriptionBaseApiException e) {
+                    throw new EntitlementApiException(e);
+                }
+                return null;
+            }
+        };
+
+        pluginExecution.executeWithPlugin(undoChangePlanEntitlementWithPlugin, pluginContext);
+
+    }
+
+    @Override
+    public Entitlement changePlanWithDate(final PlanPhaseSpecifier spec, final List<PlanPhasePriceOverride> overrides, @Nullable final LocalDate effectiveDate, final Iterable<PluginProperty> properties, final CallContext callContext) throws EntitlementApiException {
 
         logChangePlan(log, this, spec, overrides, effectiveDate, null);
 
@@ -646,7 +696,8 @@ public class DefaultEntitlement extends EntityBase implements Entitlement {
                 final InternalCallContext context = internalCallContextFactory.createInternalCallContext(getAccountId(), callContext);
 
 
-                final DateTime effectiveChangeDate = effectiveDate !=  null ? dateHelper.fromLocalDateAndReferenceTime(effectiveDate, context) : null;
+                final DateTime now = clock.getUTCNow();
+                final DateTime effectiveChangeDate = effectiveDate !=  null ? dateHelper.fromLocalDateAndReferenceTime(effectiveDate, now, context) : null;
 
                 final DateTime resultingEffectiveDate;
                 try {
@@ -685,7 +736,7 @@ public class DefaultEntitlement extends EntityBase implements Entitlement {
     }
 
     @Override
-    public Entitlement changePlanOverrideBillingPolicy(final PlanSpecifier spec, final List<PlanPhasePriceOverride> overrides, final LocalDate unused, final BillingActionPolicy actionPolicy, final Iterable<PluginProperty> properties, final CallContext callContext) throws EntitlementApiException {
+    public Entitlement changePlanOverrideBillingPolicy(final PlanPhaseSpecifier spec, final List<PlanPhasePriceOverride> overrides, final LocalDate unused, final BillingActionPolicy actionPolicy, final Iterable<PluginProperty> properties, final CallContext callContext) throws EntitlementApiException {
 
         logChangePlan(log, this, spec, overrides, null, actionPolicy);
 

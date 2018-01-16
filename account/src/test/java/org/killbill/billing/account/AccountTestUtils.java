@@ -19,6 +19,7 @@ package org.killbill.billing.account;
 import java.util.Locale;
 import java.util.UUID;
 
+import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.killbill.billing.account.api.AccountData;
 import org.killbill.billing.account.api.DefaultMutableAccountData;
@@ -65,27 +66,27 @@ public abstract class AccountTestUtils {
     }
 
     public static AccountModelDao createTestAccount() {
-        return createTestAccount(30, 31, UUID.randomUUID().toString().substring(0, 4));
+        return createTestAccount(31, UUID.randomUUID().toString().substring(0, 4));
     }
 
     public static AccountModelDao createTestAccount(final String phone) {
-        return createTestAccount(30, 31, phone);
+        return createTestAccount(31, phone);
     }
 
     public static AccountModelDao createTestAccount(final int billCycleDay) {
-        return createTestAccount(billCycleDay, billCycleDay, UUID.randomUUID().toString().substring(0, 4));
+        return createTestAccount(billCycleDay, UUID.randomUUID().toString().substring(0, 4));
     }
 
-    private static AccountModelDao createTestAccount(final int billCycleDayUTC, final int billCycleDayLocal, final String phone) {
-        final AccountData accountData = createAccountData(billCycleDayUTC, billCycleDayLocal, phone);
+    private static AccountModelDao createTestAccount(final int billCycleDayLocal, final String phone) {
+        final AccountData accountData = createAccountData(billCycleDayLocal, phone);
         return new AccountModelDao(UUID.randomUUID(), accountData);
     }
 
     public static MutableAccountData createAccountData() {
-        return createAccountData(30, 31, UUID.randomUUID().toString().substring(0, 4));
+        return createAccountData(31, UUID.randomUUID().toString().substring(0, 4));
     }
 
-    private static MutableAccountData createAccountData(final int billCycleDayUTC, final int billCycleDayLocal, final String phone) {
+    private static MutableAccountData createAccountData(final int billCycleDayLocal, final String phone) {
         final String externalKey = UUID.randomUUID().toString();
         final String email = UUID.randomUUID().toString().substring(0, 4) + '@' + UUID.randomUUID().toString().substring(0, 4);
         final String name = UUID.randomUUID().toString();
@@ -104,7 +105,7 @@ public abstract class AccountTestUtils {
         final String notes = UUID.randomUUID().toString();
 
         return new DefaultMutableAccountData(externalKey, email, name, firstNameLength, currency, null, false,
-                                             billCycleDayLocal, paymentMethodId, timeZone,
+                                             billCycleDayLocal, paymentMethodId, null, timeZone,
                                              locale, address1, address2, companyName, city, stateOrProvince,
                                              country, postalCode, phone, notes, false, true);
     }

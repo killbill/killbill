@@ -54,6 +54,7 @@ public class AccountJson extends JsonBase {
     private final Boolean isPaymentDelegatedToParent;
     @ApiModelProperty(dataType = "java.util.UUID")
     private final String paymentMethodId;
+    private final DateTime referenceTime;
     private final String timeZone;
     private final String address1;
     private final String address2;
@@ -82,6 +83,7 @@ public class AccountJson extends JsonBase {
         this.parentAccountId = account.getParentAccountId() != null ? account.getParentAccountId().toString() : null;
         this.isPaymentDelegatedToParent = account.isPaymentDelegatedToParent();
         this.paymentMethodId = account.getPaymentMethodId() != null ? account.getPaymentMethodId().toString() : null;
+        this.referenceTime = account.getReferenceTime();
         this.timeZone = account.getTimeZone() != null ? account.getTimeZone().toString() : null;
         this.address1 = account.getAddress1();
         this.address2 = account.getAddress2();
@@ -108,6 +110,7 @@ public class AccountJson extends JsonBase {
                        @JsonProperty("parentAccountId") final String parentAccountId,
                        @JsonProperty("isPaymentDelegatedToParent") final Boolean isPaymentDelegatedToParent,
                        @JsonProperty("paymentMethodId") final String paymentMethodId,
+                       @JsonProperty("referenceTime") final DateTime referenceTime,
                        @JsonProperty("timeZone") final String timeZone,
                        @JsonProperty("address1") final String address1,
                        @JsonProperty("address2") final String address2,
@@ -136,6 +139,7 @@ public class AccountJson extends JsonBase {
         this.parentAccountId = parentAccountId;
         this.isPaymentDelegatedToParent = isPaymentDelegatedToParent;
         this.paymentMethodId = paymentMethodId;
+        this.referenceTime = referenceTime;
         this.timeZone = timeZone;
         this.address1 = address1;
         this.address2 = address2;
@@ -297,7 +301,7 @@ public class AccountJson extends JsonBase {
 
             @Override
             public DateTime getReferenceTime() {
-                return null;
+                return referenceTime;
             }
 
             @Override
@@ -371,6 +375,10 @@ public class AccountJson extends JsonBase {
         return paymentMethodId;
     }
 
+    public DateTime getReferenceTime() {
+        return referenceTime;
+    }
+
     public String getTimeZone() {
         return timeZone;
     }
@@ -440,6 +448,7 @@ public class AccountJson extends JsonBase {
                ", parentAccountId=" + parentAccountId + '\'' +
                ", isPaymentDelegatedToParent=" + isPaymentDelegatedToParent + '\'' +
                ", paymentMethodId='" + paymentMethodId + '\'' +
+               ", referenceTime='" + referenceTime + '\'' +
                ", timeZone='" + timeZone + '\'' +
                ", address1='" + address1 + '\'' +
                ", address2='" + address2 + '\'' +
@@ -539,10 +548,12 @@ public class AccountJson extends JsonBase {
         if (state != null ? !state.equals(that.state) : that.state != null) {
             return false;
         }
+        if (referenceTime != null ? referenceTime.compareTo(that.referenceTime) != 0 : that.referenceTime != null) {
+            return false;
+        }
         if (timeZone != null ? !timeZone.equals(that.timeZone) : that.timeZone != null) {
             return false;
         }
-
         return true;
     }
 
@@ -560,6 +571,7 @@ public class AccountJson extends JsonBase {
         result = 31 * result + (parentAccountId != null ? parentAccountId.hashCode() : 0);
         result = 31 * result + (isPaymentDelegatedToParent != null ? isPaymentDelegatedToParent.hashCode() : 0);
         result = 31 * result + (paymentMethodId != null ? paymentMethodId.hashCode() : 0);
+        result = 31 * result + (referenceTime != null ? referenceTime.hashCode() : 0);
         result = 31 * result + (timeZone != null ? timeZone.hashCode() : 0);
         result = 31 * result + (address1 != null ? address1.hashCode() : 0);
         result = 31 * result + (address2 != null ? address2.hashCode() : 0);

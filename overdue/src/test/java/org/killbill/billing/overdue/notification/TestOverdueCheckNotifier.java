@@ -69,8 +69,9 @@ public class TestOverdueCheckNotifier extends OverdueTestSuiteWithEmbeddedDB {
     @Override
     @BeforeMethod(groups = "slow")
     public void beforeMethod() throws Exception {
-        //super.beforeMethod();
         // We override the parent method on purpose, because we want to register a different OverdueCheckNotifier
+
+        cleanupAllTables();
 
         mockDispatcher = new OverdueDispatcherMock(internalCallContextFactory);
         notifierForMock = new OverdueCheckNotifier(notificationQueueService, overdueProperties, internalCallContextFactory, mockDispatcher);
@@ -91,7 +92,7 @@ public class TestOverdueCheckNotifier extends OverdueTestSuiteWithEmbeddedDB {
         final UUID accountId = new UUID(0L, 1L);
         final Account account = Mockito.mock(Account.class);
         Mockito.when(account.getId()).thenReturn(accountId);
-        Mockito.when(accountApi.getImmutableAccountDataByRecordId(Mockito.<UUID>eq(internalCallContext.getAccountRecordId()), Mockito.<InternalTenantContext>any())).thenReturn(account);
+        Mockito.when(accountApi.getImmutableAccountDataByRecordId(Mockito.eq(internalCallContext.getAccountRecordId()), Mockito.<InternalTenantContext>any())).thenReturn(account);
         final DateTime now = clock.getUTCNow();
         final DateTime readyTime = now.plusMillis(2000);
 

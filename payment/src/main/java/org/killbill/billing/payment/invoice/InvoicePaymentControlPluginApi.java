@@ -321,16 +321,25 @@ public final class InvoicePaymentControlPluginApi implements PaymentControlPlugi
                 return new DefaultPriorPaymentControlResult(true);
             }
 
+
             // Get account and check if it is child and payment is delegated to parent => abort
+
             final AccountData accountData = accountApi.getAccountById(invoice.getAccountId(), internalContext);
-            if ((accountData != null) && (accountData.getParentAccountId() != null) && accountData.isPaymentDelegatedToParent()) {
+            if (((accountData != null) && (accountData.getParentAccountId() != null) && accountData.isPaymentDelegatedToParent()) || // Valid when we initially create the child invoice (even if parent invoice does not exist yet)
+                (invoice.getParentAccountId() != null))  { // Valid after we have unparented the child
                 return new DefaultPriorPaymentControlResult(true);
             }
+
+
+            // Is remaining amount > 0 ?
             final BigDecimal requestedAmount = validateAndComputePaymentAmount(invoice, paymentControlPluginContext.getAmount(), paymentControlPluginContext.isApiPayment());
+            if (requestedAmount.compareTo(BigDecimal.ZERO) <= 0) {
+                return new DefaultPriorPaymentControlResult(true);
+            }
 
-            final boolean isAborted = requestedAmount.compareTo(BigDecimal.ZERO) == 0;
 
-            if (!isAborted && paymentControlPluginContext.getPaymentMethodId() == null) {
+            // Do we have a  paymentMethod ?
+            if (paymentControlPluginContext.getPaymentMethodId() == null) {
                 log.warn("Payment for invoiceId='{}' was not triggered, accountId='{}' doesn't have a default payment method", getInvoiceId(pluginProperties), paymentControlPluginContext.getAccountId());
                 invoiceApi.recordPaymentAttemptCompletion(invoiceId,
                                                           paymentControlPluginContext.getAmount(),
@@ -344,35 +353,31 @@ public final class InvoicePaymentControlPluginApi implements PaymentControlPlugi
                 return new DefaultPriorPaymentControlResult(true);
             }
 
-            if (!isAborted && insert_AUTO_PAY_OFF_ifRequired(paymentControlPluginContext, requestedAmount)) {
+
+            // Are we in auto-payoff ?
+            if (insert_AUTO_PAY_OFF_ifRequired(paymentControlPluginContext, requestedAmount)) {
                 return new DefaultPriorPaymentControlResult(true);
             }
 
-            if (paymentControlPluginContext.isApiPayment() && isAborted) {
-                throw new PaymentControlApiException("Abort purchase call: ", new PaymentApiException(ErrorCode.PAYMENT_PLUGIN_EXCEPTION,
-                                                                                                      String.format("Aborted Payment for invoice %s : invoice balance is = %s, requested payment amount is = %s",
-                                                                                                                    invoice.getId(),
-                                                                                                                    invoice.getBalance(),
-                                                                                                                    paymentControlPluginContext.getAmount())));
-            } else {
 
-                //
-                // Insert attempt row with a success = false status to implement a two-phase commit strategy and guard against scenario where payment would go through
-                // but onSuccessCall callback never gets called (leaving the place for a double payment if user retries the operation)
-                //
-                invoiceApi.recordPaymentAttemptInit(invoice.getId(),
-                                                    MoreObjects.firstNonNull(paymentControlPluginContext.getAmount(), BigDecimal.ZERO),
-                                                    paymentControlPluginContext.getCurrency(),
-                                                    paymentControlPluginContext.getCurrency(),
-                                                    // Likely to be null, but we don't care as we use the transactionExternalKey
-                                                    // to match the operation in the checkForIncompleteInvoicePaymentAndRepair logic below
-                                                    paymentControlPluginContext.getPaymentId(),
-                                                    paymentControlPluginContext.getTransactionExternalKey(),
-                                                    paymentControlPluginContext.getCreatedDate(),
-                                                    internalContext);
+            //
+            // Insert attempt row with a success = false status to implement a two-phase commit strategy and guard against scenario where payment would go through
+            // but onSuccessCall callback never gets called (leaving the place for a double payment if user retries the operation)
+            //
+            invoiceApi.recordPaymentAttemptInit(invoice.getId(),
+                                                MoreObjects.firstNonNull(paymentControlPluginContext.getAmount(), BigDecimal.ZERO),
+                                                paymentControlPluginContext.getCurrency(),
+                                                paymentControlPluginContext.getCurrency(),
+                                                // Likely to be null, but we don't care as we use the transactionExternalKey
+                                                // to match the operation in the checkForIncompleteInvoicePaymentAndRepair logic below
+                                                paymentControlPluginContext.getPaymentId(),
+                                                paymentControlPluginContext.getTransactionExternalKey(),
+                                                paymentControlPluginContext.getCreatedDate(),
+                                                internalContext);
 
-                return new DefaultPriorPaymentControlResult(isAborted, requestedAmount);
-            }
+            return new DefaultPriorPaymentControlResult(false, requestedAmount);
+
+
         } catch (final InvoiceApiException e) {
             throw new PaymentControlApiException(e);
         } catch (final IllegalArgumentException e) {
@@ -641,23 +646,25 @@ public final class InvoicePaymentControlPluginApi implements PaymentControlPlugi
         return false;
     }
 
-    private BigDecimal validateAndComputePaymentAmount(final Invoice invoice, @Nullable final BigDecimal inputAmount, final boolean isApiPayment) {
+    private BigDecimal validateAndComputePaymentAmount(final Invoice invoice, @Nullable final BigDecimal inputAmount, final boolean isApiPayment) throws PaymentControlApiException {
 
         if (invoice.getBalance().compareTo(BigDecimal.ZERO) <= 0) {
             log.info("invoiceId='{}' has already been paid", invoice.getId());
             return BigDecimal.ZERO;
         }
+
         if (isApiPayment &&
             inputAmount != null &&
             invoice.getBalance().compareTo(inputAmount) < 0) {
-            log.info("invoiceId='{}' has a balance='{}' < retry paymentAmount='{}'", invoice.getId(), invoice.getBalance().floatValue(), inputAmount.floatValue());
-            return BigDecimal.ZERO;
+            log.info("invoiceId='{}' has a balance='{}' < paymentAmount='{}'", invoice.getId(), invoice.getBalance().floatValue(), inputAmount.floatValue());
+            throw new PaymentControlApiException("Abort purchase call: ", new PaymentApiException(ErrorCode.PAYMENT_PLUGIN_EXCEPTION,
+                                                                                                  String.format("Invalid amount '%s' for invoice '%s': invoice balance is = '%s'",
+                                                                                                                inputAmount,
+                                                                                                                invoice.getId(),
+                                                                                                                invoice.getBalance())));
         }
-        if (inputAmount == null) {
-            return invoice.getBalance();
-        } else {
-            return invoice.getBalance().compareTo(inputAmount) < 0 ? invoice.getBalance() : inputAmount;
-        }
+
+        return (inputAmount == null || invoice.getBalance().compareTo(inputAmount) < 0) ? invoice.getBalance() : inputAmount;
     }
 
     private boolean insert_AUTO_PAY_OFF_ifRequired(final PaymentControlContext paymentControlContext, final BigDecimal computedAmount) {

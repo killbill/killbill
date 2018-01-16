@@ -18,15 +18,18 @@
 
 package org.killbill.billing.beatrix.integration;
 
-import com.google.common.base.Function;
-import com.google.common.base.Joiner;
-import com.google.common.base.Predicate;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Iterables;
-import com.google.common.collect.Lists;
-import com.google.inject.Guice;
-import com.google.inject.Injector;
-import com.google.inject.Stage;
+import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+import java.util.concurrent.Callable;
+
+import javax.annotation.Nullable;
+import javax.inject.Inject;
+import javax.inject.Named;
+
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDate;
@@ -122,30 +125,31 @@ import org.skife.config.TimeSpan;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
+import org.testng.IHookCallBack;
+import org.testng.IHookable;
+import org.testng.ITestResult;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
 
-import javax.annotation.Nullable;
-import javax.inject.Inject;
-import javax.inject.Named;
-import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
-import java.util.concurrent.Callable;
+import com.google.common.base.Function;
+import com.google.common.base.Joiner;
+import com.google.common.base.Predicate;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
+import com.google.inject.Guice;
+import com.google.inject.Injector;
+import com.google.inject.Stage;
 
-import static org.awaitility.Awaitility.await;
 import static java.util.concurrent.TimeUnit.SECONDS;
+import static org.awaitility.Awaitility.await;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.assertTrue;
 import static org.testng.Assert.fail;
 
-
-public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB {
+public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implements IHookable {
 
     protected static final DateTimeZone testTimeZone = DateTimeZone.UTC;
     protected static final Logger log = LoggerFactory.getLogger(TestIntegrationBase.class);
@@ -295,6 +299,7 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB {
 
     protected ConfigurableInvoiceConfig invoiceConfig;
 
+    @Override
     protected void assertListenerStatus() {
         busHandler.assertListenerStatus();
     }
@@ -329,16 +334,10 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB {
         lifecycle.fireStartupSequencePostEventRegistration();
 
         paymentPlugin.clear();
-
-        // Make sure we start with a clean state
-        assertListenerStatus();
     }
 
     @AfterMethod(groups = "slow")
     public void afterMethod() throws Exception {
-        // Make sure we finish in a clean state
-        assertListenerStatus();
-
         lifecycle.fireShutdownSequencePriorEventUnRegistration();
         busService.getBus().unregister(busHandler);
         lifecycle.fireShutdownSequencePostEventUnRegistration();
@@ -435,7 +434,7 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB {
                 .isNotifiedForInvoices(false)
                 .externalKey(UUID.randomUUID().toString().substring(1, 8))
                 .currency(Currency.USD)
-                .paymentMethodId(UUID.randomUUID())
+                .referenceTime(clock.getUTCNow())
                 .timeZone(DateTimeZone.UTC);
         if (billingDay != null) {
             builder.billingCycleDayLocal(billingDay);
@@ -454,6 +453,7 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB {
                                        .billingCycleDayLocal(billingDay)
                                        .currency(Currency.USD)
                                        .paymentMethodId(UUID.randomUUID())
+                                       .referenceTime(clock.getUTCNow())
                                        .timeZone(DateTimeZone.UTC)
                                        .parentAccountId(parentAccountId)
                                        .isPaymentDelegatedToParent(isPaymentDelegatedToParent)
@@ -504,7 +504,7 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB {
                     final List<PluginProperty> properties = new ArrayList<PluginProperty>();
                     final PluginProperty prop1 = new PluginProperty(InvoicePaymentControlPluginApi.PROP_IPCD_INVOICE_ID, invoice.getId().toString(), false);
                     properties.add(prop1);
-                    return paymentApi.createPurchaseWithPaymentControl(account, account.getPaymentMethodId(), null, amount, currency, UUID.randomUUID().toString(),
+                    return paymentApi.createPurchaseWithPaymentControl(account, account.getPaymentMethodId(), null, amount, currency, null, UUID.randomUUID().toString(),
                                                                        UUID.randomUUID().toString(), properties, PAYMENT_OPTIONS, callContext);
                 } catch (final PaymentApiException e) {
                     fail(e.toString());
@@ -523,7 +523,7 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB {
                     final PluginProperty prop1 = new PluginProperty(InvoicePaymentControlPluginApi.PROP_IPCD_INVOICE_ID, invoice.getId().toString(), false);
                     properties.add(prop1);
 
-                    return paymentApi.createPurchaseWithPaymentControl(account, account.getPaymentMethodId(), null, invoice.getBalance(), invoice.getCurrency(), UUID.randomUUID().toString(),
+                    return paymentApi.createPurchaseWithPaymentControl(account, account.getPaymentMethodId(), null, invoice.getBalance(), invoice.getCurrency(), null, UUID.randomUUID().toString(),
                                                                        UUID.randomUUID().toString(), properties, PAYMENT_OPTIONS, callContext);
                 } catch (final PaymentApiException e) {
                     fail(e.toString());
@@ -543,7 +543,7 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB {
                     final PluginProperty prop1 = new PluginProperty(InvoicePaymentControlPluginApi.PROP_IPCD_INVOICE_ID, invoice.getId().toString(), false);
                     properties.add(prop1);
 
-                    return paymentApi.createPurchaseWithPaymentControl(account, account.getPaymentMethodId(), null, invoice.getBalance(), invoice.getCurrency(), UUID.randomUUID().toString(),
+                    return paymentApi.createPurchaseWithPaymentControl(account, account.getPaymentMethodId(), null, invoice.getBalance(), invoice.getCurrency(), null, UUID.randomUUID().toString(),
                                                                        UUID.randomUUID().toString(), properties, EXTERNAL_PAYMENT_OPTIONS, callContext);
                 } catch (final PaymentApiException e) {
                     fail(e.toString());
@@ -562,7 +562,7 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB {
             @Override
             public Payment apply(@Nullable final Void input) {
                 try {
-                    return paymentApi.createRefundWithPaymentControl(account, payment.getId(), amount, currency, UUID.randomUUID().toString(),
+                    return paymentApi.createRefundWithPaymentControl(account, payment.getId(), amount, currency, null, UUID.randomUUID().toString(),
                                                                      PLUGIN_PROPERTIES, PAYMENT_OPTIONS, callContext);
                 } catch (final PaymentApiException e) {
                     fail(e.toString());
@@ -588,7 +588,7 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB {
                 properties.add(prop2);
 
                 try {
-                    return paymentApi.createRefundWithPaymentControl(account, payment.getId(), amount, currency, UUID.randomUUID().toString(),
+                    return paymentApi.createRefundWithPaymentControl(account, payment.getId(), amount, currency, null, UUID.randomUUID().toString(),
                                                                      properties, PAYMENT_OPTIONS, callContext);
                 } catch (final PaymentApiException e) {
                     fail(e.toString());
@@ -607,7 +607,7 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB {
             @Override
             public Payment apply(@Nullable final Void input) {
                 try {
-                    return paymentApi.createChargebackWithPaymentControl(account, payment.getId(), amount, currency, UUID.randomUUID().toString(),
+                    return paymentApi.createChargebackWithPaymentControl(account, payment.getId(), amount, currency, null, UUID.randomUUID().toString(),
                                                                          PAYMENT_OPTIONS, callContext);
                 } catch (final PaymentApiException e) {
                     fail(e.toString());
@@ -634,7 +634,7 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB {
             @Override
             public Payment apply(@Nullable final Void input) {
                 try {
-                    return paymentApi.createChargebackReversalWithPaymentControl(account, payment.getId(), chargebackTransactionExternalKey, PAYMENT_OPTIONS, callContext);
+                    return paymentApi.createChargebackReversalWithPaymentControl(account, payment.getId(), null, chargebackTransactionExternalKey, PAYMENT_OPTIONS, callContext);
                 } catch (final PaymentApiException e) {
                     fail(e.toString());
                     return null;
@@ -659,7 +659,7 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB {
             public Entitlement apply(@Nullable final Void dontcare) {
                 try {
                     final PlanPhaseSpecifier spec = new PlanPhaseSpecifier(productName, billingPeriod, PriceListSet.DEFAULT_PRICELIST_NAME, null);
-                    final Entitlement entitlement = entitlementApi.createBaseEntitlement(accountId, spec, bundleExternalKey, overrides, null, null, false, ImmutableList.<PluginProperty>of(), callContext);
+                    final Entitlement entitlement = entitlementApi.createBaseEntitlement(accountId, spec, bundleExternalKey, overrides, null, null, false, true, ImmutableList.<PluginProperty>of(), callContext);
                     assertNotNull(entitlement);
                     return entitlement;
                 } catch (final EntitlementApiException e) {
@@ -717,9 +717,9 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB {
                     // Need to fetch again to get latest CTD updated from the system
                     Entitlement refreshedEntitlement = entitlementApi.getEntitlementForId(entitlement.getId(), callContext);
                     if (billingPolicy == null) {
-                        refreshedEntitlement = refreshedEntitlement.changePlan(new PlanSpecifier(productName, billingPeriod, priceList), null, ImmutableList.<PluginProperty>of(), callContext);
+                        refreshedEntitlement = refreshedEntitlement.changePlan(new PlanPhaseSpecifier(productName, billingPeriod, priceList), null, ImmutableList.<PluginProperty>of(), callContext);
                     } else {
-                        refreshedEntitlement = refreshedEntitlement.changePlanOverrideBillingPolicy(new PlanSpecifier(productName, billingPeriod, priceList), null, null, billingPolicy, ImmutableList.<PluginProperty>of(), callContext);
+                        refreshedEntitlement = refreshedEntitlement.changePlanOverrideBillingPolicy(new PlanPhaseSpecifier(productName, billingPeriod, priceList), null, null, billingPolicy, ImmutableList.<PluginProperty>of(), callContext);
                     }
                     return refreshedEntitlement;
                 } catch (final EntitlementApiException e) {
@@ -800,18 +800,46 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB {
     }
 
     protected void add_AUTO_PAY_OFF_Tag(final UUID id, final ObjectType type) throws TagDefinitionApiException, TagApiException {
-        busHandler.pushExpectedEvent(NextEvent.TAG);
-        tagUserApi.addTag(id, type, ControlTagType.AUTO_PAY_OFF.getId(), callContext);
-        assertListenerStatus();
+        add_account_Tag(id, ControlTagType.AUTO_PAY_OFF, type);
+    }
 
-        final List<Tag> tags = tagUserApi.getTagsForObject(id, type, false, callContext);
-        assertEquals(tags.size(), 1);
+    protected void add_AUTO_INVOICING_OFF_Tag(final UUID id, final ObjectType type) throws TagDefinitionApiException, TagApiException {
+        add_account_Tag(id, ControlTagType.AUTO_INVOICING_OFF, type);
+    }
+
+    protected void add_AUTO_INVOICING_DRAFT_Tag(final UUID id, final ObjectType type) throws TagDefinitionApiException, TagApiException {
+        add_account_Tag(id, ControlTagType.AUTO_INVOICING_DRAFT, type);
+    }
+
+    protected void add_AUTO_INVOICING_REUSE_DRAFT_Tag(final UUID id, final ObjectType type) throws TagDefinitionApiException, TagApiException {
+        add_account_Tag(id, ControlTagType.AUTO_INVOICING_REUSE_DRAFT, type);
+    }
+
+    private void add_account_Tag(final UUID id, final ControlTagType controlTagType, final ObjectType type) throws TagDefinitionApiException, TagApiException {
+        busHandler.pushExpectedEvent(NextEvent.TAG);
+        tagUserApi.addTag(id, type, controlTagType.getId(), callContext);
+        assertListenerStatus();
+        tagUserApi.getTagsForObject(id, type, false, callContext);
     }
 
     protected void remove_AUTO_PAY_OFF_Tag(final UUID id, final ObjectType type, final NextEvent... additionalEvents) throws TagDefinitionApiException, TagApiException {
+        remove_account_Tag(id, ControlTagType.AUTO_PAY_OFF, type, additionalEvents);
+    }
+
+
+    protected void remove_AUTO_INVOICING_OFF_Tag(final UUID id, final ObjectType type, final NextEvent... additionalEvents) throws TagDefinitionApiException, TagApiException {
+        remove_account_Tag(id, ControlTagType.AUTO_INVOICING_OFF, type, additionalEvents);
+    }
+
+    protected void remove_AUTO_INVOICING_DRAFT_Tag(final UUID id, final ObjectType type, final NextEvent... additionalEvents) throws TagDefinitionApiException, TagApiException {
+        remove_account_Tag(id, ControlTagType.AUTO_INVOICING_DRAFT, type, additionalEvents);
+    }
+
+
+    private  void remove_account_Tag(final UUID id, final ControlTagType controlTagType, final ObjectType type, final NextEvent... additionalEvents) throws TagDefinitionApiException, TagApiException {
         busHandler.pushExpectedEvent(NextEvent.TAG);
         busHandler.pushExpectedEvents(additionalEvents);
-        tagUserApi.removeTag(id, type, ControlTagType.AUTO_PAY_OFF.getId(), callContext);
+        tagUserApi.removeTag(id, type, controlTagType.getId(), callContext);
         assertListenerStatus();
     }
 
@@ -987,6 +1015,16 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB {
         }
 
         @Override
+        public List<String> getInvoicePluginNames() {
+            return defaultInvoiceConfig.getInvoicePluginNames();
+        }
+
+        @Override
+        public List<String> getInvoicePluginNames(final InternalTenantContext tenantContext) {
+            return defaultInvoiceConfig.getInvoicePluginNames();
+        }
+
+        @Override
         public boolean isEmailNotificationsEnabled() {
             return defaultInvoiceConfig.isEmailNotificationsEnabled();
         }
@@ -994,6 +1032,16 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB {
         @Override
         public boolean isInvoicingSystemEnabled() {
             return isInvoicingSystemEnabled;
+        }
+
+        @Override
+        public String getParentAutoCommitUtcTime() {
+            return defaultInvoiceConfig.getParentAutoCommitUtcTime();
+        }
+
+        @Override
+        public String getParentAutoCommitUtcTime(final InternalTenantContext tenantContext) {
+            return defaultInvoiceConfig.getParentAutoCommitUtcTime();
         }
 
         @Override

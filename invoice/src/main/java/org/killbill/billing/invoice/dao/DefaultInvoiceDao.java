@@ -26,12 +26,14 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
 import javax.annotation.Nullable;
 
 import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
+import org.joda.time.LocalTime;
 import org.killbill.billing.ErrorCode;
 import org.killbill.billing.ObjectType;
 import org.killbill.billing.account.api.Account;
@@ -40,7 +42,7 @@ import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.entity.EntityPersistenceException;
 import org.killbill.billing.invoice.InvoiceDispatcher.FutureAccountNotifications;
-import org.killbill.billing.invoice.InvoiceDispatcher.FutureAccountNotifications.SubscriptionNotification;
+import org.killbill.billing.invoice.InvoicePluginDispatcher;
 import org.killbill.billing.invoice.api.DefaultInvoicePaymentErrorEvent;
 import org.killbill.billing.invoice.api.DefaultInvoicePaymentInfoEvent;
 import org.killbill.billing.invoice.api.Invoice;
@@ -285,24 +287,29 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
     @Override
     public List<InvoiceItemModelDao> createInvoices(final List<InvoiceModelDao> invoices,
                                                     final InternalCallContext context) {
-        return createInvoices(invoices, new FutureAccountNotifications(ImmutableMap.<UUID, List<SubscriptionNotification>>of()), context);
+        return createInvoices(invoices, new FutureAccountNotifications(), context);
     }
 
     private List<InvoiceItemModelDao> createInvoices(final Iterable<InvoiceModelDao> invoices,
                                                      final FutureAccountNotifications callbackDateTimePerSubscriptions,
                                                      final InternalCallContext context) {
+        // Track invoices that are being created
         final Collection<UUID> createdInvoiceIds = new HashSet<UUID>();
-        final Collection<UUID> adjustedInvoiceIds = new HashSet<UUID>();
-        final Collection<UUID> committedInvoiceIds = new HashSet<UUID>();
+        // Track invoices that already exist but are being committed -- AUTO_INVOICING_REUSE_DRAFT mode
+        final Collection<UUID> committedReusedInvoiceId = new HashSet<UUID>();
+        // Track all invoices that are referenced through all invoiceItems
+        final Collection<UUID> allInvoiceIds = new HashSet<UUID>();
+        // Track invoices that are committed but were not created or reused -- to sent the InvoiceAdjustment bus event
+        final Collection<UUID> adjustedCommittedInvoiceIds = new HashSet<UUID>();
 
-        final Collection<UUID> uniqueInvoiceIds = new HashSet<UUID>();
+        final Collection<UUID> invoiceIdsReferencedFromItems = new HashSet<UUID>();
         for (final InvoiceModelDao invoiceModelDao : invoices) {
             for (final InvoiceItemModelDao invoiceItemModelDao : invoiceModelDao.getInvoiceItems()) {
-                uniqueInvoiceIds.add(invoiceItemModelDao.getInvoiceId());
+                invoiceIdsReferencedFromItems.add(invoiceItemModelDao.getInvoiceId());
             }
         }
 
-        if (Iterables.<InvoiceModelDao>isEmpty(invoices)) {
+        if (Iterables.isEmpty(invoices)) {
             return ImmutableList.<InvoiceItemModelDao>of();
         }
         final UUID accountId = invoices.iterator().next().getAccountId();
@@ -319,43 +326,55 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
                 final List<InvoiceItemModelDao> createdInvoiceItems = new LinkedList<InvoiceItemModelDao>();
                 for (final InvoiceModelDao invoiceModelDao : invoices) {
                     invoiceByInvoiceId.put(invoiceModelDao.getId(), invoiceModelDao);
-                    final boolean isRealInvoice = uniqueInvoiceIds.remove(invoiceModelDao.getId());
+                    final boolean isNotShellInvoice = invoiceIdsReferencedFromItems.remove(invoiceModelDao.getId());
 
-                    // Create the invoice if needed
-                    if (invoiceSqlDao.getById(invoiceModelDao.getId().toString(), context) == null) {
-                        // We only want to insert that invoice if there are real invoiceItems associated to it -- if not, this is just
-                        // a shell invoice and we only need to insert the invoiceItems -- for the already existing invoices
-                        if (isRealInvoice) {
+                    final InvoiceModelDao invoiceOnDisk = invoiceSqlDao.getById(invoiceModelDao.getId().toString(), context);
+                    if (isNotShellInvoice) {
+                        // Create the invoice if this is not a shell invoice and it does not already exist
+                        if (invoiceOnDisk == null) {
                             createAndRefresh(invoiceSqlDao, invoiceModelDao, context);
                             createdInvoiceIds.add(invoiceModelDao.getId());
+                        } else if (invoiceOnDisk.getStatus() == InvoiceStatus.DRAFT && invoiceModelDao.getStatus() == InvoiceStatus.COMMITTED) {
+                            invoiceSqlDao.updateStatus(invoiceModelDao.getId().toString(), InvoiceStatus.COMMITTED.toString(), context);
+                            committedReusedInvoiceId.add(invoiceModelDao.getId());
                         }
                     }
 
                     // Create the invoice items if needed (note: they may not necessarily belong to that invoice)
                     for (final InvoiceItemModelDao invoiceItemModelDao : invoiceModelDao.getInvoiceItems()) {
-                        if (transInvoiceItemSqlDao.getById(invoiceItemModelDao.getId().toString(), context) == null) {
+                        final InvoiceItemModelDao existingInvoiceItem = transInvoiceItemSqlDao.getById(invoiceItemModelDao.getId().toString(), context);
+                        // Because of AUTO_INVOICING_REUSE_DRAFT we expect an invoice were items might already exist.
+                        // Also for ALLOWED_INVOICE_ITEM_TYPES, we expect plugins to potentially modify the amount
+                        if (existingInvoiceItem == null) {
                             createdInvoiceItems.add(createInvoiceItemFromTransaction(transInvoiceItemSqlDao, invoiceItemModelDao, context));
+                            allInvoiceIds.add(invoiceItemModelDao.getInvoiceId());
+                        } else if (InvoicePluginDispatcher.ALLOWED_INVOICE_ITEM_TYPES.contains(invoiceItemModelDao.getType()) &&
+                                   (invoiceItemModelDao.getAmount().compareTo(existingInvoiceItem.getAmount()) != 0)) {
+                            checkAgainstExistingInvoiceItemState(existingInvoiceItem, invoiceItemModelDao);
 
-                            adjustedInvoiceIds.add(invoiceItemModelDao.getInvoiceId());
+                            transInvoiceItemSqlDao.updateAmount(invoiceItemModelDao.getId().toString(), invoiceItemModelDao.getAmount(), context);
                         }
                     }
 
-                    final boolean wasInvoiceCreated = createdInvoiceIds.contains(invoiceModelDao.getId());
+                    final boolean wasInvoiceCreatedOrCommitted = createdInvoiceIds.contains(invoiceModelDao.getId()) ||
+                                                       committedReusedInvoiceId.contains(invoiceModelDao.getId());
                     if (InvoiceStatus.COMMITTED.equals(invoiceModelDao.getStatus())) {
-                        committedInvoiceIds.add(invoiceModelDao.getId());
 
-                        notifyOfFutureBillingEvents(entitySqlDaoWrapperFactory, invoiceModelDao.getAccountId(), callbackDateTimePerSubscriptions, context);
-
-                        if (wasInvoiceCreated) {
+                        if (wasInvoiceCreatedOrCommitted) {
                             notifyBusOfInvoiceCreation(entitySqlDaoWrapperFactory, invoiceModelDao, context);
+                        } else {
+                            adjustedCommittedInvoiceIds.add(invoiceModelDao.getId());
                         }
-                    } else if (wasInvoiceCreated && invoiceModelDao.isParentInvoice()) {
+                    } else if (wasInvoiceCreatedOrCommitted && invoiceModelDao.isParentInvoice()) {
                         // Commit queue
                         notifyOfParentInvoiceCreation(entitySqlDaoWrapperFactory, invoiceModelDao, context);
                     }
+
+                    // We always add the future notifications when the callbackDateTimePerSubscriptions is not empty (incl. DRAFT invoices containing RECURRING items created using AUTO_INVOICING_DRAFT feature)
+                    notifyOfFutureBillingEvents(entitySqlDaoWrapperFactory, invoiceModelDao.getAccountId(), callbackDateTimePerSubscriptions, context);
                 }
 
-                for (final UUID adjustedInvoiceId : adjustedInvoiceIds) {
+                for (final UUID adjustedInvoiceId : allInvoiceIds) {
                     final boolean newInvoice = createdInvoiceIds.contains(adjustedInvoiceId);
                     if (newInvoice) {
                         // New invoice, so no associated payment yet: no need to refresh the invoice state
@@ -366,12 +385,11 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
                         cbaDao.doCBAComplexityFromTransaction(adjustedInvoiceId, invoicesTags, entitySqlDaoWrapperFactory, context);
                     }
 
-                    if (committedInvoiceIds.contains(adjustedInvoiceId) && !newInvoice) {
+                    if (adjustedCommittedInvoiceIds.contains(adjustedInvoiceId)) {
                         // Notify the bus since the balance of the invoice changed (only if the invoice is COMMITTED)
                         notifyBusOfInvoiceAdjustment(entitySqlDaoWrapperFactory, adjustedInvoiceId, accountId, context.getUserToken(), context);
                     }
                 }
-
                 return createdInvoiceItems;
             }
         });
@@ -439,7 +457,21 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
                 BigDecimal accountBalance = BigDecimal.ZERO;
                 final List<InvoiceModelDao> invoices = invoiceDaoHelper.getAllInvoicesByAccountFromTransaction(invoicesTags, entitySqlDaoWrapperFactory, context);
                 for (final InvoiceModelDao cur : invoices) {
-                    accountBalance = accountBalance.add((new DefaultInvoice(cur)).getBalance());
+
+                    // Skip DRAFT invoices
+                    if (cur.getStatus().equals(InvoiceStatus.DRAFT)) {
+                        continue;
+                    }
+
+                    final boolean hasZeroParentBalance =
+                            cur.getParentInvoice() != null &&
+                            (cur.getParentInvoice().isWrittenOff() ||
+                             cur.getParentInvoice().getStatus() == InvoiceStatus.DRAFT ||
+                             InvoiceModelDaoHelper.getRawBalanceForRegularInvoice(cur.getParentInvoice()).compareTo(BigDecimal.ZERO) == 0);
+
+
+                    // invoices that are WRITTEN_OFF or paid children invoices are excluded from balance computation but the cba summation needs to be included
+                    accountBalance = cur.isWrittenOff() || hasZeroParentBalance ? BigDecimal.ZERO : accountBalance.add(InvoiceModelDaoHelper.getRawBalanceForRegularInvoice(cur));
                     cba = cba.add(InvoiceModelDaoHelper.getCBAAmount(cur));
                 }
                 return accountBalance.subtract(cba);
@@ -865,7 +897,10 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
 
                 // Retrieve the invoice and make sure it belongs to the right account
                 final InvoiceModelDao invoice = transactional.getById(invoiceId.toString(), context);
-                if (invoice == null || !invoice.getAccountId().equals(accountId)) {
+                if (invoice == null ||
+                    !invoice.getAccountId().equals(accountId) ||
+                    invoice.isMigrated() ||
+                    invoice.getStatus() == InvoiceStatus.DRAFT) {
                     throw new InvoiceApiException(ErrorCode.INVOICE_NOT_FOUND, invoiceId);
                 }
 
@@ -884,7 +919,7 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
 
                 // Verify the final invoice balance is not negative
                 invoiceDaoHelper.populateChildren(invoice, invoicesTags, entitySqlDaoWrapperFactory, context);
-                if (InvoiceModelDaoHelper.getBalance(invoice).compareTo(BigDecimal.ZERO) < 0) {
+                if (InvoiceModelDaoHelper.getRawBalanceForRegularInvoice(invoice).compareTo(BigDecimal.ZERO) < 0) {
                     throw new InvoiceApiException(ErrorCode.INVOICE_WOULD_BE_NEGATIVE);
                 }
 
@@ -965,19 +1000,18 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
     private void notifyOfFutureBillingEvents(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory, final UUID accountId,
                                              final FutureAccountNotifications callbackDateTimePerSubscriptions, final InternalCallContext internalCallContext) {
 
+        for (final LocalDate notificationDate : callbackDateTimePerSubscriptions.getNotificationsForTrigger().keySet()) {
+            final DateTime notificationDateTime = internalCallContext.toUTCDateTime(notificationDate);
+            final Set<UUID> subscriptionIds = callbackDateTimePerSubscriptions.getNotificationsForTrigger().get(notificationDate);
+            nextBillingDatePoster.insertNextBillingNotificationFromTransaction(entitySqlDaoWrapperFactory, accountId, subscriptionIds, notificationDateTime, internalCallContext);
+        }
+
         final long dryRunNotificationTime = invoiceConfig.getDryRunNotificationSchedule(internalCallContext).getMillis();
-        final boolean isInvoiceNotificationEnabled = dryRunNotificationTime > 0;
-        for (final UUID subscriptionId : callbackDateTimePerSubscriptions.getNotifications().keySet()) {
-            final List<SubscriptionNotification> callbackDateTimeUTC = callbackDateTimePerSubscriptions.getNotifications().get(subscriptionId);
-            for (final SubscriptionNotification cur : callbackDateTimeUTC) {
-                if (isInvoiceNotificationEnabled) {
-                    final DateTime curDryRunNotificationTime = cur.getEffectiveDate().minus(dryRunNotificationTime);
-                    final DateTime effectiveCurDryRunNotificationTime = (curDryRunNotificationTime.isAfter(clock.getUTCNow())) ? curDryRunNotificationTime : clock.getUTCNow();
-                    nextBillingDatePoster.insertNextBillingDryRunNotificationFromTransaction(entitySqlDaoWrapperFactory, accountId, subscriptionId, effectiveCurDryRunNotificationTime, cur.getEffectiveDate(), internalCallContext);
-                }
-                if (cur.isForInvoiceNotificationTrigger()) {
-                    nextBillingDatePoster.insertNextBillingNotificationFromTransaction(entitySqlDaoWrapperFactory, accountId, subscriptionId, cur.getEffectiveDate(), internalCallContext);
-                }
+        if (dryRunNotificationTime > 0) {
+            for (final LocalDate notificationDate : callbackDateTimePerSubscriptions.getNotificationsForDryRun().keySet()) {
+                final DateTime notificationDateTime = internalCallContext.toUTCDateTime(notificationDate);
+                final Set<UUID> subscriptionIds = callbackDateTimePerSubscriptions.getNotificationsForDryRun().get(notificationDate);
+                nextBillingDatePoster.insertNextBillingDryRunNotificationFromTransaction(entitySqlDaoWrapperFactory, accountId, subscriptionIds, notificationDateTime, notificationDateTime.plusMillis((int) dryRunNotificationTime), internalCallContext);
             }
         }
     }
@@ -1089,9 +1123,10 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
 
     private void notifyBusOfInvoiceCreation(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory, final InvoiceModelDao invoice, final InternalCallContext context) {
         try {
-            final BigDecimal balance = InvoiceModelDaoHelper.getBalance(invoice);
+            // This is called for a new COMMITTED invoice (which cannot be writtenOff as it does not exist yet, so rawBalance == balance)
+            final BigDecimal rawBalance = InvoiceModelDaoHelper.getRawBalanceForRegularInvoice(invoice);
             final DefaultInvoiceCreationEvent event = new DefaultInvoiceCreationEvent(invoice.getId(), invoice.getAccountId(),
-                                                                                                            balance, invoice.getCurrency(),
+                                                                                      rawBalance, invoice.getCurrency(),
                                                                                                             context.getAccountRecordId(), context.getTenantRecordId(),
                                                                                                             context.getUserToken());
             eventBus.postFromTransaction(event, entitySqlDaoWrapperFactory.getHandle().getConnection());
@@ -1103,8 +1138,15 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
     private void notifyOfParentInvoiceCreation(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory,
                                                final InvoiceModelDao parentInvoice,
                                                final InternalCallContext context) {
-        final DateTime futureNotificationDate = parentInvoice.getCreatedDate().withTimeAtStartOfDay().plusDays(1);
-        parentInvoiceCommitmentPoster.insertParentInvoiceFromTransactionInternal(entitySqlDaoWrapperFactory, parentInvoice.getId(), futureNotificationDate, context);
+        final DateTime now = clock.getUTCNow();
+        final LocalTime localTime = LocalTime.parse(invoiceConfig.getParentAutoCommitUtcTime(context));
+
+        DateTime targetFutureNotificationDate = now.withTime(localTime);
+        while (targetFutureNotificationDate.compareTo(now) < 0) {
+            targetFutureNotificationDate = targetFutureNotificationDate.plusDays(1);
+        }
+
+        parentInvoiceCommitmentPoster.insertParentInvoiceFromTransactionInternal(entitySqlDaoWrapperFactory, parentInvoice.getId(), targetFutureNotificationDate, context);
     }
 
     @Override
@@ -1203,6 +1245,7 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
                                                                                  null,
                                                                                  chargeDescription,
                                                                                  childCreatedDate.toLocalDate(),
+                                                                                 childCreatedDate.toLocalDate(),
                                                                                  accountCBA,
                                                                                  childAccount.getCurrency());
                 invoiceForExternalCharge.addInvoiceItem(externalChargeItem);
@@ -1269,4 +1312,49 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
     private List<Tag> getInvoicesTags(final InternalTenantContext context) {
         return tagInternalApi.getTagsForAccountType(ObjectType.INVOICE, false, context);
     }
+
+    private static void checkAgainstExistingInvoiceItemState(final InvoiceItemModelDao existingInvoiceItem, final InvoiceItemModelDao inputInvoiceItem) {
+        Preconditions.checkState(existingInvoiceItem.getAccountId().equals(inputInvoiceItem.getAccountId()), String.format("Unexpected account ID '%s' for invoice item '%s'",
+                                                                                                                           inputInvoiceItem.getAccountId(), existingInvoiceItem.getId()));
+        if (existingInvoiceItem.getChildAccountId() != null) {
+            Preconditions.checkState(existingInvoiceItem.getChildAccountId().equals(inputInvoiceItem.getChildAccountId()), String.format("Unexpected child account ID '%s' for invoice item '%s'",
+                                                                                                                                         inputInvoiceItem.getChildAccountId(), existingInvoiceItem.getId()));
+        }
+        Preconditions.checkState(existingInvoiceItem.getInvoiceId().equals(inputInvoiceItem.getInvoiceId()), String.format("Unexpected invoice ID '%s' for invoice item '%s'",
+                                                                                                                           inputInvoiceItem.getInvoiceId(), existingInvoiceItem.getId()));
+        if (existingInvoiceItem.getBundleId() != null) {
+            Preconditions.checkState(existingInvoiceItem.getBundleId().equals(inputInvoiceItem.getBundleId()), String.format("Unexpected bundle ID '%s' for invoice item '%s'",
+                                                                                                                             inputInvoiceItem.getBundleId(), existingInvoiceItem.getId()));
+        }
+        if (existingInvoiceItem.getSubscriptionId() != null) {
+            Preconditions.checkState(existingInvoiceItem.getSubscriptionId().equals(inputInvoiceItem.getSubscriptionId()), String.format("Unexpected subscription ID '%s' for invoice item '%s'",
+                                                                                                                                         inputInvoiceItem.getSubscriptionId(), existingInvoiceItem.getId()));
+        }
+        if (existingInvoiceItem.getPlanName() != null) {
+            Preconditions.checkState(existingInvoiceItem.getPlanName().equals(inputInvoiceItem.getPlanName()), String.format("Unexpected plan name '%s' for invoice item '%s'",
+                                                                                                                             inputInvoiceItem.getPlanName(), existingInvoiceItem.getId()));
+        }
+        if (existingInvoiceItem.getPhaseName() != null) {
+            Preconditions.checkState(existingInvoiceItem.getPhaseName().equals(inputInvoiceItem.getPhaseName()), String.format("Unexpected phase name '%s' for invoice item '%s'",
+                                                                                                                               inputInvoiceItem.getPhaseName(), existingInvoiceItem.getId()));
+        }
+        if (existingInvoiceItem.getUsageName() != null) {
+            Preconditions.checkState(existingInvoiceItem.getUsageName().equals(inputInvoiceItem.getUsageName()), String.format("Unexpected usage name '%s' for invoice item '%s'",
+                                                                                                                               inputInvoiceItem.getUsageName(), existingInvoiceItem.getId()));
+        }
+        if (existingInvoiceItem.getStartDate() != null) {
+            Preconditions.checkState(existingInvoiceItem.getStartDate().equals(inputInvoiceItem.getStartDate()), String.format("Unexpected startDate '%s' for invoice item '%s'",
+                                                                                                                               inputInvoiceItem.getStartDate(), existingInvoiceItem.getId()));
+        }
+        if (existingInvoiceItem.getEndDate() != null) {
+            Preconditions.checkState(existingInvoiceItem.getEndDate().equals(inputInvoiceItem.getEndDate()), String.format("Unexpected endDate '%s' for invoice item '%s'",
+                                                                                                                           inputInvoiceItem.getEndDate(), existingInvoiceItem.getId()));
+        }
+
+        Preconditions.checkState(existingInvoiceItem.getCurrency() == inputInvoiceItem.getCurrency(), String.format("Unexpected currency '%s' for invoice item '%s'",
+                                                                                                                    inputInvoiceItem.getCurrency(), existingInvoiceItem.getId()));
+        Preconditions.checkState(existingInvoiceItem.getType() == inputInvoiceItem.getType(), String.format("Unexpected item type '%s' for invoice item '%s'",
+                                                                                                            inputInvoiceItem.getType(), existingInvoiceItem.getId()));
+    }
+
 }

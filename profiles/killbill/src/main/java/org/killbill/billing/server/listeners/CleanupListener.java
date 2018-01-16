@@ -28,6 +28,8 @@ import javax.servlet.ServletContextListener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import net.sf.log4jdbc.sql.jdbcapi.DriverSpy;
+
 public class CleanupListener implements ServletContextListener {
 
     private static final Logger logger = LoggerFactory.getLogger(CleanupListener.class);
@@ -38,16 +40,6 @@ public class CleanupListener implements ServletContextListener {
 
     @Override
     public void contextDestroyed(final ServletContextEvent servletContextEvent) {
-        final Enumeration<Driver> drivers = DriverManager.getDrivers();
-        while (drivers.hasMoreElements()) {
-            try {
-                final Driver driver = drivers.nextElement();
-                DriverManager.deregisterDriver(driver);
-            } catch (final SQLException e) {
-                logger.warn("Unable to de-register driver", e);
-            }
-        }
-
         // See http://docs.oracle.com/cd/E17952_01/connector-j-relnotes-en/news-5-1-23.html
         try {
             Class.forName("com.mysql.jdbc.AbandonedConnectionCleanupThread");
@@ -64,6 +56,24 @@ public class CleanupListener implements ServletContextListener {
             org.mariadb.jdbc.Driver.unloadDriver();
         } catch (final ClassNotFoundException ignored) {
             // MariaDB driver not used
+        }
+
+        try {
+            // Invoke DriverSpy directly if it hasn't been already, as it will statically load drivers
+            DriverManager.deregisterDriver(new DriverSpy());
+        } catch (final SQLException e) {
+            logger.warn("Unable to de-register driver", e);
+        }
+
+        // This needs to be last, as drivers above will invoke registerDriver statically
+        final Enumeration<Driver> drivers = DriverManager.getDrivers();
+        while (drivers.hasMoreElements()) {
+            try {
+                final Driver driver = drivers.nextElement();
+                DriverManager.deregisterDriver(driver);
+            } catch (final SQLException e) {
+                logger.warn("Unable to de-register driver", e);
+            }
         }
     }
 }

@@ -1,7 +1,8 @@
 /*
- * Copyright 2010-2013 Ning, Inc.
+ * Copyright 2014-2017 Groupon, Inc
+ * Copyright 2014-2017 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -14,14 +15,11 @@
  * under the License.
  */
 
-package org.killbill.billing.util.email;
+package org.killbill.billing.subscription.events.user;
 
-import java.io.IOException;
-import java.util.List;
+public class ApiEventUndoChange extends ApiEventBase {
 
-public interface EmailSender {
-
-    public void sendHTMLEmail(List<String> to, List<String> cc, String subject, String htmlBody) throws IOException, EmailApiException;
-
-    public void sendPlainTextEmail(List<String> to, List<String> cc, String subject, String body) throws IOException, EmailApiException;
+    public ApiEventUndoChange(final ApiEventBuilder builder) {
+        super(builder.setApiEventType(ApiEventType.UNDO_CHANGE));
+    }
 }

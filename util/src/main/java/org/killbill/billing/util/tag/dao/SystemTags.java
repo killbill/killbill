@@ -24,6 +24,7 @@ import java.util.UUID;
 
 import javax.annotation.Nullable;
 
+import org.killbill.billing.ObjectType;
 import org.killbill.billing.util.tag.ControlTagType;
 
 import com.google.common.base.Predicate;
@@ -37,7 +38,7 @@ public class SystemTags {
     public static final String PARK_TAG_DEFINITION_NAME = "__PARK__";
 
     // Note! TagSqlDao.sql.stg needs to be kept in sync (see userAndSystemTagDefinitions)
-    private static final List<TagDefinitionModelDao> SYSTEM_DEFINED_TAG_DEFINITIONS = ImmutableList.<TagDefinitionModelDao>of(new TagDefinitionModelDao(PARK_TAG_DEFINITION_ID, null, null, PARK_TAG_DEFINITION_NAME, "Accounts with invalid invoicing state"));
+    private static final List<TagDefinitionModelDao> SYSTEM_DEFINED_TAG_DEFINITIONS = ImmutableList.<TagDefinitionModelDao>of(new TagDefinitionModelDao(PARK_TAG_DEFINITION_ID, null, null, PARK_TAG_DEFINITION_NAME, "Accounts with invalid invoicing state", ObjectType.ACCOUNT.name()));
 
     public static Collection<TagDefinitionModelDao> get(final boolean includeSystemTags) {
         final Collection<TagDefinitionModelDao> all = includeSystemTags ?

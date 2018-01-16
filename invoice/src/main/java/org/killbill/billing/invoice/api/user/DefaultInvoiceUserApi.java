@@ -75,6 +75,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Function;
+import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.collect.Collections2;
@@ -267,7 +268,7 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
         }
 
         return new ExternalChargeInvoiceItem(externalChargeItem.getId(), externalChargeItem.getInvoiceId(), externalChargeItem.getAccountId(),
-                                             externalChargeItem.getDescription(), externalChargeItem.getStartDate(),
+                                             externalChargeItem.getDescription(), externalChargeItem.getStartDate(), externalChargeItem.getEndDate(),
                                              externalChargeItem.getAmount(), externalChargeItem.getCurrency());
     }
 
@@ -305,20 +306,35 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
                     } else {
                         if (existingInvoicesForExternalCharges.get(invoiceIdForExternalCharge) == null) {
                             final Invoice existingInvoiceForExternalCharge = getInvoice(invoiceIdForExternalCharge, context);
+                            if (InvoiceStatus.COMMITTED.equals(existingInvoiceForExternalCharge.getStatus())) {
+                                throw new InvoiceApiException(ErrorCode.INVOICE_ALREADY_COMMITTED, existingInvoiceForExternalCharge.getId());
+                            }
                             existingInvoicesForExternalCharges.put(invoiceIdForExternalCharge, existingInvoiceForExternalCharge);
                         }
                         invoiceForExternalCharge = existingInvoicesForExternalCharges.get(invoiceIdForExternalCharge);
                     }
+
+                    final LocalDate startDate = MoreObjects.firstNonNull(charge.getStartDate(), effectiveDate);
+                    final LocalDate endDate = charge.getEndDate();
 
                     final InvoiceItem externalCharge = new ExternalChargeInvoiceItem(UUIDs.randomUUID(),
                                                                                      context.getCreatedDate(),
                                                                                      invoiceForExternalCharge.getId(),
                                                                                      accountId,
                                                                                      charge.getBundleId(),
+                                                                                     charge.getSubscriptionId(),
+                                                                                     charge.getPlanName(),
+                                                                                     charge.getPhaseName(),
+                                                                                     charge.getPrettyPlanName(),
+                                                                                     charge.getPrettyPhaseName(),
                                                                                      charge.getDescription(),
-                                                                                     effectiveDate,
+                                                                                     startDate,
+                                                                                     endDate,
                                                                                      charge.getAmount(),
-                                                                                     charge.getCurrency());
+                                                                                     charge.getRate(),
+                                                                                     charge.getCurrency(),
+                                                                                     charge.getLinkedItemId());
+
                     invoiceForExternalCharge.addInvoiceItem(externalCharge);
                 }
 
@@ -432,7 +448,9 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
                                                                                          effectiveDate,
                                                                                          description,
                                                                                          internalCallContextFactory.createInternalCallContext(accountId, context));
-                invoice.addInvoiceItem(adjustmentItem);
+                if (adjustmentItem != null) {
+                    invoice.addInvoiceItem(adjustmentItem);
+                }
 
                 return ImmutableList.<Invoice>of(invoice);
             }
@@ -445,9 +463,9 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
                                                                                                         return InvoiceItemType.ITEM_ADJ.equals(invoiceItem.getInvoiceItemType());
                                                                                                     }
                                                                                                 });
-        Preconditions.checkState(adjustmentInvoiceItems.size() == 1, "Should have created a single adjustment item: " + adjustmentInvoiceItems);
+        Preconditions.checkState(adjustmentInvoiceItems.size() <= 1, "Should have created a single adjustment item: " + adjustmentInvoiceItems);
 
-        return adjustmentInvoiceItems.iterator().next();
+        return adjustmentInvoiceItems.iterator().hasNext() ? adjustmentInvoiceItems.iterator().next() : null;
     }
 
     @Override

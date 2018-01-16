@@ -19,12 +19,15 @@ package org.killbill.billing.jaxrs;
 
 import java.math.BigDecimal;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
 import javax.annotation.Nullable;
 
+import org.joda.time.DateTime;
+import org.killbill.billing.ObjectType;
 import org.killbill.billing.client.KillBillClientException;
 import org.killbill.billing.client.RequestOptions;
 import org.killbill.billing.client.model.Account;
@@ -61,6 +64,7 @@ import com.google.inject.Inject;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertFalse;
+import static org.testng.Assert.assertTrue;
 import static org.testng.Assert.fail;
 
 public class TestPayment extends TestJaxrsBase {
@@ -101,6 +105,25 @@ public class TestPayment extends TestJaxrsBase {
     public void tearDown() throws Exception {
         mockPaymentProviderPlugin.clear();
     }
+
+    @Test(groups = "slow")
+    public void testWithTransactionEffectiveDate() throws Exception {
+        final Account account = createAccountWithDefaultPaymentMethod();
+
+
+        final PaymentTransaction authTransaction = new PaymentTransaction();
+        authTransaction.setAmount(BigDecimal.ONE);
+        authTransaction.setCurrency(account.getCurrency());
+        authTransaction.setTransactionType(TransactionType.AUTHORIZE.name());
+        final DateTime effectiveDate = new DateTime(2018, 9,4, 3,5,35);
+        authTransaction.setEffectiveDate(effectiveDate);
+
+        final Payment payment = killBillClient.createPayment(account.getAccountId(), account.getPaymentMethodId(), authTransaction,
+                                                             ImmutableMap.<String, String>of(), requestOptions);
+        final PaymentTransaction paymentTransaction = payment.getTransactions().get(0);
+        assertTrue(paymentTransaction.getEffectiveDate().compareTo(effectiveDate) == 0);
+    }
+
 
     @Test(groups = "slow")
     public void testWithFailedPayment() throws Exception {
@@ -617,6 +640,29 @@ public class TestPayment extends TestJaxrsBase {
     }
 
     @Test(groups = "slow")
+    public void testComboAuthorizationControlWithNullPaymentMethodId() throws Exception {
+        final Account accountJson = createAccount();
+
+        // Non-default payment method
+        final PaymentMethod paymentMethod = createPaymentMethod(accountJson, false);
+        mockPaymentControlProviderPlugin.setAdjustedPaymentMethodId(paymentMethod.getPaymentMethodId());
+
+        accountJson.setAccountId(null);
+        final String paymentExternalKey = UUID.randomUUID().toString();
+
+        final PaymentTransaction authTransactionJson = new PaymentTransaction();
+        authTransactionJson.setPaymentExternalKey(paymentExternalKey);
+        authTransactionJson.setAmount(BigDecimal.TEN);
+        authTransactionJson.setTransactionType("AUTHORIZE");
+        final ComboPaymentTransaction comboPaymentTransaction = new ComboPaymentTransaction(accountJson, null, authTransactionJson, ImmutableList.<PluginProperty>of(), ImmutableList.<PluginProperty>of());
+
+        final Payment payment = killBillClient.createPayment(comboPaymentTransaction, ImmutableList.<String>of(MockPaymentControlProviderPlugin.PLUGIN_NAME), ImmutableMap.<String, String>of(), requestOptions);
+        verifyComboPayment(payment, paymentExternalKey, BigDecimal.TEN, BigDecimal.ZERO, BigDecimal.ZERO, 1, 1);
+
+        assertEquals(killBillClient.getPayment(payment.getPaymentId(), false, true, ImmutableMap.<String, String>of(), AuditLevel.NONE, requestOptions).getPaymentAttempts().size(), 1);
+    }
+
+    @Test(groups = "slow")
     public void testComboAuthorizationControlPluginException() throws Exception {
         final Account accountJson = getAccount();
         accountJson.setAccountId(null);
@@ -672,7 +718,7 @@ public class TestPayment extends TestJaxrsBase {
     public void testGetTagsForPaymentTransaction() throws Exception {
         UUID tagDefinitionId = UUID.randomUUID();
         String tagDefinitionName = "payment-transaction";
-        TagDefinition tagDefinition = new TagDefinition(tagDefinitionId, false, tagDefinitionName, "description", null);
+        TagDefinition tagDefinition = new TagDefinition(tagDefinitionId, false, tagDefinitionName, "description",  ImmutableList.<ObjectType>of(ObjectType.TRANSACTION));
         final TagDefinition createdTagDefinition = killBillClient.createTagDefinition(tagDefinition, requestOptions);
 
         final Account account = createAccountWithDefaultPaymentMethod();
@@ -695,7 +741,7 @@ public class TestPayment extends TestJaxrsBase {
     public void testCreateTagForPaymentTransaction() throws Exception {
         UUID tagDefinitionId = UUID.randomUUID();
         String tagDefinitionName = "payment-transaction";
-        TagDefinition tagDefinition = new TagDefinition(tagDefinitionId, false, tagDefinitionName, "description", null);
+        TagDefinition tagDefinition = new TagDefinition(tagDefinitionId, false, tagDefinitionName, "description", ImmutableList.<ObjectType>of(ObjectType.TRANSACTION));
         final TagDefinition createdTagDefinition = killBillClient.createTagDefinition(tagDefinition, requestOptions);
 
         final Account account = createAccountWithDefaultPaymentMethod();
@@ -799,7 +845,7 @@ public class TestPayment extends TestJaxrsBase {
         assertEquals(payment.getRefundedAmount().compareTo(refundedAmount), 0);
         assertEquals(payment.getTransactions().size(), nbTransactions);
 
-        final Payments Payments = killBillClient.getPayments();
+        final Payments Payments = killBillClient.getPayments(requestOptions);
         assertEquals(Payments.size(), paymentNb);
         assertEquals(Payments.get(paymentNb - 1), payment);
     }

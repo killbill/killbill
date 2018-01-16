@@ -63,7 +63,7 @@ public class TestApiListener {
 
     private static final Joiner SPACE_JOINER = Joiner.on(" ");
 
-    private static final long DELAY = 25000;
+    private static final long DELAY = 60000;
 
     private final List<NextEvent> nextExpectedEvent;
     private final IDBI idbi;
@@ -106,6 +106,7 @@ public class TestApiListener {
         CREATE,
         TRANSFER,
         CHANGE,
+        UNDO_CHANGE,
         CANCEL,
         UNCANCEL,
         PAUSE,
@@ -162,6 +163,10 @@ public class TestApiListener {
                 break;
             case CHANGE:
                 assertEqualsNicely(NextEvent.CHANGE);
+                notifyIfStackEmpty();
+                break;
+            case UNDO_CHANGE:
+                assertEqualsNicely(NextEvent.UNDO_CHANGE);
                 notifyIfStackEmpty();
                 break;
             case UNCANCEL:

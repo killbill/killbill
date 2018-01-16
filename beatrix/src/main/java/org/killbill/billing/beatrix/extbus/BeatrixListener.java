@@ -58,6 +58,7 @@ import org.killbill.billing.lifecycle.glue.BusModule;
 import org.killbill.billing.notification.plugin.api.BlockingStateMetadata;
 import org.killbill.billing.notification.plugin.api.BroadcastMetadata;
 import org.killbill.billing.notification.plugin.api.ExtBusEventType;
+import org.killbill.billing.notification.plugin.api.InvoicePaymentMetadata;
 import org.killbill.billing.notification.plugin.api.PaymentMetadata;
 import org.killbill.billing.notification.plugin.api.SubscriptionMetadata;
 import org.killbill.billing.notification.plugin.api.SubscriptionMetadata.ActionType;
@@ -86,7 +87,7 @@ public class BeatrixListener {
     private final PersistentBus externalBus;
     private final InternalCallContextFactory internalCallContextFactory;
 
-    protected final ObjectMapper objectMapper;
+    protected ObjectMapper objectMapper;
 
     @Inject
     public BeatrixListener(@Named(BusModule.EXTERNAL_BUS_NAMED) final PersistentBus externalBus,
@@ -225,6 +226,8 @@ public class BeatrixListener {
                 objectType = ObjectType.INVOICE;
                 objectId = realEventInvPay.getInvoiceId();
                 eventBusType = ExtBusEventType.INVOICE_PAYMENT_SUCCESS;
+                final InvoicePaymentMetadata invoicePaymentInfoMetaDataObj = new InvoicePaymentMetadata(realEventInvPay.getPaymentId(), realEventInvPay.getType(), realEventInvPay.getPaymentDate(), realEventInvPay.getAmount(), realEventInvPay.getCurrency(), realEventInvPay.getLinkedInvoicePaymentId(), realEventInvPay.getPaymentCookieId(), realEventInvPay.getProcessedCurrency());
+                metaData = objectMapper.writeValueAsString(invoicePaymentInfoMetaDataObj);
                 break;
 
             case INVOICE_PAYMENT_ERROR:
@@ -232,6 +235,8 @@ public class BeatrixListener {
                 objectType = ObjectType.INVOICE;
                 objectId = realEventInvPayErr.getInvoiceId();
                 eventBusType = ExtBusEventType.INVOICE_PAYMENT_FAILED;
+                final InvoicePaymentMetadata invoicePaymentErrorMetaDataObj = new InvoicePaymentMetadata(realEventInvPayErr.getPaymentId(), realEventInvPayErr.getType(), realEventInvPayErr.getPaymentDate(), realEventInvPayErr.getAmount(), realEventInvPayErr.getCurrency(), realEventInvPayErr.getLinkedInvoicePaymentId(), realEventInvPayErr.getPaymentCookieId(), realEventInvPayErr.getProcessedCurrency());
+                metaData = objectMapper.writeValueAsString(invoicePaymentErrorMetaDataObj);
                 break;
 
             case PAYMENT_INFO:

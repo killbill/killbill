@@ -32,6 +32,7 @@ import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.HeaderParam;
 import javax.ws.rs.POST;
+import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
@@ -101,13 +102,14 @@ public class PaymentMethodResource extends JaxRsResourceBase {
                            @ApiResponse(code = 404, message = "Account or payment method not found")})
     public Response getPaymentMethod(@PathParam("paymentMethodId") final String paymentMethodId,
                                      @QueryParam(QUERY_PLUGIN_PROPERTY) final List<String> pluginPropertiesString,
+                                     @QueryParam(QUERY_INCLUDED_DELETED) @DefaultValue("false") final Boolean includedDeleted,
                                      @QueryParam(QUERY_AUDIT) @DefaultValue("NONE") final AuditMode auditMode,
                                      @QueryParam(QUERY_WITH_PLUGIN_INFO) @DefaultValue("false") final Boolean withPluginInfo,
                                      @javax.ws.rs.core.Context final HttpServletRequest request) throws AccountApiException, PaymentApiException {
         final Iterable<PluginProperty> pluginProperties = extractPluginProperties(pluginPropertiesString);
         final TenantContext tenantContext = context.createTenantContextNoAccountId(request);
 
-        final PaymentMethod paymentMethod = paymentApi.getPaymentMethodById(UUID.fromString(paymentMethodId), false, withPluginInfo, pluginProperties, tenantContext);
+        final PaymentMethod paymentMethod = paymentApi.getPaymentMethodById(UUID.fromString(paymentMethodId), includedDeleted, withPluginInfo, pluginProperties, tenantContext);
         final Account account = accountUserApi.getAccountById(paymentMethod.getAccountId(), tenantContext);
         final AccountAuditLogs accountAuditLogs = auditUserApi.getAccountAuditLogs(paymentMethod.getAccountId(), auditMode.getLevel(), tenantContext);
         final PaymentMethodJson json = PaymentMethodJson.toPaymentMethodJson(account, paymentMethod, accountAuditLogs);
@@ -122,13 +124,14 @@ public class PaymentMethodResource extends JaxRsResourceBase {
     @ApiResponses(value = {@ApiResponse(code = 404, message = "Account or payment method not found")})
     public Response getPaymentMethodByKey(@QueryParam(QUERY_EXTERNAL_KEY) final String externalKey,
                                           @QueryParam(QUERY_PLUGIN_PROPERTY) final List<String> pluginPropertiesString,
+                                          @QueryParam(QUERY_INCLUDED_DELETED) @DefaultValue("false") final Boolean includedDeleted,
                                           @QueryParam(QUERY_AUDIT) @DefaultValue("NONE") final AuditMode auditMode,
                                           @QueryParam(QUERY_WITH_PLUGIN_INFO) @DefaultValue("false") final Boolean withPluginInfo,
                                           @javax.ws.rs.core.Context final HttpServletRequest request) throws AccountApiException, PaymentApiException {
         final Iterable<PluginProperty> pluginProperties = extractPluginProperties(pluginPropertiesString);
         final TenantContext tenantContext = context.createTenantContextNoAccountId(request);
 
-        final PaymentMethod paymentMethod = paymentApi.getPaymentMethodByExternalKey(externalKey, false, withPluginInfo, pluginProperties, tenantContext);
+        final PaymentMethod paymentMethod = paymentApi.getPaymentMethodByExternalKey(externalKey, includedDeleted, withPluginInfo, pluginProperties, tenantContext);
         final Account account = accountUserApi.getAccountById(paymentMethod.getAccountId(), tenantContext);
         final AccountAuditLogs accountAuditLogs = auditUserApi.getAccountAuditLogs(paymentMethod.getAccountId(), auditMode.getLevel(), tenantContext);
         final PaymentMethodJson json = PaymentMethodJson.toPaymentMethodJson(account, paymentMethod, accountAuditLogs);
@@ -305,6 +308,25 @@ public class PaymentMethodResource extends JaxRsResourceBase {
         return super.createCustomFields(UUID.fromString(paymentMethodId), customFields,
                                         context.createCallContextNoAccountId(createdBy, reason, comment, request), uriInfo, request);
     }
+
+
+    @TimedResource
+    @PUT
+    @Path("/{paymentMethodId:" + UUID_PATTERN + "}/" + CUSTOM_FIELDS)
+    @Consumes(APPLICATION_JSON)
+    @Produces(APPLICATION_JSON)
+    @ApiOperation(value = "Modify custom fields to payment method")
+    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid payment method id supplied")})
+    public Response modifyCustomFields(@PathParam("paymentMethodId") final String paymentMethodId,
+                                       final List<CustomFieldJson> customFields,
+                                       @HeaderParam(HDR_CREATED_BY) final String createdBy,
+                                       @HeaderParam(HDR_REASON) final String reason,
+                                       @HeaderParam(HDR_COMMENT) final String comment,
+                                       @javax.ws.rs.core.Context final HttpServletRequest request) throws CustomFieldApiException {
+        return super.modifyCustomFields(UUID.fromString(paymentMethodId), customFields,
+                                        context.createCallContextNoAccountId(createdBy, reason, comment, request));
+    }
+
 
     @TimedResource
     @DELETE

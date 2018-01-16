@@ -41,7 +41,6 @@ import org.killbill.billing.catalog.api.ProductCategory;
 import org.killbill.billing.entitlement.api.DefaultEntitlement;
 import org.killbill.billing.entitlement.api.Entitlement.EntitlementActionPolicy;
 import org.killbill.billing.invoice.InvoiceDispatcher.FutureAccountNotifications;
-import org.killbill.billing.invoice.InvoiceDispatcher.FutureAccountNotifications.SubscriptionNotification;
 import org.killbill.billing.invoice.api.Invoice;
 import org.killbill.billing.invoice.api.InvoiceItemType;
 import org.killbill.billing.invoice.api.InvoiceStatus;
@@ -51,7 +50,6 @@ import org.killbill.billing.invoice.dao.InvoiceModelDao;
 import org.killbill.billing.payment.api.Payment;
 import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.payment.api.TransactionStatus;
-import org.testng.annotations.AfterMethod;
 import org.testng.annotations.Test;
 
 import com.google.common.collect.ImmutableList;
@@ -63,12 +61,6 @@ public class TestIntegrationInvoiceWithRepairLogic extends TestIntegrationBase {
 
     @Inject
     protected InvoiceDao invoiceDao;
-
-
-    @AfterMethod(groups = "slow")
-    public void afterMethod() throws Exception {
-        super.afterMethod();
-    }
 
     @Test(groups = "slow")
     public void testSimplePartialRepairWithItemAdjustment() throws Exception {
@@ -728,7 +720,7 @@ public class TestIntegrationInvoiceWithRepairLogic extends TestIntegrationBase {
         newItems.add(recurring3);
         newItems.add(repair3);
         shellInvoice.addInvoiceItems(newItems);
-        invoiceDao.createInvoice(shellInvoice, new FutureAccountNotifications(new HashMap<UUID, List<SubscriptionNotification>>()), internalCallContext);
+        invoiceDao.createInvoice(shellInvoice, new FutureAccountNotifications(), internalCallContext);
 
 
         // Move ahead one month, verify nothing from previous data was generated

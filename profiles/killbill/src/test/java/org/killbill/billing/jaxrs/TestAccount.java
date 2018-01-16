@@ -116,10 +116,13 @@ public class TestAccount extends TestJaxrsBase {
         // Update Account
         final Account newInput = new Account(input.getAccountId(),
                                              "zozo", 4, input.getExternalKey(), "rr@google.com", 18,
-                                             "USD", null, false, null, "UTC",
+                                             "USD", null, false, null, null, "UTC",
                                              "bl1", "bh2", "", "", "ca", "San Francisco", "usa", "en", "415-255-2991",
                                              "notes", false, false, null, null);
+
         final Account updatedAccount = killBillClient.updateAccount(newInput, requestOptions);
+        // referenceTime is set automatically by system, no way to guess it
+        newInput.setReferenceTime(updatedAccount.getReferenceTime());
         Assert.assertTrue(updatedAccount.equals(newInput));
 
         // Try search endpoint
@@ -144,6 +147,7 @@ public class TestAccount extends TestJaxrsBase {
 
         // Set notes to something else
         final Account newInput = new Account(input.getAccountId(),
+                                             null,
                                              null,
                                              null,
                                              null,

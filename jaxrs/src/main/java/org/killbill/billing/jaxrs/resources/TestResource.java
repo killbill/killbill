@@ -21,8 +21,10 @@ package org.killbill.billing.jaxrs.resources;
 import javax.inject.Inject;
 import javax.servlet.ServletRequest;
 import javax.servlet.http.HttpServletRequest;
+import javax.ws.rs.DELETE;
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
+import javax.ws.rs.HeaderParam;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
@@ -30,19 +32,28 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
+import javax.ws.rs.core.UriInfo;
 
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDate;
 import org.killbill.billing.ObjectType;
 import org.killbill.billing.account.api.AccountUserApi;
+import org.killbill.billing.catalog.api.CatalogApiException;
+import org.killbill.billing.catalog.api.CatalogUserApi;
 import org.killbill.billing.jaxrs.util.Context;
 import org.killbill.billing.jaxrs.util.JaxrsUriBuilder;
 import org.killbill.billing.payment.api.PaymentApi;
+import org.killbill.billing.tenant.api.TenantApiException;
+import org.killbill.billing.tenant.api.TenantKV.TenantKey;
+import org.killbill.billing.tenant.api.TenantUserApi;
 import org.killbill.billing.util.api.AuditUserApi;
 import org.killbill.billing.util.api.CustomFieldUserApi;
 import org.killbill.billing.util.api.RecordIdApi;
 import org.killbill.billing.util.api.TagUserApi;
+import org.killbill.billing.util.cache.Cachable.CacheType;
+import org.killbill.billing.util.cache.CacheControllerDispatcher;
+import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.TenantContext;
 import org.killbill.bus.api.BusEvent;
 import org.killbill.bus.api.BusEventWithMetadata;
@@ -85,16 +96,23 @@ public class TestResource extends JaxRsResourceBase {
     private final PersistentBus persistentBus;
     private final NotificationQueueService notificationQueueService;
     private final RecordIdApi recordIdApi;
+    private final TenantUserApi tenantApi;
+    private final CatalogUserApi catalogUserApi;
+    private final CacheControllerDispatcher cacheControllerDispatcher;
 
     @Inject
     public TestResource(final JaxrsUriBuilder uriBuilder, final TagUserApi tagUserApi, final CustomFieldUserApi customFieldUserApi,
                         final AuditUserApi auditUserApi, final AccountUserApi accountUserApi, final RecordIdApi recordIdApi,
                         final PersistentBus persistentBus, final NotificationQueueService notificationQueueService, final PaymentApi paymentApi,
-                        final Clock clock, final Context context) {
+                        final TenantUserApi tenantApi, final CatalogUserApi catalogUserApi,
+                        final Clock clock, final CacheControllerDispatcher cacheControllerDispatcher, final Context context) {
         super(uriBuilder, tagUserApi, customFieldUserApi, auditUserApi, accountUserApi, paymentApi, null, clock, context);
         this.persistentBus = persistentBus;
         this.notificationQueueService = notificationQueueService;
         this.recordIdApi = recordIdApi;
+        this.catalogUserApi = catalogUserApi;
+        this.tenantApi = tenantApi;
+        this.cacheControllerDispatcher = cacheControllerDispatcher;
     }
 
     public final class ClockResource {
@@ -201,6 +219,8 @@ public class TestResource extends JaxRsResourceBase {
         return getCurrentTime(timeZoneStr);
     }
 
+
+
     private boolean waitForNotificationToComplete(final ServletRequest request, final Long timeoutSec) {
         final TenantContext tenantContext = context.createTenantContextNoAccountId(request);
         final Long tenantRecordId = recordIdApi.getRecordId(tenantContext.getTenantId(), ObjectType.TENANT, tenantContext);
@@ -248,7 +268,7 @@ public class TestResource extends JaxRsResourceBase {
 
     private boolean areAllBusEventsProcessed(final Long tenantRecordId) {
         final Iterable<BusEventWithMetadata<BusEvent>> availableBusEventForSearchKey2 = persistentBus.getAvailableOrInProcessingBusEventsForSearchKey2(null, tenantRecordId);
-        final int nbBusEvents = Iterables.<BusEventWithMetadata<BusEvent>>size(availableBusEventForSearchKey2);
+        final int nbBusEvents = Iterables.size(availableBusEventForSearchKey2);
         if (nbBusEvents != 0) {
             log.info("TestResource: at least {} more bus event(s) to process", nbBusEvents);
         }

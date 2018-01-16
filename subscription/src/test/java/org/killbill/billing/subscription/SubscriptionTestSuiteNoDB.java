@@ -138,7 +138,7 @@ public class SubscriptionTestSuiteNoDB extends GuicyKillbillTestSuiteNoDB {
         subscriptionTestInitializer.startTestFramework(testListener, clock, busService, subscriptionBaseService);
 
         this.catalog = subscriptionTestInitializer.initCatalog(catalogService, internalCallContext);
-        this.accountData = subscriptionTestInitializer.initAccountData();
+        this.accountData = subscriptionTestInitializer.initAccountData(clock);
         final UUID accountId = UUIDs.randomUUID();
         mockNonEntityDao.addTenantRecordIdMapping(accountId, internalCallContext);
 
@@ -155,6 +155,7 @@ public class SubscriptionTestSuiteNoDB extends GuicyKillbillTestSuiteNoDB {
         subscriptionTestInitializer.stopTestFramework(testListener, busService, subscriptionBaseService);
     }
 
+    @Override
     protected void assertListenerStatus() {
         testListener.assertListenerStatus();
     }

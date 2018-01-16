@@ -39,8 +39,6 @@ public class DefaultNodeInfoDao implements NodeInfoDao {
     public DefaultNodeInfoDao(final IDBI dbi, final Clock clock) {
         this.dbi = dbi;
         this.clock = clock;
-        ((DBI) dbi).registerMapper(new LowerToCamelBeanMapperFactory(NodeInfoModelDao.class));
-
     }
 
     @Override

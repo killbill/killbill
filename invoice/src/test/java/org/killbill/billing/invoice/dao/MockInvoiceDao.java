@@ -68,7 +68,7 @@ public class MockInvoiceDao extends MockEntityDaoBase<InvoiceModelDao, Invoice, 
         }
         try {
             eventBus.post(new DefaultInvoiceCreationEvent(invoice.getId(), invoice.getAccountId(),
-                                                          InvoiceModelDaoHelper.getBalance(invoice), invoice.getCurrency(),
+                                                          InvoiceModelDaoHelper.getRawBalanceForRegularInvoice(invoice), invoice.getCurrency(),
                                                           context.getAccountRecordId(), context.getTenantRecordId(), context.getUserToken()));
         } catch (final PersistentBus.EventBusException ex) {
             throw new RuntimeException(ex);
@@ -260,7 +260,7 @@ public class MockInvoiceDao extends MockEntityDaoBase<InvoiceModelDao, Invoice, 
 
         for (final InvoiceModelDao invoice : getAll(context)) {
             if (accountId.equals(invoice.getAccountId())) {
-                balance = balance.add(InvoiceModelDaoHelper.getBalance(invoice));
+                balance = balance.add(InvoiceModelDaoHelper.getRawBalanceForRegularInvoice(invoice));
             }
         }
 
@@ -272,7 +272,7 @@ public class MockInvoiceDao extends MockEntityDaoBase<InvoiceModelDao, Invoice, 
         final List<InvoiceModelDao> unpaidInvoices = new ArrayList<InvoiceModelDao>();
 
         for (final InvoiceModelDao invoice : getAll(context)) {
-            if (accountId.equals(invoice.getAccountId()) && (InvoiceModelDaoHelper.getBalance(invoice).compareTo(BigDecimal.ZERO) > 0) && !invoice.isMigrated()) {
+            if (accountId.equals(invoice.getAccountId()) && (InvoiceModelDaoHelper.getRawBalanceForRegularInvoice(invoice).compareTo(BigDecimal.ZERO) > 0) && !invoice.isMigrated()) {
                 unpaidInvoices.add(invoice);
             }
         }

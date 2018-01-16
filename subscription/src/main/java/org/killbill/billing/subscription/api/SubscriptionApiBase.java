@@ -20,6 +20,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.killbill.billing.callcontext.InternalTenantContext;
+import org.killbill.billing.catalog.api.Catalog;
 import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.catalog.api.CatalogInternalApi;
 import org.killbill.billing.subscription.api.user.DefaultSubscriptionBase;
@@ -37,15 +38,12 @@ public class SubscriptionApiBase {
 
     protected final SubscriptionBaseApiService apiService;
     protected final Clock clock;
-    protected final CatalogInternalApi catalogInternalApi;
 
-    public SubscriptionApiBase(final SubscriptionDao dao, final SubscriptionBaseApiService apiService, final Clock clock, final CatalogInternalApi catalogInternalApi) {
+    public SubscriptionApiBase(final SubscriptionDao dao, final SubscriptionBaseApiService apiService, final Clock clock) {
         this.dao = dao;
         this.apiService = apiService;
         this.clock = clock;
-        this.catalogInternalApi = catalogInternalApi;
     }
-
     protected List<SubscriptionBase> createSubscriptionsForApiUse(final List<SubscriptionBase> internalSubscriptions) {
         return new ArrayList<SubscriptionBase>(Collections2.transform(internalSubscriptions, new Function<SubscriptionBase, SubscriptionBase>() {
             @Override
@@ -59,10 +57,10 @@ public class SubscriptionApiBase {
         return new DefaultSubscriptionBase((DefaultSubscriptionBase) internalSubscription, apiService, clock);
     }
 
-    protected DefaultSubscriptionBase createSubscriptionForApiUse(SubscriptionBuilder builder, List<SubscriptionBaseEvent> events, final InternalTenantContext context) throws CatalogApiException {
+    protected DefaultSubscriptionBase createSubscriptionForApiUse(SubscriptionBuilder builder, List<SubscriptionBaseEvent> events, final Catalog catalog, final InternalTenantContext context) throws CatalogApiException {
         final DefaultSubscriptionBase subscription = new DefaultSubscriptionBase(builder, apiService, clock);
         if (events.size() > 0) {
-            subscription.rebuildTransitions(events, catalogInternalApi.getFullCatalog(true, true, context));
+            subscription.rebuildTransitions(events, catalog);
         }
         return subscription;
     }

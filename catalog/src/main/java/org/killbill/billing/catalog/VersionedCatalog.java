@@ -85,9 +85,6 @@ public class VersionedCatalog extends ValidatingConfig<VersionedCatalog> impleme
     @XmlElement(required = true)
     private String catalogName;
 
-    @XmlElement(required = true)
-    private BillingMode recurringBillingMode;
-
     // Required for JAXB deserialization
     public VersionedCatalog() {
         this.clock = null;
@@ -121,6 +118,13 @@ public class VersionedCatalog extends ValidatingConfig<VersionedCatalog> impleme
             if (c.getEffectiveDate().getTime() <= date.getTime()) {
                 return i;
             }
+        }
+        // If the only version we have are after the input date, we return the first version
+        // This is not strictly correct from an api point of view, but there is no real good use case
+        // where the system would ask for the catalog for a date prior any catalog was uploaded and
+        // yet time manipulation could end of inn that state -- see https://github.com/killbill/killbill/issues/760
+        if (versions.size() > 0) {
+            return 0;
         }
         throw new CatalogApiException(ErrorCode.CAT_NO_CATALOG_FOR_GIVEN_DATE, date.toString());
     }
@@ -174,8 +178,11 @@ public class VersionedCatalog extends ValidatingConfig<VersionedCatalog> impleme
                 }
             }
 
+
+            final boolean initialVersion = (i == 0);
             final DateTime catalogEffectiveDate = CatalogDateHelper.toUTCDateTime(c.getEffectiveDate());
-            if (!subscriptionStartDate.isBefore(catalogEffectiveDate)) { // Its a new subscription this plan always applies
+            if (initialVersion || // Prevent issue with time granularity -- see #760
+                !subscriptionStartDate.isBefore(catalogEffectiveDate)) { // It's a new subscription this plan always applies
                 return new CatalogPlanEntry(c, plan);
             } else { //Its an existing subscription
                 if (plan.getEffectiveDateForExistingSubscriptions() != null) { //if it is null any change to this does not apply to existing subscriptions
@@ -236,9 +243,6 @@ public class VersionedCatalog extends ValidatingConfig<VersionedCatalog> impleme
         if (catalogName == null && e.getCatalogName() != null) {
             catalogName = e.getCatalogName();
         }
-        if (recurringBillingMode == null) {
-            recurringBillingMode = e.getRecurringBillingMode();
-        }
         versions.add(e);
         Collections.sort(versions, new Comparator<StandaloneCatalog>() {
             @Override
@@ -272,6 +276,10 @@ public class VersionedCatalog extends ValidatingConfig<VersionedCatalog> impleme
     @Override
     public Currency[] getSupportedCurrencies(final DateTime requestedDate) throws CatalogApiException {
         return versionForDate(requestedDate).getCurrentSupportedCurrencies();
+    }
+
+    public Unit[] getUnits(final DateTime requestedDate) throws CatalogApiException {
+        return versionForDate(requestedDate).getCurrentUnits();
     }
 
     @Override
@@ -433,10 +441,6 @@ public class VersionedCatalog extends ValidatingConfig<VersionedCatalog> impleme
                 errors.add(new ValidationError(String.format("Catalog name '%s' is not consistent across versions ", c.getCatalogName()),
                                                c.getCatalogURI(), VersionedCatalog.class, ""));
             }
-            if (!c.getRecurringBillingMode().equals(recurringBillingMode)) {
-                errors.add(new ValidationError(String.format("Catalog recurringBillingMode '%s' is not consistent across versions ", c.getCatalogName()),
-                                               c.getCatalogURI(), VersionedCatalog.class, ""));
-            }
             errors.addAll(c.validate(c, errors));
         }
         return errors;
@@ -453,11 +457,6 @@ public class VersionedCatalog extends ValidatingConfig<VersionedCatalog> impleme
     @Override
     public Date getStandaloneCatalogEffectiveDate(final DateTime requestedDate) throws CatalogApiException {
         return versionForDate(requestedDate).getEffectiveDate();
-    }
-
-    @Override
-    public BillingMode getRecurringBillingMode() {
-        return recurringBillingMode;
     }
 
     @Override

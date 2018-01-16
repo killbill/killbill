@@ -18,6 +18,8 @@
 
 package org.killbill.billing.util.entity.dao;
 
+import javax.annotation.Nullable;
+
 import org.killbill.billing.util.cache.CacheControllerDispatcher;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.billing.util.dao.NonEntityDao;
@@ -102,11 +104,11 @@ public class EntitySqlDaoTransactionalJdbiWrapper {
      * @param <E>                            checked exception which can be thrown from the transaction
      * @return result from the transaction fo type ReturnType
      */
-    public <ReturnType, E extends Exception> ReturnType execute(final Class<E> exception, final EntitySqlDaoTransactionWrapper<ReturnType> entitySqlDaoTransactionWrapper) throws E {
+    public <ReturnType, E extends Exception> ReturnType execute(@Nullable final Class<E> exception, final EntitySqlDaoTransactionWrapper<ReturnType> entitySqlDaoTransactionWrapper) throws E {
         try {
             return execute(entitySqlDaoTransactionWrapper);
         } catch (RuntimeException e) {
-            if (e.getCause() != null && e.getCause().getClass().isAssignableFrom(exception)) {
+            if (e.getCause() != null && exception != null && e.getCause().getClass().isAssignableFrom(exception)) {
                 throw (E) e.getCause();
             } else if (e.getCause() != null && e.getCause() instanceof RuntimeException) {
                 throw (RuntimeException) e.getCause();

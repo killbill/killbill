@@ -74,6 +74,8 @@ public class TestDefaultSubscriptionTransferApi extends SubscriptionTestSuiteNoD
         final SubscriptionBaseApiService apiService = Mockito.mock(SubscriptionBaseApiService.class);
         final SubscriptionBaseTimelineApi timelineApi = Mockito.mock(SubscriptionBaseTimelineApi.class);
         transferApi = new DefaultSubscriptionBaseTransferApi(clock, dao, timelineApi, catalogInternalApiWithMockCatalogService, apiService, internalCallContextFactory);
+        // Overrride catalog with our Mock CatalogService
+        this.catalog = catalogInternalApiWithMockCatalogService.getFullCatalog(true, true, internalCallContext);
     }
 
     @Test(groups = "fast")
@@ -86,7 +88,7 @@ public class TestDefaultSubscriptionTransferApi extends SubscriptionTestSuiteNoD
         final DefaultSubscriptionBase subscription = new DefaultSubscriptionBase(subscriptionBuilder);
 
         final DateTime transferDate = subscriptionStartTime.plusDays(10);
-        final List<SubscriptionBaseEvent> events = transferApi.toEvents(existingEvents, subscription, transferDate, internalCallContext);
+        final List<SubscriptionBaseEvent> events = transferApi.toEvents(existingEvents, subscription, transferDate, catalog, internalCallContext);
 
         Assert.assertEquals(events.size(), 0);
     }
@@ -102,7 +104,7 @@ public class TestDefaultSubscriptionTransferApi extends SubscriptionTestSuiteNoD
         final DefaultSubscriptionBase subscription = new DefaultSubscriptionBase(subscriptionBuilder);
 
         final DateTime transferDate = subscriptionStartTime.plusHours(1);
-        final List<SubscriptionBaseEvent> events = transferApi.toEvents(existingEvents, subscription, transferDate, internalCallContext);
+        final List<SubscriptionBaseEvent> events = transferApi.toEvents(existingEvents, subscription, transferDate, catalog, internalCallContext);
 
         Assert.assertEquals(events.size(), 1);
         Assert.assertEquals(events.get(0).getType(), EventType.API_USER);

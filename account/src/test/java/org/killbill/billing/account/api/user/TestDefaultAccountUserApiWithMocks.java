@@ -20,6 +20,7 @@ package org.killbill.billing.account.api.user;
 
 import java.util.UUID;
 
+import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.killbill.billing.account.AccountTestSuiteNoDB;
 import org.killbill.billing.account.api.AccountData;
@@ -66,6 +67,7 @@ public class TestDefaultAccountUserApiWithMocks extends AccountTestSuiteNoDB {
         final Currency currency = Currency.BRL;
         final Integer billCycleDay = Integer.MAX_VALUE;
         final UUID paymentMethodId = UUID.randomUUID();
+        final DateTime referenceTime = clock.getUTCNow();
         final DateTimeZone timeZone = DateTimeZone.UTC;
         final String locale = UUID.randomUUID().toString();
         final String address1 = UUID.randomUUID().toString();
@@ -80,7 +82,7 @@ public class TestDefaultAccountUserApiWithMocks extends AccountTestSuiteNoDB {
         final Boolean isMigrated = true;
         final Boolean isNotifiedForInvoices = false;
         final AccountData data = new DefaultAccount(id, externalKey, email, name, firstNameLength, currency, null, false, billCycleDay,
-                                                    paymentMethodId, timeZone, locale, address1, address2, companyName,
+                                                    paymentMethodId, referenceTime, timeZone, locale, address1, address2, companyName,
                                                     city, stateOrProvince, country, postalCode, phone, notes, isMigrated, isNotifiedForInvoices);
 
         accountUserApi.createAccount(data, callContext);

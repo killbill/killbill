@@ -140,9 +140,6 @@ public class EntitlementTestSuiteWithEmbeddedDB extends GuicyKillbillTestSuiteWi
         startTestFamework(testListener, clock, busService, subscriptionBaseService, entitlementService);
         this.catalog = initCatalog(catalogService);
 
-        // Make sure we start with a clean state
-        assertListenerStatus();
-
         configureShiro();
         login("EntitlementUser");
     }
@@ -174,11 +171,7 @@ public class EntitlementTestSuiteWithEmbeddedDB extends GuicyKillbillTestSuiteWi
 
     @AfterMethod(groups = "slow")
     public void afterMethod() throws Exception {
-
         securityApi.logout();
-
-        // Make sure we finish in a clean state
-        assertListenerStatus();
 
         stopTestFramework(testListener, busService, subscriptionBaseService, entitlementService);
     }
@@ -267,6 +260,7 @@ public class EntitlementTestSuiteWithEmbeddedDB extends GuicyKillbillTestSuiteWi
     }
 
     protected AccountData getAccountData(final int billingDay) {
+
         return new MockAccountBuilder().name(UUID.randomUUID().toString().substring(1, 8))
                                        .firstNameLength(6)
                                        .email(UUID.randomUUID().toString().substring(1, 8))
@@ -277,6 +271,7 @@ public class EntitlementTestSuiteWithEmbeddedDB extends GuicyKillbillTestSuiteWi
                                        .billingCycleDayLocal(billingDay)
                                        .currency(Currency.USD)
                                        .paymentMethodId(UUID.randomUUID())
+                                       .referenceTime(clock.getUTCNow())
                                        .timeZone(DateTimeZone.UTC)
                                        .build();
     }
@@ -289,6 +284,7 @@ public class EntitlementTestSuiteWithEmbeddedDB extends GuicyKillbillTestSuiteWi
         return account;
     }
 
+    @Override
     protected void assertListenerStatus() {
         testListener.assertListenerStatus();
     }

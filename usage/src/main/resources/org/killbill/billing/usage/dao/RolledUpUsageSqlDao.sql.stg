@@ -1,4 +1,4 @@
-group RolledUpUsageSqlDao : EntitySqlDao;
+import "org/killbill/billing/util/entity/dao/EntitySqlDao.sql.stg"
 
 tableName() ::= "rolled_up_usage"
 
@@ -29,45 +29,45 @@ select
 from <tableName()>
 where subscription_id = :subscriptionId
 and tracking_id = :trackingId
-<AND_CHECK_TENANT()>
+<AND_CHECK_TENANT("")>
 limit 1
 ;
 >>
 
 getUsageForSubscription() ::= <<
 select
-  <allTableFields()>
+  <allTableFields("")>
 from <tableName()>
 where subscription_id = :subscriptionId
 and record_date >= :startDate
 and record_date \< :endDate
 and unit_type = :unitType
-<AND_CHECK_TENANT()>
-<defaultOrderBy()>
+<AND_CHECK_TENANT("")>
+<defaultOrderBy("")>
 ;
 >>
 
 getAllUsageForSubscription() ::= <<
 select
-  <allTableFields()>
+  <allTableFields("")>
 from <tableName()>
 where subscription_id = :subscriptionId
 and record_date >= :startDate
 and record_date \< :endDate
-<AND_CHECK_TENANT()>
-<defaultOrderBy()>
+<AND_CHECK_TENANT("")>
+<defaultOrderBy("")>
 ;
 >>
 
 getRawUsageForAccount() ::= <<
 select
-  <allTableFields()>
+  <allTableFields("")>
 from <tableName()>
 where account_record_id = :accountRecordId
 and record_date >= :startDate
 and record_date \< :endDate
-<AND_CHECK_TENANT()>
-<defaultOrderBy()>
+<AND_CHECK_TENANT("")>
+<defaultOrderBy("")>
 ;
 >>
 

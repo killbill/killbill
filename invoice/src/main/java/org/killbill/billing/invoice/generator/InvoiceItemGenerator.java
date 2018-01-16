@@ -38,7 +38,7 @@ import org.slf4j.Logger;
 public abstract class InvoiceItemGenerator {
 
     public abstract List<InvoiceItem> generateItems(final ImmutableAccountData account, final UUID invoiceId, final BillingEventSet eventSet,
-                                                    @Nullable final List<Invoice> existingInvoices, final LocalDate targetDate,
+                                                    @Nullable final Iterable<Invoice> existingInvoices, final LocalDate targetDate,
                                                     final Currency targetCurrency, Map<UUID, SubscriptionFutureNotificationDates> perSubscriptionFutureNotificationDate,
                                                     final InternalCallContext context) throws InvoiceApiException;
 

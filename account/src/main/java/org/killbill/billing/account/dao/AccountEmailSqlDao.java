@@ -20,7 +20,7 @@ import java.util.List;
 import java.util.UUID;
 
 import org.skife.jdbi.v2.sqlobject.Bind;
-import org.skife.jdbi.v2.sqlobject.BindBean;
+import org.killbill.commons.jdbi.binder.SmartBindBean;
 import org.skife.jdbi.v2.sqlobject.SqlQuery;
 import org.skife.jdbi.v2.sqlobject.SqlUpdate;
 
@@ -30,17 +30,17 @@ import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.util.entity.dao.Audited;
 import org.killbill.billing.util.entity.dao.EntitySqlDao;
-import org.killbill.billing.util.entity.dao.EntitySqlDaoStringTemplate;
+import org.killbill.commons.jdbi.template.KillBillSqlDaoStringTemplate;
 
-@EntitySqlDaoStringTemplate
+@KillBillSqlDaoStringTemplate
 public interface AccountEmailSqlDao extends EntitySqlDao<AccountEmailModelDao, AccountEmail> {
 
     @SqlUpdate
     @Audited(ChangeType.DELETE)
-    public void markEmailAsDeleted(@BindBean final AccountEmailModelDao accountEmail,
-                                   @BindBean final InternalCallContext context);
+    public void markEmailAsDeleted(@SmartBindBean final AccountEmailModelDao accountEmail,
+                                   @SmartBindBean final InternalCallContext context);
 
     @SqlQuery
     public List<AccountEmailModelDao> getEmailByAccountId(@Bind("accountId") final UUID accountId,
-                                                          @BindBean final InternalTenantContext context);
+                                                          @SmartBindBean final InternalTenantContext context);
 }

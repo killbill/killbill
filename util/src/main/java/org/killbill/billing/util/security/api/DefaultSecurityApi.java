@@ -206,6 +206,12 @@ public class DefaultSecurityApi implements SecurityApi {
     }
 
     @Override
+    public void updateRoleDefinition(final String role, final List<String> permissions, final CallContext callContext) throws SecurityApiException {
+        final List<String> sanitizedPermissions = sanitizeAndValidatePermissions(permissions);
+        userDao.updateRoleDefinition(role, sanitizedPermissions, callContext.getUserName());
+    }
+
+    @Override
     public List<String> getRoleDefinition(final String role, final TenantContext tenantContext) {
         final List<RolesPermissionsModelDao> permissionsModelDao = userDao.getRoleDefinition(role);
         return ImmutableList.copyOf(Iterables.transform(permissionsModelDao, new Function<RolesPermissionsModelDao, String>() {

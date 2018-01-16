@@ -81,7 +81,7 @@ public class TestDefaultInvoiceMigrationApi extends InvoiceTestSuiteWithEmbedded
         Assert.assertEquals(invoice.getInvoiceItems().size(), 1);
         Assert.assertEquals(invoice.getInvoiceItems().get(0).getAmount().compareTo(MIGRATION_INVOICE_AMOUNT), 0);
         Assert.assertEquals(invoice.getInvoiceItems().get(0).getType(), InvoiceItemType.RECURRING);
-        Assert.assertEquals(InvoiceModelDaoHelper.getBalance(invoice).compareTo(BigDecimal.ZERO), 0);
+        Assert.assertEquals(InvoiceModelDaoHelper.getRawBalanceForRegularInvoice(invoice).compareTo(BigDecimal.ZERO), 0);
         Assert.assertEquals(invoice.getCurrency(), MIGRATION_INVOICE_CURRENCY);
         Assert.assertTrue(invoice.isMigrated());
 
@@ -108,7 +108,7 @@ public class TestDefaultInvoiceMigrationApi extends InvoiceTestSuiteWithEmbedded
     public void testBalance() throws InvoiceApiException {
         final InvoiceModelDao migrationInvoice = invoiceDao.getById(migrationInvoiceId, internalCallContext);
         final InvoiceModelDao regularInvoice = invoiceDao.getById(regularInvoiceId, internalCallContext);
-        final BigDecimal balanceOfAllInvoices = InvoiceModelDaoHelper.getBalance(migrationInvoice).add(InvoiceModelDaoHelper.getBalance(regularInvoice));
+        final BigDecimal balanceOfAllInvoices = InvoiceModelDaoHelper.getRawBalanceForRegularInvoice(migrationInvoice).add(InvoiceModelDaoHelper.getRawBalanceForRegularInvoice(regularInvoice));
 
         final BigDecimal accountBalance = invoiceUserApi.getAccountBalance(accountId, callContext);
         Assert.assertEquals(accountBalance.compareTo(balanceOfAllInvoices), 0);

@@ -25,6 +25,7 @@ import org.killbill.billing.util.customfield.CustomField;
 import org.killbill.billing.util.dao.TableName;
 import org.killbill.billing.util.entity.dao.EntityModelDao;
 import org.killbill.billing.util.entity.dao.EntityModelDaoBase;
+import org.killbill.billing.util.tag.dao.TagModelDao;
 
 public class CustomFieldModelDao extends EntityModelDaoBase implements EntityModelDao<CustomField> {
 
@@ -33,7 +34,6 @@ public class CustomFieldModelDao extends EntityModelDaoBase implements EntityMod
     private UUID objectId;
     private ObjectType objectType;
     private Boolean isActive;
-
 
     public CustomFieldModelDao() {  /* For the DAO mapper */ }
 
@@ -136,6 +136,27 @@ public class CustomFieldModelDao extends EntityModelDaoBase implements EntityMod
 
         return true;
     }
+
+    public boolean isSame(final CustomFieldModelDao that) {
+        if (fieldName != null ? !fieldName.equals(that.fieldName) : that.fieldName != null) {
+            return false;
+        }
+        if (fieldValue != null ? !fieldValue.equals(that.fieldValue) : that.fieldValue != null) {
+            return false;
+        }
+        if (objectId != null ? !objectId.equals(that.objectId) : that.objectId != null) {
+            return false;
+        }
+        if (objectType != that.objectType) {
+            return false;
+        }
+        if (isActive != null ? !isActive.equals(that.isActive) : that.isActive != null) {
+            return false;
+        }
+        return true;
+    }
+
+
 
     @Override
     public int hashCode() {

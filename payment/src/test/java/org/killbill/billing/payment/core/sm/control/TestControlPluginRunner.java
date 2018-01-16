@@ -54,6 +54,7 @@ public class TestControlPluginRunner extends PaymentTestSuiteNoDB {
         final PriorPaymentControlResult paymentControlResult = controlPluginRunner.executePluginPriorCalls(account,
                                                                                                            paymentMethodId,
                                                                                                            null,
+                                                                                                           null,
                                                                                                            paymentId,
                                                                                                            paymentExternalKey,
                                                                                                            paymentTransactionId,

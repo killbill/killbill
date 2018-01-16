@@ -57,7 +57,7 @@ public class TestExternalPaymentPlugin extends PaymentTestSuiteWithEmbeddedDB {
         final String paymentExternalKey = "externalKey";
         final String transactionExternalKey = "transactionKey";
 
-        final Payment payment = paymentApi.createPurchase(account, account.getPaymentMethodId(), null, requestedAmount, Currency.AED, paymentExternalKey, transactionExternalKey,
+        final Payment payment = paymentApi.createPurchase(account, account.getPaymentMethodId(), null, requestedAmount, Currency.AED, null, paymentExternalKey, transactionExternalKey,
                                                           ImmutableList.<PluginProperty>of(), callContext);
 
         final Payment paymentPluginInfoFalse = paymentApi.getPayment(payment.getId(), false, false, ImmutableList.<PluginProperty>of(), callContext);
@@ -97,7 +97,7 @@ public class TestExternalPaymentPlugin extends PaymentTestSuiteWithEmbeddedDB {
         final String transactionExternalKey = "transactionKey";
 
         final Payment payment = paymentApi.createPurchase(account, account.getPaymentMethodId(), null, requestedAmount,
-                                                          Currency.AED, paymentExternalKey, transactionExternalKey,
+                                                          Currency.AED, null, paymentExternalKey, transactionExternalKey,
                                                           ImmutableList.<PluginProperty>of(), callContext);
 
         final Pagination<PaymentMethod> paymentMethods = paymentApi.getPaymentMethods(0L, 10L, false, null, callContext);

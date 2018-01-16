@@ -61,7 +61,7 @@ public class DefaultImmutableAccountData implements ImmutableAccountData, Extern
              account.getCurrency(),
              account.getTimeZone(),
              AccountDateTimeUtils.getFixedOffsetTimeZone(account),
-             AccountDateTimeUtils.getReferenceDateTime(account));
+             account.getReferenceTime());
     }
 
     public DefaultImmutableAccountData(final AccountModelDao account) {
@@ -70,7 +70,7 @@ public class DefaultImmutableAccountData implements ImmutableAccountData, Extern
              account.getCurrency(),
              account.getTimeZone(),
              AccountDateTimeUtils.getFixedOffsetTimeZone(account),
-             AccountDateTimeUtils.getReferenceDateTime(account));
+             account.getReferenceTime());
     }
 
     @Override

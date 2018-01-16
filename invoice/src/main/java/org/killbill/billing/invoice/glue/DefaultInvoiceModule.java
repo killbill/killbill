@@ -26,7 +26,7 @@ import org.killbill.billing.invoice.ParkedAccountsManager;
 import org.killbill.billing.invoice.api.DefaultInvoiceService;
 import org.killbill.billing.invoice.api.InvoiceApiHelper;
 import org.killbill.billing.invoice.api.InvoiceInternalApi;
-import org.killbill.billing.invoice.api.InvoiceNotifier;
+import org.killbill.billing.invoice.api.InvoiceListenerService;
 import org.killbill.billing.invoice.api.InvoicePaymentApi;
 import org.killbill.billing.invoice.api.InvoiceService;
 import org.killbill.billing.invoice.api.InvoiceUserApi;
@@ -46,10 +46,8 @@ import org.killbill.billing.invoice.generator.InvoiceGenerator;
 import org.killbill.billing.invoice.generator.UsageInvoiceItemGenerator;
 import org.killbill.billing.invoice.notification.DefaultNextBillingDateNotifier;
 import org.killbill.billing.invoice.notification.DefaultNextBillingDatePoster;
-import org.killbill.billing.invoice.notification.EmailInvoiceNotifier;
 import org.killbill.billing.invoice.notification.NextBillingDateNotifier;
 import org.killbill.billing.invoice.notification.NextBillingDatePoster;
-import org.killbill.billing.invoice.notification.NullInvoiceNotifier;
 import org.killbill.billing.invoice.plugin.api.InvoicePluginApi;
 import org.killbill.billing.invoice.template.bundles.DefaultResourceBundleFactory;
 import org.killbill.billing.invoice.usage.RawUsageOptimizer;
@@ -102,8 +100,9 @@ public class DefaultInvoiceModule extends KillBillModule implements InvoiceModul
         bind(InvoiceConfig.class).to(MultiTenantInvoiceConfig.class).asEagerSingleton();
     }
 
-    protected void installInvoiceService() {
+    protected void installInvoiceServices() {
         bind(InvoiceService.class).to(DefaultInvoiceService.class).asEagerSingleton();
+        bind(InvoiceListenerService.class).to(InvoiceListener.class).asEagerSingleton();
     }
 
     protected void installResourceBundleFactory() {
@@ -117,14 +116,6 @@ public class DefaultInvoiceModule extends KillBillModule implements InvoiceModul
         final TranslatorConfig config = new ConfigurationObjectFactory(skifeConfigSource).build(TranslatorConfig.class);
         bind(TranslatorConfig.class).toInstance(config);
         bind(InvoiceFormatterFactory.class).to(config.getInvoiceFormatterFactoryClass()).asEagerSingleton();
-    }
-
-    protected void installInvoiceNotifier() {
-        if (staticInvoiceConfig.isEmailNotificationsEnabled()) {
-            bind(InvoiceNotifier.class).to(EmailInvoiceNotifier.class).asEagerSingleton();
-        } else {
-            bind(InvoiceNotifier.class).to(NullInvoiceNotifier.class).asEagerSingleton();
-        }
     }
 
     protected void installInvoiceDispatcher() {
@@ -154,8 +145,7 @@ public class DefaultInvoiceModule extends KillBillModule implements InvoiceModul
         installConfig();
 
         installInvoicePluginApi();
-        installInvoiceService();
-        installInvoiceNotifier();
+        installInvoiceServices();
         installNotifiers();
         installInvoiceDispatcher();
         installInvoiceListener();

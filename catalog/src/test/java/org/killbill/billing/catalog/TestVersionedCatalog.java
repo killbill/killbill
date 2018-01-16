@@ -18,24 +18,16 @@
 
 package org.killbill.billing.catalog;
 
-import java.io.IOException;
 import java.math.BigDecimal;
-import java.net.URISyntaxException;
-
-import javax.xml.bind.JAXBException;
-import javax.xml.transform.TransformerException;
 
 import org.joda.time.DateTime;
 import org.killbill.billing.ErrorCode;
 import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.catalog.api.Currency;
-import org.killbill.billing.catalog.api.InvalidConfigException;
 import org.killbill.billing.catalog.api.Plan;
-import org.killbill.billing.platform.api.KillbillService.ServiceException;
 import org.testng.Assert;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
-import org.xml.sax.SAXException;
 
 public class TestVersionedCatalog extends CatalogTestSuiteNoDB {
 
@@ -56,15 +48,9 @@ public class TestVersionedCatalog extends CatalogTestSuiteNoDB {
         final DateTime dt214 = new DateTime("2011-02-14T00:01:00+00:00");
         final DateTime dt3 = new DateTime("2011-03-03T00:01:00+00:00");
 
-        // New subscription
-        try {
-            vc.findPlan("pistol-monthly", dt0, dt0);
-            Assert.fail("Exception should have been thrown there are no plans for this date");
-        } catch (CatalogApiException e) {
-            // Expected behaviour
-            log.error("Expected exception", e);
+        // We find it although the date provided is too early because we default to first catalog version
+        final Plan newSubPlan0 = vc.findPlan("pistol-monthly", dt0, dt0);
 
-        }
         final Plan newSubPlan1 = vc.findPlan("pistol-monthly", dt1, dt1);
         final Plan newSubPlan2 = vc.findPlan("pistol-monthly", dt2, dt2);
         final Plan newSubPlan214 = vc.findPlan("pistol-monthly", dt214, dt214);
@@ -88,13 +74,35 @@ public class TestVersionedCatalog extends CatalogTestSuiteNoDB {
     }
 
     @Test(groups = "fast")
-    public void testErrorOnDateTooEarly() {
+    public void testErrorOnDateTooEarly() throws CatalogApiException {
         final DateTime dt0 = new DateTime("1977-01-01T00:00:00+00:00");
+
+        // We find it although the date provided is too early because we default to first catalog version
+        vc.findPlan("shotgun-monthly", dt0);
+
         try {
-            vc.findPlan("foo", dt0);
+            // We **don't find it** because date is too early and not part of first catalog version
+            vc.findPlan("shotgun-quarterly", dt0);
             Assert.fail("Date is too early an exception should have been thrown");
         } catch (CatalogApiException e) {
-            Assert.assertEquals(e.getCode(), ErrorCode.CAT_NO_CATALOG_FOR_GIVEN_DATE.getCode());
+            Assert.assertEquals(e.getCode(), ErrorCode.CAT_NO_SUCH_PLAN.getCode());
         }
+    }
+
+
+    @Test(groups = "fast")
+    public void testWithDeletedPlan() throws CatalogApiException {
+
+        // We find it because this is version 2 whose effectiveDate is "2011-02-02T00:00:00+00:00"
+        vc.findPlan("shotgun-quarterly", new DateTime("2011-02-02T00:01:00+00:00"));
+
+        try {
+            // We **don't find it** because date provided matches version 3 where plan was removed
+            vc.findPlan("shotgun-quarterly", new DateTime("2011-03-03T00:01:00+00:00"));
+            Assert.fail("Plan has been removed");
+        } catch (CatalogApiException e) {
+            Assert.assertEquals(e.getCode(), ErrorCode.CAT_NO_SUCH_PLAN.getCode());
+        }
+
     }
 }

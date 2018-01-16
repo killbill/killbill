@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2014 Ning, Inc.
- * Copyright 2014 Groupon, Inc
- * Copyright 2014 The Billing Project, LLC
+ * Copyright 2014-2017 Groupon, Inc
+ * Copyright 2014-2017 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -27,25 +27,57 @@ import org.killbill.billing.client.KillBillClientException;
 import org.killbill.billing.client.model.Account;
 import org.killbill.billing.client.model.CustomField;
 import org.killbill.billing.client.model.CustomFields;
+import org.killbill.billing.util.api.AuditLevel;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
+import com.google.common.collect.ImmutableList;
+
 public class TestCustomField extends TestJaxrsBase {
 
-    @Test(groups = "slow", description = "Can paginate through all custom fields")
+
+    @Test(groups = "slow", description = "Can create/modify/delete custom fields")
+    public void testBasicCustomFields() throws Exception {
+        final Account account = createAccount();
+        final CustomField customField = new CustomField();
+        customField.setName("MyName");
+        customField.setValue("InitialValue");
+        killBillClient.createAccountCustomField(account.getAccountId(), customField, requestOptions);
+
+        CustomFields allCustomFields = killBillClient.getCustomFields(requestOptions);
+        Assert.assertEquals(allCustomFields.size(), 1);
+        Assert.assertEquals(allCustomFields.get(0).getName(), "MyName");
+        Assert.assertEquals(allCustomFields.get(0).getValue(), "InitialValue");
+
+        final CustomField customFieldModified = new CustomField();
+        customFieldModified.setCustomFieldId(allCustomFields.get(0).getCustomFieldId());
+        customFieldModified.setValue("NewValue");
+        killBillClient.modifyAccountCustomFields(account.getAccountId(), ImmutableList.of(customFieldModified), requestOptions);
+
+        allCustomFields = killBillClient.getCustomFields(requestOptions);
+        Assert.assertEquals(allCustomFields.size(), 1);
+        Assert.assertEquals(allCustomFields.get(0).getName(), "MyName");
+        Assert.assertEquals(allCustomFields.get(0).getValue(), "NewValue");
+
+        killBillClient.deleteAccountCustomField(account.getAccountId(), allCustomFields.get(0).getCustomFieldId(), requestOptions);
+        allCustomFields = killBillClient.getCustomFields(requestOptions);
+        Assert.assertEquals(allCustomFields.size(), 0);
+    }
+
+        @Test(groups = "slow", description = "Can paginate through all custom fields")
     public void testCustomFieldsPagination() throws Exception {
         final Account account = createAccount();
         for (int i = 0; i < 5; i++) {
             final CustomField customField = new CustomField();
             customField.setName(UUID.randomUUID().toString().substring(0, 5));
             customField.setValue(UUID.randomUUID().toString().substring(0, 5));
-            killBillClient.createAccountCustomField(account.getAccountId(), customField, createdBy, reason, comment);
+            killBillClient.createAccountCustomField(account.getAccountId(), customField, requestOptions);
         }
 
-        final CustomFields allCustomFields = killBillClient.getCustomFields();
+        final CustomFields allCustomFields = killBillClient.getCustomFields(requestOptions);
         Assert.assertEquals(allCustomFields.size(), 5);
 
-        CustomFields page = killBillClient.getCustomFields(0L, 1L);
+        CustomFields page = killBillClient.getCustomFields(0L, 1L, requestOptions);
         for (int i = 0; i < 5; i++) {
             Assert.assertNotNull(page);
             Assert.assertEquals(page.size(), 1);
@@ -60,15 +92,21 @@ public class TestCustomField extends TestJaxrsBase {
             doSearchCustomField(customField.getValue(), customField);
         }
 
-        final CustomFields customFields = killBillClient.searchCustomFields(ObjectType.ACCOUNT.toString());
+        final CustomFields customFields = killBillClient.searchCustomFields(ObjectType.ACCOUNT.toString(), requestOptions);
         Assert.assertEquals(customFields.size(), 5);
         Assert.assertEquals(customFields.getPaginationCurrentOffset(), 0);
         Assert.assertEquals(customFields.getPaginationTotalNbRecords(), 5);
         Assert.assertEquals(customFields.getPaginationMaxNbRecords(), 5);
+
+        final CustomFields allAccountCustomFields = killBillClient.getAllAccountCustomFields(account.getAccountId(), null, AuditLevel.FULL, requestOptions);
+        Assert.assertEquals(allAccountCustomFields.size(), 5);
+
+        final CustomFields allBundleCustomFieldsForAccount = killBillClient.getAllAccountCustomFields(account.getAccountId(), ObjectType.ACCOUNT.name(), AuditLevel.FULL, requestOptions);
+        Assert.assertEquals(allBundleCustomFieldsForAccount.size(), 5);
     }
 
     private void doSearchCustomField(final String searchKey, @Nullable final CustomField expectedCustomField) throws KillBillClientException {
-        final CustomFields customFields = killBillClient.searchCustomFields(searchKey);
+        final CustomFields customFields = killBillClient.searchCustomFields(searchKey, requestOptions);
         if (expectedCustomField == null) {
             Assert.assertTrue(customFields.isEmpty());
             Assert.assertEquals(customFields.getPaginationCurrentOffset(), 0);

@@ -49,9 +49,9 @@ public class TestTag extends TestJaxrsBase {
 
     @Test(groups = "slow", description = "Cannot add badly formatted TagDefinition")
     public void testTagErrorHandling() throws Exception {
-        final TagDefinition[] tagDefinitions = {new TagDefinition(null, false, null, null, null),
-                                                new TagDefinition(null, false, "something", null, null),
-                                                new TagDefinition(null, false, null, "something", null)};
+        final TagDefinition[] tagDefinitions = {new TagDefinition(null, false, null, null,  ImmutableList.<ObjectType>of(ObjectType.ACCOUNT)),
+                                                new TagDefinition(null, false, "something", null,  ImmutableList.<ObjectType>of(ObjectType.INVOICE)),
+                                                new TagDefinition(null, false, null, "something",  ImmutableList.<ObjectType>of(ObjectType.TRANSACTION))};
 
         for (final TagDefinition tagDefinition : tagDefinitions) {
             try {
@@ -66,7 +66,7 @@ public class TestTag extends TestJaxrsBase {
 
     @Test(groups = "slow", description = "Can create a TagDefinition")
     public void testTagDefinitionOk() throws Exception {
-        final TagDefinition input = new TagDefinition(null, false, "blue", "relaxing color", ImmutableList.<ObjectType>of());
+        final TagDefinition input = new TagDefinition(null, false, "blue", "relaxing color",  ImmutableList.<ObjectType>of(ObjectType.TRANSACTION));
 
         final TagDefinition objFromJson = killBillClient.createTagDefinition(input, requestOptions);
         assertNotNull(objFromJson);
@@ -79,20 +79,17 @@ public class TestTag extends TestJaxrsBase {
         List<TagDefinition> objFromJson = killBillClient.getTagDefinitions(requestOptions);
         final int sizeSystemTag = objFromJson.isEmpty() ? 0 : objFromJson.size();
 
-        for (final TagDefinition cur : objFromJson) {
-            Assert.assertFalse(SystemTags.isSystemTag(cur.getId()));
-        }
 
-        final TagDefinition inputBlue = new TagDefinition(null, false, "blue", "relaxing color", ImmutableList.<ObjectType>of());
+        final TagDefinition inputBlue = new TagDefinition(null, false, "blue", "relaxing color",  ImmutableList.<ObjectType>of(ObjectType.TRANSACTION));
         killBillClient.createTagDefinition(inputBlue, requestOptions);
 
-        final TagDefinition inputRed = new TagDefinition(null, false, "red", "hot color", ImmutableList.<ObjectType>of());
+        final TagDefinition inputRed = new TagDefinition(null, false, "red", "hot color",  ImmutableList.<ObjectType>of(ObjectType.TRANSACTION));
         killBillClient.createTagDefinition(inputRed, requestOptions);
 
-        final TagDefinition inputYellow = new TagDefinition(null, false, "yellow", "vibrant color", ImmutableList.<ObjectType>of());
+        final TagDefinition inputYellow = new TagDefinition(null, false, "yellow", "vibrant color",  ImmutableList.<ObjectType>of(ObjectType.TRANSACTION));
         killBillClient.createTagDefinition(inputYellow, requestOptions);
 
-        final TagDefinition inputGreen = new TagDefinition(null, false, "green", "super relaxing color", ImmutableList.<ObjectType>of());
+        final TagDefinition inputGreen = new TagDefinition(null, false, "green", "super relaxing color",  ImmutableList.<ObjectType>of(ObjectType.TRANSACTION));
         killBillClient.createTagDefinition(inputGreen, requestOptions);
 
         objFromJson = killBillClient.getTagDefinitions(requestOptions);
@@ -122,7 +119,7 @@ public class TestTag extends TestJaxrsBase {
             killBillClient.createAccountTag(account.getAccountId(), controlTagType.getId(), requestOptions);
         }
 
-        final TagDefinition bundleTagDefInput = new TagDefinition(null, false, "bundletagdef", "nothing special", ImmutableList.<ObjectType>of());
+        final TagDefinition bundleTagDefInput = new TagDefinition(null, false, "bundletagdef", "nothing special",  ImmutableList.<ObjectType>of(ObjectType.TRANSACTION));
         final TagDefinition bundleTagDef = killBillClient.createTagDefinition(bundleTagDefInput, requestOptions);
 
         killBillClient.createBundleTag(subscriptionJson.getBundleId(), bundleTagDef.getId(), requestOptions);

@@ -17,8 +17,11 @@
 
 package org.killbill.billing.util.security.shiro.dao;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
+import javax.annotation.Nullable;
 import javax.inject.Inject;
 
 import org.apache.shiro.crypto.RandomNumberGenerator;
@@ -54,9 +57,6 @@ public class DefaultUserDao implements UserDao {
         this.dbi = dbi;
         this.clock = clock;
         this.securityConfig = securityConfig;
-        ((DBI) dbi).registerMapper(new LowerToCamelBeanMapperFactory(UserModelDao.class));
-        ((DBI) dbi).registerMapper(new LowerToCamelBeanMapperFactory(UserRolesModelDao.class));
-        ((DBI) dbi).registerMapper(new LowerToCamelBeanMapperFactory(RolesPermissionsModelDao.class));
     }
 
     @Override
@@ -107,6 +107,49 @@ public class DefaultUserDao implements UserDao {
                     throw new SecurityApiException(ErrorCode.SECURITY_ROLE_ALREADY_EXISTS, role);
                 }
                 for (final String permission : permissions) {
+                    rolesPermissionsSqlDao.create(new RolesPermissionsModelDao(role, permission, createdDate, createdBy));
+                }
+                return null;
+            }
+        });
+
+    }
+
+    @Override
+    public void updateRoleDefinition(final String role, final List<String> permissions, final String createdBy) throws SecurityApiException {
+        final DateTime createdDate = clock.getUTCNow();
+        inTransactionWithExceptionHandling(new TransactionCallback<Void>() {
+            @Override
+            public Void inTransaction(final Handle handle, final TransactionStatus status) throws Exception {
+                final RolesPermissionsSqlDao rolesPermissionsSqlDao = handle.attach(RolesPermissionsSqlDao.class);
+                final List<RolesPermissionsModelDao> existingPermissions = rolesPermissionsSqlDao.getByRoleName(role);
+                // A empty list of permissions means we should remove all current permissions
+                final Iterable<RolesPermissionsModelDao> toBeDeleted = existingPermissions.isEmpty() ?
+                                                                       existingPermissions :
+                                                                       Iterables.filter(existingPermissions, new Predicate<RolesPermissionsModelDao>() {
+                    @Override
+                    public boolean apply(final RolesPermissionsModelDao input) {
+                        return !permissions.contains(input.getPermission());
+                    }
+                });
+
+                final Iterable<String> toBeAdded = Iterables.filter(permissions, new Predicate<String>() {
+                    @Override
+                    public boolean apply(final String input) {
+                        for (RolesPermissionsModelDao e : existingPermissions) {
+                            if (e.getPermission().equals(input)) {
+                                return false;
+                            }
+                        }
+                        return true;
+                    }
+                });
+
+                for (RolesPermissionsModelDao d : toBeDeleted) {
+                    rolesPermissionsSqlDao.unactiveEvent(d.getRecordId(), createdDate, createdBy);
+                }
+
+                for (final String permission : toBeAdded) {
                     rolesPermissionsSqlDao.create(new RolesPermissionsModelDao(role, permission, createdDate, createdBy));
                 }
                 return null;
