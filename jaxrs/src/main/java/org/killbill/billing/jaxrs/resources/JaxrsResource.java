@@ -188,6 +188,9 @@ public interface JaxrsResource {
     public static final String INVOICES = "invoices";
     public static final String INVOICES_PATH = PREFIX + "/" + INVOICES;
 
+    public static final String INVOICE_ITEMS = "invoiceItems";
+    public static final String INVOICES_ITEMS_PATH = PREFIX + "/" + INVOICE_ITEMS;
+
     public static final String CHARGES = "charges";
     public static final String CHARGES_PATH = PREFIX + "/" + INVOICES + "/" + CHARGES;
 

@@ -34,6 +34,7 @@ import org.killbill.billing.jaxrs.resources.CatalogResource;
 import org.killbill.billing.jaxrs.resources.CreditResource;
 import org.killbill.billing.jaxrs.resources.CustomFieldResource;
 import org.killbill.billing.jaxrs.resources.ExportResource;
+import org.killbill.billing.jaxrs.resources.InvoiceItemResource;
 import org.killbill.billing.jaxrs.resources.InvoicePaymentResource;
 import org.killbill.billing.jaxrs.resources.InvoiceResource;
 import org.killbill.billing.jaxrs.resources.NodesInfoResource;
@@ -208,6 +209,7 @@ public class KillbillServerModule extends KillbillPlatformModule {
         bind(TenantResource.class).asEagerSingleton();
         bind(TransactionResource.class).asEagerSingleton();
         bind(UsageResource.class).asEagerSingleton();
+        bind(InvoiceItemResource.class).asEagerSingleton();
 
         bind(KillbillEventHandler.class).asEagerSingleton();
     }
