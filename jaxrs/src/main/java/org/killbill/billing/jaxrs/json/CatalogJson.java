@@ -1,6 +1,6 @@
 /*
- * Copyright 2014-2015 Groupon, Inc
- * Copyright 2014-2015 The Billing Project, LLC
+ * Copyright 2014-2018 Groupon, Inc
+ * Copyright 2014-2018 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -92,37 +92,11 @@ public class CatalogJson {
             }
             ProductJson productJson = productMap.get(product.getName());
             if (productJson == null) {
-                productJson = new ProductJson(product.getCategory().toString(),
-                                              product.getName(),
-                                              toProductNames(product.getIncluded()),
-                                              toProductNames(product.getAvailable()));
+                productJson = new ProductJson(product);
                 productMap.put(product.getName(), productJson);
             }
 
-            // Build the phases associated with this plan
-            final List<PhaseJson> phases = new LinkedList<PhaseJson>();
-            for (final PlanPhase phase : plan.getAllPhases()) {
-                final List<PriceJson> prices = new LinkedList<PriceJson>();
-                if (phase.getRecurring() != null && phase.getRecurring().getRecurringPrice() != null) {
-                    for (final Price price : phase.getRecurring().getRecurringPrice().getPrices()) {
-                        prices.add(new PriceJson(price));
-                    }
-                }
-
-                final List<PriceJson> fixedPrices = new LinkedList<PriceJson>();
-                if (phase.getFixed() != null && phase.getFixed().getPrice() != null) {
-                    for (final Price price : phase.getFixed().getPrice().getPrices()) {
-                        fixedPrices.add(new PriceJson(price));
-                    }
-                }
-
-                final DurationJson durationJson = new DurationJson(phase.getDuration().getUnit(), phase.getDuration().getNumber());
-                final List<UsageJson> usagesJson = buildUsagesJson(phase.getUsages());
-                final PhaseJson phaseJson = new PhaseJson(phase.getPhaseType().toString(), prices, fixedPrices, durationJson, usagesJson);
-                phases.add(phaseJson);
-            }
-
-            final PlanJson planJson = new PlanJson(plan.getName(), plan.getRecurringBillingPeriod(), phases);
+            final PlanJson planJson = new PlanJson(plan);
             productJson.getPlans().add(planJson);
         }
 
@@ -135,53 +109,7 @@ public class CatalogJson {
 
     }
 
-    private List<UsageJson> buildUsagesJson(final Usage[] usages) throws CurrencyValueNull {
-        List<UsageJson> usagesJson = new ArrayList<UsageJson>();
-        for (int i = 0; i < usages.length; i++) {
-            usagesJson.add(new UsageJson(usages[i].getBillingPeriod().toString(), buildTiers(usages[i].getTiers())));
-        }
-        return usagesJson;
-    }
-
-    private List<TierJson> buildTiers(final Tier[] tiers) throws CurrencyValueNull {
-        List<TierJson> tiersJson = new ArrayList<TierJson>();
-        if (tiers != null && tiers.length > 0) {
-            for (int i=0; i < tiers.length; i++) {
-                tiersJson.add(new TierJson(buildTieredBlocks(tiers[i].getTieredBlocks()),
-                                           buildLimits(tiers[i].getLimits()),
-                                           buildPrices(tiers[i].getFixedPrice()),
-                                           buildPrices(tiers[i].getRecurringPrice())));
-            }
-        }
-        return tiersJson;
-    }
-
-    private List<LimitJson> buildLimits(final Limit[] limits) {
-        List<LimitJson> limitsJson = new ArrayList<LimitJson>();
-        if (limits != null && limits.length > 0) {
-            for (int i=0; i < limits.length; i++) {
-                limitsJson.add(new LimitJson(limits[i].getUnit().getName(),
-                                             limits[i].getMax().toString(),
-                                             limits[i].getMin().toString()));
-            }
-        }
-        return limitsJson;
-    }
-
-    private List<TieredBlockJson> buildTieredBlocks(final TieredBlock[] tieredBlocks) throws CurrencyValueNull {
-        List<TieredBlockJson> tieredBlocksJson = new ArrayList<TieredBlockJson>();
-        if (tieredBlocks != null && tieredBlocks.length > 0) {
-            for (int i=0; i < tieredBlocks.length; i++) {
-                tieredBlocksJson.add(new TieredBlockJson(tieredBlocks[i].getUnit().getName(),
-                                                         tieredBlocks[i].getSize().toString(),
-                                                         tieredBlocks[i].getMax().toString(),
-                                                         buildPrices(tieredBlocks[i].getPrice())));
-            }
-        }
-        return tieredBlocksJson;
-    }
-
-    private List<PriceJson> buildPrices(final InternationalPrice internationalPrice) throws CurrencyValueNull {
+    private static List<PriceJson> buildPrices(final InternationalPrice internationalPrice) throws CurrencyValueNull {
         List<PriceJson> pricesJson = new ArrayList<PriceJson>();
         Price[] prices = (internationalPrice != null) ? internationalPrice.getPrices() : null;
         if (prices != null && prices.length > 0) {
@@ -191,16 +119,6 @@ public class CatalogJson {
             }
         }
         return pricesJson;
-    }
-
-    private List<String> toProductNames(final Collection<Product> in) {
-        return Lists.transform(ImmutableList.<Product>copyOf(in),
-                               new Function<Product, String>() {
-                                   @Override
-                                   public String apply(final Product input) {
-                                       return input.getName();
-                                   }
-                               });
     }
 
     public List<ProductJson> getProducts() {
@@ -295,8 +213,12 @@ public class CatalogJson {
             this.available = available;
         }
 
-        public ProductJson(final String type, final String name, final List<String> included, final List<String> available) {
-            this(type, name, new LinkedList<PlanJson>(), included, available);
+        public ProductJson(final Product product) {
+            this.type = product.getCategory().toString();
+            this.name = product.getName();
+            this.plans = new LinkedList<PlanJson>();
+            this.included = toProductNames(product.getIncluded());
+            this.available = toProductNames(product.getAvailable());
         }
 
         public String getType() {
@@ -370,6 +292,16 @@ public class CatalogJson {
             result = 31 * result + (available != null ? available.hashCode() : 0);
             return result;
         }
+
+        private List<String> toProductNames(final Collection<Product> in) {
+            return Lists.transform(ImmutableList.<Product>copyOf(in),
+                                   new Function<Product, String>() {
+                                       @Override
+                                       public String apply(final Product input) {
+                                           return input.getName();
+                                       }
+                                   });
+        }
     }
 
     public static class PlanJson {
@@ -377,6 +309,18 @@ public class CatalogJson {
         private final String name;
         private final BillingPeriod billingPeriod;
         private final List<PhaseJson> phases;
+
+        public PlanJson(final Plan plan) throws CurrencyValueNull {
+            final List<PhaseJson> phases = new LinkedList<PhaseJson>();
+            for (final PlanPhase phase : plan.getAllPhases()) {
+                final PhaseJson phaseJson = new PhaseJson(phase);
+                phases.add(phaseJson);
+            }
+
+            this.name = plan.getName();
+            this.billingPeriod = plan.getRecurringBillingPeriod();
+            this.phases = phases;
+        }
 
         @JsonCreator
         public PlanJson(@JsonProperty("name") final String name,
@@ -729,6 +673,31 @@ public class CatalogJson {
         private final DurationJson duration;
         private final List<UsageJson> usages;
 
+        public PhaseJson(final PlanPhase phase) throws CurrencyValueNull {
+            final List<PriceJson> prices = new LinkedList<PriceJson>();
+            if (phase.getRecurring() != null && phase.getRecurring().getRecurringPrice() != null) {
+                for (final Price price : phase.getRecurring().getRecurringPrice().getPrices()) {
+                    prices.add(new PriceJson(price));
+                }
+            }
+
+            final List<PriceJson> fixedPrices = new LinkedList<PriceJson>();
+            if (phase.getFixed() != null && phase.getFixed().getPrice() != null) {
+                for (final Price price : phase.getFixed().getPrice().getPrices()) {
+                    fixedPrices.add(new PriceJson(price));
+                }
+            }
+
+            final DurationJson durationJson = new DurationJson(phase.getDuration().getUnit(), phase.getDuration().getNumber());
+            final List<UsageJson> usagesJson = buildUsagesJson(phase.getUsages());
+
+            this.type = phase.getPhaseType().toString();
+            this.prices = prices;
+            this.fixedPrices = fixedPrices;
+            this.duration = durationJson;
+            this.usages = usagesJson;
+        }
+
         @JsonCreator
         public PhaseJson(@JsonProperty("type") final String type,
                          @JsonProperty("prices") final List<PriceJson> prices,
@@ -745,15 +714,19 @@ public class CatalogJson {
         public String getType() {
             return type;
         }
+
         public List<PriceJson> getPrices() {
             return prices;
         }
+
         public List<PriceJson> getFixedPrices() {
             return fixedPrices;
         }
+
         public DurationJson getDuration() {
             return duration;
         }
+
         public List<UsageJson> getUsages() {
             return usages;
         }
@@ -793,7 +766,7 @@ public class CatalogJson {
             if (duration != null ? !duration.equals(phaseJson.duration) : phaseJson.duration != null) {
                 return false;
             }
-            if (usages != null ? !usages.equals(phaseJson.usages) : phaseJson.usages!= null) {
+            if (usages != null ? !usages.equals(phaseJson.usages) : phaseJson.usages != null) {
                 return false;
             }
 
@@ -808,6 +781,52 @@ public class CatalogJson {
             result = 31 * result + (duration != null ? duration.hashCode() : 0);
             result = 31 * result + (usages != null ? usages.hashCode() : 0);
             return result;
+        }
+
+        private List<UsageJson> buildUsagesJson(final Usage[] usages) throws CurrencyValueNull {
+            List<UsageJson> usagesJson = new ArrayList<UsageJson>();
+            for (int i = 0; i < usages.length; i++) {
+                usagesJson.add(new UsageJson(usages[i].getBillingPeriod().toString(), buildTiers(usages[i].getTiers())));
+            }
+            return usagesJson;
+        }
+
+        private List<TierJson> buildTiers(final Tier[] tiers) throws CurrencyValueNull {
+            List<TierJson> tiersJson = new ArrayList<TierJson>();
+            if (tiers != null && tiers.length > 0) {
+                for (int i = 0; i < tiers.length; i++) {
+                    tiersJson.add(new TierJson(buildTieredBlocks(tiers[i].getTieredBlocks()),
+                                               buildLimits(tiers[i].getLimits()),
+                                               buildPrices(tiers[i].getFixedPrice()),
+                                               buildPrices(tiers[i].getRecurringPrice())));
+                }
+            }
+            return tiersJson;
+        }
+
+        private List<LimitJson> buildLimits(final Limit[] limits) {
+            List<LimitJson> limitsJson = new ArrayList<LimitJson>();
+            if (limits != null && limits.length > 0) {
+                for (int i = 0; i < limits.length; i++) {
+                    limitsJson.add(new LimitJson(limits[i].getUnit().getName(),
+                                                 limits[i].getMax().toString(),
+                                                 limits[i].getMin().toString()));
+                }
+            }
+            return limitsJson;
+        }
+
+        private List<TieredBlockJson> buildTieredBlocks(final TieredBlock[] tieredBlocks) throws CurrencyValueNull {
+            List<TieredBlockJson> tieredBlocksJson = new ArrayList<TieredBlockJson>();
+            if (tieredBlocks != null && tieredBlocks.length > 0) {
+                for (int i = 0; i < tieredBlocks.length; i++) {
+                    tieredBlocksJson.add(new TieredBlockJson(tieredBlocks[i].getUnit().getName(),
+                                                             tieredBlocks[i].getSize().toString(),
+                                                             tieredBlocks[i].getMax().toString(),
+                                                             buildPrices(tieredBlocks[i].getPrice())));
+                }
+            }
+            return tieredBlocksJson;
         }
     }
 
