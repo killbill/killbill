@@ -19,6 +19,7 @@ package org.killbill.billing.invoice.usage;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -30,6 +31,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import javax.annotation.Nullable;
 
 import org.joda.time.LocalDate;
+import org.killbill.billing.ErrorCode;
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.catalog.api.BillingMode;
 import org.killbill.billing.catalog.api.CatalogApiException;
@@ -50,6 +52,8 @@ import org.killbill.billing.usage.api.RolledUpUsage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
@@ -184,21 +188,24 @@ public class ContiguousIntervalUsageInArrear {
         final List<RolledUpUsage> allUsage = getRolledUpUsage();
         for (final RolledUpUsage ru : allUsage) {
 
+            List<ToBeBilledConsumableInArrearDetail> toBeBilledUsageDetails = Lists.newLinkedList();
             BigDecimal toBeBilledUsage = BigDecimal.ZERO;
             if (usage.getUsageType() == UsageType.CAPACITY) {
                 toBeBilledUsage = computeToBeBilledCapacityInArrear(ru.getRolledUpUnits());
             } else /* UsageType.CONSUMABLE */{
 
                 // Compute total price amount that should be billed for that period of time (and usage section) across unitTypes.
+                int tierNum = 1;
                 for (final RolledUpUnit cur : ru.getRolledUpUnits()) {
                     if (!unitTypes.contains(cur.getUnitType())) {
                         log.warn("ContiguousIntervalConsumableInArrear is skipping unitType " + cur.getUnitType());
                         continue;
                     }
 
-                    final BigDecimal toBeBilledForUnit = computeToBeBilledConsumableInArrear(cur);
-                    toBeBilledUsage = toBeBilledUsage.add(toBeBilledForUnit);
+                    toBeBilledUsageDetails.addAll(computeToBeBilledConsumableInArrear(cur, tierNum++));
                 }
+                toBeBilledUsage = toBeBilledUsage.add(toBeBilledForUnit(toBeBilledUsageDetails));
+
             }
             // Retrieves current price amount billed for that period of time (and usage section)
             final Iterable<InvoiceItem> billedItems = getBilledItems(ru.getStart(), ru.getEnd(), existingUsage);
@@ -207,9 +214,12 @@ public class ContiguousIntervalUsageInArrear {
             // Compare the two and add the missing piece if required.
             if (!billedItems.iterator().hasNext() || billedUsage.compareTo(toBeBilledUsage) < 0) {
                 final BigDecimal amountToBill = toBeBilledUsage.subtract(billedUsage);
+                if (billedUsage.compareTo(BigDecimal.ZERO) > 0){
+                    toBeBilledUsageDetails.add(new ToBeBilledConsumableInArrearDetail(-1, "billedUsage", billedUsage, -1));
+                }
                 if (amountToBill.compareTo(BigDecimal.ZERO) > 0) {
                     final InvoiceItem item = new UsageInvoiceItem(invoiceId, accountId, getBundleId(), getSubscriptionId(), getPlanName(),
-                                                                  getPhaseName(), usage.getName(), ru.getStart(), ru.getEnd(), amountToBill, getCurrency());
+                                                                  getPhaseName(), usage.getName(), ru.getStart(), ru.getEnd(), amountToBill, getCurrency(),null,toJson(toBeBilledUsageDetails));
                     result.add(item);
                 }
             }
@@ -394,24 +404,25 @@ public class ContiguousIntervalUsageInArrear {
      * @throws CatalogApiException
      */
     @VisibleForTesting
-    BigDecimal computeToBeBilledConsumableInArrear(final RolledUpUnit roUnit) throws CatalogApiException {
+    List<ToBeBilledConsumableInArrearDetail> computeToBeBilledConsumableInArrear(final RolledUpUnit roUnit, int tierNum) throws CatalogApiException {
 
         Preconditions.checkState(isBuilt.get());
         final List<TieredBlock> tieredBlocks = getConsumableInArrearTieredBlocks(usage, roUnit.getUnitType());
 
         switch (usage.getTierBlockPolicy()) {
             case ALL_TIERS:
-                return computeToBeBilledConsumableInArrearWith_ALL_TIERS(tieredBlocks, roUnit.getAmount());
+                return computeToBeBilledConsumableInArrearWith_ALL_TIERS(tieredBlocks, roUnit.getAmount(), tierNum);
             case TOP_TIER:
-                return computeToBeBilledConsumableInArrearWith_TOP_TIER(tieredBlocks, roUnit.getAmount());
+                return Arrays.asList(computeToBeBilledConsumableInArrearWith_TOP_TIER(tieredBlocks, roUnit.getAmount(), tierNum));
             default:
                 throw new IllegalStateException("Unknown TierBlockPolicy " + usage.getTierBlockPolicy());
         }
     }
 
 
-    BigDecimal computeToBeBilledConsumableInArrearWith_ALL_TIERS(final List<TieredBlock> tieredBlocks, final Long units) throws CatalogApiException {
+    List<ToBeBilledConsumableInArrearDetail> computeToBeBilledConsumableInArrearWith_ALL_TIERS(final List<TieredBlock> tieredBlocks, final Long units, int tierNum) throws CatalogApiException {
 
+        List<ToBeBilledConsumableInArrearDetail> toBeBilledDetails = Lists.newLinkedList();
         BigDecimal result = BigDecimal.ZERO;
         int remainingUnits = units.intValue();
         for (final TieredBlock tieredBlock : tieredBlocks) {
@@ -426,12 +437,12 @@ public class ContiguousIntervalUsageInArrear {
                 nbUsedTierBlocks = tmp;
                 remainingUnits = 0;
             }
-            result = result.add(tieredBlock.getPrice().getPrice(getCurrency()).multiply(new BigDecimal(nbUsedTierBlocks)));
+            toBeBilledDetails.add(new ToBeBilledConsumableInArrearDetail(tierNum, tieredBlock.getUnit().getName(), tieredBlock.getPrice().getPrice(getCurrency()), nbUsedTierBlocks));
         }
-        return result;
+        return toBeBilledDetails;
     }
 
-    BigDecimal computeToBeBilledConsumableInArrearWith_TOP_TIER(final List<TieredBlock> tieredBlocks, final Long units) throws CatalogApiException {
+    ToBeBilledConsumableInArrearDetail computeToBeBilledConsumableInArrearWith_TOP_TIER(final List<TieredBlock> tieredBlocks, final Long units, int tierNum) throws CatalogApiException {
 
         int remainingUnits = units.intValue();
 
@@ -451,7 +462,8 @@ public class ContiguousIntervalUsageInArrear {
         }
         final int lastBlockTierSize = targetBlock.getSize().intValue();
         final int nbBlocks = units.intValue() / lastBlockTierSize + (units.intValue() % lastBlockTierSize == 0 ? 0 : 1);
-        return targetBlock.getPrice().getPrice(getCurrency()).multiply(new BigDecimal(nbBlocks));
+
+        return new ToBeBilledConsumableInArrearDetail(tierNum, targetBlock.getUnit().getName(), targetBlock.getPrice().getPrice(getCurrency()), nbBlocks);
     }
 
 
@@ -555,6 +567,56 @@ public class ContiguousIntervalUsageInArrear {
 
         public LocalDate getNextNotificationDate() {
             return nextNotificationDate;
+        }
+    }
+
+    private BigDecimal toBeBilledForUnit(List<ToBeBilledConsumableInArrearDetail> toBeBilledDetails){
+        BigDecimal result = BigDecimal.ZERO;
+        for (ToBeBilledConsumableInArrearDetail toBeBilled: toBeBilledDetails){
+            result = result.add(toBeBilled.getAmount());
+        }
+        return result;
+    }
+
+    private String toJson(List<ToBeBilledConsumableInArrearDetail> toBeBilledConsumableInArrearDetails) throws CatalogApiException {
+        String result = null;
+        if (toBeBilledConsumableInArrearDetails != null && toBeBilledConsumableInArrearDetails.size() > 0){
+            ObjectMapper objectMapper = new ObjectMapper();
+            try {
+                result = objectMapper.writeValueAsString(toBeBilledConsumableInArrearDetails);
+            } catch (JsonProcessingException e) {
+                throw new CatalogApiException(e, ErrorCode.__UNKNOWN_ERROR_CODE);
+            }
+        }
+        return result;
+    }
+
+    public class ToBeBilledConsumableInArrearDetail {
+
+        private final int tier;
+        private final String tierUnit;
+        private final BigDecimal tierPrice;
+        private final int quantity;
+        private final BigDecimal amount;
+
+        public ToBeBilledConsumableInArrearDetail(int tier, String tierUnit, BigDecimal tierPrice, int quantity){
+            this(tier, tierUnit, tierPrice, quantity, tierPrice.multiply(new BigDecimal(quantity)));
+        }
+
+        public ToBeBilledConsumableInArrearDetail(int tier, String tierUnit, BigDecimal tierPrice, int quantity, BigDecimal amount){
+            this.tier = tier;
+            this.tierUnit = tierUnit;
+            this.tierPrice = tierPrice;
+            this.quantity = quantity;
+            this.amount = amount;
+        }
+
+        public int getTier() { return tier; };
+        public String getTierUnit() { return tierUnit; }
+        public BigDecimal getTierPrice() { return tierPrice; }
+        public int getQuantity() { return quantity; }
+        public BigDecimal getAmount() {
+            return amount;
         }
     }
 }

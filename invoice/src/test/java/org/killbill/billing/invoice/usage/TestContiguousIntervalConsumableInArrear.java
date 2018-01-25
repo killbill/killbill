@@ -18,6 +18,7 @@
 
 package org.killbill.billing.invoice.usage;
 
+import java.io.IOException;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -36,6 +37,7 @@ import org.killbill.billing.catalog.api.Usage;
 import org.killbill.billing.invoice.api.InvoiceItem;
 import org.killbill.billing.invoice.model.FixedPriceInvoiceItem;
 import org.killbill.billing.invoice.model.UsageInvoiceItem;
+import org.killbill.billing.invoice.usage.ContiguousIntervalUsageInArrear.ToBeBilledConsumableInArrearDetail;
 import org.killbill.billing.invoice.usage.ContiguousIntervalUsageInArrear.UsageInArrearItemsAndNextNotificationDate;
 import org.killbill.billing.junction.BillingEvent;
 import org.killbill.billing.usage.RawUsage;
@@ -46,6 +48,10 @@ import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Function;
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
@@ -139,10 +145,12 @@ public class TestContiguousIntervalConsumableInArrear extends TestUsageInArrearB
                                                                                                                                              Collections.<Usage>emptyList())
                                                                                                                      );
 
-        final BigDecimal result = intervalConsumableInArrear.computeToBeBilledConsumableInArrear(new DefaultRolledUpUnit("unit", 111L));
-
+        List<ToBeBilledConsumableInArrearDetail> result = intervalConsumableInArrear.computeToBeBilledConsumableInArrear(new DefaultRolledUpUnit("unit", 111L), 1);
+        assertEquals(result.size(), 3);
         // 111 = 10 (tier1) + 100 (tier2) + 1 (tier3) => 10 * 1.5 + 100 * 1 + 1 * 0.5 = 115.5
-        assertEquals(result, new BigDecimal("115.5"));
+        assertEquals(result.get(0).getAmount(), new BigDecimal("15.0"));
+        assertEquals(result.get(1).getAmount(), new BigDecimal("100.0"));
+        assertEquals(result.get(2).getAmount(), new BigDecimal("0.5"));
     }
 
 
@@ -165,10 +173,12 @@ public class TestContiguousIntervalConsumableInArrear extends TestUsageInArrearB
                                                                                                                                              Collections.<Usage>emptyList())
                                                                                                                      );
 
-        final BigDecimal result = intervalConsumableInArrear.computeToBeBilledConsumableInArrear(new DefaultRolledUpUnit("unit", 5325L));
+        List<ToBeBilledConsumableInArrearDetail> result = intervalConsumableInArrear.computeToBeBilledConsumableInArrear(new DefaultRolledUpUnit("unit", 5325L),1);
+        assertEquals(result.size(), 2);
 
         // 5000 = 1000 (tier1) + 4325 (tier2) => 10 + 5 = 15
-        assertEquals(result, new BigDecimal("15"));
+        assertEquals(result.get(0).getAmount(), new BigDecimal("10"));
+        assertEquals(result.get(1).getAmount(), new BigDecimal("5"));
     }
 
 
@@ -197,22 +207,26 @@ public class TestContiguousIntervalConsumableInArrear extends TestUsageInArrearB
         //
         // In this model unit amount is first used to figure out which tier we are in, and then we price all unit at that 'target' tier
         //
-        final BigDecimal inputTier1 = intervalConsumableInArrear.computeToBeBilledConsumableInArrear(new DefaultRolledUpUnit("unit", 1000L));
+        List<ToBeBilledConsumableInArrearDetail> inputTier1 = intervalConsumableInArrear.computeToBeBilledConsumableInArrear(new DefaultRolledUpUnit("unit", 1000L), 1);
+        assertEquals(inputTier1.size(), 1);
         // 1000 units => (tier1) : 1000 / 100 + 1000 % 100 = 10
-        assertEquals(inputTier1, new BigDecimal("10"));
+        assertEquals(inputTier1.get(0).getAmount(), new BigDecimal("10"));
 
-        final BigDecimal inputTier2 = intervalConsumableInArrear.computeToBeBilledConsumableInArrear(new DefaultRolledUpUnit("unit", 101000L));
+        List<ToBeBilledConsumableInArrearDetail> inputTier2 = intervalConsumableInArrear.computeToBeBilledConsumableInArrear(new DefaultRolledUpUnit("unit", 101000L), 1);
+        assertEquals(inputTier2.size(), 1);
         // 101000 units => (tier2) :  101000 / 1000 + 101000 % 1000 = 101 + 0 = 101
-        assertEquals(inputTier2, new BigDecimal("101"));
+        assertEquals(inputTier2.get(0).getAmount(), new BigDecimal("101"));
 
-        final BigDecimal inputTier3 = intervalConsumableInArrear.computeToBeBilledConsumableInArrear(new DefaultRolledUpUnit("unit", 101001L));
+        List<ToBeBilledConsumableInArrearDetail> inputTier3 = intervalConsumableInArrear.computeToBeBilledConsumableInArrear(new DefaultRolledUpUnit("unit", 101001L), 1);
+        assertEquals(inputTier3.size(), 1);
         // 101001 units => (tier3) : 101001 / 1000 + 101001 % 1000 = 101 + 1 = 102 units => $51
-        assertEquals(inputTier3, new BigDecimal("51.0"));
+        assertEquals(inputTier3.get(0).getAmount(), new BigDecimal("51.0"));
 
         // If we pass the maximum of the last tier, we price all units at the last tier
-        final BigDecimal inputLastTier = intervalConsumableInArrear.computeToBeBilledConsumableInArrear(new DefaultRolledUpUnit("unit", 300000L));
+        List<ToBeBilledConsumableInArrearDetail> inputLastTier = intervalConsumableInArrear.computeToBeBilledConsumableInArrear(new DefaultRolledUpUnit("unit", 300000L), 1);
+        assertEquals(inputLastTier.size(), 1);
         // 300000 units => (tier3) : 300000 / 1000 + 300000 % 1000 = 300 units => $150
-        assertEquals(inputLastTier, new BigDecimal("150.0"));
+        assertEquals(inputLastTier.get(0).getAmount(), new BigDecimal("150.0"));
     }
 
 
@@ -238,17 +252,18 @@ public class TestContiguousIntervalConsumableInArrear extends TestUsageInArrearB
                                                                                                                                              Collections.<Usage>emptyList())
                                                                                                                      );
 
-        final BigDecimal result = intervalConsumableInArrear.computeToBeBilledConsumableInArrear(new DefaultRolledUpUnit("unit", 111L));
+        List<ToBeBilledConsumableInArrearDetail> result = intervalConsumableInArrear.computeToBeBilledConsumableInArrear(new DefaultRolledUpUnit("unit", 111L),1);
+        assertEquals(result.size(), 1);
 
         // 111 = 111 * 0.5 =
-        assertEquals(result, new BigDecimal("55.5"));
+        assertEquals(result.get(0).getAmount(), new BigDecimal("55.5"));
     }
 
 
 
 
     @Test(groups = "fast")
-    public void testComputeMissingItems() throws CatalogApiException {
+    public void testComputeMissingItems() throws CatalogApiException, IOException {
 
         final LocalDate startDate = new LocalDate(2014, 03, 20);
         final LocalDate firstBCDDate = new LocalDate(2014, 04, 15);
@@ -290,6 +305,7 @@ public class TestContiguousIntervalConsumableInArrear extends TestUsageInArrearB
             }
         }));
 
+        ObjectMapper objectMapper = new ObjectMapper();
 
         // Invoiced for 1 BTC and used 130 + 271 = 401 => 5 blocks => 5 BTC so remaining piece should be 4 BTC
         assertEquals(result.get(0).getAmount().compareTo(new BigDecimal("4.0")), 0, String.format("%s != 4.0", result.get(0).getAmount()));
@@ -303,6 +319,15 @@ public class TestContiguousIntervalConsumableInArrear extends TestUsageInArrearB
         assertTrue(result.get(0).getStartDate().compareTo(startDate) == 0);
         assertTrue(result.get(0).getEndDate().compareTo(firstBCDDate) == 0);
 
+        // check item detail
+        List<MockToBeBilledConsumableInArrearDetail> itemDetails = objectMapper.reader()
+                                                                               .forType(new TypeReference<List<MockToBeBilledConsumableInArrearDetail>>() {})
+                                                                               .readValue(result.get(0).getItemDetails());
+        assertEquals(itemDetails.size(), 2);
+        assertEquals(itemDetails.get(0).getAmount().compareTo(new BigDecimal("5")),0);
+        assertEquals(itemDetails.get(1).getAmount().compareTo(new BigDecimal("-1")),0);
+        assertEquals(result.get(0).getAmount().compareTo(itemDetails.get(0).getAmount().add(itemDetails.get(1).getAmount())),0);
+
         // Invoiced for 1 BTC and used 199  => 2 blocks => 2 BTC so remaining piece should be 1 BTC
         assertEquals(result.get(1).getAmount().compareTo(new BigDecimal("1.0")), 0, String.format("%s != 1.0", result.get(0).getAmount()));
         assertEquals(result.get(1).getCurrency(), Currency.BTC);
@@ -314,6 +339,16 @@ public class TestContiguousIntervalConsumableInArrear extends TestUsageInArrearB
         assertEquals(result.get(1).getUsageName(), usage.getName());
         assertTrue(result.get(1).getStartDate().compareTo(firstBCDDate) == 0);
         assertTrue(result.get(1).getEndDate().compareTo(endDate) == 0);
+
+        // check item detail
+        List<MockToBeBilledConsumableInArrearDetail> itemDetails2 = objectMapper.reader()
+                                                                               .forType(new TypeReference<List<MockToBeBilledConsumableInArrearDetail>>() {})
+                                                                               .readValue(result.get(1).getItemDetails());
+        assertEquals(itemDetails2.size(), 2);
+        assertEquals(itemDetails2.get(0).getAmount().compareTo(new BigDecimal("2")),0);
+        assertEquals(itemDetails2.get(1).getAmount().compareTo(new BigDecimal("-1")),0);
+        assertEquals(result.get(1).getAmount().compareTo(itemDetails2.get(0).getAmount().add(itemDetails2.get(1).getAmount())),0);
+
     }
 
     @Test(groups = "fast")
@@ -415,4 +450,31 @@ public class TestContiguousIntervalConsumableInArrear extends TestUsageInArrearB
         assertEquals(res.getTransitionTimes().size(), 0);
     }
 
+    public static class MockToBeBilledConsumableInArrearDetail {
+
+        private int tier;
+        private String tierUnit;
+        private BigDecimal tierPrice;
+        private int quantity;
+        private BigDecimal amount;
+
+        @JsonCreator
+        public MockToBeBilledConsumableInArrearDetail(@JsonProperty("tier") int tier, @JsonProperty("tierUnit") String tierUnit,
+                                                  @JsonProperty("tierPrice") BigDecimal tierPrice, @JsonProperty("quantity") int quantity,
+                                                  @JsonProperty("amount") BigDecimal amount){
+            this.tier = tier;
+            this.tierUnit = tierUnit;
+            this.tierPrice = tierPrice;
+            this.quantity = quantity;
+            this.amount = amount;
+        }
+
+        public int getTier() { return tier; };
+        public String getTierUnit() { return tierUnit; }
+        public BigDecimal getTierPrice() { return tierPrice; }
+        public int getQuantity() { return quantity; }
+        public BigDecimal getAmount() {
+            return amount;
+        }
+    }
 }
