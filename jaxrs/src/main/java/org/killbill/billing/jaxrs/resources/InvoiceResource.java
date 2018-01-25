@@ -578,7 +578,9 @@ public class InvoiceResource extends JaxRsResourceBase {
                                                    input.getAmount(),
                                                    accountCurrency.name(),
                                                    null,
-                                                   null);
+                                                   null,
+                                                   input.getQuantity(),
+                                                   input.getItemDetails());
                     }
                 }
             });
