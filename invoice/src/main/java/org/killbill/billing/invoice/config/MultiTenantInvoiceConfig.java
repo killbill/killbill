@@ -163,6 +163,15 @@ public class MultiTenantInvoiceConfig extends MultiTenantConfigBase implements I
     }
 
     @Override
+    public String getItemResultBehaviorMode() {
+        final String result = staticConfig.getItemResultBehaviorMode();
+        if (result != InvoiceConfig.AGGREGATE_MODE || result != InvoiceConfig.DETAIL_MODE) {
+            return InvoiceConfig.AGGREGATE_MODE;
+        }
+        return result;
+    }
+
+    @Override
     protected Class<? extends KillbillConfig> getConfigClass() {
         return InvoiceConfig.class;
     }

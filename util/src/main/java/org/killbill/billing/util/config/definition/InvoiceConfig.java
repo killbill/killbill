@@ -27,6 +27,8 @@ import org.skife.config.Param;
 import org.skife.config.TimeSpan;
 
 public interface InvoiceConfig extends KillbillConfig {
+    static final String AGGREGATE_MODE = "aggregate";
+    static final String DETAIL_MODE = "detail";
 
     @Config("org.killbill.invoice.maxNumberOfMonthsInFuture")
     @Default("36")
@@ -117,4 +119,9 @@ public interface InvoiceConfig extends KillbillConfig {
     @Default("true")
     @Description("Whether the invoicing system is enabled")
     boolean isInvoicingSystemEnabled(@Param("dummy") final InternalTenantContext tenantContext);
+
+    @Config("org.killbill.invoice.item.result.behavior.mode")
+    @Default(AGGREGATE_MODE)
+    @Description("How the result for an item will be reported (aggregate mode or detail mode). ")
+    String getItemResultBehaviorMode();
 }
