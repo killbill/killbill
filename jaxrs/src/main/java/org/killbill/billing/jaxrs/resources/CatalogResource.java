@@ -1,7 +1,9 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
+ * Copyright 2014-2018 Groupon, Inc
+ * Copyright 2014-2018 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -18,6 +20,7 @@ package org.killbill.billing.jaxrs.resources;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 import javax.annotation.Nullable;
 import javax.servlet.http.HttpServletRequest;
@@ -34,16 +37,30 @@ import javax.ws.rs.core.UriInfo;
 
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
+import org.joda.time.LocalDate;
 import org.killbill.billing.account.api.AccountUserApi;
 import org.killbill.billing.catalog.StandaloneCatalog;
 import org.killbill.billing.catalog.VersionedCatalog;
 import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.catalog.api.CatalogUserApi;
+import org.killbill.billing.catalog.api.CurrencyValueNull;
 import org.killbill.billing.catalog.api.Listing;
+import org.killbill.billing.catalog.api.Plan;
+import org.killbill.billing.catalog.api.PlanPhase;
+import org.killbill.billing.catalog.api.PriceList;
+import org.killbill.billing.catalog.api.Product;
 import org.killbill.billing.catalog.api.SimplePlanDescriptor;
 import org.killbill.billing.catalog.api.StaticCatalog;
 import org.killbill.billing.catalog.api.user.DefaultSimplePlanDescriptor;
+import org.killbill.billing.entitlement.api.Subscription;
+import org.killbill.billing.entitlement.api.SubscriptionApi;
+import org.killbill.billing.entitlement.api.SubscriptionApiException;
+import org.killbill.billing.entitlement.api.SubscriptionEvent;
 import org.killbill.billing.jaxrs.json.CatalogJson;
+import org.killbill.billing.jaxrs.json.CatalogJson.PhaseJson;
+import org.killbill.billing.jaxrs.json.CatalogJson.PlanJson;
+import org.killbill.billing.jaxrs.json.CatalogJson.PriceListJson;
+import org.killbill.billing.jaxrs.json.CatalogJson.ProductJson;
 import org.killbill.billing.jaxrs.json.PlanDetailJson;
 import org.killbill.billing.jaxrs.json.SimplePlanJson;
 import org.killbill.billing.jaxrs.util.Context;
@@ -73,6 +90,7 @@ import static javax.ws.rs.core.MediaType.APPLICATION_XML;
 public class CatalogResource extends JaxRsResourceBase {
 
     private final CatalogUserApi catalogUserApi;
+    private final SubscriptionApi subscriptionApi;
 
     @Inject
     public CatalogResource(final JaxrsUriBuilder uriBuilder,
@@ -82,10 +100,12 @@ public class CatalogResource extends JaxRsResourceBase {
                            final AccountUserApi accountUserApi,
                            final PaymentApi paymentApi,
                            final CatalogUserApi catalogUserApi,
+                           final SubscriptionApi subscriptionApi,
                            final Clock clock,
                            final Context context) {
         super(uriBuilder, tagUserApi, customFieldUserApi, auditUserApi, accountUserApi, paymentApi, null, clock, context);
         this.catalogUserApi = catalogUserApi;
+        this.subscriptionApi = subscriptionApi;
     }
 
     @TimedResource
@@ -124,8 +144,8 @@ public class CatalogResource extends JaxRsResourceBase {
 
         final TenantContext tenantContext = context.createContext(request);
         final DateTime catalogDateVersion = requestedDate != null ?
-                                      DATE_TIME_FORMATTER.parseDateTime(requestedDate).toDateTime(DateTimeZone.UTC) :
-                                      null;
+                                            DATE_TIME_FORMATTER.parseDateTime(requestedDate).toDateTime(DateTimeZone.UTC) :
+                                            null;
 
         // Yack...
         final VersionedCatalog catalog = (VersionedCatalog) catalogUserApi.getCatalog(catalogName, tenantContext);
@@ -191,6 +211,136 @@ public class CatalogResource extends JaxRsResourceBase {
         return Response.status(Status.OK).entity(details).build();
     }
 
+    @TimedResource
+    @GET
+    @Path("/plan")
+    @Produces(APPLICATION_JSON)
+    @ApiOperation(value = "Retrieve plan for a given subscription and date", response = PlanJson.class)
+    @ApiResponses(value = {})
+    public Response getPlanForSubscriptionAndDate(@QueryParam("subscriptionId") final String subscriptionIdString,
+                                                  @QueryParam("requestedDate") final String requestedDateString,
+                                                  @javax.ws.rs.core.Context final HttpServletRequest request) throws SubscriptionApiException, CurrencyValueNull {
+        verifyNonNullOrEmpty(subscriptionIdString, "Subscription id needs to be specified");
+
+        final SubscriptionEvent lastEventBeforeRequestedDate = getLastEventBeforeDate(subscriptionIdString, requestedDateString, request);
+        if (lastEventBeforeRequestedDate == null) {
+            return Response.status(Status.BAD_REQUEST).entity(String.format("%s is before the subscription start date", requestedDateString)).type("text/plain").build();
+        }
+
+        final Plan plan = lastEventBeforeRequestedDate.getNextPlan();
+        if (plan == null) {
+            // Subscription was cancelled at that point
+            return Response.status(Status.BAD_REQUEST).entity(String.format("%s is after the subscription cancel date", requestedDateString)).type("text/plain").build();
+        }
+
+        final PlanJson planJson = new PlanJson(plan);
+        return Response.status(Status.OK).entity(planJson).build();
+    }
+
+    @TimedResource
+    @GET
+    @Path("/phase")
+    @Produces(APPLICATION_JSON)
+    @ApiOperation(value = "Retrieve phase for a given subscription and date", response = PhaseJson.class)
+    @ApiResponses(value = {})
+    public Response getPhaseForSubscriptionAndDate(@QueryParam("subscriptionId") final String subscriptionIdString,
+                                                   @QueryParam("requestedDate") final String requestedDateString,
+                                                   @javax.ws.rs.core.Context final HttpServletRequest request) throws SubscriptionApiException, CurrencyValueNull {
+        verifyNonNullOrEmpty(subscriptionIdString, "Subscription id needs to be specified");
+
+        final SubscriptionEvent lastEventBeforeRequestedDate = getLastEventBeforeDate(subscriptionIdString, requestedDateString, request);
+        if (lastEventBeforeRequestedDate == null) {
+            return Response.status(Status.BAD_REQUEST).entity(String.format("%s is before the subscription start date", requestedDateString)).type("text/plain").build();
+        }
+
+        final PlanPhase phase = lastEventBeforeRequestedDate.getNextPhase();
+        if (phase == null) {
+            // Subscription was cancelled at that point
+            return Response.status(Status.BAD_REQUEST).entity(String.format("%s is after the subscription cancel date", requestedDateString)).type("text/plain").build();
+        }
+
+        final PhaseJson phaseJson = new PhaseJson(phase);
+        return Response.status(Status.OK).entity(phaseJson).build();
+    }
+
+    @TimedResource
+    @GET
+    @Path("/product")
+    @Produces(APPLICATION_JSON)
+    @ApiOperation(value = "Retrieve product for a given subscription and date", response = ProductJson.class)
+    @ApiResponses(value = {})
+    public Response getProductForSubscriptionAndDate(@QueryParam("subscriptionId") final String subscriptionIdString,
+                                                     @QueryParam("requestedDate") final String requestedDateString,
+                                                     @javax.ws.rs.core.Context final HttpServletRequest request) throws SubscriptionApiException {
+        verifyNonNullOrEmpty(subscriptionIdString, "Subscription id needs to be specified");
+
+        final SubscriptionEvent lastEventBeforeRequestedDate = getLastEventBeforeDate(subscriptionIdString, requestedDateString, request);
+        if (lastEventBeforeRequestedDate == null) {
+            return Response.status(Status.BAD_REQUEST).entity(String.format("%s is before the subscription start date", requestedDateString)).type("text/plain").build();
+        }
+
+        final Product product = lastEventBeforeRequestedDate.getNextProduct();
+        if (product == null) {
+            // Subscription was cancelled at that point
+            return Response.status(Status.BAD_REQUEST).entity(String.format("%s is after the subscription cancel date", requestedDateString)).type("text/plain").build();
+        }
+
+        final ProductJson productJson = new ProductJson(product);
+        return Response.status(Status.OK).entity(productJson).build();
+    }
+
+    @TimedResource
+    @GET
+    @Path("/priceList")
+    @Produces(APPLICATION_JSON)
+    @ApiOperation(value = "Retrieve priceList for a given subscription and date", response = PriceListJson.class)
+    @ApiResponses(value = {})
+    public Response getPriceListForSubscriptionAndDate(@QueryParam("subscriptionId") final String subscriptionIdString,
+                                                       @QueryParam("requestedDate") final String requestedDateString,
+                                                       @javax.ws.rs.core.Context final HttpServletRequest request) throws SubscriptionApiException {
+        verifyNonNullOrEmpty(subscriptionIdString, "Subscription id needs to be specified");
+
+        final SubscriptionEvent lastEventBeforeRequestedDate = getLastEventBeforeDate(subscriptionIdString, requestedDateString, request);
+        if (lastEventBeforeRequestedDate == null) {
+            return Response.status(Status.BAD_REQUEST).entity(String.format("%s is before the subscription start date", requestedDateString)).type("text/plain").build();
+        }
+
+        final PriceList priceList = lastEventBeforeRequestedDate.getNextPriceList();
+        if (priceList == null) {
+            // Subscription was cancelled at that point
+            return Response.status(Status.BAD_REQUEST).entity(String.format("%s is after the subscription cancel date", requestedDateString)).type("text/plain").build();
+        }
+
+        final PriceListJson priceListJson = new PriceListJson(priceList);
+        return Response.status(Status.OK).entity(priceListJson).build();
+    }
+
+    private SubscriptionEvent getLastEventBeforeDate(final String subscriptionIdString, final String requestedDateString, final HttpServletRequest request) throws SubscriptionApiException {
+        final TenantContext tenantContext = context.createContext(request);
+        final DateTime requestedDateTime = requestedDateString != null ?
+                                           DATE_TIME_FORMATTER.parseDateTime(requestedDateString).toDateTime(DateTimeZone.UTC) :
+                                           clock.getUTCNow();
+        final LocalDate requestedDate = requestedDateTime.toLocalDate();
+
+        final Subscription subscription = subscriptionApi.getSubscriptionForEntitlementId(UUID.fromString(subscriptionIdString), tenantContext);
+        SubscriptionEvent lastEventBeforeRequestedDate = null;
+        for (final SubscriptionEvent subscriptionEvent : subscription.getSubscriptionEvents()) {
+            if (lastEventBeforeRequestedDate == null) {
+                if (subscriptionEvent.getEffectiveDate().compareTo(requestedDate) > 0) {
+                    // requestedDate too far in the past, before subscription start date
+                    return null;
+                }
+                lastEventBeforeRequestedDate = subscriptionEvent;
+            }
+            if (subscriptionEvent.getEffectiveDate().compareTo(requestedDate) > 0) {
+                break;
+            } else {
+                lastEventBeforeRequestedDate = subscriptionEvent;
+            }
+        }
+
+        return lastEventBeforeRequestedDate;
+    }
 
     @TimedResource
     @POST
@@ -200,11 +350,11 @@ public class CatalogResource extends JaxRsResourceBase {
     @ApiOperation(value = "Upload the full catalog as XML")
     @ApiResponses(value = {})
     public Response addSimplePlan(final SimplePlanJson simplePlan,
-                                     @HeaderParam(HDR_CREATED_BY) final String createdBy,
-                                     @HeaderParam(HDR_REASON) final String reason,
-                                     @HeaderParam(HDR_COMMENT) final String comment,
-                                     @javax.ws.rs.core.Context final HttpServletRequest request,
-                                     @javax.ws.rs.core.Context final UriInfo uriInfo) throws Exception {
+                                  @HeaderParam(HDR_CREATED_BY) final String createdBy,
+                                  @HeaderParam(HDR_REASON) final String reason,
+                                  @HeaderParam(HDR_COMMENT) final String comment,
+                                  @javax.ws.rs.core.Context final HttpServletRequest request,
+                                  @javax.ws.rs.core.Context final UriInfo uriInfo) throws Exception {
         final CallContext callContext = context.createContext(createdBy, reason, comment, request);
 
         final SimplePlanDescriptor desc = new DefaultSimplePlanDescriptor(simplePlan.getPlanId(),
