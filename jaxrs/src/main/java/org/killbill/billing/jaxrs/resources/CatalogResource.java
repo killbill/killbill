@@ -224,13 +224,13 @@ public class CatalogResource extends JaxRsResourceBase {
 
         final SubscriptionEvent lastEventBeforeRequestedDate = getLastEventBeforeDate(subscriptionIdString, requestedDateString, request);
         if (lastEventBeforeRequestedDate == null) {
-            return Response.status(Status.NOT_FOUND).build();
+            return Response.status(Status.BAD_REQUEST).entity(String.format("%s is before the subscription start date", requestedDateString)).type("text/plain").build();
         }
 
         final Plan plan = lastEventBeforeRequestedDate.getNextPlan();
         if (plan == null) {
             // Subscription was cancelled at that point
-            return Response.status(Status.NOT_FOUND).build();
+            return Response.status(Status.BAD_REQUEST).entity(String.format("%s is after the subscription cancel date", requestedDateString)).type("text/plain").build();
         }
 
         final PlanJson planJson = new PlanJson(plan);
@@ -250,13 +250,13 @@ public class CatalogResource extends JaxRsResourceBase {
 
         final SubscriptionEvent lastEventBeforeRequestedDate = getLastEventBeforeDate(subscriptionIdString, requestedDateString, request);
         if (lastEventBeforeRequestedDate == null) {
-            return Response.status(Status.NOT_FOUND).build();
+            return Response.status(Status.BAD_REQUEST).entity(String.format("%s is before the subscription start date", requestedDateString)).type("text/plain").build();
         }
 
         final PlanPhase phase = lastEventBeforeRequestedDate.getNextPhase();
         if (phase == null) {
             // Subscription was cancelled at that point
-            return Response.status(Status.NOT_FOUND).build();
+            return Response.status(Status.BAD_REQUEST).entity(String.format("%s is after the subscription cancel date", requestedDateString)).type("text/plain").build();
         }
 
         final PhaseJson phaseJson = new PhaseJson(phase);
@@ -271,18 +271,18 @@ public class CatalogResource extends JaxRsResourceBase {
     @ApiResponses(value = {})
     public Response getProductForSubscriptionAndDate(@QueryParam("subscriptionId") final String subscriptionIdString,
                                                      @QueryParam("requestedDate") final String requestedDateString,
-                                                     @javax.ws.rs.core.Context final HttpServletRequest request) throws SubscriptionApiException, CurrencyValueNull {
+                                                     @javax.ws.rs.core.Context final HttpServletRequest request) throws SubscriptionApiException {
         verifyNonNullOrEmpty(subscriptionIdString, "Subscription id needs to be specified");
 
         final SubscriptionEvent lastEventBeforeRequestedDate = getLastEventBeforeDate(subscriptionIdString, requestedDateString, request);
         if (lastEventBeforeRequestedDate == null) {
-            return Response.status(Status.NOT_FOUND).build();
+            return Response.status(Status.BAD_REQUEST).entity(String.format("%s is before the subscription start date", requestedDateString)).type("text/plain").build();
         }
 
         final Product product = lastEventBeforeRequestedDate.getNextProduct();
         if (product == null) {
             // Subscription was cancelled at that point
-            return Response.status(Status.NOT_FOUND).build();
+            return Response.status(Status.BAD_REQUEST).entity(String.format("%s is after the subscription cancel date", requestedDateString)).type("text/plain").build();
         }
 
         final ProductJson productJson = new ProductJson(product);
@@ -297,18 +297,18 @@ public class CatalogResource extends JaxRsResourceBase {
     @ApiResponses(value = {})
     public Response getPriceListForSubscriptionAndDate(@QueryParam("subscriptionId") final String subscriptionIdString,
                                                        @QueryParam("requestedDate") final String requestedDateString,
-                                                       @javax.ws.rs.core.Context final HttpServletRequest request) throws SubscriptionApiException, CurrencyValueNull {
+                                                       @javax.ws.rs.core.Context final HttpServletRequest request) throws SubscriptionApiException {
         verifyNonNullOrEmpty(subscriptionIdString, "Subscription id needs to be specified");
 
         final SubscriptionEvent lastEventBeforeRequestedDate = getLastEventBeforeDate(subscriptionIdString, requestedDateString, request);
         if (lastEventBeforeRequestedDate == null) {
-            return Response.status(Status.NOT_FOUND).build();
+            return Response.status(Status.BAD_REQUEST).entity(String.format("%s is before the subscription start date", requestedDateString)).type("text/plain").build();
         }
 
         final PriceList priceList = lastEventBeforeRequestedDate.getNextPriceList();
         if (priceList == null) {
             // Subscription was cancelled at that point
-            return Response.status(Status.NOT_FOUND).build();
+            return Response.status(Status.BAD_REQUEST).entity(String.format("%s is after the subscription cancel date", requestedDateString)).type("text/plain").build();
         }
 
         final PriceListJson priceListJson = new PriceListJson(priceList);
