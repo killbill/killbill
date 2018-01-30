@@ -1050,8 +1050,13 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
         }
 
         @Override
-        public String getItemResultBehaviorMode() {
-            return null;
+        public UsageDetailMode getItemResultBehaviorMode() {
+            return defaultInvoiceConfig.getItemResultBehaviorMode();
+        }
+
+        @Override
+        public UsageDetailMode getItemResultBehaviorMode(final InternalTenantContext tenantContext) {
+            return getItemResultBehaviorMode();
         }
 
         public void setInvoicingSystemEnabled(final boolean invoicingSystemEnabled) {

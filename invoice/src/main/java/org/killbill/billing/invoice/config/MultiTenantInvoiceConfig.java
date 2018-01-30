@@ -32,6 +32,7 @@ import org.skife.config.TimeSpan;
 
 public class MultiTenantInvoiceConfig extends MultiTenantConfigBase implements InvoiceConfig {
 
+
     private final InvoiceConfig staticConfig;
 
     @Inject
@@ -163,12 +164,26 @@ public class MultiTenantInvoiceConfig extends MultiTenantConfigBase implements I
     }
 
     @Override
-    public String getItemResultBehaviorMode() {
-        final String result = staticConfig.getItemResultBehaviorMode();
-        if (result != InvoiceConfig.AGGREGATE_MODE || result != InvoiceConfig.DETAIL_MODE) {
-            return InvoiceConfig.AGGREGATE_MODE;
+    public UsageDetailMode getItemResultBehaviorMode() {
+        final UsageDetailMode mode = staticConfig.getItemResultBehaviorMode();
+        if (mode.compareTo(UsageDetailMode.AGGREGATE) != 0 || mode.compareTo(UsageDetailMode.DETAIL) != 0) {
+            return UsageDetailMode.AGGREGATE;
         }
-        return result;
+        return mode;
+    }
+
+    @Override
+    public UsageDetailMode getItemResultBehaviorMode(final InternalTenantContext tenantContext) {
+        final UsageDetailMode mode = staticConfig.getItemResultBehaviorMode();
+        final String result = getStringTenantConfig("getItemResultBehaviorMode", tenantContext);
+        if (result != null){
+            return UsageDetailMode.valueOf(result);
+        }
+
+        if (mode.compareTo(UsageDetailMode.AGGREGATE) != 0 || mode.compareTo(UsageDetailMode.DETAIL) != 0) {
+            return UsageDetailMode.AGGREGATE;
+        }
+        return mode;
     }
 
     @Override
