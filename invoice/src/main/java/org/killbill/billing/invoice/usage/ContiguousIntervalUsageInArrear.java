@@ -187,15 +187,14 @@ public class ContiguousIntervalUsageInArrear {
 
         final List<RolledUpUsage> allUsage = getRolledUpUsage();
         for (final RolledUpUsage ru : allUsage) {
-
-            List<ToBeBilledConsumableInArrearDetail> toBeBilledUsageDetails = Lists.newLinkedList();
+            int tierNum = 1;
+            List<ConsumableInArrearDetail> toBeBilledUsageDetails = Lists.newLinkedList();
             BigDecimal toBeBilledUsage = BigDecimal.ZERO;
             if (usage.getUsageType() == UsageType.CAPACITY) {
-                toBeBilledUsage = computeToBeBilledCapacityInArrear(ru.getRolledUpUnits());
+                toBeBilledUsageDetails.addAll(computeToBeBilledCapacityInArrear(ru.getRolledUpUnits(), tierNum));
             } else /* UsageType.CONSUMABLE */{
 
                 // Compute total price amount that should be billed for that period of time (and usage section) across unitTypes.
-                int tierNum = 1;
                 for (final RolledUpUnit cur : ru.getRolledUpUnits()) {
                     if (!unitTypes.contains(cur.getUnitType())) {
                         log.warn("ContiguousIntervalConsumableInArrear is skipping unitType " + cur.getUnitType());
@@ -204,9 +203,9 @@ public class ContiguousIntervalUsageInArrear {
 
                     toBeBilledUsageDetails.addAll(computeToBeBilledConsumableInArrear(cur, tierNum++));
                 }
-                toBeBilledUsage = toBeBilledUsage.add(toBeBilledForUnit(toBeBilledUsageDetails));
 
             }
+            toBeBilledUsage = toBeBilledForUnit(toBeBilledUsageDetails);
             // Retrieves current price amount billed for that period of time (and usage section)
             final Iterable<InvoiceItem> billedItems = getBilledItems(ru.getStart(), ru.getEnd(), existingUsage);
             final BigDecimal billedUsage = computeBilledUsage(billedItems);
@@ -371,12 +370,13 @@ public class ContiguousIntervalUsageInArrear {
      * @throws CatalogApiException
      */
     @VisibleForTesting
-    BigDecimal computeToBeBilledCapacityInArrear(final List<RolledUpUnit> roUnits) throws CatalogApiException {
+    List<ConsumableInArrearDetail> computeToBeBilledCapacityInArrear(final List<RolledUpUnit> roUnits, int tierNum) throws CatalogApiException {
         Preconditions.checkState(isBuilt.get());
 
         final List<Tier> tiers = getCapacityInArrearTier(usage);
 
         for (final Tier cur : tiers) {
+            List<ConsumableInArrearDetail> toBeBilledDetails = Lists.newLinkedList();
             boolean complies = true;
             for (final RolledUpUnit ro : roUnits) {
                 final Limit tierLimit = getTierLimit(cur, ro.getUnitType());
@@ -386,9 +386,12 @@ public class ContiguousIntervalUsageInArrear {
                     complies = false;
                     break;
                 }
+                toBeBilledDetails.add(new ConsumableInArrearDetail(tierNum++, ro.getUnitType(), cur.getRecurringPrice().getPrice(getCurrency()), ro.getAmount().intValue(), BigDecimal.ZERO, null, null));
+
             }
             if (complies) {
-                return cur.getRecurringPrice().getPrice(getCurrency());
+                toBeBilledDetails.get(toBeBilledDetails.size() - 1).setAmount(cur.getRecurringPrice().getPrice(getCurrency()));
+                return toBeBilledDetails;
             }
         }
         // Probably invalid catalog config

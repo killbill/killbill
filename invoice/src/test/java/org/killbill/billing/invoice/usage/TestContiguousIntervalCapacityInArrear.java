@@ -36,6 +36,7 @@ import org.killbill.billing.catalog.api.Usage;
 import org.killbill.billing.invoice.api.InvoiceItem;
 import org.killbill.billing.invoice.model.FixedPriceInvoiceItem;
 import org.killbill.billing.invoice.model.UsageInvoiceItem;
+import org.killbill.billing.invoice.usage.ContiguousIntervalUsageInArrear.ConsumableInArrearDetail;
 import org.killbill.billing.invoice.usage.ContiguousIntervalUsageInArrear.UsageInArrearItemsAndNextNotificationDate;
 import org.killbill.billing.junction.BillingEvent;
 import org.killbill.billing.usage.RawUsage;
@@ -144,30 +145,30 @@ public class TestContiguousIntervalCapacityInArrear extends TestUsageInArrearBas
                                                                                                                                                   Collections.<Usage>emptyList())
                                                                                                                      );
         // Tier 1 (both units from tier 1)
-        BigDecimal result = intervalCapacityInArrear.computeToBeBilledCapacityInArrear(ImmutableList.<RolledUpUnit>of(new DefaultRolledUpUnit("unit1", 100L),
-                                                                                                                      new DefaultRolledUpUnit("unit2", 1000L)));
-        assertEquals(result, BigDecimal.TEN);
+        List<ConsumableInArrearDetail> result = intervalCapacityInArrear.computeToBeBilledCapacityInArrear(ImmutableList.<RolledUpUnit>of(new DefaultRolledUpUnit("unit1", 100L),
+                                                                                                                                          new DefaultRolledUpUnit("unit2", 1000L)), 1);
+        assertEquals(intervalCapacityInArrear.toBeBilledForUnit(result), BigDecimal.TEN);
 
         // Tier 2 (only one unit from tier 1)
         result = intervalCapacityInArrear.computeToBeBilledCapacityInArrear(ImmutableList.<RolledUpUnit>of(new DefaultRolledUpUnit("unit1", 100L),
-                                                                                                           new DefaultRolledUpUnit("unit2", 1001L)));
-        assertEquals(result, new BigDecimal("20.0"));
+                                                                                                           new DefaultRolledUpUnit("unit2", 1001L)), 1);
+        assertEquals(intervalCapacityInArrear.toBeBilledForUnit(result), new BigDecimal("20.0"));
 
         // Tier 2 (only one unit from tier 1)
         result = intervalCapacityInArrear.computeToBeBilledCapacityInArrear(ImmutableList.<RolledUpUnit>of(new DefaultRolledUpUnit("unit1", 101L),
-                                                                                                           new DefaultRolledUpUnit("unit2", 1000L)));
-        assertEquals(result, new BigDecimal("20.0"));
+                                                                                                           new DefaultRolledUpUnit("unit2", 1000L)), 1);
+        assertEquals(intervalCapacityInArrear.toBeBilledForUnit(result), new BigDecimal("20.0"));
 
 
         // Tier 2 (both units from tier 2)
         result = intervalCapacityInArrear.computeToBeBilledCapacityInArrear(ImmutableList.<RolledUpUnit>of(new DefaultRolledUpUnit("unit1", 101L),
-                                                                                                           new DefaultRolledUpUnit("unit2", 1001L)));
-        assertEquals(result, new BigDecimal("20.0"));
+                                                                                                           new DefaultRolledUpUnit("unit2", 1001L)), 1);
+        assertEquals(intervalCapacityInArrear.toBeBilledForUnit(result), new BigDecimal("20.0"));
 
         // Tier 3 (only one unit from tier 3)
         result = intervalCapacityInArrear.computeToBeBilledCapacityInArrear(ImmutableList.<RolledUpUnit>of(new DefaultRolledUpUnit("unit1", 10L),
-                                                                                                           new DefaultRolledUpUnit("unit2", 2001L)));
-        assertEquals(result, new BigDecimal("30.0"));
+                                                                                                           new DefaultRolledUpUnit("unit2", 2001L)), 1);
+        assertEquals(intervalCapacityInArrear.toBeBilledForUnit(result), new BigDecimal("30.0"));
     }
 
     @Test(groups = "fast")
