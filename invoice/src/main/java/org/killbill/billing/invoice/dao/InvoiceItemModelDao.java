@@ -76,6 +76,7 @@ public class InvoiceItemModelDao extends EntityModelDaoBase implements EntityMod
         this.quantity = quantity;
         this.itemDetails = itemDetails;
     }
+
     public InvoiceItemModelDao(final UUID id, final DateTime createdDate, final InvoiceItemType type, final UUID invoiceId, final UUID accountId,
                                final UUID childAccountId, final UUID bundleId, final UUID subscriptionId, final String description, final String planName,
                                final String phaseName, final String usageName, final LocalDate startDate, final LocalDate endDate, final BigDecimal amount,
@@ -119,137 +120,145 @@ public class InvoiceItemModelDao extends EntityModelDaoBase implements EntityMod
         return type;
     }
 
-    public UUID getInvoiceId() {
-        return invoiceId;
-    }
-
-    public UUID getAccountId() {
-        return accountId;
-    }
-
-    public UUID getChildAccountId() {
-        return childAccountId;
-    }
-
-    public UUID getBundleId() {
-        return bundleId;
-    }
-
-    public UUID getSubscriptionId() {
-        return subscriptionId;
-    }
-
-    public String getDescription() {
-        return description;
-    }
-
-    public String getPlanName() {
-        return planName;
-    }
-
-    public String getPhaseName() {
-        return phaseName;
-    }
-
-    public String getUsageName() {
-        return usageName;
-    }
-
-    public LocalDate getStartDate() {
-        return startDate;
-    }
-
-    public LocalDate getEndDate() {
-        return endDate;
-    }
-
-    public BigDecimal getAmount() {
-        return amount;
-    }
-
-    public BigDecimal getRate() {
-        return rate;
-    }
-
-    public Currency getCurrency() {
-        return currency;
-    }
-
-    public UUID getLinkedItemId() {
-        return linkedItemId;
-    }
-
-    public Integer getQuantity() { return quantity; }
-
-    public String getItemDetails() { return itemDetails; }
-
     public void setType(final InvoiceItemType type) {
         this.type = type;
+    }
+
+    public UUID getInvoiceId() {
+        return invoiceId;
     }
 
     public void setInvoiceId(final UUID invoiceId) {
         this.invoiceId = invoiceId;
     }
 
+    public UUID getAccountId() {
+        return accountId;
+    }
+
     public void setAccountId(final UUID accountId) {
         this.accountId = accountId;
+    }
+
+    public UUID getChildAccountId() {
+        return childAccountId;
     }
 
     public void setChildAccountId(final UUID childAccountId) {
         this.childAccountId = childAccountId;
     }
 
+    public UUID getBundleId() {
+        return bundleId;
+    }
+
     public void setBundleId(final UUID bundleId) {
         this.bundleId = bundleId;
+    }
+
+    public UUID getSubscriptionId() {
+        return subscriptionId;
     }
 
     public void setSubscriptionId(final UUID subscriptionId) {
         this.subscriptionId = subscriptionId;
     }
 
+    public String getDescription() {
+        return description;
+    }
+
     public void setDescription(final String description) {
         this.description = description;
+    }
+
+    public String getPlanName() {
+        return planName;
     }
 
     public void setPlanName(final String planName) {
         this.planName = planName;
     }
 
+    public String getPhaseName() {
+        return phaseName;
+    }
+
     public void setPhaseName(final String phaseName) {
         this.phaseName = phaseName;
+    }
+
+    public String getUsageName() {
+        return usageName;
     }
 
     public void setUsageName(final String usageName) {
         this.usageName = usageName;
     }
 
+    public LocalDate getStartDate() {
+        return startDate;
+    }
+
     public void setStartDate(final LocalDate startDate) {
         this.startDate = startDate;
+    }
+
+    public LocalDate getEndDate() {
+        return endDate;
     }
 
     public void setEndDate(final LocalDate endDate) {
         this.endDate = endDate;
     }
 
+    public BigDecimal getAmount() {
+        return amount;
+    }
+
     public void setAmount(final BigDecimal amount) {
         this.amount = amount;
+    }
+
+    public BigDecimal getRate() {
+        return rate;
     }
 
     public void setRate(final BigDecimal rate) {
         this.rate = rate;
     }
 
+    public Currency getCurrency() {
+        return currency;
+    }
+
     public void setCurrency(final Currency currency) {
         this.currency = currency;
+    }
+
+    public UUID getLinkedItemId() {
+        return linkedItemId;
     }
 
     public void setLinkedItemId(final UUID linkedItemId) {
         this.linkedItemId = linkedItemId;
     }
 
-    public void setQuantity(final Integer quantity) { this.quantity = quantity; }
+    public Integer getQuantity() {
+        return quantity;
+    }
 
-    public void setItemDetails(final String itemDetails) { this.itemDetails = itemDetails; }
+    public void setQuantity(final Integer quantity) {
+        this.quantity = quantity;
+    }
+
+    public String getItemDetails() {
+        return itemDetails;
+    }
+
+    public void setItemDetails(final String itemDetails) {
+        this.itemDetails = itemDetails;
+    }
 
     @Override
     public String toString() {

@@ -63,6 +63,7 @@ public class InvoiceItemJson extends JsonBase {
     private final LocalDate startDate;
     private final LocalDate endDate;
     private final BigDecimal amount;
+    private final BigDecimal rate;
     private final String currency;
     private final Integer quantity;
     private final String itemDetails;
@@ -87,11 +88,12 @@ public class InvoiceItemJson extends JsonBase {
                            @JsonProperty("startDate") final LocalDate startDate,
                            @JsonProperty("endDate") final LocalDate endDate,
                            @JsonProperty("amount") final BigDecimal amount,
+                           @JsonProperty("rate") final  BigDecimal rate,
                            @JsonProperty("currency") final String currency,
-                           @JsonProperty("childItems") final List<InvoiceItemJson> childItems,
-                           @JsonProperty("auditLogs") @Nullable final List<AuditLogJson> auditLogs,
                            @JsonProperty("quantity") final Integer quantity,
-                           @JsonProperty("itemDetails") final String itemDetails) {
+                           @JsonProperty("itemDetails") final String itemDetails,
+                           @JsonProperty("childItems") final List<InvoiceItemJson> childItems,
+                           @JsonProperty("auditLogs") @Nullable final List<AuditLogJson> auditLogs) {
         super(auditLogs);
         this.invoiceItemId = invoiceItemId;
         this.invoiceId = invoiceId;
@@ -111,6 +113,7 @@ public class InvoiceItemJson extends JsonBase {
         this.startDate = startDate;
         this.endDate = endDate;
         this.amount = amount;
+        this.rate = rate;
         this.currency = currency;
         this.childItems = childItems;
         this.quantity = quantity;
@@ -124,8 +127,8 @@ public class InvoiceItemJson extends JsonBase {
              item.getPrettyPlanName(), item.getPrettyPhaseName(), item.getPrettyUsageName(),
              item.getInvoiceItemType().toString(),
              item.getDescription(), item.getStartDate(), item.getEndDate(),
-             item.getAmount(), item.getCurrency().name(), toInvoiceItemJson(childItems), toAuditLogJson(auditLogs),
-             item.getQuantity(), item.getItemDetails());
+             item.getAmount(), item.getRate(), item.getCurrency().name(),
+             item.getQuantity(), item.getItemDetails(), toInvoiceItemJson(childItems), toAuditLogJson(auditLogs));
     }
 
     private static List<InvoiceItemJson> toInvoiceItemJson(final List<InvoiceItem> childItems) {
@@ -229,7 +232,7 @@ public class InvoiceItemJson extends JsonBase {
 
             @Override
             public BigDecimal getRate() {
-                return null;
+                return rate;
             }
 
             @Override
@@ -341,6 +344,8 @@ public class InvoiceItemJson extends JsonBase {
         return amount;
     }
 
+    public BigDecimal getRate() { return rate; }
+
     public String getCurrency() {
         return currency;
     }
@@ -371,6 +376,7 @@ public class InvoiceItemJson extends JsonBase {
         sb.append(", startDate=").append(startDate);
         sb.append(", endDate=").append(endDate);
         sb.append(", amount=").append(amount);
+        sb.append(", rate=").append(rate);
         sb.append(", currency=").append(currency);
         sb.append(", quantity=").append(quantity);
         sb.append(", itemDetails=").append(itemDetails);
@@ -446,6 +452,9 @@ public class InvoiceItemJson extends JsonBase {
         if (itemDetails != null ? !itemDetails.equals(that.itemDetails) : that.itemDetails != null) {
             return false;
         }
+        if (rate != null ? !rate.equals(that.rate) : that.rate != null) {
+            return false;
+        }
 
         return true;
     }
@@ -466,10 +475,11 @@ public class InvoiceItemJson extends JsonBase {
         result = 31 * result + (startDate != null ? startDate.hashCode() : 0);
         result = 31 * result + (endDate != null ? endDate.hashCode() : 0);
         result = 31 * result + (amount != null ? amount.hashCode() : 0);
+        result = 31 * result + (rate != null ? rate.hashCode() : 0);
         result = 31 * result + (currency != null ? currency.hashCode() : 0);
-        result = 31 * result + (childItems != null ? childItems.hashCode() : 0);
         result = 31 * result + (quantity != null ? quantity.hashCode() : 0);
         result = 31 * result + (itemDetails != null ? itemDetails.hashCode() : 0);
+        result = 31 * result + (childItems != null ? childItems.hashCode() : 0);
         return result;
     }
 }

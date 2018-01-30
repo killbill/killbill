@@ -576,11 +576,12 @@ public class InvoiceResource extends JaxRsResourceBase {
                                                    input.getStartDate(),
                                                    input.getEndDate(),
                                                    input.getAmount(),
+                                                   input.getRate(),
                                                    accountCurrency.name(),
-                                                   null,
-                                                   null,
                                                    input.getQuantity(),
-                                                   input.getItemDetails());
+                                                   input.getItemDetails(),
+                                                   null,
+                                                   null);
                     }
                 }
             });

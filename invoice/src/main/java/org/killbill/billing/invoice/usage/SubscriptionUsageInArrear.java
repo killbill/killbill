@@ -38,6 +38,7 @@ import org.killbill.billing.invoice.generator.InvoiceItemGenerator.InvoiceItemGe
 import org.killbill.billing.invoice.usage.ContiguousIntervalUsageInArrear.UsageInArrearItemsAndNextNotificationDate;
 import org.killbill.billing.junction.BillingEvent;
 import org.killbill.billing.usage.RawUsage;
+import org.killbill.billing.util.config.definition.InvoiceConfig;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
@@ -78,6 +79,7 @@ public class SubscriptionUsageInArrear {
     private final List<RawUsage> rawSubscriptionUsage;
     private final LocalDate rawUsageStartDate;
     private final InternalTenantContext internalTenantContext;
+    private final InvoiceConfig invoiceConfig;
 
     public SubscriptionUsageInArrear(final UUID accountId,
                                      final UUID invoiceId,
@@ -85,7 +87,8 @@ public class SubscriptionUsageInArrear {
                                      final List<RawUsage> rawUsage,
                                      final LocalDate targetDate,
                                      final LocalDate rawUsageStartDate,
-                                     final InternalTenantContext internalTenantContext) {
+                                     final InternalTenantContext internalTenantContext,
+                                     final InvoiceConfig invoiceConfig) {
 
         this.accountId = accountId;
         this.invoiceId = invoiceId;
@@ -100,6 +103,7 @@ public class SubscriptionUsageInArrear {
                 return input.getSubscriptionId().equals(subscriptionBillingEvents.get(0).getSubscription().getId());
             }
         }));
+        this.invoiceConfig = invoiceConfig;
     }
 
     /**
@@ -149,7 +153,7 @@ public class SubscriptionUsageInArrear {
                 // Add inflight usage interval if non existent
                 ContiguousIntervalUsageInArrear existingInterval = inFlightInArrearUsageIntervals.get(usage.getName());
                 if (existingInterval == null) {
-                    existingInterval = new ContiguousIntervalUsageInArrear(usage, accountId, invoiceId, rawSubscriptionUsage, targetDate, rawUsageStartDate, internalTenantContext);
+                    existingInterval = new ContiguousIntervalUsageInArrear(usage, accountId, invoiceId, rawSubscriptionUsage, targetDate, rawUsageStartDate, internalTenantContext, invoiceConfig);
                     inFlightInArrearUsageIntervals.put(usage.getName(), existingInterval);
                 }
                 // Add billing event for that usage interval
