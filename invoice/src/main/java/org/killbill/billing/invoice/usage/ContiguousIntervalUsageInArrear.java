@@ -30,8 +30,10 @@ import java.util.UUID;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.annotation.Nullable;
+import javax.inject.Inject;
 
 import org.joda.time.LocalDate;
+import org.killbill.billing.ErrorCode;
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.catalog.api.BillingMode;
 import org.killbill.billing.catalog.api.CatalogApiException;
@@ -94,7 +96,7 @@ public class ContiguousIntervalUsageInArrear {
     private final AtomicBoolean isBuilt;
     private final LocalDate rawUsageStartDate;
     private final InternalTenantContext internalTenantContext;
-    private final InvoiceConfig invoiceConfig;
+    private final UsageDetailMode usageDetailMode;
 
     public ContiguousIntervalUsageInArrear(final Usage usage,
                                            final UUID accountId,
@@ -102,7 +104,7 @@ public class ContiguousIntervalUsageInArrear {
                                            final List<RawUsage> rawSubscriptionUsage,
                                            final LocalDate targetDate,
                                            final LocalDate rawUsageStartDate,
-                                           final InvoiceConfig invoiceConfig,
+                                           final UsageDetailMode usageDetailMode,
                                            final InternalTenantContext internalTenantContext) {
         this.usage = usage;
         this.accountId = accountId;
@@ -115,7 +117,7 @@ public class ContiguousIntervalUsageInArrear {
         this.billingEvents = Lists.newLinkedList();
         this.transitionTimes = Lists.newLinkedList();
         this.isBuilt = new AtomicBoolean(false);
-        this.invoiceConfig = invoiceConfig;
+        this.usageDetailMode = usageDetailMode;
     }
 
     /**
@@ -224,8 +226,10 @@ public class ContiguousIntervalUsageInArrear {
                 toBeBilledUsageDetails = reconcileExistedBilledWithToBeBilled(billedItems, toBeBilledUsageDetails);
                 final BigDecimal amountToBill = toBeBilledForUnit(toBeBilledUsageDetails);
 
+                //final BigDecimal amountToBill = toBeBilledUsage.subtract(billedUsage);
+
                 if (amountToBill.compareTo(BigDecimal.ZERO) > 0) {
-                    if (UsageDetailMode.DETAIL.compareTo(invoiceConfig.getItemResultBehaviorMode(internalTenantContext)) == 0){
+                    if (UsageDetailMode.DETAIL.compareTo(usageDetailMode) == 0){
                         for (ConsumableInArrearDetail toBeBilledUsageDetail : toBeBilledUsageDetails){
                             final InvoiceItem item = new UsageInvoiceItem(invoiceId, accountId, getBundleId(), getSubscriptionId(), getPlanName(),
                                                                           getPhaseName(), usage.getName(), ru.getStart(), ru.getEnd(), toBeBilledUsageDetail.getAmount(), toBeBilledUsageDetail.getTierPrice(), getCurrency(),toBeBilledUsageDetail.getQuantity(),null);
