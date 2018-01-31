@@ -84,7 +84,7 @@ public class DefaultPaginationSqlDaoHelper {
 
             // Make sure to free resources (https://github.com/killbill/killbill/issues/853)
             if (simplePaginationIterator instanceof Closeable) {
-                // Always the case with the current implementation (delegateIterator is a org.skife.jdbi.v2.ResultIterator)
+                // Always the case with the current implementation (simplePaginationIterator is a org.skife.jdbi.v2.ResultIterator)
                 try {
                     ((Closeable) simplePaginationIterator).close();
                 } catch (final IOException e) {
