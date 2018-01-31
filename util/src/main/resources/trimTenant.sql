@@ -39,6 +39,8 @@ BEGIN
 
     DELETE FROM account_email_history WHERE tenant_record_id = v_tenant_record_id;
     DELETE FROM account_emails WHERE tenant_record_id = v_tenant_record_id;
+    DELETE FROM account_history WHERE tenant_record_id = v_tenant_record_id;
+    DELETE FROM accounts WHERE tenant_record_id = v_tenant_record_id;
     DELETE FROM audit_log WHERE tenant_record_id = v_tenant_record_id;
     DELETE FROM blocking_states WHERE tenant_record_id = v_tenant_record_id;
     DELETE FROM bundles WHERE tenant_record_id = v_tenant_record_id;
@@ -57,6 +59,8 @@ BEGIN
     DELETE FROM payment_attempt_history WHERE tenant_record_id = v_tenant_record_id;
     DELETE FROM payment_attempts WHERE tenant_record_id = v_tenant_record_id;
     DELETE FROM payment_history WHERE tenant_record_id = v_tenant_record_id;
+    DELETE FROM payment_method_history WHERE tenant_record_id = v_tenant_record_id;
+    DELETE FROM payment_methods WHERE tenant_record_id = v_tenant_record_id;
     DELETE FROM payment_transaction_history WHERE tenant_record_id = v_tenant_record_id;
     DELETE FROM payment_transactions WHERE tenant_record_id = v_tenant_record_id;
     DELETE FROM payments WHERE tenant_record_id = v_tenant_record_id;
