@@ -69,7 +69,7 @@ public class TestCatalogUpdater extends CatalogTestSuiteNoDB {
         final DateTime now = clock.getUTCNow();
         final SimplePlanDescriptor desc = new DefaultSimplePlanDescriptor("foo-monthly-12345", "Foo", ProductCategory.BASE, Currency.EUR, BigDecimal.TEN, BillingPeriod.MONTHLY, 0, TimeUnit.UNLIMITED, ImmutableList.<String>of());
 
-        final CatalogUpdater catalogUpdater = new CatalogUpdater(BillingMode.IN_ADVANCE, now, desc.getCurrency());
+        final CatalogUpdater catalogUpdater = new CatalogUpdater(now, desc.getCurrency());
         catalogUpdater.addSimplePlanDescriptor(desc);
         final StandaloneCatalog catalog = catalogUpdater.getCatalog();
 
