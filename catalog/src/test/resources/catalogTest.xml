@@ -1,8 +1,10 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <!--
   ~ Copyright 2010-2013 Ning, Inc.
+  ~ Copyright 2014-2018 Groupon, Inc
+  ~ Copyright 2014-2018 The Billing Project, LLC
   ~
-  ~ Ning licenses this file to you under the Apache License, version 2.0
+  ~ The Billing Project licenses this file to you under the Apache License, version 2.0
   ~ (the "License"); you may not use this file except in compliance with the
   ~ License.  You may obtain a copy of the License at:
   ~
@@ -42,6 +44,9 @@
     </units>
 
     <products>
+        <product name="Knife">
+            <category>STANDALONE</category>
+        </product>
         <product name="Blowdart">
             <category>BASE</category>
         </product>
@@ -191,6 +196,31 @@
     </rules>
 
     <plans>
+        <plan name="knife-monthly-notrial">
+            <product>Knife</product>
+            <finalPhase type="EVERGREEN">
+                <duration>
+                    <unit>UNLIMITED</unit>
+                </duration>
+                <recurring>
+                    <billingPeriod>MONTHLY</billingPeriod>
+                    <recurringPrice>
+                        <price>
+                            <currency>USD</currency>
+                            <value>29.95</value>
+                        </price>
+                        <price>
+                            <currency>EUR</currency>
+                            <value>29.95</value>
+                        </price>
+                        <price>
+                            <currency>GBP</currency>
+                            <value>29.95</value>
+                        </price>
+                    </recurringPrice>
+                </recurring>
+            </finalPhase>
+        </plan>
         <plan name="blowdart-monthly-notrial">
             <product>Blowdart</product>
             <finalPhase type="EVERGREEN">
@@ -216,7 +246,6 @@
                 </recurring>
             </finalPhase>
         </plan>
-
         <plan name="pistol-monthly-notrial">
             <product>Pistol</product>
             <finalPhase type="EVERGREEN">
@@ -1373,6 +1402,7 @@
         </childPriceList>
         <childPriceList name="notrial">
             <plans>
+                <plan>knife-monthly-notrial</plan>
                 <plan>blowdart-monthly-notrial</plan>
                 <plan>pistol-monthly-notrial</plan>
             </plans>

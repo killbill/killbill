@@ -247,6 +247,39 @@
                 </recurring>
             </finalPhase>
         </plan>
+        <plan name="standard-monthly-12345">
+            <product>Standard</product>
+            <finalPhase type="EVERGREEN">
+                <duration>
+                    <unit>UNLIMITED</unit>
+                </duration>
+                <recurring>
+                    <billingPeriod>MONTHLY</billingPeriod>
+                    <recurringPrice>
+                        <price>
+                            <currency>GBP</currency>
+                            <value>75.00</value>
+                        </price>
+                        <price>
+                            <currency>EUR</currency>
+                            <value>85.00</value>
+                        </price>
+                        <price>
+                            <currency>USD</currency>
+                            <value>100.00</value>
+                        </price>
+                        <price>
+                            <currency>JPY</currency>
+                            <value>10.00</value>
+                        </price>
+                        <price>
+                            <currency>BTC</currency>
+                            <value>0.1</value>
+                        </price>
+                    </recurringPrice>
+                </recurring>
+            </finalPhase>
+        </plan>
         <plan name="sports-monthly">
             <product>Sports</product>
             <initialPhases>
@@ -965,6 +998,11 @@
             <plans>
                 <plan>cia-standard-monthly</plan>
                 <plan>cia-sports-monthly</plan>
+            </plans>
+        </childPriceList>
+        <childPriceList name="ambiguous">
+            <plans>
+                <plan>standard-monthly-12345</plan>
             </plans>
         </childPriceList>
     </priceLists>

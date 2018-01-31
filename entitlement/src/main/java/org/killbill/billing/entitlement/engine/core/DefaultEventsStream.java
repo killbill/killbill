@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014-2016 Groupon, Inc
- * Copyright 2014-2016 The Billing Project, LLC
+ * Copyright 2014-2018 Groupon, Inc
+ * Copyright 2014-2018 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -111,7 +111,8 @@ public class DefaultEventsStream implements EventsStream {
                               @Nullable final SubscriptionBaseBundle bundle,
                               @Nullable final SubscriptionBase baseSubscription,
                               @Nullable final SubscriptionBase subscription) {
-        for (final Object object : new Object[]{account, bundle, baseSubscription, subscription}) {
+        // baseSubscription can be null for STANDALONE products (https://github.com/killbill/killbill/issues/840)
+        for (final Object object : new Object[]{account, bundle, subscription}) {
             Preconditions.checkNotNull(object,
                                        "accountId='%s', bundleId='%s', baseSubscriptionId='%s', subscriptionId='%s'",
                                        account != null ? account.getId() : null,
