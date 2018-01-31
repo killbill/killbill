@@ -104,8 +104,8 @@ public class ContiguousIntervalUsageInArrear {
                                            final List<RawUsage> rawSubscriptionUsage,
                                            final LocalDate targetDate,
                                            final LocalDate rawUsageStartDate,
-                                           final InternalTenantContext internalTenantContext,
-                                           final InvoiceConfig invoiceConfig) {
+                                           final InvoiceConfig invoiceConfig,
+                                           final InternalTenantContext internalTenantContext) {
         this.usage = usage;
         this.accountId = accountId;
         this.invoiceId = invoiceId;
