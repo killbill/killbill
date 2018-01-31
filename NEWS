@@ -1,3 +1,10 @@
+0.19.2
+    Fix issue with STANDALONE plans (#840)
+    Fix connection leak (#558)
+    Fix limitation where catalog plan name cannot end with an number (#842)
+    Fix missing Invoice Notification when we have future billing events (#846)
+    Rreduce log level of InvoiceItemGeneratorLogger (#851)
+
 0.18.16
     See https://github.com/killbill/killbill/releases/tag/killbill-0.18.16
 
