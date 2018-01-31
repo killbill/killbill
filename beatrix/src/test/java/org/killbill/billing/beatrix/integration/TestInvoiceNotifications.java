@@ -22,11 +22,16 @@ import org.killbill.billing.account.api.Account;
 import org.killbill.billing.account.api.AccountData;
 import org.killbill.billing.api.TestApiListener.NextEvent;
 import org.killbill.billing.catalog.api.BillingPeriod;
+import org.killbill.billing.catalog.api.PlanPhaseSpecifier;
+import org.killbill.billing.catalog.api.PriceListSet;
 import org.killbill.billing.catalog.api.ProductCategory;
 import org.killbill.billing.entitlement.api.DefaultEntitlement;
+import org.killbill.billing.entitlement.api.Entitlement;
+import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.platform.api.KillbillConfigSource;
 import org.testng.annotations.Test;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
 public class TestInvoiceNotifications extends TestIntegrationBase {
@@ -63,4 +68,44 @@ public class TestInvoiceNotifications extends TestIntegrationBase {
         // And then verify the invoice is correctly generated
         addDaysAndCheckForCompletion(7, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
     }
+
+
+    @Test(groups = "slow")
+    public void testInvoiceNotificationWithFutureSubscriptionEvents() throws Exception {
+        clock.setDay(new LocalDate(2018, 1, 31));
+
+        final AccountData accountData = getAccountData(28);
+        final Account account = createAccountWithNonOsgiPaymentMethod(accountData);
+        accountChecker.checkAccount(account.getId(), accountData, callContext);
+
+
+        final LocalDate billingDate = new LocalDate(2018, 2, 28);
+        final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("pistol-monthly-notrial");
+
+
+        busHandler.pushExpectedEvents(NextEvent.BLOCK);
+        final Entitlement entitlement = entitlementApi.createBaseEntitlement(account.getId(), spec, "bundleKey", null, null, billingDate, false, true, ImmutableList.<PluginProperty>of(), callContext);
+        busHandler.assertListenerStatus();
+
+        // Move to the notification before the start date =>  2018, 2, 21
+        addDaysAndCheckForCompletion(21, NextEvent.INVOICE_NOTIFICATION);
+
+        // Move to the start date => 2018, 2, 28
+        addDaysAndCheckForCompletion(7, NextEvent.CREATE, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
+
+        final LocalDate futureChangeDate = new LocalDate(2018, 3, 28);
+
+        entitlement.changePlanWithDate(new PlanPhaseSpecifier("shotgun-monthly"), null, futureChangeDate, null, callContext);
+        assertListenerStatus();
+
+        // Move to the notification before the start date =>  2018, 3, 21
+        addDaysAndCheckForCompletion(21, NextEvent.INVOICE_NOTIFICATION);
+
+
+        // Move to the change date => 2018, 3, 28
+        addDaysAndCheckForCompletion(7, NextEvent.CHANGE, NextEvent.INVOICE, NextEvent.NULL_INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
+
+    }
+
+
 }
