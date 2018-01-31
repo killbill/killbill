@@ -24,13 +24,11 @@ import org.killbill.billing.ErrorCode;
 import org.killbill.billing.account.api.Account;
 import org.killbill.billing.account.api.AccountApiException;
 import org.killbill.billing.api.TestApiListener.NextEvent;
-import org.killbill.billing.catalog.api.BillingActionPolicy;
 import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.catalog.api.PlanPhasePriceOverride;
 import org.killbill.billing.catalog.api.PlanPhaseSpecifier;
 import org.killbill.billing.catalog.api.PlanSpecifier;
 import org.killbill.billing.catalog.api.PriceListSet;
-import org.killbill.billing.catalog.api.ProductCategory;
 import org.killbill.billing.entitlement.EntitlementTestSuiteWithEmbeddedDB;
 import org.killbill.billing.entitlement.api.Entitlement.EntitlementActionPolicy;
 import org.killbill.billing.entitlement.api.Entitlement.EntitlementSourceType;
@@ -115,6 +113,39 @@ public class TestDefaultEntitlement extends EntitlementTestSuiteWithEmbeddedDB {
         final Account account = createAccount(getAccountData(7));
 
         final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("Shotgun", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, null);
+
+        // Create entitlement and check each field
+        testListener.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK);
+        final Entitlement entitlement = entitlementApi.createBaseEntitlement(account.getId(), spec, account.getExternalKey(), null, null, null, false, ImmutableList.<PluginProperty>of(), callContext);
+        assertListenerStatus();
+        assertEquals(entitlement.getState(), EntitlementState.ACTIVE);
+
+        clock.addDays(5);
+
+        final LocalDate cancelDate = new LocalDate(clock.getUTCToday().plusDays(1));
+        entitlement.cancelEntitlementWithDate(cancelDate, true, ImmutableList.<PluginProperty>of(), callContext);
+
+        final Entitlement entitlement2 = entitlementApi.getEntitlementForId(entitlement.getId(), callContext);
+        assertEquals(entitlement2.getState(), EntitlementState.ACTIVE);
+        assertEquals(entitlement2.getEffectiveEndDate(), cancelDate);
+
+        testListener.pushExpectedEvents(NextEvent.UNCANCEL);
+        entitlement2.uncancelEntitlement(ImmutableList.<PluginProperty>of(), callContext);
+        assertListenerStatus();
+
+        clock.addDays(1);
+        final Entitlement entitlement3 = entitlementApi.getEntitlementForId(entitlement.getId(), callContext);
+        assertEquals(entitlement3.getState(), EntitlementState.ACTIVE);
+    }
+
+    @Test(groups = "slow", description = "https://github.com/killbill/killbill/issues/840")
+    public void testUncancelEntitlementFor_STANDALONE_Product() throws AccountApiException, EntitlementApiException {
+        final LocalDate initialDate = new LocalDate(2013, 8, 7);
+        clock.setDay(initialDate);
+
+        final Account account = createAccount(getAccountData(7));
+
+        final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("Knife", BillingPeriod.MONTHLY, "notrial", null);
 
         // Create entitlement and check each field
         testListener.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK);
@@ -283,10 +314,9 @@ public class TestDefaultEntitlement extends EntitlementTestSuiteWithEmbeddedDB {
     }
 
     @Test(groups = "slow")
-        public void testEntitlementChangePlanOnPendingEntitlement() throws AccountApiException, EntitlementApiException {
+    public void testEntitlementChangePlanOnPendingEntitlement() throws AccountApiException, EntitlementApiException {
         final LocalDate initialDate = new LocalDate(2013, 8, 7);
         clock.setDay(initialDate);
-
 
         final LocalDate startDate = initialDate.plusDays(10);
 
@@ -316,7 +346,7 @@ public class TestDefaultEntitlement extends EntitlementTestSuiteWithEmbeddedDB {
 
         entitlement.changePlanWithDate(spec2, ImmutableList.<PlanPhasePriceOverride>of(), startDate, ImmutableList.<PluginProperty>of(), callContext);
 
-        testListener.pushExpectedEvents(NextEvent.CREATE,  NextEvent.BLOCK);
+        testListener.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK);
         clock.addDays(10);
         assertListenerStatus();
 
