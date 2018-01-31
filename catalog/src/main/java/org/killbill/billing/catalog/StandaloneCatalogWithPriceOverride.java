@@ -19,6 +19,7 @@ package org.killbill.billing.catalog;
 
 import java.util.regex.Matcher;
 
+import org.killbill.billing.ErrorCode;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.catalog.api.CatalogApiException;
@@ -69,7 +70,6 @@ public class StandaloneCatalogWithPriceOverride extends StandaloneCatalog implem
         return internalCallContextFactory;
     }
 
-
     @Override
     public Plan createOrFindCurrentPlan(final PlanSpecifier spec, final PlanPhasePriceOverridesWithCallContext overrides) throws CatalogApiException {
         final Plan defaultPlan = super.createOrFindCurrentPlan(spec, null);
@@ -103,8 +103,10 @@ public class StandaloneCatalogWithPriceOverride extends StandaloneCatalog implem
     public DefaultPlan findCurrentPlan(final String planName) throws CatalogApiException {
         final Matcher m = DefaultPriceOverride.CUSTOM_PLAN_NAME_PATTERN.matcher(planName);
         if (m.matches()) {
-            final InternalTenantContext internalTenantContext = createInternalTenantContext();
-            return priceOverride.getOverriddenPlan(planName, this, internalTenantContext);
+            final DefaultPlan plan = maybeGetOverriddenPlan(planName);
+            if (plan != null) {
+                return plan;
+            }
         }
         return super.findCurrentPlan(planName);
     }
@@ -119,11 +121,30 @@ public class StandaloneCatalogWithPriceOverride extends StandaloneCatalog implem
         final String planName = DefaultPlanPhase.planName(phaseName);
         final Matcher m = DefaultPriceOverride.CUSTOM_PLAN_NAME_PATTERN.matcher(planName);
         if (m.matches()) {
-            final InternalTenantContext internalTenantContext = createInternalTenantContext();
-            final Plan plan = priceOverride.getOverriddenPlan(planName, this, internalTenantContext);
-            return plan.findPhase(phaseName);
+            final DefaultPlan plan = maybeGetOverriddenPlan(planName);
+            if (plan != null) {
+                return plan.findPhase(phaseName);
+            }
         }
         return super.findCurrentPhase(phaseName);
+    }
+
+    private DefaultPlan maybeGetOverriddenPlan(final String planName) throws CatalogApiException {
+        final InternalTenantContext internalTenantContext = createInternalTenantContext();
+
+        try {
+            return priceOverride.getOverriddenPlan(planName, this, internalTenantContext);
+        } catch (final RuntimeException e) {
+            if (e.getCause() == null ||
+                e.getCause().getCause() == null ||
+                !(e.getCause().getCause() instanceof CatalogApiException) ||
+                ((CatalogApiException) e.getCause().getCause()).getCode() != ErrorCode.CAT_NO_SUCH_PLAN.getCode()) {
+                throw e;
+            } else {
+                // Otherwise, ambiguous name? See https://github.com/killbill/killbill/issues/842.
+                return null;
+            }
+        }
     }
 
     private InternalTenantContext createInternalTenantContext() {

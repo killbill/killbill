@@ -1,6 +1,6 @@
 /*
- * Copyright 2014-2016 Groupon, Inc
- * Copyright 2014-2016 The Billing Project, LLC
+ * Copyright 2014-2018 Groupon, Inc
+ * Copyright 2014-2018 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -31,10 +31,12 @@ import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.catalog.api.MutableStaticCatalog;
 import org.killbill.billing.catalog.api.PhaseType;
 import org.killbill.billing.catalog.api.Plan;
+import org.killbill.billing.catalog.api.PlanPhase;
 import org.killbill.billing.catalog.api.PriceList;
 import org.killbill.billing.catalog.api.Product;
 import org.killbill.billing.catalog.api.ProductCategory;
 import org.killbill.billing.catalog.api.SimplePlanDescriptor;
+import org.killbill.billing.catalog.api.StaticCatalog;
 import org.killbill.billing.catalog.api.TimeUnit;
 import org.killbill.billing.catalog.api.user.DefaultSimplePlanDescriptor;
 import org.killbill.xmlloader.XMLLoader;
@@ -60,6 +62,37 @@ public class TestCatalogUpdater extends CatalogTestSuiteNoDB {
         final String catalogXML = catalogUpdater.getCatalogXML();
         final StandaloneCatalog catalog = XMLLoader.getObjectFromStream(new URI("dummy"), new ByteArrayInputStream(catalogXML.getBytes(Charset.forName("UTF-8"))), StandaloneCatalog.class);
         assertEquals(catalog.getCurrentPlans().size(), 0);
+    }
+
+    @Test(groups = "fast", description = "https://github.com/killbill/killbill/issues/842")
+    public void testCreateAmbiguousPlan() throws CatalogApiException {
+        final DateTime now = clock.getUTCNow();
+        final SimplePlanDescriptor desc = new DefaultSimplePlanDescriptor("foo-monthly-12345", "Foo", ProductCategory.BASE, Currency.EUR, BigDecimal.TEN, BillingPeriod.MONTHLY, 0, TimeUnit.UNLIMITED, ImmutableList.<String>of());
+
+        final CatalogUpdater catalogUpdater = new CatalogUpdater(BillingMode.IN_ADVANCE, now, desc.getCurrency());
+        catalogUpdater.addSimplePlanDescriptor(desc);
+        final StandaloneCatalog catalog = catalogUpdater.getCatalog();
+
+        assertEquals(catalog.getCurrentPlans().size(), 1);
+
+        final StaticCatalog standaloneCatalogWithPriceOverride = new StandaloneCatalogWithPriceOverride(catalog,
+                                                                                                        priceOverride,
+                                                                                                        internalCallContext.getTenantRecordId(),
+                                                                                                        internalCallContextFactory);
+
+        final Plan plan = catalog.findCurrentPlan("foo-monthly-12345");
+        assertEquals(plan.getName(), "foo-monthly-12345");
+
+        // Verify PriceOverride logic
+        final Plan plan2 = standaloneCatalogWithPriceOverride.findCurrentPlan("foo-monthly-12345");
+        assertEquals(plan2.getName(), "foo-monthly-12345");
+
+        final PlanPhase planPhase = catalog.findCurrentPhase("foo-monthly-12345-evergreen");
+        assertEquals(planPhase.getName(), "foo-monthly-12345-evergreen");
+
+        // Verify PriceOverride logic
+        final PlanPhase phase2 = standaloneCatalogWithPriceOverride.findCurrentPhase("foo-monthly-12345-evergreen");
+        assertEquals(phase2.getName(), "foo-monthly-12345-evergreen");
     }
 
     @Test(groups = "fast")
@@ -101,7 +134,6 @@ public class TestCatalogUpdater extends CatalogTestSuiteNoDB {
         assertEquals(priceList.getPlans().size(), 1);
         assertEquals(priceList.getPlans().iterator().next().getName(), "foo-monthly");
     }
-
 
     @Test(groups = "fast")
     public void testAddTrialPlanOnFirstCatalog() throws CatalogApiException {
@@ -149,8 +181,6 @@ public class TestCatalogUpdater extends CatalogTestSuiteNoDB {
         assertEquals(priceList.getPlans().iterator().next().getName(), "foo-monthly");
     }
 
-
-
     @Test(groups = "fast")
     public void testAddPlanOnExistingCatalog() throws Exception {
 
@@ -184,8 +214,6 @@ public class TestCatalogUpdater extends CatalogTestSuiteNoDB {
         assertEquals(priceList.getName(), new PriceListDefault().getName());
         assertEquals(priceList.getPlans().size(), 4);
     }
-
-
 
     @Test(groups = "fast")
     public void testAddExistingPlanWithNewCurrency() throws Exception {
@@ -231,7 +259,6 @@ public class TestCatalogUpdater extends CatalogTestSuiteNoDB {
         SimplePlanDescriptor desc = new DefaultSimplePlanDescriptor("standard-monthly", "Standard", ProductCategory.BASE, Currency.EUR, BigDecimal.TEN, BillingPeriod.MONTHLY, 0, TimeUnit.DAYS, ImmutableList.<String>of());
         addBadSimplePlanDescriptor(catalogUpdater, desc);
 
-
         // Existing Plan has a 30 days trial => try different trial length
         desc = new DefaultSimplePlanDescriptor("standard-monthly", "Standard", ProductCategory.BASE, Currency.EUR, BigDecimal.TEN, BillingPeriod.MONTHLY, 14, TimeUnit.DAYS, ImmutableList.<String>of());
         addBadSimplePlanDescriptor(catalogUpdater, desc);
@@ -257,10 +284,8 @@ public class TestCatalogUpdater extends CatalogTestSuiteNoDB {
         addBadSimplePlanDescriptor(catalogUpdater, desc);
     }
 
-
     @Test(groups = "fast")
     public void testPlanWithNonFinalFixedTermPhase() throws Exception {
-
 
         final StandaloneCatalog catalog = XMLLoader.getObjectFromString(Resources.getResource("SpyCarBasic.xml").toExternalForm(), StandaloneCatalog.class);
 
@@ -271,7 +296,6 @@ public class TestCatalogUpdater extends CatalogTestSuiteNoDB {
         newProduct.setCatagory(ProductCategory.BASE);
         newProduct.initialize((StandaloneCatalog) mutableCatalog, null);
         mutableCatalog.addProduct(newProduct);
-
 
         final DefaultPlanPhase trialPhase = new DefaultPlanPhase();
         trialPhase.setPhaseType(PhaseType.TRIAL);
@@ -284,32 +308,28 @@ public class TestCatalogUpdater extends CatalogTestSuiteNoDB {
         fixedTermPhase.setDuration(new DefaultDuration().setUnit(TimeUnit.MONTHS).setNumber(3));
         fixedTermPhase.setRecurring(new DefaultRecurring().setBillingPeriod(BillingPeriod.MONTHLY).setRecurringPrice(new DefaultInternationalPrice().setPrices(new DefaultPrice[]{new DefaultPrice().setCurrency(Currency.USD).setValue(BigDecimal.TEN)})));
 
-
         final DefaultPlanPhase evergreenPhase = new DefaultPlanPhase();
         evergreenPhase.setPhaseType(PhaseType.EVERGREEN);
         evergreenPhase.setDuration(new DefaultDuration().setUnit(TimeUnit.MONTHS).setNumber(1));
         evergreenPhase.setRecurring(new DefaultRecurring().setBillingPeriod(BillingPeriod.MONTHLY).setRecurringPrice(new DefaultInternationalPrice().setPrices(new DefaultPrice[]{new DefaultPrice().setCurrency(Currency.USD).setValue(BigDecimal.TEN)})));
 
-
         final DefaultPlan newPlan = new DefaultPlan();
         newPlan.setName("something-with-fixed-term");
         newPlan.setPriceListName(DefaultPriceListSet.DEFAULT_PRICELIST_NAME);
         newPlan.setProduct(newProduct);
-        newPlan.setInitialPhases(new DefaultPlanPhase[] {trialPhase, fixedTermPhase});
+        newPlan.setInitialPhases(new DefaultPlanPhase[]{trialPhase, fixedTermPhase});
         newPlan.setFinalPhase(fixedTermPhase);
         mutableCatalog.addPlan(newPlan);
         newPlan.initialize((StandaloneCatalog) mutableCatalog, new URI("dummy"));
 
         final String newCatalogStr = XMLWriter.writeXML((StandaloneCatalog) mutableCatalog, StandaloneCatalog.class);
-        final StandaloneCatalog newCatalog =  XMLLoader.getObjectFromStream(new URI("dummy"), new ByteArrayInputStream(newCatalogStr.getBytes(Charset.forName("UTF-8"))), StandaloneCatalog.class);
+        final StandaloneCatalog newCatalog = XMLLoader.getObjectFromStream(new URI("dummy"), new ByteArrayInputStream(newCatalogStr.getBytes(Charset.forName("UTF-8"))), StandaloneCatalog.class);
 
         final DefaultPlan targetPlan = newCatalog.findCurrentPlan("something-with-fixed-term");
         Assert.assertEquals(targetPlan.getInitialPhases().length, 2);
         Assert.assertEquals(targetPlan.getInitialPhases()[1].getPhaseType(), PhaseType.FIXEDTERM);
 
     }
-
-
 
     @Test(groups = "fast")
     public void testVerifyXML() throws Exception {
@@ -555,7 +575,6 @@ public class TestCatalogUpdater extends CatalogTestSuiteNoDB {
         System.err.println(catalogUpdater.getCatalogXML());
     }
 
-
     private StandaloneCatalog enhanceOriginalCatalogForInvalidTestCases(final String catalogName) throws Exception {
 
         final StandaloneCatalog catalog = XMLLoader.getObjectFromString(Resources.getResource(catalogName).toExternalForm(), StandaloneCatalog.class);
@@ -588,7 +607,6 @@ public class TestCatalogUpdater extends CatalogTestSuiteNoDB {
         mutableCatalog.addPlan(newPlan1);
         newPlan1.initialize((StandaloneCatalog) mutableCatalog, new URI("dummy"));
 
-
         final DefaultProduct newProduct2 = new DefaultProduct();
         newProduct2.setName("SuperDynamic");
         newProduct2.setCatagory(ProductCategory.BASE);
@@ -601,7 +619,6 @@ public class TestCatalogUpdater extends CatalogTestSuiteNoDB {
         fixedterm2.setDuration(new DefaultDuration().setUnit(TimeUnit.MONTHS).setNumber(3));
         fixedterm2.setRecurring(new DefaultRecurring().setBillingPeriod(BillingPeriod.MONTHLY).setRecurringPrice(new DefaultInternationalPrice().setPrices(new DefaultPrice[]{new DefaultPrice().setCurrency(Currency.USD).setValue(BigDecimal.TEN)})));
 
-
         final DefaultPlan newPlan2 = new DefaultPlan();
         newPlan2.setName("superdynamic-fixedterm");
         newPlan2.setPriceListName(DefaultPriceListSet.DEFAULT_PRICELIST_NAME);
@@ -610,11 +627,9 @@ public class TestCatalogUpdater extends CatalogTestSuiteNoDB {
         mutableCatalog.addPlan(newPlan2);
         newPlan2.initialize((StandaloneCatalog) mutableCatalog, new URI("dummy"));
 
-
         final String newCatalogStr = XMLWriter.writeXML((StandaloneCatalog) mutableCatalog, StandaloneCatalog.class);
         return XMLLoader.getObjectFromStream(new URI("dummy"), new ByteArrayInputStream(newCatalogStr.getBytes(Charset.forName("UTF-8"))), StandaloneCatalog.class);
     }
-
 
     private void addBadSimplePlanDescriptor(final CatalogUpdater catalogUpdater, final SimplePlanDescriptor desc) {
         try {
