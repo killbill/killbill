@@ -30,10 +30,8 @@ import java.util.UUID;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.annotation.Nullable;
-import javax.inject.Inject;
 
 import org.joda.time.LocalDate;
-import org.killbill.billing.ErrorCode;
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.catalog.api.BillingMode;
 import org.killbill.billing.catalog.api.CatalogApiException;
@@ -225,8 +223,6 @@ public class ContiguousIntervalUsageInArrear {
             if (!billedItems.iterator().hasNext() || billedUsage.compareTo(toBeBilledUsage) < 0) {
                 toBeBilledUsageDetails = reconcileExistedBilledWithToBeBilled(billedItems, toBeBilledUsageDetails);
                 final BigDecimal amountToBill = toBeBilledForUnit(toBeBilledUsageDetails);
-
-                //final BigDecimal amountToBill = toBeBilledUsage.subtract(billedUsage);
 
                 if (amountToBill.compareTo(BigDecimal.ZERO) > 0) {
                     if (UsageDetailMode.DETAIL.compareTo(usageDetailMode) == 0){
@@ -625,7 +621,7 @@ public class ContiguousIntervalUsageInArrear {
         return toBeBilledConsumableInArrearDetails;
     }
 
-    private static final String toJson(List<ConsumableInArrearDetail> toBeBilledConsumableInArrearDetails) {
+    public static final String toJson(List<ConsumableInArrearDetail> toBeBilledConsumableInArrearDetails) {
         String result = null;
         if (toBeBilledConsumableInArrearDetails != null && toBeBilledConsumableInArrearDetails.size() > 0){
             ObjectMapper objectMapper = new ObjectMapper();
@@ -638,7 +634,7 @@ public class ContiguousIntervalUsageInArrear {
         return result;
     }
 
-    private static final List<ConsumableInArrearDetail> fromJson(String itemDetails){
+    public static final List<ConsumableInArrearDetail> fromJson(String itemDetails){
         List<ConsumableInArrearDetail> toBeBilledConsumableInArrearDetails = null;
         if (itemDetails != null){
             ObjectMapper objectMapper = new ObjectMapper();
@@ -686,18 +682,35 @@ public class ContiguousIntervalUsageInArrear {
             this.reference = reference;
         }
 
-        public int getTier() { return tier; };
-        public String getTierUnit() { return tierUnit; }
-        public BigDecimal getTierPrice() { return tierPrice; }
-        public Integer getQuantity() { return quantity; }
-        public BigDecimal getExistingUsageAmount() { return existingUsageAmount; }
+        public int getTier() {
+            return tier;
+        }
+        public String getTierUnit() {
+            return tierUnit;
+        }
+        public BigDecimal getTierPrice() {
+
+            return tierPrice;
+        }
+        public Integer getQuantity() {
+            return quantity;
+        }
+        public BigDecimal getExistingUsageAmount() {
+            return existingUsageAmount;
+        }
         public BigDecimal getAmount() {
             return amount;
         }
 
-        public void setAmount(BigDecimal amount) { this.amount = amount; }
-        public void setExistingUsageAmount(BigDecimal existingUsageAmount) { this.existingUsageAmount = existingUsageAmount; }
-        public void setReference(String reference) { this.reference = reference; }
+        public void setAmount(BigDecimal amount) {
+            this.amount = amount;
+        }
+        public void setExistingUsageAmount(BigDecimal existingUsageAmount) {
+            this.existingUsageAmount = existingUsageAmount;
+        }
+        public void setReference(String reference) {
+            this.reference = reference;
+        }
 
         public List<ConsumableInArrearDetail> reconcile(List<ConsumableInArrearDetail> billedUsageItemDetails){
             List<ConsumableInArrearDetail> unreconciledUsage = Lists.newLinkedList();

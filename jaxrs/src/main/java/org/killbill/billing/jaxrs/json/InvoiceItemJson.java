@@ -452,7 +452,7 @@ public class InvoiceItemJson extends JsonBase {
         if (itemDetails != null ? !itemDetails.equals(that.itemDetails) : that.itemDetails != null) {
             return false;
         }
-        if (rate != null ? !rate.equals(that.rate) : that.rate != null) {
+        if (rate != null ? rate.compareTo(that.rate) != 0 : that.rate != null) {
             return false;
         }
 
