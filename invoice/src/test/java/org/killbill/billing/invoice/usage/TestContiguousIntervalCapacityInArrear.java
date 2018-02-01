@@ -26,7 +26,6 @@ import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDate;
 import org.killbill.billing.catalog.DefaultLimit;
 import org.killbill.billing.catalog.DefaultTier;
-import org.killbill.billing.catalog.DefaultTieredBlock;
 import org.killbill.billing.catalog.DefaultUnit;
 import org.killbill.billing.catalog.DefaultUsage;
 import org.killbill.billing.catalog.api.BillingPeriod;
@@ -36,24 +35,20 @@ import org.killbill.billing.catalog.api.Usage;
 import org.killbill.billing.invoice.api.InvoiceItem;
 import org.killbill.billing.invoice.model.FixedPriceInvoiceItem;
 import org.killbill.billing.invoice.model.UsageInvoiceItem;
-import org.killbill.billing.invoice.usage.ContiguousIntervalUsageInArrear.ConsumableInArrearDetail;
+import org.killbill.billing.invoice.usage.ContiguousIntervalUsageInArrear.UsageInArrearDetail;
 import org.killbill.billing.invoice.usage.ContiguousIntervalUsageInArrear.UsageInArrearItemsAndNextNotificationDate;
 import org.killbill.billing.junction.BillingEvent;
 import org.killbill.billing.usage.RawUsage;
 import org.killbill.billing.usage.api.RolledUpUnit;
-import org.killbill.billing.usage.api.RolledUpUsage;
 import org.killbill.billing.usage.api.svcs.DefaultRawUsage;
-import org.testng.Assert;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-import com.google.common.base.Function;
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Ordering;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertTrue;
@@ -120,19 +115,23 @@ public class TestContiguousIntervalCapacityInArrear extends TestUsageInArrearBas
 
         final DefaultUnit unit1 = new DefaultUnit().setName("unit1");
         final DefaultUnit unit2 = new DefaultUnit().setName("unit2");
+        final DefaultUnit unit3 = new DefaultUnit().setName("unit3");
 
         final DefaultLimit limit1_1 = new DefaultLimit().setUnit(unit1).setMax((double) 100).setMin((double) -1);
         final DefaultLimit limit1_2 = new DefaultLimit().setUnit(unit2).setMax((double) 1000).setMin((double) -1);
-        final DefaultTier tier1 = createDefaultTierWithLimits(BigDecimal.TEN, limit1_1, limit1_2);
+        final DefaultLimit limit1_3 = new DefaultLimit().setUnit(unit3).setMax((double) 50).setMin((double) -1);
+        final DefaultTier tier1 = createDefaultTierWithLimits(BigDecimal.TEN, limit1_1, limit1_2, limit1_3);
 
         final DefaultLimit limit2_1 = new DefaultLimit().setUnit(unit1).setMax((double) 200).setMin((double) -1);
         final DefaultLimit limit2_2 = new DefaultLimit().setUnit(unit2).setMax((double) 2000).setMin((double) -1);
-        final DefaultTier tier2 = createDefaultTierWithLimits(new BigDecimal("20.0"), limit2_1, limit2_2);
+        final DefaultLimit limit2_3 = new DefaultLimit().setUnit(unit3).setMax((double) 100).setMin((double) -1);
+        final DefaultTier tier2 = createDefaultTierWithLimits(new BigDecimal("20.0"), limit2_1, limit2_2, limit2_3);
 
         // Don't define any max for last tier to allow any number
         final DefaultLimit limit3_1 = new DefaultLimit().setUnit(unit1).setMin((double) -1).setMax((double) -1);
         final DefaultLimit limit3_2 = new DefaultLimit().setUnit(unit2).setMin((double) -1).setMax((double) -1);
-        final DefaultTier tier3 = createDefaultTierWithLimits(new BigDecimal("30.0"), limit3_1, limit3_2);
+        final DefaultLimit limit3_3 = new DefaultLimit().setUnit(unit3).setMax((double) -1).setMin((double) -1);
+        final DefaultTier tier3 = createDefaultTierWithLimits(new BigDecimal("30.0"), limit3_1, limit3_2, limit3_3);
 
 
         final DefaultUsage usage = createCapacityInArrearUsage(usageName, BillingPeriod.MONTHLY, tier1, tier2, tier3);
@@ -145,8 +144,10 @@ public class TestContiguousIntervalCapacityInArrear extends TestUsageInArrearBas
                                                                                                                                                   Collections.<Usage>emptyList())
                                                                                                                      );
         // Tier 1 (both units from tier 1)
-        List<ConsumableInArrearDetail> result = intervalCapacityInArrear.computeToBeBilledCapacityInArrear(ImmutableList.<RolledUpUnit>of(new DefaultRolledUpUnit("unit1", 100L),
-                                                                                                                                          new DefaultRolledUpUnit("unit2", 1000L)), 1);
+        List<UsageInArrearDetail> result = intervalCapacityInArrear.computeToBeBilledCapacityInArrear(ImmutableList.<RolledUpUnit>of(new DefaultRolledUpUnit("unit1", 100L),
+                                                                                                                                     new DefaultRolledUpUnit("unit2", 1000L),
+                                                                                                                                     new DefaultRolledUpUnit("unit3", 50L)), 1);
+        assertEquals(result.size(), 3);
         assertEquals(intervalCapacityInArrear.toBeBilledForUnit(result), BigDecimal.TEN);
 
         // Tier 2 (only one unit from tier 1)

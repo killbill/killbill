@@ -180,10 +180,11 @@ public class MultiTenantInvoiceConfig extends MultiTenantConfigBase implements I
             return UsageDetailMode.valueOf(result);
         }
 
-        if (mode.compareTo(UsageDetailMode.AGGREGATE) != 0 || mode.compareTo(UsageDetailMode.DETAIL) != 0) {
-            return UsageDetailMode.AGGREGATE;
+        if (mode == UsageDetailMode.AGGREGATE || mode == UsageDetailMode.DETAIL) {
+            return mode;
         }
-        return mode;
+
+        return UsageDetailMode.AGGREGATE;
     }
 
     @Override
