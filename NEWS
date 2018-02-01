@@ -1,3 +1,9 @@
+0.18.17
+    Relax sanity checks for STANDALONE subscriptions #840
+    Fix JDBC connection leak in pagination API #853
+    Fix limitation where catalog plan name cannot end with an number #842
+    Reduce log level of InvoiceItemGeneratorLogger #851
+
 0.18.16
     See https://github.com/killbill/killbill/releases/tag/killbill-0.18.16
 
