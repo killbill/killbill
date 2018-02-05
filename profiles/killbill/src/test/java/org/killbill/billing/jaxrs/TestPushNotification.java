@@ -21,22 +21,38 @@ package org.killbill.billing.jaxrs;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.UUID;
+import java.util.concurrent.Callable;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.awaitility.Awaitility;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
+import org.joda.time.DateTime;
+import org.killbill.CreatorName;
 import org.killbill.billing.client.KillBillClientException;
 import org.killbill.billing.client.model.TenantKey;
 import org.killbill.billing.jaxrs.json.NotificationJson;
 import org.killbill.billing.notification.plugin.api.ExtBusEventType;
+import org.killbill.billing.server.DefaultServerService;
+import org.killbill.billing.server.notifications.PushNotificationKey;
 import org.killbill.billing.server.notifications.PushNotificationListener;
+import org.killbill.billing.server.notifications.PushNotificationRetryService;
 import org.killbill.billing.tenant.api.TenantKV;
+import org.killbill.notificationq.DefaultNotificationQueueService;
+import org.killbill.notificationq.NotificationQueueDispatcher;
+import org.killbill.notificationq.api.NotificationEvent;
+import org.killbill.notificationq.api.NotificationQueue;
+import org.killbill.notificationq.api.NotificationQueueService.NotificationQueueHandler;
+import org.killbill.notificationq.dao.NotificationEventModelDao;
+import org.killbill.queue.QueueObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
@@ -44,7 +60,11 @@ import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.base.MoreObjects;
 import com.google.common.io.CharStreams;
 
 public class TestPushNotification extends TestJaxrsBase {
@@ -123,6 +143,72 @@ public class TestPushNotification extends TestJaxrsBase {
         }
 
         unregisterTenantForCallback(callback);
+    }
+
+    @Test(groups = "slow", description = "https://github.com/killbill/killbill/issues/726")
+    public void testVerify726Backport() throws Exception {
+        // Record an event without the metadata field
+        final PushNotificationKeyPre726 key = new PushNotificationKeyPre726(UUID.randomUUID(),
+                                                                            UUID.randomUUID(),
+                                                                            UUID.randomUUID().toString(),
+                                                                            UUID.randomUUID().toString(),
+                                                                            UUID.randomUUID(),
+                                                                            1,
+                                                                            UUID.randomUUID().toString());
+        final String eventJson = QueueObjectMapper.get().writeValueAsString(key);
+        // Need to serialize it manually, to reflect the correct class name
+        final NotificationEventModelDao notificationEventModelDao = new NotificationEventModelDao(CreatorName.get(),
+                                                                                                  clock.getUTCNow(),
+                                                                                                  PushNotificationKey.class.getName(),
+                                                                                                  eventJson,
+                                                                                                  UUID.randomUUID(),
+                                                                                                  internalCallContext.getAccountRecordId(),
+                                                                                                  internalCallContext.getTenantRecordId(),
+                                                                                                  UUID.randomUUID(),
+                                                                                                  clock.getUTCNow(),
+                                                                                                  DefaultServerService.SERVER_SERVICE + ":testVerify726Backport");
+
+        final AtomicReference<PushNotificationKey> notification = new AtomicReference<PushNotificationKey>();
+        // Need to create a custom queue to extract the deserialized event
+        final NotificationQueue notificationQueue = notificationQueueService.createNotificationQueue(DefaultServerService.SERVER_SERVICE,
+                                                                                                     "testVerify726Backport",
+                                                                                                     new NotificationQueueHandler() {
+                                                                                                         @Override
+                                                                                                         public void handleReadyNotification(final NotificationEvent notificationKey, final DateTime eventDateTime, final UUID userToken, final Long accountRecordId, final Long tenantRecordId) {
+                                                                                                             if (!(notificationKey instanceof PushNotificationKey)) {
+                                                                                                                 Assert.fail();
+                                                                                                                 return;
+                                                                                                             }
+                                                                                                             final PushNotificationKey key = (PushNotificationKey) notificationKey;
+                                                                                                             notification.set(key);
+                                                                                                         }
+                                                                                                     }
+                                                                                                    );
+        try {
+            notificationQueue.startQueue();
+            ((NotificationQueueDispatcher) notificationQueueService).getDao().insertEntry(notificationEventModelDao);
+            Awaitility.await()
+                      .atMost(10, TimeUnit.SECONDS)
+                      .until(new Callable<Boolean>() {
+                          @Override
+                          public Boolean call() {
+                              return notification.get() != null;
+                          }
+                      });
+        } finally {
+            notificationQueue.stopQueue();
+        }
+
+        final PushNotificationKey retrievedKey = notification.get();
+        Assert.assertEquals(retrievedKey.getTenantId(), key.tenantId);
+        Assert.assertEquals(retrievedKey.getAccountId(), key.accountId);
+        Assert.assertEquals(retrievedKey.getEventType(), key.eventType);
+        Assert.assertEquals(retrievedKey.getObjectType(), key.objectType);
+        Assert.assertEquals(retrievedKey.getObjectId(), key.objectId);
+        Assert.assertEquals(retrievedKey.getAttemptNumber(), (Integer) key.attemptNumber);
+        Assert.assertEquals(retrievedKey.getUrl(), key.url);
+        // New NULL field
+        Assert.assertNull(retrievedKey.getMetaData());
     }
 
     private void unregisterTenantForCallback(final String callback) throws KillBillClientException {
@@ -374,6 +460,33 @@ public class TestPushNotification extends TestJaxrsBase {
                 test.setCompleted(withError);
             }
         }
+    }
 
+    public static final class PushNotificationKeyPre726 implements NotificationEvent {
+
+        public UUID tenantId;
+        public UUID accountId;
+        public String eventType;
+        public String objectType;
+        public UUID objectId;
+        public int attemptNumber;
+        public String url;
+
+        @JsonCreator
+        public PushNotificationKeyPre726(@JsonProperty("tenantId") final UUID tenantId,
+                                         @JsonProperty("accountId") final UUID accountId,
+                                         @JsonProperty("eventType") final String eventType,
+                                         @JsonProperty("objectType") final String objectType,
+                                         @JsonProperty("objectId") final UUID objectId,
+                                         @JsonProperty("attemptNumber") final int attemptNumber,
+                                         @JsonProperty("url") final String url) {
+            this.tenantId = tenantId;
+            this.accountId = accountId;
+            this.eventType = eventType;
+            this.objectType = objectType;
+            this.objectId = objectId;
+            this.attemptNumber = attemptNumber;
+            this.url = url;
+        }
     }
 }

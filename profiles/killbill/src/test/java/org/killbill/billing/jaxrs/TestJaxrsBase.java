@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014-2017 Groupon, Inc
- * Copyright 2014-2017 The Billing Project, LLC
+ * Copyright 2014-2018 Groupon, Inc
+ * Copyright 2014-2018 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -62,6 +62,7 @@ import org.killbill.billing.util.config.definition.PaymentConfig;
 import org.killbill.billing.util.config.definition.SecurityConfig;
 import org.killbill.bus.api.PersistentBus;
 import org.killbill.commons.jdbi.guice.DaoConfig;
+import org.killbill.notificationq.api.NotificationQueueService;
 import org.skife.config.ConfigurationObjectFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -105,6 +106,9 @@ public class TestJaxrsBase extends KillbillClient {
 
     @Inject
     protected TestApiListener busHandler;
+
+    @Inject
+    protected NotificationQueueService notificationQueueService;
 
     @Inject
     @Named(KillbillServerModule.SHIRO_DATA_SOURCE_ID)
