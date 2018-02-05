@@ -406,8 +406,7 @@ public class ContiguousIntervalUsageInArrear {
 
             }
             if (complies) {
-                toBeBilledDetails.get(toBeBilledDetails.size() - 1).setAmount(cur.getRecurringPrice().getPrice(getCurrency()));
-                return toBeBilledDetails;
+                return distributeAmount(toBeBilledDetails, cur.getRecurringPrice().getPrice(getCurrency()));
             }
         }
         // Probably invalid catalog config
@@ -646,12 +645,27 @@ public class ContiguousIntervalUsageInArrear {
         return toBeBilledUsageInArrearDetails;
     }
 
-    public class UsageInArrearDetail {
+    // divide the price between all details to prevent a detail to be removed if the price is zero when the usage mode is detail
+    private static final List<UsageInArrearDetail> distributeAmount(List<UsageInArrearDetail> toBeBilledDetails, BigDecimal price) {
+        BigDecimal priceByDetail = price.divide(new BigDecimal(toBeBilledDetails.size()), 2, BigDecimal.ROUND_HALF_UP);
+        BigDecimal accumulatedPrice = BigDecimal.ZERO;
+
+        for (UsageInArrearDetail toBeBilledDetail : toBeBilledDetails) {
+            accumulatedPrice = accumulatedPrice.add(priceByDetail);
+            toBeBilledDetail.setAmount(priceByDetail);
+        }
+
+        toBeBilledDetails.get(toBeBilledDetails.size() - 1).setAmount(priceByDetail.add(price.subtract(accumulatedPrice)));
+
+        return toBeBilledDetails;
+    }
+
+    public static class UsageInArrearDetail {
 
         private final int tier;
         private final String tierUnit;
         private final BigDecimal tierPrice;
-        private final Integer quantity;
+        private Integer quantity;
         private String reference;
         private BigDecimal existingUsageAmount;
         private BigDecimal amount;
@@ -718,7 +732,8 @@ public class ContiguousIntervalUsageInArrear {
             List<UsageInArrearDetail> unreconciledUsage = Lists.newLinkedList();
             for (UsageInArrearDetail billedUsageDetail : billedUsageItemDetails) {
                 if (tierUnit.equals(billedUsageDetail.tierUnit)) {
-                    existingUsageAmount = billedUsageDetail.amount.abs();
+                    existingUsageAmount = billedUsageDetail.getAmount().abs();
+                    quantity = quantity - billedUsageDetail.getQuantity();
                     amount = amount.subtract(existingUsageAmount);
                 } else {
                     unreconciledUsage.add(billedUsageDetail);
