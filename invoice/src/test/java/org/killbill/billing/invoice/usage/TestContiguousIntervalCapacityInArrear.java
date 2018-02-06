@@ -17,6 +17,7 @@
 
 package org.killbill.billing.invoice.usage;
 
+import java.io.IOException;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -41,10 +42,12 @@ import org.killbill.billing.junction.BillingEvent;
 import org.killbill.billing.usage.RawUsage;
 import org.killbill.billing.usage.api.RolledUpUnit;
 import org.killbill.billing.usage.api.svcs.DefaultRawUsage;
+import org.killbill.billing.util.config.definition.InvoiceConfig.UsageDetailMode;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
@@ -243,6 +246,224 @@ public class TestContiguousIntervalCapacityInArrear extends TestUsageInArrearBas
         assertTrue(result.get(1).getEndDate().compareTo(endDate) == 0);
     }
 
+    @Test(groups = "fast")
+    public void testComputeMissingItemsAggregateMode() throws CatalogApiException, IOException {
+
+        final LocalDate startDate = new LocalDate(2014, 03, 20);
+        final LocalDate firstBCDDate = new LocalDate(2014, 04, 15);
+        final LocalDate secondBCDDate = new LocalDate(2014, 05, 15);
+        final LocalDate endDate = new LocalDate(2014, 06, 15);
+
+        // 2 items for startDate - firstBCDDate
+        final List<RawUsage> rawUsages = new ArrayList<RawUsage>();
+        rawUsages.add(new DefaultRawUsage(subscriptionId, new LocalDate(2014, 03, 20), "FOO", 5L));
+        rawUsages.add(new DefaultRawUsage(subscriptionId, new LocalDate(2014, 03, 21), "BAR", 99L));
+        // 2 items for firstBCDDate - secondBCDDate
+        rawUsages.add(new DefaultRawUsage(subscriptionId, new LocalDate(2014, 04, 15), "FOO", 5L));
+        rawUsages.add(new DefaultRawUsage(subscriptionId, new LocalDate(2014, 04, 16), "BAR", 101L));
+        // 2 items for secondBCDDate - endDate
+        rawUsages.add(new DefaultRawUsage(subscriptionId, new LocalDate(2014, 05, 19), "FOO", 75L));
+        rawUsages.add(new DefaultRawUsage(subscriptionId, new LocalDate(2014, 05, 20), "BAR", 101L));
+
+        final DefaultUnit unitFoo = new DefaultUnit().setName("FOO");
+        final DefaultUnit unitBar = new DefaultUnit().setName("BAR");
+
+        final DefaultLimit unitFooLimitTier1 = new DefaultLimit().setUnit(unitFoo).setMax((double) 10);
+        final DefaultLimit unitBarLimitTier1 = new DefaultLimit().setUnit(unitBar).setMax((double) 100);
+        final DefaultTier tier1 = createDefaultTierWithLimits(BigDecimal.ONE, unitFooLimitTier1, unitBarLimitTier1);
+
+        final DefaultLimit unitFooLimitTier2 = new DefaultLimit().setUnit(unitFoo).setMax((double) 50);
+        final DefaultLimit unitBarLimitTier2 = new DefaultLimit().setUnit(unitBar).setMax((double) 500);
+        final DefaultTier tier2 = createDefaultTierWithLimits(BigDecimal.TEN, unitFooLimitTier2, unitBarLimitTier2);
+
+        final DefaultLimit unitFooLimitTier3 = new DefaultLimit().setUnit(unitFoo).setMax((double) 75);
+        final DefaultLimit unitBarLimitTier3 = new DefaultLimit().setUnit(unitBar).setMax((double) 750);
+        final DefaultTier tier3 = createDefaultTierWithLimits(new BigDecimal("100.0"), unitFooLimitTier3, unitBarLimitTier3);
+
+        final DefaultUsage usage = createCapacityInArrearUsage(usageName, BillingPeriod.MONTHLY, tier1, tier2, tier3);
+
+
+        final LocalDate targetDate = endDate;
+
+        final BillingEvent event1 = createMockBillingEvent(startDate.toDateTimeAtStartOfDay(DateTimeZone.UTC),BillingPeriod.MONTHLY, Collections.<Usage>emptyList());
+        final BillingEvent event2 = createMockBillingEvent(secondBCDDate.toDateTimeAtStartOfDay(DateTimeZone.UTC), BillingPeriod.MONTHLY, Collections.<Usage>emptyList());
+        final BillingEvent event3 = createMockBillingEvent(endDate.toDateTimeAtStartOfDay(DateTimeZone.UTC), BillingPeriod.MONTHLY, Collections.<Usage>emptyList());
+
+        final ContiguousIntervalUsageInArrear intervalConsumableInArrear = createContiguousIntervalConsumableInArrear(usage, rawUsages, targetDate, true, event1, event2, event3);
+
+        final UsageInArrearItemsAndNextNotificationDate usageResult = intervalConsumableInArrear.computeMissingItemsAndNextNotificationDate(ImmutableList.<InvoiceItem>of());
+        final List<InvoiceItem> rawResults = usageResult.getInvoiceItems();
+        assertEquals(rawResults.size(), 6);
+
+        final List<InvoiceItem> result = ImmutableList.copyOf(Iterables.filter(rawResults, new Predicate<InvoiceItem>() {
+            @Override
+            public boolean apply(final InvoiceItem input) {
+                return input.getAmount().compareTo(BigDecimal.ZERO) > 0;
+            }
+        }));
+
+
+        assertEquals(result.get(0).getAmount().compareTo(new BigDecimal("1.0")), 0, String.format("%s != 1.0", result.get(0).getAmount()));
+        assertEquals(result.get(0).getCurrency(), Currency.BTC);
+        assertEquals(result.get(0).getAccountId(), accountId);
+        assertEquals(result.get(0).getBundleId(), bundleId);
+        assertEquals(result.get(0).getSubscriptionId(), subscriptionId);
+        assertEquals(result.get(0).getPlanName(), planName);
+        assertEquals(result.get(0).getPhaseName(), phaseName);
+        assertEquals(result.get(0).getUsageName(), usage.getName());
+        assertTrue(result.get(0).getStartDate().compareTo(startDate) == 0);
+        assertTrue(result.get(0).getEndDate().compareTo(firstBCDDate) == 0);
+        // check item detail
+        List<UsageInArrearDetail> itemDetails1 = objectMapper.readValue(result.get(0).getItemDetails(), new TypeReference<List<UsageInArrearDetail>>() {});
+        assertEquals(itemDetails1.size(), 2);
+        assertEquals(itemDetails1.get(0).getTier(), 1);
+        assertEquals(itemDetails1.get(0).getQuantity().intValue(), 99);
+        assertEquals(itemDetails1.get(0).getTierPrice().compareTo(BigDecimal.ONE), 0);
+        assertEquals(itemDetails1.get(1).getTier(), 1);
+        assertEquals(itemDetails1.get(1).getQuantity().intValue(), 5);
+        assertEquals(itemDetails1.get(1).getTierPrice().compareTo(BigDecimal.ONE), 0);
+
+        assertEquals(result.get(1).getAmount().compareTo(new BigDecimal("10.0")), 0, String.format("%s != 10.0", result.get(0).getAmount()));
+        assertEquals(result.get(1).getCurrency(), Currency.BTC);
+        assertEquals(result.get(1).getAccountId(), accountId);
+        assertEquals(result.get(1).getBundleId(), bundleId);
+        assertEquals(result.get(1).getSubscriptionId(), subscriptionId);
+        assertEquals(result.get(1).getPlanName(), planName);
+        assertEquals(result.get(1).getPhaseName(), phaseName);
+        assertEquals(result.get(1).getUsageName(), usage.getName());
+        assertTrue(result.get(1).getStartDate().compareTo(firstBCDDate) == 0);
+        assertTrue(result.get(1).getEndDate().compareTo(secondBCDDate) == 0);
+        // check item detail
+        List<UsageInArrearDetail> itemDetails2 = objectMapper.readValue(result.get(1).getItemDetails(), new TypeReference<List<UsageInArrearDetail>>() {});
+        assertEquals(itemDetails2.size(), 2);
+        assertEquals(itemDetails2.get(0).getTier(), 2);
+        assertEquals(itemDetails2.get(0).getQuantity().intValue(), 101);
+        assertEquals(itemDetails2.get(0).getTierPrice().compareTo(BigDecimal.TEN), 0);
+        assertEquals(itemDetails2.get(1).getTier(), 2);
+        assertEquals(itemDetails2.get(1).getQuantity().intValue(), 5);
+        assertEquals(itemDetails2.get(1).getTierPrice().compareTo(BigDecimal.TEN), 0);
+
+        assertEquals(result.get(2).getAmount().compareTo(new BigDecimal("100.0")), 0, String.format("%s != 100.0", result.get(0).getAmount()));
+        assertEquals(result.get(2).getCurrency(), Currency.BTC);
+        assertEquals(result.get(2).getAccountId(), accountId);
+        assertEquals(result.get(2).getBundleId(), bundleId);
+        assertEquals(result.get(2).getSubscriptionId(), subscriptionId);
+        assertEquals(result.get(2).getPlanName(), planName);
+        assertEquals(result.get(2).getPhaseName(), phaseName);
+        assertEquals(result.get(2).getUsageName(), usage.getName());
+        assertTrue(result.get(2).getStartDate().compareTo(secondBCDDate) == 0);
+        assertTrue(result.get(2).getEndDate().compareTo(endDate) == 0);
+        // check item detail
+        List<UsageInArrearDetail> itemDetails3 = objectMapper.readValue(result.get(2).getItemDetails(), new TypeReference<List<UsageInArrearDetail>>() {});
+        assertEquals(itemDetails3.size(), 2);
+        assertEquals(itemDetails3.get(0).getTier(), 3);
+        assertEquals(itemDetails3.get(0).getQuantity().intValue(), 101);
+        assertEquals(itemDetails3.get(0).getTierPrice().compareTo(new BigDecimal("100.0")), 0);
+        assertEquals(itemDetails3.get(1).getTier(), 3);
+        assertEquals(itemDetails3.get(1).getQuantity().intValue(), 75);
+        assertEquals(itemDetails3.get(1).getTierPrice().compareTo(new BigDecimal("100.0")), 0);
+    }
+
+    @Test(groups = "fast")
+    public void testComputeMissingItemsDetailMode() throws CatalogApiException {
+
+        final LocalDate startDate = new LocalDate(2014, 03, 20);
+        final LocalDate firstBCDDate = new LocalDate(2014, 04, 15);
+        final LocalDate secondBCDDate = new LocalDate(2014, 05, 15);
+        final LocalDate endDate = new LocalDate(2014, 06, 15);
+
+        // 2 items for startDate - firstBCDDate
+        final List<RawUsage> rawUsages = new ArrayList<RawUsage>();
+        rawUsages.add(new DefaultRawUsage(subscriptionId, new LocalDate(2014, 03, 20), "FOO", 5L));
+        rawUsages.add(new DefaultRawUsage(subscriptionId, new LocalDate(2014, 03, 21), "BAR", 99L));
+        // 2 items for firstBCDDate - secondBCDDate
+        rawUsages.add(new DefaultRawUsage(subscriptionId, new LocalDate(2014, 04, 15), "FOO", 5L));
+        rawUsages.add(new DefaultRawUsage(subscriptionId, new LocalDate(2014, 04, 16), "BAR", 101L));
+        // 2 items for secondBCDDate - endDate
+        rawUsages.add(new DefaultRawUsage(subscriptionId, new LocalDate(2014, 05, 19), "FOO", 75L));
+        rawUsages.add(new DefaultRawUsage(subscriptionId, new LocalDate(2014, 05, 20), "BAR", 101L));
+
+        final DefaultUnit unitFoo = new DefaultUnit().setName("FOO");
+        final DefaultUnit unitBar = new DefaultUnit().setName("BAR");
+
+        final DefaultLimit unitFooLimitTier1 = new DefaultLimit().setUnit(unitFoo).setMax((double) 10);
+        final DefaultLimit unitBarLimitTier1 = new DefaultLimit().setUnit(unitBar).setMax((double) 100);
+        final DefaultTier tier1 = createDefaultTierWithLimits(BigDecimal.ONE, unitFooLimitTier1, unitBarLimitTier1);
+
+        final DefaultLimit unitFooLimitTier2 = new DefaultLimit().setUnit(unitFoo).setMax((double) 50);
+        final DefaultLimit unitBarLimitTier2 = new DefaultLimit().setUnit(unitBar).setMax((double) 500);
+        final DefaultTier tier2 = createDefaultTierWithLimits(BigDecimal.TEN, unitFooLimitTier2, unitBarLimitTier2);
+
+        final DefaultLimit unitFooLimitTier3 = new DefaultLimit().setUnit(unitFoo).setMax((double) 75);
+        final DefaultLimit unitBarLimitTier3 = new DefaultLimit().setUnit(unitBar).setMax((double) 750);
+        final DefaultTier tier3 = createDefaultTierWithLimits(new BigDecimal("100.0"), unitFooLimitTier3, unitBarLimitTier3);
+
+        final DefaultUsage usage = createCapacityInArrearUsage(usageName, BillingPeriod.MONTHLY, tier1, tier2, tier3);
+        final LocalDate targetDate = endDate;
+
+        final BillingEvent event1 = createMockBillingEvent(startDate.toDateTimeAtStartOfDay(DateTimeZone.UTC),BillingPeriod.MONTHLY, Collections.<Usage>emptyList());
+        final BillingEvent event2 = createMockBillingEvent(secondBCDDate.toDateTimeAtStartOfDay(DateTimeZone.UTC), BillingPeriod.MONTHLY, Collections.<Usage>emptyList());
+        final BillingEvent event3 = createMockBillingEvent(endDate.toDateTimeAtStartOfDay(DateTimeZone.UTC), BillingPeriod.MONTHLY, Collections.<Usage>emptyList());
+
+        final ContiguousIntervalUsageInArrear intervalConsumableInArrear = createContiguousIntervalConsumableInArrear(usage, rawUsages, targetDate, true, UsageDetailMode.DETAIL, event1, event2, event3);
+
+        final UsageInArrearItemsAndNextNotificationDate usageResult = intervalConsumableInArrear.computeMissingItemsAndNextNotificationDate(ImmutableList.<InvoiceItem>of());
+        final List<InvoiceItem> rawResults = usageResult.getInvoiceItems();
+        assertEquals(rawResults.size(), 9);
+
+        final List<InvoiceItem> result = ImmutableList.copyOf(Iterables.filter(rawResults, new Predicate<InvoiceItem>() {
+            @Override
+            public boolean apply(final InvoiceItem input) {
+                return input.getAmount().compareTo(BigDecimal.ZERO) > 0 || input.getQuantity() != null;
+            }
+        }));
+
+        for (InvoiceItem item: result){
+            assertEquals(item.getCurrency(), Currency.BTC);
+            assertEquals(item.getAccountId(), accountId);
+            assertEquals(item.getBundleId(), bundleId);
+            assertEquals(item.getSubscriptionId(), subscriptionId);
+            assertEquals(item.getPlanName(), planName);
+            assertEquals(item.getPhaseName(), phaseName);
+            assertEquals(item.getUsageName(), usage.getName());
+        }
+
+        assertEquals(result.get(0).getAmount().compareTo(BigDecimal.ZERO), 0, String.format("%s != 0", result.get(0).getAmount()));
+        assertEquals(result.get(0).getQuantity().intValue(), 99);
+        assertEquals(result.get(0).getRate().compareTo(BigDecimal.ONE), 0);
+        assertTrue(result.get(0).getStartDate().compareTo(startDate) == 0);
+        assertTrue(result.get(0).getEndDate().compareTo(firstBCDDate) == 0);
+
+        assertEquals(result.get(1).getAmount().compareTo(BigDecimal.ONE), 0, String.format("%s != 1", result.get(1).getAmount()));
+        assertEquals(result.get(1).getQuantity().intValue(), 5);
+        assertEquals(result.get(1).getRate().compareTo(BigDecimal.ONE), 0);
+        assertTrue(result.get(1).getStartDate().compareTo(startDate) == 0);
+        assertTrue(result.get(1).getEndDate().compareTo(firstBCDDate) == 0);
+
+        assertEquals(result.get(2).getAmount().compareTo(BigDecimal.ZERO), 0, String.format("%s != 0", result.get(2).getAmount()));
+        assertEquals(result.get(2).getQuantity().intValue(), 101);
+        assertEquals(result.get(2).getRate().compareTo(BigDecimal.TEN), 0);
+        assertTrue(result.get(2).getStartDate().compareTo(firstBCDDate) == 0);
+        assertTrue(result.get(2).getEndDate().compareTo(secondBCDDate) == 0);
+
+        assertEquals(result.get(3).getAmount().compareTo(BigDecimal.TEN), 0, String.format("%s != 1", result.get(3).getAmount()));
+        assertEquals(result.get(3).getQuantity().intValue(), 5);
+        assertEquals(result.get(3).getRate().compareTo(BigDecimal.TEN), 0);
+        assertTrue(result.get(3).getStartDate().compareTo(firstBCDDate) == 0);
+        assertTrue(result.get(3).getEndDate().compareTo(secondBCDDate) == 0);
+
+        assertEquals(result.get(4).getAmount().compareTo(BigDecimal.ZERO), 0, String.format("%s != 0.0", result.get(4).getAmount()));
+        assertEquals(result.get(4).getQuantity().intValue(), 101);
+        assertEquals(result.get(4).getRate().compareTo(new BigDecimal("100.0")), 0);
+        assertTrue(result.get(4).getStartDate().compareTo(secondBCDDate) == 0);
+        assertTrue(result.get(4).getEndDate().compareTo(endDate) == 0);
+
+        assertEquals(result.get(5).getAmount().compareTo(new BigDecimal("100.0")), 0, String.format("%s != 50.0", result.get(5).getAmount()));
+        assertEquals(result.get(5).getQuantity().intValue(), 75);
+        assertEquals(result.get(5).getRate().compareTo(new BigDecimal("100.0")), 0);
+        assertTrue(result.get(5).getStartDate().compareTo(secondBCDDate) == 0);
+        assertTrue(result.get(5).getEndDate().compareTo(endDate) == 0);
+   }
 
 
 }

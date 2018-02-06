@@ -18,7 +18,7 @@
 <catalog xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:noNamespaceSchemaLocation="CatalogSchema.xsd ">
 
-    <effectiveDate>2013-02-08T00:00:00+00:00</effectiveDate>
+    <effectiveDate>2017-02-08T00:00:00+00:00</effectiveDate>
     <catalogName>Usage</catalogName>
 
     <!-- TBD
@@ -242,7 +242,7 @@
                     <unit>UNLIMITED</unit>
                 </duration>
                 <usages>
-                    <usage name="consumable-in-arrear-usage1" billingMode="IN_ARREAR" usageType="CONSUMABLE">
+                    <usage name="consumable-in-arrear-usage1" billingMode="IN_ARREAR" usageType="CONSUMABLE" tierBlockPolicy="ALL_TIERS">
                         <billingPeriod>MONTHLY</billingPeriod>
                         <tiers>
                             <tier>
