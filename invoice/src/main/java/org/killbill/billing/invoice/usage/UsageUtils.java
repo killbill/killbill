@@ -46,7 +46,7 @@ public class UsageUtils {
             tierNum++;
             for (TieredBlock tierBlock : tier.getTieredBlocks()) {
                 if (tierBlock.getUnit().getName().equals(unitType)) {
-                    Map<Integer, TieredBlock> tieredBlockWithTierNum = new HashMap<>();
+                    Map<Integer, TieredBlock> tieredBlockWithTierNum = new HashMap<Integer, TieredBlock>();
                     tieredBlockWithTierNum.put(tierNum, tierBlock);
                     result.add(tieredBlockWithTierNum);
                 }
