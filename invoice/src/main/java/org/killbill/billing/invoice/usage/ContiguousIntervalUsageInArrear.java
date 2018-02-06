@@ -199,7 +199,7 @@ public class ContiguousIntervalUsageInArrear {
             List<UsageInArrearDetail> toBeBilledUsageDetails = Lists.newLinkedList();
             BigDecimal toBeBilledUsage = BigDecimal.ZERO;
             if (usage.getUsageType() == UsageType.CAPACITY) {
-                toBeBilledUsageDetails.addAll(computeToBeBilledCapacityInArrear(ru.getRolledUpUnits(), tierNum));
+                toBeBilledUsageDetails.addAll(computeToBeBilledCapacityInArrear(ru.getRolledUpUnits()));
             } else /* UsageType.CONSUMABLE */{
 
                 // Compute total price amount that should be billed for that period of time (and usage section) across unitTypes.
@@ -386,12 +386,13 @@ public class ContiguousIntervalUsageInArrear {
      * @throws CatalogApiException
      */
     @VisibleForTesting
-    List<UsageInArrearDetail> computeToBeBilledCapacityInArrear(final List<RolledUpUnit> roUnits, int tierNum) throws CatalogApiException {
+    List<UsageInArrearDetail> computeToBeBilledCapacityInArrear(final List<RolledUpUnit> roUnits) throws CatalogApiException {
         Preconditions.checkState(isBuilt.get());
 
         final List<Tier> tiers = getCapacityInArrearTier(usage);
-
+        int tierNum = 0;
         for (final Tier cur : tiers) {
+            tierNum++;
             List<UsageInArrearDetail> toBeBilledDetails = Lists.newLinkedList();
             boolean complies = true;
             for (final RolledUpUnit ro : roUnits) {
@@ -402,7 +403,7 @@ public class ContiguousIntervalUsageInArrear {
                     complies = false;
                     break;
                 }
-                toBeBilledDetails.add(new UsageInArrearDetail(tierNum++, ro.getUnitType(), cur.getRecurringPrice().getPrice(getCurrency()), ro.getAmount().intValue(), BigDecimal.ZERO, null, null));
+                toBeBilledDetails.add(new UsageInArrearDetail(tierNum, ro.getUnitType(), cur.getRecurringPrice().getPrice(getCurrency()), ro.getAmount().intValue(), BigDecimal.ZERO, null, null));
 
             }
             if (complies) {
