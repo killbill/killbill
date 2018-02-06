@@ -407,7 +407,8 @@ public class ContiguousIntervalUsageInArrear {
 
             }
             if (complies) {
-                return distributeAmount(toBeBilledDetails, cur.getRecurringPrice().getPrice(getCurrency()));
+                toBeBilledDetails.get(toBeBilledDetails.size() - 1).setAmount(cur.getRecurringPrice().getPrice(getCurrency()));
+                return toBeBilledDetails;
             }
         }
         // Probably invalid catalog config
@@ -644,21 +645,6 @@ public class ContiguousIntervalUsageInArrear {
         }
 
         return toBeBilledUsageInArrearDetails;
-    }
-
-    // divide the price between all details to prevent a detail to be removed if the price is zero when the usage mode is detail
-    private static final List<UsageInArrearDetail> distributeAmount(List<UsageInArrearDetail> toBeBilledDetails, BigDecimal price) {
-        BigDecimal priceByDetail = price.divide(new BigDecimal(toBeBilledDetails.size()), 2, BigDecimal.ROUND_HALF_UP);
-        BigDecimal accumulatedPrice = BigDecimal.ZERO;
-
-        for (UsageInArrearDetail toBeBilledDetail : toBeBilledDetails) {
-            accumulatedPrice = accumulatedPrice.add(priceByDetail);
-            toBeBilledDetail.setAmount(priceByDetail);
-        }
-
-        toBeBilledDetails.get(toBeBilledDetails.size() - 1).setAmount(priceByDetail.add(price.subtract(accumulatedPrice)));
-
-        return toBeBilledDetails;
     }
 
     public static class UsageInArrearDetail {
