@@ -16,8 +16,10 @@
 
 package org.killbill.billing.invoice.usage;
 
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import org.killbill.billing.catalog.api.BillingMode;
@@ -33,16 +35,20 @@ import com.google.common.collect.Lists;
 
 public class UsageUtils {
 
-    public static List<TieredBlock> getConsumableInArrearTieredBlocks(final Usage usage, final String unitType) {
+    public static List<Map<Integer,TieredBlock>> getConsumableInArrearTieredBlocks(final Usage usage, final String unitType) {
 
         Preconditions.checkArgument(usage.getBillingMode() == BillingMode.IN_ARREAR && usage.getUsageType() == UsageType.CONSUMABLE);
         Preconditions.checkArgument(usage.getTiers().length > 0);
 
-        final List<TieredBlock> result = Lists.newLinkedList();
+        final List<Map<Integer,TieredBlock>> result = Lists.newLinkedList();
+        int tierNum = 0;
         for (Tier tier : usage.getTiers()) {
+            tierNum++;
             for (TieredBlock tierBlock : tier.getTieredBlocks()) {
                 if (tierBlock.getUnit().getName().equals(unitType)) {
-                    result.add(tierBlock);
+                    Map<Integer, TieredBlock> tieredBlockWithTierNum = new HashMap<>();
+                    tieredBlockWithTierNum.put(tierNum, tierBlock);
+                    result.add(tieredBlockWithTierNum);
                 }
             }
         }

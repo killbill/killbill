@@ -195,7 +195,7 @@ public class ContiguousIntervalUsageInArrear {
 
         final List<RolledUpUsage> allUsage = getRolledUpUsage();
         for (final RolledUpUsage ru : allUsage) {
-            int tierNum = 1;
+
             List<UsageInArrearDetail> toBeBilledUsageDetails = Lists.newLinkedList();
             BigDecimal toBeBilledUsage = BigDecimal.ZERO;
             if (usage.getUsageType() == UsageType.CAPACITY) {
@@ -209,7 +209,7 @@ public class ContiguousIntervalUsageInArrear {
                         continue;
                     }
 
-                    toBeBilledUsageDetails.addAll(computeToBeBilledConsumableInArrear(cur, tierNum++));
+                    toBeBilledUsageDetails.addAll(computeToBeBilledConsumableInArrear(cur));
                 }
 
             }
@@ -424,28 +424,31 @@ public class ContiguousIntervalUsageInArrear {
      * @throws CatalogApiException
      */
     @VisibleForTesting
-    List<UsageInArrearDetail> computeToBeBilledConsumableInArrear(final RolledUpUnit roUnit, int tierNum) throws CatalogApiException {
+    List<UsageInArrearDetail> computeToBeBilledConsumableInArrear(final RolledUpUnit roUnit) throws CatalogApiException {
 
         Preconditions.checkState(isBuilt.get());
-        final List<TieredBlock> tieredBlocks = getConsumableInArrearTieredBlocks(usage, roUnit.getUnitType());
+        final List<Map<Integer,TieredBlock>> tieredBlocksWithTierNum = getConsumableInArrearTieredBlocks(usage, roUnit.getUnitType());
 
         switch (usage.getTierBlockPolicy()) {
             case ALL_TIERS:
-                return computeToBeBilledConsumableInArrearWith_ALL_TIERS(tieredBlocks, roUnit.getAmount(), tierNum);
+                return computeToBeBilledConsumableInArrearWith_ALL_TIERS(tieredBlocksWithTierNum, roUnit.getAmount());
             case TOP_TIER:
-                return Arrays.asList(computeToBeBilledConsumableInArrearWith_TOP_TIER(tieredBlocks, roUnit.getAmount(), tierNum));
+                return Arrays.asList(computeToBeBilledConsumableInArrearWith_TOP_TIER(tieredBlocksWithTierNum, roUnit.getAmount()));
             default:
                 throw new IllegalStateException("Unknown TierBlockPolicy " + usage.getTierBlockPolicy());
         }
     }
 
 
-    List<UsageInArrearDetail> computeToBeBilledConsumableInArrearWith_ALL_TIERS(final List<TieredBlock> tieredBlocks, final Long units, int tierNum) throws CatalogApiException {
+    List<UsageInArrearDetail> computeToBeBilledConsumableInArrearWith_ALL_TIERS(final List<Map<Integer,TieredBlock>> tieredBlocksWithTierNum, final Long units) throws CatalogApiException {
 
         List<UsageInArrearDetail> toBeBilledDetails = Lists.newLinkedList();
         BigDecimal result = BigDecimal.ZERO;
         int remainingUnits = units.intValue();
-        for (final TieredBlock tieredBlock : tieredBlocks) {
+        for (final Map<Integer,TieredBlock> tieredBlockWithTierNum : tieredBlocksWithTierNum) {
+
+            final TieredBlock tieredBlock = tieredBlockWithTierNum.entrySet().iterator().next().getValue();
+            final int tierNum = tieredBlockWithTierNum.entrySet().iterator().next().getKey();
 
             final int blockTierSize = tieredBlock.getSize().intValue();
             final int tmp = remainingUnits / blockTierSize + (remainingUnits % blockTierSize == 0 ? 0 : 1);
@@ -457,19 +460,27 @@ public class ContiguousIntervalUsageInArrear {
                 nbUsedTierBlocks = tmp;
                 remainingUnits = 0;
             }
-            toBeBilledDetails.add(new UsageInArrearDetail(tierNum, tieredBlock.getUnit().getName(), tieredBlock.getPrice().getPrice(getCurrency()), nbUsedTierBlocks));
+
+            if (nbUsedTierBlocks > 0) {
+                toBeBilledDetails.add(new UsageInArrearDetail(tierNum, tieredBlock.getUnit().getName(), tieredBlock.getPrice().getPrice(getCurrency()), nbUsedTierBlocks));
+            }
         }
         return toBeBilledDetails;
     }
 
-    UsageInArrearDetail computeToBeBilledConsumableInArrearWith_TOP_TIER(final List<TieredBlock> tieredBlocks, final Long units, int tierNum) throws CatalogApiException {
+    UsageInArrearDetail computeToBeBilledConsumableInArrearWith_TOP_TIER(final List<Map<Integer,TieredBlock>> tieredBlocksWithTierNum, final Long units) throws CatalogApiException {
 
         int remainingUnits = units.intValue();
 
         // By default last last tierBlock
-        TieredBlock targetBlock = tieredBlocks.get(tieredBlocks.size() - 1);
+        Map<Integer,TieredBlock> targetBlockWithTierNum = tieredBlocksWithTierNum.get(tieredBlocksWithTierNum.size() - 1);
+        TieredBlock targetBlock = targetBlockWithTierNum.entrySet().iterator().next().getValue();
+        int targetTierNum = targetBlockWithTierNum.entrySet().iterator().next().getKey();
         // Loop through all tier block
-        for (final TieredBlock tieredBlock : tieredBlocks) {
+        for (final Map<Integer,TieredBlock> tieredBlockWithTierNum : tieredBlocksWithTierNum) {
+
+            final TieredBlock tieredBlock = tieredBlockWithTierNum.entrySet().iterator().next().getValue();
+            final int tierNum = tieredBlockWithTierNum.entrySet().iterator().next().getKey();
 
             final int blockTierSize = tieredBlock.getSize().intValue();
             final int tmp = remainingUnits / blockTierSize + (remainingUnits % blockTierSize == 0 ? 0 : 1);
@@ -477,13 +488,14 @@ public class ContiguousIntervalUsageInArrear {
                 remainingUnits -= tieredBlock.getMax() * blockTierSize;
             } else {
                 targetBlock = tieredBlock;
+                targetTierNum = tierNum;
                 break;
             }
         }
         final int lastBlockTierSize = targetBlock.getSize().intValue();
         final int nbBlocks = units.intValue() / lastBlockTierSize + (units.intValue() % lastBlockTierSize == 0 ? 0 : 1);
 
-        return new UsageInArrearDetail(tierNum, targetBlock.getUnit().getName(), targetBlock.getPrice().getPrice(getCurrency()), nbBlocks);
+        return new UsageInArrearDetail(targetTierNum, targetBlock.getUnit().getName(), targetBlock.getPrice().getPrice(getCurrency()), nbBlocks);
     }
 
 
