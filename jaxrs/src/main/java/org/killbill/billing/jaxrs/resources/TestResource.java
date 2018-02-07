@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014-2017 Groupon, Inc
- * Copyright 2014-2017 The Billing Project, LLC
+ * Copyright 2014-2018 Groupon, Inc
+ * Copyright 2014-2018 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -17,6 +17,8 @@
  */
 
 package org.killbill.billing.jaxrs.resources;
+
+import java.util.Iterator;
 
 import javax.inject.Inject;
 import javax.servlet.ServletRequest;
@@ -279,11 +281,20 @@ public class TestResource extends JaxRsResourceBase {
 
     private boolean areAllNotificationsProcessed(final Long tenantRecordId) {
         int nbNotifications = 0;
-        for (final NotificationQueue notificationQueue : notificationQueueService.getNotificationQueues()) {
-            for (final NotificationEventWithMetadata<NotificationEvent> notificationEvent : notificationQueue.getFutureOrInProcessingNotificationForSearchKey2(null, tenantRecordId)) {
-                if (!notificationEvent.getEffectiveDate().isAfter(clock.getUTCNow())) {
-                    nbNotifications += 1;
+        final Iterator<NotificationQueue> iterator = notificationQueueService.getNotificationQueues().iterator();
+        try {
+            while (iterator.hasNext()) {
+                final NotificationQueue notificationQueue = iterator.next();
+                for (final NotificationEventWithMetadata<NotificationEvent> notificationEvent : notificationQueue.getFutureOrInProcessingNotificationForSearchKey2(null, tenantRecordId)) {
+                    if (!notificationEvent.getEffectiveDate().isAfter(clock.getUTCNow())) {
+                        nbNotifications += 1;
+                    }
                 }
+            }
+        } finally {
+            // Go through all results to close the connection
+            while (iterator.hasNext()) {
+                iterator.next();
             }
         }
         if (nbNotifications != 0) {
@@ -294,6 +305,7 @@ public class TestResource extends JaxRsResourceBase {
 
     private boolean areAllBusEventsProcessed(final Long tenantRecordId) {
         final Iterable<BusEventWithMetadata<BusEvent>> availableBusEventForSearchKey2 = persistentBus.getAvailableOrInProcessingBusEventsForSearchKey2(null, tenantRecordId);
+        // This will go through all results to close the connection
         final int nbBusEvents = Iterables.<BusEventWithMetadata<BusEvent>>size(availableBusEventForSearchKey2);
         if (nbBusEvents != 0) {
             log.info("TestResource: at least {} more bus event(s) to process", nbBusEvents);
