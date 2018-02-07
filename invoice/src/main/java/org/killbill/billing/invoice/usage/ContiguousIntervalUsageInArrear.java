@@ -427,29 +427,28 @@ public class ContiguousIntervalUsageInArrear {
     List<UsageInArrearDetail> computeToBeBilledConsumableInArrear(final RolledUpUnit roUnit) throws CatalogApiException {
 
         Preconditions.checkState(isBuilt.get());
-        final List<Map<Integer,TieredBlock>> tieredBlocksWithTierNum = getConsumableInArrearTieredBlocks(usage, roUnit.getUnitType());
+        final List<TieredBlock> tieredBlocks = getConsumableInArrearTieredBlocks(usage, roUnit.getUnitType());
 
         switch (usage.getTierBlockPolicy()) {
             case ALL_TIERS:
-                return computeToBeBilledConsumableInArrearWith_ALL_TIERS(tieredBlocksWithTierNum, roUnit.getAmount());
+                return computeToBeBilledConsumableInArrearWith_ALL_TIERS(tieredBlocks, roUnit.getAmount());
             case TOP_TIER:
-                return Arrays.asList(computeToBeBilledConsumableInArrearWith_TOP_TIER(tieredBlocksWithTierNum, roUnit.getAmount()));
+                return Arrays.asList(computeToBeBilledConsumableInArrearWith_TOP_TIER(tieredBlocks, roUnit.getAmount()));
             default:
                 throw new IllegalStateException("Unknown TierBlockPolicy " + usage.getTierBlockPolicy());
         }
     }
 
 
-    List<UsageInArrearDetail> computeToBeBilledConsumableInArrearWith_ALL_TIERS(final List<Map<Integer,TieredBlock>> tieredBlocksWithTierNum, final Long units) throws CatalogApiException {
+    List<UsageInArrearDetail> computeToBeBilledConsumableInArrearWith_ALL_TIERS(final List<TieredBlock> tieredBlocks, final Long units) throws CatalogApiException {
 
         List<UsageInArrearDetail> toBeBilledDetails = Lists.newLinkedList();
         BigDecimal result = BigDecimal.ZERO;
         int remainingUnits = units.intValue();
-        for (final Map<Integer,TieredBlock> tieredBlockWithTierNum : tieredBlocksWithTierNum) {
+        int tierNum = 0;
+        for (final TieredBlock tieredBlock : tieredBlocks) {
 
-            final TieredBlock tieredBlock = tieredBlockWithTierNum.entrySet().iterator().next().getValue();
-            final int tierNum = tieredBlockWithTierNum.entrySet().iterator().next().getKey();
-
+            tierNum++;
             final int blockTierSize = tieredBlock.getSize().intValue();
             final int tmp = remainingUnits / blockTierSize + (remainingUnits % blockTierSize == 0 ? 0 : 1);
             final int nbUsedTierBlocks;
@@ -468,20 +467,18 @@ public class ContiguousIntervalUsageInArrear {
         return toBeBilledDetails;
     }
 
-    UsageInArrearDetail computeToBeBilledConsumableInArrearWith_TOP_TIER(final List<Map<Integer,TieredBlock>> tieredBlocksWithTierNum, final Long units) throws CatalogApiException {
+    UsageInArrearDetail computeToBeBilledConsumableInArrearWith_TOP_TIER(final List<TieredBlock> tieredBlocks, final Long units) throws CatalogApiException {
 
         int remainingUnits = units.intValue();
 
         // By default last last tierBlock
-        Map<Integer,TieredBlock> targetBlockWithTierNum = tieredBlocksWithTierNum.get(tieredBlocksWithTierNum.size() - 1);
-        TieredBlock targetBlock = targetBlockWithTierNum.entrySet().iterator().next().getValue();
-        int targetTierNum = targetBlockWithTierNum.entrySet().iterator().next().getKey();
+        TieredBlock targetBlock = tieredBlocks.get(tieredBlocks.size() - 1);
+        int targetTierNum = tieredBlocks.size();
+        int tierNum = 0;
         // Loop through all tier block
-        for (final Map<Integer,TieredBlock> tieredBlockWithTierNum : tieredBlocksWithTierNum) {
+        for (final TieredBlock tieredBlock : tieredBlocks) {
 
-            final TieredBlock tieredBlock = tieredBlockWithTierNum.entrySet().iterator().next().getValue();
-            final int tierNum = tieredBlockWithTierNum.entrySet().iterator().next().getKey();
-
+            tierNum++;
             final int blockTierSize = tieredBlock.getSize().intValue();
             final int tmp = remainingUnits / blockTierSize + (remainingUnits % blockTierSize == 0 ? 0 : 1);
             if (tmp > tieredBlock.getMax()) {

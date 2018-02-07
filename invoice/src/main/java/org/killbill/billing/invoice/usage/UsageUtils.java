@@ -35,20 +35,16 @@ import com.google.common.collect.Lists;
 
 public class UsageUtils {
 
-    public static List<Map<Integer,TieredBlock>> getConsumableInArrearTieredBlocks(final Usage usage, final String unitType) {
+    public static List<TieredBlock> getConsumableInArrearTieredBlocks(final Usage usage, final String unitType) {
 
         Preconditions.checkArgument(usage.getBillingMode() == BillingMode.IN_ARREAR && usage.getUsageType() == UsageType.CONSUMABLE);
         Preconditions.checkArgument(usage.getTiers().length > 0);
 
-        final List<Map<Integer,TieredBlock>> result = Lists.newLinkedList();
-        int tierNum = 0;
+        final List<TieredBlock> result = Lists.newLinkedList();
         for (Tier tier : usage.getTiers()) {
-            tierNum++;
             for (TieredBlock tierBlock : tier.getTieredBlocks()) {
                 if (tierBlock.getUnit().getName().equals(unitType)) {
-                    Map<Integer, TieredBlock> tieredBlockWithTierNum = new HashMap<Integer, TieredBlock>();
-                    tieredBlockWithTierNum.put(tierNum, tierBlock);
-                    result.add(tieredBlockWithTierNum);
+                    result.add(tierBlock);
                 }
             }
         }
