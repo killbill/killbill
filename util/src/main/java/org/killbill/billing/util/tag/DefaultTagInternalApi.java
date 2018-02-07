@@ -21,6 +21,7 @@ import java.util.UUID;
 
 import javax.inject.Inject;
 
+import org.killbill.billing.ErrorCode;
 import org.killbill.billing.ObjectType;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
@@ -74,8 +75,14 @@ public class DefaultTagInternalApi implements TagInternalApi {
     public void addTag(final UUID objectId, final ObjectType objectType, final UUID tagDefinitionId, final InternalCallContext context)
             throws TagApiException {
         final TagModelDao tag = new TagModelDao(context.getCreatedDate(), tagDefinitionId, objectId, objectType);
-        tagDao.create(tag, context);
-
+        try {
+            tagDao.create(tag, context);
+        } catch (TagApiException e) {
+            // Be lenient here and make the addTag method idempotent
+            if (ErrorCode.TAG_ALREADY_EXISTS.getCode() != e.getCode()) {
+                throw e;
+            }
+        }
     }
 
     @Override

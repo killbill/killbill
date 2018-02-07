@@ -301,14 +301,7 @@ public class AdminResource extends JaxRsResourceBase {
                     generator.close();
                 } finally {
                     // In case the client goes away (IOException), make sure to close the underlying DB connection
-                    if (tags instanceof Closeable) {
-                        ((Closeable) tags).close();
-                    } else {
-                        // TODO 0.20.x (https://github.com/killbill/killbill/issues/558)
-                        while (iterator.hasNext()) {
-                            iterator.next();
-                        }
-                    }
+                    tags.close();
                 }
             }
         };
