@@ -682,12 +682,12 @@ public class TestContiguousIntervalConsumableInArrear extends TestUsageInArrearB
 
         // Case 3
         rawUsages = new ArrayList<RawUsage>();
-        rawUsages.add(new DefaultRawUsage(subscriptionId, new LocalDate(2014, 03, 20), "FOO", 75L));
+        rawUsages.add(new DefaultRawUsage(subscriptionId, new LocalDate(2014, 03, 20), "FOO", 76L));
         rawUsages.add(new DefaultRawUsage(subscriptionId, new LocalDate(2014, 03, 21), "BAR", 101L));
 
         result = produceInvoiceItems(rawUsages, TierBlockPolicy.TOP_TIER, UsageDetailMode.AGGREGATE);
         assertEquals(result.size(), 1);
-        assertEquals(result.get(0).getAmount().compareTo(new BigDecimal("9520")),0);
+        assertEquals(result.get(0).getAmount().compareTo(new BigDecimal("9620")),0);
 
         itemDetails = objectMapper.readValue(result.get(0).getItemDetails(), new TypeReference<List<UsageInArrearDetail>>() {});
         // BAR: 101 * 20 = 2020
@@ -699,8 +699,8 @@ public class TestContiguousIntervalConsumableInArrear extends TestUsageInArrearB
         // FOO: 76 * 100 = 7500
         assertEquals(itemDetails.get(1).getTierUnit(), "FOO");
         assertEquals(itemDetails.get(1).getTier(), 3);
-        assertEquals(itemDetails.get(1).getAmount().compareTo(new BigDecimal("7500")), 0);
-        assertEquals(itemDetails.get(1).getQuantity().intValue(), 75);
+        assertEquals(itemDetails.get(1).getAmount().compareTo(new BigDecimal("7600")), 0);
+        assertEquals(itemDetails.get(1).getQuantity().intValue(), 76);
         assertEquals(itemDetails.get(1).getTierPrice().compareTo(new BigDecimal("100.0")), 0);
     }
 
@@ -741,7 +741,7 @@ public class TestContiguousIntervalConsumableInArrear extends TestUsageInArrearB
 
         // Case 3
         rawUsages = new ArrayList<RawUsage>();
-        rawUsages.add(new DefaultRawUsage(subscriptionId, new LocalDate(2014, 03, 20), "FOO", 75L));
+        rawUsages.add(new DefaultRawUsage(subscriptionId, new LocalDate(2014, 03, 20), "FOO", 76L));
         rawUsages.add(new DefaultRawUsage(subscriptionId, new LocalDate(2014, 03, 21), "BAR", 101L));
 
         result = produceInvoiceItems(rawUsages, TierBlockPolicy.TOP_TIER, UsageDetailMode.DETAIL);
@@ -751,8 +751,8 @@ public class TestContiguousIntervalConsumableInArrear extends TestUsageInArrearB
         assertEquals(result.get(0).getQuantity().intValue(), 101);
         assertEquals(result.get(0).getRate().compareTo(new BigDecimal("20.0")), 0);
         // FOO: 76 * 100 = 7500
-        assertEquals(result.get(1).getAmount().compareTo(new BigDecimal("7500")), 0);
-        assertEquals(result.get(1).getQuantity().intValue(), 75);
+        assertEquals(result.get(1).getAmount().compareTo(new BigDecimal("7600")), 0);
+        assertEquals(result.get(1).getQuantity().intValue(), 76);
         assertEquals(result.get(1).getRate().compareTo(new BigDecimal("100.0")), 0);
     }
 
