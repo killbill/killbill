@@ -403,7 +403,7 @@ public class ContiguousIntervalUsageInArrear {
                     complies = false;
                     break;
                 }
-                toBeBilledDetails.add(new UsageInArrearDetail(tierNum, ro.getUnitType(), cur.getRecurringPrice().getPrice(getCurrency()), ro.getAmount().intValue(), BigDecimal.ZERO, null, null));
+                toBeBilledDetails.add(new UsageInArrearDetail(tierNum, ro.getUnitType(), cur.getRecurringPrice().getPrice(getCurrency()), ro.getAmount().intValue(), BigDecimal.ZERO, BigDecimal.ZERO, ""));
 
             }
             if (complies) {
@@ -620,11 +620,14 @@ public class ContiguousIntervalUsageInArrear {
                 if (billedUsageItemDetails != null && billedUsageItemDetails.size() > 0) {
                     for (final UsageInArrearDetail billedUsage : billedUsageItemDetails) {
                         toBeBilledUsageInArrearDetails.add(new UsageInArrearDetail(billedUsage.getTier(), billedUsage.getTierUnit(), billedUsage.getTierPrice(),
-                                                                                   billedUsage.getQuantity(), billedUsage.getAmount().negate(), null, bi.getId().toString()));
+                                                                                   billedUsage.getQuantity() * -1, billedUsage.getAmount().negate(), null, bi.getId().toString()));
                     }
                 }
             } else {
-                toBeBilledUsageInArrearDetails.add(new UsageInArrearDetail(bi.getRate(), bi.getQuantity(), bi.getAmount().negate(), bi.getId().toString()));
+                toBeBilledUsageInArrearDetails.get(0).setAmount(toBeBilledUsageInArrearDetails.get(0).getAmount().subtract(bi.getAmount()));
+                toBeBilledUsageInArrearDetails.get(0).setQuantity(toBeBilledUsageInArrearDetails.get(0).getQuantity() - (bi.getQuantity() == null ? 0 : bi.getQuantity()));
+                toBeBilledUsageInArrearDetails.get(0).setExistingUsageAmount(toBeBilledUsageInArrearDetails.get(0).getExistingUsageAmount().add(bi.getAmount()));
+                toBeBilledUsageInArrearDetails.get(0).setReference(toBeBilledUsageInArrearDetails.get(0).getReference().concat(":").concat(bi.getId().toString()));
             }
         }
 
@@ -671,7 +674,7 @@ public class ContiguousIntervalUsageInArrear {
         }
 
         public UsageInArrearDetail(int tier, String tierUnit, BigDecimal tierPrice, Integer quantity) {
-            this(tier, tierUnit, tierPrice, quantity, tierPrice.multiply(new BigDecimal(quantity)), null, null);
+            this(tier, tierUnit, tierPrice, quantity, tierPrice.multiply(new BigDecimal(quantity)), BigDecimal.ZERO, "");
         }
 
         @JsonCreator
@@ -708,12 +711,20 @@ public class ContiguousIntervalUsageInArrear {
             return existingUsageAmount;
         }
 
+        public String getReference() {
+            return reference;
+        }
+
         public void setExistingUsageAmount(BigDecimal existingUsageAmount) {
             this.existingUsageAmount = existingUsageAmount;
         }
 
         public BigDecimal getAmount() {
             return amount;
+        }
+
+        public void setQuantity(Integer quantity) {
+            this.quantity = quantity;
         }
 
         public void setAmount(BigDecimal amount) {
