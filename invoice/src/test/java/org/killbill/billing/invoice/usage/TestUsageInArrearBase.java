@@ -44,8 +44,11 @@ import org.killbill.billing.invoice.InvoiceTestSuiteNoDB;
 import org.killbill.billing.junction.BillingEvent;
 import org.killbill.billing.subscription.api.SubscriptionBase;
 import org.killbill.billing.usage.RawUsage;
+import org.killbill.billing.util.config.definition.InvoiceConfig.UsageDetailMode;
 import org.mockito.Mockito;
 import org.testng.annotations.BeforeClass;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 public abstract class TestUsageInArrearBase extends InvoiceTestSuiteNoDB {
 
@@ -58,6 +61,8 @@ public abstract class TestUsageInArrearBase extends InvoiceTestSuiteNoDB {
     protected String phaseName;
     protected Currency currency;
     protected String usageName;
+    protected ObjectMapper objectMapper;
+
 
     @BeforeClass(groups = "fast")
     protected void beforeClass() throws Exception {
@@ -71,10 +76,16 @@ public abstract class TestUsageInArrearBase extends InvoiceTestSuiteNoDB {
         planName = "planName";
         phaseName = "phaseName";
         currency = Currency.BTC;
+        usageDetailMode = invoiceConfig.getItemResultBehaviorMode(internalCallContext);
+        objectMapper = new ObjectMapper();
     }
 
     protected ContiguousIntervalUsageInArrear createContiguousIntervalConsumableInArrear(final DefaultUsage usage, final List<RawUsage> rawUsages, final LocalDate targetDate, final boolean closedInterval, final BillingEvent... events) {
-        final ContiguousIntervalUsageInArrear intervalConsumableInArrear = new ContiguousIntervalUsageInArrear(usage, accountId, invoiceId, rawUsages, targetDate, new LocalDate(events[0].getEffectiveDate()), internalCallContext);
+        return createContiguousIntervalConsumableInArrear(usage, rawUsages, targetDate, closedInterval, usageDetailMode, events);
+    }
+
+    protected ContiguousIntervalUsageInArrear createContiguousIntervalConsumableInArrear(final DefaultUsage usage, final List<RawUsage> rawUsages, final LocalDate targetDate, final boolean closedInterval, UsageDetailMode detailMode, final BillingEvent... events) {
+        final ContiguousIntervalUsageInArrear intervalConsumableInArrear = new ContiguousIntervalUsageInArrear(usage, accountId, invoiceId, rawUsages, targetDate, new LocalDate(events[0].getEffectiveDate()), detailMode, internalCallContext);
         for (final BillingEvent event : events) {
             intervalConsumableInArrear.addBillingEvent(event);
         }

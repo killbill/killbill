@@ -1049,6 +1049,16 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
             return isInvoicingSystemEnabled();
         }
 
+        @Override
+        public UsageDetailMode getItemResultBehaviorMode() {
+            return defaultInvoiceConfig.getItemResultBehaviorMode();
+        }
+
+        @Override
+        public UsageDetailMode getItemResultBehaviorMode(final InternalTenantContext tenantContext) {
+            return getItemResultBehaviorMode();
+        }
+
         public void setInvoicingSystemEnabled(final boolean invoicingSystemEnabled) {
             isInvoicingSystemEnabled = invoicingSystemEnabled;
         }

@@ -20,6 +20,8 @@ CREATE TABLE invoice_items (
     rate numeric(15,9) NULL,
     currency varchar(3) NOT NULL,
     linked_item_id varchar(36),
+    quantity int,
+    item_details text,
     created_by varchar(50) NOT NULL,
     created_date datetime NOT NULL,
     account_record_id bigint /*! unsigned */ not null,

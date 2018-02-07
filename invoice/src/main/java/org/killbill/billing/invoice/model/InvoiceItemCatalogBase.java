@@ -40,15 +40,30 @@ public abstract class InvoiceItemCatalogBase extends InvoiceItemBase implements 
     public InvoiceItemCatalogBase(final UUID id, @Nullable final DateTime createdDate, final UUID invoiceId, final UUID accountId, @Nullable final UUID bundleId,
                                   @Nullable final UUID subscriptionId, @Nullable final String description, @Nullable final String planName, @Nullable final String phaseName, @Nullable final String usageName,
                                   final LocalDate startDate, final LocalDate endDate, final BigDecimal amount, final BigDecimal rate, final Currency currency, @Nullable final UUID linkedItemId) {
-        this(id, createdDate, invoiceId, accountId, bundleId, subscriptionId, description, planName, phaseName, usageName, null, null, null, startDate, endDate, amount, rate, currency, linkedItemId);
+        this(id, createdDate, invoiceId, accountId, bundleId, subscriptionId, description, planName, phaseName, usageName, null, null, null, startDate, endDate, amount, rate, currency, linkedItemId, null, null);
+    }
+
+    public InvoiceItemCatalogBase(final UUID id, @Nullable final DateTime createdDate, final UUID invoiceId, final UUID accountId, @Nullable final UUID bundleId,
+                                  @Nullable final UUID subscriptionId, @Nullable final String description, @Nullable final String planName, @Nullable final String phaseName, @Nullable final String usageName,
+                                  final LocalDate startDate, final LocalDate endDate, final BigDecimal amount, final BigDecimal rate, final Currency currency, @Nullable final UUID linkedItemId,
+                                  @Nullable final Integer quantity, @Nullable final String itemDetails) {
+        this(id, createdDate, invoiceId, accountId, bundleId, subscriptionId, description, planName, phaseName, usageName, null, null, null, startDate, endDate, amount, rate, currency, linkedItemId, quantity, itemDetails);
+    }
+
+    public InvoiceItemCatalogBase(final UUID id, @Nullable final DateTime createdDate, final UUID invoiceId, final UUID accountId, @Nullable final UUID bundleId,
+                                  @Nullable final UUID subscriptionId, @Nullable final String description, @Nullable final String planName, @Nullable final String phaseName, @Nullable final String usageName,
+                                  @Nullable final String prettyPlanName, @Nullable final String prettyPhaseName, @Nullable final String prettyUsageName,
+                                  final LocalDate startDate, final LocalDate endDate, final BigDecimal amount, final BigDecimal rate, final Currency currency, @Nullable final UUID linkedItemId) {
+        this(id, createdDate, invoiceId, accountId, bundleId, subscriptionId, description, planName, phaseName, usageName, prettyPlanName, prettyPhaseName, prettyUsageName, startDate, endDate, amount, rate, currency, linkedItemId, null, null);
     }
 
 
     public InvoiceItemCatalogBase(final UUID id, @Nullable final DateTime createdDate, final UUID invoiceId, final UUID accountId, @Nullable final UUID bundleId,
                                   @Nullable final UUID subscriptionId, @Nullable final String description, @Nullable final String planName, @Nullable final String phaseName, @Nullable final String usageName,
                                   @Nullable final String prettyPlanName, @Nullable final String prettyPhaseName, @Nullable final String prettyUsageName,
-                                  final LocalDate startDate, final LocalDate endDate, final BigDecimal amount, final BigDecimal rate, final Currency currency, @Nullable final UUID linkedItemId) {
-        super(id, createdDate, invoiceId, accountId, bundleId, subscriptionId, description, startDate, endDate, amount, rate, currency, linkedItemId);
+                                  final LocalDate startDate, final LocalDate endDate, final BigDecimal amount, final BigDecimal rate, final Currency currency, @Nullable final UUID linkedItemId,
+                                  @Nullable final Integer quantity, @Nullable final String itemDetails) {
+        super(id, createdDate, invoiceId, accountId, bundleId, subscriptionId, description, startDate, endDate, amount, rate, currency, linkedItemId, quantity, itemDetails);
         this.planName = planName;
         this.phaseName = phaseName;
         this.usageName = usageName;

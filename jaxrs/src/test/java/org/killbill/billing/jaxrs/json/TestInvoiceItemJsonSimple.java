@@ -56,7 +56,7 @@ public class TestInvoiceItemJsonSimple extends JaxrsTestSuiteNoDB {
                                                                     bundleId, subscriptionId, planName, phaseName, usageName,
                                                                     null, null, null,
                                                                     type, description,
-                                                                    startDate, endDate, amount, currency.name(), null, auditLogs);
+                                                                    startDate, endDate, amount, null, currency.name(), null, null, null, auditLogs);
         Assert.assertEquals(invoiceItemJson.getInvoiceItemId(), invoiceItemId);
         Assert.assertEquals(invoiceItemJson.getInvoiceId(), invoiceId);
         Assert.assertEquals(invoiceItemJson.getLinkedInvoiceItemId(), linkedInvoiceItemId);

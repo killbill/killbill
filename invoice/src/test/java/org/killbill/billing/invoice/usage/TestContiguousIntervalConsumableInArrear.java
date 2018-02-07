@@ -18,10 +18,14 @@
 
 package org.killbill.billing.invoice.usage;
 
+import java.io.IOException;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDate;
@@ -36,16 +40,22 @@ import org.killbill.billing.catalog.api.Usage;
 import org.killbill.billing.invoice.api.InvoiceItem;
 import org.killbill.billing.invoice.model.FixedPriceInvoiceItem;
 import org.killbill.billing.invoice.model.UsageInvoiceItem;
+import org.killbill.billing.invoice.usage.ContiguousIntervalUsageInArrear.UsageInArrearDetail;
 import org.killbill.billing.invoice.usage.ContiguousIntervalUsageInArrear.UsageInArrearItemsAndNextNotificationDate;
 import org.killbill.billing.junction.BillingEvent;
 import org.killbill.billing.usage.RawUsage;
 import org.killbill.billing.usage.api.RolledUpUsage;
 import org.killbill.billing.usage.api.svcs.DefaultRawUsage;
+import org.killbill.billing.util.config.definition.InvoiceConfig.UsageDetailMode;
 import org.testng.Assert;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Function;
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
@@ -139,10 +149,12 @@ public class TestContiguousIntervalConsumableInArrear extends TestUsageInArrearB
                                                                                                                                              Collections.<Usage>emptyList())
                                                                                                                      );
 
-        final BigDecimal result = intervalConsumableInArrear.computeToBeBilledConsumableInArrear(new DefaultRolledUpUnit("unit", 111L));
-
+        List<UsageInArrearDetail> result = intervalConsumableInArrear.computeToBeBilledConsumableInArrear(new DefaultRolledUpUnit("unit", 111L));
+        assertEquals(result.size(), 3);
         // 111 = 10 (tier1) + 100 (tier2) + 1 (tier3) => 10 * 1.5 + 100 * 1 + 1 * 0.5 = 115.5
-        assertEquals(result, new BigDecimal("115.5"));
+        assertEquals(result.get(0).getAmount(), new BigDecimal("15.0"));
+        assertEquals(result.get(1).getAmount(), new BigDecimal("100.0"));
+        assertEquals(result.get(2).getAmount(), new BigDecimal("0.5"));
     }
 
 
@@ -165,10 +177,12 @@ public class TestContiguousIntervalConsumableInArrear extends TestUsageInArrearB
                                                                                                                                              Collections.<Usage>emptyList())
                                                                                                                      );
 
-        final BigDecimal result = intervalConsumableInArrear.computeToBeBilledConsumableInArrear(new DefaultRolledUpUnit("unit", 5325L));
+        List<UsageInArrearDetail> result = intervalConsumableInArrear.computeToBeBilledConsumableInArrear(new DefaultRolledUpUnit("unit", 5325L));
+        assertEquals(result.size(), 2);
 
         // 5000 = 1000 (tier1) + 4325 (tier2) => 10 + 5 = 15
-        assertEquals(result, new BigDecimal("15"));
+        assertEquals(result.get(0).getAmount(), new BigDecimal("10"));
+        assertEquals(result.get(1).getAmount(), new BigDecimal("5"));
     }
 
 
@@ -197,22 +211,26 @@ public class TestContiguousIntervalConsumableInArrear extends TestUsageInArrearB
         //
         // In this model unit amount is first used to figure out which tier we are in, and then we price all unit at that 'target' tier
         //
-        final BigDecimal inputTier1 = intervalConsumableInArrear.computeToBeBilledConsumableInArrear(new DefaultRolledUpUnit("unit", 1000L));
+        List<UsageInArrearDetail> inputTier1 = intervalConsumableInArrear.computeToBeBilledConsumableInArrear(new DefaultRolledUpUnit("unit", 1000L));
+        assertEquals(inputTier1.size(), 1);
         // 1000 units => (tier1) : 1000 / 100 + 1000 % 100 = 10
-        assertEquals(inputTier1, new BigDecimal("10"));
+        assertEquals(inputTier1.get(0).getAmount(), new BigDecimal("10"));
 
-        final BigDecimal inputTier2 = intervalConsumableInArrear.computeToBeBilledConsumableInArrear(new DefaultRolledUpUnit("unit", 101000L));
+        List<UsageInArrearDetail> inputTier2 = intervalConsumableInArrear.computeToBeBilledConsumableInArrear(new DefaultRolledUpUnit("unit", 101000L));
+        assertEquals(inputTier2.size(), 1);
         // 101000 units => (tier2) :  101000 / 1000 + 101000 % 1000 = 101 + 0 = 101
-        assertEquals(inputTier2, new BigDecimal("101"));
+        assertEquals(inputTier2.get(0).getAmount(), new BigDecimal("101"));
 
-        final BigDecimal inputTier3 = intervalConsumableInArrear.computeToBeBilledConsumableInArrear(new DefaultRolledUpUnit("unit", 101001L));
+        List<UsageInArrearDetail> inputTier3 = intervalConsumableInArrear.computeToBeBilledConsumableInArrear(new DefaultRolledUpUnit("unit", 101001L));
+        assertEquals(inputTier3.size(), 1);
         // 101001 units => (tier3) : 101001 / 1000 + 101001 % 1000 = 101 + 1 = 102 units => $51
-        assertEquals(inputTier3, new BigDecimal("51.0"));
+        assertEquals(inputTier3.get(0).getAmount(), new BigDecimal("51.0"));
 
         // If we pass the maximum of the last tier, we price all units at the last tier
-        final BigDecimal inputLastTier = intervalConsumableInArrear.computeToBeBilledConsumableInArrear(new DefaultRolledUpUnit("unit", 300000L));
+        List<UsageInArrearDetail> inputLastTier = intervalConsumableInArrear.computeToBeBilledConsumableInArrear(new DefaultRolledUpUnit("unit", 300000L));
+        assertEquals(inputLastTier.size(), 1);
         // 300000 units => (tier3) : 300000 / 1000 + 300000 % 1000 = 300 units => $150
-        assertEquals(inputLastTier, new BigDecimal("150.0"));
+        assertEquals(inputLastTier.get(0).getAmount(), new BigDecimal("150.0"));
     }
 
 
@@ -238,17 +256,18 @@ public class TestContiguousIntervalConsumableInArrear extends TestUsageInArrearB
                                                                                                                                              Collections.<Usage>emptyList())
                                                                                                                      );
 
-        final BigDecimal result = intervalConsumableInArrear.computeToBeBilledConsumableInArrear(new DefaultRolledUpUnit("unit", 111L));
+        List<UsageInArrearDetail> result = intervalConsumableInArrear.computeToBeBilledConsumableInArrear(new DefaultRolledUpUnit("unit", 111L));
+        assertEquals(result.size(), 1);
 
         // 111 = 111 * 0.5 =
-        assertEquals(result, new BigDecimal("55.5"));
+        assertEquals(result.get(0).getAmount(), new BigDecimal("55.5"));
     }
 
 
 
 
     @Test(groups = "fast")
-    public void testComputeMissingItems() throws CatalogApiException {
+    public void testComputeMissingItems() throws CatalogApiException, IOException {
 
         final LocalDate startDate = new LocalDate(2014, 03, 20);
         final LocalDate firstBCDDate = new LocalDate(2014, 04, 15);
@@ -290,7 +309,6 @@ public class TestContiguousIntervalConsumableInArrear extends TestUsageInArrearB
             }
         }));
 
-
         // Invoiced for 1 BTC and used 130 + 271 = 401 => 5 blocks => 5 BTC so remaining piece should be 4 BTC
         assertEquals(result.get(0).getAmount().compareTo(new BigDecimal("4.0")), 0, String.format("%s != 4.0", result.get(0).getAmount()));
         assertEquals(result.get(0).getCurrency(), Currency.BTC);
@@ -303,6 +321,12 @@ public class TestContiguousIntervalConsumableInArrear extends TestUsageInArrearB
         assertTrue(result.get(0).getStartDate().compareTo(startDate) == 0);
         assertTrue(result.get(0).getEndDate().compareTo(firstBCDDate) == 0);
 
+        // check item detail
+        List<UsageInArrearDetail> itemDetails = objectMapper.readValue(result.get(0).getItemDetails(), new TypeReference<List<UsageInArrearDetail>>() {});
+
+        assertEquals(itemDetails.size(), 1);
+        assertEquals(itemDetails.get(0).getAmount().compareTo(result.get(0).getAmount()),0);
+
         // Invoiced for 1 BTC and used 199  => 2 blocks => 2 BTC so remaining piece should be 1 BTC
         assertEquals(result.get(1).getAmount().compareTo(new BigDecimal("1.0")), 0, String.format("%s != 1.0", result.get(0).getAmount()));
         assertEquals(result.get(1).getCurrency(), Currency.BTC);
@@ -314,6 +338,11 @@ public class TestContiguousIntervalConsumableInArrear extends TestUsageInArrearB
         assertEquals(result.get(1).getUsageName(), usage.getName());
         assertTrue(result.get(1).getStartDate().compareTo(firstBCDDate) == 0);
         assertTrue(result.get(1).getEndDate().compareTo(endDate) == 0);
+
+        // check item detail
+        List<UsageInArrearDetail> itemDetails2 = objectMapper.readValue(result.get(1).getItemDetails(), new TypeReference<List<UsageInArrearDetail>>() {});
+        assertEquals(itemDetails2.size(), 1);
+        assertEquals(itemDetails2.get(0).getAmount().compareTo(result.get(1).getAmount()),0);
     }
 
     @Test(groups = "fast")
@@ -407,7 +436,7 @@ public class TestContiguousIntervalConsumableInArrear extends TestUsageInArrearB
         final BillingEvent event2 = createMockBillingEvent(new LocalDate(2014, 10, 16).toDateTimeAtStartOfDay(DateTimeZone.UTC), BillingPeriod.MONTHLY, Collections.<Usage>emptyList());
 
 
-        final ContiguousIntervalUsageInArrear intervalConsumableInArrear = new ContiguousIntervalUsageInArrear(usage, accountId, invoiceId, rawUsages, targetDate, rawUsageStartDate, internalCallContext);
+        final ContiguousIntervalUsageInArrear intervalConsumableInArrear = new ContiguousIntervalUsageInArrear(usage, accountId, invoiceId, rawUsages, targetDate, rawUsageStartDate, usageDetailMode, internalCallContext);
         intervalConsumableInArrear.addBillingEvent(event1);
         intervalConsumableInArrear.addBillingEvent(event2);
 
@@ -415,4 +444,365 @@ public class TestContiguousIntervalConsumableInArrear extends TestUsageInArrearB
         assertEquals(res.getTransitionTimes().size(), 0);
     }
 
+    @Test(groups = "fast")
+    public void testTobeBilledForUnit() throws CatalogApiException {
+
+        final DefaultTieredBlock block1 = createDefaultTieredBlock("cell-phone-minutes", 1000, 10000, new BigDecimal("0.5"));
+        final DefaultTieredBlock block2 = createDefaultTieredBlock("Mbytes", 512, 512000, new BigDecimal("0.3"));
+        final DefaultTier tier = createDefaultTierWithBlocks(block1, block2);
+
+        final DefaultUsage usage = createConsumableInArrearUsage(usageName, BillingPeriod.MONTHLY, TierBlockPolicy.ALL_TIERS, tier);
+        final LocalDate targetDate = new LocalDate(2014, 03, 20);
+        final ContiguousIntervalUsageInArrear intervalConsumableInArrear = createContiguousIntervalConsumableInArrear(usage, ImmutableList.<RawUsage>of(), targetDate, false,
+                                                                                                                      createMockBillingEvent(targetDate.toDateTimeAtStartOfDay(DateTimeZone.UTC),
+                                                                                                                                             BillingPeriod.MONTHLY,
+                                                                                                                                             Collections.<Usage>emptyList())
+                                                                                                                     );
+        List<UsageInArrearDetail> results = Lists.newArrayList();
+        results.addAll(intervalConsumableInArrear.computeToBeBilledConsumableInArrear(new DefaultRolledUpUnit("cell-phone-minutes", 1000L)));
+        results.addAll(intervalConsumableInArrear.computeToBeBilledConsumableInArrear(new DefaultRolledUpUnit("Mbytes", 30720L)));
+        assertEquals(results.size(), 2);
+
+        assertEquals(intervalConsumableInArrear.toBeBilledForUnit(results), new BigDecimal("18.5"));
+    }
+
+    @Test(groups = "fast")
+    public void testComputeMissingItemsAggregateModeAllTier() throws CatalogApiException, IOException {
+
+        // Case 1
+        List<RawUsage> rawUsages = new ArrayList<RawUsage>();
+        rawUsages.add(new DefaultRawUsage(subscriptionId, new LocalDate(2014, 03, 20), "FOO", 5L));
+        rawUsages.add(new DefaultRawUsage(subscriptionId, new LocalDate(2014, 03, 21), "BAR", 99L));
+
+        List<InvoiceItem> result = produceInvoiceItems(rawUsages, TierBlockPolicy.ALL_TIERS, UsageDetailMode.AGGREGATE);
+        assertEquals(result.size(), 1);
+        assertEquals(result.get(0).getAmount().compareTo(new BigDecimal("203")),0);
+
+        List<UsageInArrearDetail> itemDetails = objectMapper.readValue(result.get(0).getItemDetails(), new TypeReference<List<UsageInArrearDetail>>() {});
+        // BAR: 99 * 2 = 198
+        assertEquals(itemDetails.get(0).getTierUnit(), "BAR");
+        assertEquals(itemDetails.get(0).getTier(), 1);
+        assertEquals(itemDetails.get(0).getAmount().compareTo(new BigDecimal("198")), 0);
+        assertEquals(itemDetails.get(0).getQuantity().intValue(), 99);
+        assertEquals(itemDetails.get(0).getTierPrice().compareTo(new BigDecimal("2.0")), 0);
+        // FOO: 5 * 1 = 5
+        assertEquals(itemDetails.get(1).getTierUnit(), "FOO");
+        assertEquals(itemDetails.get(1).getTier(), 1);
+        assertEquals(itemDetails.get(1).getAmount().compareTo(new BigDecimal("5")), 0);
+        assertEquals(itemDetails.get(1).getQuantity().intValue(), 5);
+        assertEquals(itemDetails.get(1).getTierPrice().compareTo(BigDecimal.ONE), 0);
+
+        // Case 2
+        rawUsages = new ArrayList<RawUsage>();
+        rawUsages.add(new DefaultRawUsage(subscriptionId, new LocalDate(2014, 03, 20), "FOO", 5L));
+        rawUsages.add(new DefaultRawUsage(subscriptionId, new LocalDate(2014, 03, 21), "BAR", 101L));
+
+        result = produceInvoiceItems(rawUsages, TierBlockPolicy.ALL_TIERS, UsageDetailMode.AGGREGATE);
+        assertEquals(result.size(), 1);
+        assertEquals(result.get(0).getAmount().compareTo(new BigDecimal("225")),0);
+
+        itemDetails = objectMapper.readValue(result.get(0).getItemDetails(), new TypeReference<List<UsageInArrearDetail>>() {});
+        // BAR: 100 * 2 = 200
+        assertEquals(itemDetails.get(0).getTierUnit(), "BAR");
+        assertEquals(itemDetails.get(0).getTier(), 1);
+        assertEquals(itemDetails.get(0).getAmount().compareTo(new BigDecimal("200.0")), 0);
+        assertEquals(itemDetails.get(0).getQuantity().intValue(), 100);
+        assertEquals(itemDetails.get(0).getTierPrice().compareTo(new BigDecimal("2.0")), 0);
+        // BAR: 1 * 20 = 20
+        assertEquals(itemDetails.get(1).getTierUnit(), "BAR");
+        assertEquals(itemDetails.get(1).getTier(), 2);
+        assertEquals(itemDetails.get(1).getAmount().compareTo(new BigDecimal("20.0")), 0);
+        assertEquals(itemDetails.get(1).getQuantity().intValue(), 1);
+        assertEquals(itemDetails.get(1).getTierPrice().compareTo(new BigDecimal("20.0")), 0);
+        // FOO: 5 * 1 = 5
+        assertEquals(itemDetails.get(2).getTierUnit(), "FOO");
+        assertEquals(itemDetails.get(2).getTier(), 1);
+        assertEquals(itemDetails.get(2).getAmount().compareTo(new BigDecimal("5")), 0);
+        assertEquals(itemDetails.get(2).getQuantity().intValue(), 5);
+        assertEquals(itemDetails.get(2).getTierPrice().compareTo(BigDecimal.ONE), 0);
+
+        // Case 3
+        rawUsages = new ArrayList<RawUsage>();
+        rawUsages.add(new DefaultRawUsage(subscriptionId, new LocalDate(2014, 03, 20), "FOO", 75L));
+        rawUsages.add(new DefaultRawUsage(subscriptionId, new LocalDate(2014, 03, 21), "BAR", 101L));
+
+        result = produceInvoiceItems(rawUsages, TierBlockPolicy.ALL_TIERS, UsageDetailMode.AGGREGATE);
+        assertEquals(result.size(), 1);
+        assertEquals(result.get(0).getAmount().compareTo(new BigDecimal("2230")),0);
+
+        itemDetails = objectMapper.readValue(result.get(0).getItemDetails(), new TypeReference<List<UsageInArrearDetail>>() {});
+        // BAR: 100 * 2 = 200
+        assertEquals(itemDetails.get(0).getTierUnit(), "BAR");
+        assertEquals(itemDetails.get(0).getTier(), 1);
+        assertEquals(itemDetails.get(0).getAmount().compareTo(new BigDecimal("200.0")), 0);
+        assertEquals(itemDetails.get(0).getQuantity().intValue(), 100);
+        assertEquals(itemDetails.get(0).getTierPrice().compareTo(new BigDecimal("2.0")), 0);
+        // BAR: 1 * 20 = 20
+        assertEquals(itemDetails.get(1).getTierUnit(), "BAR");
+        assertEquals(itemDetails.get(1).getTier(), 2);
+        assertEquals(itemDetails.get(1).getAmount().compareTo(new BigDecimal("20.0")), 0);
+        assertEquals(itemDetails.get(1).getQuantity().intValue(), 1);
+        assertEquals(itemDetails.get(1).getTierPrice().compareTo(new BigDecimal("20.0")), 0);
+        // FOO: 10 * 1 = 10
+        assertEquals(itemDetails.get(2).getTierUnit(), "FOO");
+        assertEquals(itemDetails.get(2).getTier(), 1);
+        assertEquals(itemDetails.get(2).getAmount().compareTo(BigDecimal.TEN), 0);
+        assertEquals(itemDetails.get(2).getQuantity().intValue(), 10);
+        assertEquals(itemDetails.get(2).getTierPrice().compareTo(BigDecimal.ONE), 0);
+        // FOO: 50 * 10 = 500
+        assertEquals(itemDetails.get(3).getTierUnit(), "FOO");
+        assertEquals(itemDetails.get(3).getTier(), 2);
+        assertEquals(itemDetails.get(3).getAmount().compareTo(new BigDecimal("500")), 0);
+        assertEquals(itemDetails.get(3).getQuantity().intValue(), 50);
+        assertEquals(itemDetails.get(3).getTierPrice().compareTo(BigDecimal.TEN), 0);
+        // FOO: 15 * 100 = 1500
+        assertEquals(itemDetails.get(4).getTierUnit(), "FOO");
+        assertEquals(itemDetails.get(4).getTier(), 3);
+        assertEquals(itemDetails.get(4).getAmount().compareTo(new BigDecimal("1500")), 0);
+        assertEquals(itemDetails.get(4).getQuantity().intValue(), 15);
+        assertEquals(itemDetails.get(4).getTierPrice().compareTo(new BigDecimal("100.0")), 0);
+    }
+
+    @Test(groups = "fast")
+    public void testComputeMissingItemsDetailModeAllTier() throws CatalogApiException, IOException {
+
+        // Case 1
+        List<RawUsage> rawUsages = new ArrayList<RawUsage>();
+        rawUsages.add(new DefaultRawUsage(subscriptionId, new LocalDate(2014, 03, 20), "FOO", 5L));
+        rawUsages.add(new DefaultRawUsage(subscriptionId, new LocalDate(2014, 03, 21), "BAR", 99L));
+
+        List<InvoiceItem> result = produceInvoiceItems(rawUsages, TierBlockPolicy.ALL_TIERS, UsageDetailMode.DETAIL);
+        assertEquals(result.size(), 2);
+        // BAR: 99 * 2 = 198
+        assertEquals(result.get(0).getAmount().compareTo(new BigDecimal("198")), 0);
+        assertEquals(result.get(0).getQuantity().intValue(), 99);
+        assertEquals(result.get(0).getRate().compareTo(new BigDecimal("2.0")), 0);
+        // FOO: 5 * 1 = 5
+        assertEquals(result.get(1).getAmount().compareTo(new BigDecimal("5")), 0);
+        assertEquals(result.get(1).getQuantity().intValue(), 5);
+        assertEquals(result.get(1).getRate().compareTo(BigDecimal.ONE), 0);
+
+        // Case 2
+        rawUsages = new ArrayList<RawUsage>();
+        rawUsages.add(new DefaultRawUsage(subscriptionId, new LocalDate(2014, 03, 20), "FOO", 5L));
+        rawUsages.add(new DefaultRawUsage(subscriptionId, new LocalDate(2014, 03, 21), "BAR", 101L));
+
+        result = produceInvoiceItems(rawUsages, TierBlockPolicy.ALL_TIERS, UsageDetailMode.DETAIL);
+        assertEquals(result.size(), 3);
+       // BAR: 100 * 2 = 200
+        assertEquals(result.get(0).getAmount().compareTo(new BigDecimal("200.0")), 0);
+        assertEquals(result.get(0).getQuantity().intValue(), 100);
+        assertEquals(result.get(0).getRate().compareTo(new BigDecimal("2.0")), 0);
+        // BAR: 1 * 20 = 20
+        assertEquals(result.get(1).getAmount().compareTo(new BigDecimal("20.0")), 0);
+        assertEquals(result.get(1).getQuantity().intValue(), 1);
+        assertEquals(result.get(1).getRate().compareTo(new BigDecimal("20.0")), 0);
+        // FOO: 5 * 1 = 5
+        assertEquals(result.get(2).getAmount().compareTo(new BigDecimal("5")), 0);
+        assertEquals(result.get(2).getQuantity().intValue(), 5);
+        assertEquals(result.get(2).getRate().compareTo(BigDecimal.ONE), 0);
+
+        // Case 3
+        rawUsages = new ArrayList<RawUsage>();
+        rawUsages.add(new DefaultRawUsage(subscriptionId, new LocalDate(2014, 03, 20), "FOO", 75L));
+        rawUsages.add(new DefaultRawUsage(subscriptionId, new LocalDate(2014, 03, 21), "BAR", 101L));
+
+        result = produceInvoiceItems(rawUsages, TierBlockPolicy.ALL_TIERS, UsageDetailMode.DETAIL);
+        assertEquals(result.size(), 5);
+       // BAR: 100 * 2 = 200
+        assertEquals(result.get(0).getAmount().compareTo(new BigDecimal("200.0")), 0);
+        assertEquals(result.get(0).getQuantity().intValue(), 100);
+        assertEquals(result.get(0).getRate().compareTo(new BigDecimal("2.0")), 0);
+        // BAR: 1 * 20 = 20
+        assertEquals(result.get(1).getAmount().compareTo(new BigDecimal("20.0")), 0);
+        assertEquals(result.get(1).getQuantity().intValue(), 1);
+        assertEquals(result.get(1).getRate().compareTo(new BigDecimal("20.0")), 0);
+        // FOO: 10 * 1 = 10
+        assertEquals(result.get(2).getAmount().compareTo(BigDecimal.TEN), 0);
+        assertEquals(result.get(2).getQuantity().intValue(), 10);
+        assertEquals(result.get(2).getRate().compareTo(BigDecimal.ONE), 0);
+        // FOO: 50 * 10 = 500
+        assertEquals(result.get(3).getAmount().compareTo(new BigDecimal("500")), 0);
+        assertEquals(result.get(3).getQuantity().intValue(), 50);
+        assertEquals(result.get(3).getRate().compareTo(BigDecimal.TEN), 0);
+        // FOO: 15 * 100 = 1500
+        assertEquals(result.get(4).getAmount().compareTo(new BigDecimal("1500")), 0);
+        assertEquals(result.get(4).getQuantity().intValue(), 15);
+        assertEquals(result.get(4).getRate().compareTo(new BigDecimal("100.0")), 0);
+    }
+
+    @Test(groups = "fast")
+    public void testComputeMissingItemsAggregateModeTopTier() throws CatalogApiException, IOException {
+
+        // Case 1
+        List<RawUsage> rawUsages = new ArrayList<RawUsage>();
+        rawUsages.add(new DefaultRawUsage(subscriptionId, new LocalDate(2014, 03, 20), "FOO", 5L));
+        rawUsages.add(new DefaultRawUsage(subscriptionId, new LocalDate(2014, 03, 21), "BAR", 99L));
+
+        List<InvoiceItem> result = produceInvoiceItems(rawUsages, TierBlockPolicy.TOP_TIER, UsageDetailMode.AGGREGATE);
+        assertEquals(result.size(), 1);
+        assertEquals(result.get(0).getAmount().compareTo(new BigDecimal("203")),0);
+
+        List<UsageInArrearDetail> itemDetails = objectMapper.readValue(result.get(0).getItemDetails(), new TypeReference<List<UsageInArrearDetail>>() {});
+        // BAR: 99 * 2 = 198
+        assertEquals(itemDetails.get(0).getTierUnit(), "BAR");
+        assertEquals(itemDetails.get(0).getTier(), 1);
+        assertEquals(itemDetails.get(0).getAmount().compareTo(new BigDecimal("198")), 0);
+        assertEquals(itemDetails.get(0).getQuantity().intValue(), 99);
+        assertEquals(itemDetails.get(0).getTierPrice().compareTo(new BigDecimal("2.0")), 0);
+        // FOO: 5 * 1 = 5
+        assertEquals(itemDetails.get(1).getTierUnit(), "FOO");
+        assertEquals(itemDetails.get(1).getTier(), 1);
+        assertEquals(itemDetails.get(1).getAmount().compareTo(new BigDecimal("5")), 0);
+        assertEquals(itemDetails.get(1).getQuantity().intValue(), 5);
+        assertEquals(itemDetails.get(1).getTierPrice().compareTo(BigDecimal.ONE), 0);
+
+        // Case 2
+        rawUsages = new ArrayList<RawUsage>();
+        rawUsages.add(new DefaultRawUsage(subscriptionId, new LocalDate(2014, 03, 20), "FOO", 5L));
+        rawUsages.add(new DefaultRawUsage(subscriptionId, new LocalDate(2014, 03, 21), "BAR", 101L));
+
+        result = produceInvoiceItems(rawUsages, TierBlockPolicy.TOP_TIER, UsageDetailMode.AGGREGATE);
+        assertEquals(result.size(), 1);
+        assertEquals(result.get(0).getAmount().compareTo(new BigDecimal("2025")),0);
+
+        itemDetails = objectMapper.readValue(result.get(0).getItemDetails(), new TypeReference<List<UsageInArrearDetail>>() {});
+        // BAR: 101 * 20 = 2020
+        assertEquals(itemDetails.get(0).getTierUnit(), "BAR");
+        assertEquals(itemDetails.get(0).getTier(), 2);
+        assertEquals(itemDetails.get(0).getAmount().compareTo(new BigDecimal("2020.0")), 0);
+        assertEquals(itemDetails.get(0).getQuantity().intValue(), 101);
+        assertEquals(itemDetails.get(0).getTierPrice().compareTo(new BigDecimal("20.0")), 0);
+        // FOO: 5 * 1 = 5
+        assertEquals(itemDetails.get(1).getTierUnit(), "FOO");
+        assertEquals(itemDetails.get(1).getTier(), 1);
+        assertEquals(itemDetails.get(1).getAmount().compareTo(new BigDecimal("5")), 0);
+        assertEquals(itemDetails.get(1).getQuantity().intValue(), 5);
+        assertEquals(itemDetails.get(1).getTierPrice().compareTo(BigDecimal.ONE), 0);
+
+        // Case 3
+        rawUsages = new ArrayList<RawUsage>();
+        rawUsages.add(new DefaultRawUsage(subscriptionId, new LocalDate(2014, 03, 20), "FOO", 76L));
+        rawUsages.add(new DefaultRawUsage(subscriptionId, new LocalDate(2014, 03, 21), "BAR", 101L));
+
+        result = produceInvoiceItems(rawUsages, TierBlockPolicy.TOP_TIER, UsageDetailMode.AGGREGATE);
+        assertEquals(result.size(), 1);
+        assertEquals(result.get(0).getAmount().compareTo(new BigDecimal("9620")),0);
+
+        itemDetails = objectMapper.readValue(result.get(0).getItemDetails(), new TypeReference<List<UsageInArrearDetail>>() {});
+        // BAR: 101 * 20 = 2020
+        assertEquals(itemDetails.get(0).getTierUnit(), "BAR");
+        assertEquals(itemDetails.get(0).getTier(), 2);
+        assertEquals(itemDetails.get(0).getAmount().compareTo(new BigDecimal("2020.0")), 0);
+        assertEquals(itemDetails.get(0).getQuantity().intValue(), 101);
+        assertEquals(itemDetails.get(0).getTierPrice().compareTo(new BigDecimal("20.0")), 0);
+        // FOO: 76 * 100 = 7500
+        assertEquals(itemDetails.get(1).getTierUnit(), "FOO");
+        assertEquals(itemDetails.get(1).getTier(), 3);
+        assertEquals(itemDetails.get(1).getAmount().compareTo(new BigDecimal("7600")), 0);
+        assertEquals(itemDetails.get(1).getQuantity().intValue(), 76);
+        assertEquals(itemDetails.get(1).getTierPrice().compareTo(new BigDecimal("100.0")), 0);
+    }
+
+    @Test(groups = "fast")
+    public void testComputeMissingItemsDetailModeTopTier() throws CatalogApiException, IOException {
+
+        // Case 1
+        List<RawUsage> rawUsages = new ArrayList<RawUsage>();
+        rawUsages.add(new DefaultRawUsage(subscriptionId, new LocalDate(2014, 03, 20), "FOO", 5L));
+        rawUsages.add(new DefaultRawUsage(subscriptionId, new LocalDate(2014, 03, 21), "BAR", 99L));
+
+        List<InvoiceItem> result = produceInvoiceItems(rawUsages, TierBlockPolicy.TOP_TIER, UsageDetailMode.DETAIL);
+        assertEquals(result.size(), 2);
+        // BAR: 99 * 2 = 198
+        assertEquals(result.get(0).getAmount().compareTo(new BigDecimal("198")), 0);
+        assertEquals(result.get(0).getQuantity().intValue(), 99);
+        assertEquals(result.get(0).getRate().compareTo(new BigDecimal("2.0")), 0);
+        // FOO: 5 * 1 = 5
+        assertEquals(result.get(1).getAmount().compareTo(new BigDecimal("5")), 0);
+        assertEquals(result.get(1).getQuantity().intValue(), 5);
+        assertEquals(result.get(1).getRate().compareTo(BigDecimal.ONE), 0);
+
+        // Case 2
+        rawUsages = new ArrayList<RawUsage>();
+        rawUsages.add(new DefaultRawUsage(subscriptionId, new LocalDate(2014, 03, 20), "FOO", 5L));
+        rawUsages.add(new DefaultRawUsage(subscriptionId, new LocalDate(2014, 03, 21), "BAR", 101L));
+
+        result = produceInvoiceItems(rawUsages, TierBlockPolicy.TOP_TIER, UsageDetailMode.DETAIL);
+        assertEquals(result.size(), 2);
+         // BAR: 101 * 20 = 2020
+        assertEquals(result.get(0).getAmount().compareTo(new BigDecimal("2020.0")), 0);
+        assertEquals(result.get(0).getQuantity().intValue(), 101);
+        assertEquals(result.get(0).getRate().compareTo(new BigDecimal("20.0")), 0);
+        // FOO: 5 * 1 = 5
+        assertEquals(result.get(1).getAmount().compareTo(new BigDecimal("5")), 0);
+        assertEquals(result.get(1).getQuantity().intValue(), 5);
+        assertEquals(result.get(1).getRate().compareTo(BigDecimal.ONE), 0);
+
+        // Case 3
+        rawUsages = new ArrayList<RawUsage>();
+        rawUsages.add(new DefaultRawUsage(subscriptionId, new LocalDate(2014, 03, 20), "FOO", 76L));
+        rawUsages.add(new DefaultRawUsage(subscriptionId, new LocalDate(2014, 03, 21), "BAR", 101L));
+
+        result = produceInvoiceItems(rawUsages, TierBlockPolicy.TOP_TIER, UsageDetailMode.DETAIL);
+        assertEquals(result.size(), 2);
+        // BAR: 101 * 20 = 2020
+        assertEquals(result.get(0).getAmount().compareTo(new BigDecimal("2020.0")), 0);
+        assertEquals(result.get(0).getQuantity().intValue(), 101);
+        assertEquals(result.get(0).getRate().compareTo(new BigDecimal("20.0")), 0);
+        // FOO: 76 * 100 = 7500
+        assertEquals(result.get(1).getAmount().compareTo(new BigDecimal("7600")), 0);
+        assertEquals(result.get(1).getQuantity().intValue(), 76);
+        assertEquals(result.get(1).getRate().compareTo(new BigDecimal("100.0")), 0);
+    }
+
+    private List<InvoiceItem> produceInvoiceItems(List<RawUsage> rawUsages, TierBlockPolicy tierBlockPolicy, UsageDetailMode usageDetailMode) throws CatalogApiException {
+
+        final LocalDate startDate = new LocalDate(2014, 03, 20);
+        final LocalDate firstBCDDate = new LocalDate(2014, 04, 15);
+        final LocalDate endDate = new LocalDate(2014, 05, 15);
+
+        final DefaultTieredBlock blockFooTier1 = createDefaultTieredBlock("FOO", 1, 10, BigDecimal.ONE);
+        final DefaultTieredBlock blockBarTier1 = createDefaultTieredBlock("BAR", 1, 100, new BigDecimal("2"));
+        final DefaultTier tier1 = createDefaultTierWithBlocks(blockFooTier1, blockBarTier1);
+
+        final DefaultTieredBlock blockFooTier2 = createDefaultTieredBlock("FOO", 1, 50, BigDecimal.TEN);
+        final DefaultTieredBlock blockBarTier2 = createDefaultTieredBlock("BAR", 1, 500, new BigDecimal("20"));
+        final DefaultTier tier2 = createDefaultTierWithBlocks(blockFooTier2, blockBarTier2);
+
+        final DefaultTieredBlock blockFooTier3 = createDefaultTieredBlock("FOO", 1, 75, new BigDecimal("100"));
+        final DefaultTieredBlock blockBarTier3 = createDefaultTieredBlock("BAR", 1, 750, new BigDecimal("200"));
+        final DefaultTier tier3 = createDefaultTierWithBlocks(blockFooTier3, blockBarTier3);
+        final DefaultUsage usage = createConsumableInArrearUsage(usageName, BillingPeriod.MONTHLY, tierBlockPolicy, tier1, tier2, tier3);
+
+        final LocalDate targetDate = endDate;
+
+        final BillingEvent event1 = createMockBillingEvent(startDate.toDateTimeAtStartOfDay(DateTimeZone.UTC),BillingPeriod.MONTHLY, Collections.<Usage>emptyList());
+        final BillingEvent event2 = createMockBillingEvent(endDate.toDateTimeAtStartOfDay(DateTimeZone.UTC), BillingPeriod.MONTHLY, Collections.<Usage>emptyList());
+
+        final ContiguousIntervalUsageInArrear intervalConsumableInArrear = createContiguousIntervalConsumableInArrear(usage, rawUsages, targetDate, true, usageDetailMode, event1, event2);
+
+        final UsageInArrearItemsAndNextNotificationDate usageResult = intervalConsumableInArrear.computeMissingItemsAndNextNotificationDate(ImmutableList.<InvoiceItem>of());
+        final List<InvoiceItem> rawResults = usageResult.getInvoiceItems();
+        final List<InvoiceItem> result = ImmutableList.copyOf(Iterables.filter(rawResults, new Predicate<InvoiceItem>() {
+            @Override
+            public boolean apply(final InvoiceItem input) {
+                return input.getAmount().compareTo(BigDecimal.ZERO) > 0;
+            }
+        }));
+
+        for (InvoiceItem item: result) {
+            assertEquals(item.getCurrency(), Currency.BTC);
+            assertEquals(item.getAccountId(), accountId);
+            assertEquals(item.getBundleId(), bundleId);
+            assertEquals(item.getSubscriptionId(), subscriptionId);
+            assertEquals(item.getPlanName(), planName);
+            assertEquals(item.getPhaseName(), phaseName);
+            assertEquals(item.getUsageName(), usage.getName());
+            assertTrue(item.getStartDate().compareTo(startDate) == 0);
+            assertTrue(item.getEndDate().compareTo(firstBCDDate) == 0);
+        }
+
+        return result;
+    }
 }

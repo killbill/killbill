@@ -19,6 +19,8 @@ tableFields(prefix) ::= <<
 , <prefix>rate
 , <prefix>currency
 , <prefix>linked_item_id
+, <prefix>quantity
+, <prefix>item_details
 , <prefix>created_by
 , <prefix>created_date
 >>
@@ -40,6 +42,8 @@ tableValues() ::= <<
 , :rate
 , :currency
 , :linkedItemId
+, :quantity
+, :itemDetails
 , :createdBy
 , :createdDate
 >>
