@@ -225,7 +225,7 @@ public class ContiguousIntervalUsageInArrear {
                 final BigDecimal amountToBill = toBeBilledForUnit(toBeBilledUsageDetails);
 
                 if (amountToBill.compareTo(BigDecimal.ZERO) > 0) {
-                    if (UsageDetailMode.DETAIL == usageDetailMode){
+                    if (UsageDetailMode.DETAIL == usageDetailMode && usage.getUsageType() == UsageType.CONSUMABLE){
                         for (UsageInArrearDetail toBeBilledUsageDetail : toBeBilledUsageDetails){
                             final InvoiceItem item = new UsageInvoiceItem(invoiceId, accountId, getBundleId(), getSubscriptionId(), getPlanName(),
                                                                           getPhaseName(), usage.getName(), ru.getStart(), ru.getEnd(), toBeBilledUsageDetail.getAmount(), toBeBilledUsageDetail.getTierPrice(), getCurrency(),toBeBilledUsageDetail.getQuantity(),null);
