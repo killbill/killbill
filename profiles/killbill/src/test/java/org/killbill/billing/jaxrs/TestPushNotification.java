@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014-2017 Groupon, Inc
- * Copyright 2014-2017 The Billing Project, LLC
+ * Copyright 2014-2018 Groupon, Inc
+ * Copyright 2014-2018 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -31,6 +31,7 @@ import javax.servlet.http.HttpServletResponse;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
+import org.killbill.billing.api.FlakyRetryAnalyzer;
 import org.killbill.billing.client.KillBillClientException;
 import org.killbill.billing.client.model.TenantKey;
 import org.killbill.billing.jaxrs.json.NotificationJson;
@@ -205,7 +206,8 @@ public class TestPushNotification extends TestJaxrsBase {
         unregisterTenantForCallback(callback);
     }
 
-    @Test(groups = "slow")
+    // Flaky, see https://github.com/killbill/killbill/issues/860
+    @Test(groups = "slow", retryAnalyzer = FlakyRetryAnalyzer.class)
     public void testPushNotificationRetriesMaxAttemptNumber() throws Exception {
         final String callback = registerTenantForCallback();
 
