@@ -151,29 +151,29 @@ public class TestContiguousIntervalCapacityInArrear extends TestUsageInArrearBas
         // Tier 1 (both units from tier 1)
         List<UsageInArrearDetail> result = intervalCapacityInArrear.computeToBeBilledCapacityInArrear(ImmutableList.<RolledUpUnit>of(new DefaultRolledUpUnit("unit1", 100L),
                                                                                                                                      new DefaultRolledUpUnit("unit2", 1000L),
-                                                                                                                                     new DefaultRolledUpUnit("unit3", 50L)));
+                                                                                                                                     new DefaultRolledUpUnit("unit3", 50L)), true);
         assertEquals(result.size(), 3);
         assertTrue(intervalCapacityInArrear.toBeBilledForUnit(result).compareTo(BigDecimal.TEN) == 0);
 
         // Tier 2 (only one unit from tier 1)
         result = intervalCapacityInArrear.computeToBeBilledCapacityInArrear(ImmutableList.<RolledUpUnit>of(new DefaultRolledUpUnit("unit1", 100L),
-                                                                                                           new DefaultRolledUpUnit("unit2", 1001L)));
+                                                                                                           new DefaultRolledUpUnit("unit2", 1001L)), true);
         assertTrue(intervalCapacityInArrear.toBeBilledForUnit(result).compareTo(new BigDecimal("20.0")) == 0);
 
         // Tier 2 (only one unit from tier 1)
         result = intervalCapacityInArrear.computeToBeBilledCapacityInArrear(ImmutableList.<RolledUpUnit>of(new DefaultRolledUpUnit("unit1", 101L),
-                                                                                                           new DefaultRolledUpUnit("unit2", 1000L)));
+                                                                                                           new DefaultRolledUpUnit("unit2", 1000L)), true);
         assertTrue(intervalCapacityInArrear.toBeBilledForUnit(result).compareTo(new BigDecimal("20.0")) == 0);
 
 
         // Tier 2 (both units from tier 2)
         result = intervalCapacityInArrear.computeToBeBilledCapacityInArrear(ImmutableList.<RolledUpUnit>of(new DefaultRolledUpUnit("unit1", 101L),
-                                                                                                           new DefaultRolledUpUnit("unit2", 1001L)));
+                                                                                                           new DefaultRolledUpUnit("unit2", 1001L)), true);
         assertTrue(intervalCapacityInArrear.toBeBilledForUnit(result).compareTo(new BigDecimal("20.0")) == 0);
 
         // Tier 3 (only one unit from tier 3)
         result = intervalCapacityInArrear.computeToBeBilledCapacityInArrear(ImmutableList.<RolledUpUnit>of(new DefaultRolledUpUnit("unit1", 10L),
-                                                                                                           new DefaultRolledUpUnit("unit2", 2001L)));
+                                                                                                           new DefaultRolledUpUnit("unit2", 2001L)), true);
         assertTrue(intervalCapacityInArrear.toBeBilledForUnit(result).compareTo(new BigDecimal("30.0")) == 0);
     }
 
