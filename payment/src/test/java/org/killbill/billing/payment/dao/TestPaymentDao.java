@@ -295,7 +295,8 @@ public class TestPaymentDao extends PaymentTestSuiteWithEmbeddedDB {
         assertEquals(deletedPaymentMethod.getPluginName(), pluginName);
     }
 
-    @Test(groups = "slow")
+    // Flaky, see https://github.com/killbill/killbill/issues/860
+    @Test(groups = "slow", retryAnalyzer = FlakyRetryAnalyzer.class)
     public void testPendingTransactions() {
 
         final UUID paymentMethodId = UUID.randomUUID();
