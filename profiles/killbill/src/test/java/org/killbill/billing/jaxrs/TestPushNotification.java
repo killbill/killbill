@@ -234,16 +234,16 @@ public class TestPushNotification extends TestJaxrsBase {
 
         resetCallbackStatusProperties();
 
-        // move clock 15 minutes and get 1st retry
-        clock.addDeltaFromReality(900000);
+        // move clock 15 minutes (+10s for flakiness) and get 1st retry
+        clock.addDeltaFromReality(910000);
 
         assertAllCallbacksCompleted();
         Assert.assertTrue(callbackCompletedWithError);
 
         resetCallbackStatusProperties();
 
-        // move clock an hour and get 2nd retry
-        clock.addDeltaFromReality(3600000);
+        // move clock an hour (+10s for flakiness) and get 2nd retry
+        clock.addDeltaFromReality(3610000);
 
         assertAllCallbacksCompleted();
         Assert.assertTrue(callbackCompletedWithError);
