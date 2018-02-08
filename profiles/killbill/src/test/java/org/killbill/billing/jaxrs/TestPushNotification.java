@@ -153,7 +153,8 @@ public class TestPushNotification extends TestJaxrsBase {
         return callback;
     }
 
-    @Test(groups = "slow")
+    // Flaky, see https://github.com/killbill/killbill/issues/860
+    @Test(groups = "slow", retryAnalyzer = FlakyRetryAnalyzer.class)
     public void testPushNotificationRetries() throws Exception {
         final String callback = registerTenantForCallback();
 
