@@ -390,10 +390,12 @@ public class ContiguousIntervalUsageInArrear {
         Preconditions.checkState(isBuilt.get());
 
         final List<Tier> tiers = getCapacityInArrearTier(usage);
+
+        final Set<String> perUnitTypeDetailTierLevel = new HashSet<String>();
         int tierNum = 0;
+        final List<UsageInArrearDetail> toBeBilledDetails = Lists.newLinkedList();
         for (final Tier cur : tiers) {
             tierNum++;
-            List<UsageInArrearDetail> toBeBilledDetails = Lists.newLinkedList();
             boolean complies = true;
             for (final RolledUpUnit ro : roUnits) {
                 final Limit tierLimit = getTierLimit(cur, ro.getUnitType());
@@ -401,10 +403,12 @@ public class ContiguousIntervalUsageInArrear {
                 // Specifying a -1 value for last max tier will make the validation works
                 if (tierLimit.getMax() != (double) -1 && ro.getAmount().doubleValue() > tierLimit.getMax()) {
                     complies = false;
-                    break;
+                } else {
+                    if (!perUnitTypeDetailTierLevel.contains(ro.getUnitType())) {
+                        toBeBilledDetails.add(new UsageInArrearDetail(tierNum, ro.getUnitType(), cur.getRecurringPrice().getPrice(getCurrency()), ro.getAmount().intValue(), BigDecimal.ZERO, BigDecimal.ZERO, ""));
+                        perUnitTypeDetailTierLevel.add(ro.getUnitType());
+                    }
                 }
-                toBeBilledDetails.add(new UsageInArrearDetail(tierNum, ro.getUnitType(), cur.getRecurringPrice().getPrice(getCurrency()), ro.getAmount().intValue(), BigDecimal.ZERO, BigDecimal.ZERO, ""));
-
             }
             if (complies) {
                 toBeBilledDetails.get(toBeBilledDetails.size() - 1).setAmount(cur.getRecurringPrice().getPrice(getCurrency()));
@@ -443,7 +447,6 @@ public class ContiguousIntervalUsageInArrear {
     List<UsageInArrearDetail> computeToBeBilledConsumableInArrearWith_ALL_TIERS(final List<TieredBlock> tieredBlocks, final Long units) throws CatalogApiException {
 
         List<UsageInArrearDetail> toBeBilledDetails = Lists.newLinkedList();
-        BigDecimal result = BigDecimal.ZERO;
         int remainingUnits = units.intValue();
         int tierNum = 0;
         for (final TieredBlock tieredBlock : tieredBlocks) {

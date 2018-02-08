@@ -292,15 +292,16 @@ public class TestContiguousIntervalCapacityInArrear extends TestUsageInArrearBas
         assertEquals(result.get(0).getAmount().compareTo(BigDecimal.TEN),0, String.format("%s != 10.0", result.get(0).getAmount()));
 
         itemDetails = objectMapper.readValue(result.get(0).getItemDetails(), new TypeReference<List<UsageInArrearDetail>>() {});
-        // BAR item detail
-        assertEquals(itemDetails.get(0).getTierUnit(), "BAR");
-        assertEquals(itemDetails.get(0).getTier(), 2);
-        assertEquals(itemDetails.get(0).getQuantity().intValue(), 101);
-        assertEquals(itemDetails.get(0).getTierPrice().compareTo(BigDecimal.TEN), 0);
         // FOO item detail
-        assertEquals(itemDetails.get(1).getTierUnit(), "FOO");
+        assertEquals(itemDetails.get(0).getTierUnit(), "FOO");
+        assertEquals(itemDetails.get(0).getTier(), 1);
+        assertEquals(itemDetails.get(0).getQuantity().intValue(), 5);
+        assertEquals(itemDetails.get(0).getTierPrice().compareTo(BigDecimal.ONE), 0);
+
+        // BAR item detail
+        assertEquals(itemDetails.get(1).getTierUnit(), "BAR");
         assertEquals(itemDetails.get(1).getTier(), 2);
-        assertEquals(itemDetails.get(1).getQuantity().intValue(), 5);
+        assertEquals(itemDetails.get(1).getQuantity().intValue(), 101);
         assertEquals(itemDetails.get(1).getTierPrice().compareTo(BigDecimal.TEN), 0);
 
         // Case 3
@@ -314,9 +315,9 @@ public class TestContiguousIntervalCapacityInArrear extends TestUsageInArrearBas
         itemDetails = objectMapper.readValue(result.get(0).getItemDetails(), new TypeReference<List<UsageInArrearDetail>>() {});
         // BAR item detail
         assertEquals(itemDetails.get(0).getTierUnit(), "BAR");
-        assertEquals(itemDetails.get(0).getTier(), 3);
+        assertEquals(itemDetails.get(0).getTier(), 2);
         assertEquals(itemDetails.get(0).getQuantity().intValue(), 101);
-        assertEquals(itemDetails.get(0).getTierPrice().compareTo(new BigDecimal("100.0")), 0);
+        assertEquals(itemDetails.get(0).getTierPrice().compareTo(new BigDecimal("10.0")), 0);
         // FOO item detail
         assertEquals(itemDetails.get(1).getTierUnit(), "FOO");
         assertEquals(itemDetails.get(1).getTier(), 3);
