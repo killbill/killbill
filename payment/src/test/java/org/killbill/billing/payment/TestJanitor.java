@@ -28,6 +28,7 @@ import java.util.concurrent.TimeUnit;
 
 import org.joda.time.LocalDate;
 import org.killbill.billing.account.api.Account;
+import org.killbill.billing.api.FlakyRetryAnalyzer;
 import org.killbill.billing.api.TestApiListener;
 import org.killbill.billing.api.TestApiListener.NextEvent;
 import org.killbill.billing.callcontext.InternalCallContext;
@@ -414,7 +415,8 @@ public class TestJanitor extends PaymentTestSuiteWithEmbeddedDB {
     }
 
     // The test will check that when a PENDING entry stays PENDING, we go through all our retries and eventually give up (no infinite loop of retries)
-    @Test(groups = "slow")
+    // Flaky, see https://github.com/killbill/killbill/issues/860
+    @Test(groups = "slow", retryAnalyzer = FlakyRetryAnalyzer.class)
     public void testPendingEntriesThatDontMove() throws Exception {
 
         final BigDecimal requestedAmount = BigDecimal.TEN;
@@ -447,13 +449,13 @@ public class TestJanitor extends PaymentTestSuiteWithEmbeddedDB {
             // Verify there is a notification to retry updating the value
             assertEquals(getPendingNotificationCnt(internalCallContext), 1);
 
-            clock.addDeltaFromReality(cur.getMillis() + 1);
+            clock.addDeltaFromReality(cur.getMillis() + 1000);
 
             assertNotificationsCompleted(internalCallContext, 5);
             // We add a sleep here to make sure the notification gets processed. Note that calling assertNotificationsCompleted alone would not work
             // because there is a point in time where the notification queue is empty (showing notification was processed), but the processing of the notification
             // will itself enter a new notification, and so the synchronization is difficult without writing *too much code*.
-            Thread.sleep(1000);
+            Thread.sleep(1500);
             assertNotificationsCompleted(internalCallContext, 5);
 
             final Payment updatedPayment = paymentApi.getPayment(payment.getId(), false, false, ImmutableList.<PluginProperty>of(), callContext);
