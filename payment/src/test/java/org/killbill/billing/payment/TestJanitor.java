@@ -1,6 +1,6 @@
 /*
- * Copyright 2014-2017 Groupon, Inc
- * Copyright 2014-2017 The Billing Project, LLC
+ * Copyright 2014-2018 Groupon, Inc
+ * Copyright 2014-2018 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -20,6 +20,7 @@ package org.killbill.billing.payment;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -512,11 +513,19 @@ public class TestJanitor extends PaymentTestSuiteWithEmbeddedDB {
                 @Override
                 public Boolean call() throws Exception {
                     boolean completed = true;
-                    for (final NotificationEventWithMetadata<NotificationEvent> notificationEvent : notificationQueueService.getNotificationQueue(DefaultPaymentService.SERVICE_NAME, Janitor.QUEUE_NAME).getFutureOrInProcessingNotificationForSearchKeys(internalCallContext.getAccountRecordId(), internalCallContext.getTenantRecordId())) {
-                        if (!notificationEvent.getEffectiveDate().isAfter(clock.getUTCNow())) {
-                            completed = false;
+                    final Iterator<NotificationEventWithMetadata<NotificationEvent>> iterator = notificationQueueService.getNotificationQueue(DefaultPaymentService.SERVICE_NAME, Janitor.QUEUE_NAME).getFutureOrInProcessingNotificationForSearchKeys(internalCallContext.getAccountRecordId(), internalCallContext.getTenantRecordId()).iterator();
+                    try {
+                        while (iterator.hasNext()) {
+                            final NotificationEventWithMetadata<NotificationEvent> notificationEvent = iterator.next();
+                            if (!notificationEvent.getEffectiveDate().isAfter(clock.getUTCNow())) {
+                                completed = false;
+                            }
                         }
+                    } finally {
                         // Go through all results to close the connection
+                        while (iterator.hasNext()) {
+                            iterator.next();
+                        }
                     }
                     return completed;
                 }
