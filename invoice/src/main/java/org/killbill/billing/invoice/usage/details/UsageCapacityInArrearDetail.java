@@ -51,11 +51,10 @@ public class UsageCapacityInArrearDetail implements UsageInArrearDetail {
         return tierDetails;
     }
 
-    // TODO STEPH optimize
     @Override
     public String toJson(final ObjectMapper objectMapper) {
         String result = null;
-        if (tierDetails != null && tierDetails.size() > 0){
+        if (tierDetails != null && tierDetails.size() > 0) {
             try {
                 result = objectMapper.writeValueAsString(tierDetails);
             } catch (JsonProcessingException e) {
