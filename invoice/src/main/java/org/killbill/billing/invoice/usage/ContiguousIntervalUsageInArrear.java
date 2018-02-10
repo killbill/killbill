@@ -46,24 +46,28 @@ import org.killbill.billing.invoice.api.InvoiceItem;
 import org.killbill.billing.invoice.api.InvoiceItemType;
 import org.killbill.billing.invoice.generator.BillingIntervalDetail;
 import org.killbill.billing.invoice.model.UsageInvoiceItem;
+import org.killbill.billing.invoice.usage.details.UsageCapacityInArrearDetail;
+import org.killbill.billing.invoice.usage.details.UsageConsumableInArrearDetail;
+import org.killbill.billing.invoice.usage.details.UsageConsumableInArrearTierUnitDetail;
+import org.killbill.billing.invoice.usage.details.UsageInArrearDetail;
+import org.killbill.billing.invoice.usage.details.UsageInArrearDetailInitializer;
+import org.killbill.billing.invoice.usage.details.UsageInArrearTierUnitDetail;
 import org.killbill.billing.junction.BillingEvent;
 import org.killbill.billing.usage.RawUsage;
 import org.killbill.billing.usage.api.RolledUpUnit;
 import org.killbill.billing.usage.api.RolledUpUsage;
 import org.killbill.billing.util.config.definition.InvoiceConfig.UsageDetailMode;
+import org.killbill.billing.util.jackson.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 
@@ -71,8 +75,6 @@ import static org.killbill.billing.invoice.usage.UsageUtils.getCapacityInArrearT
 import static org.killbill.billing.invoice.usage.UsageUtils.getCapacityInArrearUnitTypes;
 import static org.killbill.billing.invoice.usage.UsageUtils.getConsumableInArrearTieredBlocks;
 import static org.killbill.billing.invoice.usage.UsageUtils.getConsumableInArrearUnitTypes;
-
-
 
 /**
  * There is one such class per subscriptionId, matching a given in arrear/consumable usage section and
@@ -208,56 +210,84 @@ public class ContiguousIntervalUsageInArrear {
             // 3. Computes total billed usage amount
             final BigDecimal billedUsage = computeBilledUsage(billedItems);
 
-            List<UsageInArrearDetail> toBeBilledUsageDetails = Lists.newLinkedList();
+            final List<RolledUpUnit> rolledUpUnits = ru.getRolledUpUnits();
+
+            UsageInArrearDetail toBeBilledUsageDetails = new UsageInArrearDetailInitializer();
             BigDecimal toBeBilledUsage;
             if (usage.getUsageType() == UsageType.CAPACITY) {
                 // In CAPACITY mode we build across units
-                toBeBilledUsageDetails.addAll(computeToBeBilledCapacityInArrear(ru.getRolledUpUnits(), areAllBilledItemsWithDetails));
-            } else /* UsageType.CONSUMABLE */{
+                toBeBilledUsageDetails = computeToBeBilledCapacityInArrear(rolledUpUnits);
+            } else /* UsageType.CONSUMABLE */ {
+
+                final Map<String, List<UsageConsumableInArrearTierUnitDetail>> previousUnitsUsage;
+                if (areAllBilledItemsWithDetails) {
+                    previousUnitsUsage = new HashMap<String, List<UsageConsumableInArrearTierUnitDetail>>();
+                    for (RolledUpUnit cur : rolledUpUnits) {
+                        final List<UsageConsumableInArrearTierUnitDetail> usageInArrearDetailForUnitType = getUsageConsumableInArrearDetailForUnitType(billedItems, cur.getUnitType());
+                        previousUnitsUsage.put(cur.getUnitType(), usageInArrearDetailForUnitType);
+                    }
+                } else {
+                    previousUnitsUsage = ImmutableMap.of();
+                }
+
                 // In CONSUMABLE mode we build for each unit independently, hence *for* loop
-                for (final RolledUpUnit cur : ru.getRolledUpUnits()) {
+                final List<UsageConsumableInArrearTierUnitDetail> usageConsumableInArrearTierUnitDetails = new ArrayList<UsageConsumableInArrearTierUnitDetail>();
+                for (final RolledUpUnit cur : rolledUpUnits) {
                     if (!unitTypes.contains(cur.getUnitType())) {
                         log.warn("ContiguousIntervalConsumableInArrear is skipping unitType " + cur.getUnitType());
                         continue;
                     }
-                    toBeBilledUsageDetails.addAll(computeToBeBilledConsumableInArrear(cur, areAllBilledItemsWithDetails));
+                    final List<UsageConsumableInArrearTierUnitDetail> previousUsage = previousUnitsUsage.containsKey(cur.getUnitType()) ? previousUnitsUsage.get(cur.getUnitType()) : ImmutableList.<UsageConsumableInArrearTierUnitDetail>of();
+
+                    usageConsumableInArrearTierUnitDetails.addAll(computeToBeBilledConsumableInArrear(cur, previousUsage, areAllBilledItemsWithDetails));
                 }
+                toBeBilledUsageDetails = new UsageConsumableInArrearDetail(usageConsumableInArrearTierUnitDetails);
             }
             // Based on details computed, compute total (proposed) amount
-            toBeBilledUsage = toBeBilledForUnit(toBeBilledUsageDetails);
-
+            toBeBilledUsage = toBeBilledUsageDetails.getAmount();
 
             // Compute final amount by subtracting  amount that was already billed.
             if (!billedItems.iterator().hasNext() || billedUsage.compareTo(toBeBilledUsage) < 0) {
                 final BigDecimal amountToBill;
-                if (areAllBilledItemsWithDetails) {
-                    toBeBilledUsageDetails = reconcileExistedBilledWithToBeBilled(billedItems, toBeBilledUsageDetails);
-                    amountToBill = toBeBilledForUnit(toBeBilledUsageDetails);
+                if (areAllBilledItemsWithDetails && usage.getUsageType() == UsageType.CONSUMABLE) {
+                    amountToBill = toBeBilledUsage;
                 } else {
-                    // If we don't have details from previous already billed usage, we can't reconcile each of the usage detail, so we just compute the overall price
-                    amountToBill = toBeBilledForUnit(toBeBilledUsageDetails).subtract(billedUsage);
+                    amountToBill = toBeBilledUsage.subtract(billedUsage);
                 }
 
                 if (amountToBill.compareTo(BigDecimal.ZERO) > 0) {
-                    if (UsageDetailMode.DETAIL == usageDetailMode && usage.getUsageType() == UsageType.CONSUMABLE){
-                        for (UsageInArrearDetail toBeBilledUsageDetail : toBeBilledUsageDetails){
+                    if (UsageDetailMode.DETAIL == usageDetailMode && usage.getUsageType() == UsageType.CONSUMABLE) {
+                        for (UsageConsumableInArrearTierUnitDetail toBeBilledUsageDetail : ((UsageConsumableInArrearDetail) toBeBilledUsageDetails).getTierDetails()) {
                             final InvoiceItem item = new UsageInvoiceItem(invoiceId, accountId, getBundleId(), getSubscriptionId(), getPlanName(),
-                                                                          getPhaseName(), usage.getName(), ru.getStart(), ru.getEnd(), toBeBilledUsageDetail.getAmount(), toBeBilledUsageDetail.getTierPrice(), getCurrency(),toBeBilledUsageDetail.getQuantity(),null);
+                                                                          getPhaseName(), usage.getName(), ru.getStart(), ru.getEnd(), toBeBilledUsageDetail.getAmount(), toBeBilledUsageDetail.getTierPrice(), getCurrency(), toBeBilledUsageDetail.getQuantity(), null);
                             result.add(item);
                         }
                     } else {
+                        final String itemDetails = areAllBilledItemsWithDetails ? toBeBilledUsageDetails.toJson(objectMapper) : null;
                         final InvoiceItem item = new UsageInvoiceItem(invoiceId, accountId, getBundleId(), getSubscriptionId(), getPlanName(),
-                                                                      getPhaseName(), usage.getName(), ru.getStart(), ru.getEnd(), amountToBill, null, getCurrency(),null, toJson(toBeBilledUsageDetails));
+                                                                      getPhaseName(), usage.getName(), ru.getStart(), ru.getEnd(), amountToBill, null, getCurrency(), null, itemDetails);
                         result.add(item);
                     }
                 }
             }
         }
-
         final LocalDate nextNotificationdate = computeNextNotificationDate();
         return new UsageInArrearItemsAndNextNotificationDate(result, nextNotificationdate);
     }
 
+    private List<UsageConsumableInArrearTierUnitDetail> getUsageConsumableInArrearDetailForUnitType(final Iterable<InvoiceItem> billedItems, final String unitType) {
+
+        final List<UsageConsumableInArrearTierUnitDetail> result = new ArrayList<UsageConsumableInArrearTierUnitDetail>();
+        for (final InvoiceItem bi : billedItems) {
+            final List<UsageConsumableInArrearTierUnitDetail> billedUsageItemDetails = fromJson(bi.getItemDetails());
+            for (final UsageConsumableInArrearTierUnitDetail curDetail : billedUsageItemDetails) {
+                if (curDetail.getTierUnit().equals(unitType)) {
+                    result.add(curDetail);
+                }
+            }
+        }
+        return result;
+    }
 
     private boolean areAllBilledItemsWithDetails(final Iterable<InvoiceItem> billedItems) {
         boolean atLeastOneItemWithoutDetails = Iterables.any(billedItems, new Predicate<InvoiceItem>() {
@@ -335,7 +365,7 @@ public class ContiguousIntervalUsageInArrear {
                 if (prevRawUsage != null) {
                     if (prevRawUsage.getDate().compareTo(prevDate) >= 0 && prevRawUsage.getDate().compareTo(curDate) < 0) {
                         final Long currentAmount = perRangeUnitToAmount.get(prevRawUsage.getUnitType());
-                        final Long updatedAmount =  computeUpdatedAmount(currentAmount, prevRawUsage.getAmount());
+                        final Long updatedAmount = computeUpdatedAmount(currentAmount, prevRawUsage.getAmount());
                         perRangeUnitToAmount.put(prevRawUsage.getUnitType(), updatedAmount);
                         prevRawUsage = null;
                     }
@@ -356,7 +386,7 @@ public class ContiguousIntervalUsageInArrear {
                         }
 
                         final Long currentAmount = perRangeUnitToAmount.get(curRawUsage.getUnitType());
-                        final Long updatedAmount =  computeUpdatedAmount(currentAmount, curRawUsage.getAmount());
+                        final Long updatedAmount = computeUpdatedAmount(currentAmount, curRawUsage.getAmount());
                         perRangeUnitToAmount.put(curRawUsage.getUnitType(), updatedAmount);
                     }
                 }
@@ -394,7 +424,6 @@ public class ContiguousIntervalUsageInArrear {
         }
     }
 
-
     private Limit getTierLimit(final Tier tier, final String unitType) {
         for (final Limit cur : tier.getLimits()) {
             if (cur.getUnit().getName().equals(unitType)) {
@@ -411,14 +440,14 @@ public class ContiguousIntervalUsageInArrear {
      * @throws CatalogApiException
      */
     @VisibleForTesting
-    List<UsageInArrearDetail> computeToBeBilledCapacityInArrear(final List<RolledUpUnit> roUnits, final boolean areAllBilledItemsWithDetails) throws CatalogApiException {
+    UsageCapacityInArrearDetail computeToBeBilledCapacityInArrear(final List<RolledUpUnit> roUnits) throws CatalogApiException {
         Preconditions.checkState(isBuilt.get());
 
         final List<Tier> tiers = getCapacityInArrearTier(usage);
 
         final Set<String> perUnitTypeDetailTierLevel = new HashSet<String>();
         int tierNum = 0;
-        final List<UsageInArrearDetail> toBeBilledDetails = Lists.newLinkedList();
+        final List<UsageInArrearTierUnitDetail> toBeBilledDetails = Lists.newLinkedList();
         for (final Tier cur : tiers) {
             tierNum++;
             boolean complies = true;
@@ -430,20 +459,19 @@ public class ContiguousIntervalUsageInArrear {
                     complies = false;
                 } else {
                     if (!perUnitTypeDetailTierLevel.contains(ro.getUnitType())) {
-                        toBeBilledDetails.add(new UsageInArrearDetail(tierNum, ro.getUnitType(), cur.getRecurringPrice().getPrice(getCurrency()), ro.getAmount().intValue(), BigDecimal.ZERO, BigDecimal.ZERO, areAllBilledItemsWithDetails, ""));
+                        toBeBilledDetails.add(new UsageConsumableInArrearTierUnitDetail(tierNum, ro.getUnitType(), cur.getRecurringPrice().getPrice(getCurrency()), 1, ro.getAmount().intValue(), BigDecimal.ZERO));
                         perUnitTypeDetailTierLevel.add(ro.getUnitType());
                     }
                 }
             }
             if (complies) {
-                toBeBilledDetails.get(toBeBilledDetails.size() - 1).setAmount(cur.getRecurringPrice().getPrice(getCurrency()));
-                return toBeBilledDetails;
+                return new UsageCapacityInArrearDetail(toBeBilledDetails, cur.getRecurringPrice().getPrice(getCurrency()));
             }
         }
         // Probably invalid catalog config
         final Joiner joiner = Joiner.on(", ");
         joiner.join(roUnits);
-        Preconditions.checkState(false, "Could not find tier for usage " + usage.getName()+ "matching with data = " + joiner.join(roUnits));
+        Preconditions.checkState(false, "Could not find tier for usage " + usage.getName() + "matching with data = " + joiner.join(roUnits));
         return null;
     }
 
@@ -453,33 +481,36 @@ public class ContiguousIntervalUsageInArrear {
      * @throws CatalogApiException
      */
     @VisibleForTesting
-    List<UsageInArrearDetail> computeToBeBilledConsumableInArrear(final RolledUpUnit roUnit, final boolean areAllBilledItemsWithDetails) throws CatalogApiException {
+    List<UsageConsumableInArrearTierUnitDetail> computeToBeBilledConsumableInArrear(final RolledUpUnit roUnit, final List<UsageConsumableInArrearTierUnitDetail> previousUsage, final boolean areAllBilledItemsWithDetails) throws CatalogApiException {
 
         Preconditions.checkState(isBuilt.get());
         final List<TieredBlock> tieredBlocks = getConsumableInArrearTieredBlocks(usage, roUnit.getUnitType());
 
         switch (usage.getTierBlockPolicy()) {
             case ALL_TIERS:
-                return computeToBeBilledConsumableInArrearWith_ALL_TIERS(tieredBlocks, roUnit.getAmount(), areAllBilledItemsWithDetails);
+                return computeToBeBilledConsumableInArrearWith_ALL_TIERS(tieredBlocks, previousUsage, roUnit.getAmount());
             case TOP_TIER:
-                return Arrays.asList(computeToBeBilledConsumableInArrearWith_TOP_TIER(tieredBlocks, roUnit.getAmount(), areAllBilledItemsWithDetails));
+                return Arrays.asList(computeToBeBilledConsumableInArrearWith_TOP_TIER(tieredBlocks, previousUsage, roUnit.getAmount(), areAllBilledItemsWithDetails));
             default:
                 throw new IllegalStateException("Unknown TierBlockPolicy " + usage.getTierBlockPolicy());
         }
     }
 
+    List<UsageConsumableInArrearTierUnitDetail> computeToBeBilledConsumableInArrearWith_ALL_TIERS(final List<TieredBlock> tieredBlocks, final List<UsageConsumableInArrearTierUnitDetail> previousUsage, final Long units) throws CatalogApiException {
 
-    List<UsageInArrearDetail> computeToBeBilledConsumableInArrearWith_ALL_TIERS(final List<TieredBlock> tieredBlocks, final Long units, final boolean areAllBilledItemsWithDetails) throws CatalogApiException {
-
-        List<UsageInArrearDetail> toBeBilledDetails = Lists.newLinkedList();
+        List<UsageConsumableInArrearTierUnitDetail> toBeBilledDetails = Lists.newLinkedList();
         int remainingUnits = units.intValue();
         int tierNum = 0;
+
+        final int lastPreviousUsageTier = previousUsage.size(); // we count tier from 1, 2, ...
+        final boolean hasPreviousUsage = lastPreviousUsageTier > 0;
+
         for (final TieredBlock tieredBlock : tieredBlocks) {
 
             tierNum++;
             final int blockTierSize = tieredBlock.getSize().intValue();
             final int tmp = remainingUnits / blockTierSize + (remainingUnits % blockTierSize == 0 ? 0 : 1);
-            final int nbUsedTierBlocks;
+            int nbUsedTierBlocks;
             if (tmp > tieredBlock.getMax()) {
                 nbUsedTierBlocks = tieredBlock.getMax().intValue();
                 remainingUnits -= tieredBlock.getMax() * blockTierSize;
@@ -489,13 +520,26 @@ public class ContiguousIntervalUsageInArrear {
             }
 
             if (nbUsedTierBlocks > 0) {
-                toBeBilledDetails.add(new UsageInArrearDetail(tierNum, tieredBlock.getUnit().getName(), tieredBlock.getPrice().getPrice(getCurrency()), nbUsedTierBlocks, areAllBilledItemsWithDetails));
+                if (hasPreviousUsage) {
+                    final Integer previousUsageQuantity = tierNum <= lastPreviousUsageTier ? previousUsage.get(tierNum - 1).getQuantity() : 0;
+                    if (tierNum < lastPreviousUsageTier) {
+                        Preconditions.checkState(nbUsedTierBlocks == previousUsageQuantity, String.format("Expected usage for tier='%d', unit='%s' to be full, instead found units='[%d/%d]'",
+                                                                                                          tierNum, tieredBlock.getUnit().getName(), nbUsedTierBlocks, previousUsageQuantity));
+                    } else {
+                        Preconditions.checkState(nbUsedTierBlocks - previousUsageQuantity >= 0, String.format("Expected usage for tier='%d', unit='%s' to contain at least as mush as current usage, instead found units='[%d/%d]",
+                                                                                                              tierNum, tieredBlock.getUnit().getName(), nbUsedTierBlocks, previousUsageQuantityq));
+                    }
+                    nbUsedTierBlocks = nbUsedTierBlocks - previousUsageQuantity;
+                }
+                if (nbUsedTierBlocks > 0) {
+                    toBeBilledDetails.add(new UsageConsumableInArrearTierUnitDetail(tierNum, tieredBlock.getUnit().getName(), tieredBlock.getPrice().getPrice(getCurrency()), blockTierSize, nbUsedTierBlocks));
+                }
             }
         }
         return toBeBilledDetails;
     }
 
-    UsageInArrearDetail computeToBeBilledConsumableInArrearWith_TOP_TIER(final List<TieredBlock> tieredBlocks, final Long units, final boolean areAllBilledItemsWithDetails) throws CatalogApiException {
+    UsageConsumableInArrearTierUnitDetail computeToBeBilledConsumableInArrearWith_TOP_TIER(final List<TieredBlock> tieredBlocks, final List<UsageConsumableInArrearTierUnitDetail> previousUsage, final Long units, final boolean areAllBilledItemsWithDetails) throws CatalogApiException {
 
         int remainingUnits = units.intValue();
 
@@ -520,9 +564,8 @@ public class ContiguousIntervalUsageInArrear {
         final int lastBlockTierSize = targetBlock.getSize().intValue();
         final int nbBlocks = units.intValue() / lastBlockTierSize + (units.intValue() % lastBlockTierSize == 0 ? 0 : 1);
 
-        return new UsageInArrearDetail(targetTierNum, targetBlock.getUnit().getName(), targetBlock.getPrice().getPrice(getCurrency()), nbBlocks, areAllBilledItemsWithDetails);
+        return new UsageConsumableInArrearTierUnitDetail(targetTierNum, targetBlock.getUnit().getName(), targetBlock.getPrice().getPrice(getCurrency()), targetBlock.getSize().intValue(), nbBlocks);
     }
-
 
     /**
      * @param filteredUsageForInterval the list of invoiceItem to consider
@@ -628,159 +671,29 @@ public class ContiguousIntervalUsageInArrear {
         }
     }
 
-    public BigDecimal toBeBilledForUnit(List<UsageInArrearDetail> toBeBilledDetails){
-        BigDecimal result = BigDecimal.ZERO;
-        for (UsageInArrearDetail toBeBilled: toBeBilledDetails){
-            result = result.add(toBeBilled.getAmount());
+    public BigDecimal toBeBilledForUnit(final List<UsageConsumableInArrearTierUnitDetail> toBeBilledDetails, final UsageType usageType) {
+        if (usageType == UsageType.CAPACITY) {
+            return toBeBilledDetails.get(0).getAmount();
+        } else {
+            BigDecimal result = BigDecimal.ZERO;
+            for (UsageConsumableInArrearTierUnitDetail toBeBilled : toBeBilledDetails) {
+                result = result.add(toBeBilled.getAmount());
+            }
+            return result;
         }
-        return result;
     }
 
-    private List<UsageInArrearDetail> reconcileExistedBilledWithToBeBilled(final Iterable<InvoiceItem> billedItems, final List<UsageInArrearDetail> toBeBilledUsageInArrearDetails) {
-        for (final InvoiceItem bi : billedItems) {
-            List<UsageInArrearDetail> billedUsageItemDetails = fromJson(bi.getItemDetails());
-
-            Preconditions.checkState(billedUsageItemDetails != null && billedUsageItemDetails.size() > 0);
-
-            for (final UsageInArrearDetail toBeBilledConsumable : toBeBilledUsageInArrearDetails) {
-                billedUsageItemDetails = toBeBilledConsumable.reconcile(billedUsageItemDetails);
-            }
-
-            if (billedUsageItemDetails != null && billedUsageItemDetails.size() > 0) {
-                for (final UsageInArrearDetail billedUsage : billedUsageItemDetails) {
-                    toBeBilledUsageInArrearDetails.add(new UsageInArrearDetail(billedUsage.getTier(), billedUsage.getTierUnit(), billedUsage.getTierPrice(),
-                                                                               billedUsage.getQuantity() * -1, billedUsage.getAmount().negate(), null, true, bi.getId().toString()));
-                }
-            }
-        }
-        return toBeBilledUsageInArrearDetails;
-    }
-
-    private static String toJson(final List<UsageInArrearDetail> toBeBilledUsageInArrearDetails) {
-        String result = null;
-        if (toBeBilledUsageInArrearDetails != null && toBeBilledUsageInArrearDetails.size() > 0){
+    public static List<UsageConsumableInArrearTierUnitDetail> fromJson(String itemDetails) {
+        List<UsageConsumableInArrearTierUnitDetail> toBeBilledUsageConsumableInArrearTierUnitDetails = null;
+        if (itemDetails != null) {
             try {
-                result = objectMapper.writeValueAsString(toBeBilledUsageInArrearDetails);
-            } catch (JsonProcessingException e) {
-                Preconditions.checkState(false, e.getMessage());
-            }
-        }
-        return result;
-    }
-
-    private static List<UsageInArrearDetail> fromJson(String itemDetails){
-        List<UsageInArrearDetail> toBeBilledUsageInArrearDetails = null;
-        if (itemDetails != null){
-            try {
-                toBeBilledUsageInArrearDetails = objectMapper.readValue(itemDetails, new TypeReference<List<UsageInArrearDetail>>() {});
+                toBeBilledUsageConsumableInArrearTierUnitDetails = objectMapper.readValue(itemDetails, new TypeReference<List<UsageConsumableInArrearTierUnitDetail>>() {});
             } catch (IOException e) {
                 Preconditions.checkState(false, e.getMessage());
             }
         }
 
-        return toBeBilledUsageInArrearDetails;
+        return toBeBilledUsageConsumableInArrearTierUnitDetails;
     }
 
-    public static class UsageInArrearDetail {
-
-        private final int tier;
-        private final String tierUnit;
-        private final BigDecimal tierPrice;
-        private Integer quantity;
-        private String reference;
-        private BigDecimal previousBilledAmount;
-        private boolean isPreviousBilledAmountAvailable;
-        private BigDecimal amount;
-
-        public UsageInArrearDetail(int tier, String tierUnit, BigDecimal tierPrice, Integer quantity, boolean isPreviousBilledAmountAvailable) {
-            this(tier, tierUnit, tierPrice, quantity, tierPrice.multiply(new BigDecimal(quantity)), BigDecimal.ZERO, isPreviousBilledAmountAvailable, "");
-        }
-
-        @JsonCreator
-        public UsageInArrearDetail(@JsonProperty("tier") int tier,
-                                   @JsonProperty("tierUnit") String tierUnit,
-                                   @JsonProperty("tierPrice") BigDecimal tierPrice,
-                                   @JsonProperty("quantity") Integer quantity,
-                                   @JsonProperty("amount") BigDecimal amount,
-                                    @JsonProperty("previousBilledAmount") BigDecimal previousBilledAmount,
-                                   @JsonProperty("isPreviousBilledAmountAvailable") boolean isPreviousBilledAmountAvailable,
-                                   @JsonProperty("reference") String reference) {
-            this.tier = tier;
-            this.tierUnit = tierUnit;
-            this.tierPrice = tierPrice;
-            this.quantity = quantity;
-            this.amount = amount;
-            this.previousBilledAmount = previousBilledAmount;
-            this.isPreviousBilledAmountAvailable = isPreviousBilledAmountAvailable;
-            this.reference = reference;
-        }
-
-        public int getTier() {
-            return tier;
-        }
-
-        public String getTierUnit() {
-            return tierUnit;
-        }
-
-        public BigDecimal getTierPrice() {
-            return tierPrice;
-        }
-
-        public Integer getQuantity() {
-            return quantity;
-        }
-
-        public BigDecimal getPreviousBilledAmount() {
-            return previousBilledAmount;
-        }
-
-        public String getReference() {
-            return reference;
-        }
-
-        public void setPreviousBilledAmount(BigDecimal previousBilledAmount) {
-            this.previousBilledAmount = previousBilledAmount;
-        }
-
-        public boolean isPreviousBilledAmountAvailable() {
-            return isPreviousBilledAmountAvailable;
-        }
-
-        public void setPreviousBilledAmountAvailable(final boolean previousBilledAmountAvailable) {
-            isPreviousBilledAmountAvailable = previousBilledAmountAvailable;
-        }
-
-        public BigDecimal getAmount() {
-            return amount;
-        }
-
-        public void setQuantity(Integer quantity) {
-            this.quantity = quantity;
-        }
-
-        public void setAmount(BigDecimal amount) {
-            this.amount = amount;
-        }
-
-        public void setReference(String reference) {
-            this.reference = reference;
-        }
-
-        public List<UsageInArrearDetail> reconcile(final List<UsageInArrearDetail> billedUsageItemDetails) {
-
-            final List<UsageInArrearDetail> unreconciledUsage = Lists.newLinkedList();
-            for (UsageInArrearDetail billedUsageDetail : billedUsageItemDetails) {
-                if (tierUnit.equals(billedUsageDetail.tierUnit)) {
-                    previousBilledAmount = billedUsageDetail.getAmount().abs();
-                    quantity = quantity - billedUsageDetail.getQuantity();
-                    amount = amount.subtract(previousBilledAmount);
-                } else {
-                    unreconciledUsage.add(billedUsageDetail);
-                }
-            }
-
-            return unreconciledUsage;
-        }
-    }
 }

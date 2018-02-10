@@ -27,19 +27,20 @@ import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDate;
 import org.killbill.billing.catalog.DefaultLimit;
 import org.killbill.billing.catalog.DefaultTier;
-import org.killbill.billing.catalog.DefaultTieredBlock;
 import org.killbill.billing.catalog.DefaultUnit;
 import org.killbill.billing.catalog.DefaultUsage;
 import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.catalog.api.Currency;
-import org.killbill.billing.catalog.api.TierBlockPolicy;
 import org.killbill.billing.catalog.api.Usage;
+import org.killbill.billing.catalog.api.UsageType;
 import org.killbill.billing.invoice.api.InvoiceItem;
 import org.killbill.billing.invoice.model.FixedPriceInvoiceItem;
 import org.killbill.billing.invoice.model.UsageInvoiceItem;
-import org.killbill.billing.invoice.usage.ContiguousIntervalUsageInArrear.UsageInArrearDetail;
 import org.killbill.billing.invoice.usage.ContiguousIntervalUsageInArrear.UsageInArrearItemsAndNextNotificationDate;
+import org.killbill.billing.invoice.usage.details.UsageCapacityInArrearDetail;
+import org.killbill.billing.invoice.usage.details.UsageConsumableInArrearTierUnitDetail;
+import org.killbill.billing.invoice.usage.details.UsageInArrearTierUnitDetail;
 import org.killbill.billing.junction.BillingEvent;
 import org.killbill.billing.usage.RawUsage;
 import org.killbill.billing.usage.api.RolledUpUnit;
@@ -149,32 +150,32 @@ public class TestContiguousIntervalCapacityInArrear extends TestUsageInArrearBas
                                                                                                                                                   Collections.<Usage>emptyList())
                                                                                                                      );
         // Tier 1 (both units from tier 1)
-        List<UsageInArrearDetail> result = intervalCapacityInArrear.computeToBeBilledCapacityInArrear(ImmutableList.<RolledUpUnit>of(new DefaultRolledUpUnit("unit1", 100L),
-                                                                                                                                     new DefaultRolledUpUnit("unit2", 1000L),
-                                                                                                                                     new DefaultRolledUpUnit("unit3", 50L)), true);
-        assertEquals(result.size(), 3);
-        assertTrue(intervalCapacityInArrear.toBeBilledForUnit(result).compareTo(BigDecimal.TEN) == 0);
+        UsageCapacityInArrearDetail result = intervalCapacityInArrear.computeToBeBilledCapacityInArrear(ImmutableList.<RolledUpUnit>of(new DefaultRolledUpUnit("unit1", 100L),
+                                                                                                                                       new DefaultRolledUpUnit("unit2", 1000L),
+                                                                                                                                       new DefaultRolledUpUnit("unit3", 50L)));
+        assertEquals(result.getTierDetails().size(), 3);
+        assertTrue(result.getAmount().compareTo(BigDecimal.TEN) == 0);
 
         // Tier 2 (only one unit from tier 1)
         result = intervalCapacityInArrear.computeToBeBilledCapacityInArrear(ImmutableList.<RolledUpUnit>of(new DefaultRolledUpUnit("unit1", 100L),
-                                                                                                           new DefaultRolledUpUnit("unit2", 1001L)), true);
-        assertTrue(intervalCapacityInArrear.toBeBilledForUnit(result).compareTo(new BigDecimal("20.0")) == 0);
+                                                                                                           new DefaultRolledUpUnit("unit2", 1001L)));
+        assertTrue(result.getAmount().compareTo(new BigDecimal("20.0")) == 0);
 
         // Tier 2 (only one unit from tier 1)
         result = intervalCapacityInArrear.computeToBeBilledCapacityInArrear(ImmutableList.<RolledUpUnit>of(new DefaultRolledUpUnit("unit1", 101L),
-                                                                                                           new DefaultRolledUpUnit("unit2", 1000L)), true);
-        assertTrue(intervalCapacityInArrear.toBeBilledForUnit(result).compareTo(new BigDecimal("20.0")) == 0);
+                                                                                                           new DefaultRolledUpUnit("unit2", 1000L)));
+        assertTrue(result.getAmount().compareTo(new BigDecimal("20.0")) == 0);
 
 
         // Tier 2 (both units from tier 2)
         result = intervalCapacityInArrear.computeToBeBilledCapacityInArrear(ImmutableList.<RolledUpUnit>of(new DefaultRolledUpUnit("unit1", 101L),
-                                                                                                           new DefaultRolledUpUnit("unit2", 1001L)), true);
-        assertTrue(intervalCapacityInArrear.toBeBilledForUnit(result).compareTo(new BigDecimal("20.0")) == 0);
+                                                                                                           new DefaultRolledUpUnit("unit2", 1001L)));
+        assertTrue(result.getAmount().compareTo(new BigDecimal("20.0")) == 0);
 
         // Tier 3 (only one unit from tier 3)
         result = intervalCapacityInArrear.computeToBeBilledCapacityInArrear(ImmutableList.<RolledUpUnit>of(new DefaultRolledUpUnit("unit1", 10L),
-                                                                                                           new DefaultRolledUpUnit("unit2", 2001L)), true);
-        assertTrue(intervalCapacityInArrear.toBeBilledForUnit(result).compareTo(new BigDecimal("30.0")) == 0);
+                                                                                                           new DefaultRolledUpUnit("unit2", 2001L)));
+        assertTrue(result.getAmount().compareTo(new BigDecimal("30.0")) == 0);
     }
 
     @Test(groups = "fast")
@@ -184,23 +185,37 @@ public class TestContiguousIntervalCapacityInArrear extends TestUsageInArrearBas
         final LocalDate firstBCDDate = new LocalDate(2014, 04, 15);
         final LocalDate endDate = new LocalDate(2014, 05, 15);
 
-        // 2 items for startDate - firstBCDDate
         final List<RawUsage> rawUsages = new ArrayList<RawUsage>();
-        rawUsages.add(new DefaultRawUsage(subscriptionId, new LocalDate(2014, 03, 20), "unit", 130L));
-        rawUsages.add(new DefaultRawUsage(subscriptionId, new LocalDate(2014, 03, 21), "unit", 271L));
-        // 1 items for firstBCDDate - endDate
-        rawUsages.add(new DefaultRawUsage(subscriptionId, new LocalDate(2014, 04, 15), "unit", 199L));
+        //
+        // First period: startDate - firstBCDDate
+        //
+        // 2 items for unit1
+        rawUsages.add(new DefaultRawUsage(subscriptionId, new LocalDate(2014, 03, 20), "unit1", 130L));
+        rawUsages.add(new DefaultRawUsage(subscriptionId, new LocalDate(2014, 03, 21), "unit1", 271L));
+        // 1 items for unit2
+        rawUsages.add(new DefaultRawUsage(subscriptionId, new LocalDate(2014, 03, 24), "unit2", 10L));
 
-        final DefaultUnit unit = new DefaultUnit().setName("unit");
-        final DefaultLimit limit = new DefaultLimit().setUnit(unit).setMax((double) -1);
+        //
+        // Second period: firstBCDDate - endDate
+        //
+        // 1 items unit1
+        rawUsages.add(new DefaultRawUsage(subscriptionId, new LocalDate(2014, 04, 15), "unit1", 199L));
+        // 1 items unit2
+        rawUsages.add(new DefaultRawUsage(subscriptionId, new LocalDate(2014, 04, 15), "unit2", 20L));
 
-        final DefaultTier tier = createDefaultTierWithLimits(BigDecimal.TEN, limit);
+        final DefaultUnit unit1 = new DefaultUnit().setName("unit1");
+        final DefaultLimit limit1 = new DefaultLimit().setUnit(unit1).setMax((double) -1);
+
+        final DefaultUnit unit2 = new DefaultUnit().setName("unit2");
+        final DefaultLimit limit2 = new DefaultLimit().setUnit(unit2).setMax((double) -1);
+
+
+        final DefaultTier tier = createDefaultTierWithLimits(BigDecimal.TEN, limit1, limit2);
 
         final DefaultUsage usage = createCapacityInArrearUsage(usageName, BillingPeriod.MONTHLY, tier);
 
 
         final LocalDate targetDate = endDate;
-
         final BillingEvent event1 = createMockBillingEvent(startDate.toDateTimeAtStartOfDay(DateTimeZone.UTC),BillingPeriod.MONTHLY, Collections.<Usage>emptyList());
         final BillingEvent event2 = createMockBillingEvent(endDate.toDateTimeAtStartOfDay(DateTimeZone.UTC), BillingPeriod.MONTHLY, Collections.<Usage>emptyList());
 
@@ -249,29 +264,27 @@ public class TestContiguousIntervalCapacityInArrear extends TestUsageInArrearBas
     }
 
     @Test(groups = "fast")
-    public void testComputeMissingItemsAggregateMode() throws CatalogApiException, IOException {
-
-        testComputeMissingItemsByMode(UsageDetailMode.AGGREGATE);
+    public void testMultipleItemsAndTiersAggregateMode() throws CatalogApiException, IOException {
+        testMultipleItemsAndTiers(UsageDetailMode.AGGREGATE);
     }
 
     @Test(groups = "fast")
-    public void testComputeMissingItemsDetailMode() throws CatalogApiException, IOException {
-
-       testComputeMissingItemsByMode(UsageDetailMode.DETAIL);
+    public void testMultipleItemsAndTiersDetailMode() throws CatalogApiException, IOException {
+        testMultipleItemsAndTiers(UsageDetailMode.DETAIL);
     }
 
-    private void testComputeMissingItemsByMode(UsageDetailMode usageDetailMode) throws CatalogApiException, IOException {
+    private void testMultipleItemsAndTiers(UsageDetailMode usageDetailMode) throws CatalogApiException, IOException {
 
         // Case 1
         List<RawUsage> rawUsages = new ArrayList<RawUsage>();
         rawUsages.add(new DefaultRawUsage(subscriptionId, new LocalDate(2014, 03, 20), "FOO", 5L));
         rawUsages.add(new DefaultRawUsage(subscriptionId, new LocalDate(2014, 03, 21), "BAR", 99L));
 
-        List<InvoiceItem> result = produceInvoiceItems(rawUsages, usageDetailMode);
+        List<InvoiceItem> result = produceInvoiceItems(rawUsages, usageDetailMode, ImmutableList.<InvoiceItem>of());
         assertEquals(result.size(), 1);
         assertEquals(result.get(0).getAmount().compareTo(BigDecimal.ONE),0, String.format("%s != 1.0", result.get(0).getAmount()));
 
-        List<UsageInArrearDetail> itemDetails = objectMapper.readValue(result.get(0).getItemDetails(), new TypeReference<List<UsageInArrearDetail>>() {});
+        List<UsageConsumableInArrearTierUnitDetail> itemDetails = objectMapper.readValue(result.get(0).getItemDetails(), new TypeReference<List<UsageConsumableInArrearTierUnitDetail>>() {});
         // BAR item detail
         assertEquals(itemDetails.get(0).getTierUnit(), "BAR");
         assertEquals(itemDetails.get(0).getTier(), 1);
@@ -287,11 +300,11 @@ public class TestContiguousIntervalCapacityInArrear extends TestUsageInArrearBas
         rawUsages = new ArrayList<RawUsage>();
         rawUsages.add(new DefaultRawUsage(subscriptionId, new LocalDate(2014, 03, 20), "FOO", 5L));
         rawUsages.add(new DefaultRawUsage(subscriptionId, new LocalDate(2014, 03, 21), "BAR", 101L));
-        result = produceInvoiceItems(rawUsages, usageDetailMode);
+        result = produceInvoiceItems(rawUsages, usageDetailMode, ImmutableList.<InvoiceItem>of());
         assertEquals(result.size(), 1);
         assertEquals(result.get(0).getAmount().compareTo(BigDecimal.TEN),0, String.format("%s != 10.0", result.get(0).getAmount()));
 
-        itemDetails = objectMapper.readValue(result.get(0).getItemDetails(), new TypeReference<List<UsageInArrearDetail>>() {});
+        itemDetails = objectMapper.readValue(result.get(0).getItemDetails(), new TypeReference<List<UsageConsumableInArrearTierUnitDetail>>() {});
         // FOO item detail
         assertEquals(itemDetails.get(0).getTierUnit(), "FOO");
         assertEquals(itemDetails.get(0).getTier(), 1);
@@ -308,11 +321,11 @@ public class TestContiguousIntervalCapacityInArrear extends TestUsageInArrearBas
         rawUsages = new ArrayList<RawUsage>();
         rawUsages.add(new DefaultRawUsage(subscriptionId, new LocalDate(2014, 03, 20), "FOO", 75L));
         rawUsages.add(new DefaultRawUsage(subscriptionId, new LocalDate(2014, 03, 21), "BAR", 101L));
-        result = produceInvoiceItems(rawUsages, usageDetailMode);
+        result = produceInvoiceItems(rawUsages, usageDetailMode, ImmutableList.<InvoiceItem>of());
         assertEquals(result.size(), 1);
         assertEquals(result.get(0).getAmount().compareTo(new BigDecimal("100.0")),0, String.format("%s != 100.0", result.get(0).getAmount()));
 
-        itemDetails = objectMapper.readValue(result.get(0).getItemDetails(), new TypeReference<List<UsageInArrearDetail>>() {});
+        itemDetails = objectMapper.readValue(result.get(0).getItemDetails(), new TypeReference<List<UsageConsumableInArrearTierUnitDetail>>() {});
         // BAR item detail
         assertEquals(itemDetails.get(0).getTierUnit(), "BAR");
         assertEquals(itemDetails.get(0).getTier(), 2);
@@ -325,7 +338,49 @@ public class TestContiguousIntervalCapacityInArrear extends TestUsageInArrearBas
         assertEquals(itemDetails.get(1).getTierPrice().compareTo(new BigDecimal("100.0")), 0);
     }
 
-    private List<InvoiceItem> produceInvoiceItems(List<RawUsage> rawUsages, UsageDetailMode usageDetailMode) throws CatalogApiException {
+    @Test(groups = "fast")
+    public void testMultipleItemsAndTiersWithExistingItems() throws CatalogApiException, IOException {
+
+
+        // let's assume we have some existing usage
+        final UsageInArrearTierUnitDetail existingFooUsageTier1 = new UsageConsumableInArrearTierUnitDetail(1, "FOO", BigDecimal.ONE, 1, 9, BigDecimal.TEN);
+        final UsageInArrearTierUnitDetail existingBarUsageTier2 = new UsageConsumableInArrearTierUnitDetail(2, "BAR", BigDecimal.TEN, 1, 200, BigDecimal.TEN);
+
+
+        List<RawUsage> rawUsages = new ArrayList<RawUsage>();
+        rawUsages.add(new DefaultRawUsage(subscriptionId, new LocalDate(2014, 03, 20), "FOO", 60L)); // tier 3
+        rawUsages.add(new DefaultRawUsage(subscriptionId, new LocalDate(2014, 03, 21), "BAR", 200L)); // tier 2
+
+
+        final List<UsageInArrearTierUnitDetail> existingUsage = ImmutableList.of(existingFooUsageTier1, existingBarUsageTier2);
+
+        final String existingUsageJson = new UsageCapacityInArrearDetail(existingUsage, BigDecimal.TEN).toJson(objectMapper);
+
+
+        final List<InvoiceItem> existingItems = new ArrayList<InvoiceItem>();
+        final InvoiceItem ii1 = new UsageInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, usageName, new LocalDate(2014, 03, 20), new LocalDate(2014, 04, 15), BigDecimal.TEN, null, currency, null, existingUsageJson);
+        existingItems.add(ii1);
+
+
+        List<InvoiceItem> result = produceInvoiceItems(rawUsages, UsageDetailMode.AGGREGATE, existingItems);
+        assertEquals(result.size(), 1);
+        assertEquals(result.get(0).getAmount().compareTo(new BigDecimal("90.00")), 0, String.format("%s != 90.0", result.get(0).getAmount()));
+
+        List<UsageConsumableInArrearTierUnitDetail> itemDetails = objectMapper.readValue(result.get(0).getItemDetails(), new TypeReference<List<UsageConsumableInArrearTierUnitDetail>>() {});
+        // BAR item detail
+        assertEquals(itemDetails.get(0).getTierUnit(), "BAR");
+        assertEquals(itemDetails.get(0).getTier(), 2);
+        assertEquals(itemDetails.get(0).getQuantity().intValue(), 200);
+        assertEquals(itemDetails.get(0).getTierPrice().compareTo(BigDecimal.TEN), 0);
+        // FOO item detail
+        assertEquals(itemDetails.get(1).getTierUnit(), "FOO");
+        assertEquals(itemDetails.get(1).getTier(), 3);
+        assertEquals(itemDetails.get(1).getQuantity().intValue(), 60);
+        assertEquals(itemDetails.get(1).getTierPrice().compareTo(new BigDecimal("100.00")), 0);
+    }
+
+
+    private List<InvoiceItem> produceInvoiceItems(List<RawUsage> rawUsages, UsageDetailMode usageDetailMode, List<InvoiceItem> existingItems) throws CatalogApiException {
 
         final LocalDate startDate = new LocalDate(2014, 03, 20);
         final LocalDate firstBCDDate = new LocalDate(2014, 04, 15);
@@ -355,7 +410,7 @@ public class TestContiguousIntervalCapacityInArrear extends TestUsageInArrearBas
 
         final ContiguousIntervalUsageInArrear intervalConsumableInArrear = createContiguousIntervalConsumableInArrear(usage, rawUsages, targetDate, true, usageDetailMode, event1, event2);
 
-        final UsageInArrearItemsAndNextNotificationDate usageResult = intervalConsumableInArrear.computeMissingItemsAndNextNotificationDate(ImmutableList.<InvoiceItem>of());
+        final UsageInArrearItemsAndNextNotificationDate usageResult = intervalConsumableInArrear.computeMissingItemsAndNextNotificationDate(existingItems);
         final List<InvoiceItem> rawResults = usageResult.getInvoiceItems();
         final List<InvoiceItem> result = ImmutableList.copyOf(Iterables.filter(rawResults, new Predicate<InvoiceItem>() {
             @Override

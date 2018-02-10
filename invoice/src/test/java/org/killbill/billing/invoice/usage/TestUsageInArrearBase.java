@@ -22,7 +22,6 @@ import java.util.List;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
-import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDate;
 import org.killbill.billing.account.api.Account;
 import org.killbill.billing.catalog.DefaultInternationalPrice;
@@ -45,10 +44,9 @@ import org.killbill.billing.junction.BillingEvent;
 import org.killbill.billing.subscription.api.SubscriptionBase;
 import org.killbill.billing.usage.RawUsage;
 import org.killbill.billing.util.config.definition.InvoiceConfig.UsageDetailMode;
+import org.killbill.billing.util.jackson.ObjectMapper;
 import org.mockito.Mockito;
 import org.testng.annotations.BeforeClass;
-
-import com.fasterxml.jackson.databind.ObjectMapper;
 
 public abstract class TestUsageInArrearBase extends InvoiceTestSuiteNoDB {
 
