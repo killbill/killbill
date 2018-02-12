@@ -481,9 +481,11 @@ public class TestContiguousIntervalConsumableInArrear extends TestUsageInArrearB
 
         List<InvoiceItem> result = produceInvoiceItems(rawUsages, TierBlockPolicy.ALL_TIERS, UsageDetailMode.AGGREGATE, ImmutableList.<InvoiceItem>of());
         assertEquals(result.size(), 1);
-        assertEquals(result.get(0).getAmount().compareTo(new BigDecimal("203")),0);
+        assertEquals(result.get(0).getAmount().compareTo(new BigDecimal("203")), 0);
 
-        List<UsageConsumableInArrearTierUnitDetail> itemDetails = objectMapper.readValue(result.get(0).getItemDetails(), new TypeReference<List<UsageConsumableInArrearTierUnitDetail>>() {});
+        UsageConsumableInArrearDetail usageDetail = objectMapper.readValue(result.get(0).getItemDetails(), new TypeReference<UsageConsumableInArrearDetail>() {});
+        List<UsageConsumableInArrearTierUnitDetail> itemDetails = usageDetail.getTierDetails();
+
         // BAR: 99 * 2 = 198
         assertEquals(itemDetails.get(0).getTierUnit(), "BAR");
         assertEquals(itemDetails.get(0).getTier(), 1);
@@ -504,9 +506,11 @@ public class TestContiguousIntervalConsumableInArrear extends TestUsageInArrearB
 
         result = produceInvoiceItems(rawUsages, TierBlockPolicy.ALL_TIERS, UsageDetailMode.AGGREGATE, ImmutableList.<InvoiceItem>of());
         assertEquals(result.size(), 1);
-        assertEquals(result.get(0).getAmount().compareTo(new BigDecimal("225")),0);
+        assertEquals(result.get(0).getAmount().compareTo(new BigDecimal("225")), 0);
 
-        itemDetails = objectMapper.readValue(result.get(0).getItemDetails(), new TypeReference<List<UsageConsumableInArrearTierUnitDetail>>() {});
+        usageDetail = objectMapper.readValue(result.get(0).getItemDetails(), new TypeReference<UsageConsumableInArrearDetail>() {});
+        itemDetails = usageDetail.getTierDetails();
+
         // BAR: 100 * 2 = 200
         assertEquals(itemDetails.get(0).getTierUnit(), "BAR");
         assertEquals(itemDetails.get(0).getTier(), 1);
@@ -533,9 +537,10 @@ public class TestContiguousIntervalConsumableInArrear extends TestUsageInArrearB
 
         result = produceInvoiceItems(rawUsages, TierBlockPolicy.ALL_TIERS, UsageDetailMode.AGGREGATE, ImmutableList.<InvoiceItem>of());
         assertEquals(result.size(), 1);
-        assertEquals(result.get(0).getAmount().compareTo(new BigDecimal("2230")),0);
+        assertEquals(result.get(0).getAmount().compareTo(new BigDecimal("2230")), 0);
 
-        itemDetails = objectMapper.readValue(result.get(0).getItemDetails(), new TypeReference<List<UsageConsumableInArrearTierUnitDetail>>() {});
+        usageDetail = objectMapper.readValue(result.get(0).getItemDetails(), new TypeReference<UsageConsumableInArrearDetail>() {});
+        itemDetails = usageDetail.getTierDetails();
         // BAR: 100 * 2 = 200
         assertEquals(itemDetails.get(0).getTierUnit(), "BAR");
         assertEquals(itemDetails.get(0).getTier(), 1);
