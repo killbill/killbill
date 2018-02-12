@@ -118,7 +118,7 @@ public class ContiguousIntervalCapacityUsageInArrear extends ContiguousIntervalU
                     complies = false;
                 } else {
                     if (!perUnitTypeDetailTierLevel.contains(ro.getUnitType())) {
-                        toBeBilledDetails.add(new UsageConsumableInArrearTierUnitDetail(tierNum, ro.getUnitType(), cur.getRecurringPrice().getPrice(getCurrency()), 1, ro.getAmount().intValue(), BigDecimal.ZERO));
+                        toBeBilledDetails.add(new UsageInArrearTierUnitDetail(tierNum, ro.getUnitType(), cur.getRecurringPrice().getPrice(getCurrency()), ro.getAmount().intValue()));
                         perUnitTypeDetailTierLevel.add(ro.getUnitType());
                     }
                 }

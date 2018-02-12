@@ -39,7 +39,6 @@ import org.killbill.billing.invoice.model.FixedPriceInvoiceItem;
 import org.killbill.billing.invoice.model.UsageInvoiceItem;
 import org.killbill.billing.invoice.usage.ContiguousIntervalUsageInArrear.UsageInArrearItemsAndNextNotificationDate;
 import org.killbill.billing.invoice.usage.details.UsageCapacityInArrearDetail;
-import org.killbill.billing.invoice.usage.details.UsageConsumableInArrearTierUnitDetail;
 import org.killbill.billing.invoice.usage.details.UsageInArrearTierUnitDetail;
 import org.killbill.billing.junction.BillingEvent;
 import org.killbill.billing.usage.RawUsage;
@@ -278,17 +277,21 @@ public class TestContiguousIntervalCapacityInArrear extends TestUsageInArrearBas
         assertEquals(result.size(), 1);
         assertEquals(result.get(0).getAmount().compareTo(BigDecimal.ONE), 0, String.format("%s != 1.0", result.get(0).getAmount()));
 
-        List<UsageConsumableInArrearTierUnitDetail> itemDetails = objectMapper.readValue(result.get(0).getItemDetails(), new TypeReference<List<UsageConsumableInArrearTierUnitDetail>>() {});
+        UsageCapacityInArrearDetail itemDetails = objectMapper.readValue(result.get(0).getItemDetails(), new TypeReference<UsageCapacityInArrearDetail>() {});
+        assertEquals(itemDetails.getAmount().compareTo(BigDecimal.ONE), 0);
+        assertEquals(itemDetails.getTierDetails().size(), 2);
+
+        List<UsageInArrearTierUnitDetail> itemUnitDetails = itemDetails.getTierDetails();
         // BAR item detail
-        assertEquals(itemDetails.get(0).getTierUnit(), "BAR");
-        assertEquals(itemDetails.get(0).getTier(), 1);
-        assertEquals(itemDetails.get(0).getQuantity().intValue(), 99);
-        assertEquals(itemDetails.get(0).getTierPrice().compareTo(BigDecimal.ONE), 0);
+        assertEquals(itemUnitDetails.get(0).getTierUnit(), "BAR");
+        assertEquals(itemUnitDetails.get(0).getTier(), 1);
+        assertEquals(itemUnitDetails.get(0).getQuantity().intValue(), 99);
+        assertEquals(itemUnitDetails.get(0).getTierPrice().compareTo(BigDecimal.ONE), 0);
         // FOO item detail
-        assertEquals(itemDetails.get(1).getTierUnit(), "FOO");
-        assertEquals(itemDetails.get(1).getTier(), 1);
-        assertEquals(itemDetails.get(1).getQuantity().intValue(), 5);
-        assertEquals(itemDetails.get(1).getTierPrice().compareTo(BigDecimal.ONE), 0);
+        assertEquals(itemUnitDetails.get(1).getTierUnit(), "FOO");
+        assertEquals(itemUnitDetails.get(1).getTier(), 1);
+        assertEquals(itemUnitDetails.get(1).getQuantity().intValue(), 5);
+        assertEquals(itemUnitDetails.get(1).getTierPrice().compareTo(BigDecimal.ONE), 0);
 
         // Case 2
         rawUsages = new ArrayList<RawUsage>();
@@ -298,18 +301,22 @@ public class TestContiguousIntervalCapacityInArrear extends TestUsageInArrearBas
         assertEquals(result.size(), 1);
         assertEquals(result.get(0).getAmount().compareTo(BigDecimal.TEN), 0, String.format("%s != 10.0", result.get(0).getAmount()));
 
-        itemDetails = objectMapper.readValue(result.get(0).getItemDetails(), new TypeReference<List<UsageConsumableInArrearTierUnitDetail>>() {});
+        itemDetails = objectMapper.readValue(result.get(0).getItemDetails(), new TypeReference<UsageCapacityInArrearDetail>() {});
+        assertEquals(itemDetails.getAmount().compareTo(BigDecimal.TEN), 0);
+        assertEquals(itemDetails.getTierDetails().size(), 2);
+        itemUnitDetails = itemDetails.getTierDetails();
+
         // FOO item detail
-        assertEquals(itemDetails.get(0).getTierUnit(), "FOO");
-        assertEquals(itemDetails.get(0).getTier(), 1);
-        assertEquals(itemDetails.get(0).getQuantity().intValue(), 5);
-        assertEquals(itemDetails.get(0).getTierPrice().compareTo(BigDecimal.ONE), 0);
+        assertEquals(itemUnitDetails.get(0).getTierUnit(), "FOO");
+        assertEquals(itemUnitDetails.get(0).getTier(), 1);
+        assertEquals(itemUnitDetails.get(0).getQuantity().intValue(), 5);
+        assertEquals(itemUnitDetails.get(0).getTierPrice().compareTo(BigDecimal.ONE), 0);
 
         // BAR item detail
-        assertEquals(itemDetails.get(1).getTierUnit(), "BAR");
-        assertEquals(itemDetails.get(1).getTier(), 2);
-        assertEquals(itemDetails.get(1).getQuantity().intValue(), 101);
-        assertEquals(itemDetails.get(1).getTierPrice().compareTo(BigDecimal.TEN), 0);
+        assertEquals(itemUnitDetails.get(1).getTierUnit(), "BAR");
+        assertEquals(itemUnitDetails.get(1).getTier(), 2);
+        assertEquals(itemUnitDetails.get(1).getQuantity().intValue(), 101);
+        assertEquals(itemUnitDetails.get(1).getTierPrice().compareTo(BigDecimal.TEN), 0);
 
         // Case 3
         rawUsages = new ArrayList<RawUsage>();
@@ -319,25 +326,32 @@ public class TestContiguousIntervalCapacityInArrear extends TestUsageInArrearBas
         assertEquals(result.size(), 1);
         assertEquals(result.get(0).getAmount().compareTo(new BigDecimal("100.0")), 0, String.format("%s != 100.0", result.get(0).getAmount()));
 
-        itemDetails = objectMapper.readValue(result.get(0).getItemDetails(), new TypeReference<List<UsageConsumableInArrearTierUnitDetail>>() {});
+        itemDetails = objectMapper.readValue(result.get(0).getItemDetails(), new TypeReference<UsageCapacityInArrearDetail>() {});
+        assertEquals(itemDetails.getAmount().compareTo(new BigDecimal("100.0")), 0);
+        assertEquals(itemDetails.getTierDetails().size(), 2);
+        itemUnitDetails = itemDetails.getTierDetails();
+
         // BAR item detail
-        assertEquals(itemDetails.get(0).getTierUnit(), "BAR");
-        assertEquals(itemDetails.get(0).getTier(), 2);
-        assertEquals(itemDetails.get(0).getQuantity().intValue(), 101);
-        assertEquals(itemDetails.get(0).getTierPrice().compareTo(new BigDecimal("10.0")), 0);
+        assertEquals(itemUnitDetails.get(0).getTierUnit(), "BAR");
+        assertEquals(itemUnitDetails.get(0).getTier(), 2);
+        assertEquals(itemUnitDetails.get(0).getQuantity().intValue(), 101);
+        assertEquals(itemUnitDetails.get(0).getTierPrice().compareTo(new BigDecimal("10.0")), 0);
+
         // FOO item detail
-        assertEquals(itemDetails.get(1).getTierUnit(), "FOO");
-        assertEquals(itemDetails.get(1).getTier(), 3);
-        assertEquals(itemDetails.get(1).getQuantity().intValue(), 75);
-        assertEquals(itemDetails.get(1).getTierPrice().compareTo(new BigDecimal("100.0")), 0);
+        assertEquals(itemUnitDetails.get(1).getTierUnit(), "FOO");
+        assertEquals(itemUnitDetails.get(1).getTier(), 3);
+        assertEquals(itemUnitDetails.get(1).getQuantity().intValue(), 75);
+        assertEquals(itemUnitDetails.get(1).getTierPrice().compareTo(new BigDecimal("100.0")), 0);
+
     }
 
     @Test(groups = "fast")
     public void testMultipleItemsAndTiersWithExistingItems() throws CatalogApiException, IOException, InvoiceApiException {
 
         // let's assume we have some existing usage
-        final UsageInArrearTierUnitDetail existingFooUsageTier1 = new UsageConsumableInArrearTierUnitDetail(1, "FOO", BigDecimal.ONE, 1, 9, BigDecimal.TEN);
-        final UsageInArrearTierUnitDetail existingBarUsageTier2 = new UsageConsumableInArrearTierUnitDetail(2, "BAR", BigDecimal.TEN, 1, 200, BigDecimal.TEN);
+        final UsageInArrearTierUnitDetail existingFooUsageTier1 = new UsageInArrearTierUnitDetail(1, "FOO", BigDecimal.ONE, 9);
+        final UsageInArrearTierUnitDetail existingBarUsageTier2 = new UsageInArrearTierUnitDetail(2, "BAR", BigDecimal.TEN, 200);
+
 
         List<RawUsage> rawUsages = new ArrayList<RawUsage>();
         rawUsages.add(new DefaultRawUsage(subscriptionId, new LocalDate(2014, 03, 20), "FOO", 60L)); // tier 3
@@ -355,17 +369,22 @@ public class TestContiguousIntervalCapacityInArrear extends TestUsageInArrearBas
         assertEquals(result.size(), 1);
         assertEquals(result.get(0).getAmount().compareTo(new BigDecimal("90.00")), 0, String.format("%s != 90.0", result.get(0).getAmount()));
 
-        List<UsageConsumableInArrearTierUnitDetail> itemDetails = objectMapper.readValue(result.get(0).getItemDetails(), new TypeReference<List<UsageConsumableInArrearTierUnitDetail>>() {});
+        UsageCapacityInArrearDetail itemDetails = objectMapper.readValue(result.get(0).getItemDetails(), new TypeReference<UsageCapacityInArrearDetail>() {});
+        assertEquals(itemDetails.getAmount().compareTo(new BigDecimal("100.00")), 0);
+        assertEquals(itemDetails.getTierDetails().size(), 2);
+
+        List<UsageInArrearTierUnitDetail> itemUnitDetails = itemDetails.getTierDetails();
+
         // BAR item detail
-        assertEquals(itemDetails.get(0).getTierUnit(), "BAR");
-        assertEquals(itemDetails.get(0).getTier(), 2);
-        assertEquals(itemDetails.get(0).getQuantity().intValue(), 200);
-        assertEquals(itemDetails.get(0).getTierPrice().compareTo(BigDecimal.TEN), 0);
+        assertEquals(itemUnitDetails.get(0).getTierUnit(), "BAR");
+        assertEquals(itemUnitDetails.get(0).getTier(), 2);
+        assertEquals(itemUnitDetails.get(0).getQuantity().intValue(), 200);
+        assertEquals(itemUnitDetails.get(0).getTierPrice().compareTo(BigDecimal.TEN), 0);
         // FOO item detail
-        assertEquals(itemDetails.get(1).getTierUnit(), "FOO");
-        assertEquals(itemDetails.get(1).getTier(), 3);
-        assertEquals(itemDetails.get(1).getQuantity().intValue(), 60);
-        assertEquals(itemDetails.get(1).getTierPrice().compareTo(new BigDecimal("100.00")), 0);
+        assertEquals(itemUnitDetails.get(1).getTierUnit(), "FOO");
+        assertEquals(itemUnitDetails.get(1).getTier(), 3);
+        assertEquals(itemUnitDetails.get(1).getQuantity().intValue(), 60);
+        assertEquals(itemUnitDetails.get(1).getTierPrice().compareTo(new BigDecimal("100.00")), 0);
     }
 
     private List<InvoiceItem> produceInvoiceItems(List<RawUsage> rawUsages, UsageDetailMode usageDetailMode, List<InvoiceItem> existingItems) throws CatalogApiException, InvoiceApiException {
