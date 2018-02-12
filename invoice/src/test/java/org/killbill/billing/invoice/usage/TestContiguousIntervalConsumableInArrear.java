@@ -35,6 +35,7 @@ import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.catalog.api.TierBlockPolicy;
 import org.killbill.billing.catalog.api.Usage;
 import org.killbill.billing.catalog.api.UsageType;
+import org.killbill.billing.invoice.api.InvoiceApiException;
 import org.killbill.billing.invoice.api.InvoiceItem;
 import org.killbill.billing.invoice.model.FixedPriceInvoiceItem;
 import org.killbill.billing.invoice.model.UsageInvoiceItem;
@@ -264,7 +265,7 @@ public class TestContiguousIntervalConsumableInArrear extends TestUsageInArrearB
 
 
     @Test(groups = "fast")
-    public void testComputeMissingItems() throws CatalogApiException, IOException {
+    public void testComputeMissingItems() throws CatalogApiException, IOException, InvoiceApiException {
 
         final LocalDate startDate = new LocalDate(2014, 03, 20);
         final LocalDate firstBCDDate = new LocalDate(2014, 04, 15);
@@ -461,7 +462,7 @@ public class TestContiguousIntervalConsumableInArrear extends TestUsageInArrearB
     }
 
     @Test(groups = "fast")
-    public void testComputeMissingItemsAggregateModeAllTier() throws CatalogApiException, IOException {
+    public void testComputeMissingItemsAggregateModeAllTier() throws CatalogApiException, IOException, InvoiceApiException {
 
         // Case 1
         List<RawUsage> rawUsages = new ArrayList<RawUsage>();
@@ -558,7 +559,7 @@ public class TestContiguousIntervalConsumableInArrear extends TestUsageInArrearB
     }
 
     @Test(groups = "fast")
-    public void testComputeMissingItemsDetailModeAllTier() throws CatalogApiException, IOException {
+    public void testComputeMissingItemsDetailModeAllTier() throws CatalogApiException, IOException, InvoiceApiException {
 
         // Case 1
         List<RawUsage> rawUsages = new ArrayList<RawUsage>();
@@ -626,7 +627,7 @@ public class TestContiguousIntervalConsumableInArrear extends TestUsageInArrearB
     }
 
     @Test(groups = "fast")
-    public void testComputeMissingItemsAggregateModeTopTier() throws CatalogApiException, IOException {
+    public void testComputeMissingItemsAggregateModeTopTier() throws CatalogApiException, IOException, InvoiceApiException {
 
         // Case 1
         List<RawUsage> rawUsages = new ArrayList<RawUsage>();
@@ -699,7 +700,7 @@ public class TestContiguousIntervalConsumableInArrear extends TestUsageInArrearB
     }
 
     @Test(groups = "fast")
-    public void testComputeMissingItemsDetailModeTopTier() throws CatalogApiException, IOException {
+    public void testComputeMissingItemsDetailModeTopTier() throws CatalogApiException, IOException, InvoiceApiException {
 
         // Case 1
         List<RawUsage> rawUsages = new ArrayList<RawUsage>();
@@ -753,7 +754,7 @@ public class TestContiguousIntervalConsumableInArrear extends TestUsageInArrearB
 
 
     @Test(groups = "fast")
-    public void testMultipleItemsAndTiersWithExistingItemsAllTiers() throws CatalogApiException, IOException {
+    public void testMultipleItemsAndTiersWithExistingItemsAllTiers() throws CatalogApiException, IOException, InvoiceApiException {
 
         //
         // Let's assume we were already billed on the previous period
@@ -819,8 +820,12 @@ public class TestContiguousIntervalConsumableInArrear extends TestUsageInArrearB
     }
 
 
+    @Test(groups = "fast")
+    public void testMultipleItemsAndTiersWithExistingItemsTopTier() throws CatalogApiException, IOException {
+        // TODO + code
+    }
 
-    private List<InvoiceItem> produceInvoiceItems(List<RawUsage> rawUsages, TierBlockPolicy tierBlockPolicy, UsageDetailMode usageDetailMode, final List<InvoiceItem> existingItems) throws CatalogApiException {
+    private List<InvoiceItem> produceInvoiceItems(List<RawUsage> rawUsages, TierBlockPolicy tierBlockPolicy, UsageDetailMode usageDetailMode, final List<InvoiceItem> existingItems) throws CatalogApiException, InvoiceApiException {
 
         final LocalDate startDate = new LocalDate(2014, 03, 20);
         final LocalDate firstBCDDate = new LocalDate(2014, 04, 15);

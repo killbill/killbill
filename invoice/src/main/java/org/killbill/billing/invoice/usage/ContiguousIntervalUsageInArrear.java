@@ -20,7 +20,6 @@ package org.killbill.billing.invoice.usage;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -33,21 +32,21 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import javax.annotation.Nullable;
 
 import org.joda.time.LocalDate;
+import org.killbill.billing.ErrorCode;
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.catalog.api.BillingMode;
 import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.catalog.api.Limit;
 import org.killbill.billing.catalog.api.Tier;
-import org.killbill.billing.catalog.api.TieredBlock;
 import org.killbill.billing.catalog.api.Usage;
 import org.killbill.billing.catalog.api.UsageType;
+import org.killbill.billing.invoice.api.InvoiceApiException;
 import org.killbill.billing.invoice.api.InvoiceItem;
 import org.killbill.billing.invoice.api.InvoiceItemType;
 import org.killbill.billing.invoice.generator.BillingIntervalDetail;
 import org.killbill.billing.invoice.model.UsageInvoiceItem;
 import org.killbill.billing.invoice.usage.details.UsageCapacityInArrearDetail;
-import org.killbill.billing.invoice.usage.details.UsageConsumableInArrearDetail;
 import org.killbill.billing.invoice.usage.details.UsageConsumableInArrearTierUnitDetail;
 import org.killbill.billing.invoice.usage.details.UsageInArrearDetail;
 import org.killbill.billing.invoice.usage.details.UsageInArrearTierUnitDetail;
@@ -71,7 +70,6 @@ import com.google.common.collect.Lists;
 
 import static org.killbill.billing.invoice.usage.UsageUtils.getCapacityInArrearTier;
 import static org.killbill.billing.invoice.usage.UsageUtils.getCapacityInArrearUnitTypes;
-import static org.killbill.billing.invoice.usage.UsageUtils.getConsumableInArrearTieredBlocks;
 import static org.killbill.billing.invoice.usage.UsageUtils.getConsumableInArrearUnitTypes;
 
 /**
@@ -172,7 +170,7 @@ public abstract class ContiguousIntervalUsageInArrear {
      * @param existingUsage existing on disk usage items for the subscription
      * @throws CatalogApiException
      */
-    public UsageInArrearItemsAndNextNotificationDate computeMissingItemsAndNextNotificationDate(final List<InvoiceItem> existingUsage) throws CatalogApiException {
+    public UsageInArrearItemsAndNextNotificationDate computeMissingItemsAndNextNotificationDate(final List<InvoiceItem> existingUsage) throws CatalogApiException, InvoiceApiException {
 
         Preconditions.checkState(isBuilt.get());
 
@@ -210,11 +208,21 @@ public abstract class ContiguousIntervalUsageInArrear {
 
             final List<RolledUpUnit> rolledUpUnits = ru.getRolledUpUnits();
 
+
+
             final UsageInArrearDetail toBeBilledUsageDetails = getToBeBilledUsageDetails(rolledUpUnits, billedItems, areAllBilledItemsWithDetails);
             final BigDecimal toBeBilledUsage = toBeBilledUsageDetails.getAmount();
 
-            populateResults(ru.getStart(), ru.getEnd(), billedItems, billedUsage, toBeBilledUsage, toBeBilledUsageDetails, areAllBilledItemsWithDetails, result);
-
+            final int billedUsageDelta = billedUsage.compareTo(toBeBilledUsage);
+            // We built more in the past than what we find now, data usage vanished?
+            if (billedUsageDelta > 0) {
+                throw new InvoiceApiException(ErrorCode.UNEXPECTED_ERROR,
+                                              String.format("ILLEGAL INVOICING STATE: Usage period start='%s', end='%s', previously billed amount='%.2f', new proposed amount='%.2f'",
+                                                            ru.getStart(), ru.getEnd(), billedUsage, toBeBilledUsage));
+            // Something remains to be billed
+            } else if (billedUsageDelta < 0) {
+                populateResults(ru.getStart(), ru.getEnd(), billedItems, billedUsage, toBeBilledUsage, toBeBilledUsageDetails, areAllBilledItemsWithDetails, result);
+            }
         }
         final LocalDate nextNotificationdate = computeNextNotificationDate();
         return new UsageInArrearItemsAndNextNotificationDate(result, nextNotificationdate);

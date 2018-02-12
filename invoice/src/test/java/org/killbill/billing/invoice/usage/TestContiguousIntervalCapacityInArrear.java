@@ -33,6 +33,7 @@ import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.catalog.api.Usage;
+import org.killbill.billing.invoice.api.InvoiceApiException;
 import org.killbill.billing.invoice.api.InvoiceItem;
 import org.killbill.billing.invoice.model.FixedPriceInvoiceItem;
 import org.killbill.billing.invoice.model.UsageInvoiceItem;
@@ -175,7 +176,7 @@ public class TestContiguousIntervalCapacityInArrear extends TestUsageInArrearBas
     }
 
     @Test(groups = "fast")
-    public void testComputeMissingItems() throws CatalogApiException {
+    public void testComputeMissingItems() throws CatalogApiException, InvoiceApiException {
 
         final LocalDate startDate = new LocalDate(2014, 03, 20);
         final LocalDate firstBCDDate = new LocalDate(2014, 04, 15);
@@ -257,16 +258,16 @@ public class TestContiguousIntervalCapacityInArrear extends TestUsageInArrearBas
     }
 
     @Test(groups = "fast")
-    public void testMultipleItemsAndTiersAggregateMode() throws CatalogApiException, IOException {
+    public void testMultipleItemsAndTiersAggregateMode() throws CatalogApiException, IOException, InvoiceApiException {
         testMultipleItemsAndTiers(UsageDetailMode.AGGREGATE);
     }
 
     @Test(groups = "fast")
-    public void testMultipleItemsAndTiersDetailMode() throws CatalogApiException, IOException {
+    public void testMultipleItemsAndTiersDetailMode() throws CatalogApiException, IOException, InvoiceApiException {
         testMultipleItemsAndTiers(UsageDetailMode.DETAIL);
     }
 
-    private void testMultipleItemsAndTiers(UsageDetailMode usageDetailMode) throws CatalogApiException, IOException {
+    private void testMultipleItemsAndTiers(UsageDetailMode usageDetailMode) throws CatalogApiException, IOException, InvoiceApiException {
 
         // Case 1
         List<RawUsage> rawUsages = new ArrayList<RawUsage>();
@@ -332,7 +333,7 @@ public class TestContiguousIntervalCapacityInArrear extends TestUsageInArrearBas
     }
 
     @Test(groups = "fast")
-    public void testMultipleItemsAndTiersWithExistingItems() throws CatalogApiException, IOException {
+    public void testMultipleItemsAndTiersWithExistingItems() throws CatalogApiException, IOException, InvoiceApiException {
 
         // let's assume we have some existing usage
         final UsageInArrearTierUnitDetail existingFooUsageTier1 = new UsageConsumableInArrearTierUnitDetail(1, "FOO", BigDecimal.ONE, 1, 9, BigDecimal.TEN);
@@ -367,7 +368,7 @@ public class TestContiguousIntervalCapacityInArrear extends TestUsageInArrearBas
         assertEquals(itemDetails.get(1).getTierPrice().compareTo(new BigDecimal("100.00")), 0);
     }
 
-    private List<InvoiceItem> produceInvoiceItems(List<RawUsage> rawUsages, UsageDetailMode usageDetailMode, List<InvoiceItem> existingItems) throws CatalogApiException {
+    private List<InvoiceItem> produceInvoiceItems(List<RawUsage> rawUsages, UsageDetailMode usageDetailMode, List<InvoiceItem> existingItems) throws CatalogApiException, InvoiceApiException {
 
         final LocalDate startDate = new LocalDate(2014, 03, 20);
         final LocalDate firstBCDDate = new LocalDate(2014, 04, 15);

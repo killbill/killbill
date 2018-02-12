@@ -39,8 +39,6 @@ import org.killbill.billing.usage.RawUsage;
 import org.killbill.billing.usage.api.RolledUpUnit;
 import org.killbill.billing.util.config.definition.InvoiceConfig.UsageDetailMode;
 import org.killbill.billing.util.jackson.ObjectMapper;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
@@ -51,7 +49,7 @@ import static org.killbill.billing.invoice.usage.UsageUtils.getCapacityInArrearT
 
 public class ContiguousIntervalCapacityUsageInArrear extends ContiguousIntervalUsageInArrear {
 
-    private static final Logger log = LoggerFactory.getLogger(ContiguousIntervalCapacityUsageInArrear.class);
+    private static final Joiner joiner = Joiner.on(", ");
 
     private static final ObjectMapper objectMapper = new ObjectMapper();
 
@@ -130,7 +128,6 @@ public class ContiguousIntervalCapacityUsageInArrear extends ContiguousIntervalU
             }
         }
         // Probably invalid catalog config
-        final Joiner joiner = Joiner.on(", ");
         joiner.join(roUnits);
         Preconditions.checkState(false, "Could not find tier for usage " + usage.getName() + "matching with data = " + joiner.join(roUnits));
         return null;
