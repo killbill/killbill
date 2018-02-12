@@ -319,8 +319,12 @@ public class TestContiguousIntervalConsumableInArrear extends TestUsageInArrearB
         assertTrue(result.get(0).getStartDate().compareTo(startDate) == 0);
         assertTrue(result.get(0).getEndDate().compareTo(firstBCDDate) == 0);
 
-        // Because the existing items did not have any json (item details), the new one also don't have the details.
-        assertNull(result.get(0).getItemDetails());
+        assertNotNull(result.get(0).getItemDetails());
+        UsageConsumableInArrearDetail usageDetail = objectMapper.readValue(result.get(0).getItemDetails(), new TypeReference<UsageConsumableInArrearDetail>() {});
+        List<UsageConsumableInArrearTierUnitDetail> itemDetails = usageDetail.getTierDetails();
+        assertEquals(itemDetails.size(), 1);
+        // Because we did not have the details before, the new details don't take into account the
+        assertEquals(itemDetails.get(0).getAmount().compareTo(new BigDecimal("5.0")), 0);
 
         // Invoiced for 1 BTC and used 199  => 2 blocks => 2 BTC so remaining piece should be 1 BTC
         assertEquals(result.get(1).getAmount().compareTo(new BigDecimal("1.0")), 0, String.format("%s != 1.0", result.get(0).getAmount()));
@@ -333,7 +337,13 @@ public class TestContiguousIntervalConsumableInArrear extends TestUsageInArrearB
         assertEquals(result.get(1).getUsageName(), usage.getName());
         assertTrue(result.get(1).getStartDate().compareTo(firstBCDDate) == 0);
         assertTrue(result.get(1).getEndDate().compareTo(endDate) == 0);
-        assertNull(result.get(1).getItemDetails());
+        assertNotNull(result.get(1).getItemDetails());
+
+        usageDetail = objectMapper.readValue(result.get(1).getItemDetails(), new TypeReference<UsageConsumableInArrearDetail>() {});
+        itemDetails = usageDetail.getTierDetails();
+        assertEquals(itemDetails.size(), 1);
+        assertEquals(itemDetails.get(0).getAmount().compareTo(new BigDecimal("2.0")), 0);
+
     }
 
     @Test(groups = "fast")
