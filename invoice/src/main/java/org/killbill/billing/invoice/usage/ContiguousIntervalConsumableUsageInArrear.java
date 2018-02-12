@@ -70,6 +70,8 @@ public class ContiguousIntervalConsumableUsageInArrear extends ContiguousInterva
     protected void populateResults(final LocalDate startDate, final LocalDate endDate, final Iterable<InvoiceItem> billedItems, final BigDecimal billedUsage, final BigDecimal toBeBilledUsage, final UsageInArrearDetail toBeBilledUsageDetails, final boolean areAllBilledItemsWithDetails, final List<InvoiceItem> result) {
         // Compute final amount by subtracting  amount that was already billed.
         if (!billedItems.iterator().hasNext() || billedUsage.compareTo(toBeBilledUsage) < 0) {
+            // In the case past invoice items showed the details (areAllBilledItemsWithDetails=true), billed usage has already been taken into account
+            // as it part of the reconciliation logic, so no need to subtract it here
             final BigDecimal amountToBill = areAllBilledItemsWithDetails ? toBeBilledUsage : toBeBilledUsage.subtract(billedUsage);
 
             if (amountToBill.compareTo(BigDecimal.ZERO) > 0) {
@@ -90,6 +92,7 @@ public class ContiguousIntervalConsumableUsageInArrear extends ContiguousInterva
 
     }
 
+    @Override
     protected UsageInArrearDetail getToBeBilledUsageDetails(final List<RolledUpUnit> rolledUpUnits, final Iterable<InvoiceItem> billedItems, final boolean areAllBilledItemsWithDetails) throws CatalogApiException {
 
         final Map<String, List<UsageConsumableInArrearTierUnitDetail>> previousUnitsUsage;
@@ -121,8 +124,9 @@ public class ContiguousIntervalConsumableUsageInArrear extends ContiguousInterva
 
         final List<UsageConsumableInArrearTierUnitDetail> result = new ArrayList<UsageConsumableInArrearTierUnitDetail>();
         for (final InvoiceItem bi : billedItems) {
-            final List<UsageConsumableInArrearTierUnitDetail> billedUsageItemDetails = fromJson(bi.getItemDetails());
-            for (final UsageConsumableInArrearTierUnitDetail curDetail : billedUsageItemDetails) {
+
+            final UsageConsumableInArrearDetail usageDetail = fromJson(bi.getItemDetails());
+            for (final UsageConsumableInArrearTierUnitDetail curDetail : usageDetail.getTierDetails()) {
                 if (curDetail.getTierUnit().equals(unitType)) {
                     result.add(curDetail);
                 }
@@ -229,17 +233,16 @@ public class ContiguousIntervalConsumableUsageInArrear extends ContiguousInterva
         return sb.toString();
     }
 
-    public static List<UsageConsumableInArrearTierUnitDetail> fromJson(String itemDetails) {
-        List<UsageConsumableInArrearTierUnitDetail> toBeBilledUsageConsumableInArrearTierUnitDetails = null;
+    public static UsageConsumableInArrearDetail fromJson(String itemDetails) {
+        UsageConsumableInArrearDetail result = null;
         if (itemDetails != null) {
             try {
-                toBeBilledUsageConsumableInArrearTierUnitDetails = objectMapper.readValue(itemDetails, new TypeReference<List<UsageConsumableInArrearTierUnitDetail>>() {});
+                result = objectMapper.readValue(itemDetails, new TypeReference<UsageConsumableInArrearDetail>() {});
             } catch (IOException e) {
                 Preconditions.checkState(false, e.getMessage());
             }
         }
-
-        return toBeBilledUsageConsumableInArrearTierUnitDetails;
+        return result;
     }
 
 }

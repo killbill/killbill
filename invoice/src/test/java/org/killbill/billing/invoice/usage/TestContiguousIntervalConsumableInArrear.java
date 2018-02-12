@@ -61,8 +61,8 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Ordering;
 
 import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.assertTrue;
-import static org.testng.AssertJUnit.assertNull;
 
 public class TestContiguousIntervalConsumableInArrear extends TestUsageInArrearBase {
 
@@ -636,9 +636,10 @@ public class TestContiguousIntervalConsumableInArrear extends TestUsageInArrearB
 
         List<InvoiceItem> result = produceInvoiceItems(rawUsages, TierBlockPolicy.TOP_TIER, UsageDetailMode.AGGREGATE, ImmutableList.<InvoiceItem>of());
         assertEquals(result.size(), 1);
-        assertEquals(result.get(0).getAmount().compareTo(new BigDecimal("203")),0);
+        assertEquals(result.get(0).getAmount().compareTo(new BigDecimal("203")), 0);
 
-        List<UsageConsumableInArrearTierUnitDetail> itemDetails = objectMapper.readValue(result.get(0).getItemDetails(), new TypeReference<List<UsageConsumableInArrearTierUnitDetail>>() {});
+        UsageConsumableInArrearDetail usageDetail = objectMapper.readValue(result.get(0).getItemDetails(), new TypeReference<UsageConsumableInArrearDetail>() {});
+        List<UsageConsumableInArrearTierUnitDetail> itemDetails = usageDetail.getTierDetails();
         // BAR: 99 * 2 = 198
         assertEquals(itemDetails.get(0).getTierUnit(), "BAR");
         assertEquals(itemDetails.get(0).getTier(), 1);
@@ -659,9 +660,11 @@ public class TestContiguousIntervalConsumableInArrear extends TestUsageInArrearB
 
         result = produceInvoiceItems(rawUsages, TierBlockPolicy.TOP_TIER, UsageDetailMode.AGGREGATE, ImmutableList.<InvoiceItem>of());
         assertEquals(result.size(), 1);
-        assertEquals(result.get(0).getAmount().compareTo(new BigDecimal("2025")),0);
+        assertEquals(result.get(0).getAmount().compareTo(new BigDecimal("2025")), 0);
 
-        itemDetails = objectMapper.readValue(result.get(0).getItemDetails(), new TypeReference<List<UsageConsumableInArrearTierUnitDetail>>() {});
+        usageDetail = objectMapper.readValue(result.get(0).getItemDetails(), new TypeReference<UsageConsumableInArrearDetail>() {});
+        itemDetails = usageDetail.getTierDetails();
+
         // BAR: 101 * 20 = 2020
         assertEquals(itemDetails.get(0).getTierUnit(), "BAR");
         assertEquals(itemDetails.get(0).getTier(), 2);
@@ -682,9 +685,10 @@ public class TestContiguousIntervalConsumableInArrear extends TestUsageInArrearB
 
         result = produceInvoiceItems(rawUsages, TierBlockPolicy.TOP_TIER, UsageDetailMode.AGGREGATE, ImmutableList.<InvoiceItem>of());
         assertEquals(result.size(), 1);
-        assertEquals(result.get(0).getAmount().compareTo(new BigDecimal("9620")),0);
+        assertEquals(result.get(0).getAmount().compareTo(new BigDecimal("9620")), 0);
 
-        itemDetails = objectMapper.readValue(result.get(0).getItemDetails(), new TypeReference<List<UsageConsumableInArrearTierUnitDetail>>() {});
+        usageDetail = objectMapper.readValue(result.get(0).getItemDetails(), new TypeReference<UsageConsumableInArrearDetail>() {});
+        itemDetails = usageDetail.getTierDetails();
         // BAR: 101 * 20 = 2020
         assertEquals(itemDetails.get(0).getTierUnit(), "BAR");
         assertEquals(itemDetails.get(0).getTier(), 2);
@@ -725,7 +729,7 @@ public class TestContiguousIntervalConsumableInArrear extends TestUsageInArrearB
 
         result = produceInvoiceItems(rawUsages, TierBlockPolicy.TOP_TIER, UsageDetailMode.DETAIL, ImmutableList.<InvoiceItem>of());
         assertEquals(result.size(), 2);
-         // BAR: 101 * 20 = 2020
+        // BAR: 101 * 20 = 2020
         assertEquals(result.get(0).getAmount().compareTo(new BigDecimal("2020.0")), 0);
         assertEquals(result.get(0).getQuantity().intValue(), 101);
         assertEquals(result.get(0).getRate().compareTo(new BigDecimal("20.0")), 0);
@@ -775,19 +779,20 @@ public class TestContiguousIntervalConsumableInArrear extends TestUsageInArrearB
         // Create usage data points (will include already billed + add new usage data)
         //
         List<RawUsage> rawUsages = new ArrayList<RawUsage>();
-        rawUsages.add(new DefaultRawUsage(subscriptionId, new LocalDate(2014, 03, 20), "FOO", 50L /* already built */+ 20L)); // tier 3
-        rawUsages.add(new DefaultRawUsage(subscriptionId, new LocalDate(2014, 03, 21), "BAR", 80L /* already built */+ 120L)); // tier 2
+        rawUsages.add(new DefaultRawUsage(subscriptionId, new LocalDate(2014, 03, 20), "FOO", 50L /* already built */ + 20L)); // tier 3
+        rawUsages.add(new DefaultRawUsage(subscriptionId, new LocalDate(2014, 03, 21), "BAR", 80L /* already built */ + 120L)); // tier 2
 
         final List<InvoiceItem> existingItems = new ArrayList<InvoiceItem>();
         final InvoiceItem ii1 = new UsageInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, usageName, new LocalDate(2014, 03, 20), new LocalDate(2014, 04, 15), new BigDecimal("570.00"), null, currency, null, existingUsageJson);
         existingItems.add(ii1);
 
-
         List<InvoiceItem> result = produceInvoiceItems(rawUsages, TierBlockPolicy.ALL_TIERS, UsageDetailMode.AGGREGATE, existingItems);
         assertEquals(result.size(), 1);
         assertEquals(result.get(0).getAmount().compareTo(new BigDecimal("3140.00")), 0, String.format("%s != 3140.0", result.get(0).getAmount()));
 
-        List<UsageConsumableInArrearTierUnitDetail> itemDetails = objectMapper.readValue(result.get(0).getItemDetails(), new TypeReference<List<UsageConsumableInArrearTierUnitDetail>>() {});
+        UsageConsumableInArrearDetail usageDetail = objectMapper.readValue(result.get(0).getItemDetails(), new TypeReference<UsageConsumableInArrearDetail>() {});
+        List<UsageConsumableInArrearTierUnitDetail> itemDetails = usageDetail.getTierDetails();
+
         // BAR item detail
         assertEquals(itemDetails.get(0).getTierUnit(), "BAR");
         assertEquals(itemDetails.get(0).getTier(), 1);

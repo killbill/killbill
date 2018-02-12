@@ -52,7 +52,7 @@ public class UsageConsumableInArrearDetail implements UsageInArrearDetail {
         String result = null;
         if (tierDetails != null && tierDetails.size() > 0){
             try {
-                result = objectMapper.writeValueAsString(tierDetails);
+                result = objectMapper.writeValueAsString(this);
             } catch (JsonProcessingException e) {
                 Preconditions.checkState(false, e.getMessage());
             }
