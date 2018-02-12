@@ -379,48 +379,6 @@ public abstract class ContiguousIntervalUsageInArrear {
     }
 
     /**
-     * @param roUnits the list of rolled up units for the period
-     * @return the price amount that should be billed for that period/unitType
-     * @throws CatalogApiException
-     */
-    @VisibleForTesting
-    UsageCapacityInArrearDetail computeToBeBilledCapacityInArrear(final List<RolledUpUnit> roUnits) throws CatalogApiException {
-        Preconditions.checkState(isBuilt.get());
-
-        final List<Tier> tiers = getCapacityInArrearTier(usage);
-
-        final Set<String> perUnitTypeDetailTierLevel = new HashSet<String>();
-        int tierNum = 0;
-        final List<UsageInArrearTierUnitDetail> toBeBilledDetails = Lists.newLinkedList();
-        for (final Tier cur : tiers) {
-            tierNum++;
-            boolean complies = true;
-            for (final RolledUpUnit ro : roUnits) {
-                final Limit tierLimit = getTierLimit(cur, ro.getUnitType());
-                // We ignore the min and only look at the max Limit as the tiers should be contiguous.
-                // Specifying a -1 value for last max tier will make the validation works
-                if (tierLimit.getMax() != (double) -1 && ro.getAmount().doubleValue() > tierLimit.getMax()) {
-                    complies = false;
-                } else {
-                    if (!perUnitTypeDetailTierLevel.contains(ro.getUnitType())) {
-                        toBeBilledDetails.add(new UsageConsumableInArrearTierUnitDetail(tierNum, ro.getUnitType(), cur.getRecurringPrice().getPrice(getCurrency()), 1, ro.getAmount().intValue(), BigDecimal.ZERO));
-                        perUnitTypeDetailTierLevel.add(ro.getUnitType());
-                    }
-                }
-            }
-            if (complies) {
-                return new UsageCapacityInArrearDetail(toBeBilledDetails, cur.getRecurringPrice().getPrice(getCurrency()));
-            }
-        }
-        // Probably invalid catalog config
-        final Joiner joiner = Joiner.on(", ");
-        joiner.join(roUnits);
-        Preconditions.checkState(false, "Could not find tier for usage " + usage.getName() + "matching with data = " + joiner.join(roUnits));
-        return null;
-    }
-
-
-    /**
      * @param filteredUsageForInterval the list of invoiceItem to consider
      * @return the price amount that was already billed for that period and usage section (across unitTypes)
      */
@@ -534,18 +492,5 @@ public abstract class ContiguousIntervalUsageInArrear {
             }
             return result;
         }
-    }
-
-    public static List<UsageConsumableInArrearTierUnitDetail> fromJson(String itemDetails) {
-        List<UsageConsumableInArrearTierUnitDetail> toBeBilledUsageConsumableInArrearTierUnitDetails = null;
-        if (itemDetails != null) {
-            try {
-                toBeBilledUsageConsumableInArrearTierUnitDetails = objectMapper.readValue(itemDetails, new TypeReference<List<UsageConsumableInArrearTierUnitDetail>>() {});
-            } catch (IOException e) {
-                Preconditions.checkState(false, e.getMessage());
-            }
-        }
-
-        return toBeBilledUsageConsumableInArrearTierUnitDetails;
     }
 }
