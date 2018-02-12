@@ -141,7 +141,7 @@ public class TestContiguousIntervalCapacityInArrear extends TestUsageInArrearBas
 
         final LocalDate targetDate = new LocalDate(2014, 03, 20);
 
-        final ContiguousIntervalUsageInArrear intervalCapacityInArrear = createContiguousIntervalCapacityInArrear(usage, ImmutableList.<RawUsage>of(), targetDate, false,
+        final ContiguousIntervalCapacityUsageInArrear intervalCapacityInArrear = createContiguousIntervalCapacityInArrear(usage, ImmutableList.<RawUsage>of(), targetDate, false,
                                                                                                                   createMockBillingEvent(targetDate.toDateTimeAtStartOfDay(DateTimeZone.UTC),
                                                                                                                                          BillingPeriod.MONTHLY,
                                                                                                                                          Collections.<Usage>emptyList())
