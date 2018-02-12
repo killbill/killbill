@@ -359,7 +359,7 @@ public class TestContiguousIntervalCapacityInArrear extends TestUsageInArrearBas
 
         final List<UsageInArrearTierUnitDetail> existingUsage = ImmutableList.of(existingFooUsageTier1, existingBarUsageTier2);
 
-        final String existingUsageJson = new UsageCapacityInArrearDetail(existingUsage, BigDecimal.TEN).toJson(objectMapper);
+        final String existingUsageJson = objectMapper.writeValueAsString(new UsageCapacityInArrearDetail(existingUsage, BigDecimal.TEN));
 
         final List<InvoiceItem> existingItems = new ArrayList<InvoiceItem>();
         final InvoiceItem ii1 = new UsageInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, usageName, new LocalDate(2014, 03, 20), new LocalDate(2014, 04, 15), BigDecimal.TEN, null, currency, null, existingUsageJson);

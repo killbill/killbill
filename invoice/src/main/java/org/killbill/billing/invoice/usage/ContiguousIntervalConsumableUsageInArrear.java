@@ -82,7 +82,7 @@ public class ContiguousIntervalConsumableUsageInArrear extends ContiguousInterva
                         result.add(item);
                     }
                 } else {
-                    final String itemDetails = toBeBilledUsageDetails.toJson(objectMapper);
+                    final String itemDetails = toJson(toBeBilledUsageDetails);
                     final InvoiceItem item = new UsageInvoiceItem(invoiceId, accountId, getBundleId(), getSubscriptionId(), getPlanName(),
                                                                   getPhaseName(), usage.getName(), startDate, endDate, amountToBill, null, getCurrency(), null, itemDetails);
                     result.add(item);

@@ -19,11 +19,7 @@ package org.killbill.billing.invoice.usage.details;
 
 import java.math.BigDecimal;
 
-import org.killbill.billing.util.jackson.ObjectMapper;
-
 public interface UsageInArrearDetail {
 
     BigDecimal getAmount();
-
-    String toJson(ObjectMapper mapper);
 }

@@ -32,7 +32,6 @@ import org.killbill.billing.catalog.api.Usage;
 import org.killbill.billing.invoice.api.InvoiceItem;
 import org.killbill.billing.invoice.model.UsageInvoiceItem;
 import org.killbill.billing.invoice.usage.details.UsageCapacityInArrearDetail;
-import org.killbill.billing.invoice.usage.details.UsageConsumableInArrearTierUnitDetail;
 import org.killbill.billing.invoice.usage.details.UsageInArrearDetail;
 import org.killbill.billing.invoice.usage.details.UsageInArrearTierUnitDetail;
 import org.killbill.billing.usage.RawUsage;
@@ -73,7 +72,7 @@ public class ContiguousIntervalCapacityUsageInArrear extends ContiguousIntervalU
             final BigDecimal amountToBill = toBeBilledUsage.subtract(billedUsage);
 
             if (amountToBill.compareTo(BigDecimal.ZERO) > 0) {
-                    final String itemDetails = areAllBilledItemsWithDetails ? toBeBilledUsageDetails.toJson(objectMapper) : null;
+                    final String itemDetails = areAllBilledItemsWithDetails ? toJson(toBeBilledUsageDetails) : null;
                     final InvoiceItem item = new UsageInvoiceItem(invoiceId, accountId, getBundleId(), getSubscriptionId(), getPlanName(),
                                                                   getPhaseName(), usage.getName(), startDate, endDate, amountToBill, null, getCurrency(), null, itemDetails);
                     result.add(item);

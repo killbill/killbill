@@ -786,9 +786,9 @@ public class TestContiguousIntervalConsumableInArrear extends TestUsageInArrearB
 
         final List<UsageConsumableInArrearTierUnitDetail> existingUsage = ImmutableList.of(existingFooUsageTier1, existingFooUsageTier2, existingBarUsageTier1);
 
-        final UsageConsumableInArrearDetail tmp = new UsageConsumableInArrearDetail(existingUsage);
+        final UsageConsumableInArrearDetail usageConsumableInArrearDetail = new UsageConsumableInArrearDetail(existingUsage);
 
-        final String existingUsageJson = tmp.toJson(objectMapper);
+        final String existingUsageJson =  objectMapper.writeValueAsString(usageConsumableInArrearDetail);
 
         //
         // Create usage data points (will include already billed + add new usage data)
