@@ -50,7 +50,7 @@ public class UsageUtils {
                 }
             }
             // We expect this method to return an ordered list of TieredBlock, each for each tier.
-            Preconditions.checkState(found, String.format("Catalog issue in usage section '%s': Missing tierBlock definition for unit '%s'", usage.getName(), unitType));
+            Preconditions.checkState(found, "Catalog issue in usage section '%s': Missing tierBlock definition for unit '%s'", usage.getName(), unitType);
         }
         return result;
     }
