@@ -42,7 +42,6 @@ import org.killbill.billing.invoice.api.InvoiceItem;
 import org.killbill.billing.invoice.api.InvoiceItemType;
 import org.killbill.billing.invoice.generator.BillingIntervalDetail;
 import org.killbill.billing.invoice.model.UsageInvoiceItem;
-import org.killbill.billing.invoice.usage.details.UsageConsumableInArrearTierUnitDetail;
 import org.killbill.billing.invoice.usage.details.UsageInArrearDetail;
 import org.killbill.billing.junction.BillingEvent;
 import org.killbill.billing.usage.RawUsage;
@@ -200,18 +199,18 @@ public abstract class ContiguousIntervalUsageInArrear {
 
             final List<RolledUpUnit> rolledUpUnits = ru.getRolledUpUnits();
 
-
-
             final UsageInArrearDetail toBeBilledUsageDetails = getToBeBilledUsageDetails(rolledUpUnits, billedItems, areAllBilledItemsWithDetails);
             final BigDecimal toBeBilledUsage = toBeBilledUsageDetails.getAmount();
 
             final int billedUsageDelta = billedUsage.compareTo(toBeBilledUsage);
             // We built more in the past than what we find now, data usage vanished?
             if (billedUsageDelta > 0) {
+                /*
                 throw new InvoiceApiException(ErrorCode.UNEXPECTED_ERROR,
                                               String.format("ILLEGAL INVOICING STATE: Usage period start='%s', end='%s', previously billed amount='%.2f', new proposed amount='%.2f'",
                                                             ru.getStart(), ru.getEnd(), billedUsage, toBeBilledUsage));
-            // Something remains to be billed
+               */
+                // Something remains to be billed
             } else if (billedUsageDelta < 0) {
                 populateResults(ru.getStart(), ru.getEnd(), billedItems, billedUsage, toBeBilledUsage, toBeBilledUsageDetails, areAllBilledItemsWithDetails, result);
             }
