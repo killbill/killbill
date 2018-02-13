@@ -284,7 +284,7 @@ public class TestWithTaxItems extends TestIntegrationBase {
         testInvoicePluginApi.addTaxItem(new TaxInvoiceItem(invoiceTaxItemId, null, account.getId(), null, "Tax Item", new LocalDate(2012, 4, 1), BigDecimal.ONE, account.getCurrency()));
 
         // Insert external charge autoCommit = false => Invoice will be in DRAFT
-        invoiceUserApi.insertExternalCharges(account.getId(), clock.getUTCNow().toLocalDate(), ImmutableList.<InvoiceItem>of(new ExternalChargeInvoiceItem(null, account.getId(), null, "foo", new LocalDate(2012, 4, 1), null, new BigDecimal("33.80"), account.getCurrency())), false, callContext);
+        invoiceUserApi.insertExternalCharges(account.getId(), clock.getUTCNow().toLocalDate(), ImmutableList.<InvoiceItem>of(new ExternalChargeInvoiceItem(null, account.getId(), null, "foo", new LocalDate(2012, 4, 1), null, new BigDecimal("33.80"), account.getCurrency(), null)), false, callContext);
 
         // Make sure TestInvoicePluginApi **update** the original TAX item
         testInvoicePluginApi.addTaxItem(new TaxInvoiceItem(invoiceTaxItemId, null, account.getId(), null, "Tax Item", new LocalDate(2012, 4, 1), new BigDecimal("12.45"), account.getCurrency()));

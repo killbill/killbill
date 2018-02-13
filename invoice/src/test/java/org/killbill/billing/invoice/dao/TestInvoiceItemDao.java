@@ -187,7 +187,7 @@ public class TestInvoiceItemDao extends InvoiceTestSuiteWithEmbeddedDB {
         final LocalDate startDate = new LocalDate(2012, 4, 1);
         final LocalDate endDate = new LocalDate(2012, 5, 1);
         final InvoiceItem externalChargeInvoiceItem = new ExternalChargeInvoiceItem(invoiceId, accountId, bundleId, description,
-                                                                                    startDate, endDate, TEN, Currency.USD);
+                                                                                    startDate, endDate, TEN, Currency.USD, null);
         invoiceUtil.createInvoiceItem(externalChargeInvoiceItem, context);
 
         final InvoiceItemModelDao savedItem = invoiceUtil.getInvoiceItemById(externalChargeInvoiceItem.getId(), context);
@@ -223,7 +223,7 @@ public class TestInvoiceItemDao extends InvoiceTestSuiteWithEmbeddedDB {
 
     private void createAndVerifyExternalCharge(final BigDecimal amount, final Currency currency) throws EntityPersistenceException {
         final InvoiceItem externalChargeInvoiceItem = new ExternalChargeInvoiceItem(UUID.randomUUID(), account.getId(), UUID.randomUUID(),
-                                                                                    UUID.randomUUID().toString(), new LocalDate(2012, 4, 1), new LocalDate(2012, 5, 1), amount, currency);
+                                                                                    UUID.randomUUID().toString(), new LocalDate(2012, 4, 1), new LocalDate(2012, 5, 1), amount, currency, null);
         invoiceUtil.createInvoiceItem(externalChargeInvoiceItem, context);
 
         final InvoiceItemModelDao savedItem = invoiceUtil.getInvoiceItemById(externalChargeInvoiceItem.getId(), context);

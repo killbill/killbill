@@ -53,7 +53,7 @@ public class TestInvoiceFlagBehaviors extends InvoiceTestSuiteWithEmbeddedDB {
     public void testWrittenOffInvoiceBeforeAccountCredit() throws Exception {
 
         // Create new invoice with one charge and expect account credit to be used
-        final List<InvoiceItem> items = invoiceUserApi.insertExternalCharges(accountId, clock.getUTCToday(), ImmutableList.<InvoiceItem>of(new ExternalChargeInvoiceItem(UUID.randomUUID(), clock.getUTCNow(), null, accountId, null, null, null, null, BigDecimal.TEN, accountCurrency)), true, callContext);
+        final List<InvoiceItem> items = invoiceUserApi.insertExternalCharges(accountId, clock.getUTCToday(), ImmutableList.<InvoiceItem>of(new ExternalChargeInvoiceItem(UUID.randomUUID(), clock.getUTCNow(), null, accountId, null, null, null, null, BigDecimal.TEN, accountCurrency, null)), true, callContext);
         assertEquals(items.size(), 1);
 
         // Check both invoice and account balance is 10.00
@@ -109,7 +109,7 @@ public class TestInvoiceFlagBehaviors extends InvoiceTestSuiteWithEmbeddedDB {
         assertEquals(accountCBA0.compareTo(BigDecimal.TEN), 0);
 
         // Create new invoice with one charge and expect account credit to be used
-        final List<InvoiceItem> items = invoiceUserApi.insertExternalCharges(accountId, clock.getUTCToday(), ImmutableList.<InvoiceItem>of(new ExternalChargeInvoiceItem(UUID.randomUUID(), clock.getUTCNow(), null, accountId, null, null, null, null, new BigDecimal("13.5"), accountCurrency)), true, callContext);
+        final List<InvoiceItem> items = invoiceUserApi.insertExternalCharges(accountId, clock.getUTCToday(), ImmutableList.<InvoiceItem>of(new ExternalChargeInvoiceItem(UUID.randomUUID(), clock.getUTCNow(), null, accountId, null, null, null, null, new BigDecimal("13.5"), accountCurrency, null)), true, callContext);
         assertEquals(items.size(), 1);
 
         final BigDecimal accountBalance1 = invoiceUserApi.getAccountBalance(accountId, callContext);
@@ -156,7 +156,7 @@ public class TestInvoiceFlagBehaviors extends InvoiceTestSuiteWithEmbeddedDB {
         invoiceUserApi.insertCredit(accountId, BigDecimal.TEN, null, accountCurrency, true, null, callContext);
 
         // Create new invoice with one charge and expect account credit to be used
-        final List<InvoiceItem> items = invoiceUserApi.insertExternalCharges(accountId, clock.getUTCToday(), ImmutableList.<InvoiceItem>of(new ExternalChargeInvoiceItem(UUID.randomUUID(), clock.getUTCNow(), null, accountId, null, null, null, null, new BigDecimal("4.0"), accountCurrency)), false, callContext);
+        final List<InvoiceItem> items = invoiceUserApi.insertExternalCharges(accountId, clock.getUTCToday(), ImmutableList.<InvoiceItem>of(new ExternalChargeInvoiceItem(UUID.randomUUID(), clock.getUTCNow(), null, accountId, null, null, null, null, new BigDecimal("4.0"), accountCurrency, null)), false, callContext);
         assertEquals(items.size(), 1);
 
         final UUID invoiceId = items.get(0).getInvoiceId();
