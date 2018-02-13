@@ -216,8 +216,8 @@ public abstract class ContiguousIntervalUsageInArrear {
                 populateResults(ru.getStart(), ru.getEnd(), billedItems, billedUsage, toBeBilledUsage, toBeBilledUsageDetails, areAllBilledItemsWithDetails, result);
             }
         }
-        final LocalDate nextNotificationdate = computeNextNotificationDate();
-        return new UsageInArrearItemsAndNextNotificationDate(result, nextNotificationdate);
+        final LocalDate nextNotificationDate = computeNextNotificationDate();
+        return new UsageInArrearItemsAndNextNotificationDate(result, nextNotificationDate);
     }
 
     protected abstract void populateResults(final LocalDate startDate, final LocalDate endDate, final Iterable<InvoiceItem> billedItems, final BigDecimal billedUsage, final BigDecimal toBeBilledUsage, final UsageInArrearDetail toBeBilledUsageDetails, final boolean areAllBilledItemsWithDetails, final List<InvoiceItem> result);
@@ -461,18 +461,6 @@ public abstract class ContiguousIntervalUsageInArrear {
 
         public LocalDate getNextNotificationDate() {
             return nextNotificationDate;
-        }
-    }
-
-    public BigDecimal toBeBilledForUnit(final List<UsageConsumableInArrearTierUnitDetail> toBeBilledDetails, final UsageType usageType) {
-        if (usageType == UsageType.CAPACITY) {
-            return toBeBilledDetails.get(0).getAmount();
-        } else {
-            BigDecimal result = BigDecimal.ZERO;
-            for (UsageConsumableInArrearTierUnitDetail toBeBilled : toBeBilledDetails) {
-                result = result.add(toBeBilled.getAmount());
-            }
-            return result;
         }
     }
 

@@ -450,7 +450,7 @@ public class TestContiguousIntervalConsumableInArrear extends TestUsageInArrearB
     }
 
     @Test(groups = "fast")
-    public void testTobeBilledForUnit() throws CatalogApiException {
+    public void testBilledUsage() throws CatalogApiException {
 
         final DefaultTieredBlock block1 = createDefaultTieredBlock("cell-phone-minutes", 1000, 10000, new BigDecimal("0.5"));
         final DefaultTieredBlock block2 = createDefaultTieredBlock("Mbytes", 512, 512000, new BigDecimal("0.3"));
@@ -463,12 +463,14 @@ public class TestContiguousIntervalConsumableInArrear extends TestUsageInArrearB
                                                                                                                                              BillingPeriod.MONTHLY,
                                                                                                                                              Collections.<Usage>emptyList())
                                                                                                                      );
-        List<UsageConsumableInArrearTierUnitDetail> results = Lists.newArrayList();
-        results.addAll(intervalConsumableInArrear.computeToBeBilledConsumableInArrear(new DefaultRolledUpUnit("cell-phone-minutes", 1000L), ImmutableList.<UsageConsumableInArrearTierUnitDetail>of(), true));
-        results.addAll(intervalConsumableInArrear.computeToBeBilledConsumableInArrear(new DefaultRolledUpUnit("Mbytes", 30720L), ImmutableList.<UsageConsumableInArrearTierUnitDetail>of(), true));
-        assertEquals(results.size(), 2);
+        final List<UsageConsumableInArrearTierUnitDetail> tierUnitDetails = Lists.newArrayList();
+        tierUnitDetails.addAll(intervalConsumableInArrear.computeToBeBilledConsumableInArrear(new DefaultRolledUpUnit("cell-phone-minutes", 1000L), ImmutableList.<UsageConsumableInArrearTierUnitDetail>of(), true));
+        tierUnitDetails.addAll(intervalConsumableInArrear.computeToBeBilledConsumableInArrear(new DefaultRolledUpUnit("Mbytes", 30720L), ImmutableList.<UsageConsumableInArrearTierUnitDetail>of(), true));
+        assertEquals(tierUnitDetails.size(), 2);
 
-        assertEquals(intervalConsumableInArrear.toBeBilledForUnit(results, UsageType.CONSUMABLE), new BigDecimal("18.5"));
+        final UsageConsumableInArrearDetail details = new UsageConsumableInArrearDetail(tierUnitDetails);
+
+        assertEquals(details.getAmount().compareTo(new BigDecimal("18.5")), 0);
     }
 
     @Test(groups = "fast")
