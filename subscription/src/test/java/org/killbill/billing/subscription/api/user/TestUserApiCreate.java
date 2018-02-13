@@ -1,7 +1,9 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
+ * Copyright 2014-2018 Groupon, Inc
+ * Copyright 2014-2018 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -16,6 +18,7 @@
 
 package org.killbill.billing.subscription.api.user;
 
+import java.sql.SQLException;
 import java.sql.SQLIntegrityConstraintViolationException;
 import java.util.List;
 
@@ -34,7 +37,6 @@ import org.killbill.billing.subscription.DefaultSubscriptionTestInitializer;
 import org.killbill.billing.subscription.SubscriptionTestSuiteWithEmbeddedDB;
 import org.killbill.billing.subscription.events.SubscriptionBaseEvent;
 import org.killbill.billing.subscription.events.phase.PhaseEvent;
-import org.mariadb.jdbc.internal.util.dao.QueryException;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
@@ -82,7 +84,7 @@ public class TestUserApiCreate extends SubscriptionTestSuiteWithEmbeddedDB {
             subscriptionInternalApi.createBundleForAccount(bundle.getAccountId(), DefaultSubscriptionTestInitializer.DEFAULT_BUNDLE_KEY, false, internalCallContext);
             Assert.fail("createBundleForAccount should fail because key already exists");
         } catch (final RuntimeException e) {
-            assertTrue(e.getCause() instanceof SQLIntegrityConstraintViolationException);
+            assertTrue(e.getCause() instanceof SQLException && (e.getCause() instanceof SQLIntegrityConstraintViolationException || "23505".compareTo(((SQLException) e.getCause()).getSQLState()) == 0));
         }
 
         final SubscriptionBaseBundle newBundle = subscriptionInternalApi.createBundleForAccount(bundle.getAccountId(), DefaultSubscriptionTestInitializer.DEFAULT_BUNDLE_KEY, true, internalCallContext);
