@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014-2017 Groupon, Inc
- * Copyright 2014-2017 The Billing Project, LLC
+ * Copyright 2014-2018 Groupon, Inc
+ * Copyright 2014-2018 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -19,6 +19,7 @@
 package org.killbill.billing.invoice.notification;
 
 import java.io.IOException;
+import java.util.Iterator;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
@@ -84,19 +85,27 @@ public class DefaultNextBillingDatePoster implements NextBillingDatePoster {
             final Iterable<NotificationEventWithMetadata<NextBillingDateNotificationKey>> futureNotifications = nextBillingQueue.getFutureNotificationFromTransactionForSearchKeys(internalCallContext.getAccountRecordId(), internalCallContext.getTenantRecordId(), entitySqlDaoWrapperFactory.getHandle().getConnection());
 
             NotificationEventWithMetadata<NextBillingDateNotificationKey> existingNotificationForEffectiveDate = null;
-            for (final NotificationEventWithMetadata<NextBillingDateNotificationKey> input : futureNotifications) {
-                final boolean isEventDryRunForNotifications = input.getEvent().isDryRunForInvoiceNotification() != null ?
-                                                              input.getEvent().isDryRunForInvoiceNotification() : false;
+            final Iterator<NotificationEventWithMetadata<NextBillingDateNotificationKey>> iterator = futureNotifications.iterator();
+            try {
+                while (iterator.hasNext()) {
+                    final NotificationEventWithMetadata<NextBillingDateNotificationKey> input = iterator.next();
+                    final boolean isEventDryRunForNotifications = input.getEvent().isDryRunForInvoiceNotification() != null ?
+                                                                  input.getEvent().isDryRunForInvoiceNotification() : false;
 
-                final LocalDate notificationEffectiveLocaleDate = internalCallContext.toLocalDate(futureNotificationTime);
-                final LocalDate eventEffectiveLocaleDate = internalCallContext.toLocalDate(input.getEffectiveDate());
+                    final LocalDate notificationEffectiveLocaleDate = internalCallContext.toLocalDate(futureNotificationTime);
+                    final LocalDate eventEffectiveLocaleDate = internalCallContext.toLocalDate(input.getEffectiveDate());
 
-                if (notificationEffectiveLocaleDate.compareTo(eventEffectiveLocaleDate) == 0 &&
-                    ((isDryRunForInvoiceNotification && isEventDryRunForNotifications) ||
-                     (!isDryRunForInvoiceNotification && !isEventDryRunForNotifications))) {
-                    existingNotificationForEffectiveDate = input;
+                    if (notificationEffectiveLocaleDate.compareTo(eventEffectiveLocaleDate) == 0 &&
+                        ((isDryRunForInvoiceNotification && isEventDryRunForNotifications) ||
+                         (!isDryRunForInvoiceNotification && !isEventDryRunForNotifications))) {
+                        existingNotificationForEffectiveDate = input;
+                    }
                 }
+            } finally {
                 // Go through all results to close the connection
+                while (iterator.hasNext()) {
+                    iterator.next();
+                }
             }
 
             if (existingNotificationForEffectiveDate == null) {

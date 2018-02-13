@@ -1,6 +1,6 @@
 /*
- * Copyright 2014-2017 Groupon, Inc
- * Copyright 2014-2017 The Billing Project, LLC
+ * Copyright 2014-2018 Groupon, Inc
+ * Copyright 2014-2018 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -20,6 +20,7 @@ package org.killbill.billing.payment;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -28,6 +29,7 @@ import java.util.concurrent.TimeUnit;
 
 import org.joda.time.LocalDate;
 import org.killbill.billing.account.api.Account;
+import org.killbill.billing.api.FlakyRetryAnalyzer;
 import org.killbill.billing.api.TestApiListener;
 import org.killbill.billing.api.TestApiListener.NextEvent;
 import org.killbill.billing.callcontext.InternalCallContext;
@@ -414,7 +416,8 @@ public class TestJanitor extends PaymentTestSuiteWithEmbeddedDB {
     }
 
     // The test will check that when a PENDING entry stays PENDING, we go through all our retries and eventually give up (no infinite loop of retries)
-    @Test(groups = "slow")
+    // Flaky, see https://github.com/killbill/killbill/issues/860
+    @Test(groups = "slow", retryAnalyzer = FlakyRetryAnalyzer.class)
     public void testPendingEntriesThatDontMove() throws Exception {
 
         final BigDecimal requestedAmount = BigDecimal.TEN;
@@ -447,13 +450,13 @@ public class TestJanitor extends PaymentTestSuiteWithEmbeddedDB {
             // Verify there is a notification to retry updating the value
             assertEquals(getPendingNotificationCnt(internalCallContext), 1);
 
-            clock.addDeltaFromReality(cur.getMillis() + 1);
+            clock.addDeltaFromReality(cur.getMillis() + 1000);
 
             assertNotificationsCompleted(internalCallContext, 5);
             // We add a sleep here to make sure the notification gets processed. Note that calling assertNotificationsCompleted alone would not work
             // because there is a point in time where the notification queue is empty (showing notification was processed), but the processing of the notification
             // will itself enter a new notification, and so the synchronization is difficult without writing *too much code*.
-            Thread.sleep(1000);
+            Thread.sleep(1500);
             assertNotificationsCompleted(internalCallContext, 5);
 
             final Payment updatedPayment = paymentApi.getPayment(payment.getId(), false, false, ImmutableList.<PluginProperty>of(), callContext);
@@ -510,11 +513,19 @@ public class TestJanitor extends PaymentTestSuiteWithEmbeddedDB {
                 @Override
                 public Boolean call() throws Exception {
                     boolean completed = true;
-                    for (final NotificationEventWithMetadata<NotificationEvent> notificationEvent : notificationQueueService.getNotificationQueue(DefaultPaymentService.SERVICE_NAME, Janitor.QUEUE_NAME).getFutureOrInProcessingNotificationForSearchKeys(internalCallContext.getAccountRecordId(), internalCallContext.getTenantRecordId())) {
-                        if (!notificationEvent.getEffectiveDate().isAfter(clock.getUTCNow())) {
-                            completed = false;
+                    final Iterator<NotificationEventWithMetadata<NotificationEvent>> iterator = notificationQueueService.getNotificationQueue(DefaultPaymentService.SERVICE_NAME, Janitor.QUEUE_NAME).getFutureOrInProcessingNotificationForSearchKeys(internalCallContext.getAccountRecordId(), internalCallContext.getTenantRecordId()).iterator();
+                    try {
+                        while (iterator.hasNext()) {
+                            final NotificationEventWithMetadata<NotificationEvent> notificationEvent = iterator.next();
+                            if (!notificationEvent.getEffectiveDate().isAfter(clock.getUTCNow())) {
+                                completed = false;
+                            }
                         }
+                    } finally {
                         // Go through all results to close the connection
+                        while (iterator.hasNext()) {
+                            iterator.next();
+                        }
                     }
                     return completed;
                 }
