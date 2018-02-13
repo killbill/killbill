@@ -17,11 +17,9 @@
 
 package org.killbill.billing.invoice.usage;
 
-import java.io.IOException;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -37,8 +35,6 @@ import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.catalog.api.BillingMode;
 import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.catalog.api.Currency;
-import org.killbill.billing.catalog.api.Limit;
-import org.killbill.billing.catalog.api.Tier;
 import org.killbill.billing.catalog.api.Usage;
 import org.killbill.billing.catalog.api.UsageType;
 import org.killbill.billing.invoice.api.InvoiceApiException;
@@ -46,10 +42,7 @@ import org.killbill.billing.invoice.api.InvoiceItem;
 import org.killbill.billing.invoice.api.InvoiceItemType;
 import org.killbill.billing.invoice.generator.BillingIntervalDetail;
 import org.killbill.billing.invoice.model.UsageInvoiceItem;
-import org.killbill.billing.invoice.usage.details.UsageCapacityInArrearDetail;
-import org.killbill.billing.invoice.usage.details.UsageConsumableInArrearTierUnitDetail;
 import org.killbill.billing.invoice.usage.details.UsageInArrearDetail;
-import org.killbill.billing.invoice.usage.details.UsageInArrearTierUnitDetail;
 import org.killbill.billing.junction.BillingEvent;
 import org.killbill.billing.usage.RawUsage;
 import org.killbill.billing.usage.api.RolledUpUnit;
@@ -59,16 +52,14 @@ import org.killbill.billing.util.jackson.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 
-import static org.killbill.billing.invoice.usage.UsageUtils.getCapacityInArrearTier;
 import static org.killbill.billing.invoice.usage.UsageUtils.getCapacityInArrearUnitTypes;
 import static org.killbill.billing.invoice.usage.UsageUtils.getConsumableInArrearUnitTypes;
 
@@ -208,24 +199,24 @@ public abstract class ContiguousIntervalUsageInArrear {
 
             final List<RolledUpUnit> rolledUpUnits = ru.getRolledUpUnits();
 
-
-
             final UsageInArrearDetail toBeBilledUsageDetails = getToBeBilledUsageDetails(rolledUpUnits, billedItems, areAllBilledItemsWithDetails);
             final BigDecimal toBeBilledUsage = toBeBilledUsageDetails.getAmount();
 
             final int billedUsageDelta = billedUsage.compareTo(toBeBilledUsage);
             // We built more in the past than what we find now, data usage vanished?
             if (billedUsageDelta > 0) {
+                /*
                 throw new InvoiceApiException(ErrorCode.UNEXPECTED_ERROR,
                                               String.format("ILLEGAL INVOICING STATE: Usage period start='%s', end='%s', previously billed amount='%.2f', new proposed amount='%.2f'",
                                                             ru.getStart(), ru.getEnd(), billedUsage, toBeBilledUsage));
-            // Something remains to be billed
+               */
+                // Something remains to be billed
             } else if (billedUsageDelta < 0) {
                 populateResults(ru.getStart(), ru.getEnd(), billedItems, billedUsage, toBeBilledUsage, toBeBilledUsageDetails, areAllBilledItemsWithDetails, result);
             }
         }
-        final LocalDate nextNotificationdate = computeNextNotificationDate();
-        return new UsageInArrearItemsAndNextNotificationDate(result, nextNotificationdate);
+        final LocalDate nextNotificationDate = computeNextNotificationDate();
+        return new UsageInArrearItemsAndNextNotificationDate(result, nextNotificationDate);
     }
 
     protected abstract void populateResults(final LocalDate startDate, final LocalDate endDate, final Iterable<InvoiceItem> billedItems, final BigDecimal billedUsage, final BigDecimal toBeBilledUsage, final UsageInArrearDetail toBeBilledUsageDetails, final boolean areAllBilledItemsWithDetails, final List<InvoiceItem> result);
@@ -368,16 +359,6 @@ public abstract class ContiguousIntervalUsageInArrear {
         }
     }
 
-    private Limit getTierLimit(final Tier tier, final String unitType) {
-        for (final Limit cur : tier.getLimits()) {
-            if (cur.getUnit().getName().equals(unitType)) {
-                return cur;
-            }
-        }
-        Preconditions.checkState(false, "Could not find unit type " + unitType + " in usage tier ");
-        return null;
-    }
-
     /**
      * @param filteredUsageForInterval the list of invoiceItem to consider
      * @return the price amount that was already billed for that period and usage section (across unitTypes)
@@ -482,15 +463,13 @@ public abstract class ContiguousIntervalUsageInArrear {
         }
     }
 
-    public BigDecimal toBeBilledForUnit(final List<UsageConsumableInArrearTierUnitDetail> toBeBilledDetails, final UsageType usageType) {
-        if (usageType == UsageType.CAPACITY) {
-            return toBeBilledDetails.get(0).getAmount();
-        } else {
-            BigDecimal result = BigDecimal.ZERO;
-            for (UsageConsumableInArrearTierUnitDetail toBeBilled : toBeBilledDetails) {
-                result = result.add(toBeBilled.getAmount());
-            }
-            return result;
+    protected String toJson(final UsageInArrearDetail usageInArrearDetail) {
+        try {
+            return objectMapper.writeValueAsString(usageInArrearDetail);
+        } catch (JsonProcessingException e) {
+            Preconditions.checkState(false, e.getMessage());
+            return null;
         }
     }
+
 }

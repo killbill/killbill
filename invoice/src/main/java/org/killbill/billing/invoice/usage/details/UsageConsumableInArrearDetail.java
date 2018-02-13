@@ -20,12 +20,8 @@ package org.killbill.billing.invoice.usage.details;
 import java.math.BigDecimal;
 import java.util.List;
 
-import org.killbill.billing.util.jackson.ObjectMapper;
-
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.google.common.base.Preconditions;
 
 public class UsageConsumableInArrearDetail implements UsageInArrearDetail {
 
@@ -45,19 +41,6 @@ public class UsageConsumableInArrearDetail implements UsageInArrearDetail {
 
     public BigDecimal getAmount() {
         return amount;
-    }
-
-    @Override
-    public String toJson(final ObjectMapper objectMapper) {
-        String result = null;
-        if (tierDetails != null && tierDetails.size() > 0){
-            try {
-                result = objectMapper.writeValueAsString(this);
-            } catch (JsonProcessingException e) {
-                Preconditions.checkState(false, e.getMessage());
-            }
-        }
-        return result;
     }
 
     public List<UsageConsumableInArrearTierUnitDetail> getTierDetails() {
