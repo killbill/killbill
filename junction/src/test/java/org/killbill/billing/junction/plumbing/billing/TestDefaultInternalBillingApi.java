@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014-2017 Groupon, Inc
- * Copyright 2014-2017 The Billing Project, LLC
+ * Copyright 2014-2018 Groupon, Inc
+ * Copyright 2014-2018 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -19,6 +19,7 @@
 package org.killbill.billing.junction.plumbing.billing;
 
 import java.util.List;
+import java.util.UUID;
 
 import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
@@ -31,9 +32,13 @@ import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.catalog.api.PlanPhaseSpecifier;
 import org.killbill.billing.catalog.api.PriceListSet;
 import org.killbill.billing.entitlement.EntitlementService;
+import org.killbill.billing.entitlement.api.BaseEntitlementWithAddOnsSpecifier;
 import org.killbill.billing.entitlement.api.BlockingStateType;
+import org.killbill.billing.entitlement.api.DefaultBaseEntitlementWithAddOnsSpecifier;
 import org.killbill.billing.entitlement.api.DefaultEntitlementApi;
+import org.killbill.billing.entitlement.api.DefaultEntitlementSpecifier;
 import org.killbill.billing.entitlement.api.Entitlement;
+import org.killbill.billing.entitlement.api.EntitlementSpecifier;
 import org.killbill.billing.junction.BillingEvent;
 import org.killbill.billing.junction.DefaultBlockingState;
 import org.killbill.billing.junction.JunctionTestSuiteWithEmbeddedDB;
@@ -46,6 +51,62 @@ import org.testng.annotations.Test;
 import com.google.common.collect.ImmutableList;
 
 public class TestDefaultInternalBillingApi extends JunctionTestSuiteWithEmbeddedDB {
+
+    @Test(groups = "slow", description = "https://github.com/killbill/killbill/issues/865")
+    public void testBCDUpdateMultipleSubscriptionsAccountAligned() throws Exception {
+        final LocalDate initialDate = new LocalDate(2013, 8, 7);
+        clock.setDay(initialDate);
+
+        // Account with no BCD
+        final Account account = createAccount(getAccountData(0));
+        Assert.assertEquals(account.getBillCycleDayLocal(), (Integer) 0);
+
+        // Create 2 entitlements, one base with one add-on. All entitlements are ACCOUNT aligned
+        final String bundleKey1 = UUID.randomUUID().toString();
+        final EntitlementSpecifier entitlementSpecifierBase1 = new DefaultEntitlementSpecifier(new PlanPhaseSpecifier("Shotgun", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, null), null);
+        final EntitlementSpecifier entitlementSpecifierAO1 = new DefaultEntitlementSpecifier(new PlanPhaseSpecifier("Cabinet", BillingPeriod.TRIANNUAL, PriceListSet.DEFAULT_PRICELIST_NAME, null), null);
+        final BaseEntitlementWithAddOnsSpecifier specifier1 = new DefaultBaseEntitlementWithAddOnsSpecifier(null, bundleKey1, ImmutableList.of(entitlementSpecifierBase1, entitlementSpecifierAO1), null, null, false);
+        testListener.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.CREATE, NextEvent.BLOCK);
+        entitlementApi.createBaseEntitlementsWithAddOns(account.getId(),
+                                                        ImmutableList.of(specifier1),
+                                                        false,
+                                                        ImmutableList.<PluginProperty>of(),
+                                                        callContext);
+        assertListenerStatus();
+
+        final List<Entitlement> entitlements = entitlementApi.getAllEntitlementsForAccountId(account.getId(), callContext);
+        Assert.assertEquals(entitlements.size(), 2);
+        Assert.assertEquals(entitlements.get(0).getLastActiveProduct().getName(), "Shotgun");
+        Assert.assertEquals(entitlements.get(0).getBillCycleDayLocal(), (Integer) 6);
+        Assert.assertEquals(entitlements.get(1).getLastActiveProduct().getName(), "Cabinet");
+        Assert.assertEquals(entitlements.get(1).getBillCycleDayLocal(), (Integer) 7);
+
+        // Account still has no BCD
+        final Account accountNoBCD = accountApi.getAccountById(account.getId(), callContext);
+        Assert.assertEquals(accountNoBCD.getBillCycleDayLocal(), (Integer) 0);
+
+        final List<BillingEvent> events = ImmutableList.<BillingEvent>copyOf(billingInternalApi.getBillingEventsForAccountAndUpdateAccountBCD(account.getId(), null, internalCallContext));
+        Assert.assertEquals(events.size(), 3);
+        for (final BillingEvent billingEvent : events) {
+            if (billingEvent.getSubscription().getId().equals(entitlements.get(1).getId())) {
+                Assert.assertEquals(billingEvent.getBillCycleDayLocal(), 7);
+            } else {
+                Assert.assertEquals(billingEvent.getBillCycleDayLocal(), 6);
+            }
+        }
+
+        // Verify BCD
+        final Account accountWithBCD = accountApi.getAccountById(account.getId(), callContext);
+        Assert.assertEquals(accountWithBCD.getBillCycleDayLocal(), (Integer) 6);
+
+        // Verify GET
+        final List<Entitlement> entitlementsUpdated = entitlementApi.getAllEntitlementsForAccountId(account.getId(), callContext);
+        Assert.assertEquals(entitlementsUpdated.size(), 2);
+        Assert.assertEquals(entitlementsUpdated.get(0).getLastActiveProduct().getName(), "Shotgun");
+        Assert.assertEquals(entitlementsUpdated.get(0).getBillCycleDayLocal(), (Integer) 6);
+        Assert.assertEquals(entitlementsUpdated.get(1).getLastActiveProduct().getName(), "Cabinet");
+        Assert.assertEquals(entitlementsUpdated.get(1).getBillCycleDayLocal(), (Integer) 6);
+    }
 
     // This test was originally for https://github.com/killbill/killbill/issues/123.
     // The invocationCount > 0 was to trigger an issue where events would come out-of-order randomly.

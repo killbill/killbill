@@ -68,6 +68,7 @@
                 <addonProduct>Laser-Scope</addonProduct>
                 <addonProduct>Holster</addonProduct>
                 <addonProduct>Bullets</addonProduct>
+                <addonProduct>Cabinet</addonProduct>
             </available>
         </product>
         <product name="Assault-Rifle">
@@ -100,6 +101,9 @@
             <category>ADD_ON</category>
         </product>
         <product name="Bullets">
+            <category>ADD_ON</category>
+        </product>
+        <product name="Cabinet">
             <category>ADD_ON</category>
         </product>
     </products>
@@ -175,6 +179,11 @@
             </createAlignmentCase>
         </createAlignment>
         <billingAlignment>
+            <billingAlignmentCase>
+                <!-- For cabinet-triannual (add-on ACCOUNT aligned) -->
+                <billingPeriod>TRIANNUAL</billingPeriod>
+                <alignment>ACCOUNT</alignment>
+            </billingAlignmentCase>
             <billingAlignmentCase>
                 <productCategory>ADD_ON</productCategory>
                 <alignment>BUNDLE</alignment>
@@ -1354,6 +1363,33 @@
             <plansAllowedInBundle>-1</plansAllowedInBundle>
             <!-- arbitrary number of these (multipack) -->
         </plan>
+        <plan name="cabinet-triannual">
+            <product>Cabinet</product>
+            <initialPhases>
+            </initialPhases>
+            <finalPhase type="EVERGREEN">
+                <duration>
+                    <unit>UNLIMITED</unit>
+                </duration>
+                <recurring>
+                    <billingPeriod>TRIANNUAL</billingPeriod>
+                    <recurringPrice>
+                        <price>
+                            <currency>USD</currency>
+                            <value>999.95</value>
+                        </price>
+                        <price>
+                            <currency>EUR</currency>
+                            <value>499.95</value>
+                        </price>
+                        <price>
+                            <currency>GBP</currency>
+                            <value>999.95</value>
+                        </price>
+                    </recurringPrice>
+                </recurring>
+            </finalPhase>
+        </plan>
     </plans>
     <priceLists>
         <defaultPriceList name="DEFAULT">
@@ -1370,6 +1406,7 @@
                 <plan>assault-rifle-annual</plan>
                 <plan>laser-scope-monthly</plan>
                 <plan>telescopic-scope-monthly</plan>
+                <plan>cabinet-triannual</plan>
                 <plan>cleaning-monthly</plan>
                 <plan>extra-ammo-monthly</plan>
                 <plan>holster-monthly-regular</plan>
