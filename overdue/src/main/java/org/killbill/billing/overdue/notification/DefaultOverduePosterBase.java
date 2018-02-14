@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014-2017 Groupon, Inc
- * Copyright 2014-2017 The Billing Project, LLC
+ * Copyright 2014-2018 Groupon, Inc
+ * Copyright 2014-2018 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -18,6 +18,7 @@
 
 package org.killbill.billing.overdue.notification;
 
+import java.util.Iterator;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
@@ -93,10 +94,18 @@ public abstract class DefaultOverduePosterBase implements OverduePoster {
                 public Void inTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory) throws Exception {
                     final Iterable<NotificationEventWithMetadata<T>> futureNotifications = getFutureNotificationsForAccountInTransaction(entitySqlDaoWrapperFactory, checkOverdueQueue,
                                                                                                                                          clazz, context);
-                    for (final NotificationEventWithMetadata<T> notification : futureNotifications) {
-                        checkOverdueQueue.removeNotificationFromTransaction(entitySqlDaoWrapperFactory.getHandle().getConnection(), notification.getRecordId());
+                    final Iterator<NotificationEventWithMetadata<T>> iterator = futureNotifications.iterator();
+                    try {
+                        while (iterator.hasNext()) {
+                            final NotificationEventWithMetadata<T> notification = iterator.next();
+                            checkOverdueQueue.removeNotificationFromTransaction(entitySqlDaoWrapperFactory.getHandle().getConnection(), notification.getRecordId());
+                        }
+                    } finally {
+                        // Go through all results to close the connection
+                        while (iterator.hasNext()) {
+                            iterator.next();
+                        }
                     }
-
                     return null;
                 }
             });
