@@ -71,12 +71,12 @@ public class UsageConsumableInArrearTierUnitDetail extends UsageInArrearTierUnit
         return tierBlockSize;
     }
 
-    public void updateQuantityAndAmount(final Integer targetQuantity) {
-        this.quantity = targetQuantity;
-        this.amount = computeAmount(tierPrice, targetQuantity);
+    public void updateQuantityAndAmount(final Integer addionalQuantity) {
+        this.quantity = quantity + addionalQuantity;
+        this.amount = computeAmount(tierPrice, quantity);
     }
 
     private static BigDecimal computeAmount(final BigDecimal targetTierPrice, final Integer targetQuantity) {
-        return targetTierPrice.multiply(new BigDecimal(targetQuantity));
+        return targetTierPrice.multiply(BigDecimal.valueOf(targetQuantity));
     }
 }

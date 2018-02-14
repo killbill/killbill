@@ -136,7 +136,7 @@ public class ContiguousIntervalConsumableUsageInArrear extends ContiguousInterva
                         resultMap.put(curDetail.getTier(), curDetail);
                     } else {
                         final UsageConsumableInArrearTierUnitDetail perTierDetail = resultMap.get(curDetail.getTier());
-                        perTierDetail.updateQuantityAndAmount(perTierDetail.getQuantity() + curDetail.getQuantity());
+                        perTierDetail.updateQuantityAndAmount(curDetail.getQuantity());
                     }
                 }
             }
