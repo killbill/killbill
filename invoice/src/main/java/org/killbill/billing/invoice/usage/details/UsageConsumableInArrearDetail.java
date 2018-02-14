@@ -26,9 +26,9 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 public class UsageConsumableInArrearDetail implements UsageInArrearDetail {
 
     private final List<UsageConsumableInArrearTierUnitDetail> tierDetails;
-    private BigDecimal amount;
+    private final BigDecimal amount;
 
-    public UsageConsumableInArrearDetail(@JsonProperty("tierDetails") List<UsageConsumableInArrearTierUnitDetail> tierDetails) {
+    public UsageConsumableInArrearDetail(List<UsageConsumableInArrearTierUnitDetail> tierDetails) {
         this(tierDetails, computeAmount(tierDetails));
     }
 
