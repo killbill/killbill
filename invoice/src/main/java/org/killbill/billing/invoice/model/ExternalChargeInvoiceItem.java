@@ -30,24 +30,24 @@ import org.killbill.billing.util.UUIDs;
 public class ExternalChargeInvoiceItem extends InvoiceItemCatalogBase {
 
     public ExternalChargeInvoiceItem(final UUID invoiceId, final UUID accountId, @Nullable final UUID bundleId, @Nullable final String description,
-                                     final LocalDate startDate, final LocalDate endDate, final BigDecimal amount, final Currency currency) {
-        this(UUIDs.randomUUID(), invoiceId, accountId, bundleId, description, startDate, endDate, amount, currency);
+                                     final LocalDate startDate, final LocalDate endDate, final BigDecimal amount, final Currency currency, @Nullable final String itemDetails) {
+        this(UUIDs.randomUUID(), invoiceId, accountId, bundleId, description, startDate, endDate, amount, currency, itemDetails);
     }
 
     public ExternalChargeInvoiceItem(final UUID id, final UUID invoiceId, final UUID accountId, @Nullable final UUID bundleId,
-                                     @Nullable final String description, final LocalDate startDate, final LocalDate endDate, final BigDecimal amount, final Currency currency) {
-        this(id, null, invoiceId, accountId, bundleId, description, startDate, endDate, amount, currency);
+                                     @Nullable final String description, final LocalDate startDate, final LocalDate endDate, final BigDecimal amount, final Currency currency, @Nullable final String itemDetails) {
+        this(id, null, invoiceId, accountId, bundleId, description, startDate, endDate, amount, currency, itemDetails);
     }
 
     public ExternalChargeInvoiceItem(final UUID id, @Nullable final DateTime createdDate, final UUID invoiceId, final UUID accountId, @Nullable final UUID bundleId,
-                                     @Nullable final String description, final LocalDate startDate, final LocalDate endDate, final BigDecimal amount, final Currency currency) {
-        super(id, createdDate, invoiceId, accountId, bundleId, null, description, null, null, null, startDate, endDate, amount, null, currency, null);
+                                     @Nullable final String description, final LocalDate startDate, final LocalDate endDate, final BigDecimal amount, final Currency currency, @Nullable final String itemDetails) {
+        super(id, createdDate, invoiceId, accountId, bundleId, null, description, null, null, null, startDate, endDate, amount, null, currency, null, null, itemDetails);
     }
 
     public ExternalChargeInvoiceItem(final UUID id, @Nullable final DateTime createdDate, final UUID invoiceId, final UUID accountId, final UUID bundleId, final UUID subscriptionId,
                                      final String planName, final String phaseName, final String prettyPlanName, final String prettyPhaseName, @Nullable final String description, final LocalDate startDate, final LocalDate endDate,
-                                     final BigDecimal amount, final BigDecimal rate, final Currency currency, @Nullable final UUID linkedItemId) {
-        super(id, createdDate, invoiceId, accountId, bundleId, subscriptionId, description, planName, phaseName, null, prettyPlanName, prettyPhaseName, null, startDate, endDate, amount, rate, currency, linkedItemId);
+                                     final BigDecimal amount, final BigDecimal rate, final Currency currency, @Nullable final UUID linkedItemId, @Nullable String itemDetails) {
+        super(id, createdDate, invoiceId, accountId, bundleId, subscriptionId, description, planName, phaseName, null, prettyPlanName, prettyPhaseName, null, startDate, endDate, amount, rate, currency, linkedItemId, null, itemDetails);
     }
 
     @Override

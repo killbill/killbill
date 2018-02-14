@@ -269,7 +269,7 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
 
         return new ExternalChargeInvoiceItem(externalChargeItem.getId(), externalChargeItem.getInvoiceId(), externalChargeItem.getAccountId(),
                                              externalChargeItem.getDescription(), externalChargeItem.getStartDate(), externalChargeItem.getEndDate(),
-                                             externalChargeItem.getAmount(), externalChargeItem.getCurrency());
+                                             externalChargeItem.getAmount(), externalChargeItem.getCurrency(), externalChargeItem.getItemDetails());
     }
 
     @Override
@@ -333,7 +333,8 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
                                                                                      charge.getAmount(),
                                                                                      charge.getRate(),
                                                                                      charge.getCurrency(),
-                                                                                     charge.getLinkedItemId());
+                                                                                     charge.getLinkedItemId(),
+                                                                                     charge.getItemDetails());
 
                     invoiceForExternalCharge.addInvoiceItem(externalCharge);
                 }
