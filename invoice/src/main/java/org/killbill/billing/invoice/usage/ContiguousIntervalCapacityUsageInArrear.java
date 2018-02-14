@@ -37,7 +37,6 @@ import org.killbill.billing.invoice.usage.details.UsageInArrearTierUnitDetail;
 import org.killbill.billing.usage.RawUsage;
 import org.killbill.billing.usage.api.RolledUpUnit;
 import org.killbill.billing.util.config.definition.InvoiceConfig.UsageDetailMode;
-import org.killbill.billing.util.jackson.ObjectMapper;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
@@ -50,8 +49,6 @@ public class ContiguousIntervalCapacityUsageInArrear extends ContiguousIntervalU
 
     private static final Joiner joiner = Joiner.on(", ");
 
-    private static final ObjectMapper objectMapper = new ObjectMapper();
-
     public ContiguousIntervalCapacityUsageInArrear(final Usage usage,
                                                    final UUID accountId,
                                                    final UUID invoiceId,
@@ -63,24 +60,18 @@ public class ContiguousIntervalCapacityUsageInArrear extends ContiguousIntervalU
         super(usage, accountId, invoiceId, rawSubscriptionUsage, targetDate, rawUsageStartDate, usageDetailMode, internalTenantContext);
     }
 
-
-
     @Override
-    protected void populateResults(final LocalDate startDate, final LocalDate endDate, final Iterable<InvoiceItem> billedItems, final BigDecimal billedUsage, final BigDecimal toBeBilledUsage, final UsageInArrearDetail toBeBilledUsageDetails, final boolean areAllBilledItemsWithDetails, final List<InvoiceItem> result) {
+    protected void populateResults(final LocalDate startDate, final LocalDate endDate, final BigDecimal billedUsage, final BigDecimal toBeBilledUsage, final UsageInArrearDetail toBeBilledUsageDetails, final boolean areAllBilledItemsWithDetails, final List<InvoiceItem> result) {
         // Compute final amount by subtracting  amount that was already billed.
-        if (!billedItems.iterator().hasNext() || billedUsage.compareTo(toBeBilledUsage) < 0) {
-            final BigDecimal amountToBill = toBeBilledUsage.subtract(billedUsage);
+        final BigDecimal amountToBill = toBeBilledUsage.subtract(billedUsage);
 
-            if (amountToBill.compareTo(BigDecimal.ZERO) > 0) {
-                    final String itemDetails = areAllBilledItemsWithDetails ? toJson(toBeBilledUsageDetails) : null;
-                    final InvoiceItem item = new UsageInvoiceItem(invoiceId, accountId, getBundleId(), getSubscriptionId(), getPlanName(),
-                                                                  getPhaseName(), usage.getName(), startDate, endDate, amountToBill, null, getCurrency(), null, itemDetails);
-                    result.add(item);
-            }
+        if (amountToBill.compareTo(BigDecimal.ZERO) > 0) {
+            final String itemDetails = areAllBilledItemsWithDetails ? toJson(toBeBilledUsageDetails) : null;
+            final InvoiceItem item = new UsageInvoiceItem(invoiceId, accountId, getBundleId(), getSubscriptionId(), getPlanName(),
+                                                          getPhaseName(), usage.getName(), startDate, endDate, amountToBill, null, getCurrency(), null, itemDetails);
+            result.add(item);
         }
-
     }
-
 
     @Override
     protected UsageInArrearDetail getToBeBilledUsageDetails(final List<RolledUpUnit> rolledUpUnits, final Iterable<InvoiceItem> billedItems, final boolean areAllBilledItemsWithDetails) throws CatalogApiException {

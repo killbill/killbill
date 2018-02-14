@@ -30,7 +30,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import javax.annotation.Nullable;
 
 import org.joda.time.LocalDate;
-import org.killbill.billing.ErrorCode;
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.catalog.api.BillingMode;
 import org.killbill.billing.catalog.api.CatalogApiException;
@@ -201,26 +200,13 @@ public abstract class ContiguousIntervalUsageInArrear {
 
             final UsageInArrearDetail toBeBilledUsageDetails = getToBeBilledUsageDetails(rolledUpUnits, billedItems, areAllBilledItemsWithDetails);
             final BigDecimal toBeBilledUsage = toBeBilledUsageDetails.getAmount();
-
-            final int billedUsageDelta = billedUsage.compareTo(toBeBilledUsage);
-            // We built more in the past than what we find now, data usage vanished?
-            if (billedUsageDelta > 0) {
-                /*
-                throw new InvoiceApiException(ErrorCode.UNEXPECTED_ERROR,
-                                              String.format("ILLEGAL INVOICING STATE: Usage period start='%s', end='%s', previously billed amount='%.2f', new proposed amount='%.2f'",
-                                                            ru.getStart(), ru.getEnd(), billedUsage, toBeBilledUsage));
-               */
-                // Something remains to be billed
-            } else if (billedUsageDelta < 0) {
-                populateResults(ru.getStart(), ru.getEnd(), billedItems, billedUsage, toBeBilledUsage, toBeBilledUsageDetails, areAllBilledItemsWithDetails, result);
-            }
+            populateResults(ru.getStart(), ru.getEnd(), billedUsage, toBeBilledUsage, toBeBilledUsageDetails, areAllBilledItemsWithDetails, result);
         }
         final LocalDate nextNotificationDate = computeNextNotificationDate();
         return new UsageInArrearItemsAndNextNotificationDate(result, nextNotificationDate);
     }
 
-    protected abstract void populateResults(final LocalDate startDate, final LocalDate endDate, final Iterable<InvoiceItem> billedItems, final BigDecimal billedUsage, final BigDecimal toBeBilledUsage, final UsageInArrearDetail toBeBilledUsageDetails, final boolean areAllBilledItemsWithDetails, final List<InvoiceItem> result);
-
+    protected abstract void populateResults(final LocalDate startDate, final LocalDate endDate, final BigDecimal billedUsage, final BigDecimal toBeBilledUsage, final UsageInArrearDetail toBeBilledUsageDetails, final boolean areAllBilledItemsWithDetails, final List<InvoiceItem> result);
 
     protected abstract UsageInArrearDetail getToBeBilledUsageDetails(final List<RolledUpUnit> rolledUpUnits, final Iterable<InvoiceItem> billedItems, final boolean areAllBilledItemsWithDetails) throws CatalogApiException;
 
