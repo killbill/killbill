@@ -30,6 +30,8 @@ import java.util.UUID;
 import org.joda.time.LocalDate;
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.catalog.api.CatalogApiException;
+import org.killbill.billing.catalog.api.Currency;
+import org.killbill.billing.catalog.api.Tier;
 import org.killbill.billing.catalog.api.TierBlockPolicy;
 import org.killbill.billing.catalog.api.TieredBlock;
 import org.killbill.billing.catalog.api.Usage;
@@ -79,7 +81,7 @@ public class ContiguousIntervalConsumableUsageInArrear extends ContiguousInterva
             if (UsageDetailMode.DETAIL == usageDetailMode) {
                 for (UsageConsumableInArrearTierUnitDetail toBeBilledUsageDetail : ((UsageConsumableInArrearDetail) toBeBilledUsageDetails).getTierDetails()) {
                     final InvoiceItem item = new UsageInvoiceItem(invoiceId, accountId, getBundleId(), getSubscriptionId(), getPlanName(),
-                                                                  getPhaseName(), usage.getName(), startDate, endDate, toBeBilledUsageDetail.getAmount(), toBeBilledUsageDetail.getTierPrice(), getCurrency(), toBeBilledUsageDetail.getQuantity(), null);
+                                                                  getPhaseName(), usage.getName(), startDate, endDate, toBeBilledUsageDetail.getAmount(), toBeBilledUsageDetail.getTierPrice(), getCurrency(), toBeBilledUsageDetail.getQuantity(), toBeBilledUsageDetail.getTierUnit());
                     result.add(item);
                 }
             } else {
@@ -95,7 +97,7 @@ public class ContiguousIntervalConsumableUsageInArrear extends ContiguousInterva
     protected UsageInArrearDetail getToBeBilledUsageDetails(final List<RolledUpUnit> rolledUpUnits, final Iterable<InvoiceItem> billedItems, final boolean areAllBilledItemsWithDetails) throws CatalogApiException {
 
         final Map<String, List<UsageConsumableInArrearTierUnitDetail>> previousUnitsUsage;
-        if (areAllBilledItemsWithDetails) {
+        if (usageDetailMode == UsageDetailMode.DETAIL || areAllBilledItemsWithDetails) {
             previousUnitsUsage = new HashMap<String, List<UsageConsumableInArrearTierUnitDetail>>();
             for (RolledUpUnit cur : rolledUpUnits) {
                 final List<UsageConsumableInArrearTierUnitDetail> usageInArrearDetailForUnitType = getBilledDetailsForUnitType(billedItems, cur.getUnitType());
@@ -120,24 +122,66 @@ public class ContiguousIntervalConsumableUsageInArrear extends ContiguousInterva
         return toBeBilledUsageDetails;
     }
 
+
     @VisibleForTesting
     List<UsageConsumableInArrearTierUnitDetail> getBilledDetailsForUnitType(final Iterable<InvoiceItem> billedItems, final String unitType) {
 
         // Aggregate on a per-tier level, will return a list with item per level -- for this 'unitType'
         final Map<Integer, UsageConsumableInArrearTierUnitDetail> resultMap = new TreeMap<Integer, UsageConsumableInArrearTierUnitDetail>(Ordering.<Integer>natural());
+
+
+
+        List<UsageConsumableInArrearTierUnitDetail> tierDetails = new ArrayList<UsageConsumableInArrearTierUnitDetail>();
         for (final InvoiceItem bi : billedItems) {
 
-            final UsageConsumableInArrearDetail usageDetail = fromJson(bi.getItemDetails());
-            for (final UsageConsumableInArrearTierUnitDetail curDetail : usageDetail.getTierDetails()) {
+            if (usageDetailMode == UsageDetailMode.DETAIL) {
 
-                if (curDetail.getTierUnit().equals(unitType)) {
+                final Currency currency = getCurrency();
 
-                    if (!resultMap.containsKey(curDetail.getTier())) {
-                        resultMap.put(curDetail.getTier(), curDetail);
-                    } else {
-                        final UsageConsumableInArrearTierUnitDetail perTierDetail = resultMap.get(curDetail.getTier());
-                        perTierDetail.updateQuantityAndAmount(curDetail.getQuantity());
+                final String biUnitType = bi.getItemDetails();
+                if (!biUnitType.equals(unitType)) {
+                    continue;
+                }
+
+                int tierLevel = 0;
+                TieredBlock targetTier = null;
+                for (Tier tier : usage.getTiers()) {
+                    tierLevel++;
+                    for (TieredBlock tierBlock : tier.getTieredBlocks()) {
+                        if (tierBlock.getUnit().getName().equals(unitType)) {
+                            try {
+                                if (tierBlock.getPrice().getPrice(currency).compareTo(bi.getRate()) == 0) {
+                                    targetTier = tierBlock;
+                                    break;
+                                }
+                            } catch (CatalogApiException e) {
+                                throw new IllegalStateException(String.format("Failed to extract catalog price for currency '%s'", currency), e);
+                            }
+                        }
                     }
+                    if (targetTier != null) {
+                        break;
+                    }
+                }
+
+                Preconditions.checkState(targetTier != null, "OHHHHHH some is wrong!!!");
+
+                tierDetails.add(new UsageConsumableInArrearTierUnitDetail(tierLevel, biUnitType, bi.getRate(), targetTier.getSize().intValue(), bi.getQuantity(), bi.getAmount()));
+            } else {
+                final UsageConsumableInArrearDetail usageDetail = fromJson(bi.getItemDetails());
+                tierDetails.addAll(usageDetail.getTierDetails());
+            }
+        }
+
+        for (final UsageConsumableInArrearTierUnitDetail curDetail : tierDetails) {
+
+            if (curDetail.getTierUnit().equals(unitType)) {
+
+                if (!resultMap.containsKey(curDetail.getTier())) {
+                    resultMap.put(curDetail.getTier(), curDetail);
+                } else {
+                    final UsageConsumableInArrearTierUnitDetail perTierDetail = resultMap.get(curDetail.getTier());
+                    perTierDetail.updateQuantityAndAmount(curDetail.getQuantity());
                 }
             }
         }

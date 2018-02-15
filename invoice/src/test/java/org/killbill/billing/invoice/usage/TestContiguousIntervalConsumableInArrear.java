@@ -518,7 +518,7 @@ public class TestContiguousIntervalConsumableInArrear extends TestUsageInArrearB
     }
 
     @Test(groups = "fast")
-    public void testComputeMissingItemsAggregateModeAllTier() throws CatalogApiException, IOException, InvoiceApiException {
+    public void testComputeMissingItemsAggregateModeAllTier_AGGREGATE() throws CatalogApiException, IOException, InvoiceApiException {
 
         // Case 1
         List<RawUsage> rawUsages = new ArrayList<RawUsage>();
@@ -620,7 +620,7 @@ public class TestContiguousIntervalConsumableInArrear extends TestUsageInArrearB
     }
 
     @Test(groups = "fast")
-    public void testComputeMissingItemsDetailModeAllTier() throws CatalogApiException, IOException, InvoiceApiException {
+    public void testComputeMissingItemsDetailModeAllTier_DETAIL() throws CatalogApiException, IOException, InvoiceApiException {
 
         // Case 1
         List<RawUsage> rawUsages = new ArrayList<RawUsage>();
@@ -688,7 +688,7 @@ public class TestContiguousIntervalConsumableInArrear extends TestUsageInArrearB
     }
 
     @Test(groups = "fast")
-    public void testComputeMissingItemsAggregateModeTopTier() throws CatalogApiException, IOException, InvoiceApiException {
+    public void testComputeMissingItemsAggregateModeTopTier_AGGREGATE() throws CatalogApiException, IOException, InvoiceApiException {
 
         // Case 1
         List<RawUsage> rawUsages = new ArrayList<RawUsage>();
@@ -765,7 +765,7 @@ public class TestContiguousIntervalConsumableInArrear extends TestUsageInArrearB
     }
 
     @Test(groups = "fast")
-    public void testComputeMissingItemsDetailModeTopTier() throws CatalogApiException, IOException, InvoiceApiException {
+    public void testComputeMissingItemsDetailModeTopTier_DETAIL() throws CatalogApiException, IOException, InvoiceApiException {
 
         // Case 1
         List<RawUsage> rawUsages = new ArrayList<RawUsage>();
@@ -819,7 +819,7 @@ public class TestContiguousIntervalConsumableInArrear extends TestUsageInArrearB
 
 
     @Test(groups = "fast")
-    public void testMultipleItemsAndTiersWithExistingItemsAllTiers() throws CatalogApiException, IOException, InvoiceApiException {
+    public void testMultipleItemsAndTiersWithExistingItemsAllTiers_AGGREGATE() throws CatalogApiException, IOException, InvoiceApiException {
 
         //
         // Let's assume we were already billed on the previous period
@@ -854,6 +854,9 @@ public class TestContiguousIntervalConsumableInArrear extends TestUsageInArrearB
         UsageConsumableInArrearDetail usageDetail = objectMapper.readValue(result.get(0).getItemDetails(), new TypeReference<UsageConsumableInArrearDetail>() {});
         List<UsageConsumableInArrearTierUnitDetail> itemDetails = usageDetail.getTierDetails();
 
+
+        // We get same total than AGGREGATE : 3140
+
         // BAR item detail
         assertEquals(itemDetails.get(0).getTierUnit(), "BAR");
         assertEquals(itemDetails.get(0).getTier(), 1);
@@ -884,6 +887,55 @@ public class TestContiguousIntervalConsumableInArrear extends TestUsageInArrearB
         assertEquals(itemDetails.get(3).getTierPrice().compareTo(new BigDecimal("100.00")), 0);
         assertEquals(itemDetails.get(3).getAmount().compareTo(new BigDecimal("1000.00")), 0);
     }
+
+
+    @Test(groups = "fast")
+    public void testMultipleItemsAndTiersWithExistingItemsAllTiers_DETAIL() throws CatalogApiException, IOException, InvoiceApiException {
+
+
+        //
+        // Create usage data points (will include already billed + add new usage data)
+        //
+        List<RawUsage> rawUsages = new ArrayList<RawUsage>();
+        rawUsages.add(new DefaultRawUsage(subscriptionId, new LocalDate(2014, 03, 20), "FOO", 50L /* already built */ + 20L)); // tier 3
+        rawUsages.add(new DefaultRawUsage(subscriptionId, new LocalDate(2014, 03, 21), "BAR", 80L /* already built */ + 120L)); // tier 2
+
+        // Same as previous example bu instead of creating JSON we create one item per type/tier
+        final List<InvoiceItem> existingItems = new ArrayList<InvoiceItem>();
+        final InvoiceItem i1 = new UsageInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, usageName, new LocalDate(2014, 03, 20), new LocalDate(2014, 04, 15), new BigDecimal("10.00") /* amount */,  new BigDecimal("1.00") /* rate = tierPrice*/, currency, 10 /* # units*/, "FOO");
+        final InvoiceItem i2 = new UsageInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, usageName, new LocalDate(2014, 03, 20), new LocalDate(2014, 04, 15), new BigDecimal("400.00"),  new BigDecimal("10.00"), currency, 40, "FOO");
+        final InvoiceItem i3 = new UsageInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, usageName, new LocalDate(2014, 03, 20), new LocalDate(2014, 04, 15), new BigDecimal("160.00"),  new BigDecimal("2.00"), currency, 80, "BAR");
+        existingItems.addAll(ImmutableList.<InvoiceItem>of(i1, i2, i3));
+
+        List<InvoiceItem> result = produceInvoiceItems(rawUsages, TierBlockPolicy.ALL_TIERS, UsageDetailMode.DETAIL, existingItems);
+        assertEquals(result.size(), 4);
+        assertEquals(result.get(0).getItemDetails(), "BAR");
+        assertEquals(result.get(0).getRate().compareTo(new BigDecimal("2.00")), 0);
+        assertEquals(result.get(0).getAmount().compareTo(new BigDecimal("40.00")), 0);
+        assertEquals(result.get(0).getQuantity().intValue(), 20);
+
+        assertEquals(result.get(1).getItemDetails(), "BAR");
+        assertEquals(result.get(1).getRate().compareTo(new BigDecimal("20.00")), 0);
+        assertEquals(result.get(1).getAmount().compareTo(new BigDecimal("2000.00")), 0);
+        assertEquals(result.get(1).getQuantity().intValue(), 100);
+
+        assertEquals(result.get(2).getItemDetails(), "FOO");
+        assertEquals(result.get(2).getRate().compareTo(new BigDecimal("10.00")), 0);
+        assertEquals(result.get(2).getAmount().compareTo(new BigDecimal("100.00")), 0);
+        assertEquals(result.get(2).getQuantity().intValue(), 10);
+
+        assertEquals(result.get(3).getItemDetails(), "FOO");
+        assertEquals(result.get(3).getRate().compareTo(new BigDecimal("100.00")), 0);
+        assertEquals(result.get(3).getAmount().compareTo(new BigDecimal("1000.00")), 0);
+        assertEquals(result.get(3).getQuantity().intValue(), 10);
+
+    }
+
+
+
+
+
+
 
 
     @Test(groups = "fast")
