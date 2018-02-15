@@ -129,8 +129,6 @@ public class ContiguousIntervalConsumableUsageInArrear extends ContiguousInterva
         // Aggregate on a per-tier level, will return a list with item per level -- for this 'unitType'
         final Map<Integer, UsageConsumableInArrearTierUnitDetail> resultMap = new TreeMap<Integer, UsageConsumableInArrearTierUnitDetail>(Ordering.<Integer>natural());
 
-
-
         List<UsageConsumableInArrearTierUnitDetail> tierDetails = new ArrayList<UsageConsumableInArrearTierUnitDetail>();
         for (final InvoiceItem bi : billedItems) {
 
@@ -164,7 +162,7 @@ public class ContiguousIntervalConsumableUsageInArrear extends ContiguousInterva
                     }
                 }
 
-                Preconditions.checkState(targetTier != null, "OHHHHHH some is wrong!!!");
+                Preconditions.checkState(targetTier != null, "Could not extract tier level matching usage='%s', unit='%s', rate='%s' ", usage.getName(), unitType, bi.getRate());
 
                 tierDetails.add(new UsageConsumableInArrearTierUnitDetail(tierLevel, biUnitType, bi.getRate(), targetTier.getSize().intValue(), bi.getQuantity(), bi.getAmount()));
             } else {
