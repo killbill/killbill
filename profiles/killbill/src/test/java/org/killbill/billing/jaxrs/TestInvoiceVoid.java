@@ -23,12 +23,12 @@ import java.util.UUID;
 
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
+import org.joda.time.LocalDate;
 import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.catalog.api.ProductCategory;
 import org.killbill.billing.client.KillBillClientException;
 import org.killbill.billing.client.model.Account;
 import org.killbill.billing.client.model.Invoice;
-import org.killbill.billing.client.model.InvoiceItem;
 import org.killbill.billing.client.model.InvoicePayment;
 import org.killbill.billing.client.model.InvoicePaymentTransaction;
 import org.killbill.billing.client.model.InvoicePayments;
@@ -144,6 +144,88 @@ public class TestInvoiceVoid extends TestJaxrsBase {
             assertTrue(true);
         }
 
+    }
+
+
+    @Test(groups = "slow", description = "Void a child invoice")
+    public void testChildVoidInvoice() throws Exception {
+        final DateTime initialDate = new DateTime(2012, 4, 25, 0, 3, 42, 0);
+        final LocalDate triggeredDate = new LocalDate(2012, 5, 26);
+        clock.setDeltaFromReality(initialDate.getMillis() - clock.getUTCNow().getMillis());
+
+        final Account parentAccount = createAccount();
+        final Account childAccount1 = createAccount(parentAccount.getAccountId());
+
+        // Add a bundle and subscription
+        createEntitlement(childAccount1.getAccountId(), UUID.randomUUID().toString(), "Shotgun",
+                          ProductCategory.BASE, BillingPeriod.MONTHLY, true);
+
+        // trigger an invoice generation
+        killBillClient.createInvoice(childAccount1.getAccountId(), triggeredDate, requestOptions);
+        List<Invoice> child1Invoices = killBillClient.getInvoicesForAccount(childAccount1.getAccountId(), true, false, requestOptions);
+        assertEquals(child1Invoices.size(), 2);
+
+        // move one day so that the parent invoice is committed
+        clock.addDays(1);
+        crappyWaitForLackOfProperSynchonization();
+        List<Invoice> parentInvoices = killBillClient.getInvoicesForAccount(parentAccount.getAccountId(), true, false, requestOptions);
+        assertEquals(parentInvoices.size(), 1);
+
+        // try to void child invoice
+        killBillClient.voidInvoice(child1Invoices.get(1).getInvoiceId(), requestOptions);
+
+        //  move the clock 1 month to check if invoices change
+        clock.addDays(31);
+        crappyWaitForLackOfProperSynchonization();
+
+        // The parent added other invoice, now it has two (duplicate)
+        parentInvoices = killBillClient.getInvoicesForAccount(parentAccount.getAccountId(), true, false, requestOptions);
+        assertEquals(parentInvoices.size(), 2);
+
+        // the child added one invoice as expected
+        child1Invoices = killBillClient.getInvoicesForAccount(childAccount1.getAccountId(), true, false, requestOptions);
+        assertEquals(child1Invoices.size(), 2);
+    }
+
+    @Test(groups = "slow", description = "Void a parent invoice")
+    public void testParentVoidInvoice() throws Exception {
+        final DateTime initialDate = new DateTime(2012, 4, 25, 0, 3, 42, 0);
+        final LocalDate triggeredDate = new LocalDate(2012, 5, 26);
+        clock.setDeltaFromReality(initialDate.getMillis() - clock.getUTCNow().getMillis());
+
+        final Account parentAccount = createAccount();
+        final Account childAccount1 = createAccount(parentAccount.getAccountId());
+
+        // Add a bundle and subscription
+        createEntitlement(childAccount1.getAccountId(), UUID.randomUUID().toString(), "Shotgun",
+                          ProductCategory.BASE, BillingPeriod.MONTHLY, true);
+
+        // trigger an invoice generation
+        killBillClient.createInvoice(childAccount1.getAccountId(), triggeredDate, requestOptions);
+        List<Invoice> child1Invoices = killBillClient.getInvoicesForAccount(childAccount1.getAccountId(), true, false, requestOptions);
+        assertEquals(child1Invoices.size(), 2);
+
+        // move one day so that the parent invoice is committed
+        clock.addDays(1);
+        crappyWaitForLackOfProperSynchonization();
+        List<Invoice> parentInvoices = killBillClient.getInvoicesForAccount(parentAccount.getAccountId(), true, false, requestOptions);
+        assertEquals(parentInvoices.size(), 1);
+
+        // try to void parent invoice
+        killBillClient.voidInvoice(parentInvoices.get(0).getInvoiceId(), requestOptions);
+
+        //  move the clock 1 month to check if invoices change
+        clock.addDays(31);
+        crappyWaitForLackOfProperSynchonization();
+
+        // since the child did not have any change, the parent does not have an invoice
+        // after the void.
+        parentInvoices = killBillClient.getInvoicesForAccount(parentAccount.getAccountId(), true, false, requestOptions);
+        assertEquals(parentInvoices.size(), 0);
+
+        // the child does not have any change
+        child1Invoices = killBillClient.getInvoicesForAccount(childAccount1.getAccountId(), true, false, requestOptions);
+        assertEquals(child1Invoices.size(), 2);
     }
 
     private InvoicePayment processPayment(Account accountJson, Invoice invoice, boolean partialPay) throws Exception {
