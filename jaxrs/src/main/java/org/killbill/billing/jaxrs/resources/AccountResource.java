@@ -488,7 +488,7 @@ public class AccountResource extends JaxRsResourceBase {
         final Callable<List<Invoice>> invoicesCallable = new Callable<List<Invoice>>() {
             @Override
             public List<Invoice> call() throws Exception {
-                return invoiceApi.getInvoicesByAccount(accountId, false, tenantContext);
+                return invoiceApi.getInvoicesByAccount(accountId, false, false, tenantContext);
             }
         };
         final Callable<List<InvoicePayment>> invoicePaymentsCallable = new Callable<List<InvoicePayment>>() {
@@ -699,6 +699,7 @@ public class AccountResource extends JaxRsResourceBase {
                                 @QueryParam(QUERY_INVOICE_WITH_ITEMS) @DefaultValue("false") final boolean withItems,
                                 @QueryParam(QUERY_WITH_MIGRATION_INVOICES) @DefaultValue("false") final boolean withMigrationInvoices,
                                 @QueryParam(QUERY_UNPAID_INVOICES_ONLY) @DefaultValue("false") final boolean unpaidInvoicesOnly,
+                                @QueryParam(QUERY_INCLUDE_VOIDED_INVOICES) @DefaultValue("false") final boolean includeVoidedInvoices,
                                 @QueryParam(QUERY_AUDIT) @DefaultValue("NONE") final AuditMode auditMode,
                                 @javax.ws.rs.core.Context final HttpServletRequest request) throws AccountApiException {
 
@@ -710,7 +711,7 @@ public class AccountResource extends JaxRsResourceBase {
 
         final List<Invoice> invoices = unpaidInvoicesOnly ?
                                        new ArrayList<Invoice>(invoiceApi.getUnpaidInvoicesByAccountId(accountId, null, tenantContext)) :
-                                       invoiceApi.getInvoicesByAccount(accountId, withMigrationInvoices, tenantContext);
+                                       invoiceApi.getInvoicesByAccount(accountId, withMigrationInvoices, includeVoidedInvoices, tenantContext);
 
         final AccountAuditLogs accountAuditLogs = auditUserApi.getAccountAuditLogs(accountId, auditMode.getLevel(), tenantContext);
 

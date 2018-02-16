@@ -1010,6 +1010,27 @@ public class InvoiceResource extends JaxRsResourceBase {
         return Response.status(Response.Status.OK).build();
     }
 
+    @TimedResource
+    @PUT
+    @Path("/{invoiceId:" + UUID_PATTERN + "}/" + VOID_INVOICE)
+    @Consumes(APPLICATION_JSON)
+    @Produces(APPLICATION_JSON)
+    @ApiOperation(value = "Perform the action of voiding an invoice")
+    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid invoice id supplied"),
+                           @ApiResponse(code = 404, message = "Invoice not found")})
+    public Response voidInvoice(@PathParam("invoiceId") final String invoiceIdString,
+                                  @HeaderParam(HDR_CREATED_BY) final String createdBy,
+                                  @HeaderParam(HDR_REASON) final String reason,
+                                  @HeaderParam(HDR_COMMENT) final String comment,
+                                  @javax.ws.rs.core.Context final HttpServletRequest request,
+                                  @javax.ws.rs.core.Context final UriInfo uriInfo) throws InvoiceApiException {
+
+        final CallContext callContext = context.createCallContextNoAccountId(createdBy, reason, comment, request);
+        final UUID invoiceId = UUID.fromString(invoiceIdString);
+        invoiceApi.voidInvoice(invoiceId, callContext);
+        return Response.status(Response.Status.OK).build();
+    }
+
     @Override
     protected ObjectType getObjectType() {
         return ObjectType.INVOICE;

@@ -261,6 +261,7 @@ public class DefaultInvoice extends EntityBase implements Invoice, Cloneable {
         if (isWrittenOff() ||
             isMigrationInvoice() ||
             getStatus() == InvoiceStatus.DRAFT ||
+            getStatus() == InvoiceStatus.VOID ||
             hasZeroParentBalance()) {
             return BigDecimal.ZERO;
         } else {
