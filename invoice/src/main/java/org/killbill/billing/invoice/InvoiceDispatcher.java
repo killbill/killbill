@@ -333,7 +333,7 @@ public class InvoiceDispatcher {
             // (Note that we can't return right away as we send a NullInvoice event)
             final List<Invoice> existingInvoices = billingEvents.isAccountAutoInvoiceOff() ?
                                                    ImmutableList.<Invoice>of() :
-                                                   ImmutableList.<Invoice>copyOf(Collections2.transform(invoiceDao.getInvoicesByAccount(context),
+                                                   ImmutableList.<Invoice>copyOf(Collections2.transform(invoiceDao.getInvoicesByAccount(false, context),
                                                                                                         new Function<InvoiceModelDao, Invoice>() {
                                                                                                             @Override
                                                                                                             public Invoice apply(final InvoiceModelDao input) {

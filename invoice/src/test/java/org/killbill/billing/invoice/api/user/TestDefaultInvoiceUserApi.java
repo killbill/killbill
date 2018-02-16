@@ -24,11 +24,13 @@ import java.util.UUID;
 
 import javax.annotation.Nullable;
 
+import org.joda.time.DateTime;
 import org.killbill.billing.ErrorCode;
 import org.killbill.billing.ObjectType;
 import org.killbill.billing.account.api.Account;
 import org.killbill.billing.api.TestApiListener.NextEvent;
 import org.killbill.billing.callcontext.DefaultCallContext;
+import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.invoice.InvoiceTestSuiteWithEmbeddedDB;
 import org.killbill.billing.invoice.TestInvoiceHelper.DryRunFutureDateArguments;
@@ -36,8 +38,11 @@ import org.killbill.billing.invoice.api.Invoice;
 import org.killbill.billing.invoice.api.InvoiceApiException;
 import org.killbill.billing.invoice.api.InvoiceItem;
 import org.killbill.billing.invoice.api.InvoiceItemType;
+import org.killbill.billing.invoice.api.InvoicePayment;
+import org.killbill.billing.invoice.api.InvoicePaymentType;
 import org.killbill.billing.invoice.api.InvoiceStatus;
 import org.killbill.billing.invoice.api.InvoiceUserApi;
+import org.killbill.billing.invoice.model.DefaultInvoicePayment;
 import org.killbill.billing.invoice.model.ExternalChargeInvoiceItem;
 import org.killbill.billing.util.api.TagApiException;
 import org.killbill.billing.util.callcontext.CallContext;
@@ -376,5 +381,39 @@ public class TestDefaultInvoiceUserApi extends InvoiceTestSuiteWithEmbeddedDB {
         } catch (final InvoiceApiException e) {
             Assert.assertEquals(e.getCode(), ErrorCode.INVOICE_ALREADY_COMMITTED.getCode());
         }
+    }
+
+    @Test(groups = "slow")
+    public void testVoidInvoice() throws Exception {
+       // try to void invoice
+        invoiceUserApi.voidInvoice(invoiceId, callContext);
+
+        final Invoice invoice = invoiceUserApi.getInvoice(invoiceId, callContext);
+        Assert.assertEquals(invoice.getStatus(), InvoiceStatus.VOID);
+    }
+
+    @Test(groups = "slow")
+    public void testVoidInvoiceThatIsPaid() throws Exception {
+        InternalCallContext context = internalCallContextFactory.createInternalCallContext(accountId, callContext);
+        // Verify the initial invoice balance
+        final BigDecimal invoiceBalance = invoiceUserApi.getInvoice(invoiceId, callContext).getBalance();
+        Assert.assertEquals(invoiceBalance.compareTo(BigDecimal.ZERO), 1);
+
+        // Verify the initial account balance
+        final BigDecimal accountBalance = invoiceUserApi.getAccountBalance(accountId, callContext);
+        Assert.assertEquals(accountBalance, invoiceBalance);
+
+        // create payment
+        final InvoicePayment payment = new DefaultInvoicePayment(InvoicePaymentType.ATTEMPT, UUID.randomUUID(), invoiceId, new DateTime(), invoiceBalance, Currency.USD, Currency.USD, null, true);
+        invoiceUtil.createPayment(payment, context);
+
+        // try to void invoice, it should fail
+        try {
+            invoiceUserApi.voidInvoice(invoiceId, callContext);
+            Assert.fail("Should fail to void invoice that is already paid");
+        } catch (final InvoiceApiException e) {
+            Assert.assertEquals(e.getCode(), ErrorCode.CAN_NOT_VOID_INVOICE_THAT_IS_PAID.getCode());
+        }
+
     }
 }
