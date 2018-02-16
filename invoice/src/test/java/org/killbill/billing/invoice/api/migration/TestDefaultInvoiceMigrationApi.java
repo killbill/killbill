@@ -90,11 +90,11 @@ public class TestDefaultInvoiceMigrationApi extends InvoiceTestSuiteWithEmbedded
 
     @Test(groups = "slow")
     public void testUserApiAccess() {
-        final List<Invoice> byAccount = invoiceUserApi.getInvoicesByAccount(accountId, false, callContext);
+        final List<Invoice> byAccount = invoiceUserApi.getInvoicesByAccount(accountId, false, false, callContext);
         Assert.assertEquals(byAccount.size(), 1);
         Assert.assertEquals(byAccount.get(0).getId(), regularInvoiceId);
 
-        final List<Invoice> byAccountAndDate = invoiceUserApi.getInvoicesByAccount(accountId, date_migrated.minusDays(1), callContext);
+        final List<Invoice> byAccountAndDate = invoiceUserApi.getInvoicesByAccount(accountId, date_migrated.minusDays(1), false, callContext);
         Assert.assertEquals(byAccountAndDate.size(), 1);
         Assert.assertEquals(byAccountAndDate.get(0).getId(), regularInvoiceId);
 

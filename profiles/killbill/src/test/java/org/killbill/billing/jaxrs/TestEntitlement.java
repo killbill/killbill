@@ -277,7 +277,7 @@ public class TestEntitlement extends TestJaxrsBase {
         Assert.assertEquals(subscription.getEvents().get(2).getProduct(), "Shotgun");
 
 
-        final List<Invoice> invoices = killBillClient.getInvoicesForAccount(accountJson.getAccountId(), true, false, false, AuditLevel.FULL, requestOptions);
+        final List<Invoice> invoices = killBillClient.getInvoicesForAccount(accountJson.getAccountId(), true, false, false, false, AuditLevel.FULL, requestOptions);
         assertEquals(invoices.size(), 1);
         assertEquals(invoices.get(0).getAmount().compareTo(BigDecimal.TEN), 0);
 
@@ -541,7 +541,7 @@ public class TestEntitlement extends TestJaxrsBase {
         assertEquals(bundles.size(), 1);
         assertEquals(bundles.get(0).getSubscriptions().size(), 3);
 
-        final List<Invoice> invoices = killBillClient.getInvoicesForAccount(accountJson.getAccountId(), true, false, false, AuditLevel.FULL, requestOptions);
+        final List<Invoice> invoices = killBillClient.getInvoicesForAccount(accountJson.getAccountId(), true, false, false, false, AuditLevel.FULL, requestOptions);
         assertEquals(invoices.size(), 2);
     }
 

@@ -221,13 +221,13 @@ public class TestInvoiceHelper {
         Invoice invoice = generateInvoice(account.getId(), targetDate, new DryRunFutureDateArguments(), context);
         Assert.assertNotNull(invoice);
 
-        List<InvoiceModelDao> invoices = invoiceDao.getInvoicesByAccount(context);
+        List<InvoiceModelDao> invoices = invoiceDao.getInvoicesByAccount(false, context);
         Assert.assertEquals(invoices.size(), 0);
 
         invoice = generateInvoice(account.getId(), targetDate, null, context);
         Assert.assertNotNull(invoice);
 
-        invoices = invoiceDao.getInvoicesByAccount(context);
+        invoices = invoiceDao.getInvoicesByAccount(false, context);
         Assert.assertEquals(invoices.size(), 1);
 
         return invoice.getId();
