@@ -28,7 +28,7 @@ public class UsageConsumableInArrearTierUnitDetail extends UsageInArrearTierUnit
     private BigDecimal amount;
 
     public UsageConsumableInArrearTierUnitDetail(int tier, String tierUnit, BigDecimal tierPrice, Integer tierBlockSize, Integer quantity) {
-        this(tier, tierUnit, tierPrice, tierBlockSize, quantity, tierPrice.multiply(new BigDecimal(quantity)));
+        this(tier, tierUnit, tierPrice, tierBlockSize, quantity, computeAmount(tierPrice, quantity));
     }
 
     @JsonCreator
@@ -69,5 +69,14 @@ public class UsageConsumableInArrearTierUnitDetail extends UsageInArrearTierUnit
 
     public int getTierBlockSize() {
         return tierBlockSize;
+    }
+
+    public void updateQuantityAndAmount(final Integer addionalQuantity) {
+        this.quantity = quantity + addionalQuantity;
+        this.amount = computeAmount(tierPrice, quantity);
+    }
+
+    private static BigDecimal computeAmount(final BigDecimal targetTierPrice, final Integer targetQuantity) {
+        return targetTierPrice.multiply(BigDecimal.valueOf(targetQuantity));
     }
 }

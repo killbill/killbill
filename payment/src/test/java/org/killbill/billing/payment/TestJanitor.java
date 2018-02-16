@@ -305,7 +305,8 @@ public class TestJanitor extends PaymentTestSuiteWithEmbeddedDB {
         assertEquals(updatedPayment.getTransactions().get(0).getTransactionStatus(), TransactionStatus.SUCCESS);
     }
 
-    @Test(groups = "slow")
+    // Flaky, see https://github.com/killbill/killbill/issues/860
+    @Test(groups = "slow", retryAnalyzer = FlakyRetryAnalyzer.class)
     public void testUnknownEntriesWithFailures() throws PaymentApiException, EventBusException {
 
         final BigDecimal requestedAmount = BigDecimal.TEN;

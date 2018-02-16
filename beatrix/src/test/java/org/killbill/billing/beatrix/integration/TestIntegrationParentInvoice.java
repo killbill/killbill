@@ -1,6 +1,6 @@
 /*
- * Copyright 2014-2017 Groupon, Inc
- * Copyright 2014-2017 The Billing Project, LLC
+ * Copyright 2014-2018 Groupon, Inc
+ * Copyright 2014-2018 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -27,6 +27,7 @@ import javax.inject.Inject;
 
 import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
+import org.joda.time.Minutes;
 import org.killbill.billing.ErrorCode;
 import org.killbill.billing.ObjectType;
 import org.killbill.billing.account.api.Account;
@@ -103,7 +104,7 @@ public class TestIntegrationParentInvoice extends TestIntegrationBase {
         final Iterator<NotificationEventWithMetadata<NotificationEvent>> metadataEventIterator = events.iterator();
         assertTrue(metadataEventIterator.hasNext());
         final NotificationEventWithMetadata<NotificationEvent> notificationEvent = metadataEventIterator.next();
-        assertTrue(notificationEvent.getEffectiveDate().compareTo(new DateTime(2015, 5, 15, 23, 59, 59, 0, testTimeZone)) == 0);
+        assertTrue(Math.abs(Minutes.minutesBetween(notificationEvent.getEffectiveDate(), new DateTime(2015, 5, 15, 23, 59, 59, 999, testTimeZone)).getMinutes()) <= 1);
 
         // Moving a day the NotificationQ calls the commitInvoice. No payment is expected
         busHandler.pushExpectedEvents(NextEvent.INVOICE);
