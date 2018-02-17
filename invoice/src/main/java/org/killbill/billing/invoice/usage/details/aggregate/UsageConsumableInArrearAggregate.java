@@ -15,7 +15,7 @@
  * under the License.
  */
 
-package org.killbill.billing.invoice.usage.details;
+package org.killbill.billing.invoice.usage.details.aggregate;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -23,18 +23,18 @@ import java.util.List;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-public class UsageConsumableInArrearDetail implements UsageInArrearDetail {
+public class UsageConsumableInArrearAggregate implements UsageInArrearAggregate {
 
-    private final List<UsageConsumableInArrearTierUnitDetail> tierDetails;
+    private final List<UsageConsumableInArrearTierUnitAggregate> tierDetails;
     private final BigDecimal amount;
 
-    public UsageConsumableInArrearDetail(List<UsageConsumableInArrearTierUnitDetail> tierDetails) {
+    public UsageConsumableInArrearAggregate(List<UsageConsumableInArrearTierUnitAggregate> tierDetails) {
         this(tierDetails, computeAmount(tierDetails));
     }
 
     @JsonCreator
-    public UsageConsumableInArrearDetail(@JsonProperty("tierDetails") List<UsageConsumableInArrearTierUnitDetail> tierDetails,
-                                         @JsonProperty("amount") BigDecimal amount) {
+    public UsageConsumableInArrearAggregate(@JsonProperty("tierDetails") List<UsageConsumableInArrearTierUnitAggregate> tierDetails,
+                                            @JsonProperty("amount") BigDecimal amount) {
         this.tierDetails = tierDetails;
         this.amount = amount;
     }
@@ -43,13 +43,13 @@ public class UsageConsumableInArrearDetail implements UsageInArrearDetail {
         return amount;
     }
 
-    public List<UsageConsumableInArrearTierUnitDetail> getTierDetails() {
+    public List<UsageConsumableInArrearTierUnitAggregate> getTierDetails() {
         return tierDetails;
     }
 
-    private static BigDecimal computeAmount(final List<UsageConsumableInArrearTierUnitDetail> tierDetails) {
+    private static BigDecimal computeAmount(final List<UsageConsumableInArrearTierUnitAggregate> tierDetails) {
         BigDecimal result = BigDecimal.ZERO;
-        for (UsageConsumableInArrearTierUnitDetail toBeBilled : tierDetails) {
+        for (UsageConsumableInArrearTierUnitAggregate toBeBilled : tierDetails) {
             result = result.add(toBeBilled.getAmount());
         }
         return result;

@@ -24,15 +24,17 @@ import java.util.Set;
 import java.util.UUID;
 
 import org.joda.time.LocalDate;
+import org.killbill.billing.ErrorCode;
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.catalog.api.Limit;
 import org.killbill.billing.catalog.api.Tier;
 import org.killbill.billing.catalog.api.Usage;
+import org.killbill.billing.invoice.api.InvoiceApiException;
 import org.killbill.billing.invoice.api.InvoiceItem;
 import org.killbill.billing.invoice.model.UsageInvoiceItem;
-import org.killbill.billing.invoice.usage.details.UsageCapacityInArrearDetail;
-import org.killbill.billing.invoice.usage.details.UsageInArrearDetail;
+import org.killbill.billing.invoice.usage.details.aggregate.UsageCapacityInArrearAggregate;
+import org.killbill.billing.invoice.usage.details.aggregate.UsageInArrearAggregate;
 import org.killbill.billing.invoice.usage.details.UsageInArrearTierUnitDetail;
 import org.killbill.billing.usage.RawUsage;
 import org.killbill.billing.usage.api.RolledUpUnit;
@@ -74,7 +76,7 @@ public class ContiguousIntervalCapacityUsageInArrear extends ContiguousIntervalU
     }
 
     @Override
-    protected UsageInArrearDetail getToBeBilledUsageDetails(final List<RolledUpUnit> rolledUpUnits, final Iterable<InvoiceItem> billedItems, final boolean areAllBilledItemsWithDetails) throws CatalogApiException {
+    protected UsageInArrearAggregate getToBeBilledUsageDetails(final List<RolledUpUnit> rolledUpUnits, final Iterable<InvoiceItem> billedItems, final boolean areAllBilledItemsWithDetails) throws CatalogApiException {
         return computeToBeBilledCapacityInArrear(rolledUpUnits);
     }
 
@@ -89,7 +91,7 @@ public class ContiguousIntervalCapacityUsageInArrear extends ContiguousIntervalU
     }
 
     @VisibleForTesting
-    UsageCapacityInArrearDetail computeToBeBilledCapacityInArrear(final List<RolledUpUnit> roUnits) throws CatalogApiException {
+    UsageCapacityInArrearAggregate computeToBeBilledCapacityInArrear(final List<RolledUpUnit> roUnits) throws CatalogApiException {
         Preconditions.checkState(isBuilt.get());
 
         final List<Tier> tiers = getCapacityInArrearTier(usage);
@@ -114,7 +116,7 @@ public class ContiguousIntervalCapacityUsageInArrear extends ContiguousIntervalU
                 }
             }
             if (complies) {
-                return new UsageCapacityInArrearDetail(toBeBilledDetails, cur.getRecurringPrice().getPrice(getCurrency()));
+                return new UsageCapacityInArrearAggregate(toBeBilledDetails, cur.getRecurringPrice().getPrice(getCurrency()));
             }
         }
         // Probably invalid catalog config

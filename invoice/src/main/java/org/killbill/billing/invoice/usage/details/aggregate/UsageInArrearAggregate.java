@@ -15,11 +15,11 @@
  * under the License.
  */
 
-package org.killbill.billing.invoice.usage.details;
+package org.killbill.billing.invoice.usage.details.aggregate;
 
 import java.math.BigDecimal;
 
-public interface UsageInArrearDetail {
+public interface UsageInArrearAggregate {
 
     BigDecimal getAmount();
 }

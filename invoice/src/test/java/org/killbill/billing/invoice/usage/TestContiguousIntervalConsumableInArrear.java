@@ -40,8 +40,8 @@ import org.killbill.billing.invoice.api.InvoiceItem;
 import org.killbill.billing.invoice.model.FixedPriceInvoiceItem;
 import org.killbill.billing.invoice.model.UsageInvoiceItem;
 import org.killbill.billing.invoice.usage.ContiguousIntervalUsageInArrear.UsageInArrearItemsAndNextNotificationDate;
-import org.killbill.billing.invoice.usage.details.UsageConsumableInArrearDetail;
-import org.killbill.billing.invoice.usage.details.UsageConsumableInArrearTierUnitDetail;
+import org.killbill.billing.invoice.usage.details.aggregate.UsageConsumableInArrearAggregate;
+import org.killbill.billing.invoice.usage.details.aggregate.UsageConsumableInArrearTierUnitAggregate;
 import org.killbill.billing.junction.BillingEvent;
 import org.killbill.billing.usage.RawUsage;
 import org.killbill.billing.usage.api.RolledUpUsage;
@@ -101,15 +101,15 @@ public class TestContiguousIntervalConsumableInArrear extends TestUsageInArrearB
                                                                                                                                              BillingPeriod.MONTHLY,
                                                                                                                                              Collections.<Usage>emptyList()));
 
-        final UsageConsumableInArrearTierUnitDetail detail1 = new UsageConsumableInArrearTierUnitDetail(3, "FOO", new BigDecimal("0.50"), 1, 700);
-        final UsageConsumableInArrearTierUnitDetail detail2 = new UsageConsumableInArrearTierUnitDetail(2, "FOO", BigDecimal.ONE, 1, 500);
-        final UsageConsumableInArrearTierUnitDetail detail3 = new UsageConsumableInArrearTierUnitDetail(1, "FOO", BigDecimal.TEN, 1, 10);
-        final UsageConsumableInArrearTierUnitDetail detail4 = new UsageConsumableInArrearTierUnitDetail(2, "FOO", BigDecimal.ONE, 1, 50);
-        final UsageConsumableInArrearTierUnitDetail detail5 = new UsageConsumableInArrearTierUnitDetail(1, "FOO", BigDecimal.TEN, 1, 100);
+        final UsageConsumableInArrearTierUnitAggregate detail1 = new UsageConsumableInArrearTierUnitAggregate(3, "FOO", new BigDecimal("0.50"), 1, 700);
+        final UsageConsumableInArrearTierUnitAggregate detail2 = new UsageConsumableInArrearTierUnitAggregate(2, "FOO", BigDecimal.ONE, 1, 500);
+        final UsageConsumableInArrearTierUnitAggregate detail3 = new UsageConsumableInArrearTierUnitAggregate(1, "FOO", BigDecimal.TEN, 1, 10);
+        final UsageConsumableInArrearTierUnitAggregate detail4 = new UsageConsumableInArrearTierUnitAggregate(2, "FOO", BigDecimal.ONE, 1, 50);
+        final UsageConsumableInArrearTierUnitAggregate detail5 = new UsageConsumableInArrearTierUnitAggregate(1, "FOO", BigDecimal.TEN, 1, 100);
 
-        final List<UsageConsumableInArrearTierUnitDetail> existingUsage = ImmutableList.of(detail1, detail2, detail3, detail4, detail5);
+        final List<UsageConsumableInArrearTierUnitAggregate> existingUsage = ImmutableList.of(detail1, detail2, detail3, detail4, detail5);
 
-        final UsageConsumableInArrearDetail usageConsumableInArrearDetail = new UsageConsumableInArrearDetail(existingUsage);
+        final UsageConsumableInArrearAggregate usageConsumableInArrearDetail = new UsageConsumableInArrearAggregate(existingUsage);
 
         final String existingUsageJson =  objectMapper.writeValueAsString(usageConsumableInArrearDetail);
 
@@ -118,7 +118,7 @@ public class TestContiguousIntervalConsumableInArrear extends TestUsageInArrearB
         existingItems.add(ii1);
 
 
-        final List<UsageConsumableInArrearTierUnitDetail> aggregateDetails = intervalConsumableInArrear.getBilledDetailsForUnitType(existingItems, "FOO");
+        final List<UsageConsumableInArrearTierUnitAggregate> aggregateDetails = intervalConsumableInArrear.getBilledDetailsForUnitType(existingItems, "FOO");
         assertEquals(aggregateDetails.size(), 3);
         assertEquals(aggregateDetails.get(0).getTier(), 1);
         assertEquals(aggregateDetails.get(0).getQuantity().intValue(), 110);
@@ -191,7 +191,7 @@ public class TestContiguousIntervalConsumableInArrear extends TestUsageInArrearB
                                                                                                                                              Collections.<Usage>emptyList())
                                                                                                                      );
 
-        List<UsageConsumableInArrearTierUnitDetail> result = intervalConsumableInArrear.computeToBeBilledConsumableInArrear(new DefaultRolledUpUnit("unit", 111L), ImmutableList.<UsageConsumableInArrearTierUnitDetail>of());
+        List<UsageConsumableInArrearTierUnitAggregate> result = intervalConsumableInArrear.computeToBeBilledConsumableInArrear(new DefaultRolledUpUnit("unit", 111L), ImmutableList.<UsageConsumableInArrearTierUnitAggregate>of());
         assertEquals(result.size(), 3);
         // 111 = 10 (tier1) + 100 (tier2) + 1 (tier3) => 10 * 1.5 + 100 * 1 + 1 * 0.5 = 115.5
         assertEquals(result.get(0).getAmount(), new BigDecimal("15.0"));
@@ -219,7 +219,7 @@ public class TestContiguousIntervalConsumableInArrear extends TestUsageInArrearB
                                                                                                                                              Collections.<Usage>emptyList())
                                                                                                                      );
 
-        List<UsageConsumableInArrearTierUnitDetail> result = intervalConsumableInArrear.computeToBeBilledConsumableInArrear(new DefaultRolledUpUnit("unit", 5325L), ImmutableList.<UsageConsumableInArrearTierUnitDetail>of());
+        List<UsageConsumableInArrearTierUnitAggregate> result = intervalConsumableInArrear.computeToBeBilledConsumableInArrear(new DefaultRolledUpUnit("unit", 5325L), ImmutableList.<UsageConsumableInArrearTierUnitAggregate>of());
         assertEquals(result.size(), 2);
 
         // 5000 = 1000 (tier1) + 4325 (tier2) => 10 + 5 = 15
@@ -253,23 +253,23 @@ public class TestContiguousIntervalConsumableInArrear extends TestUsageInArrearB
         //
         // In this model unit amount is first used to figure out which tier we are in, and then we price all unit at that 'target' tier
         //
-        List<UsageConsumableInArrearTierUnitDetail> inputTier1 = intervalConsumableInArrear.computeToBeBilledConsumableInArrear(new DefaultRolledUpUnit("unit", 1000L), ImmutableList.<UsageConsumableInArrearTierUnitDetail>of());
+        List<UsageConsumableInArrearTierUnitAggregate> inputTier1 = intervalConsumableInArrear.computeToBeBilledConsumableInArrear(new DefaultRolledUpUnit("unit", 1000L), ImmutableList.<UsageConsumableInArrearTierUnitAggregate>of());
         assertEquals(inputTier1.size(), 1);
         // 1000 units => (tier1) : 1000 / 100 + 1000 % 100 = 10
         assertEquals(inputTier1.get(0).getAmount(), new BigDecimal("10"));
 
-        List<UsageConsumableInArrearTierUnitDetail> inputTier2 = intervalConsumableInArrear.computeToBeBilledConsumableInArrear(new DefaultRolledUpUnit("unit", 101000L), ImmutableList.<UsageConsumableInArrearTierUnitDetail>of());
+        List<UsageConsumableInArrearTierUnitAggregate> inputTier2 = intervalConsumableInArrear.computeToBeBilledConsumableInArrear(new DefaultRolledUpUnit("unit", 101000L), ImmutableList.<UsageConsumableInArrearTierUnitAggregate>of());
         assertEquals(inputTier2.size(), 1);
         // 101000 units => (tier2) :  101000 / 1000 + 101000 % 1000 = 101 + 0 = 101
         assertEquals(inputTier2.get(0).getAmount(), new BigDecimal("101"));
 
-        List<UsageConsumableInArrearTierUnitDetail> inputTier3 = intervalConsumableInArrear.computeToBeBilledConsumableInArrear(new DefaultRolledUpUnit("unit", 101001L), ImmutableList.<UsageConsumableInArrearTierUnitDetail>of());
+        List<UsageConsumableInArrearTierUnitAggregate> inputTier3 = intervalConsumableInArrear.computeToBeBilledConsumableInArrear(new DefaultRolledUpUnit("unit", 101001L), ImmutableList.<UsageConsumableInArrearTierUnitAggregate>of());
         assertEquals(inputTier3.size(), 1);
         // 101001 units => (tier3) : 101001 / 1000 + 101001 % 1000 = 101 + 1 = 102 units => $51
         assertEquals(inputTier3.get(0).getAmount(), new BigDecimal("51.0"));
 
         // If we pass the maximum of the last tier, we price all units at the last tier
-        List<UsageConsumableInArrearTierUnitDetail> inputLastTier = intervalConsumableInArrear.computeToBeBilledConsumableInArrear(new DefaultRolledUpUnit("unit", 300000L), ImmutableList.<UsageConsumableInArrearTierUnitDetail>of());
+        List<UsageConsumableInArrearTierUnitAggregate> inputLastTier = intervalConsumableInArrear.computeToBeBilledConsumableInArrear(new DefaultRolledUpUnit("unit", 300000L), ImmutableList.<UsageConsumableInArrearTierUnitAggregate>of());
         assertEquals(inputLastTier.size(), 1);
         // 300000 units => (tier3) : 300000 / 1000 + 300000 % 1000 = 300 units => $150
         assertEquals(inputLastTier.get(0).getAmount(), new BigDecimal("150.0"));
@@ -298,7 +298,7 @@ public class TestContiguousIntervalConsumableInArrear extends TestUsageInArrearB
                                                                                                                                              Collections.<Usage>emptyList())
                                                                                                                      );
 
-        List<UsageConsumableInArrearTierUnitDetail> result = intervalConsumableInArrear.computeToBeBilledConsumableInArrear(new DefaultRolledUpUnit("unit", 111L), ImmutableList.<UsageConsumableInArrearTierUnitDetail>of());
+        List<UsageConsumableInArrearTierUnitAggregate> result = intervalConsumableInArrear.computeToBeBilledConsumableInArrear(new DefaultRolledUpUnit("unit", 111L), ImmutableList.<UsageConsumableInArrearTierUnitAggregate>of());
         assertEquals(result.size(), 1);
 
         // 111 = 111 * 0.5 =
@@ -364,8 +364,8 @@ public class TestContiguousIntervalConsumableInArrear extends TestUsageInArrearB
         assertTrue(result.get(0).getEndDate().compareTo(firstBCDDate) == 0);
 
         assertNotNull(result.get(0).getItemDetails());
-        UsageConsumableInArrearDetail usageDetail = objectMapper.readValue(result.get(0).getItemDetails(), new TypeReference<UsageConsumableInArrearDetail>() {});
-        List<UsageConsumableInArrearTierUnitDetail> itemDetails = usageDetail.getTierDetails();
+        UsageConsumableInArrearAggregate usageDetail = objectMapper.readValue(result.get(0).getItemDetails(), new TypeReference<UsageConsumableInArrearAggregate>() {});
+        List<UsageConsumableInArrearTierUnitAggregate> itemDetails = usageDetail.getTierDetails();
         assertEquals(itemDetails.size(), 1);
         // Because we did not have the details before, the new details don't take into account the
         assertEquals(itemDetails.get(0).getAmount().compareTo(new BigDecimal("5.0")), 0);
@@ -383,7 +383,7 @@ public class TestContiguousIntervalConsumableInArrear extends TestUsageInArrearB
         assertTrue(result.get(1).getEndDate().compareTo(endDate) == 0);
         assertNotNull(result.get(1).getItemDetails());
 
-        usageDetail = objectMapper.readValue(result.get(1).getItemDetails(), new TypeReference<UsageConsumableInArrearDetail>() {});
+        usageDetail = objectMapper.readValue(result.get(1).getItemDetails(), new TypeReference<UsageConsumableInArrearAggregate>() {});
         itemDetails = usageDetail.getTierDetails();
         assertEquals(itemDetails.size(), 1);
         assertEquals(itemDetails.get(0).getAmount().compareTo(new BigDecimal("2.0")), 0);
@@ -507,12 +507,12 @@ public class TestContiguousIntervalConsumableInArrear extends TestUsageInArrearB
                                                                                                                                              BillingPeriod.MONTHLY,
                                                                                                                                              Collections.<Usage>emptyList())
                                                                                                                      );
-        final List<UsageConsumableInArrearTierUnitDetail> tierUnitDetails = Lists.newArrayList();
-        tierUnitDetails.addAll(intervalConsumableInArrear.computeToBeBilledConsumableInArrear(new DefaultRolledUpUnit("cell-phone-minutes", 1000L), ImmutableList.<UsageConsumableInArrearTierUnitDetail>of()));
-        tierUnitDetails.addAll(intervalConsumableInArrear.computeToBeBilledConsumableInArrear(new DefaultRolledUpUnit("Mbytes", 30720L), ImmutableList.<UsageConsumableInArrearTierUnitDetail>of()));
+        final List<UsageConsumableInArrearTierUnitAggregate> tierUnitDetails = Lists.newArrayList();
+        tierUnitDetails.addAll(intervalConsumableInArrear.computeToBeBilledConsumableInArrear(new DefaultRolledUpUnit("cell-phone-minutes", 1000L), ImmutableList.<UsageConsumableInArrearTierUnitAggregate>of()));
+        tierUnitDetails.addAll(intervalConsumableInArrear.computeToBeBilledConsumableInArrear(new DefaultRolledUpUnit("Mbytes", 30720L), ImmutableList.<UsageConsumableInArrearTierUnitAggregate>of()));
         assertEquals(tierUnitDetails.size(), 2);
 
-        final UsageConsumableInArrearDetail details = new UsageConsumableInArrearDetail(tierUnitDetails);
+        final UsageConsumableInArrearAggregate details = new UsageConsumableInArrearAggregate(tierUnitDetails);
 
         assertEquals(details.getAmount().compareTo(new BigDecimal("18.5")), 0);
     }
@@ -529,8 +529,8 @@ public class TestContiguousIntervalConsumableInArrear extends TestUsageInArrearB
         assertEquals(result.size(), 1);
         assertEquals(result.get(0).getAmount().compareTo(new BigDecimal("203")), 0);
 
-        UsageConsumableInArrearDetail usageDetail = objectMapper.readValue(result.get(0).getItemDetails(), new TypeReference<UsageConsumableInArrearDetail>() {});
-        List<UsageConsumableInArrearTierUnitDetail> itemDetails = usageDetail.getTierDetails();
+        UsageConsumableInArrearAggregate usageDetail = objectMapper.readValue(result.get(0).getItemDetails(), new TypeReference<UsageConsumableInArrearAggregate>() {});
+        List<UsageConsumableInArrearTierUnitAggregate> itemDetails = usageDetail.getTierDetails();
 
         // BAR: 99 * 2 = 198
         assertEquals(itemDetails.get(0).getTierUnit(), "BAR");
@@ -554,7 +554,7 @@ public class TestContiguousIntervalConsumableInArrear extends TestUsageInArrearB
         assertEquals(result.size(), 1);
         assertEquals(result.get(0).getAmount().compareTo(new BigDecimal("225")), 0);
 
-        usageDetail = objectMapper.readValue(result.get(0).getItemDetails(), new TypeReference<UsageConsumableInArrearDetail>() {});
+        usageDetail = objectMapper.readValue(result.get(0).getItemDetails(), new TypeReference<UsageConsumableInArrearAggregate>() {});
         itemDetails = usageDetail.getTierDetails();
 
         // BAR: 100 * 2 = 200
@@ -585,7 +585,7 @@ public class TestContiguousIntervalConsumableInArrear extends TestUsageInArrearB
         assertEquals(result.size(), 1);
         assertEquals(result.get(0).getAmount().compareTo(new BigDecimal("2230")), 0);
 
-        usageDetail = objectMapper.readValue(result.get(0).getItemDetails(), new TypeReference<UsageConsumableInArrearDetail>() {});
+        usageDetail = objectMapper.readValue(result.get(0).getItemDetails(), new TypeReference<UsageConsumableInArrearAggregate>() {});
         itemDetails = usageDetail.getTierDetails();
         // BAR: 100 * 2 = 200
         assertEquals(itemDetails.get(0).getTierUnit(), "BAR");
@@ -699,8 +699,8 @@ public class TestContiguousIntervalConsumableInArrear extends TestUsageInArrearB
         assertEquals(result.size(), 1);
         assertEquals(result.get(0).getAmount().compareTo(new BigDecimal("203")), 0);
 
-        UsageConsumableInArrearDetail usageDetail = objectMapper.readValue(result.get(0).getItemDetails(), new TypeReference<UsageConsumableInArrearDetail>() {});
-        List<UsageConsumableInArrearTierUnitDetail> itemDetails = usageDetail.getTierDetails();
+        UsageConsumableInArrearAggregate usageDetail = objectMapper.readValue(result.get(0).getItemDetails(), new TypeReference<UsageConsumableInArrearAggregate>() {});
+        List<UsageConsumableInArrearTierUnitAggregate> itemDetails = usageDetail.getTierDetails();
         // BAR: 99 * 2 = 198
         assertEquals(itemDetails.get(0).getTierUnit(), "BAR");
         assertEquals(itemDetails.get(0).getTier(), 1);
@@ -723,7 +723,7 @@ public class TestContiguousIntervalConsumableInArrear extends TestUsageInArrearB
         assertEquals(result.size(), 1);
         assertEquals(result.get(0).getAmount().compareTo(new BigDecimal("2025")), 0);
 
-        usageDetail = objectMapper.readValue(result.get(0).getItemDetails(), new TypeReference<UsageConsumableInArrearDetail>() {});
+        usageDetail = objectMapper.readValue(result.get(0).getItemDetails(), new TypeReference<UsageConsumableInArrearAggregate>() {});
         itemDetails = usageDetail.getTierDetails();
 
         // BAR: 101 * 20 = 2020
@@ -748,7 +748,7 @@ public class TestContiguousIntervalConsumableInArrear extends TestUsageInArrearB
         assertEquals(result.size(), 1);
         assertEquals(result.get(0).getAmount().compareTo(new BigDecimal("9620")), 0);
 
-        usageDetail = objectMapper.readValue(result.get(0).getItemDetails(), new TypeReference<UsageConsumableInArrearDetail>() {});
+        usageDetail = objectMapper.readValue(result.get(0).getItemDetails(), new TypeReference<UsageConsumableInArrearAggregate>() {});
         itemDetails = usageDetail.getTierDetails();
         // BAR: 101 * 20 = 2020
         assertEquals(itemDetails.get(0).getTierUnit(), "BAR");
@@ -825,14 +825,14 @@ public class TestContiguousIntervalConsumableInArrear extends TestUsageInArrearB
         // Let's assume we were already billed on the previous period
         //
         // FOO : 10 (tier 1) + 40 (tier 2) = 50
-        final UsageConsumableInArrearTierUnitDetail existingFooUsageTier1 = new UsageConsumableInArrearTierUnitDetail(1, "FOO", BigDecimal.ONE, 1, 10, new BigDecimal("10.00"));
-        final UsageConsumableInArrearTierUnitDetail existingFooUsageTier2 = new UsageConsumableInArrearTierUnitDetail(2, "FOO", BigDecimal.TEN, 1, 40, new BigDecimal("400.00"));
+        final UsageConsumableInArrearTierUnitAggregate existingFooUsageTier1 = new UsageConsumableInArrearTierUnitAggregate(1, "FOO", BigDecimal.ONE, 1, 10, new BigDecimal("10.00"));
+        final UsageConsumableInArrearTierUnitAggregate existingFooUsageTier2 = new UsageConsumableInArrearTierUnitAggregate(2, "FOO", BigDecimal.TEN, 1, 40, new BigDecimal("400.00"));
         // BAR : 10 (tier 1) + 40 (tier 2)
-        final UsageConsumableInArrearTierUnitDetail existingBarUsageTier1 = new UsageConsumableInArrearTierUnitDetail(1, "BAR", new BigDecimal("2.00"), 1, 80, new BigDecimal("160.00"));
+        final UsageConsumableInArrearTierUnitAggregate existingBarUsageTier1 = new UsageConsumableInArrearTierUnitAggregate(1, "BAR", new BigDecimal("2.00"), 1, 80, new BigDecimal("160.00"));
 
-        final List<UsageConsumableInArrearTierUnitDetail> existingUsage = ImmutableList.of(existingFooUsageTier1, existingFooUsageTier2, existingBarUsageTier1);
+        final List<UsageConsumableInArrearTierUnitAggregate> existingUsage = ImmutableList.of(existingFooUsageTier1, existingFooUsageTier2, existingBarUsageTier1);
 
-        final UsageConsumableInArrearDetail usageConsumableInArrearDetail = new UsageConsumableInArrearDetail(existingUsage);
+        final UsageConsumableInArrearAggregate usageConsumableInArrearDetail = new UsageConsumableInArrearAggregate(existingUsage);
 
         final String existingUsageJson =  objectMapper.writeValueAsString(usageConsumableInArrearDetail);
 
@@ -851,8 +851,8 @@ public class TestContiguousIntervalConsumableInArrear extends TestUsageInArrearB
         assertEquals(result.size(), 1);
         assertEquals(result.get(0).getAmount().compareTo(new BigDecimal("3140.00")), 0, String.format("%s != 3140.0", result.get(0).getAmount()));
 
-        UsageConsumableInArrearDetail usageDetail = objectMapper.readValue(result.get(0).getItemDetails(), new TypeReference<UsageConsumableInArrearDetail>() {});
-        List<UsageConsumableInArrearTierUnitDetail> itemDetails = usageDetail.getTierDetails();
+        UsageConsumableInArrearAggregate usageDetail = objectMapper.readValue(result.get(0).getItemDetails(), new TypeReference<UsageConsumableInArrearAggregate>() {});
+        List<UsageConsumableInArrearTierUnitAggregate> itemDetails = usageDetail.getTierDetails();
 
 
         // We get same total than AGGREGATE : 3140

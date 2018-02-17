@@ -15,22 +15,24 @@
  * under the License.
  */
 
-package org.killbill.billing.invoice.usage.details;
+package org.killbill.billing.invoice.usage.details.aggregate;
 
 import java.math.BigDecimal;
 import java.util.List;
 
+import org.killbill.billing.invoice.usage.details.UsageInArrearTierUnitDetail;
+
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-public class UsageCapacityInArrearDetail implements UsageInArrearDetail {
+public class UsageCapacityInArrearAggregate implements UsageInArrearAggregate {
 
     private final List<UsageInArrearTierUnitDetail> tierDetails;
     private BigDecimal amount;
 
     @JsonCreator
-    public UsageCapacityInArrearDetail(@JsonProperty("tierDetails") List<UsageInArrearTierUnitDetail> tierDetails,
-                                       @JsonProperty("amount") BigDecimal amount) {
+    public UsageCapacityInArrearAggregate(@JsonProperty("tierDetails") List<UsageInArrearTierUnitDetail> tierDetails,
+                                          @JsonProperty("amount") BigDecimal amount) {
         this.tierDetails = tierDetails;
         this.amount = amount;
     }
