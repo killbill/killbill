@@ -33,8 +33,8 @@ import org.killbill.billing.catalog.api.Usage;
 import org.killbill.billing.invoice.api.InvoiceApiException;
 import org.killbill.billing.invoice.api.InvoiceItem;
 import org.killbill.billing.invoice.model.UsageInvoiceItem;
-import org.killbill.billing.invoice.usage.details.aggregate.UsageCapacityInArrearAggregate;
-import org.killbill.billing.invoice.usage.details.aggregate.UsageInArrearAggregate;
+import org.killbill.billing.invoice.usage.details.UsageCapacityInArrearAggregate;
+import org.killbill.billing.invoice.usage.details.UsageInArrearAggregate;
 import org.killbill.billing.invoice.usage.details.UsageInArrearTierUnitDetail;
 import org.killbill.billing.usage.RawUsage;
 import org.killbill.billing.usage.api.RolledUpUnit;
@@ -63,7 +63,7 @@ public class ContiguousIntervalCapacityUsageInArrear extends ContiguousIntervalU
     }
 
     @Override
-    protected void populateResults(final LocalDate startDate, final LocalDate endDate, final BigDecimal billedUsage, final BigDecimal toBeBilledUsage, final UsageInArrearDetail toBeBilledUsageDetails, final boolean areAllBilledItemsWithDetails, final List<InvoiceItem> result) {
+    protected void populateResults(final LocalDate startDate, final LocalDate endDate, final BigDecimal billedUsage, final BigDecimal toBeBilledUsage, final UsageInArrearAggregate toBeBilledUsageDetails, final boolean areAllBilledItemsWithDetails, final List<InvoiceItem> result) throws InvoiceApiException {
         // Compute final amount by subtracting  amount that was already billed.
         final BigDecimal amountToBill = toBeBilledUsage.subtract(billedUsage);
 
@@ -72,6 +72,10 @@ public class ContiguousIntervalCapacityUsageInArrear extends ContiguousIntervalU
             final InvoiceItem item = new UsageInvoiceItem(invoiceId, accountId, getBundleId(), getSubscriptionId(), getPlanName(),
                                                           getPhaseName(), usage.getName(), startDate, endDate, amountToBill, null, getCurrency(), null, itemDetails);
             result.add(item);
+        } else if (amountToBill.compareTo(BigDecimal.ZERO) < 0) {
+            throw new InvoiceApiException(ErrorCode.UNEXPECTED_ERROR,
+                                          String.format("ILLEGAL INVOICING STATE: Usage period start='%s', end='%s', previously billed amount='%.2f', new proposed amount='%.2f'",
+                                                        startDate, endDate, billedUsage, toBeBilledUsage));
         }
     }
 

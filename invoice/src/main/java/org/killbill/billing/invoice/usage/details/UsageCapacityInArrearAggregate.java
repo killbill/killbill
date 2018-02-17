@@ -15,12 +15,10 @@
  * under the License.
  */
 
-package org.killbill.billing.invoice.usage.details.aggregate;
+package org.killbill.billing.invoice.usage.details;
 
 import java.math.BigDecimal;
 import java.util.List;
-
-import org.killbill.billing.invoice.usage.details.UsageInArrearTierUnitDetail;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;

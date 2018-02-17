@@ -41,7 +41,7 @@ import org.killbill.billing.invoice.api.InvoiceItem;
 import org.killbill.billing.invoice.api.InvoiceItemType;
 import org.killbill.billing.invoice.generator.BillingIntervalDetail;
 import org.killbill.billing.invoice.model.UsageInvoiceItem;
-import org.killbill.billing.invoice.usage.details.aggregate.UsageInArrearAggregate;
+import org.killbill.billing.invoice.usage.details.UsageInArrearAggregate;
 import org.killbill.billing.junction.BillingEvent;
 import org.killbill.billing.usage.RawUsage;
 import org.killbill.billing.usage.api.RolledUpUnit;
@@ -449,7 +449,7 @@ public abstract class ContiguousIntervalUsageInArrear {
         }
     }
 
-    protected String toJson(final UsageInArrearAggregate usageInArrearAggregate) {
+    protected String toJson(final Object usageInArrearAggregate) {
         try {
             return objectMapper.writeValueAsString(usageInArrearAggregate);
         } catch (JsonProcessingException e) {

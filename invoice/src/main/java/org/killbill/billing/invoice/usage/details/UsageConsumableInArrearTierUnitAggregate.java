@@ -15,7 +15,7 @@
  * under the License.
  */
 
-package org.killbill.billing.invoice.usage.details.aggregate;
+package org.killbill.billing.invoice.usage.details;
 
 import java.math.BigDecimal;
 
