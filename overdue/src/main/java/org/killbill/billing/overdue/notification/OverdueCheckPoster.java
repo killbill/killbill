@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014-2017 Groupon, Inc
- * Copyright 2014-2017 The Billing Project, LLC
+ * Copyright 2014-2018 Groupon, Inc
+ * Copyright 2014-2018 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -17,6 +17,8 @@
  */
 
 package org.killbill.billing.overdue.notification;
+
+import java.util.Iterator;
 
 import org.joda.time.DateTime;
 import org.killbill.billing.util.cache.CacheControllerDispatcher;
@@ -48,23 +50,32 @@ public class OverdueCheckPoster extends DefaultOverduePosterBase {
         boolean shouldInsertNewNotification = true;
         int minIndexToDeleteFrom = 0;
         int index = 0;
-        for (final NotificationEventWithMetadata<T> cur : futureNotifications) {
-            // Results are ordered by effective date asc
-            if (index == 0) {
-                if (cur.getEffectiveDate().isBefore(futureNotificationTime)) {
-                    // We don't have to insert a new one. For sanity, delete any other future notification
-                    minIndexToDeleteFrom = 1;
-                    shouldInsertNewNotification = false;
-                } else {
-                    // We win - we are before any other already recorded. Delete all others.
-                    minIndexToDeleteFrom = 0;
+        final Iterator<NotificationEventWithMetadata<T>> iterator = futureNotifications.iterator();
+        try {
+            while (iterator.hasNext()) {
+                final NotificationEventWithMetadata<T> cur = iterator.next();
+                // Results are ordered by effective date asc
+                if (index == 0) {
+                    if (cur.getEffectiveDate().isBefore(futureNotificationTime)) {
+                        // We don't have to insert a new one. For sanity, delete any other future notification
+                        minIndexToDeleteFrom = 1;
+                        shouldInsertNewNotification = false;
+                    } else {
+                        // We win - we are before any other already recorded. Delete all others.
+                        minIndexToDeleteFrom = 0;
+                    }
                 }
-            }
 
-            if (minIndexToDeleteFrom <= index) {
-                overdueQueue.removeNotificationFromTransaction(entitySqlDaoWrapperFactory.getHandle().getConnection(), cur.getRecordId());
+                if (minIndexToDeleteFrom <= index) {
+                    overdueQueue.removeNotificationFromTransaction(entitySqlDaoWrapperFactory.getHandle().getConnection(), cur.getRecordId());
+                }
+                index++;
             }
-            index++;
+        } finally {
+            // Go through all results to close the connection
+            while (iterator.hasNext()) {
+                iterator.next();
+            }
         }
 
         return shouldInsertNewNotification;
