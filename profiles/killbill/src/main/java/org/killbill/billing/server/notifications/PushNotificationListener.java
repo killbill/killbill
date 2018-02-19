@@ -162,7 +162,8 @@ public class PushNotificationListener {
         final NotificationJson notification = new NotificationJson(key.getEventType() != null ? key.getEventType().toString() : null,
                                                                    key.getAccountId() != null ? key.getAccountId().toString() : null,
                                                                    key.getObjectType() != null ? key.getObjectType().toString() : null,
-                                                                   key.getObjectId() != null ? key.getObjectId().toString() : null);
+                                                                   key.getObjectId() != null ? key.getObjectId().toString() : null,
+                                                                   key.getMetaData());
         final String body = mapper.writeValueAsString(notification);
         doPost(key.getTenantId(), key.getUrl(), body, notification, TIMEOUT_NOTIFICATION, key.getAttemptNumber());
     }
@@ -173,7 +174,9 @@ public class PushNotificationListener {
                                                                 notificationJson.getEventType(),
                                                                 notificationJson.getObjectType(),
                                                                 notificationJson.getObjectId() != null ? UUID.fromString(notificationJson.getObjectId()) : null,
-                                                                attemptRetryNumber + 1, url);
+                                                                attemptRetryNumber + 1,
+                                                                notificationJson.getMetaData(),
+                                                                url);
 
         final TenantContext tenantContext = contextFactory.createTenantContext(tenantId);
         final DateTime nextNotificationTime = getNextNotificationTime(key.getAttemptNumber(), internalCallContextFactory.createInternalTenantContextWithoutAccountRecordId(tenantContext));
