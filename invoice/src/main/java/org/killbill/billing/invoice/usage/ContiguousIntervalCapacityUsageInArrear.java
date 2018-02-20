@@ -24,15 +24,17 @@ import java.util.Set;
 import java.util.UUID;
 
 import org.joda.time.LocalDate;
+import org.killbill.billing.ErrorCode;
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.catalog.api.Limit;
 import org.killbill.billing.catalog.api.Tier;
 import org.killbill.billing.catalog.api.Usage;
+import org.killbill.billing.invoice.api.InvoiceApiException;
 import org.killbill.billing.invoice.api.InvoiceItem;
 import org.killbill.billing.invoice.model.UsageInvoiceItem;
-import org.killbill.billing.invoice.usage.details.UsageCapacityInArrearDetail;
-import org.killbill.billing.invoice.usage.details.UsageInArrearDetail;
+import org.killbill.billing.invoice.usage.details.UsageCapacityInArrearAggregate;
+import org.killbill.billing.invoice.usage.details.UsageInArrearAggregate;
 import org.killbill.billing.invoice.usage.details.UsageInArrearTierUnitDetail;
 import org.killbill.billing.usage.RawUsage;
 import org.killbill.billing.usage.api.RolledUpUnit;
@@ -61,7 +63,7 @@ public class ContiguousIntervalCapacityUsageInArrear extends ContiguousIntervalU
     }
 
     @Override
-    protected void populateResults(final LocalDate startDate, final LocalDate endDate, final BigDecimal billedUsage, final BigDecimal toBeBilledUsage, final UsageInArrearDetail toBeBilledUsageDetails, final boolean areAllBilledItemsWithDetails, final List<InvoiceItem> result) {
+    protected void populateResults(final LocalDate startDate, final LocalDate endDate, final BigDecimal billedUsage, final BigDecimal toBeBilledUsage, final UsageInArrearAggregate toBeBilledUsageDetails, final boolean areAllBilledItemsWithDetails, final List<InvoiceItem> result) throws InvoiceApiException {
         // Compute final amount by subtracting  amount that was already billed.
         final BigDecimal amountToBill = toBeBilledUsage.subtract(billedUsage);
 
@@ -70,11 +72,15 @@ public class ContiguousIntervalCapacityUsageInArrear extends ContiguousIntervalU
             final InvoiceItem item = new UsageInvoiceItem(invoiceId, accountId, getBundleId(), getSubscriptionId(), getPlanName(),
                                                           getPhaseName(), usage.getName(), startDate, endDate, amountToBill, null, getCurrency(), null, itemDetails);
             result.add(item);
+        } else if (amountToBill.compareTo(BigDecimal.ZERO) < 0) {
+            throw new InvoiceApiException(ErrorCode.UNEXPECTED_ERROR,
+                                          String.format("ILLEGAL INVOICING STATE: Usage period start='%s', end='%s', previously billed amount='%.2f', new proposed amount='%.2f'",
+                                                        startDate, endDate, billedUsage, toBeBilledUsage));
         }
     }
 
     @Override
-    protected UsageInArrearDetail getToBeBilledUsageDetails(final List<RolledUpUnit> rolledUpUnits, final Iterable<InvoiceItem> billedItems, final boolean areAllBilledItemsWithDetails) throws CatalogApiException {
+    protected UsageInArrearAggregate getToBeBilledUsageDetails(final List<RolledUpUnit> rolledUpUnits, final Iterable<InvoiceItem> billedItems, final boolean areAllBilledItemsWithDetails) throws CatalogApiException {
         return computeToBeBilledCapacityInArrear(rolledUpUnits);
     }
 
@@ -89,7 +95,7 @@ public class ContiguousIntervalCapacityUsageInArrear extends ContiguousIntervalU
     }
 
     @VisibleForTesting
-    UsageCapacityInArrearDetail computeToBeBilledCapacityInArrear(final List<RolledUpUnit> roUnits) throws CatalogApiException {
+    UsageCapacityInArrearAggregate computeToBeBilledCapacityInArrear(final List<RolledUpUnit> roUnits) throws CatalogApiException {
         Preconditions.checkState(isBuilt.get());
 
         final List<Tier> tiers = getCapacityInArrearTier(usage);
@@ -114,7 +120,7 @@ public class ContiguousIntervalCapacityUsageInArrear extends ContiguousIntervalU
                 }
             }
             if (complies) {
-                return new UsageCapacityInArrearDetail(toBeBilledDetails, cur.getRecurringPrice().getPrice(getCurrency()));
+                return new UsageCapacityInArrearAggregate(toBeBilledDetails, cur.getRecurringPrice().getPrice(getCurrency()));
             }
         }
         // Probably invalid catalog config

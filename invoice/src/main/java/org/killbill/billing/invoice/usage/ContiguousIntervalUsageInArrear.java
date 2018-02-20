@@ -41,7 +41,7 @@ import org.killbill.billing.invoice.api.InvoiceItem;
 import org.killbill.billing.invoice.api.InvoiceItemType;
 import org.killbill.billing.invoice.generator.BillingIntervalDetail;
 import org.killbill.billing.invoice.model.UsageInvoiceItem;
-import org.killbill.billing.invoice.usage.details.UsageInArrearDetail;
+import org.killbill.billing.invoice.usage.details.UsageInArrearAggregate;
 import org.killbill.billing.junction.BillingEvent;
 import org.killbill.billing.usage.RawUsage;
 import org.killbill.billing.usage.api.RolledUpUnit;
@@ -198,7 +198,7 @@ public abstract class ContiguousIntervalUsageInArrear {
 
             final List<RolledUpUnit> rolledUpUnits = ru.getRolledUpUnits();
 
-            final UsageInArrearDetail toBeBilledUsageDetails = getToBeBilledUsageDetails(rolledUpUnits, billedItems, areAllBilledItemsWithDetails);
+            final UsageInArrearAggregate toBeBilledUsageDetails = getToBeBilledUsageDetails(rolledUpUnits, billedItems, areAllBilledItemsWithDetails);
             final BigDecimal toBeBilledUsage = toBeBilledUsageDetails.getAmount();
             populateResults(ru.getStart(), ru.getEnd(), billedUsage, toBeBilledUsage, toBeBilledUsageDetails, areAllBilledItemsWithDetails, result);
         }
@@ -206,9 +206,9 @@ public abstract class ContiguousIntervalUsageInArrear {
         return new UsageInArrearItemsAndNextNotificationDate(result, nextNotificationDate);
     }
 
-    protected abstract void populateResults(final LocalDate startDate, final LocalDate endDate, final BigDecimal billedUsage, final BigDecimal toBeBilledUsage, final UsageInArrearDetail toBeBilledUsageDetails, final boolean areAllBilledItemsWithDetails, final List<InvoiceItem> result);
+    protected abstract void populateResults(final LocalDate startDate, final LocalDate endDate, final BigDecimal billedUsage, final BigDecimal toBeBilledUsage, final UsageInArrearAggregate toBeBilledUsageDetails, final boolean areAllBilledItemsWithDetails, final List<InvoiceItem> result) throws InvoiceApiException;
 
-    protected abstract UsageInArrearDetail getToBeBilledUsageDetails(final List<RolledUpUnit> rolledUpUnits, final Iterable<InvoiceItem> billedItems, final boolean areAllBilledItemsWithDetails) throws CatalogApiException;
+    protected abstract UsageInArrearAggregate getToBeBilledUsageDetails(final List<RolledUpUnit> rolledUpUnits, final Iterable<InvoiceItem> billedItems, final boolean areAllBilledItemsWithDetails) throws CatalogApiException;
 
     private boolean areAllBilledItemsWithDetails(final Iterable<InvoiceItem> billedItems) {
         boolean atLeastOneItemWithoutDetails = Iterables.any(billedItems, new Predicate<InvoiceItem>() {
@@ -449,9 +449,9 @@ public abstract class ContiguousIntervalUsageInArrear {
         }
     }
 
-    protected String toJson(final UsageInArrearDetail usageInArrearDetail) {
+    protected String toJson(final Object usageInArrearAggregate) {
         try {
-            return objectMapper.writeValueAsString(usageInArrearDetail);
+            return objectMapper.writeValueAsString(usageInArrearAggregate);
         } catch (JsonProcessingException e) {
             Preconditions.checkState(false, e.getMessage());
             return null;

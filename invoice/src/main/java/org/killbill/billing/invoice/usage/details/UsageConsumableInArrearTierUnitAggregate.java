@@ -19,25 +19,27 @@ package org.killbill.billing.invoice.usage.details;
 
 import java.math.BigDecimal;
 
+import org.killbill.billing.invoice.usage.details.UsageInArrearTierUnitDetail;
+
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-public class UsageConsumableInArrearTierUnitDetail extends UsageInArrearTierUnitDetail {
+public class UsageConsumableInArrearTierUnitAggregate extends UsageInArrearTierUnitDetail {
 
     private final int tierBlockSize;
     private BigDecimal amount;
 
-    public UsageConsumableInArrearTierUnitDetail(int tier, String tierUnit, BigDecimal tierPrice, Integer tierBlockSize, Integer quantity) {
+    public UsageConsumableInArrearTierUnitAggregate(int tier, String tierUnit, BigDecimal tierPrice, Integer tierBlockSize, Integer quantity) {
         this(tier, tierUnit, tierPrice, tierBlockSize, quantity, computeAmount(tierPrice, quantity));
     }
 
     @JsonCreator
-    public UsageConsumableInArrearTierUnitDetail(@JsonProperty("tier") int tier,
-                                                 @JsonProperty("tierUnit") String tierUnit,
-                                                 @JsonProperty("tierPrice") BigDecimal tierPrice,
-                                                 @JsonProperty("tierBlockSize") Integer tierBlockSize,
-                                                 @JsonProperty("quantity") Integer quantity,
-                                                 @JsonProperty("amount") BigDecimal amount) {
+    public UsageConsumableInArrearTierUnitAggregate(@JsonProperty("tier") int tier,
+                                                    @JsonProperty("tierUnit") String tierUnit,
+                                                    @JsonProperty("tierPrice") BigDecimal tierPrice,
+                                                    @JsonProperty("tierBlockSize") Integer tierBlockSize,
+                                                    @JsonProperty("quantity") Integer quantity,
+                                                    @JsonProperty("amount") BigDecimal amount) {
         super(tier, tierUnit, tierPrice, quantity);
         this.amount = amount;
         this.tierBlockSize = tierBlockSize;

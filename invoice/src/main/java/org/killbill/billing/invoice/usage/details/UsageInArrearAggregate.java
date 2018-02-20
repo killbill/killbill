@@ -19,7 +19,7 @@ package org.killbill.billing.invoice.usage.details;
 
 import java.math.BigDecimal;
 
-public interface UsageInArrearDetail {
+public interface UsageInArrearAggregate {
 
     BigDecimal getAmount();
 }

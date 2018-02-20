@@ -38,7 +38,7 @@ import org.killbill.billing.invoice.api.InvoiceItem;
 import org.killbill.billing.invoice.model.FixedPriceInvoiceItem;
 import org.killbill.billing.invoice.model.UsageInvoiceItem;
 import org.killbill.billing.invoice.usage.ContiguousIntervalUsageInArrear.UsageInArrearItemsAndNextNotificationDate;
-import org.killbill.billing.invoice.usage.details.UsageCapacityInArrearDetail;
+import org.killbill.billing.invoice.usage.details.UsageCapacityInArrearAggregate;
 import org.killbill.billing.invoice.usage.details.UsageInArrearTierUnitDetail;
 import org.killbill.billing.junction.BillingEvent;
 import org.killbill.billing.usage.RawUsage;
@@ -147,9 +147,9 @@ public class TestContiguousIntervalCapacityInArrear extends TestUsageInArrearBas
                                                                                                                                          Collections.<Usage>emptyList())
                                                                                                                  );
         // Tier 1 (both units from tier 1)
-        UsageCapacityInArrearDetail result = intervalCapacityInArrear.computeToBeBilledCapacityInArrear(ImmutableList.<RolledUpUnit>of(new DefaultRolledUpUnit("unit1", 100L),
-                                                                                                                                       new DefaultRolledUpUnit("unit2", 1000L),
-                                                                                                                                       new DefaultRolledUpUnit("unit3", 50L)));
+        UsageCapacityInArrearAggregate result = intervalCapacityInArrear.computeToBeBilledCapacityInArrear(ImmutableList.<RolledUpUnit>of(new DefaultRolledUpUnit("unit1", 100L),
+                                                                                                                                          new DefaultRolledUpUnit("unit2", 1000L),
+                                                                                                                                          new DefaultRolledUpUnit("unit3", 50L)));
         assertEquals(result.getTierDetails().size(), 3);
         assertTrue(result.getAmount().compareTo(BigDecimal.TEN) == 0);
 
@@ -277,7 +277,7 @@ public class TestContiguousIntervalCapacityInArrear extends TestUsageInArrearBas
         assertEquals(result.size(), 1);
         assertEquals(result.get(0).getAmount().compareTo(BigDecimal.ONE), 0, String.format("%s != 1.0", result.get(0).getAmount()));
 
-        UsageCapacityInArrearDetail itemDetails = objectMapper.readValue(result.get(0).getItemDetails(), new TypeReference<UsageCapacityInArrearDetail>() {});
+        UsageCapacityInArrearAggregate itemDetails = objectMapper.readValue(result.get(0).getItemDetails(), new TypeReference<UsageCapacityInArrearAggregate>() {});
         assertEquals(itemDetails.getAmount().compareTo(BigDecimal.ONE), 0);
         assertEquals(itemDetails.getTierDetails().size(), 2);
 
@@ -301,7 +301,7 @@ public class TestContiguousIntervalCapacityInArrear extends TestUsageInArrearBas
         assertEquals(result.size(), 1);
         assertEquals(result.get(0).getAmount().compareTo(BigDecimal.TEN), 0, String.format("%s != 10.0", result.get(0).getAmount()));
 
-        itemDetails = objectMapper.readValue(result.get(0).getItemDetails(), new TypeReference<UsageCapacityInArrearDetail>() {});
+        itemDetails = objectMapper.readValue(result.get(0).getItemDetails(), new TypeReference<UsageCapacityInArrearAggregate>() {});
         assertEquals(itemDetails.getAmount().compareTo(BigDecimal.TEN), 0);
         assertEquals(itemDetails.getTierDetails().size(), 2);
         itemUnitDetails = itemDetails.getTierDetails();
@@ -326,7 +326,7 @@ public class TestContiguousIntervalCapacityInArrear extends TestUsageInArrearBas
         assertEquals(result.size(), 1);
         assertEquals(result.get(0).getAmount().compareTo(new BigDecimal("100.0")), 0, String.format("%s != 100.0", result.get(0).getAmount()));
 
-        itemDetails = objectMapper.readValue(result.get(0).getItemDetails(), new TypeReference<UsageCapacityInArrearDetail>() {});
+        itemDetails = objectMapper.readValue(result.get(0).getItemDetails(), new TypeReference<UsageCapacityInArrearAggregate>() {});
         assertEquals(itemDetails.getAmount().compareTo(new BigDecimal("100.0")), 0);
         assertEquals(itemDetails.getTierDetails().size(), 2);
         itemUnitDetails = itemDetails.getTierDetails();
@@ -359,7 +359,7 @@ public class TestContiguousIntervalCapacityInArrear extends TestUsageInArrearBas
 
         final List<UsageInArrearTierUnitDetail> existingUsage = ImmutableList.of(existingFooUsageTier1, existingBarUsageTier2);
 
-        final String existingUsageJson = objectMapper.writeValueAsString(new UsageCapacityInArrearDetail(existingUsage, BigDecimal.TEN));
+        final String existingUsageJson = objectMapper.writeValueAsString(new UsageCapacityInArrearAggregate(existingUsage, BigDecimal.TEN));
 
         final List<InvoiceItem> existingItems = new ArrayList<InvoiceItem>();
         final InvoiceItem ii1 = new UsageInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, usageName, new LocalDate(2014, 03, 20), new LocalDate(2014, 04, 15), BigDecimal.TEN, null, currency, null, existingUsageJson);
@@ -369,7 +369,7 @@ public class TestContiguousIntervalCapacityInArrear extends TestUsageInArrearBas
         assertEquals(result.size(), 1);
         assertEquals(result.get(0).getAmount().compareTo(new BigDecimal("90.00")), 0, String.format("%s != 90.0", result.get(0).getAmount()));
 
-        UsageCapacityInArrearDetail itemDetails = objectMapper.readValue(result.get(0).getItemDetails(), new TypeReference<UsageCapacityInArrearDetail>() {});
+        UsageCapacityInArrearAggregate itemDetails = objectMapper.readValue(result.get(0).getItemDetails(), new TypeReference<UsageCapacityInArrearAggregate>() {});
         assertEquals(itemDetails.getAmount().compareTo(new BigDecimal("100.00")), 0);
         assertEquals(itemDetails.getTierDetails().size(), 2);
 

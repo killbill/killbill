@@ -23,14 +23,14 @@ import java.util.List;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-public class UsageCapacityInArrearDetail implements UsageInArrearDetail {
+public class UsageCapacityInArrearAggregate implements UsageInArrearAggregate {
 
     private final List<UsageInArrearTierUnitDetail> tierDetails;
     private BigDecimal amount;
 
     @JsonCreator
-    public UsageCapacityInArrearDetail(@JsonProperty("tierDetails") List<UsageInArrearTierUnitDetail> tierDetails,
-                                       @JsonProperty("amount") BigDecimal amount) {
+    public UsageCapacityInArrearAggregate(@JsonProperty("tierDetails") List<UsageInArrearTierUnitDetail> tierDetails,
+                                          @JsonProperty("amount") BigDecimal amount) {
         this.tierDetails = tierDetails;
         this.amount = amount;
     }
