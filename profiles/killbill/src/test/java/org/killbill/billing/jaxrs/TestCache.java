@@ -1,5 +1,6 @@
 /*
- * Copyright 2016 The Billing Project, LLC
+ * Copyright 2014-2018 Groupon, Inc
+ * Copyright 2014-2018 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -21,6 +22,7 @@ import java.util.UUID;
 import org.joda.time.LocalDate;
 import org.killbill.automaton.StateMachineConfig;
 import org.killbill.billing.account.api.ImmutableAccountData;
+import org.killbill.billing.api.FlakyRetryAnalyzer;
 import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.catalog.api.Catalog;
 import org.killbill.billing.catalog.api.PriceListSet;
@@ -100,7 +102,8 @@ public class TestCache extends TestJaxrsBase {
         Assert.assertFalse(accountBcdCache.isKeyInCache(input.getAccountId()));
     }
 
-    @Test(groups = "slow", description = "Can Invalidate (clear) all Tenant Caches for current Tenant")
+    // Flaky, see https://github.com/killbill/killbill/issues/860
+    @Test(groups = "slow", description = "Can Invalidate (clear) all Tenant Caches for current Tenant", retryAnalyzer = FlakyRetryAnalyzer.class)
     public void testInvalidateCacheByTenant() throws Exception {
         // creating a new Tenant for this test
         final String testApiKey = "testApiKey";
