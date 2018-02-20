@@ -43,6 +43,7 @@ import org.killbill.billing.catalog.api.StaticCatalog;
 import org.killbill.billing.entitlement.api.SubscriptionEventType;
 import org.killbill.billing.events.EffectiveSubscriptionInternalEvent;
 import org.killbill.billing.invoice.api.DryRunArguments;
+import org.killbill.billing.invoice.api.InvoiceStatus;
 import org.killbill.billing.junction.BillingEvent;
 import org.killbill.billing.junction.BillingEventSet;
 import org.killbill.billing.junction.BillingInternalApi;
@@ -62,6 +63,7 @@ import org.slf4j.LoggerFactory;
 import com.google.common.base.Function;
 import com.google.common.base.Predicate;
 import com.google.common.collect.Collections2;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.inject.Inject;
 
@@ -93,7 +95,8 @@ public class DefaultInternalBillingApi implements BillingInternalApi {
         final Catalog currentCatalog =  catalogInternalApi.getFullCatalog(true, true, context);
 
         // Check to see if billing is off for the account
-        final List<Tag> accountTags = tagApi.getTags(accountId, ObjectType.ACCOUNT, context);
+        final List<Tag> tags = tagApi.getTagsForAccountId(false, context);
+        final List<Tag> accountTags = getTagsForObjectType(ObjectType.ACCOUNT, tags);
         final boolean found_AUTO_INVOICING_OFF = is_AUTO_INVOICING_OFF(accountTags);
         final boolean found_INVOICING_DRAFT = is_AUTO_INVOICING_DRAFT(accountTags);
         final boolean found_INVOICING_REUSE_DRAFT = is_AUTO_INVOICING_REUSE_DRAFT(accountTags);
@@ -108,7 +111,7 @@ public class DefaultInternalBillingApi implements BillingInternalApi {
 
             final ImmutableAccountData account = accountApi.getImmutableAccountDataById(accountId, context);
             result = new DefaultBillingEventSet(false, found_INVOICING_DRAFT, found_INVOICING_REUSE_DRAFT);
-            addBillingEventsForBundles(bundles, account, dryRunArguments, context, result, skippedSubscriptions, currentCatalog);
+            addBillingEventsForBundles(bundles, account, dryRunArguments, context, result, skippedSubscriptions, currentCatalog, tags);
         }
 
         if (result.isEmpty()) {
@@ -135,7 +138,7 @@ public class DefaultInternalBillingApi implements BillingInternalApi {
     }
 
     private void addBillingEventsForBundles(final List<SubscriptionBaseBundle> bundles, final ImmutableAccountData account, final DryRunArguments dryRunArguments, final InternalCallContext context,
-                                            final DefaultBillingEventSet result, final Set<UUID> skipSubscriptionsSet, final Catalog catalog) throws AccountApiException, CatalogApiException, SubscriptionBaseApiException {
+                                            final DefaultBillingEventSet result, final Set<UUID> skipSubscriptionsSet, final Catalog catalog, final List<Tag> tags) throws AccountApiException, CatalogApiException, SubscriptionBaseApiException {
 
         final boolean dryRunMode = dryRunArguments != null;
 
@@ -151,6 +154,7 @@ public class DefaultInternalBillingApi implements BillingInternalApi {
 
         }
 
+        final List<Tag> bundleTags = getTagsForObjectType(ObjectType.BUNDLE, tags);
         for (final SubscriptionBaseBundle bundle : bundles) {
             final DryRunArguments dryRunArgumentsForBundle = (dryRunArguments != null &&
                                                               dryRunArguments.getBundleId() != null &&
@@ -159,7 +163,6 @@ public class DefaultInternalBillingApi implements BillingInternalApi {
             final List<SubscriptionBase> subscriptions = subscriptionApi.getSubscriptionsForBundle(bundle.getId(), dryRunArgumentsForBundle, context);
 
             //Check if billing is off for the bundle
-            final List<Tag> bundleTags = tagApi.getTags(bundle.getId(), ObjectType.BUNDLE, context);
             boolean found_AUTO_INVOICING_OFF = is_AUTO_INVOICING_OFF(bundleTags);
             if (found_AUTO_INVOICING_OFF) {
                 for (final SubscriptionBase subscription : subscriptions) { // billing is off so list sub ids in set to be excluded
@@ -270,5 +273,14 @@ public class DefaultInternalBillingApi implements BillingInternalApi {
         });
     }
 
+    private List<Tag> getTagsForObjectType(final ObjectType objectType, final List<Tag> tags) {
+        return ImmutableList.<Tag>copyOf(Iterables.<Tag>filter(tags,
+                                                                  new Predicate<Tag>() {
+                                                                      @Override
+                                                                      public boolean apply(final Tag input) {
+                                                                          return objectType.equals(input.getObjectType());
+                                                                      }
+                                                                  }));
+    }
 
 }
