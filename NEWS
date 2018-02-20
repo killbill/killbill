@@ -14,6 +14,9 @@
     Fix missing Invoice Notification when we have future billing events (#846)
     Reduce log level of InvoiceItemGeneratorLogger (#851)
 
+0.18.18
+    See https://github.com/killbill/killbill/releases/tag/killbill-0.18.18
+
 0.18.17
     Relax sanity checks for STANDALONE subscriptions #840
     Fix JDBC connection leak in pagination API #853
