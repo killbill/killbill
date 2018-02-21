@@ -197,7 +197,7 @@ public class ContiguousIntervalConsumableUsageInArrear extends ContiguousInterva
             final int blockTierSize = tieredBlock.getSize().intValue();
             final int tmp = remainingUnits / blockTierSize + (remainingUnits % blockTierSize == 0 ? 0 : 1);
             int nbUsedTierBlocks;
-            if (tmp > tieredBlock.getMax()) {
+            if (tieredBlock.getMax() != (double) -1 && tmp > tieredBlock.getMax() ) {
                 nbUsedTierBlocks = tieredBlock.getMax().intValue();
                 remainingUnits -= tieredBlock.getMax() * blockTierSize;
             } else {
@@ -239,7 +239,7 @@ public class ContiguousIntervalConsumableUsageInArrear extends ContiguousInterva
             tierNum++;
             final int blockTierSize = tieredBlock.getSize().intValue();
             final int tmp = remainingUnits / blockTierSize + (remainingUnits % blockTierSize == 0 ? 0 : 1);
-            if (tmp > tieredBlock.getMax()) {
+            if ( tmp > tieredBlock.getMax()) { /* Includes the case where max is unlimited (-1) */
                 remainingUnits -= tieredBlock.getMax() * blockTierSize;
             } else {
                 targetBlock = tieredBlock;
