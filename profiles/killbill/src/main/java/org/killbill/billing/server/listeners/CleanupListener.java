@@ -53,7 +53,8 @@ public class CleanupListener implements ServletContextListener {
         // See https://mariadb.atlassian.net/browse/CONJ-61
         try {
             Class.forName("org.mariadb.jdbc.Driver");
-            org.mariadb.jdbc.Driver.unloadDriver();
+            // Removed by https://github.com/MariaDB/mariadb-connector-j/commit/ff91ae0bb4f5c49beaba7475b76883b426a51cd4#diff-7d2a758f3b306f512cd12ad68eeb0137
+            //org.mariadb.jdbc.Driver.unloadDriver();
         } catch (final ClassNotFoundException ignored) {
             // MariaDB driver not used
         }

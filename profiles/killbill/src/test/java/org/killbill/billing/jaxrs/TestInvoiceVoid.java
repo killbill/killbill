@@ -24,6 +24,7 @@ import java.util.UUID;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDate;
+import org.killbill.billing.api.FlakyRetryAnalyzer;
 import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.catalog.api.ProductCategory;
 import org.killbill.billing.client.KillBillClientException;
@@ -146,8 +147,8 @@ public class TestInvoiceVoid extends TestJaxrsBase {
 
     }
 
-
-    @Test(groups = "slow", description = "Void a child invoice")
+    // Flaky, see https://github.com/killbill/killbill/issues/860
+    @Test(groups = "slow", description = "Void a child invoice", retryAnalyzer = FlakyRetryAnalyzer.class)
     public void testChildVoidInvoice() throws Exception {
         final DateTime initialDate = new DateTime(2012, 4, 25, 0, 3, 42, 0);
         final LocalDate triggeredDate = new LocalDate(2012, 5, 26);
@@ -187,7 +188,8 @@ public class TestInvoiceVoid extends TestJaxrsBase {
         assertEquals(child1Invoices.size(), 2);
     }
 
-    @Test(groups = "slow", description = "Void a parent invoice")
+    // Flaky, see https://github.com/killbill/killbill/issues/860
+    @Test(groups = "slow", description = "Void a parent invoice", retryAnalyzer = FlakyRetryAnalyzer.class)
     public void testParentVoidInvoice() throws Exception {
         final DateTime initialDate = new DateTime(2012, 4, 25, 0, 3, 42, 0);
         final LocalDate triggeredDate = new LocalDate(2012, 5, 26);
