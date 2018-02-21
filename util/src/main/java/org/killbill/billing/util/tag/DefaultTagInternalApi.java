@@ -67,7 +67,7 @@ public class DefaultTagInternalApi implements TagInternalApi {
     }
 
     @Override
-    public List<Tag> getTagsForAccountId(final boolean includedDeleted, final InternalTenantContext context) {
+    public List<Tag> getTagsForAccount(final boolean includedDeleted, final InternalTenantContext context) {
         return toTagList(tagDao.getTagsForAccount(includedDeleted, context));
     }
 

@@ -26,6 +26,8 @@ import java.util.Set;
 import java.util.SortedSet;
 import java.util.UUID;
 
+import javax.annotation.Nullable;
+
 import org.killbill.billing.ObjectType;
 import org.killbill.billing.account.api.AccountApiException;
 import org.killbill.billing.account.api.AccountInternalApi;
@@ -95,8 +97,8 @@ public class DefaultInternalBillingApi implements BillingInternalApi {
         final Catalog currentCatalog =  catalogInternalApi.getFullCatalog(true, true, context);
 
         // Check to see if billing is off for the account
-        final List<Tag> tags = tagApi.getTagsForAccountId(false, context);
-        final List<Tag> accountTags = getTagsForObjectType(ObjectType.ACCOUNT, tags);
+        final List<Tag> tagsForAccount = tagApi.getTagsForAccount(false, context);
+        final List<Tag> accountTags = getTagsForObjectType(ObjectType.ACCOUNT, tagsForAccount, null);
         final boolean found_AUTO_INVOICING_OFF = is_AUTO_INVOICING_OFF(accountTags);
         final boolean found_INVOICING_DRAFT = is_AUTO_INVOICING_DRAFT(accountTags);
         final boolean found_INVOICING_REUSE_DRAFT = is_AUTO_INVOICING_REUSE_DRAFT(accountTags);
@@ -111,7 +113,7 @@ public class DefaultInternalBillingApi implements BillingInternalApi {
 
             final ImmutableAccountData account = accountApi.getImmutableAccountDataById(accountId, context);
             result = new DefaultBillingEventSet(false, found_INVOICING_DRAFT, found_INVOICING_REUSE_DRAFT);
-            addBillingEventsForBundles(bundles, account, dryRunArguments, context, result, skippedSubscriptions, currentCatalog, tags);
+            addBillingEventsForBundles(bundles, account, dryRunArguments, context, result, skippedSubscriptions, currentCatalog, tagsForAccount);
         }
 
         if (result.isEmpty()) {
@@ -138,7 +140,7 @@ public class DefaultInternalBillingApi implements BillingInternalApi {
     }
 
     private void addBillingEventsForBundles(final List<SubscriptionBaseBundle> bundles, final ImmutableAccountData account, final DryRunArguments dryRunArguments, final InternalCallContext context,
-                                            final DefaultBillingEventSet result, final Set<UUID> skipSubscriptionsSet, final Catalog catalog, final List<Tag> tags) throws AccountApiException, CatalogApiException, SubscriptionBaseApiException {
+                                            final DefaultBillingEventSet result, final Set<UUID> skipSubscriptionsSet, final Catalog catalog, final List<Tag> tagsForAccount) throws AccountApiException, CatalogApiException, SubscriptionBaseApiException {
 
         final boolean dryRunMode = dryRunArguments != null;
 
@@ -154,22 +156,23 @@ public class DefaultInternalBillingApi implements BillingInternalApi {
 
         }
 
-        final List<Tag> bundleTags = getTagsForObjectType(ObjectType.BUNDLE, tags);
         final Map<UUID, List<SubscriptionBase>> subscriptionsForAccount = subscriptionApi.getSubscriptionsForAccount(context);
 
         for (final SubscriptionBaseBundle bundle : bundles) {
             final DryRunArguments dryRunArgumentsForBundle = (dryRunArguments != null &&
                                                               dryRunArguments.getBundleId() != null &&
                                                               dryRunArguments.getBundleId().equals(bundle.getId())) ?
-                                                             dryRunArguments : null;
+                                                              dryRunArguments : null;
             final List<SubscriptionBase> subscriptions;
+            // In dryRun mode, optimization is intentionally left as is, since is not a common path.
             if (dryRunArgumentsForBundle == null || dryRunArgumentsForBundle.getAction() == null) {
                 subscriptions = subscriptionsForAccount.get(bundle.getId());
             } else {
                 subscriptions = subscriptionApi.getSubscriptionsForBundle(bundle.getId(), dryRunArgumentsForBundle, context);
             }
 
-            //Check if billing is off for the bundle
+            // Check if billing is off for the bundle
+            final List<Tag> bundleTags = getTagsForObjectType(ObjectType.BUNDLE, tagsForAccount, bundle.getId());
             boolean found_AUTO_INVOICING_OFF = is_AUTO_INVOICING_OFF(bundleTags);
             if (found_AUTO_INVOICING_OFF) {
                 for (final SubscriptionBase subscription : subscriptions) { // billing is off so list sub ids in set to be excluded
@@ -280,12 +283,17 @@ public class DefaultInternalBillingApi implements BillingInternalApi {
         });
     }
 
-    private List<Tag> getTagsForObjectType(final ObjectType objectType, final List<Tag> tags) {
+    private List<Tag> getTagsForObjectType(final ObjectType objectType, final List<Tag> tags, final @Nullable UUID objectId) {
         return ImmutableList.<Tag>copyOf(Iterables.<Tag>filter(tags,
                                                                   new Predicate<Tag>() {
                                                                       @Override
                                                                       public boolean apply(final Tag input) {
-                                                                          return objectType.equals(input.getObjectType());
+                                                                          if (objectId == null) {
+                                                                              return objectType == input.getObjectType();
+                                                                          } else {
+                                                                              return objectType == input.getObjectType() && objectId == input.getObjectId();
+                                                                          }
+
                                                                       }
                                                                   }));
     }
