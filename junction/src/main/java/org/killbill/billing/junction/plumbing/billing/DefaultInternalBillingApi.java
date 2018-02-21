@@ -155,12 +155,19 @@ public class DefaultInternalBillingApi implements BillingInternalApi {
         }
 
         final List<Tag> bundleTags = getTagsForObjectType(ObjectType.BUNDLE, tags);
+        final Map<UUID, List<SubscriptionBase>> subscriptionsForAccount = subscriptionApi.getSubscriptionsForAccount(context);
+
         for (final SubscriptionBaseBundle bundle : bundles) {
             final DryRunArguments dryRunArgumentsForBundle = (dryRunArguments != null &&
                                                               dryRunArguments.getBundleId() != null &&
                                                               dryRunArguments.getBundleId().equals(bundle.getId())) ?
                                                              dryRunArguments : null;
-            final List<SubscriptionBase> subscriptions = subscriptionApi.getSubscriptionsForBundle(bundle.getId(), dryRunArgumentsForBundle, context);
+            final List<SubscriptionBase> subscriptions;
+            if (dryRunArgumentsForBundle == null || dryRunArgumentsForBundle.getAction() == null) {
+                subscriptions = subscriptionsForAccount.get(bundle.getId());
+            } else {
+                subscriptions = subscriptionApi.getSubscriptionsForBundle(bundle.getId(), dryRunArgumentsForBundle, context);
+            }
 
             //Check if billing is off for the bundle
             boolean found_AUTO_INVOICING_OFF = is_AUTO_INVOICING_OFF(bundleTags);
