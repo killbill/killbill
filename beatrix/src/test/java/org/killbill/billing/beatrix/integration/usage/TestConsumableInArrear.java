@@ -120,6 +120,26 @@ public class TestConsumableInArrear extends TestIntegrationBase {
         invoiceChecker.checkInvoice(account.getId(), 4, callContext,
                                     new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 1), new LocalDate(2012, 6, 1), InvoiceItemType.USAGE, new BigDecimal("5.90")),
                                     new ExpectedInvoiceItemCheck(new LocalDate(2012, 7, 1), new LocalDate(2012, 8, 1), InvoiceItemType.USAGE, new BigDecimal("11.80")));
+
+
+        // Add a few more month of usage data and check correctness of invoice: iterate 8 times until 2013-4-1 (prior ANNUAL renewal)
+        LocalDate startDate = new LocalDate(2012, 8, 1);
+        int currentInvoice = 5;
+        for (int i = 0; i < 8; i++) {
+
+            setUsage(aoSubscription.getId(), "bullets", startDate.plusDays(15), 350L, callContext);
+
+            busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
+            clock.addMonths(1);
+            assertListenerStatus();
+
+            invoiceChecker.checkInvoice(account.getId(), currentInvoice, callContext,
+                                        new ExpectedInvoiceItemCheck(startDate, startDate.plusMonths(1), InvoiceItemType.USAGE, new BigDecimal("11.80")));
+
+
+            startDate = startDate.plusMonths(1);
+            currentInvoice++;
+        }
     }
 
     @Test(groups = "slow")
