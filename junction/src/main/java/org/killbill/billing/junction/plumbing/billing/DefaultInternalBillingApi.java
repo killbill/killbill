@@ -291,7 +291,7 @@ public class DefaultInternalBillingApi implements BillingInternalApi {
                                                                           if (objectId == null) {
                                                                               return objectType == input.getObjectType();
                                                                           } else {
-                                                                              return objectType == input.getObjectType() && objectId == input.getObjectId();
+                                                                              return objectType == input.getObjectType() && objectId.equals(input.getObjectId());
                                                                           }
 
                                                                       }
