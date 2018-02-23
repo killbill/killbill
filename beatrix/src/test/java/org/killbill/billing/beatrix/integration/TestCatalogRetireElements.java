@@ -1,6 +1,6 @@
 /*
- * Copyright 2014-2016 Groupon, Inc
- * Copyright 2014-2016 The Billing Project, LLC
+ * Copyright 2014-2018 Groupon, Inc
+ * Copyright 2014-2018 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -22,6 +22,7 @@ import java.util.List;
 import org.joda.time.LocalDate;
 import org.killbill.billing.ErrorCode;
 import org.killbill.billing.account.api.Account;
+import org.killbill.billing.api.FlakyRetryAnalyzer;
 import org.killbill.billing.api.TestApiListener.NextEvent;
 import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.catalog.api.PhaseType;
@@ -51,7 +52,8 @@ public class TestCatalogRetireElements extends TestIntegrationBase {
         return super.getConfigSource("/beatrixCatalogRetireElements.properties");
     }
 
-    @Test(groups = "slow")
+    // Flaky, see https://github.com/killbill/killbill/issues/860
+    @Test(groups = "slow", retryAnalyzer = FlakyRetryAnalyzer.class)
     public void testRetirePlan() throws Exception {
         // Catalog v1 starts in 2011-01-01
         // Catalog v2 starts in 2015-12-01
@@ -102,7 +104,8 @@ public class TestCatalogRetireElements extends TestIntegrationBase {
         }
     }
 
-    @Test(groups = "slow")
+    // Flaky, see https://github.com/killbill/killbill/issues/860
+    @Test(groups = "slow", retryAnalyzer = FlakyRetryAnalyzer.class)
     public void testRetirePlanWithUncancel() throws Exception {
         // Catalog v1 starts in 2011-01-01
         // Catalog v2 starts in 2015-12-01
@@ -166,7 +169,8 @@ public class TestCatalogRetireElements extends TestIntegrationBase {
         }
     }
 
-    @Test(groups = "slow")
+    // Flaky, see https://github.com/killbill/killbill/issues/860
+    @Test(groups = "slow", retryAnalyzer = FlakyRetryAnalyzer.class)
     public void testRetirePlanAfterChange() throws Exception {
         // Catalog v1 starts in 2011-01-01
         // Catalog v3 starts in 2016-01-01
