@@ -41,11 +41,9 @@ import org.killbill.billing.catalog.api.CatalogInternalApi;
 import org.killbill.billing.catalog.api.Plan;
 import org.killbill.billing.catalog.api.PlanPhase;
 import org.killbill.billing.catalog.api.PlanPhaseSpecifier;
-import org.killbill.billing.catalog.api.StaticCatalog;
 import org.killbill.billing.entitlement.api.SubscriptionEventType;
 import org.killbill.billing.events.EffectiveSubscriptionInternalEvent;
 import org.killbill.billing.invoice.api.DryRunArguments;
-import org.killbill.billing.invoice.api.InvoiceStatus;
 import org.killbill.billing.junction.BillingEvent;
 import org.killbill.billing.junction.BillingEventSet;
 import org.killbill.billing.junction.BillingInternalApi;
@@ -166,7 +164,7 @@ public class DefaultInternalBillingApi implements BillingInternalApi {
             final List<SubscriptionBase> subscriptions;
             // In dryRun mode, optimization is intentionally left as is, since is not a common path.
             if (dryRunArgumentsForBundle == null || dryRunArgumentsForBundle.getAction() == null) {
-                subscriptions = subscriptionsForAccount.get(bundle.getId());
+                subscriptions = getSubscriptionsForAccountByBundleId(subscriptionsForAccount,bundle.getId());
             } else {
                 subscriptions = subscriptionApi.getSubscriptionsForBundle(bundle.getId(), dryRunArgumentsForBundle, context);
             }
@@ -179,7 +177,7 @@ public class DefaultInternalBillingApi implements BillingInternalApi {
                     result.getSubscriptionIdsWithAutoInvoiceOff().add(subscription.getId());
                 }
             } else { // billing is not off
-                final SubscriptionBase baseSubscription = !subscriptions.isEmpty() ? subscriptions.get(0) : null;
+                final SubscriptionBase baseSubscription = subscriptions != null && !subscriptions.isEmpty() ? subscriptions.get(0) : null;
                 addBillingEventsForSubscription(account, subscriptions, baseSubscription, dryRunMode, context, result, skipSubscriptionsSet, catalog);
             }
         }
@@ -296,6 +294,10 @@ public class DefaultInternalBillingApi implements BillingInternalApi {
 
                                                                       }
                                                                   }));
+    }
+
+    private List<SubscriptionBase> getSubscriptionsForAccountByBundleId(final Map<UUID, List<SubscriptionBase>> subscriptionsForAccount, final UUID bundleId) {
+        return subscriptionsForAccount.containsKey(bundleId) ? subscriptionsForAccount.get(bundleId) : ImmutableList.<SubscriptionBase>of();
     }
 
 }
