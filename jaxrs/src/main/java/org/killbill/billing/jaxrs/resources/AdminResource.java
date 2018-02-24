@@ -428,7 +428,7 @@ public class AdminResource extends JaxRsResourceBase {
     @POST
     @Path("/" + HEALTHCHECK)
     @Produces(APPLICATION_JSON)
-    @ApiOperation(value = "Put the host back into of rotation")
+    @ApiOperation(value = "Put the host back into rotation")
     @ApiResponses(value = {})
     public Response putInRotation(@javax.ws.rs.core.Context final HttpServletRequest request) {
         killbillHealthcheck.putInRotation();
