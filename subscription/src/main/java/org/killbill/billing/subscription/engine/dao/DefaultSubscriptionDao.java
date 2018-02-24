@@ -295,7 +295,8 @@ public class DefaultSubscriptionDao extends EntityDaoBase<SubscriptionBundleMode
 
             @Override
             public SubscriptionBaseBundle inTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory) throws Exception {
-                final List<SubscriptionBundleModelDao> existingBundles = entitySqlDaoWrapperFactory.become(BundleSqlDao.class).getBundlesForLikeKey(bundle.getExternalKey(), context);
+                final List<SubscriptionBundleModelDao> existingBundles = bundle.getExternalKey() == null ? ImmutableList.<SubscriptionBundleModelDao>of()
+                                                                                                         : entitySqlDaoWrapperFactory.become(BundleSqlDao.class).getBundlesForLikeKey(bundle.getExternalKey(), context);
 
                 final SubscriptionBaseBundle unusedBundle = findExistingUnusedBundleForExternalKeyAndAccount(existingBundles, entitySqlDaoWrapperFactory);
                 if (unusedBundle != null) {

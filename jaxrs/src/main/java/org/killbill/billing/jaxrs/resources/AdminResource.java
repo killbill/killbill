@@ -1,6 +1,6 @@
 /*
- * Copyright 2014-2017 Groupon, Inc
- * Copyright 2014-2017 The Billing Project, LLC
+ * Copyright 2014-2018 Groupon, Inc
+ * Copyright 2014-2018 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -17,6 +17,7 @@
 
 package org.killbill.billing.jaxrs.resources;
 
+import java.io.Closeable;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.URI;
@@ -300,9 +301,7 @@ public class AdminResource extends JaxRsResourceBase {
                     generator.close();
                 } finally {
                     // In case the client goes away (IOException), make sure to close the underlying DB connection
-                    while (iterator.hasNext()) {
-                        iterator.next();
-                    }
+                    tags.close();
                 }
             }
         };
@@ -429,7 +428,7 @@ public class AdminResource extends JaxRsResourceBase {
     @POST
     @Path("/" + HEALTHCHECK)
     @Produces(APPLICATION_JSON)
-    @ApiOperation(value = "Put the host out of rotation")
+    @ApiOperation(value = "Put the host back into rotation")
     @ApiResponses(value = {})
     public Response putInRotation(@javax.ws.rs.core.Context final HttpServletRequest request) {
         killbillHealthcheck.putInRotation();

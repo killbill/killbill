@@ -32,6 +32,7 @@ import org.skife.config.TimeSpan;
 
 public class MultiTenantInvoiceConfig extends MultiTenantConfigBase implements InvoiceConfig {
 
+
     private final InvoiceConfig staticConfig;
 
     @Inject
@@ -160,6 +161,31 @@ public class MultiTenantInvoiceConfig extends MultiTenantConfigBase implements I
             return Boolean.parseBoolean(result);
         }
         return isInvoicingSystemEnabled();
+    }
+
+    @Override
+    public UsageDetailMode getItemResultBehaviorMode() {
+        final UsageDetailMode mode = staticConfig.getItemResultBehaviorMode();
+        if (mode == UsageDetailMode.AGGREGATE || mode == UsageDetailMode.DETAIL) {
+            return mode;
+        }
+
+        return UsageDetailMode.AGGREGATE;
+    }
+
+    @Override
+    public UsageDetailMode getItemResultBehaviorMode(final InternalTenantContext tenantContext) {
+        final UsageDetailMode mode = staticConfig.getItemResultBehaviorMode();
+        final String result = getStringTenantConfig("getItemResultBehaviorMode", tenantContext);
+        if (result != null){
+            return UsageDetailMode.valueOf(result);
+        }
+
+        if (mode == UsageDetailMode.AGGREGATE || mode == UsageDetailMode.DETAIL) {
+            return mode;
+        }
+
+        return UsageDetailMode.AGGREGATE;
     }
 
     @Override

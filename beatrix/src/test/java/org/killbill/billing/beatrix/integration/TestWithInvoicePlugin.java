@@ -110,7 +110,7 @@ public class TestWithInvoicePlugin extends TestIntegrationBase {
         final DefaultEntitlement bpSubscription = createBaseEntitlementAndCheckForCompletion(account.getId(), "bundleKey", "Pistol", ProductCategory.BASE, BillingPeriod.MONTHLY, NextEvent.CREATE, NextEvent.BLOCK);
         subscriptionChecker.checkSubscriptionCreated(bpSubscription.getId(), internalCallContext);
         // Invoice failed to generate
-        assertEquals(invoiceUserApi.getInvoicesByAccount(account.getId(), false, callContext).size(), 0);
+        assertEquals(invoiceUserApi.getInvoicesByAccount(account.getId(), false, false,  callContext).size(), 0);
 
         // Verify bus event has moved to the retry service (can't easily check the timestamp unfortunately)
         // No future notification at this point (FIXED item, the PHASE event is the trigger for the next one)
@@ -129,7 +129,7 @@ public class TestWithInvoicePlugin extends TestIntegrationBase {
         // No notification in the main queue at this point (the PHASE event is the trigger for the next one)
         checkNotificationsNoRetry(0);
 
-        assertEquals(invoiceUserApi.getInvoicesByAccount(account.getId(), false, callContext).size(), 1);
+        assertEquals(invoiceUserApi.getInvoicesByAccount(account.getId(), false, false,  callContext).size(), 1);
         invoiceChecker.checkInvoice(account.getId(),
                                     1,
                                     callContext,
@@ -141,7 +141,7 @@ public class TestWithInvoicePlugin extends TestIntegrationBase {
         assertListenerStatus();
         checkNotificationsNoRetry(1);
 
-        assertEquals(invoiceUserApi.getInvoicesByAccount(account.getId(), false, callContext).size(), 2);
+        assertEquals(invoiceUserApi.getInvoicesByAccount(account.getId(), false, false,  callContext).size(), 2);
         invoiceChecker.checkInvoice(account.getId(),
                                     2,
                                     callContext,
@@ -155,7 +155,7 @@ public class TestWithInvoicePlugin extends TestIntegrationBase {
         assertListenerStatus();
 
         // Invoice failed to generate
-        assertEquals(invoiceUserApi.getInvoicesByAccount(account.getId(), false, callContext).size(), 2);
+        assertEquals(invoiceUserApi.getInvoicesByAccount(account.getId(), false, false,  callContext).size(), 2);
 
         // Verify notification has moved to the retry service
         checkRetryNotifications("2012-06-01T00:05:00", 1);
@@ -174,7 +174,7 @@ public class TestWithInvoicePlugin extends TestIntegrationBase {
         checkNotificationsNoRetry(1);
 
         // Invoice was generated
-        assertEquals(invoiceUserApi.getInvoicesByAccount(account.getId(), false, callContext).size(), 3);
+        assertEquals(invoiceUserApi.getInvoicesByAccount(account.getId(), false, false,  callContext).size(), 3);
         invoiceChecker.checkInvoice(account.getId(),
                                     3,
                                     callContext,
@@ -188,7 +188,7 @@ public class TestWithInvoicePlugin extends TestIntegrationBase {
         assertListenerStatus();
 
         // Invoice failed to generate
-        assertEquals(invoiceUserApi.getInvoicesByAccount(account.getId(), false, callContext).size(), 3);
+        assertEquals(invoiceUserApi.getInvoicesByAccount(account.getId(), false, false,  callContext).size(), 3);
 
         // Verify notification has moved to the retry service
         checkRetryNotifications("2012-07-01T00:05:00", 1);
@@ -200,7 +200,7 @@ public class TestWithInvoicePlugin extends TestIntegrationBase {
         assertListenerStatus();
         checkNotificationsNoRetry(1);
 
-        assertEquals(invoiceUserApi.getInvoicesByAccount(account.getId(), false, callContext).size(), 4);
+        assertEquals(invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, callContext).size(), 4);
     }
 
     private void checkRetryBusEvents(final int retryNb, final int expectedFutureInvoiceNotifications) throws NoSuchNotificationQueue {

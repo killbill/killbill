@@ -39,6 +39,8 @@ import org.killbill.billing.usage.api.UsageUserApi;
 import org.killbill.billing.util.api.TagUserApi;
 import org.killbill.billing.util.cache.CacheControllerDispatcher;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
+import org.killbill.billing.util.config.definition.InvoiceConfig;
+import org.killbill.billing.util.config.definition.InvoiceConfig.UsageDetailMode;
 import org.killbill.bus.api.PersistentBus;
 import org.killbill.clock.Clock;
 import org.killbill.commons.locker.GlobalLocker;
@@ -66,6 +68,8 @@ public abstract class InvoiceTestSuiteNoDB extends GuicyKillbillTestSuiteNoDB {
     protected InvoicePaymentApi invoicePaymentApi;
     @Inject
     protected InvoiceGenerator generator;
+    @Inject
+    protected InvoiceConfig invoiceConfig;
     @Inject
     protected BillingInternalApi billingApi;
     @Inject
@@ -104,6 +108,7 @@ public abstract class InvoiceTestSuiteNoDB extends GuicyKillbillTestSuiteNoDB {
     protected KillbillConfigSource getConfigSource() {
         return getConfigSource("/resource.properties");
     }
+    protected UsageDetailMode usageDetailMode;
 
     @BeforeClass(groups = "fast")
     protected void beforeClass() throws Exception {

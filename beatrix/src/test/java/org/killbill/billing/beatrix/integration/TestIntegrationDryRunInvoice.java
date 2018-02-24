@@ -92,7 +92,7 @@ public class TestIntegrationDryRunInvoice extends TestIntegrationBase {
         busHandler.pushExpectedEvents(NextEvent.PHASE, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
         clock.addDays(30);
         assertListenerStatus();
-        List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), false, callContext);
+        List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, callContext);
         invoiceChecker.checkInvoice(invoices.get(1).getId(), callContext, expectedInvoices);
         expectedInvoices.clear();
 
@@ -105,7 +105,7 @@ public class TestIntegrationDryRunInvoice extends TestIntegrationBase {
         busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
         clock.addMonths(1);
         assertListenerStatus();
-        invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), false, callContext);
+        invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, callContext);
         invoiceChecker.checkInvoice(invoices.get(2).getId(), callContext, expectedInvoices);
         expectedInvoices.clear();
 
@@ -353,7 +353,7 @@ public class TestIntegrationDryRunInvoice extends TestIntegrationBase {
         clock.addMonths(1);
         assertListenerStatus();
 
-        final List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), false, callContext);
+        final List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, callContext);
         assertEquals(invoices.size(), 2);
 
         expectedInvoices.add(new ExpectedInvoiceItemCheck(new LocalDate(2017, 5, 1), new LocalDate(2017, 6, 1), InvoiceItemType.REPAIR_ADJ, new BigDecimal("-19.95")));

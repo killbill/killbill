@@ -1,6 +1,6 @@
 /*
- * Copyright 2015 Groupon, Inc
- * Copyright 2015 The Billing Project, LLC
+ * Copyright 2015-2018 Groupon, Inc
+ * Copyright 2015-2018 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -18,6 +18,7 @@
 package org.apache.shiro.authc.pam;
 
 import java.util.Collection;
+import java.util.LinkedList;
 
 import org.apache.shiro.authc.AuthenticationInfo;
 import org.apache.shiro.authc.AuthenticationToken;
@@ -26,13 +27,19 @@ import org.killbill.billing.server.security.FirstSuccessfulStrategyWith540;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-// See https://issues.apache.org/jira/browse/SHIRO-540
+/**
+ * Fix for https://issues.apache.org/jira/browse/SHIRO-540
+ * Support for additional realms non injected
+ */
 public class ModularRealmAuthenticatorWith540 extends ModularRealmAuthenticator {
 
     private static final Logger log = LoggerFactory.getLogger(ModularRealmAuthenticator.class);
 
-    public ModularRealmAuthenticatorWith540(final ModularRealmAuthenticator delegate) {
-        setRealms(delegate.getRealms());
+    public ModularRealmAuthenticatorWith540(final Collection<Realm> realmsFromShiroIni, final ModularRealmAuthenticator delegate) {
+        // Note: order matters (the first successful match will win)
+        final Collection<Realm> realms = new LinkedList<Realm>(realmsFromShiroIni);
+        realms.addAll(delegate.getRealms());
+        setRealms(realms);
         setAuthenticationStrategy(delegate.getAuthenticationStrategy());
     }
 

@@ -156,7 +156,7 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
     }
 
     @Override
-    public List<InvoiceModelDao> getInvoicesByAccount(final InternalTenantContext context) {
+    public List<InvoiceModelDao> getInvoicesByAccount(final Boolean includeVoidedInvoices, final InternalTenantContext context) {
         final List<Tag> invoicesTags = getInvoicesTags(context);
 
         return transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<List<InvoiceModelDao>>() {
@@ -168,7 +168,8 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
                                                                                                                                                                      new Predicate<InvoiceModelDao>() {
                                                                                                                                                                          @Override
                                                                                                                                                                          public boolean apply(final InvoiceModelDao invoice) {
-                                                                                                                                                                             return !invoice.isMigrated();
+                                                                                                                                                                             return !invoice.isMigrated() &&
+                                                                                                                                                                                    (includeVoidedInvoices ? true : !InvoiceStatus.VOID.equals(invoice.getStatus()));
                                                                                                                                                                          }
                                                                                                                                                                      })));
                 invoiceDaoHelper.populateChildren(invoices, invoicesTags, entitySqlDaoWrapperFactory, context);
@@ -179,26 +180,26 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
     }
 
     @Override
-    public List<InvoiceModelDao> getAllInvoicesByAccount(final InternalTenantContext context) {
+    public List<InvoiceModelDao> getAllInvoicesByAccount(final Boolean includeVoidedInvoices, final InternalTenantContext context) {
         final List<Tag> invoicesTags = getInvoicesTags(context);
 
         return transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<List<InvoiceModelDao>>() {
             @Override
             public List<InvoiceModelDao> inTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory) throws Exception {
-                return invoiceDaoHelper.getAllInvoicesByAccountFromTransaction(invoicesTags, entitySqlDaoWrapperFactory, context);
+                return invoiceDaoHelper.getAllInvoicesByAccountFromTransaction(includeVoidedInvoices, invoicesTags, entitySqlDaoWrapperFactory, context);
             }
         });
     }
 
     @Override
-    public List<InvoiceModelDao> getInvoicesByAccount(final LocalDate fromDate, final InternalTenantContext context) {
+    public List<InvoiceModelDao> getInvoicesByAccount(final Boolean includeVoidedInvoices, final LocalDate fromDate, final InternalTenantContext context) {
         final List<Tag> invoicesTags = getInvoicesTags(context);
 
         return transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<List<InvoiceModelDao>>() {
             @Override
             public List<InvoiceModelDao> inTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory) throws Exception {
                 final InvoiceSqlDao invoiceDao = entitySqlDaoWrapperFactory.become(InvoiceSqlDao.class);
-                final List<InvoiceModelDao> invoices = getAllNonMigratedInvoicesByAccountAfterDate(invoiceDao, fromDate, context);
+                final List<InvoiceModelDao> invoices = getAllNonMigratedInvoicesByAccountAfterDate(includeVoidedInvoices, invoiceDao, fromDate, context);
                 invoiceDaoHelper.populateChildren(invoices, invoicesTags, entitySqlDaoWrapperFactory, context);
 
                 return invoices;
@@ -206,12 +207,13 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
         });
     }
 
-    private List<InvoiceModelDao> getAllNonMigratedInvoicesByAccountAfterDate(final InvoiceSqlDao invoiceSqlDao, final LocalDate fromDate, final InternalTenantContext context) {
+    private List<InvoiceModelDao> getAllNonMigratedInvoicesByAccountAfterDate(final Boolean includeVoidedInvoices, final InvoiceSqlDao invoiceSqlDao, final LocalDate fromDate, final InternalTenantContext context) {
         return ImmutableList.<InvoiceModelDao>copyOf(INVOICE_MODEL_DAO_ORDERING.sortedCopy(Iterables.<InvoiceModelDao>filter(invoiceSqlDao.getByAccountRecordId(context),
                                                                                                                              new Predicate<InvoiceModelDao>() {
                                                                                                                                  @Override
                                                                                                                                  public boolean apply(final InvoiceModelDao invoice) {
-                                                                                                                                     return !invoice.isMigrated() && invoice.getTargetDate().compareTo(fromDate) >= 0;
+                                                                                                                                     return !invoice.isMigrated() && invoice.getTargetDate().compareTo(fromDate) >= 0 &&
+                                                                                                                                            (includeVoidedInvoices ? true : !InvoiceStatus.VOID.equals(invoice.getStatus()));
                                                                                                                                  }
                                                                                                                              })));
     }
@@ -455,11 +457,11 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
                 BigDecimal cba = BigDecimal.ZERO;
 
                 BigDecimal accountBalance = BigDecimal.ZERO;
-                final List<InvoiceModelDao> invoices = invoiceDaoHelper.getAllInvoicesByAccountFromTransaction(invoicesTags, entitySqlDaoWrapperFactory, context);
+                final List<InvoiceModelDao> invoices = invoiceDaoHelper.getAllInvoicesByAccountFromTransaction(false, invoicesTags, entitySqlDaoWrapperFactory, context);
                 for (final InvoiceModelDao cur : invoices) {
 
-                    // Skip DRAFT invoices
-                    if (cur.getStatus().equals(InvoiceStatus.DRAFT)) {
+                    // Skip DRAFT OR VOID invoices
+                    if (cur.getStatus().equals(InvoiceStatus.DRAFT) || cur.getStatus().equals(InvoiceStatus.VOID)) {
                         continue;
                     }
 
@@ -467,6 +469,7 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
                             cur.getParentInvoice() != null &&
                             (cur.getParentInvoice().isWrittenOff() ||
                              cur.getParentInvoice().getStatus() == InvoiceStatus.DRAFT ||
+                             cur.getParentInvoice().getStatus() == InvoiceStatus.VOID ||
                              InvoiceModelDaoHelper.getRawBalanceForRegularInvoice(cur.getParentInvoice()).compareTo(BigDecimal.ZERO) == 0);
 
 
@@ -930,7 +933,7 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
                     if (accountCBA.compareTo(cbaItem.getAmount().negate()) < 0) {
                         throw new IllegalStateException("The account balance can't be lower than the amount adjusted");
                     }
-                    final List<InvoiceModelDao> invoicesFollowing = getAllNonMigratedInvoicesByAccountAfterDate(transactional, invoice.getInvoiceDate(), context);
+                    final List<InvoiceModelDao> invoicesFollowing = getAllNonMigratedInvoicesByAccountAfterDate(false, transactional, invoice.getInvoiceDate(), context);
                     invoiceDaoHelper.populateChildren(invoicesFollowing, invoicesTags, entitySqlDaoWrapperFactory, context);
 
                     // The remaining amount to adjust (i.e. the amount of credits used on following invoices)
@@ -1103,9 +1106,10 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
                     throw new InvoiceApiException(ErrorCode.INVOICE_NOT_FOUND, invoiceId);
                 }
 
-                if (invoice.getStatus().equals(newStatus)) {
+                if (invoice.getStatus().equals(newStatus) || invoice.getStatus().equals(InvoiceStatus.VOID)) {
                     throw new InvoiceApiException(ErrorCode.INVOICE_INVALID_STATUS, newStatus, invoiceId, invoice.getStatus());
                 }
+
 
                 transactional.updateStatus(invoiceId.toString(), newStatus.toString(), context);
 
@@ -1247,7 +1251,8 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
                                                                                  childCreatedDate.toLocalDate(),
                                                                                  childCreatedDate.toLocalDate(),
                                                                                  accountCBA,
-                                                                                 childAccount.getCurrency());
+                                                                                 childAccount.getCurrency(),
+                                                                                 null);
                 invoiceForExternalCharge.addInvoiceItem(externalChargeItem);
 
                 // create credit to parent account

@@ -697,7 +697,7 @@ public class TestOverdueIntegration extends TestOverdueBase {
 
         // 2012-05-06 => Create an external charge on a new invoice
         addDaysAndCheckForCompletion(5);
-        final InvoiceItem externalCharge = new ExternalChargeInvoiceItem(null, account.getId(), bundle.getId(), "For overdue", new LocalDate(2012, 5, 6), new LocalDate(2012, 6, 6), BigDecimal.TEN, Currency.USD);
+        final InvoiceItem externalCharge = new ExternalChargeInvoiceItem(null, account.getId(), bundle.getId(), "For overdue", new LocalDate(2012, 5, 6), new LocalDate(2012, 6, 6), BigDecimal.TEN, Currency.USD, null);
         invoiceUserApi.insertExternalCharges(account.getId(), clock.getUTCToday(), ImmutableList.<InvoiceItem>of(externalCharge), false, callContext).get(0);
         assertListenerStatus();
         invoiceChecker.checkInvoice(account.getId(), 2, callContext, new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 6), new LocalDate(2012, 6, 6), InvoiceItemType.EXTERNAL_CHARGE, BigDecimal.TEN));
@@ -759,7 +759,7 @@ public class TestOverdueIntegration extends TestOverdueBase {
         checkODState(OverdueWrapper.CLEAR_STATE_NAME);
 
         // Now, refund the second (first non-zero dollar) invoice
-        final Payment payment = paymentApi.getPayment(invoiceUserApi.getInvoicesByAccount(account.getId(), false, callContext).get(1).getPayments().get(0).getPaymentId(), false, false, PLUGIN_PROPERTIES, callContext);
+        final Payment payment = paymentApi.getPayment(invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, callContext).get(1).getPayments().get(0).getPaymentId(), false, false, PLUGIN_PROPERTIES, callContext);
         refundPaymentAndCheckForCompletion(account, payment, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT, NextEvent.BLOCK);
         // We should now be in OD1
         checkODState("OD1");
@@ -805,7 +805,7 @@ public class TestOverdueIntegration extends TestOverdueBase {
         checkODState(OverdueWrapper.CLEAR_STATE_NAME);
 
         // Now, create a chargeback for the second (first non-zero dollar) invoice
-        final InvoicePayment invoicePayment = invoicePaymentApi.getInvoicePayments(invoiceUserApi.getInvoicesByAccount(account.getId(), false, callContext).get(1).getPayments().get(0).getPaymentId(), callContext).get(0);
+        final InvoicePayment invoicePayment = invoicePaymentApi.getInvoicePayments(invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, callContext).get(1).getPayments().get(0).getPaymentId(), callContext).get(0);
         Payment payment = paymentApi.getPayment(invoicePayment.getPaymentId(), false, false, ImmutableList.<PluginProperty>of(), callContext);
         payment = createChargeBackAndCheckForCompletion(account, payment, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT, NextEvent.BLOCK);
         // We should now be in OD1

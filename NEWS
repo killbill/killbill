@@ -1,3 +1,34 @@
+0.19.3
+    Fix issue with tag idempotency. Fixes #857
+    Fix JDBC connection leak in pagination API. Fixes #853
+    Fix limitation where catalog plan name cannot end with an number. Fixes #842
+    Reduce log level of InvoiceItemGeneratorLogger. Fixes #851
+    Usage detail/aggregate mode. Fixes #839 
+    Add metadata detail field to external charges. Fixes #843
+    Add ability to void invoices. Fixes #833
+
+0.19.2
+    Fix issue with STANDALONE plans (#840)
+    Fix connection leak (#558)
+    Fix limitation where catalog plan name cannot end with an number (#842)
+    Fix missing Invoice Notification when we have future billing events (#846)
+    Reduce log level of InvoiceItemGeneratorLogger (#851)
+
+0.18.18
+    See https://github.com/killbill/killbill/releases/tag/killbill-0.18.18
+
+0.18.17
+    Relax sanity checks for STANDALONE subscriptions #840
+    Fix JDBC connection leak in pagination API #853
+    Fix limitation where catalog plan name cannot end with an number #842
+    Reduce log level of InvoiceItemGeneratorLogger #851
+
+0.18.16
+    See https://github.com/killbill/killbill/releases/tag/killbill-0.18.16
+
+0.18.15
+    See https://github.com/killbill/killbill/releases/tag/killbill-0.18.15
+
 0.18.14
     See https://github.com/killbill/killbill/releases/tag/killbill-0.18.14
 

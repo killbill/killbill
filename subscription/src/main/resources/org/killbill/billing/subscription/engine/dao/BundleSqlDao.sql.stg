@@ -49,15 +49,10 @@ where id = :id
 
 
 renameBundleExternalKey(prefix)  ::= <<
-update bundles b
-join (select
-     record_id
-     , external_key
-     from
-     bundles
-     where external_key = :externalKey <AND_CHECK_TENANT("")>) t
-on b.record_id = t.record_id
-set b.external_key = concat('kb', '<prefix>', '-', t.record_id, ':', t.external_key)
+update bundles
+set external_key = concat('kb', '<prefix>', '-', record_id, ':', external_key)
+where external_key = :externalKey
+<AND_CHECK_TENANT("")>
 ;
 >>
 

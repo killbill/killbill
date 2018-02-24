@@ -151,7 +151,7 @@ public abstract class KillbillClient extends GuicyKillbillTestSuiteWithEmbeddedD
         input.setBillingPeriod(billingPeriod);
         input.setPriceList(PriceListSet.DEFAULT_PRICELIST_NAME);
 
-        return killBillClient.createSubscription(input, null, waitCompletion ? DEFAULT_WAIT_COMPLETION_TIMEOUT_SEC : -1, requestOptions);
+        return killBillClient.createSubscription(input, null, null,  waitCompletion ? DEFAULT_WAIT_COMPLETION_TIMEOUT_SEC : -1, false, requestOptions);
     }
 
     protected Account createAccountWithPMBundleAndSubscriptionAndWaitForFirstInvoice() throws Exception {

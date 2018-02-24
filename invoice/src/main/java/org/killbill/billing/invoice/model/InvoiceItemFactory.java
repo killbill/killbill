@@ -69,6 +69,8 @@ public class InvoiceItemFactory {
         final BigDecimal rate = invoiceItemModelDao.getRate();
         final Currency currency = invoiceItemModelDao.getCurrency();
         final UUID linkedItemId = invoiceItemModelDao.getLinkedItemId();
+        final Integer quantity = invoiceItemModelDao.getQuantity();
+        final String itemDetails = invoiceItemModelDao.getItemDetails();
 
         final InvoiceItemType type = invoiceItemModelDao.getType();
 
@@ -80,7 +82,7 @@ public class InvoiceItemFactory {
         final InvoiceItem item;
         switch (type) {
             case EXTERNAL_CHARGE:
-                item = new ExternalChargeInvoiceItem(id, createdDate, invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, prettyPlanName, prettyPlanPhaseName, description, startDate, endDate, amount, rate, currency, linkedItemId);
+                item = new ExternalChargeInvoiceItem(id, createdDate, invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, prettyPlanName, prettyPlanPhaseName, description, startDate, endDate, amount, rate, currency, linkedItemId, itemDetails);
                 break;
             case FIXED:
                 item = new FixedPriceInvoiceItem(id, createdDate, invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, prettyPlanName, prettyPlanPhaseName, description, startDate, amount, currency);
@@ -101,7 +103,7 @@ public class InvoiceItemFactory {
                 item = new ItemAdjInvoiceItem(id, createdDate, invoiceId, accountId, startDate, description, amount, currency, linkedItemId);
                 break;
             case USAGE:
-                item = new UsageInvoiceItem(id, createdDate, invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, usageName, prettyPlanName, prettyPlanPhaseName, prettyUsageName, startDate, endDate, description, amount, currency);
+                item = new UsageInvoiceItem(id, createdDate, invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, usageName, prettyPlanName, prettyPlanPhaseName, prettyUsageName, startDate, endDate, description, amount, rate, currency, quantity, itemDetails);
                 break;
             case TAX:
                 item = new TaxInvoiceItem(id, createdDate, invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, usageName, prettyPlanName, prettyPlanPhaseName, prettyUsageName, startDate, description, amount, currency, linkedItemId);

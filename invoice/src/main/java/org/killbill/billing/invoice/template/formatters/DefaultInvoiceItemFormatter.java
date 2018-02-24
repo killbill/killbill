@@ -193,6 +193,12 @@ public class DefaultInvoiceItemFormatter implements InvoiceItemFormatter {
     }
 
     @Override
+    public Integer getQuantity() { return item.getQuantity(); }
+
+    @Override
+    public String getItemDetails() { return item.getItemDetails(); }
+
+    @Override
     public boolean matches(final Object other) {
         throw new UnsupportedOperationException();
     }

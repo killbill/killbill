@@ -29,6 +29,7 @@ import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.events.BlockingTransitionInternalEvent;
 import org.killbill.billing.events.EffectiveSubscriptionInternalEvent;
 import org.killbill.billing.events.InvoiceCreationInternalEvent;
+import org.killbill.billing.events.RequestedSubscriptionInternalEvent;
 import org.killbill.billing.invoice.api.InvoiceApiException;
 import org.killbill.billing.invoice.api.InvoiceInternalApi;
 import org.killbill.billing.invoice.api.InvoiceListenerService;
@@ -155,6 +156,15 @@ public class InvoiceListener extends RetryableService implements InvoiceListener
                                                  }
                                              }
                                          });
+        subscriberQueueHandler.subscribe(RequestedSubscriptionInternalEvent.class,
+                                         new SubscriberAction<RequestedSubscriptionInternalEvent>() {
+                                             @Override
+                                             public void run(final RequestedSubscriptionInternalEvent event) {
+                                                 final InternalCallContext context = internalCallContextFactory.createInternalCallContext(event.getSearchKey2(), event.getSearchKey1(), "SubscriptionBaseTransition", CallOrigin.INTERNAL, UserType.SYSTEM, event.getUserToken());
+                                                 dispatcher.processSubscriptionStartRequestedDate(event, context);
+                                             }
+                                         });
+
         this.retryableSubscriber = new RetryableSubscriber(clock, this, subscriberQueueHandler);
     }
 
@@ -189,6 +199,14 @@ public class InvoiceListener extends RetryableService implements InvoiceListener
     public void handleBlockingStateTransition(final BlockingTransitionInternalEvent event) {
         retryableSubscriber.handleEvent(event);
     }
+
+    @AllowConcurrentEvents
+    @Subscribe
+    public void handleSubscriptionTransition(final RequestedSubscriptionInternalEvent event) {
+        retryableSubscriber.handleEvent(event);
+    }
+
+
 
     public void handleNextBillingDateEvent(final UUID subscriptionId, final DateTime eventDateTime, final UUID userToken, final Long accountRecordId, final Long tenantRecordId) {
         final InternalCallContext context = internalCallContextFactory.createInternalCallContext(tenantRecordId, accountRecordId, "Next Billing Date", CallOrigin.INTERNAL, UserType.SYSTEM, userToken);

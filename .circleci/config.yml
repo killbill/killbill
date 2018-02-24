@@ -174,46 +174,18 @@ workflows:
   version: 2
   build-and-test:
     jobs:
-      - build:
-          filters:
-            branches:
-              only:
-                - master
-                - work-for-release-0.19.x
-                - circle-ci-experiment
+      - build
       - test-h2:
           requires:
             - build
-          filters:
-            branches:
-              only:
-                - master
-                - circle-ci-experiment
       - test-mysql:
           requires:
             - build
-          filters:
-            branches:
-              only:
-                - master
-                - work-for-release-0.19.x
-                - circle-ci-experiment
       - test-postgresql:
           requires:
             - build
-          filters:
-            branches:
-              only:
-                - master
-                - circle-ci-experiment
       - integration-tests:
           requires:
             - test-h2
             - test-mysql
             - test-postgresql
-          filters:
-            branches:
-              only:
-                - master
-                - work-for-release-0.19.x
-                - circle-ci-experiment

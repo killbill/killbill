@@ -156,7 +156,11 @@ public class DefaultTagDefinition extends EntityBase implements TagDefinition {
         throw new IllegalStateException(String.format("ControlTag id %s does not seem to exist", id));
     }
 
-    private static List<ObjectType> toObjectTypes(final String input) {
+    private static List<ObjectType> toObjectTypes(@Nullable final String input) {
+        if (input == null) {
+            return ImmutableList.copyOf(ObjectType.values());
+        }
+
         return ImmutableList.copyOf(Iterables.transform(SPLITTER.splitToList(input), new Function<String, ObjectType>() {
             @Override
             public ObjectType apply(final String input) {

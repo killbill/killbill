@@ -134,7 +134,7 @@ public class RawUsageOptimizer {
             }
         }
 
-        final LocalDate result = targetStartDate.compareTo(firstEventStartDate) > 0 ? targetStartDate : firstEventStartDate;
+        final LocalDate result = targetStartDate != null && targetStartDate.compareTo(firstEventStartDate) > 0 ? targetStartDate : firstEventStartDate;
         return result;
     }
 

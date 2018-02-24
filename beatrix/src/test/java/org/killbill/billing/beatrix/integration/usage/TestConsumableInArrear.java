@@ -120,6 +120,26 @@ public class TestConsumableInArrear extends TestIntegrationBase {
         invoiceChecker.checkInvoice(account.getId(), 4, callContext,
                                     new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 1), new LocalDate(2012, 6, 1), InvoiceItemType.USAGE, new BigDecimal("5.90")),
                                     new ExpectedInvoiceItemCheck(new LocalDate(2012, 7, 1), new LocalDate(2012, 8, 1), InvoiceItemType.USAGE, new BigDecimal("11.80")));
+
+
+        // Add a few more month of usage data and check correctness of invoice: iterate 8 times until 2013-4-1 (prior ANNUAL renewal)
+        LocalDate startDate = new LocalDate(2012, 8, 1);
+        int currentInvoice = 5;
+        for (int i = 0; i < 8; i++) {
+
+            setUsage(aoSubscription.getId(), "bullets", startDate.plusDays(15), 350L, callContext);
+
+            busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
+            clock.addMonths(1);
+            assertListenerStatus();
+
+            invoiceChecker.checkInvoice(account.getId(), currentInvoice, callContext,
+                                        new ExpectedInvoiceItemCheck(startDate, startDate.plusMonths(1), InvoiceItemType.USAGE, new BigDecimal("11.80")));
+
+
+            startDate = startDate.plusMonths(1);
+            currentInvoice++;
+        }
     }
 
     @Test(groups = "slow")
@@ -172,74 +192,6 @@ public class TestConsumableInArrear extends TestIntegrationBase {
         busHandler.pushExpectedEvent(NextEvent.NULL_INVOICE);
         clock.addDays(4);
         assertListenerStatus();
-    }
-
-    @Test(groups = "slow")
-    public void testWithDayLightSaving() throws Exception {
-        clock.setTime(new DateTime("2015-09-01T08:01:01.000Z"));
-
-        final DateTimeZone tz = DateTimeZone.forID("America/Juneau");
-        final AccountData accountData = new MockAccountBuilder().name(UUID.randomUUID().toString().substring(1, 8))
-                                                                .firstNameLength(6)
-                                                                .email(UUID.randomUUID().toString().substring(1, 8))
-                                                                .phone(UUID.randomUUID().toString().substring(1, 8))
-                                                                .migrated(false)
-                                                                .isNotifiedForInvoices(false)
-                                                                .externalKey(UUID.randomUUID().toString().substring(1, 8))
-                                                                .billingCycleDayLocal(1)
-                                                                .currency(Currency.USD)
-                                                                .paymentMethodId(UUID.randomUUID())
-                                                                .referenceTime(clock.getUTCNow())
-                                                                .timeZone(tz)
-                                                                .build();
-        final Account account = createAccountWithNonOsgiPaymentMethod(accountData);
-        accountChecker.checkAccount(account.getId(), accountData, callContext);
-
-        //
-        // CREATE SUBSCRIPTION AND EXPECT BOTH EVENTS: NextEvent.CREATE, NextEvent.BLOCK NextEvent.INVOICE
-        //
-        final DefaultEntitlement bpSubscription = createBaseEntitlementAndCheckForCompletion(account.getId(), "bundleKey", "Shotgun", ProductCategory.BASE, BillingPeriod.ANNUAL, NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE);
-        // Check bundle after BP got created otherwise we get an error from auditApi.
-        subscriptionChecker.checkSubscriptionCreated(bpSubscription.getId(), internalCallContext);
-        invoiceChecker.checkInvoice(account.getId(), 1, callContext, new ExpectedInvoiceItemCheck(new LocalDate(2015, 9, 1), null, InvoiceItemType.FIXED, new BigDecimal("0")));
-        assertListenerStatus();
-
-        //
-        // ADD ADD_ON ON THE SAME DAY
-        //
-        final DefaultEntitlement aoSubscription = addAOEntitlementAndCheckForCompletion(bpSubscription.getBundleId(), "Bullets", ProductCategory.ADD_ON, BillingPeriod.NO_BILLING_PERIOD, NextEvent.CREATE, NextEvent.BLOCK, NextEvent.NULL_INVOICE);
-        assertListenerStatus();
-
-        busHandler.pushExpectedEvents(NextEvent.PHASE, NextEvent.NULL_INVOICE, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
-        clock.addDays(30);
-        assertListenerStatus();
-        invoiceChecker.checkInvoice(account.getId(), 2, callContext,
-                                    new ExpectedInvoiceItemCheck(new LocalDate(2015, 10, 1), new LocalDate(2016, 10, 1), InvoiceItemType.RECURRING, new BigDecimal("2399.95")));
-
-        // 2015-11-1
-        busHandler.pushExpectedEvent(NextEvent.NULL_INVOICE);
-        clock.addMonths(1);
-        assertListenerStatus();
-
-        // 2015-12-1
-        busHandler.pushExpectedEvent(NextEvent.NULL_INVOICE);
-        clock.addMonths(1);
-        assertListenerStatus();
-
-        // We sleep to let system creates lots of notification if an infinite loop was indeed happening
-        Thread.sleep(3000);
-        // And then we check that we only have the expected number of notifications in the history table.
-        final Integer countNotifications = dbi.withHandle(new HandleCallback<Integer>() {
-                                                              @Override
-                                                              public Integer withHandle(final Handle handle) throws Exception {
-
-                                                                  List<Map<String, Object>> res = handle.select("select count(*) as count from notifications_history;");
-                                                                  final Integer count = Integer.valueOf(res.get(0).get("count").toString());
-                                                                  return count;
-                                                              }
-                                                          }
-                                                         );
-        Assert.assertEquals(countNotifications.intValue(), 4);
     }
 
     private void setUsage(final UUID subscriptionId, final String unitType, final LocalDate startDate, final Long amount, final CallContext context) throws UsageApiException {

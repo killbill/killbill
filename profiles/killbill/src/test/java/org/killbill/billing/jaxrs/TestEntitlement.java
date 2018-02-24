@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014-2017 Groupon, Inc
- * Copyright 2014-2017 The Billing Project, LLC
+ * Copyright 2014-2018 Groupon, Inc
+ * Copyright 2014-2018 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -27,6 +27,7 @@ import java.util.regex.Pattern;
 import org.joda.time.DateTime;
 import org.joda.time.Interval;
 import org.joda.time.LocalDate;
+import org.killbill.billing.api.FlakyRetryAnalyzer;
 import org.killbill.billing.catalog.DefaultPriceListSet;
 import org.killbill.billing.catalog.api.BillingActionPolicy;
 import org.killbill.billing.catalog.api.BillingPeriod;
@@ -277,7 +278,7 @@ public class TestEntitlement extends TestJaxrsBase {
         Assert.assertEquals(subscription.getEvents().get(2).getProduct(), "Shotgun");
 
 
-        final List<Invoice> invoices = killBillClient.getInvoicesForAccount(accountJson.getAccountId(), true, false, false, AuditLevel.FULL, requestOptions);
+        final List<Invoice> invoices = killBillClient.getInvoicesForAccount(accountJson.getAccountId(), true, false, false, false, AuditLevel.FULL, requestOptions);
         assertEquals(invoices.size(), 1);
         assertEquals(invoices.get(0).getAmount().compareTo(BigDecimal.TEN), 0);
 
@@ -392,7 +393,8 @@ public class TestEntitlement extends TestJaxrsBase {
         assertEquals(killBillClient.getInvoiceTags(invoicesAfterClose.get(0).getInvoiceId(), requestOptions).size(), 1);
     }
 
-    @Test(groups = "slow", description = "Create a bulk of base entitlement and addOns under the same transaction")
+    // Flaky, see https://github.com/killbill/killbill/issues/860
+    @Test(groups = "slow", description = "Create a bulk of base entitlement and addOns under the same transaction", retryAnalyzer = FlakyRetryAnalyzer.class)
     public void testCreateEntitlementsWithAddOnsThenCloseAccountWithItemAdjustment() throws Exception {
         final DateTime initialDate = new DateTime(2012, 4, 25, 0, 3, 42, 0);
         clock.setDeltaFromReality(initialDate.getMillis() - clock.getUTCNow().getMillis());
@@ -541,7 +543,7 @@ public class TestEntitlement extends TestJaxrsBase {
         assertEquals(bundles.size(), 1);
         assertEquals(bundles.get(0).getSubscriptions().size(), 3);
 
-        final List<Invoice> invoices = killBillClient.getInvoicesForAccount(accountJson.getAccountId(), true, false, false, AuditLevel.FULL, requestOptions);
+        final List<Invoice> invoices = killBillClient.getInvoicesForAccount(accountJson.getAccountId(), true, false, false, false, AuditLevel.FULL, requestOptions);
         assertEquals(invoices.size(), 2);
     }
 

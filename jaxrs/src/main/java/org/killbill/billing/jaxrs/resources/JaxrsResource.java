@@ -107,6 +107,7 @@ public interface JaxrsResource {
     public static final String QUERY_INVOICE_WITH_ITEMS = "withItems";
     public static final String QUERY_WITH_MIGRATION_INVOICES = "withMigrationInvoices";
     public static final String QUERY_UNPAID_INVOICES_ONLY = "unpaidInvoicesOnly";
+    public static final String QUERY_INCLUDE_VOIDED_INVOICES = "includeVoidedInvoices";
     public static final String QUERY_INVOICE_WITH_CHILDREN_ITEMS = "withChildrenItems";
 
     public static final String QUERY_PAYMENT_EXTERNAL = "externalPayment";
@@ -187,6 +188,9 @@ public interface JaxrsResource {
 
     public static final String INVOICES = "invoices";
     public static final String INVOICES_PATH = PREFIX + "/" + INVOICES;
+
+    public static final String INVOICE_ITEMS = "invoiceItems";
+    public static final String INVOICES_ITEMS_PATH = PREFIX + "/" + INVOICE_ITEMS;
 
     public static final String CHARGES = "charges";
     public static final String CHARGES_PATH = PREFIX + "/" + INVOICES + "/" + CHARGES;
@@ -284,6 +288,7 @@ public interface JaxrsResource {
     public static final String INVOICE_TRANSLATION = "translation";
     public static final String INVOICE_CATALOG_TRANSLATION = "catalogTranslation";
     public static final String COMMIT_INVOICE = "commitInvoice";
+    public static final String VOID_INVOICE = "voidInvoice";
 
     public static final String COMBO = "combo";
     public static final String MIGRATION = "migration";

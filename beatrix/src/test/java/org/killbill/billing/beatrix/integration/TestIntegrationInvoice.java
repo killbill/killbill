@@ -133,7 +133,7 @@ public class TestIntegrationInvoice extends TestIntegrationBase {
         clock.addDays(30);
         assertListenerStatus();
 
-        List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), false, callContext);
+        List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, callContext);
         invoiceChecker.checkInvoice(invoices.get(1).getId(), callContext, expectedInvoices);
         expectedInvoices.clear();
 
@@ -143,7 +143,7 @@ public class TestIntegrationInvoice extends TestIntegrationBase {
         // add create external charge
         final LocalDate date = clock.getToday(account.getTimeZone());
         final List<InvoiceItem> invoiceItemList = new ArrayList<InvoiceItem>();
-        ExternalChargeInvoiceItem item = new ExternalChargeInvoiceItem(null, account.getId(), subscription.getBundleId(), "", date, date, BigDecimal.TEN, account.getCurrency());
+        ExternalChargeInvoiceItem item = new ExternalChargeInvoiceItem(null, account.getId(), subscription.getBundleId(), "", date, date, BigDecimal.TEN, account.getCurrency(), null);
         invoiceItemList.add(item);
         final List<InvoiceItem> draftInvoiceItems = invoiceUserApi.insertExternalCharges(account.getId(), date, invoiceItemList, false, callContext);
 
@@ -155,7 +155,7 @@ public class TestIntegrationInvoice extends TestIntegrationBase {
         busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
         clock.addMonths(1);
         assertListenerStatus();
-        invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), false, callContext);
+        invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, callContext);
 
         invoiceChecker.checkInvoice(invoices.get(2).getId(), callContext, expectedDraftInvoices);
         invoiceChecker.checkInvoice(invoices.get(3).getId(), callContext, expectedInvoices);

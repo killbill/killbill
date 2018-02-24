@@ -242,7 +242,7 @@
                     <unit>UNLIMITED</unit>
                 </duration>
                 <usages>
-                    <usage name="consumable-in-arrear-usage1" billingMode="IN_ARREAR" usageType="CONSUMABLE">
+                    <usage name="consumable-in-arrear-usage1" billingMode="IN_ARREAR" usageType="CONSUMABLE" tierBlockPolicy="ALL_TIERS">
                         <billingPeriod>MONTHLY</billingPeriod>
                         <tiers>
                             <tier>

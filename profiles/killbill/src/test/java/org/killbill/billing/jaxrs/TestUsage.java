@@ -125,7 +125,7 @@ public class TestUsage extends TestJaxrsBase {
         crappyWaitForLackOfProperSynchonization();
 
 
-        final Invoices invoices = killBillClient.getInvoicesForAccount(accountJson.getAccountId(), true, false, false, AuditLevel.MINIMAL, requestOptions);
+        final Invoices invoices = killBillClient.getInvoicesForAccount(accountJson.getAccountId(), true, false, false, false, AuditLevel.MINIMAL, requestOptions);
         Assert.assertEquals(invoices.size(), 2);
 
         final InvoiceItem usageItem =  Iterables.tryFind(invoices.get(1).getItems(), new Predicate<InvoiceItem>() {

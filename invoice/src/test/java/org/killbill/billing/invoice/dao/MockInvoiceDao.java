@@ -134,7 +134,7 @@ public class MockInvoiceDao extends MockEntityDaoBase<InvoiceModelDao, Invoice, 
     }
 
     @Override
-    public List<InvoiceModelDao> getInvoicesByAccount(final InternalTenantContext context) {
+    public List<InvoiceModelDao> getInvoicesByAccount(final Boolean includeVoidedInvoices, final InternalTenantContext context) {
         final List<InvoiceModelDao> result = new ArrayList<InvoiceModelDao>();
 
         synchronized (monitor) {
@@ -149,12 +149,13 @@ public class MockInvoiceDao extends MockEntityDaoBase<InvoiceModelDao, Invoice, 
     }
 
     @Override
-    public List<InvoiceModelDao> getInvoicesByAccount(final LocalDate fromDate, final InternalTenantContext context) {
+    public List<InvoiceModelDao> getInvoicesByAccount(final Boolean includeVoidedInvoices, final LocalDate fromDate, final InternalTenantContext context) {
         final List<InvoiceModelDao> invoicesForAccount = new ArrayList<InvoiceModelDao>();
         synchronized (monitor) {
             final UUID accountId = accountRecordIds.inverse().get(context.getAccountRecordId());
             for (final InvoiceModelDao invoice : getAll(context)) {
-                if (accountId.equals(invoice.getAccountId()) && !invoice.getTargetDate().isBefore(fromDate) && !invoice.isMigrated()) {
+                if (accountId.equals(invoice.getAccountId()) && !invoice.getTargetDate().isBefore(fromDate) && !invoice.isMigrated() &&
+                    (includeVoidedInvoices ? true : !InvoiceStatus.VOID.equals(invoice.getStatus()))) {
                     invoicesForAccount.add(invoice);
                 }
             }
@@ -281,13 +282,13 @@ public class MockInvoiceDao extends MockEntityDaoBase<InvoiceModelDao, Invoice, 
     }
 
     @Override
-    public List<InvoiceModelDao> getAllInvoicesByAccount(final InternalTenantContext context) {
+    public List<InvoiceModelDao> getAllInvoicesByAccount(final Boolean includeVoidedInvoices, final InternalTenantContext context) {
         final List<InvoiceModelDao> result = new ArrayList<InvoiceModelDao>();
 
         synchronized (monitor) {
             final UUID accountId = accountRecordIds.inverse().get(context.getAccountRecordId());
             for (final InvoiceModelDao invoice : invoices.values()) {
-                if (accountId.equals(invoice.getAccountId())) {
+                if (accountId.equals(invoice.getAccountId()) && (includeVoidedInvoices ? true : !InvoiceStatus.VOID.equals(invoice.getStatus()))) {
                     result.add(invoice);
                 }
             }

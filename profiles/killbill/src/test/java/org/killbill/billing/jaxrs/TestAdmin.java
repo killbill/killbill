@@ -1,6 +1,6 @@
 /*
- * Copyright 2014-2015 Groupon, Inc
- * Copyright 2014-2015 The Billing Project, LLC
+ * Copyright 2014-2018 Groupon, Inc
+ * Copyright 2014-2018 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -25,6 +25,7 @@ import java.util.Map;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
+import org.killbill.billing.api.FlakyRetryAnalyzer;
 import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.catalog.api.ProductCategory;
 import org.killbill.billing.client.JaxrsResource;
@@ -54,7 +55,8 @@ import static org.testng.Assert.assertNotNull;
 
 public class TestAdmin extends TestJaxrsBase {
 
-    @Test(groups = "slow")
+    // Flaky, see https://github.com/killbill/killbill/issues/860
+    @Test(groups = "slow", retryAnalyzer = FlakyRetryAnalyzer.class)
     public void testAdminPaymentEndpoint() throws Exception {
         final Account account = createAccountWithDefaultPaymentMethod();
 
@@ -117,7 +119,7 @@ public class TestAdmin extends TestJaxrsBase {
             crappyWaitForLackOfProperSynchonization();
 
             Assert.assertEquals(killBillClient.getInvoices(requestOptions).getPaginationMaxNbRecords(), i + 1);
-            final List<Invoice> invoices = killBillClient.getInvoicesForAccount(accountJson.getAccountId(), false, false, false, AuditLevel.NONE, requestOptions);
+            final List<Invoice> invoices = killBillClient.getInvoicesForAccount(accountJson.getAccountId(), false, false, false, false, AuditLevel.NONE, requestOptions);
             assertEquals(invoices.size(), 1);
         }
 
@@ -127,7 +129,7 @@ public class TestAdmin extends TestJaxrsBase {
 
         Assert.assertEquals(killBillClient.getInvoices(requestOptions).getPaginationMaxNbRecords(), 10);
         for (final UUID accountId : accounts) {
-            final List<Invoice> invoices = killBillClient.getInvoicesForAccount(accountId, false, false, false, AuditLevel.NONE, requestOptions);
+            final List<Invoice> invoices = killBillClient.getInvoicesForAccount(accountId, false, false, false, false, AuditLevel.NONE, requestOptions);
             assertEquals(invoices.size(), 2);
         }
 
@@ -145,7 +147,7 @@ public class TestAdmin extends TestJaxrsBase {
 
         Assert.assertEquals(killBillClient.getInvoices(requestOptions).getPaginationMaxNbRecords(), 10);
         for (final UUID accountId : accounts) {
-            final List<Invoice> invoices = killBillClient.getInvoicesForAccount(accountId, false, false, false, AuditLevel.NONE, requestOptions);
+            final List<Invoice> invoices = killBillClient.getInvoicesForAccount(accountId, false, false, false, false, AuditLevel.NONE, requestOptions);
             assertEquals(invoices.size(), 2);
         }
 

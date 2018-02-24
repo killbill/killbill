@@ -107,7 +107,7 @@ public class TestInvoicePayment extends TestIntegrationBase {
         bpEntitlement1.cancelEntitlementWithPolicyOverrideBillingPolicy(EntitlementActionPolicy.IMMEDIATE, BillingActionPolicy.END_OF_TERM, ImmutableList.<PluginProperty>of(), callContext);
         assertListenerStatus();
 
-        List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), false, callContext);
+        List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, callContext);
         final Invoice thirdInvoice = invoices.get(2);
         final InvoiceItem itemForBPEntitlement1 = Iterables.tryFind(thirdInvoice.getInvoiceItems(), new Predicate<InvoiceItem>() {
             @Override
@@ -126,7 +126,7 @@ public class TestInvoicePayment extends TestIntegrationBase {
         clock.addMonths(1);
         assertListenerStatus();
 
-        invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), false, callContext);
+        invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, callContext);
         final Invoice fourthInvoice = invoices.get(3);
 
         Assert.assertEquals(fourthInvoice.getInvoiceItems().size(), 1);
@@ -455,7 +455,7 @@ public class TestInvoicePayment extends TestIntegrationBase {
         busHandler.pushExpectedEvents(NextEvent.INVOICE);
         final LocalDate startDate = clock.getUTCToday();
         final LocalDate endDate = startDate.plusDays(5);
-        final InvoiceItem externalCharge = new ExternalChargeInvoiceItem(null, account.getId(), null, "Initial external charge", startDate, endDate, BigDecimal.TEN, Currency.USD);
+        final InvoiceItem externalCharge = new ExternalChargeInvoiceItem(null, account.getId(), null, "Initial external charge", startDate, endDate, BigDecimal.TEN, Currency.USD, null);
         final InvoiceItem item1 = invoiceUserApi.insertExternalCharges(account.getId(), clock.getUTCToday(), ImmutableList.<InvoiceItem>of(externalCharge), true, callContext).get(0);
         assertListenerStatus();
         // Verify service period for external charge -- seee #151
@@ -553,7 +553,7 @@ public class TestInvoicePayment extends TestIntegrationBase {
         clock.addDays(30);
         assertListenerStatus();
 
-        final List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), false, callContext);
+        final List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, callContext);
         assertEquals(invoices.size(), 2);
 
         final Invoice invoice1 = invoices.get(0).getInvoiceItems().get(0).getInvoiceItemType() == InvoiceItemType.RECURRING ?
@@ -647,7 +647,7 @@ public class TestInvoicePayment extends TestIntegrationBase {
 
         invoiceChecker.checkChargedThroughDate(baseEntitlement.getId(), new LocalDate(2012, 6, 1), callContext);
 
-        final List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), false, callContext);
+        final List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, callContext);
         assertEquals(invoices.size(), 2);
 
         final Invoice invoice1 = invoices.get(0).getInvoiceItems().get(0).getInvoiceItemType() == InvoiceItemType.RECURRING ?
@@ -733,7 +733,7 @@ public class TestInvoicePayment extends TestIntegrationBase {
 
         invoiceChecker.checkChargedThroughDate(baseEntitlement.getId(), new LocalDate(2012, 6, 1), callContext);
 
-        final List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), false, callContext);
+        final List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, callContext);
         assertEquals(invoices.size(), 2);
 
         final Invoice invoice1 = invoices.get(0).getInvoiceItems().get(0).getInvoiceItemType() == InvoiceItemType.RECURRING ?
@@ -831,7 +831,7 @@ public class TestInvoicePayment extends TestIntegrationBase {
 
         invoiceChecker.checkChargedThroughDate(baseEntitlement.getId(), new LocalDate(2012, 6, 1), callContext);
 
-        final List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), false, callContext);
+        final List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, callContext);
         assertEquals(invoices.size(), 2);
 
         final Invoice invoice1 = invoices.get(0).getInvoiceItems().get(0).getInvoiceItemType() == InvoiceItemType.RECURRING ?
@@ -938,7 +938,7 @@ public class TestInvoicePayment extends TestIntegrationBase {
 
         invoiceChecker.checkChargedThroughDate(baseEntitlement.getId(), new LocalDate(2012, 6, 1), callContext);
 
-        final List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), false, callContext);
+        final List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, callContext);
         assertEquals(invoices.size(), 2);
 
         final Invoice invoice1 = invoices.get(0).getInvoiceItems().get(0).getInvoiceItemType() == InvoiceItemType.RECURRING ?

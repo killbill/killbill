@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014-2017 Groupon, Inc
- * Copyright 2014-2017 The Billing Project, LLC
+ * Copyright 2014-2018 Groupon, Inc
+ * Copyright 2014-2018 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -26,6 +26,7 @@ import java.util.UUID;
 
 import org.joda.time.DateTime;
 import org.killbill.billing.account.api.Account;
+import org.killbill.billing.api.FlakyRetryAnalyzer;
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.payment.PaymentTestSuiteWithEmbeddedDB;
 import org.killbill.billing.payment.api.Payment;
@@ -94,7 +95,8 @@ public class TestPaymentDao extends PaymentTestSuiteWithEmbeddedDB {
         assertEquals(retrievedAttempts.get(0).getPluginName(), pluginName);
     }
 
-    @Test(groups = "slow")
+    // Flaky, see https://github.com/killbill/killbill/issues/860
+    @Test(groups = "slow", retryAnalyzer = FlakyRetryAnalyzer.class)
     public void testPaymentAndTransactions() {
         final UUID paymentMethodId = UUID.randomUUID();
         final UUID accountId = UUID.randomUUID();
@@ -293,7 +295,8 @@ public class TestPaymentDao extends PaymentTestSuiteWithEmbeddedDB {
         assertEquals(deletedPaymentMethod.getPluginName(), pluginName);
     }
 
-    @Test(groups = "slow")
+    // Flaky, see https://github.com/killbill/killbill/issues/860
+    @Test(groups = "slow", retryAnalyzer = FlakyRetryAnalyzer.class)
     public void testPendingTransactions() {
 
         final UUID paymentMethodId = UUID.randomUUID();
