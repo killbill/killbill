@@ -34,7 +34,7 @@ public class ComboHostedPaymentPageJson extends ComboPaymentJson {
     public ComboHostedPaymentPageJson(@JsonProperty("account") final AccountJson account,
                                       @JsonProperty("paymentMethod") final PaymentMethodJson paymentMethod,
                                       @JsonProperty("hostedPaymentPageFields") final HostedPaymentPageFieldsJson hostedPaymentPageFields,
-                                      @JsonProperty("paymentMethodPluginProperties") final Iterable<PluginPropertyJson> paymentMethodPluginProperties,
+                                      @JsonProperty("paymentMethodPluginProperties") final List<PluginPropertyJson> paymentMethodPluginProperties,
                                       @JsonProperty("auditLogs") @Nullable final List<AuditLogJson> auditLogs) {
         super(account, paymentMethod, paymentMethodPluginProperties, auditLogs);
         this.hostedPaymentPageFields = hostedPaymentPageFields;

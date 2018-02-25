@@ -29,14 +29,14 @@ import io.swagger.annotations.ApiModel;
 public class ComboPaymentTransactionJson extends ComboPaymentJson {
 
     private final PaymentTransactionJson transaction;
-    private final Iterable<PluginPropertyJson> transactionPluginProperties;
+    private final List<PluginPropertyJson> transactionPluginProperties;
 
     @JsonCreator
     public ComboPaymentTransactionJson(@JsonProperty("account") final AccountJson account,
                                        @JsonProperty("paymentMethod") final PaymentMethodJson paymentMethod,
                                        @JsonProperty("transaction") final PaymentTransactionJson transaction,
-                                       @JsonProperty("paymentMethodPluginProperties") final Iterable<PluginPropertyJson> paymentMethodPluginProperties,
-                                       @JsonProperty("transactionPluginProperties") final Iterable<PluginPropertyJson> transactionPluginProperties,
+                                       @JsonProperty("paymentMethodPluginProperties") final List<PluginPropertyJson> paymentMethodPluginProperties,
+                                       @JsonProperty("transactionPluginProperties") final List<PluginPropertyJson> transactionPluginProperties,
                                        @JsonProperty("auditLogs") @Nullable final List<AuditLogJson> auditLogs) {
         super(account, paymentMethod, paymentMethodPluginProperties, auditLogs);
         this.transaction = transaction;
@@ -55,7 +55,7 @@ public class ComboPaymentTransactionJson extends ComboPaymentJson {
         return null;
     }
 
-    public Iterable<PluginPropertyJson> getTransactionPluginProperties() {
+    public List<PluginPropertyJson> getTransactionPluginProperties() {
         return transactionPluginProperties;
     }
 

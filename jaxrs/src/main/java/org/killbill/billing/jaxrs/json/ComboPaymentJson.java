@@ -30,12 +30,12 @@ public abstract class ComboPaymentJson extends JsonBase {
 
     private final AccountJson account;
     private final PaymentMethodJson paymentMethod;
-    private final Iterable<PluginPropertyJson> paymentMethodPluginProperties;
+    private final List<PluginPropertyJson> paymentMethodPluginProperties;
 
     @JsonCreator
     public ComboPaymentJson(@JsonProperty("account") final AccountJson account,
                             @JsonProperty("paymentMethod") final PaymentMethodJson paymentMethod,
-                            @JsonProperty("paymentMethodPluginProperties") final Iterable<PluginPropertyJson> paymentMethodPluginProperties,
+                            @JsonProperty("paymentMethodPluginProperties") final List<PluginPropertyJson> paymentMethodPluginProperties,
                             @JsonProperty("auditLogs") @Nullable final List<AuditLogJson> auditLogs) {
         super(auditLogs);
         this.account = account;
@@ -51,7 +51,7 @@ public abstract class ComboPaymentJson extends JsonBase {
         return paymentMethod;
     }
 
-    public Iterable<PluginPropertyJson> getPaymentMethodPluginProperties() {
+    public List<PluginPropertyJson> getPaymentMethodPluginProperties() {
         return paymentMethodPluginProperties;
     }
 
