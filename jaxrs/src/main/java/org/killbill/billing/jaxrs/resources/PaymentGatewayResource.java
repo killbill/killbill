@@ -67,7 +67,7 @@ import static javax.ws.rs.core.MediaType.WILDCARD;
 
 @Singleton
 @Path(JaxrsResource.PAYMENT_GATEWAYS_PATH)
-@Api(value = JaxrsResource.PAYMENT_GATEWAYS_PATH, description = "HPP endpoints")
+@Api(value = JaxrsResource.PAYMENT_GATEWAYS_PATH, description = "HPP endpoints", tags="PaymentGateway")
 public class PaymentGatewayResource extends ComboPaymentResource {
 
     private final PaymentGatewayApi paymentGatewayApi;

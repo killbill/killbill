@@ -75,7 +75,7 @@ import static javax.ws.rs.core.MediaType.TEXT_PLAIN;
 
 @Singleton
 @Path(JaxrsResource.TENANTS_PATH)
-@Api(value = JaxrsResource.TENANTS_PATH, description = "Operations on tenants")
+@Api(value = JaxrsResource.TENANTS_PATH, description = "Operations on tenants", tags="Tenant")
 public class TenantResource extends JaxRsResourceBase {
 
     private final TenantUserApi tenantApi;

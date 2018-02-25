@@ -52,7 +52,7 @@ import static javax.ws.rs.core.MediaType.TEXT_PLAIN;
 
 @Singleton
 @Path(JaxrsResource.EXPORT_PATH)
-@Api(value = JaxrsResource.EXPORT_PATH, description = "Export endpoints")
+@Api(value = JaxrsResource.EXPORT_PATH, description = "Export endpoints", tags="Export")
 public class ExportResource extends JaxRsResourceBase {
 
     private final ExportUserApi exportUserApi;

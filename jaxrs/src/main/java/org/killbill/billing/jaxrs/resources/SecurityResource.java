@@ -65,7 +65,7 @@ import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 
 @Singleton
 @Path(JaxrsResource.SECURITY_PATH)
-@Api(value = JaxrsResource.SECURITY_PATH, description = "Information about RBAC")
+@Api(value = JaxrsResource.SECURITY_PATH, description = "Information about RBAC", tags="Security")
 public class SecurityResource extends JaxRsResourceBase {
 
     private final SecurityApi securityApi;

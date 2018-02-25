@@ -64,7 +64,7 @@ import io.swagger.annotations.ApiResponses;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 
 @Path(JaxrsResource.INVOICES_ITEMS_PATH)
-@Api(value = JaxrsResource.INVOICES_ITEMS_PATH, description = "Operations on invoice items")
+@Api(value = JaxrsResource.INVOICES_ITEMS_PATH, description = "Operations on invoice items", tags="InvoiceItem")
 public class InvoiceItemResource extends JaxRsResourceBase {
     private static final String ID_PARAM_NAME = "invoiceItemId";
 

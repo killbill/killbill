@@ -73,7 +73,7 @@ import io.swagger.annotations.ApiResponses;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 
 @Path(JaxrsResource.PAYMENT_TRANSACTIONS_PATH)
-@Api(value = JaxrsResource.PAYMENT_TRANSACTIONS_PATH, description = "Operations on payment transactions")
+@Api(value = JaxrsResource.PAYMENT_TRANSACTIONS_PATH, description = "Operations on payment transactions", tags="PaymentTransaction")
 public class TransactionResource extends JaxRsResourceBase {
 
     private static final String ID_PARAM_NAME = "transactionId";

@@ -127,7 +127,7 @@ import static javax.ws.rs.core.MediaType.TEXT_HTML;
 import static javax.ws.rs.core.MediaType.TEXT_PLAIN;
 
 @Path(JaxrsResource.INVOICES_PATH)
-@Api(value = JaxrsResource.INVOICES_PATH, description = "Operations on invoices")
+@Api(value = JaxrsResource.INVOICES_PATH, description = "Operations on invoices", tags="Invoice")
 public class InvoiceResource extends JaxRsResourceBase {
 
     private static final Logger log = LoggerFactory.getLogger(InvoiceResource.class);
@@ -322,9 +322,9 @@ public class InvoiceResource extends JaxRsResourceBase {
     @Path("/" + MIGRATION + "/{accountId:" + UUID_PATTERN + "}")
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
-    @ApiOperation(value = "Create a migration invoice", response = InvoiceJson.class)
+    @ApiOperation(value = "Create a migration invoice", response = InvoiceJson.class, tags="Invoice")
     @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid account id or target datetime supplied")})
-    public Response createMigrationInvoice(final Iterable<InvoiceItemJson> items,
+    public Response createMigrationInvoice(final List<InvoiceItemJson> items,
                                            @PathParam("accountId") final String accountIdStr,
                                            @Nullable @QueryParam(QUERY_TARGET_DATE) final String targetDate,
                                            @HeaderParam(HDR_CREATED_BY) final String createdBy,
@@ -489,7 +489,7 @@ public class InvoiceResource extends JaxRsResourceBase {
     @ApiOperation(value = "Create external charge(s)", response = InvoiceItemJson.class, responseContainer = "List")
     @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid account id supplied"),
                            @ApiResponse(code = 404, message = "Account not found")})
-    public Response createExternalCharges(final Iterable<InvoiceItemJson> externalChargesJson,
+    public Response createExternalCharges(final List<InvoiceItemJson> externalChargesJson,
                                           @PathParam("accountId") final String accountIdStr,
                                           @QueryParam(QUERY_REQUESTED_DT) final String requestedDateTimeString,
                                           @QueryParam(QUERY_PAY_INVOICE) @DefaultValue("false") final Boolean payInvoice,

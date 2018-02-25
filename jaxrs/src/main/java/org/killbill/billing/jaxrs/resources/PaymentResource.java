@@ -87,7 +87,7 @@ import io.swagger.annotations.ApiResponses;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 
 @Path(JaxrsResource.PAYMENTS_PATH)
-@Api(value = JaxrsResource.PAYMENTS_PATH, description = "Operations on payments")
+@Api(value = JaxrsResource.PAYMENTS_PATH, description = "Operations on payments", tags="Payment")
 public class PaymentResource extends ComboPaymentResource {
 
     private static final String ID_PARAM_NAME = "paymentId";

@@ -146,7 +146,7 @@ import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 
 @Singleton
 @Path(JaxrsResource.ACCOUNTS_PATH)
-@Api(value = JaxrsResource.ACCOUNTS_PATH, description = "Operations on accounts")
+@Api(value = JaxrsResource.ACCOUNTS_PATH, description = "Operations on accounts", tags="Account")
 public class AccountResource extends JaxRsResourceBase {
 
     private static final String ID_PARAM_NAME = "accountId";

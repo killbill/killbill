@@ -86,7 +86,7 @@ import io.swagger.annotations.ApiResponses;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 
 @Path(JaxrsResource.BUNDLES_PATH)
-@Api(value = JaxrsResource.BUNDLES_PATH, description = "Operations on bundles")
+@Api(value = JaxrsResource.BUNDLES_PATH, description = "Operations on bundles", tags="Bundle")
 public class BundleResource extends JaxRsResourceBase {
 
     private static final String ID_PARAM_NAME = "bundleId";

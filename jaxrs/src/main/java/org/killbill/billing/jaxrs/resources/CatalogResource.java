@@ -91,7 +91,7 @@ import static javax.ws.rs.core.MediaType.APPLICATION_XML;
 
 @Singleton
 @Path(JaxrsResource.CATALOG_PATH)
-@Api(value = JaxrsResource.CATALOG_PATH, description = "Catalog information")
+@Api(value = JaxrsResource.CATALOG_PATH, description = "Catalog information", tags="Catalog")
 public class CatalogResource extends JaxRsResourceBase {
 
     private final CatalogUserApi catalogUserApi;

@@ -105,7 +105,7 @@ import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 
 @Singleton
 @Path(JaxrsResource.ADMIN_PATH)
-@Api(value = JaxrsResource.ADMIN_PATH, description = "Admin operations (will require special privileges)")
+@Api(value = JaxrsResource.ADMIN_PATH, description = "Admin operations (will require special privileges)", tags="Admin")
 public class AdminResource extends JaxRsResourceBase {
 
     private static final String OK = "OK";

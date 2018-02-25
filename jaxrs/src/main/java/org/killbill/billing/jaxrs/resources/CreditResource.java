@@ -62,7 +62,7 @@ import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 
 @Singleton
 @Path(JaxrsResource.CREDITS_PATH)
-@Api(value = JaxrsResource.CREDITS_PATH, description = "Operations on credits")
+@Api(value = JaxrsResource.CREDITS_PATH, description = "Operations on credits", tags="Credit")
 public class CreditResource extends JaxRsResourceBase {
 
     private final InvoiceUserApi invoiceUserApi;

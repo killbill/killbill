@@ -57,7 +57,7 @@ import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 
 @Singleton
 @Path(JaxrsResource.CUSTOM_FIELDS_PATH)
-@Api(value = JaxrsResource.CUSTOM_FIELDS_PATH, description = "Operations on custom fields")
+@Api(value = JaxrsResource.CUSTOM_FIELDS_PATH, description = "Operations on custom fields", tags="CustomField")
 public class CustomFieldResource extends JaxRsResourceBase {
 
     @Inject

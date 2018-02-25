@@ -72,7 +72,7 @@ import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 
 @Singleton
 @Path(JaxrsResource.USAGES_PATH)
-@Api(value = JaxrsResource.USAGES_PATH, description = "Operations on usage")
+@Api(value = JaxrsResource.USAGES_PATH, description = "Operations on usage", tags="Usage")
 public class UsageResource extends JaxRsResourceBase {
 
     private final UsageUserApi usageUserApi;

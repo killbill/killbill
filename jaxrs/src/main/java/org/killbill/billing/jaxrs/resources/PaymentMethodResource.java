@@ -78,7 +78,7 @@ import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 
 @Singleton
 @Path(JaxrsResource.PAYMENT_METHODS_PATH)
-@Api(value = JaxrsResource.PAYMENT_METHODS_PATH, description = "Operations on payment methods")
+@Api(value = JaxrsResource.PAYMENT_METHODS_PATH, description = "Operations on payment methods", tags="PaymentMethod")
 public class PaymentMethodResource extends JaxRsResourceBase {
 
     @Inject
