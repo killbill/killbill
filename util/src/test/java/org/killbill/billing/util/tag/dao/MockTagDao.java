@@ -44,7 +44,13 @@ public class MockTagDao extends MockEntityDaoBase<TagModelDao, Tag, TagApiExcept
         if (tagStore.get(tag.getObjectId()) == null) {
             tagStore.put(tag.getObjectId(), new ArrayList<TagModelDao>());
         }
+
+        // add it to the account tags
+        if (tagStore.get(getAccountId(context.getAccountRecordId())) == null) {
+            tagStore.put(getAccountId(context.getAccountRecordId()), new ArrayList<TagModelDao>());
+        }
         tagStore.get(tag.getObjectId()).add(tag);
+        tagStore.get(getAccountId(context.getAccountRecordId())).add(tag);
     }
 
     @Override
@@ -93,10 +99,18 @@ public class MockTagDao extends MockEntityDaoBase<TagModelDao, Tag, TagApiExcept
 
     @Override
     public List<TagModelDao> getTagsForAccount(final boolean includedDeleted, final InternalTenantContext internalTenantContext) {
-        throw new UnsupportedOperationException();
+        if (tagStore.get(getAccountId(internalTenantContext.getAccountRecordId())) == null) {
+            return ImmutableList.<TagModelDao>of();
+        }
+
+        return tagStore.get(getAccountId(internalTenantContext.getAccountRecordId()));
     }
 
     public void clear() {
         tagStore.clear();
+    }
+
+    private UUID getAccountId(final Long accountRecordId) {
+        return new UUID(0L, accountRecordId);
     }
 }
