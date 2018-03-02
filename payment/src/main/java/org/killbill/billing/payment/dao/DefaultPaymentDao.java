@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014-2017 Groupon, Inc
- * Copyright 2014-2017 The Billing Project, LLC
+ * Copyright 2014-2018 Groupon, Inc
+ * Copyright 2014-2018 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -325,11 +325,40 @@ public class DefaultPaymentDao extends EntityDaoBase<PaymentModelDao, Payment, P
 
     @Override
     public PaymentAndTransactionModelDao updatePaymentAndTransactionOnCompletion(final UUID accountId, @Nullable final UUID attemptId, final UUID paymentId, final TransactionType transactionType,
-                                                                                                    final String currentPaymentStateName, @Nullable final String lastPaymentSuccessStateName,
-                                                                                                    final UUID transactionId, final TransactionStatus transactionStatus,
-                                                                                                    final BigDecimal processedAmount, final Currency processedCurrency,
-                                                                                                    final String gatewayErrorCode, final String gatewayErrorMsg,
-                                                                                                    final InternalCallContext context) {
+                                                                                 final String currentPaymentStateName,
+                                                                                 final UUID transactionId, final TransactionStatus transactionStatus,
+                                                                                 final BigDecimal processedAmount, final Currency processedCurrency,
+                                                                                 final String gatewayErrorCode, final String gatewayErrorMsg,
+                                                                                 final InternalCallContext context) {
+        return updatePaymentAndTransactionOnCompletion(false, accountId, attemptId, paymentId, transactionType,
+                                                       currentPaymentStateName, null,
+                                                       transactionId, transactionStatus,
+                                                       processedAmount, processedCurrency,
+                                                       gatewayErrorCode, gatewayErrorMsg,
+                                                       context);
+    }
+
+    @Override
+    public PaymentAndTransactionModelDao updatePaymentAndTransactionOnCompletion(final UUID accountId, @Nullable final UUID attemptId, final UUID paymentId, final TransactionType transactionType,
+                                                                                 final String currentPaymentStateName, @Nullable final String lastPaymentSuccessStateName,
+                                                                                 final UUID transactionId, final TransactionStatus transactionStatus,
+                                                                                 final BigDecimal processedAmount, final Currency processedCurrency,
+                                                                                 final String gatewayErrorCode, final String gatewayErrorMsg,
+                                                                                 final InternalCallContext context) {
+        return updatePaymentAndTransactionOnCompletion(true, accountId, attemptId, paymentId, transactionType,
+                                                       currentPaymentStateName, lastPaymentSuccessStateName,
+                                                       transactionId, transactionStatus,
+                                                       processedAmount, processedCurrency,
+                                                       gatewayErrorCode, gatewayErrorMsg,
+                                                       context);
+    }
+
+    private PaymentAndTransactionModelDao updatePaymentAndTransactionOnCompletion(final boolean updateLastPaymentSuccessStateName, final UUID accountId, @Nullable final UUID attemptId, final UUID paymentId, final TransactionType transactionType,
+                                                                                  final String currentPaymentStateName, @Nullable final String lastPaymentSuccessStateName,
+                                                                                  final UUID transactionId, final TransactionStatus transactionStatus,
+                                                                                  final BigDecimal processedAmount, final Currency processedCurrency,
+                                                                                  final String gatewayErrorCode, final String gatewayErrorMsg,
+                                                                                  final InternalCallContext context) {
         final PaymentAndTransactionModelDao paymentAndTransactionModelDao = new PaymentAndTransactionModelDao();
 
         return transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<PaymentAndTransactionModelDao>() {
@@ -358,7 +387,7 @@ public class DefaultPaymentDao extends EntityDaoBase<PaymentModelDao, Payment, P
 
                 final PaymentSqlDao paymentSqlDao = entitySqlDaoWrapperFactory.become(PaymentSqlDao.class);
                 final PaymentModelDao paymentModelDao;
-                if (lastPaymentSuccessStateName != null) {
+                if (updateLastPaymentSuccessStateName) {
                     paymentModelDao = (PaymentModelDao) paymentSqlDao.updateLastSuccessPaymentStateName(paymentId.toString(), currentPaymentStateName, lastPaymentSuccessStateName, contextWithUpdatedDate);
                 } else {
                     paymentModelDao = (PaymentModelDao) paymentSqlDao.updatePaymentStateName(paymentId.toString(), currentPaymentStateName, contextWithUpdatedDate);
