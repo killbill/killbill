@@ -19,11 +19,13 @@ package org.killbill.billing.jaxrs.resources;
 
 import io.swagger.annotations.SwaggerDefinition;
 import io.swagger.jaxrs.config.ReaderListener;
+import io.swagger.models.Model;
 import io.swagger.models.Operation;
 import io.swagger.models.Path;
 import io.swagger.models.Swagger;
 import io.swagger.models.auth.BasicAuthDefinition;
 import io.swagger.models.parameters.HeaderParameter;
+import io.swagger.models.properties.Property;
 
 @SwaggerDefinition
 public class KillBillApiDefinition implements ReaderListener {
@@ -56,6 +58,14 @@ public class KillBillApiDefinition implements ReaderListener {
             applyExtraSchemaOperation(path.getPut(), pathName, "PUT", apiKeyParam, apiSecretParam);
             applyExtraSchemaOperation(path.getDelete(), pathName, "DELETE", apiKeyParam, apiSecretParam);
             applyExtraSchemaOperation(path.getOptions(), pathName, "OPTIONS", apiKeyParam, apiSecretParam);
+        }
+
+        for (final Model m : swagger.getDefinitions().values()) {
+            if (m.getProperties() != null) {
+                for (final Property p : m.getProperties().values()) {
+                    p.setReadOnly(false);
+                }
+            }
         }
     }
 
