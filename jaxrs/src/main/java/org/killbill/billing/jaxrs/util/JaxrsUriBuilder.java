@@ -106,7 +106,7 @@ public class JaxrsUriBuilder {
                 // Use "remote" value to support X-Forwarded headers (assumes RemoteIpValve or similar is configured)
                 // See https://github.com/killbill/killbill/issues/566
                 uriBuilder.scheme(request.getScheme())
-                          .host(MoreObjects.firstNonNull(jaxrsConfig.getJaxrsLocationHost(), uriInfo.getAbsolutePath().getHost())) // Should we look for X-Forwarded-By instead?
+                          .host(MoreObjects.firstNonNull(jaxrsConfig.getJaxrsLocationHost(), request.getServerName()))
                           .port(request.getServerPort());
             } else {
                 uriBuilder.scheme(uriInfo.getAbsolutePath().getScheme())
