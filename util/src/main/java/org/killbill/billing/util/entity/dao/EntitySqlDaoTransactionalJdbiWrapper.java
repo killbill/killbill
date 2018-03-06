@@ -84,7 +84,10 @@ public class EntitySqlDaoTransactionalJdbiWrapper {
         final Handle handle = dbi.open();
         try {
             final EntitySqlDao<EntityModelDao<Entity>, Entity> entitySqlDao = handle.attach(InitialEntitySqlDao.class);
-            return entitySqlDao.inTransaction(TransactionIsolationLevel.READ_COMMITTED, new JdbiTransaction<ReturnType, EntityModelDao<Entity>, Entity>(handle, entitySqlDaoTransactionWrapper));
+            // The transaction isolation level is now set at the pool level: this avoids 3 roundtrips for each transaction
+            // Note that if the pool isn't used (tests or PostgreSQL), the transaction level will depend on the DB configuration
+            //return entitySqlDao.inTransaction(TransactionIsolationLevel.READ_COMMITTED, new JdbiTransaction<ReturnType, EntityModelDao<Entity>, Entity>(handle, entitySqlDaoTransactionWrapper));
+            return entitySqlDao.inTransaction(new JdbiTransaction<ReturnType, EntityModelDao<Entity>, Entity>(handle, entitySqlDaoTransactionWrapper));
         } finally {
             handle.close();
         }
