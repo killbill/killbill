@@ -25,7 +25,11 @@ import io.swagger.models.Path;
 import io.swagger.models.Swagger;
 import io.swagger.models.auth.BasicAuthDefinition;
 import io.swagger.models.parameters.HeaderParameter;
+import io.swagger.models.parameters.Parameter;
 import io.swagger.models.properties.Property;
+
+import static org.killbill.billing.jaxrs.resources.JaxrsResource.HDR_CREATED_BY;
+import static org.killbill.billing.jaxrs.resources.JaxrsResource.QUERY_AUDIT;
 
 @SwaggerDefinition
 public class KillBillApiDefinition implements ReaderListener {
@@ -53,11 +57,12 @@ public class KillBillApiDefinition implements ReaderListener {
 
         for (final String pathName : swagger.getPaths().keySet()) {
             final Path path = swagger.getPaths().get(pathName);
-            applyExtraSchemaOperation(path.getGet(), pathName, "GET", apiKeyParam, apiSecretParam);
-            applyExtraSchemaOperation(path.getPost(), pathName, "POST", apiKeyParam, apiSecretParam);
-            applyExtraSchemaOperation(path.getPut(), pathName, "PUT", apiKeyParam, apiSecretParam);
-            applyExtraSchemaOperation(path.getDelete(), pathName, "DELETE", apiKeyParam, apiSecretParam);
-            applyExtraSchemaOperation(path.getOptions(), pathName, "OPTIONS", apiKeyParam, apiSecretParam);
+            decorateOperation(path.getGet(), pathName, "GET", apiKeyParam, apiSecretParam);
+            decorateOperation(path.getPost(), pathName, "POST", apiKeyParam, apiSecretParam);
+            decorateOperation(path.getPut(), pathName, "PUT", apiKeyParam, apiSecretParam);
+            decorateOperation(path.getDelete(), pathName, "DELETE", apiKeyParam, apiSecretParam);
+            decorateOperation(path.getOptions(), pathName, "OPTIONS", apiKeyParam, apiSecretParam);
+
         }
 
         for (final Model m : swagger.getDefinitions().values()) {
@@ -69,12 +74,26 @@ public class KillBillApiDefinition implements ReaderListener {
         }
     }
 
-    private void applyExtraSchemaOperation(final Operation op, final String pathName, final String httpMethod, final HeaderParameter apiKeyParam, final HeaderParameter apiSecretParam) {
+    private void decorateOperation(final Operation op, final String pathName, final String httpMethod, final HeaderParameter apiKeyParam, final HeaderParameter apiSecretParam) {
         if (op != null) {
             op.addSecurity(BASIC_AUTH_SCHEME, null);
             if (requiresTenantInformation(pathName, httpMethod)) {
                 op.addParameter(apiKeyParam);
                 op.addParameter(apiSecretParam);
+            }
+
+            for (Parameter p : op.getParameters()) {
+                if (p.getIn().equals("body") || p.getIn().equals("path")) {
+                    p.setRequired(true);
+                }
+                if (p.getIn().equals("header")) {
+                    if (p.getName().equals(HDR_CREATED_BY)) {
+                        p.setRequired(true);
+                    }
+                    if (p.getName().equals(QUERY_AUDIT)) {
+                        p.setRequired(false);
+                    }
+                }
             }
         }
     }
