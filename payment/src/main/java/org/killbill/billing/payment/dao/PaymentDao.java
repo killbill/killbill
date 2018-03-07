@@ -61,6 +61,10 @@ public interface PaymentDao extends EntityDao<PaymentModelDao, Payment, PaymentA
 
     public PaymentTransactionModelDao updatePaymentWithNewTransaction(UUID paymentId, PaymentTransactionModelDao paymentTransaction, InternalCallContext context);
 
+    public PaymentAndTransactionModelDao updatePaymentAndTransactionOnCompletion(UUID accountId, UUID attemptId, UUID paymentId, TransactionType transactionType, String currentPaymentStateName, UUID transactionId,
+                                                                                 TransactionStatus paymentStatus, BigDecimal processedAmount, Currency processedCurrency,
+                                                                                 String gatewayErrorCode, String gatewayErrorMsg, InternalCallContext context);
+
     public PaymentAndTransactionModelDao updatePaymentAndTransactionOnCompletion(UUID accountId, UUID attemptId, UUID paymentId, TransactionType transactionType, String currentPaymentStateName, String lastPaymentSuccessStateName, UUID transactionId,
                                                                                  TransactionStatus paymentStatus, BigDecimal processedAmount, Currency processedCurrency,
                                                                                  String gatewayErrorCode, String gatewayErrorMsg, InternalCallContext context);
