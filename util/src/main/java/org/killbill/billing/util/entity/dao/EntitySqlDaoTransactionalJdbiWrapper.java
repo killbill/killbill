@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2012 Ning, Inc.
- * Copyright 2014-2016 Groupon, Inc
- * Copyright 2014-2016 The Billing Project, LLC
+ * Copyright 2014-2018 Groupon, Inc
+ * Copyright 2014-2018 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -28,13 +28,16 @@ import org.killbill.clock.Clock;
 import org.skife.jdbi.v2.Handle;
 import org.skife.jdbi.v2.IDBI;
 import org.skife.jdbi.v2.Transaction;
-import org.skife.jdbi.v2.TransactionIsolationLevel;
 import org.skife.jdbi.v2.TransactionStatus;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Transaction manager for EntitySqlDao queries
  */
 public class EntitySqlDaoTransactionalJdbiWrapper {
+
+    private final Logger logger = LoggerFactory.getLogger(EntitySqlDaoTransactionalJdbiWrapper.class);
 
     private final IDBI dbi;
     private final Clock clock;
@@ -81,15 +84,22 @@ public class EntitySqlDaoTransactionalJdbiWrapper {
      * @return result from the transaction fo type ReturnType
      */
     public <ReturnType> ReturnType execute(final EntitySqlDaoTransactionWrapper<ReturnType> entitySqlDaoTransactionWrapper) {
+        final String debugInfo = logger.isDebugEnabled() ? getDebugInfo() : null;
+
         final Handle handle = dbi.open();
+        logger.debug("DBI handle created, transaction: {}", debugInfo);
         try {
             final EntitySqlDao<EntityModelDao<Entity>, Entity> entitySqlDao = handle.attach(InitialEntitySqlDao.class);
             // The transaction isolation level is now set at the pool level: this avoids 3 roundtrips for each transaction
             // Note that if the pool isn't used (tests or PostgreSQL), the transaction level will depend on the DB configuration
             //return entitySqlDao.inTransaction(TransactionIsolationLevel.READ_COMMITTED, new JdbiTransaction<ReturnType, EntityModelDao<Entity>, Entity>(handle, entitySqlDaoTransactionWrapper));
-            return entitySqlDao.inTransaction(new JdbiTransaction<ReturnType, EntityModelDao<Entity>, Entity>(handle, entitySqlDaoTransactionWrapper));
+            logger.debug("Starting transaction {}", debugInfo);
+            final ReturnType returnType = entitySqlDao.inTransaction(new JdbiTransaction<ReturnType, EntityModelDao<Entity>, Entity>(handle, entitySqlDaoTransactionWrapper));
+            logger.debug("Exiting  transaction {}, returning {}", debugInfo, returnType);
+            return returnType;
         } finally {
             handle.close();
+            logger.debug("DBI handle closed,  transaction: {}", debugInfo);
         }
     }
 
@@ -110,7 +120,7 @@ public class EntitySqlDaoTransactionalJdbiWrapper {
     public <ReturnType, E extends Exception> ReturnType execute(@Nullable final Class<E> exception, final EntitySqlDaoTransactionWrapper<ReturnType> entitySqlDaoTransactionWrapper) throws E {
         try {
             return execute(entitySqlDaoTransactionWrapper);
-        } catch (RuntimeException e) {
+        } catch (final RuntimeException e) {
             if (e.getCause() != null && exception != null && e.getCause().getClass().isAssignableFrom(exception)) {
                 throw (E) e.getCause();
             } else if (e.getCause() != null && e.getCause() instanceof RuntimeException) {
@@ -119,5 +129,32 @@ public class EntitySqlDaoTransactionalJdbiWrapper {
                 throw e;
             }
         }
+    }
+
+    private static String getDebugInfo() {
+        final Throwable t = new Throwable();
+        t.fillInStackTrace();
+
+        final StackTraceElement[] stackTrace = t.getStackTrace();
+        if (stackTrace == null) {
+            return null;
+        }
+
+        final StringBuilder dump = new StringBuilder();
+        int firstEntitySqlDaoCall = 0;
+
+        String className;
+        for (int i = 0; i < stackTrace.length; i++) {
+            className = stackTrace[i].getClassName();
+            if (className.startsWith("org.killbill.billing.util.entity.dao.EntitySqlDaoTransactionalJdbiWrapper")) {
+                firstEntitySqlDaoCall = i;
+            }
+        }
+        final int j = 1 + firstEntitySqlDaoCall;
+
+        dump.append(stackTrace[j].getClassName()).append(".").append(stackTrace[j].getMethodName()).append("(").
+                append(stackTrace[j].getFileName()).append(":").append(stackTrace[j].getLineNumber()).append(")");
+
+        return dump.toString();
     }
 }
