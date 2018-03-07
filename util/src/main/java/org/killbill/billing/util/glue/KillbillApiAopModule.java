@@ -1,6 +1,6 @@
 /*
- * Copyright 2014 Groupon, Inc
- * Copyright 2014 The Billing Project, LLC
+ * Copyright 2014-2018 Groupon, Inc
+ * Copyright 2014-2018 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -25,12 +25,16 @@ import org.killbill.billing.KillbillApi;
 import org.killbill.commons.profiling.Profiling;
 import org.killbill.commons.profiling.Profiling.WithProfilingCallback;
 import org.killbill.commons.profiling.ProfilingFeature.ProfilingFeatureType;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.matcher.Matcher;
 import com.google.inject.matcher.Matchers;
 
 public class KillbillApiAopModule extends AbstractModule {
+
+    private static final Logger logger = LoggerFactory.getLogger(KillbillApiAopModule.class);
 
     @Override
     protected void configure() {
@@ -49,7 +53,10 @@ public class KillbillApiAopModule extends AbstractModule {
             return prof.executeWithProfiling(ProfilingFeatureType.API, invocation.getMethod().getName(), new WithProfilingCallback() {
                 @Override
                 public Object execute() throws Throwable {
-                    return invocation.proceed();
+                    logger.debug("Entering API call {}, arguments: {}", invocation.getMethod(), invocation.getArguments());
+                    final Object proceed = invocation.proceed();
+                    logger.debug("Exiting  API call {}, returning: {}", invocation.getMethod(), proceed);
+                    return proceed;
                 }
             });
         }
