@@ -57,6 +57,7 @@ import org.killbill.notificationq.api.NotificationQueueService.NoSuchNotificatio
 import org.killbill.queue.retry.RetryNotificationEvent;
 import org.killbill.queue.retry.RetryableService;
 import org.testng.annotations.BeforeClass;
+import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import com.google.common.base.Predicate;
@@ -97,6 +98,11 @@ public class TestWithInvoicePlugin extends TestIntegrationBase {
                 return "TestInvoicePluginApi";
             }
         }, testInvoicePluginApi);
+    }
+
+    @BeforeMethod(groups = "slow")
+    public void setUp() throws Exception {
+        testInvoicePluginApi.additionalInvoiceItem = null;
     }
 
     @Test(groups = "slow")
