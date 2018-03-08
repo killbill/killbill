@@ -17,6 +17,7 @@
   -->
 
 <configuration>
+    <jmxConfigurator />
     <conversionRule conversionWord="maskedMsg" converterClass="org.killbill.billing.server.log.obfuscators.ObfuscatorConverter" />
 
     <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
