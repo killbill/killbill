@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014 Groupon, Inc
- * Copyright 2014 The Billing Project, LLC
+ * Copyright 2014-2018 Groupon, Inc
+ * Copyright 2014-2018 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -45,12 +45,7 @@ public class CreditBalanceAdjInvoiceItem extends AdjInvoiceItem {
     public CreditBalanceAdjInvoiceItem(final UUID id, @Nullable final DateTime createdDate, final UUID invoiceId, final UUID accountId,
                                        final LocalDate date, final UUID linkedInvoiceItemId,
                                        @Nullable final String description, final BigDecimal amount, final Currency currency) {
-        super(id, createdDate, invoiceId, accountId, date, date, description, amount, currency, linkedInvoiceItemId);
-    }
-
-    @Override
-    public InvoiceItemType getInvoiceItemType() {
-        return InvoiceItemType.CBA_ADJ;
+        super(id, createdDate, invoiceId, accountId, date, date, description, amount, currency, linkedInvoiceItemId, InvoiceItemType.CBA_ADJ);
     }
 
     @Override

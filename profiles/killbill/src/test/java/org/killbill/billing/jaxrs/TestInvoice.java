@@ -438,7 +438,10 @@ public class TestInvoice extends TestJaxrsBase {
         final Account accountJson = createAccountNoPMBundleAndSubscriptionAndWaitForFirstInvoice();
 
         // Get the invoices
-        assertEquals(killBillClient.getInvoicesForAccount(accountJson.getAccountId(), requestOptions).size(), 2);
+        final Invoices originalInvoices = killBillClient.getInvoicesForAccount(accountJson.getAccountId(), requestOptions);
+        assertEquals(originalInvoices.size(), 2);
+
+        final UUID firstInvoiceItemId = originalInvoices.get(0).getItems().get(0).getInvoiceItemId();
 
         // Post an external charge
         final BigDecimal chargeAmount = BigDecimal.TEN;
@@ -448,6 +451,7 @@ public class TestInvoice extends TestJaxrsBase {
         externalCharge.setCurrency(accountJson.getCurrency());
         externalCharge.setDescription(UUID.randomUUID().toString());
         externalCharge.setItemDetails("Item Details");
+        externalCharge.setLinkedInvoiceItemId(firstInvoiceItemId);
 
         final LocalDate startDate = clock.getUTCToday();
         externalCharge.setStartDate(startDate);
@@ -464,6 +468,7 @@ public class TestInvoice extends TestJaxrsBase {
         assertEquals(invoiceWithItems.getItems().get(0).getStartDate().compareTo(startDate), 0);
         assertEquals(invoiceWithItems.getItems().get(0).getEndDate().compareTo(endDate), 0);
         assertEquals(invoiceWithItems.getItems().get(0).getItemDetails(), "Item Details");
+        assertEquals(invoiceWithItems.getItems().get(0).getLinkedInvoiceItemId(), firstInvoiceItemId);
 
         // Verify the total number of invoices
         assertEquals(killBillClient.getInvoicesForAccount(accountJson.getAccountId(), requestOptions).size(), 3);
