@@ -1,6 +1,6 @@
 /*
- * Copyright 2014-2016 Groupon, Inc
- * Copyright 2014-2016 The Billing Project, LLC
+ * Copyright 2014-2018 Groupon, Inc
+ * Copyright 2014-2018 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -97,26 +97,6 @@ public class TestWithTaxItems extends TestIntegrationBase {
         testInvoicePluginApi.reset();
     }
 
-    private void add_AUTO_INVOICING_OFF_Tag(final UUID id) throws TagDefinitionApiException, TagApiException {
-        busHandler.pushExpectedEvent(NextEvent.TAG);
-        tagUserApi.addTag(id, ObjectType.ACCOUNT, ControlTagType.AUTO_INVOICING_OFF.getId(), callContext);
-        assertListenerStatus();
-        final List<Tag> tags = tagUserApi.getTagsForObject(id, ObjectType.ACCOUNT, false, callContext);
-        assertEquals(tags.size(), 1);
-    }
-
-    private void remove_AUTO_INVOICING_OFF_Tag(final UUID id, final NextEvent... events) throws TagDefinitionApiException, TagApiException {
-        final NextEvent[] allEvents = new NextEvent[events.length + 1];
-        allEvents[0] = NextEvent.TAG;
-        int i = 1;
-        for (NextEvent cur : events) {
-            allEvents[i++] = cur;
-        }
-        busHandler.pushExpectedEvents(allEvents);
-        tagUserApi.removeTag(id, ObjectType.ACCOUNT, ControlTagType.AUTO_INVOICING_OFF.getId(), callContext);
-        assertListenerStatus();
-    }
-
     @Test(groups = "slow")
     public void testBasicTaxItems() throws Exception {
         // We take april as it has 30 days (easier to play with BCD)
@@ -134,7 +114,7 @@ public class TestWithTaxItems extends TestIntegrationBase {
         subscriptionChecker.checkSubscriptionCreated(bpSubscription.getId(), internalCallContext);
 
         // Move to Evergreen PHASE, but add AUTO_INVOICING_OFF => No invoice
-        add_AUTO_INVOICING_OFF_Tag(account.getId());
+        add_AUTO_INVOICING_OFF_Tag(account.getId(), ObjectType.ACCOUNT);
         busHandler.pushExpectedEvent(NextEvent.PHASE);
         clock.addDays(30);
         assertListenerStatus();
@@ -149,7 +129,7 @@ public class TestWithTaxItems extends TestIntegrationBase {
         testInvoicePluginApi.addTaxItem(new TaxInvoiceItem(pluginInvoiceItemId, null, account.getId(), null, "Tax Item", new LocalDate(2012, 5, 1), BigDecimal.ONE, account.getCurrency()));
 
         // Remove AUTO_INVOICING_OFF => Invoice + Payment
-        remove_AUTO_INVOICING_OFF_Tag(account.getId(), NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
+        remove_AUTO_INVOICING_OFF_Tag(account.getId(), ObjectType.ACCOUNT, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
         invoiceChecker.checkInvoice(account.getId(), 2, callContext,
                                     new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 1), new LocalDate(2012, 6, 1), InvoiceItemType.RECURRING, new BigDecimal("29.95")),
                                     new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 1), new LocalDate(2012, 6, 1), InvoiceItemType.RECURRING, new BigDecimal("2.95")),
@@ -169,7 +149,7 @@ public class TestWithTaxItems extends TestIntegrationBase {
         assertEquals(taxItem.getId(), pluginInvoiceItemId);
 
         // Add AUTO_INVOICING_OFF and change to a higher plan on the same day that already include the 'Cleaning' ADD_ON, so it gets cancelled
-        add_AUTO_INVOICING_OFF_Tag(account.getId());
+        add_AUTO_INVOICING_OFF_Tag(account.getId(), ObjectType.ACCOUNT);
         busHandler.pushExpectedEvents(NextEvent.CHANGE, NextEvent.CANCEL, NextEvent.BLOCK);
         changeEntitlementAndCheckForCompletion(bpSubscription, "Shotgun", BillingPeriod.MONTHLY, BillingActionPolicy.IMMEDIATE);
         assertListenerStatus();
@@ -178,7 +158,7 @@ public class TestWithTaxItems extends TestIntegrationBase {
         testInvoicePluginApi.addTaxItem(new TaxInvoiceItem(UUID.randomUUID(), null, account.getId(), null, "Tax Item", new LocalDate(2012, 5, 1), BigDecimal.ONE, account.getCurrency()));
 
         // Remove AUTO_INVOICING_OFF => Invoice + Payment
-        remove_AUTO_INVOICING_OFF_Tag(account.getId(), NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
+        remove_AUTO_INVOICING_OFF_Tag(account.getId(), ObjectType.ACCOUNT, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
         invoiceChecker.checkInvoice(account.getId(), 2, callContext,
                                     new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 1), new LocalDate(2012, 6, 1), InvoiceItemType.RECURRING, new BigDecimal("29.95")),
                                     new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 1), new LocalDate(2012, 6, 1), InvoiceItemType.RECURRING, new BigDecimal("2.95")),
@@ -191,7 +171,7 @@ public class TestWithTaxItems extends TestIntegrationBase {
                                     new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 1), null, InvoiceItemType.TAX, new BigDecimal("1.0")));
 
         // Add AUTO_INVOICING_OFF and change to a higher plan on the same day
-        add_AUTO_INVOICING_OFF_Tag(account.getId());
+        add_AUTO_INVOICING_OFF_Tag(account.getId(), ObjectType.ACCOUNT);
         busHandler.pushExpectedEvent(NextEvent.CHANGE);
         changeEntitlementAndCheckForCompletion(bpSubscription, "Assault-Rifle", BillingPeriod.MONTHLY, BillingActionPolicy.IMMEDIATE);
         assertListenerStatus();
@@ -200,7 +180,7 @@ public class TestWithTaxItems extends TestIntegrationBase {
         testInvoicePluginApi.addTaxItem(new TaxInvoiceItem(UUID.randomUUID(), null, account.getId(), null, "Tax Item", new LocalDate(2012, 5, 1), BigDecimal.ONE, account.getCurrency()));
 
         // Remove AUTO_INVOICING_OFF => Invoice + Payment
-        remove_AUTO_INVOICING_OFF_Tag(account.getId(), NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
+        remove_AUTO_INVOICING_OFF_Tag(account.getId(), ObjectType.ACCOUNT, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
 
         invoiceChecker.checkInvoice(account.getId(), 3, callContext,
                                     new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 1), new LocalDate(2012, 6, 1), InvoiceItemType.RECURRING, new BigDecimal("249.95")),

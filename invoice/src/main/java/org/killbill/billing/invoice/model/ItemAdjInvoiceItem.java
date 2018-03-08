@@ -37,12 +37,12 @@ public class ItemAdjInvoiceItem extends AdjInvoiceItem {
     public ItemAdjInvoiceItem(final InvoiceItem linkedInvoiceItem, final LocalDate effectiveDate,
                               final BigDecimal amount, final Currency currency) {
         this(UUIDs.randomUUID(), null, linkedInvoiceItem.getInvoiceId(), linkedInvoiceItem.getAccountId(), effectiveDate,
-             linkedInvoiceItem.getDescription(), amount, currency, linkedInvoiceItem.getId());
+             linkedInvoiceItem.getDescription(), amount, currency, linkedInvoiceItem.getId(), null);
     }
 
     public ItemAdjInvoiceItem(final UUID id, @Nullable final DateTime createdDate, final UUID invoiceId, final UUID accountId, final LocalDate startDate,
-                              @Nullable final String description, final BigDecimal amount, final Currency currency, final UUID linkedItemId) {
-        super(id, createdDate, invoiceId, accountId, startDate, startDate, description, amount, currency, linkedItemId, InvoiceItemType.ITEM_ADJ);
+                              @Nullable final String description, final BigDecimal amount, final Currency currency, final UUID linkedItemId, @Nullable final String itemDetails) {
+        super(id, createdDate, invoiceId, accountId, startDate, startDate, description, amount, currency, linkedItemId, itemDetails, InvoiceItemType.ITEM_ADJ);
     }
 
     @Override
