@@ -93,7 +93,7 @@ public class NoCachingTenantBroadcastDao extends EntityDaoBase<TenantBroadcastMo
 
     @Override
     public List<TenantBroadcastModelDao> getLatestEntriesFrom(final Long recordId) {
-        return transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<List<TenantBroadcastModelDao>>() {
+        return transactionalSqlDao.execute(true, new EntitySqlDaoTransactionWrapper<List<TenantBroadcastModelDao>>() {
             @Override
             public List<TenantBroadcastModelDao> inTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory) throws Exception {
                 return entitySqlDaoWrapperFactory.become(TenantBroadcastSqlDao.class).getLatestEntries(recordId);
@@ -103,7 +103,7 @@ public class NoCachingTenantBroadcastDao extends EntityDaoBase<TenantBroadcastMo
 
     @Override
     public TenantBroadcastModelDao getLatestEntry() {
-        return transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<TenantBroadcastModelDao>() {
+        return transactionalSqlDao.execute(true, new EntitySqlDaoTransactionWrapper<TenantBroadcastModelDao>() {
             @Override
             public TenantBroadcastModelDao inTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory) throws Exception {
                 return entitySqlDaoWrapperFactory.become(TenantBroadcastSqlDao.class).getLatestEntry();

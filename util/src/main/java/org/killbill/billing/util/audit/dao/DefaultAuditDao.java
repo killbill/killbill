@@ -57,18 +57,18 @@ import static org.killbill.billing.util.glue.IDBISetup.MAIN_RO_IDBI_NAMED;
 
 public class DefaultAuditDao implements AuditDao {
 
-    private final NonEntitySqlDao nonEntitySqlDao;
+    private final NonEntitySqlDao roNonEntitySqlDao;
     private final EntitySqlDaoTransactionalJdbiWrapper transactionalSqlDao;
 
     @Inject
     public DefaultAuditDao(final IDBI dbi, @Named(MAIN_RO_IDBI_NAMED) final IDBI roDbi, final Clock clock, final CacheControllerDispatcher cacheControllerDispatcher, final NonEntityDao nonEntityDao, final InternalCallContextFactory internalCallContextFactory) {
-        this.nonEntitySqlDao = dbi.onDemand(NonEntitySqlDao.class);
+        this.roNonEntitySqlDao = roDbi.onDemand(NonEntitySqlDao.class);
         this.transactionalSqlDao = new EntitySqlDaoTransactionalJdbiWrapper(dbi, roDbi, clock, cacheControllerDispatcher, nonEntityDao, internalCallContextFactory);
     }
 
     @Override
     public DefaultAccountAuditLogs getAuditLogsForAccountRecordId(final AuditLevel auditLevel, final InternalTenantContext context) {
-        final UUID accountId = nonEntitySqlDao.getIdFromObject(context.getAccountRecordId(), TableName.ACCOUNT.getTableName());
+        final UUID accountId = roNonEntitySqlDao.getIdFromObject(context.getAccountRecordId(), TableName.ACCOUNT.getTableName());
 
         // Lazy evaluate records to minimize the memory footprint (these can yield a lot of results)
         // We usually always want to wrap our queries in an EntitySqlDaoTransactionWrapper... except here.
@@ -118,19 +118,19 @@ public class DefaultAuditDao implements AuditDao {
 
                                                                            if (historyRecordIdIdsCache.get(originalTableNameForHistoryTableName) == null) {
                                                                                if (TableName.ACCOUNT.equals(originalTableNameForHistoryTableName)) {
-                                                                                   final Iterable<RecordIdIdMappings> mappings = nonEntitySqlDao.getHistoryRecordIdIdMappingsForAccountsTable(originalTableNameForHistoryTableName.getTableName(),
-                                                                                                                                                                                              input.getTableName().getTableName(),
-                                                                                                                                                                                              tenantContext);
+                                                                                   final Iterable<RecordIdIdMappings> mappings = roNonEntitySqlDao.getHistoryRecordIdIdMappingsForAccountsTable(originalTableNameForHistoryTableName.getTableName(),
+                                                                                                                                                                                                input.getTableName().getTableName(),
+                                                                                                                                                                                                tenantContext);
                                                                                    historyRecordIdIdsCache.put(originalTableNameForHistoryTableName, RecordIdIdMappings.toMap(mappings));
                                                                                } else if (TableName.TAG_DEFINITIONS.equals(originalTableNameForHistoryTableName)) {
-                                                                                   final Iterable<RecordIdIdMappings> mappings = nonEntitySqlDao.getHistoryRecordIdIdMappingsForTablesWithoutAccountRecordId(originalTableNameForHistoryTableName.getTableName(),
-                                                                                                                                                                                                             input.getTableName().getTableName(),
-                                                                                                                                                                                                             tenantContext);
+                                                                                   final Iterable<RecordIdIdMappings> mappings = roNonEntitySqlDao.getHistoryRecordIdIdMappingsForTablesWithoutAccountRecordId(originalTableNameForHistoryTableName.getTableName(),
+                                                                                                                                                                                                               input.getTableName().getTableName(),
+                                                                                                                                                                                                               tenantContext);
                                                                                    historyRecordIdIdsCache.put(originalTableNameForHistoryTableName, RecordIdIdMappings.toMap(mappings));
                                                                                } else {
-                                                                                   final Iterable<RecordIdIdMappings> mappings = nonEntitySqlDao.getHistoryRecordIdIdMappings(originalTableNameForHistoryTableName.getTableName(),
-                                                                                                                                                                              input.getTableName().getTableName(),
-                                                                                                                                                                              tenantContext);
+                                                                                   final Iterable<RecordIdIdMappings> mappings = roNonEntitySqlDao.getHistoryRecordIdIdMappings(originalTableNameForHistoryTableName.getTableName(),
+                                                                                                                                                                                input.getTableName().getTableName(),
+                                                                                                                                                                                tenantContext);
                                                                                    historyRecordIdIdsCache.put(originalTableNameForHistoryTableName, RecordIdIdMappings.toMap(mappings));
 
                                                                                }
@@ -141,8 +141,8 @@ public class DefaultAuditDao implements AuditDao {
                                                                            objectType = input.getTableName().getObjectType();
 
                                                                            if (recordIdIdsCache.get(input.getTableName()) == null) {
-                                                                               final Iterable<RecordIdIdMappings> mappings = nonEntitySqlDao.getRecordIdIdMappings(input.getTableName().getTableName(),
-                                                                                                                                                                   tenantContext);
+                                                                               final Iterable<RecordIdIdMappings> mappings = roNonEntitySqlDao.getRecordIdIdMappings(input.getTableName().getTableName(),
+                                                                                                                                                                     tenantContext);
                                                                                recordIdIdsCache.put(input.getTableName(), RecordIdIdMappings.toMap(mappings));
                                                                            }
 
@@ -174,7 +174,7 @@ public class DefaultAuditDao implements AuditDao {
     }
 
     private List<AuditLog> doGetAuditLogsForId(final TableName tableName, final UUID objectId, final AuditLevel auditLevel, final InternalTenantContext context) {
-        final Long recordId = nonEntitySqlDao.getRecordIdFromObject(objectId.toString(), tableName.getTableName());
+        final Long recordId = roNonEntitySqlDao.getRecordIdFromObject(objectId.toString(), tableName.getTableName());
         if (recordId == null) {
             return ImmutableList.<AuditLog>of();
         } else {
@@ -188,8 +188,8 @@ public class DefaultAuditDao implements AuditDao {
             throw new IllegalStateException("History table shouldn't be null for " + tableName);
         }
 
-        final Long targetRecordId = nonEntitySqlDao.getRecordIdFromObject(objectId.toString(), tableName.getTableName());
-        final List<AuditLog> allAuditLogs = transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<List<AuditLog>>() {
+        final Long targetRecordId = roNonEntitySqlDao.getRecordIdFromObject(objectId.toString(), tableName.getTableName());
+        final List<AuditLog> allAuditLogs = transactionalSqlDao.execute(true, new EntitySqlDaoTransactionWrapper<List<AuditLog>>() {
             @Override
             public List<AuditLog> inTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory) throws Exception {
                 final List<AuditLogModelDao> auditLogsViaHistoryForTargetRecordId = entitySqlDaoWrapperFactory.become(EntitySqlDao.class).getAuditLogsViaHistoryForTargetRecordId(historyTableName.name(),
@@ -203,7 +203,7 @@ public class DefaultAuditDao implements AuditDao {
     }
 
     private List<AuditLog> getAuditLogsForRecordId(final TableName tableName, final UUID auditedEntityId, final Long targetRecordId, final AuditLevel auditLevel, final InternalTenantContext context) {
-        final List<AuditLog> allAuditLogs = transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<List<AuditLog>>() {
+        final List<AuditLog> allAuditLogs = transactionalSqlDao.execute(true, new EntitySqlDaoTransactionWrapper<List<AuditLog>>() {
             @Override
             public List<AuditLog> inTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory) throws Exception {
                 final List<AuditLogModelDao> auditLogsForTargetRecordId = entitySqlDaoWrapperFactory.become(EntitySqlDao.class).getAuditLogsForTargetRecordId(tableName.name(),

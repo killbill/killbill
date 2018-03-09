@@ -93,7 +93,7 @@ public class DefaultAccountDao extends EntityDaoBase<AccountModelDao, Account, A
             entity.setReferenceTime(context.getCreatedDate());
         }
 
-        final AccountModelDao refreshedEntity = transactionalSqlDao.execute(getCreateEntitySqlDaoTransactionWrapper(entity, context));
+        final AccountModelDao refreshedEntity = transactionalSqlDao.execute(false, getCreateEntitySqlDaoTransactionWrapper(entity, context));
         // Populate the caches only after the transaction has been committed, in case of rollbacks
         transactionalSqlDao.populateCaches(refreshedEntity);
         // Eagerly populate the account-immutable cache as well
@@ -130,7 +130,7 @@ public class DefaultAccountDao extends EntityDaoBase<AccountModelDao, Account, A
 
     @Override
     public AccountModelDao getAccountByKey(final String key, final InternalTenantContext context) {
-        return transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<AccountModelDao>() {
+        return transactionalSqlDao.execute(true, new EntitySqlDaoTransactionWrapper<AccountModelDao>() {
             @Override
             public AccountModelDao inTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory) throws Exception {
                 return entitySqlDaoWrapperFactory.become(AccountSqlDao.class).getAccountByKey(key, context);
@@ -144,7 +144,7 @@ public class DefaultAccountDao extends EntityDaoBase<AccountModelDao, Account, A
         if (userIsFeelingLucky) {
             // The use-case we can optimize is when the user is looking for an exact match (e.g. he knows the full email). In that case, we can speed up the queries
             // by doing exact searches only.
-            final AccountModelDao accountModelDao = transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<AccountModelDao>() {
+            final AccountModelDao accountModelDao = transactionalSqlDao.execute(true, new EntitySqlDaoTransactionWrapper<AccountModelDao>() {
                 @Override
                 public AccountModelDao inTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory) throws Exception {
                     return entitySqlDaoWrapperFactory.become(AccountSqlDao.class).luckySearch(searchKey, context);
@@ -182,7 +182,7 @@ public class DefaultAccountDao extends EntityDaoBase<AccountModelDao, Account, A
             throw new AccountApiException(ErrorCode.ACCOUNT_CANNOT_MAP_NULL_KEY, "");
         }
 
-        return transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<UUID>() {
+        return transactionalSqlDao.execute(true, new EntitySqlDaoTransactionWrapper<UUID>() {
             @Override
             public UUID inTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory) throws Exception {
                 return entitySqlDaoWrapperFactory.become(AccountSqlDao.class).getIdFromKey(externalKey, context);
@@ -192,7 +192,7 @@ public class DefaultAccountDao extends EntityDaoBase<AccountModelDao, Account, A
 
     @Override
     public void update(final AccountModelDao specifiedAccount, final InternalCallContext context) throws AccountApiException {
-        transactionalSqlDao.execute(AccountApiException.class, new EntitySqlDaoTransactionWrapper<Void>() {
+        transactionalSqlDao.execute(false, AccountApiException.class, new EntitySqlDaoTransactionWrapper<Void>() {
             @Override
             public Void inTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory) throws EventBusException, AccountApiException {
                 final AccountSqlDao transactional = entitySqlDaoWrapperFactory.become(AccountSqlDao.class);
@@ -225,7 +225,7 @@ public class DefaultAccountDao extends EntityDaoBase<AccountModelDao, Account, A
 
     @Override
     public void updatePaymentMethod(final UUID accountId, final UUID paymentMethodId, final InternalCallContext context) throws AccountApiException {
-        transactionalSqlDao.execute(AccountApiException.class, new EntitySqlDaoTransactionWrapper<Void>() {
+        transactionalSqlDao.execute(false, AccountApiException.class, new EntitySqlDaoTransactionWrapper<Void>() {
             @Override
             public Void inTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory) throws EntityPersistenceException, EventBusException {
                 final AccountSqlDao transactional = entitySqlDaoWrapperFactory.become(AccountSqlDao.class);
@@ -262,7 +262,7 @@ public class DefaultAccountDao extends EntityDaoBase<AccountModelDao, Account, A
 
     @Override
     public void addEmail(final AccountEmailModelDao email, final InternalCallContext context) throws AccountApiException {
-        transactionalSqlDao.execute(AccountApiException.class, new EntitySqlDaoTransactionWrapper<Void>() {
+        transactionalSqlDao.execute(false, AccountApiException.class, new EntitySqlDaoTransactionWrapper<Void>() {
             @Override
             public Void inTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory) throws Exception {
                 final AccountEmailSqlDao transactional = entitySqlDaoWrapperFactory.become(AccountEmailSqlDao.class);
@@ -279,7 +279,7 @@ public class DefaultAccountDao extends EntityDaoBase<AccountModelDao, Account, A
 
     @Override
     public void removeEmail(final AccountEmailModelDao email, final InternalCallContext context) {
-        transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<Void>() {
+        transactionalSqlDao.execute(false, new EntitySqlDaoTransactionWrapper<Void>() {
             @Override
             public Void inTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory) throws Exception {
                 entitySqlDaoWrapperFactory.become(AccountEmailSqlDao.class).markEmailAsDeleted(email, context);
@@ -290,7 +290,7 @@ public class DefaultAccountDao extends EntityDaoBase<AccountModelDao, Account, A
 
     @Override
     public List<AccountEmailModelDao> getEmailsByAccountId(final UUID accountId, final InternalTenantContext context) {
-        return transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<List<AccountEmailModelDao>>() {
+        return transactionalSqlDao.execute(true, new EntitySqlDaoTransactionWrapper<List<AccountEmailModelDao>>() {
             @Override
             public List<AccountEmailModelDao> inTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory) throws Exception {
                 return entitySqlDaoWrapperFactory.become(AccountEmailSqlDao.class).getEmailByAccountId(accountId, context);
@@ -300,7 +300,7 @@ public class DefaultAccountDao extends EntityDaoBase<AccountModelDao, Account, A
 
     @Override
     public Integer getAccountBCD(final UUID accountId, final InternalTenantContext context) {
-        return transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<Integer>() {
+        return transactionalSqlDao.execute(true, new EntitySqlDaoTransactionWrapper<Integer>() {
             @Override
             public Integer inTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory) throws Exception {
                 return entitySqlDaoWrapperFactory.become(AccountSqlDao.class).getBCD(accountId.toString(), context);
@@ -310,7 +310,7 @@ public class DefaultAccountDao extends EntityDaoBase<AccountModelDao, Account, A
 
     @Override
     public List<AccountModelDao> getAccountsByParentId(final UUID parentAccountId, final InternalTenantContext context) {
-        return transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<List<AccountModelDao>>() {
+        return transactionalSqlDao.execute(true, new EntitySqlDaoTransactionWrapper<List<AccountModelDao>>() {
             @Override
             public List<AccountModelDao> inTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory) throws Exception {
                 return entitySqlDaoWrapperFactory.become(AccountSqlDao.class).getAccountsByParentId(parentAccountId, context);

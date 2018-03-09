@@ -94,7 +94,7 @@ public class DefaultImmutableAccountInternalApi implements ImmutableAccountInter
     }
 
     private Account getAccountByRecordIdInternal(final Long recordId, final InternalTenantContext context) {
-        final AccountModelDao accountModelDao = transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<AccountModelDao>() {
+        final AccountModelDao accountModelDao = transactionalSqlDao.execute(true, new EntitySqlDaoTransactionWrapper<AccountModelDao>() {
 
             @Override
             public AccountModelDao inTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory) throws Exception {

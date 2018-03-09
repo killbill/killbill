@@ -73,7 +73,7 @@ public class DefaultTagDefinitionDao extends EntityDaoBase<TagDefinitionModelDao
 
     @Override
     public List<TagDefinitionModelDao> getTagDefinitions(final boolean includeSystemTags, final InternalTenantContext context) {
-        return transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<List<TagDefinitionModelDao>>() {
+        return transactionalSqlDao.execute(true, new EntitySqlDaoTransactionWrapper<List<TagDefinitionModelDao>>() {
             @Override
             public List<TagDefinitionModelDao> inTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory) throws Exception {
                 // Get user definitions from the database
@@ -91,7 +91,7 @@ public class DefaultTagDefinitionDao extends EntityDaoBase<TagDefinitionModelDao
 
     @Override
     public TagDefinitionModelDao getByName(final String definitionName, final InternalTenantContext context) {
-        return transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<TagDefinitionModelDao>() {
+        return transactionalSqlDao.execute(true, new EntitySqlDaoTransactionWrapper<TagDefinitionModelDao>() {
             @Override
             public TagDefinitionModelDao inTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory) throws Exception {
                 final TagDefinitionModelDao tagDefinitionModelDao = SystemTags.lookup(definitionName);
@@ -102,7 +102,7 @@ public class DefaultTagDefinitionDao extends EntityDaoBase<TagDefinitionModelDao
 
     @Override
     public TagDefinitionModelDao getById(final UUID definitionId, final InternalTenantContext context) {
-        return transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<TagDefinitionModelDao>() {
+        return transactionalSqlDao.execute(true, new EntitySqlDaoTransactionWrapper<TagDefinitionModelDao>() {
             @Override
             public TagDefinitionModelDao inTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory) throws Exception {
                 final TagDefinitionModelDao tagDefinitionModelDao = SystemTags.lookup(definitionId);
@@ -113,7 +113,7 @@ public class DefaultTagDefinitionDao extends EntityDaoBase<TagDefinitionModelDao
 
     @Override
     public List<TagDefinitionModelDao> getByIds(final Collection<UUID> definitionIds, final InternalTenantContext context) {
-        return transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<List<TagDefinitionModelDao>>() {
+        return transactionalSqlDao.execute(true, new EntitySqlDaoTransactionWrapper<List<TagDefinitionModelDao>>() {
             @Override
             public List<TagDefinitionModelDao> inTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory) throws Exception {
                 final List<TagDefinitionModelDao> result = new LinkedList<TagDefinitionModelDao>();
@@ -146,7 +146,7 @@ public class DefaultTagDefinitionDao extends EntityDaoBase<TagDefinitionModelDao
         }
 
         try {
-            return transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<TagDefinitionModelDao>() {
+            return transactionalSqlDao.execute(false, new EntitySqlDaoTransactionWrapper<TagDefinitionModelDao>() {
                 @Override
                 public TagDefinitionModelDao inTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory) throws Exception {
                     final TagDefinitionSqlDao tagDefinitionSqlDao = entitySqlDaoWrapperFactory.become(TagDefinitionSqlDao.class);
@@ -192,7 +192,7 @@ public class DefaultTagDefinitionDao extends EntityDaoBase<TagDefinitionModelDao
     @Override
     public void deleteById(final UUID definitionId, final InternalCallContext context) throws TagDefinitionApiException {
         try {
-            transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<Void>() {
+            transactionalSqlDao.execute(false, new EntitySqlDaoTransactionWrapper<Void>() {
                 @Override
                 public Void inTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory) throws Exception {
                     final TagDefinitionSqlDao tagDefinitionSqlDao = entitySqlDaoWrapperFactory.become(TagDefinitionSqlDao.class);

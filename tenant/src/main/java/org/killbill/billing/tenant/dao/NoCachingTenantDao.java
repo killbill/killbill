@@ -62,7 +62,7 @@ public class NoCachingTenantDao extends EntityDaoBase<TenantModelDao, Tenant, Te
 
     @Override
     public TenantModelDao getTenantByApiKey(final String apiKey) {
-        return transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<TenantModelDao>() {
+        return transactionalSqlDao.execute(true, new EntitySqlDaoTransactionWrapper<TenantModelDao>() {
             @Override
             public TenantModelDao inTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory) throws Exception {
                 return entitySqlDaoWrapperFactory.become(TenantSqlDao.class).getByApiKey(apiKey);
@@ -72,7 +72,7 @@ public class NoCachingTenantDao extends EntityDaoBase<TenantModelDao, Tenant, Te
 
     @Override
     public List<String> getTenantValueForKey(final String key, final InternalTenantContext context) {
-        return transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<List<String>>() {
+        return transactionalSqlDao.execute(true, new EntitySqlDaoTransactionWrapper<List<String>>() {
             @Override
             public List<String> inTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory) throws Exception {
                 final List<TenantKVModelDao> tenantKV = entitySqlDaoWrapperFactory.become(TenantKVSqlDao.class).getTenantValueForKey(key, context);
@@ -88,7 +88,7 @@ public class NoCachingTenantDao extends EntityDaoBase<TenantModelDao, Tenant, Te
 
     @Override
     public TenantKVModelDao getKeyByRecordId(final Long recordId, final InternalTenantContext context) {
-        return transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<TenantKVModelDao>() {
+        return transactionalSqlDao.execute(true, new EntitySqlDaoTransactionWrapper<TenantKVModelDao>() {
             @Override
             public TenantKVModelDao inTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory) throws Exception {
                 return entitySqlDaoWrapperFactory.become(TenantKVSqlDao.class).getByRecordId(recordId, context);
@@ -103,7 +103,7 @@ public class NoCachingTenantDao extends EntityDaoBase<TenantModelDao, Tenant, Te
 
     @Override
     public TenantModelDao getByRecordId(final Long recordId, final InternalTenantContext context) {
-        return transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<TenantModelDao>() {
+        return transactionalSqlDao.execute(true, new EntitySqlDaoTransactionWrapper<TenantModelDao>() {
             @Override
             public TenantModelDao inTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory) throws Exception {
                 return entitySqlDaoWrapperFactory.become(TenantSqlDao.class).getByRecordId(recordId, context);

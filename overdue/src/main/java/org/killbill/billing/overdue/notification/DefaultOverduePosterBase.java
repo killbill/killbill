@@ -65,7 +65,7 @@ public abstract class DefaultOverduePosterBase implements OverduePoster {
             final NotificationQueue overdueQueue = notificationQueueService.getNotificationQueue(DefaultOverdueService.OVERDUE_SERVICE_NAME,
                                                                                                  overdueQueueName);
 
-            transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<Void>() {
+            transactionalSqlDao.execute(false, new EntitySqlDaoTransactionWrapper<Void>() {
                 @Override
                 public Void inTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory) throws Exception {
                     // Check if we already have notifications for that key
@@ -93,7 +93,7 @@ public abstract class DefaultOverduePosterBase implements OverduePoster {
         try {
             final NotificationQueue checkOverdueQueue = notificationQueueService.getNotificationQueue(DefaultOverdueService.OVERDUE_SERVICE_NAME,
                                                                                                       overdueQueueName);
-            transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<Void>() {
+            transactionalSqlDao.execute(false, new EntitySqlDaoTransactionWrapper<Void>() {
                 @Override
                 public Void inTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory) throws Exception {
                     final Iterable<NotificationEventWithMetadata<T>> futureNotifications = getFutureNotificationsForAccountInTransaction(entitySqlDaoWrapperFactory, checkOverdueQueue,
