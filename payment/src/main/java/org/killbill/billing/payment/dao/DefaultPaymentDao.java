@@ -29,6 +29,7 @@ import java.util.regex.Pattern;
 
 import javax.annotation.Nullable;
 import javax.inject.Inject;
+import javax.inject.Named;
 
 import org.joda.time.DateTime;
 import org.killbill.billing.ErrorCode;
@@ -73,6 +74,8 @@ import com.google.common.collect.Collections2;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 
+import static org.killbill.billing.util.glue.IDBISetup.MAIN_RO_IDBI_NAMED;
+
 public class DefaultPaymentDao extends EntityDaoBase<PaymentModelDao, Payment, PaymentApiException> implements PaymentDao {
 
     private static final Logger log = LoggerFactory.getLogger(DefaultPaymentDao.class);
@@ -82,9 +85,9 @@ public class DefaultPaymentDao extends EntityDaoBase<PaymentModelDao, Payment, P
     private final Clock clock;
 
     @Inject
-    public DefaultPaymentDao(final IDBI dbi, final Clock clock, final CacheControllerDispatcher cacheControllerDispatcher,
+    public DefaultPaymentDao(final IDBI dbi, @Named(MAIN_RO_IDBI_NAMED) final IDBI roDbi, final Clock clock, final CacheControllerDispatcher cacheControllerDispatcher,
                              final NonEntityDao nonEntityDao, final InternalCallContextFactory internalCallContextFactory, final PersistentBus eventBus) {
-        super(new EntitySqlDaoTransactionalJdbiWrapper(dbi, clock, cacheControllerDispatcher, nonEntityDao, internalCallContextFactory), PaymentSqlDao.class);
+        super(new EntitySqlDaoTransactionalJdbiWrapper(dbi, roDbi, clock, cacheControllerDispatcher, nonEntityDao, internalCallContextFactory), PaymentSqlDao.class);
         this.paginationHelper = new DefaultPaginationSqlDaoHelper(transactionalSqlDao);
         this.eventBus = eventBus;
         this.clock = clock;
@@ -148,6 +151,7 @@ public class DefaultPaymentDao extends EntityDaoBase<PaymentModelDao, Payment, P
                                                   public Long getCount(final PaymentAttemptSqlDao sqlDao, final InternalTenantContext context) {
                                                       return sqlDao.getCountByStateNameAcrossTenants(stateName, createdBefore);
                                                   }
+
                                                   @Override
                                                   public Iterator<PaymentAttemptModelDao> build(final PaymentAttemptSqlDao sqlDao, final Long offset, final Long limit, final Ordering ordering, final InternalTenantContext context) {
                                                       return sqlDao.getByStateNameAcrossTenants(stateName, createdBefore, offset, limit, ordering.toString());
@@ -537,7 +541,6 @@ public class DefaultPaymentDao extends EntityDaoBase<PaymentModelDao, Payment, P
             }
         });
     }
-
 
     @Override
     public Pagination<PaymentMethodModelDao> searchPaymentMethods(final String searchKey, final Long offset, final Long limit, final InternalTenantContext context) {

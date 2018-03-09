@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014-2016 Groupon, Inc
- * Copyright 2014-2016 The Billing Project, LLC
+ * Copyright 2014-2018 Groupon, Inc
+ * Copyright 2014-2018 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -23,6 +23,7 @@ import java.util.List;
 import java.util.UUID;
 
 import javax.annotation.Nullable;
+import javax.inject.Named;
 
 import org.killbill.billing.BillingExceptionBase;
 import org.killbill.billing.ErrorCode;
@@ -58,6 +59,8 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.inject.Inject;
 
+import static org.killbill.billing.util.glue.IDBISetup.MAIN_RO_IDBI_NAMED;
+
 public class DefaultCustomFieldDao extends EntityDaoBase<CustomFieldModelDao, CustomField, CustomFieldApiException> implements CustomFieldDao {
 
     private static final Logger log = LoggerFactory.getLogger(DefaultCustomFieldDao.class);
@@ -65,9 +68,9 @@ public class DefaultCustomFieldDao extends EntityDaoBase<CustomFieldModelDao, Cu
     private final PersistentBus bus;
 
     @Inject
-    public DefaultCustomFieldDao(final IDBI dbi, final Clock clock, final CacheControllerDispatcher controllerDispatcher,
+    public DefaultCustomFieldDao(final IDBI dbi, @Named(MAIN_RO_IDBI_NAMED) final IDBI roDbi, final Clock clock, final CacheControllerDispatcher controllerDispatcher,
                                  final NonEntityDao nonEntityDao, final InternalCallContextFactory internalCallContextFactory, final PersistentBus bus) {
-        super(new EntitySqlDaoTransactionalJdbiWrapper(dbi, clock, controllerDispatcher, nonEntityDao, internalCallContextFactory), CustomFieldSqlDao.class);
+        super(new EntitySqlDaoTransactionalJdbiWrapper(dbi, roDbi, clock, controllerDispatcher, nonEntityDao, internalCallContextFactory), CustomFieldSqlDao.class);
         this.bus = bus;
     }
 
@@ -128,7 +131,7 @@ public class DefaultCustomFieldDao extends EntityDaoBase<CustomFieldModelDao, Cu
 
         transactionalSqlDao.execute(CustomFieldApiException.class, new EntitySqlDaoTransactionWrapper<Void>() {
 
-            private void validateCustomField(final CustomFieldModelDao input,  @Nullable CustomFieldModelDao existing) throws CustomFieldApiException {
+            private void validateCustomField(final CustomFieldModelDao input, @Nullable CustomFieldModelDao existing) throws CustomFieldApiException {
                 if (existing == null) {
                     throw new CustomFieldApiException(ErrorCode.CUSTOM_FIELD_DOES_NOT_EXISTS_FOR_ID, input.getId());
                 }

@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014-2017 Groupon, Inc
- * Copyright 2014-2017 The Billing Project, LLC
+ * Copyright 2014-2018 Groupon, Inc
+ * Copyright 2014-2018 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -30,6 +30,7 @@ import java.util.Set;
 import java.util.UUID;
 
 import javax.annotation.Nullable;
+import javax.inject.Named;
 
 import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
@@ -86,11 +87,12 @@ import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Ordering;
 import com.google.inject.Inject;
+
+import static org.killbill.billing.util.glue.IDBISetup.MAIN_RO_IDBI_NAMED;
 
 public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, InvoiceApiException> implements InvoiceDao {
 
@@ -126,6 +128,7 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
     @Inject
     public DefaultInvoiceDao(final TagInternalApi tagInternalApi,
                              final IDBI dbi,
+                             @Named(MAIN_RO_IDBI_NAMED) final IDBI roDbi,
                              final NextBillingDatePoster nextBillingDatePoster,
                              final PersistentBus eventBus,
                              final Clock clock,
@@ -136,7 +139,7 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
                              final CBADao cbaDao,
                              final ParentInvoiceCommitmentPoster parentInvoiceCommitmentPoster,
                              final InternalCallContextFactory internalCallContextFactory) {
-        super(new EntitySqlDaoTransactionalJdbiWrapper(dbi, clock, cacheControllerDispatcher, nonEntityDao, internalCallContextFactory), InvoiceSqlDao.class);
+        super(new EntitySqlDaoTransactionalJdbiWrapper(dbi, roDbi, clock, cacheControllerDispatcher, nonEntityDao, internalCallContextFactory), InvoiceSqlDao.class);
         this.tagInternalApi = tagInternalApi;
         this.nextBillingDatePoster = nextBillingDatePoster;
         this.eventBus = eventBus;
@@ -359,7 +362,7 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
                     }
 
                     final boolean wasInvoiceCreatedOrCommitted = createdInvoiceIds.contains(invoiceModelDao.getId()) ||
-                                                       committedReusedInvoiceId.contains(invoiceModelDao.getId());
+                                                                 committedReusedInvoiceId.contains(invoiceModelDao.getId());
                     if (InvoiceStatus.COMMITTED.equals(invoiceModelDao.getStatus())) {
 
                         if (wasInvoiceCreatedOrCommitted) {
@@ -472,7 +475,6 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
                              cur.getParentInvoice().getStatus() == InvoiceStatus.VOID ||
                              InvoiceModelDaoHelper.getRawBalanceForRegularInvoice(cur.getParentInvoice()).compareTo(BigDecimal.ZERO) == 0);
 
-
                     // invoices that are WRITTEN_OFF or paid children invoices are excluded from balance computation but the cba summation needs to be included
                     accountBalance = cur.isWrittenOff() || hasZeroParentBalance ? BigDecimal.ZERO : accountBalance.add(InvoiceModelDaoHelper.getRawBalanceForRegularInvoice(cur));
                     cba = cba.add(InvoiceModelDaoHelper.getCBAAmount(cur));
@@ -538,7 +540,6 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
     public InvoicePaymentModelDao createRefund(final UUID paymentId, final BigDecimal requestedRefundAmount, final boolean isInvoiceAdjusted,
                                                final Map<UUID, BigDecimal> invoiceItemIdsWithNullAmounts, final String transactionExternalKey,
                                                final InternalCallContext context) throws InvoiceApiException {
-
 
         if (isInvoiceAdjusted && invoiceItemIdsWithNullAmounts.size() == 0) {
             throw new InvoiceApiException(ErrorCode.INVOICE_ITEMS_ADJUSTMENT_MISSING);
@@ -813,7 +814,6 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
             }
         });
     }
-
 
     @Override
     public void notifyOfPaymentInit(final InvoicePaymentModelDao invoicePayment, final InternalCallContext context) {
@@ -1102,14 +1102,13 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
                 // Retrieve the invoice and make sure it belongs to the right account
                 final InvoiceModelDao invoice = transactional.getById(invoiceId.toString(), context);
 
-                if (invoice == null ) {
+                if (invoice == null) {
                     throw new InvoiceApiException(ErrorCode.INVOICE_NOT_FOUND, invoiceId);
                 }
 
                 if (invoice.getStatus().equals(newStatus) || invoice.getStatus().equals(InvoiceStatus.VOID)) {
                     throw new InvoiceApiException(ErrorCode.INVOICE_INVALID_STATUS, newStatus, invoiceId, invoice.getStatus());
                 }
-
 
                 transactional.updateStatus(invoiceId.toString(), newStatus.toString(), context);
 
@@ -1131,8 +1130,8 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
             final BigDecimal rawBalance = InvoiceModelDaoHelper.getRawBalanceForRegularInvoice(invoice);
             final DefaultInvoiceCreationEvent event = new DefaultInvoiceCreationEvent(invoice.getId(), invoice.getAccountId(),
                                                                                       rawBalance, invoice.getCurrency(),
-                                                                                                            context.getAccountRecordId(), context.getTenantRecordId(),
-                                                                                                            context.getUserToken());
+                                                                                      context.getAccountRecordId(), context.getTenantRecordId(),
+                                                                                      context.getUserToken());
             eventBus.postFromTransaction(event, entitySqlDaoWrapperFactory.getHandle().getConnection());
         } catch (final EventBusException e) {
             log.error(String.format("Failed to post invoice creation event %s for account %s", invoice.getAccountId()), e);
@@ -1203,7 +1202,7 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
                 // Retrieve the invoice and make sure it belongs to the right account
                 final InvoiceItemModelDao invoiceItem = transactional.getById(invoiceItemId.toString(), context);
 
-                if (invoiceItem == null ) {
+                if (invoiceItem == null) {
                     throw new InvoiceApiException(ErrorCode.INVOICE_ITEM_NOT_FOUND, invoiceItemId);
                 }
 
@@ -1243,16 +1242,16 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
                                                                             InvoiceStatus.COMMITTED);
                 final String chargeDescription = "Charge to move credit from child to parent account";
                 final InvoiceItem externalChargeItem = new ExternalChargeInvoiceItem(UUIDs.randomUUID(),
-                                                                                 childCreatedDate,
-                                                                                 invoiceForExternalCharge.getId(),
-                                                                                 childAccount.getId(),
-                                                                                 null,
-                                                                                 chargeDescription,
-                                                                                 childCreatedDate.toLocalDate(),
-                                                                                 childCreatedDate.toLocalDate(),
-                                                                                 accountCBA,
-                                                                                 childAccount.getCurrency(),
-                                                                                 null);
+                                                                                     childCreatedDate,
+                                                                                     invoiceForExternalCharge.getId(),
+                                                                                     childAccount.getId(),
+                                                                                     null,
+                                                                                     chargeDescription,
+                                                                                     childCreatedDate.toLocalDate(),
+                                                                                     childCreatedDate.toLocalDate(),
+                                                                                     accountCBA,
+                                                                                     childAccount.getCurrency(),
+                                                                                     null);
                 invoiceForExternalCharge.addInvoiceItem(externalChargeItem);
 
                 // create credit to parent account
@@ -1273,7 +1272,6 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
                                                                         accountCBA.negate(),
                                                                         childAccount.getCurrency());
                 invoiceForCredit.addInvoiceItem(creditItem);
-
 
                 // save invoices and invoice items
                 final InvoiceModelDao childInvoice = new InvoiceModelDao(invoiceForExternalCharge);

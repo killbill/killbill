@@ -1,6 +1,6 @@
 /*
- * Copyright 2014-2017 Groupon, Inc
- * Copyright 2014-2017 The Billing Project, LLC
+ * Copyright 2014-2018 Groupon, Inc
+ * Copyright 2014-2018 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -27,6 +27,8 @@ import org.killbill.billing.util.config.definition.SecurityConfig;
 import com.google.inject.Inject;
 import com.google.inject.Provider;
 
+import static org.killbill.billing.platform.glue.KillBillPlatformModuleBase.SHIRO_DATA_SOURCE_ID;
+
 public class KillbillJdbcTenantRealmProvider implements Provider<KillbillJdbcTenantRealm> {
 
     private final SecurityConfig securityConfig;
@@ -34,7 +36,7 @@ public class KillbillJdbcTenantRealmProvider implements Provider<KillbillJdbcTen
     private final DataSource dataSource;
 
     @Inject
-    public KillbillJdbcTenantRealmProvider(final SecurityConfig securityConfig, final CacheManager cacheManager, @Named(KillbillPlatformModule.SHIRO_DATA_SOURCE_ID_NAMED) final DataSource dataSource) {
+    public KillbillJdbcTenantRealmProvider(final SecurityConfig securityConfig, final CacheManager cacheManager, @Named(SHIRO_DATA_SOURCE_ID) final DataSource dataSource) {
         this.securityConfig = securityConfig;
         this.cacheManager = cacheManager;
         this.dataSource = dataSource;

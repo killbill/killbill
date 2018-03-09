@@ -20,6 +20,8 @@ package org.killbill.billing.overdue.notification;
 
 import java.util.Iterator;
 
+import javax.inject.Named;
+
 import org.joda.time.DateTime;
 import org.killbill.billing.util.cache.CacheControllerDispatcher;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
@@ -33,13 +35,15 @@ import org.skife.jdbi.v2.IDBI;
 
 import com.google.inject.Inject;
 
+import static org.killbill.billing.util.glue.IDBISetup.MAIN_RO_IDBI_NAMED;
+
 public class OverdueCheckPoster extends DefaultOverduePosterBase {
 
     @Inject
     public OverdueCheckPoster(final NotificationQueueService notificationQueueService,
-                              final IDBI dbi, final Clock clock, final CacheControllerDispatcher cacheControllerDispatcher,
+                              final IDBI dbi, @Named(MAIN_RO_IDBI_NAMED) final IDBI roDbi, final Clock clock, final CacheControllerDispatcher cacheControllerDispatcher,
                               final NonEntityDao nonEntityDao, final InternalCallContextFactory internalCallContextFactory) {
-        super(notificationQueueService, dbi, clock, cacheControllerDispatcher, nonEntityDao, internalCallContextFactory);
+        super(notificationQueueService, dbi, roDbi, clock, cacheControllerDispatcher, nonEntityDao, internalCallContextFactory);
     }
 
     @Override

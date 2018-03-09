@@ -45,7 +45,7 @@ public class EntitySqlDaoTransactionalJdbiWrapper {
     private final NonEntityDao nonEntityDao;
     private final InternalCallContextFactory internalCallContextFactory;
 
-    public EntitySqlDaoTransactionalJdbiWrapper(final IDBI dbi, final Clock clock, final CacheControllerDispatcher cacheControllerDispatcher,
+    public EntitySqlDaoTransactionalJdbiWrapper(final IDBI dbi, final IDBI roDbi, final Clock clock, final CacheControllerDispatcher cacheControllerDispatcher,
                                                 final NonEntityDao nonEntityDao, final InternalCallContextFactory internalCallContextFactory) {
         this.dbi = dbi;
         this.clock = clock;
