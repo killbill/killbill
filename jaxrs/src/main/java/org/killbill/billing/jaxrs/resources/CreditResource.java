@@ -89,10 +89,10 @@ public class CreditResource extends JaxRsResourceBase {
     @ApiOperation(value = "Retrieve a credit by id", response = CreditJson.class)
     @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid credit id supplied"),
                            @ApiResponse(code = 404, message = "Credit not found")})
-    public Response getCredit(@PathParam("creditId") final String creditId,
+    public Response getCredit(@PathParam("creditId") final UUID creditId,
                               @javax.ws.rs.core.Context final HttpServletRequest request) throws InvoiceApiException, AccountApiException {
         final TenantContext tenantContext = context.createTenantContextNoAccountId(request);
-        final InvoiceItem credit = invoiceUserApi.getCreditById(UUID.fromString(creditId), tenantContext);
+        final InvoiceItem credit = invoiceUserApi.getCreditById(creditId, tenantContext);
         final Invoice invoice = invoiceUserApi.getInvoice(credit.getInvoiceId(), tenantContext);
         final CreditJson creditJson = new CreditJson(invoice, credit);
         return Response.status(Response.Status.OK).entity(creditJson).build();
@@ -117,13 +117,13 @@ public class CreditResource extends JaxRsResourceBase {
 
         final CallContext callContext = context.createCallContextNoAccountId(createdBy, reason, comment, request);
 
-        final Account account = accountUserApi.getAccountById(UUID.fromString(json.getAccountId()), callContext);
+        final Account account = accountUserApi.getAccountById(json.getAccountId(), callContext);
         final LocalDate effectiveDate = new LocalDate(clock.getUTCNow(), account.getTimeZone());
 
         final InvoiceItem credit;
         if (json.getInvoiceId() != null) {
             // Apply an invoice level credit
-            credit = invoiceUserApi.insertCreditForInvoice(account.getId(), UUID.fromString(json.getInvoiceId()), json.getCreditAmount(),
+            credit = invoiceUserApi.insertCreditForInvoice(account.getId(), json.getInvoiceId(), json.getCreditAmount(),
                                                            effectiveDate, account.getCurrency(), json.getDescription(), callContext);
         } else {
             // Apply a account level credit

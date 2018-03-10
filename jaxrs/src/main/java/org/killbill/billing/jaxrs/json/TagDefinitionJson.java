@@ -18,6 +18,7 @@ package org.killbill.billing.jaxrs.json;
 
 import java.util.List;
 import java.util.Set;
+import java.util.UUID;
 
 import javax.annotation.Nullable;
 
@@ -37,8 +38,7 @@ import io.swagger.annotations.ApiModelProperty;
 @ApiModel(value="TagDefinition")
 public class TagDefinitionJson extends JsonBase {
 
-    @ApiModelProperty(dataType = "java.util.UUID")
-    private final String id;
+    private final UUID id;
     private final Boolean isControlTag;
     @ApiModelProperty(required = true)
     private final String name;
@@ -47,7 +47,7 @@ public class TagDefinitionJson extends JsonBase {
     private final Set<String> applicableObjectTypes;
 
     @JsonCreator
-    public TagDefinitionJson(@JsonProperty("id") final String id,
+    public TagDefinitionJson(@JsonProperty("id") final UUID id,
                              @JsonProperty("isControlTag") final Boolean isControlTag,
                              @JsonProperty("name") final String name,
                              @JsonProperty("description") @Nullable final String description,
@@ -62,7 +62,7 @@ public class TagDefinitionJson extends JsonBase {
     }
 
     public TagDefinitionJson(final TagDefinition tagDefinition, @Nullable final List<AuditLog> auditLogs) {
-        this(tagDefinition.getId().toString(),
+        this(tagDefinition.getId(),
              tagDefinition.isControlTag(),
              tagDefinition.getName(),
              tagDefinition.getDescription(),
@@ -79,7 +79,7 @@ public class TagDefinitionJson extends JsonBase {
              toAuditLogJson(auditLogs));
     }
 
-    public String getId() {
+    public UUID getId() {
         return id;
     }
 

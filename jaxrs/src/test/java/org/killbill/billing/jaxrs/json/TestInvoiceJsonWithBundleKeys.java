@@ -41,12 +41,12 @@ public class TestInvoiceJsonWithBundleKeys extends JaxrsTestSuiteNoDB {
         final BigDecimal amount = BigDecimal.TEN;
         final BigDecimal creditAdj = BigDecimal.ONE;
         final BigDecimal refundAdj = BigDecimal.ONE;
-        final String invoiceId = UUID.randomUUID().toString();
+        final UUID invoiceId = UUID.randomUUID();
         final LocalDate invoiceDate = clock.getUTCToday();
         final LocalDate targetDate = clock.getUTCToday();
         final String invoiceNumber = UUID.randomUUID().toString();
         final BigDecimal balance = BigDecimal.ZERO;
-        final String accountId = UUID.randomUUID().toString();
+        final UUID accountId = UUID.randomUUID();
         final String bundleKeys = UUID.randomUUID().toString();
         final CreditJson creditJson = createCreditJson();
         final List<CreditJson> credits = ImmutableList.<CreditJson>of(creditJson);
@@ -98,12 +98,12 @@ public class TestInvoiceJsonWithBundleKeys extends JaxrsTestSuiteNoDB {
         Assert.assertEquals(invoiceJson.getAmount(), invoice.getChargedAmount());
         Assert.assertEquals(invoiceJson.getCreditAdj(), invoice.getCreditedAmount());
         Assert.assertEquals(invoiceJson.getRefundAdj(), invoice.getRefundedAmount());
-        Assert.assertEquals(invoiceJson.getInvoiceId(), invoice.getId().toString());
+        Assert.assertEquals(invoiceJson.getInvoiceId(), invoice.getId());
         Assert.assertEquals(invoiceJson.getInvoiceDate(), invoice.getInvoiceDate());
         Assert.assertEquals(invoiceJson.getTargetDate(), invoice.getTargetDate());
         Assert.assertEquals(invoiceJson.getInvoiceNumber(), String.valueOf(invoice.getInvoiceNumber()));
         Assert.assertEquals(invoiceJson.getBalance(), invoice.getBalance());
-        Assert.assertEquals(invoiceJson.getAccountId(), invoice.getAccountId().toString());
+        Assert.assertEquals(invoiceJson.getAccountId(), invoice.getAccountId());
         Assert.assertEquals(invoiceJson.getBundleKeys(), bundleKeys);
         Assert.assertEquals(invoiceJson.getCredits(), credits);
         Assert.assertNull(invoiceJson.getAuditLogs());
@@ -113,10 +113,10 @@ public class TestInvoiceJsonWithBundleKeys extends JaxrsTestSuiteNoDB {
     private CreditJson createCreditJson() {
         final BigDecimal creditAmount = BigDecimal.TEN;
         final Currency currency = Currency.USD;
-        final String invoiceId = UUID.randomUUID().toString();
+        final UUID invoiceId = UUID.randomUUID();
         final String invoiceNumber = UUID.randomUUID().toString();
         final LocalDate effectiveDate = clock.getUTCToday();
-        final String accountId = UUID.randomUUID().toString();
+        final UUID accountId = UUID.randomUUID();
         return new CreditJson(creditAmount, currency.name(), invoiceId, invoiceNumber, effectiveDate,  accountId, null, null);
     }
 }

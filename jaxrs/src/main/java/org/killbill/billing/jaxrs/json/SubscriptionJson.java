@@ -22,6 +22,7 @@ import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.UUID;
 
 import javax.annotation.Nullable;
 
@@ -47,12 +48,9 @@ import io.swagger.annotations.ApiModelProperty;
 @ApiModel(value="Subscription")
 public class SubscriptionJson extends JsonBase {
 
-    @ApiModelProperty(dataType = "java.util.UUID")
-    private final String accountId;
-    @ApiModelProperty(dataType = "java.util.UUID")
-    private final String bundleId;
-    @ApiModelProperty(dataType = "java.util.UUID")
-    private final String subscriptionId;
+    private final UUID accountId;
+    private final UUID bundleId;
+    private final UUID subscriptionId;
     private final String externalKey;
     private final LocalDate startDate;
     @ApiModelProperty(required = true)
@@ -84,7 +82,7 @@ public class SubscriptionJson extends JsonBase {
     @ApiModel(value="EventSubscription")
     public static class EventSubscriptionJson extends JsonBase {
 
-        private final String eventId;
+        private final UUID eventId;
         private final String billingPeriod;
         private final LocalDate effectiveDate;
         private final String plan;
@@ -99,7 +97,7 @@ public class SubscriptionJson extends JsonBase {
         private final String serviceStateName;
 
         @JsonCreator
-        public EventSubscriptionJson(@JsonProperty("eventId") final String eventId,
+        public EventSubscriptionJson(@JsonProperty("eventId") final UUID eventId,
                                      @JsonProperty("billingPeriod") final String billingPeriod,
                                      @JsonProperty("effectiveDate") final LocalDate effectiveDate,
                                      @JsonProperty("plan") final String plan,
@@ -135,7 +133,7 @@ public class SubscriptionJson extends JsonBase {
             final Product product = subscriptionEvent.getNextProduct() != null ? subscriptionEvent.getNextProduct() : subscriptionEvent.getPrevProduct();
             final PriceList priceList = subscriptionEvent.getNextPriceList() != null ? subscriptionEvent.getNextPriceList() : subscriptionEvent.getPrevPriceList();
             final PlanPhase phase = subscriptionEvent.getNextPhase() != null ? subscriptionEvent.getNextPhase() : subscriptionEvent.getPrevPhase();
-            this.eventId = subscriptionEvent.getId().toString();
+            this.eventId = subscriptionEvent.getId();
             this.billingPeriod = billingPeriod != null ? billingPeriod.toString() : null;
             this.effectiveDate = subscriptionEvent.getEffectiveDate();
             this.plan = plan != null ? plan.getName() : null;
@@ -163,7 +161,7 @@ public class SubscriptionJson extends JsonBase {
             throw new IllegalStateException("Unepxected objectType " + subscriptionEventObjectType + " for SubscriptionEvent " + subscriptionEvent.getId());
         }
 
-        public String getEventId() {
+        public UUID getEventId() {
             return eventId;
         }
 
@@ -300,9 +298,9 @@ public class SubscriptionJson extends JsonBase {
     }
 
     @JsonCreator
-    public SubscriptionJson(@JsonProperty("accountId") @Nullable final String accountId,
-                            @JsonProperty("bundleId") @Nullable final String bundleId,
-                            @JsonProperty("subscriptionId") @Nullable final String subscriptionId,
+    public SubscriptionJson(@JsonProperty("accountId") @Nullable final UUID accountId,
+                            @JsonProperty("bundleId") @Nullable final UUID bundleId,
+                            @JsonProperty("subscriptionId") @Nullable final UUID subscriptionId,
                             @JsonProperty("externalKey") @Nullable final String externalKey,
                             @JsonProperty("startDate") @Nullable final LocalDate startDate,
                             @JsonProperty("productName") @Nullable final String productName,
@@ -390,9 +388,9 @@ public class SubscriptionJson extends JsonBase {
         this.billingStartDate = subscription.getBillingStartDate();
         this.billingEndDate = subscription.getBillingEndDate();
         this.billCycleDayLocal = subscription.getBillCycleDayLocal();
-        this.accountId = subscription.getAccountId().toString();
-        this.bundleId = subscription.getBundleId().toString();
-        this.subscriptionId = subscription.getId().toString();
+        this.accountId = subscription.getAccountId();
+        this.bundleId = subscription.getBundleId();
+        this.subscriptionId = subscription.getId();
         this.externalKey = subscription.getExternalKey();
         this.events = new LinkedList<EventSubscriptionJson>();
         // We fill the catalog info every time we get the currency from the account (even if this is not overridden Plan)
@@ -423,15 +421,15 @@ public class SubscriptionJson extends JsonBase {
         }
     }
 
-    public String getAccountId() {
+    public UUID getAccountId() {
         return accountId;
     }
 
-    public String getBundleId() {
+    public UUID getBundleId() {
         return bundleId;
     }
 
-    public String getSubscriptionId() {
+    public UUID getSubscriptionId() {
         return subscriptionId;
     }
 

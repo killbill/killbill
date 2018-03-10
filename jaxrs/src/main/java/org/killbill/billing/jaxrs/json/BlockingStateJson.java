@@ -36,8 +36,7 @@ import io.swagger.annotations.ApiModelProperty;
 @ApiModel(value="BlockingState")
 public class BlockingStateJson extends JsonBase {
 
-    @ApiModelProperty(dataType = "java.util.UUID")
-    private final String blockedId;
+    private final UUID blockedId;
     private final String stateName;
     private final String service;
     private final Boolean blockChange;
@@ -47,7 +46,7 @@ public class BlockingStateJson extends JsonBase {
     private final BlockingStateType type;
 
     @JsonCreator
-    public BlockingStateJson(@JsonProperty("blockedId") final String blockedId,
+    public BlockingStateJson(@JsonProperty("blockedId") final UUID blockedId,
                              @JsonProperty("stateName") final String stateName,
                              @JsonProperty("service") final String service,
                              @JsonProperty("blockChange") final Boolean blockChange,
@@ -68,7 +67,7 @@ public class BlockingStateJson extends JsonBase {
     }
 
     public BlockingStateJson(final BlockingState input, final AccountAuditLogs accountAuditLogs) {
-        this(input.getBlockedId().toString(),
+        this(input.getBlockedId(),
              input.getStateName(),
              input.getService(),
              input.isBlockChange(),
@@ -80,7 +79,7 @@ public class BlockingStateJson extends JsonBase {
     }
 
 
-    public String getBlockedId() {
+    public UUID getBlockedId() {
         return blockedId;
     }
 

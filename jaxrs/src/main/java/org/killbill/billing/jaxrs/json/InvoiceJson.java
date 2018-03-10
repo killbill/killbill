@@ -19,6 +19,7 @@ package org.killbill.billing.jaxrs.json;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 import javax.annotation.Nullable;
 
@@ -43,23 +44,21 @@ public class InvoiceJson extends JsonBase {
 
     private final BigDecimal amount;
     private final String currency;
-    @ApiModelProperty(dataType = "java.util.UUID")
-    private final String invoiceId;
+    private final UUID invoiceId;
     private final LocalDate invoiceDate;
     private final LocalDate targetDate;
     private final String invoiceNumber;
     private final BigDecimal balance;
     private final BigDecimal creditAdj;
     private final BigDecimal refundAdj;
-    @ApiModelProperty(dataType = "java.util.UUID")
-    private final String accountId;
+    private final UUID accountId;
     private final List<InvoiceItemJson> items;
     private final String bundleKeys;
     private final List<CreditJson> credits;
     private final String status;
     private final Boolean isParentInvoice;
-    private final String parentInvoiceId;
-    private final String parentAccountId;
+    private final UUID parentInvoiceId;
+    private final UUID parentAccountId;
 
     @JsonCreator
     public InvoiceJson(@JsonProperty("amount") final BigDecimal amount,
@@ -67,18 +66,18 @@ public class InvoiceJson extends JsonBase {
                        @JsonProperty("status") final String status,
                        @JsonProperty("creditAdj") final BigDecimal creditAdj,
                        @JsonProperty("refundAdj") final BigDecimal refundAdj,
-                       @JsonProperty("invoiceId") final String invoiceId,
+                       @JsonProperty("invoiceId") final UUID invoiceId,
                        @JsonProperty("invoiceDate") final LocalDate invoiceDate,
                        @JsonProperty("targetDate") final LocalDate targetDate,
                        @JsonProperty("invoiceNumber") final String invoiceNumber,
                        @JsonProperty("balance") final BigDecimal balance,
-                       @JsonProperty("accountId") final String accountId,
+                       @JsonProperty("accountId") final UUID accountId,
                        @JsonProperty("bundleKeys") final String bundleKeys,
                        @JsonProperty("credits") final List<CreditJson> credits,
                        @JsonProperty("items") final List<InvoiceItemJson> items,
                        @JsonProperty("isParentInvoice") final Boolean isParentInvoice,
-                       @JsonProperty("parentInvoiceId") final String parentInvoiceId,
-                       @JsonProperty("parentAccountId") final String parentAccountId,
+                       @JsonProperty("parentInvoiceId") final UUID parentInvoiceId,
+                       @JsonProperty("parentAccountId") final UUID parentAccountId,
                        @JsonProperty("auditLogs") @Nullable final List<AuditLogJson> auditLogs) {
         super(auditLogs);
         this.amount = amount;
@@ -106,10 +105,10 @@ public class InvoiceJson extends JsonBase {
 
     public InvoiceJson(final Invoice input, final String bundleKeys, final List<CreditJson> credits, final List<AuditLog> auditLogs) {
         this(input.getChargedAmount(), input.getCurrency().toString(), input.getStatus().toString(), input.getCreditedAmount(), input.getRefundedAmount(),
-             input.getId().toString(), input.getInvoiceDate(), input.getTargetDate(), String.valueOf(input.getInvoiceNumber()),
-             input.getBalance(), input.getAccountId().toString(), bundleKeys, credits, null, input.isParentInvoice(),
-             input.getParentInvoiceId() != null ? input.getParentInvoiceId().toString() : null,
-             input.getParentAccountId() != null ? input.getParentAccountId().toString() : null,
+             input.getId(), input.getInvoiceDate(), input.getTargetDate(), String.valueOf(input.getInvoiceNumber()),
+             input.getBalance(), input.getAccountId(), bundleKeys, credits, null, input.isParentInvoice(),
+             input.getParentInvoiceId(),
+             input.getParentAccountId(),
              toAuditLogJson(auditLogs));
     }
 
@@ -135,17 +134,17 @@ public class InvoiceJson extends JsonBase {
         this.status = input.getStatus().toString();
         this.creditAdj = input.getCreditedAmount();
         this.refundAdj = input.getRefundedAmount();
-        this.invoiceId = input.getId().toString();
+        this.invoiceId = input.getId();
         this.invoiceDate = input.getInvoiceDate();
         this.targetDate = input.getTargetDate();
         this.invoiceNumber = input.getInvoiceNumber() == null ? null : String.valueOf(input.getInvoiceNumber());
         this.balance = input.getBalance();
-        this.accountId = input.getAccountId().toString();
+        this.accountId = input.getAccountId();
         this.bundleKeys = null;
         this.credits = null;
         this.isParentInvoice = input.isParentInvoice();
-        this.parentInvoiceId = input.getParentInvoiceId() != null ? input.getParentInvoiceId().toString() : null;
-        this.parentAccountId = input.getParentAccountId() != null ? input.getParentAccountId().toString() : null;
+        this.parentInvoiceId = input.getParentInvoiceId();
+        this.parentAccountId = input.getParentAccountId();
 
     }
 
@@ -157,7 +156,7 @@ public class InvoiceJson extends JsonBase {
         return currency;
     }
 
-    public String getInvoiceId() {
+    public UUID getInvoiceId() {
         return invoiceId;
     }
 
@@ -185,7 +184,7 @@ public class InvoiceJson extends JsonBase {
         return refundAdj;
     }
 
-    public String getAccountId() {
+    public UUID getAccountId() {
         return accountId;
     }
 
@@ -209,11 +208,11 @@ public class InvoiceJson extends JsonBase {
         return isParentInvoice;
     }
 
-    public String getParentInvoiceId() {
+    public UUID getParentInvoiceId() {
         return parentInvoiceId;
     }
 
-    public String getParentAccountId() {
+    public UUID getParentAccountId() {
         return parentAccountId;
     }
 

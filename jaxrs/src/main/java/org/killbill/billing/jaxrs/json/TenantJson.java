@@ -16,6 +16,8 @@
 
 package org.killbill.billing.jaxrs.json;
 
+import java.util.UUID;
+
 import org.killbill.billing.tenant.api.Tenant;
 import org.killbill.billing.tenant.api.TenantData;
 
@@ -27,8 +29,7 @@ import io.swagger.annotations.ApiModelProperty;
 @ApiModel(value="Tenant")
 public class TenantJson extends JsonBase {
 
-    @ApiModelProperty(dataType = "java.util.UUID")
-    private final String tenantId;
+    private final UUID tenantId;
     private final String externalKey;
     @ApiModelProperty(required = true)
     private final String apiKey;
@@ -36,7 +37,7 @@ public class TenantJson extends JsonBase {
     private final String apiSecret;
 
     @JsonCreator
-    public TenantJson(@JsonProperty("tenantId") final String tenantId,
+    public TenantJson(@JsonProperty("tenantId") final UUID tenantId,
                       @JsonProperty("externalKey") final String externalKey,
                       @JsonProperty("apiKey") final String apiKey,
                       @JsonProperty("apiSecret") final String apiSecret) {
@@ -47,7 +48,7 @@ public class TenantJson extends JsonBase {
     }
 
     public TenantJson(final Tenant tenant) {
-        this(tenant.getId().toString(), tenant.getExternalKey(), tenant.getApiKey(), tenant.getApiSecret());
+        this(tenant.getId(), tenant.getExternalKey(), tenant.getApiKey(), tenant.getApiSecret());
     }
 
     public TenantData toTenantData() {
@@ -69,7 +70,7 @@ public class TenantJson extends JsonBase {
         };
     }
 
-    public String getTenantId() {
+    public UUID getTenantId() {
         return tenantId;
     }
 

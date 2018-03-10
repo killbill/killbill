@@ -18,6 +18,7 @@ package org.killbill.billing.jaxrs.json;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.UUID;
 
 import javax.annotation.Nullable;
 
@@ -38,10 +39,8 @@ import io.swagger.annotations.ApiModelProperty;
 @ApiModel(value="Payment")
 public class PaymentJson extends JsonBase {
 
-    @ApiModelProperty(dataType = "java.util.UUID")
-    private final String accountId;
-    @ApiModelProperty(dataType = "java.util.UUID")
-    private final String paymentId;
+    private final UUID accountId;
+    private final UUID paymentId;
     private final String paymentNumber;
     private final String paymentExternalKey;
     private final BigDecimal authAmount;
@@ -50,14 +49,13 @@ public class PaymentJson extends JsonBase {
     private final BigDecimal refundedAmount;
     private final BigDecimal creditedAmount;
     private final String currency;
-    @ApiModelProperty(dataType = "java.util.UUID")
-    private final String paymentMethodId;
+    private final UUID paymentMethodId;
     private final List<? extends PaymentTransactionJson> transactions;
     private final List<PaymentAttemptJson> paymentAttempts;
 
     @JsonCreator
-    public PaymentJson(@JsonProperty("accountId") final String accountId,
-                       @JsonProperty("paymentId") final String paymentId,
+    public PaymentJson(@JsonProperty("accountId") final UUID accountId,
+                       @JsonProperty("paymentId") final UUID paymentId,
                        @JsonProperty("paymentNumber") final String paymentNumber,
                        @JsonProperty("paymentExternalKey") final String paymentExternalKey,
                        @JsonProperty("authAmount") final BigDecimal authAmount,
@@ -66,7 +64,7 @@ public class PaymentJson extends JsonBase {
                        @JsonProperty("refundedAmount") final BigDecimal refundedAmount,
                        @JsonProperty("creditedAmount") final BigDecimal creditedAmount,
                        @JsonProperty("currency") final String currency,
-                       @JsonProperty("paymentMethodId") final String paymentMethodId,
+                       @JsonProperty("paymentMethodId") final UUID paymentMethodId,
                        @JsonProperty("transactions") final List<? extends PaymentTransactionJson> transactions,
                        @JsonProperty("paymentAttempts") final List<PaymentAttemptJson> paymentAttempts,
                        @JsonProperty("auditLogs") @Nullable final List<AuditLogJson> auditLogs) {
@@ -87,8 +85,8 @@ public class PaymentJson extends JsonBase {
     }
 
     public PaymentJson(final Payment dp, @Nullable final AccountAuditLogs accountAuditLogs) {
-        this(dp.getAccountId().toString(),
-             dp.getId().toString(),
+        this(dp.getAccountId(),
+             dp.getId(),
              dp.getPaymentNumber().toString(),
              dp.getExternalKey(),
              dp.getAuthAmount(),
@@ -97,7 +95,7 @@ public class PaymentJson extends JsonBase {
              dp.getRefundedAmount(),
              dp.getCreditedAmount(),
              dp.getCurrency() != null ? dp.getCurrency().toString() : null,
-             dp.getPaymentMethodId() != null ? dp.getPaymentMethodId().toString() : null,
+             dp.getPaymentMethodId(),
              getTransactions(dp.getTransactions(), dp.getExternalKey(), accountAuditLogs),
              getAttempts(dp.getPaymentAttempts(), dp.getExternalKey(), accountAuditLogs),
              toAuditLogJson(accountAuditLogs == null ? null : accountAuditLogs.getAuditLogsForPayment(dp.getId())));
@@ -127,11 +125,11 @@ public class PaymentJson extends JsonBase {
                                                        )) : null;
     }
 
-    public String getAccountId() {
+    public UUID getAccountId() {
         return accountId;
     }
 
-    public String getPaymentId() {
+    public UUID getPaymentId() {
         return paymentId;
     }
 
@@ -167,7 +165,7 @@ public class PaymentJson extends JsonBase {
         return currency;
     }
 
-    public String getPaymentMethodId() {
+    public UUID getPaymentMethodId() {
         return paymentMethodId;
     }
 

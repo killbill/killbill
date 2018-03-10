@@ -18,6 +18,7 @@ package org.killbill.billing.jaxrs.json;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.UUID;
 
 import javax.annotation.Nullable;
 
@@ -33,11 +34,10 @@ import io.swagger.annotations.ApiModelProperty;
 @ApiModel(value="PaymentTransaction")
 public class PaymentTransactionJson extends JsonBase {
 
-    @ApiModelProperty(dataType = "java.util.UUID")
-    private final String transactionId;
+    private final UUID transactionId;
     private final String transactionExternalKey;
-    @ApiModelProperty(value = "Associated payment id, required when notifying state transitions", dataType = "java.util.UUID")
-    private final String paymentId;
+    @ApiModelProperty(value = "Associated payment id, required when notifying state transitions")
+    private final UUID paymentId;
     private final String paymentExternalKey;
     @ApiModelProperty(dataType = "org.killbill.billing.payment.api.TransactionType")
     private final String transactionType;
@@ -59,9 +59,9 @@ public class PaymentTransactionJson extends JsonBase {
     private final List<PluginPropertyJson> properties;
 
     @JsonCreator
-    public PaymentTransactionJson(@JsonProperty("transactionId") final String transactionId,
+    public PaymentTransactionJson(@JsonProperty("transactionId") final UUID transactionId,
                                   @JsonProperty("transactionExternalKey") final String transactionExternalKey,
-                                  @JsonProperty("paymentId") final String paymentId,
+                                  @JsonProperty("paymentId") final UUID paymentId,
                                   @JsonProperty("paymentExternalKey") final String paymentExternalKey,
                                   @JsonProperty("transactionType") final String transactionType,
                                   @JsonProperty("amount") final BigDecimal amount,
@@ -96,9 +96,9 @@ public class PaymentTransactionJson extends JsonBase {
     }
 
     public PaymentTransactionJson(final PaymentTransaction transaction, final String paymentExternalKey, @Nullable final List<AuditLog> transactionLogs) {
-        this(transaction.getId().toString(),
+        this(transaction.getId(),
              transaction.getExternalKey(),
-             transaction.getPaymentId().toString(),
+             transaction.getPaymentId(),
              paymentExternalKey,
              transaction.getTransactionType().toString(),
              transaction.getAmount(),
@@ -115,11 +115,11 @@ public class PaymentTransactionJson extends JsonBase {
              toAuditLogJson(transactionLogs));
     }
 
-    public String getTransactionId() {
+    public UUID getTransactionId() {
         return transactionId;
     }
 
-    public String getPaymentId() {
+    public UUID getPaymentId() {
         return paymentId;
     }
 

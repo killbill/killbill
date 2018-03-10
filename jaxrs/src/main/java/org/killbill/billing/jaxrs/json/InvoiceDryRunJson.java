@@ -18,6 +18,7 @@
 package org.killbill.billing.jaxrs.json;
 
 import java.util.List;
+import java.util.UUID;
 
 import javax.annotation.Nullable;
 
@@ -38,8 +39,8 @@ public class InvoiceDryRunJson {
     private final String billingPeriod;
     private final String priceListName;
     private final LocalDate effectiveDate;
-    private final String subscriptionId;
-    private final String bundleId;
+    private final UUID subscriptionId;
+    private final UUID bundleId;
     private final String billingPolicy;
     private final List<PhasePriceOverrideJson> priceOverrides;
 
@@ -51,8 +52,8 @@ public class InvoiceDryRunJson {
                              @JsonProperty("productCategory") @Nullable final String productCategory,
                              @JsonProperty("billingPeriod") @Nullable final String billingPeriod,
                              @JsonProperty("priceListName") @Nullable final String priceListName,
-                             @JsonProperty("subscriptionId") @Nullable final String subscriptionId,
-                             @JsonProperty("bundleId") @Nullable final String bundleId,
+                             @JsonProperty("subscriptionId") @Nullable final UUID subscriptionId,
+                             @JsonProperty("bundleId") @Nullable final UUID bundleId,
                              @JsonProperty("effectiveDate") @Nullable final LocalDate effectiveDate,
                              @JsonProperty("billingPolicy") @Nullable final String billingPolicy,
                              @JsonProperty("priceOverrides") @Nullable final List<PhasePriceOverrideJson> priceOverrides) {
@@ -98,7 +99,7 @@ public class InvoiceDryRunJson {
         return priceListName;
     }
 
-    public String getSubscriptionId() {
+    public UUID getSubscriptionId() {
         return subscriptionId;
     }
 
@@ -106,7 +107,7 @@ public class InvoiceDryRunJson {
         return effectiveDate;
     }
 
-    public String getBundleId() {
+    public UUID getBundleId() {
         return bundleId;
     }
 

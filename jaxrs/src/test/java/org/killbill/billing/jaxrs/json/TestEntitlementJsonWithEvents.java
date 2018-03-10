@@ -43,15 +43,15 @@ public class TestEntitlementJsonWithEvents extends JaxrsTestSuiteNoDB {
 
     @Test(groups = "fast")
     public void testJson() throws Exception {
-        final String accountId = UUID.randomUUID().toString();
-        final String bundleId = UUID.randomUUID().toString();
-        final String subscriptionId = UUID.randomUUID().toString();
+        final UUID accountId = UUID.randomUUID();
+        final UUID bundleId = UUID.randomUUID();
+        final UUID subscriptionId = UUID.randomUUID();
         final String externalKey = UUID.randomUUID().toString();
         final DateTime effectiveDate = DefaultClock.toUTCDateTime(new DateTime(DateTimeZone.UTC));
         final UUID eventId = UUID.randomUUID();
         final List<AuditLogJson> auditLogs = createAuditLogsJson(clock.getUTCNow());
 
-        final EventSubscriptionJson newEvent = new EventSubscriptionJson(eventId.toString(),
+        final EventSubscriptionJson newEvent = new EventSubscriptionJson(eventId,
                                                                          BillingPeriod.NO_BILLING_PERIOD.toString(),
                                                                          effectiveDate.toLocalDate(),
                                                                          UUID.randomUUID().toString(),

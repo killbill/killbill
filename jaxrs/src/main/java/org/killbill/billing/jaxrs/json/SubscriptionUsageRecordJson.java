@@ -37,15 +37,15 @@ import io.swagger.annotations.ApiModelProperty;
 @ApiModel(value="SubscriptionUsageRecord")
 public class SubscriptionUsageRecordJson {
 
-    @ApiModelProperty(dataType = "java.util.UUID", required = true)
-    private final String subscriptionId;
+    @ApiModelProperty(required = true)
+    private final UUID subscriptionId;
     @ApiModelProperty(required = true)
     private final List<UnitUsageRecordJson> unitUsageRecords;
     @ApiModelProperty(required = false)
     private final String trackingId;
 
     @JsonCreator
-    public SubscriptionUsageRecordJson(@JsonProperty("subscriptionId") final String subscriptionId,
+    public SubscriptionUsageRecordJson(@JsonProperty("subscriptionId") final UUID subscriptionId,
                                        @JsonProperty("trackingId") final String trackingId,
                                        @JsonProperty("unitUsageRecords") final List<UnitUsageRecordJson> unitUsageRecords) {
         this.subscriptionId = subscriptionId;
@@ -53,7 +53,7 @@ public class SubscriptionUsageRecordJson {
         this.unitUsageRecords = unitUsageRecords;
     }
 
-    public String getSubscriptionId() {
+    public UUID getSubscriptionId() {
         return subscriptionId;
     }
 
@@ -130,7 +130,7 @@ public class SubscriptionUsageRecordJson {
                 return input.toUnitUsageRecord();
             }
         }));
-        final SubscriptionUsageRecord result = new SubscriptionUsageRecord(UUID.fromString(subscriptionId), trackingId, tmp);
+        final SubscriptionUsageRecord result = new SubscriptionUsageRecord(subscriptionId, trackingId, tmp);
         return result;
     }
 }

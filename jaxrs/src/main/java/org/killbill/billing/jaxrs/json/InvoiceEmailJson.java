@@ -16,6 +16,8 @@
 
 package org.killbill.billing.jaxrs.json;
 
+import java.util.UUID;
+
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonGetter;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -25,18 +27,17 @@ import io.swagger.annotations.ApiModelProperty;
 @ApiModel(value="InvoiceEmail")
 public class InvoiceEmailJson extends JsonBase {
 
-    @ApiModelProperty(dataType = "java.util.UUID")
-    private final String accountId;
+    private final UUID accountId;
     private final boolean isNotifiedForInvoices;
 
     @JsonCreator
-    public InvoiceEmailJson(@JsonProperty("accountId") final String accountId,
+    public InvoiceEmailJson(@JsonProperty("accountId") final UUID accountId,
                             @JsonProperty("isNotifiedForInvoices") final boolean isNotifiedForInvoices) {
         this.accountId = accountId;
         this.isNotifiedForInvoices = isNotifiedForInvoices;
     }
 
-    public String getAccountId() {
+    public UUID getAccountId() {
         return accountId;
     }
 

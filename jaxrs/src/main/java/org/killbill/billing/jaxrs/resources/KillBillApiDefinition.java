@@ -17,6 +17,17 @@
 
 package org.killbill.billing.jaxrs.resources;
 
+import java.util.List;
+
+import javax.annotation.Nullable;
+
+import org.killbill.billing.util.api.AuditLevel;
+import org.killbill.billing.util.audit.AuditLog;
+
+import com.google.common.base.Function;
+import com.google.common.base.Functions;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Iterables;
 import io.swagger.annotations.SwaggerDefinition;
 import io.swagger.jaxrs.config.ReaderListener;
 import io.swagger.models.Model;
@@ -24,8 +35,11 @@ import io.swagger.models.Operation;
 import io.swagger.models.Path;
 import io.swagger.models.Swagger;
 import io.swagger.models.auth.BasicAuthDefinition;
+import io.swagger.models.parameters.BodyParameter;
 import io.swagger.models.parameters.HeaderParameter;
 import io.swagger.models.parameters.Parameter;
+import io.swagger.models.parameters.PathParameter;
+import io.swagger.models.parameters.QueryParameter;
 import io.swagger.models.properties.Property;
 
 import static org.killbill.billing.jaxrs.resources.JaxrsResource.HDR_CREATED_BY;
@@ -83,15 +97,27 @@ public class KillBillApiDefinition implements ReaderListener {
             }
 
             for (Parameter p : op.getParameters()) {
-                if (p.getIn().equals("body") || p.getIn().equals("path")) {
+                if (p instanceof BodyParameter) {
                     p.setRequired(true);
-                }
-                if (p.getIn().equals("header")) {
+                } else if (p instanceof PathParameter) {
+                    p.setRequired(true);
+                } else if (p instanceof HeaderParameter) {
                     if (p.getName().equals(HDR_CREATED_BY)) {
                         p.setRequired(true);
                     }
-                    if (p.getName().equals(QUERY_AUDIT)) {
-                        p.setRequired(false);
+                } else if (p instanceof QueryParameter) {
+                    QueryParameter qp = (QueryParameter) p;
+                    if (qp.getName().equals(QUERY_AUDIT)) {
+                        qp.setName("auditLevel");
+                        qp.setRequired(false);
+                        qp.setType("string");
+                        final List<String> values = ImmutableList.copyOf(Iterables.transform(ImmutableList.<AuditLevel>copyOf(AuditLevel.values()), new Function<AuditLevel, String>() {
+                            @Override
+                            public String apply(final AuditLevel input) {
+                                return input.toString();
+                            }
+                        }));
+                        qp.setEnum(values);
                     }
                 }
             }

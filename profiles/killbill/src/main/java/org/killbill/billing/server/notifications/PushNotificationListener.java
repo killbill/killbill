@@ -160,9 +160,9 @@ public class PushNotificationListener {
     public void resendPushNotification(final PushNotificationKey key) throws JsonProcessingException {
 
         final NotificationJson notification = new NotificationJson(key.getEventType() != null ? key.getEventType().toString() : null,
-                                                                   key.getAccountId() != null ? key.getAccountId().toString() : null,
+                                                                   key.getAccountId(),
                                                                    key.getObjectType() != null ? key.getObjectType().toString() : null,
-                                                                   key.getObjectId() != null ? key.getObjectId().toString() : null,
+                                                                   key.getObjectId(),
                                                                    key.getMetaData());
         final String body = mapper.writeValueAsString(notification);
         doPost(key.getTenantId(), key.getUrl(), body, notification, TIMEOUT_NOTIFICATION, key.getAttemptNumber());
@@ -170,10 +170,10 @@ public class PushNotificationListener {
 
     private void saveRetryPushNotificationInQueue(final UUID tenantId, final String url, final NotificationJson notificationJson, final int attemptRetryNumber) {
         final PushNotificationKey key = new PushNotificationKey(tenantId,
-                                                                notificationJson.getAccountId() != null ? UUID.fromString(notificationJson.getAccountId()) : null,
+                                                                notificationJson.getAccountId(),
                                                                 notificationJson.getEventType(),
                                                                 notificationJson.getObjectType(),
-                                                                notificationJson.getObjectId() != null ? UUID.fromString(notificationJson.getObjectId()) : null,
+                                                                notificationJson.getObjectId(),
                                                                 attemptRetryNumber + 1,
                                                                 notificationJson.getMetaData(),
                                                                 url);

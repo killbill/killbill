@@ -18,6 +18,7 @@ package org.killbill.billing.jaxrs.json;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.UUID;
 
 import javax.annotation.Nullable;
 
@@ -37,12 +38,11 @@ public class CreditJson extends JsonBase {
 
     @ApiModelProperty(required = true)
     private final BigDecimal creditAmount;
-    @ApiModelProperty(dataType = "java.util.UUID")
-    private final String invoiceId;
+    private final UUID invoiceId;
     private final String invoiceNumber;
     private final LocalDate effectiveDate;
-    @ApiModelProperty(dataType = "java.util.UUID", required = true)
-    private final String accountId;
+    @ApiModelProperty(required = true)
+    private final UUID accountId;
     private final String description;
     private final String currency;
 
@@ -50,10 +50,10 @@ public class CreditJson extends JsonBase {
     @JsonCreator
     public CreditJson(@JsonProperty("creditAmount") final BigDecimal creditAmount,
                       @JsonProperty("currency") final String currency,
-                      @JsonProperty("invoiceId") final String invoiceId,
+                      @JsonProperty("invoiceId") final UUID invoiceId,
                       @JsonProperty("invoiceNumber") final String invoiceNumber,
                       @JsonProperty("effectiveDate") final LocalDate effectiveDate,
-                      @JsonProperty("accountId") final String accountId,
+                      @JsonProperty("accountId") final UUID accountId,
                       @JsonProperty("description") final String description,
                       @JsonProperty("auditLogs") @Nullable final List<AuditLogJson> auditLogs) {
         super(auditLogs);
@@ -68,10 +68,10 @@ public class CreditJson extends JsonBase {
 
     public CreditJson(final Invoice invoice, final InvoiceItem credit, final List<AuditLog> auditLogs) {
         super(toAuditLogJson(auditLogs));
-        this.accountId = toString(credit.getAccountId());
+        this.accountId = credit.getAccountId();
         this.creditAmount = credit.getAmount();
         this.currency = credit.getCurrency().name();
-        this.invoiceId = toString(credit.getInvoiceId());
+        this.invoiceId = credit.getInvoiceId();
         this.invoiceNumber = invoice.getInvoiceNumber().toString();
         this.effectiveDate = credit.getStartDate();
         this.description = credit.getDescription();
@@ -85,7 +85,7 @@ public class CreditJson extends JsonBase {
         return creditAmount;
     }
 
-    public String getInvoiceId() {
+    public UUID getInvoiceId() {
         return invoiceId;
     }
 
@@ -97,7 +97,7 @@ public class CreditJson extends JsonBase {
         return effectiveDate;
     }
 
-    public String getAccountId() {
+    public UUID getAccountId() {
         return accountId;
     }
 
