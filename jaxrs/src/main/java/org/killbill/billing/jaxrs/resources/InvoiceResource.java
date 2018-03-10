@@ -119,6 +119,7 @@ import com.google.common.collect.Ordering;
 import com.google.inject.Inject;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiParam;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 
@@ -293,7 +294,7 @@ public class InvoiceResource extends JaxRsResourceBase {
     @Produces(APPLICATION_JSON)
     @ApiOperation(value = "Trigger an invoice generation", response = InvoiceJson.class)
     @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid account id or target datetime supplied")})
-    public Response createFutureInvoice(@QueryParam(QUERY_ACCOUNT_ID) final UUID accountId,
+    public Response createFutureInvoice(@ApiParam(required=true) @QueryParam(QUERY_ACCOUNT_ID) final UUID accountId,
                                         @QueryParam(QUERY_TARGET_DATE) final String targetDate,
                                         @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                         @HeaderParam(HDR_REASON) final String reason,
@@ -348,7 +349,7 @@ public class InvoiceResource extends JaxRsResourceBase {
     @ApiOperation(value = "Generate a dryRun invoice", response = InvoiceJson.class)
     @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid account id or target datetime supplied")})
     public Response generateDryRunInvoice(@Nullable final InvoiceDryRunJson dryRunSubscriptionSpec,
-                                          @QueryParam(QUERY_ACCOUNT_ID) final UUID accountId,
+                                          @ApiParam(required=true) @QueryParam(QUERY_ACCOUNT_ID) final UUID accountId,
                                           @Nullable @QueryParam(QUERY_TARGET_DATE) final String targetDate,
                                           @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                           @HeaderParam(HDR_REASON) final String reason,
@@ -413,7 +414,7 @@ public class InvoiceResource extends JaxRsResourceBase {
                            @ApiResponse(code = 404, message = "Account or invoice not found")})
     public Response deleteCBA(@PathParam("invoiceId") final UUID invoiceId,
                               @PathParam("invoiceItemId") final UUID invoiceItemId,
-                              @QueryParam(QUERY_ACCOUNT_ID) final UUID accountId,
+                              @ApiParam(required=true) @QueryParam(QUERY_ACCOUNT_ID) final UUID accountId,
                               @HeaderParam(HDR_CREATED_BY) final String createdBy,
                               @HeaderParam(HDR_REASON) final String reason,
                               @HeaderParam(HDR_COMMENT) final String comment,

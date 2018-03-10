@@ -58,6 +58,7 @@ import org.killbill.commons.metrics.TimedResource;
 
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiParam;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 
@@ -149,7 +150,7 @@ public class InvoiceItemResource extends JaxRsResourceBase {
     @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid invoice item id supplied"),
                            @ApiResponse(code = 404, message = "Account not found")})
     public Response getTags(@PathParam(ID_PARAM_NAME) final UUID id,
-                            @QueryParam(QUERY_ACCOUNT_ID) final UUID accountId,
+                            @ApiParam(required=true) @QueryParam(QUERY_ACCOUNT_ID) final UUID accountId,
                             @QueryParam(QUERY_AUDIT) @DefaultValue("NONE") final AuditMode auditMode,
                             @QueryParam(QUERY_TAGS_INCLUDED_DELETED) @DefaultValue("false") final Boolean includedDeleted,
                             @javax.ws.rs.core.Context final HttpServletRequest request) throws TagDefinitionApiException, AccountApiException {
