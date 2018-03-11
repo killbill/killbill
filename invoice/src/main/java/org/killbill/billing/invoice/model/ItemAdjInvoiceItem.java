@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014 Groupon, Inc
- * Copyright 2014 The Billing Project, LLC
+ * Copyright 2014-2018 Groupon, Inc
+ * Copyright 2014-2018 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -40,15 +40,9 @@ public class ItemAdjInvoiceItem extends AdjInvoiceItem {
              linkedInvoiceItem.getDescription(), amount, currency, linkedInvoiceItem.getId());
     }
 
-
     public ItemAdjInvoiceItem(final UUID id, @Nullable final DateTime createdDate, final UUID invoiceId, final UUID accountId, final LocalDate startDate,
                               @Nullable final String description, final BigDecimal amount, final Currency currency, final UUID linkedItemId) {
-        super(id, createdDate, invoiceId, accountId, startDate, startDate, description, amount, currency, linkedItemId);
-    }
-
-    @Override
-    public InvoiceItemType getInvoiceItemType() {
-        return InvoiceItemType.ITEM_ADJ;
+        super(id, createdDate, invoiceId, accountId, startDate, startDate, description, amount, currency, linkedItemId, InvoiceItemType.ITEM_ADJ);
     }
 
     @Override

@@ -48,7 +48,6 @@ import org.killbill.billing.catalog.api.BillingActionPolicy;
 import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.catalog.api.PlanPhasePriceOverride;
 import org.killbill.billing.catalog.api.PlanPhaseSpecifier;
-import org.killbill.billing.entitlement.api.Entitlement.EntitlementState;
 import org.killbill.billing.entitlement.api.SubscriptionEventType;
 import org.killbill.billing.events.BusInternalEvent;
 import org.killbill.billing.events.EffectiveSubscriptionInternalEvent;
@@ -77,6 +76,7 @@ import org.killbill.billing.invoice.generator.InvoiceWithMetadata.SubscriptionFu
 import org.killbill.billing.invoice.generator.InvoiceWithMetadata.SubscriptionFutureNotificationDates.UsageDef;
 import org.killbill.billing.invoice.model.DefaultInvoice;
 import org.killbill.billing.invoice.model.FixedPriceInvoiceItem;
+import org.killbill.billing.invoice.model.InvoiceItemCatalogBase;
 import org.killbill.billing.invoice.model.InvoiceItemFactory;
 import org.killbill.billing.invoice.model.ItemAdjInvoiceItem;
 import org.killbill.billing.invoice.model.ParentInvoiceItem;
@@ -571,7 +571,30 @@ public class InvoiceDispatcher {
                     if (exitingItem != null) {
                         invoice.removeInvoiceItem(exitingItem);
                     }
-                    invoice.addInvoiceItem(cur);
+
+                    final InvoiceItem sanitizedInvoiceItemFromPlugin = new InvoiceItemCatalogBase(cur.getId(),
+                                                                                                  cur.getCreatedDate(),
+                                                                                                  MoreObjects.firstNonNull(cur.getInvoiceId(), invoice.getId()),
+                                                                                                  cur.getAccountId(),
+                                                                                                  cur.getBundleId(),
+                                                                                                  cur.getSubscriptionId(),
+                                                                                                  cur.getDescription(),
+                                                                                                  cur.getPlanName(),
+                                                                                                  cur.getPhaseName(),
+                                                                                                  cur.getUsageName(),
+                                                                                                  cur.getPrettyPlanName(),
+                                                                                                  cur.getPrettyPhaseName(),
+                                                                                                  cur.getPrettyUsageName(),
+                                                                                                  cur.getStartDate(),
+                                                                                                  cur.getEndDate(),
+                                                                                                  cur.getAmount(),
+                                                                                                  cur.getRate(),
+                                                                                                  cur.getCurrency(),
+                                                                                                  cur.getLinkedItemId(),
+                                                                                                  cur.getQuantity(),
+                                                                                                  cur.getItemDetails(),
+                                                                                                  cur.getInvoiceItemType());
+                    invoice.addInvoiceItem(sanitizedInvoiceItemFromPlugin);
                 }
 
                 // Use credit after we call the plugin (https://github.com/killbill/killbill/issues/637)
