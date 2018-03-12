@@ -17,11 +17,17 @@
 
 package org.killbill.billing.server.log.obfuscators;
 
+import java.lang.reflect.Constructor;
+import java.util.Arrays;
 import java.util.Collection;
+import java.util.List;
+
+import org.killbill.billing.util.cache.TenantOverdueConfigCacheLoader;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import ch.qos.logback.classic.pattern.ClassicConverter;
 import ch.qos.logback.classic.spi.ILoggingEvent;
-import com.google.common.collect.ImmutableList;
 
 /**
  * ObfuscatorConverter attempts to mask sensitive data in the log files.
@@ -44,15 +50,24 @@ import com.google.common.collect.ImmutableList;
  */
 public class ObfuscatorConverter extends ClassicConverter {
 
-    private final Collection<Obfuscator> obfuscators = ImmutableList.<Obfuscator>of(new ConfigMagicObfuscator(),
-                                                                                    new LoggingFilterObfuscator(),
-                                                                                    new PatternObfuscator(),
-                                                                                    new LuhnMaskingObfuscator());
+    private static final Logger LOGGER = LoggerFactory.getLogger(TenantOverdueConfigCacheLoader.class);
+
+    private final Collection<Obfuscator> obfuscators = Arrays.asList(new ConfigMagicObfuscator(),
+                                                                     new LoggingFilterObfuscator(),
+                                                                     new PatternObfuscator(),
+                                                                     new LuhnMaskingObfuscator());
+    private List<String> additionalObfuscators;
+
+    @Override
+    public void start() {
+        additionalObfuscators = getOptionList();
+        super.start();
+    }
 
     @Override
     public String convert(final ILoggingEvent event) {
         String convertedMessage = event.getFormattedMessage();
-        for (final Obfuscator obfuscator : obfuscators) {
+        for (final Obfuscator obfuscator : mergeAdditionalObfuscators()) {
             try {
                 convertedMessage = obfuscator.obfuscate(convertedMessage, event);
             } catch (final RuntimeException e) {
@@ -60,5 +75,26 @@ public class ObfuscatorConverter extends ClassicConverter {
             }
         }
         return convertedMessage;
+    }
+
+    private Collection<Obfuscator> mergeAdditionalObfuscators() {
+        if(additionalObfuscators != null) {
+            for (String obfuscatorClassName : additionalObfuscators) {
+                createAndAddObfuscator(obfuscatorClassName);
+            }
+        }
+        return obfuscators;
+    }
+
+    private void createAndAddObfuscator(final String obfuscatorClassName) {
+        try {
+            obfuscators.add(createDynamicObfuscator(obfuscatorClassName));
+        } catch (Exception e) {
+            LOGGER.error(String.format("Unable to create instance for %s.", obfuscatorClassName), e);
+        }
+    }
+
+    private Obfuscator createDynamicObfuscator(final String className) throws Exception {
+        return (Obfuscator) Class.forName(className).getConstructor().newInstance();
     }
 }
