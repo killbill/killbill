@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014-2016 Groupon, Inc
- * Copyright 2014-2016 The Billing Project, LLC
+ * Copyright 2014-2018 Groupon, Inc
+ * Copyright 2014-2018 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -26,7 +26,6 @@ import java.util.UUID;
 import org.joda.time.DateTime;
 import org.joda.time.Interval;
 import org.joda.time.LocalDate;
-import org.killbill.billing.ErrorCode;
 import org.killbill.billing.account.api.Account;
 import org.killbill.billing.account.api.AccountData;
 import org.killbill.billing.api.TestApiListener.NextEvent;
@@ -43,6 +42,7 @@ import org.killbill.billing.entitlement.api.Entitlement.EntitlementActionPolicy;
 import org.killbill.billing.entitlement.api.Entitlement.EntitlementState;
 import org.killbill.billing.entitlement.api.SubscriptionBundle;
 import org.killbill.billing.entitlement.api.SubscriptionEventType;
+import org.killbill.billing.invoice.api.DryRunArguments;
 import org.killbill.billing.invoice.api.DryRunType;
 import org.killbill.billing.invoice.api.Invoice;
 import org.killbill.billing.invoice.api.InvoiceApiException;
@@ -55,12 +55,131 @@ import org.testng.annotations.Test;
 
 import com.google.common.collect.ImmutableList;
 
+import static org.killbill.billing.ErrorCode.INVOICE_NOTHING_TO_DO;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotEquals;
 import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.assertTrue;
+import static org.testng.Assert.fail;
 
 public class TestIntegration extends TestIntegrationBase {
+
+    @Test(groups = "slow", description = "https://github.com/killbill/killbill/issues/897")
+    public void testFutureCancelBPWithAOBeforePhase() throws Exception {
+        // We take april as it has 30 days (easier to play with BCD)
+        // Set clock to the initial start date - we implicitly assume here that the account timezone is UTC
+        clock.setDay(new LocalDate(2012, 4, 1));
+
+        final AccountData accountData = getAccountData(1);
+        final Account account = createAccountWithNonOsgiPaymentMethod(accountData);
+        accountChecker.checkAccount(account.getId(), accountData, callContext);
+
+        final List<ExpectedInvoiceItemCheck> expectedInvoices = new ArrayList<ExpectedInvoiceItemCheck>();
+
+        //
+        // CREATE SUBSCRIPTION AND EXPECT BOTH EVENTS: NextEvent.CREATE, NextEvent.BLOCK NextEvent.INVOICE
+        //
+        final DefaultEntitlement bpSubscription = createBaseEntitlementAndCheckForCompletion(account.getId(), "bundleKey", "Shotgun", ProductCategory.BASE, BillingPeriod.MONTHLY, NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE);
+        // Check bundle after BP got created otherwise we get an error from auditApi.
+        subscriptionChecker.checkSubscriptionCreated(bpSubscription.getId(), internalCallContext);
+        expectedInvoices.add(new ExpectedInvoiceItemCheck(new LocalDate(2012, 4, 1), null, InvoiceItemType.FIXED, new BigDecimal("0")));
+        invoiceChecker.checkInvoice(account.getId(), 1, callContext, expectedInvoices);
+        expectedInvoices.clear();
+
+        addMonthsAndCheckForCompletion(1, NextEvent.PHASE, NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT);
+        expectedInvoices.add(new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 1), new LocalDate(2012, 6, 1), InvoiceItemType.RECURRING, new BigDecimal("249.95")));
+        final Invoice invoice2 = invoiceChecker.checkInvoice(account.getId(), 2, callContext, expectedInvoices);
+        paymentChecker.checkPayment(account.getId(), 1, callContext, new ExpectedPaymentCheck(new LocalDate(2012, 5, 1), new BigDecimal("249.95"), TransactionStatus.SUCCESS, invoice2.getId(), Currency.USD));
+        expectedInvoices.clear();
+
+        //
+        // ADD ADD_ON (Laser-Scope has a START_OF_SUBSCRIPTION create alignment)
+        //
+        addAOEntitlementAndCheckForCompletion(bpSubscription.getBundleId(), "Laser-Scope", ProductCategory.ADD_ON, BillingPeriod.MONTHLY, NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
+        expectedInvoices.add(new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 1), new LocalDate(2012, 6, 1), InvoiceItemType.RECURRING, new BigDecimal("999.95")));
+        final Invoice invoice3 = invoiceChecker.checkInvoice(account.getId(), 3, callContext, expectedInvoices);
+        paymentChecker.checkPayment(account.getId(), 2, callContext, new ExpectedPaymentCheck(new LocalDate(2012, 5, 1), new BigDecimal("999.95"), TransactionStatus.SUCCESS, invoice3.getId(), Currency.USD));
+        expectedInvoices.clear();
+
+        //
+        // CANCEL BP
+        //
+        cancelEntitlementAndCheckForCompletion(bpSubscription, EntitlementActionPolicy.END_OF_TERM, BillingActionPolicy.END_OF_TERM);
+
+        // Verify we can trigger a dry-run invoice while the cancellation is pending
+        final DryRunArguments dryRun = new TestDryRunArguments(DryRunType.SUBSCRIPTION_ACTION, null, null, null, null, null, SubscriptionEventType.STOP_BILLING, bpSubscription.getId(),
+                                                               bpSubscription.getBundleId(), null, null);
+        try {
+            invoiceUserApi.triggerInvoiceGeneration(account.getId(), new LocalDate(2012, 6, 1), dryRun, callContext);
+            fail();
+        } catch (final InvoiceApiException e) {
+            assertEquals(e.getCode(), INVOICE_NOTHING_TO_DO.getCode());
+        }
+
+        addMonthsAndCheckForCompletion(1, NextEvent.BLOCK, NextEvent.BLOCK, NextEvent.CANCEL, NextEvent.CANCEL, NextEvent.NULL_INVOICE, NextEvent.NULL_INVOICE);
+
+        checkNoMoreInvoiceToGenerate(account);
+    }
+
+    @Test(groups = "slow", description = "https://github.com/killbill/killbill/issues/897")
+    public void testFutureCancelBPWithAOAfterPhase() throws Exception {
+        // We take april as it has 30 days (easier to play with BCD)
+        // Set clock to the initial start date - we implicitly assume here that the account timezone is UTC
+        clock.setDay(new LocalDate(2012, 4, 1));
+
+        final AccountData accountData = getAccountData(1);
+        final Account account = createAccountWithNonOsgiPaymentMethod(accountData);
+        accountChecker.checkAccount(account.getId(), accountData, callContext);
+
+        final List<ExpectedInvoiceItemCheck> expectedInvoices = new ArrayList<ExpectedInvoiceItemCheck>();
+
+        //
+        // CREATE SUBSCRIPTION AND EXPECT BOTH EVENTS: NextEvent.CREATE, NextEvent.BLOCK NextEvent.INVOICE
+        //
+        final DefaultEntitlement bpSubscription = createBaseEntitlementAndCheckForCompletion(account.getId(), "bundleKey", "Shotgun", ProductCategory.BASE, BillingPeriod.MONTHLY, NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE);
+        // Check bundle after BP got created otherwise we get an error from auditApi.
+        subscriptionChecker.checkSubscriptionCreated(bpSubscription.getId(), internalCallContext);
+        expectedInvoices.add(new ExpectedInvoiceItemCheck(new LocalDate(2012, 4, 1), null, InvoiceItemType.FIXED, new BigDecimal("0")));
+        invoiceChecker.checkInvoice(account.getId(), 1, callContext, expectedInvoices);
+        expectedInvoices.clear();
+
+        //
+        // ADD ADD_ON
+        //
+        addAOEntitlementAndCheckForCompletion(bpSubscription.getBundleId(), "Telescopic-Scope", ProductCategory.ADD_ON, BillingPeriod.MONTHLY, NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
+        expectedInvoices.add(new ExpectedInvoiceItemCheck(new LocalDate(2012, 4, 1), new LocalDate(2012, 5, 1), InvoiceItemType.RECURRING, new BigDecimal("399.95")));
+        final Invoice invoice2 = invoiceChecker.checkInvoice(account.getId(), 2, callContext, expectedInvoices);
+        paymentChecker.checkPayment(account.getId(), 1, callContext, new ExpectedPaymentCheck(new LocalDate(2012, 4, 1), new BigDecimal("399.95"), TransactionStatus.SUCCESS, invoice2.getId(), Currency.USD));
+        expectedInvoices.clear();
+
+        // Go past the PHASE events
+        addMonthsAndCheckForCompletion(1, NextEvent.PHASE, NextEvent.PHASE, NextEvent.NULL_INVOICE, NextEvent.NULL_INVOICE, NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT);
+        expectedInvoices.add(new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 1), new LocalDate(2012, 6, 1), InvoiceItemType.RECURRING, new BigDecimal("249.95")));
+        expectedInvoices.add(new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 1), new LocalDate(2012, 6, 1), InvoiceItemType.RECURRING, new BigDecimal("999.95")));
+        final Invoice invoice3 = invoiceChecker.checkInvoice(account.getId(), 3, callContext, expectedInvoices);
+        expectedInvoices.clear();
+        paymentChecker.checkPayment(account.getId(), 2, callContext, new ExpectedPaymentCheck(new LocalDate(2012, 5, 1), new BigDecimal("1249.9"), TransactionStatus.SUCCESS, invoice3.getId(), Currency.USD));
+        expectedInvoices.clear();
+
+        //
+        // CANCEL BP EOT
+        //
+        cancelEntitlementAndCheckForCompletion(bpSubscription, EntitlementActionPolicy.END_OF_TERM, BillingActionPolicy.END_OF_TERM);
+
+        // Verify we can trigger a dry-run invoice while the cancellation is pending
+        final DryRunArguments dryRun = new TestDryRunArguments(DryRunType.SUBSCRIPTION_ACTION, null, null, null, null, null, SubscriptionEventType.STOP_BILLING, bpSubscription.getId(),
+                                                               bpSubscription.getBundleId(), null, null);
+        try {
+            invoiceUserApi.triggerInvoiceGeneration(account.getId(), new LocalDate(2012, 6, 1), dryRun, callContext);
+            fail();
+        } catch (final InvoiceApiException e) {
+            assertEquals(e.getCode(), INVOICE_NOTHING_TO_DO.getCode());
+        }
+
+        addMonthsAndCheckForCompletion(1, NextEvent.BLOCK, NextEvent.BLOCK, NextEvent.CANCEL, NextEvent.CANCEL, NextEvent.NULL_INVOICE, NextEvent.NULL_INVOICE);
+
+        checkNoMoreInvoiceToGenerate(account);
+    }
 
     @Test(groups = "slow")
     public void testCancelBPWithAOTheSameDay() throws Exception {
@@ -291,7 +410,7 @@ public class TestIntegration extends TestIntegrationBase {
            invoiceUserApi.triggerInvoiceGeneration(account.getId(), clock.getUTCToday(), dryRun, callContext);
             Assert.fail("Call should return no invoices");
         } catch (final InvoiceApiException e) {
-            assertEquals(e.getCode(), ErrorCode.INVOICE_NOTHING_TO_DO.getCode());
+            assertEquals(e.getCode(), INVOICE_NOTHING_TO_DO.getCode());
         }
 
         baseEntitlement = changeEntitlementAndCheckForCompletion(baseEntitlement, "Pistol", BillingPeriod.MONTHLY, null);
