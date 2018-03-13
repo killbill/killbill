@@ -21,8 +21,10 @@ import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 
+@ApiModel(value="UserRoles")
 public class UserRolesJson {
 
     @ApiModelProperty(required = true)

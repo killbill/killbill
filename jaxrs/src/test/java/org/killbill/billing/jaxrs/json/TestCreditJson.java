@@ -36,10 +36,10 @@ public class TestCreditJson extends JaxrsTestSuiteNoDB {
     public void testJson() throws Exception {
         final BigDecimal creditAmount = BigDecimal.TEN;
         final Currency currency = Currency.AED;
-        final String invoiceId = UUID.randomUUID().toString();
+        final UUID invoiceId = UUID.randomUUID();
         final String invoiceNumber = UUID.randomUUID().toString();
         final LocalDate effectiveDate = clock.getUTCToday();
-        final String accountId = UUID.randomUUID().toString();
+        final UUID accountId = UUID.randomUUID();
         final List<AuditLogJson> auditLogs = createAuditLogsJson(clock.getUTCNow());
         final CreditJson creditJson = new CreditJson(creditAmount, currency.name(), invoiceId, invoiceNumber, effectiveDate,
                                                      accountId, null, auditLogs);

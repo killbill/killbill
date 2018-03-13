@@ -28,7 +28,7 @@ public class TestAccountEmailJson extends JaxrsTestSuiteNoDB {
 
     @Test(groups = "fast")
     public void testJson() throws Exception {
-        final String accountId = UUID.randomUUID().toString();
+        final UUID accountId = UUID.randomUUID();
         final String email = UUID.randomUUID().toString();
 
         final AccountEmailJson accountEmailJson = new AccountEmailJson(accountId, email);
@@ -46,7 +46,7 @@ public class TestAccountEmailJson extends JaxrsTestSuiteNoDB {
 
     @Test(groups = "fast")
     public void testToAccountEmail() throws Exception {
-        final String accountId = UUID.randomUUID().toString();
+        final UUID accountId = UUID.randomUUID();
         final String email = UUID.randomUUID().toString();
 
         final AccountEmailJson accountEmailJson = new AccountEmailJson(accountId, email);
@@ -54,7 +54,7 @@ public class TestAccountEmailJson extends JaxrsTestSuiteNoDB {
         Assert.assertEquals(accountEmailJson.getEmail(), email);
 
         final AccountEmail accountEmail = accountEmailJson.toAccountEmail(UUID.randomUUID());
-        Assert.assertEquals(accountEmail.getAccountId().toString(), accountId);
+        Assert.assertEquals(accountEmail.getAccountId(), accountId);
         Assert.assertEquals(accountEmail.getEmail(), email);
     }
 }

@@ -30,7 +30,9 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Preconditions;
+import io.swagger.annotations.ApiModel;
 
+@ApiModel(value="ProfilingData")
 public class ProfilingDataJson {
 
     private final List<ProfilingDataJsonItem> rawData;

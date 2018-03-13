@@ -72,7 +72,7 @@ import io.swagger.annotations.ApiResponses;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 
 @Path(JaxrsResource.NODES_INFO_PATH)
-@Api(value = JaxrsResource.NODES_INFO_PATH, description = "Operations to retrieve nodes info")
+@Api(value = JaxrsResource.NODES_INFO_PATH, description = "Operations to retrieve nodes info", tags="NodesInfo")
 public class NodesInfoResource extends JaxRsResourceBase {
 
     private final KillbillNodesApi killbillInfoApi;

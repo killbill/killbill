@@ -27,7 +27,9 @@ import org.killbill.billing.catalog.api.UsageType;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import io.swagger.annotations.ApiModel;
 
+@ApiModel(value="UsagePriceOverride")
 public class UsagePriceOverrideJson {
 
     private final String usageName;
