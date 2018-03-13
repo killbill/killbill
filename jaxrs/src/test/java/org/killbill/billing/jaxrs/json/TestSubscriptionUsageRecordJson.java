@@ -34,7 +34,7 @@ public class TestSubscriptionUsageRecordJson extends JaxrsTestSuiteNoDB {
     @Test(groups = "fast")
     public void testJson() throws Exception {
         final LocalDate localDate = new LocalDate();
-        final String subscriptionId = UUID.randomUUID().toString();
+        final UUID subscriptionId = UUID.randomUUID();
         final String trackingId = UUID.randomUUID().toString();
         final List<UnitUsageRecordJson> unitUsageRecords = new ArrayList<UnitUsageRecordJson>();
         final List<UsageRecordJson> usageRecords = new ArrayList<UsageRecordJson>();
@@ -53,7 +53,7 @@ public class TestSubscriptionUsageRecordJson extends JaxrsTestSuiteNoDB {
         Assert.assertEquals(subscriptionUsageRecordJson.getUnitUsageRecords().get(0).getUsageRecords().get(0).getRecordDate(), localDate);
 
         final SubscriptionUsageRecord subscriptionUsageRecord = subscriptionUsageRecordJson.toSubscriptionUsageRecord();
-        Assert.assertEquals(subscriptionUsageRecord.getSubscriptionId().toString(), subscriptionId);
+        Assert.assertEquals(subscriptionUsageRecord.getSubscriptionId(), subscriptionId);
         Assert.assertEquals(subscriptionUsageRecord.getTrackingId(), trackingId);
         Assert.assertEquals(subscriptionUsageRecord.getUnitUsageRecord().size(), 1);
         Assert.assertEquals(subscriptionUsageRecord.getUnitUsageRecord().get(0).getUnitType(), "foo");

@@ -31,7 +31,9 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
+import io.swagger.annotations.ApiModel;
 
+@ApiModel(value="PlanDetail")
 public class PlanDetailJson {
 
     final String product;

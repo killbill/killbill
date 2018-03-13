@@ -32,14 +32,14 @@ public class TestAccountJson extends JaxrsTestSuiteNoDB {
 
     @Test(groups = "fast")
     public void testJson() throws Exception {
-        final String accountId = UUID.randomUUID().toString();
+        final UUID accountId = UUID.randomUUID();
         final String name = UUID.randomUUID().toString();
         final Integer length = 12;
         final String externalKey = UUID.randomUUID().toString();
         final String email = UUID.randomUUID().toString();
         final Integer billCycleDayLocal = 6;
         final String currency = UUID.randomUUID().toString();
-        final String paymentMethodId = UUID.randomUUID().toString();
+        final UUID paymentMethodId = UUID.randomUUID();
         final DateTime referenceTime = new DateTime();
         final String timeZone = UUID.randomUUID().toString();
         final String address1 = UUID.randomUUID().toString();
@@ -54,7 +54,7 @@ public class TestAccountJson extends JaxrsTestSuiteNoDB {
         final String notes = UUID.randomUUID().toString();
         final Boolean isMigrated = true;
         final Boolean isNotifiedForInvoice = false;
-        final String parentAccountId = UUID.randomUUID().toString();
+        final UUID parentAccountId = UUID.randomUUID();
 
         final AccountJson accountJson = new AccountJson(accountId, name, length, externalKey,
                                                         email, billCycleDayLocal, currency, parentAccountId, true, paymentMethodId,
@@ -127,12 +127,12 @@ public class TestAccountJson extends JaxrsTestSuiteNoDB {
         Assert.assertEquals(accountJson.getEmail(), account.getEmail());
         Assert.assertEquals(accountJson.getExternalKey(), account.getExternalKey());
         Assert.assertEquals(accountJson.getName(), account.getName());
-        Assert.assertEquals(accountJson.getPaymentMethodId(), account.getPaymentMethodId().toString());
+        Assert.assertEquals(accountJson.getPaymentMethodId(), account.getPaymentMethodId());
         Assert.assertEquals(accountJson.getPhone(), account.getPhone());
         Assert.assertEquals(accountJson.isMigrated(), account.isMigrated());
         Assert.assertEquals(accountJson.isNotifiedForInvoices(), account.isNotifiedForInvoices());
         Assert.assertEquals(accountJson.getState(), account.getStateOrProvince());
         Assert.assertEquals(accountJson.getTimeZone(), account.getTimeZone().toString());
-        Assert.assertEquals(accountJson.getParentAccountId(), account.getParentAccountId().toString());
+        Assert.assertEquals(accountJson.getParentAccountId(), account.getParentAccountId());
     }
 }

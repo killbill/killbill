@@ -64,7 +64,7 @@ import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 
 @Singleton
 @Path(JaxrsResource.TAG_DEFINITIONS_PATH)
-@Api(value = JaxrsResource.TAG_DEFINITIONS_PATH, description = "Operations on tag definitions")
+@Api(value = JaxrsResource.TAG_DEFINITIONS_PATH, description = "Operations on tag definitions", tags="TagDefinition")
 public class TagDefinitionResource extends JaxRsResourceBase {
 
     @Inject
@@ -104,11 +104,11 @@ public class TagDefinitionResource extends JaxRsResourceBase {
     @Produces(APPLICATION_JSON)
     @ApiOperation(value = "Retrieve a tag definition", response = TagDefinitionJson.class)
     @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid tagDefinitionId supplied")})
-    public Response getTagDefinition(@PathParam("tagDefinitionId") final String tagDefId,
+    public Response getTagDefinition(@PathParam("tagDefinitionId") final UUID tagDefId,
                                      @QueryParam(QUERY_AUDIT) @DefaultValue("NONE") final AuditMode auditMode,
                                      @javax.ws.rs.core.Context final HttpServletRequest request) throws TagDefinitionApiException {
         final TenantContext tenantContext = context.createTenantContextNoAccountId(request);
-        final TagDefinition tagDefinition = tagUserApi.getTagDefinition(UUID.fromString(tagDefId), tenantContext);
+        final TagDefinition tagDefinition = tagUserApi.getTagDefinition(tagDefId, tenantContext);
         final List<AuditLog> auditLogs = auditUserApi.getAuditLogs(tagDefinition.getId(), ObjectType.TAG_DEFINITION, auditMode.getLevel(), tenantContext);
         final TagDefinitionJson json = new TagDefinitionJson(tagDefinition, auditLogs);
         return Response.status(Status.OK).entity(json).build();
@@ -144,12 +144,12 @@ public class TagDefinitionResource extends JaxRsResourceBase {
     @Produces(APPLICATION_JSON)
     @ApiOperation(value = "Delete a tag definition")
     @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid tagDefinitionId supplied")})
-    public Response deleteTagDefinition(@PathParam("tagDefinitionId") final String tagDefId,
+    public Response deleteTagDefinition(@PathParam("tagDefinitionId") final UUID tagDefId,
                                         @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                         @HeaderParam(HDR_REASON) final String reason,
                                         @HeaderParam(HDR_COMMENT) final String comment,
                                         @javax.ws.rs.core.Context final HttpServletRequest request) throws TagDefinitionApiException {
-        tagUserApi.deleteTagDefinition(UUID.fromString(tagDefId), context.createCallContextNoAccountId(createdBy, reason, comment, request));
+        tagUserApi.deleteTagDefinition(tagDefId, context.createCallContextNoAccountId(createdBy, reason, comment, request));
         return Response.status(Status.NO_CONTENT).build();
     }
 

@@ -162,7 +162,7 @@ public abstract class JaxRsResourceBase implements JaxrsResource {
     }
 
     public Response addBlockingState(final BlockingStateJson json,
-                                     final String id,
+                                     final UUID blockableId,
                                      final BlockingStateType type,
                                      final String requestedDate,
                                      final List<String> pluginPropertiesString,
@@ -173,7 +173,6 @@ public abstract class JaxRsResourceBase implements JaxrsResource {
 
         final Iterable<PluginProperty> pluginProperties = extractPluginProperties(pluginPropertiesString);
         final CallContext callContext = context.createCallContextNoAccountId(createdBy, reason, comment, request);
-        final UUID blockableId = UUID.fromString(id);
 
         final boolean isBlockBilling = (json.isBlockBilling() != null && json.isBlockBilling());
         final boolean isBlockEntitlement = (json.isBlockEntitlement() != null && json.isBlockEntitlement());
@@ -277,7 +276,7 @@ public abstract class JaxRsResourceBase implements JaxrsResource {
         for (final CustomFieldJson cur : customFields) {
             verifyNonNullOrEmpty(cur.getCustomFieldId(), "CustomFieldJson id needs to be set");
             verifyNonNullOrEmpty(cur.getValue(), "CustomFieldJson value needs to be set");
-            input.add(new StringCustomField(UUID.fromString(cur.getCustomFieldId()), cur.getName(), cur.getValue(), getObjectType(), id, context.getCreatedDate()));
+            input.add(new StringCustomField(cur.getCustomFieldId(), cur.getName(), cur.getValue(), getObjectType(), id, context.getCreatedDate()));
         }
 
         customFieldUserApi.updateCustomFields(input, context);
@@ -374,10 +373,9 @@ public abstract class JaxRsResourceBase implements JaxrsResource {
         }
     }
 
-    protected Payment getPaymentByIdOrKey(@Nullable final String paymentIdStr, @Nullable final String externalKey, final Iterable<PluginProperty> pluginProperties, final TenantContext tenantContext) throws PaymentApiException {
-        Preconditions.checkArgument(paymentIdStr != null || externalKey != null, "Need to set either paymentId or payment externalKey");
-        if (paymentIdStr != null) {
-            final UUID paymentId = UUID.fromString(paymentIdStr);
+    protected Payment getPaymentByIdOrKey(@Nullable final UUID paymentId, @Nullable final String externalKey, final Iterable<PluginProperty> pluginProperties, final TenantContext tenantContext) throws PaymentApiException {
+        Preconditions.checkArgument(paymentId != null || externalKey != null, "Need to set either paymentId or payment externalKey");
+        if (paymentId != null) {
             return paymentApi.getPayment(paymentId, false, false, pluginProperties, tenantContext);
         } else {
             return paymentApi.getPaymentByExternalKey(externalKey, false, false, pluginProperties, tenantContext);
@@ -446,14 +444,14 @@ public abstract class JaxRsResourceBase implements JaxrsResource {
     }
 
 
-    protected PaymentTransaction lookupPendingOrSuccessTransaction(final Payment initialPayment, @Nullable final String transactionId, @Nullable final String transactionExternalKey, @Nullable final String transactionType) throws PaymentApiException {
+    protected PaymentTransaction lookupPendingOrSuccessTransaction(final Payment initialPayment, @Nullable final UUID transactionId, @Nullable final String transactionExternalKey, @Nullable final String transactionType) throws PaymentApiException {
         final Collection<PaymentTransaction> pendingTransaction = Collections2.filter(initialPayment.getTransactions(), new Predicate<PaymentTransaction>() {
             @Override
             public boolean apply(final PaymentTransaction input) {
                 if (input.getTransactionStatus() != TransactionStatus.PENDING && input.getTransactionStatus() != TransactionStatus.SUCCESS) {
                     return false;
                 }
-                if (transactionId != null && !transactionId.equals(input.getId().toString())) {
+                if (transactionId != null && !transactionId.equals(input.getId())) {
                     return false;
                 }
                 if (transactionExternalKey != null && !transactionExternalKey.equals(input.getExternalKey())) {
@@ -476,7 +474,7 @@ public abstract class JaxRsResourceBase implements JaxrsResource {
                 final String parameterValue;
                 if (transactionId != null) {
                     parameterType = "transactionId";
-                    parameterValue = transactionId;
+                    parameterValue = transactionId.toString();
                 } else if (transactionExternalKey != null) {
                     parameterType = "transactionExternalKey";
                     parameterValue = transactionExternalKey;

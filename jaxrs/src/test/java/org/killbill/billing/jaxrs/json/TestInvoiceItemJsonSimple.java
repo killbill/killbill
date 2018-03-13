@@ -35,13 +35,13 @@ public class TestInvoiceItemJsonSimple extends JaxrsTestSuiteNoDB {
 
     @Test(groups = "fast")
     public void testJson() throws Exception {
-        final String invoiceItemId = UUID.randomUUID().toString();
-        final String invoiceId = UUID.randomUUID().toString();
-        final String linkedInvoiceItemId = UUID.randomUUID().toString();
-        final String accountId = UUID.randomUUID().toString();
-        final String childAccountId = UUID.randomUUID().toString();
-        final String bundleId = UUID.randomUUID().toString();
-        final String subscriptionId = UUID.randomUUID().toString();
+        final UUID invoiceItemId = UUID.randomUUID();
+        final UUID invoiceId = UUID.randomUUID();
+        final UUID linkedInvoiceItemId = UUID.randomUUID();
+        final UUID accountId = UUID.randomUUID();
+        final UUID childAccountId = UUID.randomUUID();
+        final UUID bundleId = UUID.randomUUID();
+        final UUID subscriptionId = UUID.randomUUID();
         final String planName = UUID.randomUUID().toString();
         final String phaseName = UUID.randomUUID().toString();
         final String usageName = UUID.randomUUID().toString();
@@ -100,12 +100,12 @@ public class TestInvoiceItemJsonSimple extends JaxrsTestSuiteNoDB {
         Mockito.when(invoiceItem.getInvoiceItemType()).thenReturn(InvoiceItemType.FIXED);
 
         final InvoiceItemJson invoiceItemJson = new InvoiceItemJson(invoiceItem);
-        Assert.assertEquals(invoiceItemJson.getInvoiceItemId(), invoiceItem.getId().toString());
-        Assert.assertEquals(invoiceItemJson.getInvoiceId(), invoiceItem.getInvoiceId().toString());
-        Assert.assertEquals(invoiceItemJson.getLinkedInvoiceItemId(), invoiceItem.getLinkedItemId().toString());
-        Assert.assertEquals(invoiceItemJson.getAccountId(), invoiceItem.getAccountId().toString());
-        Assert.assertEquals(invoiceItemJson.getBundleId(), invoiceItem.getBundleId().toString());
-        Assert.assertEquals(invoiceItemJson.getSubscriptionId(), invoiceItem.getSubscriptionId().toString());
+        Assert.assertEquals(invoiceItemJson.getInvoiceItemId(), invoiceItem.getId());
+        Assert.assertEquals(invoiceItemJson.getInvoiceId(), invoiceItem.getInvoiceId());
+        Assert.assertEquals(invoiceItemJson.getLinkedInvoiceItemId(), invoiceItem.getLinkedItemId());
+        Assert.assertEquals(invoiceItemJson.getAccountId(), invoiceItem.getAccountId());
+        Assert.assertEquals(invoiceItemJson.getBundleId(), invoiceItem.getBundleId());
+        Assert.assertEquals(invoiceItemJson.getSubscriptionId(), invoiceItem.getSubscriptionId());
         Assert.assertEquals(invoiceItemJson.getPlanName(), invoiceItem.getPlanName());
         Assert.assertEquals(invoiceItemJson.getPhaseName(), invoiceItem.getPhaseName());
         Assert.assertEquals(invoiceItemJson.getUsageName(), invoiceItem.getUsageName());
