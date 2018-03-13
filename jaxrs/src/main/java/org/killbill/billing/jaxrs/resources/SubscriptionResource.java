@@ -77,6 +77,7 @@ import org.killbill.billing.events.PaymentInfoInternalEvent;
 import org.killbill.billing.events.PaymentPluginErrorInternalEvent;
 import org.killbill.billing.jaxrs.json.BlockingStateJson;
 import org.killbill.billing.jaxrs.json.BulkBaseSubscriptionAndAddOnsJson;
+import org.killbill.billing.jaxrs.json.BundleJson;
 import org.killbill.billing.jaxrs.json.CustomFieldJson;
 import org.killbill.billing.jaxrs.json.PhasePriceOverrideJson;
 import org.killbill.billing.jaxrs.json.SubscriptionJson;
@@ -254,7 +255,7 @@ public class SubscriptionResource extends JaxRsResourceBase {
     @Path("/createEntitlementWithAddOns")
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
-    @ApiOperation(value = "Create an entitlement with addOn products")
+    @ApiOperation(value = "Create an entitlement with addOn products", response = BundleJson.class)
     @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid entitlement supplied")})
     public Response createEntitlementWithAddOns(final List<SubscriptionJson> entitlements,
                                                 @QueryParam(QUERY_REQUESTED_DT) final String requestedDate, /* This is deprecated, only used for backward compatibility */
@@ -279,7 +280,7 @@ public class SubscriptionResource extends JaxRsResourceBase {
     @Path("/createEntitlementsWithAddOns")
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
-    @ApiOperation(value = "Create multiple entitlements with addOn products")
+    @ApiOperation(value = "Create multiple entitlements with addOn products", response = BundleJson.class, responseContainer = "List")
     @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid entitlements supplied")})
     public Response createEntitlementsWithAddOns(final List<BulkBaseSubscriptionAndAddOnsJson> entitlementsWithAddOns,
                                                 @QueryParam(QUERY_REQUESTED_DT) final String requestedDate, /* This is deprecated, only used for backward compatibility */

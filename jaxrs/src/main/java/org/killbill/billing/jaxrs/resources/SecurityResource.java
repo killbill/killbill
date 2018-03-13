@@ -147,7 +147,7 @@ public class SecurityResource extends JaxRsResourceBase {
     @GET
     @Produces(APPLICATION_JSON)
     @Path("/users/{username:" + ANYTHING_PATTERN + "}/roles")
-    @ApiOperation(value = "Get roles associated to a user")
+    @ApiOperation(value = "Get roles associated to a user", response = UserRolesJson.class)
     public Response getUserRoles(@PathParam("username") final String username,
                                  @javax.ws.rs.core.Context final HttpServletRequest request,
                                  @javax.ws.rs.core.Context final UriInfo uriInfo) throws SecurityApiException {

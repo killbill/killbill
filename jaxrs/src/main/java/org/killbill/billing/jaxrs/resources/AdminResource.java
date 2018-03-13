@@ -150,7 +150,7 @@ public class AdminResource extends JaxRsResourceBase {
     @GET
     @Path("/queues")
     @Produces(APPLICATION_JSON)
-    @ApiOperation(value = "Get queues entries", response = Response.class)
+    @ApiOperation(value = "Get queues entries", response = Response.class, hidden=true)
     @ApiResponses(value = {})
     public Response getQueueEntries(@QueryParam("accountId") final UUID accountId,
                                     @QueryParam("queueName") final String queueName,
