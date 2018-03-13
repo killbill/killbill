@@ -76,7 +76,7 @@ import org.killbill.billing.events.PaymentErrorInternalEvent;
 import org.killbill.billing.events.PaymentInfoInternalEvent;
 import org.killbill.billing.events.PaymentPluginErrorInternalEvent;
 import org.killbill.billing.jaxrs.json.BlockingStateJson;
-import org.killbill.billing.jaxrs.json.BulkBaseSubscriptionAndAddOnsJson;
+import org.killbill.billing.jaxrs.json.BulkSubscriptionsBundleJson;
 import org.killbill.billing.jaxrs.json.BundleJson;
 import org.killbill.billing.jaxrs.json.CustomFieldJson;
 import org.killbill.billing.jaxrs.json.PhasePriceOverrideJson;
@@ -271,7 +271,7 @@ public class SubscriptionResource extends JaxRsResourceBase {
                                                 @HeaderParam(HDR_COMMENT) final String comment,
                                                 @javax.ws.rs.core.Context final HttpServletRequest request,
                                                 @javax.ws.rs.core.Context final UriInfo uriInfo) throws EntitlementApiException, AccountApiException, SubscriptionApiException {
-        final List<BulkBaseSubscriptionAndAddOnsJson> entitlementsWithAddOns = ImmutableList.of(new BulkBaseSubscriptionAndAddOnsJson(entitlements));
+        final List<BulkSubscriptionsBundleJson> entitlementsWithAddOns = ImmutableList.of(new BulkSubscriptionsBundleJson(entitlements));
         return createEntitlementsWithAddOnsInternal(entitlementsWithAddOns, requestedDate, entitlementDate, billingDate, isMigrated, renameKeyIfExistsAndUnused, callCompletion, timeoutSec, pluginPropertiesString, createdBy, reason, comment, request, uriInfo, ObjectType.BUNDLE);
     }
 
@@ -282,7 +282,7 @@ public class SubscriptionResource extends JaxRsResourceBase {
     @Produces(APPLICATION_JSON)
     @ApiOperation(value = "Create multiple entitlements with addOn products", response = BundleJson.class, responseContainer = "List")
     @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid entitlements supplied")})
-    public Response createEntitlementsWithAddOns(final List<BulkBaseSubscriptionAndAddOnsJson> entitlementsWithAddOns,
+    public Response createEntitlementsWithAddOns(final List<BulkSubscriptionsBundleJson> entitlementsWithAddOns,
                                                 @QueryParam(QUERY_REQUESTED_DT) final String requestedDate, /* This is deprecated, only used for backward compatibility */
                                                 @QueryParam(QUERY_ENTITLEMENT_REQUESTED_DT) final String entitlementDate,
                                                 @QueryParam(QUERY_BILLING_REQUESTED_DT) final String billingDate,
@@ -300,7 +300,7 @@ public class SubscriptionResource extends JaxRsResourceBase {
     }
 
 
-    public Response createEntitlementsWithAddOnsInternal(final List<BulkBaseSubscriptionAndAddOnsJson> entitlementsWithAddOns,
+    public Response createEntitlementsWithAddOnsInternal(final List<BulkSubscriptionsBundleJson> entitlementsWithAddOns,
                                                  final String requestedDate,
                                                  final String entitlementDate,
                                                  final String billingDate,
@@ -325,7 +325,7 @@ public class SubscriptionResource extends JaxRsResourceBase {
         final Account account = accountUserApi.getAccountById(entitlementsWithAddOns.get(0).getBaseEntitlementAndAddOns().get(0).getAccountId(), callContext);
 
         final List<BaseEntitlementWithAddOnsSpecifier> baseEntitlementWithAddOnsSpecifierList = new ArrayList<BaseEntitlementWithAddOnsSpecifier>();
-        for (BulkBaseSubscriptionAndAddOnsJson bulkBaseEntitlementWithAddOns : entitlementsWithAddOns) {
+        for (BulkSubscriptionsBundleJson bulkBaseEntitlementWithAddOns : entitlementsWithAddOns) {
             final Iterable<SubscriptionJson> baseEntitlements = Iterables.filter(
                     bulkBaseEntitlementWithAddOns.getBaseEntitlementAndAddOns(), new Predicate<SubscriptionJson>() {
                         @Override
