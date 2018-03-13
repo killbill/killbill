@@ -92,16 +92,22 @@ public class TestCatalogRetireElements extends TestIntegrationBase {
             assertEquals(e.getCode(), ErrorCode.CAT_PLAN_NOT_FOUND.getCode());
         }
 
+
+        final DefaultEntitlement bpEntitlement2 =
+                createBaseEntitlementAndCheckForCompletion(account.getId(), "externalKey2", "Bazooka",
+                                                           ProductCategory.BASE, term, NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
+        assertNotNull(bpEntitlement2);
+
+
         // Move out a month and verify 'Pistol' plan continue working as expected.
         busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
         clock.addMonths(1);
         assertListenerStatus();
 
+
         final List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, callContext);
-        assertEquals(invoices.size(), 3);
-        for (final Invoice invoice : invoices) {
-            assertEquals(invoice.getInvoiceItems().get(0).getPlanName(), "pistol-monthly");
-        }
+        assertEquals(invoices.size(), 4);
+
     }
 
     // Flaky, see https://github.com/killbill/killbill/issues/860
