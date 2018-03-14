@@ -81,14 +81,14 @@ public class ObfuscatorConverter extends ClassicConverter {
 
     private void createAndAddObfuscator(final String obfuscatorClassName) {
         try {
-            BaseObfuscator newObfuscator = createDynamicObfuscator(obfuscatorClassName);
+            Obfuscator newObfuscator = createDynamicObfuscator(obfuscatorClassName);
             obfuscators.add(newObfuscator);
         } catch (Exception e) {
             // Ignore? Not sure the impact of importing a logger here
         }
     }
 
-    private BaseObfuscator createDynamicObfuscator(final String className) throws Exception {
-        return (BaseObfuscator) Class.forName(className).getConstructor().newInstance();
+    private Obfuscator createDynamicObfuscator(final String className) throws Exception {
+        return (Obfuscator) Class.forName(className).getConstructor().newInstance();
     }
 }
