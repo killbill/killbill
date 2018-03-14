@@ -17,11 +17,13 @@
 
 package org.killbill.billing.server.log.obfuscators;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
+import java.util.List;
 
 import ch.qos.logback.classic.pattern.ClassicConverter;
 import ch.qos.logback.classic.spi.ILoggingEvent;
-import com.google.common.collect.ImmutableList;
 
 /**
  * ObfuscatorConverter attempts to mask sensitive data in the log files.
@@ -44,10 +46,17 @@ import com.google.common.collect.ImmutableList;
  */
 public class ObfuscatorConverter extends ClassicConverter {
 
-    private final Collection<Obfuscator> obfuscators = ImmutableList.<Obfuscator>of(new ConfigMagicObfuscator(),
-                                                                                    new LoggingFilterObfuscator(),
-                                                                                    new PatternObfuscator(),
-                                                                                    new LuhnMaskingObfuscator());
+    private final Collection<Obfuscator> obfuscators = new ArrayList<Obfuscator>();
+
+    @Override
+    public void start() {
+        obfuscators.addAll(Arrays.asList(new ConfigMagicObfuscator(),
+                                         new LoggingFilterObfuscator(),
+                                         new PatternObfuscator(),
+                                         new LuhnMaskingObfuscator()));
+        mergeAdditionalObfuscators(getOptionList());
+        super.start();
+    }
 
     @Override
     public String convert(final ILoggingEvent event) {
@@ -60,5 +69,27 @@ public class ObfuscatorConverter extends ClassicConverter {
             }
         }
         return convertedMessage;
+    }
+
+    private void mergeAdditionalObfuscators(final List<String> additionalObfuscators) {
+        if(additionalObfuscators != null) {
+            for (String obfuscatorClassName : additionalObfuscators) {
+                createAndAddObfuscator(obfuscatorClassName);
+            }
+        }
+    }
+
+    private void createAndAddObfuscator(final String obfuscatorClassName) {
+        try {
+            Obfuscator newObfuscator = createDynamicObfuscator(obfuscatorClassName);
+            obfuscators.add(newObfuscator);
+        } catch (Exception e) {
+            // Ignore? Not sure the impact of importing a logger here
+            obfuscators.size();
+        }
+    }
+
+    private Obfuscator createDynamicObfuscator(final String className) throws Exception {
+        return (Obfuscator) Class.forName(className).getConstructor().newInstance();
     }
 }
