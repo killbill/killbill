@@ -248,7 +248,7 @@ public class InvoicePaymentResource extends JaxRsResourceBase {
                                              @javax.ws.rs.core.Context final UriInfo uriInfo,
                                              @javax.ws.rs.core.Context final HttpServletRequest request) throws PaymentApiException, AccountApiException {
         verifyNonNullOrEmpty(json, "InvoicePaymentTransactionJson body should be specified");
-        verifyNonNullOrEmpty(json.getTransactionExternalKey(), "transactionExternalKey amount needs to be set");
+        verifyNonNullOrEmpty(json.getTransactionExternalKey(), "InvoicePaymentTransactionJson transactionExternalKey needs to be set");
 
         final CallContext callContext = context.createCallContextNoAccountId(createdBy, reason, comment, request);
         final Payment payment = paymentApi.getPayment(paymentId, false, false, ImmutableList.<PluginProperty>of(), callContext);
