@@ -127,6 +127,7 @@ public class InvoiceApiHelper {
                                             @Nullable final Currency currency,
                                             final LocalDate effectiveDate,
                                             final String description,
+                                            @Nullable final String itemDetails,
                                             final InternalCallContext context) throws InvoiceApiException {
         final InvoiceItem invoiceItemToBeAdjusted = Iterables.<InvoiceItem>tryFind(invoiceToBeAdjusted.getInvoiceItems(),
                                                                                    new Predicate<InvoiceItem>() {
@@ -168,7 +169,7 @@ public class InvoiceApiHelper {
                                       amountToAdjust,
                                       currencyForAdjustment,
                                       invoiceItemToBeAdjusted.getId(),
-                                      null);
+                                      itemDetails);
     }
 
     private List<InvoiceItem> fromInvoiceItemModelDao(final Collection<InvoiceItemModelDao> invoiceItemModelDaos) {

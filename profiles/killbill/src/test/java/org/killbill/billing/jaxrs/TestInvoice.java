@@ -359,11 +359,24 @@ public class TestInvoice extends TestJaxrsBase {
         adjustmentInvoiceItem.setAccountId(accountJson.getAccountId());
         adjustmentInvoiceItem.setInvoiceId(invoice.getInvoiceId());
         adjustmentInvoiceItem.setInvoiceItemId(invoiceItem.getInvoiceItemId());
-        killBillClient.adjustInvoiceItem(invoiceItem, requestOptions);
+        final String itemDetails = "{\n" +
+                                   "  \"user\": \"admin\",\n" +
+                                   "  \"reason\": \"SLA not met\"\n" +
+                                   "}";
+        adjustmentInvoiceItem.setItemDetails(itemDetails);
+        killBillClient.adjustInvoiceItem(adjustmentInvoiceItem, requestOptions);
 
         // Verify the new invoice balance is zero
         final Invoice adjustedInvoice = killBillClient.getInvoice(invoice.getInvoiceId(), true, false, AuditLevel.FULL, requestOptions);
         assertEquals(adjustedInvoice.getAmount().compareTo(BigDecimal.ZERO), 0);
+
+        final InvoiceItem createdAdjustment = Iterables.find(adjustedInvoice.getItems(), new Predicate<InvoiceItem>() {
+            @Override
+            public boolean apply(final InvoiceItem input) {
+                return InvoiceItemType.ITEM_ADJ.toString().equals(input.getItemType());
+            }
+        });
+        assertEquals(createdAdjustment.getItemDetails(), itemDetails);
 
         // Verify invoice audit logs
         Assert.assertEquals(adjustedInvoice.getAuditLogs().size(), 1);

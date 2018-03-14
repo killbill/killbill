@@ -34,13 +34,13 @@ import com.google.common.base.MoreObjects;
 public class CreditAdjInvoiceItem extends AdjInvoiceItem {
 
     public CreditAdjInvoiceItem(final UUID invoiceId, final UUID accountId, final LocalDate date,
-                                @Nullable final String description, final BigDecimal amount, final Currency currency) {
-        this(UUIDs.randomUUID(), null, invoiceId, accountId, date, description, amount, currency);
+                                @Nullable final String description, final BigDecimal amount, final Currency currency, @Nullable final String itemDetails) {
+        this(UUIDs.randomUUID(), null, invoiceId, accountId, date, description, amount, currency, itemDetails);
     }
 
     public CreditAdjInvoiceItem(final UUID id, @Nullable final DateTime createdDate, final UUID invoiceId, final UUID accountId, final LocalDate date,
-                                @Nullable final String description, final BigDecimal amount, final Currency currency) {
-        super(id, createdDate, invoiceId, accountId, date, date, description, amount, currency, null, InvoiceItemType.CREDIT_ADJ);
+                                @Nullable final String description, final BigDecimal amount, final Currency currency, @Nullable final String itemDetails) {
+        super(id, createdDate, invoiceId, accountId, date, date, description, amount, currency, null, itemDetails, InvoiceItemType.CREDIT_ADJ);
     }
 
     @Override

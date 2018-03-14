@@ -1270,7 +1270,8 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
                                                                         creditDescription,
                                                                         // Note! The amount is negated here!
                                                                         accountCBA.negate(),
-                                                                        childAccount.getCurrency());
+                                                                        childAccount.getCurrency(),
+                                                                        null);
                 invoiceForCredit.addInvoiceItem(creditItem);
 
                 // save invoices and invoice items
