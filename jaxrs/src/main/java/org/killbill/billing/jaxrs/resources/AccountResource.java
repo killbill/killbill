@@ -353,7 +353,7 @@ public class AccountResource extends JaxRsResourceBase {
     @POST
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
-    @ApiOperation(value = "Create account")
+    @ApiOperation(value = "Create account", response = AccountJson.class)
     @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid account data supplied")})
     public Response createAccount(final AccountJson json,
                                   @HeaderParam(HDR_CREATED_BY) final String createdBy,
@@ -803,7 +803,7 @@ public class AccountResource extends JaxRsResourceBase {
     @Path("/{accountId:" + UUID_PATTERN + "}/" + PAYMENT_METHODS)
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
-    @ApiOperation(value = "Add a payment method")
+    @ApiOperation(value = "Add a payment method", response = PaymentMethodJson.class)
     @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid account id supplied"),
                            @ApiResponse(code = 404, message = "Account not found")})
     public Response createPaymentMethod(final PaymentMethodJson json,
@@ -959,12 +959,14 @@ public class AccountResource extends JaxRsResourceBase {
         return Response.status(Response.Status.OK).entity(result).build();
     }
 
+
+
     @TimedResource(name = "processPayment")
     @POST
     @Path("/" + PAYMENTS)
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
-    @ApiOperation(value = "Trigger a payment using the account external key (authorization, purchase or credit)")
+    @ApiOperation(value = "Trigger a payment using the account external key (authorization, purchase or credit)", response = PaymentJson.class)
     @ApiResponses(value = {@ApiResponse(code = 201, message = "Payment transaction created successfully"),
                            @ApiResponse(code = 400, message = "Invalid account external key supplied"),
                            @ApiResponse(code = 404, message = "Account not found"),
@@ -994,7 +996,7 @@ public class AccountResource extends JaxRsResourceBase {
     @Path("/{accountId:" + UUID_PATTERN + "}/" + PAYMENTS)
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
-    @ApiOperation(value = "Trigger a payment (authorization, purchase or credit)")
+    @ApiOperation(value = "Trigger a payment (authorization, purchase or credit)", response = PaymentJson.class)
     @ApiResponses(value = {@ApiResponse(code = 201, message = "Payment transaction created successfully"),
                            @ApiResponse(code = 400, message = "Invalid account id supplied"),
                            @ApiResponse(code = 404, message = "Account not found"),
@@ -1193,7 +1195,7 @@ public class AccountResource extends JaxRsResourceBase {
     @Path("/{accountId:" + UUID_PATTERN + "}/" + CUSTOM_FIELDS)
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
-    @ApiOperation(value = "Add custom fields to account")
+    @ApiOperation(value = "Add custom fields to account", response = CustomField.class, responseContainer = "List")
     @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid account id supplied")})
     public Response createCustomFields(@PathParam(ID_PARAM_NAME) final UUID accountId,
                                        final List<CustomFieldJson> customFields,
@@ -1282,7 +1284,7 @@ public class AccountResource extends JaxRsResourceBase {
     @POST
     @Path("/{accountId:" + UUID_PATTERN + "}/" + TAGS)
     @Produces(APPLICATION_JSON)
-    @ApiOperation(value = "Add tags to account")
+    @ApiOperation(value = "Add tags to account", response = TagJson.class, responseContainer = "List")
     @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid account id supplied")})
     public Response createTags(@PathParam(ID_PARAM_NAME) final UUID accountId,
                                @QueryParam(QUERY_TAGS) final String tagList,
@@ -1356,7 +1358,7 @@ public class AccountResource extends JaxRsResourceBase {
     @Path("/{accountId:" + UUID_PATTERN + "}/" + EMAILS)
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
-    @ApiOperation(value = "Add account email")
+    @ApiOperation(value = "Add account email", response = AccountEmailJson.class, responseContainer = "List")
     @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid account id supplied"),
                            @ApiResponse(code = 404, message = "Account not found")})
     public Response addEmail(final AccountEmailJson json,

@@ -166,7 +166,7 @@ public class SubscriptionResource extends JaxRsResourceBase {
     @POST
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
-    @ApiOperation(value = "Create an entitlement")
+    @ApiOperation(value = "Create an entitlement", response = SubscriptionJson.class)
     @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid entitlement supplied")})
     public Response createEntitlement(final SubscriptionJson entitlement,
                                       @QueryParam(QUERY_REQUESTED_DT) final String requestedDate, /* This is deprecated, only used for backward compatibility */
@@ -935,7 +935,7 @@ public class SubscriptionResource extends JaxRsResourceBase {
     @Path("/{subscriptionId:" + UUID_PATTERN + "}/" + TAGS)
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
-    @ApiOperation(value = "Add tags to subscription")
+    @ApiOperation(value = "Add tags to subscription", response = TagJson.class, responseContainer = "List")
     @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid subscription id supplied")})
     public Response createTags(@PathParam(ID_PARAM_NAME) final UUID id,
                                @QueryParam(QUERY_TAGS) final String tagList,

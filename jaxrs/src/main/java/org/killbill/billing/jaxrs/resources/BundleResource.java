@@ -70,6 +70,7 @@ import org.killbill.billing.util.api.TagUserApi;
 import org.killbill.billing.util.audit.AccountAuditLogs;
 import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.TenantContext;
+import org.killbill.billing.util.customfield.CustomField;
 import org.killbill.billing.util.entity.Pagination;
 import org.killbill.clock.Clock;
 import org.killbill.commons.metrics.TimedResource;
@@ -308,7 +309,7 @@ public class BundleResource extends JaxRsResourceBase {
     @Path("/{bundleId:" + UUID_PATTERN + "}/" + CUSTOM_FIELDS)
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
-    @ApiOperation(value = "Add custom fields to bundle")
+    @ApiOperation(value = "Add custom fields to bundle", response = CustomField.class, responseContainer = "List")
     @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid bundle id supplied")})
     public Response createCustomFields(@PathParam(ID_PARAM_NAME) final UUID bundleId,
                                        final List<CustomFieldJson> customFields,
@@ -438,7 +439,7 @@ public class BundleResource extends JaxRsResourceBase {
     @Path("/{bundleId:" + UUID_PATTERN + "}/" + TAGS)
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
-    @ApiOperation(value = "Add tags to bundle")
+    @ApiOperation(value = "Add tags to bundle", response = TagJson.class, responseContainer = "List")
     @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid bundle id supplied")})
     public Response createTags(@PathParam(ID_PARAM_NAME) final UUID bundleId,
                                @QueryParam(QUERY_TAGS) final String tagList,

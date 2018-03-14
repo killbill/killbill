@@ -60,6 +60,7 @@ import org.killbill.billing.util.api.TagUserApi;
 import org.killbill.billing.util.audit.AccountAuditLogs;
 import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.TenantContext;
+import org.killbill.billing.util.customfield.CustomField;
 import org.killbill.billing.util.entity.Pagination;
 import org.killbill.clock.Clock;
 import org.killbill.commons.metrics.TimedResource;
@@ -297,7 +298,7 @@ public class PaymentMethodResource extends JaxRsResourceBase {
     @Path("/{paymentMethodId:" + UUID_PATTERN + "}/" + CUSTOM_FIELDS)
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
-    @ApiOperation(value = "Add custom fields to payment method")
+    @ApiOperation(value = "Add custom fields to payment method", response = CustomField.class, responseContainer = "List")
     @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid payment method id supplied")})
     public Response createCustomFields(@PathParam("paymentMethodId") final UUID paymentMethodId,
                                        final List<CustomFieldJson> customFields,

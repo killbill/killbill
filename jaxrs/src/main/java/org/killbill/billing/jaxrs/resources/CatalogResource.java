@@ -116,7 +116,7 @@ public class CatalogResource extends JaxRsResourceBase {
     @TimedResource
     @GET
     @Produces(APPLICATION_XML)
-    @ApiOperation(value = "Retrieve the full catalog as XML", response = String.class, hidden = true)
+    @ApiOperation(value = "Retrieve the full catalog as XML", response = String.class)
     @ApiResponses(value = {})
     public Response getCatalogXml(@javax.ws.rs.core.Context final HttpServletRequest request) throws Exception {
         final TenantContext tenantContext = context.createTenantContextNoAccountId(request);
@@ -352,7 +352,7 @@ public class CatalogResource extends JaxRsResourceBase {
     @Path("/simplePlan")
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
-    @ApiOperation(value = "Upload the full catalog as XML")
+    @ApiOperation(value = "Add a simple plan entry in the current version of the catalog")
     @ApiResponses(value = {})
     public Response addSimplePlan(final SimplePlanJson simplePlan,
                                   @HeaderParam(HDR_CREATED_BY) final String createdBy,

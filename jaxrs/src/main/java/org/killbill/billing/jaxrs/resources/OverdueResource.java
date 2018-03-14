@@ -83,7 +83,7 @@ public class OverdueResource extends JaxRsResourceBase {
     @TimedResource
     @GET
     @Produces(APPLICATION_XML)
-    @ApiOperation(value = "Retrieve the overdue config as XML", response = String.class, hidden = true)
+    @ApiOperation(value = "Retrieve the overdue config as XML", response = String.class)
     @ApiResponses(value = {})
     public Response getOverdueConfigXml(@javax.ws.rs.core.Context final HttpServletRequest request) throws Exception {
         final TenantContext tenantContext = context.createTenantContextNoAccountId(request);
@@ -128,7 +128,7 @@ public class OverdueResource extends JaxRsResourceBase {
     @POST
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
-    @ApiOperation(value = "Upload the full overdue config as JSON")
+    @ApiOperation(value = "Upload the full overdue config as JSON", response = OverdueJson.class)
     @ApiResponses(value = {})
     public Response uploadOverdueConfigJson(final OverdueJson overdueJson,
                                   @HeaderParam(HDR_CREATED_BY) final String createdBy,

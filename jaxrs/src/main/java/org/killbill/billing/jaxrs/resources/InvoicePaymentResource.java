@@ -72,6 +72,7 @@ import org.killbill.billing.util.api.TagUserApi;
 import org.killbill.billing.util.audit.AccountAuditLogs;
 import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.TenantContext;
+import org.killbill.billing.util.customfield.CustomField;
 import org.killbill.clock.Clock;
 import org.killbill.commons.metrics.TimedResource;
 
@@ -146,7 +147,7 @@ public class InvoicePaymentResource extends JaxRsResourceBase {
     @Path("/{paymentId:" + UUID_PATTERN + "}/" + REFUNDS)
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
-    @ApiOperation(value = "Refund a payment, and adjust the invoice if needed")
+    @ApiOperation(value = "Refund a payment, and adjust the invoice if needed", response = InvoicePaymentJson.class)
     @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid payment id supplied"),
                            @ApiResponse(code = 404, message = "Account or payment not found")})
     public Response createRefundWithAdjustments(final InvoicePaymentTransactionJson json,
@@ -209,7 +210,7 @@ public class InvoicePaymentResource extends JaxRsResourceBase {
     @Path("/{paymentId:" + UUID_PATTERN + "}/" + CHARGEBACKS)
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
-    @ApiOperation(value = "Record a chargeback")
+    @ApiOperation(value = "Record a chargeback", response = InvoicePaymentJson.class)
     @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid payment id supplied"),
                            @ApiResponse(code = 404, message = "Account or payment not found")})
     public Response createChargeback(final InvoicePaymentTransactionJson json,
@@ -237,7 +238,7 @@ public class InvoicePaymentResource extends JaxRsResourceBase {
     @Path("/{paymentId:" + UUID_PATTERN + "}/" + CHARGEBACK_REVERSALS)
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
-    @ApiOperation(value = "Record a chargebackReversal")
+    @ApiOperation(value = "Record a chargebackReversal", response = InvoicePaymentJson.class)
     @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid payment id supplied"),
                            @ApiResponse(code = 404, message = "Account or payment not found")})
     public Response createChargebackReversal(final InvoicePaymentTransactionJson json,
@@ -328,7 +329,7 @@ public class InvoicePaymentResource extends JaxRsResourceBase {
     @Path("/{paymentId:" + UUID_PATTERN + "}/" + CUSTOM_FIELDS)
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
-    @ApiOperation(value = "Add custom fields to payment")
+    @ApiOperation(value = "Add custom fields to payment", response = CustomField.class, responseContainer = "List")
     @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid payment id supplied")})
     public Response createCustomFields(@PathParam(ID_PARAM_NAME) final UUID id,
                                        final List<CustomFieldJson> customFields,
@@ -400,7 +401,7 @@ public class InvoicePaymentResource extends JaxRsResourceBase {
     @Path("/{paymentId:" + UUID_PATTERN + "}/" + TAGS)
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
-    @ApiOperation(value = "Add tags to payment")
+    @ApiOperation(value = "Add tags to payment", response = TagJson.class, responseContainer = "List")
     @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid payment id supplied")})
     public Response createTags(@PathParam(ID_PARAM_NAME) final UUID id,
                                @QueryParam(QUERY_TAGS) final String tagList,

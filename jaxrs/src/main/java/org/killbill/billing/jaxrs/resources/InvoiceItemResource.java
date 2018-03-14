@@ -53,6 +53,7 @@ import org.killbill.billing.util.api.TagApiException;
 import org.killbill.billing.util.api.TagDefinitionApiException;
 import org.killbill.billing.util.api.TagUserApi;
 import org.killbill.billing.util.callcontext.TenantContext;
+import org.killbill.billing.util.customfield.CustomField;
 import org.killbill.clock.Clock;
 import org.killbill.commons.metrics.TimedResource;
 
@@ -93,7 +94,7 @@ public class InvoiceItemResource extends JaxRsResourceBase {
     @Path("/{invoiceItemId:" + UUID_PATTERN + "}/" + CUSTOM_FIELDS)
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
-    @ApiOperation(value = "Add custom fields to invoice item")
+    @ApiOperation(value = "Add custom fields to invoice item", response = CustomField.class, responseContainer = "List")
     @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid invoice item id supplied")})
     public Response createCustomFields(@PathParam(ID_PARAM_NAME) final UUID id,
                                        final List<CustomFieldJson> customFields,
@@ -165,7 +166,7 @@ public class InvoiceItemResource extends JaxRsResourceBase {
     @Path("/{invoiceItemId:" + UUID_PATTERN + "}/" + TAGS)
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
-    @ApiOperation(value = "Add tags to invoice item")
+    @ApiOperation(value = "Add tags to invoice item", response = TagJson.class, responseContainer = "List")
     @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid invoice item id supplied")})
     public Response createTags(@PathParam(ID_PARAM_NAME) final UUID id,
                                @QueryParam(QUERY_TAGS) final String tagList,

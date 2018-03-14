@@ -123,7 +123,7 @@ public class TenantResource extends JaxRsResourceBase {
     @POST
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
-    @ApiOperation(value = "Create a tenant")
+    @ApiOperation(value = "Create a tenant", response = TenantJson.class)
     @ApiResponses(value = {@ApiResponse(code = 500, message = "Tenant already exists")})
     public Response createTenant(final TenantJson json,
                                  @QueryParam(QUERY_TENANT_USE_GLOBAL_DEFAULT) @DefaultValue("false") final Boolean useGlobalDefault,
@@ -153,7 +153,7 @@ public class TenantResource extends JaxRsResourceBase {
     @Path("/" + REGISTER_NOTIFICATION_CALLBACK)
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
-    @ApiOperation(value = "Create a push notification")
+    @ApiOperation(value = "Create a push notification", response = TenantKeyJson.class)
     @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid tenantId supplied")})
     public Response registerPushNotificationCallback(@QueryParam(QUERY_NOTIFICATION_CALLBACK) final String notificationCallback,
                                                      @HeaderParam(HDR_CREATED_BY) final String createdBy,
@@ -191,7 +191,7 @@ public class TenantResource extends JaxRsResourceBase {
     @Path("/" + UPLOAD_PLUGIN_CONFIG + "/{pluginName:" + ANYTHING_PATTERN + "}")
     @Consumes(TEXT_PLAIN)
     @Produces(APPLICATION_JSON)
-    @ApiOperation(value = "Add a per tenant configuration for a plugin")
+    @ApiOperation(value = "Add a per tenant configuration for a plugin", response = TenantKeyJson.class)
     @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid tenantId supplied")})
     public Response uploadPluginConfiguration(final String pluginConfig,
                                               @PathParam("pluginName") final String pluginName,
@@ -254,7 +254,7 @@ public class TenantResource extends JaxRsResourceBase {
     @Path("/" + UPLOAD_PER_TENANT_CONFIG)
     @Consumes(TEXT_PLAIN)
     @Produces(APPLICATION_JSON)
-    @ApiOperation(value = "Add a per tenant configuration (system properties)")
+    @ApiOperation(value = "Add a per tenant configuration (system properties)", response = TenantKeyJson.class)
     @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid tenantId supplied")})
     public Response uploadPerTenantConfiguration(final String perTenantConfig,
                                                  @HeaderParam(HDR_CREATED_BY) final String createdBy,
@@ -292,7 +292,7 @@ public class TenantResource extends JaxRsResourceBase {
     @Path("/" + UPLOAD_PLUGIN_PAYMENT_STATE_MACHINE_CONFIG + "/{pluginName:" + ANYTHING_PATTERN + "}")
     @Consumes(TEXT_PLAIN)
     @Produces(APPLICATION_JSON)
-    @ApiOperation(value = "Add a per tenant payment state machine for a plugin")
+    @ApiOperation(value = "Add a per tenant payment state machine for a plugin", response = TenantKeyJson.class)
     @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid tenantId supplied")})
     public Response uploadPluginPaymentStateMachineConfig(final String paymentStateMachineConfig,
                                                           @PathParam("pluginName") final String pluginName,
@@ -333,7 +333,7 @@ public class TenantResource extends JaxRsResourceBase {
     @Path("/" + USER_KEY_VALUE + "/{keyName:" + ANYTHING_PATTERN + "}")
     @Consumes(TEXT_PLAIN)
     @Produces(APPLICATION_JSON)
-    @ApiOperation(value = "Add a per tenant user key/value")
+    @ApiOperation(value = "Add a per tenant user key/value", response = TenantKeyJson.class)
     @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid tenantId supplied")})
     public Response insertUserKeyValue(@PathParam("keyName") final String key,
                                final String value,

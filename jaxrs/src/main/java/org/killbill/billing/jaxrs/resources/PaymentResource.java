@@ -69,6 +69,7 @@ import org.killbill.billing.util.api.TagUserApi;
 import org.killbill.billing.util.audit.AccountAuditLogs;
 import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.TenantContext;
+import org.killbill.billing.util.customfield.CustomField;
 import org.killbill.billing.util.entity.Pagination;
 import org.killbill.clock.Clock;
 import org.killbill.commons.metrics.MetricTag;
@@ -299,7 +300,7 @@ public class PaymentResource extends ComboPaymentResource {
     @Path("/{paymentId:" + UUID_PATTERN + "}/")
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
-    @ApiOperation(value = "Capture an existing authorization")
+    @ApiOperation(value = "Capture an existing authorization", response = PaymentJson.class)
     @ApiResponses(value = {@ApiResponse(code = 201, message = "Payment transaction created successfully"),
                            @ApiResponse(code = 400, message = "Invalid paymentId supplied"),
                            @ApiResponse(code = 404, message = "Account or payment not found"),
@@ -324,7 +325,7 @@ public class PaymentResource extends ComboPaymentResource {
     @POST
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
-    @ApiOperation(value = "Capture an existing authorization")
+    @ApiOperation(value = "Capture an existing authorization", response = PaymentJson.class)
     @ApiResponses(value = {@ApiResponse(code = 201, message = "Payment transaction created successfully"),
                            @ApiResponse(code = 404, message = "Account or payment not found"),
                            @ApiResponse(code = 402, message = "Transaction declined by gateway"),
@@ -377,7 +378,7 @@ public class PaymentResource extends ComboPaymentResource {
     @Path("/{paymentId:" + UUID_PATTERN + "}/" + REFUNDS)
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
-    @ApiOperation(value = "Refund an existing payment")
+    @ApiOperation(value = "Refund an existing payment", response = PaymentJson.class)
     @ApiResponses(value = {@ApiResponse(code = 201, message = "Payment transaction created successfully"),
                            @ApiResponse(code = 400, message = "Invalid paymentId supplied"),
                            @ApiResponse(code = 404, message = "Account or payment not found"),
@@ -403,7 +404,7 @@ public class PaymentResource extends ComboPaymentResource {
     @Path("/" + REFUNDS)
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
-    @ApiOperation(value = "Refund an existing payment")
+    @ApiOperation(value = "Refund an existing payment", response = PaymentJson.class)
     @ApiResponses(value = {@ApiResponse(code = 201, message = "Payment transaction created successfully"),
                            @ApiResponse(code = 404, message = "Account or payment not found"),
                            @ApiResponse(code = 402, message = "Transaction declined by gateway"),
@@ -534,7 +535,7 @@ public class PaymentResource extends ComboPaymentResource {
     @Path("/{paymentId:" + UUID_PATTERN + "}/" + CHARGEBACKS)
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
-    @ApiOperation(value = "Record a chargeback")
+    @ApiOperation(value = "Record a chargeback", response = PaymentJson.class)
     @ApiResponses(value = {@ApiResponse(code = 201, message = "Payment transaction created successfully"),
                            @ApiResponse(code = 400, message = "Invalid paymentId supplied"),
                            @ApiResponse(code = 404, message = "Account or payment not found"),
@@ -560,7 +561,7 @@ public class PaymentResource extends ComboPaymentResource {
     @Path("/" + CHARGEBACKS)
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
-    @ApiOperation(value = "Record a chargeback")
+    @ApiOperation(value = "Record a chargeback", response = PaymentJson.class)
     @ApiResponses(value = {@ApiResponse(code = 201, message = "Payment transaction created successfully"),
                            @ApiResponse(code = 404, message = "Account or payment not found"),
                            @ApiResponse(code = 402, message = "Transaction declined by gateway"),
@@ -613,7 +614,7 @@ public class PaymentResource extends ComboPaymentResource {
     @Path("/{paymentId:" + UUID_PATTERN + "}/" + CHARGEBACK_REVERSALS)
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
-    @ApiOperation(value = "Record a chargeback reversal")
+    @ApiOperation(value = "Record a chargeback reversal", response = PaymentJson.class)
     @ApiResponses(value = {@ApiResponse(code = 201, message = "Payment transaction created successfully"),
                            @ApiResponse(code = 400, message = "Invalid paymentId supplied"),
                            @ApiResponse(code = 404, message = "Account or payment not found"),
@@ -639,7 +640,7 @@ public class PaymentResource extends ComboPaymentResource {
     @Path("/" + CHARGEBACK_REVERSALS)
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
-    @ApiOperation(value = "Record a chargeback reversal")
+    @ApiOperation(value = "Record a chargeback reversal", response = PaymentJson.class)
     @ApiResponses(value = {@ApiResponse(code = 201, message = "Payment transaction created successfully"),
                            @ApiResponse(code = 404, message = "Account or payment not found"),
                            @ApiResponse(code = 402, message = "Transaction declined by gateway"),
@@ -687,7 +688,7 @@ public class PaymentResource extends ComboPaymentResource {
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
     @Path("/" + COMBO)
-    @ApiOperation(value = "Combo api to create a new payment transaction on a existing (or not) account ")
+    @ApiOperation(value = "Combo api to create a new payment transaction on a existing (or not) account ", response = PaymentJson.class)
     @ApiResponses(value = {@ApiResponse(code = 201, message = "Payment transaction created successfully"),
                            @ApiResponse(code = 400, message = "Invalid data for Account or PaymentMethod"),
                            @ApiResponse(code = 402, message = "Transaction declined by gateway"),
@@ -798,7 +799,7 @@ public class PaymentResource extends ComboPaymentResource {
     @Path("/{paymentId:" + UUID_PATTERN + "}/" + CUSTOM_FIELDS)
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
-    @ApiOperation(value = "Add custom fields to payment")
+    @ApiOperation(value = "Add custom fields to payment", response = CustomField.class, responseContainer = "List")
     @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid payment id supplied")})
     public Response createCustomFields(@PathParam(ID_PARAM_NAME) final UUID id,
                                        final List<CustomFieldJson> customFields,
@@ -866,7 +867,7 @@ public class PaymentResource extends ComboPaymentResource {
     @Path("/{paymentId:" + UUID_PATTERN + "}/" + TAGS)
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
-    @ApiOperation(value = "Add tags to payment payment")
+    @ApiOperation(value = "Add tags to payment payment", response = TagJson.class, responseContainer = "List")
     @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid payment id supplied")})
     public Response createTags(@PathParam(ID_PARAM_NAME) final UUID paymentId,
                                @QueryParam(QUERY_TAGS) final String tagList,
