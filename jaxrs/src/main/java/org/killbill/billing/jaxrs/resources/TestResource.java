@@ -181,7 +181,6 @@ public class TestResource extends JaxRsResourceBase {
 
         final ClockMock testClock = getClockMock();
         if (requestedClockDate == null) {
-            log.info("************      RESETTING CLOCK to " + clock.getUTCNow());
             testClock.resetDeltaFromReality();
         } else {
             final DateTime newTime = DATE_TIME_FORMATTER.parseDateTime(requestedClockDate).toDateTime(DateTimeZone.UTC);
