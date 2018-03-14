@@ -29,7 +29,7 @@ import com.google.common.collect.ImmutableList;
 
 public class TestObfuscator extends ServerTestSuiteNoDB {
 
-    private final Obfuscator obfuscator = new Obfuscator() {
+    private final BaseObfuscator obfuscator = new BaseObfuscator() {
         @Override
         public String obfuscate(final String originalString, final ILoggingEvent event) {
             return null;

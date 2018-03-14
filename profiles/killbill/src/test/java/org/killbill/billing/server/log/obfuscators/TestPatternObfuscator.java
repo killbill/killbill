@@ -277,7 +277,7 @@ public class TestPatternObfuscator extends ServerTestSuiteNoDB {
     @Test(groups = "fast")
     public void testProfilingHeaderIsNotObfuscated() throws Exception {
         final ILoggingEvent event = Mockito.mock(ILoggingEvent.class);
-        Mockito.when(event.getLoggerName()).thenReturn(Obfuscator.LOGGING_FILTER_NAME);
+        Mockito.when(event.getLoggerName()).thenReturn(BaseObfuscator.LOGGING_FILTER_NAME);
 
         verify("1 * Server out-bound response\n" +
                "1 < 500\n" +

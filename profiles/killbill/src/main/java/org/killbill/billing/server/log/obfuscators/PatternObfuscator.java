@@ -24,10 +24,10 @@ import java.util.regex.Pattern;
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import com.google.common.collect.ImmutableList;
 
-public class PatternObfuscator extends Obfuscator {
+public class PatternObfuscator extends BaseObfuscator {
 
     // Hide by default sensitive bank, PCI and PII data. For PANs, see LuhnMaskingObfuscator
-    private static final String[] DEFAULT_SENSITIVE_KEYS = {
+    protected static final String[] DEFAULT_SENSITIVE_KEYS = {
             "accountnumber",
             "authenticationdata",
             "bankaccountnumber",

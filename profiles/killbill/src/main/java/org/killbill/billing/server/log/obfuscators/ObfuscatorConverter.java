@@ -46,7 +46,7 @@ import ch.qos.logback.classic.spi.ILoggingEvent;
  */
 public class ObfuscatorConverter extends ClassicConverter {
 
-    private final Collection<Obfuscator> obfuscators = new ArrayList<Obfuscator>();
+    protected final Collection<Obfuscator> obfuscators = new ArrayList<Obfuscator>();
 
     @Override
     public void start() {
@@ -81,15 +81,14 @@ public class ObfuscatorConverter extends ClassicConverter {
 
     private void createAndAddObfuscator(final String obfuscatorClassName) {
         try {
-            Obfuscator newObfuscator = createDynamicObfuscator(obfuscatorClassName);
+            BaseObfuscator newObfuscator = createDynamicObfuscator(obfuscatorClassName);
             obfuscators.add(newObfuscator);
         } catch (Exception e) {
             // Ignore? Not sure the impact of importing a logger here
-            obfuscators.size();
         }
     }
 
-    private Obfuscator createDynamicObfuscator(final String className) throws Exception {
-        return (Obfuscator) Class.forName(className).getConstructor().newInstance();
+    private BaseObfuscator createDynamicObfuscator(final String className) throws Exception {
+        return (BaseObfuscator) Class.forName(className).getConstructor().newInstance();
     }
 }

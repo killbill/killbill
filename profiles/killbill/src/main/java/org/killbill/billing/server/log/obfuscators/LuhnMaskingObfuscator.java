@@ -27,7 +27,7 @@ import com.google.common.annotations.VisibleForTesting;
  * <p/>
  * Inspired from https://github.com/esamson/logback-luhn-mask (licensed under the Apache License, Version 2.0)
  */
-public class LuhnMaskingObfuscator extends Obfuscator {
+public class LuhnMaskingObfuscator extends BaseObfuscator {
 
     /**
      * The minimum number of digits a credit card can have.
