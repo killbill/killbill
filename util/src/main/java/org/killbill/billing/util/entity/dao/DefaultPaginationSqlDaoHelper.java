@@ -61,7 +61,7 @@ public class DefaultPaginationSqlDaoHelper {
         // We still need to know the actual number of results, mainly for the UI so that it knows if it needs to fetch
         // more pages.
         // Note: for simple pagination (no search filter), this will be computed below instead (MaxNbRecords == TotalNbRecords)
-        final Long totalNbRecordsOrNull = transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<Long>() {
+        final Long totalNbRecordsOrNull = transactionalSqlDao.execute(true, new EntitySqlDaoTransactionWrapper<Long>() {
             @Override
             public Long inTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory) throws Exception {
                 final EntitySqlDao<M, E> sqlDao = entitySqlDaoWrapperFactory.become(sqlDaoClazz);

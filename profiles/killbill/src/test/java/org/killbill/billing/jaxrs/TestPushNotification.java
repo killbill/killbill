@@ -112,10 +112,10 @@ public class TestPushNotification extends TestJaxrsBase {
         return (remainingMs > 0);
     }
 
-    public void retrieveAccountWithAsserts(final String accountId) {
+    public void retrieveAccountWithAsserts(final UUID accountId) {
         try {
             // Just check we can retrieve the account with the id from the callback
-            killBillClient.getAccount(UUID.fromString(accountId), requestOptions);
+            killBillClient.getAccount(accountId, requestOptions);
         } catch (final Exception e) {
             Assert.fail(e.getMessage());
         }

@@ -61,7 +61,7 @@ import static javax.ws.rs.core.MediaType.APPLICATION_XML;
 
 @Singleton
 @Path(JaxrsResource.OVERDUE_PATH)
-@Api(value = JaxrsResource.OVERDUE_PATH, description = "Overdue information")
+@Api(value = JaxrsResource.OVERDUE_PATH, description = "Overdue information", tags="Overdue")
 public class OverdueResource extends JaxRsResourceBase {
 
     private final OverdueApi overdueApi;

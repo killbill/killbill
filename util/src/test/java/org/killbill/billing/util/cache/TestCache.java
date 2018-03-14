@@ -35,7 +35,7 @@ public class TestCache extends UtilTestSuiteWithEmbeddedDB {
     private EntitySqlDaoTransactionalJdbiWrapper transactionalSqlDao;
 
     private Long getTagRecordId(final UUID tagId) {
-        return transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<Long>() {
+        return transactionalSqlDao.execute(true, new EntitySqlDaoTransactionWrapper<Long>() {
             @Override
             public Long inTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory) throws Exception {
                 return entitySqlDaoWrapperFactory.become(TagSqlDao.class).getRecordId(tagId.toString(), internalCallContext);
@@ -60,7 +60,7 @@ public class TestCache extends UtilTestSuiteWithEmbeddedDB {
 
     @Test(groups = "slow")
     public void testCacheRecordId() throws Exception {
-        this.transactionalSqlDao = new EntitySqlDaoTransactionalJdbiWrapper(dbi, clock, controlCacheDispatcher, nonEntityDao, internalCallContextFactory);
+        this.transactionalSqlDao = new EntitySqlDaoTransactionalJdbiWrapper(dbi, roDbi, clock, controlCacheDispatcher, nonEntityDao, internalCallContextFactory);
         final TagModelDao tag = new TagModelDao(clock.getUTCNow(), UUID.randomUUID(), UUID.randomUUID(), ObjectType.TAG);
 
         // Verify we start with nothing in the cache
@@ -88,7 +88,7 @@ public class TestCache extends UtilTestSuiteWithEmbeddedDB {
 
     @Test(groups = "slow")
     public void testAllCachesAfterGetById() throws Exception {
-        this.transactionalSqlDao = new EntitySqlDaoTransactionalJdbiWrapper(dbi, clock, controlCacheDispatcher, nonEntityDao, internalCallContextFactory);
+        this.transactionalSqlDao = new EntitySqlDaoTransactionalJdbiWrapper(dbi, roDbi, clock, controlCacheDispatcher, nonEntityDao, internalCallContextFactory);
         final TagModelDao tag = new TagModelDao(clock.getUTCNow(), UUID.randomUUID(), UUID.randomUUID(), ObjectType.TAG);
 
         insertTag(tag);
@@ -121,7 +121,7 @@ public class TestCache extends UtilTestSuiteWithEmbeddedDB {
     }
 
     private void insertTag(final TagModelDao modelDao) {
-        transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<Void>() {
+        transactionalSqlDao.execute(false, new EntitySqlDaoTransactionWrapper<Void>() {
             @Override
             public Void inTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory) throws Exception {
                 entitySqlDaoWrapperFactory.become(TagSqlDao.class).create(modelDao, internalCallContext);
@@ -131,7 +131,7 @@ public class TestCache extends UtilTestSuiteWithEmbeddedDB {
     }
 
     private TagModelDao getById(final UUID id) {
-        return transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<TagModelDao>() {
+        return transactionalSqlDao.execute(true, new EntitySqlDaoTransactionWrapper<TagModelDao>() {
             @Override
             public TagModelDao inTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory) throws Exception {
                 return entitySqlDaoWrapperFactory.become(TagSqlDao.class).getById(id.toString(), internalCallContext);

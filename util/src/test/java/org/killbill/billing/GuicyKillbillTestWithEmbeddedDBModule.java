@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014-2016 Groupon, Inc
- * Copyright 2014-2016 The Billing Project, LLC
+ * Copyright 2014-2018 Groupon, Inc
+ * Copyright 2014-2018 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -22,6 +22,12 @@ import org.killbill.billing.platform.api.KillbillConfigSource;
 import org.killbill.billing.platform.test.PlatformDBTestingHelper;
 import org.killbill.billing.platform.test.config.TestKillbillConfigSource;
 import org.killbill.billing.platform.test.glue.TestPlatformModuleWithEmbeddedDB;
+import org.killbill.billing.util.glue.IDBISetup;
+import org.skife.jdbi.v2.IDBI;
+
+import com.google.inject.Provides;
+import com.google.inject.Singleton;
+import com.google.inject.name.Named;
 
 public class GuicyKillbillTestWithEmbeddedDBModule extends GuicyKillbillTestModule {
 
@@ -47,6 +53,13 @@ public class GuicyKillbillTestWithEmbeddedDBModule extends GuicyKillbillTestModu
 
         public KillbillTestPlatformModuleWithEmbeddedDB(final KillbillConfigSource configSource) {
             super(configSource, withOSGI, (TestKillbillConfigSource) configSource);
+        }
+
+        @Provides
+        @Singleton
+        @Named(IDBISetup.MAIN_RO_IDBI_NAMED)
+        protected IDBI provideRoIDBIInAComplicatedWayBecauseOf627(final IDBI idbi) {
+            return idbi;
         }
 
         @Override

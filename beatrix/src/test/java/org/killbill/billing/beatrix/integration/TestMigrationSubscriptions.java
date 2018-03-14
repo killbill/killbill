@@ -409,6 +409,8 @@ public class TestMigrationSubscriptions extends TestIntegrationBase {
         // Account in PDT
         final AccountData accountData = new MockAccountBuilder().currency(Currency.USD)
                                                                 .timeZone(timeZone)
+                                                                // Fixed reference time, regardless of current DST
+                                                                .referenceTime(clock.getUTCNow())
                                                                 .build();
 
         final Account account = createAccountWithNonOsgiPaymentMethod(accountData);

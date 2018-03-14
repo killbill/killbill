@@ -16,30 +16,33 @@
 
 package org.killbill.billing.jaxrs.json;
 
+import java.util.UUID;
+
 import org.killbill.billing.notification.plugin.api.ExtBusEvent;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 
 /*
  * Use to communicate back with client after they registered a callback
  */
+
+@ApiModel(value="Notification")
 public class NotificationJson {
 
     private final String eventType;
-    @ApiModelProperty(dataType = "java.util.UUID")
-    private final String accountId;
+    private final UUID accountId;
     private final String objectType;
-    @ApiModelProperty(dataType = "java.util.UUID")
-    private final String objectId;
+    private final UUID objectId;
     private String metaData;
 
     @JsonCreator
     public NotificationJson(@JsonProperty("eventType") final String eventType,
-                            @JsonProperty("accountId") final String accountId,
+                            @JsonProperty("accountId") final UUID accountId,
                             @JsonProperty("objectType") final String objectType,
-                            @JsonProperty("objectId") final String objectId,
+                            @JsonProperty("objectId") final UUID objectId,
                             @JsonProperty("metaData") final String metaData) {
         this.eventType = eventType;
         this.accountId = accountId;
@@ -50,9 +53,9 @@ public class NotificationJson {
 
     public NotificationJson(final ExtBusEvent event) {
         this(event.getEventType().toString(),
-             event.getAccountId() != null ? event.getAccountId().toString() : null,
+             event.getAccountId(),
              event.getObjectType().toString(),
-             event.getObjectId() != null ? event.getObjectId().toString() : null,
+             event.getObjectId(),
              event.getMetaData());
     }
 
@@ -60,7 +63,7 @@ public class NotificationJson {
         return eventType;
     }
 
-    public String getAccountId() {
+    public UUID getAccountId() {
         return accountId;
     }
 
@@ -68,7 +71,7 @@ public class NotificationJson {
         return objectType;
     }
 
-    public String getObjectId() {
+    public UUID getObjectId() {
         return objectId;
     }
 

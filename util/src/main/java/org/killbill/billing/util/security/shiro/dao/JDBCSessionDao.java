@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014-2017 Groupon, Inc
- * Copyright 2014-2017 The Billing Project, LLC
+ * Copyright 2014-2018 Groupon, Inc
+ * Copyright 2014-2018 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -24,6 +24,7 @@ import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 import javax.inject.Inject;
+import javax.inject.Named;
 
 import org.apache.shiro.session.Session;
 import org.apache.shiro.session.mgt.eis.CachingSessionDAO;
@@ -35,17 +36,21 @@ import org.slf4j.LoggerFactory;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 
+import static org.killbill.billing.util.glue.IDBISetup.MAIN_RO_IDBI_NAMED;
+
 public class JDBCSessionDao extends CachingSessionDAO {
 
     private static final Logger log = LoggerFactory.getLogger(JDBCSessionDao.class);
 
     private final JDBCSessionSqlDao jdbcSessionSqlDao;
+    private final JDBCSessionSqlDao roJdbcSessionSqlDao;
 
     private final Cache<Serializable, Boolean> noUpdateSessionsCache = CacheBuilder.newBuilder().expireAfterWrite(5, TimeUnit.SECONDS).build();
 
     @Inject
-    public JDBCSessionDao(final IDBI dbi) {
+    public JDBCSessionDao(final IDBI dbi, @Named(MAIN_RO_IDBI_NAMED) final IDBI roDbi) {
         this.jdbcSessionSqlDao = dbi.onDemand(JDBCSessionSqlDao.class);
+        this.roJdbcSessionSqlDao = roDbi.onDemand(JDBCSessionSqlDao.class);
     }
 
     @Override
@@ -80,7 +85,7 @@ public class JDBCSessionDao extends CachingSessionDAO {
         }
 
         final String sessionIdString = sessionId.toString();
-        final SessionModelDao sessionModelDao = jdbcSessionSqlDao.read(sessionIdString);
+        final SessionModelDao sessionModelDao = roJdbcSessionSqlDao.read(sessionIdString);
 
         if (sessionModelDao == null) {
             return null;

@@ -30,7 +30,7 @@ public class TestTagDefinitionJson extends JaxrsTestSuiteNoDB {
 
     @Test(groups = "fast")
     public void testJson() throws Exception {
-        final String id = UUID.randomUUID().toString();
+        final UUID id = UUID.randomUUID();
         final Boolean isControlTag = true;
         final String name = UUID.randomUUID().toString();
         final String description = UUID.randomUUID().toString();

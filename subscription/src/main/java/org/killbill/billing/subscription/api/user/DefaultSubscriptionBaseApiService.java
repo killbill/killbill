@@ -185,7 +185,7 @@ public class DefaultSubscriptionBaseApiService implements SubscriptionBaseApiSer
         try {
             final InternalCallContext internalCallContext = createCallContextFromBundleId(subscription.getBundleId(), context);
             final Catalog fullCatalog = catalogInternalApi.getFullCatalog(true, true, internalCallContext);
-            final BillingActionPolicy policy = fullCatalog.planCancelPolicy(planPhase, now);
+            final BillingActionPolicy policy = fullCatalog.planCancelPolicy(planPhase, subscription.getStartDate());
 
             Preconditions.checkState(policy != BillingActionPolicy.START_OF_TERM, "A default START_OF_TERM policy is not availaible");
 
@@ -239,7 +239,7 @@ public class DefaultSubscriptionBaseApiService implements SubscriptionBaseApiSer
 
         try {
             for (final DefaultSubscriptionBase subscription : subscriptions) {
-                final BillingAlignment billingAlignment = (subscription.getState() == EntitlementState.PENDING ? null : catalog.billingAlignment(new PlanPhaseSpecifier(subscription.getLastActivePlan().getName(), subscription.getLastActivePhase().getPhaseType()), clock.getUTCNow()));
+                final BillingAlignment billingAlignment = (subscription.getState() == EntitlementState.PENDING ? null : catalog.billingAlignment(new PlanPhaseSpecifier(subscription.getLastActivePlan().getName(), subscription.getLastActivePhase().getPhaseType()), subscription.getStartDate()));
                 final DateTime effectiveDate = subscription.getPlanChangeEffectiveDate(policy, billingAlignment, accountBillCycleDayLocal, context);
                 subscriptionsWithEffectiveDate.put(subscription, effectiveDate);
             }
@@ -404,7 +404,7 @@ public class DefaultSubscriptionBaseApiService implements SubscriptionBaseApiSer
 
             final PlanPhaseSpecifier fromPlanPhase = new PlanPhaseSpecifier(currentPlan.getName(),
                                                                             subscription.getCurrentOrPendingPhase().getPhaseType());
-            planChangeResult = catalogInternalApi.getFullCatalog(true, true, internalCallContext).planChange(fromPlanPhase, toPlanPhase, effectiveDate);
+            planChangeResult = catalogInternalApi.getFullCatalog(true, true, internalCallContext).planChange(fromPlanPhase, toPlanPhase, subscription.getStartDate());
         } catch (final CatalogApiException e) {
             throw new SubscriptionBaseApiException(e);
         }

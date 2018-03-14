@@ -20,7 +20,10 @@ import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import io.swagger.annotations.ApiModel;
 
+
+@ApiModel(value="HostedPaymentPageFields")
 public class HostedPaymentPageFieldsJson extends JsonBase {
 
     private final List<PluginPropertyJson> formFields;

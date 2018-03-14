@@ -75,7 +75,7 @@ import static javax.ws.rs.core.MediaType.TEXT_PLAIN;
 
 @Singleton
 @Path(JaxrsResource.TENANTS_PATH)
-@Api(value = JaxrsResource.TENANTS_PATH, description = "Operations on tenants")
+@Api(value = JaxrsResource.TENANTS_PATH, description = "Operations on tenants", tags="Tenant")
 public class TenantResource extends JaxRsResourceBase {
 
     private final TenantUserApi tenantApi;
@@ -104,8 +104,8 @@ public class TenantResource extends JaxRsResourceBase {
     @ApiOperation(value = "Retrieve a tenant by id", response = TenantJson.class)
     @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid tenantId supplied"),
                            @ApiResponse(code = 404, message = "Tenant not found")})
-    public Response getTenant(@PathParam("tenantId") final String tenantId) throws TenantApiException {
-        final Tenant tenant = tenantApi.getTenantById(UUID.fromString(tenantId));
+    public Response getTenant(@PathParam("tenantId") final UUID tenantId) throws TenantApiException {
+        final Tenant tenant = tenantApi.getTenantById(tenantId);
         return Response.status(Status.OK).entity(new TenantJson(tenant)).build();
     }
 

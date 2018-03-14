@@ -67,7 +67,7 @@ import static javax.ws.rs.core.MediaType.WILDCARD;
 
 @Singleton
 @Path(JaxrsResource.PAYMENT_GATEWAYS_PATH)
-@Api(value = JaxrsResource.PAYMENT_GATEWAYS_PATH, description = "HPP endpoints")
+@Api(value = JaxrsResource.PAYMENT_GATEWAYS_PATH, description = "HPP endpoints", tags="PaymentGateway")
 public class PaymentGatewayResource extends ComboPaymentResource {
 
     private final PaymentGatewayApi paymentGatewayApi;
@@ -130,8 +130,8 @@ public class PaymentGatewayResource extends ComboPaymentResource {
     @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid accountId supplied"),
                            @ApiResponse(code = 404, message = "Account not found")})
     public Response buildFormDescriptor(final HostedPaymentPageFieldsJson json,
-                                        @PathParam("accountId") final String accountIdString,
-                                        @QueryParam(QUERY_PAYMENT_METHOD_ID) final String paymentMethodIdStr,
+                                        @PathParam("accountId") final UUID accountId,
+                                        @QueryParam(QUERY_PAYMENT_METHOD_ID) final UUID inputPaymentMethodId,
                                         @QueryParam(QUERY_PAYMENT_CONTROL_PLUGIN_NAME) final List<String> paymentControlPluginNames,
                                         @QueryParam(QUERY_PLUGIN_PROPERTY) final List<String> pluginPropertiesString,
                                         @HeaderParam(HDR_CREATED_BY) final String createdBy,
@@ -141,10 +141,9 @@ public class PaymentGatewayResource extends ComboPaymentResource {
                                         @javax.ws.rs.core.Context final HttpServletRequest request) throws PaymentApiException, AccountApiException {
         final Iterable<PluginProperty> pluginProperties = extractPluginProperties(pluginPropertiesString);
         final PaymentOptions paymentOptions = createControlPluginApiPaymentOptions(paymentControlPluginNames);
-        final UUID accountId = UUID.fromString(accountIdString);
         final CallContext callContext = context.createCallContextWithAccountId(accountId, createdBy, reason, comment, request);
         final Account account = accountUserApi.getAccountById(accountId, callContext);
-        final UUID paymentMethodId = paymentMethodIdStr == null ? account.getPaymentMethodId() : UUID.fromString(paymentMethodIdStr);
+        final UUID paymentMethodId = inputPaymentMethodId == null ? account.getPaymentMethodId() : inputPaymentMethodId;
 
         validatePaymentMethodForAccount(accountId, paymentMethodId, callContext);
 

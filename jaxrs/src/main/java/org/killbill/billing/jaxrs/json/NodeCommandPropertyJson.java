@@ -21,7 +21,9 @@ import org.killbill.billing.util.nodes.NodeCommandProperty;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import io.swagger.annotations.ApiModel;
 
+@ApiModel(value="NodeCommandProperty")
 public class NodeCommandPropertyJson extends NodeCommandProperty {
 
 
