@@ -240,7 +240,7 @@ public class TestPaymentDao extends PaymentTestSuiteWithEmbeddedDB {
         final PaymentModelDao savedPayment4Again = paymentDao.getPayment(savedPayment.getId(), internalCallContext);
         assertEquals(savedPayment4Again.getId(), paymentModelDao.getId());
         assertEquals(savedPayment4Again.getStateName(), "AUTH_ABORTED");
-        assertEquals(savedPayment4Again.getLastSuccessStateName(), "AUTH_SUCCESS");
+        assertNull(savedPayment4Again.getLastSuccessStateName());
 
         paymentDao.updatePaymentAndTransactionOnCompletion(accountId, savedTransactionModelDao2.getAttemptId(), savedPayment.getId(), savedTransactionModelDao2.getTransactionType(), "AUTH_ABORTED", "AUTH_SUCCESS", transactionModelDao2.getId(), TransactionStatus.SUCCESS,
                                                            BigDecimal.ONE, Currency.USD, null, "nothing", internalCallContext);

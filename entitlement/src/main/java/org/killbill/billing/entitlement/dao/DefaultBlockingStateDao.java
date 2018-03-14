@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014-2017 Groupon, Inc
- * Copyright 2014-2017 The Billing Project, LLC
+ * Copyright 2014-2018 Groupon, Inc
+ * Copyright 2014-2018 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -29,6 +29,7 @@ import java.util.Map;
 import java.util.UUID;
 
 import javax.annotation.Nullable;
+import javax.inject.Named;
 
 import org.joda.time.DateTime;
 import org.killbill.billing.ErrorCode;
@@ -73,6 +74,8 @@ import com.google.common.collect.Collections2;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Ordering;
 
+import static org.killbill.billing.util.glue.IDBISetup.MAIN_RO_IDBI_NAMED;
+
 public class DefaultBlockingStateDao extends EntityDaoBase<BlockingStateModelDao, BlockingState, EntitlementApiException> implements BlockingStateDao {
 
     private static final Logger log = LoggerFactory.getLogger(DefaultBlockingStateDao.class);
@@ -112,9 +115,9 @@ public class DefaultBlockingStateDao extends EntityDaoBase<BlockingStateModelDao
 
     private final StatelessBlockingChecker statelessBlockingChecker = new StatelessBlockingChecker();
 
-    public DefaultBlockingStateDao(final IDBI dbi, final Clock clock, final NotificationQueueService notificationQueueService, final PersistentBus eventBus,
+    public DefaultBlockingStateDao(final IDBI dbi, @Named(MAIN_RO_IDBI_NAMED) final IDBI roDbi, final Clock clock, final NotificationQueueService notificationQueueService, final PersistentBus eventBus,
                                    final CacheControllerDispatcher cacheControllerDispatcher, final NonEntityDao nonEntityDao, final InternalCallContextFactory internalCallContextFactory) {
-        super(new EntitySqlDaoTransactionalJdbiWrapper(dbi, clock, cacheControllerDispatcher, nonEntityDao, internalCallContextFactory), BlockingStateSqlDao.class);
+        super(new EntitySqlDaoTransactionalJdbiWrapper(dbi, roDbi, clock, cacheControllerDispatcher, nonEntityDao, internalCallContextFactory), BlockingStateSqlDao.class);
         this.clock = clock;
         this.notificationQueueService = notificationQueueService;
         this.eventBus = eventBus;
@@ -129,7 +132,7 @@ public class DefaultBlockingStateDao extends EntityDaoBase<BlockingStateModelDao
 
     @Override
     public BlockingState getBlockingStateForService(final UUID blockableId, final BlockingStateType blockingStateType, final String serviceName, final InternalTenantContext context) {
-        return transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<BlockingState>() {
+        return transactionalSqlDao.execute(true, new EntitySqlDaoTransactionWrapper<BlockingState>() {
             @Override
             public BlockingState inTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory) throws Exception {
                 // Upper bound time limit is now
@@ -142,7 +145,7 @@ public class DefaultBlockingStateDao extends EntityDaoBase<BlockingStateModelDao
 
     @Override
     public List<BlockingState> getBlockingState(final UUID blockableId, final BlockingStateType blockingStateType, final DateTime upToDate, final InternalTenantContext context) {
-        return transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<List<BlockingState>>() {
+        return transactionalSqlDao.execute(true, new EntitySqlDaoTransactionWrapper<List<BlockingState>>() {
             @Override
             public List<BlockingState> inTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory) throws Exception {
                 final BlockingStateSqlDao sqlDao = entitySqlDaoWrapperFactory.become(BlockingStateSqlDao.class);
@@ -166,7 +169,7 @@ public class DefaultBlockingStateDao extends EntityDaoBase<BlockingStateModelDao
 
     @Override
     public List<BlockingState> getBlockingAllForAccountRecordId(final InternalTenantContext context) {
-        return transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<List<BlockingState>>() {
+        return transactionalSqlDao.execute(true, new EntitySqlDaoTransactionWrapper<List<BlockingState>>() {
             @Override
             public List<BlockingState> inTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory) throws Exception {
                 final BlockingStateSqlDao sqlDao = entitySqlDaoWrapperFactory.become(BlockingStateSqlDao.class);
@@ -183,7 +186,7 @@ public class DefaultBlockingStateDao extends EntityDaoBase<BlockingStateModelDao
 
     @Override
     public void setBlockingStatesAndPostBlockingTransitionEvent(final Map<BlockingState, Optional<UUID>> states, final InternalCallContext context) {
-        transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<Void>() {
+        transactionalSqlDao.execute(false, new EntitySqlDaoTransactionWrapper<Void>() {
             @Override
             public Void inTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory) throws Exception {
                 final BlockingStateSqlDao sqlDao = entitySqlDaoWrapperFactory.become(BlockingStateSqlDao.class);
@@ -359,7 +362,7 @@ public class DefaultBlockingStateDao extends EntityDaoBase<BlockingStateModelDao
 
     @Override
     public void unactiveBlockingState(final UUID id, final InternalCallContext context) {
-        transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<Void>() {
+        transactionalSqlDao.execute(false, new EntitySqlDaoTransactionWrapper<Void>() {
             @Override
             public Void inTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory) throws Exception {
                 final BlockingStateSqlDao sqlDao = entitySqlDaoWrapperFactory.become(BlockingStateSqlDao.class);

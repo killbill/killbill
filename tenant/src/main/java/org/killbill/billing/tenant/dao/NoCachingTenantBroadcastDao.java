@@ -1,6 +1,6 @@
 /*
- * Copyright 2014-2016 Groupon, Inc
- * Copyright 2014-2016 The Billing Project, LLC
+ * Copyright 2014-2018 Groupon, Inc
+ * Copyright 2014-2018 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -37,11 +37,13 @@ import org.killbill.billing.util.entity.dao.EntitySqlDaoWrapperFactory;
 import org.killbill.clock.Clock;
 import org.skife.jdbi.v2.IDBI;
 
+import static org.killbill.billing.util.glue.IDBISetup.MAIN_RO_IDBI_NAMED;
+
 public class NoCachingTenantBroadcastDao extends EntityDaoBase<TenantBroadcastModelDao, Entity, TenantApiException> implements TenantBroadcastDao {
 
     @Inject
-    public NoCachingTenantBroadcastDao(final IDBI dbi, final Clock clock, @Named(DefaultTenantModule.NO_CACHING_TENANT) final InternalCallContextFactory internalCallContextFactory) {
-        super(new EntitySqlDaoTransactionalJdbiWrapper(dbi, clock, null, null, internalCallContextFactory), TenantBroadcastSqlDao.class);
+    public NoCachingTenantBroadcastDao(final IDBI dbi, @Named(MAIN_RO_IDBI_NAMED) final IDBI roDbi, final Clock clock, @Named(DefaultTenantModule.NO_CACHING_TENANT) final InternalCallContextFactory internalCallContextFactory) {
+        super(new EntitySqlDaoTransactionalJdbiWrapper(dbi, roDbi, clock, null, null, internalCallContextFactory), TenantBroadcastSqlDao.class);
     }
 
     @Override
@@ -91,7 +93,7 @@ public class NoCachingTenantBroadcastDao extends EntityDaoBase<TenantBroadcastMo
 
     @Override
     public List<TenantBroadcastModelDao> getLatestEntriesFrom(final Long recordId) {
-        return transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<List<TenantBroadcastModelDao>>() {
+        return transactionalSqlDao.execute(true, new EntitySqlDaoTransactionWrapper<List<TenantBroadcastModelDao>>() {
             @Override
             public List<TenantBroadcastModelDao> inTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory) throws Exception {
                 return entitySqlDaoWrapperFactory.become(TenantBroadcastSqlDao.class).getLatestEntries(recordId);
@@ -101,7 +103,7 @@ public class NoCachingTenantBroadcastDao extends EntityDaoBase<TenantBroadcastMo
 
     @Override
     public TenantBroadcastModelDao getLatestEntry() {
-        return transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<TenantBroadcastModelDao>() {
+        return transactionalSqlDao.execute(true, new EntitySqlDaoTransactionWrapper<TenantBroadcastModelDao>() {
             @Override
             public TenantBroadcastModelDao inTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory) throws Exception {
                 return entitySqlDaoWrapperFactory.become(TenantBroadcastSqlDao.class).getLatestEntry();

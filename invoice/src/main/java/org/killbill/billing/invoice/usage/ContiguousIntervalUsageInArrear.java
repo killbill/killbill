@@ -97,7 +97,7 @@ public abstract class ContiguousIntervalUsageInArrear {
         this.accountId = accountId;
         this.invoiceId = invoiceId;
         this.unitTypes = usage.getUsageType() == UsageType.CAPACITY ? getCapacityInArrearUnitTypes(usage) : getConsumableInArrearUnitTypes(usage);
-        this.rawSubscriptionUsage = rawSubscriptionUsage;
+        this.rawSubscriptionUsage = filterInputRawUsage(rawSubscriptionUsage);
         this.targetDate = targetDate;
         this.rawUsageStartDate = rawUsageStartDate;
         this.internalTenantContext = internalTenantContext;
@@ -106,6 +106,7 @@ public abstract class ContiguousIntervalUsageInArrear {
         this.isBuilt = new AtomicBoolean(false);
         this.usageDetailMode = usageDetailMode;
     }
+
 
     /**
      * Builds the transitionTimes associated to that usage section. Those are determined based on billing events for when to start and when to stop,
@@ -345,6 +346,16 @@ public abstract class ContiguousIntervalUsageInArrear {
         }
     }
 
+    private List<RawUsage> filterInputRawUsage(final List<RawUsage> rawSubscriptionUsage) {
+        final Iterable<RawUsage> filteredList = Iterables.filter(rawSubscriptionUsage, new Predicate<RawUsage>() {
+            @Override
+            public boolean apply(final RawUsage input) {
+                return unitTypes.contains(input.getUnitType());
+            }
+        });
+        return ImmutableList.copyOf(filteredList);
+    }
+    
     /**
      * @param filteredUsageForInterval the list of invoiceItem to consider
      * @return the price amount that was already billed for that period and usage section (across unitTypes)
@@ -419,16 +430,6 @@ public abstract class ContiguousIntervalUsageInArrear {
         return billingEvents.get(0).getCurrency();
     }
 
-    @Override
-    public String toString() {
-        final StringBuilder sb = new StringBuilder("ContiguousIntervalConsumableInArrear{");
-        sb.append("transitionTimes=").append(transitionTimes);
-        sb.append(", billingEvents=").append(billingEvents);
-        sb.append(", rawSubscriptionUsage=").append(rawSubscriptionUsage);
-        sb.append(", rawUsageStartDate=").append(rawUsageStartDate);
-        sb.append('}');
-        return sb.toString();
-    }
 
     public class UsageInArrearItemsAndNextNotificationDate {
 

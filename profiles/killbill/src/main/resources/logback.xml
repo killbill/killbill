@@ -17,12 +17,13 @@
   -->
 
 <configuration>
+    <jmxConfigurator />
     <conversionRule conversionWord="maskedMsg" converterClass="org.killbill.billing.server.log.obfuscators.ObfuscatorConverter" />
 
     <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
         <encoder>
             <!-- See http://jira.qos.ch/browse/LOGBACK-262 -->
-            <pattern>%date{"yyyy-MM-dd'T'HH:mm:ss,SSSZ", UTC} lvl='%level', log='%logger{0}', th='%thread', xff='%X{req.xForwardedFor}', rId='%X{req.requestId}', aRId='%X{kb.accountRecordId}', tRId='%X{kb.tenantRecordId}', %maskedMsg%n</pattern>
+            <pattern>%date{"yyyy-MM-dd'T'HH:mm:ss,SSSZ", UTC} lvl='%level', log='%logger{0}', th='%thread', xff='%X{req.xForwardedFor}', rId='%X{req.requestId}', tok='%X{kb.userToken}', aRId='%X{kb.accountRecordId}', tRId='%X{kb.tenantRecordId}', %maskedMsg%n</pattern>
         </encoder>
     </appender>
 
@@ -43,7 +44,7 @@
                     </timeBasedFileNamingAndTriggeringPolicy>
                 </rollingPolicy>
                 <encoder>
-                    <pattern>%date{"yyyy-MM-dd'T'HH:mm:ss,SSSZ", UTC} lvl='%level', log='%logger{0}', th='%thread', xff='%X{req.xForwardedFor}', rId='%X{req.requestId}', aRId='%X{kb.accountRecordId}', tRId='%X{kb.tenantRecordId}', %maskedMsg%n</pattern>
+                    <pattern>%date{"yyyy-MM-dd'T'HH:mm:ss,SSSZ", UTC} lvl='%level', log='%logger{0}', th='%thread', xff='%X{req.xForwardedFor}', rId='%X{req.requestId}', tok='%X{kb.userToken}', aRId='%X{kb.accountRecordId}', tRId='%X{kb.tenantRecordId}', %maskedMsg%n</pattern>
                 </encoder>
             </appender>
         </sift>
@@ -64,7 +65,7 @@
                     </timeBasedFileNamingAndTriggeringPolicy>
                 </rollingPolicy>
                 <encoder>
-                    <pattern>%date{"yyyy-MM-dd'T'HH:mm:ss,SSSZ", UTC} lvl='%level', log='%logger{0}', th='%thread', xff='%X{req.xForwardedFor}', rId='%X{req.requestId}', aRId='%X{kb.accountRecordId}', tRId='%X{kb.tenantRecordId}', %maskedMsg%n</pattern>
+                    <pattern>%date{"yyyy-MM-dd'T'HH:mm:ss,SSSZ", UTC} lvl='%level', log='%logger{0}', th='%thread', xff='%X{req.xForwardedFor}', rId='%X{req.requestId}', tok='%X{kb.userToken}', aRId='%X{kb.accountRecordId}', tRId='%X{kb.tenantRecordId}', %maskedMsg%n</pattern>
                 </encoder>
             </appender>
         </sift>
@@ -85,7 +86,7 @@
                     </timeBasedFileNamingAndTriggeringPolicy>
                 </rollingPolicy>
                 <encoder>
-                    <pattern>%date{"yyyy-MM-dd'T'HH:mm:ss,SSSZ", UTC} lvl='%level', log='%logger{0}', th='%thread', xff='%X{req.xForwardedFor}', rId='%X{req.requestId}', aRId='%X{kb.accountRecordId}', tRId='%X{kb.tenantRecordId}', %maskedMsg%n</pattern>
+                    <pattern>%date{"yyyy-MM-dd'T'HH:mm:ss,SSSZ", UTC} lvl='%level', log='%logger{0}', th='%thread', xff='%X{req.xForwardedFor}', rId='%X{req.requestId}', tok='%X{kb.userToken}', aRId='%X{kb.accountRecordId}', tRId='%X{kb.tenantRecordId}', %maskedMsg%n</pattern>
                 </encoder>
             </appender>
         </sift>
@@ -106,7 +107,7 @@
                     </timeBasedFileNamingAndTriggeringPolicy>
                 </rollingPolicy>
                 <encoder>
-                    <pattern>%date{"yyyy-MM-dd'T'HH:mm:ss,SSSZ", UTC} lvl='%level', log='%logger{0}', th='%thread', xff='%X{req.xForwardedFor}', rId='%X{req.requestId}', aRId='%X{kb.accountRecordId}', tRId='%X{kb.tenantRecordId}', %maskedMsg%n</pattern>
+                    <pattern>%date{"yyyy-MM-dd'T'HH:mm:ss,SSSZ", UTC} lvl='%level', log='%logger{0}', th='%thread', xff='%X{req.xForwardedFor}', rId='%X{req.requestId}', tok='%X{kb.userToken}', aRId='%X{kb.accountRecordId}', tRId='%X{kb.tenantRecordId}', %maskedMsg%n</pattern>
                 </encoder>
             </appender>
         </sift>
@@ -127,7 +128,7 @@
                     </timeBasedFileNamingAndTriggeringPolicy>
                 </rollingPolicy>
                 <encoder>
-                    <pattern>%date{"yyyy-MM-dd'T'HH:mm:ss,SSSZ", UTC} lvl='%level', log='%logger{0}', th='%thread', xff='%X{req.xForwardedFor}', rId='%X{req.requestId}', aRId='%X{kb.accountRecordId}', tRId='%X{kb.tenantRecordId}', %maskedMsg%n</pattern>
+                    <pattern>%date{"yyyy-MM-dd'T'HH:mm:ss,SSSZ", UTC} lvl='%level', log='%logger{0}', th='%thread', xff='%X{req.xForwardedFor}', rId='%X{req.requestId}', tok='%X{kb.userToken}', aRId='%X{kb.accountRecordId}', tRId='%X{kb.tenantRecordId}', %maskedMsg%n</pattern>
                 </encoder>
             </appender>
         </sift>
@@ -148,7 +149,7 @@
                     </timeBasedFileNamingAndTriggeringPolicy>
                 </rollingPolicy>
                 <encoder>
-                    <pattern>%date{"yyyy-MM-dd'T'HH:mm:ss,SSSZ", UTC} lvl='%level', log='%logger{0}', th='%thread', xff='%X{req.xForwardedFor}', rId='%X{req.requestId}', aRId='%X{kb.accountRecordId}', tRId='%X{kb.tenantRecordId}', %maskedMsg%n</pattern>
+                    <pattern>%date{"yyyy-MM-dd'T'HH:mm:ss,SSSZ", UTC} lvl='%level', log='%logger{0}', th='%thread', xff='%X{req.xForwardedFor}', rId='%X{req.requestId}', tok='%X{kb.userToken}', aRId='%X{kb.accountRecordId}', tRId='%X{kb.tenantRecordId}', %maskedMsg%n</pattern>
                 </encoder>
             </appender>
         </sift>

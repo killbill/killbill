@@ -34,24 +34,21 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Function;
 import com.google.common.collect.Collections2;
 import com.google.common.collect.ImmutableList;
+import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 
+@ApiModel(value="InvoiceItem")
 public class InvoiceItemJson extends JsonBase {
 
-    @ApiModelProperty(dataType = "java.util.UUID", required = true)
-    private final String invoiceItemId;
-    @ApiModelProperty(dataType = "java.util.UUID")
-    private final String invoiceId;
-    @ApiModelProperty(dataType = "java.util.UUID")
-    private final String linkedInvoiceItemId;
-    @ApiModelProperty(dataType = "java.util.UUID", required = true)
-    private final String accountId;
-    @ApiModelProperty(dataType = "java.util.UUID", required = false)
-    private final String childAccountId;
-    @ApiModelProperty(dataType = "java.util.UUID")
-    private final String bundleId;
-    @ApiModelProperty(dataType = "java.util.UUID")
-    private final String subscriptionId;
+    @ApiModelProperty( required = true)
+    private final UUID invoiceItemId;
+    private final UUID invoiceId;
+    private final UUID linkedInvoiceItemId;
+    @ApiModelProperty(required = true)
+    private final UUID accountId;
+    private final UUID childAccountId;
+    private final UUID bundleId;
+    private final UUID subscriptionId;
     private final String planName;
     private final String phaseName;
     private final String usageName;
@@ -70,13 +67,13 @@ public class InvoiceItemJson extends JsonBase {
     private List<InvoiceItemJson> childItems;
 
     @JsonCreator
-    public InvoiceItemJson(@JsonProperty("invoiceItemId") final String invoiceItemId,
-                           @JsonProperty("invoiceId") final String invoiceId,
-                           @JsonProperty("linkedInvoiceItemId") final String linkedInvoiceItemId,
-                           @JsonProperty("accountId") final String accountId,
-                           @JsonProperty("childAccountId") final String childAccountId,
-                           @JsonProperty("bundleId") final String bundleId,
-                           @JsonProperty("subscriptionId") final String subscriptionId,
+    public InvoiceItemJson(@JsonProperty("invoiceItemId") final UUID invoiceItemId,
+                           @JsonProperty("invoiceId") final UUID invoiceId,
+                           @JsonProperty("linkedInvoiceItemId") final UUID linkedInvoiceItemId,
+                           @JsonProperty("accountId") final UUID accountId,
+                           @JsonProperty("childAccountId") final UUID childAccountId,
+                           @JsonProperty("bundleId") final UUID bundleId,
+                           @JsonProperty("subscriptionId") final UUID subscriptionId,
                            @JsonProperty("planName") final String planName,
                            @JsonProperty("phaseName") final String phaseName,
                            @JsonProperty("usageName") final String usageName,
@@ -121,8 +118,8 @@ public class InvoiceItemJson extends JsonBase {
     }
 
     public InvoiceItemJson(final InvoiceItem item, final List<InvoiceItem> childItems, @Nullable final List<AuditLog> auditLogs) {
-        this(toString(item.getId()), toString(item.getInvoiceId()), toString(item.getLinkedItemId()),
-             toString(item.getAccountId()), toString(item.getChildAccountId()), toString(item.getBundleId()), toString(item.getSubscriptionId()),
+        this(item.getId(), item.getInvoiceId(), item.getLinkedItemId(),
+             item.getAccountId(), item.getChildAccountId(), item.getBundleId(), item.getSubscriptionId(),
              item.getPlanName(), item.getPhaseName(), item.getUsageName(),
              item.getPrettyPlanName(), item.getPrettyPhaseName(), item.getPrettyUsageName(),
              item.getInvoiceItemType().toString(),
@@ -152,17 +149,17 @@ public class InvoiceItemJson extends JsonBase {
 
             @Override
             public UUID getInvoiceId() {
-                return invoiceId != null ? UUID.fromString(invoiceId) : null;
+                return invoiceId;
             }
 
             @Override
             public UUID getAccountId() {
-                return accountId != null ? UUID.fromString(accountId) : null;
+                return accountId;
             }
 
             @Override
             public UUID getChildAccountId() {
-                return childAccountId != null ? UUID.fromString(childAccountId) : null;
+                return childAccountId;
             }
 
             @Override
@@ -192,12 +189,12 @@ public class InvoiceItemJson extends JsonBase {
 
             @Override
             public UUID getBundleId() {
-                return bundleId != null ? UUID.fromString(bundleId) : null;
+                return bundleId;
             }
 
             @Override
             public UUID getSubscriptionId() {
-                return subscriptionId != null ? UUID.fromString(subscriptionId) : null;
+                return subscriptionId;
             }
 
             @Override
@@ -237,7 +234,7 @@ public class InvoiceItemJson extends JsonBase {
 
             @Override
             public UUID getLinkedItemId() {
-                return linkedInvoiceItemId != null ? UUID.fromString(linkedInvoiceItemId) : null;
+                return linkedInvoiceItemId;
             }
 
             @Override
@@ -272,31 +269,31 @@ public class InvoiceItemJson extends JsonBase {
         this(input, null, null);
     }
 
-    public String getInvoiceItemId() {
+    public UUID getInvoiceItemId() {
         return invoiceItemId;
     }
 
-    public String getInvoiceId() {
+    public UUID getInvoiceId() {
         return invoiceId;
     }
 
-    public String getLinkedInvoiceItemId() {
+    public UUID getLinkedInvoiceItemId() {
         return linkedInvoiceItemId;
     }
 
-    public String getAccountId() {
+    public UUID getAccountId() {
         return accountId;
     }
 
-    public String getChildAccountId() {
+    public UUID getChildAccountId() {
         return childAccountId;
     }
 
-    public String getBundleId() {
+    public UUID getBundleId() {
         return bundleId;
     }
 
-    public String getSubscriptionId() {
+    public UUID getSubscriptionId() {
         return subscriptionId;
     }
 

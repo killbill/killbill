@@ -1,6 +1,6 @@
 /*
- * Copyright 2016-2017 Groupon, Inc
- * Copyright 2016-2017 The Billing Project, LLC
+ * Copyright 2014-2018 Groupon, Inc
+ * Copyright 2014-2018 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -18,6 +18,8 @@
 package org.killbill.billing.account.api.svcs;
 
 import java.util.UUID;
+
+import javax.inject.Named;
 
 import org.killbill.billing.ObjectType;
 import org.killbill.billing.account.api.Account;
@@ -44,6 +46,8 @@ import org.skife.jdbi.v2.IDBI;
 
 import com.google.inject.Inject;
 
+import static org.killbill.billing.util.glue.IDBISetup.MAIN_RO_IDBI_NAMED;
+
 public class DefaultImmutableAccountInternalApi implements ImmutableAccountInternalApi {
 
     private final EntitySqlDaoTransactionalJdbiWrapper transactionalSqlDao;
@@ -53,11 +57,12 @@ public class DefaultImmutableAccountInternalApi implements ImmutableAccountInter
 
     @Inject
     public DefaultImmutableAccountInternalApi(final IDBI dbi,
+                                              @Named(MAIN_RO_IDBI_NAMED) final IDBI roDbi,
                                               final Clock clock,
                                               final NonEntityDao nonEntityDao,
                                               final CacheControllerDispatcher cacheControllerDispatcher) {
         // This API will directly issue queries instead of relying on the DAO (introduced to avoid Guice circular dependencies with InternalCallContextFactory)
-        this.transactionalSqlDao = new EntitySqlDaoTransactionalJdbiWrapper(dbi, clock, cacheControllerDispatcher, nonEntityDao, null);
+        this.transactionalSqlDao = new EntitySqlDaoTransactionalJdbiWrapper(dbi, roDbi, clock, cacheControllerDispatcher, nonEntityDao, null);
         this.nonEntityDao = nonEntityDao;
         this.accountCacheController = cacheControllerDispatcher.getCacheController(CacheType.ACCOUNT_IMMUTABLE);
         this.recordIdCacheController = cacheControllerDispatcher.getCacheController(CacheType.RECORD_ID);
@@ -89,7 +94,7 @@ public class DefaultImmutableAccountInternalApi implements ImmutableAccountInter
     }
 
     private Account getAccountByRecordIdInternal(final Long recordId, final InternalTenantContext context) {
-        final AccountModelDao accountModelDao = transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<AccountModelDao>() {
+        final AccountModelDao accountModelDao = transactionalSqlDao.execute(true, new EntitySqlDaoTransactionWrapper<AccountModelDao>() {
 
             @Override
             public AccountModelDao inTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory) throws Exception {

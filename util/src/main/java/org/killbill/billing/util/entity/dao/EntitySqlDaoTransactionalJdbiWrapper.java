@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2012 Ning, Inc.
- * Copyright 2014-2016 Groupon, Inc
- * Copyright 2014-2016 The Billing Project, LLC
+ * Copyright 2014-2018 Groupon, Inc
+ * Copyright 2014-2018 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -28,23 +28,28 @@ import org.killbill.clock.Clock;
 import org.skife.jdbi.v2.Handle;
 import org.skife.jdbi.v2.IDBI;
 import org.skife.jdbi.v2.Transaction;
-import org.skife.jdbi.v2.TransactionIsolationLevel;
 import org.skife.jdbi.v2.TransactionStatus;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Transaction manager for EntitySqlDao queries
  */
 public class EntitySqlDaoTransactionalJdbiWrapper {
 
+    private final Logger logger = LoggerFactory.getLogger(EntitySqlDaoTransactionalJdbiWrapper.class);
+
     private final IDBI dbi;
+    private final IDBI roDbi;
     private final Clock clock;
     private final CacheControllerDispatcher cacheControllerDispatcher;
     private final NonEntityDao nonEntityDao;
     private final InternalCallContextFactory internalCallContextFactory;
 
-    public EntitySqlDaoTransactionalJdbiWrapper(final IDBI dbi, final Clock clock, final CacheControllerDispatcher cacheControllerDispatcher,
+    public EntitySqlDaoTransactionalJdbiWrapper(final IDBI dbi, final IDBI roDbi, final Clock clock, final CacheControllerDispatcher cacheControllerDispatcher,
                                                 final NonEntityDao nonEntityDao, final InternalCallContextFactory internalCallContextFactory) {
         this.dbi = dbi;
+        this.roDbi = roDbi;
         this.clock = clock;
         this.cacheControllerDispatcher = cacheControllerDispatcher;
         this.nonEntityDao = nonEntityDao;
@@ -76,17 +81,29 @@ public class EntitySqlDaoTransactionalJdbiWrapper {
     interface InitialEntitySqlDao extends EntitySqlDao<EntityModelDao<Entity>, Entity> {}
 
     /**
-     * @param entitySqlDaoTransactionWrapper transaction to execute
      * @param <ReturnType>                   object type to return from the transaction
+     * @param ro                             whether to use the read-only connection
+     * @param entitySqlDaoTransactionWrapper transaction to execute
      * @return result from the transaction fo type ReturnType
      */
-    public <ReturnType> ReturnType execute(final EntitySqlDaoTransactionWrapper<ReturnType> entitySqlDaoTransactionWrapper) {
-        final Handle handle = dbi.open();
+    public <ReturnType> ReturnType execute(final boolean ro, final EntitySqlDaoTransactionWrapper<ReturnType> entitySqlDaoTransactionWrapper) {
+        final String debugInfo = logger.isDebugEnabled() ? getDebugInfo() : null;
+        final String debugPrefix = ro ? "RO" : "RW";
+
+        final Handle handle = ro ? roDbi.open() : dbi.open();
+        logger.debug("[{}] DBI handle created, transaction: {}", debugPrefix, debugInfo);
         try {
             final EntitySqlDao<EntityModelDao<Entity>, Entity> entitySqlDao = handle.attach(InitialEntitySqlDao.class);
-            return entitySqlDao.inTransaction(TransactionIsolationLevel.READ_COMMITTED, new JdbiTransaction<ReturnType, EntityModelDao<Entity>, Entity>(handle, entitySqlDaoTransactionWrapper));
+            // The transaction isolation level is now set at the pool level: this avoids 3 roundtrips for each transaction
+            // Note that if the pool isn't used (tests or PostgreSQL), the transaction level will depend on the DB configuration
+            //return entitySqlDao.inTransaction(TransactionIsolationLevel.READ_COMMITTED, new JdbiTransaction<ReturnType, EntityModelDao<Entity>, Entity>(handle, entitySqlDaoTransactionWrapper));
+            logger.debug("[{}] Starting transaction {}", debugPrefix, debugInfo);
+            final ReturnType returnType = entitySqlDao.inTransaction(new JdbiTransaction<ReturnType, EntityModelDao<Entity>, Entity>(handle, entitySqlDaoTransactionWrapper));
+            logger.debug("[{}] Exiting  transaction {}, returning {}", debugPrefix, debugInfo, returnType);
+            return returnType;
         } finally {
             handle.close();
+            logger.debug("[{}] DBI handle closed,  transaction: {}", debugPrefix, debugInfo);
         }
     }
 
@@ -95,19 +112,20 @@ public class EntitySqlDaoTransactionalJdbiWrapper {
     // to send bus events, record notifications where we need to keep the Connection through the jDBI Handle.
     //
     public <M extends EntityModelDao<E>, E extends Entity, T extends EntitySqlDao<M, E>> T onDemandForStreamingResults(final Class<T> sqlObjectType) {
-        return dbi.onDemand(sqlObjectType);
+        return roDbi.onDemand(sqlObjectType);
     }
 
     /**
-     * @param entitySqlDaoTransactionWrapper transaction to execute
      * @param <ReturnType>                   object type to return from the transaction
      * @param <E>                            checked exception which can be thrown from the transaction
+     * @param ro                             whether to use the read-only connection
+     * @param entitySqlDaoTransactionWrapper transaction to execute
      * @return result from the transaction fo type ReturnType
      */
-    public <ReturnType, E extends Exception> ReturnType execute(@Nullable final Class<E> exception, final EntitySqlDaoTransactionWrapper<ReturnType> entitySqlDaoTransactionWrapper) throws E {
+    public <ReturnType, E extends Exception> ReturnType execute(final boolean ro, @Nullable final Class<E> exception, final EntitySqlDaoTransactionWrapper<ReturnType> entitySqlDaoTransactionWrapper) throws E {
         try {
-            return execute(entitySqlDaoTransactionWrapper);
-        } catch (RuntimeException e) {
+            return execute(ro, entitySqlDaoTransactionWrapper);
+        } catch (final RuntimeException e) {
             if (e.getCause() != null && exception != null && e.getCause().getClass().isAssignableFrom(exception)) {
                 throw (E) e.getCause();
             } else if (e.getCause() != null && e.getCause() instanceof RuntimeException) {
@@ -116,5 +134,32 @@ public class EntitySqlDaoTransactionalJdbiWrapper {
                 throw e;
             }
         }
+    }
+
+    private static String getDebugInfo() {
+        final Throwable t = new Throwable();
+        t.fillInStackTrace();
+
+        final StackTraceElement[] stackTrace = t.getStackTrace();
+        if (stackTrace == null) {
+            return null;
+        }
+
+        final StringBuilder dump = new StringBuilder();
+        int firstEntitySqlDaoCall = 0;
+
+        String className;
+        for (int i = 0; i < stackTrace.length; i++) {
+            className = stackTrace[i].getClassName();
+            if (className.startsWith("org.killbill.billing.util.entity.dao.EntitySqlDaoTransactionalJdbiWrapper")) {
+                firstEntitySqlDaoCall = i;
+            }
+        }
+        final int j = 1 + firstEntitySqlDaoCall;
+
+        dump.append(stackTrace[j].getClassName()).append(".").append(stackTrace[j].getMethodName()).append("(").
+                append(stackTrace[j].getFileName()).append(":").append(stackTrace[j].getLineNumber()).append(")");
+
+        return dump.toString();
     }
 }

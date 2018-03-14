@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2014 Ning, Inc.
- * Copyright 2014-2016 Groupon, Inc
- * Copyright 2014-2016 The Billing Project, LLC
+ * Copyright 2014-2018 Groupon, Inc
+ * Copyright 2014-2018 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -42,6 +42,7 @@ public abstract class InvoiceItemBase extends EntityBase implements InvoiceItem 
     protected final BigDecimal amount;
     protected final Currency currency;
     protected final String description;
+    protected final InvoiceItemType invoiceItemType;
 
     /* Fixed and recurring specific */
     protected final UUID subscriptionId;
@@ -59,34 +60,27 @@ public abstract class InvoiceItemBase extends EntityBase implements InvoiceItem 
 
     public InvoiceItemBase(final UUID id, @Nullable final DateTime createdDate, final UUID invoiceId, final UUID accountId, @Nullable final UUID bundleId,
                            @Nullable final UUID subscriptionId, @Nullable final String description,
-                           final LocalDate startDate, final LocalDate endDate, final BigDecimal amount, final BigDecimal rate, final Currency currency, final UUID reversedItemId) {
-        this(id, createdDate, invoiceId, accountId, null, bundleId, subscriptionId, description, startDate, endDate, amount, rate, currency, reversedItemId, null, null);
+                           final LocalDate startDate, final LocalDate endDate, final BigDecimal amount, final BigDecimal rate, final Currency currency, final UUID reversedItemId, final InvoiceItemType invoiceItemType) {
+        this(id, createdDate, invoiceId, accountId, null, bundleId, subscriptionId, description, startDate, endDate, amount, rate, currency, reversedItemId, null, null, invoiceItemType);
     }
 
     public InvoiceItemBase(final UUID id, @Nullable final DateTime createdDate, final UUID invoiceId, final UUID accountId, @Nullable final UUID bundleId,
                            @Nullable final UUID subscriptionId, @Nullable final String description,
                            final LocalDate startDate, final LocalDate endDate, final BigDecimal amount, final BigDecimal rate, final Currency currency, final UUID reversedItemId,
-                           @Nullable final Integer quantity, @Nullable final String itemDetails) {
-        this(id, createdDate, invoiceId, accountId, null, bundleId, subscriptionId, description, startDate, endDate, amount, rate, currency, reversedItemId, quantity, itemDetails);
+                           @Nullable final Integer quantity, @Nullable final String itemDetails, final InvoiceItemType invoiceItemType) {
+        this(id, createdDate, invoiceId, accountId, null, bundleId, subscriptionId, description, startDate, endDate, amount, rate, currency, reversedItemId, quantity, itemDetails, invoiceItemType);
     }
 
     // For parent invoices
     public InvoiceItemBase(final UUID id, @Nullable final DateTime createdDate, final UUID invoiceId, final UUID accountId, final UUID childAccountId,
-                           final BigDecimal amount, final Currency currency, final String description) {
-        this(id, createdDate, invoiceId, accountId, childAccountId, null, null, description, null, null, amount, null, currency, null, null, null);
-    }
-
-    public InvoiceItemBase(final UUID id, @Nullable final DateTime createdDate, final UUID invoiceId, final UUID accountId, @Nullable final UUID childAccountId, @Nullable final UUID bundleId,
-                           @Nullable final UUID subscriptionId, @Nullable final String description,
-                           @Nullable final LocalDate startDate, final LocalDate endDate, final BigDecimal amount, final BigDecimal rate, final Currency currency,
-                           final UUID reversedItemId) {
-        this(id, createdDate, invoiceId, accountId, childAccountId, bundleId, subscriptionId, description, startDate, endDate, amount, rate, currency, reversedItemId, null, null);
+                           final BigDecimal amount, final Currency currency, final String description, final InvoiceItemType invoiceItemType) {
+        this(id, createdDate, invoiceId, accountId, childAccountId, null, null, description, null, null, amount, null, currency, null, null, null, invoiceItemType);
     }
 
     private InvoiceItemBase(final UUID id, @Nullable final DateTime createdDate, final UUID invoiceId, final UUID accountId, @Nullable final UUID childAccountId, @Nullable final UUID bundleId,
                             @Nullable final UUID subscriptionId, @Nullable final String description,
                             @Nullable final LocalDate startDate, final LocalDate endDate, final BigDecimal amount, final BigDecimal rate, final Currency currency,
-                            final UUID reversedItemId, @Nullable final Integer quantity, @Nullable final String itemDetails) {
+                            final UUID reversedItemId, @Nullable final Integer quantity, @Nullable final String itemDetails, final InvoiceItemType invoiceItemType) {
         super(id, createdDate, createdDate);
         this.invoiceId = invoiceId;
         this.accountId = accountId;
@@ -102,6 +96,7 @@ public abstract class InvoiceItemBase extends EntityBase implements InvoiceItem 
         this.linkedItemId = reversedItemId;
         this.quantity = quantity;
         this.itemDetails = itemDetails;
+        this.invoiceItemType = invoiceItemType;
     }
 
     @Override
@@ -313,8 +308,12 @@ public abstract class InvoiceItemBase extends EntityBase implements InvoiceItem 
     }
 
     @Override
-    public abstract InvoiceItemType getInvoiceItemType();
+    public InvoiceItemType getInvoiceItemType() {
+        return invoiceItemType;
+    }
 
     @Override
-    public abstract String getDescription();
+    public String getDescription() {
+        return description;
+    }
 }

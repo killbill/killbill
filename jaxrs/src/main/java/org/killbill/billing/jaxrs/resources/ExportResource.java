@@ -52,7 +52,7 @@ import static javax.ws.rs.core.MediaType.TEXT_PLAIN;
 
 @Singleton
 @Path(JaxrsResource.EXPORT_PATH)
-@Api(value = JaxrsResource.EXPORT_PATH, description = "Export endpoints")
+@Api(value = JaxrsResource.EXPORT_PATH, description = "Export endpoints", tags="Export")
 public class ExportResource extends JaxRsResourceBase {
 
     private final ExportUserApi exportUserApi;
@@ -78,13 +78,11 @@ public class ExportResource extends JaxRsResourceBase {
     @ApiOperation(value = "Export account data", response = String.class)
     @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid account id supplied"),
                            @ApiResponse(code = 404, message = "Account not found")})
-    public StreamingOutput exportDataForAccount(@PathParam("accountId") final String accountIdStr
-            ,
+    public StreamingOutput exportDataForAccount(@PathParam("accountId") final UUID accountId,
                                                 @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                                 @HeaderParam(HDR_REASON) final String reason,
                                                 @HeaderParam(HDR_COMMENT) final String comment,
                                                 @javax.ws.rs.core.Context final HttpServletRequest request) {
-        final UUID accountId = UUID.fromString(accountIdStr);
         final CallContext callContext = context.createCallContextWithAccountId(accountId, createdBy, reason, comment, request);
         return new StreamingOutput() {
             @Override

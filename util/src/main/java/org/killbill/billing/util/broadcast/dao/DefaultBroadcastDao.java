@@ -1,6 +1,6 @@
 /*
- * Copyright 2014-2015 Groupon, Inc
- * Copyright 2014-2015 The Billing Project, LLC
+ * Copyright 2014-2018 Groupon, Inc
+ * Copyright 2014-2018 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -20,25 +20,24 @@ package org.killbill.billing.util.broadcast.dao;
 import java.util.List;
 
 import javax.inject.Inject;
+import javax.inject.Named;
 
-import org.killbill.clock.Clock;
-import org.killbill.commons.jdbi.mapper.LowerToCamelBeanMapperFactory;
-import org.skife.jdbi.v2.DBI;
 import org.skife.jdbi.v2.Handle;
 import org.skife.jdbi.v2.IDBI;
 import org.skife.jdbi.v2.TransactionCallback;
 import org.skife.jdbi.v2.TransactionStatus;
 
+import static org.killbill.billing.util.glue.IDBISetup.MAIN_RO_IDBI_NAMED;
 
 public class DefaultBroadcastDao implements BroadcastDao {
 
     private final IDBI dbi;
-    private final Clock clock;
+    private final IDBI roDbi;
 
     @Inject
-    public DefaultBroadcastDao(final IDBI dbi, final Clock clock) {
+    public DefaultBroadcastDao(final IDBI dbi, @Named(MAIN_RO_IDBI_NAMED) final IDBI roDbi) {
         this.dbi = dbi;
-        this.clock = clock;
+        this.roDbi = roDbi;
     }
 
     @Override
@@ -53,10 +52,9 @@ public class DefaultBroadcastDao implements BroadcastDao {
         });
     }
 
-
     @Override
     public List<BroadcastModelDao> getLatestEntriesFrom(final Long recordId) {
-        return dbi.inTransaction(new TransactionCallback<List<BroadcastModelDao>>() {
+        return roDbi.inTransaction(new TransactionCallback<List<BroadcastModelDao>>() {
             @Override
             public List<BroadcastModelDao> inTransaction(final Handle handle, final TransactionStatus status) throws Exception {
                 final BroadcastSqlDao sqlDao = handle.attach(BroadcastSqlDao.class);
@@ -67,7 +65,7 @@ public class DefaultBroadcastDao implements BroadcastDao {
 
     @Override
     public BroadcastModelDao getLatestEntry() {
-        return dbi.inTransaction(new TransactionCallback<BroadcastModelDao>() {
+        return roDbi.inTransaction(new TransactionCallback<BroadcastModelDao>() {
             @Override
             public BroadcastModelDao inTransaction(final Handle handle, final TransactionStatus status) throws Exception {
                 final BroadcastSqlDao sqlDao = handle.attach(BroadcastSqlDao.class);

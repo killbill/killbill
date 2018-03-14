@@ -1,7 +1,9 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
+ * Copyright 2014-2018 Groupon, Inc
+ * Copyright 2014-2018 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -20,43 +22,48 @@ import java.util.List;
 import java.util.UUID;
 
 import javax.inject.Inject;
+import javax.inject.Named;
 
 import org.joda.time.LocalDate;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.skife.jdbi.v2.IDBI;
 
+import static org.killbill.billing.util.glue.IDBISetup.MAIN_RO_IDBI_NAMED;
+
 public class DefaultRolledUpUsageDao implements RolledUpUsageDao {
 
     private final RolledUpUsageSqlDao rolledUpUsageSqlDao;
+    private final RolledUpUsageSqlDao roRolledUpUsageSqlDao;
 
     @Inject
-    public DefaultRolledUpUsageDao(final IDBI dbi) {
+    public DefaultRolledUpUsageDao(final IDBI dbi, @Named(MAIN_RO_IDBI_NAMED) final IDBI roDbi) {
         this.rolledUpUsageSqlDao = dbi.onDemand(RolledUpUsageSqlDao.class);
+        this.roRolledUpUsageSqlDao = roDbi.onDemand(RolledUpUsageSqlDao.class);
     }
 
     @Override
-    public void record(final Iterable<RolledUpUsageModelDao> usages, final InternalCallContext context){
+    public void record(final Iterable<RolledUpUsageModelDao> usages, final InternalCallContext context) {
         rolledUpUsageSqlDao.create(usages, context);
     }
 
     @Override
-    public Boolean recordsWithTrackingIdExist(final UUID subscriptionId, final String trackingId, final InternalTenantContext context){
-        return rolledUpUsageSqlDao.recordsWithTrackingIdExist(subscriptionId, trackingId, context) != null ;
+    public Boolean recordsWithTrackingIdExist(final UUID subscriptionId, final String trackingId, final InternalTenantContext context) {
+        return rolledUpUsageSqlDao.recordsWithTrackingIdExist(subscriptionId, trackingId, context) != null;
     }
 
     @Override
     public List<RolledUpUsageModelDao> getUsageForSubscription(final UUID subscriptionId, final LocalDate startDate, final LocalDate endDate, final String unitType, final InternalTenantContext context) {
-        return rolledUpUsageSqlDao.getUsageForSubscription(subscriptionId, startDate.toDate(), endDate.toDate(), unitType, context);
+        return roRolledUpUsageSqlDao.getUsageForSubscription(subscriptionId, startDate.toDate(), endDate.toDate(), unitType, context);
     }
 
     @Override
     public List<RolledUpUsageModelDao> getAllUsageForSubscription(final UUID subscriptionId, final LocalDate startDate, final LocalDate endDate, final InternalTenantContext context) {
-        return rolledUpUsageSqlDao.getAllUsageForSubscription(subscriptionId, startDate.toDate(), endDate.toDate(), context);
+        return roRolledUpUsageSqlDao.getAllUsageForSubscription(subscriptionId, startDate.toDate(), endDate.toDate(), context);
     }
 
     @Override
     public List<RolledUpUsageModelDao> getRawUsageForAccount(final LocalDate startDate, final LocalDate endDate, final InternalTenantContext context) {
-        return rolledUpUsageSqlDao.getRawUsageForAccount(startDate.toDate(), endDate.toDate(), context);
+        return roRolledUpUsageSqlDao.getRawUsageForAccount(startDate.toDate(), endDate.toDate(), context);
     }
 }

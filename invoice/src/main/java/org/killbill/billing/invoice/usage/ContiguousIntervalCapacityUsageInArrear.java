@@ -128,4 +128,16 @@ public class ContiguousIntervalCapacityUsageInArrear extends ContiguousIntervalU
         Preconditions.checkState(false, "Could not find tier for usage " + usage.getName() + "matching with data = " + joiner.join(roUnits));
         return null;
     }
+
+    @Override
+    public String toString() {
+        final StringBuilder sb = new StringBuilder("ContiguousIntervalCapacityUsageInArrear{");
+        sb.append("transitionTimes=").append(transitionTimes);
+        sb.append(", billingEvents=").append(billingEvents);
+        sb.append(", rawSubscriptionUsage=").append(rawSubscriptionUsage);
+        sb.append(", rawUsageStartDate=").append(rawUsageStartDate);
+        sb.append('}');
+        return sb.toString();
+    }
+
 }

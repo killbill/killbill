@@ -46,7 +46,9 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
+import io.swagger.annotations.ApiModel;
 
+@ApiModel(value="PhasePriceOverride")
 public class PhasePriceOverrideJson {
 
 

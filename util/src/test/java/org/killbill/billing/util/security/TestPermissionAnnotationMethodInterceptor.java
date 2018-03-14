@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014-2017 Groupon, Inc
- * Copyright 2014-2017 The Billing Project, LLC
+ * Copyright 2014-2018 Groupon, Inc
+ * Copyright 2014-2018 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -40,6 +40,9 @@ import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Stage;
+import com.google.inject.name.Names;
+
+import static org.killbill.billing.platform.glue.KillBillPlatformModuleBase.MAIN_RO_DATA_SOURCE_ID;
 
 public class TestPermissionAnnotationMethodInterceptor extends UtilTestSuiteNoDB {
 
@@ -84,6 +87,7 @@ public class TestPermissionAnnotationMethodInterceptor extends UtilTestSuiteNoDB
                                                            @Override
                                                            protected void configure() {
                                                                bind(IDBI.class).toInstance(Mockito.mock(IDBI.class));
+                                                               bind(IDBI.class).annotatedWith(Names.named(MAIN_RO_DATA_SOURCE_ID)).toInstance(Mockito.mock(IDBI.class));
                                                                bind(TenantInternalApi.class).toInstance(Mockito.mock(TenantInternalApi.class));
                                                                bind(NonEntityDao.class).toInstance(Mockito.mock(NonEntityDao.class));
                                                            }
@@ -114,6 +118,7 @@ public class TestPermissionAnnotationMethodInterceptor extends UtilTestSuiteNoDB
                                                            @Override
                                                            public void configure() {
                                                                bind(IDBI.class).toInstance(Mockito.mock(IDBI.class));
+                                                               bind(IDBI.class).annotatedWith(Names.named(MAIN_RO_DATA_SOURCE_ID)).toInstance(Mockito.mock(IDBI.class));
                                                                bind(IAopTester.class).to(AopTesterImpl.class).asEagerSingleton();
                                                                bind(TenantInternalApi.class).toInstance(Mockito.mock(TenantInternalApi.class));
                                                                bind(NonEntityDao.class).toInstance(Mockito.mock(NonEntityDao.class));

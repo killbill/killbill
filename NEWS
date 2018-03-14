@@ -1,3 +1,9 @@
+0.19.5
+    
+    Database perf improvements
+    Payment fix for lastPaymentSuccessStateName
+    Invoice Usage fix for multiple usage sections
+
 0.19.3
     Fix issue with tag idempotency. Fixes #857
     Fix JDBC connection leak in pagination API. Fixes #853
