@@ -671,7 +671,28 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
 
         this.events = inputEvents;
 
-        filterOutDuplicateCancelEvents(events);
+        Collections.sort(inputEvents, new Comparator<SubscriptionBaseEvent>() {
+            @Override
+            public int compare(final SubscriptionBaseEvent o1, final SubscriptionBaseEvent o2) {
+                final int res = o1.getEffectiveDate().compareTo(o2.getEffectiveDate());
+                if (res != 0) {
+                    return res;
+                }
+
+                // In-memory events have a total order of 0, make sure they are after on disk event
+                if (o1.getTotalOrdering() == 0 && o2.getTotalOrdering() > 0) {
+                    return 1;
+                } else if (o1.getTotalOrdering() > 0 && o2.getTotalOrdering() == 0) {
+                    return -1;
+                } else if (o1.getTotalOrdering() == o2.getTotalOrdering()) {
+                    return 0;
+                } else {
+                    return o1.getTotalOrdering() < (o2.getTotalOrdering()) ? -1 : 1;
+                }
+            }
+        });
+
+        removeEverythingPastCancelEvent(events);
 
         UUID nextUserToken = null;
 
@@ -692,28 +713,9 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
 
         transitions = new LinkedList<SubscriptionBaseTransition>();
 
-        // DefaultSubscriptionDao#buildBundleSubscriptions may have added an out-of-order cancellation event (https://github.com/killbill/killbill/issues/897)
-        final SubscriptionBaseEvent cancellationEvent = Iterables.tryFind(inputEvents,
-                                                                          new Predicate<SubscriptionBaseEvent>() {
-                                                                              @Override
-                                                                              public boolean apply(final SubscriptionBaseEvent input) {
-                                                                                  return input.getType() == EventType.API_USER && ((ApiEvent) input).getApiEventType() == ApiEventType.CANCEL;
-                                                                              }
-                                                                          }).orNull();
         for (final SubscriptionBaseEvent cur : inputEvents) {
             if (!cur.isActive()) {
                 continue;
-            }
-
-            if (cancellationEvent != null) {
-                if (cur.getId().compareTo(cancellationEvent.getId()) == 0) {
-                    // Keep the cancellation event
-                } else if (cur.getType() == EventType.API_USER && (((ApiEvent) cur).getApiEventType() == ApiEventType.TRANSFER || ((ApiEvent) cur).getApiEventType() == ApiEventType.CREATE)) {
-                    // Keep the initial event (SOT use-case)
-                } else if (cur.getEffectiveDate().compareTo(cancellationEvent.getEffectiveDate()) >= 0) {
-                    // Event to ignore past cancellation date
-                    continue;
-                }
             }
 
             ApiEventType apiEventType = null;
@@ -811,73 +813,41 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
         }
     }
 
+    // Skip any event after a CANCEL event:
     //
-    // Hardening against data integrity issues where we have multiple active CANCEL (See #619):
-    // We skip any cancel events after the first one (subscription cannot be cancelled multiple times).
-    // The code should prevent such cases from happening but because of #619, some invalid data could be there so to be safe we added this code
+    //  * DefaultSubscriptionDao#buildBundleSubscriptions may have added an out-of-order cancellation event (https://github.com/killbill/killbill/issues/897)
+    //  * Hardening against data integrity issues where we have multiple active CANCEL (https://github.com/killbill/killbill/issues/619)
     //
-    // Also we remove !onDisk cancel events when there is an onDisk cancel event (can happen during the path where we process the base plan cancel notification, and are
-    // in the process of adding the new cancel events for the AO)
-    //
-    private void filterOutDuplicateCancelEvents(final List<SubscriptionBaseEvent> inputEvents) {
-
-        Collections.sort(inputEvents, new Comparator<SubscriptionBaseEvent>() {
-            @Override
-            public int compare(final SubscriptionBaseEvent o1, final SubscriptionBaseEvent o2) {
-                int res = o1.getEffectiveDate().compareTo(o2.getEffectiveDate());
-                if (res == 0) {
-                    // In-memory events have a total order of 0, make sure they are after on disk event
-                    if (o1.getTotalOrdering() == 0 && o2.getTotalOrdering() > 0) {
-                        return 1;
-                    } else if (o1.getTotalOrdering() > 0 && o2.getTotalOrdering() == 0) {
-                        return -1;
-                    } else {
-                        res = o1.getTotalOrdering() < (o2.getTotalOrdering()) ? -1 : 1;
-                    }
-                }
-                return res;
-            }
-        });
-
-        final boolean isCancelled = Iterables.any(inputEvents, new Predicate<SubscriptionBaseEvent>() {
-            @Override
-            public boolean apply(final SubscriptionBaseEvent input) {
-                if (input.isActive() && input.getType() == EventType.API_USER) {
-                    final ApiEvent userEV = (ApiEvent) input;
-                    if (userEV.getApiEventType() == ApiEventType.CANCEL && userEV.isFromDisk()) {
-                        return true;
-                    }
-                }
-                return false;
-            }
-        });
-
-        if (!isCancelled) {
+    private void removeEverythingPastCancelEvent(final List<SubscriptionBaseEvent> inputEvents) {
+        final SubscriptionBaseEvent cancellationEvent = Iterables.tryFind(inputEvents,
+                                                                          new Predicate<SubscriptionBaseEvent>() {
+                                                                              @Override
+                                                                              public boolean apply(final SubscriptionBaseEvent input) {
+                                                                                  return input.getType() == EventType.API_USER && ((ApiEvent) input).getApiEventType() == ApiEventType.CANCEL;
+                                                                              }
+                                                                          }).orNull();
+        if (cancellationEvent == null) {
             return;
         }
 
-
-        boolean foundFirstOnDiskCancel = false;
-        final Iterator<SubscriptionBaseEvent> it =  inputEvents.iterator();
-        while(it.hasNext()) {
+        final Iterator<SubscriptionBaseEvent> it = inputEvents.iterator();
+        while (it.hasNext()) {
             final SubscriptionBaseEvent input = it.next();
             if (!input.isActive()) {
                 continue;
             }
 
-            if (input.getType() == EventType.API_USER) {
-                final ApiEvent userEV = (ApiEvent) input;
-                if (userEV.getApiEventType() == ApiEventType.CANCEL) {
-                    if (userEV.isFromDisk()) {
-                        if (!foundFirstOnDiskCancel) {
-                            foundFirstOnDiskCancel = true;
-                        } else {
-                            it.remove();
-                        }
-                    } else {
-                        it.remove();
-                    }
-                }
+            if (input.getId().compareTo(cancellationEvent.getId()) == 0) {
+                // Keep the cancellation event
+            } else if (input.getType() == EventType.API_USER && (((ApiEvent) input).getApiEventType() == ApiEventType.TRANSFER || ((ApiEvent) input).getApiEventType() == ApiEventType.CREATE)) {
+                // Keep the initial event (SOT use-case)
+            } else if (input.getType() == EventType.API_USER && (((ApiEvent) input).getApiEventType() == ApiEventType.CANCEL) && !((ApiEvent) input).isFromDisk()) {
+                // Also we remove !onDisk cancel events when there is an onDisk cancel event (can happen during the path where we process the base plan cancel notification, and are
+                // in the process of adding the new cancel events for the AO)
+                it.remove();
+            } else if (input.getEffectiveDate().compareTo(cancellationEvent.getEffectiveDate()) >= 0) {
+                // Event to ignore past cancellation date
+                it.remove();
             }
         }
     }
