@@ -841,10 +841,6 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
                 // Keep the cancellation event
             } else if (input.getType() == EventType.API_USER && (((ApiEvent) input).getApiEventType() == ApiEventType.TRANSFER || ((ApiEvent) input).getApiEventType() == ApiEventType.CREATE)) {
                 // Keep the initial event (SOT use-case)
-            } else if (input.getType() == EventType.API_USER && (((ApiEvent) input).getApiEventType() == ApiEventType.CANCEL) && !((ApiEvent) input).isFromDisk()) {
-                // Also we remove !onDisk cancel events when there is an onDisk cancel event (can happen during the path where we process the base plan cancel notification, and are
-                // in the process of adding the new cancel events for the AO)
-                it.remove();
             } else if (input.getEffectiveDate().compareTo(cancellationEvent.getEffectiveDate()) >= 0) {
                 // Event to ignore past cancellation date
                 it.remove();
