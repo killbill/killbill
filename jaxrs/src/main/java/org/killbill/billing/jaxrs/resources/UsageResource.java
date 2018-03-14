@@ -72,7 +72,7 @@ import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 
 @Singleton
 @Path(JaxrsResource.USAGES_PATH)
-@Api(value = JaxrsResource.USAGES_PATH, description = "Operations on usage")
+@Api(value = JaxrsResource.USAGES_PATH, description = "Operations on usage", tags="Usage")
 public class UsageResource extends JaxRsResourceBase {
 
     private final UsageUserApi usageUserApi;
@@ -123,7 +123,7 @@ public class UsageResource extends JaxRsResourceBase {
         }
         final CallContext callContext = context.createCallContextNoAccountId(createdBy, reason, comment, request);
         // Verify subscription exists..
-        final Entitlement entitlement = entitlementApi.getEntitlementForId(UUID.fromString(json.getSubscriptionId()), callContext);
+        final Entitlement entitlement = entitlementApi.getEntitlementForId(json.getSubscriptionId(), callContext);
         if (entitlement.getState() != EntitlementState.ACTIVE) {
             return Response.status(Status.BAD_REQUEST).build();
         }
@@ -139,7 +139,7 @@ public class UsageResource extends JaxRsResourceBase {
     @Produces(APPLICATION_JSON)
     @ApiOperation(value = "Retrieve usage for a subscription and unit type", response = RolledUpUsageJson.class)
     @ApiResponses(value = {@ApiResponse(code = 400, message = "Missing start date or end date")})
-    public Response getUsage(@PathParam("subscriptionId") final String subscriptionId,
+    public Response getUsage(@PathParam("subscriptionId") final UUID subscriptionId,
                              @PathParam("unitType") final String unitType,
                              @QueryParam(QUERY_START_DATE) final String startDate,
                              @QueryParam(QUERY_END_DATE) final String endDate,
@@ -152,7 +152,7 @@ public class UsageResource extends JaxRsResourceBase {
         final LocalDate usageStartDate = LOCAL_DATE_FORMATTER.parseLocalDate(startDate);
         final LocalDate usageEndDate = LOCAL_DATE_FORMATTER.parseLocalDate(endDate);
 
-        final RolledUpUsage usage = usageUserApi.getUsageForSubscription(UUID.fromString(subscriptionId), unitType, usageStartDate, usageEndDate, tenantContext);
+        final RolledUpUsage usage = usageUserApi.getUsageForSubscription(subscriptionId, unitType, usageStartDate, usageEndDate, tenantContext);
         final RolledUpUsageJson result = new RolledUpUsageJson(usage);
         return Response.status(Status.OK).entity(result).build();
     }
@@ -163,7 +163,7 @@ public class UsageResource extends JaxRsResourceBase {
     @Produces(APPLICATION_JSON)
     @ApiOperation(value = "Retrieve usage for a subscription", response = RolledUpUsageJson.class)
     @ApiResponses(value = {@ApiResponse(code = 400, message = "Missing start date or end date")})
-    public Response getAllUsage(@PathParam("subscriptionId") final String subscriptionId,
+    public Response getAllUsage(@PathParam("subscriptionId") final UUID subscriptionId,
                                 @QueryParam(QUERY_START_DATE) final String startDate,
                                 @QueryParam(QUERY_END_DATE) final String endDate,
                                 @javax.ws.rs.core.Context final HttpServletRequest request) {
@@ -178,7 +178,7 @@ public class UsageResource extends JaxRsResourceBase {
 
         // The current JAXRS API only allows to look for one transition
         final List<LocalDate> startEndDate = ImmutableList.<LocalDate>builder().add(usageStartDate).add(usageEndDate).build();
-        final List<RolledUpUsage> usage = usageUserApi.getAllUsageForSubscription(UUID.fromString(subscriptionId), startEndDate, tenantContext);
+        final List<RolledUpUsage> usage = usageUserApi.getAllUsageForSubscription(subscriptionId, startEndDate, tenantContext);
         final RolledUpUsageJson result = new RolledUpUsageJson(usage.get(0));
         return Response.status(Status.OK).entity(result).build();
     }

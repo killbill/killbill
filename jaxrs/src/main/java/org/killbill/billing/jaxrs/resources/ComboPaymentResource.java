@@ -65,7 +65,7 @@ public abstract class ComboPaymentResource extends JaxRsResourceBase {
     protected Account getOrCreateAccount(final AccountJson accountJson, final CallContext callContext) throws AccountApiException {
         // Attempt to retrieve by accountId if specified
         if (accountJson.getAccountId() != null) {
-            return accountUserApi.getAccountById(UUID.fromString(accountJson.getAccountId()), callContext);
+            return accountUserApi.getAccountById(accountJson.getAccountId(), callContext);
         }
 
         if (accountJson.getExternalKey() != null) {
@@ -91,7 +91,7 @@ public abstract class ComboPaymentResource extends JaxRsResourceBase {
 
         // If we were specified a paymentMethod id and we find it, we return it
         if (paymentMethodJson.getPaymentMethodId() != null) {
-            final UUID match = UUID.fromString(paymentMethodJson.getPaymentMethodId());
+            final UUID match = paymentMethodJson.getPaymentMethodId();
             if (Iterables.any(accountPaymentMethods, new Predicate<PaymentMethod>() {
                 @Override
                 public boolean apply(final PaymentMethod input) {
@@ -118,7 +118,7 @@ public abstract class ComboPaymentResource extends JaxRsResourceBase {
 
         // Only set as default if this is the first paymentMethod on the account
         final boolean isDefault = accountPaymentMethods.isEmpty();
-        final PaymentMethod paymentData = paymentMethodJson.toPaymentMethod(account.getId().toString());
+        final PaymentMethod paymentData = paymentMethodJson.toPaymentMethod(account.getId());
         return paymentApi.addPaymentMethod(account, paymentMethodJson.getExternalKey(), paymentMethodJson.getPluginName(), isDefault,
                                            paymentData.getPluginDetail(), pluginProperties, callContext);
     }

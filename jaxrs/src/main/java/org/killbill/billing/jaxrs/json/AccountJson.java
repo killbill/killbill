@@ -35,12 +35,13 @@ import org.killbill.billing.util.audit.AccountAuditLogs;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Strings;
+import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 
+@ApiModel(value="Account")
 public class AccountJson extends JsonBase {
 
-    @ApiModelProperty(dataType = "java.util.UUID")
-    private final String accountId;
+    private final UUID accountId;
     private final String externalKey;
     private final BigDecimal accountCBA;
     private final BigDecimal accountBalance;
@@ -49,11 +50,9 @@ public class AccountJson extends JsonBase {
     private final String email;
     private final Integer billCycleDayLocal;
     private final String currency;
-    @ApiModelProperty(dataType = "java.util.UUID")
-    private final String parentAccountId;
+    private final UUID parentAccountId;
     private final Boolean isPaymentDelegatedToParent;
-    @ApiModelProperty(dataType = "java.util.UUID")
-    private final String paymentMethodId;
+    private final UUID paymentMethodId;
     private final DateTime referenceTime;
     private final String timeZone;
     private final String address1;
@@ -73,16 +72,16 @@ public class AccountJson extends JsonBase {
         super(toAuditLogJson(accountAuditLogs == null ? null : accountAuditLogs.getAuditLogsForAccount()));
         this.accountCBA = accountCBA;
         this.accountBalance = accountBalance;
-        this.accountId = account.getId().toString();
+        this.accountId = account.getId();
         this.externalKey = account.getExternalKey();
         this.name = account.getName();
         this.firstNameLength = account.getFirstNameLength();
         this.email = account.getEmail();
         this.billCycleDayLocal = account.getBillCycleDayLocal();
         this.currency = account.getCurrency() != null ? account.getCurrency().toString() : null;
-        this.parentAccountId = account.getParentAccountId() != null ? account.getParentAccountId().toString() : null;
+        this.parentAccountId = account.getParentAccountId();
         this.isPaymentDelegatedToParent = account.isPaymentDelegatedToParent();
-        this.paymentMethodId = account.getPaymentMethodId() != null ? account.getPaymentMethodId().toString() : null;
+        this.paymentMethodId = account.getPaymentMethodId();
         this.referenceTime = account.getReferenceTime();
         this.timeZone = account.getTimeZone() != null ? account.getTimeZone().toString() : null;
         this.address1 = account.getAddress1();
@@ -100,16 +99,16 @@ public class AccountJson extends JsonBase {
     }
 
     @JsonCreator
-    public AccountJson(@JsonProperty("accountId") final String accountId,
+    public AccountJson(@JsonProperty("accountId") final UUID accountId,
                        @JsonProperty("name") final String name,
                        @JsonProperty("firstNameLength") final Integer firstNameLength,
                        @JsonProperty("externalKey") final String externalKey,
                        @JsonProperty("email") final String email,
                        @JsonProperty("billCycleDayLocal") final Integer billCycleDayLocal,
                        @JsonProperty("currency") final String currency,
-                       @JsonProperty("parentAccountId") final String parentAccountId,
+                       @JsonProperty("parentAccountId") final UUID parentAccountId,
                        @JsonProperty("isPaymentDelegatedToParent") final Boolean isPaymentDelegatedToParent,
-                       @JsonProperty("paymentMethodId") final String paymentMethodId,
+                       @JsonProperty("paymentMethodId") final UUID paymentMethodId,
                        @JsonProperty("referenceTime") final DateTime referenceTime,
                        @JsonProperty("timeZone") final String timeZone,
                        @JsonProperty("address1") final String address1,
@@ -205,11 +204,7 @@ public class AccountJson extends JsonBase {
 
             @Override
             public UUID getPaymentMethodId() {
-                if (Strings.emptyToNull(paymentMethodId) == null) {
-                    return null;
-                } else {
-                    return UUID.fromString(paymentMethodId);
-                }
+                return paymentMethodId;
             }
 
             @Override
@@ -279,11 +274,7 @@ public class AccountJson extends JsonBase {
 
             @Override
             public UUID getParentAccountId() {
-                if (Strings.emptyToNull(parentAccountId) == null) {
-                    return null;
-                } else {
-                    return UUID.fromString(parentAccountId);
-                }
+                return parentAccountId;
             }
 
             @Override
@@ -330,7 +321,7 @@ public class AccountJson extends JsonBase {
         return accountBalance;
     }
 
-    public String getAccountId() {
+    public UUID getAccountId() {
         return accountId;
     }
 
@@ -362,7 +353,7 @@ public class AccountJson extends JsonBase {
         return currency;
     }
 
-    public String getParentAccountId() {
+    public UUID getParentAccountId() {
         return parentAccountId;
     }
 
@@ -371,7 +362,7 @@ public class AccountJson extends JsonBase {
         return isPaymentDelegatedToParent;
     }
 
-    public String getPaymentMethodId() {
+    public UUID getPaymentMethodId() {
         return paymentMethodId;
     }
 

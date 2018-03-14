@@ -61,7 +61,7 @@ import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 
 @Singleton
 @Path(JaxrsResource.TAGS_PATH)
-@Api(value = JaxrsResource.TAGS_PATH, description = "Operations on tags")
+@Api(value = JaxrsResource.TAGS_PATH, description = "Operations on tags", tags="Tag")
 public class TagResource extends JaxRsResourceBase {
 
     @Inject

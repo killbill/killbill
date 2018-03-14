@@ -89,6 +89,11 @@
                 <alignment>START_OF_BUNDLE</alignment>
             </createAlignmentCase>
         </createAlignment>
+        <billingAlignment>
+            <billingAlignmentCase>
+                <alignment>BUNDLE</alignment>
+            </billingAlignmentCase>
+        </billingAlignment>
     </rules>
 
     <plans>

@@ -28,7 +28,7 @@ public class TestInvoiceEmailJson extends JaxrsTestSuiteNoDB {
 
     @Test(groups = "fast")
     public void testJson() throws Exception {
-        final String accountId = UUIDs.randomUUID().toString();
+        final UUID accountId = UUIDs.randomUUID();
         final boolean isNotifiedForInvoices = true;
 
         final InvoiceEmailJson invoiceEmailJson = new InvoiceEmailJson(accountId, isNotifiedForInvoices);

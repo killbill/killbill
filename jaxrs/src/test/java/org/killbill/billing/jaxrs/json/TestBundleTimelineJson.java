@@ -33,7 +33,7 @@ public class TestBundleTimelineJson extends JaxrsTestSuiteNoDB {
 
     @Test(groups = "fast")
     public void testJson() throws Exception {
-        final EventSubscriptionJson event = new EventSubscriptionJson(UUID.randomUUID().toString(),
+        final EventSubscriptionJson event = new EventSubscriptionJson(UUID.randomUUID(),
                                                                       BillingPeriod.NO_BILLING_PERIOD.toString(),
                                                                       new LocalDate(),
                                                                       UUID.randomUUID().toString(),
@@ -46,8 +46,8 @@ public class TestBundleTimelineJson extends JaxrsTestSuiteNoDB {
                                                                       UUID.randomUUID().toString(),
                                                                       UUID.randomUUID().toString(),
                                                                       null);
-        final BundleTimelineJson bundleTimelineJson = new BundleTimelineJson(UUID.randomUUID().toString(),
-                                                                             UUID.randomUUID().toString(),
+        final BundleTimelineJson bundleTimelineJson = new BundleTimelineJson(UUID.randomUUID(),
+                                                                             UUID.randomUUID(),
                                                                              UUID.randomUUID().toString(),
                                                                              ImmutableList.<EventSubscriptionJson>of(event),
                                                                              null);

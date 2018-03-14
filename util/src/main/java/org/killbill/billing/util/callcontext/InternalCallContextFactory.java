@@ -51,6 +51,7 @@ public class InternalCallContextFactory {
 
     public static final String MDC_KB_ACCOUNT_RECORD_ID = "kb.accountRecordId";
     public static final String MDC_KB_TENANT_RECORD_ID = "kb.tenantRecordId";
+    public static final String MDC_KB_USER_TOKEN = "kb.userToken";
 
     private final ImmutableAccountInternalApi accountInternalApi;
     private final Clock clock;
@@ -159,7 +160,7 @@ public class InternalCallContextFactory {
          * @return internal tenant callcontext
          */
     public InternalTenantContext createInternalTenantContext(final Long tenantRecordId, @Nullable final Long accountRecordId) {
-        populateMDCContext(accountRecordId, tenantRecordId);
+        populateMDCContext(null, accountRecordId, tenantRecordId);
 
         if (accountRecordId == null) {
             return new InternalTenantContext(tenantRecordId);
@@ -245,7 +246,7 @@ public class InternalCallContextFactory {
     public InternalCallContext createInternalCallContextWithoutAccountRecordId(final CallContext context) {
         // If tenant id is null, this will default to the default tenant record id (multi-tenancy disabled)
         final Long tenantRecordId = getTenantRecordIdSafe(context);
-        populateMDCContext(null, tenantRecordId);
+        populateMDCContext(context.getUserToken(), null, tenantRecordId);
         return new InternalCallContext(tenantRecordId, context, clock.getUTCNow());
     }
 
@@ -254,7 +255,7 @@ public class InternalCallContextFactory {
         final ImmutableAccountData immutableAccountData = getImmutableAccountData(accountRecordId, context.getTenantRecordId());
         final DateTimeZone fixedOffsetTimeZone = immutableAccountData.getFixedOffsetTimeZone();
         final DateTime referenceTime = immutableAccountData.getReferenceTime();
-        populateMDCContext(accountRecordId, context.getTenantRecordId());
+        populateMDCContext(context.getUserToken(), accountRecordId, context.getTenantRecordId());
         return new InternalCallContext(context, accountRecordId, fixedOffsetTimeZone, referenceTime, clock.getUTCNow());
     }
 
@@ -263,12 +264,12 @@ public class InternalCallContextFactory {
         // See DefaultImmutableAccountData implementation
         final DateTimeZone fixedOffsetTimeZone = AccountDateTimeUtils.getFixedOffsetTimeZone(accountModelDao);
         final DateTime referenceTime = accountModelDao.getReferenceTime();
-        populateMDCContext(accountRecordId, context.getTenantRecordId());
+        populateMDCContext(context.getUserToken(), accountRecordId, context.getTenantRecordId());
         return new InternalCallContext(context, accountRecordId, fixedOffsetTimeZone, referenceTime, clock.getUTCNow());
     }
 
     public InternalCallContext createInternalCallContext(final DateTimeZone fixedOffsetTimeZone, final DateTime referenceTime, final Long accountRecordId, final InternalCallContext context) {
-        populateMDCContext(accountRecordId, context.getTenantRecordId());
+        populateMDCContext(context.getUserToken(), accountRecordId, context.getTenantRecordId());
         return new InternalCallContext(context, accountRecordId, fixedOffsetTimeZone, referenceTime, clock.getUTCNow());
     }
 
@@ -299,7 +300,7 @@ public class InternalCallContextFactory {
             referenceTime = immutableAccountData.getReferenceTime();
         }
 
-        populateMDCContext(accountRecordId, nonNulTenantRecordId);
+        populateMDCContext(userToken, accountRecordId, nonNulTenantRecordId);
 
         return new InternalCallContext(nonNulTenantRecordId,
                                        accountRecordId,
@@ -327,11 +328,12 @@ public class InternalCallContextFactory {
         }
     }
 
-    private void populateMDCContext(@Nullable final Long accountRecordId, final Long tenantRecordId) {
+    private void populateMDCContext(@Nullable final UUID userToken, @Nullable final Long accountRecordId, final Long tenantRecordId) {
         if (accountRecordId != null) {
             MDC.put(MDC_KB_ACCOUNT_RECORD_ID, String.valueOf(accountRecordId));
         }
         MDC.put(MDC_KB_TENANT_RECORD_ID, String.valueOf(tenantRecordId));
+        MDC.put(MDC_KB_USER_TOKEN, userToken != null ? userToken.toString() : null);
     }
 
     //

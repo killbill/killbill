@@ -19,6 +19,7 @@ package org.killbill.billing.jaxrs.json;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.UUID;
 
 import javax.annotation.Nullable;
 
@@ -31,16 +32,13 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 
-@ApiModel(description = "Payment attempt")
+@ApiModel(value="PaymentAttempt")
 public class PaymentAttemptJson extends JsonBase {
 
-    @ApiModelProperty(dataType = "java.util.UUID")
-    private final String accountId;
-    @ApiModelProperty(dataType = "java.util.UUID")
-    private final String paymentMethodId;
+    private final UUID accountId;
+    private final UUID paymentMethodId;
     private final String paymentExternalKey;
-    @ApiModelProperty(dataType = "java.util.UUID")
-    private final String transactionId;
+    private final UUID transactionId;
     private final String transactionExternalKey;
     @ApiModelProperty(dataType = "org.killbill.billing.payment.api.TransactionType")
     private final String transactionType;
@@ -56,10 +54,10 @@ public class PaymentAttemptJson extends JsonBase {
     private final List<PluginPropertyJson> pluginProperties;
 
     @JsonCreator
-    public PaymentAttemptJson(@JsonProperty("accountId") final String accountId,
-                              @JsonProperty("paymentMethodId") final String paymentMethodId,
+    public PaymentAttemptJson(@JsonProperty("accountId") final UUID accountId,
+                              @JsonProperty("paymentMethodId") final UUID paymentMethodId,
                               @JsonProperty("paymentExternalKey") final String paymentExternalKey,
-                              @JsonProperty("transactionId") final String transactionId,
+                              @JsonProperty("transactionId") final UUID transactionId,
                               @JsonProperty("transactionExternalKey") final String transactionExternalKey,
                               @JsonProperty("transactionType") final String transactionType,
                               @JsonProperty("effectiveDate") final DateTime effectiveDate,
@@ -85,11 +83,11 @@ public class PaymentAttemptJson extends JsonBase {
     }
 
     public PaymentAttemptJson(final PaymentAttempt paymentAttempt, final String paymentExternalKey, @Nullable final List<AuditLog> attemptsLogs) {
-        this(paymentAttempt.getAccountId().toString(),
+        this(paymentAttempt.getAccountId(),
              // Could be null if aborted in the priorCall
-             paymentAttempt.getPaymentMethodId() != null ? paymentAttempt.getPaymentMethodId().toString() : null,
+             paymentAttempt.getPaymentMethodId(),
              paymentExternalKey,
-             paymentAttempt.getTransactionId() != null ? paymentAttempt.getTransactionId().toString() : null,
+             paymentAttempt.getTransactionId(),
              paymentAttempt.getTransactionExternalKey(),
              paymentAttempt.getTransactionType().toString(),
              paymentAttempt.getEffectiveDate(),
@@ -101,11 +99,11 @@ public class PaymentAttemptJson extends JsonBase {
              toAuditLogJson(attemptsLogs));
     }
 
-    public String getAccountId() {
+    public UUID getAccountId() {
         return accountId;
     }
 
-    public String getPaymentMethodId() {
+    public UUID getPaymentMethodId() {
         return paymentMethodId;
     }
 
@@ -113,7 +111,7 @@ public class PaymentAttemptJson extends JsonBase {
         return paymentExternalKey;
     }
 
-    public String getTransactionId() {
+    public UUID getTransactionId() {
         return transactionId;
     }
 

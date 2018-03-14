@@ -737,7 +737,7 @@ public class DefaultSubscriptionInternalApi extends SubscriptionApiBase implemen
                             final Plan currentPlan = subscriptionForCancellation.getCurrentPlan();
                             final PlanPhaseSpecifier spec = new PlanPhaseSpecifier(currentPlan.getName(),
                                                                                    subscriptionForCancellation.getCurrentPhase().getPhaseType());
-                            policy = catalog.planCancelPolicy(spec, utcNow);
+                            policy = catalog.planCancelPolicy(spec, subscriptionForCancellation.getStartDate());
                         }
                         // We pass null for billingAlignment, accountTimezone, account BCD because this is not available which means that dryRun with START_OF_TERM BillingPolicy will fail
                         cancelEffectiveDate = subscriptionForCancellation.getPlanChangeEffectiveDate(policy, null, -1, context);
@@ -791,7 +791,7 @@ public class DefaultSubscriptionInternalApi extends SubscriptionApiBase implemen
 
         try {
             final Catalog catalog = catalogInternalApi.getFullCatalog(true, true, context);
-            final BillingAlignment alignment = catalog.billingAlignment(planPhaseSpecifier, effectiveDate);
+            final BillingAlignment alignment = catalog.billingAlignment(planPhaseSpecifier, subscription.getStartDate());
             return BillCycleDayCalculator.calculateBcdForAlignment(bcdCache, subscription, baseSubscription, alignment, context, accountBillCycleDayLocal);
         } catch (final CatalogApiException e) {
             throw new SubscriptionBaseApiException(e);

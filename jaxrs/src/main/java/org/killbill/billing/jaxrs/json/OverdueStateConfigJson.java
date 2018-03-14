@@ -23,7 +23,9 @@ import org.killbill.billing.overdue.api.OverdueState;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import io.swagger.annotations.ApiModel;
 
+@ApiModel(value="OverdueStateConfig")
 public class OverdueStateConfigJson {
 
     private final String name;

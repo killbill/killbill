@@ -90,7 +90,7 @@ import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 //
 //
 @Path(JaxrsResource.TEST_PATH)
-@Api(value = JaxrsResource.TEST_PATH, description = "Operations for testing")
+@Api(value = JaxrsResource.TEST_PATH, description = "Operations for testing", hidden=true)
 public class TestResource extends JaxRsResourceBase {
 
     private static final Logger log = LoggerFactory.getLogger(TestResource.class);
@@ -181,7 +181,6 @@ public class TestResource extends JaxRsResourceBase {
 
         final ClockMock testClock = getClockMock();
         if (requestedClockDate == null) {
-            log.info("************      RESETTING CLOCK to " + clock.getUTCNow());
             testClock.resetDeltaFromReality();
         } else {
             final DateTime newTime = DATE_TIME_FORMATTER.parseDateTime(requestedClockDate).toDateTime(DateTimeZone.UTC);
