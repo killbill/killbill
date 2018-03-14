@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014-2017 Groupon, Inc
- * Copyright 2014-2017 The Billing Project, LLC
+ * Copyright 2014-2018 Groupon, Inc
+ * Copyright 2014-2018 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -62,6 +62,7 @@ import org.killbill.billing.entitlement.api.BlockingState;
 import org.killbill.billing.entitlement.api.BlockingStateType;
 import org.killbill.billing.entitlement.api.DefaultEntitlement;
 import org.killbill.billing.entitlement.api.Entitlement;
+import org.killbill.billing.entitlement.api.Entitlement.EntitlementActionPolicy;
 import org.killbill.billing.entitlement.api.EntitlementApi;
 import org.killbill.billing.entitlement.api.EntitlementApiException;
 import org.killbill.billing.entitlement.api.SubscriptionApi;
@@ -125,9 +126,7 @@ import org.skife.config.TimeSpan;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
-import org.testng.IHookCallBack;
 import org.testng.IHookable;
-import org.testng.ITestResult;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
@@ -751,6 +750,26 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
                     // Need to fetch again to get latest CTD updated from the system
                     Entitlement refreshedEntitlement = entitlementApi.getEntitlementForId(entitlement.getId(), callContext);
                     refreshedEntitlement = refreshedEntitlement.cancelEntitlementWithDate(requestedDate, false, ImmutableList.<PluginProperty>of(), callContext);
+                    return refreshedEntitlement;
+                } catch (final EntitlementApiException e) {
+                    fail(e.getMessage());
+                    return null;
+                }
+            }
+        }, events);
+    }
+
+    protected DefaultEntitlement cancelEntitlementAndCheckForCompletion(final Entitlement entitlement,
+                                                                        final EntitlementActionPolicy entitlementActionPolicy,
+                                                                        final BillingActionPolicy billingActionPolicy,
+                                                                        final NextEvent... events) {
+        return (DefaultEntitlement) doCallAndCheckForCompletion(new Function<Void, Entitlement>() {
+            @Override
+            public Entitlement apply(@Nullable final Void dontcare) {
+                try {
+                    // Need to fetch again to get latest CTD updated from the system
+                    Entitlement refreshedEntitlement = entitlementApi.getEntitlementForId(entitlement.getId(), callContext);
+                    refreshedEntitlement = refreshedEntitlement.cancelEntitlementWithPolicyOverrideBillingPolicy(entitlementActionPolicy, billingActionPolicy, ImmutableList.<PluginProperty>of(), callContext);
                     return refreshedEntitlement;
                 } catch (final EntitlementApiException e) {
                     fail(e.getMessage());

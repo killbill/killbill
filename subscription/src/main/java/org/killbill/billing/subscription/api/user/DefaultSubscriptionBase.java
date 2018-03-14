@@ -679,12 +679,29 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
 
         transitions = new LinkedList<SubscriptionBaseTransition>();
 
+        // DefaultSubscriptionDao#buildBundleSubscriptions may have added an out-of-order cancellation event (https://github.com/killbill/killbill/issues/897)
+        final SubscriptionBaseEvent cancellationEvent = Iterables.tryFind(inputEvents,
+                                                                          new Predicate<SubscriptionBaseEvent>() {
+                                                                              @Override
+                                                                              public boolean apply(final SubscriptionBaseEvent input) {
+                                                                                  return input.getType() == EventType.API_USER && ((ApiEvent) input).getApiEventType() == ApiEventType.CANCEL;
+                                                                              }
+                                                                          }).orNull();
         for (final SubscriptionBaseEvent cur : inputEvents) {
-
             if (!cur.isActive()) {
                 continue;
             }
 
+            if (cancellationEvent != null) {
+                if (cur.getId().compareTo(cancellationEvent.getId()) == 0) {
+                    // Keep the cancellation event
+                } else if (cur.getType() == EventType.API_USER && (((ApiEvent) cur).getApiEventType() == ApiEventType.TRANSFER || ((ApiEvent) cur).getApiEventType() == ApiEventType.CREATE)) {
+                    // Keep the initial event (SOT use-case)
+                } else if (cur.getEffectiveDate().compareTo(cancellationEvent.getEffectiveDate()) >= 0) {
+                    // Event to ignore past cancellation date
+                    continue;
+                }
+            }
 
             ApiEventType apiEventType = null;
             boolean isFromDisk = true;
@@ -795,7 +812,14 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
             public int compare(final SubscriptionBaseEvent o1, final SubscriptionBaseEvent o2) {
                 int res = o1.getEffectiveDate().compareTo(o2.getEffectiveDate());
                 if (res == 0) {
-                    res = o1.getTotalOrdering() < (o2.getTotalOrdering()) ? -1 : 1;
+                    // In-memory events have a total order of 0, make sure they are after on disk event
+                    if (o1.getTotalOrdering() == 0 && o2.getTotalOrdering() > 0) {
+                        return 1;
+                    } else if (o1.getTotalOrdering() > 0 && o2.getTotalOrdering() == 0) {
+                        return -1;
+                    } else {
+                        res = o1.getTotalOrdering() < (o2.getTotalOrdering()) ? -1 : 1;
+                    }
                 }
                 return res;
             }
