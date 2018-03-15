@@ -25,7 +25,8 @@ import ch.qos.logback.classic.pattern.ClassicConverter;
 import ch.qos.logback.classic.spi.ILoggingEvent;
 
 /**
- * ObfuscatorConverter attempts to mask sensitive data in the log files.
+ * ObfuscatorConverter attempts to mask sensitive data in the log files. Extra parameters can be passed to the
+ * converter and the underlying obsfucators by adding arguments behind maskedMsg like the example shown below.
  * <p/>
  * To use, define a new conversion word in your Logback configuration, e.g.:
  * <pre>
@@ -34,7 +35,7 @@ import ch.qos.logback.classic.spi.ILoggingEvent;
  *             converterClass="org.killbill.billing.server.log.obfuscators.ObfuscatorConverter" />
  *         <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
  *             <encoder>
- *                 <pattern>%date [%thread] - %maskedMsg%n</pattern>
+ *                 <pattern>%date [%thread] - %maskedMsg{param1, param2, ...}%n</pattern>
  *             </encoder>
  *         </appender>
  *         <root level="DEBUG">
