@@ -17,12 +17,15 @@
 
 package org.killbill.billing.server.log.obfuscators;
 
+import java.util.List;
+
 import org.killbill.billing.server.log.ServerTestSuiteNoDB;
 import org.mockito.Mockito;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import ch.qos.logback.classic.spi.ILoggingEvent;
+import com.google.common.collect.ImmutableList;
 
 public class TestObfuscatorConverter extends ServerTestSuiteNoDB {
 
@@ -60,11 +63,52 @@ public class TestObfuscatorConverter extends ServerTestSuiteNoDB {
                "</gateway>");
     }
 
+    @Test(groups = "fast")
+    public void testLogSensitiveDataWithExtraKeywords() throws Exception {
+        verifyWithExtendedPatternObfuscator("Starting purchase call: \n" +
+                                            "<gateway>\n" +
+                                            "<card>4111111111111111</card>\n" +
+                                            "<address1>790 test blvd</address1>\n" +
+                                            "<bankAccountNumber>482391823</bankAccountNumber>\n" +
+                                            "<password>supersecret</password>\n" +
+                                            "</gateway>",
+                                            "Starting purchase call: \n" +
+                                            "<gateway>\n" +
+                                            "<card>411111******1111</card>\n" +
+                                            "<address1>*************</address1>\n" +
+                                            "<bankAccountNumber>*********</bankAccountNumber>\n" +
+                                            "<password>***********</password>\n" +
+                                            "</gateway>");
+    }
+
     private void verify(final String input, final String output) {
         final ILoggingEvent event = Mockito.mock(ILoggingEvent.class);
         Mockito.when(event.getFormattedMessage()).thenReturn(input);
 
+        converter.start();
         final String obfuscated = converter.convert(event);
         Assert.assertEquals(obfuscated, output, obfuscated);
+    }
+
+    private void verifyWithExtendedPatternObfuscator(final String input, final String output) {
+        final ExtendedObfuscatorConverter extendedConverter = new ExtendedObfuscatorConverter();
+        final ILoggingEvent event = Mockito.mock(ILoggingEvent.class);
+        Mockito.when(event.getFormattedMessage()).thenReturn(input);
+
+        extendedConverter.start();
+        final String obfuscated = extendedConverter.convert(event);
+        Assert.assertEquals(obfuscated, output, obfuscated);
+    }
+
+    class ExtendedObfuscatorConverter extends ObfuscatorConverter {
+        @Override
+        public void start() {
+            super.start();
+        }
+
+        @Override
+        public List<String> getOptionList() {
+            return ImmutableList.of("address1");
+        }
     }
 }
