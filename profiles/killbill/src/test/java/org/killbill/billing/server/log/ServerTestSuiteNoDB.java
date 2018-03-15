@@ -17,7 +17,6 @@
 
 package org.killbill.billing.server.log;
 
-import org.killbill.billing.GuicyKillbillTestModule;
 import org.killbill.billing.GuicyKillbillTestSuiteNoDB;
 import org.testng.annotations.BeforeClass;
 

@@ -24,7 +24,7 @@ import java.util.regex.Pattern;
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import com.google.common.collect.ImmutableList;
 
-public class LoggingFilterObfuscator extends Obfuscator {
+public class LoggingFilterObfuscator extends BaseObfuscator {
 
     private static final String[] DEFAULT_SENSITIVE_HEADERS = {
             "Authorization",

@@ -218,7 +218,7 @@ public class TestLuhnMaskingObfuscator extends ServerTestSuiteNoDB {
     @Test(groups = "fast")
     public void testQueryParametersAreObfuscated() throws Exception {
         final ILoggingEvent event = Mockito.mock(ILoggingEvent.class);
-        Mockito.when(event.getLoggerName()).thenReturn(Obfuscator.LOGGING_FILTER_NAME);
+        Mockito.when(event.getLoggerName()).thenReturn(BaseObfuscator.LOGGING_FILTER_NAME);
 
         // Check the query parameters are obfuscated (see TestPatternObfuscator#testProfilingHeaderIsNotObfuscated)
         // TODO Pierre: Obfuscate the Authorization and X-Killbill-ApiSecret headers?
