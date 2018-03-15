@@ -68,11 +68,9 @@ import org.killbill.billing.jaxrs.util.Context;
 import org.killbill.billing.jaxrs.util.JaxrsUriBuilder;
 import org.killbill.billing.payment.api.PaymentApi;
 import org.killbill.billing.tenant.api.TenantApiException;
-import org.killbill.billing.tenant.api.TenantKV.TenantKey;
 import org.killbill.billing.util.api.AuditUserApi;
 import org.killbill.billing.util.api.CustomFieldUserApi;
 import org.killbill.billing.util.api.TagUserApi;
-import org.killbill.billing.util.cache.Cachable.CacheType;
 import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.TenantContext;
 import org.killbill.clock.Clock;
@@ -83,15 +81,14 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
-import static javax.ws.rs.core.MediaType.APPLICATION_XML;
+import static javax.ws.rs.core.MediaType.TEXT_XML;
 
 @Singleton
 @Path(JaxrsResource.CATALOG_PATH)
-@Api(value = JaxrsResource.CATALOG_PATH, description = "Catalog information", tags="Catalog")
+@Api(value = JaxrsResource.CATALOG_PATH, description = "Catalog information", tags = "Catalog")
 public class CatalogResource extends JaxRsResourceBase {
 
     private final CatalogUserApi catalogUserApi;
@@ -115,7 +112,7 @@ public class CatalogResource extends JaxRsResourceBase {
 
     @TimedResource
     @GET
-    @Produces(APPLICATION_XML)
+    @Produces(TEXT_XML)
     @ApiOperation(value = "Retrieve the full catalog as XML", response = String.class)
     @ApiResponses(value = {})
     public Response getCatalogXml(@javax.ws.rs.core.Context final HttpServletRequest request) throws Exception {
@@ -125,7 +122,7 @@ public class CatalogResource extends JaxRsResourceBase {
 
     @TimedResource
     @POST
-    @Consumes(APPLICATION_XML)
+    @Consumes(TEXT_XML)
     @ApiOperation(value = "Upload the full catalog as XML")
     @ApiResponses(value = {})
     public Response uploadCatalogXml(final String catalogXML,
@@ -375,7 +372,6 @@ public class CatalogResource extends JaxRsResourceBase {
         return uriBuilder.buildResponse(uriInfo, CatalogResource.class, null, null, request);
     }
 
-
     @DELETE
     @ApiOperation(value = "Delete all versions for a per tenant catalog")
     @ApiResponses(value = {})
@@ -388,6 +384,5 @@ public class CatalogResource extends JaxRsResourceBase {
         catalogUserApi.deleteCatalog(callContext);
         return Response.status(Status.OK).build();
     }
-
 
 }

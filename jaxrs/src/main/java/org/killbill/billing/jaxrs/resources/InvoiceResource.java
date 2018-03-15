@@ -716,7 +716,7 @@ public class InvoiceResource extends JaxRsResourceBase {
     @GET
     @Path("/" + INVOICE_CATALOG_TRANSLATION + "/{locale:" + ANYTHING_PATTERN + "}/")
     @Produces(TEXT_PLAIN)
-    @ApiOperation(value = "Retrieves the catalog translation for the tenant", response = String.class, hidden = true)
+    @ApiOperation(value = "Retrieves the catalog translation for the tenant", response = String.class)
     @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid locale supplied"),
                            @ApiResponse(code = 404, message = "Template not found")})
     public Response getCatalogTranslation(@PathParam("locale") final String localeStr,

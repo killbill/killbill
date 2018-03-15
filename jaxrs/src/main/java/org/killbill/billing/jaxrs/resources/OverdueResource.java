@@ -57,11 +57,11 @@ import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponses;
 
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
-import static javax.ws.rs.core.MediaType.APPLICATION_XML;
+import static javax.ws.rs.core.MediaType.TEXT_XML;
 
 @Singleton
 @Path(JaxrsResource.OVERDUE_PATH)
-@Api(value = JaxrsResource.OVERDUE_PATH, description = "Overdue information", tags="Overdue")
+@Api(value = JaxrsResource.OVERDUE_PATH, description = "Overdue information", tags = "Overdue")
 public class OverdueResource extends JaxRsResourceBase {
 
     private final OverdueApi overdueApi;
@@ -82,17 +82,17 @@ public class OverdueResource extends JaxRsResourceBase {
 
     @TimedResource
     @GET
-    @Produces(APPLICATION_XML)
+    @Produces(TEXT_XML)
     @ApiOperation(value = "Retrieve the overdue config as XML", response = String.class)
     @ApiResponses(value = {})
     public Response getOverdueConfigXml(@javax.ws.rs.core.Context final HttpServletRequest request) throws Exception {
         final TenantContext tenantContext = context.createTenantContextNoAccountId(request);
-        return Response.status(Status.OK).entity(XMLWriter.writeXML((DefaultOverdueConfig )overdueApi.getOverdueConfig(tenantContext), DefaultOverdueConfig.class)).build();
+        return Response.status(Status.OK).entity(XMLWriter.writeXML((DefaultOverdueConfig) overdueApi.getOverdueConfig(tenantContext), DefaultOverdueConfig.class)).build();
     }
 
     @TimedResource
     @POST
-    @Consumes(APPLICATION_XML)
+    @Consumes(TEXT_XML)
     @ApiOperation(value = "Upload the full overdue config as XML")
     @ApiResponses(value = {})
     public Response uploadOverdueConfigXml(final String overdueXML,
@@ -113,7 +113,7 @@ public class OverdueResource extends JaxRsResourceBase {
     @TimedResource
     @GET
     @Produces(APPLICATION_JSON)
-    @ApiOperation(value = "Retrieve the overdue config as JSON" , response = OverdueJson.class)
+    @ApiOperation(value = "Retrieve the overdue config as JSON", response = OverdueJson.class)
     @ApiResponses(value = {})
     public Response getOverdueConfigJson(@javax.ws.rs.core.Context final HttpServletRequest request) throws Exception {
         final TenantContext tenantContext = context.createTenantContextNoAccountId(request);
@@ -122,8 +122,6 @@ public class OverdueResource extends JaxRsResourceBase {
         return Response.status(Status.OK).entity(result).build();
     }
 
-
-
     @TimedResource
     @POST
     @Consumes(APPLICATION_JSON)
@@ -131,11 +129,11 @@ public class OverdueResource extends JaxRsResourceBase {
     @ApiOperation(value = "Upload the full overdue config as JSON", response = OverdueJson.class)
     @ApiResponses(value = {})
     public Response uploadOverdueConfigJson(final OverdueJson overdueJson,
-                                  @HeaderParam(HDR_CREATED_BY) final String createdBy,
-                                  @HeaderParam(HDR_REASON) final String reason,
-                                  @HeaderParam(HDR_COMMENT) final String comment,
-                                  @javax.ws.rs.core.Context final HttpServletRequest request,
-                                  @javax.ws.rs.core.Context final UriInfo uriInfo) throws Exception {
+                                            @HeaderParam(HDR_CREATED_BY) final String createdBy,
+                                            @HeaderParam(HDR_REASON) final String reason,
+                                            @HeaderParam(HDR_COMMENT) final String comment,
+                                            @javax.ws.rs.core.Context final HttpServletRequest request,
+                                            @javax.ws.rs.core.Context final UriInfo uriInfo) throws Exception {
         final CallContext callContext = context.createCallContextNoAccountId(createdBy, reason, comment, request);
 
         final OverdueConfig overdueConfig = OverdueJson.toOverdueConfigWithValidation(overdueJson);
