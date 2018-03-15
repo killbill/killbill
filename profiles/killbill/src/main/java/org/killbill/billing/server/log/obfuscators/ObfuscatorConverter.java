@@ -17,11 +17,12 @@
 
 package org.killbill.billing.server.log.obfuscators;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 
 import ch.qos.logback.classic.pattern.ClassicConverter;
 import ch.qos.logback.classic.spi.ILoggingEvent;
-import com.google.common.collect.ImmutableList;
 
 /**
  * ObfuscatorConverter attempts to mask sensitive data in the log files.
@@ -44,10 +45,16 @@ import com.google.common.collect.ImmutableList;
  */
 public class ObfuscatorConverter extends ClassicConverter {
 
-    private final Collection<Obfuscator> obfuscators = ImmutableList.<Obfuscator>of(new ConfigMagicObfuscator(),
-                                                                                    new LoggingFilterObfuscator(),
-                                                                                    new PatternObfuscator(),
-                                                                                    new LuhnMaskingObfuscator());
+    private final Collection<Obfuscator> obfuscators = new ArrayList<Obfuscator>();
+
+    @Override
+    public void start() {
+        obfuscators.addAll(Arrays.asList(new ConfigMagicObfuscator(),
+                                         new LoggingFilterObfuscator(),
+                                         new PatternObfuscator(getOptionList()),
+                                         new LuhnMaskingObfuscator()));
+        super.start();
+    }
 
     @Override
     public String convert(final ILoggingEvent event) {
