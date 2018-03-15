@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014-2016 Groupon, Inc
- * Copyright 2014-2016 The Billing Project, LLC
+ * Copyright 2014-2018 Groupon, Inc
+ * Copyright 2014-2018 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -19,7 +19,6 @@
 package org.killbill.billing.jaxrs;
 
 import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -31,7 +30,6 @@ import org.killbill.billing.api.FlakyRetryAnalyzer;
 import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.catalog.api.ProductCategory;
 import org.killbill.billing.client.KillBillClientException;
-import org.killbill.billing.client.RequestOptions;
 import org.killbill.billing.client.model.Account;
 import org.killbill.billing.client.model.AuditLog;
 import org.killbill.billing.client.model.Credit;
@@ -361,11 +359,24 @@ public class TestInvoice extends TestJaxrsBase {
         adjustmentInvoiceItem.setAccountId(accountJson.getAccountId());
         adjustmentInvoiceItem.setInvoiceId(invoice.getInvoiceId());
         adjustmentInvoiceItem.setInvoiceItemId(invoiceItem.getInvoiceItemId());
-        killBillClient.adjustInvoiceItem(invoiceItem, requestOptions);
+        final String itemDetails = "{\n" +
+                                   "  \"user\": \"admin\",\n" +
+                                   "  \"reason\": \"SLA not met\"\n" +
+                                   "}";
+        adjustmentInvoiceItem.setItemDetails(itemDetails);
+        killBillClient.adjustInvoiceItem(adjustmentInvoiceItem, requestOptions);
 
         // Verify the new invoice balance is zero
         final Invoice adjustedInvoice = killBillClient.getInvoice(invoice.getInvoiceId(), true, false, AuditLevel.FULL, requestOptions);
         assertEquals(adjustedInvoice.getAmount().compareTo(BigDecimal.ZERO), 0);
+
+        final InvoiceItem createdAdjustment = Iterables.find(adjustedInvoice.getItems(), new Predicate<InvoiceItem>() {
+            @Override
+            public boolean apply(final InvoiceItem input) {
+                return InvoiceItemType.ITEM_ADJ.toString().equals(input.getItemType());
+            }
+        });
+        assertEquals(createdAdjustment.getItemDetails(), itemDetails);
 
         // Verify invoice audit logs
         Assert.assertEquals(adjustedInvoice.getAuditLogs().size(), 1);

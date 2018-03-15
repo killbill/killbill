@@ -55,7 +55,6 @@ import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.catalog.api.PhaseType;
 import org.killbill.billing.catalog.api.PlanPhasePriceOverride;
 import org.killbill.billing.catalog.api.PlanPhaseSpecifier;
-import org.killbill.billing.catalog.api.PlanSpecifier;
 import org.killbill.billing.catalog.api.PriceListSet;
 import org.killbill.billing.catalog.api.ProductCategory;
 import org.killbill.billing.entitlement.api.BlockingState;
@@ -119,7 +118,6 @@ import org.killbill.billing.util.config.definition.PaymentConfig;
 import org.killbill.billing.util.dao.NonEntityDao;
 import org.killbill.billing.util.nodes.KillbillNodesApi;
 import org.killbill.billing.util.tag.ControlTagType;
-import org.killbill.billing.util.tag.Tag;
 import org.killbill.bus.api.PersistentBus;
 import org.skife.config.ConfigurationObjectFactory;
 import org.skife.config.TimeSpan;
@@ -792,6 +790,7 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
                                                                    invoiceItem.getId(),
                                                                    invoice.getInvoiceDate(),
                                                                    null,
+                                                                   null,
                                                                    callContext);
                     }
 
@@ -809,7 +808,7 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
             public Void apply(@Nullable final Void input) {
                 try {
                     invoiceUserApi.insertInvoiceItemAdjustment(account.getId(), invoice.getId(), invoice.getInvoiceItems().get(itemNb - 1).getId(),
-                                                               invoice.getInvoiceDate(), null, callContext);
+                                                               invoice.getInvoiceDate(), null, null, callContext);
                 } catch (final InvoiceApiException e) {
                     fail(e.toString());
                 }
