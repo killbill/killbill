@@ -146,7 +146,7 @@ public class KillBillApiDefinition implements ReaderListener {
     }
 
     private static boolean isTenantCreationRequest(final String path, final String httpMethod) {
-        return JaxrsResource.TENANTS_PATH.equals(path) && "POST".equalsIgnoreCase(httpMethod);
+        return JaxrsResource.TENANTS_PATH.equals(path);
     }
 
     private static boolean isNodeInfoRequest(final String path) {

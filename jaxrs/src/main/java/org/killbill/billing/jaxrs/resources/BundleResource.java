@@ -386,7 +386,7 @@ public class BundleResource extends JaxRsResourceBase {
     public Response transferBundle(final BundleJson json,
                                    @PathParam(ID_PARAM_NAME) final UUID bundleId,
                                    @QueryParam(QUERY_REQUESTED_DT) final String requestedDate,
-                                   @QueryParam(QUERY_BILLING_POLICY) @DefaultValue("END_OF_TERM") final String policyString,
+                                   @QueryParam(QUERY_BILLING_POLICY) @DefaultValue("END_OF_TERM") final BillingActionPolicy billingPolicy,
                                    @QueryParam(QUERY_PLUGIN_PROPERTY) final List<String> pluginPropertiesString,
                                    @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                    @HeaderParam(HDR_REASON) final String reason,
@@ -397,13 +397,12 @@ public class BundleResource extends JaxRsResourceBase {
         verifyNonNullOrEmpty(json.getAccountId(), "BundleJson accountId needs to be set");
 
         final Iterable<PluginProperty> pluginProperties = extractPluginProperties(pluginPropertiesString);
-        final BillingActionPolicy policy = BillingActionPolicy.valueOf(policyString.toUpperCase());
 
         final CallContext callContext = context.createCallContextNoAccountId(createdBy, reason, comment, request);
         final SubscriptionBundle bundle = subscriptionApi.getSubscriptionBundle(bundleId, callContext);
         final LocalDate inputLocalDate = toLocalDate(requestedDate);
 
-        final UUID newBundleId = entitlementApi.transferEntitlementsOverrideBillingPolicy(bundle.getAccountId(), json.getAccountId(), bundle.getExternalKey(), inputLocalDate, policy, pluginProperties, callContext);
+        final UUID newBundleId = entitlementApi.transferEntitlementsOverrideBillingPolicy(bundle.getAccountId(), json.getAccountId(), bundle.getExternalKey(), inputLocalDate, billingPolicy, pluginProperties, callContext);
         return uriBuilder.buildResponse(uriInfo, BundleResource.class, "getBundle", newBundleId, request);
     }
 
