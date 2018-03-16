@@ -809,13 +809,14 @@ public class DefaultSubscriptionDao extends EntityDaoBase<SubscriptionBundleMode
         final UUID subscriptionId = subscription.getId();
         cancelFutureEventsFromTransaction(subscriptionId, cancelEvent.getEffectiveDate(), entitySqlDaoWrapperFactory, true, context);
         final SubscriptionEventSqlDao subscriptionEventSqlDao = entitySqlDaoWrapperFactory.become(SubscriptionEventSqlDao.class);
-        createAndRefresh(subscriptionEventSqlDao, new SubscriptionEventModelDao(cancelEvent), context);
+        final SubscriptionEventModelDao cancelEventWithUpdatedTotalOrdering = createAndRefresh(subscriptionEventSqlDao, new SubscriptionEventModelDao(cancelEvent), context);
 
-        final boolean isBusEvent = cancelEvent.getEffectiveDate().compareTo(clock.getUTCNow()) <= 0;
-        recordBusOrFutureNotificationFromTransaction(subscription, cancelEvent, entitySqlDaoWrapperFactory, isBusEvent, seqId, catalog, context);
+        final SubscriptionBaseEvent refreshedSubscriptionEvent = SubscriptionEventModelDao.toSubscriptionEvent(cancelEventWithUpdatedTotalOrdering);
+        final boolean isBusEvent = refreshedSubscriptionEvent.getEffectiveDate().compareTo(clock.getUTCNow()) <= 0;
+        recordBusOrFutureNotificationFromTransaction(subscription, refreshedSubscriptionEvent, entitySqlDaoWrapperFactory, isBusEvent, seqId, catalog, context);
 
         // Notify the Bus of the requested change
-        notifyBusOfRequestedChange(entitySqlDaoWrapperFactory, subscription, cancelEvent, SubscriptionBaseTransitionType.CANCEL, context);
+        notifyBusOfRequestedChange(entitySqlDaoWrapperFactory, subscription, refreshedSubscriptionEvent, SubscriptionBaseTransitionType.CANCEL, context);
     }
 
     private void cancelNextPhaseEventFromTransaction(final UUID subscriptionId, final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory, final InternalCallContext context) {
