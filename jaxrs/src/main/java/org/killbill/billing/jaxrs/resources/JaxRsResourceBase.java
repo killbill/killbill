@@ -18,7 +18,6 @@
 
 package org.killbill.billing.jaxrs.resources;
 
-import java.io.Closeable;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.math.BigDecimal;
@@ -268,7 +267,6 @@ public abstract class JaxRsResourceBase implements JaxrsResource {
         return uriBuilder.buildResponse(uriInfo, this.getClass(), "getCustomFields", id, request);
     }
 
-
     protected Response modifyCustomFields(final UUID id,
                                           final List<CustomFieldJson> customFields,
                                           final CallContext context) throws CustomFieldApiException {
@@ -282,8 +280,6 @@ public abstract class JaxRsResourceBase implements JaxrsResource {
         customFieldUserApi.updateCustomFields(input, context);
         return Response.status(Response.Status.OK).build();
     }
-
-
 
     /**
      * @param id              the if of the object for which the custom fields apply
@@ -382,7 +378,6 @@ public abstract class JaxRsResourceBase implements JaxrsResource {
         }
     }
 
-
     protected Response completeTransactionInternal(final PaymentTransactionJson json,
                                                    final Payment initialPayment,
                                                    final List<String> paymentControlPluginNames,
@@ -442,7 +437,6 @@ public abstract class JaxRsResourceBase implements JaxrsResource {
         return createPaymentResponse(uriInfo, result, pendingTransaction.getTransactionType(), pendingTransaction.getExternalKey(), request);
 
     }
-
 
     protected PaymentTransaction lookupPendingOrSuccessTransaction(final Payment initialPayment, @Nullable final UUID transactionId, @Nullable final String transactionExternalKey, @Nullable final String transactionType) throws PaymentApiException {
         final Collection<PaymentTransaction> pendingTransaction = Collections2.filter(initialPayment.getTransactions(), new Predicate<PaymentTransaction>() {

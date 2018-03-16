@@ -23,7 +23,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.annotations.ApiModel;
 
 
-@ApiModel(value="HostedPaymentPageFields")
+@ApiModel(value="HostedPaymentPageFields", parent = JsonBase.class)
 public class HostedPaymentPageFieldsJson extends JsonBase {
 
     private final List<PluginPropertyJson> formFields;

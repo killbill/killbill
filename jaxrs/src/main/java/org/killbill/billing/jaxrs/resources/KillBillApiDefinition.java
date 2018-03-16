@@ -108,7 +108,6 @@ public class KillBillApiDefinition implements ReaderListener {
                 } else if (p instanceof QueryParameter) {
                     QueryParameter qp = (QueryParameter) p;
                     if (qp.getName().equals(QUERY_AUDIT)) {
-                        qp.setName("auditLevel");
                         qp.setRequired(false);
                         qp.setType("string");
                         final List<String> values = ImmutableList.copyOf(Iterables.transform(ImmutableList.<AuditLevel>copyOf(AuditLevel.values()), new Function<AuditLevel, String>() {

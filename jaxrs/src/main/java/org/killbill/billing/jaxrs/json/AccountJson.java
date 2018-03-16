@@ -38,7 +38,7 @@ import com.google.common.base.Strings;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 
-@ApiModel(value="Account")
+@ApiModel(value="Account", parent = JsonBase.class)
 public class AccountJson extends JsonBase {
 
     private final UUID accountId;

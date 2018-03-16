@@ -30,7 +30,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 
-@ApiModel(value="CustomField")
+@ApiModel(value="CustomField", parent = JsonBase.class)
 public class CustomFieldJson extends JsonBase {
 
     private final UUID customFieldId;

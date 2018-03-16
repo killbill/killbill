@@ -24,7 +24,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 
-@ApiModel(value="InvoiceEmail")
+@ApiModel(value="InvoiceEmail", parent = JsonBase.class)
 public class InvoiceEmailJson extends JsonBase {
 
     private final UUID accountId;

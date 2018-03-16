@@ -45,7 +45,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 
-@ApiModel(value="Subscription")
+@ApiModel(value="Subscription", parent = JsonBase.class)
 public class SubscriptionJson extends JsonBase {
 
     private final UUID accountId;
@@ -79,7 +79,7 @@ public class SubscriptionJson extends JsonBase {
     private final List<EventSubscriptionJson> events;
     private final List<PhasePriceOverrideJson> priceOverrides;
 
-    @ApiModel(value="EventSubscription")
+    @ApiModel(value="EventSubscription", parent = JsonBase.class)
     public static class EventSubscriptionJson extends JsonBase {
 
         private final UUID eventId;

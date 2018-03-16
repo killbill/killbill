@@ -33,7 +33,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 
-@ApiModel(value="BlockingState")
+@ApiModel(value="BlockingState", parent = JsonBase.class)
 public class BlockingStateJson extends JsonBase {
 
     private final UUID blockedId;

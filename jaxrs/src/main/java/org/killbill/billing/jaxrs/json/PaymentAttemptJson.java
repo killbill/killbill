@@ -32,7 +32,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 
-@ApiModel(value="PaymentAttempt")
+@ApiModel(value="PaymentAttempt", parent = JsonBase.class)
 public class PaymentAttemptJson extends JsonBase {
 
     private final UUID accountId;

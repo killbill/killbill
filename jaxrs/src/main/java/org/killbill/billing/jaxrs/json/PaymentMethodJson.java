@@ -40,7 +40,7 @@ import com.google.common.collect.Collections2;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 
-@ApiModel(value="PaymentMethod")
+@ApiModel(value="PaymentMethod", parent = JsonBase.class)
 public class PaymentMethodJson extends JsonBase {
 
     private final String externalKey;

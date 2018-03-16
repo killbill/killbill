@@ -32,7 +32,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 
-@ApiModel(value="GatewayNotification")
+@ApiModel(value="GatewayNotification", parent = JsonBase.class)
 public class GatewayNotificationJson extends JsonBase {
 
     private final UUID kbPaymentId;

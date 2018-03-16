@@ -33,7 +33,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 
-@ApiModel(value="Credit")
+@ApiModel(value="Credit", parent = JsonBase.class)
 public class CreditJson extends JsonBase {
 
     @ApiModelProperty(required = true)

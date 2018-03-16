@@ -37,7 +37,7 @@ import com.google.common.collect.ImmutableList;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 
-@ApiModel(value="InvoiceItem")
+@ApiModel(value="InvoiceItem", parent = JsonBase.class)
 public class InvoiceItemJson extends JsonBase {
 
     @ApiModelProperty( required = true)

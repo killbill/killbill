@@ -20,7 +20,7 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.annotations.ApiModel;
 
-@ApiModel(value="HostedPaymentPageCustomer")
+@ApiModel(value="HostedPaymentPageCustomer", parent = JsonBase.class)
 public class HostedPaymentPageCustomerJson extends JsonBase {
 
     private final String firstName;

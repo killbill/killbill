@@ -27,7 +27,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 
-@ApiModel(value="HostedPaymentPageFormDescriptor")
+@ApiModel(value="HostedPaymentPageFormDescriptor", parent = JsonBase.class)
 public class HostedPaymentPageFormDescriptorJson extends JsonBase {
 
     private final UUID kbAccountId;

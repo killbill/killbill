@@ -35,7 +35,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 
-@ApiModel(value="Bundle")
+@ApiModel(value="Bundle", parent = JsonBase.class)
 public class BundleJson extends JsonBase {
 
     @ApiModelProperty(required = true)
