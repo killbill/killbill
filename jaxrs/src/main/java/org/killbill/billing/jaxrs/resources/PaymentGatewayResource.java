@@ -163,7 +163,7 @@ public class PaymentGatewayResource extends ComboPaymentResource {
     @ApiOperation(value = "Process a gateway notification", notes = "The response is built by the appropriate plugin", response = GatewayNotificationJson.class)
     @ApiResponses(value = {})
     public Response processNotification(final String body,
-                                        @PathParam(QUERY_PAYMENT_PLUGIN_NAME) final String pluginName,
+                                        @PathParam(PATH_PAYMENT_PLUGIN_NAME) final String pluginName,
                                         @QueryParam(QUERY_PAYMENT_CONTROL_PLUGIN_NAME) final List<String> paymentControlPluginNames,
                                         @QueryParam(QUERY_PLUGIN_PROPERTY) final List<String> pluginPropertiesString,
                                         @HeaderParam(HDR_CREATED_BY) final String createdBy,

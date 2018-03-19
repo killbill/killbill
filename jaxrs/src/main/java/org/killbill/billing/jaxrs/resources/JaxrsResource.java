@@ -65,11 +65,12 @@ public interface JaxrsResource {
     public static String NUMBER_PATTERN = "[0-9]+";
     public static String ANYTHING_PATTERN = ".*";
 
+    public static final String PATH_PAYMENT_PLUGIN_NAME = "pluginName";
+
+
     /*
      * Query parameters
      */
-
-
     public static final String QUERY_LOCAL_NODE_ONLY = "localNodeOnly";
     public static final String QUERY_EXTERNAL_KEY = "externalKey";
     public static final String QUERY_API_KEY = "apiKey";
