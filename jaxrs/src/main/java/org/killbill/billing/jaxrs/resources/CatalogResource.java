@@ -166,6 +166,25 @@ public class CatalogResource extends JaxRsResourceBase {
         return Response.status(Status.OK).entity(result).build();
     }
 
+    @TimedResource
+    @GET
+    @Path("/versions")
+    @Produces(APPLICATION_JSON)
+    @ApiOperation(value = "Retrieve a list of catalog versions", response = DateTime.class)
+    @ApiResponses(value = {})
+    public Response getCatalogVersionJson(@javax.ws.rs.core.Context final HttpServletRequest request) throws Exception {
+
+        final TenantContext tenantContext = context.createTenantContextNoAccountId(request);
+        final VersionedCatalog catalog = (VersionedCatalog) catalogUserApi.getCatalog(catalogName, tenantContext);
+
+        final List<DateTime> result = new ArrayList<DateTime>();
+        for (final StandaloneCatalog v : catalog.getVersions()) {
+            result.add(new DateTime(v.getEffectiveDate()));
+        }
+
+        return Response.status(Status.OK).entity(result).build();
+    }
+
     // Need to figure out dependency on StandaloneCatalog
     //    @GET
     //    @Path("/xsd")
