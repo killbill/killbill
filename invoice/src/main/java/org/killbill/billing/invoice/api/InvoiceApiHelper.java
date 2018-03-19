@@ -1,6 +1,6 @@
 /*
- * Copyright 2015 Groupon, Inc
- * Copyright 2015 The Billing Project, LLC
+ * Copyright 2014-2018 Groupon, Inc
+ * Copyright 2014-2018 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -127,6 +127,7 @@ public class InvoiceApiHelper {
                                             @Nullable final Currency currency,
                                             final LocalDate effectiveDate,
                                             final String description,
+                                            @Nullable final String itemDetails,
                                             final InternalCallContext context) throws InvoiceApiException {
         final InvoiceItem invoiceItemToBeAdjusted = Iterables.<InvoiceItem>tryFind(invoiceToBeAdjusted.getInvoiceItems(),
                                                                                    new Predicate<InvoiceItem>() {
@@ -167,7 +168,8 @@ public class InvoiceApiHelper {
                                       description,
                                       amountToAdjust,
                                       currencyForAdjustment,
-                                      invoiceItemToBeAdjusted.getId());
+                                      invoiceItemToBeAdjusted.getId(),
+                                      itemDetails);
     }
 
     private List<InvoiceItem> fromInvoiceItemModelDao(final Collection<InvoiceItemModelDao> invoiceItemModelDaos) {
