@@ -688,7 +688,7 @@ public class AccountResource extends JaxRsResourceBase {
     @GET
     @Path("/{accountId:" + UUID_PATTERN + "}/" + INVOICES)
     @Produces(APPLICATION_JSON)
-    @ApiOperation(value = "Retrieve account invoices", response = InvoiceJson.class)
+    @ApiOperation(value = "Retrieve account invoices", response = InvoiceJson.class, responseContainer = "List")
     @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid account id supplied"),
                            @ApiResponse(code = 404, message = "Account not found")})
     public Response getInvoices(@PathParam("accountId") final String accountIdString,
