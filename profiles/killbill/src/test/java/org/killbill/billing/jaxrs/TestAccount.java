@@ -19,8 +19,6 @@
 package org.killbill.billing.jaxrs;
 
 import java.math.BigDecimal;
-import java.util.Collection;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.UUID;
 
@@ -29,15 +27,16 @@ import javax.annotation.Nullable;
 import org.killbill.billing.ErrorCode;
 import org.killbill.billing.ObjectType;
 import org.killbill.billing.client.KillBillClientException;
-import org.killbill.billing.client.model.Account;
 import org.killbill.billing.client.model.Accounts;
-import org.killbill.billing.client.model.AuditLog;
-import org.killbill.billing.client.model.CustomField;
+import org.killbill.billing.client.model.CustomFields;
 import org.killbill.billing.client.model.InvoicePayments;
-import org.killbill.billing.client.model.PaymentMethod;
-import org.killbill.billing.client.model.PaymentMethodPluginDetail;
 import org.killbill.billing.client.model.PaymentMethods;
-import org.killbill.billing.client.model.Tag;
+import org.killbill.billing.client.model.gen.Account;
+import org.killbill.billing.client.model.gen.AuditLog;
+import org.killbill.billing.client.model.gen.CustomField;
+import org.killbill.billing.client.model.gen.PaymentMethod;
+import org.killbill.billing.client.model.gen.PaymentMethodPluginDetail;
+import org.killbill.billing.client.model.gen.Tag;
 import org.killbill.billing.osgi.api.OSGIServiceRegistration;
 import org.killbill.billing.payment.plugin.api.PaymentPluginApi;
 import org.killbill.billing.payment.provider.MockPaymentProviderPlugin;
@@ -47,7 +46,7 @@ import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
 
 import static org.testng.Assert.assertEquals;
@@ -78,7 +77,7 @@ public class TestAccount extends TestJaxrsBase {
     public void testEmptyAccount() throws Exception {
         final Account emptyAccount = new Account();
 
-        final Account account = killBillClient.createAccount(emptyAccount, requestOptions);
+        final Account account = accountApi.createAccount(emptyAccount, requestOptions);
         Assert.assertNotNull(account.getExternalKey());
         Assert.assertNull(account.getName());
         Assert.assertNull(account.getEmail());
@@ -90,12 +89,12 @@ public class TestAccount extends TestJaxrsBase {
         final Account inputWithNoExternalKey = getAccount(UUID.randomUUID().toString(), null, UUID.randomUUID().toString());
         Assert.assertNull(inputWithNoExternalKey.getExternalKey());
 
-        final Account account = killBillClient.createAccount(inputWithNoExternalKey, requestOptions);
+        final Account account = accountApi.createAccount(inputWithNoExternalKey, requestOptions);
         Assert.assertNotNull(account.getExternalKey());
 
         final Account inputWithSameExternalKey = getAccount(UUID.randomUUID().toString(), account.getExternalKey(), UUID.randomUUID().toString());
         try {
-            killBillClient.createAccount(inputWithSameExternalKey, requestOptions);
+            accountApi.createAccount(inputWithSameExternalKey, requestOptions);
             Assert.fail();
         } catch (final KillBillClientException e) {
             Assert.assertEquals(e.getBillingException().getCode(), (Integer) ErrorCode.ACCOUNT_ALREADY_EXISTS.getCode());
@@ -107,7 +106,7 @@ public class TestAccount extends TestJaxrsBase {
         final Account input = createAccount();
 
         // Retrieves by external key
-        final Account retrievedAccount = killBillClient.getAccount(input.getExternalKey(), requestOptions);
+        final Account retrievedAccount = accountApi.getAccountByKey(input.getExternalKey(), requestOptions);
         Assert.assertTrue(retrievedAccount.equals(input));
 
         // Try search endpoint
@@ -118,9 +117,10 @@ public class TestAccount extends TestJaxrsBase {
                                              "zozo", 4, input.getExternalKey(), "rr@google.com", 18,
                                              "USD", null, false, null, null, "UTC",
                                              "bl1", "bh2", "", "", "ca", "San Francisco", "usa", "en", "415-255-2991",
-                                             "notes", false, false, null, null);
+                                             "notes", false, false, null, null, EMPTY_AUDIT_LOGS);
 
-        final Account updatedAccount = killBillClient.updateAccount(newInput, requestOptions);
+        accountApi.updateAccount(newInput, input.getAccountId(), requestOptions);
+        final Account updatedAccount = accountApi.getAccount(input.getAccountId(), requestOptions);
         // referenceTime is set automatically by system, no way to guess it
         newInput.setReferenceTime(updatedAccount.getReferenceTime());
         Assert.assertTrue(updatedAccount.equals(newInput));
@@ -143,7 +143,6 @@ public class TestAccount extends TestJaxrsBase {
         Assert.assertEquals(input.getState(), "Poitou");
         Assert.assertEquals(input.getCountry(), "France");
         Assert.assertEquals(input.getLocale(), "fr");
-
 
         // Set notes to something else
         final Account newInput = new Account(input.getAccountId(),
@@ -171,11 +170,12 @@ public class TestAccount extends TestJaxrsBase {
                                              null,
                                              null,
                                              null,
-                                             null);
-
+                                             null,
+                                             EMPTY_AUDIT_LOGS);
 
         // Update notes, all other fields remaining the same (value set to null but treatNullAsReset defaults to false)
-        Account updatedAccount = killBillClient.updateAccount(newInput, requestOptions);
+        accountApi.updateAccount(newInput, newInput.getAccountId(), requestOptions);
+        Account updatedAccount = accountApi.getAccount(input.getAccountId(), requestOptions);
 
         Assert.assertNotNull(updatedAccount.getExternalKey());
         Assert.assertNotNull(updatedAccount.getNotes());
@@ -190,7 +190,8 @@ public class TestAccount extends TestJaxrsBase {
 
         // Reset notes, all other fields remaining the same
         updatedAccount.setNotes(null);
-        updatedAccount = killBillClient.updateAccount(updatedAccount, true, requestOptions);
+        accountApi.updateAccount(updatedAccount, updatedAccount.getAccountId(), true, requestOptions);
+        updatedAccount = accountApi.getAccount(input.getAccountId(), requestOptions);
 
         Assert.assertNotNull(updatedAccount.getExternalKey());
         Assert.assertNull(updatedAccount.getNotes());
@@ -203,12 +204,11 @@ public class TestAccount extends TestJaxrsBase {
         Assert.assertEquals(updatedAccount.getLocale(), "fr");
     }
 
-
     @Test(groups = "slow", description = "Can retrieve the account balance")
     public void testAccountWithBalance() throws Exception {
         final Account accountJson = createAccountNoPMBundleAndSubscriptionAndWaitForFirstInvoice();
 
-        final Account accountWithBalance = killBillClient.getAccount(accountJson.getAccountId(), true, false, requestOptions);
+        final Account accountWithBalance = accountApi.getAccount(accountJson.getAccountId(), true, false, AuditLevel.NONE, requestOptions);
         final BigDecimal accountBalance = accountWithBalance.getAccountBalance();
         Assert.assertTrue(accountBalance.compareTo(BigDecimal.ZERO) > 0);
     }
@@ -216,14 +216,14 @@ public class TestAccount extends TestJaxrsBase {
     @Test(groups = "slow", description = "Cannot update a non-existent account")
     public void testUpdateNonExistentAccount() throws Exception {
         final Account input = getAccount();
-
-        Assert.assertNull(killBillClient.updateAccount(input, requestOptions));
+        accountApi.updateAccount(input, input.getAccountId(), requestOptions);
+        // TODO
+        //Assert.assertNull();
     }
 
     @Test(groups = "slow", description = "Cannot retrieve non-existent account")
     public void testAccountNonExistent() throws Exception {
-        Assert.assertNull(killBillClient.getAccount(UUID.randomUUID(), requestOptions));
-        Assert.assertNull(killBillClient.getAccount(UUID.randomUUID().toString(), requestOptions));
+        Assert.assertNull(accountApi.getAccount(UUID.randomUUID(), requestOptions));
     }
 
     @Test(groups = "slow", description = "Can CRUD payment methods")
@@ -233,50 +233,50 @@ public class TestAccount extends TestJaxrsBase {
 
         final PaymentMethodPluginDetail info = new PaymentMethodPluginDetail();
         info.setProperties(getPaymentMethodCCProperties());
-        PaymentMethod paymentMethodJson = new PaymentMethod(null, UUID.randomUUID().toString(), accountJson.getAccountId(), true, PLUGIN_NAME, info);
-        final PaymentMethod paymentMethodCC = killBillClient.createPaymentMethod(paymentMethodJson, requestOptions);
-        assertTrue(paymentMethodCC.getIsDefault());
+        PaymentMethod paymentMethodJson = new PaymentMethod(null, UUID.randomUUID().toString(), accountJson.getAccountId(), true, PLUGIN_NAME, info, EMPTY_AUDIT_LOGS);
+        final PaymentMethod paymentMethodCC = accountApi.createPaymentMethod(paymentMethodJson, accountJson.getAccountId(), true, false, NULL_PLUGIN_NAMES, NULL_PLUGIN_PROPERTIES, requestOptions);
+        assertTrue(paymentMethodCC.isIsDefault());
 
         //
         // Add another payment method
         //
         final PaymentMethodPluginDetail info2 = new PaymentMethodPluginDetail();
         info2.setProperties(getPaymentMethodPaypalProperties());
-        paymentMethodJson = new PaymentMethod(null, UUID.randomUUID().toString(), accountJson.getAccountId(), false, PLUGIN_NAME, info2);
-        final PaymentMethod paymentMethodPP = killBillClient.createPaymentMethod(paymentMethodJson, requestOptions);
-        assertFalse(paymentMethodPP.getIsDefault());
+        paymentMethodJson = new PaymentMethod(null, UUID.randomUUID().toString(), accountJson.getAccountId(), false, PLUGIN_NAME, info2, EMPTY_AUDIT_LOGS);
+        final PaymentMethod paymentMethodPP = accountApi.createPaymentMethod(paymentMethodJson, accountJson.getAccountId(), NULL_PLUGIN_NAMES, NULL_PLUGIN_PROPERTIES, requestOptions);
+        assertFalse(paymentMethodPP.isIsDefault());
 
         //
         // FETCH ALL PAYMENT METHODS
         //
-        List<PaymentMethod> paymentMethods = killBillClient.getPaymentMethodsForAccount(accountJson.getAccountId(), requestOptions);
+        List<PaymentMethod> paymentMethods = accountApi.getPaymentMethods(accountJson.getAccountId(), NULL_PLUGIN_PROPERTIES, requestOptions);
         assertEquals(paymentMethods.size(), 2);
 
         //
         // CHANGE DEFAULT
         //
-        assertTrue(killBillClient.getPaymentMethod(paymentMethodCC.getPaymentMethodId(), requestOptions).getIsDefault());
-        assertFalse(killBillClient.getPaymentMethod(paymentMethodPP.getPaymentMethodId(), requestOptions).getIsDefault());
-        killBillClient.updateDefaultPaymentMethod(accountJson.getAccountId(), paymentMethodPP.getPaymentMethodId(), requestOptions);
-        assertTrue(killBillClient.getPaymentMethod(paymentMethodPP.getPaymentMethodId(), requestOptions).getIsDefault());
-        assertFalse(killBillClient.getPaymentMethod(paymentMethodCC.getPaymentMethodId(), requestOptions).getIsDefault());
+        assertTrue(paymentMethodApi.getPaymentMethod(paymentMethodCC.getPaymentMethodId(), NULL_PLUGIN_PROPERTIES, requestOptions).isIsDefault());
+        assertFalse(paymentMethodApi.getPaymentMethod(paymentMethodPP.getPaymentMethodId(), NULL_PLUGIN_PROPERTIES, requestOptions).isIsDefault());
+        accountApi.setDefaultPaymentMethod(accountJson.getAccountId(), paymentMethodPP.getPaymentMethodId(), NULL_PLUGIN_PROPERTIES, requestOptions);
+        assertTrue(paymentMethodApi.getPaymentMethod(paymentMethodPP.getPaymentMethodId(), NULL_PLUGIN_PROPERTIES, requestOptions).isIsDefault());
+        assertFalse(paymentMethodApi.getPaymentMethod(paymentMethodCC.getPaymentMethodId(), NULL_PLUGIN_PROPERTIES, requestOptions).isIsDefault());
 
         //
         // DELETE NON DEFAULT PM
         //
-        killBillClient.deletePaymentMethod(paymentMethodCC.getPaymentMethodId(), false, false, requestOptions);
+        paymentMethodApi.deletePaymentMethod(paymentMethodCC.getPaymentMethodId(), false, false, NULL_PLUGIN_PROPERTIES, requestOptions);
 
         //
         // FETCH ALL PAYMENT METHODS
         //
-        paymentMethods = killBillClient.getPaymentMethodsForAccount(accountJson.getAccountId(), requestOptions);
+        paymentMethods = accountApi.getPaymentMethods(accountJson.getAccountId(), NULL_PLUGIN_PROPERTIES, requestOptions);
         assertEquals(paymentMethods.size(), 1);
 
         //
         // DELETE DEFAULT PAYMENT METHOD (without special flag first)
         //
         try {
-            killBillClient.deletePaymentMethod(paymentMethodPP.getPaymentMethodId(), false, false, requestOptions);
+            paymentMethodApi.deletePaymentMethod(paymentMethodPP.getPaymentMethodId(), false, false, NULL_PLUGIN_PROPERTIES, requestOptions);
             fail();
         } catch (final KillBillClientException e) {
         }
@@ -284,17 +284,17 @@ public class TestAccount extends TestJaxrsBase {
         //
         // RETRY TO DELETE DEFAULT PAYMENT METHOD (with special flag this time)
         //
-        killBillClient.deletePaymentMethod(paymentMethodPP.getPaymentMethodId(), true, false, requestOptions);
+        paymentMethodApi.deletePaymentMethod(paymentMethodPP.getPaymentMethodId(), true, false, NULL_PLUGIN_PROPERTIES, requestOptions);
 
         // CHECK ACCOUNT IS NOW AUTO_PAY_OFF
-        final List<Tag> tagsJson = killBillClient.getAccountTags(accountJson.getAccountId(), requestOptions);
+        final List<Tag> tagsJson = accountApi.getTags(accountJson.getAccountId(), requestOptions);
         Assert.assertEquals(tagsJson.size(), 1);
         final Tag tagJson = tagsJson.get(0);
         Assert.assertEquals(tagJson.getTagDefinitionName(), "AUTO_PAY_OFF");
         Assert.assertEquals(tagJson.getTagDefinitionId(), new UUID(0, 1));
 
         // FETCH ACCOUNT AGAIN AND CHECK THERE IS NO DEFAULT PAYMENT METHOD SET
-        final Account updatedAccount = killBillClient.getAccount(accountJson.getAccountId(), requestOptions);
+        final Account updatedAccount = accountApi.getAccount(accountJson.getAccountId(), requestOptions);
         Assert.assertEquals(updatedAccount.getAccountId(), accountJson.getAccountId());
         Assert.assertNull(updatedAccount.getPaymentMethodId());
 
@@ -302,7 +302,7 @@ public class TestAccount extends TestJaxrsBase {
         // FINALLY TRY TO REMOVE AUTO_PAY_OFF WITH NO DEFAULT PAYMENT METHOD ON ACCOUNT
         //
         try {
-            killBillClient.deleteAccountTag(accountJson.getAccountId(), new UUID(0, 1), requestOptions);
+            accountApi.deleteTags(accountJson.getAccountId(), new UUID(0, 1).toString(), requestOptions);
         } catch (final KillBillClientException e) {
         }
     }
@@ -312,7 +312,7 @@ public class TestAccount extends TestJaxrsBase {
         final Account accountJson = createAccountWithPMBundleAndSubscriptionAndWaitForFirstInvoice();
 
         // Verify payments
-        final InvoicePayments objFromJson = killBillClient.getInvoicePaymentsForAccount(accountJson.getAccountId(), requestOptions);
+        final InvoicePayments objFromJson = accountApi.getInvoicePayments(accountJson.getAccountId(), NULL_PLUGIN_PROPERTIES, requestOptions);
         Assert.assertEquals(objFromJson.size(), 1);
     }
 
@@ -323,19 +323,19 @@ public class TestAccount extends TestJaxrsBase {
         final UUID autoPayOffId = new UUID(0, 1);
 
         // Add a tag
-        killBillClient.createAccountTag(input.getAccountId(), autoPayOffId, requestOptions);
+        accountApi.createTags(input.getAccountId(), autoPayOffId.toString(), requestOptions);
 
         // Retrieves all tags
-        final List<Tag> tags1 = killBillClient.getAccountTags(input.getAccountId(), AuditLevel.FULL, requestOptions);
+        final List<Tag> tags1 = accountApi.getTags(input.getAccountId(), AuditLevel.FULL, false, requestOptions);
         Assert.assertEquals(tags1.size(), 1);
         Assert.assertEquals(tags1.get(0).getTagDefinitionId(), autoPayOffId);
 
         // Verify adding the same tag a second time doesn't do anything
-        killBillClient.createAccountTag(input.getAccountId(), autoPayOffId, requestOptions);
+        accountApi.createTags(input.getAccountId(), autoPayOffId.toString(), requestOptions);
 
         // Retrieves all tags again
-        killBillClient.createAccountTag(input.getAccountId(), autoPayOffId, requestOptions);
-        final List<Tag> tags2 = killBillClient.getAccountTags(input.getAccountId(), AuditLevel.FULL, requestOptions);
+        accountApi.createTags(input.getAccountId(), autoPayOffId.toString(), requestOptions);
+        final List<Tag> tags2 = accountApi.getTags(input.getAccountId(), AuditLevel.FULL, true, requestOptions);
         Assert.assertEquals(tags2, tags1);
 
         // Verify audit logs
@@ -354,20 +354,20 @@ public class TestAccount extends TestJaxrsBase {
         final Account accountJson = createAccount();
         assertNotNull(accountJson);
 
-        final Collection<CustomField> customFields = new LinkedList<CustomField>();
-        customFields.add(new CustomField(null, accountJson.getAccountId(), ObjectType.ACCOUNT, "1", "value1", null));
-        customFields.add(new CustomField(null, accountJson.getAccountId(), ObjectType.ACCOUNT, "2", "value2", null));
-        customFields.add(new CustomField(null, accountJson.getAccountId(), ObjectType.ACCOUNT, "3", "value3", null));
+        final CustomFields customFields = new CustomFields();
+        customFields.add(new CustomField(null, accountJson.getAccountId(), ObjectType.ACCOUNT, "1", "value1", EMPTY_AUDIT_LOGS));
+        customFields.add(new CustomField(null, accountJson.getAccountId(), ObjectType.ACCOUNT, "2", "value2", EMPTY_AUDIT_LOGS));
+        customFields.add(new CustomField(null, accountJson.getAccountId(), ObjectType.ACCOUNT, "3", "value3", EMPTY_AUDIT_LOGS));
 
-        killBillClient.createAccountCustomFields(accountJson.getAccountId(), customFields, requestOptions);
+        accountApi.createCustomFields(accountJson.getAccountId(), customFields, requestOptions);
 
-        final List<CustomField> accountCustomFields = killBillClient.getAccountCustomFields(accountJson.getAccountId(), requestOptions);
+        final List<CustomField> accountCustomFields = accountApi.getCustomFields(accountJson.getAccountId(), requestOptions);
         assertEquals(accountCustomFields.size(), 3);
 
         // Delete all custom fields for account
-        killBillClient.deleteAccountCustomFields(accountJson.getAccountId(), requestOptions);
+        accountApi.deleteCustomFields(accountJson.getAccountId(), null, requestOptions);
 
-        final List<CustomField> remainingCustomFields = killBillClient.getAccountCustomFields(accountJson.getAccountId(), requestOptions);
+        final List<CustomField> remainingCustomFields = accountApi.getCustomFields(accountJson.getAccountId(), requestOptions);
         assertEquals(remainingCustomFields.size(), 0);
     }
 
@@ -375,28 +375,28 @@ public class TestAccount extends TestJaxrsBase {
     public void testRefreshPaymentMethods() throws Exception {
         final Account account = createAccountWithDefaultPaymentMethod("someExternalKey");
 
-        final PaymentMethods paymentMethodsBeforeRefreshing = killBillClient.getPaymentMethodsForAccount(account.getAccountId(), requestOptions);
+        final PaymentMethods paymentMethodsBeforeRefreshing = accountApi.getPaymentMethods(account.getAccountId(), NULL_PLUGIN_PROPERTIES, requestOptions);
         assertEquals(paymentMethodsBeforeRefreshing.size(), 1);
         assertEquals(paymentMethodsBeforeRefreshing.get(0).getExternalKey(), "someExternalKey");
 
         // WITH NAME OF AN EXISTING PLUGIN
-        killBillClient.refreshPaymentMethods(account.getAccountId(), PLUGIN_NAME, ImmutableMap.<String, String>of(), requestOptions);
+        accountApi.refreshPaymentMethods(account.getAccountId(), PLUGIN_NAME, NULL_PLUGIN_PROPERTIES, requestOptions);
 
-        final PaymentMethods paymentMethodsAfterExistingPluginCall = killBillClient.getPaymentMethodsForAccount(account.getAccountId(), requestOptions);
+        final PaymentMethods paymentMethodsAfterExistingPluginCall = accountApi.getPaymentMethods(account.getAccountId(), NULL_PLUGIN_PROPERTIES, requestOptions);
 
         assertEquals(paymentMethodsAfterExistingPluginCall.size(), 1);
         assertEquals(paymentMethodsAfterExistingPluginCall.get(0).getExternalKey(), "someExternalKey");
 
         // WITHOUT PLUGIN NAME
-        killBillClient.refreshPaymentMethods(account.getAccountId(), ImmutableMap.<String, String>of(), requestOptions);
+        accountApi.refreshPaymentMethods(account.getAccountId(), PLUGIN_NAME, NULL_PLUGIN_PROPERTIES, requestOptions);
 
-        final PaymentMethods paymentMethodsAfterNoPluginNameCall = killBillClient.getPaymentMethodsForAccount(account.getAccountId(), requestOptions);
+        final PaymentMethods paymentMethodsAfterNoPluginNameCall = accountApi.getPaymentMethods(account.getAccountId(), NULL_PLUGIN_PROPERTIES, requestOptions);
         assertEquals(paymentMethodsAfterNoPluginNameCall.size(), 1);
         assertEquals(paymentMethodsAfterNoPluginNameCall.get(0).getExternalKey(), "someExternalKey");
 
         // WITH WRONG PLUGIN NAME
         try {
-            killBillClient.refreshPaymentMethods(account.getAccountId(), "GreatestPluginEver", ImmutableMap.<String, String>of(), requestOptions);
+            accountApi.refreshPaymentMethods(account.getAccountId(), "GreatestPluginEver", NULL_PLUGIN_PROPERTIES, requestOptions);
             Assert.fail();
         } catch (final KillBillClientException e) {
             Assert.assertEquals(e.getBillingException().getCode(), (Integer) ErrorCode.PAYMENT_NO_SUCH_PAYMENT_PLUGIN.getCode());
@@ -409,10 +409,10 @@ public class TestAccount extends TestJaxrsBase {
             createAccount();
         }
 
-        final Accounts allAccounts = killBillClient.getAccounts(requestOptions);
+        final Accounts allAccounts = accountApi.getAccounts(requestOptions);
         Assert.assertEquals(allAccounts.size(), 5);
 
-        Accounts page = killBillClient.getAccounts(0L, 1L, requestOptions);
+        Accounts page = accountApi.getAccounts(0L, 1L, false, false, AuditLevel.NONE, requestOptions);
         for (int i = 0; i < 5; i++) {
             Assert.assertNotNull(page);
             Assert.assertEquals(page.size(), 1);
@@ -439,14 +439,14 @@ public class TestAccount extends TestJaxrsBase {
 
         // Search by external key.
         // Note: we will always find a match since we don't update it
-        final List<Account> accountsByExternalKey = killBillClient.searchAccounts(input.getExternalKey(), requestOptions);
+        final List<Account> accountsByExternalKey = accountApi.searchAccounts(input.getExternalKey(), requestOptions);
         Assert.assertEquals(accountsByExternalKey.size(), 1);
         Assert.assertEquals(accountsByExternalKey.get(0).getAccountId(), input.getAccountId());
         Assert.assertEquals(accountsByExternalKey.get(0).getExternalKey(), input.getExternalKey());
     }
 
     private void doSearchAccount(final String key, @Nullable final Account output) throws Exception {
-        final List<Account> accountsByKey = killBillClient.searchAccounts(key, requestOptions);
+        final List<Account> accountsByKey = accountApi.searchAccounts(key, requestOptions);
         if (output == null) {
             Assert.assertEquals(accountsByKey.size(), 0);
         } else {
@@ -463,13 +463,13 @@ public class TestAccount extends TestJaxrsBase {
         final Account childInput = getAccount();
         childInput.setParentAccountId(parentAccount.getAccountId());
         childInput.setIsPaymentDelegatedToParent(true);
-        final Account childAccount = killBillClient.createAccount(childInput, requestOptions);
+        final Account childAccount = accountApi.createAccount(childInput, requestOptions);
 
         // Retrieves child account by external key
-        final Account retrievedAccount = killBillClient.getAccount(childAccount.getExternalKey(), requestOptions);
+        final Account retrievedAccount = accountApi.getAccountByKey(childAccount.getExternalKey(), requestOptions);
         Assert.assertTrue(retrievedAccount.equals(childAccount));
         Assert.assertEquals(retrievedAccount.getParentAccountId(), parentAccount.getAccountId());
-        Assert.assertTrue(retrievedAccount.getIsPaymentDelegatedToParent());
+        Assert.assertTrue(retrievedAccount.isIsPaymentDelegatedToParent());
     }
 
     @Test(groups = "slow", description = "retrieve children accounts by parent account id")
@@ -480,17 +480,17 @@ public class TestAccount extends TestJaxrsBase {
         final Account childInput = getAccount();
         childInput.setParentAccountId(parentAccount.getAccountId());
         childInput.setIsPaymentDelegatedToParent(true);
-        Account childAccount = killBillClient.createAccount(childInput, requestOptions);
-        childAccount = killBillClient.getAccount(childAccount.getAccountId(), true, true, requestOptions);
+        Account childAccount = accountApi.createAccount(childInput, requestOptions);
+        childAccount = accountApi.getAccount(childAccount.getAccountId(), true, true, AuditLevel.NONE, requestOptions);
 
         final Account childInput2 = getAccount();
         childInput2.setParentAccountId(parentAccount.getAccountId());
         childInput2.setIsPaymentDelegatedToParent(true);
-        Account childAccount2 = killBillClient.createAccount(childInput2, requestOptions);
-        childAccount2 = killBillClient.getAccount(childAccount2.getAccountId(), true, true, requestOptions);
+        Account childAccount2 = accountApi.createAccount(childInput2, requestOptions);
+        childAccount2 = accountApi.getAccount(childAccount2.getAccountId(), true, true, AuditLevel.NONE, requestOptions);
 
         // Retrieves children accounts by parent account id
-        final Accounts childrenAccounts = killBillClient.getChildrenAccounts(parentAccount.getAccountId(), true, true, requestOptions);
+        final Accounts childrenAccounts = accountApi.getChildrenAccounts(parentAccount.getAccountId(), true, true, AuditLevel.NONE, requestOptions);
         Assert.assertEquals(childrenAccounts.size(), 2);
 
         Assert.assertTrue(childrenAccounts.get(0).equals(childAccount));
@@ -501,16 +501,7 @@ public class TestAccount extends TestJaxrsBase {
     public void testEmptyGetChildrenAccounts() throws Exception {
 
         // Retrieves children accounts by parent account id
-        final Accounts childrenAccounts = killBillClient.getChildrenAccounts(UUID.randomUUID(), false, false, requestOptions);
-        Assert.assertEquals(childrenAccounts.size(), 0);
-
-    }
-
-    @Test(groups = "slow", description = "retrieve an empty children accounts list by a null id")
-    public void testGetChildrenAccountsByNullId() throws Exception {
-
-        // Retrieves children accounts by parent account id
-        final Accounts childrenAccounts = killBillClient.getChildrenAccounts(null, true, true, requestOptions);
+        final Accounts childrenAccounts = accountApi.getChildrenAccounts(UUID.randomUUID(), false, false, AuditLevel.NONE, requestOptions);
         Assert.assertEquals(childrenAccounts.size(), 0);
 
     }

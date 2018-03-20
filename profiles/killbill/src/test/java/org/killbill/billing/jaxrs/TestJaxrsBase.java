@@ -38,11 +38,33 @@ import org.eclipse.jetty.servlet.FilterHolder;
 import org.joda.time.LocalDate;
 import org.killbill.billing.GuicyKillbillTestWithEmbeddedDBModule;
 import org.killbill.billing.api.TestApiListener;
-import org.killbill.billing.client.KillBillClient;
 import org.killbill.billing.client.KillBillHttpClient;
-import org.killbill.billing.client.model.Payment;
-import org.killbill.billing.client.model.PaymentTransaction;
-import org.killbill.billing.client.model.Tenant;
+import org.killbill.billing.client.api.gen.AccountApi;
+import org.killbill.billing.client.api.gen.AdminApi;
+import org.killbill.billing.client.api.gen.BundleApi;
+import org.killbill.billing.client.api.gen.CatalogApi;
+import org.killbill.billing.client.api.gen.CreditApi;
+import org.killbill.billing.client.api.gen.CustomFieldApi;
+import org.killbill.billing.client.api.gen.ExportApi;
+import org.killbill.billing.client.api.gen.InvoiceApi;
+import org.killbill.billing.client.api.gen.InvoiceItemApi;
+import org.killbill.billing.client.api.gen.InvoicePaymentApi;
+import org.killbill.billing.client.api.gen.NodesInfoApi;
+import org.killbill.billing.client.api.gen.OverdueApi;
+import org.killbill.billing.client.api.gen.PaymentApi;
+import org.killbill.billing.client.api.gen.PaymentGatewayApi;
+import org.killbill.billing.client.api.gen.PaymentMethodApi;
+import org.killbill.billing.client.api.gen.PaymentTransactionApi;
+import org.killbill.billing.client.api.gen.PluginInfoApi;
+import org.killbill.billing.client.api.gen.SecurityApi;
+import org.killbill.billing.client.api.gen.SubscriptionApi;
+import org.killbill.billing.client.api.gen.TagApi;
+import org.killbill.billing.client.api.gen.TagDefinitionApi;
+import org.killbill.billing.client.api.gen.TenantApi;
+import org.killbill.billing.client.api.gen.UsageApi;
+import org.killbill.billing.client.model.gen.Payment;
+import org.killbill.billing.client.model.gen.PaymentTransaction;
+import org.killbill.billing.client.model.gen.Tenant;
 import org.killbill.billing.invoice.glue.DefaultInvoiceModule;
 import org.killbill.billing.jetty.HttpServer;
 import org.killbill.billing.jetty.HttpServerConfig;
@@ -182,7 +204,29 @@ public class TestJaxrsBase extends KillbillClient {
                                                     DEFAULT_CONNECT_TIMEOUT_SEC * 1000,
                                                     DEFAULT_READ_TIMEOUT_SEC * 1000,
                                                     DEFAULT_REQUEST_TIMEOUT_SEC * 1000);
-        killBillClient = new KillBillClient(killBillHttpClient);
+        accountApi = new AccountApi(killBillHttpClient);
+        adminApi = new AdminApi(killBillHttpClient);
+        bundleApi = new BundleApi(killBillHttpClient);
+        catalogApi = new CatalogApi(killBillHttpClient);
+        creditApi = new CreditApi(killBillHttpClient);
+        customFieldApi = new CustomFieldApi(killBillHttpClient);
+        exportApi = new ExportApi(killBillHttpClient);
+        invoiceApi = new InvoiceApi(killBillHttpClient);
+        invoiceItemApi = new InvoiceItemApi(killBillHttpClient);
+        invoicePaymentApi = new InvoicePaymentApi(killBillHttpClient);
+        nodesInfoApi = new NodesInfoApi(killBillHttpClient);
+        overdueApi = new OverdueApi(killBillHttpClient);
+        paymentApi = new PaymentApi(killBillHttpClient);
+        paymentGatewayApi = new PaymentGatewayApi(killBillHttpClient);
+        paymentMethodApi = new PaymentMethodApi(killBillHttpClient);
+        paymentTransactionApi = new PaymentTransactionApi(killBillHttpClient);
+        pluginInfoApi = new PluginInfoApi(killBillHttpClient);
+        securityApi = new SecurityApi(killBillHttpClient);
+        subscriptionApi = new SubscriptionApi(killBillHttpClient);
+        tagApi = new TagApi(killBillHttpClient);
+        tagDefinitionApi = new TagDefinitionApi(killBillHttpClient);
+        tenantApi = new TenantApi(killBillHttpClient);
+        usageApi = new UsageApi(killBillHttpClient);
     }
 
     protected void loginTenant(final String apiKey, final String apiSecret) {
@@ -228,12 +272,13 @@ public class TestJaxrsBase extends KillbillClient {
         final Tenant tenant = new Tenant();
         tenant.setApiKey(DEFAULT_API_KEY);
         tenant.setApiSecret(DEFAULT_API_SECRET);
-        killBillClient.createTenant(tenant, createdBy, reason, comment);
+        tenantApi.createTenant(tenant, true, requestOptions);
     }
 
     @AfterMethod(groups = "slow")
     public void afterMethod() throws Exception {
-        killBillClient.close();
+
+        killBillHttpClient.close();
         externalBus.stop();
         internalBus.stop();
     }

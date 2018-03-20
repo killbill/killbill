@@ -28,24 +28,55 @@ import org.killbill.billing.GuicyKillbillTestSuiteWithEmbeddedDB;
 import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.catalog.api.PriceListSet;
 import org.killbill.billing.catalog.api.ProductCategory;
-import org.killbill.billing.client.KillBillClient;
 import org.killbill.billing.client.KillBillClientException;
 import org.killbill.billing.client.KillBillHttpClient;
 import org.killbill.billing.client.RequestOptions;
-import org.killbill.billing.client.model.Account;
-import org.killbill.billing.client.model.PaymentMethod;
-import org.killbill.billing.client.model.PaymentMethodPluginDetail;
-import org.killbill.billing.client.model.PluginProperty;
-import org.killbill.billing.client.model.Subscription;
+import org.killbill.billing.client.api.gen.AccountApi;
+import org.killbill.billing.client.api.gen.AdminApi;
+import org.killbill.billing.client.api.gen.BundleApi;
+import org.killbill.billing.client.api.gen.CatalogApi;
+import org.killbill.billing.client.api.gen.CreditApi;
+import org.killbill.billing.client.api.gen.CustomFieldApi;
+import org.killbill.billing.client.api.gen.ExportApi;
+import org.killbill.billing.client.api.gen.InvoiceApi;
+import org.killbill.billing.client.api.gen.InvoiceItemApi;
+import org.killbill.billing.client.api.gen.InvoicePaymentApi;
+import org.killbill.billing.client.api.gen.NodesInfoApi;
+import org.killbill.billing.client.api.gen.OverdueApi;
+import org.killbill.billing.client.api.gen.PaymentApi;
+import org.killbill.billing.client.api.gen.PaymentGatewayApi;
+import org.killbill.billing.client.api.gen.PaymentMethodApi;
+import org.killbill.billing.client.api.gen.PaymentTransactionApi;
+import org.killbill.billing.client.api.gen.PluginInfoApi;
+import org.killbill.billing.client.api.gen.SecurityApi;
+import org.killbill.billing.client.api.gen.SubscriptionApi;
+import org.killbill.billing.client.api.gen.TagApi;
+import org.killbill.billing.client.api.gen.TagDefinitionApi;
+import org.killbill.billing.client.api.gen.TenantApi;
+import org.killbill.billing.client.api.gen.UsageApi;
 import org.killbill.billing.client.model.Tags;
+import org.killbill.billing.client.model.gen.Account;
+import org.killbill.billing.client.model.gen.AuditLog;
+import org.killbill.billing.client.model.gen.PaymentMethod;
+import org.killbill.billing.client.model.gen.PaymentMethodPluginDetail;
+import org.killbill.billing.client.model.gen.PluginProperty;
+import org.killbill.billing.client.model.gen.Subscription;
 import org.killbill.billing.payment.provider.ExternalPaymentProviderPlugin;
 import org.killbill.billing.util.UUIDs;
 import org.killbill.billing.util.tag.ControlTagType;
+
+import com.google.common.collect.ImmutableList;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
 
 public abstract class KillbillClient extends GuicyKillbillTestSuiteWithEmbeddedDB {
+
+    protected static final ImmutableList<String> NULL_PLUGIN_NAMES = null;
+    protected static final ImmutableList<String> NULL_PLUGIN_PROPERTIES = null;
+    protected static final ImmutableList<AuditLog> EMPTY_AUDIT_LOGS = ImmutableList.<AuditLog>of();
+
+
 
     protected final int DEFAULT_WAIT_COMPLETION_TIMEOUT_SEC = 10;
 
@@ -72,8 +103,31 @@ public abstract class KillbillClient extends GuicyKillbillTestSuiteWithEmbeddedD
                                                                    .withComment(comment)
                                                                    .build();
 
-    protected KillBillClient killBillClient;
     protected KillBillHttpClient killBillHttpClient;
+
+    protected AccountApi accountApi;
+    protected AdminApi adminApi;
+    protected BundleApi bundleApi;
+    protected CatalogApi catalogApi;
+    protected CreditApi creditApi;
+    protected CustomFieldApi customFieldApi;
+    protected ExportApi exportApi;
+    protected InvoiceApi invoiceApi;
+    protected InvoiceItemApi invoiceItemApi;
+    protected InvoicePaymentApi invoicePaymentApi;
+    protected NodesInfoApi nodesInfoApi;
+    protected OverdueApi overdueApi;
+    protected PaymentApi paymentApi;
+    protected PaymentGatewayApi paymentGatewayApi;
+    protected PaymentMethodApi paymentMethodApi;
+    protected PaymentTransactionApi paymentTransactionApi;
+    protected PluginInfoApi pluginInfoApi;
+    protected SecurityApi securityApi;
+    protected SubscriptionApi subscriptionApi;
+    protected TagApi tagApi;
+    protected TagDefinitionApi tagDefinitionApi;
+    protected TenantApi tenantApi;
+    protected UsageApi usageApi;
 
     protected List<PluginProperty> getPaymentMethodCCProperties() {
         final List<PluginProperty> properties = new ArrayList<PluginProperty>();
@@ -100,11 +154,11 @@ public abstract class KillbillClient extends GuicyKillbillTestSuiteWithEmbeddedD
     }
 
     protected Account createAccountWithDefaultPaymentMethod(final String externalkey) throws Exception {
-        return  createAccountWithDefaultPaymentMethod(externalkey, null);
+        return createAccountWithDefaultPaymentMethod(externalkey, null);
     }
 
     protected Account createAccountWithDefaultPaymentMethod() throws Exception {
-        return  createAccountWithDefaultPaymentMethod(UUID.randomUUID().toString(), null);
+        return createAccountWithDefaultPaymentMethod(UUID.randomUUID().toString(), null);
     }
 
     protected Account createAccountWithDefaultPaymentMethod(final String externalkey, @Nullable final List<PluginProperty> pmProperties) throws Exception {
@@ -112,24 +166,22 @@ public abstract class KillbillClient extends GuicyKillbillTestSuiteWithEmbeddedD
 
         final PaymentMethodPluginDetail info = new PaymentMethodPluginDetail();
         info.setProperties(pmProperties);
-        final PaymentMethod paymentMethodJson = new PaymentMethod(null, externalkey, input.getAccountId(), true, PLUGIN_NAME, info);
-        killBillClient.createPaymentMethod(paymentMethodJson, createdBy, reason, comment);
-        return killBillClient.getAccount(input.getExternalKey());
+        final PaymentMethod paymentMethodJson = new PaymentMethod(null, externalkey, input.getAccountId(), true, PLUGIN_NAME, info, EMPTY_AUDIT_LOGS);
+        accountApi.createPaymentMethod(paymentMethodJson, input.getAccountId(), true, false, NULL_PLUGIN_NAMES, NULL_PLUGIN_PROPERTIES, requestOptions);
+        return accountApi.getAccount(input.getAccountId(), requestOptions);
     }
 
     protected Account createAccountWithExternalPaymentMethod() throws Exception {
         final Account input = createAccount();
-
         createPaymentMethod(input, true);
-
-        return killBillClient.getAccount(input.getExternalKey(), requestOptions);
+        return accountApi.getAccount(input.getAccountId(), requestOptions);
     }
 
     protected PaymentMethod createPaymentMethod(final Account input, final boolean isDefault) throws KillBillClientException {
         final PaymentMethodPluginDetail info = new PaymentMethodPluginDetail();
         final PaymentMethod paymentMethodJson = new PaymentMethod(null, UUIDs.randomUUID().toString(), input.getAccountId(),
-                                                                  isDefault, ExternalPaymentProviderPlugin.PLUGIN_NAME, info);
-        return killBillClient.createPaymentMethod(paymentMethodJson, requestOptions);
+                                                                  isDefault, ExternalPaymentProviderPlugin.PLUGIN_NAME, info, EMPTY_AUDIT_LOGS);
+        return accountApi.createPaymentMethod(paymentMethodJson, input.getAccountId(), NULL_PLUGIN_NAMES, NULL_PLUGIN_PROPERTIES, requestOptions);
     }
 
     protected Account createAccount() throws Exception {
@@ -138,7 +190,7 @@ public abstract class KillbillClient extends GuicyKillbillTestSuiteWithEmbeddedD
 
     protected Account createAccount(final UUID parentAccountId) throws Exception {
         final Account input = getAccount(parentAccountId);
-        return killBillClient.createAccount(input, createdBy, reason, comment);
+        return accountApi.createAccount(input, requestOptions);
     }
 
     protected Subscription createEntitlement(final UUID accountId, final String bundleExternalKey, final String productName,
@@ -150,8 +202,7 @@ public abstract class KillbillClient extends GuicyKillbillTestSuiteWithEmbeddedD
         input.setProductCategory(productCategory);
         input.setBillingPeriod(billingPeriod);
         input.setPriceList(PriceListSet.DEFAULT_PRICELIST_NAME);
-
-        return killBillClient.createSubscription(input, null, null,  waitCompletion ? DEFAULT_WAIT_COMPLETION_TIMEOUT_SEC : -1, false, requestOptions);
+        return subscriptionApi.createEntitlement(input, null, null, true, false, null, waitCompletion, waitCompletion ? DEFAULT_WAIT_COMPLETION_TIMEOUT_SEC : -1L, NULL_PLUGIN_PROPERTIES, requestOptions);
     }
 
     protected Account createAccountWithPMBundleAndSubscriptionAndWaitForFirstInvoice() throws Exception {
@@ -172,7 +223,7 @@ public abstract class KillbillClient extends GuicyKillbillTestSuiteWithEmbeddedD
         final Account accountJson = createAccountWithExternalPaymentMethod();
         assertNotNull(accountJson);
 
-        final Tags accountTag = killBillClient.createAccountTag(accountJson.getAccountId(), ControlTagType.MANUAL_PAY.getId(), requestOptions);
+        final Tags accountTag = accountApi.createTags(accountJson.getAccountId(), ControlTagType.MANUAL_PAY.getId().toString(), requestOptions);
         assertNotNull(accountTag);
         assertEquals(accountTag.get(0).getTagDefinitionId(), ControlTagType.MANUAL_PAY.getId());
 
@@ -247,7 +298,7 @@ public abstract class KillbillClient extends GuicyKillbillTestSuiteWithEmbeddedD
 
         // Note: the accountId payload is ignored on account creation
         return new Account(accountId, name, length, externalKey, email, null, currency, parentAccountId, isPaymentDelegatedToParent, null, null, timeZone,
-                           address1, address2, postalCode, company, city, state, country, locale, phone, notes, false, false, null, null);
+                           address1, address2, postalCode, company, city, state, country, locale, phone, notes, false, false, null, null, EMPTY_AUDIT_LOGS);
     }
 
     /**
@@ -257,7 +308,6 @@ public abstract class KillbillClient extends GuicyKillbillTestSuiteWithEmbeddedD
     protected void crappyWaitForLackOfProperSynchonization() throws Exception {
         crappyWaitForLackOfProperSynchonization(5000);
     }
-
 
     protected void crappyWaitForLackOfProperSynchonization(int sleepValueMSec) throws Exception {
         Thread.sleep(sleepValueMSec);
