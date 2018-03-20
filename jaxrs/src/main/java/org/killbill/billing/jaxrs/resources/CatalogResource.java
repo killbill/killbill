@@ -126,15 +126,16 @@ public class CatalogResource extends JaxRsResourceBase {
                                             null;
 
         final VersionedCatalog catalog = (VersionedCatalog) catalogUserApi.getCatalog(catalogName, tenantContext);
-
-        String result = null;
+        final String result;
         if (catalogDateVersion != null) {
+            final VersionedCatalog oneVersionCatalog = new VersionedCatalog();
             for (final StandaloneCatalog v : catalog.getVersions()) {
-                if (v.getEffectiveDate().compareTo(catalogDateVersion.toDate()) == 0) {
-                    result = XMLWriter.writeXML(v, StandaloneCatalog.class);
+                if (v.getEffectiveDate().compareTo(catalogDateVersion.toDate()) >= 0) {
+                    oneVersionCatalog.add(v);
                     break;
                 }
             }
+            result = XMLWriter.writeXML(oneVersionCatalog, VersionedCatalog.class);
         } else {
             result = XMLWriter.writeXML(catalog, VersionedCatalog.class);
         }
@@ -189,7 +190,7 @@ public class CatalogResource extends JaxRsResourceBase {
     @GET
     @Path("/versions")
     @Produces(APPLICATION_JSON)
-    @ApiOperation(value = "Retrieve a list of catalog versions", response = DateTime.class)
+    @ApiOperation(value = "Retrieve a list of catalog versions", response = DateTime.class, responseContainer = "List")
     @ApiResponses(value = {})
     public Response getCatalogVersionJson(@javax.ws.rs.core.Context final HttpServletRequest request) throws Exception {
 
