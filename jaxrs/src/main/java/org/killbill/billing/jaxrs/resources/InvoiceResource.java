@@ -1052,19 +1052,19 @@ public class InvoiceResource extends JaxRsResourceBase {
                 this.billingPolicy = null;
                 this.overrides = null;
             } else {
-                this.dryRunType = input.getDryRunType() != null ? DryRunType.valueOf(input.getDryRunType()) : DryRunType.TARGET_DATE;
-                this.action = input.getDryRunAction() != null ? SubscriptionEventType.valueOf(input.getDryRunAction()) : null;
+                this.dryRunType = input.getDryRunType() != null ? input.getDryRunType() : DryRunType.TARGET_DATE;
+                this.action = input.getDryRunAction() != null ? input.getDryRunAction() : null;
                 this.subscriptionId = input.getSubscriptionId();
                 this.bundleId = input.getBundleId();
                 this.effectiveDate = input.getEffectiveDate();
-                this.billingPolicy = input.getBillingPolicy() != null ? BillingActionPolicy.valueOf(input.getBillingPolicy()) : null;
+                this.billingPolicy = input.getBillingPolicy() != null ? input.getBillingPolicy() : null;
                 final PlanPhaseSpecifier planPhaseSpecifier = (input.getProductName() != null &&
                                                                input.getProductCategory() != null &&
                                                                input.getBillingPeriod() != null) ?
                                                               new PlanPhaseSpecifier(input.getProductName(),
-                                                                                     BillingPeriod.valueOf(input.getBillingPeriod()),
+                                                                                     input.getBillingPeriod(),
                                                                                      input.getPriceListName(),
-                                                                                     input.getPhaseType() != null ? PhaseType.valueOf(input.getPhaseType()) : null) :
+                                                                                     input.getPhaseType() != null ? input.getPhaseType() : null) :
                                                               null;
                 this.specifier = planPhaseSpecifier;
                 this.overrides = input.getPriceOverrides() != null ?

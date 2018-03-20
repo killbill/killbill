@@ -23,6 +23,12 @@ import java.util.UUID;
 import javax.annotation.Nullable;
 
 import org.joda.time.LocalDate;
+import org.killbill.billing.catalog.api.BillingActionPolicy;
+import org.killbill.billing.catalog.api.BillingPeriod;
+import org.killbill.billing.catalog.api.PhaseType;
+import org.killbill.billing.catalog.api.ProductCategory;
+import org.killbill.billing.entitlement.api.SubscriptionEventType;
+import org.killbill.billing.invoice.api.DryRunType;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -31,31 +37,31 @@ import io.swagger.annotations.ApiModel;
 @ApiModel(value="InvoiceDryRun")
 public class InvoiceDryRunJson {
 
-    private final String dryRunType;
-    private final String dryRunAction;
-    private final String phaseType;
+    private final DryRunType dryRunType;
+    private final SubscriptionEventType dryRunAction;
+    private final PhaseType phaseType;
     private final String productName;
-    private final String productCategory;
-    private final String billingPeriod;
+    private final ProductCategory productCategory;
+    private final BillingPeriod billingPeriod;
     private final String priceListName;
     private final LocalDate effectiveDate;
     private final UUID subscriptionId;
     private final UUID bundleId;
-    private final String billingPolicy;
+    private final BillingActionPolicy billingPolicy;
     private final List<PhasePriceOverrideJson> priceOverrides;
 
     @JsonCreator
-    public InvoiceDryRunJson(@JsonProperty("dryRunType") @Nullable final String dryRunType,
-                             @JsonProperty("dryRunAction") @Nullable final String dryRunAction,
-                             @JsonProperty("phaseType") @Nullable final String phaseType,
+    public InvoiceDryRunJson(@JsonProperty("dryRunType") @Nullable final DryRunType dryRunType,
+                             @JsonProperty("dryRunAction") @Nullable final SubscriptionEventType dryRunAction,
+                             @JsonProperty("phaseType") @Nullable final PhaseType phaseType,
                              @JsonProperty("productName") @Nullable final String productName,
-                             @JsonProperty("productCategory") @Nullable final String productCategory,
-                             @JsonProperty("billingPeriod") @Nullable final String billingPeriod,
+                             @JsonProperty("productCategory") @Nullable final ProductCategory productCategory,
+                             @JsonProperty("billingPeriod") @Nullable final BillingPeriod billingPeriod,
                              @JsonProperty("priceListName") @Nullable final String priceListName,
                              @JsonProperty("subscriptionId") @Nullable final UUID subscriptionId,
                              @JsonProperty("bundleId") @Nullable final UUID bundleId,
                              @JsonProperty("effectiveDate") @Nullable final LocalDate effectiveDate,
-                             @JsonProperty("billingPolicy") @Nullable final String billingPolicy,
+                             @JsonProperty("billingPolicy") @Nullable final BillingActionPolicy billingPolicy,
                              @JsonProperty("priceOverrides") @Nullable final List<PhasePriceOverrideJson> priceOverrides) {
         this.dryRunType = dryRunType;
         this.dryRunAction = dryRunAction;
@@ -71,15 +77,15 @@ public class InvoiceDryRunJson {
         this.priceOverrides = priceOverrides;
     }
 
-    public String getDryRunType() {
+    public DryRunType getDryRunType() {
         return dryRunType;
     }
 
-    public String getDryRunAction() {
+    public SubscriptionEventType getDryRunAction() {
         return dryRunAction;
     }
 
-    public String getPhaseType() {
+    public PhaseType getPhaseType() {
         return phaseType;
     }
 
@@ -87,11 +93,11 @@ public class InvoiceDryRunJson {
         return productName;
     }
 
-    public String getProductCategory() {
+    public ProductCategory getProductCategory() {
         return productCategory;
     }
 
-    public String getBillingPeriod() {
+    public BillingPeriod getBillingPeriod() {
         return billingPeriod;
     }
 
@@ -111,7 +117,7 @@ public class InvoiceDryRunJson {
         return bundleId;
     }
 
-    public String getBillingPolicy() {
+    public BillingActionPolicy getBillingPolicy() {
         return billingPolicy;
     }
 
