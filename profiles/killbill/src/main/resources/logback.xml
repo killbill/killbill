@@ -185,10 +185,12 @@
 
     <!-- Silence verbose loggers in DEBUG mode -->
     <logger name="com.dmurph" level="OFF"/>
-    <logger name="org.killbill.billing.notificationq" level="INFO"/>
-    <logger name="org.killbill.billing.queue" level="INFO"/>
-    <logger name="org.killbill.billing.server.updatechecker" level="INFO"/>
     <logger name="org.eclipse" level="INFO"/>
+    <logger name="org.killbill.billing.server.updatechecker" level="INFO"/>
+    <!-- Useful loggers for debugging -->
+    <logger name="org.killbill.billing.jaxrs.resources" level="INFO"/>
+    <logger name="org.killbill.notificationq" level="INFO"/>
+    <logger name="org.killbill.queue" level="INFO"/>
 
     <root level="INFO">
         <appender-ref ref="STDOUT"/>
