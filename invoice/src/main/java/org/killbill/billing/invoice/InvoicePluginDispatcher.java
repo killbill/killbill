@@ -1,6 +1,6 @@
 /*
- * Copyright 2014-2015 Groupon, Inc
- * Copyright 2014-2015 The Billing Project, LLC
+ * Copyright 2014-2018 Groupon, Inc
+ * Copyright 2014-2018 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -25,13 +25,16 @@ import java.util.Set;
 
 import javax.inject.Inject;
 
+import org.joda.time.LocalDate;
 import org.killbill.billing.ErrorCode;
 import org.killbill.billing.callcontext.InternalTenantContext;
+import org.killbill.billing.invoice.api.DefaultInvoiceContext;
 import org.killbill.billing.invoice.api.Invoice;
 import org.killbill.billing.invoice.api.InvoiceApiException;
 import org.killbill.billing.invoice.api.InvoiceItem;
 import org.killbill.billing.invoice.api.InvoiceItemType;
 import org.killbill.billing.invoice.model.DefaultInvoice;
+import org.killbill.billing.invoice.plugin.api.InvoiceContext;
 import org.killbill.billing.invoice.plugin.api.InvoicePluginApi;
 import org.killbill.billing.osgi.api.OSGIServiceRegistration;
 import org.killbill.billing.payment.api.PluginProperty;
@@ -48,13 +51,12 @@ public class InvoicePluginDispatcher {
     private static final Logger log = LoggerFactory.getLogger(InvoicePluginDispatcher.class);
 
     public static final Collection<InvoiceItemType> ALLOWED_INVOICE_ITEM_TYPES = ImmutableList.<InvoiceItemType>of(InvoiceItemType.EXTERNAL_CHARGE,
-                                                                                                                    InvoiceItemType.ITEM_ADJ,
-                                                                                                                    InvoiceItemType.CREDIT_ADJ,
-                                                                                                                    InvoiceItemType.TAX);
+                                                                                                                   InvoiceItemType.ITEM_ADJ,
+                                                                                                                   InvoiceItemType.CREDIT_ADJ,
+                                                                                                                   InvoiceItemType.TAX);
 
     private final OSGIServiceRegistration<InvoicePluginApi> pluginRegistry;
     private final InvoiceConfig invoiceConfig;
-
 
     @Inject
     public InvoicePluginDispatcher(final OSGIServiceRegistration<InvoicePluginApi> pluginRegistry,
@@ -63,15 +65,78 @@ public class InvoicePluginDispatcher {
         this.invoiceConfig = invoiceConfig;
     }
 
+    public void priorCall(final LocalDate targetDate, final List<Invoice> existingInvoices, final boolean isDryRun, final boolean isRescheduled, final CallContext callContext, final InternalTenantContext internalTenantContext) {
+        final List<InvoicePluginApi> invoicePlugins = getInvoicePlugins(internalTenantContext);
+        if (invoicePlugins.isEmpty()) {
+            return;
+        }
+
+        final InvoiceContext invoiceContext = new DefaultInvoiceContext(targetDate, null, existingInvoices, isDryRun, isRescheduled, callContext);
+        for (final InvoicePluginApi invoicePlugin : invoicePlugins) {
+            invoicePlugin.priorCall(invoiceContext, ImmutableList.<PluginProperty>of());
+        }
+    }
+
+    public void onSuccessCall(final LocalDate targetDate,
+                              final DefaultInvoice invoice,
+                              final List<Invoice> existingInvoices,
+                              final boolean isDryRun,
+                              final boolean isRescheduled,
+                              final CallContext callContext,
+                              final InternalTenantContext internalTenantContext) {
+        onCompletionCall(true, targetDate, invoice, existingInvoices, isDryRun, isRescheduled, callContext, internalTenantContext);
+    }
+
+    public void onFailureCall(final LocalDate targetDate,
+                              final DefaultInvoice invoice,
+                              final List<Invoice> existingInvoices,
+                              final boolean isDryRun,
+                              final boolean isRescheduled,
+                              final CallContext callContext,
+                              final InternalTenantContext internalTenantContext) {
+        onCompletionCall(false, targetDate, invoice, existingInvoices, isDryRun, isRescheduled, callContext, internalTenantContext);
+    }
+
+    private void onCompletionCall(final boolean isSuccess,
+                                  final LocalDate targetDate,
+                                  final DefaultInvoice originalInvoice,
+                                  final List<Invoice> existingInvoices,
+                                  final boolean isDryRun,
+                                  final boolean isRescheduled,
+                                  final CallContext callContext,
+                                  final InternalTenantContext internalTenantContext) {
+        final List<InvoicePluginApi> invoicePlugins = getInvoicePlugins(internalTenantContext);
+        if (invoicePlugins.isEmpty()) {
+            return;
+        }
+
+        // We clone the original invoice so plugins don't remove/add items
+        final Invoice clonedInvoice = (Invoice) originalInvoice.clone();
+        final InvoiceContext invoiceContext = new DefaultInvoiceContext(targetDate, clonedInvoice, existingInvoices, isDryRun, isRescheduled, callContext);
+
+        for (final InvoicePluginApi invoicePlugin : invoicePlugins) {
+            if (isSuccess) {
+                invoicePlugin.onSuccessCall(invoiceContext, ImmutableList.<PluginProperty>of());
+            } else {
+                invoicePlugin.onFailureCall(invoiceContext, ImmutableList.<PluginProperty>of());
+            }
+        }
+    }
+
     //
     // If we have multiple plugins there is a question of plugin ordering and also a 'product' questions to decide whether
     // subsequent plugins should have access to items added by previous plugins
     //
     public List<InvoiceItem> getAdditionalInvoiceItems(final Invoice originalInvoice, final boolean isDryRun, final CallContext callContext, final InternalTenantContext tenantContext) throws InvoiceApiException {
+        final List<InvoiceItem> additionalInvoiceItems = new LinkedList<InvoiceItem>();
+
+        final List<InvoicePluginApi> invoicePlugins = getInvoicePlugins(tenantContext);
+        if (invoicePlugins.isEmpty()) {
+            return additionalInvoiceItems;
+        }
+
         // We clone the original invoice so plugins don't remove/add items
         final Invoice clonedInvoice = (Invoice) ((DefaultInvoice) originalInvoice).clone();
-        final List<InvoiceItem> additionalInvoiceItems = new LinkedList<InvoiceItem>();
-        final List<InvoicePluginApi> invoicePlugins = getInvoicePlugins(tenantContext);
         for (final InvoicePluginApi invoicePlugin : invoicePlugins) {
             final List<InvoiceItem> items = invoicePlugin.getAdditionalInvoiceItems(clonedInvoice, isDryRun, ImmutableList.<PluginProperty>of(), callContext);
             if (items != null) {
@@ -93,7 +158,6 @@ public class InvoicePluginDispatcher {
 
     private List<InvoicePluginApi> getInvoicePlugins(final InternalTenantContext tenantContext) {
 
-
         final Collection<String> resultingPluginList = getResultingPluginNameList(tenantContext);
 
         final List<InvoicePluginApi> invoicePlugins = new ArrayList<InvoicePluginApi>();
@@ -112,7 +176,7 @@ public class InvoicePluginDispatcher {
         if (configuredPlugins == null || configuredPlugins.isEmpty()) {
             return registeredPlugins;
         } else {
-            final List<String> result  =  new ArrayList<String>(configuredPlugins.size());
+            final List<String> result = new ArrayList<String>(configuredPlugins.size());
             for (final String name : configuredPlugins) {
                 if (pluginRegistry.getServiceForName(name) != null) {
                     result.add(name);

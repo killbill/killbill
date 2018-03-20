@@ -509,11 +509,17 @@ public class InvoiceDispatcher {
                                                              final List<Invoice> existingInvoices,
                                                              final boolean isDryRun,
                                                              final InternalCallContext internalCallContext) throws InvoiceApiException {
+        final boolean isRescheduled = false; // TODO
+
+        final CallContext callContext = buildCallContext(internalCallContext);
+        invoicePluginDispatcher.priorCall(targetDate, existingInvoices, isDryRun, isRescheduled, callContext, internalCallContext);
+
         final ImmutableAccountData account;
         try {
             account = accountApi.getImmutableAccountDataById(accountId, internalCallContext);
         } catch (final AccountApiException e) {
             log.error("Unable to generate invoice for accountId='{}', a future notification has NOT been recorded", accountId, e);
+            invoicePluginDispatcher.onFailureCall(targetDate, null, existingInvoices, isDryRun, isRescheduled, callContext, internalCallContext);
             return null;
         }
 
@@ -525,6 +531,8 @@ public class InvoiceDispatcher {
 
         // If invoice comes back null, there is nothing new to generate, we can bail early
         if (invoice == null) {
+            invoicePluginDispatcher.onSuccessCall(targetDate, null, existingInvoices, isDryRun, isRescheduled, callContext, internalCallContext);
+
             if (isDryRun) {
                 log.info("Generated null dryRun invoice for accountId='{}', targetDate='{}'", accountId, targetDate);
             } else {
@@ -551,7 +559,6 @@ public class InvoiceDispatcher {
             //
             // Ask external invoice plugins if additional items (tax, etc) shall be added to the invoice
             //
-            final CallContext callContext = buildCallContext(internalCallContext);
             final List<InvoiceItem> additionalInvoiceItemsFromPlugins = invoicePluginDispatcher.getAdditionalInvoiceItems(tmpInvoiceForInvoicePlugins, isDryRun, callContext, internalCallContext);
             if (additionalInvoiceItemsFromPlugins.isEmpty()) {
                 // PERF: avoid re-computing the CBA if no change was made
@@ -559,7 +566,6 @@ public class InvoiceDispatcher {
                     invoice.addInvoiceItem(cbaItemPreInvoicePlugins);
                 }
             } else {
-
                 // Add or update items from generated invoice
                 for (final InvoiceItem cur : additionalInvoiceItemsFromPlugins) {
                     final InvoiceItem exitingItem = Iterables.tryFind(tmpInvoiceForInvoicePlugins.getInvoiceItems(), new Predicate<InvoiceItem>() {
@@ -605,7 +611,6 @@ public class InvoiceDispatcher {
             }
 
             if (!isDryRun) {
-
                 // Compute whether this is a new invoice object (or just some adjustments on an existing invoice), and extract invoiceIds for later use
                 final Set<UUID> uniqueInvoiceIds = getUniqueInvoiceIds(invoice);
                 final boolean isRealInvoiceWithItems = uniqueInvoiceIds.remove(invoice.getId());
@@ -633,6 +638,13 @@ public class InvoiceDispatcher {
             // Make sure we always set future notifications in case of errors
             if (!isDryRun && !success) {
                 commitInvoiceAndSetFutureNotifications(account, null, futureAccountNotifications, internalCallContext);
+            }
+
+            if (success) {
+                final DefaultInvoice refreshedInvoice = new DefaultInvoice(invoiceDao.getById(invoice.getId(), internalCallContext));
+                invoicePluginDispatcher.onSuccessCall(targetDate, refreshedInvoice, existingInvoices, isDryRun, isRescheduled, callContext, internalCallContext);
+            } else {
+                invoicePluginDispatcher.onFailureCall(targetDate, invoice, existingInvoices, isDryRun, isRescheduled, callContext, internalCallContext);
             }
         }
 
