@@ -72,7 +72,7 @@ public class EntitySqlDaoTransactionalJdbiWrapper {
 
         @Override
         public ReturnType inTransaction(final EntitySqlDao<M, E> transactionalSqlDao, final TransactionStatus status) throws Exception {
-            final EntitySqlDaoWrapperFactory factoryEntitySqlDao = new EntitySqlDaoWrapperFactory(h, clock, cacheControllerDispatcher, nonEntityDao, internalCallContextFactory);
+            final EntitySqlDaoWrapperFactory factoryEntitySqlDao = new EntitySqlDaoWrapperFactory(h, clock, cacheControllerDispatcher, internalCallContextFactory);
             return entitySqlDaoTransactionWrapper.inTransaction(factoryEntitySqlDao);
         }
     }
