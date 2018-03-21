@@ -121,8 +121,8 @@ public interface JaxrsResource {
     public static final String QUERY_TENANT_USE_GLOBAL_DEFAULT = "useGlobalDefault";
     public static final String QUERY_TAGS_INCLUDED_DELETED = "includedDeleted";
 
-    public static final String QUERY_TAGS = "tagList";
-    public static final String QUERY_CUSTOM_FIELDS = "customFieldList";
+    public static final String QUERY_TAG = "tag";
+    public static final String QUERY_CUSTOM_FIELD = "customField";
 
     public static final String QUERY_OBJECT_TYPE = "objectType";
 

@@ -121,8 +121,11 @@ public class KillBillApiDefinition implements ReaderListener {
                                qp.getName().equals(JaxrsResource.QUERY_END_DATE)) {
                         qp.setType("string");
                         qp.setFormat("date");
+                    } else if (qp.getName().equals(JaxrsResource.QUERY_CUSTOM_FIELD) ||
+                               qp.getName().equals(JaxrsResource.QUERY_TAG)) {
+                        // Keep the name singular for the ay se wend info (tag=foo$tag-bar, ...), but make it plural (to be nicer) for auto-generated code List<String> tags
+                        qp.setName(String.format("%ss",qp.getName()));
                     }
-
                 }
             }
         }

@@ -206,7 +206,7 @@ public abstract class JaxRsResourceBase implements JaxrsResource {
     }
 
     protected Response createTags(final UUID id,
-                                  final String tagList,
+                                  final List<String> tagList,
                                   final UriInfo uriInfo,
                                   final CallContext context,
                                   final HttpServletRequest request) throws TagApiException {
@@ -216,9 +216,8 @@ public abstract class JaxRsResourceBase implements JaxrsResource {
         return uriBuilder.buildResponse(uriInfo, this.getClass(), "getTags", id, request);
     }
 
-    protected Collection<UUID> getTagDefinitionUUIDs(final String tagList) {
-        final String[] tagParts = tagList.split(",\\s*");
-        return Collections2.transform(ImmutableList.copyOf(tagParts), new Function<String, UUID>() {
+    protected Collection<UUID> getTagDefinitionUUIDs(final List<String> tagList) {
+        return Collections2.transform(tagList, new Function<String, UUID>() {
             @Override
             public UUID apply(final String input) {
                 return UUID.fromString(input);
@@ -227,7 +226,7 @@ public abstract class JaxRsResourceBase implements JaxrsResource {
     }
 
     protected Response deleteTags(final UUID id,
-                                  final String tagList,
+                                  final List<String> tagList,
                                   final CallContext context) throws TagApiException {
         final Collection<UUID> input = getTagDefinitionUUIDs(tagList);
         tagUserApi.removeTags(id, getObjectType(), input, context);
@@ -289,22 +288,20 @@ public abstract class JaxRsResourceBase implements JaxrsResource {
      * @throws CustomFieldApiException
      */
     protected Response deleteCustomFields(final UUID id,
-                                          @Nullable final String customFieldList,
+                                          final List<String> customFieldList,
                                           final CallContext context) throws CustomFieldApiException {
 
         // Retrieve all the custom fields for the object
         final List<CustomField> fields = customFieldUserApi.getCustomFieldsForObject(id, getObjectType(), context);
 
-        final String[] requestedIds = customFieldList != null ? customFieldList.split("\\s*,\\s*") : null;
-
         // Filter the proposed list to only keep the one that exist and indeed match our object
         final Iterable inputIterable = Iterables.filter(fields, new Predicate<CustomField>() {
             @Override
             public boolean apply(final CustomField input) {
-                if (customFieldList == null) {
+                if (customFieldList.isEmpty()) {
                     return true;
                 }
-                for (final String cur : requestedIds) {
+                for (final String cur : customFieldList) {
                     final UUID curId = UUID.fromString(cur);
                     if (input.getId().equals(curId)) {
                         return true;

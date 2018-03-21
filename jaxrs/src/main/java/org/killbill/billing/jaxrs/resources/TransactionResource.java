@@ -202,7 +202,7 @@ public class TransactionResource extends JaxRsResourceBase {
     @ApiOperation(value = "Remove custom fields from payment transaction")
     @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid transaction id supplied")})
     public Response deleteCustomFields(@PathParam(ID_PARAM_NAME) final UUID id,
-                                       @QueryParam(QUERY_CUSTOM_FIELDS) final String customFieldList,
+                                       @QueryParam(QUERY_CUSTOM_FIELD) final List<String> customFieldList,
                                        @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                        @HeaderParam(HDR_REASON) final String reason,
                                        @HeaderParam(HDR_COMMENT) final String comment,
@@ -235,7 +235,7 @@ public class TransactionResource extends JaxRsResourceBase {
     @ApiOperation(value = "Add tags to payment transaction", response = TagJson.class, responseContainer = "List")
     @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid transaction id supplied")})
     public Response createTags(@PathParam(ID_PARAM_NAME) final UUID id,
-                               @QueryParam(QUERY_TAGS) final String tagList,
+                               @QueryParam(QUERY_TAG) final List<String> tagList,
                                @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                @HeaderParam(HDR_REASON) final String reason,
                                @HeaderParam(HDR_COMMENT) final String comment,
@@ -253,7 +253,7 @@ public class TransactionResource extends JaxRsResourceBase {
     @ApiOperation(value = "Remove tags from payment transaction")
     @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid transaction id supplied")})
     public Response deleteTags(@PathParam(ID_PARAM_NAME) final UUID id,
-                               @QueryParam(QUERY_TAGS) final String tagList,
+                               @QueryParam(QUERY_TAG) final List<String> tagList,
                                @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                @HeaderParam(HDR_REASON) final String reason,
                                @HeaderParam(HDR_COMMENT) final String comment,

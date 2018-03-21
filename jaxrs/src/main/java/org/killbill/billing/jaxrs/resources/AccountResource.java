@@ -138,13 +138,10 @@ import com.google.common.collect.Iterables;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiModelProperty;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
-import io.swagger.annotations.Authorization;
-import io.swagger.annotations.BasicAuthDefinition;
 
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 
@@ -1235,7 +1232,7 @@ public class AccountResource extends JaxRsResourceBase {
     @ApiOperation(value = "Remove custom fields from account")
     @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid account id supplied")})
     public Response deleteCustomFields(@PathParam(ID_PARAM_NAME) final UUID accountId,
-                                       @QueryParam(QUERY_CUSTOM_FIELDS) final String customFieldList,
+                                       @QueryParam(QUERY_CUSTOM_FIELD) final List<String> customFieldList,
                                        @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                        @HeaderParam(HDR_REASON) final String reason,
                                        @HeaderParam(HDR_COMMENT) final String comment,
@@ -1288,7 +1285,7 @@ public class AccountResource extends JaxRsResourceBase {
     @ApiOperation(value = "Add tags to account", response = TagJson.class, responseContainer = "List")
     @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid account id supplied")})
     public Response createTags(@PathParam(ID_PARAM_NAME) final UUID accountId,
-                               @QueryParam(QUERY_TAGS) final String tagList,
+                               @QueryParam(QUERY_TAG) final List<String> tagList,
                                @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                @HeaderParam(HDR_REASON) final String reason,
                                @HeaderParam(HDR_COMMENT) final String comment,
@@ -1306,7 +1303,7 @@ public class AccountResource extends JaxRsResourceBase {
     @ApiOperation(value = "Remove tags from account")
     @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid account id supplied or account does not have a default payment method (AUTO_PAY_OFF tag only)")})
     public Response deleteTags(@PathParam(ID_PARAM_NAME) final UUID accountId,
-                               @QueryParam(QUERY_TAGS) final String tagList,
+                               @QueryParam(QUERY_TAG) final List<String> tagList,
                                @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                @HeaderParam(HDR_REASON) final String reason,
                                @HeaderParam(HDR_COMMENT) final String comment,
