@@ -237,4 +237,14 @@ public class TestCatalog extends TestJaxrsBase {
         Assert.assertEquals(catalogsJson.size(), 0);
 
     }
+
+    @Test(groups = "slow")
+    public  void testGetCatalogVersions() throws Exception {
+        final String versionPath1 = Resources.getResource("SpyCarBasic.xml").getPath();
+        killBillClient.uploadXMLCatalog(versionPath1, requestOptions);
+
+        List<DateTime> versions = killBillClient.getCatalogVersions(requestOptions);
+        Assert.assertEquals(1, versions.size());
+        Assert.assertEquals(versions.get(0).compareTo(DateTime.parse("2013-02-08T00:00:00+00:00")), 0);
+    }
 }
