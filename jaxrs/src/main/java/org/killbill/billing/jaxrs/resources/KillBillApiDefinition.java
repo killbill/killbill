@@ -117,7 +117,16 @@ public class KillBillApiDefinition implements ReaderListener {
                             }
                         }));
                         qp.setEnum(values);
+                    } else if (qp.getName().equals(JaxrsResource.QUERY_REQUESTED_DT) ||
+                               qp.getName().equals(JaxrsResource.QUERY_ENTITLEMENT_REQUESTED_DT) ||
+                               qp.getName().equals(JaxrsResource.QUERY_BILLING_REQUESTED_DT) ||
+                               qp.getName().equals(JaxrsResource.QUERY_ENTITLEMENT_EFFECTIVE_FROM_DT) ||
+                               qp.getName().equals(JaxrsResource.QUERY_START_DATE) ||
+                               qp.getName().equals(JaxrsResource.QUERY_END_DATE)) {
+                        qp.setType("string");
+                        qp.setFormat("date");
                     }
+
                 }
             }
         }
