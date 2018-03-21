@@ -200,7 +200,7 @@ public class TestInvoice extends TestJaxrsBase {
         // Then create a dryRun for next upcoming invoice
         final InvoiceDryRun dryRunArg = new InvoiceDryRun().setDryRunType(DryRunType.UPCOMING_INVOICE);
 
-        final Invoice dryRunInvoice = invoiceApi.generateDryRunInvoice(dryRunArg, accountJson.getAccountId(), null, requestOptions.extend().withFollowLocation(false).build());
+        final Invoice dryRunInvoice = invoiceApi.generateDryRunInvoice(dryRunArg, accountJson.getAccountId(), null, requestOptions);
         assertEquals(dryRunInvoice.getBalance(), new BigDecimal("249.95"));
         assertEquals(dryRunInvoice.getTargetDate(), new LocalDate(2012, 6, 25));
         assertEquals(dryRunInvoice.getItems().size(), 1);
@@ -227,7 +227,7 @@ public class TestInvoice extends TestJaxrsBase {
         final InvoiceDryRun dryRunArg = new InvoiceDryRun(DryRunType.SUBSCRIPTION_ACTION, SubscriptionEventType.START_BILLING,
                                                           null, "Assault-Rifle", ProductCategory.BASE, BillingPeriod.ANNUAL, null, null, null, null, null, null);
 
-        final Invoice dryRunInvoice = invoiceApi.generateDryRunInvoice(dryRunArg, accountJson.getAccountId(), new LocalDate(initialDate, DateTimeZone.forID(accountJson.getTimeZone())).toString(), requestOptions.extend().withFollowLocation(false).build());
+        final Invoice dryRunInvoice = invoiceApi.generateDryRunInvoice(dryRunArg, accountJson.getAccountId(), new LocalDate(initialDate, DateTimeZone.forID(accountJson.getTimeZone())).toString(), requestOptions);
         assertEquals(dryRunInvoice.getItems().size(), 1);
 
     }
@@ -460,7 +460,7 @@ public class TestInvoice extends TestJaxrsBase {
         final InvoiceItems itemsForCharge = new InvoiceItems();
         itemsForCharge.add(externalCharge);
 
-        final List<InvoiceItem> createdExternalCharges = invoiceApi.createExternalCharges(itemsForCharge, accountJson.getAccountId(), clock.getUTCToday(), false, null, true, null, null, requestOptions.extend().withFollowLocation(false).build());
+        final List<InvoiceItem> createdExternalCharges = invoiceApi.createExternalCharges(itemsForCharge, accountJson.getAccountId(), clock.getUTCToday(), false, null, true, null, null, requestOptions);
         assertEquals(createdExternalCharges.size(), 1);
         final Invoice invoiceWithItems = invoiceApi.getInvoice(createdExternalCharges.get(0).getInvoiceId(), true, false, AuditLevel.NONE, requestOptions);
         assertEquals(invoiceWithItems.getBalance().compareTo(chargeAmount), 0);
@@ -502,7 +502,7 @@ public class TestInvoice extends TestJaxrsBase {
         externalCharge2.setDescription(UUID.randomUUID().toString());
         externalCharges.add(externalCharge2);
 
-        final List<InvoiceItem> createdExternalCharges = invoiceApi.createExternalCharges(externalCharges, accountJson.getAccountId(), clock.getUTCToday(), false, null, true, null, null, requestOptions.extend().withFollowLocation(false).build());
+        final List<InvoiceItem> createdExternalCharges = invoiceApi.createExternalCharges(externalCharges, accountJson.getAccountId(), clock.getUTCToday(), false, null, true, null, null, requestOptions);
         assertEquals(createdExternalCharges.size(), 2);
         assertEquals(createdExternalCharges.get(0).getCurrency(), accountJson.getCurrency());
         assertEquals(createdExternalCharges.get(1).getCurrency(), accountJson.getCurrency());
@@ -542,7 +542,7 @@ public class TestInvoice extends TestJaxrsBase {
         final String paymentExternalKey = "anyPaymentExternalKey";
         final String transactionExternalKey = "anyTransactionExternalKey";
 
-        final List<InvoiceItem> createdExternalCharges = invoiceApi.createExternalCharges(externalCharges, accountJson.getAccountId(), clock.getUTCToday(), true, null, true, paymentExternalKey, transactionExternalKey, requestOptions.extend().withFollowLocation(false).build());
+        final List<InvoiceItem> createdExternalCharges = invoiceApi.createExternalCharges(externalCharges, accountJson.getAccountId(), clock.getUTCToday(), true, null, true, paymentExternalKey, transactionExternalKey, requestOptions);
         assertEquals(createdExternalCharges.size(), 2);
         assertEquals(createdExternalCharges.get(0).getCurrency(), accountJson.getCurrency());
         assertEquals(createdExternalCharges.get(1).getCurrency(), accountJson.getCurrency());
@@ -574,7 +574,7 @@ public class TestInvoice extends TestJaxrsBase {
         final InvoiceItems inputExternalCharges = new InvoiceItems();
         inputExternalCharges.add(externalCharge);
 
-        final List<InvoiceItem> createdExternalCharges = invoiceApi.createExternalCharges(inputExternalCharges, accountJson.getAccountId(), clock.getUTCToday(), true, null, true, null, null, requestOptions.extend().withFollowLocation(false).build());
+        final List<InvoiceItem> createdExternalCharges = invoiceApi.createExternalCharges(inputExternalCharges, accountJson.getAccountId(), clock.getUTCToday(), true, null, true, null, null, requestOptions);
         assertEquals(createdExternalCharges.size(), 1);
         final Invoice invoiceWithItems = invoiceApi.getInvoice(createdExternalCharges.get(0).getInvoiceId(), true, false, AuditLevel.NONE, requestOptions);
         assertEquals(invoiceWithItems.getBalance().compareTo(BigDecimal.ZERO), 0);
@@ -602,7 +602,7 @@ public class TestInvoice extends TestJaxrsBase {
         externalCharge.setBundleId(bundleId);
         final InvoiceItems input = new InvoiceItems();
         input.add(externalCharge);
-        final List<InvoiceItem> createdExternalCharges = invoiceApi.createExternalCharges(input, accountJson.getAccountId(), clock.getUTCToday(), false, null, true, null, null, requestOptions.extend().withFollowLocation(false).build());
+        final List<InvoiceItem> createdExternalCharges = invoiceApi.createExternalCharges(input, accountJson.getAccountId(), clock.getUTCToday(), false, null, true, null, null, requestOptions);
         assertEquals(createdExternalCharges.size(), 1);
         final Invoice invoiceWithItems = invoiceApi.getInvoice(createdExternalCharges.get(0).getInvoiceId(), true, null, AuditLevel.NONE, requestOptions);
         assertEquals(invoiceWithItems.getBalance().compareTo(chargeAmount), 0);

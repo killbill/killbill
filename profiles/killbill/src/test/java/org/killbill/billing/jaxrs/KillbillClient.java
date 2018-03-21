@@ -223,7 +223,7 @@ public abstract class KillbillClient extends GuicyKillbillTestSuiteWithEmbeddedD
         final Account accountJson = createAccountWithExternalPaymentMethod();
         assertNotNull(accountJson);
 
-        final Tags accountTag = accountApi.createTags(accountJson.getAccountId(), ControlTagType.MANUAL_PAY.getId().toString(), requestOptions);
+        final Tags accountTag = accountApi.createTags(accountJson.getAccountId(), ImmutableList.<String>of(ControlTagType.MANUAL_PAY.getId().toString()), requestOptions);
         assertNotNull(accountTag);
         assertEquals(accountTag.get(0).getTagDefinitionId(), ControlTagType.MANUAL_PAY.getId());
 

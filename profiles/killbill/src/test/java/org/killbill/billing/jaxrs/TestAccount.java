@@ -302,7 +302,7 @@ public class TestAccount extends TestJaxrsBase {
         // FINALLY TRY TO REMOVE AUTO_PAY_OFF WITH NO DEFAULT PAYMENT METHOD ON ACCOUNT
         //
         try {
-            accountApi.deleteTags(accountJson.getAccountId(), new UUID(0, 1).toString(), requestOptions);
+            accountApi.deleteTags(accountJson.getAccountId(), ImmutableList.<String>of(new UUID(0, 1).toString()), requestOptions);
         } catch (final KillBillClientException e) {
         }
     }
@@ -323,19 +323,19 @@ public class TestAccount extends TestJaxrsBase {
         final UUID autoPayOffId = new UUID(0, 1);
 
         // Add a tag
-        accountApi.createTags(input.getAccountId(), autoPayOffId.toString(), requestOptions);
+        accountApi.createTags(input.getAccountId(), ImmutableList.<String>of(autoPayOffId.toString()), requestOptions);
 
         // Retrieves all tags
-        final List<Tag> tags1 = accountApi.getTags(input.getAccountId(), AuditLevel.FULL, false, requestOptions);
+        final List<Tag> tags1 = accountApi.getTags(input.getAccountId(), false, AuditLevel.FULL, requestOptions);
         Assert.assertEquals(tags1.size(), 1);
         Assert.assertEquals(tags1.get(0).getTagDefinitionId(), autoPayOffId);
 
         // Verify adding the same tag a second time doesn't do anything
-        accountApi.createTags(input.getAccountId(), autoPayOffId.toString(), requestOptions);
+        accountApi.createTags(input.getAccountId(), ImmutableList.<String>of(autoPayOffId.toString()), requestOptions);
 
         // Retrieves all tags again
-        accountApi.createTags(input.getAccountId(), autoPayOffId.toString(), requestOptions);
-        final List<Tag> tags2 = accountApi.getTags(input.getAccountId(), AuditLevel.FULL, true, requestOptions);
+        accountApi.createTags(input.getAccountId(), ImmutableList.<String>of(autoPayOffId.toString()), requestOptions);
+        final List<Tag> tags2 = accountApi.getTags(input.getAccountId(), true, AuditLevel.FULL, requestOptions);
         Assert.assertEquals(tags2, tags1);
 
         // Verify audit logs
