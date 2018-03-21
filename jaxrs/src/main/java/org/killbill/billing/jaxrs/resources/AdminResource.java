@@ -421,7 +421,7 @@ public class AdminResource extends JaxRsResourceBase {
         return Response.status(Status.OK).build();
     }
 
-    @POST
+    @PUT
     @Path("/" + HEALTHCHECK)
     @Produces(APPLICATION_JSON)
     @ApiOperation(value = "Put the host back into rotation")

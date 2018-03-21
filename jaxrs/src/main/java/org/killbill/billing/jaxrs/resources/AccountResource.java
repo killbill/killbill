@@ -657,7 +657,7 @@ public class AccountResource extends JaxRsResourceBase {
      * ************************** INVOICE CBA REBALANCING ********************************
      */
     @TimedResource
-    @POST
+    @PUT
     @Path("/{accountId:" + UUID_PATTERN + "}/" + CBA_REBALANCING)
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
@@ -871,7 +871,7 @@ public class AccountResource extends JaxRsResourceBase {
     }
 
     @TimedResource
-    @POST
+    @PUT
     @Path("/{accountId:" + UUID_PATTERN + "}/" + PAYMENT_METHODS + "/refresh")
     @Produces(APPLICATION_JSON)
     @ApiOperation(value = "Refresh account payment methods")
@@ -1448,7 +1448,7 @@ public class AccountResource extends JaxRsResourceBase {
     }
 
     @TimedResource
-    @POST
+    @PUT
     @Path("/{childAccountId:" + UUID_PATTERN + "}/" + TRANSFER_CREDIT)
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
