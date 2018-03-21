@@ -39,7 +39,7 @@ public class TestCustomFieldJson extends JaxrsTestSuiteNoDB {
         Assert.assertEquals(customFieldJson.getObjectType(), objectType);
         Assert.assertEquals(customFieldJson.getName(), name);
         Assert.assertEquals(customFieldJson.getValue(), value);
-        Assert.assertNull(customFieldJson.getAuditLogs());
+        Assert.assertEquals(customFieldJson.getAuditLogs().size(), 0);
 
         final String asJson = mapper.writeValueAsString(customFieldJson);
         final CustomFieldJson fromJson = mapper.readValue(asJson, CustomFieldJson.class);

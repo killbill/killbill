@@ -106,7 +106,7 @@ public class TestInvoiceJsonWithBundleKeys extends JaxrsTestSuiteNoDB {
         Assert.assertEquals(invoiceJson.getAccountId(), invoice.getAccountId());
         Assert.assertEquals(invoiceJson.getBundleKeys(), bundleKeys);
         Assert.assertEquals(invoiceJson.getCredits(), credits);
-        Assert.assertNull(invoiceJson.getAuditLogs());
+        Assert.assertEquals(invoiceJson.getAuditLogs().size(),0);
         Assert.assertEquals(invoiceJson.getStatus(), InvoiceStatus.COMMITTED.toString());
     }
 
