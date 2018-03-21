@@ -110,22 +110,39 @@ public class CatalogResource extends JaxRsResourceBase {
         this.subscriptionApi = subscriptionApi;
     }
 
+    //
+    // We mark this resource as hidden from a swagger point of view and create another one with a different Path below
+    // to hack around the restrictions of having only one type of HTTP verb per Path
+    // see https://github.com/killbill/killbill/issues/913
+    //
     @TimedResource
     @GET
     @Produces(TEXT_XML)
-    @ApiOperation(value = "Retrieve the full catalog as XML", response = String.class)
+    @ApiOperation(value = "Retrieve the full catalog as XML", response = String.class, hidden = true)
     @ApiResponses(value = {})
-    public Response getCatalogXml(@javax.ws.rs.core.Context final HttpServletRequest request) throws Exception {
+    public Response getCatalogXmlOriginal(@javax.ws.rs.core.Context final HttpServletRequest request) throws Exception {
         final TenantContext tenantContext = context.createTenantContextNoAccountId(request);
         return Response.status(Status.OK).entity(XMLWriter.writeXML((VersionedCatalog) catalogUserApi.getCatalog(catalogName, tenantContext), VersionedCatalog.class)).build();
     }
 
     @TimedResource
+    @Path("/xml")
+    @GET
+    @Produces(TEXT_XML)
+    @ApiOperation(value = "Retrieve the full catalog as XML", response = String.class)
+    @ApiResponses(value = {})
+    public Response getCatalogXml(@javax.ws.rs.core.Context final HttpServletRequest request) throws Exception {
+        return getCatalogXmlOriginal(request);
+    }
+
+
+
+    @TimedResource
     @POST
     @Consumes(TEXT_XML)
-    @ApiOperation(value = "Upload the full catalog as XML")
+    @ApiOperation(value = "Upload the full catalog as XML", hidden=true)
     @ApiResponses(value = {})
-    public Response uploadCatalogXml(final String catalogXML,
+    public Response uploadCatalogXmlOriginal(final String catalogXML,
                                      @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                      @HeaderParam(HDR_REASON) final String reason,
                                      @HeaderParam(HDR_COMMENT) final String comment,
@@ -137,9 +154,25 @@ public class CatalogResource extends JaxRsResourceBase {
     }
 
     @TimedResource
+    @POST
+    @Path("/xml")
+    @Consumes(TEXT_XML)
+    @ApiOperation(value = "Upload the full catalog as XML")
+    @ApiResponses(value = {})
+    public Response uploadCatalogXml(final String catalogXML,
+                                     @HeaderParam(HDR_CREATED_BY) final String createdBy,
+                                     @HeaderParam(HDR_REASON) final String reason,
+                                     @HeaderParam(HDR_COMMENT) final String comment,
+                                     @javax.ws.rs.core.Context final HttpServletRequest request,
+                                     @javax.ws.rs.core.Context final UriInfo uriInfo) throws Exception {
+        return uploadCatalogXmlOriginal(catalogXML, createdBy, reason, comment, request, uriInfo);
+    }
+
+
+    @TimedResource
     @GET
     @Produces(APPLICATION_JSON)
-    @ApiOperation(value = "Retrieve the catalog as JSON", response = StaticCatalog.class)
+    @ApiOperation(value = "Retrieve the catalog as JSON", responseContainer = "List", response = CatalogJson.class)
     @ApiResponses(value = {})
     public Response getCatalogJson(@QueryParam(QUERY_REQUESTED_DT) final String requestedDate,
                                    @javax.ws.rs.core.Context final HttpServletRequest request) throws Exception {

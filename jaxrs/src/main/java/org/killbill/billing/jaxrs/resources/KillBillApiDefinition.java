@@ -19,13 +19,9 @@ package org.killbill.billing.jaxrs.resources;
 
 import java.util.List;
 
-import javax.annotation.Nullable;
-
 import org.killbill.billing.util.api.AuditLevel;
-import org.killbill.billing.util.audit.AuditLog;
 
 import com.google.common.base.Function;
-import com.google.common.base.Functions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import io.swagger.annotations.SwaggerDefinition;
