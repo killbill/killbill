@@ -597,14 +597,17 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
 
     }
 
+
     @Override
     public List<InvoiceItem> getInvoiceItemsByParentInvoice(final UUID parentInvoiceId, final TenantContext context) throws InvoiceApiException {
         final InternalTenantContext internalTenantContext = internalCallContextFactory.createInternalTenantContext(parentInvoiceId, ObjectType.INVOICE, context);
+
+        final Catalog catalog  = getCatalogSafelyForPrettyNames(internalTenantContext);
         return ImmutableList.copyOf(Collections2.transform(dao.getInvoiceItemsByParentInvoice(parentInvoiceId, internalTenantContext),
                                                            new Function<InvoiceItemModelDao, InvoiceItem>() {
                                                                @Override
                                                                public InvoiceItem apply(final InvoiceItemModelDao input) {
-                                                                   return InvoiceItemFactory.fromModelDao(input);
+                                                                   return InvoiceItemFactory.fromModelDaoWithCatalog(input, catalog);
                                                                }
                                                            }));
     }
