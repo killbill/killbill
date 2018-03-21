@@ -123,7 +123,7 @@ public class SecurityResource extends JaxRsResourceBase {
                                  @javax.ws.rs.core.Context final HttpServletRequest request,
                                  @javax.ws.rs.core.Context final UriInfo uriInfo) throws SecurityApiException {
         securityApi.addUserRoles(json.getUsername(), json.getPassword(), json.getRoles(), context.createCallContextNoAccountId(createdBy, reason, comment, request));
-        return Response.status(Status.CREATED).build();
+        return uriBuilder.buildResponse(uriInfo, SecurityResource.class, "getUserRoles", json.getUsername(), request);
     }
 
     @TimedResource

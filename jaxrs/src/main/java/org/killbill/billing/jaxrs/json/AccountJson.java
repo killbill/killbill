@@ -49,7 +49,7 @@ public class AccountJson extends JsonBase {
     private final Integer firstNameLength;
     private final String email;
     private final Integer billCycleDayLocal;
-    private final String currency;
+    private final Currency currency;
     private final UUID parentAccountId;
     private final Boolean isPaymentDelegatedToParent;
     private final UUID paymentMethodId;
@@ -78,7 +78,7 @@ public class AccountJson extends JsonBase {
         this.firstNameLength = account.getFirstNameLength();
         this.email = account.getEmail();
         this.billCycleDayLocal = account.getBillCycleDayLocal();
-        this.currency = account.getCurrency() != null ? account.getCurrency().toString() : null;
+        this.currency = account.getCurrency();
         this.parentAccountId = account.getParentAccountId();
         this.isPaymentDelegatedToParent = account.isPaymentDelegatedToParent();
         this.paymentMethodId = account.getPaymentMethodId();
@@ -105,7 +105,7 @@ public class AccountJson extends JsonBase {
                        @JsonProperty("externalKey") final String externalKey,
                        @JsonProperty("email") final String email,
                        @JsonProperty("billCycleDayLocal") final Integer billCycleDayLocal,
-                       @JsonProperty("currency") final String currency,
+                       @JsonProperty("currency") final Currency currency,
                        @JsonProperty("parentAccountId") final UUID parentAccountId,
                        @JsonProperty("isPaymentDelegatedToParent") final Boolean isPaymentDelegatedToParent,
                        @JsonProperty("paymentMethodId") final UUID paymentMethodId,
@@ -235,11 +235,7 @@ public class AccountJson extends JsonBase {
 
             @Override
             public Currency getCurrency() {
-                if (Strings.emptyToNull(currency) == null) {
-                    return null;
-                } else {
-                    return Currency.valueOf(currency);
-                }
+                return currency;
             }
 
             @Override
@@ -349,7 +345,7 @@ public class AccountJson extends JsonBase {
         return billCycleDayLocal;
     }
 
-    public String getCurrency() {
+    public Currency getCurrency() {
         return currency;
     }
 

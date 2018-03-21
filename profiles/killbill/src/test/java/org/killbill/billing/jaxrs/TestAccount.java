@@ -26,6 +26,7 @@ import javax.annotation.Nullable;
 
 import org.killbill.billing.ErrorCode;
 import org.killbill.billing.ObjectType;
+import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.client.KillBillClientException;
 import org.killbill.billing.client.model.Accounts;
 import org.killbill.billing.client.model.CustomFields;
@@ -115,7 +116,7 @@ public class TestAccount extends TestJaxrsBase {
         // Update Account
         final Account newInput = new Account(input.getAccountId(),
                                              "zozo", 4, input.getExternalKey(), "rr@google.com", 18,
-                                             "USD", null, false, null, null, "UTC",
+                                             Currency.USD, null, false, null, null, "UTC",
                                              "bl1", "bh2", "", "", "ca", "San Francisco", "usa", "en", "415-255-2991",
                                              "notes", false, false, null, null, EMPTY_AUDIT_LOGS);
 

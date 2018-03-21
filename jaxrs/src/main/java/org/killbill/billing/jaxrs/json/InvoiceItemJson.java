@@ -55,13 +55,13 @@ public class InvoiceItemJson extends JsonBase {
     private final String prettyPlanName;
     private final String prettyPhaseName;
     private final String prettyUsageName;
-    private final String itemType;
+    private final InvoiceItemType itemType;
     private final String description;
     private final LocalDate startDate;
     private final LocalDate endDate;
     private final BigDecimal amount;
     private final BigDecimal rate;
-    private final String currency;
+    private final Currency currency;
     private final Integer quantity;
     private final String itemDetails;
     private List<InvoiceItemJson> childItems;
@@ -80,13 +80,13 @@ public class InvoiceItemJson extends JsonBase {
                            @JsonProperty("prettyPlanName") final String prettyPlanName,
                            @JsonProperty("prettyPhaseName") final String prettyPhaseName,
                            @JsonProperty("prettyUsageName") final String prettyUsageName,
-                           @JsonProperty("itemType") final String itemType,
+                           @JsonProperty("itemType") final InvoiceItemType itemType,
                            @JsonProperty("description") final String description,
                            @JsonProperty("startDate") final LocalDate startDate,
                            @JsonProperty("endDate") final LocalDate endDate,
                            @JsonProperty("amount") final BigDecimal amount,
                            @JsonProperty("rate") final  BigDecimal rate,
-                           @JsonProperty("currency") final String currency,
+                           @JsonProperty("currency") final Currency currency,
                            @JsonProperty("quantity") final Integer quantity,
                            @JsonProperty("itemDetails") final String itemDetails,
                            @JsonProperty("childItems") final List<InvoiceItemJson> childItems,
@@ -122,9 +122,9 @@ public class InvoiceItemJson extends JsonBase {
              item.getAccountId(), item.getChildAccountId(), item.getBundleId(), item.getSubscriptionId(),
              item.getPlanName(), item.getPhaseName(), item.getUsageName(),
              item.getPrettyPlanName(), item.getPrettyPhaseName(), item.getPrettyUsageName(),
-             item.getInvoiceItemType().toString(),
+             item.getInvoiceItemType(),
              item.getDescription(), item.getStartDate(), item.getEndDate(),
-             item.getAmount(), item.getRate(), item.getCurrency().name(),
+             item.getAmount(), item.getRate(), item.getCurrency(),
              item.getQuantity(), item.getItemDetails(), toInvoiceItemJson(childItems), toAuditLogJson(auditLogs));
     }
 
@@ -144,7 +144,7 @@ public class InvoiceItemJson extends JsonBase {
         return new InvoiceItem() {
             @Override
             public InvoiceItemType getInvoiceItemType() {
-                return itemType != null ? InvoiceItemType.valueOf(itemType) : null;
+                return itemType;
             }
 
             @Override
@@ -179,7 +179,7 @@ public class InvoiceItemJson extends JsonBase {
 
             @Override
             public Currency getCurrency() {
-                return Currency.valueOf(currency);
+                return currency;
             }
 
             @Override
@@ -321,7 +321,7 @@ public class InvoiceItemJson extends JsonBase {
         return prettyUsageName;
     }
 
-    public String getItemType() {
+    public InvoiceItemType getItemType() {
         return itemType;
     }
 
@@ -343,7 +343,7 @@ public class InvoiceItemJson extends JsonBase {
 
     public BigDecimal getRate() { return rate; }
 
-    public String getCurrency() {
+    public Currency getCurrency() {
         return currency;
     }
 

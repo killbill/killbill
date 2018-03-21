@@ -19,6 +19,7 @@
 package org.killbill.billing.jaxrs;
 
 import java.math.BigDecimal;
+import java.util.Currency;
 import java.util.List;
 import java.util.UUID;
 
@@ -210,7 +211,7 @@ public class TestInvoice extends TestJaxrsBase {
 
         final LocalDate futureDate = dryRunInvoice.getTargetDate();
         // The one more time with no DryRun
-        invoiceApi.createFutureInvoice(accountJson.getAccountId(), futureDate.toString(), requestOptions);
+        invoiceApi.createFutureInvoice(accountJson.getAccountId(), futureDate, requestOptions);
 
         // Check again # invoices, should be 3 this time
         final List<Invoice> newInvoiceList = accountApi.getInvoices(accountJson.getAccountId(), requestOptions);
@@ -227,7 +228,7 @@ public class TestInvoice extends TestJaxrsBase {
         final InvoiceDryRun dryRunArg = new InvoiceDryRun(DryRunType.SUBSCRIPTION_ACTION, SubscriptionEventType.START_BILLING,
                                                           null, "Assault-Rifle", ProductCategory.BASE, BillingPeriod.ANNUAL, null, null, null, null, null, null);
 
-        final Invoice dryRunInvoice = invoiceApi.generateDryRunInvoice(dryRunArg, accountJson.getAccountId(), new LocalDate(initialDate, DateTimeZone.forID(accountJson.getTimeZone())).toString(), requestOptions);
+        final Invoice dryRunInvoice = invoiceApi.generateDryRunInvoice(dryRunArg, accountJson.getAccountId(), new LocalDate(initialDate, DateTimeZone.forID(accountJson.getTimeZone())), requestOptions);
         assertEquals(dryRunInvoice.getItems().size(), 1);
 
     }
@@ -655,12 +656,12 @@ public class TestInvoice extends TestJaxrsBase {
         final Credit creditJson = creditApi.createCredit(credit, false, requestOptions);
 
         Invoice invoice = invoiceApi.getInvoice(creditJson.getInvoiceId(), requestOptions);
-        Assert.assertEquals(invoice.getStatus(), InvoiceStatus.DRAFT.toString());
+        Assert.assertEquals(invoice.getStatus(), InvoiceStatus.DRAFT);
 
         invoiceApi.commitInvoice(invoice.getInvoiceId(), requestOptions);
 
         invoice = invoiceApi.getInvoice(creditJson.getInvoiceId(), requestOptions);
-        Assert.assertEquals(invoice.getStatus(), InvoiceStatus.COMMITTED.toString());
+        Assert.assertEquals(invoice.getStatus(), InvoiceStatus.COMMITTED);
     }
 
     @Test(groups = "slow", description = "Can create a migration invoice")
@@ -677,7 +678,7 @@ public class TestInvoice extends TestJaxrsBase {
         externalCharge.setStartDate(new LocalDate());
         externalCharge.setAccountId(accountJson.getAccountId());
         externalCharge.setAmount(chargeAmount);
-        externalCharge.setItemType(InvoiceItemType.EXTERNAL_CHARGE.toString());
+        externalCharge.setItemType(InvoiceItemType.EXTERNAL_CHARGE);
         externalCharge.setCurrency(accountJson.getCurrency());
         final InvoiceItems inputInvoice = new InvoiceItems();
         inputInvoice.add(externalCharge);

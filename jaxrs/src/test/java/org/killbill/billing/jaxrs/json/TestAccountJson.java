@@ -38,7 +38,7 @@ public class TestAccountJson extends JaxrsTestSuiteNoDB {
         final String externalKey = UUID.randomUUID().toString();
         final String email = UUID.randomUUID().toString();
         final Integer billCycleDayLocal = 6;
-        final String currency = UUID.randomUUID().toString();
+        final Currency currency = Currency.USD;
         final UUID paymentMethodId = UUID.randomUUID();
         final DateTime referenceTime = new DateTime();
         final String timeZone = UUID.randomUUID().toString();
@@ -123,7 +123,7 @@ public class TestAccountJson extends JaxrsTestSuiteNoDB {
         Assert.assertEquals(accountJson.getLocale(), account.getLocale());
         Assert.assertEquals(accountJson.getCompany(), account.getCompanyName());
         Assert.assertEquals(accountJson.getCity(), account.getCity());
-        Assert.assertEquals(accountJson.getCurrency(), account.getCurrency().toString());
+        Assert.assertEquals(accountJson.getCurrency(), account.getCurrency());
         Assert.assertEquals(accountJson.getEmail(), account.getEmail());
         Assert.assertEquals(accountJson.getExternalKey(), account.getExternalKey());
         Assert.assertEquals(accountJson.getName(), account.getName());

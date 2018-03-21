@@ -51,7 +51,7 @@ public class TestInvoiceJsonWithBundleKeys extends JaxrsTestSuiteNoDB {
         final CreditJson creditJson = createCreditJson();
         final List<CreditJson> credits = ImmutableList.<CreditJson>of(creditJson);
         final List<AuditLogJson> auditLogs = createAuditLogsJson(clock.getUTCNow());
-        final InvoiceJson invoiceJsonSimple = new InvoiceJson(amount, Currency.USD.toString(), InvoiceStatus.COMMITTED.toString(),
+        final InvoiceJson invoiceJsonSimple = new InvoiceJson(amount, Currency.USD, InvoiceStatus.COMMITTED,
                                                               creditAdj, refundAdj, invoiceId, invoiceDate,
                                                               targetDate, invoiceNumber, balance, accountId, bundleKeys,
                                                               credits, null, false, null, null, auditLogs);
@@ -67,7 +67,7 @@ public class TestInvoiceJsonWithBundleKeys extends JaxrsTestSuiteNoDB {
         Assert.assertEquals(invoiceJsonSimple.getBundleKeys(), bundleKeys);
         Assert.assertEquals(invoiceJsonSimple.getCredits(), credits);
         Assert.assertEquals(invoiceJsonSimple.getAuditLogs(), auditLogs);
-        Assert.assertEquals(invoiceJsonSimple.getStatus(), InvoiceStatus.COMMITTED.toString());
+        Assert.assertEquals(invoiceJsonSimple.getStatus(), InvoiceStatus.COMMITTED);
         Assert.assertFalse(invoiceJsonSimple.getIsParentInvoice());
 
         final String asJson = mapper.writeValueAsString(invoiceJsonSimple);
@@ -107,7 +107,7 @@ public class TestInvoiceJsonWithBundleKeys extends JaxrsTestSuiteNoDB {
         Assert.assertEquals(invoiceJson.getBundleKeys(), bundleKeys);
         Assert.assertEquals(invoiceJson.getCredits(), credits);
         Assert.assertEquals(invoiceJson.getAuditLogs().size(),0);
-        Assert.assertEquals(invoiceJson.getStatus(), InvoiceStatus.COMMITTED.toString());
+        Assert.assertEquals(invoiceJson.getStatus(), InvoiceStatus.COMMITTED);
     }
 
     private CreditJson createCreditJson() {

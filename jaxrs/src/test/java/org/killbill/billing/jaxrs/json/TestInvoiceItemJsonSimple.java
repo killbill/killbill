@@ -45,7 +45,7 @@ public class TestInvoiceItemJsonSimple extends JaxrsTestSuiteNoDB {
         final String planName = UUID.randomUUID().toString();
         final String phaseName = UUID.randomUUID().toString();
         final String usageName = UUID.randomUUID().toString();
-        final String type = "FIXED";
+        final InvoiceItemType type = InvoiceItemType.FIXED;
         final String description = UUID.randomUUID().toString();
         final LocalDate startDate = clock.getUTCToday();
         final LocalDate endDate = clock.getUTCToday();
@@ -56,7 +56,7 @@ public class TestInvoiceItemJsonSimple extends JaxrsTestSuiteNoDB {
                                                                     bundleId, subscriptionId, planName, phaseName, usageName,
                                                                     null, null, null,
                                                                     type, description,
-                                                                    startDate, endDate, amount, null, currency.name(), null, null, null, auditLogs);
+                                                                    startDate, endDate, amount, null, currency, null, null, null, auditLogs);
         Assert.assertEquals(invoiceItemJson.getInvoiceItemId(), invoiceItemId);
         Assert.assertEquals(invoiceItemJson.getInvoiceId(), invoiceId);
         Assert.assertEquals(invoiceItemJson.getLinkedInvoiceItemId(), linkedInvoiceItemId);
@@ -72,7 +72,7 @@ public class TestInvoiceItemJsonSimple extends JaxrsTestSuiteNoDB {
         Assert.assertEquals(invoiceItemJson.getStartDate(), startDate);
         Assert.assertEquals(invoiceItemJson.getEndDate(), endDate);
         Assert.assertEquals(invoiceItemJson.getAmount(), amount);
-        Assert.assertEquals(invoiceItemJson.getCurrency(), currency.name());
+        Assert.assertEquals(invoiceItemJson.getCurrency(), currency);
         Assert.assertEquals(invoiceItemJson.getAuditLogs(), auditLogs);
 
         final String asJson = mapper.writeValueAsString(invoiceItemJson);
@@ -113,6 +113,6 @@ public class TestInvoiceItemJsonSimple extends JaxrsTestSuiteNoDB {
         Assert.assertEquals(invoiceItemJson.getStartDate(), invoiceItem.getStartDate());
         Assert.assertEquals(invoiceItemJson.getEndDate(), invoiceItem.getEndDate());
         Assert.assertEquals(invoiceItemJson.getAmount(), invoiceItem.getAmount());
-        Assert.assertEquals(invoiceItemJson.getCurrency(), invoiceItem.getCurrency().name());
+        Assert.assertEquals(invoiceItemJson.getCurrency(), invoiceItem.getCurrency());
     }
 }
