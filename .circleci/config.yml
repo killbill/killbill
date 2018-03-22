@@ -139,7 +139,7 @@ jobs:
             set +e
 
             mvn clean install -DskipTests=true
-            nohup ./bin/start-server -s &
+            nohup ./bin/start-server -s > /tmp/test-results/killbill.log 2>&1 &
 
             mkdir -p /home/killbill/killbill-integration-tests
             git clone https://github.com/killbill/killbill-integration-tests.git /home/killbill/killbill-integration-tests
