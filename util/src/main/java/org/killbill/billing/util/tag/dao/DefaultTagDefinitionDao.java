@@ -105,8 +105,12 @@ public class DefaultTagDefinitionDao extends EntityDaoBase<TagDefinitionModelDao
         return transactionalSqlDao.execute(true, new EntitySqlDaoTransactionWrapper<TagDefinitionModelDao>() {
             @Override
             public TagDefinitionModelDao inTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory) throws Exception {
-                final TagDefinitionModelDao tagDefinitionModelDao = SystemTags.lookup(definitionId);
-                return tagDefinitionModelDao != null ? tagDefinitionModelDao : entitySqlDaoWrapperFactory.become(TagDefinitionSqlDao.class).getById(definitionId.toString(), context);
+                final TagDefinitionModelDao systemTag = SystemTags.lookup(definitionId);
+                final TagDefinitionModelDao tag = systemTag != null ? systemTag : entitySqlDaoWrapperFactory.become(TagDefinitionSqlDao.class).getById(definitionId.toString(), context);
+                if(tag == null) {
+                    throw new TagDefinitionApiException(ErrorCode.TAG_DEFINITION_DOES_NOT_EXIST, definitionId);
+                }
+                return tag;
             }
         });
     }

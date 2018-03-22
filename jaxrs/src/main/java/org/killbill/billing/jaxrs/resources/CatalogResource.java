@@ -118,9 +118,29 @@ public class CatalogResource extends JaxRsResourceBase {
     @Produces(APPLICATION_XML)
     @ApiOperation(value = "Retrieve the full catalog as XML", response = String.class, hidden = true)
     @ApiResponses(value = {})
-    public Response getCatalogXml(@javax.ws.rs.core.Context final HttpServletRequest request) throws Exception {
+    public Response getCatalogXml(@QueryParam(QUERY_REQUESTED_DT) final String requestedDate,
+                                  @javax.ws.rs.core.Context final HttpServletRequest request) throws Exception {
         final TenantContext tenantContext = context.createTenantContextNoAccountId(request);
-        return Response.status(Status.OK).entity(XMLWriter.writeXML((VersionedCatalog) catalogUserApi.getCatalog(catalogName, tenantContext), VersionedCatalog.class)).build();
+        final DateTime catalogDateVersion = requestedDate != null ?
+                                            DATE_TIME_FORMATTER.parseDateTime(requestedDate).toDateTime(DateTimeZone.UTC) :
+                                            null;
+
+        final VersionedCatalog catalog = (VersionedCatalog) catalogUserApi.getCatalog(catalogName, tenantContext);
+        final String result;
+        if (catalogDateVersion != null) {
+            final VersionedCatalog oneVersionCatalog = new VersionedCatalog();
+            for (final StandaloneCatalog v : catalog.getVersions()) {
+                if (v.getEffectiveDate().compareTo(catalogDateVersion.toDate()) >= 0) {
+                    oneVersionCatalog.add(v);
+                    break;
+                }
+            }
+            result = XMLWriter.writeXML(oneVersionCatalog, VersionedCatalog.class);
+        } else {
+            result = XMLWriter.writeXML(catalog, VersionedCatalog.class);
+        }
+
+        return Response.status(Status.OK).entity(result).build();
     }
 
     @TimedResource
@@ -163,6 +183,25 @@ public class CatalogResource extends JaxRsResourceBase {
                 result.add(new CatalogJson(catalog, new DateTime(v.getEffectiveDate())));
             }
         }
+        return Response.status(Status.OK).entity(result).build();
+    }
+
+    @TimedResource
+    @GET
+    @Path("/versions")
+    @Produces(APPLICATION_JSON)
+    @ApiOperation(value = "Retrieve a list of catalog versions", response = DateTime.class, responseContainer = "List")
+    @ApiResponses(value = {})
+    public Response getCatalogVersionJson(@javax.ws.rs.core.Context final HttpServletRequest request) throws Exception {
+
+        final TenantContext tenantContext = context.createTenantContextNoAccountId(request);
+        final VersionedCatalog catalog = (VersionedCatalog) catalogUserApi.getCatalog(catalogName, tenantContext);
+
+        final List<DateTime> result = new ArrayList<DateTime>();
+        for (final StandaloneCatalog v : catalog.getVersions()) {
+            result.add(new DateTime(v.getEffectiveDate()));
+        }
+
         return Response.status(Status.OK).entity(result).build();
     }
 
