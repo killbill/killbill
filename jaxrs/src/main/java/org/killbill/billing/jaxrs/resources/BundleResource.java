@@ -459,7 +459,7 @@ public class BundleResource extends JaxRsResourceBase {
     @ApiOperation(value = "Remove tags from bundle")
     @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid bundle id supplied")})
     public Response deleteTags(@PathParam(ID_PARAM_NAME) final UUID bundleId,
-                               @QueryParam(QUERY_TAG) final List<String> tagList,
+                               @QueryParam(QUERY_TAG) final List<UUID> tagList,
                                @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                @HeaderParam(HDR_REASON) final String reason,
                                @HeaderParam(HDR_COMMENT) final String comment,

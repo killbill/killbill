@@ -888,7 +888,7 @@ public class PaymentResource extends ComboPaymentResource {
     @ApiOperation(value = "Remove tags from payment payment")
     @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid payment id supplied")})
     public Response deleteTags(@PathParam(ID_PARAM_NAME) final UUID paymentId,
-                               @QueryParam(QUERY_TAG) final List<String> tagList,
+                               @QueryParam(QUERY_TAG) final List<UUID> tagList,
                                @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                @HeaderParam(HDR_REASON) final String reason,
                                @HeaderParam(HDR_COMMENT) final String comment,

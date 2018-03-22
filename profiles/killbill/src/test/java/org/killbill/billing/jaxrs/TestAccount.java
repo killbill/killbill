@@ -303,8 +303,9 @@ public class TestAccount extends TestJaxrsBase {
         // FINALLY TRY TO REMOVE AUTO_PAY_OFF WITH NO DEFAULT PAYMENT METHOD ON ACCOUNT
         //
         try {
-            accountApi.deleteTags(accountJson.getAccountId(), ImmutableList.<String>of(new UUID(0, 1).toString()), requestOptions);
+            accountApi.deleteTags(accountJson.getAccountId(), ImmutableList.<UUID>of(new UUID(0, 1)), requestOptions);
         } catch (final KillBillClientException e) {
+            Assert.assertTrue(e.getBillingException().getCode() == ErrorCode.TAG_CANNOT_BE_REMOVED.getCode());
         }
     }
 

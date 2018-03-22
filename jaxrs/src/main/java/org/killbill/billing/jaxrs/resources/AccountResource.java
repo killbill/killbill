@@ -1303,7 +1303,7 @@ public class AccountResource extends JaxRsResourceBase {
     @ApiOperation(value = "Remove tags from account")
     @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid account id supplied or account does not have a default payment method (AUTO_PAY_OFF tag only)")})
     public Response deleteTags(@PathParam(ID_PARAM_NAME) final UUID accountId,
-                               @QueryParam(QUERY_TAG) final List<String> tagList,
+                               @QueryParam(QUERY_TAG) final List<UUID> tagList,
                                @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                @HeaderParam(HDR_REASON) final String reason,
                                @HeaderParam(HDR_COMMENT) final String comment,
@@ -1312,9 +1312,8 @@ public class AccountResource extends JaxRsResourceBase {
 
         // Look if there is an AUTO_PAY_OFF for that account and check if the account has a default paymentMethod
         // If not we can't remove the AUTO_PAY_OFF tag
-        final Collection<UUID> tagDefinitionUUIDs = getTagDefinitionUUIDs(tagList);
         boolean isTagAutoPayOff = false;
-        for (final UUID cur : tagDefinitionUUIDs) {
+        for (final UUID cur : tagList) {
             if (cur.equals(ControlTagType.AUTO_PAY_OFF.getId())) {
                 isTagAutoPayOff = true;
                 break;

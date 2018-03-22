@@ -26,6 +26,7 @@ import javax.annotation.Nullable;
 
 import org.killbill.billing.GuicyKillbillTestSuiteWithEmbeddedDB;
 import org.killbill.billing.catalog.api.BillingPeriod;
+import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.catalog.api.PriceListSet;
 import org.killbill.billing.catalog.api.ProductCategory;
 import org.killbill.billing.client.KillBillClientException;
@@ -82,7 +83,7 @@ public abstract class KillbillClient extends GuicyKillbillTestSuiteWithEmbeddedD
 
     protected static final String PLUGIN_NAME = "noop";
 
-    protected static final String DEFAULT_CURRENCY = "USD";
+    protected static final Currency DEFAULT_CURRENCY = Currency.USD;
 
     // Multi-Tenancy information, if enabled
     protected String DEFAULT_API_KEY = UUID.randomUUID().toString();
@@ -282,7 +283,7 @@ public abstract class KillbillClient extends GuicyKillbillTestSuiteWithEmbeddedD
     public Account getAccount(final String name, final String externalKey, final String email, final UUID parentAccountId) {
         final UUID accountId = UUID.randomUUID();
         final int length = 4;
-        final String currency = DEFAULT_CURRENCY;
+        final Currency currency = DEFAULT_CURRENCY;
         final String timeZone = "UTC";
         final String address1 = "12 rue des ecoles";
         final String address2 = "Poitier";

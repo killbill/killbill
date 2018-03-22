@@ -187,7 +187,7 @@ public class InvoiceItemResource extends JaxRsResourceBase {
     @ApiOperation(value = "Remove tags from invoice item")
     @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid invoice item id supplied")})
     public Response deleteTags(@PathParam(ID_PARAM_NAME) final UUID id,
-                               @QueryParam(QUERY_TAG) final List<String> tagList,
+                               @QueryParam(QUERY_TAG) final List<UUID> tagList,
                                @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                @HeaderParam(HDR_REASON) final String reason,
                                @HeaderParam(HDR_COMMENT) final String comment,
