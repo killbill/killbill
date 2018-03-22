@@ -69,7 +69,7 @@ public class InvoicePluginDispatcher {
         this.invoiceConfig = invoiceConfig;
     }
 
-    public DateTime priorCall(final LocalDate targetDate, final List<Invoice> existingInvoices, final boolean isDryRun, final boolean isRescheduled, final CallContext callContext, final InternalTenantContext internalTenantContext) {
+    public DateTime priorCall(final LocalDate targetDate, final List<Invoice> existingInvoices, final boolean isDryRun, final boolean isRescheduled, final CallContext callContext, final InternalTenantContext internalTenantContext) throws InvoiceApiException {
         log.debug("Invoking invoice plugins priorCall: targetDate='{}', isDryRun='{}', isRescheduled='{}'", targetDate, isDryRun, isRescheduled);
         final Map<String, InvoicePluginApi> invoicePlugins = getInvoicePlugins(internalTenantContext);
         if (invoicePlugins.isEmpty()) {
@@ -80,6 +80,12 @@ public class InvoicePluginDispatcher {
         final InvoiceContext invoiceContext = new DefaultInvoiceContext(targetDate, null, existingInvoices, isDryRun, isRescheduled, callContext);
         for (final String invoicePluginName : invoicePlugins.keySet()) {
             final PriorInvoiceResult priorInvoiceResult = invoicePlugins.get(invoicePluginName).priorCall(invoiceContext, ImmutableList.<PluginProperty>of());
+            log.debug("Invoice plugin {} returned priorInvoiceResult='{}'", invoicePluginName, priorInvoiceResult);
+            if (priorInvoiceResult == null) {
+                // Naughty plugin...
+                continue;
+            }
+
             if (priorInvoiceResult.getRescheduleDate() != null &&
                 (earliestRescheduleDate == null || earliestRescheduleDate.compareTo(priorInvoiceResult.getRescheduleDate()) > 0)) {
                 earliestRescheduleDate = priorInvoiceResult.getRescheduleDate();
@@ -88,7 +94,7 @@ public class InvoicePluginDispatcher {
 
             if (priorInvoiceResult.isAborted()) {
                 log.info("Invoice plugin {} aborted invoice generation for targetDate {}", invoicePluginName, targetDate);
-                // TODO
+                throw new InvoiceApiException(ErrorCode.INVOICE_PLUGIN_API_ABORTED, invoicePluginName);
             }
         }
 
@@ -148,7 +154,7 @@ public class InvoicePluginDispatcher {
     // subsequent plugins should have access to items added by previous plugins
     //
     public List<InvoiceItem> getAdditionalInvoiceItems(final Invoice originalInvoice, final boolean isDryRun, final CallContext callContext, final InternalTenantContext tenantContext) throws InvoiceApiException {
-        log.debug("Invoking invoice plugins getAdditionalInvoiceItems: isDryRun='{}',  originalInvoice='{}'", isDryRun, originalInvoice);
+        log.debug("Invoking invoice plugins getAdditionalInvoiceItems: isDryRun='{}', originalInvoice='{}'", isDryRun, originalInvoice);
 
         final List<InvoiceItem> additionalInvoiceItems = new LinkedList<InvoiceItem>();
 

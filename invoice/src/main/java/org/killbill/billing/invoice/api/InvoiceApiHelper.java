@@ -87,7 +87,7 @@ public class InvoiceApiHelper {
         final InternalTenantContext internalTenantContext = internalCallContextFactory.createInternalTenantContext(accountId, context);
         final DateTime rescheduleDate = invoicePluginDispatcher.priorCall(targetDate, existingInvoices, isDryRun, isRescheduled, context, internalTenantContext);
         if (rescheduleDate != null) {
-            log.warn("Ignoring rescheduleDate='{}', delayed scheduling is unsupported for API calls", rescheduleDate);
+            throw new InvoiceApiException(ErrorCode.INVOICE_PLUGIN_API_ABORTED, "delayed scheduling is unsupported for API calls");
         }
 
         boolean success = false;
