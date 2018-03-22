@@ -28,6 +28,7 @@ import java.util.UUID;
 import javax.annotation.Nullable;
 import javax.inject.Inject;
 
+import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
 import org.killbill.billing.ErrorCode;
 import org.killbill.billing.callcontext.InternalCallContext;
@@ -84,7 +85,10 @@ public class InvoiceApiHelper {
         final boolean isRescheduled = false;
 
         final InternalTenantContext internalTenantContext = internalCallContextFactory.createInternalTenantContext(accountId, context);
-        invoicePluginDispatcher.priorCall(targetDate, existingInvoices, isDryRun, isRescheduled, context, internalTenantContext);
+        final DateTime rescheduleDate = invoicePluginDispatcher.priorCall(targetDate, existingInvoices, isDryRun, isRescheduled, context, internalTenantContext);
+        if (rescheduleDate != null) {
+            log.warn("Ignoring rescheduleDate='{}', delayed scheduling is unsupported for API calls", rescheduleDate);
+        }
 
         boolean success = false;
         GlobalLock lock = null;

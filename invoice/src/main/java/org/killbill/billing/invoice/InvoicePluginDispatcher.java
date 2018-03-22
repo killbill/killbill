@@ -19,12 +19,15 @@ package org.killbill.billing.invoice;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import javax.inject.Inject;
 
+import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
 import org.killbill.billing.ErrorCode;
 import org.killbill.billing.callcontext.InternalTenantContext;
@@ -36,6 +39,7 @@ import org.killbill.billing.invoice.api.InvoiceItemType;
 import org.killbill.billing.invoice.model.DefaultInvoice;
 import org.killbill.billing.invoice.plugin.api.InvoiceContext;
 import org.killbill.billing.invoice.plugin.api.InvoicePluginApi;
+import org.killbill.billing.invoice.plugin.api.PriorInvoiceResult;
 import org.killbill.billing.osgi.api.OSGIServiceRegistration;
 import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.util.callcontext.CallContext;
@@ -65,16 +69,30 @@ public class InvoicePluginDispatcher {
         this.invoiceConfig = invoiceConfig;
     }
 
-    public void priorCall(final LocalDate targetDate, final List<Invoice> existingInvoices, final boolean isDryRun, final boolean isRescheduled, final CallContext callContext, final InternalTenantContext internalTenantContext) {
-        final List<InvoicePluginApi> invoicePlugins = getInvoicePlugins(internalTenantContext);
+    public DateTime priorCall(final LocalDate targetDate, final List<Invoice> existingInvoices, final boolean isDryRun, final boolean isRescheduled, final CallContext callContext, final InternalTenantContext internalTenantContext) {
+        log.debug("Invoking invoice plugins priorCall: targetDate='{}', isDryRun='{}', isRescheduled='{}'", targetDate, isDryRun, isRescheduled);
+        final Map<String, InvoicePluginApi> invoicePlugins = getInvoicePlugins(internalTenantContext);
         if (invoicePlugins.isEmpty()) {
-            return;
+            return null;
         }
 
+        DateTime earliestRescheduleDate = null;
         final InvoiceContext invoiceContext = new DefaultInvoiceContext(targetDate, null, existingInvoices, isDryRun, isRescheduled, callContext);
-        for (final InvoicePluginApi invoicePlugin : invoicePlugins) {
-            invoicePlugin.priorCall(invoiceContext, ImmutableList.<PluginProperty>of());
+        for (final String invoicePluginName : invoicePlugins.keySet()) {
+            final PriorInvoiceResult priorInvoiceResult = invoicePlugins.get(invoicePluginName).priorCall(invoiceContext, ImmutableList.<PluginProperty>of());
+            if (priorInvoiceResult.getRescheduleDate() != null &&
+                (earliestRescheduleDate == null || earliestRescheduleDate.compareTo(priorInvoiceResult.getRescheduleDate()) > 0)) {
+                earliestRescheduleDate = priorInvoiceResult.getRescheduleDate();
+                log.info("Invoice plugin {} rescheduled invoice generation to {} for targetDate {}", invoicePluginName, earliestRescheduleDate, targetDate);
+            }
+
+            if (priorInvoiceResult.isAborted()) {
+                log.info("Invoice plugin {} aborted invoice generation for targetDate {}", invoicePluginName, targetDate);
+                // TODO
+            }
         }
+
+        return earliestRescheduleDate;
     }
 
     public void onSuccessCall(final LocalDate targetDate,
@@ -84,6 +102,7 @@ public class InvoicePluginDispatcher {
                               final boolean isRescheduled,
                               final CallContext callContext,
                               final InternalTenantContext internalTenantContext) {
+        log.debug("Invoking invoice plugins onSuccessCall: targetDate='{}', isDryRun='{}', isRescheduled='{}', invoice='{}'", targetDate, isDryRun, isRescheduled, invoice);
         onCompletionCall(true, targetDate, invoice, existingInvoices, isDryRun, isRescheduled, callContext, internalTenantContext);
     }
 
@@ -94,6 +113,7 @@ public class InvoicePluginDispatcher {
                               final boolean isRescheduled,
                               final CallContext callContext,
                               final InternalTenantContext internalTenantContext) {
+        log.debug("Invoking invoice plugins onFailureCall: targetDate='{}', isDryRun='{}', isRescheduled='{}', invoice='{}'", targetDate, isDryRun, isRescheduled, invoice);
         onCompletionCall(false, targetDate, invoice, existingInvoices, isDryRun, isRescheduled, callContext, internalTenantContext);
     }
 
@@ -105,7 +125,7 @@ public class InvoicePluginDispatcher {
                                   final boolean isRescheduled,
                                   final CallContext callContext,
                                   final InternalTenantContext internalTenantContext) {
-        final List<InvoicePluginApi> invoicePlugins = getInvoicePlugins(internalTenantContext);
+        final Collection<InvoicePluginApi> invoicePlugins = getInvoicePlugins(internalTenantContext).values();
         if (invoicePlugins.isEmpty()) {
             return;
         }
@@ -128,9 +148,11 @@ public class InvoicePluginDispatcher {
     // subsequent plugins should have access to items added by previous plugins
     //
     public List<InvoiceItem> getAdditionalInvoiceItems(final Invoice originalInvoice, final boolean isDryRun, final CallContext callContext, final InternalTenantContext tenantContext) throws InvoiceApiException {
+        log.debug("Invoking invoice plugins getAdditionalInvoiceItems: isDryRun='{}',  originalInvoice='{}'", isDryRun, originalInvoice);
+
         final List<InvoiceItem> additionalInvoiceItems = new LinkedList<InvoiceItem>();
 
-        final List<InvoicePluginApi> invoicePlugins = getInvoicePlugins(tenantContext);
+        final Collection<InvoicePluginApi> invoicePlugins = getInvoicePlugins(tenantContext).values();
         if (invoicePlugins.isEmpty()) {
             return additionalInvoiceItems;
         }
@@ -156,14 +178,13 @@ public class InvoicePluginDispatcher {
         }
     }
 
-    private List<InvoicePluginApi> getInvoicePlugins(final InternalTenantContext tenantContext) {
-
+    private Map<String, InvoicePluginApi> getInvoicePlugins(final InternalTenantContext tenantContext) {
         final Collection<String> resultingPluginList = getResultingPluginNameList(tenantContext);
 
-        final List<InvoicePluginApi> invoicePlugins = new ArrayList<InvoicePluginApi>();
+        final Map<String, InvoicePluginApi> invoicePlugins = new HashMap<String, InvoicePluginApi>();
         for (final String name : resultingPluginList) {
             final InvoicePluginApi serviceForName = pluginRegistry.getServiceForName(name);
-            invoicePlugins.add(serviceForName);
+            invoicePlugins.put(name, serviceForName);
         }
         return invoicePlugins;
     }

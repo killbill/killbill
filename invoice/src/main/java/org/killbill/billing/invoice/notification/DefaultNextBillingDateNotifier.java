@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014-2017 Groupon, Inc
- * Copyright 2014-2017 The Billing Project, LLC
+ * Copyright 2014-2018 Groupon, Inc
+ * Copyright 2014-2018 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -94,9 +94,10 @@ public class DefaultNextBillingDateNotifier extends RetryableService implements 
                         key.isDryRunForInvoiceNotification()) {
                         processEventForInvoiceNotification(firstSubscriptionId, targetDate, userToken, accountRecordId, tenantRecordId);
                     } else {
-                        processEventForInvoiceGeneration(firstSubscriptionId, targetDate, userToken, accountRecordId, tenantRecordId);
+                        final boolean isRescheduled = key.isRescheduled() == Boolean.TRUE; // Handle null value (old versions < 0.19.7)
+                        processEventForInvoiceGeneration(firstSubscriptionId, targetDate, isRescheduled, userToken, accountRecordId, tenantRecordId);
                     }
-                } catch (SubscriptionBaseApiException e) {
+                } catch (final SubscriptionBaseApiException e) {
                     log.warn("Error retrieving subscriptionId='{}'", firstSubscriptionId, e);
                 }
             }
@@ -127,8 +128,8 @@ public class DefaultNextBillingDateNotifier extends RetryableService implements 
         super.stop();
     }
 
-    private void processEventForInvoiceGeneration(final UUID subscriptionId, final DateTime eventDateTime, final UUID userToken, final Long accountRecordId, final Long tenantRecordId) {
-        listener.handleNextBillingDateEvent(subscriptionId, eventDateTime, userToken, accountRecordId, tenantRecordId);
+    private void processEventForInvoiceGeneration(final UUID subscriptionId, final DateTime eventDateTime, final boolean isRescheduled, final UUID userToken, final Long accountRecordId, final Long tenantRecordId) {
+        listener.handleNextBillingDateEvent(subscriptionId, eventDateTime, isRescheduled, userToken, accountRecordId, tenantRecordId);
     }
 
     private void processEventForInvoiceNotification(final UUID subscriptionId, final DateTime eventDateTime, final UUID userToken, final Long accountRecordId, final Long tenantRecordId) {
