@@ -24,6 +24,7 @@ import java.util.UUID;
 
 import javax.annotation.Nullable;
 
+import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.payment.api.Payment;
 import org.killbill.billing.payment.api.PaymentAttempt;
 import org.killbill.billing.util.audit.AccountAuditLogs;
@@ -50,7 +51,7 @@ public class InvoicePaymentJson extends PaymentJson {
                               @JsonProperty("purchasedAmount") final BigDecimal purchasedAmount,
                               @JsonProperty("refundedAmount") final BigDecimal refundedAmount,
                               @JsonProperty("creditedAmount") final BigDecimal creditedAmount,
-                              @JsonProperty("currency") final String currency,
+                              @JsonProperty("currency") final Currency currency,
                               @JsonProperty("paymentMethodId") final UUID paymentMethodId,
                               @JsonProperty("transactions") final List<? extends PaymentTransactionJson> transactions,
                               @JsonProperty("paymentAttempts") final List<PaymentAttemptJson> paymentAttempts,

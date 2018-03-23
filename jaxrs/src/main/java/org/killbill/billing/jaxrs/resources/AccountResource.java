@@ -1032,7 +1032,7 @@ public class AccountResource extends JaxRsResourceBase {
                              json.getAmount(), "PaymentTransactionJson amount needs to be set");
 
         final Iterable<PluginProperty> pluginProperties = extractPluginProperties(pluginPropertiesString);
-        final Currency currency = json.getCurrency() == null ? account.getCurrency() : Currency.valueOf(json.getCurrency());
+        final Currency currency = json.getCurrency() == null ? account.getCurrency() : json.getCurrency();
         final UUID paymentId = json.getPaymentId();
 
         //
@@ -1059,7 +1059,7 @@ public class AccountResource extends JaxRsResourceBase {
         validatePaymentMethodForAccount(account.getId(), paymentMethodId, callContext);
 
 
-        final TransactionType transactionType = TransactionType.valueOf(json.getTransactionType());
+        final TransactionType transactionType = json.getTransactionType();
         final PaymentOptions paymentOptions = createControlPluginApiPaymentOptions(paymentControlPluginNames);
         final Payment result;
         switch (transactionType) {

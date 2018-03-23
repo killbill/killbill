@@ -44,12 +44,12 @@ public class CreditJson extends JsonBase {
     @ApiModelProperty(required = true)
     private final UUID accountId;
     private final String description;
-    private final String currency;
+    private final Currency currency;
 
 
     @JsonCreator
     public CreditJson(@JsonProperty("creditAmount") final BigDecimal creditAmount,
-                      @JsonProperty("currency") final String currency,
+                      @JsonProperty("currency") final Currency currency,
                       @JsonProperty("invoiceId") final UUID invoiceId,
                       @JsonProperty("invoiceNumber") final String invoiceNumber,
                       @JsonProperty("effectiveDate") final LocalDate effectiveDate,
@@ -70,7 +70,7 @@ public class CreditJson extends JsonBase {
         super(toAuditLogJson(auditLogs));
         this.accountId = credit.getAccountId();
         this.creditAmount = credit.getAmount();
-        this.currency = credit.getCurrency().name();
+        this.currency = credit.getCurrency();
         this.invoiceId = credit.getInvoiceId();
         this.invoiceNumber = invoice.getInvoiceNumber().toString();
         this.effectiveDate = credit.getStartDate();
@@ -105,7 +105,7 @@ public class CreditJson extends JsonBase {
         return description;
     }
 
-    public String getCurrency() {
+    public Currency getCurrency() {
         return currency;
     }
 

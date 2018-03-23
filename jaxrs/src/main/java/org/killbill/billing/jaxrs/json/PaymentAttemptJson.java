@@ -24,7 +24,9 @@ import java.util.UUID;
 import javax.annotation.Nullable;
 
 import org.joda.time.DateTime;
+import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.payment.api.PaymentAttempt;
+import org.killbill.billing.payment.api.TransactionType;
 import org.killbill.billing.util.audit.AuditLog;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
@@ -40,15 +42,14 @@ public class PaymentAttemptJson extends JsonBase {
     private final String paymentExternalKey;
     private final UUID transactionId;
     private final String transactionExternalKey;
-    @ApiModelProperty(dataType = "org.killbill.billing.payment.api.TransactionType")
-    private final String transactionType;
+    private final TransactionType transactionType;
     @ApiModelProperty(dataType = "org.joda.time.DateTime")
     private final DateTime effectiveDate;
     private final String stateName;
     @ApiModelProperty(value = "Transaction amount, required except for void operations")
     private final BigDecimal amount;
     @ApiModelProperty(value = "Amount currency (account currency unless specified)", dataType = "org.killbill.billing.catalog.api.Currency")
-    private final String currency;
+    private final Currency currency;
     // Plugin specific fields
     private final String pluginName;
     private final List<PluginPropertyJson> pluginProperties;
@@ -59,11 +60,11 @@ public class PaymentAttemptJson extends JsonBase {
                               @JsonProperty("paymentExternalKey") final String paymentExternalKey,
                               @JsonProperty("transactionId") final UUID transactionId,
                               @JsonProperty("transactionExternalKey") final String transactionExternalKey,
-                              @JsonProperty("transactionType") final String transactionType,
+                              @JsonProperty("transactionType") final TransactionType transactionType,
                               @JsonProperty("effectiveDate") final DateTime effectiveDate,
                               @JsonProperty("stateName") final String stateName,
                               @JsonProperty("amount") final BigDecimal amount,
-                              @JsonProperty("currency") final String currency,
+                              @JsonProperty("currency") final Currency currency,
                               @JsonProperty("pluginName") final String pluginName,
                               @JsonProperty("pluginProperties") final List<PluginPropertyJson> pluginProperties,
                               @JsonProperty("auditLogs") @Nullable final List<AuditLogJson> auditLogs) {
@@ -89,11 +90,11 @@ public class PaymentAttemptJson extends JsonBase {
              paymentExternalKey,
              paymentAttempt.getTransactionId(),
              paymentAttempt.getTransactionExternalKey(),
-             paymentAttempt.getTransactionType().toString(),
+             paymentAttempt.getTransactionType(),
              paymentAttempt.getEffectiveDate(),
              paymentAttempt.getStateName(),
              paymentAttempt.getAmount(),
-             paymentAttempt.getCurrency() != null ? paymentAttempt.getCurrency().toString() : null,
+             paymentAttempt.getCurrency() != null ? paymentAttempt.getCurrency() : null,
              paymentAttempt.getPluginName(),
              paymentAttempt.getPluginProperties() == null ? null : toPluginPropertyJson(paymentAttempt.getPluginProperties()),
              toAuditLogJson(attemptsLogs));
@@ -119,7 +120,7 @@ public class PaymentAttemptJson extends JsonBase {
         return transactionExternalKey;
     }
 
-    public String getTransactionType() {
+    public TransactionType getTransactionType() {
         return transactionType;
     }
 
@@ -135,7 +136,7 @@ public class PaymentAttemptJson extends JsonBase {
         return amount;
     }
 
-    public String getCurrency() {
+    public Currency getCurrency() {
         return currency;
     }
 

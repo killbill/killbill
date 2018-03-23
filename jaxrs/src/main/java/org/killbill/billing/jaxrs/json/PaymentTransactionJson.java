@@ -23,7 +23,9 @@ import java.util.UUID;
 import javax.annotation.Nullable;
 
 import org.joda.time.DateTime;
+import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.payment.api.PaymentTransaction;
+import org.killbill.billing.payment.api.TransactionType;
 import org.killbill.billing.util.audit.AuditLog;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
@@ -40,7 +42,7 @@ public class PaymentTransactionJson extends JsonBase {
     private final UUID paymentId;
     private final String paymentExternalKey;
     @ApiModelProperty(dataType = "org.killbill.billing.payment.api.TransactionType")
-    private final String transactionType;
+    private final TransactionType transactionType;
     @ApiModelProperty(dataType = "org.joda.time.DateTime")
     private final DateTime effectiveDate;
     @ApiModelProperty(value = "Transaction status, required for state change notifications", dataType = "org.killbill.billing.payment.api.TransactionStatus")
@@ -48,9 +50,9 @@ public class PaymentTransactionJson extends JsonBase {
     @ApiModelProperty(value = "Transaction amount, required except for void operations")
     private final BigDecimal amount;
     @ApiModelProperty(value = "Amount currency (account currency unless specified)", dataType = "org.killbill.billing.catalog.api.Currency")
-    private final String currency;
+    private final Currency currency;
     private final BigDecimal processedAmount;
-    private final String processedCurrency;
+    private final Currency processedCurrency;
     private final String gatewayErrorCode;
     private final String gatewayErrorMsg;
     // Plugin specific fields
@@ -63,12 +65,12 @@ public class PaymentTransactionJson extends JsonBase {
                                   @JsonProperty("transactionExternalKey") final String transactionExternalKey,
                                   @JsonProperty("paymentId") final UUID paymentId,
                                   @JsonProperty("paymentExternalKey") final String paymentExternalKey,
-                                  @JsonProperty("transactionType") final String transactionType,
+                                  @JsonProperty("transactionType") final TransactionType transactionType,
                                   @JsonProperty("amount") final BigDecimal amount,
-                                  @JsonProperty("currency") final String currency,
+                                  @JsonProperty("currency") final Currency currency,
                                   @JsonProperty("effectiveDate") final DateTime effectiveDate,
                                   @JsonProperty("processedAmount") final BigDecimal processedAmount,
-                                  @JsonProperty("processedCurrency") final String processedCurrency,
+                                  @JsonProperty("processedCurrency") final Currency processedCurrency,
                                   @JsonProperty("status") final String status,
                                   @JsonProperty("gatewayErrorCode") final String gatewayErrorCode,
                                   @JsonProperty("gatewayErrorMsg") final String gatewayErrorMsg,
@@ -100,12 +102,12 @@ public class PaymentTransactionJson extends JsonBase {
              transaction.getExternalKey(),
              transaction.getPaymentId(),
              paymentExternalKey,
-             transaction.getTransactionType().toString(),
+             transaction.getTransactionType(),
              transaction.getAmount(),
-             transaction.getCurrency() != null ? transaction.getCurrency().toString() : null,
+             transaction.getCurrency() != null ? transaction.getCurrency() : null,
              transaction.getEffectiveDate(),
              transaction.getProcessedAmount(),
-             transaction.getProcessedCurrency() != null ? transaction.getProcessedCurrency().toString() : null,
+             transaction.getProcessedCurrency() != null ? transaction.getProcessedCurrency() : null,
              transaction.getTransactionStatus() != null ? transaction.getTransactionStatus().toString() : null,
              transaction.getGatewayErrorCode(),
              transaction.getGatewayErrorMsg(),
@@ -127,7 +129,7 @@ public class PaymentTransactionJson extends JsonBase {
         return transactionExternalKey;
     }
 
-    public String getTransactionType() {
+    public TransactionType getTransactionType() {
         return transactionType;
     }
 
@@ -143,7 +145,7 @@ public class PaymentTransactionJson extends JsonBase {
         return amount;
     }
 
-    public String getCurrency() {
+    public Currency getCurrency() {
         return currency;
     }
 
@@ -175,7 +177,7 @@ public class PaymentTransactionJson extends JsonBase {
         return processedAmount;
     }
 
-    public String getProcessedCurrency() {
+    public Currency getProcessedCurrency() {
         return processedCurrency;
     }
 

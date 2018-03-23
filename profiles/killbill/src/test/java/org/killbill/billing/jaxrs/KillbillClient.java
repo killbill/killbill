@@ -67,6 +67,7 @@ import org.killbill.billing.util.UUIDs;
 import org.killbill.billing.util.tag.ControlTagType;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
@@ -74,7 +75,7 @@ import static org.testng.Assert.assertNotNull;
 public abstract class KillbillClient extends GuicyKillbillTestSuiteWithEmbeddedDB {
 
     protected static final ImmutableList<String> NULL_PLUGIN_NAMES = null;
-    protected static final ImmutableList<String> NULL_PLUGIN_PROPERTIES = null;
+    protected static final ImmutableMap<String, String> NULL_PLUGIN_PROPERTIES = null;
     protected static final ImmutableList<AuditLog> EMPTY_AUDIT_LOGS = ImmutableList.<AuditLog>of();
 
 

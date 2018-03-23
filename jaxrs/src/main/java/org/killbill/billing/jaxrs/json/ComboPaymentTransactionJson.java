@@ -21,11 +21,14 @@ import java.util.List;
 
 import javax.annotation.Nullable;
 
+import org.killbill.billing.payment.api.TransactionType;
+
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.annotations.ApiModel;
 
-@ApiModel(value="ComboPaymentTransaction")
+@ApiModel(value="ComboPaymentTransaction", parent = ComboPaymentJson.class)
 public class ComboPaymentTransactionJson extends ComboPaymentJson {
 
     private final PaymentTransactionJson transaction;
@@ -47,11 +50,11 @@ public class ComboPaymentTransactionJson extends ComboPaymentJson {
         return transaction;
     }
 
-    public String getTransactionType() {
+    @JsonIgnore
+    public TransactionType getTransactionType() {
         if (transaction != null) {
             return transaction.getTransactionType();
         }
-
         return null;
     }
 

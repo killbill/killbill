@@ -79,7 +79,7 @@ public class PlanDetailJson {
                                                                         try {
                                                                             return new PriceJson(price);
                                                                         } catch (final CurrencyValueNull e) {
-                                                                            return new PriceJson(price.getCurrency().toString(), BigDecimal.ZERO);
+                                                                            return new PriceJson(price.getCurrency(), BigDecimal.ZERO);
                                                                         }
                                                                     }
                                                                 });

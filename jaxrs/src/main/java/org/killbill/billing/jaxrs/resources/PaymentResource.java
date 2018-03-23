@@ -364,7 +364,7 @@ public class PaymentResource extends ComboPaymentResource {
         final Payment initialPayment = getPaymentByIdOrKey(paymentId, json.getPaymentExternalKey(), pluginProperties, callContext);
 
         final Account account = accountUserApi.getAccountById(initialPayment.getAccountId(), callContext);
-        final Currency currency = json.getCurrency() == null ? account.getCurrency() : Currency.valueOf(json.getCurrency());
+        final Currency currency = json.getCurrency() == null ? account.getCurrency() : json.getCurrency();
 
         final PaymentOptions paymentOptions = createControlPluginApiPaymentOptions(paymentControlPluginNames);
 
@@ -445,7 +445,7 @@ public class PaymentResource extends ComboPaymentResource {
         final Payment initialPayment = getPaymentByIdOrKey(paymentId, json.getPaymentExternalKey(), pluginProperties, callContext);
 
         final Account account = accountUserApi.getAccountById(initialPayment.getAccountId(), callContext);
-        final Currency currency = json.getCurrency() == null ? account.getCurrency() : Currency.valueOf(json.getCurrency());
+        final Currency currency = json.getCurrency() == null ? account.getCurrency() : json.getCurrency();
 
         final PaymentOptions paymentOptions = createControlPluginApiPaymentOptions(paymentControlPluginNames);
 
@@ -600,7 +600,7 @@ public class PaymentResource extends ComboPaymentResource {
         final Payment initialPayment = getPaymentByIdOrKey(paymentId, json.getPaymentExternalKey(), pluginProperties, callContext);
 
         final Account account = accountUserApi.getAccountById(initialPayment.getAccountId(), callContext);
-        final Currency currency = json.getCurrency() == null ? account.getCurrency() : Currency.valueOf(json.getCurrency());
+        final Currency currency = json.getCurrency() == null ? account.getCurrency() : json.getCurrency();
 
         final PaymentOptions paymentOptions = createControlPluginApiPaymentOptions(paymentControlPluginNames);
 
@@ -713,13 +713,13 @@ public class PaymentResource extends ComboPaymentResource {
         final UUID paymentMethodId = getOrCreatePaymentMethod(account, json.getPaymentMethod(), paymentMethodPluginProperties, callContext);
 
         final PaymentTransactionJson paymentTransactionJson = json.getTransaction();
-        final TransactionType transactionType = TransactionType.valueOf(paymentTransactionJson.getTransactionType());
+        final TransactionType transactionType = paymentTransactionJson.getTransactionType();
         final PaymentOptions paymentOptions = createControlPluginApiPaymentOptions(paymentControlPluginNames);
         final Payment result;
 
         final Iterable<PluginProperty> transactionPluginProperties = extractPluginProperties(json.getTransactionPluginProperties());
 
-        final Currency currency = paymentTransactionJson.getCurrency() == null ? account.getCurrency() : Currency.valueOf(paymentTransactionJson.getCurrency());
+        final Currency currency = paymentTransactionJson.getCurrency() == null ? account.getCurrency() : paymentTransactionJson.getCurrency();
         final UUID paymentId = null; // If we need to specify a paymentId (e.g 3DS authorization, we can use regular API, no need for combo call)
         switch (transactionType) {
             case AUTHORIZE:

@@ -134,7 +134,7 @@ public class TagDefinitionResource extends JaxRsResourceBase {
                                     !json.getApplicableObjectTypes().isEmpty(), "Applicable object types must be set");
 
 
-        final TagDefinition createdTagDef = tagUserApi.createTagDefinition(json.getName(), json.getDescription(), TagDefinitionJson.toObjectType(json.getApplicableObjectTypes()), context.createCallContextNoAccountId(createdBy, reason, comment, request));
+        final TagDefinition createdTagDef = tagUserApi.createTagDefinition(json.getName(), json.getDescription(), json.getApplicableObjectTypes(), context.createCallContextNoAccountId(createdBy, reason, comment, request));
         return uriBuilder.buildResponse(uriInfo, TagDefinitionResource.class, "getTagDefinition", createdTagDef.getId(), request);
     }
 

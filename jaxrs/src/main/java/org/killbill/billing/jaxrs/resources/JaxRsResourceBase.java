@@ -386,7 +386,7 @@ public abstract class JaxRsResourceBase implements JaxrsResource {
 
         final Account account = accountUserApi.getAccountById(initialPayment.getAccountId(), contextNoAccountId);
         final BigDecimal amount = json == null ? null : json.getAmount();
-        final Currency currency = json == null || json.getCurrency() == null ? null : Currency.valueOf(json.getCurrency());
+        final Currency currency = json == null ? null: json.getCurrency();
 
         final CallContext callContext = context.createCallContextWithAccountId(account.getId(), createdBy, reason, comment, request);
 
@@ -433,7 +433,7 @@ public abstract class JaxRsResourceBase implements JaxrsResource {
 
     }
 
-    protected PaymentTransaction lookupPendingOrSuccessTransaction(final Payment initialPayment, @Nullable final UUID transactionId, @Nullable final String transactionExternalKey, @Nullable final String transactionType) throws PaymentApiException {
+    protected PaymentTransaction lookupPendingOrSuccessTransaction(final Payment initialPayment, @Nullable final UUID transactionId, @Nullable final String transactionExternalKey, @Nullable final TransactionType transactionType) throws PaymentApiException {
         final Collection<PaymentTransaction> pendingTransaction = Collections2.filter(initialPayment.getTransactions(), new Predicate<PaymentTransaction>() {
             @Override
             public boolean apply(final PaymentTransaction input) {
@@ -446,7 +446,7 @@ public abstract class JaxRsResourceBase implements JaxrsResource {
                 if (transactionExternalKey != null && !transactionExternalKey.equals(input.getExternalKey())) {
                     return false;
                 }
-                if (transactionType != null && !transactionType.equals(input.getTransactionType().name())) {
+                if (transactionType != null && !transactionType.equals(input.getTransactionType())) {
                     return false;
                 }
                 //
@@ -469,7 +469,7 @@ public abstract class JaxRsResourceBase implements JaxrsResource {
                     parameterValue = transactionExternalKey;
                 } else if (transactionType != null) {
                     parameterType = "transactionType";
-                    parameterValue = transactionType;
+                    parameterValue = transactionType.name();
                 } else {
                     parameterType = "paymentId";
                     parameterValue = initialPayment.getId().toString();
