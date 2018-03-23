@@ -91,6 +91,11 @@ public class DefaultTenantUserApi implements TenantUserApi {
             throw new TenantApiException(ErrorCode.EXTERNAL_KEY_LIMIT_EXCEEDED);
         }
 
+        // Not transactional, but there is a db constraint on that column
+        if (data.getApiKey() != null && getTenantByApiKey(data.getApiKey()) != null) {
+            throw new TenantApiException(ErrorCode.TENANT_ALREADY_EXISTS, data.getExternalKey());
+        }
+
         try {
             tenantDao.create(new TenantModelDao(tenant), internalCallContextFactory.createInternalCallContextWithoutAccountRecordId(context));
         } catch (final TenantApiException e) {
