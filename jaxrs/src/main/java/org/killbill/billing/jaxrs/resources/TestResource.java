@@ -255,20 +255,20 @@ public class TestResource extends JaxRsResourceBase {
 
     private boolean areAllNotificationsProcessed(final Long tenantRecordId) {
         int nbNotifications = 0;
-        final Iterator<NotificationQueue> iterator = notificationQueueService.getNotificationQueues().iterator();
-        try {
-            while (iterator.hasNext()) {
-                final NotificationQueue notificationQueue = iterator.next();
-                for (final NotificationEventWithMetadata<NotificationEvent> notificationEvent : notificationQueue.getFutureOrInProcessingNotificationForSearchKey2(null, tenantRecordId)) {
+        for (final NotificationQueue notificationQueue : notificationQueueService.getNotificationQueues()) {
+            final Iterator<NotificationEventWithMetadata<NotificationEvent>> iterator = notificationQueue.getFutureOrInProcessingNotificationForSearchKey2(null, tenantRecordId).iterator();
+            try {
+                while (iterator.hasNext()) {
+                    final NotificationEventWithMetadata<NotificationEvent> notificationEvent = iterator.next();
                     if (!notificationEvent.getEffectiveDate().isAfter(clock.getUTCNow())) {
                         nbNotifications += 1;
                     }
                 }
-            }
-        } finally {
-            // Go through all results to close the connection
-            while (iterator.hasNext()) {
-                iterator.next();
+            } finally {
+                // Go through all results to close the connection
+                while (iterator.hasNext()) {
+                    iterator.next();
+                }
             }
         }
         if (nbNotifications != 0) {
