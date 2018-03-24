@@ -765,11 +765,11 @@ public class TestInvoice extends TestJaxrsBase {
         final Account childAccount3 = createAccount(parentAccount.getAccountId());
 
         // Add a bundle, subscription and move the clock to get the first invoice
-        createEntitlement(childAccount1.getAccountId(), UUID.randomUUID().toString(), "Shotgun",
+        createSubscription(childAccount1.getAccountId(), UUID.randomUUID().toString(), "Shotgun",
                           ProductCategory.BASE, BillingPeriod.MONTHLY, true);
-        createEntitlement(childAccount2.getAccountId(), UUID.randomUUID().toString(), "Pistol",
+        createSubscription(childAccount2.getAccountId(), UUID.randomUUID().toString(), "Pistol",
                           ProductCategory.BASE, BillingPeriod.MONTHLY, true);
-        createEntitlement(childAccount3.getAccountId(), UUID.randomUUID().toString(), "Shotgun",
+        createSubscription(childAccount3.getAccountId(), UUID.randomUUID().toString(), "Shotgun",
                           ProductCategory.BASE, BillingPeriod.MONTHLY, true);
 
         clock.addDays(32);

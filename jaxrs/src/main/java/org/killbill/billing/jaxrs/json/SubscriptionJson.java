@@ -31,12 +31,17 @@ import org.killbill.billing.ObjectType;
 import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.catalog.api.Currency;
+import org.killbill.billing.catalog.api.PhaseType;
 import org.killbill.billing.catalog.api.Plan;
 import org.killbill.billing.catalog.api.PlanPhase;
 import org.killbill.billing.catalog.api.PriceList;
 import org.killbill.billing.catalog.api.Product;
+import org.killbill.billing.catalog.api.ProductCategory;
+import org.killbill.billing.entitlement.api.Entitlement.EntitlementSourceType;
+import org.killbill.billing.entitlement.api.Entitlement.EntitlementState;
 import org.killbill.billing.entitlement.api.Subscription;
 import org.killbill.billing.entitlement.api.SubscriptionEvent;
+import org.killbill.billing.entitlement.api.SubscriptionEventType;
 import org.killbill.billing.util.audit.AccountAuditLogs;
 import org.killbill.billing.util.audit.AuditLog;
 
@@ -55,22 +60,16 @@ public class SubscriptionJson extends JsonBase {
     private final LocalDate startDate;
     @ApiModelProperty(required = true)
     private final String productName;
-    @ApiModelProperty(dataType = "org.killbill.billing.catalog.api.ProductCategory", required = true)
-    private final String productCategory;
-    @ApiModelProperty(dataType = "org.killbill.billing.catalog.api.BillingPeriod", required = true)
-    private final String billingPeriod;
-    @ApiModelProperty(dataType = "org.killbill.billing.catalog.api.PhaseType")
-    private final String phaseType;
+    private final ProductCategory productCategory;
+    @ApiModelProperty(required = true)
+    private final BillingPeriod billingPeriod;
+    private final PhaseType phaseType;
     @ApiModelProperty(required = true)
     private final String priceList;
     @ApiModelProperty(required = true)
     private final String planName;
-    //@ApiModelProperty(dataType = "org.killbill.billing.entitlement.api.Entitlement.EntitlementState")
-    @ApiModelProperty(dataType = "string", allowableValues = "PENDING,ACTIVE,BLOCKED,CANCELLED")
-    private final String state;
-    //@ApiModelProperty(dataType = "org.killbill.billing.entitlement.api.Entitlement.EntitlementSourceType")
-    @ApiModelProperty(dataType = "string", allowableValues = "NATIVE,MIGRATED,TRANSFERRED")
-    private final String sourceType;
+    private final EntitlementState state;
+    private final EntitlementSourceType sourceType;
     private final LocalDate cancelledDate;
     private final LocalDate chargedThroughDate;
     private final LocalDate billingStartDate;
@@ -83,14 +82,13 @@ public class SubscriptionJson extends JsonBase {
     public static class EventSubscriptionJson extends JsonBase {
 
         private final UUID eventId;
-        private final String billingPeriod;
+        private final BillingPeriod billingPeriod;
         private final LocalDate effectiveDate;
         private final String plan;
         private final String product;
         private final String priceList;
         private final String phase;
-        @ApiModelProperty(dataType = "org.killbill.billing.entitlement.api.SubscriptionEventType")
-        private final String eventType;
+        private final SubscriptionEventType eventType;
         private final Boolean isBlockedBilling;
         private final Boolean isBlockedEntitlement;
         private final String serviceName;
@@ -98,12 +96,12 @@ public class SubscriptionJson extends JsonBase {
 
         @JsonCreator
         public EventSubscriptionJson(@JsonProperty("eventId") final UUID eventId,
-                                     @JsonProperty("billingPeriod") final String billingPeriod,
+                                     @JsonProperty("billingPeriod") final BillingPeriod billingPeriod,
                                      @JsonProperty("effectiveDate") final LocalDate effectiveDate,
                                      @JsonProperty("plan") final String plan,
                                      @JsonProperty("product") final String product,
                                      @JsonProperty("priceList") final String priceList,
-                                     @JsonProperty("eventType") final String eventType,
+                                     @JsonProperty("eventType") final SubscriptionEventType eventType,
                                      @JsonProperty("isBlockedBilling") final Boolean isBlockedBilling,
                                      @JsonProperty("isBlockedEntitlement") final Boolean isBlockedEntitlement,
                                      @JsonProperty("serviceName") final String serviceName,
@@ -134,12 +132,12 @@ public class SubscriptionJson extends JsonBase {
             final PriceList priceList = subscriptionEvent.getNextPriceList() != null ? subscriptionEvent.getNextPriceList() : subscriptionEvent.getPrevPriceList();
             final PlanPhase phase = subscriptionEvent.getNextPhase() != null ? subscriptionEvent.getNextPhase() : subscriptionEvent.getPrevPhase();
             this.eventId = subscriptionEvent.getId();
-            this.billingPeriod = billingPeriod != null ? billingPeriod.toString() : null;
+            this.billingPeriod = billingPeriod;
             this.effectiveDate = subscriptionEvent.getEffectiveDate();
             this.plan = plan != null ? plan.getName() : null;
             this.product = product != null ? product.getName() : null;
             this.priceList = priceList != null ? priceList.getName() : null;
-            this.eventType = subscriptionEvent.getSubscriptionEventType().toString();
+            this.eventType = subscriptionEvent.getSubscriptionEventType();
             this.isBlockedBilling = subscriptionEvent.isBlockedBilling();
             this.isBlockedEntitlement = subscriptionEvent.isBlockedEntitlement();
             this.serviceName = subscriptionEvent.getServiceName();
@@ -165,7 +163,7 @@ public class SubscriptionJson extends JsonBase {
             return eventId;
         }
 
-        public String getBillingPeriod() {
+        public BillingPeriod getBillingPeriod() {
             return billingPeriod;
         }
 
@@ -185,7 +183,7 @@ public class SubscriptionJson extends JsonBase {
             return priceList;
         }
 
-        public String getEventType() {
+        public SubscriptionEventType getEventType() {
             return eventType;
         }
 
@@ -304,13 +302,13 @@ public class SubscriptionJson extends JsonBase {
                             @JsonProperty("externalKey") @Nullable final String externalKey,
                             @JsonProperty("startDate") @Nullable final LocalDate startDate,
                             @JsonProperty("productName") @Nullable final String productName,
-                            @JsonProperty("productCategory") @Nullable final String productCategory,
-                            @JsonProperty("billingPeriod") @Nullable final String billingPeriod,
-                            @JsonProperty("phaseType") @Nullable final String phaseType,
+                            @JsonProperty("productCategory") @Nullable final ProductCategory productCategory,
+                            @JsonProperty("billingPeriod") @Nullable final BillingPeriod billingPeriod,
+                            @JsonProperty("phaseType") @Nullable final PhaseType phaseType,
                             @JsonProperty("priceList") @Nullable final String priceList,
                             @JsonProperty("planName") @Nullable final String planName,
-                            @JsonProperty("state") @Nullable final String state,
-                            @JsonProperty("sourceType") @Nullable final String sourceType,
+                            @JsonProperty("state") @Nullable final EntitlementState state,
+                            @JsonProperty("sourceType") @Nullable final EntitlementSourceType sourceType,
                             @JsonProperty("cancelledDate") @Nullable final LocalDate cancelledDate,
                             @JsonProperty("chargedThroughDate") @Nullable final LocalDate chargedThroughDate,
                             @JsonProperty("billingStartDate") @Nullable final LocalDate billingStartDate,
@@ -355,19 +353,19 @@ public class SubscriptionJson extends JsonBase {
             this.productName = subscription.getLastActiveProduct().getName();
         }
         if (subscription.getLastActiveProductCategory() == null) {
-            this.productCategory = (firstEvent == null || firstEvent.getNextProduct() == null) ? null : firstEvent.getNextProduct().getCategory().name();
+            this.productCategory = (firstEvent == null || firstEvent.getNextProduct() == null) ? null : firstEvent.getNextProduct().getCategory();
         } else {
-            this.productCategory = subscription.getLastActiveProductCategory().name();
+            this.productCategory = subscription.getLastActiveProductCategory();
         }
         if (subscription.getLastActivePlan() == null) {
-            this.billingPeriod = (firstEvent == null || firstEvent.getNextPlan() == null) ? null : firstEvent.getNextPlan().getRecurringBillingPeriod().name();
+            this.billingPeriod = (firstEvent == null || firstEvent.getNextPlan() == null) ? null : firstEvent.getNextPlan().getRecurringBillingPeriod();
         } else {
-            this.billingPeriod = subscription.getLastActivePlan().getRecurringBillingPeriod().toString();
+            this.billingPeriod = subscription.getLastActivePlan().getRecurringBillingPeriod();
         }
         if (subscription.getLastActivePhase() == null) {
-            this.phaseType = (firstEvent == null || firstEvent.getNextPhase() == null) ? null : firstEvent.getNextPhase().getPhaseType().name();
+            this.phaseType = (firstEvent == null || firstEvent.getNextPhase() == null) ? null : firstEvent.getNextPhase().getPhaseType();
         } else {
-            this.phaseType = subscription.getLastActivePhase().getPhaseType().toString();
+            this.phaseType = subscription.getLastActivePhase().getPhaseType();
         }
         if (subscription.getLastActivePriceList() == null) {
             this.priceList = (firstEvent == null || firstEvent.getNextPriceList() == null) ? null : firstEvent.getNextPriceList().getName();
@@ -381,8 +379,8 @@ public class SubscriptionJson extends JsonBase {
         }
 
 
-        this.state = subscription.getState().name();
-        this.sourceType = subscription.getSourceType().name();
+        this.state = subscription.getState();
+        this.sourceType = subscription.getSourceType();
         this.cancelledDate = subscription.getEffectiveEndDate();
         this.chargedThroughDate = subscription.getChargedThroughDate();
         this.billingStartDate = subscription.getBillingStartDate();
@@ -445,15 +443,15 @@ public class SubscriptionJson extends JsonBase {
         return productName;
     }
 
-    public String getProductCategory() {
+    public ProductCategory getProductCategory() {
         return productCategory;
     }
 
-    public String getBillingPeriod() {
+    public BillingPeriod getBillingPeriod() {
         return billingPeriod;
     }
 
-    public String getPhaseType() {
+    public PhaseType getPhaseType() {
         return phaseType;
     }
 
@@ -465,11 +463,11 @@ public class SubscriptionJson extends JsonBase {
         return planName;
     }
 
-    public String getState() {
+    public EntitlementState getState() {
         return state;
     }
 
-    public String getSourceType() {
+    public EntitlementSourceType getSourceType() {
         return sourceType;
     }
 

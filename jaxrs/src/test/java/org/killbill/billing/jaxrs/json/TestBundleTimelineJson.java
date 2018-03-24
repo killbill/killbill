@@ -22,6 +22,7 @@ import java.util.UUID;
 
 import org.joda.time.LocalDate;
 import org.killbill.billing.catalog.api.BillingPeriod;
+import org.killbill.billing.entitlement.api.SubscriptionEventType;
 import org.killbill.billing.jaxrs.JaxrsTestSuiteNoDB;
 import org.killbill.billing.jaxrs.json.SubscriptionJson.EventSubscriptionJson;
 import org.testng.Assert;
@@ -34,12 +35,12 @@ public class TestBundleTimelineJson extends JaxrsTestSuiteNoDB {
     @Test(groups = "fast")
     public void testJson() throws Exception {
         final EventSubscriptionJson event = new EventSubscriptionJson(UUID.randomUUID(),
-                                                                      BillingPeriod.NO_BILLING_PERIOD.toString(),
+                                                                      BillingPeriod.NO_BILLING_PERIOD,
                                                                       new LocalDate(),
                                                                       UUID.randomUUID().toString(),
                                                                       UUID.randomUUID().toString(),
                                                                       UUID.randomUUID().toString(),
-                                                                      UUID.randomUUID().toString(),
+                                                                      SubscriptionEventType.PHASE,
                                                                       true,
                                                                       false,
                                                                       UUID.randomUUID().toString(),
