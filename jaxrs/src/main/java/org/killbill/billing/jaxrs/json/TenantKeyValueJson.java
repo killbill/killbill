@@ -22,15 +22,15 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.annotations.ApiModel;
 
-@ApiModel(value="TenantKey")
-public class TenantKeyJson {
+@ApiModel(value="TenantKeyValue")
+public class TenantKeyValueJson {
 
     private final String key;
     private final List<String> values;
 
     @JsonCreator
-    public TenantKeyJson(@JsonProperty("key") final String key,
-                         @JsonProperty("values") final List<String> values) {
+    public TenantKeyValueJson(@JsonProperty("key") final String key,
+                              @JsonProperty("values") final List<String> values) {
         this.key = key;
         this.values = values;
     }

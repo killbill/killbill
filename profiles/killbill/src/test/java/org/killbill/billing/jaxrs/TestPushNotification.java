@@ -39,7 +39,7 @@ import org.joda.time.DateTime;
 import org.killbill.CreatorName;
 import org.killbill.billing.api.FlakyRetryAnalyzer;
 import org.killbill.billing.client.KillBillClientException;
-import org.killbill.billing.client.model.TenantKey;
+import org.killbill.billing.client.model.gen.TenantKeyValue;
 import org.killbill.billing.jaxrs.json.NotificationJson;
 import org.killbill.billing.notification.plugin.api.ExtBusEventType;
 import org.killbill.billing.server.DefaultServerService;
@@ -115,7 +115,7 @@ public class TestPushNotification extends TestJaxrsBase {
     public void retrieveAccountWithAsserts(final UUID accountId) {
         try {
             // Just check we can retrieve the account with the id from the callback
-            killBillClient.getAccount(accountId, requestOptions);
+            accountApi.getAccount(accountId, requestOptions);
         } catch (final Exception e) {
             Assert.fail(e.getMessage());
         }
@@ -209,20 +209,20 @@ public class TestPushNotification extends TestJaxrsBase {
     }
 
     private void unregisterTenantForCallback(final String callback) throws KillBillClientException {
-        final TenantKey result = killBillClient.getCallbackNotificationForTenant(requestOptions);
+        final TenantKeyValue result = tenantApi.registerPushNotificationCallback(callback, requestOptions);
         Assert.assertEquals(result.getKey(), TenantKV.TenantKey.PUSH_NOTIFICATION_CB.toString());
         Assert.assertEquals(result.getValues().size(), 1);
         Assert.assertEquals(result.getValues().get(0), callback);
 
-        killBillClient.unregisterCallbackNotificationForTenant(requestOptions);
-        final TenantKey result2 = killBillClient.getCallbackNotificationForTenant(requestOptions);
+        tenantApi.deletePushNotificationCallbacks(requestOptions);
+        final TenantKeyValue result2 = tenantApi.getPushNotificationCallbacks(requestOptions);
         Assert.assertEquals(result2.getKey(), TenantKV.TenantKey.PUSH_NOTIFICATION_CB.toString());
         Assert.assertEquals(result2.getValues().size(), 0);
     }
 
     private String registerTenantForCallback() throws KillBillClientException, InterruptedException {// Register tenant for callback
         final String callback = "http://127.0.0.1:" + SERVER_PORT + CALLBACK_ENDPOINT;
-        final TenantKey result0 = killBillClient.registerCallbackNotificationForTenant(callback, requestOptions);
+        final TenantKeyValue result0 = tenantApi.registerPushNotificationCallback(callback, requestOptions);
 
         Assert.assertTrue(waitForCallbacksToComplete());
 
@@ -232,6 +232,7 @@ public class TestPushNotification extends TestJaxrsBase {
 
         // reset values
         resetCallbackStatusProperties();
+
         return callback;
     }
 

@@ -80,7 +80,7 @@ public abstract class KillbillClient extends GuicyKillbillTestSuiteWithEmbeddedD
 
 
 
-    protected final int DEFAULT_WAIT_COMPLETION_TIMEOUT_SEC = 10;
+    protected final long DEFAULT_WAIT_COMPLETION_TIMEOUT_SEC = 10;
 
     protected static final String PLUGIN_NAME = "noop";
 
@@ -195,7 +195,7 @@ public abstract class KillbillClient extends GuicyKillbillTestSuiteWithEmbeddedD
         return accountApi.createAccount(input, requestOptions);
     }
 
-    protected Subscription createEntitlement(final UUID accountId, final String bundleExternalKey, final String productName,
+    protected Subscription createSubscription(final UUID accountId, final String bundleExternalKey, final String productName,
                                              final ProductCategory productCategory, final BillingPeriod billingPeriod, final boolean waitCompletion) throws Exception {
         final Subscription input = new Subscription();
         input.setAccountId(accountId);
@@ -204,7 +204,7 @@ public abstract class KillbillClient extends GuicyKillbillTestSuiteWithEmbeddedD
         input.setProductCategory(productCategory);
         input.setBillingPeriod(billingPeriod);
         input.setPriceList(PriceListSet.DEFAULT_PRICELIST_NAME);
-        return subscriptionApi.createEntitlement(input, null, null, true, false, null, waitCompletion, waitCompletion ? DEFAULT_WAIT_COMPLETION_TIMEOUT_SEC : -1L, NULL_PLUGIN_PROPERTIES, requestOptions);
+        return subscriptionApi.createSubscription(input, null, null, true, false, null, waitCompletion, waitCompletion ? DEFAULT_WAIT_COMPLETION_TIMEOUT_SEC : -1L, NULL_PLUGIN_PROPERTIES, requestOptions);
     }
 
     protected Account createAccountWithPMBundleAndSubscriptionAndWaitForFirstInvoice() throws Exception {
@@ -212,7 +212,7 @@ public abstract class KillbillClient extends GuicyKillbillTestSuiteWithEmbeddedD
         assertNotNull(accountJson);
 
         // Add a bundle, subscription and move the clock to get the first invoice
-        final Subscription subscriptionJson = createEntitlement(accountJson.getAccountId(), UUID.randomUUID().toString(), "Shotgun",
+        final Subscription subscriptionJson = createSubscription(accountJson.getAccountId(), UUID.randomUUID().toString(), "Shotgun",
                                                                 ProductCategory.BASE, BillingPeriod.MONTHLY, true);
         assertNotNull(subscriptionJson);
         clock.addDays(32);
@@ -230,7 +230,7 @@ public abstract class KillbillClient extends GuicyKillbillTestSuiteWithEmbeddedD
         assertEquals(accountTag.get(0).getTagDefinitionId(), ControlTagType.MANUAL_PAY.getId());
 
         // Add a bundle, subscription and move the clock to get the first invoice
-        final Subscription subscriptionJson = createEntitlement(accountJson.getAccountId(), UUID.randomUUID().toString(), "Shotgun",
+        final Subscription subscriptionJson = createSubscription(accountJson.getAccountId(), UUID.randomUUID().toString(), "Shotgun",
                                                                 ProductCategory.BASE, BillingPeriod.MONTHLY, true);
         assertNotNull(subscriptionJson);
         clock.addDays(32);
@@ -245,7 +245,7 @@ public abstract class KillbillClient extends GuicyKillbillTestSuiteWithEmbeddedD
         assertNotNull(accountJson);
 
         // Add a bundle, subscription and move the clock to get the first invoice
-        final Subscription subscriptionJson = createEntitlement(accountJson.getAccountId(), UUID.randomUUID().toString(), "Shotgun",
+        final Subscription subscriptionJson = createSubscription(accountJson.getAccountId(), UUID.randomUUID().toString(), "Shotgun",
                                                                 ProductCategory.BASE, BillingPeriod.MONTHLY, true);
         assertNotNull(subscriptionJson);
 
@@ -258,7 +258,7 @@ public abstract class KillbillClient extends GuicyKillbillTestSuiteWithEmbeddedD
         assertNotNull(accountJson);
 
         // Add a bundle, subscription and move the clock to get the first invoice
-        final Subscription subscriptionJson = createEntitlement(accountJson.getAccountId(), UUID.randomUUID().toString(), "Shotgun",
+        final Subscription subscriptionJson = createSubscription(accountJson.getAccountId(), UUID.randomUUID().toString(), "Shotgun",
                                                                 ProductCategory.BASE, BillingPeriod.MONTHLY, true);
         assertNotNull(subscriptionJson);
         clock.addMonths(1);
