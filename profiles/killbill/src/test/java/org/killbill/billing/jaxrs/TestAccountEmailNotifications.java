@@ -20,8 +20,8 @@ package org.killbill.billing.jaxrs;
 
 import java.util.UUID;
 
-import org.killbill.billing.client.model.Account;
-import org.killbill.billing.client.model.InvoiceEmail;
+import org.killbill.billing.client.model.gen.Account;
+import org.killbill.billing.client.model.gen.InvoiceEmail;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
@@ -32,28 +32,28 @@ public class TestAccountEmailNotifications extends TestJaxrsBase {
         final Account input = createAccount();
         final UUID accountId = input.getAccountId();
 
-        final InvoiceEmail invoiceEmailJsonWithNotifications = new InvoiceEmail(accountId, true);
-        final InvoiceEmail invoiceEmailJsonWithoutNotifications = new InvoiceEmail(accountId, false);
+        final InvoiceEmail invoiceEmailJsonWithNotifications = new InvoiceEmail(accountId, true, null);
+        final InvoiceEmail invoiceEmailJsonWithoutNotifications = new InvoiceEmail(accountId, false, null);
 
         // Verify the initial state
-        final InvoiceEmail firstInvoiceEmailJson = killBillClient.getEmailNotificationsForAccount(accountId);
+        final InvoiceEmail firstInvoiceEmailJson = accountApi.getEmailNotificationsForAccount(accountId, requestOptions);
         Assert.assertEquals(firstInvoiceEmailJson.getAccountId(), accountId);
-        Assert.assertFalse(firstInvoiceEmailJson.isNotifiedForInvoices());
+        Assert.assertFalse(firstInvoiceEmailJson.isIsNotifiedForInvoices());
 
         // Enable email notifications
-        killBillClient.updateEmailNotificationsForAccount(invoiceEmailJsonWithNotifications, createdBy, reason, comment);
+        accountApi.setEmailNotificationsForAccount(invoiceEmailJsonWithNotifications, accountId, requestOptions);
 
         // Verify we can retrieve it
-        final InvoiceEmail secondInvoiceEmailJson = killBillClient.getEmailNotificationsForAccount(accountId);
+        final InvoiceEmail secondInvoiceEmailJson = accountApi.getEmailNotificationsForAccount(accountId, requestOptions);
         Assert.assertEquals(secondInvoiceEmailJson.getAccountId(), accountId);
-        Assert.assertTrue(secondInvoiceEmailJson.isNotifiedForInvoices());
+        Assert.assertTrue(secondInvoiceEmailJson.isIsNotifiedForInvoices());
 
         // Disable email notifications
-        killBillClient.updateEmailNotificationsForAccount(invoiceEmailJsonWithoutNotifications, createdBy, reason, comment);
+        accountApi.setEmailNotificationsForAccount(invoiceEmailJsonWithoutNotifications, accountId, requestOptions);
 
         // Verify we can retrieve it
-        final InvoiceEmail thirdInvoiceEmailJson = killBillClient.getEmailNotificationsForAccount(accountId);
+        final InvoiceEmail thirdInvoiceEmailJson = accountApi.getEmailNotificationsForAccount(accountId, requestOptions );
         Assert.assertEquals(thirdInvoiceEmailJson.getAccountId(), accountId);
-        Assert.assertFalse(thirdInvoiceEmailJson.isNotifiedForInvoices());
+        Assert.assertFalse(thirdInvoiceEmailJson.isIsNotifiedForInvoices());
     }
 }

@@ -548,7 +548,7 @@ public class InvoiceResource extends JaxRsResourceBase {
                 @Override
                 public InvoiceItemJson apply(final InvoiceItemJson input) {
                     if (input.getCurrency() != null) {
-                        if (!input.getCurrency().equals(accountCurrency.name())) {
+                        if (!input.getCurrency().equals(accountCurrency)) {
                             throw new IllegalArgumentException(input.getCurrency().toString());
                         }
                         return input;

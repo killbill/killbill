@@ -133,7 +133,7 @@ public class BundleResource extends JaxRsResourceBase {
     @TimedResource
     @GET
     @Produces(APPLICATION_JSON)
-    @ApiOperation(value = "Retrieve a bundle by external key", response = BundleJson.class)
+    @ApiOperation(value = "Retrieve a bundle by external key", response = BundleJson.class, responseContainer = "List")
     @ApiResponses(value = {@ApiResponse(code = 404, message = "Bundle not found")})
     public Response getBundleByKey(@ApiParam(required=true) @QueryParam(QUERY_EXTERNAL_KEY) final String externalKey,
                                    @QueryParam(QUERY_INCLUDED_DELETED) @DefaultValue("false") final Boolean includedDeleted,

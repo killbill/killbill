@@ -267,7 +267,7 @@ public class TestPayment extends TestJaxrsBase {
                                                     .withComment(comment)
                                                     .withQueryParams(queryParams).build();
 
-        Payments payments = paymentApi.getPayments(0L, 100L, null, NULL_PLUGIN_PROPERTIES, AuditLevel.NONE, false, true, inputOptions);
+        Payments payments = paymentApi.getPayments(0L, 100L, null, NULL_PLUGIN_PROPERTIES, false, true, AuditLevel.NONE, inputOptions);
 
         Assert.assertNotNull(payments.get(0).getPaymentAttempts());
         Assert.assertEquals(payments.get(0).getPaymentAttempts().get(0).getStateName(), "RETRIED");

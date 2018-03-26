@@ -27,29 +27,30 @@ import org.joda.time.DateTime;
 import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.catalog.api.ProductCategory;
 import org.killbill.billing.client.KillBillClientException;
-import org.killbill.billing.client.model.Account;
-import org.killbill.billing.client.model.Invoice;
-import org.killbill.billing.client.model.InvoiceItem;
-import org.killbill.billing.client.model.InvoicePayment;
-import org.killbill.billing.client.model.InvoicePaymentTransaction;
 import org.killbill.billing.client.model.InvoicePayments;
 import org.killbill.billing.client.model.Invoices;
-import org.killbill.billing.client.model.Payment;
-import org.killbill.billing.client.model.PaymentMethod;
-import org.killbill.billing.client.model.PaymentTransaction;
 import org.killbill.billing.client.model.Payments;
-import org.killbill.billing.client.model.Subscription;
+import org.killbill.billing.client.model.gen.Account;
+import org.killbill.billing.client.model.gen.Invoice;
+import org.killbill.billing.client.model.gen.InvoiceItem;
+import org.killbill.billing.client.model.gen.InvoicePayment;
+import org.killbill.billing.client.model.gen.InvoicePaymentTransaction;
+import org.killbill.billing.client.model.gen.Payment;
+import org.killbill.billing.client.model.gen.PaymentMethod;
+import org.killbill.billing.client.model.gen.PaymentTransaction;
+import org.killbill.billing.client.model.gen.Subscription;
 import org.killbill.billing.osgi.api.OSGIServiceRegistration;
+import org.killbill.billing.payment.api.TransactionStatus;
 import org.killbill.billing.payment.api.TransactionType;
 import org.killbill.billing.payment.plugin.api.PaymentPluginApi;
 import org.killbill.billing.payment.provider.MockPaymentProviderPlugin;
+import org.killbill.billing.util.api.AuditLevel;
 import org.killbill.billing.util.tag.ControlTagType;
 import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 
 import static org.testng.Assert.assertEquals;
@@ -70,16 +71,12 @@ public class TestInvoicePayment extends TestJaxrsBase {
         mockPaymentProviderPlugin = (MockPaymentProviderPlugin) registry.getServiceForName(PLUGIN_NAME);
     }
 
-
-
-
     @Test(groups = "slow")
     public void testRetrievePayment() throws Exception {
         final InvoicePayment paymentJson = setupScenarioWithPayment();
-        final Payment retrievedPaymentJson = killBillClient.getPayment(paymentJson.getPaymentId(), false, requestOptions);
-        Assert.assertTrue(retrievedPaymentJson.equals((Payment) paymentJson));
+        final Payment retrievedPaymentJson = paymentApi.getPayment(paymentJson.getPaymentId(), NULL_PLUGIN_PROPERTIES, requestOptions);
+        verifyInvoicePaymentAgainstPayment(paymentJson, retrievedPaymentJson);
     }
-
 
     @Test(groups = "slow")
     public void testInvoicePaymentCompletion() throws Exception {
@@ -87,21 +84,22 @@ public class TestInvoicePayment extends TestJaxrsBase {
 
         final InvoicePayment paymentJson = setupScenarioWithPayment();
 
-        final Payment retrievedPaymentJson = killBillClient.getPayment(paymentJson.getPaymentId(), false, requestOptions);
-        Assert.assertTrue(retrievedPaymentJson.equals((Payment) paymentJson));
+        final Payment retrievedPaymentJson = paymentApi.getPayment(paymentJson.getPaymentId(), NULL_PLUGIN_PROPERTIES, requestOptions);
+        verifyInvoicePaymentAgainstPayment(paymentJson, retrievedPaymentJson);
         Assert.assertEquals(retrievedPaymentJson.getTransactions().size(), 1);
-        Assert.assertEquals(retrievedPaymentJson.getTransactions().get(0).getStatus(), "PENDING");
+        Assert.assertEquals(retrievedPaymentJson.getTransactions().get(0).getStatus(), TransactionStatus.PENDING);
 
         final PaymentTransaction completeTransactionByPaymentId = new PaymentTransaction();
         completeTransactionByPaymentId.setPaymentId(retrievedPaymentJson.getPaymentId());
 
-        final Account accountWithBalance = killBillClient.getAccount(paymentJson.getAccountId(), true, false, requestOptions);
+        final Account accountWithBalance = accountApi.getAccount(paymentJson.getAccountId(), true, false, AuditLevel.NONE, requestOptions);
         Assert.assertTrue(accountWithBalance.getAccountBalance().compareTo(BigDecimal.ZERO) > 0);
 
-        final Payment completedPayment = killBillClient.completeInvoicePayment(completeTransactionByPaymentId, null, ImmutableMap.<String, String>of(), requestOptions);
-        Assert.assertEquals(completedPayment.getTransactions().get(0).getStatus(), "SUCCESS");
+        invoicePaymentApi.completeInvoicePaymentTransaction(new PaymentTransaction(), retrievedPaymentJson.getPaymentId(), NULL_PLUGIN_NAMES, NULL_PLUGIN_PROPERTIES, requestOptions);
+        final Payment completedPayment = paymentApi.getPayment(paymentJson.getPaymentId(), NULL_PLUGIN_PROPERTIES, requestOptions);
+        Assert.assertEquals(completedPayment.getTransactions().get(0).getStatus(), TransactionStatus.SUCCESS);
 
-        final Account accountWithBalance2 = killBillClient.getAccount(paymentJson.getAccountId(), true, false, requestOptions);
+        final Account accountWithBalance2 = accountApi.getAccount(paymentJson.getAccountId(), true, false, AuditLevel.NONE, requestOptions);
         Assert.assertEquals(accountWithBalance2.getAccountBalance().compareTo(BigDecimal.ZERO), 0);
 
     }
@@ -118,7 +116,8 @@ public class TestInvoicePayment extends TestJaxrsBase {
         final InvoicePaymentTransaction refund = new InvoicePaymentTransaction();
         refund.setPaymentId(invoicePaymentJson.getPaymentId());
         refund.setAmount(refundAmount);
-        final Payment paymentAfterRefundJson = killBillClient.createInvoicePaymentRefund(refund, requestOptions);
+        invoicePaymentApi.createRefundWithAdjustments(refund, invoicePaymentJson.getPaymentId(), invoicePaymentJson.getPaymentMethodId(), NULL_PLUGIN_PROPERTIES, requestOptions);
+        final Payment paymentAfterRefundJson = paymentApi.getPayment(invoicePaymentJson.getPaymentId(), NULL_PLUGIN_PROPERTIES, requestOptions);
         verifyRefund(invoicePaymentJson, paymentAfterRefundJson, refundAmount);
 
         // Verify the invoice balance
@@ -137,7 +136,9 @@ public class TestInvoicePayment extends TestJaxrsBase {
         final InvoicePaymentTransaction refund = new InvoicePaymentTransaction();
         refund.setPaymentId(paymentJson.getPaymentId());
         refund.setAmount(refundAmount);
-        final Payment paymentAfterRefundJson = killBillClient.createInvoicePaymentRefund(refund, requestOptions);
+
+        invoicePaymentApi.createRefundWithAdjustments(refund, paymentJson.getPaymentId(), paymentJson.getPaymentMethodId(), NULL_PLUGIN_PROPERTIES, requestOptions);
+        final Payment paymentAfterRefundJson = paymentApi.getPayment(paymentJson.getPaymentId(), NULL_PLUGIN_PROPERTIES, requestOptions);
         verifyRefund(paymentJson, paymentAfterRefundJson, refundAmount);
 
         // Verify the invoice balance
@@ -149,7 +150,7 @@ public class TestInvoicePayment extends TestJaxrsBase {
         final InvoicePayment paymentJson = setupScenarioWithPayment();
 
         // Get the individual items for the invoice
-        final Invoice invoice = killBillClient.getInvoice(paymentJson.getTargetInvoiceId(), true, false, requestOptions);
+        final Invoice invoice = invoiceApi.getInvoice(paymentJson.getTargetInvoiceId(), true, false, AuditLevel.NONE, requestOptions);
         final InvoiceItem itemToAdjust = invoice.getItems().get(0);
 
         // Issue a refund for the full amount
@@ -163,9 +164,11 @@ public class TestInvoicePayment extends TestJaxrsBase {
         refund.setIsAdjusted(true);
         final InvoiceItem adjustment = new InvoiceItem();
         adjustment.setInvoiceItemId(itemToAdjust.getInvoiceItemId());
-        /* null amount means full adjustment for that item */
+        //null amount means full adjustment for that item
         refund.setAdjustments(ImmutableList.<InvoiceItem>of(adjustment));
-        final Payment paymentAfterRefundJson = killBillClient.createInvoicePaymentRefund(refund, requestOptions);
+
+        invoicePaymentApi.createRefundWithAdjustments(refund, paymentJson.getPaymentId(), paymentJson.getPaymentMethodId(), NULL_PLUGIN_PROPERTIES, requestOptions);
+        final Payment paymentAfterRefundJson = paymentApi.getPayment(paymentJson.getPaymentId(), NULL_PLUGIN_PROPERTIES, requestOptions);
         verifyRefund(paymentJson, paymentAfterRefundJson, refundAmount);
 
         // Verify the invoice balance
@@ -177,7 +180,7 @@ public class TestInvoicePayment extends TestJaxrsBase {
         final InvoicePayment paymentJson = setupScenarioWithPayment();
 
         // Get the individual items for the invoice
-        final Invoice invoice = killBillClient.getInvoice(paymentJson.getTargetInvoiceId(), true, false, requestOptions);
+        final Invoice invoice = invoiceApi.getInvoice(paymentJson.getTargetInvoiceId(), true, false, AuditLevel.NONE, requestOptions);
         final InvoiceItem itemToAdjust = invoice.getItems().get(0);
 
         // Issue a refund for a fraction of the amount
@@ -192,7 +195,9 @@ public class TestInvoicePayment extends TestJaxrsBase {
         adjustment.setInvoiceItemId(itemToAdjust.getInvoiceItemId());
         adjustment.setAmount(refundAmount);
         refund.setAdjustments(ImmutableList.<InvoiceItem>of(adjustment));
-        final Payment paymentAfterRefundJson = killBillClient.createInvoicePaymentRefund(refund, requestOptions);
+
+        invoicePaymentApi.createRefundWithAdjustments(refund, paymentJson.getPaymentId(), paymentJson.getPaymentMethodId(), NULL_PLUGIN_PROPERTIES, requestOptions);
+        final Payment paymentAfterRefundJson = paymentApi.getPayment(paymentJson.getPaymentId(), NULL_PLUGIN_PROPERTIES, requestOptions);
         verifyRefund(paymentJson, paymentAfterRefundJson, refundAmount);
 
         // Verify the invoice balance
@@ -204,7 +209,7 @@ public class TestInvoicePayment extends TestJaxrsBase {
         final InvoicePayment paymentJson = setupScenarioWithPayment();
 
         // Get the individual items for the invoice
-        final Invoice invoice = killBillClient.getInvoice(paymentJson.getTargetInvoiceId(), true, false, requestOptions);
+        final Invoice invoice = invoiceApi.getInvoice(paymentJson.getTargetInvoiceId(), true, false, AuditLevel.NONE, requestOptions);
         final InvoiceItem itemToAdjust = invoice.getItems().get(0);
 
         // Issue a refund for a fraction of the amount
@@ -221,7 +226,9 @@ public class TestInvoicePayment extends TestJaxrsBase {
         // Ask for an adjustment for the full amount (bigger than the refund amount)
         adjustment.setAmount(itemToAdjust.getAmount());
         refund.setAdjustments(ImmutableList.<InvoiceItem>of(adjustment));
-        final Payment paymentAfterRefundJson = killBillClient.createInvoicePaymentRefund(refund, requestOptions);
+
+        invoicePaymentApi.createRefundWithAdjustments(refund, paymentJson.getPaymentId(), paymentJson.getPaymentMethodId(), NULL_PLUGIN_PROPERTIES, requestOptions);
+        final Payment paymentAfterRefundJson = paymentApi.getPayment(paymentJson.getPaymentId(), NULL_PLUGIN_PROPERTIES, requestOptions);
 
         // The refund did go through
         verifyRefund(paymentJson, paymentAfterRefundJson, refundAmount);
@@ -238,27 +245,28 @@ public class TestInvoicePayment extends TestJaxrsBase {
             final InvoicePaymentTransaction refund = new InvoicePaymentTransaction();
             refund.setPaymentId(lastPayment.getPaymentId());
             refund.setAmount(lastPayment.getPurchasedAmount());
-            killBillClient.createInvoicePaymentRefund(refund, requestOptions);
+
+            invoicePaymentApi.createRefundWithAdjustments(refund, lastPayment.getPaymentId(), lastPayment.getPaymentMethodId(), NULL_PLUGIN_PROPERTIES, requestOptions);
 
             final InvoicePayment invoicePayment = new InvoicePayment();
             invoicePayment.setPurchasedAmount(lastPayment.getPurchasedAmount());
             invoicePayment.setAccountId(lastPayment.getAccountId());
             invoicePayment.setTargetInvoiceId(lastPayment.getTargetInvoiceId());
-            final InvoicePayment payment = killBillClient.createInvoicePayment(invoicePayment, false, requestOptions);
+            final InvoicePayment payment = invoiceApi.createInstantPayment(invoicePayment, lastPayment.getTargetInvoiceId(), NULL_PLUGIN_PROPERTIES, requestOptions);
             lastPayment = payment;
         }
 
-        final InvoicePayments allPayments = killBillClient.getInvoicePaymentsForAccount(lastPayment.getAccountId(), requestOptions);
+        final InvoicePayments allPayments = accountApi.getInvoicePayments(lastPayment.getAccountId(), NULL_PLUGIN_PROPERTIES, requestOptions);
         Assert.assertEquals(allPayments.size(), 6);
 
-        final List<PaymentTransaction> objRefundFromJson = getPaymentTransactions(allPayments, TransactionType.REFUND.toString());
+        final List<PaymentTransaction> objRefundFromJson = getInvoicePaymentTransactions(allPayments, TransactionType.REFUND);
         Assert.assertEquals(objRefundFromJson.size(), 5);
 
-        Payments paymentsPage = killBillClient.getPayments(0L, 1L, requestOptions);
+        Payments paymentsPage = paymentApi.getPayments(0L, 1L, null, NULL_PLUGIN_PROPERTIES, false, false, AuditLevel.NONE, requestOptions);
         for (int i = 0; i < 6; i++) {
             Assert.assertNotNull(paymentsPage);
             Assert.assertEquals(paymentsPage.size(), 1);
-            Assert.assertTrue(paymentsPage.get(0).equals((Payment) allPayments.get(i)));
+            verifyInvoicePaymentAgainstPayment(allPayments.get(i), paymentsPage.get(0));
             paymentsPage = paymentsPage.getNext();
         }
         assertNull(paymentsPage);
@@ -274,28 +282,27 @@ public class TestInvoicePayment extends TestJaxrsBase {
 
         final Account accountJson = createAccountWithPMBundleAndSubscriptionAndWaitForFirstInvoice();
 
-        InvoicePayments invoicePayments = killBillClient.getInvoicePaymentsForAccount(accountJson.getAccountId(), requestOptions);
+        InvoicePayments invoicePayments = accountApi.getInvoicePayments(accountJson.getAccountId(), NULL_PLUGIN_PROPERTIES, requestOptions);
         assertEquals(invoicePayments.size(), 1);
 
         final InvoicePayment invoicePayment = invoicePayments.get(0);
         // Verify targetInvoiceId is not Null. See #593
         assertNotNull(invoicePayment.getTargetInvoiceId());
 
-        final Invoices invoices = killBillClient.getInvoicesForAccount(accountJson.getAccountId(), requestOptions);
+        final Invoices invoices = accountApi.getInvoices(accountJson.getAccountId(), requestOptions);
         assertEquals(invoices.size(), 2);
         final Invoice invoice = invoices.get(1);
         // Verify this is the correct value
         assertEquals(invoicePayment.getTargetInvoiceId(), invoice.getInvoiceId());
 
         // Make a payment and verify both invoice payment point to the same targetInvoiceId
-        killBillClient.payAllInvoices(accountJson.getAccountId(), false, null, requestOptions);
-        invoicePayments = killBillClient.getInvoicePaymentsForAccount(accountJson.getAccountId(), requestOptions);
+        accountApi.payAllInvoices(accountJson.getAccountId(), false, null, NULL_PLUGIN_PROPERTIES, requestOptions);
+        invoicePayments = accountApi.getInvoicePayments(accountJson.getAccountId(), NULL_PLUGIN_PROPERTIES, requestOptions);
         assertEquals(invoicePayments.size(), 2);
         for (final InvoicePayment cur : invoicePayments) {
             assertEquals(cur.getTargetInvoiceId(), invoice.getInvoiceId());
         }
     }
-
 
     @Test(groups = "slow")
     public void testManualInvoicePayment() throws Exception {
@@ -304,18 +311,17 @@ public class TestInvoicePayment extends TestJaxrsBase {
         assertNotNull(accountJson);
 
         // Disable automatic payments
-        killBillClient.createAccountTag(accountJson.getAccountId(), ControlTagType.AUTO_PAY_OFF.getId(), requestOptions);
+        accountApi.createTags(accountJson.getAccountId(), ImmutableList.<String>of(ControlTagType.AUTO_PAY_OFF.getId().toString()), requestOptions);
 
         // Add a bundle, subscription and move the clock to get the first invoice
-        final Subscription subscriptionJson = createEntitlement(accountJson.getAccountId(), UUID.randomUUID().toString(), "Shotgun",
-                                                                ProductCategory.BASE, BillingPeriod.MONTHLY, true);
+        final Subscription subscriptionJson = createSubscription(accountJson.getAccountId(), UUID.randomUUID().toString(), "Shotgun",
+                                                                 ProductCategory.BASE, BillingPeriod.MONTHLY, true);
         assertNotNull(subscriptionJson);
         clock.addDays(32);
         crappyWaitForLackOfProperSynchonization();
 
-        final List<Invoice> invoices = killBillClient.getInvoicesForAccount(accountJson.getAccountId(), requestOptions);
+        final List<Invoice> invoices = accountApi.getInvoices(accountJson.getAccountId(), requestOptions);
         assertEquals(invoices.size(), 2);
-
 
         final InvoicePayment invoicePayment1 = new InvoicePayment();
         invoicePayment1.setPurchasedAmount(invoices.get(1).getBalance().add(BigDecimal.TEN));
@@ -324,12 +330,11 @@ public class TestInvoicePayment extends TestJaxrsBase {
 
         // Pay too too much => 400
         try {
-            killBillClient.createInvoicePayment(invoicePayment1, false, requestOptions);
+            invoiceApi.createInstantPayment(invoicePayment1, invoicePayment1.getTargetInvoiceId(), NULL_PLUGIN_PROPERTIES, requestOptions);
             Assert.fail("InvoicePayment call should fail with 400");
         } catch (final KillBillClientException e) {
             assertTrue(true);
         }
-
 
         final InvoicePayment invoicePayment2 = new InvoicePayment();
         invoicePayment2.setPurchasedAmount(invoices.get(1).getBalance());
@@ -337,12 +342,12 @@ public class TestInvoicePayment extends TestJaxrsBase {
         invoicePayment2.setTargetInvoiceId(invoices.get(1).getInvoiceId());
 
         // Just right, Yah! => 201
-        final InvoicePayment result2 = killBillClient.createInvoicePayment(invoicePayment2, false, requestOptions);
+        final InvoicePayment result2 = invoiceApi.createInstantPayment(invoicePayment2, invoicePayment2.getTargetInvoiceId(), NULL_PLUGIN_PROPERTIES, requestOptions);
         assertEquals(result2.getTransactions().size(), 1);
         assertTrue(result2.getTransactions().get(0).getAmount().compareTo(invoices.get(1).getBalance()) == 0);
 
         // Already paid -> 204
-        final InvoicePayment result3 = killBillClient.createInvoicePayment(invoicePayment2, false, requestOptions);
+        final InvoicePayment result3 = invoiceApi.createInstantPayment(invoicePayment2, invoicePayment2.getTargetInvoiceId(), NULL_PLUGIN_PROPERTIES, requestOptions);
         assertNull(result3);
     }
 
@@ -353,39 +358,39 @@ public class TestInvoicePayment extends TestJaxrsBase {
     private InvoicePayment setupScenarioWithPayment() throws Exception {
         final Account accountJson = createAccountWithPMBundleAndSubscriptionAndWaitForFirstInvoice();
 
-        final List<InvoicePayment> paymentsForAccount = killBillClient.getInvoicePaymentsForAccount(accountJson.getAccountId(), requestOptions);
+        final List<InvoicePayment> paymentsForAccount = accountApi.getInvoicePayments(accountJson.getAccountId(), NULL_PLUGIN_PROPERTIES, requestOptions);
         Assert.assertEquals(paymentsForAccount.size(), 1);
 
         final InvoicePayment paymentJson = paymentsForAccount.get(0);
 
         // Check the PaymentMethod from paymentMethodId returned in the Payment object
         final UUID paymentMethodId = paymentJson.getPaymentMethodId();
-        final PaymentMethod paymentMethodJson = killBillClient.getPaymentMethod(paymentMethodId, true, requestOptions);
+        final PaymentMethod paymentMethodJson = paymentMethodApi.getPaymentMethod(paymentMethodId, NULL_PLUGIN_PROPERTIES, requestOptions);
         Assert.assertEquals(paymentMethodJson.getPaymentMethodId(), paymentMethodId);
         Assert.assertEquals(paymentMethodJson.getAccountId(), accountJson.getAccountId());
 
         // Verify the refunds
-        final List<PaymentTransaction> objRefundFromJson = getPaymentTransactions(paymentsForAccount, TransactionType.REFUND.toString());
+        final List<PaymentTransaction> objRefundFromJson = getInvoicePaymentTransactions(paymentsForAccount, TransactionType.REFUND);
         Assert.assertEquals(objRefundFromJson.size(), 0);
         return paymentJson;
     }
 
     private void verifyRefund(final InvoicePayment paymentJson, final Payment paymentAfterRefund, final BigDecimal refundAmount) throws KillBillClientException {
 
-        final List<PaymentTransaction> transactions = getPaymentTransactions(ImmutableList.of(paymentAfterRefund), TransactionType.REFUND.toString());
+        final List<PaymentTransaction> transactions = getPaymentTransactions(ImmutableList.of(paymentAfterRefund), TransactionType.REFUND);
         Assert.assertEquals(transactions.size(), 1);
 
         final PaymentTransaction refund = transactions.get(0);
         Assert.assertEquals(refund.getPaymentId(), paymentJson.getPaymentId());
         Assert.assertEquals(refund.getAmount().setScale(2, RoundingMode.HALF_UP), refundAmount.setScale(2, RoundingMode.HALF_UP));
         Assert.assertEquals(refund.getCurrency(), DEFAULT_CURRENCY);
-        Assert.assertEquals(refund.getStatus(), "SUCCESS");
+        Assert.assertEquals(refund.getStatus(), TransactionStatus.SUCCESS);
         Assert.assertEquals(refund.getEffectiveDate().getYear(), clock.getUTCNow().getYear());
         Assert.assertEquals(refund.getEffectiveDate().getMonthOfYear(), clock.getUTCNow().getMonthOfYear());
         Assert.assertEquals(refund.getEffectiveDate().getDayOfMonth(), clock.getUTCNow().getDayOfMonth());
 
         // Verify the refund via the payment API
-        final Payment retrievedPaymentJson = killBillClient.getPayment(paymentJson.getPaymentId(), true, requestOptions);
+        final Payment retrievedPaymentJson = paymentApi.getPayment(paymentJson.getPaymentId(), NULL_PLUGIN_PROPERTIES, requestOptions);
         Assert.assertEquals(retrievedPaymentJson.getPaymentId(), paymentJson.getPaymentId());
         Assert.assertEquals(retrievedPaymentJson.getPurchasedAmount().setScale(2, RoundingMode.HALF_UP), paymentJson.getPurchasedAmount().setScale(2, RoundingMode.HALF_UP));
         Assert.assertEquals(retrievedPaymentJson.getAccountId(), paymentJson.getAccountId());
@@ -394,8 +399,23 @@ public class TestInvoicePayment extends TestJaxrsBase {
     }
 
     private void verifyInvoice(final InvoicePayment paymentJson, final BigDecimal expectedInvoiceBalance) throws KillBillClientException {
-        final Invoice invoiceJson = killBillClient.getInvoice(paymentJson.getTargetInvoiceId(), requestOptions);
+        final Invoice invoiceJson = invoiceApi.getInvoice(paymentJson.getTargetInvoiceId(), requestOptions);
         Assert.assertEquals(invoiceJson.getBalance().setScale(2, BigDecimal.ROUND_HALF_UP),
                             expectedInvoiceBalance.setScale(2, BigDecimal.ROUND_HALF_UP));
     }
+
+    private void verifyInvoicePaymentAgainstPayment(final InvoicePayment ip, final Payment p) {
+        Assert.assertEquals(ip.getAccountId(), p.getAccountId());
+        Assert.assertEquals(ip.getPaymentId(), p.getPaymentId());
+        Assert.assertEquals(ip.getPaymentNumber(), p.getPaymentNumber());
+        Assert.assertEquals(ip.getAccountId(), p.getAccountId());
+        Assert.assertEquals(ip.getAuthAmount(), p.getAuthAmount());
+        Assert.assertEquals(ip.getCapturedAmount(), p.getCapturedAmount());
+        Assert.assertEquals(ip.getPurchasedAmount(), p.getPurchasedAmount());
+        Assert.assertEquals(ip.getRefundedAmount(), p.getRefundedAmount());
+        Assert.assertEquals(ip.getCreditedAmount(), p.getCreditedAmount());
+        Assert.assertEquals(ip.getCurrency(), p.getCurrency());
+        Assert.assertEquals(ip.getPaymentMethodId(), p.getPaymentMethodId());
+    }
+
 }

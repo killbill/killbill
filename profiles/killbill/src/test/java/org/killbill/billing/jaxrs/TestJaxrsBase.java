@@ -27,6 +27,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import javax.annotation.Nullable;
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.servlet.Servlet;
@@ -62,6 +63,7 @@ import org.killbill.billing.client.api.gen.TagApi;
 import org.killbill.billing.client.api.gen.TagDefinitionApi;
 import org.killbill.billing.client.api.gen.TenantApi;
 import org.killbill.billing.client.api.gen.UsageApi;
+import org.killbill.billing.client.model.gen.InvoicePayment;
 import org.killbill.billing.client.model.gen.Payment;
 import org.killbill.billing.client.model.gen.PaymentTransaction;
 import org.killbill.billing.client.model.gen.Tenant;
@@ -70,6 +72,7 @@ import org.killbill.billing.jetty.HttpServer;
 import org.killbill.billing.jetty.HttpServerConfig;
 import org.killbill.billing.lifecycle.glue.BusModule;
 import org.killbill.billing.osgi.api.OSGIServiceRegistration;
+import org.killbill.billing.payment.api.TransactionType;
 import org.killbill.billing.payment.glue.PaymentModule;
 import org.killbill.billing.payment.provider.MockPaymentProviderPluginModule;
 import org.killbill.billing.platform.api.KillbillConfigSource;
@@ -338,19 +341,37 @@ public class TestJaxrsBase extends KillbillClient {
         }
     }
 
-    protected static <T extends Payment> List<PaymentTransaction> getPaymentTransactions(final List<T> payments, final String transactionType) {
-        return ImmutableList.copyOf(Iterables.concat(Iterables.transform(payments, new Function<T, Iterable<PaymentTransaction>>() {
+    protected static List<PaymentTransaction> getInvoicePaymentTransactions(final List<InvoicePayment> payments, final TransactionType transactionType) {
+        final Iterable<PaymentTransaction> transform = Iterables.concat(Iterables.transform(payments, new Function<InvoicePayment, Iterable<PaymentTransaction>>() {
             @Override
-            public Iterable<PaymentTransaction> apply(final T input) {
-                return Iterables.filter(input.getTransactions(), new Predicate<PaymentTransaction>() {
-                    @Override
-                    public boolean apply(final PaymentTransaction input) {
-                        return input.getTransactionType().equals(transactionType);
-                    }
-                });
+            public Iterable<PaymentTransaction> apply(final InvoicePayment input) {
+                return input.getTransactions();
             }
-        })));
+        }));
+        return filterTransactions(transform, transactionType);
     }
+
+
+    protected static List<PaymentTransaction> getPaymentTransactions(final List<Payment> payments, final TransactionType transactionType) {
+        final Iterable<PaymentTransaction> transform = Iterables.concat(Iterables.transform(payments, new Function<Payment, Iterable<PaymentTransaction>>() {
+            @Override
+            public Iterable<PaymentTransaction> apply(final Payment input) {
+                return input.getTransactions();
+            }
+        }));
+        return filterTransactions(transform, transactionType);
+    }
+
+
+    protected static List<PaymentTransaction> filterTransactions(final Iterable<PaymentTransaction> paymentTransaction, final TransactionType transactionType) {
+        return ImmutableList.copyOf(Iterables.filter(paymentTransaction, new Predicate<PaymentTransaction>() {
+            @Override
+            public boolean apply(final PaymentTransaction input) {
+                return input.getTransactionType().equals(transactionType);
+            }
+        }));
+    }
+
 
     protected void printThreadDump() {
         final StringBuilder dump = new StringBuilder("Thread dump:\n");
