@@ -91,9 +91,17 @@ public class DefaultTenantUserApi implements TenantUserApi {
             throw new TenantApiException(ErrorCode.EXTERNAL_KEY_LIMIT_EXCEEDED);
         }
 
-        // Not transactional, but there is a db constraint on that column
-        if (data.getApiKey() != null && getTenantByApiKey(data.getApiKey()) != null) {
-            throw new TenantApiException(ErrorCode.TENANT_ALREADY_EXISTS, data.getExternalKey());
+        try {
+            // Not transactional, but there is a db constraint on that column
+            if (data.getApiKey() != null && getTenantByApiKey(data.getApiKey()) != null) {
+                throw new TenantApiException(ErrorCode.TENANT_ALREADY_EXISTS, data.getExternalKey());
+            }
+        } catch (final RuntimeException e) {
+            if (e.getCause() instanceof IllegalStateException) {
+                // could happen exemption, stating that the key is not found
+            } else {
+                throw e;
+            }
         }
 
         try {
