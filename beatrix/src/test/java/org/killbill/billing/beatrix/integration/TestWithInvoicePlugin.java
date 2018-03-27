@@ -45,8 +45,12 @@ import org.killbill.billing.invoice.model.ExternalChargeInvoiceItem;
 import org.killbill.billing.invoice.model.ItemAdjInvoiceItem;
 import org.killbill.billing.invoice.model.TaxInvoiceItem;
 import org.killbill.billing.invoice.notification.DefaultNextBillingDateNotifier;
+import org.killbill.billing.invoice.plugin.api.InvoiceContext;
 import org.killbill.billing.invoice.plugin.api.InvoicePluginApi;
 import org.killbill.billing.invoice.plugin.api.InvoicePluginApiRetryException;
+import org.killbill.billing.invoice.plugin.api.OnFailureInvoiceResult;
+import org.killbill.billing.invoice.plugin.api.OnSuccessInvoiceResult;
+import org.killbill.billing.invoice.plugin.api.PriorInvoiceResult;
 import org.killbill.billing.osgi.api.OSGIServiceDescriptor;
 import org.killbill.billing.osgi.api.OSGIServiceRegistration;
 import org.killbill.billing.payment.api.PluginProperty;
@@ -402,6 +406,11 @@ public class TestWithInvoicePlugin extends TestIntegrationBase {
         InvoiceItem additionalInvoiceItem;
 
         @Override
+        public PriorInvoiceResult priorCall(final InvoiceContext invoiceContext, final Iterable<PluginProperty> iterable) {
+            return null;
+        }
+
+        @Override
         public List<InvoiceItem> getAdditionalInvoiceItems(final Invoice invoice, final boolean isDryRun, final Iterable<PluginProperty> pluginProperties, final CallContext callContext) {
             if (shouldThrowException) {
                 throw new InvoicePluginApiRetryException();
@@ -410,6 +419,16 @@ public class TestWithInvoicePlugin extends TestIntegrationBase {
             } else {
                 return ImmutableList.<InvoiceItem>of(createTaxInvoiceItem(invoice));
             }
+        }
+
+        @Override
+        public OnSuccessInvoiceResult onSuccessCall(final InvoiceContext invoiceContext, final Iterable<PluginProperty> iterable) {
+            return null;
+        }
+
+        @Override
+        public OnFailureInvoiceResult onFailureCall(final InvoiceContext invoiceContext, final Iterable<PluginProperty> iterable) {
+            return null;
         }
 
         private InvoiceItem createTaxInvoiceItem(final Invoice invoice) {

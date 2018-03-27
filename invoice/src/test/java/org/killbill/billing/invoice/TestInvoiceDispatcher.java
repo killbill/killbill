@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014-2016 Groupon, Inc
- * Copyright 2014-2016 The Billing Project, LLC
+ * Copyright 2014-2018 Groupon, Inc
+ * Copyright 2014-2018 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -104,21 +104,21 @@ public class TestInvoiceDispatcher extends InvoiceTestSuiteWithEmbeddedDB {
                                                                    internalCallContextFactory, invoicePluginDispatcher, locker, busService.getBus(),
                                                                    notificationQueueService, invoiceConfig, clock, parkedAccountsManager);
 
-        Invoice invoice = dispatcher.processAccountFromNotificationOrBusEvent(accountId, target, new DryRunFutureDateArguments(), context);
+        Invoice invoice = dispatcher.processAccountFromNotificationOrBusEvent(accountId, target, new DryRunFutureDateArguments(), false, context);
         Assert.assertNotNull(invoice);
 
         List<InvoiceModelDao> invoices = invoiceDao.getInvoicesByAccount(false, context);
         Assert.assertEquals(invoices.size(), 0);
 
         // Try it again to double check
-        invoice = dispatcher.processAccountFromNotificationOrBusEvent(accountId, target, new DryRunFutureDateArguments(), context);
+        invoice = dispatcher.processAccountFromNotificationOrBusEvent(accountId, target, new DryRunFutureDateArguments(), false, context);
         Assert.assertNotNull(invoice);
 
         invoices = invoiceDao.getInvoicesByAccount(false, context);
         Assert.assertEquals(invoices.size(), 0);
 
         // This time no dry run
-        invoice = dispatcher.processAccountFromNotificationOrBusEvent(accountId, target, null, context);
+        invoice = dispatcher.processAccountFromNotificationOrBusEvent(accountId, target, null, false, context);
         Assert.assertNotNull(invoice);
 
         invoices = invoiceDao.getInvoicesByAccount(false, context);
@@ -194,7 +194,7 @@ public class TestInvoiceDispatcher extends InvoiceTestSuiteWithEmbeddedDB {
         invoiceDao.createInvoices(ImmutableList.<InvoiceModelDao>of(invoiceModelDao), context);
 
         try {
-            dispatcher.processAccountFromNotificationOrBusEvent(accountId, target, new DryRunFutureDateArguments(), context);
+            dispatcher.processAccountFromNotificationOrBusEvent(accountId, target, new DryRunFutureDateArguments(), false, context);
             Assert.fail();
         } catch (final InvoiceApiException e) {
             Assert.assertEquals(e.getCode(), ErrorCode.UNEXPECTED_ERROR.getCode());
@@ -205,7 +205,7 @@ public class TestInvoiceDispatcher extends InvoiceTestSuiteWithEmbeddedDB {
         Assert.assertTrue(tagUserApi.getTagsForAccount(accountId, true, callContext).isEmpty());
 
         try {
-            dispatcher.processAccountFromNotificationOrBusEvent(accountId, target, null, context);
+            dispatcher.processAccountFromNotificationOrBusEvent(accountId, target, null, false, context);
             Assert.fail();
         } catch (final InvoiceApiException e) {
             Assert.assertEquals(e.getCode(), ErrorCode.UNEXPECTED_ERROR.getCode());
@@ -218,12 +218,12 @@ public class TestInvoiceDispatcher extends InvoiceTestSuiteWithEmbeddedDB {
         Assert.assertEquals(tags.get(0).getTagDefinitionId(), SystemTags.PARK_TAG_DEFINITION_ID);
 
         // isApiCall=false
-        final Invoice nullInvoice1 = dispatcher.processAccountFromNotificationOrBusEvent(accountId, target, null, context);
+        final Invoice nullInvoice1 = dispatcher.processAccountFromNotificationOrBusEvent(accountId, target, null, false, context);
         Assert.assertNull(nullInvoice1);
 
         // No dry-run and isApiCall=true
         try {
-            dispatcher.processAccount(true, accountId, target, null, context);
+            dispatcher.processAccount(true, accountId, target, null, false, context);
             Assert.fail();
         } catch (final InvoiceApiException e) {
             Assert.assertEquals(e.getCode(), ErrorCode.UNEXPECTED_ERROR.getCode());
@@ -244,18 +244,18 @@ public class TestInvoiceDispatcher extends InvoiceTestSuiteWithEmbeddedDB {
         });
 
         // Dry-run and isApiCall=false: still parked
-        final Invoice nullInvoice2 = dispatcher.processAccountFromNotificationOrBusEvent(accountId, target, new DryRunFutureDateArguments(), context);
+        final Invoice nullInvoice2 = dispatcher.processAccountFromNotificationOrBusEvent(accountId, target, new DryRunFutureDateArguments(), false, context);
         Assert.assertNull(nullInvoice2);
 
         // Dry-run and isApiCall=true: call goes through
-        final Invoice invoice1 = dispatcher.processAccount(true, accountId, target, new DryRunFutureDateArguments(), context);
+        final Invoice invoice1 = dispatcher.processAccount(true, accountId, target, new DryRunFutureDateArguments(), false, context);
         Assert.assertNotNull(invoice1);
         Assert.assertEquals(invoiceDao.getInvoicesByAccount(false, context).size(), 0);
         // Dry-run: still parked
         Assert.assertEquals(tagUserApi.getTagsForAccount(accountId, false, callContext).size(), 1);
 
         // No dry-run and isApiCall=true: call goes through
-        final Invoice invoice2 = dispatcher.processAccount(true, accountId, target, null, context);
+        final Invoice invoice2 = dispatcher.processAccount(true, accountId, target, null, false, context);
         Assert.assertNotNull(invoice2);
         Assert.assertEquals(invoiceDao.getInvoicesByAccount(false, context).size(), 1);
         // No dry-run: now unparked
@@ -293,7 +293,7 @@ public class TestInvoiceDispatcher extends InvoiceTestSuiteWithEmbeddedDB {
         final InvoiceDispatcher dispatcher = new InvoiceDispatcher(generator, accountApi, billingApi, subscriptionApi, invoiceDao,
                                                                    internalCallContextFactory, invoicePluginDispatcher, locker, busService.getBus(),
                                                                    notificationQueueService, invoiceConfig, clock, parkedAccountsManager);
-        final Invoice invoice = dispatcher.processAccountFromNotificationOrBusEvent(account.getId(), new LocalDate("2012-07-30"), null, context);
+        final Invoice invoice = dispatcher.processAccountFromNotificationOrBusEvent(account.getId(), new LocalDate("2012-07-30"), null, false, context);
         Assert.assertNotNull(invoice);
 
         final List<InvoiceItem> invoiceItems = invoice.getInvoiceItems();

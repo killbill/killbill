@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014-2017 Groupon, Inc
- * Copyright 2014-2017 The Billing Project, LLC
+ * Copyright 2014-2018 Groupon, Inc
+ * Copyright 2014-2018 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -107,7 +107,7 @@ public class InvoiceTagHandler extends RetryableService implements KillbillServi
 
     private void processUnpaid_AUTO_INVOICING_OFF_invoices(final UUID accountId, final InternalCallContext context) {
         try {
-            dispatcher.processAccountFromNotificationOrBusEvent(accountId, null, null, context);
+            dispatcher.processAccountFromNotificationOrBusEvent(accountId, null, null, false, context);
         } catch (final InvoiceApiException e) {
             log.warn("Failed to process tag removal AUTO_INVOICING_OFF for accountId='{}'", accountId, e);
         }

@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014-2017 Groupon, Inc
- * Copyright 2014-2017 The Billing Project, LLC
+ * Copyright 2014-2018 Groupon, Inc
+ * Copyright 2014-2018 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -109,7 +109,7 @@ public class InvoiceListener extends RetryableService implements InvoiceListener
                                                  try {
                                                      final InternalCallContext context = internalCallContextFactory.createInternalCallContext(event.getSearchKey2(), event.getSearchKey1(), "SubscriptionBaseTransition", CallOrigin.INTERNAL, UserType.SYSTEM, event.getUserToken());
                                                      final UUID accountId = accountApi.getByRecordId(event.getSearchKey1(), context);
-                                                     dispatcher.processAccountFromNotificationOrBusEvent(accountId, null, null, context);
+                                                     dispatcher.processAccountFromNotificationOrBusEvent(accountId, null, null, false, context);
                                                  } catch (final InvoiceApiException e) {
                                                      log.warn("Unable to process event {}", event, e);
                                                  } catch (final AccountApiException e) {
@@ -206,12 +206,10 @@ public class InvoiceListener extends RetryableService implements InvoiceListener
         retryableSubscriber.handleEvent(event);
     }
 
-
-
-    public void handleNextBillingDateEvent(final UUID subscriptionId, final DateTime eventDateTime, final UUID userToken, final Long accountRecordId, final Long tenantRecordId) {
+    public void handleNextBillingDateEvent(final UUID subscriptionId, final DateTime eventDateTime, final boolean isRescheduled, final UUID userToken, final Long accountRecordId, final Long tenantRecordId) {
         final InternalCallContext context = internalCallContextFactory.createInternalCallContext(tenantRecordId, accountRecordId, "Next Billing Date", CallOrigin.INTERNAL, UserType.SYSTEM, userToken);
         try {
-            dispatcher.processSubscriptionForInvoiceGeneration(subscriptionId, context.toLocalDate(eventDateTime), context);
+            dispatcher.processSubscriptionForInvoiceGeneration(subscriptionId, context.toLocalDate(eventDateTime), isRescheduled, context);
         } catch (final InvoiceApiException e) {
             log.warn("Unable to process subscriptionId='{}', eventDateTime='{}'", subscriptionId, eventDateTime, e);
         }
