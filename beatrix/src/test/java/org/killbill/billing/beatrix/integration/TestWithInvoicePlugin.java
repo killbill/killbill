@@ -108,6 +108,8 @@ public class TestWithInvoicePlugin extends TestIntegrationBase {
     @BeforeMethod(groups = "slow")
     public void setUp() throws Exception {
         testInvoicePluginApi.additionalInvoiceItem = null;
+        testInvoicePluginApi.isAborted = false;
+        testInvoicePluginApi.rescheduleDate = null;
     }
 
     @Test(groups = "slow")
@@ -244,6 +246,108 @@ public class TestWithInvoicePlugin extends TestIntegrationBase {
         assertEquals(invoiceItemAdjustment.getId(), pluginInvoiceItemId);
         // verify the details are passed by the plugin #888
         assertEquals(invoiceItemAdjustment.getItemDetails(), itemDetails);
+    }
+
+    @Test(groups = "slow")
+    public void testAborted() throws Exception {
+        testInvoicePluginApi.shouldAddTaxItem = false;
+
+        // We take april as it has 30 days (easier to play with BCD)
+        // Set clock to the initial start date - we implicitly assume here that the account timezone is UTC
+        clock.setDay(new LocalDate(2012, 4, 1));
+
+        final AccountData accountData = getAccountData(1);
+        final Account account = createAccountWithNonOsgiPaymentMethod(accountData);
+        accountChecker.checkAccount(account.getId(), accountData, callContext);
+
+        // Create original subscription (Trial PHASE) -> $0 invoice
+        final DefaultEntitlement bpSubscription = createBaseEntitlementAndCheckForCompletion(account.getId(), "bundleKey", "Pistol", ProductCategory.BASE, BillingPeriod.MONTHLY, NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE);
+        invoiceChecker.checkInvoice(account.getId(), 1, callContext,
+                                    new ExpectedInvoiceItemCheck(new LocalDate(2012, 4, 1), null, InvoiceItemType.FIXED, new BigDecimal("0")));
+        subscriptionChecker.checkSubscriptionCreated(bpSubscription.getId(), internalCallContext);
+
+        // Abort invoice runs
+        testInvoicePluginApi.isAborted = true;
+
+        // Move to Evergreen PHASE
+        busHandler.pushExpectedEvents(NextEvent.PHASE);
+        clock.addDays(30);
+        assertListenerStatus();
+        assertEquals(invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, callContext).size(), 1);
+
+        // Move one month (the plugin is still aborting invoices)
+        clock.addMonths(1);
+        assertListenerStatus();
+        assertEquals(invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, callContext).size(), 1);
+
+        // Re-enable invoicing
+        testInvoicePluginApi.isAborted = false;
+
+        // No notification, so by default, the account will not be re-invoiced
+        clock.addMonths(1);
+        assertListenerStatus();
+
+        // Trigger a manual invoice run
+        busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT);
+        invoiceUserApi.triggerInvoiceGeneration(account.getId(), clock.getUTCToday(), null, callContext);
+        assertListenerStatus();
+        invoiceChecker.checkInvoice(account.getId(), 2, callContext,
+                                    new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 1), new LocalDate(2012, 6, 1), InvoiceItemType.RECURRING, new BigDecimal("29.95")),
+                                    new ExpectedInvoiceItemCheck(new LocalDate(2012, 6, 1), new LocalDate(2012, 7, 1), InvoiceItemType.RECURRING, new BigDecimal("29.95")),
+                                    new ExpectedInvoiceItemCheck(new LocalDate(2012, 7, 1), new LocalDate(2012, 8, 1), InvoiceItemType.RECURRING, new BigDecimal("29.95")));
+
+        // Invoicing resumes
+        busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT);
+        clock.addMonths(1);
+        assertListenerStatus();
+        invoiceChecker.checkInvoice(account.getId(), 3, callContext,
+                                    new ExpectedInvoiceItemCheck(new LocalDate(2012, 8, 1), new LocalDate(2012, 9, 1), InvoiceItemType.RECURRING, new BigDecimal("29.95")));
+    }
+
+    @Test(groups = "slow")
+    public void testRescheduled() throws Exception {
+        testInvoicePluginApi.shouldAddTaxItem = false;
+
+        // We take april as it has 30 days (easier to play with BCD)
+        // Set clock to the initial start date - we implicitly assume here that the account timezone is UTC
+        clock.setDay(new LocalDate(2012, 4, 1));
+
+        final AccountData accountData = getAccountData(1);
+        final Account account = createAccountWithNonOsgiPaymentMethod(accountData);
+        accountChecker.checkAccount(account.getId(), accountData, callContext);
+
+        // Create original subscription (Trial PHASE) -> $0 invoice
+        final DefaultEntitlement bpSubscription = createBaseEntitlementAndCheckForCompletion(account.getId(), "bundleKey", "Pistol", ProductCategory.BASE, BillingPeriod.MONTHLY, NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE);
+        invoiceChecker.checkInvoice(account.getId(), 1, callContext,
+                                    new ExpectedInvoiceItemCheck(new LocalDate(2012, 4, 1), null, InvoiceItemType.FIXED, new BigDecimal("0")));
+        subscriptionChecker.checkSubscriptionCreated(bpSubscription.getId(), internalCallContext);
+
+        // Reschedule invoice generation
+        final DateTime utcNow = clock.getUTCNow();
+        testInvoicePluginApi.rescheduleDate = new DateTime(2012, 5, 2, utcNow.getHourOfDay(), utcNow.getMinuteOfHour(), utcNow.getSecondOfMinute(), DateTimeZone.UTC);
+
+        // Move to Evergreen PHASE
+        busHandler.pushExpectedEvents(NextEvent.PHASE);
+        clock.addDays(30);
+        assertListenerStatus();
+        assertEquals(invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, callContext).size(), 1);
+
+        // PHASE invoice has been rescheduled, reset rescheduleDate
+        testInvoicePluginApi.rescheduleDate = null;
+
+        // Move one day
+        busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT);
+        clock.addDays(1);
+        assertListenerStatus();
+        invoiceChecker.checkInvoice(account.getId(), 2, callContext,
+                                    new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 1), new LocalDate(2012, 6, 1), InvoiceItemType.RECURRING, new BigDecimal("29.95")));
+
+        // Invoicing resumes as expected
+        busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT);
+        clock.addDays(30);
+        assertListenerStatus();
+        invoiceChecker.checkInvoice(account.getId(), 3, callContext,
+                                    new ExpectedInvoiceItemCheck(new LocalDate(2012, 6, 1), new LocalDate(2012, 7, 1), InvoiceItemType.RECURRING, new BigDecimal("29.95")));
     }
 
     @Test(groups = "slow")
@@ -404,10 +508,24 @@ public class TestWithInvoicePlugin extends TestIntegrationBase {
 
         boolean shouldThrowException = false;
         InvoiceItem additionalInvoiceItem;
+        boolean shouldAddTaxItem = false;
+        boolean isAborted = false;
+        DateTime rescheduleDate;
 
         @Override
         public PriorInvoiceResult priorCall(final InvoiceContext invoiceContext, final Iterable<PluginProperty> iterable) {
-            return null;
+            return new PriorInvoiceResult() {
+
+                @Override
+                public boolean isAborted() {
+                    return isAborted;
+                }
+
+                @Override
+                public DateTime getRescheduleDate() {
+                    return rescheduleDate;
+                }
+            };
         }
 
         @Override
@@ -416,8 +534,10 @@ public class TestWithInvoicePlugin extends TestIntegrationBase {
                 throw new InvoicePluginApiRetryException();
             } else if (additionalInvoiceItem != null) {
                 return ImmutableList.<InvoiceItem>of(additionalInvoiceItem);
-            } else {
+            } else if (shouldAddTaxItem) {
                 return ImmutableList.<InvoiceItem>of(createTaxInvoiceItem(invoice));
+            } else {
+                return ImmutableList.<InvoiceItem>of();
             }
         }
 
