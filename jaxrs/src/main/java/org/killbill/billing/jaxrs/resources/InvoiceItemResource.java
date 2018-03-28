@@ -134,7 +134,7 @@ public class InvoiceItemResource extends JaxRsResourceBase {
     @ApiOperation(value = "Remove custom fields from invoice item")
     @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid invoice item id supplied")})
     public Response deleteCustomFields(@PathParam(ID_PARAM_NAME) final UUID id,
-                                       @QueryParam(QUERY_CUSTOM_FIELD) final List<String> customFieldList,
+                                       @QueryParam(QUERY_CUSTOM_FIELD) final List<UUID> customFieldList,
                                        @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                        @HeaderParam(HDR_REASON) final String reason,
                                        @HeaderParam(HDR_COMMENT) final String comment,

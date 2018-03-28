@@ -372,8 +372,7 @@ public class AdminResource extends JaxRsResourceBase {
     @Produces(APPLICATION_JSON)
     @ApiOperation(value = "Invalidates Caches per tenant level")
     @ApiResponses(value = {})
-    public Response invalidatesCacheByTenant(@QueryParam("tenantApiKey") final String tenantApiKey,
-                                             @javax.ws.rs.core.Context final HttpServletRequest request) throws TenantApiException {
+    public Response invalidatesCacheByTenant(@javax.ws.rs.core.Context final HttpServletRequest request) throws TenantApiException {
 
         // creating Tenant Context from Request
         final TenantContext tenantContext = context.createTenantContextNoAccountId(request);

@@ -286,7 +286,7 @@ public abstract class JaxRsResourceBase implements JaxrsResource {
      * @throws CustomFieldApiException
      */
     protected Response deleteCustomFields(final UUID id,
-                                          final List<String> customFieldList,
+                                          final List<UUID> customFieldList,
                                           final CallContext context) throws CustomFieldApiException {
 
         // Retrieve all the custom fields for the object
@@ -299,8 +299,7 @@ public abstract class JaxRsResourceBase implements JaxrsResource {
                 if (customFieldList.isEmpty()) {
                     return true;
                 }
-                for (final String cur : customFieldList) {
-                    final UUID curId = UUID.fromString(cur);
+                for (final UUID curId : customFieldList) {
                     if (input.getId().equals(curId)) {
                         return true;
                     }

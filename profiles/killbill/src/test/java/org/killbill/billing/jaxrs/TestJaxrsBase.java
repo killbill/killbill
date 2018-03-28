@@ -18,9 +18,12 @@
 
 package org.killbill.billing.jaxrs;
 
+import java.io.File;
+import java.io.IOException;
 import java.lang.management.ManagementFactory;
 import java.lang.management.ThreadInfo;
 import java.lang.management.ThreadMXBean;
+import java.nio.charset.Charset;
 import java.util.EventListener;
 import java.util.Iterator;
 import java.util.List;
@@ -39,6 +42,7 @@ import org.eclipse.jetty.servlet.FilterHolder;
 import org.joda.time.LocalDate;
 import org.killbill.billing.GuicyKillbillTestWithEmbeddedDBModule;
 import org.killbill.billing.api.TestApiListener;
+import org.killbill.billing.client.KillBillClientException;
 import org.killbill.billing.client.KillBillHttpClient;
 import org.killbill.billing.client.api.gen.AccountApi;
 import org.killbill.billing.client.api.gen.AdminApi;
@@ -100,6 +104,8 @@ import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
+import com.google.common.io.Files;
+import com.google.common.io.Resources;
 import com.google.inject.Module;
 import com.google.inject.util.Modules;
 
@@ -372,6 +378,23 @@ public class TestJaxrsBase extends KillbillClient {
         }));
     }
 
+    protected String uploadTenantCatalog(final String catalog, final boolean fetch) throws IOException, KillBillClientException {
+        final String body = getResourceBodyString(catalog);
+        catalogApi.uploadCatalogXml(body, requestOptions);
+        return fetch ? catalogApi.getCatalogXml(requestOptions) : null;
+    }
+
+
+    protected void uploadTenantOverdueConfig(final String overdue) throws IOException, KillBillClientException {
+        final String body = getResourceBodyString(overdue);
+        overdueApi.uploadOverdueConfigXml(body, requestOptions);
+    }
+
+    protected String getResourceBodyString(final String resource) throws IOException {
+        final String catalogPath = Resources.getResource(resource).getPath();
+        final File catalogFile = new File(catalogPath);
+        return Files.toString(catalogFile, Charset.forName("UTF-8"));
+    }
 
     protected void printThreadDump() {
         final StringBuilder dump = new StringBuilder("Thread dump:\n");

@@ -112,8 +112,8 @@ public class PaymentGatewayResource extends ComboPaymentResource {
         final Iterable<PluginProperty> paymentMethodPluginProperties = extractPluginProperties(json.getPaymentMethodPluginProperties());
         final UUID paymentMethodId = getOrCreatePaymentMethod(account, json.getPaymentMethod(), paymentMethodPluginProperties, callContext);
 
-        final HostedPaymentPageFieldsJson hostedPaymentPageFields = json.getHostedPaymentPageFieldsJson();
-        final Iterable<PluginProperty> customFields = extractPluginProperties(hostedPaymentPageFields != null ? hostedPaymentPageFields.getCustomFields() : null);
+        final HostedPaymentPageFieldsJson hostedPaymentPageFields = json.getHostedPaymentPageFields();
+        final Iterable<PluginProperty> customFields = extractPluginProperties(hostedPaymentPageFields != null ? hostedPaymentPageFields.getFormFields() : null);
 
         final HostedPaymentPageFormDescriptor descriptor = paymentGatewayApi.buildFormDescriptorWithPaymentControl(account, paymentMethodId, customFields, pluginProperties, paymentOptions, callContext);
         final HostedPaymentPageFormDescriptorJson result = new HostedPaymentPageFormDescriptorJson(descriptor);
@@ -147,7 +147,7 @@ public class PaymentGatewayResource extends ComboPaymentResource {
 
         validatePaymentMethodForAccount(accountId, paymentMethodId, callContext);
 
-        final Iterable<PluginProperty> customFields = extractPluginProperties(json.getCustomFields());
+        final Iterable<PluginProperty> customFields = extractPluginProperties(json.getFormFields());
 
         final HostedPaymentPageFormDescriptor descriptor = paymentGatewayApi.buildFormDescriptorWithPaymentControl(account, paymentMethodId, customFields, pluginProperties, paymentOptions, callContext);
         final HostedPaymentPageFormDescriptorJson result = new HostedPaymentPageFormDescriptorJson(descriptor);
@@ -160,7 +160,7 @@ public class PaymentGatewayResource extends ComboPaymentResource {
     @Path("/" + NOTIFICATION + "/{" + QUERY_PAYMENT_PLUGIN_NAME + ":" + ANYTHING_PATTERN + "}")
     @Consumes(WILDCARD)
     @Produces(APPLICATION_JSON)
-    @ApiOperation(value = "Process a gateway notification", notes = "The response is built by the appropriate plugin", response = GatewayNotificationJson.class)
+    @ApiOperation(value = "Process a gateway notification", notes = "The response is built by the appropriate plugin")
     @ApiResponses(value = {})
     public Response processNotification(final String body,
                                         @PathParam(PATH_PAYMENT_PLUGIN_NAME) final String pluginName,

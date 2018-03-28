@@ -1232,7 +1232,7 @@ public class AccountResource extends JaxRsResourceBase {
     @ApiOperation(value = "Remove custom fields from account")
     @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid account id supplied")})
     public Response deleteCustomFields(@PathParam(ID_PARAM_NAME) final UUID accountId,
-                                       @QueryParam(QUERY_CUSTOM_FIELD) final List<String> customFieldList,
+                                       @QueryParam(QUERY_CUSTOM_FIELD) final List<UUID> customFieldList,
                                        @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                        @HeaderParam(HDR_REASON) final String reason,
                                        @HeaderParam(HDR_COMMENT) final String comment,
