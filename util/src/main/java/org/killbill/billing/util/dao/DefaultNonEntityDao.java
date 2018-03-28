@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014-2017 Groupon, Inc
- * Copyright 2014-2017 The Billing Project, LLC
+ * Copyright 2014-2018 Groupon, Inc
+ * Copyright 2014-2018 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -22,6 +22,7 @@ import java.util.UUID;
 
 import javax.annotation.Nullable;
 import javax.inject.Inject;
+import javax.inject.Named;
 
 import org.killbill.billing.ObjectType;
 import org.killbill.billing.util.cache.CacheController;
@@ -37,15 +38,17 @@ import org.skife.jdbi.v2.sqlobject.SqlObjectBuilder;
 
 import com.google.common.base.Preconditions;
 
+import static org.killbill.billing.util.glue.IDBISetup.MAIN_RO_IDBI_NAMED;
+
 public class DefaultNonEntityDao implements NonEntityDao {
 
-    private final NonEntitySqlDao nonEntitySqlDao;
+    private final NonEntitySqlDao roNonEntitySqlDao;
     private final WithCaching<String, Long> withCachingObjectId;
     private final WithCaching<String, UUID> withCachingRecordId;
 
     @Inject
-    public DefaultNonEntityDao(final IDBI dbi) {
-        this.nonEntitySqlDao = dbi.onDemand(NonEntitySqlDao.class);
+    public DefaultNonEntityDao(@Named(MAIN_RO_IDBI_NAMED) final IDBI roDbi) {
+        this.roNonEntitySqlDao = roDbi.onDemand(NonEntitySqlDao.class);
         this.withCachingObjectId = new WithCaching<String, Long>();
         this.withCachingRecordId = new WithCaching<String, UUID>();
     }
@@ -66,7 +69,7 @@ public class DefaultNonEntityDao implements NonEntityDao {
         return withCachingObjectId.withCaching(new OperationRetrieval<Long>() {
             @Override
             public Long doRetrieve(final ObjectType objectType) {
-                final NonEntitySqlDao inTransactionNonEntitySqlDao = handle == null ? nonEntitySqlDao : SqlObjectBuilder.attach(handle, NonEntitySqlDao.class);
+                final NonEntitySqlDao inTransactionNonEntitySqlDao = handle == null ? roNonEntitySqlDao : SqlObjectBuilder.attach(handle, NonEntitySqlDao.class);
                 return inTransactionNonEntitySqlDao.getRecordIdFromObject(objectId.toString(), tableName.getTableName());
             }
         }, objectId.toString(), objectType, tableName, cache);
@@ -86,7 +89,7 @@ public class DefaultNonEntityDao implements NonEntityDao {
         return withCachingObjectId.withCaching(new OperationRetrieval<Long>() {
             @Override
             public Long doRetrieve(final ObjectType objectType) {
-                final NonEntitySqlDao inTransactionNonEntitySqlDao = handle == null ? nonEntitySqlDao : SqlObjectBuilder.attach(handle, NonEntitySqlDao.class);
+                final NonEntitySqlDao inTransactionNonEntitySqlDao = handle == null ? roNonEntitySqlDao : SqlObjectBuilder.attach(handle, NonEntitySqlDao.class);
 
                 switch (tableName) {
                     case TENANT:
@@ -118,7 +121,7 @@ public class DefaultNonEntityDao implements NonEntityDao {
         return withCachingObjectId.withCaching(new OperationRetrieval<Long>() {
             @Override
             public Long doRetrieve(final ObjectType objectType) {
-                final NonEntitySqlDao inTransactionNonEntitySqlDao = handle == null ? nonEntitySqlDao : SqlObjectBuilder.attach(handle, NonEntitySqlDao.class);
+                final NonEntitySqlDao inTransactionNonEntitySqlDao = handle == null ? roNonEntitySqlDao : SqlObjectBuilder.attach(handle, NonEntitySqlDao.class);
 
                 switch (tableName) {
                     case TENANT:
@@ -150,7 +153,7 @@ public class DefaultNonEntityDao implements NonEntityDao {
         return withCachingRecordId.withCaching(new OperationRetrieval<UUID>() {
             @Override
             public UUID doRetrieve(final ObjectType objectType) {
-                final NonEntitySqlDao inTransactionNonEntitySqlDao = handle == null ? nonEntitySqlDao : SqlObjectBuilder.attach(handle, NonEntitySqlDao.class);
+                final NonEntitySqlDao inTransactionNonEntitySqlDao = handle == null ? roNonEntitySqlDao : SqlObjectBuilder.attach(handle, NonEntitySqlDao.class);
                 return inTransactionNonEntitySqlDao.getIdFromObject(recordId, tableName.getTableName());
             }
         }, String.valueOf(recordId), objectType, tableName, cache);
@@ -164,7 +167,7 @@ public class DefaultNonEntityDao implements NonEntityDao {
 
     @Override
     public Long retrieveHistoryTargetRecordId(@Nullable final Long recordId, final TableName tableName) {
-        return nonEntitySqlDao.getHistoryTargetRecordId(recordId, tableName.getTableName());
+        return roNonEntitySqlDao.getHistoryTargetRecordId(recordId, tableName.getTableName());
     }
 
     private interface OperationRetrieval<TypeOut> {

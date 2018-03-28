@@ -21,6 +21,8 @@ package org.killbill.billing.overdue.notification;
 import java.util.Iterator;
 import java.util.UUID;
 
+import javax.inject.Named;
+
 import org.joda.time.DateTime;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.overdue.service.DefaultOverdueService;
@@ -41,6 +43,8 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.annotations.VisibleForTesting;
 
+import static org.killbill.billing.util.glue.IDBISetup.MAIN_RO_IDBI_NAMED;
+
 public abstract class DefaultOverduePosterBase implements OverduePoster {
 
     private static final Logger log = LoggerFactory.getLogger(DefaultOverduePosterBase.class);
@@ -49,10 +53,10 @@ public abstract class DefaultOverduePosterBase implements OverduePoster {
     private final EntitySqlDaoTransactionalJdbiWrapper transactionalSqlDao;
 
     public DefaultOverduePosterBase(final NotificationQueueService notificationQueueService,
-                                    final IDBI dbi, final Clock clock, final CacheControllerDispatcher cacheControllerDispatcher,
+                                    final IDBI dbi, @Named(MAIN_RO_IDBI_NAMED) final IDBI roDbi, final Clock clock, final CacheControllerDispatcher cacheControllerDispatcher,
                                     final NonEntityDao nonEntityDao, final InternalCallContextFactory internalCallContextFactory) {
         this.notificationQueueService = notificationQueueService;
-        this.transactionalSqlDao = new EntitySqlDaoTransactionalJdbiWrapper(dbi, clock, cacheControllerDispatcher, nonEntityDao, internalCallContextFactory);
+        this.transactionalSqlDao = new EntitySqlDaoTransactionalJdbiWrapper(dbi, roDbi, clock, cacheControllerDispatcher, nonEntityDao, internalCallContextFactory);
     }
 
     @Override
@@ -61,7 +65,7 @@ public abstract class DefaultOverduePosterBase implements OverduePoster {
             final NotificationQueue overdueQueue = notificationQueueService.getNotificationQueue(DefaultOverdueService.OVERDUE_SERVICE_NAME,
                                                                                                  overdueQueueName);
 
-            transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<Void>() {
+            transactionalSqlDao.execute(false, new EntitySqlDaoTransactionWrapper<Void>() {
                 @Override
                 public Void inTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory) throws Exception {
                     // Check if we already have notifications for that key
@@ -89,7 +93,7 @@ public abstract class DefaultOverduePosterBase implements OverduePoster {
         try {
             final NotificationQueue checkOverdueQueue = notificationQueueService.getNotificationQueue(DefaultOverdueService.OVERDUE_SERVICE_NAME,
                                                                                                       overdueQueueName);
-            transactionalSqlDao.execute(new EntitySqlDaoTransactionWrapper<Void>() {
+            transactionalSqlDao.execute(false, new EntitySqlDaoTransactionWrapper<Void>() {
                 @Override
                 public Void inTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory) throws Exception {
                     final Iterable<NotificationEventWithMetadata<T>> futureNotifications = getFutureNotificationsForAccountInTransaction(entitySqlDaoWrapperFactory, checkOverdueQueue,

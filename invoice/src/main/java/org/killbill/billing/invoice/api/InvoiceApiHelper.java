@@ -1,6 +1,6 @@
 /*
- * Copyright 2015 Groupon, Inc
- * Copyright 2015 The Billing Project, LLC
+ * Copyright 2014-2018 Groupon, Inc
+ * Copyright 2014-2018 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -28,14 +28,17 @@ import java.util.UUID;
 import javax.annotation.Nullable;
 import javax.inject.Inject;
 
+import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
 import org.killbill.billing.ErrorCode;
 import org.killbill.billing.callcontext.InternalCallContext;
+import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.invoice.InvoicePluginDispatcher;
 import org.killbill.billing.invoice.dao.InvoiceDao;
 import org.killbill.billing.invoice.dao.InvoiceItemModelDao;
 import org.killbill.billing.invoice.dao.InvoiceModelDao;
+import org.killbill.billing.invoice.model.DefaultInvoice;
 import org.killbill.billing.invoice.model.InvoiceItemFactory;
 import org.killbill.billing.invoice.model.ItemAdjInvoiceItem;
 import org.killbill.billing.util.UUIDs;
@@ -76,11 +79,24 @@ public class InvoiceApiHelper {
     }
 
     public List<InvoiceItem> dispatchToInvoicePluginsAndInsertItems(final UUID accountId, final boolean isDryRun, final WithAccountLock withAccountLock, final CallContext context) throws InvoiceApiException {
+        // Invoked by User API call
+        final LocalDate targetDate = null;
+        final List<Invoice> existingInvoices = null;
+        final boolean isRescheduled = false;
+
+        final InternalTenantContext internalTenantContext = internalCallContextFactory.createInternalTenantContext(accountId, context);
+        final DateTime rescheduleDate = invoicePluginDispatcher.priorCall(targetDate, existingInvoices, isDryRun, isRescheduled, context, internalTenantContext);
+        if (rescheduleDate != null) {
+            throw new InvoiceApiException(ErrorCode.INVOICE_PLUGIN_API_ABORTED, "delayed scheduling is unsupported for API calls");
+        }
+
+        boolean success = false;
         GlobalLock lock = null;
+        Iterable<Invoice> invoicesForPlugins = null;
         try {
             lock = locker.lockWithNumberOfTries(LockerType.ACCNT_INV_PAY.toString(), accountId.toString(), invoiceConfig.getMaxGlobalLockRetries());
 
-            final Iterable<Invoice> invoicesForPlugins = withAccountLock.prepareInvoices();
+            invoicesForPlugins = withAccountLock.prepareInvoices();
 
             final InternalCallContext internalCallContext = internalCallContextFactory.createInternalCallContext(accountId, context);
             final List<InvoiceModelDao> invoiceModelDaos = new LinkedList<InvoiceModelDao>();
@@ -100,6 +116,8 @@ public class InvoiceApiHelper {
             }
 
             final List<InvoiceItemModelDao> createdInvoiceItems = dao.createInvoices(invoiceModelDaos, internalCallContext);
+            success = true;
+
             return fromInvoiceItemModelDao(createdInvoiceItems);
         } catch (final LockFailedException e) {
             log.warn("Failed to process invoice items for accountId='{}'", accountId.toString(), e);
@@ -107,6 +125,15 @@ public class InvoiceApiHelper {
         } finally {
             if (lock != null) {
                 lock.release();
+            }
+
+            if (success) {
+                for (final Invoice invoiceForPlugin : invoicesForPlugins) {
+                    final DefaultInvoice refreshedInvoice = new DefaultInvoice(dao.getById(invoiceForPlugin.getId(), internalTenantContext));
+                    invoicePluginDispatcher.onSuccessCall(targetDate, refreshedInvoice, existingInvoices, isDryRun, isRescheduled, context, internalTenantContext);
+                }
+            } else {
+                invoicePluginDispatcher.onFailureCall(targetDate, null, existingInvoices, isDryRun, isRescheduled, context, internalTenantContext);
             }
         }
     }
@@ -127,6 +154,7 @@ public class InvoiceApiHelper {
                                             @Nullable final Currency currency,
                                             final LocalDate effectiveDate,
                                             final String description,
+                                            @Nullable final String itemDetails,
                                             final InternalCallContext context) throws InvoiceApiException {
         final InvoiceItem invoiceItemToBeAdjusted = Iterables.<InvoiceItem>tryFind(invoiceToBeAdjusted.getInvoiceItems(),
                                                                                    new Predicate<InvoiceItem>() {
@@ -167,7 +195,8 @@ public class InvoiceApiHelper {
                                       description,
                                       amountToAdjust,
                                       currencyForAdjustment,
-                                      invoiceItemToBeAdjusted.getId());
+                                      invoiceItemToBeAdjusted.getId(),
+                                      itemDetails);
     }
 
     private List<InvoiceItem> fromInvoiceItemModelDao(final Collection<InvoiceItemModelDao> invoiceItemModelDaos) {

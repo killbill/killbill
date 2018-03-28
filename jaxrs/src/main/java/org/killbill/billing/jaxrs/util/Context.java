@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2014 Ning, Inc.
- * Copyright 2014-2016 Groupon, Inc
- * Copyright 2014-2016 The Billing Project, LLC
+ * Copyright 2014-2018 Groupon, Inc
+ * Copyright 2014-2018 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -93,7 +93,7 @@ public class Context {
         return tenantContext;
     }
 
-    // Use REQUEST_ID_HEADER if this is provided and lloks like a UUID, if not allocate a random one.
+    // Use REQUEST_ID_HEADER if this is provided and looks like a UUID, if not allocate a random one.
     public static  UUID getOrCreateUserToken() {
         UUID userToken;
         if (Request.getPerThreadRequestData().getRequestId() != null) {
@@ -116,6 +116,11 @@ public class Context {
         } else {
             return (Tenant) tenantObject;
         }
+    }
+
+    private void populateMDCContext(final CallContext callContext) {
+        // InternalCallContextFactory will do it for us
+        internalCallContextFactory.createInternalCallContextWithoutAccountRecordId(callContext);
     }
 
     private void populateMDCContext(final TenantContext tenantContext) {

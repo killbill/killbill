@@ -99,7 +99,6 @@ import com.google.inject.name.Names;
 
 public class KillbillServerModule extends KillbillPlatformModule {
 
-    public static final String SHIRO_DATA_SOURCE_ID = "shiro";
     public static final String STATIC_CONFIG = "StaticConfig";
 
     public KillbillServerModule(final ServletContext servletContext, final KillbillServerConfig serverConfig, final KillbillConfigSource configSource) {
@@ -139,7 +138,14 @@ public class KillbillServerModule extends KillbillPlatformModule {
 
         // Same database, but different pool: clone the object so the shutdown sequence cleans the pool properly
         shiroEmbeddedDB = new KillBillEmbeddedDBProvider(daoConfig).get();
-        bind(EmbeddedDB.class).annotatedWith(Names.named(SHIRO_DATA_SOURCE_ID_NAMED)).toInstance(shiroEmbeddedDB);
+        bind(EmbeddedDB.class).annotatedWith(Names.named(SHIRO_DATA_SOURCE_ID)).toInstance(shiroEmbeddedDB);
+
+        if (mainRoDataSourceConfig.isEnabled()) {
+            mainRoEmbeddedDB = new KillBillEmbeddedDBProvider(mainRoDataSourceConfig).get();
+        } else {
+            mainRoEmbeddedDB = mainEmbeddedDB;
+        }
+        bind(EmbeddedDB.class).annotatedWith(Names.named(MAIN_RO_DATA_SOURCE_ID)).toInstance(mainRoEmbeddedDB);
     }
 
     @Override

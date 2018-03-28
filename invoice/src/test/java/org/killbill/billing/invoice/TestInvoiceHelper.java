@@ -238,7 +238,7 @@ public class TestInvoiceHelper {
                                                                    invoiceDao, internalCallContextFactory, invoicePluginDispatcher, locker, busService.getBus(),
                                                                    notificationQueueService, invoiceConfig, clock, parkedAccountsManager);
 
-        return dispatcher.processAccountFromNotificationOrBusEvent(accountId, targetDate, dryRunArguments, internalCallContext);
+        return dispatcher.processAccountFromNotificationOrBusEvent(accountId, targetDate, dryRunArguments, false, internalCallContext);
     }
 
     public SubscriptionBase createSubscription() throws SubscriptionBaseApiException {

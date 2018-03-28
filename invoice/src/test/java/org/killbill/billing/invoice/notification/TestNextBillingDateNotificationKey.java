@@ -1,6 +1,6 @@
 /*
- * Copyright 2014-2015 Groupon, Inc
- * Copyright 2014-2015 The Billing Project, LLC
+ * Copyright 2014-2018 Groupon, Inc
+ * Copyright 2014-2018 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -38,7 +38,7 @@ public class TestNextBillingDateNotificationKey {
         final DateTime targetDate = new DateTime();
         final Boolean isDryRunForInvoiceNotification = Boolean.FALSE;
 
-        final NextBillingDateNotificationKey key = new NextBillingDateNotificationKey(uuidKey, null, targetDate, isDryRunForInvoiceNotification);
+        final NextBillingDateNotificationKey key = new NextBillingDateNotificationKey(uuidKey, null, targetDate, isDryRunForInvoiceNotification, false);
         final String json = mapper.writeValueAsString(key);
 
         final NextBillingDateNotificationKey result = mapper.readValue(json, NextBillingDateNotificationKey.class);
@@ -56,7 +56,7 @@ public class TestNextBillingDateNotificationKey {
         final DateTime targetDate = new DateTime();
         final Boolean isDryRunForInvoiceNotification = Boolean.FALSE;
 
-        final NextBillingDateNotificationKey key = new NextBillingDateNotificationKey(null, ImmutableList.of(uuidKey1, uuidKey2), targetDate, isDryRunForInvoiceNotification);
+        final NextBillingDateNotificationKey key = new NextBillingDateNotificationKey(null, ImmutableList.of(uuidKey1, uuidKey2), targetDate, isDryRunForInvoiceNotification, false);
         final String json = mapper.writeValueAsString(key);
 
         final NextBillingDateNotificationKey result = mapper.readValue(json, NextBillingDateNotificationKey.class);

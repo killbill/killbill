@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2014 Ning, Inc.
- * Copyright 2014-2017 Groupon, Inc
- * Copyright 2014-2017 The Billing Project, LLC
+ * Copyright 2014-2018 Groupon, Inc
+ * Copyright 2014-2018 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -44,7 +44,6 @@ import org.killbill.commons.locker.memory.MemoryGlobalLocker;
 import org.killbill.commons.locker.mysql.MySqlGlobalLocker;
 import org.killbill.commons.locker.postgresql.PostgreSQLGlobalLocker;
 import org.killbill.notificationq.api.NotificationQueueService;
-import org.skife.jdbi.v2.IDBI;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
@@ -86,8 +85,6 @@ public abstract class UtilTestSuiteWithEmbeddedDB extends GuicyKillbillTestSuite
     protected AuditDao auditDao;
     @Inject
     protected GlobalLocker locker;
-    @Inject
-    protected IDBI idbi;
     @Inject
     protected TestApiListener eventsListener;
     @Inject

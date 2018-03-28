@@ -90,7 +90,7 @@ public class TestCatalog extends TestJaxrsBase {
             Assert.assertTrue(e.getMessage().startsWith("Invalid catalog for tenant : "));
         }
 
-        String catalog = catalogApi.getCatalogXml(requestOptions);
+        String catalog = catalogApi.getCatalogXml(null, requestOptions);
         Assert.assertNotNull(catalog);
     }
 
@@ -231,5 +231,13 @@ public class TestCatalog extends TestJaxrsBase {
         catalogsJson = catalogApi.getCatalogJson(null, requestOptions);
         Assert.assertEquals(catalogsJson.size(), 0);
 
+    }
+
+    @Test(groups = "slow")
+    public  void testGetCatalogVersions() throws Exception {
+        uploadTenantCatalog("SpyCarBasic.xml", false);
+        List<DateTime> versions = catalogApi.getCatalogVersions(requestOptions);
+        Assert.assertEquals(1, versions.size());
+        Assert.assertEquals(versions.get(0).compareTo(DateTime.parse("2013-02-08T00:00:00+00:00")), 0);
     }
 }

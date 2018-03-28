@@ -379,7 +379,7 @@ public class TestEntitlement extends TestJaxrsBase {
             assertEquals(subscription.getState(), EntitlementState.ACTIVE);
         }
 
-        accountApi.closeAccount(accountJson.getAccountId(), true, true, false, requestOptions);
+        accountApi.closeAccount(accountJson.getAccountId(), true, true, false, true, requestOptions);
 
         final Bundles accountBundlesAfterClose = accountApi.getAccountBundles(accountJson.getAccountId(), null, null, requestOptions);
         assertEquals(accountBundlesAfterClose.size(), 1);
@@ -452,7 +452,7 @@ public class TestEntitlement extends TestJaxrsBase {
             }
         }
 
-        accountApi.closeAccount(accountJson.getAccountId(), true, false, true, requestOptions);
+        accountApi.closeAccount(accountJson.getAccountId(), true, false, true, true, requestOptions);
 
         final Bundles accountBundlesAfterClose = accountApi.getAccountBundles(accountJson.getAccountId(), null, null, requestOptions);
         assertEquals(accountBundlesAfterClose.size(), 2);

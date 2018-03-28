@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014-2016 Groupon, Inc
- * Copyright 2014-2016 The Billing Project, LLC
+ * Copyright 2014-2018 Groupon, Inc
+ * Copyright 2014-2018 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -100,6 +100,7 @@ public interface JaxrsResource {
     public static final String QUERY_CANCEL_ALL_SUBSCRIPTIONS = "cancelAllSubscriptions";
     public static final String QUERY_WRITE_OFF_UNPAID_INVOICES = "writeOffUnpaidInvoices";
     public static final String QUERY_ITEM_ADJUST_UNPAID_INVOICES = "itemAdjustUnpaidInvoices";
+    public static final String QUERY_REMOVE_FUTURE_NOTIFICATIONS = "removeFutureNotifications";
 
     public static final String QUERY_BLOCKING_STATE_TYPES = "blockingStateTypes";
     public static final String QUERY_BLOCKING_STATE_SVCS = "blockingStateSvcs";

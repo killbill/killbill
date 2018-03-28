@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014-2017 Groupon, Inc
- * Copyright 2014-2017 The Billing Project, LLC
+ * Copyright 2014-2018 Groupon, Inc
+ * Copyright 2014-2018 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -113,6 +113,7 @@ import org.killbill.billing.util.api.AuditLevel;
 import org.killbill.billing.util.api.AuditUserApi;
 import org.killbill.billing.util.api.CustomFieldApiException;
 import org.killbill.billing.util.api.CustomFieldUserApi;
+import org.killbill.billing.util.api.RecordIdApi;
 import org.killbill.billing.util.api.TagApiException;
 import org.killbill.billing.util.api.TagDefinitionApiException;
 import org.killbill.billing.util.api.TagUserApi;
@@ -128,6 +129,8 @@ import org.killbill.billing.util.tag.Tag;
 import org.killbill.clock.Clock;
 import org.killbill.commons.metrics.MetricTag;
 import org.killbill.commons.metrics.TimedResource;
+import org.killbill.notificationq.api.NotificationQueue;
+import org.killbill.notificationq.api.NotificationQueueService;
 
 import com.google.common.base.Function;
 import com.google.common.base.Predicate;
@@ -159,6 +162,8 @@ public class AccountResource extends JaxRsResourceBase {
     private final PaymentConfig paymentConfig;
     private final JaxrsExecutors jaxrsExecutors;
     private final JaxrsConfig jaxrsConfig;
+    private final RecordIdApi recordIdApi;
+    private final NotificationQueueService notificationQueueService;
 
     @Inject
     public AccountResource(final JaxrsUriBuilder uriBuilder,
@@ -175,7 +180,9 @@ public class AccountResource extends JaxRsResourceBase {
                            final PaymentConfig paymentConfig,
                            final JaxrsExecutors jaxrsExecutors,
                            final JaxrsConfig jaxrsConfig,
-                           final Context context) {
+                           final Context context,
+                           final RecordIdApi recordIdApi,
+                           final NotificationQueueService notificationQueueService) {
         super(uriBuilder, tagUserApi, customFieldUserApi, auditUserApi, accountApi, paymentApi, subscriptionApi, clock, context);
         this.subscriptionApi = subscriptionApi;
         this.invoiceApi = invoiceApi;
@@ -184,6 +191,8 @@ public class AccountResource extends JaxRsResourceBase {
         this.paymentConfig = paymentConfig;
         this.jaxrsExecutors = jaxrsExecutors;
         this.jaxrsConfig = jaxrsConfig;
+        this.recordIdApi = recordIdApi;
+        this.notificationQueueService = notificationQueueService;
     }
 
     @TimedResource
@@ -403,11 +412,11 @@ public class AccountResource extends JaxRsResourceBase {
                                  @QueryParam(QUERY_CANCEL_ALL_SUBSCRIPTIONS) @DefaultValue("false") final Boolean cancelAllSubscriptions,
                                  @QueryParam(QUERY_WRITE_OFF_UNPAID_INVOICES) @DefaultValue("false") final Boolean writeOffUnpaidInvoices,
                                  @QueryParam(QUERY_ITEM_ADJUST_UNPAID_INVOICES) @DefaultValue("false") final Boolean itemAdjustUnpaidInvoices,
+                                 @QueryParam(QUERY_REMOVE_FUTURE_NOTIFICATIONS) @DefaultValue("true") final Boolean removeFutureNotifications,
                                  @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                  @HeaderParam(HDR_REASON) final String reason,
                                  @HeaderParam(HDR_COMMENT) final String comment,
                                  @javax.ws.rs.core.Context final HttpServletRequest request) throws SubscriptionApiException, AccountApiException, EntitlementApiException, InvoiceApiException, TagApiException {
-
         final CallContext callContext = context.createCallContextWithAccountId(accountId, createdBy, reason, comment, request);
 
         if (cancelAllSubscriptions) {
@@ -447,7 +456,7 @@ public class AccountResource extends JaxRsResourceBase {
             for (final Invoice invoice : unpaidInvoices) {
                 for (final InvoiceItem item : invoice.getInvoiceItems()) {
                     if (ADJUSTABLE_TYPES.contains(item.getInvoiceItemType())) {
-                        invoiceApi.insertInvoiceItemAdjustment(accountId, invoice.getId(), item.getId(), clock.getUTCToday(), description, callContext);
+                        invoiceApi.insertInvoiceItemAdjustment(accountId, invoice.getId(), item.getId(), clock.getUTCToday(), description, null, callContext);
                     }
                 }
             }
@@ -455,6 +464,15 @@ public class AccountResource extends JaxRsResourceBase {
 
         final BlockingStateJson blockingState = new BlockingStateJson(accountId, "CLOSE_ACCOUNT", "account-service", true, false, false, null, BlockingStateType.ACCOUNT, null);
         addBlockingState(blockingState, accountId, BlockingStateType.ACCOUNT, null, ImmutableList.<String>of(), createdBy, reason, comment, request);
+
+        if (removeFutureNotifications) {
+            final Long tenantRecordId = recordIdApi.getRecordId(callContext.getTenantId(), ObjectType.TENANT, callContext);
+            final Long accountRecordId = accountId == null ? null : recordIdApi.getRecordId(accountId, ObjectType.ACCOUNT, callContext);
+            for (final NotificationQueue notificationQueue : notificationQueueService.getNotificationQueues()) {
+                log.debug("Removing future notifications for queueName={}", notificationQueue.getFullQName());
+                notificationQueue.removeFutureNotificationsForSearchKeys(accountRecordId, tenantRecordId);
+            }
+        }
 
         return Response.status(Status.OK).build();
     }
@@ -791,7 +809,7 @@ public class AccountResource extends JaxRsResourceBase {
         // then we apply some credit on the account.
         //
         if (externalPayment && remainingRequestPayment.compareTo(BigDecimal.ZERO) > 0) {
-            invoiceApi.insertCredit(account.getId(), remainingRequestPayment, clock.getUTCToday(), account.getCurrency(), true, "pay all invoices", callContext);
+            invoiceApi.insertCredit(account.getId(), remainingRequestPayment, clock.getUTCToday(), account.getCurrency(), true, "pay all invoices", null, callContext);
         }
         return Response.status(Status.OK).build();
     }

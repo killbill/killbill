@@ -42,10 +42,15 @@ import org.killbill.billing.invoice.api.Invoice;
 import org.killbill.billing.invoice.api.InvoiceItem;
 import org.killbill.billing.invoice.api.InvoiceItemType;
 import org.killbill.billing.invoice.model.ExternalChargeInvoiceItem;
+import org.killbill.billing.invoice.model.ItemAdjInvoiceItem;
 import org.killbill.billing.invoice.model.TaxInvoiceItem;
 import org.killbill.billing.invoice.notification.DefaultNextBillingDateNotifier;
+import org.killbill.billing.invoice.plugin.api.InvoiceContext;
 import org.killbill.billing.invoice.plugin.api.InvoicePluginApi;
 import org.killbill.billing.invoice.plugin.api.InvoicePluginApiRetryException;
+import org.killbill.billing.invoice.plugin.api.OnFailureInvoiceResult;
+import org.killbill.billing.invoice.plugin.api.OnSuccessInvoiceResult;
+import org.killbill.billing.invoice.plugin.api.PriorInvoiceResult;
 import org.killbill.billing.osgi.api.OSGIServiceDescriptor;
 import org.killbill.billing.osgi.api.OSGIServiceRegistration;
 import org.killbill.billing.payment.api.PluginProperty;
@@ -157,6 +162,88 @@ public class TestWithInvoicePlugin extends TestIntegrationBase {
         assertEquals(externalCharge.getId(), pluginInvoiceItemId);
         // verify the ID is the one passed by the plugin #887
         assertEquals(externalCharge.getLinkedItemId(), pluginLinkedItemId);
+    }
+
+    @Test(groups = "slow")
+    public void testBasicAdditionalItemAdjustment() throws Exception {
+        // We take april as it has 30 days (easier to play with BCD)
+        // Set clock to the initial start date - we implicitly assume here that the account timezone is UTC
+        clock.setDay(new LocalDate(2012, 4, 1));
+
+        final AccountData accountData = getAccountData(1);
+        final Account account = createAccountWithNonOsgiPaymentMethod(accountData);
+        accountChecker.checkAccount(account.getId(), accountData, callContext);
+
+        // Create original subscription (Trial PHASE) -> $0 invoice.
+        final DefaultEntitlement bpSubscription = createBaseEntitlementAndCheckForCompletion(account.getId(), "bundleKey", "Pistol", ProductCategory.BASE, BillingPeriod.MONTHLY, NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT);
+        invoiceChecker.checkInvoice(account.getId(), 1, callContext,
+                                    new ExpectedInvoiceItemCheck(new LocalDate(2012, 4, 1), null, InvoiceItemType.FIXED, new BigDecimal("0")),
+                                    new ExpectedInvoiceItemCheck(new LocalDate(2012, 4, 1), null, InvoiceItemType.TAX, new BigDecimal("1.0")));
+        subscriptionChecker.checkSubscriptionCreated(bpSubscription.getId(), internalCallContext);
+
+        // Move to Evergreen PHASE
+        busHandler.pushExpectedEvents(NextEvent.PHASE, NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT);
+        clock.addDays(30);
+        assertListenerStatus();
+        invoiceChecker.checkInvoice(account.getId(), 2, callContext,
+                                    new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 1), new LocalDate(2012, 6, 1), InvoiceItemType.RECURRING, new BigDecimal("29.95")),
+                                    new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 1), null, InvoiceItemType.TAX, new BigDecimal("1.0")));
+
+        final List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, callContext);
+        assertEquals(invoices.size(), 2);
+        final InvoiceItem recurringItem = Iterables.find(invoices.get(1).getInvoiceItems(),
+                                                         new Predicate<InvoiceItem>() {
+                                                             @Override
+                                                             public boolean apply(final InvoiceItem input) {
+                                                                 return InvoiceItemType.RECURRING.equals(input.getInvoiceItemType());
+                                                             }
+                                                         });
+
+        // Item adjust the recurring item from the plugin
+        final UUID pluginInvoiceItemId = UUID.randomUUID();
+        final String itemDetails = "{\n" +
+                                   "  \"user\": \"admin\",\n" +
+                                   "  \"reason\": \"SLA not met\"\n" +
+                                   "}";
+        testInvoicePluginApi.additionalInvoiceItem = new ItemAdjInvoiceItem(pluginInvoiceItemId,
+                                                                            clock.getUTCNow(),
+                                                                            recurringItem.getInvoiceId(),
+                                                                            account.getId(),
+                                                                            clock.getUTCToday(),
+                                                                            "My charge",
+                                                                            BigDecimal.TEN.negate(),
+                                                                            Currency.USD,
+                                                                            recurringItem.getId(),
+                                                                            itemDetails);
+
+        // Move one month
+        busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT);
+        clock.addMonths(1);
+        assertListenerStatus();
+
+        invoiceChecker.checkInvoice(account.getId(), 2, callContext,
+                                    new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 1), new LocalDate(2012, 6, 1), InvoiceItemType.RECURRING, new BigDecimal("29.95")),
+                                    new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 1), null, InvoiceItemType.TAX, new BigDecimal("1.0")),
+                                    new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 1), new LocalDate(2012, 5, 1), InvoiceItemType.ITEM_ADJ, BigDecimal.TEN.negate()),
+                                    new ExpectedInvoiceItemCheck(new LocalDate(2012, 6, 1), new LocalDate(2012, 6, 1), InvoiceItemType.CBA_ADJ, BigDecimal.TEN));
+
+        invoiceChecker.checkInvoice(account.getId(), 3, callContext,
+                                    new ExpectedInvoiceItemCheck(new LocalDate(2012, 6, 1), new LocalDate(2012, 7, 1), InvoiceItemType.RECURRING, new BigDecimal("29.95")),
+                                    new ExpectedInvoiceItemCheck(new LocalDate(2012, 6, 1), new LocalDate(2012, 6, 1), InvoiceItemType.CBA_ADJ, BigDecimal.TEN.negate()));
+
+        final List<Invoice> refreshedInvoices = invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, callContext);
+        final List<InvoiceItem> invoiceItems = refreshedInvoices.get(1).getInvoiceItems();
+        final InvoiceItem invoiceItemAdjustment = Iterables.tryFind(invoiceItems, new Predicate<InvoiceItem>() {
+            @Override
+            public boolean apply(final InvoiceItem input) {
+                return input.getInvoiceItemType() == InvoiceItemType.ITEM_ADJ;
+            }
+        }).orNull();
+        assertNotNull(invoiceItemAdjustment);
+        // verify the ID is the one passed by the plugin #818
+        assertEquals(invoiceItemAdjustment.getId(), pluginInvoiceItemId);
+        // verify the details are passed by the plugin #888
+        assertEquals(invoiceItemAdjustment.getItemDetails(), itemDetails);
     }
 
     @Test(groups = "slow")
@@ -319,6 +406,11 @@ public class TestWithInvoicePlugin extends TestIntegrationBase {
         InvoiceItem additionalInvoiceItem;
 
         @Override
+        public PriorInvoiceResult priorCall(final InvoiceContext invoiceContext, final Iterable<PluginProperty> iterable) {
+            return null;
+        }
+
+        @Override
         public List<InvoiceItem> getAdditionalInvoiceItems(final Invoice invoice, final boolean isDryRun, final Iterable<PluginProperty> pluginProperties, final CallContext callContext) {
             if (shouldThrowException) {
                 throw new InvoicePluginApiRetryException();
@@ -327,6 +419,16 @@ public class TestWithInvoicePlugin extends TestIntegrationBase {
             } else {
                 return ImmutableList.<InvoiceItem>of(createTaxInvoiceItem(invoice));
             }
+        }
+
+        @Override
+        public OnSuccessInvoiceResult onSuccessCall(final InvoiceContext invoiceContext, final Iterable<PluginProperty> iterable) {
+            return null;
+        }
+
+        @Override
+        public OnFailureInvoiceResult onFailureCall(final InvoiceContext invoiceContext, final Iterable<PluginProperty> iterable) {
+            return null;
         }
 
         private InvoiceItem createTaxInvoiceItem(final Invoice invoice) {

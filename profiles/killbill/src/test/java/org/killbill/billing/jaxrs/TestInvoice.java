@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014-2016 Groupon, Inc
- * Copyright 2014-2016 The Billing Project, LLC
+ * Copyright 2014-2018 Groupon, Inc
+ * Copyright 2014-2018 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -362,11 +362,24 @@ public class TestInvoice extends TestJaxrsBase {
         adjustmentInvoiceItem.setAccountId(accountJson.getAccountId());
         adjustmentInvoiceItem.setInvoiceId(invoice.getInvoiceId());
         adjustmentInvoiceItem.setInvoiceItemId(invoiceItem.getInvoiceItemId());
+        final String itemDetails = "{\n" +
+                                   "  \"user\": \"admin\",\n" +
+                                   "  \"reason\": \"SLA not met\"\n" +
+                                   "}";
+        adjustmentInvoiceItem.setItemDetails(itemDetails);
         invoiceApi.adjustInvoiceItem(invoiceItem, invoice.getInvoiceId(), null, requestOptions);
 
         // Verify the new invoice balance is zero
         final Invoice adjustedInvoice = invoiceApi.getInvoice(invoice.getInvoiceId(), true, false, AuditLevel.FULL, requestOptions);
         assertEquals(adjustedInvoice.getAmount().compareTo(BigDecimal.ZERO), 0);
+
+        final InvoiceItem createdAdjustment = Iterables.find(adjustedInvoice.getItems(), new Predicate<InvoiceItem>() {
+            @Override
+            public boolean apply(final InvoiceItem input) {
+                return InvoiceItemType.ITEM_ADJ.toString().equals(input.getItemType());
+            }
+        });
+        assertEquals(createdAdjustment.getItemDetails(), itemDetails);
 
         // Verify invoice audit logs
         Assert.assertEquals(adjustedInvoice.getAuditLogs().size(), 1);
