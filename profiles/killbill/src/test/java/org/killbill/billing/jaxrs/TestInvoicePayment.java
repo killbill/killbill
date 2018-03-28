@@ -262,7 +262,7 @@ public class TestInvoicePayment extends TestJaxrsBase {
         final List<PaymentTransaction> objRefundFromJson = getInvoicePaymentTransactions(allPayments, TransactionType.REFUND);
         Assert.assertEquals(objRefundFromJson.size(), 5);
 
-        Payments paymentsPage = paymentApi.getPayments(0L, 1L, null, NULL_PLUGIN_PROPERTIES, false, false, AuditLevel.NONE, requestOptions);
+        Payments paymentsPage = paymentApi.getPayments(0L, 1L, null, false, false, NULL_PLUGIN_PROPERTIES, AuditLevel.NONE, requestOptions);
         for (int i = 0; i < 6; i++) {
             Assert.assertNotNull(paymentsPage);
             Assert.assertEquals(paymentsPage.size(), 1);

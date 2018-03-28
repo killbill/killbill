@@ -236,7 +236,7 @@ public class TestAccount extends TestJaxrsBase {
         info.setProperties(getPaymentMethodCCProperties());
         PaymentMethod paymentMethodJson = new PaymentMethod(null, UUID.randomUUID().toString(), accountJson.getAccountId(), true, PLUGIN_NAME, info, EMPTY_AUDIT_LOGS);
         final PaymentMethod paymentMethodCC = accountApi.createPaymentMethod(paymentMethodJson, accountJson.getAccountId(), true, false, NULL_PLUGIN_NAMES, NULL_PLUGIN_PROPERTIES, requestOptions);
-        assertTrue(paymentMethodCC.isIsDefault());
+        assertTrue(paymentMethodCC.isDefault());
 
         //
         // Add another payment method
@@ -245,7 +245,7 @@ public class TestAccount extends TestJaxrsBase {
         info2.setProperties(getPaymentMethodPaypalProperties());
         paymentMethodJson = new PaymentMethod(null, UUID.randomUUID().toString(), accountJson.getAccountId(), false, PLUGIN_NAME, info2, EMPTY_AUDIT_LOGS);
         final PaymentMethod paymentMethodPP = accountApi.createPaymentMethod(paymentMethodJson, accountJson.getAccountId(), NULL_PLUGIN_NAMES, NULL_PLUGIN_PROPERTIES, requestOptions);
-        assertFalse(paymentMethodPP.isIsDefault());
+        assertFalse(paymentMethodPP.isDefault());
 
         //
         // FETCH ALL PAYMENT METHODS
@@ -256,11 +256,11 @@ public class TestAccount extends TestJaxrsBase {
         //
         // CHANGE DEFAULT
         //
-        assertTrue(paymentMethodApi.getPaymentMethod(paymentMethodCC.getPaymentMethodId(), NULL_PLUGIN_PROPERTIES, requestOptions).isIsDefault());
-        assertFalse(paymentMethodApi.getPaymentMethod(paymentMethodPP.getPaymentMethodId(), NULL_PLUGIN_PROPERTIES, requestOptions).isIsDefault());
+        assertTrue(paymentMethodApi.getPaymentMethod(paymentMethodCC.getPaymentMethodId(), NULL_PLUGIN_PROPERTIES, requestOptions).isDefault());
+        assertFalse(paymentMethodApi.getPaymentMethod(paymentMethodPP.getPaymentMethodId(), NULL_PLUGIN_PROPERTIES, requestOptions).isDefault());
         accountApi.setDefaultPaymentMethod(accountJson.getAccountId(), paymentMethodPP.getPaymentMethodId(), NULL_PLUGIN_PROPERTIES, requestOptions);
-        assertTrue(paymentMethodApi.getPaymentMethod(paymentMethodPP.getPaymentMethodId(), NULL_PLUGIN_PROPERTIES, requestOptions).isIsDefault());
-        assertFalse(paymentMethodApi.getPaymentMethod(paymentMethodCC.getPaymentMethodId(), NULL_PLUGIN_PROPERTIES, requestOptions).isIsDefault());
+        assertTrue(paymentMethodApi.getPaymentMethod(paymentMethodPP.getPaymentMethodId(), NULL_PLUGIN_PROPERTIES, requestOptions).isDefault());
+        assertFalse(paymentMethodApi.getPaymentMethod(paymentMethodCC.getPaymentMethodId(), NULL_PLUGIN_PROPERTIES, requestOptions).isDefault());
 
         //
         // DELETE NON DEFAULT PM
@@ -471,7 +471,7 @@ public class TestAccount extends TestJaxrsBase {
         final Account retrievedAccount = accountApi.getAccountByKey(childAccount.getExternalKey(), requestOptions);
         Assert.assertTrue(retrievedAccount.equals(childAccount));
         Assert.assertEquals(retrievedAccount.getParentAccountId(), parentAccount.getAccountId());
-        Assert.assertTrue(retrievedAccount.isIsPaymentDelegatedToParent());
+        Assert.assertTrue(retrievedAccount.isPaymentDelegatedToParent());
     }
 
     @Test(groups = "slow", description = "retrieve children accounts by parent account id")

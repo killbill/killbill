@@ -148,7 +148,7 @@ public class TestInvoiceVoid extends TestJaxrsBase {
     }
 
     // Flaky, see https://github.com/killbill/killbill/issues/860
-    @Test(groups = "slow", description = "Void a child invoice") // , retryAnalyzer = FlakyRetryAnalyzer.class)
+    @Test(groups = "slow", description = "Void a child invoice", retryAnalyzer = FlakyRetryAnalyzer.class)
     public void testChildVoidInvoice() throws Exception {
         final DateTime initialDate = new DateTime(2012, 4, 25, 0, 3, 42, 0);
         final LocalDate triggeredDate = new LocalDate(2012, 5, 26);
@@ -189,7 +189,7 @@ public class TestInvoiceVoid extends TestJaxrsBase {
     }
 
     // Flaky, see https://github.com/killbill/killbill/issues/860
-    @Test(groups = "slow", description = "Void a parent invoice") //, retryAnalyzer = FlakyRetryAnalyzer.class)
+    @Test(groups = "slow", description = "Void a parent invoice", retryAnalyzer = FlakyRetryAnalyzer.class)
     public void testParentVoidInvoice() throws Exception {
         final DateTime initialDate = new DateTime(2012, 4, 25, 0, 3, 42, 0);
         final LocalDate triggeredDate = new LocalDate(2012, 5, 26);

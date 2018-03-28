@@ -267,7 +267,7 @@ public class TestPayment extends TestJaxrsBase {
                                                     .withComment(comment)
                                                     .withQueryParams(queryParams).build();
 
-        Payments payments = paymentApi.getPayments(0L, 100L, null, NULL_PLUGIN_PROPERTIES, false, true, AuditLevel.NONE, inputOptions);
+        Payments payments = paymentApi.getPayments(0L, 100L, null, false, true, NULL_PLUGIN_PROPERTIES, AuditLevel.NONE, inputOptions);
 
         Assert.assertNotNull(payments.get(0).getPaymentAttempts());
         Assert.assertEquals(payments.get(0).getPaymentAttempts().get(0).getStateName(), "RETRIED");
@@ -287,7 +287,7 @@ public class TestPayment extends TestJaxrsBase {
                                                     .withComment(comment)
                                                     .withQueryParams(queryParams).build();
 
-        Payments payments = paymentApi.searchPayments("", 0L, 100L, null, NULL_PLUGIN_PROPERTIES, AuditLevel.NONE, false, true, inputOptions);
+        Payments payments = paymentApi.searchPayments("", 0L, 100L, false, true, null, NULL_PLUGIN_PROPERTIES, AuditLevel.NONE, inputOptions);
 
         Assert.assertNotNull(payments.get(0).getPaymentAttempts());
         Assert.assertEquals(payments.get(0).getPaymentAttempts().get(0).getStateName(), "RETRIED");
@@ -299,7 +299,7 @@ public class TestPayment extends TestJaxrsBase {
         mockPaymentProviderPlugin.makeNextPaymentFailWithError();
         createAccountWithPMBundleAndSubscriptionAndWaitForFirstInvoice();
 
-        Payments payments = paymentApi.searchPayments("", 0L, 100L, null, NULL_PLUGIN_PROPERTIES, AuditLevel.NONE, false, true, requestOptions);
+        Payments payments = paymentApi.searchPayments("", 0L, 100L, false, true, null, NULL_PLUGIN_PROPERTIES, AuditLevel.NONE, requestOptions);
         Assert.assertNotNull(payments.get(0));
         Payment payment = paymentApi.getPayment(payments.get(0).getPaymentId(), false, true, NULL_PLUGIN_PROPERTIES, AuditLevel.NONE, requestOptions);
 

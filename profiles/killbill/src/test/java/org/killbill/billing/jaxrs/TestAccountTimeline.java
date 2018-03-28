@@ -304,10 +304,10 @@ public class TestAccountTimeline extends TestJaxrsBase {
     }
 
     private AccountTimeline getAccountTimeline(final UUID accountId, final AuditLevel auditLevel) throws KillBillClientException {
-        final AccountTimeline accountTimeline = accountApi.getAccountTimeline(accountId, auditLevel, false, requestOptions);
+        final AccountTimeline accountTimeline = accountApi.getAccountTimeline(accountId, false, auditLevel, requestOptions);
 
         // Verify also the parallel path
-        final AccountTimeline accountTimelineInParallel = accountApi.getAccountTimeline(accountId, auditLevel, true, requestOptions);
+        final AccountTimeline accountTimelineInParallel = accountApi.getAccountTimeline(accountId, true, auditLevel, requestOptions);
         Assert.assertEquals(accountTimelineInParallel, accountTimeline);
 
         return accountTimeline;

@@ -106,7 +106,7 @@ public class TestCache extends TestJaxrsBase {
     }
 
     // Flaky, see https://github.com/killbill/killbill/issues/860
-    @Test(groups = "slow") //, description = "Can Invalidate (clear) all Tenant Caches for current Tenant", retryAnalyzer = FlakyRetryAnalyzer.class)
+    @Test(groups = "slow", description = "Can Invalidate (clear) all Tenant Caches for current Tenant", retryAnalyzer = FlakyRetryAnalyzer.class)
     public void testInvalidateCacheByTenant() throws Exception {
         // creating a new Tenant for this test
         final String testApiKey = "testApiKey";

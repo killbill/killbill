@@ -57,7 +57,7 @@ public class TestOverdue extends TestJaxrsBase {
         assertEquals(invoices.size(), 2);
 
         // We're still clear - see the configuration
-        Assert.assertTrue(accountApi.getOverdueAccount(accountJson.getAccountId(), requestOptions).isIsClearState());
+        Assert.assertTrue(accountApi.getOverdueAccount(accountJson.getAccountId(), requestOptions).isClearState());
 
         clock.addDays(30);
         crappyWaitForLackOfProperSynchonization();
@@ -96,7 +96,7 @@ public class TestOverdue extends TestJaxrsBase {
         crappyWaitForLackOfProperSynchonization();
 
         // Verify we're in clear state
-        Assert.assertTrue(accountApi.getOverdueAccount(accountJson.getAccountId(), requestOptions).isIsClearState());
+        Assert.assertTrue(accountApi.getOverdueAccount(accountJson.getAccountId(), requestOptions).isClearState());
     }
 
     @Test(groups = "slow", description = "Allow overdue condition by control tag defined in overdue config xml file")
@@ -125,8 +125,8 @@ public class TestOverdue extends TestJaxrsBase {
         assertEquals(invoicesNoTag.size(), 2);
 
         // We're still clear - see the configuration
-        Assert.assertTrue(accountApi.getOverdueAccount(accountJson.getAccountId(), requestOptions).isIsClearState());
-        Assert.assertTrue(accountApi.getOverdueAccount(accountJsonNoTag.getAccountId(), requestOptions).isIsClearState());
+        Assert.assertTrue(accountApi.getOverdueAccount(accountJson.getAccountId(), requestOptions).isClearState());
+        Assert.assertTrue(accountApi.getOverdueAccount(accountJsonNoTag.getAccountId(), requestOptions).isClearState());
 
         clock.addDays(30);
         crappyWaitForLackOfProperSynchonization();
@@ -134,7 +134,7 @@ public class TestOverdue extends TestJaxrsBase {
         // This account is expected to move to OD1 state because it matches with controlTag defined
         Assert.assertEquals(accountApi.getOverdueAccount(accountJson.getAccountId(), requestOptions).getName(), "OD1");
         // This account is not expected to move to OD1 state because it does not match with controlTag defined
-        Assert.assertTrue(accountApi.getOverdueAccount(accountJsonNoTag.getAccountId(), requestOptions).isIsClearState());
+        Assert.assertTrue(accountApi.getOverdueAccount(accountJsonNoTag.getAccountId(), requestOptions).isClearState());
     }
 
     @Test(groups = "slow", description = "Allow overdue condition by exclusion control tag defined in overdue config xml file")
@@ -165,14 +165,14 @@ public class TestOverdue extends TestJaxrsBase {
         assertEquals(invoicesNoTag.size(), 2);
 
         // We're still clear - see the configuration
-        Assert.assertTrue(accountApi.getOverdueAccount(accountJson.getAccountId(), requestOptions).isIsClearState());
-        Assert.assertTrue(accountApi.getOverdueAccount(accountJsonNoTag.getAccountId(), requestOptions).isIsClearState());
+        Assert.assertTrue(accountApi.getOverdueAccount(accountJson.getAccountId(), requestOptions).isClearState());
+        Assert.assertTrue(accountApi.getOverdueAccount(accountJsonNoTag.getAccountId(), requestOptions).isClearState());
 
         clock.addDays(30);
         crappyWaitForLackOfProperSynchonization();
 
         // This account is not expected to move to OD1 state because it does not match with exclusion controlTag defined
-        Assert.assertTrue(accountApi.getOverdueAccount(accountJson.getAccountId(), requestOptions).isIsClearState());
+        Assert.assertTrue(accountApi.getOverdueAccount(accountJson.getAccountId(), requestOptions).isClearState());
         // This account is expected to move to OD1 state because it matches with exclusion controlTag defined
         Assert.assertEquals(accountApi.getOverdueAccount(accountJsonNoTag.getAccountId(), requestOptions).getName(), "OD1");
     }

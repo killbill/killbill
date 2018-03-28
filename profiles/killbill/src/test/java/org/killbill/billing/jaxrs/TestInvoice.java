@@ -26,6 +26,7 @@ import java.util.UUID;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDate;
+import org.killbill.billing.api.FlakyRetryAnalyzer;
 import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.catalog.api.ProductCategory;
 import org.killbill.billing.client.JaxrsResource;
@@ -513,8 +514,7 @@ public class TestInvoice extends TestJaxrsBase {
     }
 
     // Flaky, see https://github.com/killbill/killbill/issues/801
-    @Test(groups = "slow", description = "Can create multiple external charges with same invoice and external keys")
-    // , retryAnalyzer = FlakyRetryAnalyzer.class
+    @Test(groups = "slow", description = "Can create multiple external charges with same invoice and external keys", retryAnalyzer = FlakyRetryAnalyzer.class)
     public void testExternalChargesWithSameInvoiceAndExternalKeys() throws Exception {
         final Account accountJson = createAccountWithPMBundleAndSubscriptionAndWaitForFirstInvoice();
 
