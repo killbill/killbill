@@ -229,7 +229,7 @@ public class TestPaymentPluginProperties extends TestJaxrsBase {
         final RequestOptions requestOptionsWithParams = basicRequestOptions.extend()
                                                                            .withQueryParams(params).build();
 
-        paymentApi.completeTransaction(completeTransactionByPaymentId, initialPayment.getPaymentId(), NULL_PLUGIN_NAMES, queryProperties, requestOptionsWithParams);
+        paymentApi.completeTransaction(initialPayment.getPaymentId(), completeTransactionByPaymentId, NULL_PLUGIN_NAMES, queryProperties, requestOptionsWithParams);
 
         //Capture the payment
         final PaymentTransaction captureTransaction = new PaymentTransaction();
@@ -237,7 +237,7 @@ public class TestPaymentPluginProperties extends TestJaxrsBase {
         captureTransaction.setProperties(bodyProperties);
         captureTransaction.setAmount(BigDecimal.TEN);
         captureTransaction.setCurrency(account.getCurrency());
-        paymentApi.captureAuthorization(captureTransaction, initialPayment.getPaymentId(), ImmutableList.<String>of(PluginPropertiesVerificator.PLUGIN_NAME), queryProperties, requestOptions);
+        paymentApi.captureAuthorization(initialPayment.getPaymentId(), captureTransaction, ImmutableList.<String>of(PluginPropertiesVerificator.PLUGIN_NAME), queryProperties, requestOptions);
 
         //Refund the payment
         final PaymentTransaction refundTransaction = new PaymentTransaction();
@@ -245,7 +245,7 @@ public class TestPaymentPluginProperties extends TestJaxrsBase {
         refundTransaction.setProperties(bodyProperties);
         refundTransaction.setAmount(BigDecimal.TEN);
         refundTransaction.setCurrency(account.getCurrency());
-        paymentApi.refundPayment(refundTransaction, initialPayment.getPaymentId(), ImmutableList.<String>of(PluginPropertiesVerificator.PLUGIN_NAME), queryProperties, requestOptions);
+        paymentApi.refundPayment(initialPayment.getPaymentId(), refundTransaction, ImmutableList.<String>of(PluginPropertiesVerificator.PLUGIN_NAME), queryProperties, requestOptions);
     }
 
     private Payment createVerifyTransaction(final Account account,
@@ -261,7 +261,7 @@ public class TestPaymentPluginProperties extends TestJaxrsBase {
         authTransaction.setPaymentExternalKey(paymentExternalKey);
         authTransaction.setTransactionExternalKey(transactionExternalKey);
         authTransaction.setTransactionType(transactionType);
-        final Payment payment = accountApi.processPayment(authTransaction, account.getAccountId(), paymentMethodId, NULL_PLUGIN_NAMES, pluginProperties, requestOptions);
+        final Payment payment = accountApi.processPayment(account.getAccountId(), authTransaction, paymentMethodId, NULL_PLUGIN_NAMES, pluginProperties, requestOptions);
         return payment;
     }
 

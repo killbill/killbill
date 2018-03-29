@@ -43,7 +43,7 @@ public class TestAccountEmail extends TestJaxrsBase {
         Assert.assertEquals(firstEmails.size(), 0);
 
         // Add an email
-        accountApi.addEmail(accountEmailJson1, accountId, requestOptions);
+        accountApi.addEmail(accountId, accountEmailJson1, requestOptions);
 
         // Verify we can retrieve it
         final List<AccountEmail> secondEmails = accountApi.getEmails(accountId, requestOptions);
@@ -52,7 +52,7 @@ public class TestAccountEmail extends TestJaxrsBase {
         Assert.assertEquals(secondEmails.get(0).getEmail(), email1);
 
         // Add another email
-        accountApi.addEmail(accountEmailJson2, accountId, requestOptions);
+        accountApi.addEmail(accountId, accountEmailJson2, requestOptions);
 
         // Verify we can retrieve both
         final List<AccountEmail> thirdEmails = accountApi.getEmails(accountId, requestOptions);
@@ -72,7 +72,7 @@ public class TestAccountEmail extends TestJaxrsBase {
         Assert.assertEquals(fourthEmails.get(0).getEmail(), email2);
 
         // Try to add the same email
-        accountApi.addEmail(accountEmailJson2, accountId, requestOptions);
+        accountApi.addEmail(accountId, accountEmailJson2, requestOptions);
         Assert.assertEquals(accountApi.getEmails(accountId, requestOptions), fourthEmails);
     }
 }

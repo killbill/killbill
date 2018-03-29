@@ -169,7 +169,7 @@ public abstract class KillbillClient extends GuicyKillbillTestSuiteWithEmbeddedD
         final PaymentMethodPluginDetail info = new PaymentMethodPluginDetail();
         info.setProperties(pmProperties);
         final PaymentMethod paymentMethodJson = new PaymentMethod(null, externalkey, input.getAccountId(), true, PLUGIN_NAME, info, EMPTY_AUDIT_LOGS);
-        accountApi.createPaymentMethod(paymentMethodJson, input.getAccountId(), true, false, NULL_PLUGIN_NAMES, NULL_PLUGIN_PROPERTIES, requestOptions);
+        accountApi.createPaymentMethod(input.getAccountId(), paymentMethodJson, true, false, NULL_PLUGIN_NAMES, NULL_PLUGIN_PROPERTIES, requestOptions);
         return accountApi.getAccount(input.getAccountId(), requestOptions);
     }
 
@@ -183,7 +183,7 @@ public abstract class KillbillClient extends GuicyKillbillTestSuiteWithEmbeddedD
         final PaymentMethodPluginDetail info = new PaymentMethodPluginDetail();
         final PaymentMethod paymentMethodJson = new PaymentMethod(null, UUIDs.randomUUID().toString(), input.getAccountId(),
                                                                   isDefault, ExternalPaymentProviderPlugin.PLUGIN_NAME, info, EMPTY_AUDIT_LOGS);
-        return accountApi.createPaymentMethod(paymentMethodJson, input.getAccountId(), NULL_PLUGIN_NAMES, NULL_PLUGIN_PROPERTIES, requestOptions);
+        return accountApi.createPaymentMethod(input.getAccountId(), paymentMethodJson, NULL_PLUGIN_NAMES, NULL_PLUGIN_PROPERTIES, requestOptions);
     }
 
     protected Account createAccount() throws Exception {

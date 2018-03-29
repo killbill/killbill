@@ -120,7 +120,7 @@ public class TestAccount extends TestJaxrsBase {
                                              "bl1", "bh2", "", "", "ca", "San Francisco", "usa", "en", "415-255-2991",
                                              "notes", false, false, null, null, EMPTY_AUDIT_LOGS);
 
-        accountApi.updateAccount(newInput, input.getAccountId(), requestOptions);
+        accountApi.updateAccount(input.getAccountId(), newInput, requestOptions);
         final Account updatedAccount = accountApi.getAccount(input.getAccountId(), requestOptions);
         // referenceTime is set automatically by system, no way to guess it
         newInput.setReferenceTime(updatedAccount.getReferenceTime());
@@ -175,7 +175,7 @@ public class TestAccount extends TestJaxrsBase {
                                              EMPTY_AUDIT_LOGS);
 
         // Update notes, all other fields remaining the same (value set to null but treatNullAsReset defaults to false)
-        accountApi.updateAccount(newInput, newInput.getAccountId(), requestOptions);
+        accountApi.updateAccount(newInput.getAccountId(), newInput, requestOptions);
         Account updatedAccount = accountApi.getAccount(input.getAccountId(), requestOptions);
 
         Assert.assertNotNull(updatedAccount.getExternalKey());
@@ -191,7 +191,7 @@ public class TestAccount extends TestJaxrsBase {
 
         // Reset notes, all other fields remaining the same
         updatedAccount.setNotes(null);
-        accountApi.updateAccount(updatedAccount, updatedAccount.getAccountId(), true, requestOptions);
+        accountApi.updateAccount(updatedAccount.getAccountId(), updatedAccount, true, requestOptions);
         updatedAccount = accountApi.getAccount(input.getAccountId(), requestOptions);
 
         Assert.assertNotNull(updatedAccount.getExternalKey());
@@ -217,9 +217,7 @@ public class TestAccount extends TestJaxrsBase {
     @Test(groups = "slow", description = "Cannot update a non-existent account")
     public void testUpdateNonExistentAccount() throws Exception {
         final Account input = getAccount();
-        accountApi.updateAccount(input, input.getAccountId(), requestOptions);
-        // TODO
-        //Assert.assertNull();
+        accountApi.updateAccount(input.getAccountId(), input, requestOptions);
     }
 
     @Test(groups = "slow", description = "Cannot retrieve non-existent account")
@@ -235,7 +233,7 @@ public class TestAccount extends TestJaxrsBase {
         final PaymentMethodPluginDetail info = new PaymentMethodPluginDetail();
         info.setProperties(getPaymentMethodCCProperties());
         PaymentMethod paymentMethodJson = new PaymentMethod(null, UUID.randomUUID().toString(), accountJson.getAccountId(), true, PLUGIN_NAME, info, EMPTY_AUDIT_LOGS);
-        final PaymentMethod paymentMethodCC = accountApi.createPaymentMethod(paymentMethodJson, accountJson.getAccountId(), true, false, NULL_PLUGIN_NAMES, NULL_PLUGIN_PROPERTIES, requestOptions);
+        final PaymentMethod paymentMethodCC = accountApi.createPaymentMethod(accountJson.getAccountId(), paymentMethodJson, true, false, NULL_PLUGIN_NAMES, NULL_PLUGIN_PROPERTIES, requestOptions);
         assertTrue(paymentMethodCC.isDefault());
 
         //
@@ -244,7 +242,7 @@ public class TestAccount extends TestJaxrsBase {
         final PaymentMethodPluginDetail info2 = new PaymentMethodPluginDetail();
         info2.setProperties(getPaymentMethodPaypalProperties());
         paymentMethodJson = new PaymentMethod(null, UUID.randomUUID().toString(), accountJson.getAccountId(), false, PLUGIN_NAME, info2, EMPTY_AUDIT_LOGS);
-        final PaymentMethod paymentMethodPP = accountApi.createPaymentMethod(paymentMethodJson, accountJson.getAccountId(), NULL_PLUGIN_NAMES, NULL_PLUGIN_PROPERTIES, requestOptions);
+        final PaymentMethod paymentMethodPP = accountApi.createPaymentMethod(accountJson.getAccountId(), paymentMethodJson, NULL_PLUGIN_NAMES, NULL_PLUGIN_PROPERTIES, requestOptions);
         assertFalse(paymentMethodPP.isDefault());
 
         //

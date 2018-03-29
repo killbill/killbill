@@ -323,8 +323,8 @@ public class InvoiceResource extends JaxRsResourceBase {
     @Produces(APPLICATION_JSON)
     @ApiOperation(value = "Create a migration invoice", response = InvoiceJson.class, tags="Invoice")
     @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid account id or target datetime supplied")})
-    public Response createMigrationInvoice(final List<InvoiceItemJson> items,
-                                           @PathParam("accountId") final UUID accountId,
+    public Response createMigrationInvoice(@PathParam("accountId") final UUID accountId,
+                                           final List<InvoiceItemJson> items,
                                            @Nullable @QueryParam(QUERY_TARGET_DATE) final String targetDate,
                                            @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                            @HeaderParam(HDR_REASON) final String reason,
@@ -435,8 +435,8 @@ public class InvoiceResource extends JaxRsResourceBase {
     @ApiOperation(value = "Adjust an invoice item", response = InvoiceJson.class)
     @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid account id, invoice id or invoice item id supplied"),
                            @ApiResponse(code = 404, message = "Invoice not found")})
-    public Response adjustInvoiceItem(final InvoiceItemJson json,
-                                      @PathParam("invoiceId") final UUID invoiceId,
+    public Response adjustInvoiceItem(@PathParam("invoiceId") final UUID invoiceId,
+                                      final InvoiceItemJson json,
                                       @QueryParam(QUERY_REQUESTED_DT) final String requestedDateTimeString,
                                       @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                       @HeaderParam(HDR_REASON) final String reason,
@@ -487,8 +487,8 @@ public class InvoiceResource extends JaxRsResourceBase {
     @ApiOperation(value = "Create external charge(s)", response = InvoiceItemJson.class, responseContainer = "List")
     @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid account id supplied"),
                            @ApiResponse(code = 404, message = "Account not found")})
-    public Response createExternalCharges(final List<InvoiceItemJson> externalChargesJson,
-                                          @PathParam("accountId") final UUID accountId,
+    public Response createExternalCharges(@PathParam("accountId") final UUID accountId,
+                                          final List<InvoiceItemJson> externalChargesJson,
                                           @QueryParam(QUERY_REQUESTED_DT) final String requestedDateTimeString,
                                           @QueryParam(QUERY_PAY_INVOICE) @DefaultValue("false") final Boolean payInvoice,
                                           @QueryParam(QUERY_PLUGIN_PROPERTY) final List<String> pluginPropertiesString,
@@ -644,8 +644,8 @@ public class InvoiceResource extends JaxRsResourceBase {
     @ApiOperation(value = "Trigger a payment for invoice", response = InvoicePaymentJson.class)
     @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid account id or invoice id supplied"),
                            @ApiResponse(code = 404, message = "Account not found")})
-    public Response createInstantPayment(final InvoicePaymentJson payment,
-                                         @PathParam("invoiceId") final UUID invoiceId,
+    public Response createInstantPayment(@PathParam("invoiceId") final UUID invoiceId,
+                                         final InvoicePaymentJson payment,
                                          @QueryParam(QUERY_PAYMENT_EXTERNAL) @DefaultValue("false") final Boolean externalPayment,
                                          @QueryParam(QUERY_PLUGIN_PROPERTY) final List<String> pluginPropertiesString,
                                          @HeaderParam(HDR_CREATED_BY) final String createdBy,
@@ -692,8 +692,8 @@ public class InvoiceResource extends JaxRsResourceBase {
     @Path("/" + INVOICE_TRANSLATION + "/{locale:" + ANYTHING_PATTERN + "}/")
     @ApiOperation(value = "Upload the invoice translation for the tenant")
     @ApiResponses(value = {})
-    public Response uploadInvoiceTranslation(final String invoiceTranslation,
-                                             @PathParam("locale") final String localeStr,
+    public Response uploadInvoiceTranslation(@PathParam("locale") final String localeStr,
+                                             final String invoiceTranslation,
                                              @QueryParam(QUERY_DELETE_IF_EXISTS) @DefaultValue("false") final boolean deleteIfExists,
                                              @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                              @HeaderParam(HDR_REASON) final String reason,
@@ -731,8 +731,8 @@ public class InvoiceResource extends JaxRsResourceBase {
     @Path("/" + INVOICE_CATALOG_TRANSLATION + "/{locale:" + ANYTHING_PATTERN + "}/")
     @ApiOperation(value = "Upload the catalog translation for the tenant")
     @ApiResponses(value = {})
-    public Response uploadCatalogTranslation(final String catalogTranslation,
-                                             @PathParam("locale") final String localeStr,
+    public Response uploadCatalogTranslation(@PathParam("locale") final String localeStr,
+                                             final String catalogTranslation,
                                              @QueryParam(QUERY_DELETE_IF_EXISTS) @DefaultValue("false") final boolean deleteIfExists,
                                              @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                              @HeaderParam(HDR_REASON) final String reason,

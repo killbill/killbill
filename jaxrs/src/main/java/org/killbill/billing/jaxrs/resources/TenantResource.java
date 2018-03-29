@@ -192,8 +192,8 @@ public class TenantResource extends JaxRsResourceBase {
     @Produces(APPLICATION_JSON)
     @ApiOperation(value = "Add a per tenant configuration for a plugin", response = TenantKeyValueJson.class)
     @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid tenantId supplied")})
-    public Response uploadPluginConfiguration(final String pluginConfig,
-                                              @PathParam("pluginName") final String pluginName,
+    public Response uploadPluginConfiguration(@PathParam("pluginName") final String pluginName,
+                                              final String pluginConfig,
                                               @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                               @HeaderParam(HDR_REASON) final String reason,
                                               @HeaderParam(HDR_COMMENT) final String comment,
@@ -293,8 +293,8 @@ public class TenantResource extends JaxRsResourceBase {
     @Produces(APPLICATION_JSON)
     @ApiOperation(value = "Add a per tenant payment state machine for a plugin", response = TenantKeyValueJson.class)
     @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid tenantId supplied")})
-    public Response uploadPluginPaymentStateMachineConfig(final String paymentStateMachineConfig,
-                                                          @PathParam("pluginName") final String pluginName,
+    public Response uploadPluginPaymentStateMachineConfig(@PathParam("pluginName") final String pluginName,
+                                                          final String paymentStateMachineConfig,
                                                           @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                                           @HeaderParam(HDR_REASON) final String reason,
                                                           @HeaderParam(HDR_COMMENT) final String comment,

@@ -549,8 +549,8 @@ public class SubscriptionResource extends JaxRsResourceBase {
     @ApiOperation(value = "Change entitlement plan")
     @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid subscription id supplied"),
                            @ApiResponse(code = 404, message = "Entitlement not found")})
-    public Response changeSubscriptionPlan(final SubscriptionJson entitlement,
-                                           @PathParam("subscriptionId") final UUID subscriptionId,
+    public Response changeSubscriptionPlan(@PathParam("subscriptionId") final UUID subscriptionId,
+                                           final SubscriptionJson entitlement,
                                            @QueryParam(QUERY_REQUESTED_DT) final String requestedDate,
                                            @QueryParam(QUERY_CALL_COMPLETION) @DefaultValue("false") final Boolean callCompletion,
                                            @QueryParam(QUERY_CALL_TIMEOUT) @DefaultValue("3") final long timeoutSec,
@@ -628,8 +628,8 @@ public class SubscriptionResource extends JaxRsResourceBase {
     @ApiOperation(value = "Block a subscription")
     @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid subscription id supplied"),
                            @ApiResponse(code = 404, message = "Subscription not found")})
-    public Response addSubscriptionBlockingState(final BlockingStateJson json,
-                                                 @PathParam(ID_PARAM_NAME) final UUID id,
+    public Response addSubscriptionBlockingState(@PathParam(ID_PARAM_NAME) final UUID id,
+                                                 final BlockingStateJson json,
                                                  @QueryParam(QUERY_REQUESTED_DT) final String requestedDate,
                                                  @QueryParam(QUERY_PLUGIN_PROPERTY) final List<String> pluginPropertiesString,
                                                  @HeaderParam(HDR_CREATED_BY) final String createdBy,
@@ -714,8 +714,8 @@ public class SubscriptionResource extends JaxRsResourceBase {
     @Path("/{subscriptionId:" + UUID_PATTERN + "}/" + BCD)
     @ApiOperation(value = "Update the BCD associated to a subscription")
     @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid entitlement supplied")})
-    public Response updateSubscriptionBCD(final SubscriptionJson json,
-                                          @PathParam(ID_PARAM_NAME) final UUID subscriptionId,
+    public Response updateSubscriptionBCD(@PathParam(ID_PARAM_NAME) final UUID subscriptionId,
+                                          final SubscriptionJson json,
                                           @QueryParam(QUERY_ENTITLEMENT_EFFECTIVE_FROM_DT) final String effectiveFromDateStr,
                                           @QueryParam(QUERY_FORCE_NEW_BCD_WITH_PAST_EFFECTIVE_DATE) @DefaultValue("false") final Boolean forceNewBcdWithPastEffectiveDate,
                                           @HeaderParam(HDR_CREATED_BY) final String createdBy,

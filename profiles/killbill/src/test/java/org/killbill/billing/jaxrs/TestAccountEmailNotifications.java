@@ -41,7 +41,7 @@ public class TestAccountEmailNotifications extends TestJaxrsBase {
         Assert.assertFalse(firstInvoiceEmailJson.isNotifiedForInvoices());
 
         // Enable email notifications
-        accountApi.setEmailNotificationsForAccount(invoiceEmailJsonWithNotifications, accountId, requestOptions);
+        accountApi.setEmailNotificationsForAccount(accountId, invoiceEmailJsonWithNotifications, requestOptions);
 
         // Verify we can retrieve it
         final InvoiceEmail secondInvoiceEmailJson = accountApi.getEmailNotificationsForAccount(accountId, requestOptions);
@@ -49,7 +49,7 @@ public class TestAccountEmailNotifications extends TestJaxrsBase {
         Assert.assertTrue(secondInvoiceEmailJson.isNotifiedForInvoices());
 
         // Disable email notifications
-        accountApi.setEmailNotificationsForAccount(invoiceEmailJsonWithoutNotifications, accountId, requestOptions);
+        accountApi.setEmailNotificationsForAccount(accountId, invoiceEmailJsonWithNotifications, requestOptions);
 
         // Verify we can retrieve it
         final InvoiceEmail thirdInvoiceEmailJson = accountApi.getEmailNotificationsForAccount(accountId, requestOptions );

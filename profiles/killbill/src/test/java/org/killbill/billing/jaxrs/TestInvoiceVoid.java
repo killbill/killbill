@@ -238,7 +238,7 @@ public class TestInvoiceVoid extends TestJaxrsBase {
         invoicePayment.setAccountId(accountJson.getAccountId());
         invoicePayment.setTargetInvoiceId(invoice.getInvoiceId());
 
-        final InvoicePayment result = invoiceApi.createInstantPayment(invoicePayment, invoice.getInvoiceId(), true, NULL_PLUGIN_PROPERTIES, requestOptions);
+        final InvoicePayment result = invoiceApi.createInstantPayment(invoice.getInvoiceId(), invoicePayment, true, NULL_PLUGIN_PROPERTIES, requestOptions);
         assertEquals(result.getTransactions().size(), 1);
         assertTrue(result.getTransactions().get(0).getAmount().compareTo(payAmount) == 0);
 
@@ -250,7 +250,7 @@ public class TestInvoiceVoid extends TestJaxrsBase {
         final InvoicePaymentTransaction refund = new InvoicePaymentTransaction();
         refund.setPaymentId(payment.getPaymentId());
         refund.setAmount(payment.getPurchasedAmount());
-        invoicePaymentApi.createRefundWithAdjustments(refund, payment.getPaymentId(), payment.getPaymentMethodId(), NULL_PLUGIN_PROPERTIES, requestOptions);
+        invoicePaymentApi.createRefundWithAdjustments(payment.getPaymentId(), refund, payment.getPaymentMethodId(), NULL_PLUGIN_PROPERTIES, requestOptions);
 
         final InvoicePayments allPayments = accountApi.getInvoicePayments(payment.getAccountId(), NULL_PLUGIN_PROPERTIES, requestOptions);
         assertEquals(allPayments.size(), 1);

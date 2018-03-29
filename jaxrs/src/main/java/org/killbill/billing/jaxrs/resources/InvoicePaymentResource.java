@@ -149,8 +149,8 @@ public class InvoicePaymentResource extends JaxRsResourceBase {
     @ApiOperation(value = "Refund a payment, and adjust the invoice if needed", response = InvoicePaymentJson.class)
     @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid payment id supplied"),
                            @ApiResponse(code = 404, message = "Account or payment not found")})
-    public Response createRefundWithAdjustments(final InvoicePaymentTransactionJson json,
-                                                @PathParam("paymentId") final UUID paymentId,
+    public Response createRefundWithAdjustments(@PathParam("paymentId") final UUID paymentId,
+                                                final InvoicePaymentTransactionJson json,
                                                 @QueryParam(QUERY_PAYMENT_EXTERNAL) @DefaultValue("false") final Boolean externalPayment,
                                                 @QueryParam(QUERY_PAYMENT_METHOD_ID) final UUID paymentMethodId,
                                                 @QueryParam(QUERY_PLUGIN_PROPERTY) final List<String> pluginPropertiesString,
@@ -212,8 +212,8 @@ public class InvoicePaymentResource extends JaxRsResourceBase {
     @ApiOperation(value = "Record a chargeback", response = InvoicePaymentJson.class)
     @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid payment id supplied"),
                            @ApiResponse(code = 404, message = "Account or payment not found")})
-    public Response createChargeback(final InvoicePaymentTransactionJson json,
-                                     @PathParam("paymentId") final UUID paymentId,
+    public Response createChargeback(@PathParam("paymentId") final UUID paymentId,
+                                     final InvoicePaymentTransactionJson json,
                                      @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                      @HeaderParam(HDR_REASON) final String reason,
                                      @HeaderParam(HDR_COMMENT) final String comment,
@@ -240,8 +240,8 @@ public class InvoicePaymentResource extends JaxRsResourceBase {
     @ApiOperation(value = "Record a chargebackReversal", response = InvoicePaymentJson.class)
     @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid payment id supplied"),
                            @ApiResponse(code = 404, message = "Account or payment not found")})
-    public Response createChargebackReversal(final InvoicePaymentTransactionJson json,
-                                             @PathParam("paymentId") final UUID paymentId,
+    public Response createChargebackReversal(@PathParam("paymentId") final UUID paymentId,
+                                             final InvoicePaymentTransactionJson json,
                                              @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                              @HeaderParam(HDR_REASON) final String reason,
                                              @HeaderParam(HDR_COMMENT) final String comment,
@@ -273,15 +273,15 @@ public class InvoicePaymentResource extends JaxRsResourceBase {
                            @ApiResponse(code = 502, message = "Failed to submit payment transaction"),
                            @ApiResponse(code = 503, message = "Payment in unknown status, failed to receive gateway response"),
                            @ApiResponse(code = 504, message = "Payment operation timeout")})
-    public Response completeInvoicePaymentTransaction(final PaymentTransactionJson json,
-                                        @PathParam("paymentId") final UUID paymentId,
-                                        @QueryParam(QUERY_PAYMENT_CONTROL_PLUGIN_NAME) final List<String> paymentControlPluginNames,
-                                        @QueryParam(QUERY_PLUGIN_PROPERTY) final List<String> pluginPropertiesString,
-                                        @HeaderParam(HDR_CREATED_BY) final String createdBy,
-                                        @HeaderParam(HDR_REASON) final String reason,
-                                        @HeaderParam(HDR_COMMENT) final String comment,
-                                        @javax.ws.rs.core.Context final UriInfo uriInfo,
-                                        @javax.ws.rs.core.Context final HttpServletRequest request) throws PaymentApiException, AccountApiException {
+    public Response completeInvoicePaymentTransaction(@PathParam("paymentId") final UUID paymentId,
+                                                      final PaymentTransactionJson json,
+                                                      @QueryParam(QUERY_PAYMENT_CONTROL_PLUGIN_NAME) final List<String> paymentControlPluginNames,
+                                                      @QueryParam(QUERY_PLUGIN_PROPERTY) final List<String> pluginPropertiesString,
+                                                      @HeaderParam(HDR_CREATED_BY) final String createdBy,
+                                                      @HeaderParam(HDR_REASON) final String reason,
+                                                      @HeaderParam(HDR_COMMENT) final String comment,
+                                                      @javax.ws.rs.core.Context final UriInfo uriInfo,
+                                                      @javax.ws.rs.core.Context final HttpServletRequest request) throws PaymentApiException, AccountApiException {
 
         final TenantContext tenantContext = context.createTenantContextNoAccountId(request);
         final Payment payment = paymentApi.getPayment(paymentId, false, false, ImmutableList.<PluginProperty>of(), tenantContext);

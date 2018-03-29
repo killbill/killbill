@@ -68,7 +68,7 @@ public class TestAdmin extends TestJaxrsBase {
         authTransaction.setPaymentExternalKey(paymentExternalKey);
         authTransaction.setTransactionExternalKey(authTransactionExternalKey);
         authTransaction.setTransactionType(TransactionType.AUTHORIZE);
-        final Payment authPayment = accountApi.processPayment(authTransaction, account.getAccountId(), account.getPaymentMethodId(), NULL_PLUGIN_NAMES, NULL_PLUGIN_PROPERTIES, requestOptions);
+        final Payment authPayment = accountApi.processPayment(account.getAccountId(), authTransaction, account.getPaymentMethodId(), NULL_PLUGIN_NAMES, NULL_PLUGIN_PROPERTIES, requestOptions);
 
         // First fix transactionStatus and paymentSstate (but not lastSuccessPaymentState
         // Note that state is not consistent between TransactionStatus and lastSuccessPaymentState but we don't care.
@@ -177,7 +177,7 @@ public class TestAdmin extends TestJaxrsBase {
         captureTransaction.setPaymentExternalKey(payment.getPaymentExternalKey());
         captureTransaction.setTransactionExternalKey(capture1TransactionExternalKey);
         try {
-            paymentApi.captureAuthorization(captureTransaction, payment.getPaymentId(), NULL_PLUGIN_NAMES, NULL_PLUGIN_PROPERTIES, requestOptions);
+            paymentApi.captureAuthorization(payment.getPaymentId(), captureTransaction, NULL_PLUGIN_NAMES, NULL_PLUGIN_PROPERTIES, requestOptions);
             if (expectException) {
                 Assert.fail("Capture should not succeed, after auth was moved to a PAYMENT_FAILURE");
             }
@@ -191,7 +191,7 @@ public class TestAdmin extends TestJaxrsBase {
 
     private void fixPaymentState(final Payment payment, final String lastSuccessPaymentState, final String currentPaymentStateName, final TransactionStatus transactionStatus) throws KillBillClientException {
         final AdminPayment body = new AdminPayment(lastSuccessPaymentState, currentPaymentStateName, transactionStatus.toString());
-        adminApi.updatePaymentTransactionState(body, payment.getPaymentId(), payment.getTransactions().get(0).getTransactionId(), requestOptions);
+        adminApi.updatePaymentTransactionState(payment.getPaymentId(), payment.getTransactions().get(0).getTransactionId(), body, requestOptions);
     }
 
     private Response triggerInvoiceGenerationForParkedAccounts(final int limit) throws KillBillClientException {

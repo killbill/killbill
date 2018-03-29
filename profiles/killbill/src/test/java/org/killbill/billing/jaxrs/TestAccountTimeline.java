@@ -92,14 +92,14 @@ public class TestAccountTimeline extends TestJaxrsBase {
         final InvoicePaymentTransaction refund = new InvoicePaymentTransaction();
         refund.setPaymentId(postedPayment.getPaymentId());
         refund.setAmount(refundAmount);
-        invoicePaymentApi.createRefundWithAdjustments(refund, postedPayment.getPaymentId(), accountJson.getPaymentMethodId(), NULL_PLUGIN_PROPERTIES, requestOptions);
+        invoicePaymentApi.createRefundWithAdjustments(postedPayment.getPaymentId(), refund, accountJson.getPaymentMethodId(), NULL_PLUGIN_PROPERTIES, requestOptions);
 
         // Add chargeback
         final BigDecimal chargebackAmount = BigDecimal.ONE;
         final InvoicePaymentTransaction chargeback = new InvoicePaymentTransaction();
         chargeback.setPaymentId(postedPayment.getPaymentId());
         chargeback.setAmount(chargebackAmount);
-        invoicePaymentApi.createChargeback(chargeback, postedPayment.getPaymentId(), requestOptions);
+        invoicePaymentApi.createChargeback(postedPayment.getPaymentId(), chargeback, requestOptions);
 
         // Verify payments
         verifyPayments(accountJson.getAccountId(), startTime, endTime, refundAmount, chargebackAmount);

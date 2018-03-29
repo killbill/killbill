@@ -95,7 +95,7 @@ public class TestInvoicePayment extends TestJaxrsBase {
         final Account accountWithBalance = accountApi.getAccount(paymentJson.getAccountId(), true, false, AuditLevel.NONE, requestOptions);
         Assert.assertTrue(accountWithBalance.getAccountBalance().compareTo(BigDecimal.ZERO) > 0);
 
-        invoicePaymentApi.completeInvoicePaymentTransaction(new PaymentTransaction(), retrievedPaymentJson.getPaymentId(), NULL_PLUGIN_NAMES, NULL_PLUGIN_PROPERTIES, requestOptions);
+        invoicePaymentApi.completeInvoicePaymentTransaction(retrievedPaymentJson.getPaymentId(), new PaymentTransaction(), NULL_PLUGIN_NAMES, NULL_PLUGIN_PROPERTIES, requestOptions);
         final Payment completedPayment = paymentApi.getPayment(paymentJson.getPaymentId(), NULL_PLUGIN_PROPERTIES, requestOptions);
         Assert.assertEquals(completedPayment.getTransactions().get(0).getStatus(), TransactionStatus.SUCCESS);
 
@@ -116,7 +116,7 @@ public class TestInvoicePayment extends TestJaxrsBase {
         final InvoicePaymentTransaction refund = new InvoicePaymentTransaction();
         refund.setPaymentId(invoicePaymentJson.getPaymentId());
         refund.setAmount(refundAmount);
-        invoicePaymentApi.createRefundWithAdjustments(refund, invoicePaymentJson.getPaymentId(), invoicePaymentJson.getPaymentMethodId(), NULL_PLUGIN_PROPERTIES, requestOptions);
+        invoicePaymentApi.createRefundWithAdjustments(invoicePaymentJson.getPaymentId(), refund, invoicePaymentJson.getPaymentMethodId(), NULL_PLUGIN_PROPERTIES, requestOptions);
         final Payment paymentAfterRefundJson = paymentApi.getPayment(invoicePaymentJson.getPaymentId(), NULL_PLUGIN_PROPERTIES, requestOptions);
         verifyRefund(invoicePaymentJson, paymentAfterRefundJson, refundAmount);
 
@@ -137,7 +137,7 @@ public class TestInvoicePayment extends TestJaxrsBase {
         refund.setPaymentId(paymentJson.getPaymentId());
         refund.setAmount(refundAmount);
 
-        invoicePaymentApi.createRefundWithAdjustments(refund, paymentJson.getPaymentId(), paymentJson.getPaymentMethodId(), NULL_PLUGIN_PROPERTIES, requestOptions);
+        invoicePaymentApi.createRefundWithAdjustments(paymentJson.getPaymentId(), refund, paymentJson.getPaymentMethodId(), NULL_PLUGIN_PROPERTIES, requestOptions);
         final Payment paymentAfterRefundJson = paymentApi.getPayment(paymentJson.getPaymentId(), NULL_PLUGIN_PROPERTIES, requestOptions);
         verifyRefund(paymentJson, paymentAfterRefundJson, refundAmount);
 
@@ -167,7 +167,7 @@ public class TestInvoicePayment extends TestJaxrsBase {
         //null amount means full adjustment for that item
         refund.setAdjustments(ImmutableList.<InvoiceItem>of(adjustment));
 
-        invoicePaymentApi.createRefundWithAdjustments(refund, paymentJson.getPaymentId(), paymentJson.getPaymentMethodId(), NULL_PLUGIN_PROPERTIES, requestOptions);
+        invoicePaymentApi.createRefundWithAdjustments(paymentJson.getPaymentId(), refund, paymentJson.getPaymentMethodId(), NULL_PLUGIN_PROPERTIES, requestOptions);
         final Payment paymentAfterRefundJson = paymentApi.getPayment(paymentJson.getPaymentId(), NULL_PLUGIN_PROPERTIES, requestOptions);
         verifyRefund(paymentJson, paymentAfterRefundJson, refundAmount);
 
@@ -196,7 +196,7 @@ public class TestInvoicePayment extends TestJaxrsBase {
         adjustment.setAmount(refundAmount);
         refund.setAdjustments(ImmutableList.<InvoiceItem>of(adjustment));
 
-        invoicePaymentApi.createRefundWithAdjustments(refund, paymentJson.getPaymentId(), paymentJson.getPaymentMethodId(), NULL_PLUGIN_PROPERTIES, requestOptions);
+        invoicePaymentApi.createRefundWithAdjustments(paymentJson.getPaymentId(), refund, paymentJson.getPaymentMethodId(), NULL_PLUGIN_PROPERTIES, requestOptions);
         final Payment paymentAfterRefundJson = paymentApi.getPayment(paymentJson.getPaymentId(), NULL_PLUGIN_PROPERTIES, requestOptions);
         verifyRefund(paymentJson, paymentAfterRefundJson, refundAmount);
 
@@ -227,7 +227,7 @@ public class TestInvoicePayment extends TestJaxrsBase {
         adjustment.setAmount(itemToAdjust.getAmount());
         refund.setAdjustments(ImmutableList.<InvoiceItem>of(adjustment));
 
-        invoicePaymentApi.createRefundWithAdjustments(refund, paymentJson.getPaymentId(), paymentJson.getPaymentMethodId(), NULL_PLUGIN_PROPERTIES, requestOptions);
+        invoicePaymentApi.createRefundWithAdjustments(paymentJson.getPaymentId(), refund, paymentJson.getPaymentMethodId(), NULL_PLUGIN_PROPERTIES, requestOptions);
         final Payment paymentAfterRefundJson = paymentApi.getPayment(paymentJson.getPaymentId(), NULL_PLUGIN_PROPERTIES, requestOptions);
 
         // The refund did go through
@@ -246,13 +246,13 @@ public class TestInvoicePayment extends TestJaxrsBase {
             refund.setPaymentId(lastPayment.getPaymentId());
             refund.setAmount(lastPayment.getPurchasedAmount());
 
-            invoicePaymentApi.createRefundWithAdjustments(refund, lastPayment.getPaymentId(), lastPayment.getPaymentMethodId(), NULL_PLUGIN_PROPERTIES, requestOptions);
+            invoicePaymentApi.createRefundWithAdjustments(lastPayment.getPaymentId(), refund, lastPayment.getPaymentMethodId(), NULL_PLUGIN_PROPERTIES, requestOptions);
 
             final InvoicePayment invoicePayment = new InvoicePayment();
             invoicePayment.setPurchasedAmount(lastPayment.getPurchasedAmount());
             invoicePayment.setAccountId(lastPayment.getAccountId());
             invoicePayment.setTargetInvoiceId(lastPayment.getTargetInvoiceId());
-            final InvoicePayment payment = invoiceApi.createInstantPayment(invoicePayment, lastPayment.getTargetInvoiceId(), NULL_PLUGIN_PROPERTIES, requestOptions);
+            final InvoicePayment payment = invoiceApi.createInstantPayment(lastPayment.getTargetInvoiceId(), invoicePayment, NULL_PLUGIN_PROPERTIES, requestOptions);
             lastPayment = payment;
         }
 
@@ -330,7 +330,7 @@ public class TestInvoicePayment extends TestJaxrsBase {
 
         // Pay too too much => 400
         try {
-            invoiceApi.createInstantPayment(invoicePayment1, invoicePayment1.getTargetInvoiceId(), NULL_PLUGIN_PROPERTIES, requestOptions);
+            invoiceApi.createInstantPayment(invoicePayment1.getTargetInvoiceId(), invoicePayment1, NULL_PLUGIN_PROPERTIES, requestOptions);
             Assert.fail("InvoicePayment call should fail with 400");
         } catch (final KillBillClientException e) {
             assertTrue(true);
@@ -342,12 +342,12 @@ public class TestInvoicePayment extends TestJaxrsBase {
         invoicePayment2.setTargetInvoiceId(invoices.get(1).getInvoiceId());
 
         // Just right, Yah! => 201
-        final InvoicePayment result2 = invoiceApi.createInstantPayment(invoicePayment2, invoicePayment2.getTargetInvoiceId(), NULL_PLUGIN_PROPERTIES, requestOptions);
+        final InvoicePayment result2 = invoiceApi.createInstantPayment(invoicePayment2.getTargetInvoiceId(), invoicePayment2, NULL_PLUGIN_PROPERTIES, requestOptions);
         assertEquals(result2.getTransactions().size(), 1);
         assertTrue(result2.getTransactions().get(0).getAmount().compareTo(invoices.get(1).getBalance()) == 0);
 
         // Already paid -> 204
-        final InvoicePayment result3 = invoiceApi.createInstantPayment(invoicePayment2, invoicePayment2.getTargetInvoiceId(), NULL_PLUGIN_PROPERTIES, requestOptions);
+        final InvoicePayment result3 = invoiceApi.createInstantPayment(invoicePayment2.getTargetInvoiceId(), invoicePayment2, NULL_PLUGIN_PROPERTIES, requestOptions);
         assertNull(result3);
     }
 

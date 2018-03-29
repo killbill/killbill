@@ -63,11 +63,11 @@ public class TestChargeback extends TestJaxrsBase {
         input.setAmount(new BigDecimal("50.00"));
         int count = 4;
         while (count-- > 0) {
-            assertNotNull(invoicePaymentApi.createChargeback(input, payment.getPaymentId(), requestOptions));
+            assertNotNull(invoicePaymentApi.createChargeback(payment.getPaymentId(), input, requestOptions));
         }
 
         // Last attempt should fail because this is more than the Payment
-        final InvoicePayment foo = invoicePaymentApi.createChargeback(input, payment.getPaymentId(), requestOptions);
+        final InvoicePayment foo = invoicePaymentApi.createChargeback(payment.getPaymentId(), input, requestOptions);
         final InvoicePayments payments = accountApi.getInvoicePayments(payment.getAccountId(), NULL_PLUGIN_PROPERTIES, requestOptions);
         final List<PaymentTransaction> transactions = getInvoicePaymentTransactions(payments, TransactionType.CHARGEBACK);
         Assert.assertEquals(transactions.size(), 5);
@@ -109,7 +109,7 @@ public class TestChargeback extends TestJaxrsBase {
         input.setPaymentId(input.getPaymentId());
         input.setAmount(BigDecimal.TEN);
         try {
-            invoicePaymentApi.createChargeback(input, input.getPaymentId(), requestOptions);
+            invoicePaymentApi.createChargeback(input.getPaymentId(), input, requestOptions);
             fail();
         } catch (NullPointerException e) {
         } catch (KillBillClientException e) {
@@ -125,7 +125,7 @@ public class TestChargeback extends TestJaxrsBase {
         input.setPaymentId(payment.getPaymentId());
 
         try {
-            invoicePaymentApi.createChargeback(input, payment.getPaymentId(), requestOptions);
+            invoicePaymentApi.createChargeback(payment.getPaymentId(), input, requestOptions);
             fail();
         } catch (final KillBillClientException e) {
         }
@@ -144,7 +144,7 @@ public class TestChargeback extends TestJaxrsBase {
         chargeback.setPaymentId(payment.getPaymentId());
         chargeback.setAmount(BigDecimal.TEN);
 
-        final InvoicePayment chargebackJson = invoicePaymentApi.createChargeback(chargeback, payment.getPaymentId(), requestOptions);
+        final InvoicePayment chargebackJson = invoicePaymentApi.createChargeback(payment.getPaymentId(), chargeback, requestOptions);
         final List<PaymentTransaction> chargebackTransactions = getInvoicePaymentTransactions(ImmutableList.of(chargebackJson), TransactionType.CHARGEBACK);
         assertEquals(chargebackTransactions.size(), 1);
 

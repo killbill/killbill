@@ -383,8 +383,8 @@ public class AccountResource extends JaxRsResourceBase {
     @Path("/{accountId:" + UUID_PATTERN + "}")
     @ApiOperation(value = "Update account")
     @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid account data supplied")})
-    public Response updateAccount(final AccountJson json,
-                                  @PathParam("accountId") final UUID accountId,
+    public Response updateAccount(@PathParam("accountId") final UUID accountId,
+                                  final AccountJson json,
                                   @QueryParam(QUERY_ACCOUNT_TREAT_NULL_AS_RESET) @DefaultValue("false") final Boolean treatNullValueAsReset,
                                   @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                   @HeaderParam(HDR_REASON) final String reason,
@@ -653,8 +653,8 @@ public class AccountResource extends JaxRsResourceBase {
     @ApiOperation(value = "Set account email notification")
     @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid account id supplied"),
                            @ApiResponse(code = 404, message = "Account not found")})
-    public Response setEmailNotificationsForAccount(final InvoiceEmailJson json,
-                                                    @PathParam("accountId") final UUID accountId,
+    public Response setEmailNotificationsForAccount(@PathParam("accountId") final UUID accountId,
+                                                    final InvoiceEmailJson json,
                                                     @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                                     @HeaderParam(HDR_REASON) final String reason,
                                                     @HeaderParam(HDR_COMMENT) final String comment,
@@ -822,8 +822,8 @@ public class AccountResource extends JaxRsResourceBase {
     @ApiOperation(value = "Add a payment method", response = PaymentMethodJson.class)
     @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid account id supplied"),
                            @ApiResponse(code = 404, message = "Account not found")})
-    public Response createPaymentMethod(final PaymentMethodJson json,
-                                        @PathParam("accountId") final UUID accountId,
+    public Response createPaymentMethod(@PathParam("accountId") final UUID accountId,
+                                        final PaymentMethodJson json,
                                         @QueryParam(QUERY_PAYMENT_METHOD_IS_DEFAULT) @DefaultValue("false") final Boolean isDefault,
                                         @QueryParam(QUERY_PAY_ALL_UNPAID_INVOICES) @DefaultValue("false") final Boolean payAllUnpaidInvoices,
                                         @QueryParam(QUERY_PAYMENT_CONTROL_PLUGIN_NAME) final List<String> paymentControlPluginNames,
@@ -1021,8 +1021,8 @@ public class AccountResource extends JaxRsResourceBase {
                            @ApiResponse(code = 502, message = "Failed to submit payment transaction"),
                            @ApiResponse(code = 503, message = "Payment in unknown status, failed to receive gateway response"),
                            @ApiResponse(code = 504, message = "Payment operation timeout")})
-    public Response processPayment(@MetricTag(tag = "type", property = "transactionType") final PaymentTransactionJson json,
-                                   @PathParam("accountId") final UUID accountId,
+    public Response processPayment(@PathParam("accountId") final UUID accountId,
+                                   @MetricTag(tag = "type", property = "transactionType") final PaymentTransactionJson json,
                                    @QueryParam(QUERY_PAYMENT_METHOD_ID) final UUID inputPaymentMethodId,
                                    @QueryParam(QUERY_PAYMENT_CONTROL_PLUGIN_NAME) final List<String> paymentControlPluginNames,
                                    @QueryParam(QUERY_PLUGIN_PROPERTY) final List<String> pluginPropertiesString,
@@ -1160,14 +1160,14 @@ public class AccountResource extends JaxRsResourceBase {
     @ApiOperation(value = "Block an account")
     @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid account id supplied"),
                            @ApiResponse(code = 404, message = "Account not found")})
-    public Response addAccountBlockingState(final BlockingStateJson json,
-                                           @PathParam(ID_PARAM_NAME) final UUID id,
-                                           @QueryParam(QUERY_REQUESTED_DT) final String requestedDate,
-                                           @QueryParam(QUERY_PLUGIN_PROPERTY) final List<String> pluginPropertiesString,
-                                           @HeaderParam(HDR_CREATED_BY) final String createdBy,
-                                           @HeaderParam(HDR_REASON) final String reason,
-                                           @HeaderParam(HDR_COMMENT) final String comment,
-                                           @javax.ws.rs.core.Context final HttpServletRequest request) throws SubscriptionApiException, EntitlementApiException, AccountApiException {
+    public Response addAccountBlockingState(@PathParam(ID_PARAM_NAME) final UUID id,
+                                            final BlockingStateJson json,
+                                            @QueryParam(QUERY_REQUESTED_DT) final String requestedDate,
+                                            @QueryParam(QUERY_PLUGIN_PROPERTY) final List<String> pluginPropertiesString,
+                                            @HeaderParam(HDR_CREATED_BY) final String createdBy,
+                                            @HeaderParam(HDR_REASON) final String reason,
+                                            @HeaderParam(HDR_COMMENT) final String comment,
+                                            @javax.ws.rs.core.Context final HttpServletRequest request) throws SubscriptionApiException, EntitlementApiException, AccountApiException {
         return addBlockingState(json, id, BlockingStateType.ACCOUNT, requestedDate, pluginPropertiesString, createdBy, reason, comment, request);
     }
 
@@ -1376,8 +1376,8 @@ public class AccountResource extends JaxRsResourceBase {
     @ApiOperation(value = "Add account email", response = AccountEmailJson.class, responseContainer = "List")
     @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid account id supplied"),
                            @ApiResponse(code = 404, message = "Account not found")})
-    public Response addEmail(final AccountEmailJson json,
-                             @PathParam(ID_PARAM_NAME) final UUID accountId,
+    public Response addEmail(@PathParam(ID_PARAM_NAME) final UUID accountId,
+                             final AccountEmailJson json,
                              @HeaderParam(HDR_CREATED_BY) final String createdBy,
                              @HeaderParam(HDR_REASON) final String reason,
                              @HeaderParam(HDR_COMMENT) final String comment,

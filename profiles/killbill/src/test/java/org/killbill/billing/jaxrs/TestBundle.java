@@ -130,7 +130,7 @@ public class TestBundle extends TestJaxrsBase {
         final Bundle bundle = new Bundle();
         bundle.setAccountId(newAccount.getAccountId());
         bundle.setBundleId(entitlementJsonNoEvents.getBundleId());
-        bundleApi.transferBundle(bundle, entitlementJsonNoEvents.getBundleId(), null, NULL_PLUGIN_PROPERTIES, requestOptions);
+        bundleApi.transferBundle(entitlementJsonNoEvents.getBundleId(), bundle, null, NULL_PLUGIN_PROPERTIES, requestOptions);
 
         existingBundles = bundleApi.getBundleByKey(bundleExternalKey, requestOptions);
         assertEquals(existingBundles.size(), 1);
@@ -178,7 +178,7 @@ public class TestBundle extends TestJaxrsBase {
         assertEquals(bundle.getExternalKey(), bundleExternalKey);
 
         final BlockingState blockingState = new BlockingState(bundle.getBundleId(), "block", "service", false, true, true, null, BlockingStateType.SUBSCRIPTION_BUNDLE, null);
-        bundleApi.addBundleBlockingState(blockingState, bundle.getBundleId(), clock.getToday(DateTimeZone.forID(accountJson.getTimeZone())), ImmutableMap.<String, String>of(), requestOptions);
+        bundleApi.addBundleBlockingState(bundle.getBundleId(), blockingState, clock.getToday(DateTimeZone.forID(accountJson.getTimeZone())), ImmutableMap.<String, String>of(), requestOptions);
 
         final Subscription subscription = subscriptionApi.getSubscription(entitlement.getSubscriptionId(), requestOptions);
         assertEquals(subscription.getState(), EntitlementState.BLOCKED);
@@ -186,7 +186,7 @@ public class TestBundle extends TestJaxrsBase {
         clock.addDays(1);
 
         final BlockingState unblockingState = new BlockingState(bundle.getBundleId(), "unblock", "service", false, false, false, null, BlockingStateType.SUBSCRIPTION_BUNDLE, null);
-        bundleApi.addBundleBlockingState(unblockingState, bundle.getBundleId(), clock.getToday(DateTimeZone.forID(accountJson.getTimeZone())), ImmutableMap.<String, String>of(), requestOptions);
+        bundleApi.addBundleBlockingState(bundle.getBundleId(), unblockingState, clock.getToday(DateTimeZone.forID(accountJson.getTimeZone())), ImmutableMap.<String, String>of(), requestOptions);
 
         final Subscription subscription2 = subscriptionApi.getSubscription(entitlement.getSubscriptionId(), requestOptions);
         assertEquals(subscription2.getState(), EntitlementState.ACTIVE);

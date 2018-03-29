@@ -279,8 +279,8 @@ public class BundleResource extends JaxRsResourceBase {
     @ApiOperation(value = "Block a bundle")
     @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid bundle id supplied"),
                            @ApiResponse(code = 404, message = "Bundle not found")})
-    public Response addBundleBlockingState(final BlockingStateJson json,
-                                           @PathParam(ID_PARAM_NAME) final UUID id,
+    public Response addBundleBlockingState(@PathParam(ID_PARAM_NAME) final UUID id,
+                                           final BlockingStateJson json,
                                            @QueryParam(QUERY_REQUESTED_DT) final String requestedDate,
                                            @QueryParam(QUERY_PLUGIN_PROPERTY) final List<String> pluginPropertiesString,
                                            @HeaderParam(HDR_CREATED_BY) final String createdBy,
@@ -383,8 +383,8 @@ public class BundleResource extends JaxRsResourceBase {
     @ApiOperation(value = "Transfer a bundle to another account")
     @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid bundle id, requested date or policy supplied"),
                            @ApiResponse(code = 404, message = "Bundle not found")})
-    public Response transferBundle(final BundleJson json,
-                                   @PathParam(ID_PARAM_NAME) final UUID bundleId,
+    public Response transferBundle(@PathParam(ID_PARAM_NAME) final UUID bundleId,
+                                   final BundleJson json,
                                    @QueryParam(QUERY_REQUESTED_DT) final String requestedDate,
                                    @QueryParam(QUERY_BILLING_POLICY) @DefaultValue("END_OF_TERM") final BillingActionPolicy billingPolicy,
                                    @QueryParam(QUERY_PLUGIN_PROPERTY) final List<String> pluginPropertiesString,
@@ -414,8 +414,8 @@ public class BundleResource extends JaxRsResourceBase {
     @ApiOperation(value = "Update a bundle externalKey")
     @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid argumnent supplied"),
                            @ApiResponse(code = 404, message = "Bundle not found")})
-    public Response renameExternalKey(final BundleJson json,
-                                      @PathParam(ID_PARAM_NAME) final UUID bundleId,
+    public Response renameExternalKey(@PathParam(ID_PARAM_NAME) final UUID bundleId,
+                                      final BundleJson json,
                                       /* @QueryParam(QUERY_PLUGIN_PROPERTY) final List<String> pluginPropertiesString, */
                                       @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                       @HeaderParam(HDR_REASON) final String reason,

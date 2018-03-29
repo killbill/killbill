@@ -115,7 +115,7 @@ public class TestPayment extends TestJaxrsBase {
         final DateTime effectiveDate = new DateTime(2018, 9, 4, 3, 5, 35);
         authTransaction.setEffectiveDate(effectiveDate);
 
-        final Payment payment = accountApi.processPayment(authTransaction, account.getAccountId(), account.getPaymentMethodId(),
+        final Payment payment = accountApi.processPayment(account.getAccountId(), authTransaction, account.getPaymentMethodId(),
                                                           NULL_PLUGIN_NAMES, NULL_PLUGIN_PROPERTIES, requestOptions);
         final PaymentTransaction paymentTransaction = payment.getTransactions().get(0);
         assertTrue(paymentTransaction.getEffectiveDate().compareTo(effectiveDate) == 0);
@@ -132,7 +132,7 @@ public class TestPayment extends TestJaxrsBase {
         authTransaction.setCurrency(account.getCurrency());
         authTransaction.setTransactionType(TransactionType.AUTHORIZE);
 
-        final Payment payment = accountApi.processPayment(authTransaction, account.getAccountId(), account.getPaymentMethodId(),
+        final Payment payment = accountApi.processPayment(account.getAccountId(), authTransaction, account.getPaymentMethodId(),
                                                           NULL_PLUGIN_NAMES, NULL_PLUGIN_PROPERTIES, requestOptions);
         final PaymentTransaction paymentTransaction = payment.getTransactions().get(0);
         assertEquals(paymentTransaction.getStatus(), TransactionStatus.PAYMENT_FAILURE);
@@ -159,7 +159,7 @@ public class TestPayment extends TestJaxrsBase {
                                                                                  .build();
 
         try {
-            accountApi.processPayment(authTransaction, account.getAccountId(), account.getPaymentMethodId(),
+            accountApi.processPayment(account.getAccountId(), authTransaction, account.getPaymentMethodId(),
                                       NULL_PLUGIN_NAMES, NULL_PLUGIN_PROPERTIES, requestOptionsWithoutFollowLocation);
             fail();
         } catch (final KillBillClientException e) {
@@ -179,7 +179,7 @@ public class TestPayment extends TestJaxrsBase {
         authTransaction.setCurrency(account.getCurrency());
         authTransaction.setTransactionType(TransactionType.AUTHORIZE);
 
-        final Payment payment = accountApi.processPayment(authTransaction, account.getAccountId(), account.getPaymentMethodId(),
+        final Payment payment = accountApi.processPayment(account.getAccountId(), authTransaction, account.getPaymentMethodId(),
                                                           NULL_PLUGIN_NAMES, NULL_PLUGIN_PROPERTIES, requestOptions);
         final PaymentTransaction paymentTransaction = payment.getTransactions().get(0);
         assertEquals(paymentTransaction.getStatus(), TransactionStatus.PLUGIN_FAILURE);
@@ -196,7 +196,7 @@ public class TestPayment extends TestJaxrsBase {
         authTransaction.setCurrency(account.getCurrency());
         authTransaction.setTransactionType(TransactionType.AUTHORIZE);
         try {
-            accountApi.processPayment(authTransaction, account.getAccountId(), account.getPaymentMethodId(),
+            accountApi.processPayment(account.getAccountId(), authTransaction, account.getPaymentMethodId(),
                                       NULL_PLUGIN_NAMES, NULL_PLUGIN_PROPERTIES, requestOptions);
             fail();
         } catch (KillBillClientException e) {
@@ -336,7 +336,7 @@ public class TestPayment extends TestJaxrsBase {
         assertEquals(payment.getPaymentId(), paymentId);
 
         final PaymentMethod paymentMethodJson = new PaymentMethod(null, UUID.randomUUID().toString(), account.getAccountId(), false, PLUGIN_NAME, new PaymentMethodPluginDetail(), null);
-        final PaymentMethod nonDefaultPaymentMethod = accountApi.createPaymentMethod(paymentMethodJson, account.getAccountId(), NULL_PLUGIN_NAMES, NULL_PLUGIN_PROPERTIES, requestOptions);
+        final PaymentMethod nonDefaultPaymentMethod = accountApi.createPaymentMethod(account.getAccountId(), paymentMethodJson, NULL_PLUGIN_NAMES, NULL_PLUGIN_PROPERTIES, requestOptions);
         testCreateRetrievePayment(account, nonDefaultPaymentMethod.getPaymentMethodId(), UUID.randomUUID().toString(), 2);
     }
 
@@ -362,7 +362,7 @@ public class TestPayment extends TestJaxrsBase {
             // Complete operation: first, only specify the payment id
             final PaymentTransaction completeTransactionByPaymentId = new PaymentTransaction();
             completeTransactionByPaymentId.setPaymentId(initialPayment.getPaymentId());
-            paymentApi.completeTransaction(completeTransactionByPaymentId, initialPayment.getPaymentId(), NULL_PLUGIN_NAMES, pluginProperties, requestOptions);
+            paymentApi.completeTransaction(initialPayment.getPaymentId(), completeTransactionByPaymentId, NULL_PLUGIN_NAMES, pluginProperties, requestOptions);
             final Payment completedPaymentByPaymentId = paymentApi.getPayment(initialPayment.getPaymentId(), pluginProperties, requestOptions);
             verifyPayment(account, paymentMethodId, completedPaymentByPaymentId, paymentExternalKey, authTransactionExternalKey, transactionType, TransactionStatus.PENDING, amount, authAmount, BigDecimal.ZERO, BigDecimal.ZERO, 1, paymentNb);
 
@@ -385,7 +385,7 @@ public class TestPayment extends TestJaxrsBase {
             final PaymentTransaction completeTransactionWithTypeAndId = new PaymentTransaction();
             completeTransactionWithTypeAndId.setPaymentId(initialPayment.getPaymentId());
             completeTransactionWithTypeAndId.setTransactionId(authPaymentTransaction.getTransactionId());
-            paymentApi.completeTransaction(completeTransactionWithTypeAndId, initialPayment.getPaymentId(), NULL_PLUGIN_NAMES, pluginProperties, requestOptions);
+            paymentApi.completeTransaction(initialPayment.getPaymentId(), completeTransactionWithTypeAndId, NULL_PLUGIN_NAMES, pluginProperties, requestOptions);
             final Payment completedPaymentByTypeAndId = paymentApi.getPayment(initialPayment.getPaymentId(), pluginProperties, requestOptions);
             verifyPayment(account, paymentMethodId, completedPaymentByTypeAndId, paymentExternalKey, authTransactionExternalKey, transactionType, TransactionStatus.PENDING, amount, authAmount, BigDecimal.ZERO, BigDecimal.ZERO, 1, paymentNb);
         }
@@ -411,7 +411,7 @@ public class TestPayment extends TestJaxrsBase {
         // Complete operation: first, only specify the payment id
         final PaymentTransaction completeTransactionByPaymentId = new PaymentTransaction();
         completeTransactionByPaymentId.setPaymentId(initialPayment.getPaymentId());
-        paymentApi.completeTransaction(completeTransactionByPaymentId, initialPayment.getPaymentId(), NULL_PLUGIN_NAMES, pluginProperties, requestOptions);
+        paymentApi.completeTransaction(initialPayment.getPaymentId(), completeTransactionByPaymentId, NULL_PLUGIN_NAMES, pluginProperties, requestOptions);
         final Payment completedPaymentByPaymentId = paymentApi.getPayment(initialPayment.getPaymentId(), pluginProperties, requestOptions);
         verifyPayment(account, paymentMethodId, completedPaymentByPaymentId, paymentExternalKey, authTransactionExternalKey, transactionType, TransactionStatus.SUCCESS, amount, amount, BigDecimal.ZERO, BigDecimal.ZERO, 1, 1);
     }
@@ -437,7 +437,7 @@ public class TestPayment extends TestJaxrsBase {
         completeTransactionByPaymentIdAndInvalidTransactionId.setPaymentId(initialPayment.getPaymentId());
         completeTransactionByPaymentIdAndInvalidTransactionId.setTransactionId(UUID.randomUUID());
         try {
-            paymentApi.completeTransaction(completeTransactionByPaymentIdAndInvalidTransactionId, initialPayment.getPaymentId(), NULL_PLUGIN_NAMES, pluginProperties, requestOptions);
+            paymentApi.completeTransaction(initialPayment.getPaymentId(), completeTransactionByPaymentIdAndInvalidTransactionId, NULL_PLUGIN_NAMES, pluginProperties, requestOptions);
             fail("Payment completion should fail when invalid transaction id has been provided");
         } catch (final KillBillClientException expected) {
         }
@@ -445,7 +445,7 @@ public class TestPayment extends TestJaxrsBase {
         final PaymentTransaction completeTransactionByPaymentIdAndTransactionId = new PaymentTransaction();
         completeTransactionByPaymentIdAndTransactionId.setPaymentId(initialPayment.getPaymentId());
         completeTransactionByPaymentIdAndTransactionId.setTransactionId(initialPayment.getTransactions().get(0).getTransactionId());
-        paymentApi.completeTransaction(completeTransactionByPaymentIdAndTransactionId, initialPayment.getPaymentId(), NULL_PLUGIN_NAMES, pluginProperties, requestOptions);
+        paymentApi.completeTransaction(initialPayment.getPaymentId(), completeTransactionByPaymentIdAndTransactionId, NULL_PLUGIN_NAMES, pluginProperties, requestOptions);
         final Payment completedPaymentByPaymentId = paymentApi.getPayment(initialPayment.getPaymentId(), pluginProperties, requestOptions);
         verifyPayment(account, paymentMethodId, completedPaymentByPaymentId, paymentExternalKey, authTransactionExternalKey, transactionType, TransactionStatus.SUCCESS, amount, amount, BigDecimal.ZERO, BigDecimal.ZERO, 1, 1);
     }
@@ -471,7 +471,7 @@ public class TestPayment extends TestJaxrsBase {
         completeTransactionByPaymentIdAndInvalidTransactionExternalKey.setPaymentId(initialPayment.getPaymentId());
         completeTransactionByPaymentIdAndInvalidTransactionExternalKey.setTransactionExternalKey("bozo");
         try {
-            paymentApi.completeTransaction(completeTransactionByPaymentIdAndInvalidTransactionExternalKey, initialPayment.getPaymentId(), NULL_PLUGIN_NAMES, pluginProperties, requestOptions);
+            paymentApi.completeTransaction(initialPayment.getPaymentId(), completeTransactionByPaymentIdAndInvalidTransactionExternalKey, NULL_PLUGIN_NAMES, pluginProperties, requestOptions);
             fail("Payment completion should fail when invalid transaction externalKey has been provided");
         } catch (final KillBillClientException expected) {
         }
@@ -505,7 +505,7 @@ public class TestPayment extends TestJaxrsBase {
         completeTransactionByPaymentIdAndInvalidTransactionType.setPaymentId(initialPayment.getPaymentId());
         completeTransactionByPaymentIdAndInvalidTransactionType.setTransactionType(TransactionType.CAPTURE);
         try {
-            paymentApi.completeTransaction(completeTransactionByPaymentIdAndInvalidTransactionType, initialPayment.getPaymentId(), NULL_PLUGIN_NAMES, pluginProperties, requestOptions);
+            paymentApi.completeTransaction(initialPayment.getPaymentId(), completeTransactionByPaymentIdAndInvalidTransactionType,NULL_PLUGIN_NAMES, pluginProperties, requestOptions);
             fail("Payment completion should fail when invalid transaction type has been provided");
         } catch (final KillBillClientException expected) {
         }
@@ -513,7 +513,7 @@ public class TestPayment extends TestJaxrsBase {
         final PaymentTransaction completeTransactionByPaymentIdAndTransactionType = new PaymentTransaction();
         completeTransactionByPaymentIdAndTransactionType.setPaymentId(initialPayment.getPaymentId());
         completeTransactionByPaymentIdAndTransactionType.setTransactionType(transactionType);
-        paymentApi.completeTransaction(completeTransactionByPaymentIdAndTransactionType, initialPayment.getPaymentId(), NULL_PLUGIN_NAMES, pluginProperties, requestOptions);
+        paymentApi.completeTransaction(initialPayment.getPaymentId(), completeTransactionByPaymentIdAndTransactionType, NULL_PLUGIN_NAMES, pluginProperties, requestOptions);
         final Payment completedPaymentByPaymentId = paymentApi.getPayment(initialPayment.getPaymentId(), NULL_PLUGIN_PROPERTIES, requestOptions);
         verifyPayment(account, paymentMethodId, completedPaymentByPaymentId, paymentExternalKey, authTransactionExternalKey, transactionType, TransactionStatus.SUCCESS, amount, amount, BigDecimal.ZERO, BigDecimal.ZERO, 1, 1);
     }
@@ -561,7 +561,7 @@ public class TestPayment extends TestJaxrsBase {
         // The payment was already completed, it should succeed (no-op)
         final PaymentTransaction completeTransactionByPaymentId = new PaymentTransaction();
         completeTransactionByPaymentId.setPaymentId(initialPayment.getPaymentId());
-        paymentApi.completeTransaction(completeTransactionByPaymentId, initialPayment.getPaymentId(), NULL_PLUGIN_NAMES, pluginProperties, requestOptions);
+        paymentApi.completeTransaction(initialPayment.getPaymentId(), completeTransactionByPaymentId, NULL_PLUGIN_NAMES, pluginProperties, requestOptions);
     }
 
     @Test(groups = "slow")
@@ -586,7 +586,7 @@ public class TestPayment extends TestJaxrsBase {
         refundTransaction.setTransactionExternalKey(refundTransactionExternalKey);
         refundTransaction.setAmount(purchaseAmount);
         refundTransaction.setCurrency(authPayment.getCurrency());
-        final Payment refundPayment = paymentApi.refundPayment(refundTransaction, authPayment.getPaymentId(), NULL_PLUGIN_NAMES, pluginProperties, requestOptions);
+        final Payment refundPayment = paymentApi.refundPayment(authPayment.getPaymentId(), refundTransaction, NULL_PLUGIN_NAMES, pluginProperties, requestOptions);
         verifyPaymentWithPendingRefund(account, paymentMethodId, paymentExternalKey, purchaseTransactionExternalKey, purchaseAmount, refundTransactionExternalKey, refundPayment);
 
         final PaymentTransaction completeTransactionWithTypeAndKey = new PaymentTransaction();
@@ -600,7 +600,7 @@ public class TestPayment extends TestJaxrsBase {
         final PaymentTransaction completeTransactionWithTypeAndId = new PaymentTransaction();
         completeTransactionWithTypeAndId.setPaymentId(refundPayment.getPaymentId());
         completeTransactionWithTypeAndId.setTransactionId(refundPayment.getTransactions().get(1).getTransactionId());
-        paymentApi.completeTransaction(completeTransactionWithTypeAndId, refundPayment.getPaymentId(), NULL_PLUGIN_NAMES, pluginProperties, requestOptions);
+        paymentApi.completeTransaction(refundPayment.getPaymentId(), completeTransactionWithTypeAndId, NULL_PLUGIN_NAMES, pluginProperties, requestOptions);
         final Payment completedPaymentByTypeAndId = paymentApi.getPayment(refundPayment.getPaymentId(), NULL_PLUGIN_PROPERTIES, requestOptions);
         verifyPaymentWithPendingRefund(account, paymentMethodId, paymentExternalKey, purchaseTransactionExternalKey, purchaseAmount, refundTransactionExternalKey, completedPaymentByTypeAndId);
     }
@@ -790,7 +790,7 @@ public class TestPayment extends TestJaxrsBase {
         captureTransaction.setPaymentExternalKey(paymentExternalKey);
         captureTransaction.setTransactionExternalKey(capture1TransactionExternalKey);
         // captureAuthorization is using paymentId
-        final Payment capturedPayment1 = paymentApi.captureAuthorization(captureTransaction, authPayment.getPaymentId(), NULL_PLUGIN_NAMES, NULL_PLUGIN_PROPERTIES, requestOptions);
+        final Payment capturedPayment1 = paymentApi.captureAuthorization(authPayment.getPaymentId(), captureTransaction, NULL_PLUGIN_NAMES, NULL_PLUGIN_PROPERTIES, requestOptions);
         verifyPayment(account, paymentMethodId, capturedPayment1, paymentExternalKey, authTransactionExternalKey, TransactionType.AUTHORIZE, TransactionStatus.SUCCESS,
                       BigDecimal.TEN, BigDecimal.TEN, BigDecimal.ONE, BigDecimal.ZERO, 2, paymentNb);
         verifyPaymentTransaction(account, authPayment.getPaymentId(), paymentExternalKey, capturedPayment1.getTransactions().get(1),
@@ -815,7 +815,7 @@ public class TestPayment extends TestJaxrsBase {
         refundTransaction.setCurrency(account.getCurrency());
         refundTransaction.setPaymentExternalKey(paymentExternalKey);
         refundTransaction.setTransactionExternalKey(refundTransactionExternalKey);
-        final Payment refundPayment = paymentApi.refundPayment(refundTransaction, authPayment.getPaymentId(), NULL_PLUGIN_NAMES, NULL_PLUGIN_PROPERTIES, requestOptions);
+        final Payment refundPayment = paymentApi.refundPayment(authPayment.getPaymentId(), refundTransaction, NULL_PLUGIN_NAMES, NULL_PLUGIN_PROPERTIES, requestOptions);
         verifyPayment(account, paymentMethodId, refundPayment, paymentExternalKey, authTransactionExternalKey, TransactionType.AUTHORIZE, TransactionStatus.SUCCESS,
                       BigDecimal.TEN, BigDecimal.TEN, new BigDecimal("2"), new BigDecimal("2"), 4, paymentNb);
         verifyPaymentTransaction(account, authPayment.getPaymentId(), paymentExternalKey, refundPayment.getTransactions().get(3),
@@ -840,7 +840,7 @@ public class TestPayment extends TestJaxrsBase {
         authTransaction.setPaymentExternalKey(paymentExternalKey);
         authTransaction.setTransactionExternalKey(transactionExternalKey);
         authTransaction.setTransactionType(transactionType);
-        final Payment payment = accountApi.processPayment(authTransaction, account.getAccountId(), paymentMethodId, NULL_PLUGIN_NAMES, pluginProperties, requestOptions);
+        final Payment payment = accountApi.processPayment(account.getAccountId(), authTransaction, paymentMethodId, NULL_PLUGIN_NAMES, pluginProperties, requestOptions);
 
         verifyPayment(account, paymentMethodId, payment, paymentExternalKey, transactionExternalKey, transactionType, transactionStatus, transactionAmount, authAmount, BigDecimal.ZERO, BigDecimal.ZERO, 1, paymentNb);
 

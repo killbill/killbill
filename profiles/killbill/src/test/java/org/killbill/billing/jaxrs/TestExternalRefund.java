@@ -61,7 +61,7 @@ public class TestExternalRefund extends TestJaxrsBase {
         invoicePaymentTransactionRequest.setAmount(BigDecimal.valueOf(249.95));
         invoicePaymentTransactionRequest.setCurrency(accountJson.getCurrency());
         invoicePaymentTransactionRequest.setPaymentId(payment.getPaymentId());
-        invoicePaymentApi.createRefundWithAdjustments(invoicePaymentTransactionRequest, payment.getPaymentId(), payment.getPaymentMethodId(), NULL_PLUGIN_PROPERTIES, requestOptions);
+        invoicePaymentApi.createRefundWithAdjustments(payment.getPaymentId(), invoicePaymentTransactionRequest, payment.getPaymentMethodId(), NULL_PLUGIN_PROPERTIES, requestOptions);
 
         final InvoicePayment invoicePaymentRefund = invoicePaymentApi.getInvoicePayment(payment.getPaymentId(), NULL_PLUGIN_PROPERTIES, requestOptions);
         assertSingleInvoicePaymentRefund(invoicePaymentRefund);
@@ -88,7 +88,7 @@ public class TestExternalRefund extends TestJaxrsBase {
         invoicePaymentTransactionRequest.setPaymentId(payment.getPaymentId());
         invoicePaymentTransactionRequest.setIsAdjusted(true);
         invoicePaymentTransactionRequest.setAdjustments(itemsToBeAdjusted);
-        invoicePaymentApi.createRefundWithAdjustments(invoicePaymentTransactionRequest, payment.getPaymentId(), payment.getPaymentMethodId(), NULL_PLUGIN_PROPERTIES, requestOptions);
+        invoicePaymentApi.createRefundWithAdjustments(payment.getPaymentId(), invoicePaymentTransactionRequest, payment.getPaymentMethodId(), NULL_PLUGIN_PROPERTIES, requestOptions);
         final InvoicePayment invoicePaymentRefund = invoicePaymentApi.getInvoicePayment(payment.getPaymentId(), NULL_PLUGIN_PROPERTIES, requestOptions);
         assertNotNull(invoicePaymentRefund);
 
@@ -116,14 +116,14 @@ public class TestExternalRefund extends TestJaxrsBase {
         invoicePaymentRequest.setAccountId(accountJson.getAccountId());
         invoicePaymentRequest.setCurrency(unpaidInvoice.getCurrency());
         invoicePaymentRequest.setPurchasedAmount(unpaidInvoice.getAmount());
-        final InvoicePayment invoicePayment = invoiceApi.createInstantPayment(invoicePaymentRequest, unpaidInvoice.getInvoiceId(), true, NULL_PLUGIN_PROPERTIES, requestOptions);
+        final InvoicePayment invoicePayment = invoiceApi.createInstantPayment(unpaidInvoice.getInvoiceId(), invoicePaymentRequest, true, NULL_PLUGIN_PROPERTIES, requestOptions);
         assertEquals(invoicePayment.getPurchasedAmount().compareTo(BigDecimal.valueOf(249.95)), 0);
         assertEquals(invoicePayment.getRefundedAmount().compareTo(BigDecimal.ZERO), 0);
 
         final InvoicePaymentTransaction invoicePaymentTransactionRequest = new InvoicePaymentTransaction();
         invoicePaymentTransactionRequest.setAmount(BigDecimal.valueOf(249.95));
         invoicePaymentTransactionRequest.setPaymentId(invoicePayment.getPaymentId());
-        final InvoicePayment invoicePaymentRefund = invoicePaymentApi.createRefundWithAdjustments(invoicePaymentTransactionRequest, invoicePayment.getPaymentId(), invoicePayment.getPaymentMethodId(), NULL_PLUGIN_PROPERTIES, requestOptions);
+        final InvoicePayment invoicePaymentRefund = invoicePaymentApi.createRefundWithAdjustments(invoicePayment.getPaymentId(), invoicePaymentTransactionRequest, invoicePayment.getPaymentMethodId(), NULL_PLUGIN_PROPERTIES, requestOptions);
         assertNotNull(invoicePaymentRefund);
 
         assertSingleInvoicePaymentRefund(invoicePaymentRefund);
@@ -150,7 +150,7 @@ public class TestExternalRefund extends TestJaxrsBase {
         invoicePaymentRequest.setAccountId(accountJson.getAccountId());
         invoicePaymentRequest.setCurrency(unpaidInvoice.getCurrency());
         invoicePaymentRequest.setPurchasedAmount(unpaidInvoice.getAmount());
-        final InvoicePayment invoicePayment = invoiceApi.createInstantPayment(invoicePaymentRequest, unpaidInvoice.getInvoiceId(), true, NULL_PLUGIN_PROPERTIES, requestOptions);
+        final InvoicePayment invoicePayment = invoiceApi.createInstantPayment(unpaidInvoice.getInvoiceId(), invoicePaymentRequest, true, NULL_PLUGIN_PROPERTIES, requestOptions);
         assertEquals(invoicePayment.getPurchasedAmount().compareTo(BigDecimal.valueOf(249.95)), 0);
         assertEquals(invoicePayment.getRefundedAmount().compareTo(BigDecimal.ZERO), 0);
 
@@ -159,7 +159,7 @@ public class TestExternalRefund extends TestJaxrsBase {
         invoicePaymentTransactionRequest.setPaymentId(invoicePayment.getPaymentId());
         invoicePaymentTransactionRequest.setIsAdjusted(true);
         invoicePaymentTransactionRequest.setAdjustments(unpaidInvoice.getItems());
-        final InvoicePayment invoicePaymentRefund = invoicePaymentApi.createRefundWithAdjustments(invoicePaymentTransactionRequest, invoicePayment.getPaymentId(), false, null, NULL_PLUGIN_PROPERTIES, requestOptions);
+        final InvoicePayment invoicePaymentRefund = invoicePaymentApi.createRefundWithAdjustments(invoicePayment.getPaymentId(), invoicePaymentTransactionRequest, false, null, NULL_PLUGIN_PROPERTIES, requestOptions);
         assertNotNull(invoicePaymentRefund);
 
         assertSingleInvoicePaymentRefund(invoicePaymentRefund);
@@ -183,7 +183,7 @@ public class TestExternalRefund extends TestJaxrsBase {
         invoicePaymentTransactionRequest.setAmount(BigDecimal.valueOf(249.95));
         invoicePaymentTransactionRequest.setCurrency(accountJson.getCurrency());
         invoicePaymentTransactionRequest.setPaymentId(payment.getPaymentId());
-        final InvoicePayment invoicePaymentExternalRefund = invoicePaymentApi.createRefundWithAdjustments(invoicePaymentTransactionRequest, payment.getPaymentId(), true, null, NULL_PLUGIN_PROPERTIES, requestOptions);
+        final InvoicePayment invoicePaymentExternalRefund = invoicePaymentApi.createRefundWithAdjustments(payment.getPaymentId(), invoicePaymentTransactionRequest, true, null, NULL_PLUGIN_PROPERTIES, requestOptions);
         assertNotNull(invoicePaymentExternalRefund);
 
         assertInvoicePaymentsExternalRefund(accountJson.getAccountId(), invoicePaymentExternalRefund);
@@ -214,7 +214,7 @@ public class TestExternalRefund extends TestJaxrsBase {
         invoicePaymentTransactionRequest.setPaymentId(payment.getPaymentId());
         invoicePaymentTransactionRequest.setIsAdjusted(true);
         invoicePaymentTransactionRequest.setAdjustments(itemsToBeAdjusted);
-        final InvoicePayment invoicePaymentExternalRefund = invoicePaymentApi.createRefundWithAdjustments(invoicePaymentTransactionRequest, payment.getPaymentId(), true, null, NULL_PLUGIN_PROPERTIES, requestOptions);
+        final InvoicePayment invoicePaymentExternalRefund = invoicePaymentApi.createRefundWithAdjustments(payment.getPaymentId(), invoicePaymentTransactionRequest, true, null, NULL_PLUGIN_PROPERTIES, requestOptions);
         assertNotNull(invoicePaymentExternalRefund);
 
         assertInvoicePaymentsExternalRefund(accountJson.getAccountId(), invoicePaymentExternalRefund);
@@ -236,7 +236,7 @@ public class TestExternalRefund extends TestJaxrsBase {
         // create another PM
         final PaymentMethodPluginDetail info = new PaymentMethodPluginDetail();
         final PaymentMethod paymentMethodJson = new PaymentMethod(null, UUID.randomUUID().toString(), accountJson.getAccountId(), false, PLUGIN_NAME, info, null);
-        final PaymentMethod otherPaymentMethod = accountApi.createPaymentMethod(paymentMethodJson, accountJson.getAccountId(), NULL_PLUGIN_NAMES, NULL_PLUGIN_PROPERTIES, requestOptions);
+        final PaymentMethod otherPaymentMethod = accountApi.createPaymentMethod(accountJson.getAccountId(), paymentMethodJson, NULL_PLUGIN_NAMES, NULL_PLUGIN_PROPERTIES, requestOptions);
 
         final Payments paymentsForAccount = accountApi.getPayments(accountJson.getAccountId(), NULL_PLUGIN_PROPERTIES, requestOptions);
         final Payment payment = paymentsForAccount.get(paymentsForAccount.size() - 1);
@@ -251,7 +251,7 @@ public class TestExternalRefund extends TestJaxrsBase {
         invoicePaymentTransactionRequest.setPaymentId(payment.getPaymentId());
         invoicePaymentTransactionRequest.setIsAdjusted(true);
         invoicePaymentTransactionRequest.setAdjustments(itemsToBeAdjusted);
-        final InvoicePayment invoicePaymentExternalRefund = invoicePaymentApi.createRefundWithAdjustments(invoicePaymentTransactionRequest, payment.getPaymentId(), true, otherPaymentMethod.getPaymentMethodId(), NULL_PLUGIN_PROPERTIES, requestOptions);
+        final InvoicePayment invoicePaymentExternalRefund = invoicePaymentApi.createRefundWithAdjustments(payment.getPaymentId(), invoicePaymentTransactionRequest, true, otherPaymentMethod.getPaymentMethodId(), NULL_PLUGIN_PROPERTIES, requestOptions);
         assertNotNull(invoicePaymentExternalRefund);
         assertEquals(invoicePaymentExternalRefund.getPaymentMethodId(), otherPaymentMethod.getPaymentMethodId());
 

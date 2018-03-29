@@ -88,7 +88,7 @@ public class TestOverdue extends TestJaxrsBase {
                 invoicePayment.setPurchasedAmount(invoice.getAmount());
                 invoicePayment.setAccountId(accountJson.getAccountId());
                 invoicePayment.setTargetInvoiceId(invoice.getInvoiceId());
-                invoiceApi.createInstantPayment(invoicePayment, invoice.getInvoiceId(), true, NULL_PLUGIN_PROPERTIES, requestOptions);
+                invoiceApi.createInstantPayment(invoice.getInvoiceId(), invoicePayment, true, NULL_PLUGIN_PROPERTIES, requestOptions);
             }
         }
 

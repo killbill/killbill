@@ -43,7 +43,7 @@ public class TestExceptions extends TestJaxrsBase {
         input.setPaymentId(payments.get(0).getPaymentId());
         input.setAmount(BigDecimal.TEN.negate());
         try {
-            invoicePaymentApi.createChargeback(input, payments.get(0).getPaymentId(), requestOptions);
+            invoicePaymentApi.createChargeback(payments.get(0).getPaymentId(), input, requestOptions);
             fail();
         } catch (final KillBillClientException e) {
             Assert.assertEquals(e.getBillingException().getClassName(), InvoiceApiException.class.getName());

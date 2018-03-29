@@ -391,8 +391,8 @@ public class TestJaxrsBase extends KillbillClient {
     }
 
     protected String getResourceBodyString(final String resource) throws IOException {
-        final String catalogPath = Resources.getResource(resource).getPath();
-        final File catalogFile = new File(catalogPath);
+        final String resourcePath = Resources.getResource(resource).getPath();
+        final File catalogFile = new File(resourcePath);
         return Files.toString(catalogFile, Charset.forName("UTF-8"));
     }
 

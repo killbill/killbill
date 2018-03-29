@@ -132,8 +132,8 @@ public class SecurityResource extends JaxRsResourceBase {
     @Produces(APPLICATION_JSON)
     @Path("/users/{username:" + ANYTHING_PATTERN + "}/password")
     @ApiOperation(value = "Update a user password")
-    public Response updateUserPassword(final UserRolesJson json,
-                                       @PathParam("username") final String username,
+    public Response updateUserPassword(@PathParam("username") final String username,
+                                       final UserRolesJson json,
                                        @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                        @HeaderParam(HDR_REASON) final String reason,
                                        @HeaderParam(HDR_COMMENT) final String comment,
@@ -162,8 +162,8 @@ public class SecurityResource extends JaxRsResourceBase {
     @Produces(APPLICATION_JSON)
     @Path("/users/{username:" + ANYTHING_PATTERN + "}/roles")
     @ApiOperation(value = "Update roles associated to a user")
-    public Response updateUserRoles(final UserRolesJson json,
-                                    @PathParam("username") final String username,
+    public Response updateUserRoles(@PathParam("username") final String username,
+                                    final UserRolesJson json,
                                     @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                     @HeaderParam(HDR_REASON) final String reason,
                                     @HeaderParam(HDR_COMMENT) final String comment,

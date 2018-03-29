@@ -99,7 +99,7 @@ public class TestEntitlement extends TestJaxrsBase {
         newInput.setProductCategory(ProductCategory.BASE);
         newInput.setBillingPeriod(entitlementJson.getBillingPeriod());
         newInput.setPriceList(entitlementJson.getPriceList());
-        subscriptionApi.changeSubscriptionPlan(newInput, entitlementJson.getSubscriptionId(), null, null, NULL_PLUGIN_PROPERTIES, requestOptions);
+        subscriptionApi.changeSubscriptionPlan(entitlementJson.getSubscriptionId(), newInput, null, null, NULL_PLUGIN_PROPERTIES, requestOptions);
 
         // MOVE AFTER TRIAL
         final Interval it = new Interval(clock.getUTCNow(), clock.getUTCNow().plusDays(31));
@@ -191,7 +191,7 @@ public class TestEntitlement extends TestJaxrsBase {
         subscription.setBillingPeriod(BillingPeriod.ANNUAL);
         subscription.setPriceList(PriceListSet.DEFAULT_PRICELIST_NAME);
 
-        subscriptionApi.changeSubscriptionPlan(subscription, subscriptionId, null, null, null, requestOptions);
+        subscriptionApi.changeSubscriptionPlan(subscriptionId, subscription, null, null, null, requestOptions);
 
         subscriptionApi.cancelSubscriptionPlan(subscriptionId, null, null, null, NULL_PLUGIN_PROPERTIES, requestOptions);
 
@@ -228,7 +228,7 @@ public class TestEntitlement extends TestJaxrsBase {
         newInput.setProductCategory(ProductCategory.BASE);
         newInput.setBillingPeriod(BillingPeriod.MONTHLY);
         newInput.setPriceList(subscriptionJson.getPriceList());
-        subscriptionApi.changeSubscriptionPlan(newInput, subscriptionJson.getSubscriptionId(), null, BillingActionPolicy.IMMEDIATE, NULL_PLUGIN_PROPERTIES, requestOptions);
+        subscriptionApi.changeSubscriptionPlan(subscriptionJson.getSubscriptionId(), newInput, null, BillingActionPolicy.IMMEDIATE, NULL_PLUGIN_PROPERTIES, requestOptions);
 
         objFromJson = subscriptionApi.getSubscription(subscriptionJson.getSubscriptionId(), requestOptions);
         assertEquals(objFromJson.getBillingPeriod(), BillingPeriod.MONTHLY);
@@ -294,7 +294,7 @@ public class TestEntitlement extends TestJaxrsBase {
         final Subscription newInput = new Subscription();
         newInput.setSubscriptionId(subscription2.getSubscriptionId());
         newInput.setPlanName("pistol-monthly");
-        subscriptionApi.changeSubscriptionPlan(newInput, subscription2.getSubscriptionId(), null, BillingActionPolicy.IMMEDIATE, NULL_PLUGIN_PROPERTIES, requestOptions);
+        subscriptionApi.changeSubscriptionPlan(subscription2.getSubscriptionId(), newInput, null, BillingActionPolicy.IMMEDIATE, NULL_PLUGIN_PROPERTIES, requestOptions);
         final Subscription subscription3 = subscriptionApi.getSubscription(subscription.getSubscriptionId(), requestOptions);
 
         Assert.assertEquals(subscription3.getEvents().size(), 4);
@@ -640,7 +640,7 @@ public class TestEntitlement extends TestJaxrsBase {
         final Subscription updatedSubscription = new Subscription();
         updatedSubscription.setSubscriptionId(entitlementJson.getSubscriptionId());
         updatedSubscription.setBillCycleDayLocal(9);
-        subscriptionApi.updateSubscriptionBCD(updatedSubscription, entitlementJson.getSubscriptionId(), null, requestOptions);
+        subscriptionApi.updateSubscriptionBCD(entitlementJson.getSubscriptionId(), updatedSubscription, null, requestOptions);
 
         final Subscription result = subscriptionApi.getSubscription(entitlementJson.getSubscriptionId(), requestOptions);
         // Still shows as the 4 (BCD did not take effect)
@@ -677,7 +677,7 @@ public class TestEntitlement extends TestJaxrsBase {
         newInput.setAccountId(entitlementJson.getAccountId());
         newInput.setSubscriptionId(entitlementJson.getSubscriptionId());
         newInput.setPlanName("pistol-monthly");
-        subscriptionApi.changeSubscriptionPlan(newInput, entitlementJson.getSubscriptionId(), null, null, NULL_PLUGIN_PROPERTIES, requestOptions);
+        subscriptionApi.changeSubscriptionPlan(entitlementJson.getSubscriptionId(), newInput, null, null, NULL_PLUGIN_PROPERTIES, requestOptions);
         final Subscription newEntitlementJson = subscriptionApi.getSubscription(entitlementJson.getSubscriptionId(), requestOptions);
         Assert.assertEquals(newEntitlementJson.getProductName(), "Pistol");
         Assert.assertEquals(newEntitlementJson.getBillingPeriod(), BillingPeriod.MONTHLY);
@@ -708,7 +708,7 @@ public class TestEntitlement extends TestJaxrsBase {
         newInput.setProductCategory(ProductCategory.BASE);
         newInput.setBillingPeriod(entitlementJson.getBillingPeriod());
         newInput.setPriceList(entitlementJson.getPriceList());
-        subscriptionApi.changeSubscriptionPlan(newInput, entitlementJson.getSubscriptionId(), new LocalDate(2012, 4, 28), null, NULL_PLUGIN_PROPERTIES, requestOptions);
+        subscriptionApi.changeSubscriptionPlan(entitlementJson.getSubscriptionId(), newInput, new LocalDate(2012, 4, 28), null, NULL_PLUGIN_PROPERTIES, requestOptions);
         Subscription refreshedSubscription = subscriptionApi.getSubscription(entitlementJson.getSubscriptionId(), requestOptions);
         Assert.assertNotNull(refreshedSubscription);
 

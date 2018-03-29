@@ -129,8 +129,8 @@ public class PaymentGatewayResource extends ComboPaymentResource {
     @ApiOperation(value = "Generate form data to redirect the customer to the gateway", response = HostedPaymentPageFormDescriptorJson.class)
     @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid accountId supplied"),
                            @ApiResponse(code = 404, message = "Account not found")})
-    public Response buildFormDescriptor(final HostedPaymentPageFieldsJson json,
-                                        @PathParam("accountId") final UUID accountId,
+    public Response buildFormDescriptor(@PathParam("accountId") final UUID accountId,
+                                        final HostedPaymentPageFieldsJson json,
                                         @QueryParam(QUERY_PAYMENT_METHOD_ID) final UUID inputPaymentMethodId,
                                         @QueryParam(QUERY_PAYMENT_CONTROL_PLUGIN_NAME) final List<String> paymentControlPluginNames,
                                         @QueryParam(QUERY_PLUGIN_PROPERTY) final List<String> pluginPropertiesString,
@@ -162,8 +162,8 @@ public class PaymentGatewayResource extends ComboPaymentResource {
     @Produces(APPLICATION_JSON)
     @ApiOperation(value = "Process a gateway notification", notes = "The response is built by the appropriate plugin")
     @ApiResponses(value = {})
-    public Response processNotification(final String body,
-                                        @PathParam(PATH_PAYMENT_PLUGIN_NAME) final String pluginName,
+    public Response processNotification(@PathParam(PATH_PAYMENT_PLUGIN_NAME) final String pluginName,
+                                        final String body,
                                         @QueryParam(QUERY_PAYMENT_CONTROL_PLUGIN_NAME) final List<String> paymentControlPluginNames,
                                         @QueryParam(QUERY_PLUGIN_PROPERTY) final List<String> pluginPropertiesString,
                                         @HeaderParam(HDR_CREATED_BY) final String createdBy,

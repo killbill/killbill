@@ -99,14 +99,14 @@ public class TestTenantKV extends TestJaxrsBase {
         final Payment paymentOtherTenant = createComboPaymentTransaction(requestOptionsOtherTenant);
 
         // Void in the first tenant (allowed by the default state machine)
-        paymentApi.voidPayment(new PaymentTransaction(), payment.getPaymentId(), NULL_PLUGIN_NAMES, NULL_PLUGIN_PROPERTIES, requestOptions);
+        paymentApi.voidPayment(payment.getPaymentId(), new PaymentTransaction(), NULL_PLUGIN_NAMES, NULL_PLUGIN_PROPERTIES, requestOptions);
         final Payment voidPayment = paymentApi.getPayment(payment.getPaymentId(), NULL_PLUGIN_PROPERTIES, requestOptions);
         Assert.assertEquals(voidPayment.getTransactions().get(0).getStatus(), TransactionStatus.SUCCESS);
         Assert.assertEquals(voidPayment.getTransactions().get(1).getStatus(), TransactionStatus.SUCCESS);
 
         // Void in the other tenant (disallowed)
         try {
-            paymentApi.voidPayment(new PaymentTransaction(), paymentOtherTenant.getPaymentId(), NULL_PLUGIN_NAMES, NULL_PLUGIN_PROPERTIES, requestOptionsOtherTenant);
+            paymentApi.voidPayment(paymentOtherTenant.getPaymentId(), new PaymentTransaction(), NULL_PLUGIN_NAMES, NULL_PLUGIN_PROPERTIES, requestOptionsOtherTenant);
             Assert.fail();
         } catch (final KillBillClientException e) {
             Assert.assertEquals((int) e.getBillingException().getCode(), ErrorCode.PAYMENT_INVALID_OPERATION.getCode());
@@ -127,7 +127,7 @@ public class TestTenantKV extends TestJaxrsBase {
                       public Boolean call() throws Exception {
                           // The void should now go through
                           try {
-                              paymentApi.voidPayment(new PaymentTransaction(), paymentOtherTenant.getPaymentId(), NULL_PLUGIN_NAMES, NULL_PLUGIN_PROPERTIES, requestOptionsOtherTenant);
+                              paymentApi.voidPayment(paymentOtherTenant.getPaymentId(), new PaymentTransaction(), NULL_PLUGIN_NAMES, NULL_PLUGIN_PROPERTIES, requestOptionsOtherTenant);
                               final Payment voidPaymentOtherTenant2 = paymentApi.getPayment(paymentOtherTenant.getPaymentId(), NULL_PLUGIN_PROPERTIES, requestOptionsOtherTenant);
                               voidPaymentOtherTenant2Ref.set(voidPaymentOtherTenant2);
                               return voidPaymentOtherTenant2 != null;

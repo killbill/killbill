@@ -183,7 +183,7 @@ public class TestCache extends TestJaxrsBase {
         final PaymentMethodPluginDetail info = new PaymentMethodPluginDetail();
         info.setProperties(null);
         final PaymentMethod paymentMethodJson = new PaymentMethod(null, UUID.randomUUID().toString(), account.getAccountId(), true, PLUGIN_NAME, info, null);
-        accountApi.createPaymentMethod(paymentMethodJson, account.getAccountId(), NULL_PLUGIN_NAMES, NULL_PLUGIN_PROPERTIES, inputOptions);
+        accountApi.createPaymentMethod(account.getAccountId(), paymentMethodJson, NULL_PLUGIN_NAMES, NULL_PLUGIN_PROPERTIES, inputOptions);
 
         final Subscription subscription = new Subscription();
         subscription.setAccountId(account.getAccountId());

@@ -39,7 +39,7 @@ public class TestPaymentGateway extends TestJaxrsBase {
 
         final HostedPaymentPageFields hppFields = new HostedPaymentPageFields();
 
-        final HostedPaymentPageFormDescriptor hostedPaymentPageFormDescriptor = paymentGatewayApi.buildFormDescriptor(hppFields, account.getAccountId(), null, NULL_PLUGIN_NAMES, NULL_PLUGIN_PROPERTIES, requestOptions);
+        final HostedPaymentPageFormDescriptor hostedPaymentPageFormDescriptor = paymentGatewayApi.buildFormDescriptor(account.getAccountId(), hppFields, null, NULL_PLUGIN_NAMES, NULL_PLUGIN_PROPERTIES, requestOptions);
         Assert.assertEquals(hostedPaymentPageFormDescriptor.getKbAccountId(), account.getAccountId());
     }
 

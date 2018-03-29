@@ -155,7 +155,7 @@ public class TestSecurity extends TestJaxrsBase {
         Assert.assertEquals(permissions.size(), Permission.values().length);
 
         String newPassword = "IamTheBestWarrior";
-        securityApi.updateUserPassword(new UserRoles(username, newPassword, null), username, requestOptions);
+        securityApi.updateUserPassword(username, new UserRoles(username, newPassword, null), requestOptions);
 
         logout();
         login(username, newPassword);
@@ -168,7 +168,7 @@ public class TestSecurity extends TestJaxrsBase {
 
         securityApi.addRoleDefinition(new RoleDefinition(newRoleDefinition, ImmutableList.of(littlePermissions)), requestOptions);
 
-        securityApi.updateUserRoles(new UserRoles(username, null, ImmutableList.of(newRoleDefinition)), username, requestOptions);
+        securityApi.updateUserRoles(username, new UserRoles(username, null, ImmutableList.of(newRoleDefinition)), requestOptions);
         permissions = securityApi.getCurrentUserPermissions(requestOptions);
         // This will only work if correct shiro cache invalidation was performed... requires lots of sweat to get it to work ;-)
         Assert.assertEquals(permissions.size(), 2);

@@ -232,9 +232,9 @@ public class AdminResource extends JaxRsResourceBase {
     @Path("/payments/{paymentId:" + UUID_PATTERN + "}/transactions/{paymentTransactionId:" + UUID_PATTERN + "}")
     @ApiOperation(value = "Update existing paymentTransaction and associated payment state")
     @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid account data supplied")})
-    public Response updatePaymentTransactionState(final AdminPaymentJson json,
-                                                  @PathParam("paymentId") final UUID paymentId,
+    public Response updatePaymentTransactionState(@PathParam("paymentId") final UUID paymentId,
                                                   @PathParam("paymentTransactionId") final UUID paymentTransactionId,
+                                                  final AdminPaymentJson json,
                                                   @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                                   @HeaderParam(HDR_REASON) final String reason,
                                                   @HeaderParam(HDR_COMMENT) final String comment,
