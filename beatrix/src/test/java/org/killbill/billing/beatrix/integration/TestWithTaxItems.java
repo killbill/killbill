@@ -49,6 +49,7 @@ import org.killbill.billing.osgi.api.OSGIServiceDescriptor;
 import org.killbill.billing.osgi.api.OSGIServiceRegistration;
 import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.util.callcontext.CallContext;
+import org.testng.Assert;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
@@ -297,7 +298,7 @@ public class TestWithTaxItems extends TestIntegrationBase {
         }
 
         @Override
-        public PriorInvoiceResult priorCall(final InvoiceContext invoiceContext, final Iterable<PluginProperty> iterable) {
+        public PriorInvoiceResult priorCall(final InvoiceContext invoiceContext, final Iterable<PluginProperty> pluginProperties) {
             return null;
         }
 
@@ -307,17 +308,34 @@ public class TestWithTaxItems extends TestIntegrationBase {
             for (final TaxInvoiceItem item : taxItems) {
                 result.add(new TaxInvoiceItem(item.getId(), invoice.getId(), invoice.getAccountId(), item.getBundleId(), "Tax Item", item.getStartDate(), item.getAmount(), invoice.getCurrency()));
             }
-            taxItems.clear();
             return result;
         }
 
         @Override
-        public OnSuccessInvoiceResult onSuccessCall(final InvoiceContext invoiceContext, final Iterable<PluginProperty> iterable) {
+        public OnSuccessInvoiceResult onSuccessCall(final InvoiceContext invoiceContext, final Iterable<PluginProperty> pluginProperties) {
+            Assert.assertFalse(invoiceContext.isRescheduled());
+
+            final Invoice invoice = invoiceContext.getInvoice();
+            Assert.assertNotNull(invoice);
+            for (final TaxInvoiceItem taxInvoiceItem : taxItems) {
+                final InvoiceItem createdTaxInvoiceItem = Iterables.<InvoiceItem>find(invoice.getInvoiceItems(),
+                                                                                      new Predicate<InvoiceItem>() {
+                                                                                          @Override
+                                                                                          public boolean apply(final InvoiceItem invoiceItem) {
+                                                                                              return invoiceItem.getId().compareTo(taxInvoiceItem.getId()) == 0;
+                                                                                          }
+                                                                                      });
+                Assert.assertEquals(createdTaxInvoiceItem.getAccountId(), taxInvoiceItem.getAccountId());
+            }
+
+            reset();
+
             return null;
         }
 
         @Override
-        public OnFailureInvoiceResult onFailureCall(final InvoiceContext invoiceContext, final Iterable<PluginProperty> iterable) {
+        public OnFailureInvoiceResult onFailureCall(final InvoiceContext invoiceContext, final Iterable<PluginProperty> pluginProperties) {
+            Assert.fail();
             return null;
         }
 

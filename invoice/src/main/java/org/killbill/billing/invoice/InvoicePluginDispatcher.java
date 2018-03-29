@@ -25,6 +25,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import javax.annotation.Nullable;
 import javax.inject.Inject;
 
 import org.joda.time.DateTime;
@@ -102,7 +103,7 @@ public class InvoicePluginDispatcher {
     }
 
     public void onSuccessCall(final LocalDate targetDate,
-                              final DefaultInvoice invoice,
+                              @Nullable final DefaultInvoice invoice,
                               final List<Invoice> existingInvoices,
                               final boolean isDryRun,
                               final boolean isRescheduled,
@@ -113,7 +114,7 @@ public class InvoicePluginDispatcher {
     }
 
     public void onFailureCall(final LocalDate targetDate,
-                              final DefaultInvoice invoice,
+                              @Nullable final DefaultInvoice invoice,
                               final List<Invoice> existingInvoices,
                               final boolean isDryRun,
                               final boolean isRescheduled,
@@ -125,7 +126,7 @@ public class InvoicePluginDispatcher {
 
     private void onCompletionCall(final boolean isSuccess,
                                   final LocalDate targetDate,
-                                  final DefaultInvoice originalInvoice,
+                                  @Nullable final DefaultInvoice originalInvoice,
                                   final List<Invoice> existingInvoices,
                                   final boolean isDryRun,
                                   final boolean isRescheduled,
@@ -137,7 +138,7 @@ public class InvoicePluginDispatcher {
         }
 
         // We clone the original invoice so plugins don't remove/add items
-        final Invoice clonedInvoice = (Invoice) originalInvoice.clone();
+        final Invoice clonedInvoice = originalInvoice == null ? null : (Invoice) originalInvoice.clone();
         final InvoiceContext invoiceContext = new DefaultInvoiceContext(targetDate, clonedInvoice, existingInvoices, isDryRun, isRescheduled, callContext);
 
         for (final InvoicePluginApi invoicePlugin : invoicePlugins) {
