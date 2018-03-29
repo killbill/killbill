@@ -52,7 +52,7 @@ public class TestTenantKV extends TestJaxrsBase {
         final String pluginName = "PLUGIN_FOO";
 
         final String pluginConfig = getResourceBodyString("plugin.yml");
-        final TenantKeyValue tenantKey0 = tenantApi.uploadPluginConfiguration(pluginConfig, pluginName, requestOptions);
+        final TenantKeyValue tenantKey0 = tenantApi.uploadPluginConfiguration(pluginName, pluginConfig, requestOptions);
         Assert.assertEquals(tenantKey0.getKey(), TenantKV.TenantKey.PLUGIN_CONFIG_.toString() + pluginName);
 
         final TenantKeyValue tenantKey1 = tenantApi.getPluginConfiguration(pluginName, requestOptions);
@@ -84,7 +84,7 @@ public class TestTenantKV extends TestJaxrsBase {
         Assert.assertEquals(emptyTenantKeyOtherTenant.getValues().size(), 0);
 
         final String stateMachineConfig = getResourceBodyString("SimplePaymentStates.xml");
-        final TenantKeyValue tenantKey0 = tenantApi.uploadPluginPaymentStateMachineConfig(stateMachineConfig, PLUGIN_NAME, requestOptionsOtherTenant);
+        final TenantKeyValue tenantKey0 = tenantApi.uploadPluginPaymentStateMachineConfig(PLUGIN_NAME, stateMachineConfig, requestOptionsOtherTenant);
         Assert.assertEquals(tenantKey0.getKey(), TenantKV.TenantKey.PLUGIN_PAYMENT_STATE_MACHINE_.toString() + PLUGIN_NAME);
 
         // Verify only the other tenant has the new state machine

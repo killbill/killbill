@@ -61,6 +61,6 @@ public class TestPaymentGateway extends TestJaxrsBase {
 
     @Test(groups = "slow")
     public void testProcessNotification() throws Exception {
-        paymentGatewayApi.processNotification("TOTO", PLUGIN_NAME, NULL_PLUGIN_NAMES, NULL_PLUGIN_PROPERTIES, requestOptions);
+        paymentGatewayApi.processNotification(PLUGIN_NAME, "TOTO", NULL_PLUGIN_NAMES, NULL_PLUGIN_PROPERTIES, requestOptions);
     }
 }

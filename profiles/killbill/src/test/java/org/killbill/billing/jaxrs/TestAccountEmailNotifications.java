@@ -49,7 +49,7 @@ public class TestAccountEmailNotifications extends TestJaxrsBase {
         Assert.assertTrue(secondInvoiceEmailJson.isNotifiedForInvoices());
 
         // Disable email notifications
-        accountApi.setEmailNotificationsForAccount(accountId, invoiceEmailJsonWithNotifications, requestOptions);
+        accountApi.setEmailNotificationsForAccount(accountId, invoiceEmailJsonWithoutNotifications, requestOptions);
 
         // Verify we can retrieve it
         final InvoiceEmail thirdInvoiceEmailJson = accountApi.getEmailNotificationsForAccount(accountId, requestOptions );
