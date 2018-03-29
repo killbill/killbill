@@ -41,7 +41,9 @@ import org.testng.annotations.Test;
 
 import com.ning.http.util.UTF8UrlEncoder;
 
+import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Iterables;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
@@ -179,7 +181,13 @@ public class TestTag extends TestJaxrsBase {
         for (int i = 0; i < 5; i++) {
             Assert.assertNotNull(page);
             Assert.assertEquals(page.size(), 1);
-            Assert.assertEquals(page.get(0), allTags.get(i));
+            final Tag targetTag = page.get(0);
+            Assert.assertTrue(Iterables.any(allTags, new Predicate<Tag>() {
+                @Override
+                public boolean apply(@Nullable final Tag input) {
+                    return input.equals(targetTag);
+                }
+            }));
             page = page.getNext();
         }
         Assert.assertNull(page);
