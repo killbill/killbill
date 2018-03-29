@@ -19,7 +19,6 @@
 package org.killbill.billing.jaxrs;
 
 import java.math.BigDecimal;
-import java.util.Currency;
 import java.util.List;
 import java.util.UUID;
 
@@ -367,7 +366,7 @@ public class TestInvoice extends TestJaxrsBase {
                                    "  \"reason\": \"SLA not met\"\n" +
                                    "}";
         adjustmentInvoiceItem.setItemDetails(itemDetails);
-        invoiceApi.adjustInvoiceItem(invoice.getInvoiceId(), invoiceItem, null, requestOptions);
+        invoiceApi.adjustInvoiceItem(invoice.getInvoiceId(), adjustmentInvoiceItem, null, requestOptions);
 
         // Verify the new invoice balance is zero
         final Invoice adjustedInvoice = invoiceApi.getInvoice(invoice.getInvoiceId(), true, false, AuditLevel.FULL, requestOptions);
@@ -376,7 +375,7 @@ public class TestInvoice extends TestJaxrsBase {
         final InvoiceItem createdAdjustment = Iterables.find(adjustedInvoice.getItems(), new Predicate<InvoiceItem>() {
             @Override
             public boolean apply(final InvoiceItem input) {
-                return InvoiceItemType.ITEM_ADJ.toString().equals(input.getItemType());
+                return InvoiceItemType.ITEM_ADJ.equals(input.getItemType());
             }
         });
         assertEquals(createdAdjustment.getItemDetails(), itemDetails);
