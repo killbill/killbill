@@ -651,8 +651,8 @@ public class InvoiceDispatcher {
                 commitInvoiceAndSetFutureNotifications(account, null, futureAccountNotifications, internalCallContext);
             }
 
-            if (success) {
-                final DefaultInvoice refreshedInvoice = new DefaultInvoice(invoiceDao.getById(invoice.getId(), internalCallContext));
+            if (isDryRun || success) {
+                final DefaultInvoice refreshedInvoice = isDryRun ? invoice : new DefaultInvoice(invoiceDao.getById(invoice.getId(), internalCallContext));
                 invoicePluginDispatcher.onSuccessCall(targetDate, refreshedInvoice, existingInvoices, isDryRun, isRescheduled, callContext, internalCallContext);
             } else {
                 invoicePluginDispatcher.onFailureCall(targetDate, invoice, existingInvoices, isDryRun, isRescheduled, callContext, internalCallContext);

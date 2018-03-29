@@ -45,8 +45,8 @@ public class TestNextBillingDateNotificationKey {
         Assert.assertEquals(result.getUuidKey(), uuidKey);
         Assert.assertEquals(result.getTargetDate().compareTo(targetDate), 0);
         Assert.assertEquals(result.isDryRunForInvoiceNotification(), isDryRunForInvoiceNotification);
+        Assert.assertFalse(key.isRescheduled());
     }
-
 
     @Test(groups = "fast")
     public void testBasicWithUUIDKeys() throws Exception {
@@ -56,13 +56,14 @@ public class TestNextBillingDateNotificationKey {
         final DateTime targetDate = new DateTime();
         final Boolean isDryRunForInvoiceNotification = Boolean.FALSE;
 
-        final NextBillingDateNotificationKey key = new NextBillingDateNotificationKey(null, ImmutableList.of(uuidKey1, uuidKey2), targetDate, isDryRunForInvoiceNotification, false);
+        final NextBillingDateNotificationKey key = new NextBillingDateNotificationKey(null, ImmutableList.of(uuidKey1, uuidKey2), targetDate, isDryRunForInvoiceNotification, true);
         final String json = mapper.writeValueAsString(key);
 
         final NextBillingDateNotificationKey result = mapper.readValue(json, NextBillingDateNotificationKey.class);
         Assert.assertNull(result.getUuidKey());
         Assert.assertEquals(result.getTargetDate().compareTo(targetDate), 0);
         Assert.assertEquals(result.isDryRunForInvoiceNotification(), isDryRunForInvoiceNotification);
+        Assert.assertTrue(key.isRescheduled());
         Assert.assertNotNull(result.getUuidKeys());
 
         Assert.assertTrue(Iterables.contains(result.getUuidKeys(), uuidKey1));
@@ -80,6 +81,5 @@ public class TestNextBillingDateNotificationKey {
         // Compatibility mode : Although the  uuidKeys is not in the json, we verify the getter return the right result
         Assert.assertNotNull(result.getUuidKeys());
         Assert.assertEquals(result.getUuidKeys().iterator().next().toString(), "a38c363f-b25b-4287-8ebc-55964e116d2f");
-
     }
 }
