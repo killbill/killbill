@@ -18,6 +18,7 @@
 package org.killbill.billing.beatrix.integration;
 
 import java.math.BigDecimal;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.Callable;
@@ -34,10 +35,13 @@ import org.killbill.billing.account.api.Account;
 import org.killbill.billing.account.api.AccountData;
 import org.killbill.billing.api.TestApiListener.NextEvent;
 import org.killbill.billing.beatrix.util.InvoiceChecker.ExpectedInvoiceItemCheck;
+import org.killbill.billing.catalog.api.BillingActionPolicy;
 import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.catalog.api.ProductCategory;
 import org.killbill.billing.entitlement.api.DefaultEntitlement;
+import org.killbill.billing.entitlement.api.Entitlement;
+import org.killbill.billing.entitlement.api.Entitlement.EntitlementActionPolicy;
 import org.killbill.billing.invoice.api.DefaultInvoiceService;
 import org.killbill.billing.invoice.api.Invoice;
 import org.killbill.billing.invoice.api.InvoiceApiException;
@@ -63,6 +67,7 @@ import org.killbill.notificationq.api.NotificationQueueService;
 import org.killbill.notificationq.api.NotificationQueueService.NoSuchNotificationQueue;
 import org.killbill.queue.retry.RetryNotificationEvent;
 import org.killbill.queue.retry.RetryableService;
+import org.mockito.Mockito;
 import org.testng.Assert;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
@@ -113,6 +118,7 @@ public class TestWithInvoicePlugin extends TestIntegrationBase {
         testInvoicePluginApi.additionalInvoiceItem = null;
         testInvoicePluginApi.shouldAddTaxItem = true;
         testInvoicePluginApi.isAborted = false;
+        testInvoicePluginApi.shouldUpdateDescription = false;
         testInvoicePluginApi.rescheduleDate = null;
         testInvoicePluginApi.wasRescheduled = false;
         testInvoicePluginApi.invocationCount = 0;
@@ -335,6 +341,53 @@ public class TestWithInvoicePlugin extends TestIntegrationBase {
                                     new ExpectedInvoiceItemCheck(new LocalDate(2012, 8, 1), new LocalDate(2012, 9, 1), InvoiceItemType.RECURRING, new BigDecimal("29.95")));
 
         Assert.assertEquals(testInvoicePluginApi.invocationCount, 4);
+    }
+
+    @Test(groups = "slow")
+    public void testUpdateDescription() throws Exception {
+        testInvoicePluginApi.shouldAddTaxItem = false;
+        testInvoicePluginApi.shouldUpdateDescription = true;
+
+        // We take april as it has 30 days (easier to play with BCD)
+        // Set clock to the initial start date - we implicitly assume here that the account timezone is UTC
+        clock.setDay(new LocalDate(2012, 4, 1));
+
+        final AccountData accountData = getAccountData(1);
+        final Account account = createAccountWithNonOsgiPaymentMethod(accountData);
+        accountChecker.checkAccount(account.getId(), accountData, callContext);
+
+        // Create original subscription (Trial PHASE) -> $0 invoice but plugin added one item
+        final Entitlement bpSubscription = createBaseEntitlementAndCheckForCompletion(account.getId(), "bundleKey", "Pistol", ProductCategory.BASE, BillingPeriod.MONTHLY, NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE);
+        final Invoice firstInvoice = invoiceChecker.checkInvoice(account.getId(), 1, callContext,
+                                                                 new ExpectedInvoiceItemCheck(new LocalDate(2012, 4, 1), null, InvoiceItemType.FIXED, new BigDecimal("0")));
+        subscriptionChecker.checkSubscriptionCreated(bpSubscription.getId(), internalCallContext);
+        checkInvoiceDescriptions(firstInvoice);
+
+        // Move to Evergreen PHASE
+        busHandler.pushExpectedEvents(NextEvent.PHASE, NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT);
+        clock.addDays(30);
+        assertListenerStatus();
+        final Invoice secondInvoice = invoiceChecker.checkInvoice(account.getId(), 2, callContext,
+                                                                  new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 1), new LocalDate(2012, 6, 1), InvoiceItemType.RECURRING, new BigDecimal("29.95")));
+        checkInvoiceDescriptions(secondInvoice);
+
+        // Cancel START_OF_TERM to make sure odd items like CBA are updated too
+        busHandler.pushExpectedEvents(NextEvent.BLOCK, NextEvent.CANCEL, NextEvent.INVOICE);
+        bpSubscription.cancelEntitlementWithPolicyOverrideBillingPolicy(EntitlementActionPolicy.IMMEDIATE,
+                                                                        BillingActionPolicy.START_OF_TERM,
+                                                                        ImmutableList.<PluginProperty>of(),
+                                                                        callContext);
+        assertListenerStatus();
+        final Invoice thirdInvoice = invoiceChecker.checkInvoice(account.getId(), 3, callContext,
+                                                                         new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 1), new LocalDate(2012, 6, 1), InvoiceItemType.REPAIR_ADJ, new BigDecimal("29.95").negate()),
+                                                                         new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 1), new LocalDate(2012, 5, 1), InvoiceItemType.CBA_ADJ, new BigDecimal("29.95")));
+        checkInvoiceDescriptions(thirdInvoice);
+    }
+
+    private void checkInvoiceDescriptions(final Invoice invoice) {
+        for (final InvoiceItem invoiceItem : invoice.getInvoiceItems()) {
+            assertEquals(invoiceItem.getDescription(), String.format("[plugin] %s", invoiceItem.getId()));
+        }
     }
 
     @Test(groups = "slow")
@@ -649,6 +702,7 @@ public class TestWithInvoicePlugin extends TestIntegrationBase {
         InvoiceItem additionalInvoiceItem;
         boolean shouldAddTaxItem = true;
         boolean isAborted = false;
+        boolean shouldUpdateDescription = false;
         DateTime rescheduleDate;
         boolean wasRescheduled = false;
         int invocationCount = 0;
@@ -679,6 +733,14 @@ public class TestWithInvoicePlugin extends TestIntegrationBase {
                 return ImmutableList.<InvoiceItem>of(additionalInvoiceItem);
             } else if (shouldAddTaxItem) {
                 return ImmutableList.<InvoiceItem>of(createTaxInvoiceItem(invoice));
+            } else if (shouldUpdateDescription) {
+                final List<InvoiceItem> updatedInvoiceItems = new LinkedList<InvoiceItem>();
+                for (final InvoiceItem invoiceItem : invoice.getInvoiceItems()) {
+                    final InvoiceItem updatedInvoiceItem = Mockito.spy(invoiceItem);
+                    Mockito.when(updatedInvoiceItem.getDescription()).thenReturn(String.format("[plugin] %s", invoiceItem.getId()));
+                    updatedInvoiceItems.add(updatedInvoiceItem);
+                }
+                return updatedInvoiceItems;
             } else {
                 return ImmutableList.<InvoiceItem>of();
             }

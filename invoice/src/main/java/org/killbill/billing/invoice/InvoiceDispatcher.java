@@ -75,12 +75,10 @@ import org.killbill.billing.invoice.generator.InvoiceWithMetadata;
 import org.killbill.billing.invoice.generator.InvoiceWithMetadata.SubscriptionFutureNotificationDates;
 import org.killbill.billing.invoice.generator.InvoiceWithMetadata.SubscriptionFutureNotificationDates.UsageDef;
 import org.killbill.billing.invoice.model.DefaultInvoice;
-import org.killbill.billing.invoice.model.FixedPriceInvoiceItem;
 import org.killbill.billing.invoice.model.InvoiceItemCatalogBase;
 import org.killbill.billing.invoice.model.InvoiceItemFactory;
 import org.killbill.billing.invoice.model.ItemAdjInvoiceItem;
 import org.killbill.billing.invoice.model.ParentInvoiceItem;
-import org.killbill.billing.invoice.model.RecurringInvoiceItem;
 import org.killbill.billing.invoice.notification.DefaultNextBillingDateNotifier;
 import org.killbill.billing.invoice.notification.NextBillingDateNotificationKey;
 import org.killbill.billing.junction.BillingEvent;
@@ -579,39 +577,16 @@ public class InvoiceDispatcher {
             } else {
                 // Add or update items from generated invoice
                 for (final InvoiceItem cur : additionalInvoiceItemsFromPlugins) {
-                    final InvoiceItem exitingItem = Iterables.tryFind(tmpInvoiceForInvoicePlugins.getInvoiceItems(), new Predicate<InvoiceItem>() {
+                    final InvoiceItem existingItem = Iterables.tryFind(tmpInvoiceForInvoicePlugins.getInvoiceItems(), new Predicate<InvoiceItem>() {
                         @Override
                         public boolean apply(final InvoiceItem input) {
                             return input.getId().equals(cur.getId());
                         }
                     }).orNull();
-                    if (exitingItem != null) {
-                        invoice.removeInvoiceItem(exitingItem);
+                    if (existingItem != null) {
+                        invoice.removeInvoiceItem(existingItem);
                     }
-
-                    final InvoiceItem sanitizedInvoiceItemFromPlugin = new InvoiceItemCatalogBase(cur.getId(),
-                                                                                                  cur.getCreatedDate(),
-                                                                                                  MoreObjects.firstNonNull(cur.getInvoiceId(), invoice.getId()),
-                                                                                                  cur.getAccountId(),
-                                                                                                  cur.getBundleId(),
-                                                                                                  cur.getSubscriptionId(),
-                                                                                                  cur.getDescription(),
-                                                                                                  cur.getPlanName(),
-                                                                                                  cur.getPhaseName(),
-                                                                                                  cur.getUsageName(),
-                                                                                                  cur.getPrettyPlanName(),
-                                                                                                  cur.getPrettyPhaseName(),
-                                                                                                  cur.getPrettyUsageName(),
-                                                                                                  cur.getStartDate(),
-                                                                                                  cur.getEndDate(),
-                                                                                                  cur.getAmount(),
-                                                                                                  cur.getRate(),
-                                                                                                  cur.getCurrency(),
-                                                                                                  cur.getLinkedItemId(),
-                                                                                                  cur.getQuantity(),
-                                                                                                  cur.getItemDetails(),
-                                                                                                  cur.getInvoiceItemType());
-                    invoice.addInvoiceItem(sanitizedInvoiceItemFromPlugin);
+                    invoice.addInvoiceItem(cur);
                 }
 
                 // Use credit after we call the plugin (https://github.com/killbill/killbill/issues/637)
@@ -639,7 +614,7 @@ public class InvoiceDispatcher {
                 success = true;
 
                 try {
-                    setChargedThroughDates(invoice.getInvoiceItems(FixedPriceInvoiceItem.class), invoice.getInvoiceItems(RecurringInvoiceItem.class), internalCallContext);
+                    setChargedThroughDates(invoice, internalCallContext);
                 } catch (final SubscriptionBaseApiException e) {
                     log.error("Failed handling SubscriptionBase change.", e);
                     return null;
@@ -854,9 +829,23 @@ public class InvoiceDispatcher {
         return internalCallContextFactory.createCallContext(context);
     }
 
-    private void setChargedThroughDates(final Collection<InvoiceItem> fixedPriceItems,
-                                        final Collection<InvoiceItem> recurringItems,
-                                        final InternalCallContext context) throws SubscriptionBaseApiException {
+    private void setChargedThroughDates(final Invoice invoice, final InternalCallContext context) throws SubscriptionBaseApiException {
+        // Don't use invoice.getInvoiceItems(final Class<T> clazz) as some items can come from plugins
+        final Collection<InvoiceItem> fixedPriceItems = new LinkedList<InvoiceItem>();
+        final Collection<InvoiceItem> recurringItems = new LinkedList<InvoiceItem>();
+        for (final InvoiceItem invoiceItem : invoice.getInvoiceItems()) {
+            switch (invoiceItem.getInvoiceItemType()) {
+                case FIXED:
+                    fixedPriceItems.add(invoiceItem);
+                    break;
+                case RECURRING:
+                    recurringItems.add(invoiceItem);
+                    break;
+                default:
+                    break;
+            }
+        }
+
         final Map<UUID, DateTime> chargeThroughDates = new HashMap<UUID, DateTime>();
         addInvoiceItemsToChargeThroughDates(chargeThroughDates, fixedPriceItems, context);
         addInvoiceItemsToChargeThroughDates(chargeThroughDates, recurringItems, context);
