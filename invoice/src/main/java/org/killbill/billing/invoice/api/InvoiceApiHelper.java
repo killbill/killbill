@@ -92,7 +92,7 @@ public class InvoiceApiHelper {
 
         boolean success = false;
         GlobalLock lock = null;
-        Iterable<Invoice> invoicesForPlugins = null;
+        Iterable<DefaultInvoice> invoicesForPlugins = null;
         try {
             lock = locker.lockWithNumberOfTries(LockerType.ACCNT_INV_PAY.toString(), accountId.toString(), invoiceConfig.getMaxGlobalLockRetries());
 
@@ -100,10 +100,9 @@ public class InvoiceApiHelper {
 
             final InternalCallContext internalCallContext = internalCallContextFactory.createInternalCallContext(accountId, context);
             final List<InvoiceModelDao> invoiceModelDaos = new LinkedList<InvoiceModelDao>();
-            for (final Invoice invoiceForPlugin : invoicesForPlugins) {
-                // Call plugin
-                final List<InvoiceItem> additionalInvoiceItems = invoicePluginDispatcher.getAdditionalInvoiceItems(invoiceForPlugin, isDryRun, context, internalCallContext);
-                invoiceForPlugin.addInvoiceItems(additionalInvoiceItems);
+            for (final DefaultInvoice invoiceForPlugin : invoicesForPlugins) {
+                // Call plugin(s)
+                invoicePluginDispatcher.updateOriginalInvoiceWithPluginInvoiceItems(invoiceForPlugin, isDryRun, context, internalCallContext);
 
                 // Transformation to InvoiceModelDao
                 final InvoiceModelDao invoiceModelDao = new InvoiceModelDao(invoiceForPlugin);

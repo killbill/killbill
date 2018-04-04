@@ -75,7 +75,6 @@ import org.killbill.billing.invoice.generator.InvoiceWithMetadata;
 import org.killbill.billing.invoice.generator.InvoiceWithMetadata.SubscriptionFutureNotificationDates;
 import org.killbill.billing.invoice.generator.InvoiceWithMetadata.SubscriptionFutureNotificationDates.UsageDef;
 import org.killbill.billing.invoice.model.DefaultInvoice;
-import org.killbill.billing.invoice.model.InvoiceItemCatalogBase;
 import org.killbill.billing.invoice.model.InvoiceItemFactory;
 import org.killbill.billing.invoice.model.ItemAdjInvoiceItem;
 import org.killbill.billing.invoice.model.ParentInvoiceItem;
@@ -558,35 +557,20 @@ public class InvoiceDispatcher {
 
         boolean success = false;
         try {
-            // Generate missing credit (> 0 for generation and < 0 for use) prior we call the plugin
+            // Generate missing credit (> 0 for generation and < 0 for use) prior we call the plugin(s)
             final InvoiceItem cbaItemPreInvoicePlugins = computeCBAOnExistingInvoice(invoice, internalCallContext);
-            DefaultInvoice tmpInvoiceForInvoicePlugins = invoice;
             if (cbaItemPreInvoicePlugins != null) {
-                tmpInvoiceForInvoicePlugins = (DefaultInvoice) tmpInvoiceForInvoicePlugins.clone();
-                tmpInvoiceForInvoicePlugins.addInvoiceItem(cbaItemPreInvoicePlugins);
+                invoice.addInvoiceItem(cbaItemPreInvoicePlugins);
             }
+
             //
             // Ask external invoice plugins if additional items (tax, etc) shall be added to the invoice
             //
-            final List<InvoiceItem> additionalInvoiceItemsFromPlugins = invoicePluginDispatcher.getAdditionalInvoiceItems(tmpInvoiceForInvoicePlugins, isDryRun, callContext, internalCallContext);
-            if (additionalInvoiceItemsFromPlugins.isEmpty()) {
-                // PERF: avoid re-computing the CBA if no change was made
+            final boolean invoiceUpdated = invoicePluginDispatcher.updateOriginalInvoiceWithPluginInvoiceItems(invoice, isDryRun, callContext, internalCallContext);
+            if (invoiceUpdated) {
+                // Remove the temporary CBA item as we need to re-compute CBA
                 if (cbaItemPreInvoicePlugins != null) {
-                    invoice.addInvoiceItem(cbaItemPreInvoicePlugins);
-                }
-            } else {
-                // Add or update items from generated invoice
-                for (final InvoiceItem cur : additionalInvoiceItemsFromPlugins) {
-                    final InvoiceItem existingItem = Iterables.tryFind(tmpInvoiceForInvoicePlugins.getInvoiceItems(), new Predicate<InvoiceItem>() {
-                        @Override
-                        public boolean apply(final InvoiceItem input) {
-                            return input.getId().equals(cur.getId());
-                        }
-                    }).orNull();
-                    if (existingItem != null) {
-                        invoice.removeInvoiceItem(existingItem);
-                    }
-                    invoice.addInvoiceItem(cur);
+                    invoice.removeInvoiceItem(cbaItemPreInvoicePlugins);
                 }
 
                 // Use credit after we call the plugin (https://github.com/killbill/killbill/issues/637)

@@ -155,32 +155,54 @@ public class InvoicePluginDispatcher {
         }
     }
 
-    //
-    // If we have multiple plugins there is a question of plugin ordering and also a 'product' questions to decide whether
-    // subsequent plugins should have access to items added by previous plugins
-    //
-    public List<InvoiceItem> getAdditionalInvoiceItems(final Invoice originalInvoice, final boolean isDryRun, final CallContext callContext, final InternalTenantContext tenantContext) throws InvoiceApiException {
+    public boolean updateOriginalInvoiceWithPluginInvoiceItems(final DefaultInvoice originalInvoice, final boolean isDryRun, final CallContext callContext, final InternalTenantContext tenantContext) throws InvoiceApiException {
         log.debug("Invoking invoice plugins getAdditionalInvoiceItems: isDryRun='{}', originalInvoice='{}'", isDryRun, originalInvoice);
-
-        final List<InvoiceItem> additionalInvoiceItems = new LinkedList<InvoiceItem>();
 
         final Collection<InvoicePluginApi> invoicePlugins = getInvoicePlugins(tenantContext).values();
         if (invoicePlugins.isEmpty()) {
-            return additionalInvoiceItems;
+            return false;
         }
 
-        // We clone the original invoice so plugins don't remove/add items
-        final Invoice clonedInvoice = (Invoice) ((DefaultInvoice) originalInvoice).clone();
+        boolean invoiceUpdated = false;
         for (final InvoicePluginApi invoicePlugin : invoicePlugins) {
+            // We clone the original invoice so plugins don't remove/add items
+            final Invoice clonedInvoice = (Invoice) originalInvoice.clone();
             final List<InvoiceItem> additionalInvoiceItemsForPlugin = invoicePlugin.getAdditionalInvoiceItems(clonedInvoice, isDryRun, ImmutableList.<PluginProperty>of(), callContext);
-            if (additionalInvoiceItemsForPlugin != null) {
+
+            if (additionalInvoiceItemsForPlugin != null && !additionalInvoiceItemsForPlugin.isEmpty()) {
+                final Collection<InvoiceItem> additionalInvoiceItems = new LinkedList<InvoiceItem>();
                 for (final InvoiceItem additionalInvoiceItem : additionalInvoiceItemsForPlugin) {
                     final InvoiceItem sanitizedInvoiceItem = validateAndSanitizeInvoiceItemFromPlugin(originalInvoice, additionalInvoiceItem, invoicePlugin);
                     additionalInvoiceItems.add(sanitizedInvoiceItem);
                 }
+                invoiceUpdated = invoiceUpdated || updateOriginalInvoiceWithPluginInvoiceItems(originalInvoice, additionalInvoiceItems);
             }
         }
-        return additionalInvoiceItems;
+
+        return invoiceUpdated;
+    }
+
+    private boolean updateOriginalInvoiceWithPluginInvoiceItems(final DefaultInvoice originalInvoice, final Collection<InvoiceItem> additionalInvoiceItems) {
+        if (additionalInvoiceItems.isEmpty()) {
+            return false;
+        }
+
+        // Add or update items from generated invoice
+        for (final InvoiceItem additionalInvoiceItem : additionalInvoiceItems) {
+            final InvoiceItem existingItem = Iterables.tryFind(originalInvoice.getInvoiceItems(),
+                                                               new Predicate<InvoiceItem>() {
+                                                                   @Override
+                                                                   public boolean apply(final InvoiceItem originalInvoiceItem) {
+                                                                       return originalInvoiceItem.getId().equals(additionalInvoiceItem.getId());
+                                                                   }
+                                                               }).orNull();
+            if (existingItem != null) {
+                originalInvoice.removeInvoiceItem(existingItem);
+            }
+            originalInvoice.addInvoiceItem(additionalInvoiceItem);
+        }
+
+        return true;
     }
 
     private InvoiceItem validateAndSanitizeInvoiceItemFromPlugin(final Invoice originalInvoice, final InvoiceItem additionalInvoiceItem, final InvoicePluginApi invoicePlugin) throws InvoiceApiException {
