@@ -831,15 +831,13 @@ public class InvoiceDispatcher {
 
     private void setChargedThroughDates(final Invoice invoice, final InternalCallContext context) throws SubscriptionBaseApiException {
         // Don't use invoice.getInvoiceItems(final Class<T> clazz) as some items can come from plugins
-        final Collection<InvoiceItem> fixedPriceItems = new LinkedList<InvoiceItem>();
-        final Collection<InvoiceItem> recurringItems = new LinkedList<InvoiceItem>();
+        final Collection<InvoiceItem> invoiceItemsToConsider = new LinkedList<InvoiceItem>();
         for (final InvoiceItem invoiceItem : invoice.getInvoiceItems()) {
             switch (invoiceItem.getInvoiceItemType()) {
                 case FIXED:
-                    fixedPriceItems.add(invoiceItem);
-                    break;
                 case RECURRING:
-                    recurringItems.add(invoiceItem);
+                case USAGE:
+                    invoiceItemsToConsider.add(invoiceItem);
                     break;
                 default:
                     break;
@@ -847,8 +845,7 @@ public class InvoiceDispatcher {
         }
 
         final Map<UUID, DateTime> chargeThroughDates = new HashMap<UUID, DateTime>();
-        addInvoiceItemsToChargeThroughDates(chargeThroughDates, fixedPriceItems, context);
-        addInvoiceItemsToChargeThroughDates(chargeThroughDates, recurringItems, context);
+        addInvoiceItemsToChargeThroughDates(chargeThroughDates, invoiceItemsToConsider, context);
 
         for (final UUID subscriptionId : chargeThroughDates.keySet()) {
             if (subscriptionId != null) {

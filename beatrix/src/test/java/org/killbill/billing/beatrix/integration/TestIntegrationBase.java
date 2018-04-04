@@ -102,6 +102,7 @@ import org.killbill.billing.payment.api.TransactionType;
 import org.killbill.billing.payment.invoice.InvoicePaymentControlPluginApi;
 import org.killbill.billing.payment.provider.MockPaymentProviderPlugin;
 import org.killbill.billing.subscription.api.SubscriptionBase;
+import org.killbill.billing.subscription.api.SubscriptionBaseInternalApi;
 import org.killbill.billing.subscription.api.SubscriptionBaseService;
 import org.killbill.billing.subscription.api.timeline.SubscriptionBaseTimelineApi;
 import org.killbill.billing.subscription.api.transfer.SubscriptionBaseTransferApi;
@@ -222,6 +223,8 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
     @Inject
     protected SubscriptionApi subscriptionApi;
 
+    @Inject
+    protected SubscriptionBaseInternalApi subscriptionBaseInternalApiApi;
 
     @Named(BeatrixIntegrationModule.NON_OSGI_PLUGIN_NAME)
     @Inject
