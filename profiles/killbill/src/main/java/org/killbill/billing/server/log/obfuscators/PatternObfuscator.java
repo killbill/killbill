@@ -17,6 +17,7 @@
 
 package org.killbill.billing.server.log.obfuscators;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedList;
 import java.util.regex.Pattern;
@@ -27,7 +28,7 @@ import com.google.common.collect.ImmutableList;
 public class PatternObfuscator extends Obfuscator {
 
     // Hide by default sensitive bank, PCI and PII data. For PANs, see LuhnMaskingObfuscator
-    private static final String[] DEFAULT_SENSITIVE_KEYS = {
+    private static final Collection<String> DEFAULT_SENSITIVE_KEYS = ImmutableList.of(
             "accountnumber",
             "authenticationdata",
             "bankaccountnumber",
@@ -49,19 +50,27 @@ public class PatternObfuscator extends Obfuscator {
             "name",
             "number",
             "password",
-            "xid"
-    };
+            "xid");
 
     private final Collection<Pattern> patterns = new LinkedList<Pattern>();
 
     public PatternObfuscator() {
-        this(ImmutableList.<Pattern>of());
+        this(ImmutableList.<Pattern>of(), ImmutableList.<String>of());
     }
 
-    public PatternObfuscator(final Collection<Pattern> extraPatterns) {
-        super();
+    public PatternObfuscator(final Collection<String> extraKeywords) {
+        this(ImmutableList.<Pattern>of(), extraKeywords);
+    }
 
-        for (final String sensitiveKey : DEFAULT_SENSITIVE_KEYS) {
+    public PatternObfuscator(final Collection<Pattern> extraPatterns, final Collection<String> extraKeywords) {
+        super();
+        Collection<String> keywords = new ArrayList<String>();
+        keywords.addAll(DEFAULT_SENSITIVE_KEYS);
+        if (extraKeywords != null) {
+            keywords.addAll(extraKeywords);
+        }
+
+        for (final String sensitiveKey : keywords) {
             this.patterns.add(buildJSONPattern(sensitiveKey));
             this.patterns.add(buildXMLPattern(sensitiveKey));
             this.patterns.add(buildMultiValuesXMLPattern(sensitiveKey));
@@ -81,7 +90,7 @@ public class PatternObfuscator extends Obfuscator {
     }
 
     private Pattern buildXMLPattern(final String key) {
-        return Pattern.compile(key + ">([^<\\n]+)</[^<>]*" + key + ">", DEFAULT_PATTERN_FLAGS);
+        return Pattern.compile(key + "(?:\\s+.*?)?>([^<\\n]+)</[^<>]*" + key + ">", DEFAULT_PATTERN_FLAGS);
     }
 
     private Pattern buildMultiValuesXMLPattern(final String key) {
