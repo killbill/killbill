@@ -41,6 +41,7 @@
 
     <units>
         <unit name="bullets"/>
+        <unit name="stones"/>
     </units>
 
     <products>
@@ -80,6 +81,9 @@
                 <addonProduct>Laser-Scope</addonProduct>
                 <addonProduct>Bullets</addonProduct>
             </available>
+        </product>
+        <product name="Trebuchet">
+            <category>BASE</category>
         </product>
         <product name="Cleaning">
             <category>ADD_ON</category>
@@ -1354,6 +1358,49 @@
             <plansAllowedInBundle>-1</plansAllowedInBundle>
             <!-- arbitrary number of these (multipack) -->
         </plan>
+        <plan name="trebuchet-usage-in-arrear" prettyName="Trebuchet Monthly Plan">
+            <product>Trebuchet</product>
+            <finalPhase type="EVERGREEN">
+                <duration>
+                    <unit>UNLIMITED</unit>
+                </duration>
+                <usages>
+                    <usage name="trebuchet-in-arrear-usage" billingMode="IN_ARREAR" usageType="CAPACITY">
+                        <billingPeriod>MONTHLY</billingPeriod>
+                        <tiers>
+                            <tier>
+                                <limits>
+                                    <limit>
+                                        <unit>stones</unit>
+                                        <max>100</max>
+                                    </limit>
+                                </limits>
+                                <recurringPrice>
+                                    <price>
+                                        <currency>USD</currency>
+                                        <value>100</value>
+                                    </price>
+                                </recurringPrice>
+                            </tier>
+                            <tier>
+                                <limits>
+                                    <limit>
+                                        <unit>stones</unit>
+                                        <max>-1</max>
+                                    </limit>
+                                </limits>
+                                <recurringPrice>
+                                    <price>
+                                        <currency>USD</currency>
+                                        <value>1000</value>
+                                    </price>
+                                </recurringPrice>
+                            </tier>
+                        </tiers>
+                    </usage>
+                </usages>
+            </finalPhase>
+        </plan>
     </plans>
     <priceLists>
         <defaultPriceList name="DEFAULT">
@@ -1368,6 +1415,7 @@
                 <plan>pistol-quarterly</plan>
                 <plan>shotgun-annual</plan>
                 <plan>assault-rifle-annual</plan>
+                <plan>trebuchet-usage-in-arrear</plan>
                 <plan>laser-scope-monthly</plan>
                 <plan>telescopic-scope-monthly</plan>
                 <plan>cleaning-monthly</plan>
