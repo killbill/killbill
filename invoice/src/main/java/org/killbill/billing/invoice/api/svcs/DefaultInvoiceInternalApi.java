@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014-2016 Groupon, Inc
- * Copyright 2014-2016 The Billing Project, LLC
+ * Copyright 2014-2018 Groupon, Inc
+ * Copyright 2014-2018 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -36,7 +36,6 @@ import org.killbill.billing.invoice.api.Invoice;
 import org.killbill.billing.invoice.api.InvoiceApiException;
 import org.killbill.billing.invoice.api.InvoiceApiHelper;
 import org.killbill.billing.invoice.api.InvoiceInternalApi;
-import org.killbill.billing.invoice.api.InvoiceItem;
 import org.killbill.billing.invoice.api.InvoicePayment;
 import org.killbill.billing.invoice.api.InvoicePaymentType;
 import org.killbill.billing.invoice.api.InvoiceStatus;
@@ -76,6 +75,10 @@ public class DefaultInvoiceInternalApi implements InvoiceInternalApi {
 
     @Override
     public Invoice getInvoiceById(final UUID invoiceId, final InternalTenantContext context) throws InvoiceApiException {
+        return getInvoiceByIdInternal(invoiceId, context);
+    }
+
+    private DefaultInvoice getInvoiceByIdInternal(final UUID invoiceId, final InternalTenantContext context) {
         return new DefaultInvoice(dao.getById(invoiceId, context));
     }
 
@@ -132,12 +135,12 @@ public class DefaultInvoiceInternalApi implements InvoiceInternalApi {
 
         // See https://github.com/killbill/killbill/issues/265
         final CallContext callContext = internalCallContextFactory.createCallContext(context);
-        final Invoice invoice = getInvoiceById(refund.getInvoiceId(), context);
+        final DefaultInvoice invoice = getInvoiceByIdInternal(refund.getInvoiceId(), context);
         final UUID accountId = invoice.getAccountId();
         final WithAccountLock withAccountLock = new WithAccountLock() {
             @Override
-            public Iterable<Invoice> prepareInvoices() throws InvoiceApiException {
-                return ImmutableList.<Invoice>of(invoice);
+            public Iterable<DefaultInvoice> prepareInvoices() throws InvoiceApiException {
+                return ImmutableList.<DefaultInvoice>of(invoice);
             }
         };
         invoiceApiHelper.dispatchToInvoicePluginsAndInsertItems(accountId, false, withAccountLock, callContext);

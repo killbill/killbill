@@ -67,6 +67,7 @@ from <tableName()> t
 where t.is_active
 and <idField("t.")> in (<ids>)
 <AND_CHECK_TENANT("t.")>
+<defaultOrderBy("t.")>
 ;
 >>
 
