@@ -289,7 +289,7 @@ public class TestInvoicePayment extends TestJaxrsBase {
         // Verify targetInvoiceId is not Null. See #593
         assertNotNull(invoicePayment.getTargetInvoiceId());
 
-        final Invoices invoices = accountApi.getInvoices(accountJson.getAccountId(), requestOptions);
+        final Invoices invoices = accountApi.getInvoicesForAccount(accountJson.getAccountId(), requestOptions);
         assertEquals(invoices.size(), 2);
         final Invoice invoice = invoices.get(1);
         // Verify this is the correct value
@@ -311,7 +311,7 @@ public class TestInvoicePayment extends TestJaxrsBase {
         assertNotNull(accountJson);
 
         // Disable automatic payments
-        accountApi.createTags(accountJson.getAccountId(), ImmutableList.<String>of(ControlTagType.AUTO_PAY_OFF.getId().toString()), requestOptions);
+        accountApi.createAccountTags(accountJson.getAccountId(), ImmutableList.<String>of(ControlTagType.AUTO_PAY_OFF.getId().toString()), requestOptions);
 
         // Add a bundle, subscription and move the clock to get the first invoice
         final Subscription subscriptionJson = createSubscription(accountJson.getAccountId(), UUID.randomUUID().toString(), "Shotgun",
@@ -320,7 +320,7 @@ public class TestInvoicePayment extends TestJaxrsBase {
         clock.addDays(32);
         crappyWaitForLackOfProperSynchonization();
 
-        final List<Invoice> invoices = accountApi.getInvoices(accountJson.getAccountId(), requestOptions);
+        final List<Invoice> invoices = accountApi.getInvoicesForAccount(accountJson.getAccountId(), requestOptions);
         assertEquals(invoices.size(), 2);
 
         final InvoicePayment invoicePayment1 = new InvoicePayment();

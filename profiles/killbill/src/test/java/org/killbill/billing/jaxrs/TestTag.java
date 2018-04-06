@@ -116,15 +116,15 @@ public class TestTag extends TestJaxrsBase {
                                                                 ProductCategory.BASE, BillingPeriod.MONTHLY, true);
 
         for (final ControlTagType controlTagType : ControlTagType.values()) {
-            accountApi.createTags(account.getAccountId(), ImmutableList.<String>of(controlTagType.getId().toString()), requestOptions);
+            accountApi.createAccountTags(account.getAccountId(), ImmutableList.<String>of(controlTagType.getId().toString()), requestOptions);
         }
 
         final TagDefinition bundleTagDefInput = new TagDefinition(null, false, "bundletagdef", "nothing special", ImmutableList.<ObjectType>of(ObjectType.TRANSACTION), null);
         final TagDefinition bundleTagDef = tagDefinitionApi.createTagDefinition(bundleTagDefInput, requestOptions);
 
-        bundleApi.createTags(subscriptionJson.getBundleId(), ImmutableList.<String>of(bundleTagDef.getId().toString()), requestOptions);
+        bundleApi.createBundleTags(subscriptionJson.getBundleId(), ImmutableList.<String>of(bundleTagDef.getId().toString()), requestOptions);
 
-        final Tags allBundleTags = bundleApi.getTags(subscriptionJson.getBundleId(), requestOptions);
+        final Tags allBundleTags = bundleApi.getBundleTags(subscriptionJson.getBundleId(), requestOptions);
         Assert.assertEquals(allBundleTags.size(), 1);
 
         final Tags allAccountTags = accountApi.getAllTags(account.getAccountId(), null, requestOptions);
@@ -138,10 +138,10 @@ public class TestTag extends TestJaxrsBase {
     public void testSystemTagsPagination() throws Exception {
         final Account account = createAccount();
         for (final ControlTagType controlTagType : ControlTagType.values()) {
-            accountApi.createTags(account.getAccountId(), ImmutableList.<String>of(controlTagType.getId().toString()), requestOptions);
+            accountApi.createAccountTags(account.getAccountId(), ImmutableList.<String>of(controlTagType.getId().toString()), requestOptions);
         }
 
-        final Tags allTags = accountApi.getTags(account.getAccountId(), requestOptions);
+        final Tags allTags = accountApi.getAccountTags(account.getAccountId(), requestOptions);
         Assert.assertEquals(allTags.size(), ControlTagType.values().length);
 
         for (final ControlTagType controlTagType : ControlTagType.values()) {
@@ -158,7 +158,7 @@ public class TestTag extends TestJaxrsBase {
         final Account account = createAccount();
 
         try {
-            accountApi.createTags(account.getAccountId(), ImmutableList.<String>of(SystemTags.PARK_TAG_DEFINITION_ID.toString()), requestOptions);
+            accountApi.createAccountTags(account.getAccountId(), ImmutableList.<String>of(SystemTags.PARK_TAG_DEFINITION_ID.toString()), requestOptions);
             Assert.fail("Creating a tag associated with a system tag should fail");
         } catch (final Exception e) {
             Assert.assertTrue(true);
@@ -171,10 +171,10 @@ public class TestTag extends TestJaxrsBase {
         for (int i = 0; i < 5; i++) {
             final TagDefinition tagDefinition = new TagDefinition(null, false, UUID.randomUUID().toString().substring(0, 5), UUID.randomUUID().toString(), ImmutableList.<ObjectType>of(ObjectType.ACCOUNT), null);
             final UUID tagDefinitionId = tagDefinitionApi.createTagDefinition(tagDefinition, requestOptions).getId();
-            accountApi.createTags(account.getAccountId(), ImmutableList.<String>of(tagDefinitionId.toString()), requestOptions);
+            accountApi.createAccountTags(account.getAccountId(), ImmutableList.<String>of(tagDefinitionId.toString()), requestOptions);
         }
 
-        final Tags allTags = accountApi.getTags(account.getAccountId(), requestOptions);
+        final Tags allTags = accountApi.getAccountTags(account.getAccountId(), requestOptions);
         Assert.assertEquals(allTags.size(), 5);
 
         Tags page = tagApi.getTags(0L, 1L, AuditLevel.NONE, requestOptions);

@@ -118,7 +118,7 @@ public class TestAdmin extends TestJaxrsBase {
             crappyWaitForLackOfProperSynchonization();
 
             Assert.assertEquals(invoiceApi.getInvoices(requestOptions).getPaginationMaxNbRecords(), i + 1);
-            final List<Invoice> invoices = accountApi.getInvoices(accountJson.getAccountId(), false, false, false, false, AuditLevel.NONE, requestOptions);
+            final List<Invoice> invoices = accountApi.getInvoicesForAccount(accountJson.getAccountId(), false, false, false, false, AuditLevel.NONE, requestOptions);
             assertEquals(invoices.size(), 1);
         }
 
@@ -128,7 +128,7 @@ public class TestAdmin extends TestJaxrsBase {
 
         Assert.assertEquals(invoiceApi.getInvoices(requestOptions).getPaginationMaxNbRecords(), 10);
         for (final UUID accountId : accounts) {
-            final List<Invoice> invoices = accountApi.getInvoices(accountId, false, false, false, false, AuditLevel.NONE, requestOptions);
+            final List<Invoice> invoices = accountApi.getInvoicesForAccount(accountId, false, false, false, false, AuditLevel.NONE, requestOptions);
             assertEquals(invoices.size(), 2);
         }
 
@@ -146,7 +146,7 @@ public class TestAdmin extends TestJaxrsBase {
 
         Assert.assertEquals(invoiceApi.getInvoices(requestOptions).getPaginationMaxNbRecords(), 10);
         for (final UUID accountId : accounts) {
-            final List<Invoice> invoices = accountApi.getInvoices(accountId, false, false, false, false, AuditLevel.NONE, requestOptions);
+            final List<Invoice> invoices = accountApi.getInvoicesForAccount(accountId, false, false, false, false, AuditLevel.NONE, requestOptions);
             assertEquals(invoices.size(), 2);
         }
 

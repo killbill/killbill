@@ -52,7 +52,7 @@ public class TestOverdue extends TestJaxrsBase {
         final Account accountJson = createAccountNoPMBundleAndSubscriptionAndWaitForFirstInvoice();
 
         // Get the invoices
-        final List<Invoice> invoices = accountApi.getInvoices(accountJson.getAccountId(), requestOptions);
+        final List<Invoice> invoices = accountApi.getInvoicesForAccount(accountJson.getAccountId(), requestOptions);
         // 2 invoices but look for the non zero dollar one
         assertEquals(invoices.size(), 2);
 
@@ -74,7 +74,7 @@ public class TestOverdue extends TestJaxrsBase {
         // Post external payments, paying the most recent invoice first: this is to avoid a race condition where
         // a refresh overdue notification kicks in after the first payment, which makes the account goes CLEAR and
         // triggers an AUTO_INVOICE_OFF tag removal (hence adjustment of the other invoices balance).
-        final Invoices invoicesForAccount = accountApi.getInvoices(accountJson.getAccountId(), requestOptions);
+        final Invoices invoicesForAccount = accountApi.getInvoicesForAccount(accountJson.getAccountId(), requestOptions);
         final List<Invoice> mostRecentInvoiceFirst = Ordering.<Invoice>from(new Comparator<Invoice>() {
             @Override
             public int compare(final Invoice invoice1, final Invoice invoice2) {
@@ -105,7 +105,7 @@ public class TestOverdue extends TestJaxrsBase {
 
         // Create an account without a payment method and assign a TEST tag
         final Account accountJson = createAccountNoPMBundleAndSubscription();
-        final Tags accountTag = accountApi.createTags(accountJson.getAccountId(), ImmutableList.<String>of(ControlTagType.TEST.getId().toString()), requestOptions);
+        final Tags accountTag = accountApi.createAccountTags(accountJson.getAccountId(), ImmutableList.<String>of(ControlTagType.TEST.getId().toString()), requestOptions);
         assertEquals(accountTag.get(0).getTagDefinitionId(), ControlTagType.TEST.getId());
 
         // Create an account without a TEST tag
@@ -116,11 +116,11 @@ public class TestOverdue extends TestJaxrsBase {
         crappyWaitForLackOfProperSynchonization();
 
         // Get the invoices
-        final List<Invoice> invoices = accountApi.getInvoices(accountJson.getAccountId(), requestOptions);
+        final List<Invoice> invoices = accountApi.getInvoicesForAccount(accountJson.getAccountId(), requestOptions);
         // 2 invoices but look for the non zero dollar one
         assertEquals(invoices.size(), 2);
 
-        final List<Invoice> invoicesNoTag = accountApi.getInvoices(accountJsonNoTag.getAccountId(), requestOptions);
+        final List<Invoice> invoicesNoTag = accountApi.getInvoicesForAccount(accountJsonNoTag.getAccountId(), requestOptions);
         // 2 invoices but look for the non zero dollar one
         assertEquals(invoicesNoTag.size(), 2);
 
@@ -144,7 +144,7 @@ public class TestOverdue extends TestJaxrsBase {
 
         // Create an account without a payment method and assign a TEST tag
         final Account accountJson = createAccountNoPMBundleAndSubscription();
-        final Tags accountTag = accountApi.createTags(accountJson.getAccountId(), ImmutableList.<String>of(ControlTagType.TEST.getId().toString()), requestOptions);
+        final Tags accountTag = accountApi.createAccountTags(accountJson.getAccountId(), ImmutableList.<String>of(ControlTagType.TEST.getId().toString()), requestOptions);
         assertEquals(accountTag.get(0).getTagDefinitionId(), ControlTagType.TEST.getId());
 
         // Create an account without a TEST tag
@@ -156,11 +156,11 @@ public class TestOverdue extends TestJaxrsBase {
         crappyWaitForLackOfProperSynchonization();
 
         // Get the invoices
-        final List<Invoice> invoices = accountApi.getInvoices(accountJson.getAccountId(), requestOptions);
+        final List<Invoice> invoices = accountApi.getInvoicesForAccount(accountJson.getAccountId(), requestOptions);
         // 2 invoices but look for the non zero dollar one
         assertEquals(invoices.size(), 2);
 
-        final List<Invoice> invoicesNoTag = accountApi.getInvoices(accountJsonNoTag.getAccountId(), requestOptions);
+        final List<Invoice> invoicesNoTag = accountApi.getInvoicesForAccount(accountJsonNoTag.getAccountId(), requestOptions);
         // 2 invoices but look for the non zero dollar one
         assertEquals(invoicesNoTag.size(), 2);
 

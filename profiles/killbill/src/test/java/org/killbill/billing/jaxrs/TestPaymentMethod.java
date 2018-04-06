@@ -116,7 +116,7 @@ public class TestPaymentMethod extends TestJaxrsBase {
         body.add(customField);
 
         // Create custom field
-        final CustomFields createdCustomFields = paymentMethodApi.createCustomFields(paymentMethodId, body, requestOptions);
+        final CustomFields createdCustomFields = paymentMethodApi.createPaymentMethodCustomFields(paymentMethodId, body, requestOptions);
         Assert.assertEquals(createdCustomFields.size(), 1);
         final CustomField createdCustomField = createdCustomFields.get(0);
         Assert.assertEquals(createdCustomField.getName(), "testKey");
@@ -125,7 +125,7 @@ public class TestPaymentMethod extends TestJaxrsBase {
         Assert.assertEquals(createdCustomField.getObjectType(), ObjectType.PAYMENT_METHOD);
 
         // Retrieve custom field
-        final CustomFields retrievedCustomFields = paymentMethodApi.getCustomFields(paymentMethodId, requestOptions);
+        final CustomFields retrievedCustomFields = paymentMethodApi.getPaymentMethodCustomFields(paymentMethodId, requestOptions);
         Assert.assertEquals(retrievedCustomFields.size(), 1);
         final CustomField retrievedCustomField = retrievedCustomFields.get(0);
         Assert.assertEquals(retrievedCustomField.getName(), "testKey");
@@ -134,8 +134,8 @@ public class TestPaymentMethod extends TestJaxrsBase {
         Assert.assertEquals(retrievedCustomField.getObjectType(), ObjectType.PAYMENT_METHOD);
 
         // Delete custom field
-        paymentMethodApi.deleteCustomFields(paymentMethodId, Collections.<UUID>singletonList(createdCustomField.getCustomFieldId()), requestOptions);
-        final CustomFields deletedCustomFields = paymentMethodApi.getCustomFields(paymentMethodId, requestOptions);
+        paymentMethodApi.deletePaymentMethodCustomFields(paymentMethodId, Collections.<UUID>singletonList(createdCustomField.getCustomFieldId()), requestOptions);
+        final CustomFields deletedCustomFields = paymentMethodApi.getPaymentMethodCustomFields(paymentMethodId, requestOptions);
         Assert.assertEquals(deletedCustomFields.size(), 0);
     }
 

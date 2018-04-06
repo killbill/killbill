@@ -79,7 +79,7 @@ public class TestAccountTimeline extends TestJaxrsBase {
         final DateTime endTime = clock.getUTCNow();
 
         // Add credit
-        final Invoice invoice = accountApi.getInvoices(accountJson.getAccountId(), requestOptions).get(1);
+        final Invoice invoice = accountApi.getInvoicesForAccount(accountJson.getAccountId(), requestOptions).get(1);
         final BigDecimal creditAmount = BigDecimal.ONE;
         final Credit credit = new Credit();
         credit.setAccountId(accountJson.getAccountId());
@@ -87,7 +87,7 @@ public class TestAccountTimeline extends TestJaxrsBase {
         creditApi.createCredit(credit, true, requestOptions);
 
         // Add refund
-        final Payment postedPayment = accountApi.getPayments(accountJson.getAccountId(), NULL_PLUGIN_PROPERTIES, requestOptions).get(0);
+        final Payment postedPayment = accountApi.getPaymentsForAccount(accountJson.getAccountId(), NULL_PLUGIN_PROPERTIES, requestOptions).get(0);
         final BigDecimal refundAmount = BigDecimal.ONE;
         final InvoicePaymentTransaction refund = new InvoicePaymentTransaction();
         refund.setPaymentId(postedPayment.getPaymentId());

@@ -209,7 +209,7 @@ public class TestPayment extends TestJaxrsBase {
         mockPaymentProviderPlugin.makeNextPaymentFailWithError();
         final Account account = createAccountWithPMBundleAndSubscriptionAndWaitForFirstInvoice();
         // Getting Invoice #2 (first after Trial period)
-        UUID failedInvoiceId = accountApi.getInvoices(account.getAccountId(), RequestOptions.empty()).get(1).getInvoiceId();
+        UUID failedInvoiceId = accountApi.getInvoicesForAccount(account.getAccountId(), RequestOptions.empty()).get(1).getInvoiceId();
 
         HashMultimap<String, String> queryParams = HashMultimap.create();
         queryParams.put("withAttempts", "true");
@@ -219,7 +219,7 @@ public class TestPayment extends TestJaxrsBase {
                                                     .withComment(comment)
                                                     .withQueryParams(queryParams).build();
 
-        InvoicePayments invoicePayments = invoiceApi.getPayments(failedInvoiceId, inputOptions);
+        InvoicePayments invoicePayments = invoiceApi.getPaymentsForInvoice(failedInvoiceId, inputOptions);
 
         Assert.assertEquals(invoicePayments.get(0).getTargetInvoiceId(), failedInvoiceId);
         Assert.assertNotNull(invoicePayments.get(0).getPaymentAttempts());
@@ -229,7 +229,7 @@ public class TestPayment extends TestJaxrsBase {
 
         // Remove the future notification and check SCHEDULED does not appear any longer
         paymentApi.cancelScheduledPaymentTransactionByExternalKey(invoicePayments.get(0).getPaymentAttempts().get(1).getTransactionExternalKey(), inputOptions);
-        invoicePayments = invoiceApi.getPayments(failedInvoiceId, inputOptions);
+        invoicePayments = invoiceApi.getPaymentsForInvoice(failedInvoiceId, inputOptions);
         Assert.assertEquals(invoicePayments.get(0).getPaymentAttempts().size(), 1);
         Assert.assertEquals(invoicePayments.get(0).getPaymentAttempts().get(0).getStateName(), "RETRIED");
     }
@@ -247,7 +247,7 @@ public class TestPayment extends TestJaxrsBase {
                                                     .withComment(comment)
                                                     .withQueryParams(queryParams).build();
 
-        Payments payments = accountApi.getPayments(account.getAccountId(), NULL_PLUGIN_PROPERTIES, inputOptions);
+        Payments payments = accountApi.getPaymentsForAccount(account.getAccountId(), NULL_PLUGIN_PROPERTIES, inputOptions);
 
         Assert.assertNotNull(payments.get(0).getPaymentAttempts());
         Assert.assertEquals(payments.get(0).getPaymentAttempts().get(0).getStateName(), "RETRIED");
@@ -320,7 +320,7 @@ public class TestPayment extends TestJaxrsBase {
 
         paymentMethodApi.deletePaymentMethod(paymentMethodId, true, false, NULL_PLUGIN_PROPERTIES, inputOptions);
 
-        Tags accountTags = accountApi.getTags(account.getAccountId(), inputOptions);
+        Tags accountTags = accountApi.getAccountTags(account.getAccountId(), inputOptions);
 
         Assert.assertNotNull(accountTags);
         Assert.assertEquals(accountTags.get(0).getTagDefinitionName(), "AUTO_PAY_OFF");
@@ -745,9 +745,9 @@ public class TestPayment extends TestJaxrsBase {
         assertEquals(payment.getPaymentId(), paymentId);
 
         UUID paymentTransactionId = payment.getTransactions().get(0).getTransactionId();
-        paymentTransactionApi.createTags(paymentTransactionId, ImmutableList.<String>of(createdTagDefinition.getId().toString()), requestOptions);
+        paymentTransactionApi.createTransactionTags(paymentTransactionId, ImmutableList.<String>of(createdTagDefinition.getId().toString()), requestOptions);
 
-        final Tags paymentTransactionTags = paymentTransactionApi.getTags(paymentTransactionId, requestOptions);
+        final Tags paymentTransactionTags = paymentTransactionApi.getTransactionTags(paymentTransactionId, requestOptions);
 
         Assert.assertNotNull(paymentTransactionTags);
         Assert.assertEquals(paymentTransactionTags.get(0).getTagDefinitionName(), tagDefinitionName);
@@ -768,7 +768,7 @@ public class TestPayment extends TestJaxrsBase {
         assertEquals(payment.getPaymentId(), paymentId);
 
         UUID paymentTransactionId = payment.getTransactions().get(0).getTransactionId();
-        final Tags paymentTransactionTag = paymentTransactionApi.createTags(paymentTransactionId, ImmutableList.<String>of(createdTagDefinition.getId().toString()), requestOptions);
+        final Tags paymentTransactionTag = paymentTransactionApi.createTransactionTags(paymentTransactionId, ImmutableList.<String>of(createdTagDefinition.getId().toString()), requestOptions);
 
         Assert.assertNotNull(paymentTransactionTag);
         Assert.assertEquals(paymentTransactionTag.get(0).getTagDefinitionName(), tagDefinitionName);
@@ -910,7 +910,7 @@ public class TestPayment extends TestJaxrsBase {
         final Payment retrievedPayment = paymentApi.getPayment(payment.getPaymentId(), NULL_PLUGIN_PROPERTIES, requestOptions);
         assertEquals(retrievedPayment, payment);
 
-        final Payments paymentsForAccount = accountApi.getPayments(account.getAccountId(), NULL_PLUGIN_PROPERTIES, requestOptions);
+        final Payments paymentsForAccount = accountApi.getPaymentsForAccount(account.getAccountId(), NULL_PLUGIN_PROPERTIES, requestOptions);
         assertEquals(paymentsForAccount.size(), paymentNb);
         assertEquals(paymentsForAccount.get(paymentNb - 1), payment);
     }

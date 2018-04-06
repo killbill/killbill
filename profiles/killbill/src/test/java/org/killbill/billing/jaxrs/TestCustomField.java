@@ -43,9 +43,9 @@ public class TestCustomField extends TestJaxrsBase {
         customField.setValue("InitialValue");
         final CustomFields input = new CustomFields();
         input.add(customField);
-        accountApi.createCustomFields(account.getAccountId(), input, requestOptions);
+        accountApi.createAccountCustomFields(account.getAccountId(), input, requestOptions);
 
-        CustomFields allCustomFields = accountApi.getCustomFields(account.getAccountId(), requestOptions);
+        CustomFields allCustomFields = accountApi.getAccountCustomFields(account.getAccountId(), requestOptions);
         Assert.assertEquals(allCustomFields.size(), 1);
         Assert.assertEquals(allCustomFields.get(0).getName(), "MyName");
         Assert.assertEquals(allCustomFields.get(0).getValue(), "InitialValue");
@@ -55,15 +55,15 @@ public class TestCustomField extends TestJaxrsBase {
         customFieldModified.setValue("NewValue");
         input.clear();
         input.add(customFieldModified);
-        accountApi.modifyCustomFields(account.getAccountId(), input, requestOptions);
+        accountApi.modifyAccountCustomFields(account.getAccountId(), input, requestOptions);
 
-        allCustomFields = accountApi.getCustomFields(account.getAccountId(), requestOptions);
+        allCustomFields = accountApi.getAccountCustomFields(account.getAccountId(), requestOptions);
         Assert.assertEquals(allCustomFields.size(), 1);
         Assert.assertEquals(allCustomFields.get(0).getName(), "MyName");
         Assert.assertEquals(allCustomFields.get(0).getValue(), "NewValue");
 
-        accountApi.deleteCustomFields(account.getAccountId(), ImmutableList.<UUID>of(allCustomFields.get(0).getCustomFieldId()), requestOptions);
-        allCustomFields = accountApi.getCustomFields(account.getAccountId(), requestOptions);
+        accountApi.deleteAccountCustomFields(account.getAccountId(), ImmutableList.<UUID>of(allCustomFields.get(0).getCustomFieldId()), requestOptions);
+        allCustomFields = accountApi.getAccountCustomFields(account.getAccountId(), requestOptions);
         Assert.assertEquals(allCustomFields.size(), 0);
     }
 
@@ -79,9 +79,9 @@ public class TestCustomField extends TestJaxrsBase {
             customField.setValue(UUID.randomUUID().toString().substring(0, 5));
             input.add(customField);
         }
-        accountApi.createCustomFields(account.getAccountId(), input, requestOptions);
+        accountApi.createAccountCustomFields(account.getAccountId(), input, requestOptions);
 
-        final CustomFields allCustomFields = accountApi.getCustomFields(account.getAccountId(), requestOptions);
+        final CustomFields allCustomFields = accountApi.getAccountCustomFields(account.getAccountId(), requestOptions);
         Assert.assertEquals(allCustomFields.size(), 5);
 
         CustomFields page = customFieldApi.getCustomFields(0L, 1L, AuditLevel.NONE, requestOptions);

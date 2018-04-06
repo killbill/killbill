@@ -44,7 +44,7 @@ public class TestInvoiceItem extends TestJaxrsBase {
     @Test(groups = "slow", description = "Add tags to invoice item")
     public void testTags() throws Exception {
         final Account accountJson = createAccountNoPMBundleAndSubscriptionAndWaitForFirstInvoice();
-        final Invoices invoicesJson = accountApi.getInvoices(accountJson.getAccountId(), true, false, false, false, AuditLevel.NONE, requestOptions);
+        final Invoices invoicesJson = accountApi.getInvoicesForAccount(accountJson.getAccountId(), true, false, false, false, AuditLevel.NONE, requestOptions);
 
         Assert.assertNotNull(invoicesJson);
         Assert.assertEquals(invoicesJson.size(), 2);
@@ -65,18 +65,18 @@ public class TestInvoiceItem extends TestJaxrsBase {
         final Multimap<String, String> followQueryParams = HashMultimap.create();
         followQueryParams.put(JaxrsResource.QUERY_ACCOUNT_ID, accountJson.getAccountId().toString());
         final RequestOptions followRequestOptions = requestOptions.extend().withQueryParamsForFollow(followQueryParams).build();
-        invoiceItemApi.createTags(invoiceItems.get(0).getInvoiceItemId(), ImmutableList.<String>of(objFromJson.getId().toString()), followRequestOptions);
+        invoiceItemApi.createInvoiceItemTags(invoiceItems.get(0).getInvoiceItemId(), ImmutableList.<String>of(objFromJson.getId().toString()), followRequestOptions);
 
         // Retrieves all tags
-        final List<Tag> tags1 = invoiceItemApi.getTags(invoiceItems.get(0).getInvoiceItemId(), accountJson.getAccountId(), null, AuditLevel.FULL, requestOptions);
+        final List<Tag> tags1 = invoiceItemApi.getInvoiceItemTags(invoiceItems.get(0).getInvoiceItemId(), accountJson.getAccountId(), null, AuditLevel.FULL, requestOptions);
         Assert.assertEquals(tags1.size(), 1);
         Assert.assertEquals(tags1.get(0).getTagDefinitionId(), objFromJson.getId());
 
         // Verify adding the same tag a second time doesn't do anything
-        invoiceItemApi.createTags(invoiceItems.get(0).getInvoiceItemId(), ImmutableList.<String>of(objFromJson.getId().toString()), followRequestOptions);
+        invoiceItemApi.createInvoiceItemTags(invoiceItems.get(0).getInvoiceItemId(), ImmutableList.<String>of(objFromJson.getId().toString()), followRequestOptions);
 
         // Retrieves all tags again
-        final List<Tag> tags2 = invoiceItemApi.getTags(invoiceItems.get(0).getInvoiceItemId(), accountJson.getAccountId(), null, AuditLevel.FULL, requestOptions);
+        final List<Tag> tags2 = invoiceItemApi.getInvoiceItemTags(invoiceItems.get(0).getInvoiceItemId(), accountJson.getAccountId(), null, AuditLevel.FULL, requestOptions);
         Assert.assertEquals(tags2, tags1);
 
         // Verify audit logs
@@ -90,8 +90,8 @@ public class TestInvoiceItem extends TestJaxrsBase {
         Assert.assertNotNull(auditLogJson.getUserToken());
 
         // remove it
-        invoiceItemApi.deleteTags(invoiceItems.get(0).getInvoiceItemId(), ImmutableList.<UUID>of(objFromJson.getId()), requestOptions);
-        final List<Tag> tags3 = invoiceItemApi.getTags(invoiceItems.get(0).getInvoiceItemId(), accountJson.getAccountId(), null, AuditLevel.FULL, requestOptions);
+        invoiceItemApi.deleteInvoiceItemTags(invoiceItems.get(0).getInvoiceItemId(), ImmutableList.<UUID>of(objFromJson.getId()), requestOptions);
+        final List<Tag> tags3 = invoiceItemApi.getInvoiceItemTags(invoiceItems.get(0).getInvoiceItemId(), accountJson.getAccountId(), null, AuditLevel.FULL, requestOptions);
         Assert.assertEquals(tags3.size(), 0);
 
         tagDefinitionApi.deleteTagDefinition(objFromJson.getId(), requestOptions);
@@ -107,7 +107,7 @@ public class TestInvoiceItem extends TestJaxrsBase {
     @Test(groups = "slow", description = "Add custom fields to invoice item")
     public void testCustomFields() throws Exception {
         final Account accountJson = createAccountNoPMBundleAndSubscriptionAndWaitForFirstInvoice();
-        final Invoices invoicesJson = accountApi.getInvoices(accountJson.getAccountId(), true, false, false, false, AuditLevel.NONE, requestOptions);
+        final Invoices invoicesJson = accountApi.getInvoicesForAccount(accountJson.getAccountId(), true, false, false, false, AuditLevel.NONE, requestOptions);
 
         Assert.assertNotNull(invoicesJson);
         Assert.assertEquals(invoicesJson.size(), 2);
@@ -121,15 +121,15 @@ public class TestInvoiceItem extends TestJaxrsBase {
         customFields.add(new CustomField(null, invoiceItems.get(0).getInvoiceItemId(), ObjectType.INVOICE_ITEM, "2", "value2", null));
         customFields.add(new CustomField(null, invoiceItems.get(0).getInvoiceItemId(), ObjectType.INVOICE_ITEM, "3", "value3", null));
 
-        invoiceItemApi.createCustomFields(invoiceItems.get(0).getInvoiceItemId(), customFields, requestOptions);
+        invoiceItemApi.createInvoiceItemCustomFields(invoiceItems.get(0).getInvoiceItemId(), customFields, requestOptions);
 
-        final List<CustomField> invoiceItemCustomFields = invoiceItemApi.getCustomFields(invoiceItems.get(0).getInvoiceItemId(), requestOptions);
+        final List<CustomField> invoiceItemCustomFields = invoiceItemApi.getInvoiceItemCustomFields(invoiceItems.get(0).getInvoiceItemId(), requestOptions);
         Assert.assertEquals(invoiceItemCustomFields.size(), 3);
 
         // Delete all custom fields for account
-        invoiceItemApi.deleteCustomFields(invoiceItems.get(0).getInvoiceItemId(), null, requestOptions);
+        invoiceItemApi.deleteInvoiceItemCustomFields(invoiceItems.get(0).getInvoiceItemId(), null, requestOptions);
 
-        final List<CustomField> remainingCustomFields = invoiceItemApi.getCustomFields(invoiceItems.get(0).getInvoiceItemId(), requestOptions);
+        final List<CustomField> remainingCustomFields = invoiceItemApi.getInvoiceItemCustomFields(invoiceItems.get(0).getInvoiceItemId(), requestOptions);
         Assert.assertEquals(remainingCustomFields.size(), 0);
     }
 }

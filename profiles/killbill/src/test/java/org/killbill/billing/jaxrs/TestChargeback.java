@@ -178,7 +178,7 @@ public class TestChargeback extends TestJaxrsBase {
         crappyWaitForLackOfProperSynchonization();
 
         // Retrieve the invoice
-        final List<Invoice> invoices = accountApi.getInvoices(accountJson.getAccountId(), requestOptions);
+        final List<Invoice> invoices = accountApi.getInvoicesForAccount(accountJson.getAccountId(), requestOptions);
         // We should have two invoices, one for the trial (zero dollar amount) and one for the first month
         assertEquals(invoices.size(), 2);
         assertTrue(invoices.get(1).getAmount().doubleValue() > 0);
@@ -187,7 +187,7 @@ public class TestChargeback extends TestJaxrsBase {
     }
 
     private InvoicePayment getPayment(final Invoice invoice) throws KillBillClientException {
-        final InvoicePayments payments = invoiceApi.getPayments(invoice.getInvoiceId(), requestOptions);
+        final InvoicePayments payments = invoiceApi.getPaymentsForInvoice(invoice.getInvoiceId(), requestOptions);
         assertNotNull(payments);
         assertEquals(payments.size(), 1);
         return payments.get(0);

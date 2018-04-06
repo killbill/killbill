@@ -81,7 +81,7 @@ public class TestPerTenantConfig extends TestJaxrsBase {
 
         final Account accountJson = createAccountWithPMBundleAndSubscriptionAndWaitForFirstInvoice();
 
-        final Payments payments = accountApi.getPayments(accountJson.getAccountId(), NULL_PLUGIN_PROPERTIES, requestOptions);
+        final Payments payments = accountApi.getPaymentsForAccount(accountJson.getAccountId(), NULL_PLUGIN_PROPERTIES, requestOptions);
         Assert.assertEquals(payments.size(), 1);
         Assert.assertEquals(payments.get(0).getTransactions().size(), 1);
 
@@ -106,10 +106,10 @@ public class TestPerTenantConfig extends TestJaxrsBase {
                       @Override
                       public Boolean call() throws Exception {
 
-                          return accountApi.getPayments(accountJson.getAccountId(), NULL_PLUGIN_PROPERTIES, requestOptions).get(0).getTransactions().size() == 2;
+                          return accountApi.getPaymentsForAccount(accountJson.getAccountId(), NULL_PLUGIN_PROPERTIES, requestOptions).get(0).getTransactions().size() == 2;
                       }
                   });
-        final Payments payments2 = accountApi.getPayments(accountJson.getAccountId(), NULL_PLUGIN_PROPERTIES, requestOptions);
+        final Payments payments2 = accountApi.getPaymentsForAccount(accountJson.getAccountId(), NULL_PLUGIN_PROPERTIES, requestOptions);
         Assert.assertEquals(payments2.size(), 1);
         Assert.assertEquals(payments2.get(0).getTransactions().size(), 2);
         Assert.assertEquals(payments2.get(0).getTransactions().get(0).getStatus(), TransactionStatus.PAYMENT_FAILURE);
@@ -119,7 +119,7 @@ public class TestPerTenantConfig extends TestJaxrsBase {
         crappyWaitForLackOfProperSynchonization(3000);
 
         // No retry with default config
-        final Payments payments3 = accountApi.getPayments(accountJson.getAccountId(), NULL_PLUGIN_PROPERTIES, requestOptions);
+        final Payments payments3 = accountApi.getPaymentsForAccount(accountJson.getAccountId(), NULL_PLUGIN_PROPERTIES, requestOptions);
         Assert.assertEquals(payments3.size(), 1);
         Assert.assertEquals(payments3.get(0).getTransactions().size(), 2);
 
@@ -132,10 +132,10 @@ public class TestPerTenantConfig extends TestJaxrsBase {
                   .until(new Callable<Boolean>() {
                       @Override
                       public Boolean call() throws Exception {
-                          return accountApi.getPayments(accountJson.getAccountId(), NULL_PLUGIN_PROPERTIES, requestOptions).get(0).getTransactions().size() == 3;
+                          return accountApi.getPaymentsForAccount(accountJson.getAccountId(), NULL_PLUGIN_PROPERTIES, requestOptions).get(0).getTransactions().size() == 3;
                       }
                   });
-        final Payments payments4 = accountApi.getPayments(accountJson.getAccountId(), NULL_PLUGIN_PROPERTIES, requestOptions);
+        final Payments payments4 = accountApi.getPaymentsForAccount(accountJson.getAccountId(), NULL_PLUGIN_PROPERTIES, requestOptions);
         Assert.assertEquals(payments4.size(), 1);
         Assert.assertEquals(payments4.get(0).getTransactions().size(), 3);
         Assert.assertEquals(payments4.get(0).getTransactions().get(0).getStatus(), TransactionStatus.PAYMENT_FAILURE);
