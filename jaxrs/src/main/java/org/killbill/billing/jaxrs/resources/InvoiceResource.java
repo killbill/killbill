@@ -939,7 +939,7 @@ public class InvoiceResource extends JaxRsResourceBase {
     @GET
     @Path("/{invoiceId:" + UUID_PATTERN + "}/" + TAGS)
     @Produces(APPLICATION_JSON)
-    @ApiOperation(value = "Retrieve invoice tags", response = TagJson.class, responseContainer = "List")
+    @ApiOperation(value = "Retrieve invoice tags", response = TagJson.class, responseContainer = "List", nickname = "getInvoiceTags")
     @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid invoice id supplied"),
                            @ApiResponse(code = 404, message = "Invoice not found")})
     public Response getTags(@PathParam(ID_PARAM_NAME) final UUID invoiceId,
@@ -958,13 +958,13 @@ public class InvoiceResource extends JaxRsResourceBase {
     @Produces(APPLICATION_JSON)
     @ApiOperation(value = "Add tags to invoice", response = TagJson.class, responseContainer = "List")
     @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid invoice id supplied")})
-    public Response createTags(@PathParam(ID_PARAM_NAME) final UUID id,
-                               @QueryParam(QUERY_TAG) final List<String> tagList,
-                               @HeaderParam(HDR_CREATED_BY) final String createdBy,
-                               @HeaderParam(HDR_REASON) final String reason,
-                               @HeaderParam(HDR_COMMENT) final String comment,
-                               @javax.ws.rs.core.Context final UriInfo uriInfo,
-                               @javax.ws.rs.core.Context final HttpServletRequest request) throws TagApiException {
+    public Response createInvoiceTags(@PathParam(ID_PARAM_NAME) final UUID id,
+                                      @QueryParam(QUERY_TAG) final List<String> tagList,
+                                      @HeaderParam(HDR_CREATED_BY) final String createdBy,
+                                      @HeaderParam(HDR_REASON) final String reason,
+                                      @HeaderParam(HDR_COMMENT) final String comment,
+                                      @javax.ws.rs.core.Context final UriInfo uriInfo,
+                                      @javax.ws.rs.core.Context final HttpServletRequest request) throws TagApiException {
         return super.createTags(id, tagList, uriInfo,
                                 context.createCallContextNoAccountId(createdBy, reason, comment, request), request);
     }
@@ -976,12 +976,12 @@ public class InvoiceResource extends JaxRsResourceBase {
     @Produces(APPLICATION_JSON)
     @ApiOperation(value = "Remove tags from invoice")
     @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid invoice id supplied")})
-    public Response deleteTags(@PathParam(ID_PARAM_NAME) final UUID id,
-                               @QueryParam(QUERY_TAG) final List<UUID> tagList,
-                               @HeaderParam(HDR_CREATED_BY) final String createdBy,
-                               @HeaderParam(HDR_REASON) final String reason,
-                               @HeaderParam(HDR_COMMENT) final String comment,
-                               @javax.ws.rs.core.Context final HttpServletRequest request) throws TagApiException {
+    public Response deleteInvoiceTags(@PathParam(ID_PARAM_NAME) final UUID id,
+                                      @QueryParam(QUERY_TAG) final List<UUID> tagList,
+                                      @HeaderParam(HDR_CREATED_BY) final String createdBy,
+                                      @HeaderParam(HDR_REASON) final String reason,
+                                      @HeaderParam(HDR_COMMENT) final String comment,
+                                      @javax.ws.rs.core.Context final HttpServletRequest request) throws TagApiException {
         return super.deleteTags(id, tagList,
                                 context.createCallContextNoAccountId(createdBy, reason, comment, request));
     }

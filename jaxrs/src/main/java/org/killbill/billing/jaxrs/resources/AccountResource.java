@@ -1267,7 +1267,7 @@ public class AccountResource extends JaxRsResourceBase {
     @GET
     @Path("/{accountId:" + UUID_PATTERN + "}/" + TAGS)
     @Produces(APPLICATION_JSON)
-    @ApiOperation(value = "Retrieve account tags", response = TagJson.class, responseContainer = "List")
+    @ApiOperation(value = "Retrieve account tags", response = TagJson.class, responseContainer = "List", nickname = "getAccountTags")
     @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid account id supplied"),
                            @ApiResponse(code = 404, message = "Account not found")})
     public Response getTags(@PathParam(ID_PARAM_NAME) final UUID accountId,
@@ -1302,13 +1302,13 @@ public class AccountResource extends JaxRsResourceBase {
     @Produces(APPLICATION_JSON)
     @ApiOperation(value = "Add tags to account", response = TagJson.class, responseContainer = "List")
     @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid account id supplied")})
-    public Response createTags(@PathParam(ID_PARAM_NAME) final UUID accountId,
-                               @QueryParam(QUERY_TAG) final List<String> tagList,
-                               @HeaderParam(HDR_CREATED_BY) final String createdBy,
-                               @HeaderParam(HDR_REASON) final String reason,
-                               @HeaderParam(HDR_COMMENT) final String comment,
-                               @javax.ws.rs.core.Context final UriInfo uriInfo,
-                               @javax.ws.rs.core.Context final HttpServletRequest request) throws TagApiException {
+    public Response createAccountTags(@PathParam(ID_PARAM_NAME) final UUID accountId,
+                                      @QueryParam(QUERY_TAG) final List<String> tagList,
+                                      @HeaderParam(HDR_CREATED_BY) final String createdBy,
+                                      @HeaderParam(HDR_REASON) final String reason,
+                                      @HeaderParam(HDR_COMMENT) final String comment,
+                                      @javax.ws.rs.core.Context final UriInfo uriInfo,
+                                      @javax.ws.rs.core.Context final HttpServletRequest request) throws TagApiException {
         return super.createTags(accountId, tagList, uriInfo,
                                 context.createCallContextWithAccountId(accountId, createdBy, reason, comment, request), request);
     }
@@ -1320,12 +1320,12 @@ public class AccountResource extends JaxRsResourceBase {
     @Produces(APPLICATION_JSON)
     @ApiOperation(value = "Remove tags from account")
     @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid account id supplied or account does not have a default payment method (AUTO_PAY_OFF tag only)")})
-    public Response deleteTags(@PathParam(ID_PARAM_NAME) final UUID accountId,
-                               @QueryParam(QUERY_TAG) final List<UUID> tagList,
-                               @HeaderParam(HDR_CREATED_BY) final String createdBy,
-                               @HeaderParam(HDR_REASON) final String reason,
-                               @HeaderParam(HDR_COMMENT) final String comment,
-                               @javax.ws.rs.core.Context final HttpServletRequest request) throws TagApiException, AccountApiException {
+    public Response deleteAccountTags(@PathParam(ID_PARAM_NAME) final UUID accountId,
+                                      @QueryParam(QUERY_TAG) final List<UUID> tagList,
+                                      @HeaderParam(HDR_CREATED_BY) final String createdBy,
+                                      @HeaderParam(HDR_REASON) final String reason,
+                                      @HeaderParam(HDR_COMMENT) final String comment,
+                                      @javax.ws.rs.core.Context final HttpServletRequest request) throws TagApiException, AccountApiException {
         final CallContext callContext = context.createCallContextWithAccountId(accountId, createdBy, reason, comment, request);
 
         // Look if there is an AUTO_PAY_OFF for that account and check if the account has a default paymentMethod

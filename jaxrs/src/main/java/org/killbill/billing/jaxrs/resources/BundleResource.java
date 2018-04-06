@@ -363,7 +363,7 @@ public class BundleResource extends JaxRsResourceBase {
     @GET
     @Path("/{bundleId:" + UUID_PATTERN + "}/" + TAGS)
     @Produces(APPLICATION_JSON)
-    @ApiOperation(value = "Retrieve bundle tags", response = TagJson.class, responseContainer = "List")
+    @ApiOperation(value = "Retrieve bundle tags", response = TagJson.class, responseContainer = "List", nickname = "getBundleTags")
     @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid bundle id supplied"),
                            @ApiResponse(code = 404, message = "Bundle not found")})
     public Response getTags(@PathParam(ID_PARAM_NAME) final UUID bundleId,
@@ -440,13 +440,13 @@ public class BundleResource extends JaxRsResourceBase {
     @Produces(APPLICATION_JSON)
     @ApiOperation(value = "Add tags to bundle", response = TagJson.class, responseContainer = "List")
     @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid bundle id supplied")})
-    public Response createTags(@PathParam(ID_PARAM_NAME) final UUID bundleId,
-                               @QueryParam(QUERY_TAG) final List<String> tagList,
-                               @HeaderParam(HDR_CREATED_BY) final String createdBy,
-                               @HeaderParam(HDR_REASON) final String reason,
-                               @HeaderParam(HDR_COMMENT) final String comment,
-                               @javax.ws.rs.core.Context final UriInfo uriInfo,
-                               @javax.ws.rs.core.Context final HttpServletRequest request) throws TagApiException {
+    public Response createBundleTags(@PathParam(ID_PARAM_NAME) final UUID bundleId,
+                                     @QueryParam(QUERY_TAG) final List<String> tagList,
+                                     @HeaderParam(HDR_CREATED_BY) final String createdBy,
+                                     @HeaderParam(HDR_REASON) final String reason,
+                                     @HeaderParam(HDR_COMMENT) final String comment,
+                                     @javax.ws.rs.core.Context final UriInfo uriInfo,
+                                     @javax.ws.rs.core.Context final HttpServletRequest request) throws TagApiException {
         return super.createTags(bundleId, tagList, uriInfo,
                                 context.createCallContextNoAccountId(createdBy, reason, comment, request), request);
     }
@@ -458,12 +458,12 @@ public class BundleResource extends JaxRsResourceBase {
     @Produces(APPLICATION_JSON)
     @ApiOperation(value = "Remove tags from bundle")
     @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid bundle id supplied")})
-    public Response deleteTags(@PathParam(ID_PARAM_NAME) final UUID bundleId,
-                               @QueryParam(QUERY_TAG) final List<UUID> tagList,
-                               @HeaderParam(HDR_CREATED_BY) final String createdBy,
-                               @HeaderParam(HDR_REASON) final String reason,
-                               @HeaderParam(HDR_COMMENT) final String comment,
-                               @javax.ws.rs.core.Context final HttpServletRequest request) throws TagApiException {
+    public Response deleteBundleTags(@PathParam(ID_PARAM_NAME) final UUID bundleId,
+                                     @QueryParam(QUERY_TAG) final List<UUID> tagList,
+                                     @HeaderParam(HDR_CREATED_BY) final String createdBy,
+                                     @HeaderParam(HDR_REASON) final String reason,
+                                     @HeaderParam(HDR_COMMENT) final String comment,
+                                     @javax.ws.rs.core.Context final HttpServletRequest request) throws TagApiException {
         return super.deleteTags(bundleId, tagList,
                                 context.createCallContextNoAccountId(createdBy, reason, comment, request));
     }
