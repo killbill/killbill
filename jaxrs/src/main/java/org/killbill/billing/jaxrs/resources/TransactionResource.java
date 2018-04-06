@@ -149,7 +149,7 @@ public class TransactionResource extends JaxRsResourceBase {
     @GET
     @Path("/{transactionId:" + UUID_PATTERN + "}/" + CUSTOM_FIELDS)
     @Produces(APPLICATION_JSON)
-    @ApiOperation(value = "Retrieve payment transaction custom fields", response = CustomFieldJson.class, responseContainer = "List")
+    @ApiOperation(value = "Retrieve payment transaction custom fields", response = CustomFieldJson.class, responseContainer = "List", nickname = "getTransactionCustomFields")
     @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid transaction id supplied")})
     public Response getCustomFields(@PathParam(ID_PARAM_NAME) final UUID id,
                                     @QueryParam(QUERY_AUDIT) @DefaultValue("NONE") final AuditMode auditMode,
@@ -164,13 +164,13 @@ public class TransactionResource extends JaxRsResourceBase {
     @Produces(APPLICATION_JSON)
     @ApiOperation(value = "Add custom fields to payment transaction", response = CustomField.class, responseContainer = "List")
     @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid transaction id supplied")})
-    public Response createCustomFields(@PathParam(ID_PARAM_NAME) final UUID id,
-                                       final List<CustomFieldJson> customFields,
-                                       @HeaderParam(HDR_CREATED_BY) final String createdBy,
-                                       @HeaderParam(HDR_REASON) final String reason,
-                                       @HeaderParam(HDR_COMMENT) final String comment,
-                                       @javax.ws.rs.core.Context final HttpServletRequest request,
-                                       @javax.ws.rs.core.Context final UriInfo uriInfo) throws CustomFieldApiException {
+    public Response createTransactionCustomFields(@PathParam(ID_PARAM_NAME) final UUID id,
+                                                  final List<CustomFieldJson> customFields,
+                                                  @HeaderParam(HDR_CREATED_BY) final String createdBy,
+                                                  @HeaderParam(HDR_REASON) final String reason,
+                                                  @HeaderParam(HDR_COMMENT) final String comment,
+                                                  @javax.ws.rs.core.Context final HttpServletRequest request,
+                                                  @javax.ws.rs.core.Context final UriInfo uriInfo) throws CustomFieldApiException {
         return super.createCustomFields(id, customFields,
                                         context.createCallContextNoAccountId(createdBy, reason, comment, request), uriInfo, request);
     }
@@ -183,12 +183,12 @@ public class TransactionResource extends JaxRsResourceBase {
     @Produces(APPLICATION_JSON)
     @ApiOperation(value = "Modify custom fields to payment transaction")
     @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid transaction id supplied")})
-    public Response modifyCustomFields(@PathParam(ID_PARAM_NAME) final UUID id,
-                                       final List<CustomFieldJson> customFields,
-                                       @HeaderParam(HDR_CREATED_BY) final String createdBy,
-                                       @HeaderParam(HDR_REASON) final String reason,
-                                       @HeaderParam(HDR_COMMENT) final String comment,
-                                       @javax.ws.rs.core.Context final HttpServletRequest request) throws CustomFieldApiException {
+    public Response modifyTransactionCustomFields(@PathParam(ID_PARAM_NAME) final UUID id,
+                                                  final List<CustomFieldJson> customFields,
+                                                  @HeaderParam(HDR_CREATED_BY) final String createdBy,
+                                                  @HeaderParam(HDR_REASON) final String reason,
+                                                  @HeaderParam(HDR_COMMENT) final String comment,
+                                                  @javax.ws.rs.core.Context final HttpServletRequest request) throws CustomFieldApiException {
         return super.modifyCustomFields(id, customFields,
                                         context.createCallContextNoAccountId(createdBy, reason, comment, request));
     }
@@ -201,12 +201,12 @@ public class TransactionResource extends JaxRsResourceBase {
     @Produces(APPLICATION_JSON)
     @ApiOperation(value = "Remove custom fields from payment transaction")
     @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid transaction id supplied")})
-    public Response deleteCustomFields(@PathParam(ID_PARAM_NAME) final UUID id,
-                                       @QueryParam(QUERY_CUSTOM_FIELD) final List<UUID> customFieldList,
-                                       @HeaderParam(HDR_CREATED_BY) final String createdBy,
-                                       @HeaderParam(HDR_REASON) final String reason,
-                                       @HeaderParam(HDR_COMMENT) final String comment,
-                                       @javax.ws.rs.core.Context final HttpServletRequest request) throws CustomFieldApiException {
+    public Response deleteTransactionCustomFields(@PathParam(ID_PARAM_NAME) final UUID id,
+                                                  @QueryParam(QUERY_CUSTOM_FIELD) final List<UUID> customFieldList,
+                                                  @HeaderParam(HDR_CREATED_BY) final String createdBy,
+                                                  @HeaderParam(HDR_REASON) final String reason,
+                                                  @HeaderParam(HDR_COMMENT) final String comment,
+                                                  @javax.ws.rs.core.Context final HttpServletRequest request) throws CustomFieldApiException {
         return super.deleteCustomFields(id, customFieldList,
                                         context.createCallContextNoAccountId(createdBy, reason, comment, request));
     }

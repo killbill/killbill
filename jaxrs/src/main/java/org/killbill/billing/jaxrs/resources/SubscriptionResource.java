@@ -860,7 +860,7 @@ public class SubscriptionResource extends JaxRsResourceBase {
     @GET
     @Path("/{subscriptionId:" + UUID_PATTERN + "}/" + CUSTOM_FIELDS)
     @Produces(APPLICATION_JSON)
-    @ApiOperation(value = "Retrieve subscription custom fields", response = CustomFieldJson.class, responseContainer = "List")
+    @ApiOperation(value = "Retrieve subscription custom fields", response = CustomFieldJson.class, responseContainer = "List", nickname = "getSubscriptionCustomFields")
     @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid subscription id supplied")})
     public Response getCustomFields(@PathParam(ID_PARAM_NAME) final UUID id,
                                     @QueryParam(QUERY_AUDIT) @DefaultValue("NONE") final AuditMode auditMode,
@@ -874,13 +874,13 @@ public class SubscriptionResource extends JaxRsResourceBase {
     @Produces(APPLICATION_JSON)
     @ApiOperation(value = "Add custom fields to subscription")
     @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid subscription id supplied")})
-    public Response createCustomFields(@PathParam(ID_PARAM_NAME) final UUID id,
-                                       final List<CustomFieldJson> customFields,
-                                       @HeaderParam(HDR_CREATED_BY) final String createdBy,
-                                       @HeaderParam(HDR_REASON) final String reason,
-                                       @HeaderParam(HDR_COMMENT) final String comment,
-                                       @javax.ws.rs.core.Context final HttpServletRequest request,
-                                       @javax.ws.rs.core.Context final UriInfo uriInfo) throws CustomFieldApiException {
+    public Response createSubscriptionCustomFields(@PathParam(ID_PARAM_NAME) final UUID id,
+                                                   final List<CustomFieldJson> customFields,
+                                                   @HeaderParam(HDR_CREATED_BY) final String createdBy,
+                                                   @HeaderParam(HDR_REASON) final String reason,
+                                                   @HeaderParam(HDR_COMMENT) final String comment,
+                                                   @javax.ws.rs.core.Context final HttpServletRequest request,
+                                                   @javax.ws.rs.core.Context final UriInfo uriInfo) throws CustomFieldApiException {
         return super.createCustomFields(id, customFields,
                                         context.createCallContextNoAccountId(createdBy, reason, comment, request), uriInfo, request);
     }
@@ -891,12 +891,12 @@ public class SubscriptionResource extends JaxRsResourceBase {
     @Produces(APPLICATION_JSON)
     @ApiOperation(value = "Modify custom fields to subscription")
     @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid subscription id supplied")})
-    public Response modifyCustomFields(@PathParam(ID_PARAM_NAME) final UUID id,
-                                       final List<CustomFieldJson> customFields,
-                                       @HeaderParam(HDR_CREATED_BY) final String createdBy,
-                                       @HeaderParam(HDR_REASON) final String reason,
-                                       @HeaderParam(HDR_COMMENT) final String comment,
-                                       @javax.ws.rs.core.Context final HttpServletRequest request) throws CustomFieldApiException {
+    public Response modifySubscriptionCustomFields(@PathParam(ID_PARAM_NAME) final UUID id,
+                                                   final List<CustomFieldJson> customFields,
+                                                   @HeaderParam(HDR_CREATED_BY) final String createdBy,
+                                                   @HeaderParam(HDR_REASON) final String reason,
+                                                   @HeaderParam(HDR_COMMENT) final String comment,
+                                                   @javax.ws.rs.core.Context final HttpServletRequest request) throws CustomFieldApiException {
         return super.modifyCustomFields(id, customFields,
                                         context.createCallContextNoAccountId(createdBy, reason, comment, request));
     }
@@ -907,13 +907,13 @@ public class SubscriptionResource extends JaxRsResourceBase {
     @Produces(APPLICATION_JSON)
     @ApiOperation(value = "Remove custom fields from subscription")
     @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid subscription id supplied")})
-    public Response deleteCustomFields(@PathParam(ID_PARAM_NAME) final UUID id,
-                                       @QueryParam(QUERY_CUSTOM_FIELD) final List<UUID> customFieldList,
-                                       @HeaderParam(HDR_CREATED_BY) final String createdBy,
-                                       @HeaderParam(HDR_REASON) final String reason,
-                                       @HeaderParam(HDR_COMMENT) final String comment,
-                                       @javax.ws.rs.core.Context final UriInfo uriInfo,
-                                       @javax.ws.rs.core.Context final HttpServletRequest request) throws CustomFieldApiException {
+    public Response deleteSubscriptionCustomFields(@PathParam(ID_PARAM_NAME) final UUID id,
+                                                   @QueryParam(QUERY_CUSTOM_FIELD) final List<UUID> customFieldList,
+                                                   @HeaderParam(HDR_CREATED_BY) final String createdBy,
+                                                   @HeaderParam(HDR_REASON) final String reason,
+                                                   @HeaderParam(HDR_COMMENT) final String comment,
+                                                   @javax.ws.rs.core.Context final UriInfo uriInfo,
+                                                   @javax.ws.rs.core.Context final HttpServletRequest request) throws CustomFieldApiException {
         return super.deleteCustomFields(id, customFieldList,
                                         context.createCallContextNoAccountId(createdBy, reason, comment, request));
     }
