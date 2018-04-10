@@ -102,6 +102,7 @@ import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
+import static javax.ws.rs.core.MediaType.APPLICATION_OCTET_STREAM;
 
 @Singleton
 @Path(JaxrsResource.ADMIN_PATH)
@@ -149,8 +150,8 @@ public class AdminResource extends JaxRsResourceBase {
 
     @GET
     @Path("/queues")
-    @Produces(APPLICATION_JSON)
-    @ApiOperation(value = "Get queues entries", response = Response.class, hidden=true)
+    @Produces(APPLICATION_OCTET_STREAM)
+    @ApiOperation(value = "Get queues entries", response = Response.class)
     @ApiResponses(value = {})
     public Response getQueueEntries(@QueryParam("accountId") final UUID accountId,
                                     @QueryParam("queueName") final String queueName,
