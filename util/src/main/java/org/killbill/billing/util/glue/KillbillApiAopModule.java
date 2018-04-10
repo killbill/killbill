@@ -81,7 +81,7 @@ public class KillbillApiAopModule extends AbstractModule {
     }
 
     public static Boolean getDirtyDBFlag() {
-        return perThreadDirtyDBFlag.get();
+        return perThreadDirtyDBFlag.get() == Boolean.TRUE;
     }
 
     private static final Matcher<Method> SYNTHETIC_METHOD_MATCHER = new Matcher<Method>() {
