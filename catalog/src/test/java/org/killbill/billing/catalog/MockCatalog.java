@@ -41,6 +41,7 @@ import org.killbill.billing.catalog.api.PlanSpecifier;
 import org.killbill.billing.catalog.api.PriceList;
 import org.killbill.billing.catalog.api.PriceListSet;
 import org.killbill.billing.catalog.api.Product;
+import org.killbill.billing.catalog.api.Unit;
 import org.killbill.billing.catalog.rules.DefaultCaseCancelPolicy;
 import org.killbill.billing.catalog.rules.DefaultCaseChangePlanAlignment;
 import org.killbill.billing.catalog.rules.DefaultCaseChangePlanPolicy;
@@ -107,6 +108,11 @@ public class MockCatalog extends StandaloneCatalog implements Catalog {
     @Override
     public Currency[] getSupportedCurrencies(final DateTime requestedDate) throws CatalogApiException {
         return getCurrentSupportedCurrencies();
+    }
+
+    @Override
+    public Unit[] getUnits(final DateTime requestedDate) throws CatalogApiException {
+        return getCurrentUnits();
     }
 
     @Override

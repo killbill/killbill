@@ -278,6 +278,7 @@ public class VersionedCatalog extends ValidatingConfig<VersionedCatalog> impleme
         return versionForDate(requestedDate).getCurrentSupportedCurrencies();
     }
 
+    @Override
     public Unit[] getUnits(final DateTime requestedDate) throws CatalogApiException {
         return versionForDate(requestedDate).getCurrentUnits();
     }
