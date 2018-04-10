@@ -18,7 +18,6 @@
 
 package org.killbill.billing.entitlement.api;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -45,9 +44,7 @@ import org.testng.annotations.Test;
 import com.google.common.collect.ImmutableList;
 
 import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.assertNull;
-import static org.testng.Assert.assertTrue;
 import static org.testng.Assert.fail;
 
 public class TestDefaultEntitlementApi extends EntitlementTestSuiteWithEmbeddedDB {
@@ -542,7 +539,6 @@ public class TestDefaultEntitlementApi extends EntitlementTestSuiteWithEmbeddedD
 
     }
 
-
     @Test(groups = "slow")
     public void testCreateEntitlementInThePast() throws AccountApiException, EntitlementApiException, SubscriptionBaseApiException {
         final LocalDate initialDate = new LocalDate(2013, 8, 7);
@@ -644,7 +640,6 @@ public class TestDefaultEntitlementApi extends EntitlementTestSuiteWithEmbeddedD
         assertEquals(result.getLastActiveProduct().getName(), "Pistol");
 
     }
-
 
     @Test(groups = "slow")
     public void testCreateBaseWithEntitlementInTheFuture() throws AccountApiException, EntitlementApiException, SubscriptionApiException {
@@ -757,7 +752,6 @@ public class TestDefaultEntitlementApi extends EntitlementTestSuiteWithEmbeddedD
         assertEquals(entitlement.getEffectiveStartDate(), initialDate);
     }
 
-
     @Test(groups = "slow")
     public void testCreateBaseSubscriptionsWithAddOns() throws AccountApiException, EntitlementApiException, SubscriptionApiException {
         final LocalDate initialDate = new LocalDate(2013, 8, 7);
@@ -804,7 +798,6 @@ public class TestDefaultEntitlementApi extends EntitlementTestSuiteWithEmbeddedD
         Assert.assertEquals(entitlementsForBundle2.size(), 2);
 
     }
-
 
     @Test(groups = "slow", expectedExceptions = EntitlementApiException.class)
     public void testCreateBaseSubscriptionsWithAddOnsMissingBase() throws AccountApiException, EntitlementApiException, SubscriptionApiException {

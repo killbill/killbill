@@ -35,6 +35,12 @@ import com.google.inject.matcher.Matchers;
 public class KillbillApiAopModule extends AbstractModule {
 
     private static final Logger logger = LoggerFactory.getLogger(KillbillApiAopModule.class);
+    private static final ThreadLocal<Boolean> perThreadDirtyDBFlag = new ThreadLocal<Boolean>();
+
+    static {
+        // Set an initial value
+        resetDirtyDBFlag();
+    }
 
     @Override
     protected void configure() {
@@ -53,13 +59,29 @@ public class KillbillApiAopModule extends AbstractModule {
             return prof.executeWithProfiling(ProfilingFeatureType.API, invocation.getMethod().getName(), new WithProfilingCallback() {
                 @Override
                 public Object execute() throws Throwable {
-                    logger.debug("Entering API call {}, arguments: {}", invocation.getMethod(), invocation.getArguments());
-                    final Object proceed = invocation.proceed();
-                    logger.debug("Exiting  API call {}, returning: {}", invocation.getMethod(), proceed);
-                    return proceed;
+                    try {
+                        logger.debug("Entering API call {}, arguments: {}", invocation.getMethod(), invocation.getArguments());
+                        final Object proceed = invocation.proceed();
+                        logger.debug("Exiting  API call {}, returning: {}", invocation.getMethod(), proceed);
+                        return proceed;
+                    } finally {
+                        resetDirtyDBFlag();
+                    }
                 }
             });
         }
+    }
+
+    public static void setDirtyDBFlag() {
+        perThreadDirtyDBFlag.set(true);
+    }
+
+    public static void resetDirtyDBFlag() {
+        perThreadDirtyDBFlag.set(false);
+    }
+
+    public static Boolean getDirtyDBFlag() {
+        return perThreadDirtyDBFlag.get();
     }
 
     private static final Matcher<Method> SYNTHETIC_METHOD_MATCHER = new Matcher<Method>() {

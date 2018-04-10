@@ -24,6 +24,7 @@ import org.killbill.billing.util.cache.CacheControllerDispatcher;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.billing.util.dao.NonEntityDao;
 import org.killbill.billing.util.entity.Entity;
+import org.killbill.billing.util.glue.KillbillApiAopModule;
 import org.killbill.clock.Clock;
 import org.skife.jdbi.v2.Handle;
 import org.skife.jdbi.v2.IDBI;
@@ -82,12 +83,13 @@ public class EntitySqlDaoTransactionalJdbiWrapper {
 
     /**
      * @param <ReturnType>                   object type to return from the transaction
-     * @param ro                             whether to use the read-only connection
+     * @param requestedRO                    hint as whether to use the read-only connection
      * @param entitySqlDaoTransactionWrapper transaction to execute
      * @return result from the transaction fo type ReturnType
      */
-    public <ReturnType> ReturnType execute(final boolean ro, final EntitySqlDaoTransactionWrapper<ReturnType> entitySqlDaoTransactionWrapper) {
+    public <ReturnType> ReturnType execute(final boolean requestedRO, final EntitySqlDaoTransactionWrapper<ReturnType> entitySqlDaoTransactionWrapper) {
         final String debugInfo = logger.isDebugEnabled() ? getDebugInfo() : null;
+        final boolean ro = shouldUseRODBI(requestedRO, debugInfo);
         final String debugPrefix = ro ? "RO" : "RW";
 
         final Handle handle = ro ? roDbi.open() : dbi.open();
@@ -107,12 +109,33 @@ public class EntitySqlDaoTransactionalJdbiWrapper {
         }
     }
 
+    private boolean shouldUseRODBI(final boolean requestedRO, final String debugInfo) {
+        if (!requestedRO) {
+            KillbillApiAopModule.setDirtyDBFlag();
+            logger.debug("[RW] Dirty flag set, transaction: {}", debugInfo);
+            return false;
+        } else {
+            if (KillbillApiAopModule.getDirtyDBFlag()) {
+                // Redirect to the rw instance, to work-around any replication delay
+                logger.debug("[RW] RO DBI handle requested, but dirty flag set, transaction: {}", debugInfo);
+                return false;
+            } else {
+                return true;
+            }
+        }
+    }
+
     //
     // This is only used in the pagination APIs when streaming results. We want to keep the connection open, and also there is no need
     // to send bus events, record notifications where we need to keep the Connection through the jDBI Handle.
     //
     public <M extends EntityModelDao<E>, E extends Entity, T extends EntitySqlDao<M, E>> T onDemandForStreamingResults(final Class<T> sqlObjectType) {
-        return roDbi.onDemand(sqlObjectType);
+        final String debugInfo = logger.isDebugEnabled() ? getDebugInfo() : null;
+        if (shouldUseRODBI(true, debugInfo)) {
+            return roDbi.onDemand(sqlObjectType);
+        } else {
+            return dbi.onDemand(sqlObjectType);
+        }
     }
 
     /**
