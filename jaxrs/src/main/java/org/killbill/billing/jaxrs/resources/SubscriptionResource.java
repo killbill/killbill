@@ -216,14 +216,9 @@ public class SubscriptionResource extends JaxRsResourceBase {
                 final LocalDate resolvedEntitlementDate = requestedDate != null ? toLocalDate(requestedDate) : toLocalDate(entitlementDate);
                 final LocalDate resolvedBillingDate = requestedDate != null ? toLocalDate(requestedDate) : toLocalDate(billingDate);
                 final List<PlanPhasePriceOverride> overrides = PhasePriceOverrideJson.toPlanPhasePriceOverrides(entitlement.getPriceOverrides(), spec, account.getCurrency());
-                final Entitlement result;
-                if (createAddOnEntitlement) {
-                    result = entitlementApi.addEntitlement(getBundleIdForAddOnCreation(entitlement), spec, overrides, resolvedEntitlementDate, resolvedBillingDate, isMigrated, pluginProperties, callContext);
-                } else if (ProductCategory.STANDALONE.toString().equals(entitlement.getProductCategory()) && entitlement.getBundleId() != null) {
-                    result = entitlementApi.addEntitlement(getBundleIdForAddOnCreation(entitlement), account.getId(), spec, overrides, resolvedEntitlementDate, resolvedBillingDate, isMigrated, pluginProperties, callContext);
-                } else {
-                    result = entitlementApi.createBaseEntitlement(account.getId(), spec, entitlement.getExternalKey(), overrides, resolvedEntitlementDate, resolvedBillingDate, isMigrated, renameKeyIfExistsAndUnused, pluginProperties, callContext);
-                }
+                final Entitlement result = createAddOnEntitlement || (ProductCategory.STANDALONE.toString().equals(entitlement.getProductCategory()) && entitlement.getBundleId() != null)
+                                           ? entitlementApi.addEntitlement(getBundleIdForAddOnCreation(entitlement), spec, overrides, resolvedEntitlementDate, resolvedBillingDate, isMigrated, pluginProperties, callContext)
+                                           : entitlementApi.createBaseEntitlement(account.getId(), spec, entitlement.getExternalKey(), overrides, resolvedEntitlementDate, resolvedBillingDate, isMigrated, renameKeyIfExistsAndUnused, pluginProperties, callContext);
 
                 if (newBCD != null) {
                     result.updateBCD(newBCD, null, callContext);
