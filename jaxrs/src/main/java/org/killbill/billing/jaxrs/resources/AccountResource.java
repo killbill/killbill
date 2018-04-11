@@ -34,6 +34,7 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
+import javax.annotation.Nullable;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
@@ -1299,11 +1300,12 @@ public class AccountResource extends JaxRsResourceBase {
     @TimedResource
     @POST
     @Path("/{accountId:" + UUID_PATTERN + "}/" + TAGS)
+    @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
     @ApiOperation(value = "Add tags to account", response = TagJson.class, responseContainer = "List")
     @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid account id supplied")})
     public Response createAccountTags(@PathParam(ID_PARAM_NAME) final UUID accountId,
-                                      @QueryParam(QUERY_TAG) final List<String> tagList,
+                                      final List<UUID> tagList,
                                       @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                       @HeaderParam(HDR_REASON) final String reason,
                                       @HeaderParam(HDR_COMMENT) final String comment,

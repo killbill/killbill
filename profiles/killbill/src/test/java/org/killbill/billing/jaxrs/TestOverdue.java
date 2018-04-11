@@ -21,6 +21,7 @@ package org.killbill.billing.jaxrs;
 import java.math.BigDecimal;
 import java.util.Comparator;
 import java.util.List;
+import java.util.UUID;
 
 import org.killbill.billing.client.model.Invoices;
 import org.killbill.billing.client.model.Tags;
@@ -105,7 +106,7 @@ public class TestOverdue extends TestJaxrsBase {
 
         // Create an account without a payment method and assign a TEST tag
         final Account accountJson = createAccountNoPMBundleAndSubscription();
-        final Tags accountTag = accountApi.createAccountTags(accountJson.getAccountId(), ImmutableList.<String>of(ControlTagType.TEST.getId().toString()), requestOptions);
+        final Tags accountTag = accountApi.createAccountTags(accountJson.getAccountId(), ImmutableList.<UUID>of(ControlTagType.TEST.getId()), requestOptions);
         assertEquals(accountTag.get(0).getTagDefinitionId(), ControlTagType.TEST.getId());
 
         // Create an account without a TEST tag
@@ -144,7 +145,7 @@ public class TestOverdue extends TestJaxrsBase {
 
         // Create an account without a payment method and assign a TEST tag
         final Account accountJson = createAccountNoPMBundleAndSubscription();
-        final Tags accountTag = accountApi.createAccountTags(accountJson.getAccountId(), ImmutableList.<String>of(ControlTagType.TEST.getId().toString()), requestOptions);
+        final Tags accountTag = accountApi.createAccountTags(accountJson.getAccountId(), ImmutableList.<UUID>of(ControlTagType.TEST.getId()), requestOptions);
         assertEquals(accountTag.get(0).getTagDefinitionId(), ControlTagType.TEST.getId());
 
         // Create an account without a TEST tag

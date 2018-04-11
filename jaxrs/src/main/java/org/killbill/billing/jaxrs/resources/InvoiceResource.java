@@ -959,7 +959,7 @@ public class InvoiceResource extends JaxRsResourceBase {
     @ApiOperation(value = "Add tags to invoice", response = TagJson.class, responseContainer = "List")
     @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid invoice id supplied")})
     public Response createInvoiceTags(@PathParam(ID_PARAM_NAME) final UUID id,
-                                      @QueryParam(QUERY_TAG) final List<String> tagList,
+                                      final List<UUID> tagList,
                                       @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                       @HeaderParam(HDR_REASON) final String reason,
                                       @HeaderParam(HDR_COMMENT) final String comment,

@@ -65,7 +65,7 @@ public class TestInvoiceItem extends TestJaxrsBase {
         final Multimap<String, String> followQueryParams = HashMultimap.create();
         followQueryParams.put(JaxrsResource.QUERY_ACCOUNT_ID, accountJson.getAccountId().toString());
         final RequestOptions followRequestOptions = requestOptions.extend().withQueryParamsForFollow(followQueryParams).build();
-        invoiceItemApi.createInvoiceItemTags(invoiceItems.get(0).getInvoiceItemId(), ImmutableList.<String>of(objFromJson.getId().toString()), followRequestOptions);
+        invoiceItemApi.createInvoiceItemTags(invoiceItems.get(0).getInvoiceItemId(), ImmutableList.<UUID>of(objFromJson.getId()), followRequestOptions);
 
         // Retrieves all tags
         final List<Tag> tags1 = invoiceItemApi.getInvoiceItemTags(invoiceItems.get(0).getInvoiceItemId(), accountJson.getAccountId(), null, AuditLevel.FULL, requestOptions);
@@ -73,7 +73,7 @@ public class TestInvoiceItem extends TestJaxrsBase {
         Assert.assertEquals(tags1.get(0).getTagDefinitionId(), objFromJson.getId());
 
         // Verify adding the same tag a second time doesn't do anything
-        invoiceItemApi.createInvoiceItemTags(invoiceItems.get(0).getInvoiceItemId(), ImmutableList.<String>of(objFromJson.getId().toString()), followRequestOptions);
+        invoiceItemApi.createInvoiceItemTags(invoiceItems.get(0).getInvoiceItemId(), ImmutableList.<UUID>of(objFromJson.getId()), followRequestOptions);
 
         // Retrieves all tags again
         final List<Tag> tags2 = invoiceItemApi.getInvoiceItemTags(invoiceItems.get(0).getInvoiceItemId(), accountJson.getAccountId(), null, AuditLevel.FULL, requestOptions);

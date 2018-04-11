@@ -323,7 +323,7 @@ public class TestAccount extends TestJaxrsBase {
         final UUID autoPayOffId = new UUID(0, 1);
 
         // Add a tag
-        accountApi.createAccountTags(input.getAccountId(), ImmutableList.<String>of(autoPayOffId.toString()), requestOptions);
+        accountApi.createAccountTags(input.getAccountId(), ImmutableList.<UUID>of(autoPayOffId), requestOptions);
 
         // Retrieves all tags
         final List<Tag> tags1 = accountApi.getAccountTags(input.getAccountId(), false, AuditLevel.FULL, requestOptions);
@@ -331,10 +331,10 @@ public class TestAccount extends TestJaxrsBase {
         Assert.assertEquals(tags1.get(0).getTagDefinitionId(), autoPayOffId);
 
         // Verify adding the same tag a second time doesn't do anything
-        accountApi.createAccountTags(input.getAccountId(), ImmutableList.<String>of(autoPayOffId.toString()), requestOptions);
+        accountApi.createAccountTags(input.getAccountId(), ImmutableList.<UUID>of(autoPayOffId), requestOptions);
 
         // Retrieves all tags again
-        accountApi.createAccountTags(input.getAccountId(), ImmutableList.<String>of(autoPayOffId.toString()), requestOptions);
+        accountApi.createAccountTags(input.getAccountId(), ImmutableList.<UUID>of(autoPayOffId), requestOptions);
         final List<Tag> tags2 = accountApi.getAccountTags(input.getAccountId(), true, AuditLevel.FULL, requestOptions);
         Assert.assertEquals(tags2, tags1);
 

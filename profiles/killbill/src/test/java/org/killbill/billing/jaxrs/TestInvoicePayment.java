@@ -311,7 +311,7 @@ public class TestInvoicePayment extends TestJaxrsBase {
         assertNotNull(accountJson);
 
         // Disable automatic payments
-        accountApi.createAccountTags(accountJson.getAccountId(), ImmutableList.<String>of(ControlTagType.AUTO_PAY_OFF.getId().toString()), requestOptions);
+        accountApi.createAccountTags(accountJson.getAccountId(), ImmutableList.<UUID>of(ControlTagType.AUTO_PAY_OFF.getId()), requestOptions);
 
         // Add a bundle, subscription and move the clock to get the first invoice
         final Subscription subscriptionJson = createSubscription(accountJson.getAccountId(), UUID.randomUUID().toString(), "Shotgun",

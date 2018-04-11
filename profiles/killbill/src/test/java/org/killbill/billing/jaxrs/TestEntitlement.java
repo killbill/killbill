@@ -597,7 +597,7 @@ public class TestEntitlement extends TestJaxrsBase {
         assertNotNull(accountJson);
 
         // assign autoPaymentOff tag to account
-        Tags tags = accountApi.createAccountTags(accountJson.getAccountId(), ImmutableList.<String>of(new UUID(0L, 1L).toString()), requestOptions);
+        Tags tags = accountApi.createAccountTags(accountJson.getAccountId(), ImmutableList.<UUID>of(new UUID(0L, 1L)), requestOptions);
         assertEquals(tags.get(0).getTagDefinitionName(), "AUTO_PAY_OFF");
 
         // verify that number of invoices and payments for account is still 0

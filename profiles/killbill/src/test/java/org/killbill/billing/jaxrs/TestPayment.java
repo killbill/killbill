@@ -745,7 +745,7 @@ public class TestPayment extends TestJaxrsBase {
         assertEquals(payment.getPaymentId(), paymentId);
 
         UUID paymentTransactionId = payment.getTransactions().get(0).getTransactionId();
-        paymentTransactionApi.createTransactionTags(paymentTransactionId, ImmutableList.<String>of(createdTagDefinition.getId().toString()), requestOptions);
+        paymentTransactionApi.createTransactionTags(paymentTransactionId, ImmutableList.<UUID>of(createdTagDefinition.getId()), requestOptions);
 
         final Tags paymentTransactionTags = paymentTransactionApi.getTransactionTags(paymentTransactionId, requestOptions);
 
@@ -768,7 +768,7 @@ public class TestPayment extends TestJaxrsBase {
         assertEquals(payment.getPaymentId(), paymentId);
 
         UUID paymentTransactionId = payment.getTransactions().get(0).getTransactionId();
-        final Tags paymentTransactionTag = paymentTransactionApi.createTransactionTags(paymentTransactionId, ImmutableList.<String>of(createdTagDefinition.getId().toString()), requestOptions);
+        final Tags paymentTransactionTag = paymentTransactionApi.createTransactionTags(paymentTransactionId, ImmutableList.<UUID>of(createdTagDefinition.getId()), requestOptions);
 
         Assert.assertNotNull(paymentTransactionTag);
         Assert.assertEquals(paymentTransactionTag.get(0).getTagDefinitionName(), tagDefinitionName);

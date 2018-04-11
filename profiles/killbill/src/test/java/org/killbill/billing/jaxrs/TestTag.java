@@ -116,13 +116,13 @@ public class TestTag extends TestJaxrsBase {
                                                                 ProductCategory.BASE, BillingPeriod.MONTHLY, true);
 
         for (final ControlTagType controlTagType : ControlTagType.values()) {
-            accountApi.createAccountTags(account.getAccountId(), ImmutableList.<String>of(controlTagType.getId().toString()), requestOptions);
+            accountApi.createAccountTags(account.getAccountId(), ImmutableList.<UUID>of(controlTagType.getId()), requestOptions);
         }
 
         final TagDefinition bundleTagDefInput = new TagDefinition(null, false, "bundletagdef", "nothing special", ImmutableList.<ObjectType>of(ObjectType.TRANSACTION), null);
         final TagDefinition bundleTagDef = tagDefinitionApi.createTagDefinition(bundleTagDefInput, requestOptions);
 
-        bundleApi.createBundleTags(subscriptionJson.getBundleId(), ImmutableList.<String>of(bundleTagDef.getId().toString()), requestOptions);
+        bundleApi.createBundleTags(subscriptionJson.getBundleId(), ImmutableList.<UUID>of(bundleTagDef.getId()), requestOptions);
 
         final Tags allBundleTags = bundleApi.getBundleTags(subscriptionJson.getBundleId(), requestOptions);
         Assert.assertEquals(allBundleTags.size(), 1);
@@ -138,7 +138,7 @@ public class TestTag extends TestJaxrsBase {
     public void testSystemTagsPagination() throws Exception {
         final Account account = createAccount();
         for (final ControlTagType controlTagType : ControlTagType.values()) {
-            accountApi.createAccountTags(account.getAccountId(), ImmutableList.<String>of(controlTagType.getId().toString()), requestOptions);
+            accountApi.createAccountTags(account.getAccountId(), ImmutableList.<UUID>of(controlTagType.getId()), requestOptions);
         }
 
         final Tags allTags = accountApi.getAccountTags(account.getAccountId(), requestOptions);
@@ -158,7 +158,7 @@ public class TestTag extends TestJaxrsBase {
         final Account account = createAccount();
 
         try {
-            accountApi.createAccountTags(account.getAccountId(), ImmutableList.<String>of(SystemTags.PARK_TAG_DEFINITION_ID.toString()), requestOptions);
+            accountApi.createAccountTags(account.getAccountId(), ImmutableList.<UUID>of(SystemTags.PARK_TAG_DEFINITION_ID), requestOptions);
             Assert.fail("Creating a tag associated with a system tag should fail");
         } catch (final Exception e) {
             Assert.assertTrue(true);
@@ -171,7 +171,7 @@ public class TestTag extends TestJaxrsBase {
         for (int i = 0; i < 5; i++) {
             final TagDefinition tagDefinition = new TagDefinition(null, false, UUID.randomUUID().toString().substring(0, 5), UUID.randomUUID().toString(), ImmutableList.<ObjectType>of(ObjectType.ACCOUNT), null);
             final UUID tagDefinitionId = tagDefinitionApi.createTagDefinition(tagDefinition, requestOptions).getId();
-            accountApi.createAccountTags(account.getAccountId(), ImmutableList.<String>of(tagDefinitionId.toString()), requestOptions);
+            accountApi.createAccountTags(account.getAccountId(), ImmutableList.<UUID>of(tagDefinitionId), requestOptions);
         }
 
         final Tags allTags = accountApi.getAccountTags(account.getAccountId(), requestOptions);
