@@ -111,6 +111,7 @@ import com.google.common.base.Predicate;
 import com.google.common.base.Strings;
 import com.google.common.collect.Collections2;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 
@@ -160,15 +161,17 @@ public abstract class JaxRsResourceBase implements JaxrsResource {
         return null;
     }
 
-    public Response addBlockingState(final BlockingStateJson json,
-                                     final UUID blockableId,
-                                     final BlockingStateType type,
-                                     final String requestedDate,
-                                     final List<String> pluginPropertiesString,
-                                     final String createdBy,
-                                     final String reason,
-                                     final String comment,
-                                     final HttpServletRequest request) throws SubscriptionApiException, EntitlementApiException, AccountApiException {
+    protected Response addBlockingState(final BlockingStateJson json,
+                                        final UUID accountId,
+                                        final UUID blockableId,
+                                        final BlockingStateType type,
+                                        final String requestedDate,
+                                        final List<String> pluginPropertiesString,
+                                        final String createdBy,
+                                        final String reason,
+                                        final String comment,
+                                        final HttpServletRequest request,
+                                        @Nullable final UriInfo uriInfo) throws SubscriptionApiException, EntitlementApiException, AccountApiException {
 
         final Iterable<PluginProperty> pluginProperties = extractPluginProperties(pluginPropertiesString);
         final CallContext callContext = context.createCallContextNoAccountId(createdBy, reason, comment, request);
@@ -180,7 +183,9 @@ public abstract class JaxRsResourceBase implements JaxrsResource {
         final LocalDate resolvedRequestedDate = toLocalDate(requestedDate);
         final BlockingState input = new DefaultBlockingState(blockableId, type, json.getStateName(), json.getService(), isBlockChange, isBlockEntitlement, isBlockBilling, null);
         subscriptionApi.addBlockingState(input, resolvedRequestedDate, pluginProperties, callContext);
-        return Response.status(Status.OK).build();
+        return uriInfo != null ?
+               uriBuilder.buildResponse(uriInfo, AccountResource.class, "getBlockingStates", accountId, ImmutableMap.<String, String>of(QUERY_BLOCKING_STATE_TYPES, type.name()) , request) :
+               null;
     }
 
     protected Response getTags(final UUID accountId, final UUID taggedObjectId, final AuditMode auditMode, final boolean includeDeleted, final TenantContext context) throws TagDefinitionApiException {

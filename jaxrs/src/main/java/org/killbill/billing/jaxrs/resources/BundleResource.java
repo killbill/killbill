@@ -273,7 +273,7 @@ public class BundleResource extends JaxRsResourceBase {
     }
 
     @TimedResource
-    @PUT
+    @POST
     @Path("/{bundleId:" + UUID_PATTERN + "}/" + BLOCK)
     @Consumes(APPLICATION_JSON)
     @ApiOperation(value = "Block a bundle")
@@ -286,8 +286,11 @@ public class BundleResource extends JaxRsResourceBase {
                                            @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                            @HeaderParam(HDR_REASON) final String reason,
                                            @HeaderParam(HDR_COMMENT) final String comment,
-                                           @javax.ws.rs.core.Context final HttpServletRequest request) throws SubscriptionApiException, EntitlementApiException, AccountApiException {
-        return addBlockingState(json, id, BlockingStateType.SUBSCRIPTION_BUNDLE, requestedDate, pluginPropertiesString, createdBy, reason, comment, request);
+                                           @javax.ws.rs.core.Context final HttpServletRequest request,
+                                           @javax.ws.rs.core.Context final UriInfo uriInfo) throws SubscriptionApiException, EntitlementApiException, AccountApiException {
+        final TenantContext tenantContext = context.createTenantContextNoAccountId(request);
+        final SubscriptionBundle bundle = subscriptionApi.getSubscriptionBundle(id, tenantContext);
+        return addBlockingState(json, bundle.getAccountId(), id, BlockingStateType.SUBSCRIPTION_BUNDLE, requestedDate, pluginPropertiesString, createdBy, reason, comment, request, uriInfo);
     }
 
 
@@ -376,7 +379,7 @@ public class BundleResource extends JaxRsResourceBase {
     }
 
     @TimedResource
-    @PUT
+    @POST
     @Path("/{bundleId:" + UUID_PATTERN + "}")
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
@@ -428,7 +431,7 @@ public class BundleResource extends JaxRsResourceBase {
 
         final CallContext callContext = context.createCallContextNoAccountId(createdBy, reason, comment, request);
         subscriptionApi.updateExternalKey(bundleId, json.getExternalKey(), callContext);
-        return uriBuilder.buildResponse(uriInfo, BundleResource.class, "getBundle", bundleId, request);
+        return Response.status(Status.OK).build();
     }
 
 

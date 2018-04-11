@@ -399,7 +399,7 @@ public class AccountResource extends JaxRsResourceBase {
         } else {
             accountUserApi.updateAccount(accountId, data, context.createCallContextWithAccountId(accountId, createdBy, reason, comment, request));
         }
-        return getAccount(accountId, false, false, new AuditMode(AuditLevel.NONE.toString()), request);
+        return Response.status(Status.OK).build();
     }
 
 
@@ -464,7 +464,7 @@ public class AccountResource extends JaxRsResourceBase {
         }
 
         final BlockingStateJson blockingState = new BlockingStateJson(accountId, "CLOSE_ACCOUNT", "account-service", true, false, false, null, BlockingStateType.ACCOUNT, null);
-        addBlockingState(blockingState, accountId, BlockingStateType.ACCOUNT, null, ImmutableList.<String>of(), createdBy, reason, comment, request);
+        addBlockingState(blockingState, accountId, accountId, BlockingStateType.ACCOUNT, null, ImmutableList.<String>of(), createdBy, reason, comment, request, null);
 
         if (removeFutureNotifications) {
             final Long tenantRecordId = recordIdApi.getRecordId(callContext.getTenantId(), ObjectType.TENANT, callContext);
@@ -1155,7 +1155,7 @@ public class AccountResource extends JaxRsResourceBase {
     }
 
     @TimedResource
-    @PUT
+    @POST
     @Path("/{accountId:" + UUID_PATTERN + "}/" + BLOCK)
     @Consumes(APPLICATION_JSON)
     @ApiOperation(value = "Block an account")
@@ -1168,8 +1168,9 @@ public class AccountResource extends JaxRsResourceBase {
                                             @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                             @HeaderParam(HDR_REASON) final String reason,
                                             @HeaderParam(HDR_COMMENT) final String comment,
-                                            @javax.ws.rs.core.Context final HttpServletRequest request) throws SubscriptionApiException, EntitlementApiException, AccountApiException {
-        return addBlockingState(json, id, BlockingStateType.ACCOUNT, requestedDate, pluginPropertiesString, createdBy, reason, comment, request);
+                                            @javax.ws.rs.core.Context final HttpServletRequest request,
+                                            @javax.ws.rs.core.Context final UriInfo uriInfo) throws SubscriptionApiException, EntitlementApiException, AccountApiException {
+        return addBlockingState(json, id, id, BlockingStateType.ACCOUNT, requestedDate, pluginPropertiesString, createdBy, reason, comment, request, uriInfo);
     }
 
 

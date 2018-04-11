@@ -613,7 +613,7 @@ public class SubscriptionResource extends JaxRsResourceBase {
                 if (operationResponse.getStatus() != Status.OK.getStatusCode()) {
                     return operationResponse;
                 }
-                return getSubscription(subscriptionId, new AuditMode(AuditLevel.NONE.toString()), request);
+                return Response.status(Status.OK).build();
             }
         };
 
@@ -622,22 +622,24 @@ public class SubscriptionResource extends JaxRsResourceBase {
     }
 
     @TimedResource
-    @PUT
+    @POST
     @Path("/{subscriptionId:" + UUID_PATTERN + "}/" + BLOCK)
     @Consumes(APPLICATION_JSON)
     @ApiOperation(value = "Block a subscription")
     @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid subscription id supplied"),
                            @ApiResponse(code = 404, message = "Subscription not found")})
-    public Response addSubscriptionBlockingState(@PathParam(ID_PARAM_NAME) final UUID id,
+    public Response addSubscriptionBlockingState(@PathParam(ID_PARAM_NAME) final UUID  id,
                                                  final BlockingStateJson json,
                                                  @QueryParam(QUERY_REQUESTED_DT) final String requestedDate,
                                                  @QueryParam(QUERY_PLUGIN_PROPERTY) final List<String> pluginPropertiesString,
                                                  @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                                  @HeaderParam(HDR_REASON) final String reason,
                                                  @HeaderParam(HDR_COMMENT) final String comment,
-                                                 @javax.ws.rs.core.Context final HttpServletRequest request) throws SubscriptionApiException, EntitlementApiException, AccountApiException {
-
-        return addBlockingState(json, id, BlockingStateType.SUBSCRIPTION, requestedDate, pluginPropertiesString, createdBy, reason, comment, request);
+                                                 @javax.ws.rs.core.Context final HttpServletRequest request,
+                                                 @javax.ws.rs.core.Context final UriInfo uriInfo) throws SubscriptionApiException, EntitlementApiException, AccountApiException {
+        final TenantContext tenantContext = context.createTenantContextNoAccountId(request);
+        final Entitlement entitlement = entitlementApi.getEntitlementForId(id, tenantContext);
+        return addBlockingState(json, entitlement.getAccountId(), id, BlockingStateType.SUBSCRIPTION, requestedDate, pluginPropertiesString, createdBy, reason, comment, request, uriInfo);
     }
 
     @TimedResource
