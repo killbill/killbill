@@ -874,6 +874,7 @@ public class TestDefaultEntitlementApi extends EntitlementTestSuiteWithEmbeddedD
 
         assertEquals(anotherStandaloneEntitlement.getAccountId(), account.getId());
         assertEquals(anotherStandaloneEntitlement.getExternalKey(), account.getExternalKey());
+        assertEquals(anotherStandaloneEntitlement.getBundleId(), baseEntitlement.getBundleId());
 
         assertEquals(anotherStandaloneEntitlement.getLastActivePriceList().getName(), "notrial");
         assertEquals(anotherStandaloneEntitlement.getLastActiveProduct().getName(), "Knife");
