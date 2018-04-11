@@ -198,6 +198,7 @@ public class SubscriptionResource extends JaxRsResourceBase {
         if (createAddOnEntitlement) {
             Preconditions.checkArgument(entitlement.getExternalKey() != null || entitlement.getBundleId() != null, "SubscriptionJson bundleId or externalKey should be specified for ADD_ON");
         }
+        final boolean createStandaloneEntitlement = ProductCategory.STANDALONE.toString().equals(entitlement.getProductCategory()) && entitlement.getBundleId() != null;
 
         final Iterable<PluginProperty> pluginProperties = extractPluginProperties(pluginPropertiesString);
         final CallContext callContext = context.createCallContextNoAccountId(createdBy, reason, comment, request);
@@ -216,7 +217,7 @@ public class SubscriptionResource extends JaxRsResourceBase {
                 final LocalDate resolvedEntitlementDate = requestedDate != null ? toLocalDate(requestedDate) : toLocalDate(entitlementDate);
                 final LocalDate resolvedBillingDate = requestedDate != null ? toLocalDate(requestedDate) : toLocalDate(billingDate);
                 final List<PlanPhasePriceOverride> overrides = PhasePriceOverrideJson.toPlanPhasePriceOverrides(entitlement.getPriceOverrides(), spec, account.getCurrency());
-                final Entitlement result = createAddOnEntitlement || (ProductCategory.STANDALONE.toString().equals(entitlement.getProductCategory()) && entitlement.getBundleId() != null)
+                final Entitlement result = createAddOnEntitlement || createStandaloneEntitlement
                                            ? entitlementApi.addEntitlement(getBundleIdForAddOnCreation(entitlement), spec, overrides, resolvedEntitlementDate, resolvedBillingDate, isMigrated, pluginProperties, callContext)
                                            : entitlementApi.createBaseEntitlement(account.getId(), spec, entitlement.getExternalKey(), overrides, resolvedEntitlementDate, resolvedBillingDate, isMigrated, renameKeyIfExistsAndUnused, pluginProperties, callContext);
 

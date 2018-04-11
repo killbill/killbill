@@ -354,7 +354,7 @@ public class DefaultEntitlementApi extends DefaultEntitlementApiBase implements 
             throw new EntitlementApiException(e);
         }
 
-        if (!subscriptionsByBundle.get(0).getCategory().equals(ProductCategory.STANDALONE)) {
+        if (!ProductCategory.STANDALONE.equals(subscriptionsByBundle.get(0).getCategory())) {
             final EventsStream eventsStreamForBaseSubscription = eventsStreamBuilder.buildForBaseSubscription(bundleId, callContext);
 
             if (eventsStreamForBaseSubscription.isEntitlementCancelled() ||
