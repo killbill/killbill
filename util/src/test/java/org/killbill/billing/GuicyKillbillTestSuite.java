@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014-2017 Groupon, Inc
- * Copyright 2014-2017 The Billing Project, LLC
+ * Copyright 2014-2018 Groupon, Inc
+ * Copyright 2014-2018 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -23,6 +23,7 @@ import java.util.UUID;
 
 import javax.inject.Inject;
 
+import org.killbill.billing.api.AbortAfterFirstFailureListener;
 import org.killbill.billing.api.FlakyInvokedMethodListener;
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.callcontext.MutableInternalCallContext;
@@ -45,7 +46,14 @@ import org.testng.annotations.Listeners;
 
 import com.google.common.collect.ImmutableMap;
 
-@Listeners(FlakyInvokedMethodListener.class)
+import static org.testng.ITestResult.CREATED;
+import static org.testng.ITestResult.FAILURE;
+import static org.testng.ITestResult.SKIP;
+import static org.testng.ITestResult.STARTED;
+import static org.testng.ITestResult.SUCCESS;
+import static org.testng.ITestResult.SUCCESS_PERCENTAGE_FAILURE;
+
+@Listeners({FlakyInvokedMethodListener.class, AbortAfterFirstFailureListener.class})
 public class GuicyKillbillTestSuite implements IHookable {
 
     // Use the simple name here to save screen real estate
@@ -138,9 +146,34 @@ public class GuicyKillbillTestSuite implements IHookable {
 
     @AfterMethod(alwaysRun = true)
     public void afterMethodAlwaysRun(final Method method, final ITestResult result) throws Exception {
+        final String tag;
+        switch (result.getStatus()) {
+            case SUCCESS:
+                tag = "SUCCESS";
+                break;
+            case FAILURE:
+                tag = "!!! FAILURE !!!";
+                break;
+            case SKIP:
+                tag = "SKIP";
+                break;
+            case SUCCESS_PERCENTAGE_FAILURE:
+                tag = "SUCCESS WITHIN PERCENTAGE";
+                break;
+            case STARTED:
+                tag = "STARTED";
+                break;
+            case CREATED:
+                tag = "CREATED";
+                break;
+            default:
+                tag = "UNKNOWN";
+                break;
+        }
+
         log.info("***************************************************************************************************");
         log.info("***   Ending test {}:{} {} ({} s.)", new Object[]{method.getDeclaringClass().getName(), method.getName(),
-                                                                    result.isSuccess() ? "SUCCESS" : "!!! FAILURE !!!",
+                                                                    tag,
                                                                     (result.getEndMillis() - result.getStartMillis()) / 1000});
         log.info("***************************************************************************************************");
         if (!hasFailed && !result.isSuccess()) {
