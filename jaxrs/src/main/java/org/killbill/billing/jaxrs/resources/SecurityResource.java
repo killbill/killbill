@@ -189,6 +189,21 @@ public class SecurityResource extends JaxRsResourceBase {
         return Response.status(Status.NO_CONTENT).build();
     }
 
+
+    @TimedResource
+    @GET
+    @Produces(APPLICATION_JSON)
+    @Path("/roles/{role:" + ANYTHING_PATTERN + "}")
+    @ApiOperation(value = "Get role definition", response = RoleDefinitionJson.class)
+    public Response getRoleDefinition(@PathParam("role") final String role,
+                                 @javax.ws.rs.core.Context final HttpServletRequest request,
+                                 @javax.ws.rs.core.Context final UriInfo uriInfo) throws SecurityApiException {
+        final List<String> roleDefinitions =  securityApi.getRoleDefinition(role, context.createTenantContextNoAccountId(request));
+        final RoleDefinitionJson result =  new RoleDefinitionJson(role, roleDefinitions);
+        return Response.status(Status.OK).entity(result).build();
+    }
+
+
     @TimedResource
     @POST
     @Path("/roles")
@@ -202,7 +217,7 @@ public class SecurityResource extends JaxRsResourceBase {
                                       @javax.ws.rs.core.Context final HttpServletRequest request,
                                       @javax.ws.rs.core.Context final UriInfo uriInfo) throws SecurityApiException {
         securityApi.addRoleDefinition(json.getRole(), json.getPermissions(), context.createCallContextNoAccountId(createdBy, reason, comment, request));
-        return Response.status(Status.CREATED).build();
+        return uriBuilder.buildResponse(uriInfo, SecurityResource.class, "getRoleDefinition", json.getRole(), request);
     }
 
 
