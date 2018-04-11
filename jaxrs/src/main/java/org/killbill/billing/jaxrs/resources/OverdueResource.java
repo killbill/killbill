@@ -54,6 +54,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
@@ -150,8 +151,9 @@ public class OverdueResource extends JaxRsResourceBase {
     @POST
     @Path("/xml")
     @Consumes(TEXT_XML)
-    @ApiOperation(value = "Upload the full overdue config as XML")
-    @ApiResponses(value = {})
+    @ApiOperation(value = "Upload the full overdue config as XML", response = String.class)
+    @ApiResponses(value = {@ApiResponse(code = 201, message = "Successfully uploaded overdue config"),
+                           @ApiResponse(code = 400, message = "Invalid node command supplied")})
     public Response uploadOverdueConfigXml(final String overdueXML,
                                                    @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                                    @HeaderParam(HDR_REASON) final String reason,
@@ -167,7 +169,8 @@ public class OverdueResource extends JaxRsResourceBase {
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
     @ApiOperation(value = "Upload the full overdue config as JSON", response = OverdueJson.class)
-    @ApiResponses(value = {})
+    @ApiResponses(value = {@ApiResponse(code = 201, message = "Successfully uploaded overdue config"),
+                           @ApiResponse(code = 400, message = "Invalid node command supplied")})
     public Response uploadOverdueConfigJson(final OverdueJson overdueJson,
                                             @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                             @HeaderParam(HDR_REASON) final String reason,

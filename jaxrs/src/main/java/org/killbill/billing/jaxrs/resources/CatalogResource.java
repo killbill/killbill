@@ -81,6 +81,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
@@ -178,8 +179,8 @@ public class CatalogResource extends JaxRsResourceBase {
     @POST
     @Path("/xml")
     @Consumes(TEXT_XML)
-    @ApiOperation(value = "Upload the full catalog as XML")
-    @ApiResponses(value = {})
+    @ApiOperation(value = "Upload the full catalog as XML", response = String.class)
+    @ApiResponses(value = {@ApiResponse(code = 201, message = "Catalog XML created successfully")})
     public Response uploadCatalogXml(final String catalogXML,
                                      @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                      @HeaderParam(HDR_REASON) final String reason,
@@ -422,8 +423,8 @@ public class CatalogResource extends JaxRsResourceBase {
     @Path("/simplePlan")
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
-    @ApiOperation(value = "Add a simple plan entry in the current version of the catalog")
-    @ApiResponses(value = {})
+    @ApiOperation(value = "Add a simple plan entry in the current version of the catalog", response = String.class)
+    @ApiResponses(value = {@ApiResponse(code = 201, message = "Created new plan successfully")})
     public Response addSimplePlan(final SimplePlanJson simplePlan,
                                   @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                   @HeaderParam(HDR_REASON) final String reason,

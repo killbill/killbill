@@ -146,7 +146,8 @@ public class NodesInfoResource extends JaxRsResourceBase {
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
     @ApiOperation(value = "Trigger a node command")
-    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid node command supplied")})
+    @ApiResponses(value = {/*@ApiResponse(code = 200, message = "Success"),*/
+                           @ApiResponse(code = 400, message = "Invalid node command supplied")})
     public Response triggerNodeCommand(final NodeCommandJson json,
                                        @QueryParam(QUERY_LOCAL_NODE_ONLY) @DefaultValue("false") final Boolean localNodeOnly,
                                        @HeaderParam(HDR_CREATED_BY) final String createdBy,
@@ -173,7 +174,7 @@ public class NodesInfoResource extends JaxRsResourceBase {
         };
 
         killbillInfoApi.triggerNodeCommand(nodeCommand, localNodeOnly);
-        return Response.status(Status.CREATED).build();
+        return Response.status(Status.OK).build();
     }
 
 

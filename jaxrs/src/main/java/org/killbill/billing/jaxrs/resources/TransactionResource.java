@@ -117,7 +117,8 @@ public class TransactionResource extends JaxRsResourceBase {
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
     @ApiOperation(value = "Mark a pending payment transaction as succeeded or failed", response = PaymentJson.class)
-    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid paymentId supplied"),
+    @ApiResponses(value = {@ApiResponse(code = 201, message = "Successfully notifiy state change"),
+                           @ApiResponse(code = 400, message = "Invalid paymentId supplied"),
                            @ApiResponse(code = 404, message = "Account or Payment not found")})
     public Response notifyStateChanged(@PathParam("transactionId") final UUID transactionId,
                                        final PaymentTransactionJson json,
@@ -163,7 +164,8 @@ public class TransactionResource extends JaxRsResourceBase {
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
     @ApiOperation(value = "Add custom fields to payment transaction", response = CustomField.class, responseContainer = "List")
-    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid transaction id supplied")})
+    @ApiResponses(value = {@ApiResponse(code = 201, message = "Custom field created successfully"),
+                           @ApiResponse(code = 400, message = "Invalid transaction id supplied")})
     public Response createTransactionCustomFields(@PathParam(ID_PARAM_NAME) final UUID id,
                                                   final List<CustomFieldJson> customFields,
                                                   @HeaderParam(HDR_CREATED_BY) final String createdBy,
@@ -233,7 +235,8 @@ public class TransactionResource extends JaxRsResourceBase {
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
     @ApiOperation(value = "Add tags to payment transaction", response = TagJson.class, responseContainer = "List")
-    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid transaction id supplied")})
+    @ApiResponses(value = {@ApiResponse(code = 201, message = "Tag created successfully"),
+                           @ApiResponse(code = 400, message = "Invalid transaction id supplied")})
     public Response createTransactionTags(@PathParam(ID_PARAM_NAME) final UUID id,
                                           final List<UUID> tagList,
                                           @HeaderParam(HDR_CREATED_BY) final String createdBy,

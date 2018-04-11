@@ -119,7 +119,8 @@ public class TagDefinitionResource extends JaxRsResourceBase {
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
     @ApiOperation(value = "Create a tag definition", response = TagDefinitionJson.class)
-    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid name or description supplied")})
+    @ApiResponses(value = {@ApiResponse(code = 201, message = "Tag definition created successfully"),
+                           @ApiResponse(code = 400, message = "Invalid name or description supplied")})
     public Response createTagDefinition(final TagDefinitionJson json,
                                         @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                         @HeaderParam(HDR_REASON) final String reason,

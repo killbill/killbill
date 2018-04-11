@@ -120,9 +120,6 @@ public class KillBillApiDefinition implements ReaderListener {
                                qp.getName().equals(JaxrsResource.QUERY_START_DATE) ||
                                qp.getName().equals(JaxrsResource.QUERY_END_DATE) ||
                                qp.getName().equals(JaxrsResource.QUERY_TARGET_DATE)) {
-
-
-
                         qp.setType("string");
                         // Yack... See #922
                         if (op.getOperationId().equals("getCatalogJson") || op.getOperationId().equals("setTestClockTime")) {

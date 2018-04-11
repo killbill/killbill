@@ -173,7 +173,8 @@ public class TestResource extends JaxRsResourceBase {
     @Path("/clock")
     @Produces(APPLICATION_JSON)
     @ApiOperation(value = "Set the current time", response = ClockResource.class)
-    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid time or timezone supplied")})
+    @ApiResponses(value = {/* @ApiResponse(code = 200, message = "Successful"), */
+                           @ApiResponse(code = 400, message = "Invalid time or timezone supplied")})
     public Response setTestClockTime(@QueryParam(QUERY_REQUESTED_DT) final String requestedClockDate,
                                      @QueryParam("timeZone") final String timeZoneStr,
                                      @QueryParam("timeoutSec") @DefaultValue("5") final Long timeoutSec,

@@ -168,7 +168,7 @@ public class SubscriptionResource extends JaxRsResourceBase {
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
     @ApiOperation(value = "Create an subscription", response = SubscriptionJson.class)
-    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid subscription supplied")})
+    @ApiResponses(value = {@ApiResponse(code = 201, message = "Subscription created successfully")})
     public Response createSubscription(final SubscriptionJson subscription,
                                        @ApiParam(hidden = true) @QueryParam(QUERY_REQUESTED_DT) final String requestedDate, /* This is deprecated, only used for backward compatibility */
                                       @QueryParam(QUERY_ENTITLEMENT_REQUESTED_DT) final String entitlementDate,
@@ -257,7 +257,7 @@ public class SubscriptionResource extends JaxRsResourceBase {
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
     @ApiOperation(value = "Create an entitlement with addOn products", response = BundleJson.class)
-    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid entitlement supplied")})
+    @ApiResponses(value = {@ApiResponse(code = 201, message = "Subscriptions created successfully")})
     public Response createSubscriptionWithAddOns(final List<SubscriptionJson> entitlements,
                                                  @ApiParam(hidden = true) @QueryParam(QUERY_REQUESTED_DT) final String requestedDate, /* This is deprecated, only used for backward compatibility */
                                                 @QueryParam(QUERY_ENTITLEMENT_REQUESTED_DT) final String entitlementDate,
@@ -282,7 +282,7 @@ public class SubscriptionResource extends JaxRsResourceBase {
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
     @ApiOperation(value = "Create multiple entitlements with addOn products", response = BundleJson.class, responseContainer = "List")
-    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid entitlements supplied")})
+    @ApiResponses(value = {@ApiResponse(code = 201, message = "Subscriptions created successfully")})
     public Response createSubscriptionsWithAddOns(final List<BulkSubscriptionsBundleJson> entitlementsWithAddOns,
                                                   @ApiParam(hidden = true) @QueryParam(QUERY_REQUESTED_DT) final String requestedDate, /* This is deprecated, only used for backward compatibility */
                                                  @QueryParam(QUERY_ENTITLEMENT_REQUESTED_DT) final String entitlementDate,
@@ -625,8 +625,9 @@ public class SubscriptionResource extends JaxRsResourceBase {
     @POST
     @Path("/{subscriptionId:" + UUID_PATTERN + "}/" + BLOCK)
     @Consumes(APPLICATION_JSON)
-    @ApiOperation(value = "Block a subscription")
-    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid subscription id supplied"),
+    @ApiOperation(value = "Block a subscription", response = BlockingStateJson.class, responseContainer = "List")
+    @ApiResponses(value = {@ApiResponse(code = 201, message = "Blocking state created successfully"),
+                           @ApiResponse(code = 400, message = "Invalid subscription id supplied"),
                            @ApiResponse(code = 404, message = "Subscription not found")})
     public Response addSubscriptionBlockingState(@PathParam(ID_PARAM_NAME) final UUID  id,
                                                  final BlockingStateJson json,
@@ -875,7 +876,8 @@ public class SubscriptionResource extends JaxRsResourceBase {
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
     @ApiOperation(value = "Add custom fields to subscription")
-    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid subscription id supplied")})
+    @ApiResponses(value = {@ApiResponse(code = 201, message = "Custom field created successfully"),
+                           @ApiResponse(code = 400, message = "Invalid subscription id supplied")})
     public Response createSubscriptionCustomFields(@PathParam(ID_PARAM_NAME) final UUID id,
                                                    final List<CustomFieldJson> customFields,
                                                    @HeaderParam(HDR_CREATED_BY) final String createdBy,
@@ -939,8 +941,8 @@ public class SubscriptionResource extends JaxRsResourceBase {
     @Path("/{subscriptionId:" + UUID_PATTERN + "}/" + TAGS)
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
-    @ApiOperation(value = "Add tags to subscription", response = TagJson.class, responseContainer = "List")
-    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid subscription id supplied")})
+    @ApiResponses(value = {@ApiResponse(code = 201, message = "Tag created successfully"),
+                           @ApiResponse(code = 400, message = "Invalid subscription id supplied")})
     public Response createSubscriptionTags(@PathParam(ID_PARAM_NAME) final UUID id,
                                            final List<UUID> tagList,
                                            @HeaderParam(HDR_CREATED_BY) final String createdBy,

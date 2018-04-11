@@ -147,7 +147,8 @@ public class InvoicePaymentResource extends JaxRsResourceBase {
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
     @ApiOperation(value = "Refund a payment, and adjust the invoice if needed", response = InvoicePaymentJson.class)
-    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid payment id supplied"),
+    @ApiResponses(value = {@ApiResponse(code = 201, message = "Created refund successfully"),
+                           @ApiResponse(code = 400, message = "Invalid payment id supplied"),
                            @ApiResponse(code = 404, message = "Account or payment not found")})
     public Response createRefundWithAdjustments(@PathParam("paymentId") final UUID paymentId,
                                                 final InvoicePaymentTransactionJson json,
@@ -210,7 +211,8 @@ public class InvoicePaymentResource extends JaxRsResourceBase {
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
     @ApiOperation(value = "Record a chargeback", response = InvoicePaymentJson.class)
-    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid payment id supplied"),
+    @ApiResponses(value = {@ApiResponse(code = 201, message = "Created chargeback successfully"),
+                           @ApiResponse(code = 400, message = "Invalid payment id supplied"),
                            @ApiResponse(code = 404, message = "Account or payment not found")})
     public Response createChargeback(@PathParam("paymentId") final UUID paymentId,
                                      final InvoicePaymentTransactionJson json,
@@ -238,7 +240,8 @@ public class InvoicePaymentResource extends JaxRsResourceBase {
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
     @ApiOperation(value = "Record a chargebackReversal", response = InvoicePaymentJson.class)
-    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid payment id supplied"),
+    @ApiResponses(value = {@ApiResponse(code = 201, message = "Created chargeback reversal successfully"),
+                           @ApiResponse(code = 400, message = "Invalid payment id supplied"),
                            @ApiResponse(code = 404, message = "Account or payment not found")})
     public Response createChargebackReversal(@PathParam("paymentId") final UUID paymentId,
                                              final InvoicePaymentTransactionJson json,
@@ -329,7 +332,8 @@ public class InvoicePaymentResource extends JaxRsResourceBase {
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
     @ApiOperation(value = "Add custom fields to payment", response = CustomField.class, responseContainer = "List")
-    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid payment id supplied")})
+    @ApiResponses(value = {@ApiResponse(code = 201, message = "Custom field created successfully"),
+                           @ApiResponse(code = 400, message = "Invalid payment id supplied")})
     public Response createInvoicePaymentCustomFields(@PathParam(ID_PARAM_NAME) final UUID id,
                                                      final List<CustomFieldJson> customFields,
                                                      @HeaderParam(HDR_CREATED_BY) final String createdBy,
@@ -401,7 +405,8 @@ public class InvoicePaymentResource extends JaxRsResourceBase {
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
     @ApiOperation(value = "Add tags to payment", response = TagJson.class, responseContainer = "List")
-    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid payment id supplied")})
+    @ApiResponses(value = {@ApiResponse(code = 201, message = "Tag created successfully"),
+                           @ApiResponse(code = 400, message = "Invalid payment id supplied")})
     public Response createInvoicePaymentTags(@PathParam(ID_PARAM_NAME) final UUID id,
                                              final List<UUID> tagList,
                                              @HeaderParam(HDR_CREATED_BY) final String createdBy,

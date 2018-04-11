@@ -59,6 +59,7 @@ import com.google.common.collect.Iterables;
 import com.google.inject.Inject;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
@@ -115,7 +116,8 @@ public class SecurityResource extends JaxRsResourceBase {
     @Path("/users")
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
-    @ApiOperation(value = "Add a new user with roles (to make api requests)")
+    @ApiOperation(value = "Add a new user with roles (to make api requests)", response = UserRolesJson.class)
+    @ApiResponses(value = {@ApiResponse(code = 201, message = "User role created successfully")})
     public Response addUserRoles(final UserRolesJson json,
                                  @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                  @HeaderParam(HDR_REASON) final String reason,
@@ -209,7 +211,8 @@ public class SecurityResource extends JaxRsResourceBase {
     @Path("/roles")
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
-    @ApiOperation(value = "Add a new role definition)")
+    @ApiOperation(value = "Add a new role definition)", response = RoleDefinitionJson.class)
+    @ApiResponses(value = {@ApiResponse(code = 201, message = "Role definition created successfully")})
     public Response addRoleDefinition(final RoleDefinitionJson json,
                                       @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                       @HeaderParam(HDR_REASON) final String reason,

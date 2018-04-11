@@ -276,8 +276,9 @@ public class BundleResource extends JaxRsResourceBase {
     @POST
     @Path("/{bundleId:" + UUID_PATTERN + "}/" + BLOCK)
     @Consumes(APPLICATION_JSON)
-    @ApiOperation(value = "Block a bundle")
-    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid bundle id supplied"),
+    @ApiOperation(value = "Block a bundle", response = BlockingStateJson.class, responseContainer = "List")
+    @ApiResponses(value = {@ApiResponse(code = 201, message = "Blocking state created successfully"),
+                           @ApiResponse(code = 400, message = "Invalid bundle id supplied"),
                            @ApiResponse(code = 404, message = "Bundle not found")})
     public Response addBundleBlockingState(@PathParam(ID_PARAM_NAME) final UUID id,
                                            final BlockingStateJson json,
@@ -313,7 +314,8 @@ public class BundleResource extends JaxRsResourceBase {
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
     @ApiOperation(value = "Add custom fields to bundle", response = CustomField.class, responseContainer = "List")
-    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid bundle id supplied")})
+    @ApiResponses(value = {@ApiResponse(code = 201, message = "Custom field created successfully"),
+                           @ApiResponse(code = 400, message = "Invalid bundle id supplied")})
     public Response createBundleCustomFields(@PathParam(ID_PARAM_NAME) final UUID bundleId,
                                              final List<CustomFieldJson> customFields,
                                              @HeaderParam(HDR_CREATED_BY) final String createdBy,
@@ -383,8 +385,9 @@ public class BundleResource extends JaxRsResourceBase {
     @Path("/{bundleId:" + UUID_PATTERN + "}")
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
-    @ApiOperation(value = "Transfer a bundle to another account")
-    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid bundle id, requested date or policy supplied"),
+    @ApiOperation(value = "Transfer a bundle to another account", response = BundleJson.class)
+    @ApiResponses(value = {@ApiResponse(code = 201, message = "Bundle transferred successfully"),
+                           @ApiResponse(code = 400, message = "Invalid bundle id, requested date or policy supplied"),
                            @ApiResponse(code = 404, message = "Bundle not found")})
     public Response transferBundle(@PathParam(ID_PARAM_NAME) final UUID bundleId,
                                    final BundleJson json,
@@ -442,7 +445,8 @@ public class BundleResource extends JaxRsResourceBase {
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
     @ApiOperation(value = "Add tags to bundle", response = TagJson.class, responseContainer = "List")
-    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid bundle id supplied")})
+    @ApiResponses(value = {@ApiResponse(code = 201, message = "Tag created successfully"),
+                           @ApiResponse(code = 400, message = "Invalid bundle id supplied")})
     public Response createBundleTags(@PathParam(ID_PARAM_NAME) final UUID bundleId,
                                      final List<UUID> tagList,
                                      @HeaderParam(HDR_CREATED_BY) final String createdBy,

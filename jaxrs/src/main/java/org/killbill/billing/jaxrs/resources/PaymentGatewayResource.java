@@ -92,7 +92,8 @@ public class PaymentGatewayResource extends ComboPaymentResource {
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
     @ApiOperation(value = "Combo API to generate form data to redirect the customer to the gateway", response = HostedPaymentPageFormDescriptorJson.class)
-    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid data for Account or PaymentMethod")})
+    @ApiResponses(value = {/*@ApiResponse(code = 200, message = "Successful"),*/
+                           @ApiResponse(code = 400, message = "Invalid data for Account or PaymentMethod")})
     public Response buildComboFormDescriptor(final ComboHostedPaymentPageJson json,
                                              @QueryParam(QUERY_PAYMENT_CONTROL_PLUGIN_NAME) final List<String> paymentControlPluginNames,
                                              @QueryParam(QUERY_PLUGIN_PROPERTY) final List<String> pluginPropertiesString,
@@ -127,7 +128,7 @@ public class PaymentGatewayResource extends ComboPaymentResource {
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
     @ApiOperation(value = "Generate form data to redirect the customer to the gateway", response = HostedPaymentPageFormDescriptorJson.class)
-    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid accountId supplied"),
+    @ApiResponses(value = {/* @ApiResponse(code = 200, message = "Successful"),*/
                            @ApiResponse(code = 404, message = "Account not found")})
     public Response buildFormDescriptor(@PathParam("accountId") final UUID accountId,
                                         final HostedPaymentPageFieldsJson json,
@@ -161,7 +162,7 @@ public class PaymentGatewayResource extends ComboPaymentResource {
     @Consumes(WILDCARD)
     @Produces(APPLICATION_JSON)
     @ApiOperation(value = "Process a gateway notification", notes = "The response is built by the appropriate plugin")
-    @ApiResponses(value = {})
+    /*@ApiResponses(value = {@ApiResponse(code = 200, message = "Successful")})*/
     public Response processNotification(@PathParam(PATH_PAYMENT_PLUGIN_NAME) final String pluginName,
                                         final String body,
                                         @QueryParam(QUERY_PAYMENT_CONTROL_PLUGIN_NAME) final List<String> paymentControlPluginNames,

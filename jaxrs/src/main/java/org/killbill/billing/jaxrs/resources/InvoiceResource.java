@@ -292,7 +292,8 @@ public class InvoiceResource extends JaxRsResourceBase {
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
     @ApiOperation(value = "Trigger an invoice generation", response = InvoiceJson.class)
-    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid account id or target datetime supplied")})
+    @ApiResponses(value = {@ApiResponse(code = 201, message = "Created invoice successfully"),
+                           @ApiResponse(code = 400, message = "Invalid account id or target datetime supplied")})
     public Response createFutureInvoice(@ApiParam(required=true) @QueryParam(QUERY_ACCOUNT_ID) final UUID accountId,
                                         @QueryParam(QUERY_TARGET_DATE) final String targetDate,
                                         @HeaderParam(HDR_CREATED_BY) final String createdBy,
@@ -322,7 +323,8 @@ public class InvoiceResource extends JaxRsResourceBase {
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
     @ApiOperation(value = "Create a migration invoice", response = InvoiceJson.class, tags="Invoice")
-    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid account id or target datetime supplied")})
+    @ApiResponses(value = {@ApiResponse(code = 201, message = "Created migration invoice successfully"),
+                           @ApiResponse(code = 400, message = "Invalid account id or target datetime supplied")})
     public Response createMigrationInvoice(@PathParam("accountId") final UUID accountId,
                                            final List<InvoiceItemJson> items,
                                            @Nullable @QueryParam(QUERY_TARGET_DATE) final String targetDate,
@@ -346,7 +348,8 @@ public class InvoiceResource extends JaxRsResourceBase {
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
     @ApiOperation(value = "Generate a dryRun invoice", response = InvoiceJson.class)
-    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid account id or target datetime supplied")})
+    @ApiResponses(value = {/* @ApiResponse(code = 200, message = "Successful"), */
+                           @ApiResponse(code = 400, message = "Invalid account id or target datetime supplied")})
     public Response generateDryRunInvoice(@Nullable final InvoiceDryRunJson dryRunSubscriptionSpec,
                                           @ApiParam(required=true) @QueryParam(QUERY_ACCOUNT_ID) final UUID accountId,
                                           @Nullable @QueryParam(QUERY_TARGET_DATE) final String targetDate,
@@ -433,7 +436,8 @@ public class InvoiceResource extends JaxRsResourceBase {
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
     @ApiOperation(value = "Adjust an invoice item", response = InvoiceJson.class)
-    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid account id, invoice id or invoice item id supplied"),
+    @ApiResponses(value = {@ApiResponse(code = 201, message = "Created adjustment Successfully"),
+                           @ApiResponse(code = 400, message = "Invalid account id, invoice id or invoice item id supplied"),
                            @ApiResponse(code = 404, message = "Invoice not found")})
     public Response adjustInvoiceItem(@PathParam("invoiceId") final UUID invoiceId,
                                       final InvoiceItemJson json,
@@ -485,7 +489,8 @@ public class InvoiceResource extends JaxRsResourceBase {
     @Consumes(APPLICATION_JSON)
     @Path("/" + CHARGES + "/{accountId:" + UUID_PATTERN + "}")
     @ApiOperation(value = "Create external charge(s)", response = InvoiceItemJson.class, responseContainer = "List")
-    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid account id supplied"),
+    @ApiResponses(value = {@ApiResponse(code = 201, message = "Created external charge Successfully"),
+                           @ApiResponse(code = 400, message = "Invalid account id supplied"),
                            @ApiResponse(code = 404, message = "Account not found")})
     public Response createExternalCharges(@PathParam("accountId") final UUID accountId,
                                           final List<InvoiceItemJson> externalChargesJson,
@@ -642,7 +647,9 @@ public class InvoiceResource extends JaxRsResourceBase {
     @Consumes(APPLICATION_JSON)
     @Path("/{invoiceId:" + UUID_PATTERN + "}/" + PAYMENTS)
     @ApiOperation(value = "Trigger a payment for invoice", response = InvoicePaymentJson.class)
-    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid account id or invoice id supplied"),
+    @ApiResponses(value = {@ApiResponse(code = 201, message = "Created payment Successfully"),
+                           @ApiResponse(code = 204, message = "Nothing to pay for"),
+                           @ApiResponse(code = 400, message = "Invalid account id or invoice id supplied"),
                            @ApiResponse(code = 404, message = "Account not found")})
     public Response createInstantPayment(@PathParam("invoiceId") final UUID invoiceId,
                                          final InvoicePaymentJson payment,
@@ -690,8 +697,8 @@ public class InvoiceResource extends JaxRsResourceBase {
     @Produces(TEXT_PLAIN)
     @Consumes(TEXT_PLAIN)
     @Path("/" + INVOICE_TRANSLATION + "/{locale:" + ANYTHING_PATTERN + "}/")
-    @ApiOperation(value = "Upload the invoice translation for the tenant")
-    @ApiResponses(value = {})
+    @ApiOperation(value = "Upload the invoice translation for the tenant", response = String.class)
+    @ApiResponses(value = {@ApiResponse(code = 201, message = "Uploaded invoice translation Successfully")})
     public Response uploadInvoiceTranslation(@PathParam("locale") final String localeStr,
                                              final String invoiceTranslation,
                                              @QueryParam(QUERY_DELETE_IF_EXISTS) @DefaultValue("false") final boolean deleteIfExists,
@@ -729,8 +736,8 @@ public class InvoiceResource extends JaxRsResourceBase {
     @Produces(TEXT_PLAIN)
     @Consumes(TEXT_PLAIN)
     @Path("/" + INVOICE_CATALOG_TRANSLATION + "/{locale:" + ANYTHING_PATTERN + "}/")
-    @ApiOperation(value = "Upload the catalog translation for the tenant")
-    @ApiResponses(value = {})
+    @ApiOperation(value = "Upload the catalog translation for the tenant", response = String.class)
+    @ApiResponses(value = {@ApiResponse(code = 201, message = "Uploaded catalog translation Successfully")})
     public Response uploadCatalogTranslation(@PathParam("locale") final String localeStr,
                                              final String catalogTranslation,
                                              @QueryParam(QUERY_DELETE_IF_EXISTS) @DefaultValue("false") final boolean deleteIfExists,
@@ -767,8 +774,8 @@ public class InvoiceResource extends JaxRsResourceBase {
     @Produces(TEXT_HTML)
     @Consumes(TEXT_HTML)
     @Path("/" + INVOICE_TEMPLATE)
-    @ApiOperation(value = "Upload the invoice template for the tenant")
-    @ApiResponses(value = {})
+    @ApiOperation(value = "Upload the invoice template for the tenant", response = String.class)
+    @ApiResponses(value = {@ApiResponse(code = 201, message = "Uploaded invoice template Successfully")})
     public Response uploadInvoiceTemplate(final String catalogTranslation,
                                           @QueryParam(QUERY_DELETE_IF_EXISTS) @DefaultValue("false") final boolean deleteIfExists,
                                           @HeaderParam(HDR_CREATED_BY) final String createdBy,
@@ -804,8 +811,7 @@ public class InvoiceResource extends JaxRsResourceBase {
     @Produces(TEXT_HTML)
     @Consumes(TEXT_HTML)
     @Path("/" + INVOICE_MP_TEMPLATE)
-    @ApiOperation(value = "Upload the manualPay invoice template for the tenant")
-    @ApiResponses(value = {})
+    @ApiOperation(value = "Upload the manualPay invoice template for the tenant", response = String.class)
     public Response uploadInvoiceMPTemplate(final String catalogTranslation,
                                             @QueryParam(QUERY_DELETE_IF_EXISTS) @DefaultValue("false") final boolean deleteIfExists,
                                             @HeaderParam(HDR_CREATED_BY) final String createdBy,
@@ -888,7 +894,8 @@ public class InvoiceResource extends JaxRsResourceBase {
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
     @ApiOperation(value = "Add custom fields to invoice", response = CustomField.class, responseContainer = "List")
-    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid invoice id supplied")})
+    @ApiResponses(value = {@ApiResponse(code = 201, message = "Custom field created successfully"),
+                           @ApiResponse(code = 400, message = "Invalid invoice id supplied")})
     public Response createInvoiceCustomFields(@PathParam(ID_PARAM_NAME) final UUID id,
                                               final List<CustomFieldJson> customFields,
                                               @HeaderParam(HDR_CREATED_BY) final String createdBy,
@@ -957,7 +964,8 @@ public class InvoiceResource extends JaxRsResourceBase {
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
     @ApiOperation(value = "Add tags to invoice", response = TagJson.class, responseContainer = "List")
-    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid invoice id supplied")})
+    @ApiResponses(value = {@ApiResponse(code = 201, message = "Tag created successfully"),
+                           @ApiResponse(code = 400, message = "Invalid invoice id supplied")})
     public Response createInvoiceTags(@PathParam(ID_PARAM_NAME) final UUID id,
                                       final List<UUID> tagList,
                                       @HeaderParam(HDR_CREATED_BY) final String createdBy,

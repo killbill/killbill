@@ -261,7 +261,7 @@ public class AdminResource extends JaxRsResourceBase {
     @Produces(APPLICATION_JSON)
     @Path("/invoices")
     @ApiOperation(value = "Trigger an invoice generation for all parked accounts")
-    @ApiResponses(value = {})
+    /* @ApiResponses(value = {@ApiResponse(code = 200, message = "Successful")})*/
     public Response triggerInvoiceGenerationForParkedAccounts(@QueryParam(QUERY_SEARCH_OFFSET) @DefaultValue("0") final Long offset,
                                                               @QueryParam(QUERY_SEARCH_LIMIT) @DefaultValue("100") final Long limit,
                                                               @HeaderParam(HDR_CREATED_BY) final String createdBy,
