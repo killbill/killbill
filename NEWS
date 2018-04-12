@@ -1,3 +1,7 @@
+0.19.9
+    Introduce thread-local dirty DB flag
+    Fix NPE in bus and notifications threads
+
 0.19.5
     
     Database perf improvements
