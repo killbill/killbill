@@ -29,6 +29,7 @@ import io.swagger.jaxrs.config.ReaderListener;
 import io.swagger.models.Model;
 import io.swagger.models.Operation;
 import io.swagger.models.Path;
+import io.swagger.models.Response;
 import io.swagger.models.Swagger;
 import io.swagger.models.auth.BasicAuthDefinition;
 import io.swagger.models.parameters.BodyParameter;
@@ -86,6 +87,18 @@ public class KillBillApiDefinition implements ReaderListener {
 
     private void decorateOperation(final Operation op, final String pathName, final String httpMethod, final HeaderParameter apiKeyParam, final HeaderParameter apiSecretParam) {
         if (op != null) {
+
+            // Bug in swagger ? somehow when we only specify a 201, swagger adds a 200 response with the schema response
+            if (httpMethod.equals("POST")) {
+                if (op.getResponses().containsKey("201") && op.getResponses().containsKey("200")) {
+                    final Response resp200 =op.getResponses().remove("200");
+                    final Response resp201 = op.getResponses().get("201");
+                    if (resp201.getSchema() == null) {
+                        resp201.setSchema(resp200.getSchema());
+                    }
+                }
+            }
+
             op.addSecurity(BASIC_AUTH_SCHEME, null);
             if (requiresTenantInformation(pathName, httpMethod)) {
                 op.addParameter(apiKeyParam);
