@@ -50,7 +50,6 @@ import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 
 import static javax.ws.rs.core.MediaType.APPLICATION_OCTET_STREAM;
-import static javax.ws.rs.core.MediaType.TEXT_PLAIN;
 
 @Singleton
 @Path(JaxrsResource.EXPORT_PATH)
@@ -78,7 +77,8 @@ public class ExportResource extends JaxRsResourceBase {
     @Path("/{accountId:" + UUID_PATTERN + "}")
     @Produces(APPLICATION_OCTET_STREAM)
     @ApiOperation(value = "Export account data", response = Response.class)
-    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid account id supplied"),
+    @ApiResponses(value = {@ApiResponse(code = 200, message = "Success"),
+                           @ApiResponse(code = 400, message = "Invalid account id supplied"),
                            @ApiResponse(code = 404, message = "Account not found")})
     public StreamingOutput exportDataForAccount(@PathParam("accountId") final UUID accountId,
                                                 @HeaderParam(HDR_CREATED_BY) final String createdBy,

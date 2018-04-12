@@ -146,7 +146,7 @@ public class NodesInfoResource extends JaxRsResourceBase {
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
     @ApiOperation(value = "Trigger a node command")
-    @ApiResponses(value = {/*@ApiResponse(code = 200, message = "Success"),*/
+    @ApiResponses(value = {@ApiResponse(code = 200, message = "Success"),
                            @ApiResponse(code = 400, message = "Invalid node command supplied")})
     public Response triggerNodeCommand(final NodeCommandJson json,
                                        @QueryParam(QUERY_LOCAL_NODE_ONLY) @DefaultValue("false") final Boolean localNodeOnly,

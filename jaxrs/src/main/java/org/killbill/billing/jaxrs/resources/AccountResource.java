@@ -763,7 +763,7 @@ public class AccountResource extends JaxRsResourceBase {
     @Consumes(APPLICATION_JSON)
     @Path("/{accountId:" + UUID_PATTERN + "}/" + INVOICE_PAYMENTS)
     @ApiOperation(value = "Trigger a payment for all unpaid invoices")
-    @ApiResponses(value = {/* @ApiResponse(code = 200, message = "Successful"), */
+    @ApiResponses(value = {@ApiResponse(code = 200, message = "Successful operation"),
                            @ApiResponse(code = 404, message = "Invalid account id supplied")})
     public Response payAllInvoices(@PathParam("accountId") final UUID accountId,
                                    @QueryParam(QUERY_PAYMENT_EXTERNAL) @DefaultValue("false") final Boolean externalPayment,

@@ -162,7 +162,7 @@ public class PaymentGatewayResource extends ComboPaymentResource {
     @Consumes(WILDCARD)
     @Produces(APPLICATION_JSON)
     @ApiOperation(value = "Process a gateway notification", notes = "The response is built by the appropriate plugin")
-    /*@ApiResponses(value = {@ApiResponse(code = 200, message = "Successful")})*/
+    @ApiResponses(value = {@ApiResponse(code = 200, message = "Successful")})
     public Response processNotification(@PathParam(PATH_PAYMENT_PLUGIN_NAME) final String pluginName,
                                         final String body,
                                         @QueryParam(QUERY_PAYMENT_CONTROL_PLUGIN_NAME) final List<String> paymentControlPluginNames,

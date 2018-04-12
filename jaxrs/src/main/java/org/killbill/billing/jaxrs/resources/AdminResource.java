@@ -152,7 +152,9 @@ public class AdminResource extends JaxRsResourceBase {
     @Path("/queues")
     @Produces(APPLICATION_OCTET_STREAM)
     @ApiOperation(value = "Get queues entries", response = Response.class)
-    @ApiResponses(value = {})
+    @ApiResponses(value = {@ApiResponse(code = 200, message = "Success"),
+                           @ApiResponse(code = 400, message = "Invalid account id supplied"),
+                           @ApiResponse(code = 404, message = "Account not found")})
     public Response getQueueEntries(@QueryParam("accountId") final UUID accountId,
                                     @QueryParam("queueName") final String queueName,
                                     @QueryParam("serviceName") final String serviceName,
@@ -261,7 +263,7 @@ public class AdminResource extends JaxRsResourceBase {
     @Produces(APPLICATION_JSON)
     @Path("/invoices")
     @ApiOperation(value = "Trigger an invoice generation for all parked accounts")
-    /* @ApiResponses(value = {@ApiResponse(code = 200, message = "Successful")})*/
+    @ApiResponses(value = {@ApiResponse(code = 200, message = "Successful operation")})
     public Response triggerInvoiceGenerationForParkedAccounts(@QueryParam(QUERY_SEARCH_OFFSET) @DefaultValue("0") final Long offset,
                                                               @QueryParam(QUERY_SEARCH_LIMIT) @DefaultValue("100") final Long limit,
                                                               @HeaderParam(HDR_CREATED_BY) final String createdBy,
