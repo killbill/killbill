@@ -749,7 +749,8 @@ public class PaymentResource extends ComboPaymentResource {
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
     @ApiOperation(value = "Cancels a scheduled payment attempt retry")
-    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid paymentTransactionId supplied")})
+    @ApiResponses(value = {@ApiResponse(code = 204, message = "Successful operation"),
+                           @ApiResponse(code = 400, message = "Invalid paymentTransactionId supplied")})
     public Response cancelScheduledPaymentTransactionById(@PathParam("paymentTransactionId") final UUID paymentTransactionId,
                                                           @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                                           @HeaderParam(HDR_REASON) final String reason,
@@ -758,7 +759,7 @@ public class PaymentResource extends ComboPaymentResource {
                                                           @javax.ws.rs.core.Context final HttpServletRequest request) throws PaymentApiException, AccountApiException {
         final CallContext callContext = context.createCallContextNoAccountId(createdBy, reason, comment, request);
         paymentApi.cancelScheduledPaymentTransaction(paymentTransactionId, callContext);
-        return Response.status(Status.OK).build();
+        return Response.status(Status.NO_CONTENT).build();
     }
 
     @TimedResource(name = "cancelScheduledPaymentTransaction")
@@ -767,7 +768,8 @@ public class PaymentResource extends ComboPaymentResource {
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
     @ApiOperation(value = "Cancels a scheduled payment attempt retry")
-    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid paymentTransactionExternalKey supplied")})
+    @ApiResponses(value = {@ApiResponse(code = 204, message = "Successful operation"),
+                           @ApiResponse(code = 400, message = "Invalid paymentTransactionExternalKey supplied")})
     public Response cancelScheduledPaymentTransactionByExternalKey(@ApiParam(required=true) @QueryParam(QUERY_TRANSACTION_EXTERNAL_KEY) final String paymentTransactionExternalKey,
                                                                    @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                                                    @HeaderParam(HDR_REASON) final String reason,
@@ -776,9 +778,8 @@ public class PaymentResource extends ComboPaymentResource {
                                                                    @javax.ws.rs.core.Context final HttpServletRequest request) throws PaymentApiException, AccountApiException {
         final CallContext callContext = context.createCallContextNoAccountId(createdBy, reason, comment, request);
         paymentApi.cancelScheduledPaymentTransaction(paymentTransactionExternalKey, callContext);
-        return Response.status(Status.OK).build();
+        return Response.status(Status.NO_CONTENT).build();
     }
-
 
 
 
@@ -819,7 +820,8 @@ public class PaymentResource extends ComboPaymentResource {
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
     @ApiOperation(value = "Modify custom fields to payment")
-    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid payment id supplied")})
+    @ApiResponses(value = {@ApiResponse(code = 204, message = "Successful operation"),
+                           @ApiResponse(code = 400, message = "Invalid payment id supplied")})
     public Response modifyPaymentCustomFields(@PathParam(ID_PARAM_NAME) final UUID id,
                                               final List<CustomFieldJson> customFields,
                                               @HeaderParam(HDR_CREATED_BY) final String createdBy,
@@ -836,7 +838,8 @@ public class PaymentResource extends ComboPaymentResource {
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
     @ApiOperation(value = "Remove custom fields from payment payment")
-    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid payment id supplied")})
+    @ApiResponses(value = {@ApiResponse(code = 204, message = "Successful operation"),
+                           @ApiResponse(code = 400, message = "Invalid payment id supplied")})
     public Response deletePaymentCustomFields(@PathParam(ID_PARAM_NAME) final UUID id,
                                               @QueryParam(QUERY_CUSTOM_FIELD) final List<UUID> customFieldList,
                                               @HeaderParam(HDR_CREATED_BY) final String createdBy,
@@ -888,7 +891,8 @@ public class PaymentResource extends ComboPaymentResource {
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
     @ApiOperation(value = "Remove tags from payment payment")
-    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid payment id supplied")})
+    @ApiResponses(value = {@ApiResponse(code = 204, message = "Successful operation"),
+                           @ApiResponse(code = 400, message = "Invalid payment id supplied")})
     public Response deletePaymentTags(@PathParam(ID_PARAM_NAME) final UUID paymentId,
                                       @QueryParam(QUERY_TAG) final List<UUID> tagList,
                                       @HeaderParam(HDR_CREATED_BY) final String createdBy,

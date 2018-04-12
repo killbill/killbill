@@ -184,7 +184,8 @@ public class TransactionResource extends JaxRsResourceBase {
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
     @ApiOperation(value = "Modify custom fields to payment transaction")
-    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid transaction id supplied")})
+    @ApiResponses(value = {@ApiResponse(code = 204, message = "Successful operation"),
+                           @ApiResponse(code = 400, message = "Invalid transaction id supplied")})
     public Response modifyTransactionCustomFields(@PathParam(ID_PARAM_NAME) final UUID id,
                                                   final List<CustomFieldJson> customFields,
                                                   @HeaderParam(HDR_CREATED_BY) final String createdBy,
@@ -202,7 +203,8 @@ public class TransactionResource extends JaxRsResourceBase {
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
     @ApiOperation(value = "Remove custom fields from payment transaction")
-    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid transaction id supplied")})
+    @ApiResponses(value = {@ApiResponse(code = 204, message = "Successful operation"),
+                           @ApiResponse(code = 400, message = "Invalid transaction id supplied")})
     public Response deleteTransactionCustomFields(@PathParam(ID_PARAM_NAME) final UUID id,
                                                   @QueryParam(QUERY_CUSTOM_FIELD) final List<UUID> customFieldList,
                                                   @HeaderParam(HDR_CREATED_BY) final String createdBy,
@@ -254,7 +256,8 @@ public class TransactionResource extends JaxRsResourceBase {
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
     @ApiOperation(value = "Remove tags from payment transaction")
-    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid transaction id supplied")})
+    @ApiResponses(value = {@ApiResponse(code = 204, message = "Successful operation"),
+                           @ApiResponse(code = 400, message = "Invalid transaction id supplied")})
     public Response deleteTransactionTags(@PathParam(ID_PARAM_NAME) final UUID id,
                                           @QueryParam(QUERY_TAG) final List<UUID> tagList,
                                           @HeaderParam(HDR_CREATED_BY) final String createdBy,

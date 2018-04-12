@@ -234,7 +234,8 @@ public class BundleResource extends JaxRsResourceBase {
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
     @ApiOperation(value = "Pause a bundle")
-    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid bundle id supplied"),
+    @ApiResponses(value = {@ApiResponse(code = 204, message = "Successful operation"),
+                           @ApiResponse(code = 400, message = "Invalid bundle id supplied"),
                            @ApiResponse(code = 404, message = "Bundle not found")})
     public Response pauseBundle(@PathParam(ID_PARAM_NAME) final UUID bundleId,
                                 @QueryParam(QUERY_REQUESTED_DT) final String requestedDate,
@@ -247,7 +248,7 @@ public class BundleResource extends JaxRsResourceBase {
         final CallContext callContext = context.createCallContextNoAccountId(createdBy, reason, comment, request);
         final LocalDate inputLocalDate = toLocalDate(requestedDate);
         entitlementApi.pause(bundleId, inputLocalDate, pluginProperties, callContext);
-        return Response.status(Status.OK).build();
+        return Response.status(Status.NO_CONTENT).build();
     }
 
     @TimedResource
@@ -256,7 +257,8 @@ public class BundleResource extends JaxRsResourceBase {
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
     @ApiOperation(value = "Resume a bundle")
-    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid bundle id supplied"),
+    @ApiResponses(value = {@ApiResponse(code = 204, message = "Successful operation"),
+                           @ApiResponse(code = 400, message = "Invalid bundle id supplied"),
                            @ApiResponse(code = 404, message = "Bundle not found")})
     public Response resumeBundle(@PathParam(ID_PARAM_NAME) final UUID bundleId,
                                  @QueryParam(QUERY_REQUESTED_DT) final String requestedDate,
@@ -269,7 +271,7 @@ public class BundleResource extends JaxRsResourceBase {
         final CallContext callContext = context.createCallContextNoAccountId(createdBy, reason, comment, request);
         final LocalDate inputLocalDate = toLocalDate(requestedDate);
         entitlementApi.resume(bundleId, inputLocalDate, pluginProperties, callContext);
-        return Response.status(Status.OK).build();
+        return Response.status(Status.NO_CONTENT).build();
     }
 
     @TimedResource
@@ -333,7 +335,8 @@ public class BundleResource extends JaxRsResourceBase {
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
     @ApiOperation(value = "Modify custom fields to bundle")
-    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid bundle id supplied")})
+    @ApiResponses(value = {@ApiResponse(code = 204, message = "Successful operation"),
+                           @ApiResponse(code = 400, message = "Invalid bundle id supplied")})
     public Response modifyBundleCustomFields(@PathParam(ID_PARAM_NAME) final UUID bundleId,
                                              final List<CustomFieldJson> customFields,
                                              @HeaderParam(HDR_CREATED_BY) final String createdBy,
@@ -353,7 +356,8 @@ public class BundleResource extends JaxRsResourceBase {
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
     @ApiOperation(value = "Remove custom fields from bundle")
-    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid bundle id supplied")})
+    @ApiResponses(value = {@ApiResponse(code = 204, message = "Successful operation"),
+                           @ApiResponse(code = 400, message = "Invalid bundle id supplied")})
     public Response deleteBundleCustomFields(@PathParam(ID_PARAM_NAME) final UUID bundleId,
                                              @QueryParam(QUERY_CUSTOM_FIELD) final List<UUID> customFieldList,
                                              @HeaderParam(HDR_CREATED_BY) final String createdBy,
@@ -418,7 +422,8 @@ public class BundleResource extends JaxRsResourceBase {
     @Path("/{bundleId:" + UUID_PATTERN + "}/" + RENAME_KEY)
     @Consumes(APPLICATION_JSON)
     @ApiOperation(value = "Update a bundle externalKey")
-    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid argumnent supplied"),
+    @ApiResponses(value = {@ApiResponse(code = 204, message = "Successful operation"),
+                           @ApiResponse(code = 400, message = "Invalid argumnent supplied"),
                            @ApiResponse(code = 404, message = "Bundle not found")})
     public Response renameExternalKey(@PathParam(ID_PARAM_NAME) final UUID bundleId,
                                       final BundleJson json,
@@ -434,7 +439,7 @@ public class BundleResource extends JaxRsResourceBase {
 
         final CallContext callContext = context.createCallContextNoAccountId(createdBy, reason, comment, request);
         subscriptionApi.updateExternalKey(bundleId, json.getExternalKey(), callContext);
-        return Response.status(Status.OK).build();
+        return Response.status(Status.NO_CONTENT).build();
     }
 
 
@@ -464,7 +469,8 @@ public class BundleResource extends JaxRsResourceBase {
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
     @ApiOperation(value = "Remove tags from bundle")
-    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid bundle id supplied")})
+    @ApiResponses(value = {@ApiResponse(code = 204, message = "Successful operation"),
+                           @ApiResponse(code = 400, message = "Invalid bundle id supplied")})
     public Response deleteBundleTags(@PathParam(ID_PARAM_NAME) final UUID bundleId,
                                      @QueryParam(QUERY_TAG) final List<UUID> tagList,
                                      @HeaderParam(HDR_CREATED_BY) final String createdBy,

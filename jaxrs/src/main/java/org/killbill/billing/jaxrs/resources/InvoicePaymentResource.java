@@ -268,7 +268,7 @@ public class InvoicePaymentResource extends JaxRsResourceBase {
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
     @ApiOperation(value = "Complete an existing transaction")
-    @ApiResponses(value = {@ApiResponse(code = 200, message = "Payment transaction created successfully"),
+    @ApiResponses(value = {@ApiResponse(code = 201, message = "Payment transaction created successfully"),
                            @ApiResponse(code = 400, message = "Invalid paymentId supplied"),
                            @ApiResponse(code = 404, message = "Account or payment not found"),
                            @ApiResponse(code = 402, message = "Transaction declined by gateway"),
@@ -352,7 +352,8 @@ public class InvoicePaymentResource extends JaxRsResourceBase {
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
     @ApiOperation(value = "Modify custom fields to payment")
-    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid payment id supplied")})
+    @ApiResponses(value = {@ApiResponse(code = 204, message = "Successful operation"),
+                           @ApiResponse(code = 400, message = "Invalid payment id supplied")})
     public Response modifyInvoicePaymentCustomFields(@PathParam(ID_PARAM_NAME) final UUID id,
                                                      final List<CustomFieldJson> customFields,
                                                      @HeaderParam(HDR_CREATED_BY) final String createdBy,
@@ -370,7 +371,8 @@ public class InvoicePaymentResource extends JaxRsResourceBase {
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
     @ApiOperation(value = "Remove custom fields from payment")
-    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid payment id supplied")})
+    @ApiResponses(value = {@ApiResponse(code = 204, message = "Successful operation"),
+                           @ApiResponse(code = 400, message = "Invalid payment id supplied")})
     public Response deleteInvoicePaymentCustomFields(@PathParam(ID_PARAM_NAME) final UUID id,
                                                      @QueryParam(QUERY_CUSTOM_FIELD) final List<UUID> customFieldList,
                                                      @HeaderParam(HDR_CREATED_BY) final String createdBy,
@@ -424,7 +426,8 @@ public class InvoicePaymentResource extends JaxRsResourceBase {
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
     @ApiOperation(value = "Remove tags from payment")
-    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid payment id supplied")})
+    @ApiResponses(value = {@ApiResponse(code = 204, message = "Successful operation"),
+                           @ApiResponse(code = 400, message = "Invalid payment id supplied")})
     public Response deleteInvoicePaymentTags(@PathParam(ID_PARAM_NAME) final UUID id,
                                              @QueryParam(QUERY_TAG) final List<UUID> tagList,
                                              @HeaderParam(HDR_CREATED_BY) final String createdBy,

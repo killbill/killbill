@@ -48,7 +48,6 @@ import org.killbill.billing.account.api.Account;
 import org.killbill.billing.account.api.AccountApiException;
 import org.killbill.billing.account.api.AccountUserApi;
 import org.killbill.billing.catalog.api.BillingActionPolicy;
-import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.catalog.api.PhaseType;
@@ -87,7 +86,6 @@ import org.killbill.billing.jaxrs.util.JaxrsUriBuilder;
 import org.killbill.billing.jaxrs.util.KillbillEventHandler;
 import org.killbill.billing.payment.api.PaymentApi;
 import org.killbill.billing.payment.api.PluginProperty;
-import org.killbill.billing.util.api.AuditLevel;
 import org.killbill.billing.util.api.AuditUserApi;
 import org.killbill.billing.util.api.CustomFieldApiException;
 import org.killbill.billing.util.api.CustomFieldUserApi;
@@ -508,7 +506,8 @@ public class SubscriptionResource extends JaxRsResourceBase {
     @Path("/{subscriptionId:" + UUID_PATTERN + "}/" + UNDO_CANCEL)
     @Produces(APPLICATION_JSON)
     @ApiOperation(value = "Un-cancel an entitlement")
-    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid subscription id supplied"),
+    @ApiResponses(value = {@ApiResponse(code = 204, message = "Successful operation"),
+                           @ApiResponse(code = 400, message = "Invalid subscription id supplied"),
                            @ApiResponse(code = 404, message = "Entitlement not found")})
     public Response uncancelSubscriptionPlan(@PathParam("subscriptionId") final UUID subscriptionId,
                                              @QueryParam(QUERY_PLUGIN_PROPERTY) final List<String> pluginPropertiesString,
@@ -519,7 +518,7 @@ public class SubscriptionResource extends JaxRsResourceBase {
         final Iterable<PluginProperty> pluginProperties = extractPluginProperties(pluginPropertiesString);
         final Entitlement current = entitlementApi.getEntitlementForId(subscriptionId, context.createCallContextNoAccountId(createdBy, reason, comment, request));
         current.uncancelEntitlement(pluginProperties, context.createCallContextNoAccountId(createdBy, reason, comment, request));
-        return Response.status(Status.OK).build();
+        return Response.status(Status.NO_CONTENT).build();
     }
 
     @TimedResource
@@ -527,7 +526,8 @@ public class SubscriptionResource extends JaxRsResourceBase {
     @Path("/{subscriptionId:" + UUID_PATTERN + "}/" + UNDO_CHANGE_PLAN)
     @Produces(APPLICATION_JSON)
     @ApiOperation(value = "Undo a pending change plan on an entitlement")
-    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid subscription id supplied"),
+    @ApiResponses(value = {@ApiResponse(code = 204, message = "Successful operation"),
+                           @ApiResponse(code = 400, message = "Invalid subscription id supplied"),
                            @ApiResponse(code = 404, message = "Entitlement not found")})
     public Response undoChangeSubscriptionPlan(@PathParam("subscriptionId") final UUID subscriptionId,
                                                @QueryParam(QUERY_PLUGIN_PROPERTY) final List<String> pluginPropertiesString,
@@ -538,7 +538,7 @@ public class SubscriptionResource extends JaxRsResourceBase {
         final Iterable<PluginProperty> pluginProperties = extractPluginProperties(pluginPropertiesString);
         final Entitlement current = entitlementApi.getEntitlementForId(subscriptionId, context.createCallContextNoAccountId(createdBy, reason, comment, request));
         current.undoChangePlan(pluginProperties, context.createCallContextNoAccountId(createdBy, reason, comment, request));
-        return Response.status(Status.OK).build();
+        return Response.status(Status.NO_CONTENT).build();
     }
 
     @TimedResource
@@ -547,7 +547,8 @@ public class SubscriptionResource extends JaxRsResourceBase {
     @Consumes(APPLICATION_JSON)
     @Path("/{subscriptionId:" + UUID_PATTERN + "}")
     @ApiOperation(value = "Change entitlement plan")
-    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid subscription id supplied"),
+    @ApiResponses(value = {@ApiResponse(code = 204, message = "Successful operation"),
+                           @ApiResponse(code = 400, message = "Invalid subscription id supplied"),
                            @ApiResponse(code = 404, message = "Entitlement not found")})
     public Response changeSubscriptionPlan(@PathParam("subscriptionId") final UUID subscriptionId,
                                            final SubscriptionJson entitlement,
@@ -600,7 +601,7 @@ public class SubscriptionResource extends JaxRsResourceBase {
                 isImmediateOp = newEntitlement.getLastActiveProduct().getName().equals(entitlement.getProductName()) &&
                                 newEntitlement.getLastActivePlan().getRecurringBillingPeriod() == entitlement.getBillingPeriod() &&
                                 newEntitlement.getLastActivePriceList().getName().equals(entitlement.getPriceList());
-                return Response.status(Status.OK).build();
+                return Response.status(Status.NO_CONTENT).build();
             }
 
             @Override
@@ -613,7 +614,7 @@ public class SubscriptionResource extends JaxRsResourceBase {
                 if (operationResponse.getStatus() != Status.OK.getStatusCode()) {
                     return operationResponse;
                 }
-                return Response.status(Status.OK).build();
+                return Response.status(Status.NO_CONTENT).build();
             }
         };
 
@@ -648,7 +649,8 @@ public class SubscriptionResource extends JaxRsResourceBase {
     @Path("/{subscriptionId:" + UUID_PATTERN + "}")
     @Produces(APPLICATION_JSON)
     @ApiOperation(value = "Cancel an entitlement plan")
-    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid subscription id supplied"),
+    @ApiResponses(value = {@ApiResponse(code = 204, message = "Successful operation"),
+                           @ApiResponse(code = 400, message = "Invalid subscription id supplied"),
                            @ApiResponse(code = 404, message = "Entitlement not found")})
     public Response cancelSubscriptionPlan(@PathParam("subscriptionId") final UUID subscriptionId,
                                            @QueryParam(QUERY_REQUESTED_DT) final String requestedDate,
@@ -692,7 +694,7 @@ public class SubscriptionResource extends JaxRsResourceBase {
                 final LocalDate nowInAccountTimeZone = new LocalDate(clock.getUTCNow(), subscription.getBillingEndDate().getChronology().getZone());
                 isImmediateOp = subscription.getBillingEndDate() != null &&
                                 !subscription.getBillingEndDate().isAfter(nowInAccountTimeZone);
-                return Response.status(Status.OK).build();
+                return Response.status(Status.NO_CONTENT).build();
             }
 
             @Override
@@ -716,7 +718,8 @@ public class SubscriptionResource extends JaxRsResourceBase {
     @Consumes(APPLICATION_JSON)
     @Path("/{subscriptionId:" + UUID_PATTERN + "}/" + BCD)
     @ApiOperation(value = "Update the BCD associated to a subscription")
-    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid entitlement supplied")})
+    @ApiResponses(value = {@ApiResponse(code = 204, message = "Successful operation"),
+                           @ApiResponse(code = 400, message = "Invalid entitlement supplied")})
     public Response updateSubscriptionBCD(@PathParam(ID_PARAM_NAME) final UUID subscriptionId,
                                           final SubscriptionJson json,
                                           @QueryParam(QUERY_ENTITLEMENT_EFFECTIVE_FROM_DT) final String effectiveFromDateStr,
@@ -753,9 +756,8 @@ public class SubscriptionResource extends JaxRsResourceBase {
                     break;
             }
         }
-
         entitlement.updateBCD(json.getBillCycleDayLocal(), effectiveFromDate, callContext);
-        return Response.status(Status.OK).build();
+        return Response.status(Status.NO_CONTENT).build();
     }
 
     private static final class CompletionUserRequestEntitlement extends CompletionUserRequestBase {
@@ -894,7 +896,8 @@ public class SubscriptionResource extends JaxRsResourceBase {
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
     @ApiOperation(value = "Modify custom fields to subscription")
-    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid subscription id supplied")})
+    @ApiResponses(value = {@ApiResponse(code = 204, message = "Successful operation"),
+                           @ApiResponse(code = 400, message = "Invalid subscription id supplied")})
     public Response modifySubscriptionCustomFields(@PathParam(ID_PARAM_NAME) final UUID id,
                                                    final List<CustomFieldJson> customFields,
                                                    @HeaderParam(HDR_CREATED_BY) final String createdBy,
@@ -910,7 +913,8 @@ public class SubscriptionResource extends JaxRsResourceBase {
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
     @ApiOperation(value = "Remove custom fields from subscription")
-    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid subscription id supplied")})
+    @ApiResponses(value = {@ApiResponse(code = 204, message = "Successful operation"),
+                           @ApiResponse(code = 400, message = "Invalid subscription id supplied")})
     public Response deleteSubscriptionCustomFields(@PathParam(ID_PARAM_NAME) final UUID id,
                                                    @QueryParam(QUERY_CUSTOM_FIELD) final List<UUID> customFieldList,
                                                    @HeaderParam(HDR_CREATED_BY) final String createdBy,
@@ -959,7 +963,8 @@ public class SubscriptionResource extends JaxRsResourceBase {
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
     @ApiOperation(value = "Remove tags from subscription")
-    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid subscription id supplied")})
+    @ApiResponses(value = {@ApiResponse(code = 204, message = "Successful operation"),
+                           @ApiResponse(code = 400, message = "Invalid subscription id supplied")})
     public Response deleteSubscriptionTags(@PathParam(ID_PARAM_NAME) final UUID id,
                                            @QueryParam(QUERY_TAG) final List<UUID> tagList,
                                            @HeaderParam(HDR_CREATED_BY) final String createdBy,

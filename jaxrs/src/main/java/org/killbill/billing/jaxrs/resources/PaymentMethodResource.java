@@ -260,7 +260,8 @@ public class PaymentMethodResource extends JaxRsResourceBase {
     @Produces(APPLICATION_JSON)
     @Path("/{paymentMethodId:" + UUID_PATTERN + "}")
     @ApiOperation(value = "Delete a payment method")
-    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid paymentMethodId supplied"),
+    @ApiResponses(value = {@ApiResponse(code = 204, message = "Successful operation"),
+                           @ApiResponse(code = 400, message = "Invalid paymentMethodId supplied"),
                            @ApiResponse(code = 404, message = "Account or payment method not found")})
     public Response deletePaymentMethod(@PathParam("paymentMethodId") final UUID paymentMethodId,
                                         @QueryParam(QUERY_DELETE_DEFAULT_PM_WITH_AUTO_PAY_OFF) @DefaultValue("false") final Boolean deleteDefaultPaymentMethodWithAutoPayOff,
@@ -278,7 +279,7 @@ public class PaymentMethodResource extends JaxRsResourceBase {
 
         paymentApi.deletePaymentMethod(account, paymentMethodId, deleteDefaultPaymentMethodWithAutoPayOff, forceDefaultPaymentMethodDeletion, pluginProperties, callContext);
 
-        return Response.status(Status.OK).build();
+        return Response.status(Status.NO_CONTENT).build();
     }
 
     @TimedResource
@@ -319,7 +320,8 @@ public class PaymentMethodResource extends JaxRsResourceBase {
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
     @ApiOperation(value = "Modify custom fields to payment method")
-    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid payment method id supplied")})
+    @ApiResponses(value = {@ApiResponse(code = 204, message = "Successful operation"),
+                           @ApiResponse(code = 400, message = "Invalid payment method id supplied")})
     public Response modifyPaymentMethodCustomFields(@PathParam("paymentMethodId") final UUID paymentMethodId,
                                                     final List<CustomFieldJson> customFields,
                                                     @HeaderParam(HDR_CREATED_BY) final String createdBy,
@@ -337,7 +339,8 @@ public class PaymentMethodResource extends JaxRsResourceBase {
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
     @ApiOperation(value = "Remove custom fields from payment method")
-    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid payment method id supplied")})
+    @ApiResponses(value = {@ApiResponse(code = 204, message = "Successful operation"),
+                           @ApiResponse(code = 400, message = "Invalid payment method id supplied")})
     public Response deletePaymentMethodCustomFields(@PathParam("paymentMethodId") final UUID paymentMethodId,
                                                     @QueryParam(QUERY_CUSTOM_FIELD) final List<UUID> customFieldList,
                                                     @HeaderParam(HDR_CREATED_BY) final String createdBy,

@@ -233,7 +233,7 @@ public abstract class JaxRsResourceBase implements JaxrsResource {
                                   final List<UUID> tagList,
                                   final CallContext context) throws TagApiException {
         tagUserApi.removeTags(id, getObjectType(), tagList, context);
-        return Response.status(Response.Status.OK).build();
+        return Response.status(Status.NO_CONTENT).build();
     }
 
     protected Response getCustomFields(final UUID id, final AuditMode auditMode, final TenantContext context) {
@@ -279,7 +279,7 @@ public abstract class JaxRsResourceBase implements JaxrsResource {
         }
 
         customFieldUserApi.updateCustomFields(input, context);
-        return Response.status(Response.Status.OK).build();
+        return Response.status(Status.NO_CONTENT).build();
     }
 
     /**
@@ -316,7 +316,7 @@ public abstract class JaxRsResourceBase implements JaxrsResource {
             final List<CustomField> input = ImmutableList.<CustomField>copyOf(inputIterable);
             customFieldUserApi.removeCustomFields(input, context);
         }
-        return Response.status(Response.Status.OK).build();
+        return Response.status(Status.NO_CONTENT).build();
     }
 
     protected <E extends Entity, J extends JsonBase> Response buildStreamingPaginationResponse(final Pagination<E> entities,

@@ -144,7 +144,8 @@ public class TagDefinitionResource extends JaxRsResourceBase {
     @Path("/{tagDefinitionId:" + UUID_PATTERN + "}")
     @Produces(APPLICATION_JSON)
     @ApiOperation(value = "Delete a tag definition")
-    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid tagDefinitionId supplied")})
+    @ApiResponses(value = {@ApiResponse(code = 204, message = "Successful operation"),
+                           @ApiResponse(code = 400, message = "Invalid tagDefinitionId supplied")})
     public Response deleteTagDefinition(@PathParam("tagDefinitionId") final UUID tagDefId,
                                         @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                         @HeaderParam(HDR_REASON) final String reason,

@@ -179,7 +179,8 @@ public class TenantResource extends JaxRsResourceBase {
     @DELETE
     @Path("/" + REGISTER_NOTIFICATION_CALLBACK)
     @ApiOperation(value = "Delete a push notification")
-    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid tenantId supplied")})
+    @ApiResponses(value = {@ApiResponse(code = 204, message = "Successful operation"),
+                           @ApiResponse(code = 400, message = "Invalid tenantId supplied")})
     public Response deletePushNotificationCallbacks(@HeaderParam(HDR_CREATED_BY) final String createdBy,
                                                     @HeaderParam(HDR_REASON) final String reason,
                                                     @HeaderParam(HDR_COMMENT) final String comment,
@@ -222,7 +223,8 @@ public class TenantResource extends JaxRsResourceBase {
     @DELETE
     @Path("/" + UPLOAD_PLUGIN_CONFIG + "/{pluginName:" + ANYTHING_PATTERN + "}")
     @ApiOperation(value = "Delete a per tenant configuration for a plugin")
-    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid tenantId supplied")})
+    @ApiResponses(value = {@ApiResponse(code = 204, message = "Successful operation"),
+                           @ApiResponse(code = 400, message = "Invalid tenantId supplied")})
     public Response deletePluginConfiguration(@PathParam("pluginName") final String pluginName,
                                               @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                               @HeaderParam(HDR_REASON) final String reason,
@@ -282,7 +284,8 @@ public class TenantResource extends JaxRsResourceBase {
     @DELETE
     @Path("/" + UPLOAD_PER_TENANT_CONFIG)
     @ApiOperation(value = "Delete a per tenant configuration (system properties)")
-    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid tenantId supplied")})
+    @ApiResponses(value = {@ApiResponse(code = 204, message = "Successful operation"),
+                           @ApiResponse(code = 400, message = "Invalid tenantId supplied")})
     public Response deletePerTenantConfiguration(@HeaderParam(HDR_CREATED_BY) final String createdBy,
                                               @HeaderParam(HDR_REASON) final String reason,
                                               @HeaderParam(HDR_COMMENT) final String comment,
@@ -323,7 +326,8 @@ public class TenantResource extends JaxRsResourceBase {
     @DELETE
     @Path("/" + UPLOAD_PLUGIN_PAYMENT_STATE_MACHINE_CONFIG + "/{pluginName:" + ANYTHING_PATTERN + "}")
     @ApiOperation(value = "Delete a per tenant payment state machine for a plugin")
-    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid tenantId supplied")})
+    @ApiResponses(value = {@ApiResponse(code = 204, message = "Successful operation"),
+                           @ApiResponse(code = 400, message = "Invalid tenantId supplied")})
     public Response deletePluginPaymentStateMachineConfig(@PathParam("pluginName") final String pluginName,
                                                           @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                                           @HeaderParam(HDR_REASON) final String reason,
@@ -371,7 +375,8 @@ public class TenantResource extends JaxRsResourceBase {
     @DELETE
     @Path("/" + USER_KEY_VALUE + "/{keyName:" + ANYTHING_PATTERN + "}")
     @ApiOperation(value = "Delete  a per tenant user key/value")
-    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid tenantId supplied")})
+    @ApiResponses(value = {@ApiResponse(code = 204, message = "Successful operation"),
+                           @ApiResponse(code = 400, message = "Invalid tenantId supplied")})
     public Response deleteUserKeyValue(@PathParam("keyName") final String key,
                                               @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                               @HeaderParam(HDR_REASON) final String reason,
@@ -379,7 +384,7 @@ public class TenantResource extends JaxRsResourceBase {
                                               @javax.ws.rs.core.Context final HttpServletRequest request) throws TenantApiException {
         final CallContext callContext = context.createCallContextNoAccountId(createdBy, reason, comment, request);
         tenantApi.deleteTenantKey(key, callContext);
-        return Response.status(Status.OK).build();
+        return Response.status(Status.NO_CONTENT).build();
     }
 
 
@@ -421,7 +426,7 @@ public class TenantResource extends JaxRsResourceBase {
         final CallContext callContext = context.createCallContextNoAccountId(createdBy, reason, comment, request);
         final String tenantKey = keyPostfix != null ? key.toString() + keyPostfix : key.toString();
         tenantApi.deleteTenantKey(tenantKey, callContext);
-        return Response.status(Status.OK).build();
+        return Response.status(Status.NO_CONTENT).build();
     }
 
     @Override

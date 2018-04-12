@@ -448,7 +448,7 @@ public class CatalogResource extends JaxRsResourceBase {
 
     @DELETE
     @ApiOperation(value = "Delete all versions for a per tenant catalog")
-    @ApiResponses(value = {})
+    @ApiResponses(value = {@ApiResponse(code = 204, message = "Successful operation")})
     public Response deleteCatalog(@HeaderParam(HDR_CREATED_BY) final String createdBy,
                                   @HeaderParam(HDR_REASON) final String reason,
                                   @HeaderParam(HDR_COMMENT) final String comment,
@@ -456,7 +456,7 @@ public class CatalogResource extends JaxRsResourceBase {
                                   @javax.ws.rs.core.Context final HttpServletRequest request) throws TenantApiException, CatalogApiException {
         final CallContext callContext = context.createCallContextNoAccountId(createdBy, reason, comment, request);
         catalogUserApi.deleteCatalog(callContext);
-        return Response.status(Status.OK).build();
+        return Response.status(Status.NO_CONTENT).build();
     }
 
 }

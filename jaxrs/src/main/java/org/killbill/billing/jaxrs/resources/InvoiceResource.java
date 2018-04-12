@@ -412,7 +412,8 @@ public class InvoiceResource extends JaxRsResourceBase {
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
     @ApiOperation(value = "Delete a CBA item")
-    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid account id, invoice id or invoice item id supplied"),
+    @ApiResponses(value = {@ApiResponse(code = 204, message = "Successful operation"),
+                           @ApiResponse(code = 400, message = "Invalid account id, invoice id or invoice item id supplied"),
                            @ApiResponse(code = 404, message = "Account or invoice not found")})
     public Response deleteCBA(@PathParam("invoiceId") final UUID invoiceId,
                               @PathParam("invoiceItemId") final UUID invoiceItemId,
@@ -427,7 +428,7 @@ public class InvoiceResource extends JaxRsResourceBase {
 
         invoiceApi.deleteCBA(account.getId(), invoiceId, invoiceItemId, callContext);
 
-        return Response.status(Status.OK).build();
+        return Response.status(Status.NO_CONTENT).build();
     }
 
     @TimedResource
@@ -914,7 +915,8 @@ public class InvoiceResource extends JaxRsResourceBase {
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
     @ApiOperation(value = "Modify custom fields to invoice")
-    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid invoice id supplied")})
+    @ApiResponses(value = {@ApiResponse(code = 204, message = "Successful operation"),
+                           @ApiResponse(code = 400, message = "Invalid invoice id supplied")})
     public Response modifyInvoiceCustomFields(@PathParam(ID_PARAM_NAME) final UUID id,
                                               final List<CustomFieldJson> customFields,
                                               @HeaderParam(HDR_CREATED_BY) final String createdBy,
@@ -931,7 +933,8 @@ public class InvoiceResource extends JaxRsResourceBase {
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
     @ApiOperation(value = "Remove custom fields from invoice")
-    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid invoice id supplied")})
+    @ApiResponses(value = {@ApiResponse(code = 204, message = "Successful operation"),
+                           @ApiResponse(code = 400, message = "Invalid invoice id supplied")})
     public Response deleteInvoiceCustomFields(@PathParam(ID_PARAM_NAME) final UUID id,
                                               @QueryParam(QUERY_CUSTOM_FIELD) final List<UUID> customFieldList,
                                               @HeaderParam(HDR_CREATED_BY) final String createdBy,
@@ -983,7 +986,8 @@ public class InvoiceResource extends JaxRsResourceBase {
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
     @ApiOperation(value = "Remove tags from invoice")
-    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid invoice id supplied")})
+    @ApiResponses(value = {@ApiResponse(code = 204, message = "Successful operation"),
+                           @ApiResponse(code = 400, message = "Invalid invoice id supplied")})
     public Response deleteInvoiceTags(@PathParam(ID_PARAM_NAME) final UUID id,
                                       @QueryParam(QUERY_TAG) final List<UUID> tagList,
                                       @HeaderParam(HDR_CREATED_BY) final String createdBy,
@@ -1000,7 +1004,8 @@ public class InvoiceResource extends JaxRsResourceBase {
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
     @ApiOperation(value = "Perform the invoice status transition from DRAFT to COMMITTED")
-    @ApiResponses(value = {@ApiResponse(code = 404, message = "Invoice not found")})
+    @ApiResponses(value = {@ApiResponse(code = 204, message = "Successful operation"),
+                           @ApiResponse(code = 404, message = "Invoice not found")})
     public Response commitInvoice(@PathParam("invoiceId") final UUID invoiceId,
                                   @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                   @HeaderParam(HDR_REASON) final String reason,
@@ -1010,7 +1015,7 @@ public class InvoiceResource extends JaxRsResourceBase {
 
         final CallContext callContext = context.createCallContextNoAccountId(createdBy, reason, comment, request);
         invoiceApi.commitInvoice(invoiceId, callContext);
-        return Response.status(Response.Status.OK).build();
+        return Response.status(Status.NO_CONTENT).build();
     }
 
     @TimedResource
@@ -1019,7 +1024,8 @@ public class InvoiceResource extends JaxRsResourceBase {
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
     @ApiOperation(value = "Perform the action of voiding an invoice")
-    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid invoice id supplied"),
+    @ApiResponses(value = {@ApiResponse(code = 204, message = "Successful operation"),
+                           @ApiResponse(code = 400, message = "Invalid invoice id supplied"),
                            @ApiResponse(code = 404, message = "Invoice not found")})
     public Response voidInvoice(@PathParam("invoiceId") final UUID invoiceId,
                                   @HeaderParam(HDR_CREATED_BY) final String createdBy,
@@ -1030,7 +1036,7 @@ public class InvoiceResource extends JaxRsResourceBase {
 
         final CallContext callContext = context.createCallContextNoAccountId(createdBy, reason, comment, request);
         invoiceApi.voidInvoice(invoiceId, callContext);
-        return Response.status(Response.Status.OK).build();
+        return Response.status(Status.NO_CONTENT).build();
     }
 
     @Override

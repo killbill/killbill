@@ -134,6 +134,7 @@ public class SecurityResource extends JaxRsResourceBase {
     @Produces(APPLICATION_JSON)
     @Path("/users/{username:" + ANYTHING_PATTERN + "}/password")
     @ApiOperation(value = "Update a user password")
+    @ApiResponses(value = {@ApiResponse(code = 204, message = "Successful operation")})
     public Response updateUserPassword(@PathParam("username") final String username,
                                        final UserRolesJson json,
                                        @HeaderParam(HDR_CREATED_BY) final String createdBy,
@@ -142,7 +143,7 @@ public class SecurityResource extends JaxRsResourceBase {
                                        @javax.ws.rs.core.Context final HttpServletRequest request,
                                        @javax.ws.rs.core.Context final UriInfo uriInfo) throws SecurityApiException {
         securityApi.updateUserPassword(username, json.getPassword(), context.createCallContextNoAccountId(createdBy, reason, comment, request));
-        return Response.status(Status.OK).build();
+        return Response.status(Status.NO_CONTENT).build();
     }
 
     @TimedResource
@@ -164,7 +165,8 @@ public class SecurityResource extends JaxRsResourceBase {
     @Produces(APPLICATION_JSON)
     @Path("/users/{username:" + ANYTHING_PATTERN + "}/roles")
     @ApiOperation(value = "Update roles associated to a user")
-    public Response updateUserRoles(@PathParam("username") final String username,
+    @ApiResponses(value = {@ApiResponse(code = 204, message = "Successful operation")})
+     public Response updateUserRoles(@PathParam("username") final String username,
                                     final UserRolesJson json,
                                     @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                     @HeaderParam(HDR_REASON) final String reason,
@@ -172,7 +174,7 @@ public class SecurityResource extends JaxRsResourceBase {
                                     @javax.ws.rs.core.Context final HttpServletRequest request,
                                     @javax.ws.rs.core.Context final UriInfo uriInfo) throws SecurityApiException {
         securityApi.updateUserRoles(username, json.getRoles(), context.createCallContextNoAccountId(createdBy, reason, comment, request));
-        return Response.status(Status.OK).build();
+        return Response.status(Status.NO_CONTENT).build();
     }
 
     @TimedResource
@@ -181,6 +183,7 @@ public class SecurityResource extends JaxRsResourceBase {
     @Produces(APPLICATION_JSON)
     @Path("/users/{username:" + ANYTHING_PATTERN + "}")
     @ApiOperation(value = "Invalidate an existing user")
+    @ApiResponses(value = {@ApiResponse(code = 204, message = "Successful operation")})
     public Response invalidateUser(@PathParam("username") final String username,
                                    @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                    @HeaderParam(HDR_REASON) final String reason,
@@ -230,6 +233,7 @@ public class SecurityResource extends JaxRsResourceBase {
     @Produces(APPLICATION_JSON)
     @Path("/roles")
     @ApiOperation(value = "Update a new role definition)")
+    @ApiResponses(value = {@ApiResponse(code = 204, message = "Successful operation")})
     public Response updateRoleDefinition(final RoleDefinitionJson json,
                                     @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                     @HeaderParam(HDR_REASON) final String reason,
@@ -237,7 +241,7 @@ public class SecurityResource extends JaxRsResourceBase {
                                     @javax.ws.rs.core.Context final HttpServletRequest request,
                                     @javax.ws.rs.core.Context final UriInfo uriInfo) throws SecurityApiException {
         securityApi.updateRoleDefinition(json.getRole(), json.getPermissions(), context.createCallContextNoAccountId(createdBy, reason, comment, request));
-        return Response.status(Status.OK).build();
+        return Response.status(Status.NO_CONTENT).build();
     }
 
 }
