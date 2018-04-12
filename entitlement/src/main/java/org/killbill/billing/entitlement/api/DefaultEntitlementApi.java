@@ -38,6 +38,7 @@ import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.catalog.api.BillingActionPolicy;
 import org.killbill.billing.catalog.api.PlanPhasePriceOverride;
 import org.killbill.billing.catalog.api.PlanPhaseSpecifier;
+import org.killbill.billing.catalog.api.ProductCategory;
 import org.killbill.billing.entitlement.AccountEventsStreams;
 import org.killbill.billing.entitlement.EntitlementService;
 import org.killbill.billing.entitlement.EventsStream;
@@ -314,21 +315,11 @@ public class DefaultEntitlementApi extends DefaultEntitlementApiBase implements 
                 final InternalCallContext context = internalCallContextFactory.createInternalCallContext(bundleId, ObjectType.BUNDLE, callContext);
                 final DateTime entitlementRequestedDate = dateHelper.fromLocalDateAndReferenceTime(baseEntitlementWithAddOnsSpecifier.getEntitlementEffectiveDate(), now, context);
 
-                final EventsStream eventsStreamForBaseSubscription = eventsStreamBuilder.buildForBaseSubscription(bundleId, callContext);
-
-                if (eventsStreamForBaseSubscription.isEntitlementCancelled() ||
-                    (eventsStreamForBaseSubscription.isEntitlementPending() &&
-                     (baseEntitlementWithAddOnsSpecifier.getEntitlementEffectiveDate() == null ||
-                      baseEntitlementWithAddOnsSpecifier.getEntitlementEffectiveDate().compareTo(eventsStreamForBaseSubscription.getEntitlementEffectiveStartDate()) < 0))) {
-                    throw new EntitlementApiException(ErrorCode.SUB_GET_NO_SUCH_BASE_SUBSCRIPTION, bundleId);
-                }
-
-                // Check the base entitlement state is not blocked
-                if (eventsStreamForBaseSubscription.isBlockChange(entitlementRequestedDate)) {
-                    throw new EntitlementApiException(new BlockingApiException(ErrorCode.BLOCK_BLOCKED_ACTION, BlockingChecker.ACTION_CHANGE, BlockingChecker.TYPE_SUBSCRIPTION, eventsStreamForBaseSubscription.getEntitlementId().toString()));
-                }
-
+                preCheckAddEntitlement(bundleId, entitlementRequestedDate, baseEntitlementWithAddOnsSpecifier, callContext);
                 try {
+
+                    final SubscriptionBaseBundle baseBundle = subscriptionBaseInternalApi.getBundleFromId(bundleId, context);
+
                     final BaseEntitlementWithAddOnsSpecifier baseEntitlementWithAddOnsSpecifier = getFirstBaseEntitlementWithAddOnsSpecifier(updatedPluginContext.getBaseEntitlementWithAddOnsSpecifiers());
                     final EntitlementSpecifier specifier = getFirstEntitlementSpecifier(baseEntitlementWithAddOnsSpecifier);
 
@@ -338,8 +329,7 @@ public class DefaultEntitlementApi extends DefaultEntitlementApiBase implements 
                     final BlockingState newBlockingState = new DefaultBlockingState(subscription.getId(), BlockingStateType.SUBSCRIPTION, DefaultEntitlementApi.ENT_STATE_START, EntitlementService.ENTITLEMENT_SERVICE_NAME, false, false, false, entitlementRequestedDate);
                     entitlementUtils.setBlockingStatesAndPostBlockingTransitionEvent(ImmutableList.<BlockingState>of(newBlockingState), subscription.getBundleId(), context);
 
-
-                    return new DefaultEntitlement(eventsStreamForBaseSubscription.getAccountId(), subscription.getId(), eventsStreamBuilder, entitlementApi, pluginExecution,
+                    return new DefaultEntitlement(baseBundle.getAccountId(), subscription.getId(), eventsStreamBuilder, entitlementApi, pluginExecution,
                                                   blockingStateDao, subscriptionBaseInternalApi, checker, notificationQueueService,
                                                   entitlementUtils, dateHelper, clock, securityApi, internalCallContextFactory, callContext);
                 } catch (final SubscriptionBaseApiException e) {
@@ -348,6 +338,37 @@ public class DefaultEntitlementApi extends DefaultEntitlementApiBase implements 
             }
         };
         return pluginExecution.executeWithPlugin(addEntitlementWithPlugin, pluginContext);
+    }
+
+    private void preCheckAddEntitlement(final UUID bundleId, final DateTime entitlementRequestedDate, final BaseEntitlementWithAddOnsSpecifier baseEntitlementWithAddOnsSpecifier, final CallContext callContext) throws EntitlementApiException {
+        final InternalCallContext context = internalCallContextFactory.createInternalCallContext(bundleId, ObjectType.BUNDLE, callContext);
+        final List<SubscriptionBase> subscriptionsByBundle;
+
+        try {
+            subscriptionsByBundle = subscriptionBaseInternalApi.getSubscriptionsForBundle(bundleId, null, context);
+
+            if (subscriptionsByBundle == null || subscriptionsByBundle.size() == 0) {
+                throw new EntitlementApiException(ErrorCode.SUB_NO_ACTIVE_SUBSCRIPTIONS, bundleId);
+            }
+        } catch (SubscriptionBaseApiException e) {
+            throw new EntitlementApiException(e);
+        }
+
+        if (!ProductCategory.STANDALONE.equals(subscriptionsByBundle.get(0).getCategory())) {
+            final EventsStream eventsStreamForBaseSubscription = eventsStreamBuilder.buildForBaseSubscription(bundleId, callContext);
+
+            if (eventsStreamForBaseSubscription.isEntitlementCancelled() ||
+                (eventsStreamForBaseSubscription.isEntitlementPending() &&
+                 (baseEntitlementWithAddOnsSpecifier.getEntitlementEffectiveDate() == null ||
+                  baseEntitlementWithAddOnsSpecifier.getEntitlementEffectiveDate().compareTo(eventsStreamForBaseSubscription.getEntitlementEffectiveStartDate()) < 0))) {
+                throw new EntitlementApiException(ErrorCode.SUB_GET_NO_SUCH_BASE_SUBSCRIPTION, bundleId);
+            }
+
+            // Check the base entitlement state is not blocked
+            if (eventsStreamForBaseSubscription.isBlockChange(entitlementRequestedDate)) {
+                throw new EntitlementApiException(new BlockingApiException(ErrorCode.BLOCK_BLOCKED_ACTION, BlockingChecker.ACTION_CHANGE, BlockingChecker.TYPE_SUBSCRIPTION, eventsStreamForBaseSubscription.getEntitlementId().toString()));
+            }
+        }
     }
 
     @Override

@@ -75,12 +75,9 @@ import org.killbill.billing.invoice.generator.InvoiceWithMetadata;
 import org.killbill.billing.invoice.generator.InvoiceWithMetadata.SubscriptionFutureNotificationDates;
 import org.killbill.billing.invoice.generator.InvoiceWithMetadata.SubscriptionFutureNotificationDates.UsageDef;
 import org.killbill.billing.invoice.model.DefaultInvoice;
-import org.killbill.billing.invoice.model.FixedPriceInvoiceItem;
-import org.killbill.billing.invoice.model.InvoiceItemCatalogBase;
 import org.killbill.billing.invoice.model.InvoiceItemFactory;
 import org.killbill.billing.invoice.model.ItemAdjInvoiceItem;
 import org.killbill.billing.invoice.model.ParentInvoiceItem;
-import org.killbill.billing.invoice.model.RecurringInvoiceItem;
 import org.killbill.billing.invoice.notification.DefaultNextBillingDateNotifier;
 import org.killbill.billing.invoice.notification.NextBillingDateNotificationKey;
 import org.killbill.billing.junction.BillingEvent;
@@ -560,58 +557,20 @@ public class InvoiceDispatcher {
 
         boolean success = false;
         try {
-            // Generate missing credit (> 0 for generation and < 0 for use) prior we call the plugin
+            // Generate missing credit (> 0 for generation and < 0 for use) prior we call the plugin(s)
             final InvoiceItem cbaItemPreInvoicePlugins = computeCBAOnExistingInvoice(invoice, internalCallContext);
-            DefaultInvoice tmpInvoiceForInvoicePlugins = invoice;
             if (cbaItemPreInvoicePlugins != null) {
-                tmpInvoiceForInvoicePlugins = (DefaultInvoice) tmpInvoiceForInvoicePlugins.clone();
-                tmpInvoiceForInvoicePlugins.addInvoiceItem(cbaItemPreInvoicePlugins);
+                invoice.addInvoiceItem(cbaItemPreInvoicePlugins);
             }
+
             //
             // Ask external invoice plugins if additional items (tax, etc) shall be added to the invoice
             //
-            final List<InvoiceItem> additionalInvoiceItemsFromPlugins = invoicePluginDispatcher.getAdditionalInvoiceItems(tmpInvoiceForInvoicePlugins, isDryRun, callContext, internalCallContext);
-            if (additionalInvoiceItemsFromPlugins.isEmpty()) {
-                // PERF: avoid re-computing the CBA if no change was made
+            final boolean invoiceUpdated = invoicePluginDispatcher.updateOriginalInvoiceWithPluginInvoiceItems(invoice, isDryRun, callContext, internalCallContext);
+            if (invoiceUpdated) {
+                // Remove the temporary CBA item as we need to re-compute CBA
                 if (cbaItemPreInvoicePlugins != null) {
-                    invoice.addInvoiceItem(cbaItemPreInvoicePlugins);
-                }
-            } else {
-                // Add or update items from generated invoice
-                for (final InvoiceItem cur : additionalInvoiceItemsFromPlugins) {
-                    final InvoiceItem exitingItem = Iterables.tryFind(tmpInvoiceForInvoicePlugins.getInvoiceItems(), new Predicate<InvoiceItem>() {
-                        @Override
-                        public boolean apply(final InvoiceItem input) {
-                            return input.getId().equals(cur.getId());
-                        }
-                    }).orNull();
-                    if (exitingItem != null) {
-                        invoice.removeInvoiceItem(exitingItem);
-                    }
-
-                    final InvoiceItem sanitizedInvoiceItemFromPlugin = new InvoiceItemCatalogBase(cur.getId(),
-                                                                                                  cur.getCreatedDate(),
-                                                                                                  MoreObjects.firstNonNull(cur.getInvoiceId(), invoice.getId()),
-                                                                                                  cur.getAccountId(),
-                                                                                                  cur.getBundleId(),
-                                                                                                  cur.getSubscriptionId(),
-                                                                                                  cur.getDescription(),
-                                                                                                  cur.getPlanName(),
-                                                                                                  cur.getPhaseName(),
-                                                                                                  cur.getUsageName(),
-                                                                                                  cur.getPrettyPlanName(),
-                                                                                                  cur.getPrettyPhaseName(),
-                                                                                                  cur.getPrettyUsageName(),
-                                                                                                  cur.getStartDate(),
-                                                                                                  cur.getEndDate(),
-                                                                                                  cur.getAmount(),
-                                                                                                  cur.getRate(),
-                                                                                                  cur.getCurrency(),
-                                                                                                  cur.getLinkedItemId(),
-                                                                                                  cur.getQuantity(),
-                                                                                                  cur.getItemDetails(),
-                                                                                                  cur.getInvoiceItemType());
-                    invoice.addInvoiceItem(sanitizedInvoiceItemFromPlugin);
+                    invoice.removeInvoiceItem(cbaItemPreInvoicePlugins);
                 }
 
                 // Use credit after we call the plugin (https://github.com/killbill/killbill/issues/637)
@@ -639,7 +598,7 @@ public class InvoiceDispatcher {
                 success = true;
 
                 try {
-                    setChargedThroughDates(invoice.getInvoiceItems(FixedPriceInvoiceItem.class), invoice.getInvoiceItems(RecurringInvoiceItem.class), internalCallContext);
+                    setChargedThroughDates(invoice, internalCallContext);
                 } catch (final SubscriptionBaseApiException e) {
                     log.error("Failed handling SubscriptionBase change.", e);
                     return null;
@@ -651,8 +610,8 @@ public class InvoiceDispatcher {
                 commitInvoiceAndSetFutureNotifications(account, null, futureAccountNotifications, internalCallContext);
             }
 
-            if (success) {
-                final DefaultInvoice refreshedInvoice = new DefaultInvoice(invoiceDao.getById(invoice.getId(), internalCallContext));
+            if (isDryRun || success) {
+                final DefaultInvoice refreshedInvoice = isDryRun ? invoice : new DefaultInvoice(invoiceDao.getById(invoice.getId(), internalCallContext));
                 invoicePluginDispatcher.onSuccessCall(targetDate, refreshedInvoice, existingInvoices, isDryRun, isRescheduled, callContext, internalCallContext);
             } else {
                 invoicePluginDispatcher.onFailureCall(targetDate, invoice, existingInvoices, isDryRun, isRescheduled, callContext, internalCallContext);
@@ -854,12 +813,23 @@ public class InvoiceDispatcher {
         return internalCallContextFactory.createCallContext(context);
     }
 
-    private void setChargedThroughDates(final Collection<InvoiceItem> fixedPriceItems,
-                                        final Collection<InvoiceItem> recurringItems,
-                                        final InternalCallContext context) throws SubscriptionBaseApiException {
+    private void setChargedThroughDates(final Invoice invoice, final InternalCallContext context) throws SubscriptionBaseApiException {
+        // Don't use invoice.getInvoiceItems(final Class<T> clazz) as some items can come from plugins
+        final Collection<InvoiceItem> invoiceItemsToConsider = new LinkedList<InvoiceItem>();
+        for (final InvoiceItem invoiceItem : invoice.getInvoiceItems()) {
+            switch (invoiceItem.getInvoiceItemType()) {
+                case FIXED:
+                case RECURRING:
+                case USAGE:
+                    invoiceItemsToConsider.add(invoiceItem);
+                    break;
+                default:
+                    break;
+            }
+        }
+
         final Map<UUID, DateTime> chargeThroughDates = new HashMap<UUID, DateTime>();
-        addInvoiceItemsToChargeThroughDates(chargeThroughDates, fixedPriceItems, context);
-        addInvoiceItemsToChargeThroughDates(chargeThroughDates, recurringItems, context);
+        addInvoiceItemsToChargeThroughDates(chargeThroughDates, invoiceItemsToConsider, context);
 
         for (final UUID subscriptionId : chargeThroughDates.keySet()) {
             if (subscriptionId != null) {

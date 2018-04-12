@@ -124,7 +124,7 @@ public class TenantResource extends JaxRsResourceBase {
     @Produces(APPLICATION_JSON)
     @ApiOperation(value = "Create a tenant", response = TenantJson.class)
     @ApiResponses(value = {@ApiResponse(code = 201, message = "Tenant created successfully"),
-                           @ApiResponse(code = 500, message = "Tenant already exists")})
+                           @ApiResponse(code = 409, message = "Tenant already exists")})
     public Response createTenant(final TenantJson json,
                                  @QueryParam(QUERY_TENANT_USE_GLOBAL_DEFAULT) @DefaultValue("false") final Boolean useGlobalDefault,
                                  @HeaderParam(HDR_CREATED_BY) final String createdBy,

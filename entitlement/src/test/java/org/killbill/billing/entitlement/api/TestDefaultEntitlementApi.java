@@ -18,7 +18,6 @@
 
 package org.killbill.billing.entitlement.api;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -45,9 +44,7 @@ import org.testng.annotations.Test;
 import com.google.common.collect.ImmutableList;
 
 import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.assertNull;
-import static org.testng.Assert.assertTrue;
 import static org.testng.Assert.fail;
 
 public class TestDefaultEntitlementApi extends EntitlementTestSuiteWithEmbeddedDB {
@@ -542,7 +539,6 @@ public class TestDefaultEntitlementApi extends EntitlementTestSuiteWithEmbeddedD
 
     }
 
-
     @Test(groups = "slow")
     public void testCreateEntitlementInThePast() throws AccountApiException, EntitlementApiException, SubscriptionBaseApiException {
         final LocalDate initialDate = new LocalDate(2013, 8, 7);
@@ -644,7 +640,6 @@ public class TestDefaultEntitlementApi extends EntitlementTestSuiteWithEmbeddedD
         assertEquals(result.getLastActiveProduct().getName(), "Pistol");
 
     }
-
 
     @Test(groups = "slow")
     public void testCreateBaseWithEntitlementInTheFuture() throws AccountApiException, EntitlementApiException, SubscriptionApiException {
@@ -757,7 +752,6 @@ public class TestDefaultEntitlementApi extends EntitlementTestSuiteWithEmbeddedD
         assertEquals(entitlement.getEffectiveStartDate(), initialDate);
     }
 
-
     @Test(groups = "slow")
     public void testCreateBaseSubscriptionsWithAddOns() throws AccountApiException, EntitlementApiException, SubscriptionApiException {
         final LocalDate initialDate = new LocalDate(2013, 8, 7);
@@ -805,7 +799,6 @@ public class TestDefaultEntitlementApi extends EntitlementTestSuiteWithEmbeddedD
 
     }
 
-
     @Test(groups = "slow", expectedExceptions = EntitlementApiException.class)
     public void testCreateBaseSubscriptionsWithAddOnsMissingBase() throws AccountApiException, EntitlementApiException, SubscriptionApiException {
         final LocalDate initialDate = new LocalDate(2013, 8, 7);
@@ -844,5 +837,47 @@ public class TestDefaultEntitlementApi extends EntitlementTestSuiteWithEmbeddedD
         entitlementApi.createBaseEntitlementsWithAddOns(account.getId(), baseEntitlementWithAddOnsSpecifiers, true, ImmutableList.<PluginProperty>of(), callContext);
         assertListenerStatus();
 
+    }
+
+    @Test(groups = "slow")
+    public void testCreatedBundledStandaloneEntitlements() throws AccountApiException, EntitlementApiException {
+        final LocalDate initialDate = new LocalDate(2013, 8, 7);
+        clock.setDay(initialDate);
+
+        final Account account = createAccount(getAccountData(7));
+
+        final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("Knife", BillingPeriod.MONTHLY, "notrial", null);
+
+        // Create STANDALONE entitlement
+        testListener.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK);
+        final Entitlement baseEntitlement = entitlementApi.createBaseEntitlement(account.getId(), spec, account.getExternalKey(), null, null, null, false, false, ImmutableList.<PluginProperty>of(), callContext);
+        assertListenerStatus();
+
+        assertEquals(baseEntitlement.getAccountId(), account.getId());
+        assertEquals(baseEntitlement.getExternalKey(), account.getExternalKey());
+        assertEquals(baseEntitlement.getLastActiveProduct().getName(), "Knife");
+        assertEquals(baseEntitlement.getLastActivePlan().getName(), "knife-monthly-notrial");
+        assertEquals(baseEntitlement.getLastActiveProductCategory(), ProductCategory.STANDALONE);
+
+        // Add another STANDALONE entitlement
+        final PlanPhaseSpecifier spec1 = new PlanPhaseSpecifier("Knife", BillingPeriod.MONTHLY, "notrial", null);
+        testListener.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK);
+        final Entitlement anotherStandaloneEntitlement = entitlementApi.addEntitlement(baseEntitlement.getBundleId(), spec1, null, initialDate, initialDate, false, ImmutableList.<PluginProperty>of(), callContext);
+        assertListenerStatus();
+
+        assertEquals(anotherStandaloneEntitlement.getAccountId(), account.getId());
+        assertEquals(anotherStandaloneEntitlement.getExternalKey(), account.getExternalKey());
+        assertEquals(anotherStandaloneEntitlement.getBundleId(), baseEntitlement.getBundleId());
+
+        assertEquals(anotherStandaloneEntitlement.getLastActivePriceList().getName(), "notrial");
+        assertEquals(anotherStandaloneEntitlement.getLastActiveProduct().getName(), "Knife");
+        assertEquals(anotherStandaloneEntitlement.getLastActivePlan().getName(), "knife-monthly-notrial");
+        assertEquals(anotherStandaloneEntitlement.getLastActiveProductCategory(), ProductCategory.STANDALONE);
+
+        List<Entitlement> bundleEntitlements = entitlementApi.getAllEntitlementsForBundle(anotherStandaloneEntitlement.getBundleId(), callContext);
+        assertEquals(bundleEntitlements.size(), 2);
+
+        bundleEntitlements = entitlementApi.getAllEntitlementsForAccountIdAndExternalKey(account.getId(), account.getExternalKey(), callContext);
+        assertEquals(bundleEntitlements.size(), 2);
     }
 }

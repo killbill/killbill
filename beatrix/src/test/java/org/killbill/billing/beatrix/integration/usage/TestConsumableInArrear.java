@@ -194,6 +194,59 @@ public class TestConsumableInArrear extends TestIntegrationBase {
         assertListenerStatus();
     }
 
+    @Test(groups = "slow")
+    public void testWithNoRecurringPlan() throws Exception {
+        // We take april as it has 30 days (easier to play with BCD)
+        // Set clock to the initial start date - we implicitly assume here that the account timezone is UTC
+        clock.setDay(new LocalDate(2012, 4, 1));
+
+        final AccountData accountData = getAccountData(1);
+        final Account account = createAccountWithNonOsgiPaymentMethod(accountData);
+        accountChecker.checkAccount(account.getId(), accountData, callContext);
+
+        // Create subscription
+        final DefaultEntitlement bpSubscription = createBaseEntitlementAndCheckForCompletion(account.getId(), "bundleKey", "Trebuchet", ProductCategory.BASE, BillingPeriod.NO_BILLING_PERIOD, NextEvent.CREATE, NextEvent.BLOCK, NextEvent.NULL_INVOICE);
+        // Check bundle after BP got created otherwise we get an error from auditApi.
+        subscriptionChecker.checkSubscriptionCreated(bpSubscription.getId(), internalCallContext);
+
+        Assert.assertNull(bpSubscription.getSubscriptionBase().getChargedThroughDate());
+
+        // Record usage for first month
+        setUsage(bpSubscription.getId(), "stones", new LocalDate(2012, 4, 5), 85L, callContext);
+        setUsage(bpSubscription.getId(), "stones", new LocalDate(2012, 4, 15), 150L, callContext);
+
+        busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
+        clock.addMonths(1);
+        assertListenerStatus();
+
+        invoiceChecker.checkInvoice(account.getId(), 1, callContext,
+                                    new ExpectedInvoiceItemCheck(new LocalDate(2012, 4, 1), new LocalDate(2012, 5, 1), InvoiceItemType.USAGE, new BigDecimal("1000")));
+
+        final DateTime firstExpectedCTD = account.getReferenceTime().withMonthOfYear(5).withDayOfMonth(1);
+        Assert.assertEquals(subscriptionBaseInternalApiApi.getSubscriptionFromId(bpSubscription.getId(), internalCallContext).getChargedThroughDate().compareTo(firstExpectedCTD), 0);
+
+        // No usage in second month
+        busHandler.pushExpectedEvents(NextEvent.NULL_INVOICE);
+        clock.addMonths(1);
+        assertListenerStatus();
+
+        Assert.assertEquals(subscriptionBaseInternalApiApi.getSubscriptionFromId(bpSubscription.getId(), internalCallContext).getChargedThroughDate().compareTo(firstExpectedCTD), 0);
+
+        // Record usage for third month (verify invoicing resumes)
+        setUsage(bpSubscription.getId(), "stones", new LocalDate(2012, 6, 5), 25L, callContext);
+        setUsage(bpSubscription.getId(), "stones", new LocalDate(2012, 6, 15), 50L, callContext);
+
+        busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
+        clock.addMonths(1);
+        assertListenerStatus();
+
+        invoiceChecker.checkInvoice(account.getId(), 2, callContext,
+                                    new ExpectedInvoiceItemCheck(new LocalDate(2012, 6, 1), new LocalDate(2012, 7, 1), InvoiceItemType.USAGE, new BigDecimal("100")));
+
+        final DateTime secondExpectedCTD = account.getReferenceTime().withMonthOfYear(7).withDayOfMonth(1);
+        Assert.assertEquals(subscriptionBaseInternalApiApi.getSubscriptionFromId(bpSubscription.getId(), internalCallContext).getChargedThroughDate().compareTo(secondExpectedCTD), 0);
+    }
+
     private void setUsage(final UUID subscriptionId, final String unitType, final LocalDate startDate, final Long amount, final CallContext context) throws UsageApiException {
         final List<UsageRecord> usageRecords = new ArrayList<UsageRecord>();
         usageRecords.add(new UsageRecord(startDate, amount));

@@ -37,6 +37,9 @@ import org.killbill.billing.subscription.events.SubscriptionBaseEvent;
 import org.killbill.billing.subscription.events.user.ApiEventBuilder;
 import org.killbill.billing.subscription.events.user.ApiEventCreate;
 import org.killbill.billing.util.UUIDs;
+import org.killbill.billing.util.glue.KillbillApiAopModule;
+import org.mockito.Mockito;
+import org.skife.jdbi.v2.IDBI;
 import org.testng.Assert;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
@@ -165,5 +168,55 @@ public class TestSubscriptionDao extends SubscriptionTestSuiteWithEmbeddedDB {
         assertEquals(result5.get(2).getExternalKey(), bundle2.getExternalKey());
 
 
+    }
+
+    @Test(groups = "slow")
+    public void testDirtyFlag() throws SubscriptionBaseApiException {
+        // @BeforeMethod created the account
+        KillbillApiAopModule.resetDirtyDBFlag();
+
+        final IDBI dbiSpy = Mockito.spy(dbi);
+        final IDBI roDbiSpy = Mockito.spy(roDbi);
+        final SubscriptionDao subscriptionDao = new DefaultSubscriptionDao(dbiSpy,
+                                                                           roDbiSpy,
+                                                                           clock,
+                                                                           addonUtils,
+                                                                           notificationQueueService,
+                                                                           bus,
+                                                                           controlCacheDispatcher,
+                                                                           nonEntityDao,
+                                                                           internalCallContextFactory);
+        Mockito.verify(dbiSpy, Mockito.times(0)).open();
+        Mockito.verify(roDbiSpy, Mockito.times(0)).open();
+
+        Assert.assertEquals(subscriptionDao.getSubscriptionBundleForAccount(accountId, internalCallContext).size(), 0);
+        Mockito.verify(dbiSpy, Mockito.times(0)).open();
+        Mockito.verify(roDbiSpy, Mockito.times(1)).open();
+
+        Assert.assertEquals(subscriptionDao.getSubscriptionBundleForAccount(accountId, internalCallContext).size(), 0);
+        Mockito.verify(dbiSpy, Mockito.times(0)).open();
+        Mockito.verify(roDbiSpy, Mockito.times(2)).open();
+
+        final String externalKey = UUID.randomUUID().toString();
+        final DateTime startDate = clock.getUTCNow();
+        final DateTime createdDate = startDate.plusSeconds(10);
+        final DefaultSubscriptionBaseBundle bundleDef = new DefaultSubscriptionBaseBundle(externalKey, accountId, startDate, startDate, createdDate, createdDate);
+        final SubscriptionBaseBundle bundle = subscriptionDao.createSubscriptionBundle(bundleDef, catalog, false, internalCallContext);
+        Mockito.verify(dbiSpy, Mockito.times(1)).open();
+        Mockito.verify(roDbiSpy, Mockito.times(2)).open();
+
+        Assert.assertEquals(subscriptionDao.getSubscriptionBundleForAccount(accountId, internalCallContext).size(), 1);
+        Mockito.verify(dbiSpy, Mockito.times(2)).open();
+        Mockito.verify(roDbiSpy, Mockito.times(2)).open();
+
+        Assert.assertEquals(subscriptionDao.getSubscriptionBundleForAccount(accountId, internalCallContext).size(), 1);
+        Mockito.verify(dbiSpy, Mockito.times(3)).open();
+        Mockito.verify(roDbiSpy, Mockito.times(2)).open();
+
+        KillbillApiAopModule.resetDirtyDBFlag();
+
+        Assert.assertEquals(subscriptionDao.getSubscriptionBundleForAccount(accountId, internalCallContext).size(), 1);
+        Mockito.verify(dbiSpy, Mockito.times(3)).open();
+        Mockito.verify(roDbiSpy, Mockito.times(3)).open();
     }
 }

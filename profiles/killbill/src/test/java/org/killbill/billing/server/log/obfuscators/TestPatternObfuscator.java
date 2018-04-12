@@ -59,6 +59,29 @@ public class TestPatternObfuscator extends ServerTestSuiteNoDB {
     }
 
     @Test(groups = "fast")
+    public void testXmlWithAttributesOnTheKey() throws Exception {
+        verify("<PayerInfo xsi:type=\"ebl:PayerInfoType\">\n" +
+               "<accountnumber xsi:type=\"ebl:EmailAddressType\">michaelhk@gmail.com</accountnumber>\n" +
+               "<PayerID xsi:type=\"ebl:UserIDType\">ZZS5TS7FD7MRA</PayerID>\n" +
+               "<PayerStatus xsi:type=\"ebl:PayPalUserStatusCodeType\">verified</PayerStatus>\n" +
+               "<PayerName xsi:type=\"ebl:PersonNameType\">\n" +
+               "<Salutation xmlns=\"urn:ebay:apis:eBLBaseComponents\"></Salutation>\n" +
+               "<ccFirstName xmlns=\"urn:ebay:apis:eBLBaseComponents\">Michael</ccFirstName>\n" +
+               "<MiddleName xmlns=\"urn:ebay:apis:eBLBaseComponents\"></MiddleName>\n" +
+               "<ccLastName xmlns=\"urn:ebay:apis:eBLBaseComponents\">Henrick</ccLastName>",
+
+               "<PayerInfo xsi:type=\"ebl:PayerInfoType\">\n" +
+               "<accountnumber xsi:type=\"ebl:EmailAddressType\">*******************</accountnumber>\n" +
+               "<PayerID xsi:type=\"ebl:UserIDType\">ZZS5TS7FD7MRA</PayerID>\n" +
+               "<PayerStatus xsi:type=\"ebl:PayPalUserStatusCodeType\">verified</PayerStatus>\n" +
+               "<PayerName xsi:type=\"ebl:PersonNameType\">\n" +
+               "<Salutation xmlns=\"urn:ebay:apis:eBLBaseComponents\"></Salutation>\n" +
+               "<ccFirstName xmlns=\"urn:ebay:apis:eBLBaseComponents\">*******</ccFirstName>\n" +
+               "<MiddleName xmlns=\"urn:ebay:apis:eBLBaseComponents\"></MiddleName>\n" +
+               "<ccLastName xmlns=\"urn:ebay:apis:eBLBaseComponents\">*******</ccLastName>");
+    }
+
+    @Test(groups = "fast")
     public void testCyberSource() throws Exception {
         verify("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +
                "<s:Envelope xmlns:s=\"http://schemas.xmlsoap.org/soap/envelope/\">\n" +
