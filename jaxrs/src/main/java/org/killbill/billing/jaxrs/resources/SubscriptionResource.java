@@ -193,12 +193,14 @@ public class SubscriptionResource extends JaxRsResourceBase {
 
         logDeprecationParameterWarningIfNeeded(QUERY_REQUESTED_DT, QUERY_ENTITLEMENT_REQUESTED_DT, QUERY_BILLING_REQUESTED_DT);
 
-        // For ADD_ON we can provide externalKey or the bundleId
-        final boolean createAddOnEntitlement = ProductCategory.ADD_ON.toString().equals(entitlement.getProductCategory());
-        if (createAddOnEntitlement) {
+        // For ADD_ON we need to provide externalKey or the bundleId
+        if (ProductCategory.ADD_ON.toString().equals(entitlement.getProductCategory())) {
             Preconditions.checkArgument(entitlement.getExternalKey() != null || entitlement.getBundleId() != null, "SubscriptionJson bundleId or externalKey should be specified for ADD_ON");
         }
-        final boolean createStandaloneEntitlement = ProductCategory.STANDALONE.toString().equals(entitlement.getProductCategory()) && entitlement.getBundleId() != null;
+
+        final boolean isInitialBundle = ProductCategory.BASE.name() == entitlement.getProductCategory() ||
+                                        (ProductCategory.STANDALONE.name() == entitlement.getProductCategory() && entitlement.getBundleId() == null);
+
 
         final Iterable<PluginProperty> pluginProperties = extractPluginProperties(pluginPropertiesString);
         final CallContext callContext = context.createCallContextNoAccountId(createdBy, reason, comment, request);
@@ -217,9 +219,9 @@ public class SubscriptionResource extends JaxRsResourceBase {
                 final LocalDate resolvedEntitlementDate = requestedDate != null ? toLocalDate(requestedDate) : toLocalDate(entitlementDate);
                 final LocalDate resolvedBillingDate = requestedDate != null ? toLocalDate(requestedDate) : toLocalDate(billingDate);
                 final List<PlanPhasePriceOverride> overrides = PhasePriceOverrideJson.toPlanPhasePriceOverrides(entitlement.getPriceOverrides(), spec, account.getCurrency());
-                final Entitlement result = createAddOnEntitlement || createStandaloneEntitlement
-                                           ? entitlementApi.addEntitlement(getBundleIdForAddOnCreation(entitlement), spec, overrides, resolvedEntitlementDate, resolvedBillingDate, isMigrated, pluginProperties, callContext)
-                                           : entitlementApi.createBaseEntitlement(account.getId(), spec, entitlement.getExternalKey(), overrides, resolvedEntitlementDate, resolvedBillingDate, isMigrated, renameKeyIfExistsAndUnused, pluginProperties, callContext);
+                final Entitlement result = isInitialBundle
+                                           ? entitlementApi.createBaseEntitlement(account.getId(), spec, entitlement.getExternalKey(), overrides, resolvedEntitlementDate, resolvedBillingDate, isMigrated, renameKeyIfExistsAndUnused, pluginProperties, callContext)
+                                           : entitlementApi.addEntitlement(getBundleIdForAddOnCreation(entitlement), spec, overrides, resolvedEntitlementDate, resolvedBillingDate, isMigrated, pluginProperties, callContext);
 
                 if (newBCD != null) {
                     result.updateBCD(newBCD, null, callContext);
