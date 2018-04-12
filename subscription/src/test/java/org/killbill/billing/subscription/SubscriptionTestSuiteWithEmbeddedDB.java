@@ -36,11 +36,14 @@ import org.killbill.billing.subscription.api.timeline.SubscriptionBaseTimelineAp
 import org.killbill.billing.subscription.api.transfer.SubscriptionBaseTransferApi;
 import org.killbill.billing.subscription.api.user.SubscriptionBaseBundle;
 import org.killbill.billing.subscription.api.user.TestSubscriptionHelper;
+import org.killbill.billing.subscription.engine.addon.AddonUtils;
 import org.killbill.billing.subscription.engine.dao.SubscriptionDao;
 import org.killbill.billing.subscription.glue.TestDefaultSubscriptionModuleWithEmbeddedDB;
 import org.killbill.billing.util.config.definition.SubscriptionConfig;
 import org.killbill.billing.util.dao.NonEntityDao;
+import org.killbill.bus.api.PersistentBus;
 import org.killbill.clock.ClockMock;
+import org.killbill.notificationq.api.NotificationQueueService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.AfterMethod;
@@ -65,10 +68,12 @@ public class SubscriptionTestSuiteWithEmbeddedDB extends GuicyKillbillTestSuiteW
     protected SubscriptionBaseInternalApi subscriptionInternalApi;
     @Inject
     protected SubscriptionBaseTransferApi transferApi;
-
+    @Inject
+    protected PersistentBus bus;
     @Inject
     protected SubscriptionBaseTimelineApi repairApi;
-
+    @Inject
+    protected NotificationQueueService notificationQueueService;
     @Inject
     protected CatalogService catalogService;
     @Inject
@@ -79,7 +84,8 @@ public class SubscriptionTestSuiteWithEmbeddedDB extends GuicyKillbillTestSuiteW
     protected ClockMock clock;
     @Inject
     protected BusService busService;
-
+    @Inject
+    protected AddonUtils addonUtils;
     @Inject
     protected TestSubscriptionHelper testUtil;
     @Inject

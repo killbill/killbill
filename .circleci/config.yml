@@ -139,6 +139,7 @@ jobs:
             set +e
 
             mvn clean install -DskipTests=true
+            mkdir -p /tmp/test-results
             nohup ./bin/start-server -s > /tmp/test-results/killbill.log 2>&1 &
 
             mkdir -p /home/killbill/killbill-integration-tests
@@ -165,7 +166,6 @@ jobs:
             done
 
             set -e
-            mkdir -p /tmp/test-results
             bundle exec rake test:core | tee /tmp/test-results/test.txt 2>&1
       - store_test_results:
           path: /tmp/test-results
