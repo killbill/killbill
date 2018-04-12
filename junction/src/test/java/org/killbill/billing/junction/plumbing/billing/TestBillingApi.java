@@ -21,7 +21,6 @@ package org.killbill.billing.junction.plumbing.billing;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 import java.util.SortedSet;
 import java.util.UUID;
 
@@ -100,7 +99,7 @@ public class TestBillingApi extends JunctionTestSuiteNoDB {
 
         Mockito.when(subscriptionInternalApi.getBundlesForAccount(Mockito.<UUID>any(), Mockito.<InternalTenantContext>any())).thenReturn(bundles);
         Mockito.when(subscriptionInternalApi.getSubscriptionsForBundle(Mockito.<UUID>any(), Mockito.<DryRunArguments>any(), Mockito.<InternalTenantContext>any())).thenReturn(subscriptions);
-        Mockito.when(subscriptionInternalApi.getSubscriptionsForAccount(Mockito.<InternalTenantContext>any())).thenReturn(ImmutableMap.<UUID, List<SubscriptionBase>>builder()
+        Mockito.when(subscriptionInternalApi.getSubscriptionsForAccount(catalog, Mockito.<InternalTenantContext>any())).thenReturn(ImmutableMap.<UUID, List<SubscriptionBase>>builder()
                                                                                                                                   .put(bunId, subscriptions)
                                                                                                                                   .build());
         Mockito.when(subscriptionInternalApi.getSubscriptionFromId(Mockito.<UUID>any(), Mockito.<InternalTenantContext>any())).thenReturn(subscription);

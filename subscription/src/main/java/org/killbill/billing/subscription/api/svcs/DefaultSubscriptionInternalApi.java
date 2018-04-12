@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014-2017 Groupon, Inc
- * Copyright 2014-2017 The Billing Project, LLC
+ * Copyright 2014-2018 Groupon, Inc
+ * Copyright 2014-2018 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -106,7 +106,6 @@ public class DefaultSubscriptionInternalApi extends SubscriptionApiBase implemen
 
     private final AddonUtils addonUtils;
     private final InternalCallContextFactory internalCallContextFactory;
-    private final NotificationQueueService notificationQueueService;
     private final CatalogInternalApi catalogInternalApi;
 
     public static final Comparator<SubscriptionBase> SUBSCRIPTIONS_COMPARATOR = new Comparator<SubscriptionBase>() {
@@ -134,7 +133,6 @@ public class DefaultSubscriptionInternalApi extends SubscriptionApiBase implemen
         super(dao, apiService, clock);
         this.addonUtils = addonUtils;
         this.internalCallContextFactory = internalCallContextFactory;
-        this.notificationQueueService = notificationQueueService;
         this.catalogInternalApi = catalogInternalApi;
     }
 
@@ -494,10 +492,8 @@ public class DefaultSubscriptionInternalApi extends SubscriptionApiBase implemen
     }
 
     @Override
-    public Map<UUID, List<SubscriptionBase>> getSubscriptionsForAccount(final InternalTenantContext context) throws SubscriptionBaseApiException {
+    public Map<UUID, List<SubscriptionBase>> getSubscriptionsForAccount(final Catalog catalog, final InternalTenantContext context) throws SubscriptionBaseApiException {
         try {
-            final Catalog catalog = catalogInternalApi.getFullCatalog(true, true, context);
-
             final Map<UUID, List<SubscriptionBase>> internalSubscriptions = dao.getSubscriptionsForAccount(catalog, context);
             final Map<UUID, List<SubscriptionBase>> result = new HashMap<UUID, List<SubscriptionBase>>();
             for (final UUID bundleId : internalSubscriptions.keySet()) {
@@ -787,10 +783,8 @@ public class DefaultSubscriptionInternalApi extends SubscriptionApiBase implemen
     }
 
     @Override
-    public int getDefaultBillCycleDayLocal(final Map<UUID, Integer> bcdCache, final SubscriptionBase subscription, final SubscriptionBase baseSubscription, final PlanPhaseSpecifier planPhaseSpecifier, final int accountBillCycleDayLocal, final DateTime effectiveDate, final InternalTenantContext context) throws SubscriptionBaseApiException {
-
+    public int getDefaultBillCycleDayLocal(final Map<UUID, Integer> bcdCache, final SubscriptionBase subscription, final SubscriptionBase baseSubscription, final PlanPhaseSpecifier planPhaseSpecifier, final int accountBillCycleDayLocal, final Catalog catalog, final InternalTenantContext context) throws SubscriptionBaseApiException {
         try {
-            final Catalog catalog = catalogInternalApi.getFullCatalog(true, true, context);
             final BillingAlignment alignment = catalog.billingAlignment(planPhaseSpecifier, subscription.getStartDate());
             return BillCycleDayCalculator.calculateBcdForAlignment(bcdCache, subscription, baseSubscription, alignment, context, accountBillCycleDayLocal);
         } catch (final CatalogApiException e) {
