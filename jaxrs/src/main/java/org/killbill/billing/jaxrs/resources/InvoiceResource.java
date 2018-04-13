@@ -796,9 +796,10 @@ public class InvoiceResource extends JaxRsResourceBase {
                                       uriInfo);
     }
 
+
     @TimedResource
     @GET
-    @Path("/" + INVOICE_MP_TEMPLATE)
+    @Path("/" + INVOICE_MP_TEMPLATE + "/{locale:" + ANYTHING_PATTERN + "}/")
     @Produces(TEXT_HTML)
     @ApiOperation(value = "Retrieves the manualPay invoice template for the tenant", response = String.class)
     @ApiResponses(value = {@ApiResponse(code = 404, message = "Template not found")})
