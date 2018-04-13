@@ -17,6 +17,8 @@
 
 package org.killbill.billing.api;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.testng.IInvokedMethod;
 import org.testng.IInvokedMethodListener;
 import org.testng.ITestResult;
@@ -24,7 +26,9 @@ import org.testng.SkipException;
 
 public class AbortAfterFirstFailureListener implements IInvokedMethodListener {
 
-    private boolean hasFailures = false;
+    private static final Logger logger = LoggerFactory.getLogger(AbortAfterFirstFailureListener.class);
+
+    private static boolean hasFailures = false;
 
     @Override
     public void beforeInvocation(final IInvokedMethod method, final ITestResult testResult) {
@@ -45,10 +49,15 @@ public class AbortAfterFirstFailureListener implements IInvokedMethodListener {
             return;
         }
 
-        if (!testResult.isSuccess()) {
+        if (testResult.getStatus() == ITestResult.FAILURE) {
             synchronized (this) {
+                logger.warn("!!! Test failure, all other tests will be skipped: {} !!!", testResult);
                 hasFailures = true;
             }
         }
+    }
+
+    public static boolean hasFailures() {
+        return hasFailures;
     }
 }

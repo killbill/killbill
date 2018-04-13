@@ -21,6 +21,7 @@ import java.util.UUID;
 
 import org.testng.Assert;
 import org.testng.annotations.BeforeClass;
+import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import org.killbill.billing.ObjectType;
@@ -37,10 +38,8 @@ public class TestDefaultAuditUserApi extends AuditLogsTestBase {
     private List<AuditLog> auditLogs;
     private List<UUID> objectIds;
 
-    @Override
-    @BeforeClass(groups = "fast")
-    public void beforeClass() throws Exception {
-        super.beforeClass();
+    @BeforeMethod(groups = "fast")
+    public void setup() throws Exception {
         auditLogs = ImmutableList.<AuditLog>of(createAuditLog(), createAuditLog(), createAuditLog(), createAuditLog());
         objectIds = ImmutableList.<UUID>of(UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID());
 

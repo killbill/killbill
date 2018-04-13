@@ -135,6 +135,10 @@ public class GuicyKillbillTestSuite implements IHookable {
 
     @BeforeMethod(alwaysRun = true)
     public void beforeMethodAlwaysRun(final Method method) throws Exception {
+        if (AbortAfterFirstFailureListener.hasFailures()) {
+            return;
+        }
+
         log.info("***************************************************************************************************");
         log.info("*** Starting test {}:{}", method.getDeclaringClass().getName(), method.getName());
         log.info("***************************************************************************************************");
@@ -146,6 +150,10 @@ public class GuicyKillbillTestSuite implements IHookable {
 
     @AfterMethod(alwaysRun = true)
     public void afterMethodAlwaysRun(final Method method, final ITestResult result) throws Exception {
+        if (AbortAfterFirstFailureListener.hasFailures()) {
+            return;
+        }
+
         final String tag;
         switch (result.getStatus()) {
             case SUCCESS:
