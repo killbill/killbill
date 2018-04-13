@@ -22,6 +22,7 @@ import java.util.List;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDate;
 import org.killbill.billing.ErrorCode;
 import org.killbill.billing.account.api.Account;
@@ -48,6 +49,32 @@ import static org.testng.Assert.assertNull;
 import static org.testng.Assert.fail;
 
 public class TestDefaultEntitlementApi extends EntitlementTestSuiteWithEmbeddedDB {
+
+    @Test(groups = "slow")
+    public void testAddOnCreationTiming() throws AccountApiException, EntitlementApiException {
+        final LocalDate initialDate = new LocalDate(2013, 8, 7);
+        clock.setDay(initialDate);
+        final Account account = createAccount(getAccountData(7));
+        // Reference time of 2013-08-07T00:00:00.000
+        Assert.assertEquals(account.getReferenceTime().compareTo(new DateTime(2013, 8, 7, 0, 0, 0, DateTimeZone.UTC)), 0);
+
+        // Add 5 seconds
+        clock.addDeltaFromReality(5000);
+
+        // Create base entitlement (null LocalDate will map to now(), i.e. 2013-08-07T00:00:05.000Z)
+        testListener.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK);
+        final PlanPhaseSpecifier baseSpec = new PlanPhaseSpecifier("Shotgun", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, null);
+        final DefaultEntitlement baseEntitlement = (DefaultEntitlement) entitlementApi.createBaseEntitlement(account.getId(), baseSpec, account.getExternalKey(), null, null, null, false, true, ImmutableList.<PluginProperty>of(), callContext);
+        assertListenerStatus();
+        Assert.assertEquals(baseEntitlement.getSubscriptionBase().getStartDate().compareTo(account.getReferenceTime().plusSeconds(5)), 0);
+
+        // Add ADD_ON (verify date passed, i.e. initialDate, won't map to 2013-08-07T00:00:00.000Z)
+        testListener.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK);
+        final PlanPhaseSpecifier addOnSpec = new PlanPhaseSpecifier("Telescopic-Scope", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, null);
+        final DefaultEntitlement addOnEntitlement = (DefaultEntitlement) entitlementApi.addEntitlement(baseEntitlement.getBundleId(), addOnSpec, null, initialDate, initialDate, false, ImmutableList.<PluginProperty>of(), callContext);
+        assertListenerStatus();
+        Assert.assertEquals(addOnEntitlement.getSubscriptionBase().getStartDate().compareTo(baseEntitlement.getSubscriptionBase().getStartDate()), 0);
+    }
 
     @Test(groups = "slow")
     public void testCheckStaleStates() throws AccountApiException, EntitlementApiException {

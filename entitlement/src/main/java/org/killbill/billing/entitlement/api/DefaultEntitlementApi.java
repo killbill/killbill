@@ -310,9 +310,7 @@ public class DefaultEntitlementApi extends DefaultEntitlementApiBase implements 
             @Override
             public Entitlement doCall(final EntitlementApi entitlementApi, final EntitlementContext updatedPluginContext) throws EntitlementApiException {
 
-                final DateTime now = clock.getUTCNow();
                 final InternalCallContext context = internalCallContextFactory.createInternalCallContext(bundleId, ObjectType.BUNDLE, callContext);
-                final DateTime entitlementRequestedDate = dateHelper.fromLocalDateAndReferenceTime(baseEntitlementWithAddOnsSpecifier.getEntitlementEffectiveDate(), now, context);
 
                 final EventsStream eventsStreamForBaseSubscription = eventsStreamBuilder.buildForBaseSubscription(bundleId, callContext);
 
@@ -323,6 +321,12 @@ public class DefaultEntitlementApi extends DefaultEntitlementApiBase implements 
                     throw new EntitlementApiException(ErrorCode.SUB_GET_NO_SUCH_BASE_SUBSCRIPTION, bundleId);
                 }
 
+                final DateTime now = clock.getUTCNow();
+
+                final DateTime entitlementRequestedDateRaw = dateHelper.fromLocalDateAndReferenceTime(baseEntitlementWithAddOnsSpecifier.getEntitlementEffectiveDate(), now, context);
+                final DateTime baseEntitlementStartDate = eventsStreamForBaseSubscription.getEntitlementEffectiveStartDateTime();
+                final DateTime entitlementRequestedDate = entitlementRequestedDateRaw.isBefore(baseEntitlementStartDate) ? baseEntitlementStartDate : entitlementRequestedDateRaw;
+
                 // Check the base entitlement state is not blocked
                 if (eventsStreamForBaseSubscription.isBlockChange(entitlementRequestedDate)) {
                     throw new EntitlementApiException(new BlockingApiException(ErrorCode.BLOCK_BLOCKED_ACTION, BlockingChecker.ACTION_CHANGE, BlockingChecker.TYPE_SUBSCRIPTION, eventsStreamForBaseSubscription.getEntitlementId().toString()));
@@ -332,7 +336,10 @@ public class DefaultEntitlementApi extends DefaultEntitlementApiBase implements 
                     final BaseEntitlementWithAddOnsSpecifier baseEntitlementWithAddOnsSpecifier = getFirstBaseEntitlementWithAddOnsSpecifier(updatedPluginContext.getBaseEntitlementWithAddOnsSpecifiers());
                     final EntitlementSpecifier specifier = getFirstEntitlementSpecifier(baseEntitlementWithAddOnsSpecifier);
 
-                    final DateTime billingRequestedDate = dateHelper.fromLocalDateAndReferenceTime(baseEntitlementWithAddOnsSpecifier.getBillingEffectiveDate(), now, context);
+                    final DateTime billingRequestedDateRaw = dateHelper.fromLocalDateAndReferenceTime(baseEntitlementWithAddOnsSpecifier.getBillingEffectiveDate(), now, context);
+                    final DateTime baseSubscriptionStartDate = eventsStreamForBaseSubscription.getSubscriptionBase().getStartDate();
+                    final DateTime billingRequestedDate = billingRequestedDateRaw.isBefore(baseSubscriptionStartDate) ? baseSubscriptionStartDate : billingRequestedDateRaw;
+
                     final SubscriptionBase subscription = subscriptionBaseInternalApi.createSubscription(bundleId, specifier.getPlanPhaseSpecifier(), specifier.getOverrides(), billingRequestedDate, isMigrated, context);
 
                     final BlockingState newBlockingState = new DefaultBlockingState(subscription.getId(), BlockingStateType.SUBSCRIPTION, DefaultEntitlementApi.ENT_STATE_START, EntitlementService.ENTITLEMENT_SERVICE_NAME, false, false, false, entitlementRequestedDate);

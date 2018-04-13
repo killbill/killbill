@@ -199,8 +199,10 @@ public class GuicyKillbillTestSuite implements IHookable {
         // Run the actual test
         callBack.runTestMethod(testResult);
 
-        // Make sure we finish in a clean state
-        assertListenerStatus();
+        if (testResult.getThrowable() == null) {
+            // Make sure we finish in a clean state (if the test didn't fail)
+            assertListenerStatus();
+        }
     }
 
     protected void assertListenerStatus() {
