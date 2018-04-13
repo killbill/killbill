@@ -348,7 +348,8 @@ public class InvoiceResource extends JaxRsResourceBase {
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
     @ApiOperation(value = "Generate a dryRun invoice", response = InvoiceJson.class)
-    @ApiResponses(value = {/* @ApiResponse(code = 200, message = "Successful"), */
+    @ApiResponses(value = {/* @ApiResponse(code = 200, message = "Successful"),  */ /* Already added by default */
+                           @ApiResponse(code = 204, message = "Nothing to generate"),
                            @ApiResponse(code = 400, message = "Invalid account id or target datetime supplied")})
     public Response generateDryRunInvoice(@Nullable final InvoiceDryRunJson dryRunSubscriptionSpec,
                                           @ApiParam(required=true) @QueryParam(QUERY_ACCOUNT_ID) final UUID accountId,
@@ -400,7 +401,7 @@ public class InvoiceResource extends JaxRsResourceBase {
             return Response.status(Status.OK).entity(new InvoiceJson(generatedInvoice, true, null, null)).build();
         } catch (InvoiceApiException e) {
             if (e.getCode() == ErrorCode.INVOICE_NOTHING_TO_DO.getCode()) {
-                return Response.status(Status.NOT_FOUND).build();
+                return Response.status(Status.NO_CONTENT).build();
             }
             throw e;
         }
