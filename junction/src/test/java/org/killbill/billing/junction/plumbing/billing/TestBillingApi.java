@@ -32,6 +32,7 @@ import org.killbill.billing.account.api.AccountApiException;
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.catalog.MockCatalog;
 import org.killbill.billing.catalog.api.BillingAlignment;
+import org.killbill.billing.catalog.api.Catalog;
 import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.catalog.api.InternationalPrice;
@@ -99,9 +100,9 @@ public class TestBillingApi extends JunctionTestSuiteNoDB {
 
         Mockito.when(subscriptionInternalApi.getBundlesForAccount(Mockito.<UUID>any(), Mockito.<InternalTenantContext>any())).thenReturn(bundles);
         Mockito.when(subscriptionInternalApi.getSubscriptionsForBundle(Mockito.<UUID>any(), Mockito.<DryRunArguments>any(), Mockito.<InternalTenantContext>any())).thenReturn(subscriptions);
-        Mockito.when(subscriptionInternalApi.getSubscriptionsForAccount(catalog, Mockito.<InternalTenantContext>any())).thenReturn(ImmutableMap.<UUID, List<SubscriptionBase>>builder()
-                                                                                                                                  .put(bunId, subscriptions)
-                                                                                                                                  .build());
+        Mockito.when(subscriptionInternalApi.getSubscriptionsForAccount(Mockito.<Catalog>any(), Mockito.<InternalTenantContext>any())).thenReturn(ImmutableMap.<UUID, List<SubscriptionBase>>builder()
+                                                                                                                                                          .put(bunId, subscriptions)
+                                                                                                                                                          .build());
         Mockito.when(subscriptionInternalApi.getSubscriptionFromId(Mockito.<UUID>any(), Mockito.<InternalTenantContext>any())).thenReturn(subscription);
         Mockito.when(subscriptionInternalApi.getBundleFromId(Mockito.<UUID>any(), Mockito.<InternalTenantContext>any())).thenReturn(bundle);
         Mockito.when(subscriptionInternalApi.getBaseSubscription(Mockito.<UUID>any(), Mockito.<InternalTenantContext>any())).thenReturn(subscription);
