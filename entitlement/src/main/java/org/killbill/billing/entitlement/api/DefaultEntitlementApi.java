@@ -38,6 +38,7 @@ import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.catalog.api.BillingActionPolicy;
 import org.killbill.billing.catalog.api.PlanPhasePriceOverride;
 import org.killbill.billing.catalog.api.PlanPhaseSpecifier;
+import org.killbill.billing.catalog.api.ProductCategory;
 import org.killbill.billing.entitlement.AccountEventsStreams;
 import org.killbill.billing.entitlement.EntitlementService;
 import org.killbill.billing.entitlement.EventsStream;
@@ -309,27 +310,29 @@ public class DefaultEntitlementApi extends DefaultEntitlementApiBase implements 
         final WithEntitlementPlugin<Entitlement> addEntitlementWithPlugin = new WithEntitlementPlugin<Entitlement>() {
             @Override
             public Entitlement doCall(final EntitlementApi entitlementApi, final EntitlementContext updatedPluginContext) throws EntitlementApiException {
-
                 final InternalCallContext context = internalCallContextFactory.createInternalCallContext(bundleId, ObjectType.BUNDLE, callContext);
-
-                final EventsStream eventsStreamForBaseSubscription = eventsStreamBuilder.buildForBaseSubscription(bundleId, callContext);
-
-                if (eventsStreamForBaseSubscription.isEntitlementCancelled() ||
-                    (eventsStreamForBaseSubscription.isEntitlementPending() &&
-                     (baseEntitlementWithAddOnsSpecifier.getEntitlementEffectiveDate() == null ||
-                      baseEntitlementWithAddOnsSpecifier.getEntitlementEffectiveDate().compareTo(eventsStreamForBaseSubscription.getEntitlementEffectiveStartDate()) < 0))) {
-                    throw new EntitlementApiException(ErrorCode.SUB_GET_NO_SUCH_BASE_SUBSCRIPTION, bundleId);
-                }
-
                 final DateTime now = clock.getUTCNow();
 
-                final DateTime entitlementRequestedDateRaw = dateHelper.fromLocalDateAndReferenceTime(baseEntitlementWithAddOnsSpecifier.getEntitlementEffectiveDate(), now, context);
-                final DateTime baseEntitlementStartDate = eventsStreamForBaseSubscription.getEntitlementEffectiveStartDateTime();
-                final DateTime entitlementRequestedDate = entitlementRequestedDateRaw.isBefore(baseEntitlementStartDate) ? baseEntitlementStartDate : entitlementRequestedDateRaw;
+                final List<SubscriptionBase> subscriptionsByBundle;
+                try {
+                    subscriptionsByBundle = subscriptionBaseInternalApi.getSubscriptionsForBundle(bundleId, null, context);
 
-                // Check the base entitlement state is not blocked
-                if (eventsStreamForBaseSubscription.isBlockChange(entitlementRequestedDate)) {
-                    throw new EntitlementApiException(new BlockingApiException(ErrorCode.BLOCK_BLOCKED_ACTION, BlockingChecker.ACTION_CHANGE, BlockingChecker.TYPE_SUBSCRIPTION, eventsStreamForBaseSubscription.getEntitlementId().toString()));
+                    if (subscriptionsByBundle == null || subscriptionsByBundle.isEmpty()) {
+                        throw new EntitlementApiException(ErrorCode.SUB_NO_ACTIVE_SUBSCRIPTIONS, bundleId);
+                    }
+                } catch (final SubscriptionBaseApiException e) {
+                    throw new EntitlementApiException(e);
+                }
+                final boolean isStandalone = ProductCategory.STANDALONE.equals(subscriptionsByBundle.get(0).getCategory());
+
+                final EventsStream eventsStreamForBaseSubscription = isStandalone ? null : eventsStreamBuilder.buildForBaseSubscription(bundleId, callContext);
+
+                final DateTime entitlementRequestedDateRaw = dateHelper.fromLocalDateAndReferenceTime(baseEntitlementWithAddOnsSpecifier.getEntitlementEffectiveDate(), now, context);
+                DateTime entitlementRequestedDate = entitlementRequestedDateRaw;
+                if (!isStandalone) {
+                    final DateTime baseEntitlementStartDate = eventsStreamForBaseSubscription.getEntitlementEffectiveStartDateTime();
+                    entitlementRequestedDate = entitlementRequestedDateRaw.isBefore(baseEntitlementStartDate) ? baseEntitlementStartDate : entitlementRequestedDateRaw;
+                    preCheckAddEntitlement(bundleId, entitlementRequestedDate, baseEntitlementWithAddOnsSpecifier, eventsStreamForBaseSubscription, callContext);
                 }
 
                 try {
@@ -337,16 +340,20 @@ public class DefaultEntitlementApi extends DefaultEntitlementApiBase implements 
                     final EntitlementSpecifier specifier = getFirstEntitlementSpecifier(baseEntitlementWithAddOnsSpecifier);
 
                     final DateTime billingRequestedDateRaw = dateHelper.fromLocalDateAndReferenceTime(baseEntitlementWithAddOnsSpecifier.getBillingEffectiveDate(), now, context);
-                    final DateTime baseSubscriptionStartDate = eventsStreamForBaseSubscription.getSubscriptionBase().getStartDate();
-                    final DateTime billingRequestedDate = billingRequestedDateRaw.isBefore(baseSubscriptionStartDate) ? baseSubscriptionStartDate : billingRequestedDateRaw;
+
+                    DateTime billingRequestedDate = billingRequestedDateRaw;
+                    if (!isStandalone) {
+                        final DateTime baseSubscriptionStartDate = eventsStreamForBaseSubscription.getSubscriptionBase().getStartDate();
+                        billingRequestedDate = billingRequestedDateRaw.isBefore(baseSubscriptionStartDate) ? baseSubscriptionStartDate : billingRequestedDateRaw;
+                    }
 
                     final SubscriptionBase subscription = subscriptionBaseInternalApi.createSubscription(bundleId, specifier.getPlanPhaseSpecifier(), specifier.getOverrides(), billingRequestedDate, isMigrated, context);
 
                     final BlockingState newBlockingState = new DefaultBlockingState(subscription.getId(), BlockingStateType.SUBSCRIPTION, DefaultEntitlementApi.ENT_STATE_START, EntitlementService.ENTITLEMENT_SERVICE_NAME, false, false, false, entitlementRequestedDate);
                     entitlementUtils.setBlockingStatesAndPostBlockingTransitionEvent(ImmutableList.<BlockingState>of(newBlockingState), subscription.getBundleId(), context);
 
-
-                    return new DefaultEntitlement(eventsStreamForBaseSubscription.getAccountId(), subscription.getId(), eventsStreamBuilder, entitlementApi, pluginExecution,
+                    final SubscriptionBaseBundle baseBundle = subscriptionBaseInternalApi.getBundleFromId(bundleId, context);
+                    return new DefaultEntitlement(baseBundle.getAccountId(), subscription.getId(), eventsStreamBuilder, entitlementApi, pluginExecution,
                                                   blockingStateDao, subscriptionBaseInternalApi, checker, notificationQueueService,
                                                   entitlementUtils, dateHelper, clock, securityApi, internalCallContextFactory, callContext);
                 } catch (final SubscriptionBaseApiException e) {
@@ -355,6 +362,20 @@ public class DefaultEntitlementApi extends DefaultEntitlementApiBase implements 
             }
         };
         return pluginExecution.executeWithPlugin(addEntitlementWithPlugin, pluginContext);
+    }
+
+    private void preCheckAddEntitlement(final UUID bundleId, final DateTime entitlementRequestedDate, final BaseEntitlementWithAddOnsSpecifier baseEntitlementWithAddOnsSpecifier, final EventsStream eventsStreamForBaseSubscription, final CallContext callContext) throws EntitlementApiException {
+        if (eventsStreamForBaseSubscription.isEntitlementCancelled() ||
+            (eventsStreamForBaseSubscription.isEntitlementPending() &&
+             (baseEntitlementWithAddOnsSpecifier.getEntitlementEffectiveDate() == null ||
+              baseEntitlementWithAddOnsSpecifier.getEntitlementEffectiveDate().compareTo(eventsStreamForBaseSubscription.getEntitlementEffectiveStartDate()) < 0))) {
+            throw new EntitlementApiException(ErrorCode.SUB_GET_NO_SUCH_BASE_SUBSCRIPTION, bundleId);
+        }
+
+        // Check the base entitlement state is not blocked
+        if (eventsStreamForBaseSubscription.isBlockChange(entitlementRequestedDate)) {
+            throw new EntitlementApiException(new BlockingApiException(ErrorCode.BLOCK_BLOCKED_ACTION, BlockingChecker.ACTION_CHANGE, BlockingChecker.TYPE_SUBSCRIPTION, eventsStreamForBaseSubscription.getEntitlementId().toString()));
+        }
     }
 
     @Override

@@ -865,4 +865,46 @@ public class TestDefaultEntitlementApi extends EntitlementTestSuiteWithEmbeddedD
         assertListenerStatus();
 
     }
+
+    @Test(groups = "slow")
+    public void testCreatedBundledStandaloneEntitlements() throws AccountApiException, EntitlementApiException {
+        final LocalDate initialDate = new LocalDate(2013, 8, 7);
+        clock.setDay(initialDate);
+
+        final Account account = createAccount(getAccountData(7));
+
+        final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("Knife", BillingPeriod.MONTHLY, "notrial", null);
+
+        // Create STANDALONE entitlement
+        testListener.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK);
+        final Entitlement baseEntitlement = entitlementApi.createBaseEntitlement(account.getId(), spec, account.getExternalKey(), null, null, null, false, false, ImmutableList.<PluginProperty>of(), callContext);
+        assertListenerStatus();
+
+        assertEquals(baseEntitlement.getAccountId(), account.getId());
+        assertEquals(baseEntitlement.getExternalKey(), account.getExternalKey());
+        assertEquals(baseEntitlement.getLastActiveProduct().getName(), "Knife");
+        assertEquals(baseEntitlement.getLastActivePlan().getName(), "knife-monthly-notrial");
+        assertEquals(baseEntitlement.getLastActiveProductCategory(), ProductCategory.STANDALONE);
+
+        // Add another STANDALONE entitlement
+        final PlanPhaseSpecifier spec1 = new PlanPhaseSpecifier("Knife", BillingPeriod.MONTHLY, "notrial", null);
+        testListener.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK);
+        final Entitlement anotherStandaloneEntitlement = entitlementApi.addEntitlement(baseEntitlement.getBundleId(), spec1, null, initialDate, initialDate, false, ImmutableList.<PluginProperty>of(), callContext);
+        assertListenerStatus();
+
+        assertEquals(anotherStandaloneEntitlement.getAccountId(), account.getId());
+        assertEquals(anotherStandaloneEntitlement.getExternalKey(), account.getExternalKey());
+        assertEquals(anotherStandaloneEntitlement.getBundleId(), baseEntitlement.getBundleId());
+
+        assertEquals(anotherStandaloneEntitlement.getLastActivePriceList().getName(), "notrial");
+        assertEquals(anotherStandaloneEntitlement.getLastActiveProduct().getName(), "Knife");
+        assertEquals(anotherStandaloneEntitlement.getLastActivePlan().getName(), "knife-monthly-notrial");
+        assertEquals(anotherStandaloneEntitlement.getLastActiveProductCategory(), ProductCategory.STANDALONE);
+
+        List<Entitlement> bundleEntitlements = entitlementApi.getAllEntitlementsForBundle(anotherStandaloneEntitlement.getBundleId(), callContext);
+        assertEquals(bundleEntitlements.size(), 2);
+
+        bundleEntitlements = entitlementApi.getAllEntitlementsForAccountIdAndExternalKey(account.getId(), account.getExternalKey(), callContext);
+        assertEquals(bundleEntitlements.size(), 2);
+    }
 }
