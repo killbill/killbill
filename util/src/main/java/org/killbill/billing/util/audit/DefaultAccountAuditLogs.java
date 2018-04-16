@@ -135,6 +135,11 @@ public class DefaultAccountAuditLogs implements AccountAuditLogs {
         return auditLogsCache.get(objectType);
     }
 
+    @Override
+    public List<AuditLog> getAuditLogs() {
+        return ImmutableList.<AuditLog>copyOf(accountAuditLogs);
+    }
+
     private final class ObjectTypeFilter extends AbstractIterator<AuditLog> {
 
         private boolean hasSeenObjectType = false;
