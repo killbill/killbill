@@ -194,6 +194,4 @@ workflows:
             - build
       - integration-tests:
           requires:
-            - test-h2
             - test-mysql
-            - test-postgresql
