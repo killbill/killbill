@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014-2016 Groupon, Inc
- * Copyright 2014-2016 The Billing Project, LLC
+ * Copyright 2014-2018 Groupon, Inc
+ * Copyright 2014-2018 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -169,7 +169,13 @@ public class DefaultEntitlementApi extends DefaultEntitlementApiBase implements 
                     final EntitlementSpecifier specifier = getFirstEntitlementSpecifier(baseEntitlementWithAddOnsSpecifier);
 
                     final DateTime billingRequestedDate = dateHelper.fromLocalDateAndReferenceTime(baseEntitlementWithAddOnsSpecifier.getBillingEffectiveDate(), now, contextWithValidAccountRecordId);
-                    final SubscriptionBase subscription = subscriptionBaseInternalApi.createSubscription(bundle, specifier.getPlanPhaseSpecifier(), specifier.getOverrides(), billingRequestedDate, isMigrated, contextWithValidAccountRecordId);
+                    final SubscriptionBase subscription = subscriptionBaseInternalApi.createSubscription(bundle,
+                                                                                                         null,
+                                                                                                         specifier.getPlanPhaseSpecifier(),
+                                                                                                         specifier.getOverrides(),
+                                                                                                         billingRequestedDate,
+                                                                                                         isMigrated,
+                                                                                                         contextWithValidAccountRecordId);
 
                     final BlockingState newBlockingState = new DefaultBlockingState(subscription.getId(), BlockingStateType.SUBSCRIPTION, DefaultEntitlementApi.ENT_STATE_START, EntitlementService.ENTITLEMENT_SERVICE_NAME, false, false, false, entitlementRequestedDate);
                     entitlementUtils.setBlockingStatesAndPostBlockingTransitionEvent(ImmutableList.<BlockingState>of(newBlockingState), subscription.getBundleId(), contextWithValidAccountRecordId);
@@ -348,7 +354,13 @@ public class DefaultEntitlementApi extends DefaultEntitlementApiBase implements 
                     }
 
                     final SubscriptionBaseBundle baseBundle = subscriptionBaseInternalApi.getBundleFromId(bundleId, context);
-                    final SubscriptionBase subscription = subscriptionBaseInternalApi.createSubscription(baseBundle, specifier.getPlanPhaseSpecifier(), specifier.getOverrides(), billingRequestedDate, isMigrated, context);
+                    final SubscriptionBase subscription = subscriptionBaseInternalApi.createSubscription(baseBundle,
+                                                                                                         eventsStreamForBaseSubscription == null ? null : eventsStreamForBaseSubscription.getSubscriptionBase(),
+                                                                                                         specifier.getPlanPhaseSpecifier(),
+                                                                                                         specifier.getOverrides(),
+                                                                                                         billingRequestedDate,
+                                                                                                         isMigrated,
+                                                                                                         context);
 
                     final BlockingState newBlockingState = new DefaultBlockingState(subscription.getId(), BlockingStateType.SUBSCRIPTION, DefaultEntitlementApi.ENT_STATE_START, EntitlementService.ENTITLEMENT_SERVICE_NAME, false, false, false, entitlementRequestedDate);
                     entitlementUtils.setBlockingStatesAndPostBlockingTransitionEvent(ImmutableList.<BlockingState>of(newBlockingState), subscription.getBundleId(), context);

@@ -406,6 +406,7 @@ public class TestUserApiCancel extends SubscriptionTestSuiteWithEmbeddedDB {
         final DateTime futureCreationDate = init.plusDays(10);
 
         DefaultSubscriptionBase subscription = (DefaultSubscriptionBase) subscriptionInternalApi.createSubscription(bundle,
+                                                                                                                    null,
                                                                                                                     testUtil.getProductSpecifier(productName, planSetName, term, null), null, futureCreationDate, false, internalCallContext);
         assertListenerStatus();
         assertNotNull(subscription);

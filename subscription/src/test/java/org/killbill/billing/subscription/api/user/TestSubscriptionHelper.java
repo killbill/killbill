@@ -43,6 +43,7 @@ import org.killbill.billing.catalog.api.TimeUnit;
 import org.killbill.billing.entitlement.api.SubscriptionEventType;
 import org.killbill.billing.invoice.api.DryRunArguments;
 import org.killbill.billing.invoice.api.DryRunType;
+import org.killbill.billing.subscription.api.SubscriptionBase;
 import org.killbill.billing.subscription.api.SubscriptionBaseInternalApi;
 import org.killbill.billing.subscription.engine.dao.SubscriptionDao;
 import org.killbill.billing.subscription.events.SubscriptionBaseEvent;
@@ -117,21 +118,26 @@ public class TestSubscriptionHelper {
 
     public DefaultSubscriptionBase createSubscription(final SubscriptionBaseBundle bundle, final String productName, final BillingPeriod term, final String planSet, final DateTime requestedDate)
             throws SubscriptionBaseApiException {
-        return createSubscriptionWithBundle(bundle, productName, term, planSet, requestedDate);
+        return createSubscriptionWithBundle(bundle, null, productName, term, planSet, requestedDate);
+    }
+
+    public DefaultSubscriptionBase createSubscription(final SubscriptionBaseBundle bundle, final SubscriptionBase baseSubscription, final String aoProduct, final BillingPeriod aoTerm, final String aoPriceList) throws SubscriptionBaseApiException {
+        return createSubscriptionWithBundle(bundle, baseSubscription, aoProduct, aoTerm, aoPriceList, null);
     }
 
     public DefaultSubscriptionBase createSubscription(final SubscriptionBaseBundle bundle, final String productName, final BillingPeriod term, final String planSet)
             throws SubscriptionBaseApiException {
-        return createSubscriptionWithBundle(bundle, productName, term, planSet, null);
+        return createSubscriptionWithBundle(bundle, null, productName, term, planSet, null);
     }
 
-    public DefaultSubscriptionBase createSubscriptionWithBundle(final SubscriptionBaseBundle bundle, final String productName, final BillingPeriod term, final String planSet, final DateTime requestedDate)
+    public DefaultSubscriptionBase createSubscriptionWithBundle(final SubscriptionBaseBundle bundle, final SubscriptionBase baseSubscription, final String productName, final BillingPeriod term, final String planSet, final DateTime requestedDate)
             throws SubscriptionBaseApiException {
 
         if (requestedDate == null || requestedDate.compareTo(clock.getUTCNow()) <= 0) {
             testListener.pushExpectedEvent(NextEvent.CREATE);
         }
         final DefaultSubscriptionBase subscription = (DefaultSubscriptionBase) subscriptionApi.createSubscription(bundle,
+                                                                                                                  baseSubscription,
                                                                                                                   new PlanPhaseSpecifier(productName, term, planSet, null), null,
                                                                                                                   requestedDate == null ? clock.getUTCNow() : requestedDate, false, internalCallContext);
         assertNotNull(subscription);
@@ -244,5 +250,4 @@ public class TestSubscriptionHelper {
         list.add(duration);
         return addOrRemoveDuration(input, list, true);
     }
-
 }

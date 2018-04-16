@@ -79,7 +79,7 @@ public class TestUserApiError extends SubscriptionTestSuiteNoDB {
         mockNonEntityDao.addTenantRecordIdMapping(aoBundle.getId(), internalCallContext);
         mockNonEntityDao.addAccountRecordIdMapping(aoBundle.getId(), internalCallContext);
 
-        testUtil.createSubscriptionWithBundle(aoBundle, "Pistol", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, null);
+        testUtil.createSubscriptionWithBundle(aoBundle, null, "Pistol", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, null);
         tCreateSubscriptionInternal(aoBundle, "Telescopic-Scope", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, ErrorCode.SUB_CREATE_AO_NOT_AVAILABLE);
     }
 
@@ -89,14 +89,23 @@ public class TestUserApiError extends SubscriptionTestSuiteNoDB {
         mockNonEntityDao.addTenantRecordIdMapping(aoBundle.getId(), internalCallContext);
         mockNonEntityDao.addAccountRecordIdMapping(aoBundle.getId(), internalCallContext);
 
-        testUtil.createSubscriptionWithBundle(aoBundle, "Assault-Rifle", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, null);
+        testUtil.createSubscriptionWithBundle(aoBundle, null, "Assault-Rifle", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, null);
         tCreateSubscriptionInternal(aoBundle, "Telescopic-Scope", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, ErrorCode.SUB_CREATE_AO_ALREADY_INCLUDED);
     }
 
     private void tCreateSubscriptionInternal(@Nullable final SubscriptionBaseBundle bundle, @Nullable final String productName,
                                              @Nullable final BillingPeriod term, final String planSet, final ErrorCode expected) {
+        SubscriptionBase baseSubscription = null;
+        if (bundle != null) {
+            try {
+                baseSubscription = subscriptionInternalApi.getBaseSubscription(bundle.getId(), internalCallContext);
+            } catch (final SubscriptionBaseApiException ignored) {
+            }
+        }
+
         try {
             subscriptionInternalApi.createSubscription(bundle,
+                                                       baseSubscription,
                                                        testUtil.getProductSpecifier(productName, planSet, term, null),
                                                        null, clock.getUTCNow(), false, internalCallContext);
             Assert.fail("Exception expected, error code: " + expected);

@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014-2017 Groupon, Inc
- * Copyright 2014-2017 The Billing Project, LLC
+ * Copyright 2014-2018 Groupon, Inc
+ * Copyright 2014-2018 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -139,7 +139,13 @@ public class DefaultSubscriptionInternalApi extends SubscriptionApiBase implemen
     }
 
     @Override
-    public SubscriptionBase createSubscription(final SubscriptionBaseBundle bundle, final PlanPhaseSpecifier spec, final List<PlanPhasePriceOverride> overrides, final DateTime requestedDateWithMs, final boolean isMigrated, final InternalCallContext context) throws SubscriptionBaseApiException {
+    public SubscriptionBase createSubscription(final SubscriptionBaseBundle bundle,
+                                               @Nullable final SubscriptionBase baseSubscription,
+                                               final PlanPhaseSpecifier spec,
+                                               final List<PlanPhasePriceOverride> overrides,
+                                               final DateTime requestedDateWithMs,
+                                               final boolean isMigrated,
+                                               final InternalCallContext context) throws SubscriptionBaseApiException {
         try {
             if (bundle == null) {
                 throw new SubscriptionBaseApiException(ErrorCode.SUB_CREATE_NO_BUNDLE, null);
@@ -163,8 +169,6 @@ public class DefaultSubscriptionInternalApi extends SubscriptionApiBase implemen
                 throw new SubscriptionBaseError(String.format("No initial PlanPhase for Product %s, term %s and set %s does not exist in the catalog",
                                                               spec.getProductName(), spec.getBillingPeriod().toString(), plan.getPriceListName()));
             }
-
-            final DefaultSubscriptionBase baseSubscription = (DefaultSubscriptionBase) dao.getBaseSubscription(bundle.getId(), catalog, context);
 
             // verify the number of subscriptions (of the same kind) allowed per bundle
             if (ProductCategory.ADD_ON.toString().equalsIgnoreCase(plan.getProduct().getCategory().toString())) {
@@ -829,7 +833,7 @@ public class DefaultSubscriptionInternalApi extends SubscriptionApiBase implemen
         return requestedDate == null ? clock.getUTCNow() : internalCallContext.toUTCDateTime(requestedDate);
     }
 
-    private DateTime getBundleStartDateWithSanity(final UUID bundleId, @Nullable final DefaultSubscriptionBase baseSubscription, final Plan plan,
+    private DateTime getBundleStartDateWithSanity(final UUID bundleId, @Nullable final SubscriptionBase baseSubscription, final Plan plan,
                                                   final DateTime effectiveDate, final Catalog catalog, final InternalTenantContext context) throws SubscriptionBaseApiException, CatalogApiException {
         switch (plan.getProduct().getCategory()) {
             case BASE:

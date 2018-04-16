@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014-2015 Groupon, Inc
- * Copyright 2014-2015 The Billing Project, LLC
+ * Copyright 2014-2018 Groupon, Inc
+ * Copyright 2014-2018 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -305,7 +305,7 @@ public class TestTransfer extends SubscriptionTestSuiteWithEmbeddedDB {
         clock.addDays(3);
         final String aoProduct1 = "Telescopic-Scope";
         final BillingPeriod aoTerm1 = BillingPeriod.MONTHLY;
-        final DefaultSubscriptionBase aoSubscription1 = testUtil.createSubscription(bundle, aoProduct1, aoTerm1, basePriceList);
+        final DefaultSubscriptionBase aoSubscription1 = testUtil.createSubscription(bundle, baseSubscription, aoProduct1, aoTerm1, basePriceList);
         assertEquals(aoSubscription1.getState(), EntitlementState.ACTIVE);
 
         // MOVE ANOTHER 25 DAYS AND CREATE AO2 [ BP STILL IN TRIAL]
@@ -313,7 +313,7 @@ public class TestTransfer extends SubscriptionTestSuiteWithEmbeddedDB {
         clock.addDays(25);
         final String aoProduct2 = "Laser-Scope";
         final BillingPeriod aoTerm2 = BillingPeriod.MONTHLY;
-        final DefaultSubscriptionBase aoSubscription2 = testUtil.createSubscription(bundle, aoProduct2, aoTerm2, basePriceList);
+        final DefaultSubscriptionBase aoSubscription2 = testUtil.createSubscription(bundle, baseSubscription, aoProduct2, aoTerm2, basePriceList);
         assertEquals(aoSubscription2.getState(), EntitlementState.ACTIVE);
 
         // MOVE AFTER TRIAL AND AO DISCOUNT PHASE [LASER SCOPE STILL IN DISCOUNT]
@@ -397,7 +397,7 @@ public class TestTransfer extends SubscriptionTestSuiteWithEmbeddedDB {
         clock.addDays(3);
         final String aoProduct1 = "Telescopic-Scope";
         final BillingPeriod aoTerm1 = BillingPeriod.MONTHLY;
-        final DefaultSubscriptionBase aoSubscription1 = testUtil.createSubscription(bundle, aoProduct1, aoTerm1, basePriceList);
+        final DefaultSubscriptionBase aoSubscription1 = testUtil.createSubscription(bundle, baseSubscription, aoProduct1, aoTerm1, basePriceList);
         assertEquals(aoSubscription1.getState(), EntitlementState.ACTIVE);
 
         testListener.pushExpectedEvent(NextEvent.PHASE);
