@@ -30,8 +30,8 @@ public abstract class JaxrsTestUtils {
     public static List<AuditLogJson> createAuditLogsJson(final DateTime changeDate) {
         final List<AuditLogJson> auditLogs = new ArrayList<AuditLogJson>();
         for (int i = 0; i < 20; i++) {
-            auditLogs.add(new AuditLogJson(UUIDs.randomUUID().toString(), changeDate, UUIDs.randomUUID().toString(),
-                                           UUIDs.randomUUID().toString(), UUIDs.randomUUID().toString(), UUIDs.randomUUID().toString(), ObjectType.BUNDLE, UUIDs.randomUUID()));
+            auditLogs.add(new AuditLogJson(UUIDs.randomUUID().toString(), changeDate, ObjectType.BUNDLE, UUIDs.randomUUID(), UUIDs.randomUUID().toString(),
+                                           UUIDs.randomUUID().toString(), UUIDs.randomUUID().toString(), UUIDs.randomUUID().toString()));
         }
 
         return auditLogs;

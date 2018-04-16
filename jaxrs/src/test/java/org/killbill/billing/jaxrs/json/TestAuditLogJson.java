@@ -44,7 +44,7 @@ public class TestAuditLogJson extends JaxrsTestSuiteNoDB {
         final UUID objectId = UUID.randomUUID();
         final ObjectType objectType = ObjectType.BUNDLE;
 
-        final AuditLogJson auditLogJson = new AuditLogJson(changeType, changeDate, changedBy, reasonCode, comments, userToken, objectType, objectId);
+        final AuditLogJson auditLogJson = new AuditLogJson(changeType, changeDate, objectType, objectId, changedBy, reasonCode, comments, userToken);
         Assert.assertEquals(auditLogJson.getChangeType(), changeType);
         Assert.assertEquals(auditLogJson.getChangeDate(), changeDate);
         Assert.assertEquals(auditLogJson.getChangedBy(), changedBy);
@@ -58,12 +58,12 @@ public class TestAuditLogJson extends JaxrsTestSuiteNoDB {
         final String asJson = mapper.writeValueAsString(auditLogJson);
         Assert.assertEquals(asJson, "{\"changeType\":\"" + auditLogJson.getChangeType() + "\"," +
                                     "\"changeDate\":\"" + auditLogJson.getChangeDate().toDateTimeISO().toString() + "\"," +
+                                    "\"objectType\":\"" + auditLogJson.getObjectType().toString() + "\"," +
+                                    "\"objectId\":\"" + auditLogJson.getObjectId().toString() + "\"," +
                                     "\"changedBy\":\"" + auditLogJson.getChangedBy() + "\"," +
                                     "\"reasonCode\":\"" + auditLogJson.getReasonCode() + "\"," +
                                     "\"comments\":\"" + auditLogJson.getComments() + "\"," +
-                                    "\"userToken\":\"" + auditLogJson.getUserToken() + "\"," +
-                                    "\"objectType\":\"" + auditLogJson.getObjectType().toString() + "\"," +
-                                    "\"objectId\":\"" + auditLogJson.getObjectId().toString() + "\"}");
+                                    "\"userToken\":\"" + auditLogJson.getUserToken() + "\"}");
 
         final AuditLogJson fromJson = mapper.readValue(asJson, AuditLogJson.class);
         Assert.assertEquals(fromJson, auditLogJson);

@@ -45,12 +45,12 @@ public class AuditLogJson {
     @JsonCreator
     public AuditLogJson(@JsonProperty("changeType") final String changeType,
                         @JsonProperty("changeDate") final DateTime changeDate,
+                        @JsonProperty("objectType") final ObjectType objectType,
+                        @JsonProperty("objectId") final UUID objectId,
                         @JsonProperty("changedBy") final String changedBy,
                         @JsonProperty("reasonCode") final String reasonCode,
                         @JsonProperty("comments") final String comments,
-                        @JsonProperty("userToken") final String userToken,
-                        @JsonProperty("objectType") final ObjectType objectType,
-                        @JsonProperty("objectId") final UUID objectId) {
+                        @JsonProperty("userToken") final String userToken) {
         this.changeType = changeType;
         this.changeDate = changeDate;
         this.changedBy = changedBy;
@@ -62,8 +62,8 @@ public class AuditLogJson {
     }
 
     public AuditLogJson(final AuditLog auditLog) {
-        this(auditLog.getChangeType().toString(), auditLog.getCreatedDate(), auditLog.getUserName(), auditLog.getReasonCode(),
-             auditLog.getComment(), auditLog.getUserToken(), auditLog.getAuditedObjectType(), auditLog.getAuditedEntityId());
+        this(auditLog.getChangeType().toString(), auditLog.getCreatedDate(), auditLog.getAuditedObjectType(), auditLog.getAuditedEntityId(), auditLog.getUserName(), auditLog.getReasonCode(),
+             auditLog.getComment(), auditLog.getUserToken());
     }
 
     public String getChangeType() {
@@ -104,12 +104,12 @@ public class AuditLogJson {
         sb.append("AuditLogJson");
         sb.append("{changeType='").append(changeType).append('\'');
         sb.append(", changeDate=").append(changeDate);
+        sb.append(", objectType='").append(objectType).append('\'');
+        sb.append(", objectId='").append(objectId).append('\'');
         sb.append(", changedBy=").append(changedBy);
         sb.append(", reasonCode='").append(reasonCode).append('\'');
         sb.append(", comments='").append(comments).append('\'');
         sb.append(", userToken='").append(userToken).append('\'');
-        sb.append(", objectType='").append(objectType).append('\'');
-        sb.append(", objectId='").append(objectId).append('\'');
         sb.append('}');
         return sb.toString();
     }

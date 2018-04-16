@@ -1496,13 +1496,11 @@ public class AccountResource extends JaxRsResourceBase {
     @Path("/{accountId:" + UUID_PATTERN + "}/" + AUDIT_LOG)
     @Produces(APPLICATION_JSON)
     @ApiOperation(value = "Retrieve audit logs by account id", response = AuditLogJson.class, responseContainer = "List")
-    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid account id supplied"),
-                           @ApiResponse(code = 404, message = "Account not found")})
+    @ApiResponses(value = {@ApiResponse(code = 404, message = "Account not found")})
     public Response getAccountAuditLogs(@PathParam("accountId") final UUID accountId,
                                @javax.ws.rs.core.Context final HttpServletRequest request) throws AccountApiException {
         final TenantContext tenantContext = context.createTenantContextWithAccountId(accountId, request);
-        final Account account = accountUserApi.getAccountById(accountId, tenantContext);
-        final AccountAuditLogs accountAuditLogs = auditUserApi.getAccountAuditLogs(account.getId(), AuditLevel.FULL, tenantContext);
+        final AccountAuditLogs accountAuditLogs = auditUserApi.getAccountAuditLogs(accountId, AuditLevel.FULL, tenantContext);
 
         return Response.status(Status.OK).entity(getAuditLogs(accountAuditLogs)).build();
     }
