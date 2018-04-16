@@ -117,21 +117,21 @@ public class TestSubscriptionHelper {
 
     public DefaultSubscriptionBase createSubscription(final SubscriptionBaseBundle bundle, final String productName, final BillingPeriod term, final String planSet, final DateTime requestedDate)
             throws SubscriptionBaseApiException {
-        return createSubscriptionWithBundle(bundle.getId(), productName, term, planSet, requestedDate);
+        return createSubscriptionWithBundle(bundle, productName, term, planSet, requestedDate);
     }
 
     public DefaultSubscriptionBase createSubscription(final SubscriptionBaseBundle bundle, final String productName, final BillingPeriod term, final String planSet)
             throws SubscriptionBaseApiException {
-        return createSubscriptionWithBundle(bundle.getId(), productName, term, planSet, null);
+        return createSubscriptionWithBundle(bundle, productName, term, planSet, null);
     }
 
-    public DefaultSubscriptionBase createSubscriptionWithBundle(final UUID bundleId, final String productName, final BillingPeriod term, final String planSet, final DateTime requestedDate)
+    public DefaultSubscriptionBase createSubscriptionWithBundle(final SubscriptionBaseBundle bundle, final String productName, final BillingPeriod term, final String planSet, final DateTime requestedDate)
             throws SubscriptionBaseApiException {
 
         if (requestedDate == null || requestedDate.compareTo(clock.getUTCNow()) <= 0) {
             testListener.pushExpectedEvent(NextEvent.CREATE);
         }
-        final DefaultSubscriptionBase subscription = (DefaultSubscriptionBase) subscriptionApi.createSubscription(bundleId,
+        final DefaultSubscriptionBase subscription = (DefaultSubscriptionBase) subscriptionApi.createSubscription(bundle,
                                                                                                                   new PlanPhaseSpecifier(productName, term, planSet, null), null,
                                                                                                                   requestedDate == null ? clock.getUTCNow() : requestedDate, false, internalCallContext);
         assertNotNull(subscription);

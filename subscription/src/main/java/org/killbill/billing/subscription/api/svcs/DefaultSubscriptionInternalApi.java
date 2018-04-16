@@ -139,8 +139,12 @@ public class DefaultSubscriptionInternalApi extends SubscriptionApiBase implemen
     }
 
     @Override
-    public SubscriptionBase createSubscription(final UUID bundleId, final PlanPhaseSpecifier spec, final List<PlanPhasePriceOverride> overrides, final DateTime requestedDateWithMs, final boolean isMigrated, final InternalCallContext context) throws SubscriptionBaseApiException {
+    public SubscriptionBase createSubscription(final SubscriptionBaseBundle bundle, final PlanPhaseSpecifier spec, final List<PlanPhasePriceOverride> overrides, final DateTime requestedDateWithMs, final boolean isMigrated, final InternalCallContext context) throws SubscriptionBaseApiException {
         try {
+            if (bundle == null) {
+                throw new SubscriptionBaseApiException(ErrorCode.SUB_CREATE_NO_BUNDLE, null);
+            }
+
             final DateTime now = clock.getUTCNow();
             final DateTime effectiveDate = (requestedDateWithMs != null) ? DefaultClock.truncateMs(requestedDateWithMs) : now;
             /*
@@ -160,28 +164,23 @@ public class DefaultSubscriptionInternalApi extends SubscriptionApiBase implemen
                                                               spec.getProductName(), spec.getBillingPeriod().toString(), plan.getPriceListName()));
             }
 
-            final SubscriptionBaseBundle bundle = dao.getSubscriptionBundleFromId(bundleId, context);
-            if (bundle == null) {
-                throw new SubscriptionBaseApiException(ErrorCode.SUB_CREATE_NO_BUNDLE, bundleId);
-            }
-
-            final DefaultSubscriptionBase baseSubscription = (DefaultSubscriptionBase) dao.getBaseSubscription(bundleId, catalog, context);
+            final DefaultSubscriptionBase baseSubscription = (DefaultSubscriptionBase) dao.getBaseSubscription(bundle.getId(), catalog, context);
 
             // verify the number of subscriptions (of the same kind) allowed per bundle
             if (ProductCategory.ADD_ON.toString().equalsIgnoreCase(plan.getProduct().getCategory().toString())) {
                 if (plan.getPlansAllowedInBundle() != -1
                     && plan.getPlansAllowedInBundle() > 0
-                    && addonUtils.countExistingAddOnsWithSamePlanName(getSubscriptionsForBundle(bundleId, null, context), plan.getName())
+                    && addonUtils.countExistingAddOnsWithSamePlanName(getSubscriptionsForBundle(bundle.getId(), null, context), plan.getName())
                        >= plan.getPlansAllowedInBundle()) {
                     // a new ADD_ON subscription of the same plan can't be added because it has reached its limit by bundle
                     throw new SubscriptionBaseApiException(ErrorCode.SUB_CREATE_AO_MAX_PLAN_ALLOWED_BY_BUNDLE, plan.getName());
                 }
             }
 
-            final DateTime bundleStartDate = getBundleStartDateWithSanity(bundleId, baseSubscription, plan, effectiveDate, catalog, context);
+            final DateTime bundleStartDate = getBundleStartDateWithSanity(bundle.getId(), baseSubscription, plan, effectiveDate, catalog, context);
             return apiService.createPlan(new SubscriptionBuilder()
                                                  .setId(UUIDs.randomUUID())
-                                                 .setBundleId(bundleId)
+                                                 .setBundleId(bundle.getId())
                                                  .setBundleExternalKey(bundle.getExternalKey())
                                                  .setCategory(plan.getProduct().getCategory())
                                                  .setBundleStartDate(bundleStartDate)
