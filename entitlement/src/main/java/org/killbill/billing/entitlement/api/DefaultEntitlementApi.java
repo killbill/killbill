@@ -36,7 +36,6 @@ import org.killbill.billing.account.api.AccountInternalApi;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.catalog.api.BillingActionPolicy;
-import org.killbill.billing.catalog.api.Catalog;
 import org.killbill.billing.catalog.api.PlanPhasePriceOverride;
 import org.killbill.billing.catalog.api.PlanPhaseSpecifier;
 import org.killbill.billing.catalog.api.ProductCategory;
@@ -71,11 +70,9 @@ import org.killbill.notificationq.api.NotificationQueueService;
 
 import com.google.common.base.Function;
 import com.google.common.base.Predicate;
-import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Multimap;
 
 import static org.killbill.billing.entitlement.logging.EntitlementLoggingHelper.logCreateEntitlement;
 import static org.killbill.billing.entitlement.logging.EntitlementLoggingHelper.logCreateEntitlementsWithAOs;
@@ -130,81 +127,19 @@ public class DefaultEntitlementApi extends DefaultEntitlementApiBase implements 
     public Entitlement createBaseEntitlement(final UUID accountId, final PlanPhaseSpecifier planPhaseSpecifier, final String externalKey, final List<PlanPhasePriceOverride> overrides,
                                              @Nullable final LocalDate entitlementEffectiveDate, @Nullable final LocalDate billingEffectiveDate, final boolean isMigrated, final boolean renameCancelledBundleIfExist,
                                              final Iterable<PluginProperty> properties, final CallContext callContext) throws EntitlementApiException {
-
-        logCreateEntitlement(log, null, planPhaseSpecifier, overrides, entitlementEffectiveDate, billingEffectiveDate);
-
         final EntitlementSpecifier entitlementSpecifier = new DefaultEntitlementSpecifier(planPhaseSpecifier, overrides);
-        final List<EntitlementSpecifier> entitlementSpecifierList = new ArrayList<EntitlementSpecifier>();
-        entitlementSpecifierList.add(entitlementSpecifier);
-        final BaseEntitlementWithAddOnsSpecifier baseEntitlementWithAddOnsSpecifier = new DefaultBaseEntitlementWithAddOnsSpecifier(
-                null,
-                externalKey,
-                entitlementSpecifierList,
-                entitlementEffectiveDate,
-                billingEffectiveDate,
-                isMigrated);
-        final List<BaseEntitlementWithAddOnsSpecifier> baseEntitlementWithAddOnsSpecifierList = new ArrayList<BaseEntitlementWithAddOnsSpecifier>();
-        baseEntitlementWithAddOnsSpecifierList.add(baseEntitlementWithAddOnsSpecifier);
-
-
-        final EntitlementContext pluginContext = new DefaultEntitlementContext(OperationType.CREATE_SUBSCRIPTION,
-                                                                               accountId,
-                                                                               null,
-                                                                               baseEntitlementWithAddOnsSpecifierList,
-                                                                               null,
-                                                                               properties,
-                                                                               callContext);
-
-        final WithEntitlementPlugin<Entitlement> createBaseEntitlementWithPlugin = new WithEntitlementPlugin<Entitlement>() {
-            @Override
-            public Entitlement doCall(final EntitlementApi entitlementApi, final EntitlementContext updatedPluginContext) throws EntitlementApiException {
-                final InternalCallContext contextWithValidAccountRecordId = internalCallContextFactory.createInternalCallContext(accountId, callContext);
-                try {
-
-                    final DateTime now = clock.getUTCNow();
-
-                    final DateTime entitlementRequestedDate = dateHelper.fromLocalDateAndReferenceTime(baseEntitlementWithAddOnsSpecifier.getEntitlementEffectiveDate(), now, contextWithValidAccountRecordId);
-                    checkForAccountBlockingChange(accountId, entitlementRequestedDate, contextWithValidAccountRecordId);
-
-                    final SubscriptionBaseBundle bundle = subscriptionBaseInternalApi.createBundleForAccount(accountId, externalKey, renameCancelledBundleIfExist, contextWithValidAccountRecordId);
-
-                    final BaseEntitlementWithAddOnsSpecifier baseEntitlementWithAddOnsSpecifier = getFirstBaseEntitlementWithAddOnsSpecifier(updatedPluginContext.getBaseEntitlementWithAddOnsSpecifiers());
-                    final EntitlementSpecifier specifier = getFirstEntitlementSpecifier(baseEntitlementWithAddOnsSpecifier);
-
-                    final DateTime billingRequestedDate = dateHelper.fromLocalDateAndReferenceTime(baseEntitlementWithAddOnsSpecifier.getBillingEffectiveDate(), now, contextWithValidAccountRecordId);
-                    final SubscriptionBase subscription = subscriptionBaseInternalApi.createSubscription(bundle,
-                                                                                                         null,
-                                                                                                         specifier.getPlanPhaseSpecifier(),
-                                                                                                         specifier.getOverrides(),
-                                                                                                         billingRequestedDate,
-                                                                                                         isMigrated,
-                                                                                                         contextWithValidAccountRecordId);
-
-                    final BlockingState newBlockingState = new DefaultBlockingState(subscription.getId(), BlockingStateType.SUBSCRIPTION, DefaultEntitlementApi.ENT_STATE_START, EntitlementService.ENTITLEMENT_SERVICE_NAME, false, false, false, entitlementRequestedDate);
-                    entitlementUtils.setBlockingStatesAndPostBlockingTransitionEvent(ImmutableList.<BlockingState>of(newBlockingState), subscription.getBundleId(), contextWithValidAccountRecordId);
-
-                    return new DefaultEntitlement(bundle,
-                                                  subscription,
-                                                  ImmutableList.<SubscriptionBase>of(subscription),
-                                                  eventsStreamBuilder,
-                                                  entitlementApi,
-                                                  pluginExecution,
-                                                  blockingStateDao,
-                                                  subscriptionBaseInternalApi,
-                                                  checker,
-                                                  notificationQueueService,
-                                                  entitlementUtils,
-                                                  dateHelper,
-                                                  clock,
-                                                  securityApi,
-                                                  internalCallContextFactory,
-                                                  contextWithValidAccountRecordId);
-                } catch (final SubscriptionBaseApiException e) {
-                    throw new EntitlementApiException(e);
-                }
-            }
-        };
-        return pluginExecution.executeWithPlugin(createBaseEntitlementWithPlugin, pluginContext);
+        final BaseEntitlementWithAddOnsSpecifier baseEntitlementWithAddOnsSpecifier = new DefaultBaseEntitlementWithAddOnsSpecifier(null,
+                                                                                                                                    externalKey,
+                                                                                                                                    ImmutableList.<EntitlementSpecifier>of(entitlementSpecifier),
+                                                                                                                                    entitlementEffectiveDate,
+                                                                                                                                    billingEffectiveDate,
+                                                                                                                                    isMigrated);
+        final List<Entitlement> baseEntitlementsWithAddOns = createBaseEntitlementsWithAddOns(accountId,
+                                                                                              ImmutableList.<BaseEntitlementWithAddOnsSpecifier>of(baseEntitlementWithAddOnsSpecifier),
+                                                                                              renameCancelledBundleIfExist,
+                                                                                              properties,
+                                                                                              callContext);
+        return baseEntitlementsWithAddOns.get(0);
     }
 
     private BaseEntitlementWithAddOnsSpecifier getFirstBaseEntitlementWithAddOnsSpecifier(final Iterable<BaseEntitlementWithAddOnsSpecifier> baseEntitlementWithAddOnsSpecifiers) throws SubscriptionBaseApiException {
