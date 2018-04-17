@@ -286,7 +286,7 @@ public class DefaultSubscriptionInternalApi extends SubscriptionApiBase implemen
             final Collection<SubscriptionAndAddOnsSpecifier> subscriptionAndAddOns = new ArrayList<SubscriptionAndAddOnsSpecifier>();
             for (final BaseEntitlementWithAddOnsSpecifier entitlementWithAddOnsSpecifier : baseEntitlementWithAddOnsSpecifier) {
                 final DateTime effectiveDate = (entitlementWithAddOnsSpecifier.getBillingEffectiveDate() != null) ?
-                                               DefaultClock.truncateMs(entitlementWithAddOnsSpecifier.getBillingEffectiveDate().toDateTimeAtStartOfDay()) : now;
+                                               context.toUTCDateTime(entitlementWithAddOnsSpecifier.getBillingEffectiveDate()) : now;
 
                 final List<EntitlementSpecifier> reorderedSpecifiers = new ArrayList<EntitlementSpecifier>();
                 final boolean isBaseOrStandaloneSpecifierExists = sanityAndReorderBPOrStandaloneSpecFirst(catalog, entitlementWithAddOnsSpecifier, effectiveDate, reorderedSpecifiers);

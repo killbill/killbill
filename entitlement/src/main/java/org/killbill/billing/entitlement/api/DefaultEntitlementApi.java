@@ -178,37 +178,40 @@ public class DefaultEntitlementApi extends DefaultEntitlementApiBase implements 
         final WithEntitlementPlugin<List<Entitlement>> createBaseEntitlementsWithAddOns = new WithEntitlementPlugin<List<Entitlement>>() {
             @Override
             public List<Entitlement> doCall(final EntitlementApi entitlementApi, final EntitlementContext updatedPluginContext) throws EntitlementApiException {
-                final Iterable<BaseEntitlementWithAddOnsSpecifier>  baseEntitlementWithAddOnsSpecifiers = updatedPluginContext.getBaseEntitlementWithAddOnsSpecifiers();
-
                 final InternalCallContext contextWithValidAccountRecordId = internalCallContextFactory.createInternalCallContext(accountId, callContext);
+                final DateTime now = clock.getUTCNow();
+
+                final Iterable<BaseEntitlementWithAddOnsSpecifier> baseEntitlementWithAddOnsSpecifiersAfterPlugins = updatedPluginContext.getBaseEntitlementWithAddOnsSpecifiers();
+                DateTime upTo = null;
+                for (final BaseEntitlementWithAddOnsSpecifier baseEntitlementWithAddOnsSpecifier : baseEntitlementWithAddOnsSpecifiersAfterPlugins) {
+                    // Entitlement
+                    final DateTime entitlementRequestedDate = dateHelper.fromLocalDateAndReferenceTime(baseEntitlementWithAddOnsSpecifier.getEntitlementEffectiveDate(),
+                                                                                                       now,
+                                                                                                       contextWithValidAccountRecordId);
+                    upTo = upTo == null || upTo.compareTo(entitlementRequestedDate) < 0 ? entitlementRequestedDate : upTo;
+                }
 
                 try {
-                    final DateTime now = clock.getUTCNow();
-
                     // Verify if operation is allowed by looking for is_block_change on Account
-                    final Iterator<BaseEntitlementWithAddOnsSpecifier> it1 = baseEntitlementWithAddOnsSpecifiers.iterator();
-                    DateTime upTo = null;
-                    while (it1.hasNext()) {
-                        final BaseEntitlementWithAddOnsSpecifier baseEntitlementWithAddOnsSpecifier = it1.next();
-                        final DateTime cur = dateHelper.fromLocalDateAndReferenceTime(baseEntitlementWithAddOnsSpecifier.getEntitlementEffectiveDate(), now, contextWithValidAccountRecordId);
-                        if (cur != null) {
-                            upTo = upTo == null || upTo.compareTo(cur) < 0 ? cur : upTo;
-                        }
-                    }
                     // Note that to fully check for block_change we should also look for BlockingState at the BUNDLE/SUBSCRIPTION level in case some of the input contain a BP that already exists.
                     checkForAccountBlockingChange(accountId, upTo, contextWithValidAccountRecordId);
 
-                    final List<SubscriptionBaseWithAddOns> subscriptionsWithAddOns = subscriptionBaseInternalApi.createBaseSubscriptionsWithAddOns(accountId, baseEntitlementWithAddOnsSpecifiers, renameCancelledBundleIfExist, contextWithValidAccountRecordId);
+                    final List<SubscriptionBaseWithAddOns> subscriptionsWithAddOns = subscriptionBaseInternalApi.createBaseSubscriptionsWithAddOns(accountId,
+                                                                                                                                                   baseEntitlementWithAddOnsSpecifiersAfterPlugins,
+                                                                                                                                                   renameCancelledBundleIfExist,
+                                                                                                                                                   contextWithValidAccountRecordId);
                     final Map<BlockingState, UUID> blockingStateMap = new HashMap<BlockingState, UUID>();
                     int i = 0;
-
-                    for (final Iterator<BaseEntitlementWithAddOnsSpecifier> it = baseEntitlementWithAddOnsSpecifiers.iterator(); it.hasNext(); i++) {
+                    for (final Iterator<BaseEntitlementWithAddOnsSpecifier> it = baseEntitlementWithAddOnsSpecifiersAfterPlugins.iterator(); it.hasNext(); i++) {
                         final BaseEntitlementWithAddOnsSpecifier baseEntitlementWithAddOnsSpecifier = it.next();
                         for (final SubscriptionBase subscriptionBase : subscriptionsWithAddOns.get(i).getSubscriptionBaseList()) {
-                            final BlockingState blockingState = new DefaultBlockingState(subscriptionBase.getId(), BlockingStateType.SUBSCRIPTION,
+                            final BlockingState blockingState = new DefaultBlockingState(subscriptionBase.getId(),
+                                                                                         BlockingStateType.SUBSCRIPTION,
                                                                                          DefaultEntitlementApi.ENT_STATE_START,
                                                                                          EntitlementService.ENTITLEMENT_SERVICE_NAME,
-                                                                                         false, false, false,
+                                                                                         false,
+                                                                                         false,
+                                                                                         false,
                                                                                          dateHelper.fromLocalDateAndReferenceTime(baseEntitlementWithAddOnsSpecifier.getEntitlementEffectiveDate(), now, contextWithValidAccountRecordId));
                             blockingStateMap.put(blockingState, subscriptionsWithAddOns.get(i).getBundle().getId());
                         }
