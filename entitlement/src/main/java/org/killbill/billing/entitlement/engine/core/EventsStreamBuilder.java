@@ -253,16 +253,20 @@ public class EventsStreamBuilder {
     public EventsStream buildForEntitlement(final UUID entitlementId, final InternalTenantContext internalTenantContext) throws EntitlementApiException {
         final SubscriptionBaseBundle bundle;
         final SubscriptionBase subscription;
-        final List<SubscriptionBase> allSubscriptionsForBundle;
-        final SubscriptionBase baseSubscription;
+        final List<SubscriptionBase> subscriptionsForBundle;
         try {
             subscription = subscriptionInternalApi.getSubscriptionFromId(entitlementId, internalTenantContext);
             bundle = subscriptionInternalApi.getBundleFromId(subscription.getBundleId(), internalTenantContext);
-            allSubscriptionsForBundle = subscriptionInternalApi.getSubscriptionsForBundle(subscription.getBundleId(), null, internalTenantContext);
-            baseSubscription = findBaseSubscription(allSubscriptionsForBundle);
+            subscriptionsForBundle = subscriptionInternalApi.getSubscriptionsForBundle(subscription.getBundleId(), null, internalTenantContext);
         } catch (final SubscriptionBaseApiException e) {
             throw new EntitlementApiException(e);
         }
+
+        return buildForEntitlement(bundle, subscription, subscriptionsForBundle, internalTenantContext);
+    }
+
+    public EventsStream buildForEntitlement(final SubscriptionBaseBundle bundle, final SubscriptionBase subscription, final List<SubscriptionBase> allSubscriptionsForBundle, final InternalTenantContext internalTenantContext) throws EntitlementApiException {
+        final SubscriptionBase baseSubscription = findBaseSubscription(allSubscriptionsForBundle);
 
         final ImmutableAccountData account;
         try {

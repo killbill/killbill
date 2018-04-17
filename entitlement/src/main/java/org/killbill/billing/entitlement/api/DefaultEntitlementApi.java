@@ -180,9 +180,22 @@ public class DefaultEntitlementApi extends DefaultEntitlementApiBase implements 
                     final BlockingState newBlockingState = new DefaultBlockingState(subscription.getId(), BlockingStateType.SUBSCRIPTION, DefaultEntitlementApi.ENT_STATE_START, EntitlementService.ENTITLEMENT_SERVICE_NAME, false, false, false, entitlementRequestedDate);
                     entitlementUtils.setBlockingStatesAndPostBlockingTransitionEvent(ImmutableList.<BlockingState>of(newBlockingState), subscription.getBundleId(), contextWithValidAccountRecordId);
 
-                    return new DefaultEntitlement(accountId, subscription.getId(), eventsStreamBuilder, entitlementApi, pluginExecution,
-                                                  blockingStateDao, subscriptionBaseInternalApi, checker, notificationQueueService,
-                                                  entitlementUtils, dateHelper, clock, securityApi, internalCallContextFactory, callContext);
+                    return new DefaultEntitlement(bundle,
+                                                  subscription,
+                                                  ImmutableList.<SubscriptionBase>of(subscription),
+                                                  eventsStreamBuilder,
+                                                  entitlementApi,
+                                                  pluginExecution,
+                                                  blockingStateDao,
+                                                  subscriptionBaseInternalApi,
+                                                  checker,
+                                                  notificationQueueService,
+                                                  entitlementUtils,
+                                                  dateHelper,
+                                                  clock,
+                                                  securityApi,
+                                                  internalCallContextFactory,
+                                                  contextWithValidAccountRecordId);
                 } catch (final SubscriptionBaseApiException e) {
                     throw new EntitlementApiException(e);
                 }
@@ -263,7 +276,7 @@ public class DefaultEntitlementApi extends DefaultEntitlementApiBase implements 
                         }
                     }
                     entitlementUtils.setBlockingStateAndPostBlockingTransitionEvent(blockingStateMap, contextWithValidAccountRecordId);
-                    return buildEntitlementList(accountId, subscriptionsWithAddOns, callContext);
+                    return buildEntitlementList(accountId, subscriptionsWithAddOns, contextWithValidAccountRecordId);
                 } catch (final SubscriptionBaseApiException e) {
                     throw new EntitlementApiException(e);
                 }
@@ -272,13 +285,25 @@ public class DefaultEntitlementApi extends DefaultEntitlementApiBase implements 
         return pluginExecution.executeWithPlugin(createBaseEntitlementsWithAddOns, pluginContext);
     }
 
-    private List<Entitlement> buildEntitlementList(final UUID accountId, final Iterable<SubscriptionBaseWithAddOns> subscriptionsWithAddOns, final CallContext callContext) throws EntitlementApiException {
+    private List<Entitlement> buildEntitlementList(final UUID accountId, final Iterable<SubscriptionBaseWithAddOns> subscriptionsWithAddOns, final InternalCallContext callContext) throws EntitlementApiException {
         final List<Entitlement> result = new ArrayList<Entitlement>();
         for (final SubscriptionBaseWithAddOns subscriptionWithAddOns : subscriptionsWithAddOns) {
             for (final SubscriptionBase subscriptionBase : subscriptionWithAddOns.getSubscriptionBaseList()) {
-                final Entitlement entitlement = new DefaultEntitlement(accountId, subscriptionBase.getId(), eventsStreamBuilder, entitlementApi, pluginExecution,
-                                                                       blockingStateDao, subscriptionBaseInternalApi, checker, notificationQueueService,
-                                                                       entitlementUtils, dateHelper, clock, securityApi, internalCallContextFactory, callContext);
+                final Entitlement entitlement = new DefaultEntitlement(accountId,
+                                                                       subscriptionBase.getId(),
+                                                                       eventsStreamBuilder,
+                                                                       entitlementApi,
+                                                                       pluginExecution,
+                                                                       blockingStateDao,
+                                                                       subscriptionBaseInternalApi,
+                                                                       checker,
+                                                                       notificationQueueService,
+                                                                       entitlementUtils,
+                                                                       dateHelper,
+                                                                       clock,
+                                                                       securityApi,
+                                                                       internalCallContextFactory,
+                                                                       callContext);
                 result.add(entitlement);
             }
         }
@@ -365,9 +390,22 @@ public class DefaultEntitlementApi extends DefaultEntitlementApiBase implements 
                     final BlockingState newBlockingState = new DefaultBlockingState(subscription.getId(), BlockingStateType.SUBSCRIPTION, DefaultEntitlementApi.ENT_STATE_START, EntitlementService.ENTITLEMENT_SERVICE_NAME, false, false, false, entitlementRequestedDate);
                     entitlementUtils.setBlockingStatesAndPostBlockingTransitionEvent(ImmutableList.<BlockingState>of(newBlockingState), subscription.getBundleId(), context);
 
-                    return new DefaultEntitlement(baseBundle.getAccountId(), subscription.getId(), eventsStreamBuilder, entitlementApi, pluginExecution,
-                                                  blockingStateDao, subscriptionBaseInternalApi, checker, notificationQueueService,
-                                                  entitlementUtils, dateHelper, clock, securityApi, internalCallContextFactory, callContext);
+                    return new DefaultEntitlement(baseBundle,
+                                                  subscription,
+                                                  subscriptionsByBundle,
+                                                  eventsStreamBuilder,
+                                                  entitlementApi,
+                                                  pluginExecution,
+                                                  blockingStateDao,
+                                                  subscriptionBaseInternalApi,
+                                                  checker,
+                                                  notificationQueueService,
+                                                  entitlementUtils,
+                                                  dateHelper,
+                                                  clock,
+                                                  securityApi,
+                                                  internalCallContextFactory,
+                                                  context);
                 } catch (final SubscriptionBaseApiException e) {
                     throw new EntitlementApiException(e);
                 }
