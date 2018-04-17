@@ -106,18 +106,7 @@ public class DefaultEntitlement extends EntityBase implements Entitlement {
     // Refresh-able
     protected EventsStream eventsStream;
 
-    public DefaultEntitlement(final UUID accountId, final UUID entitlementId, final EventsStreamBuilder eventsStreamBuilder,
-                              final EntitlementApi entitlementApi, final EntitlementPluginExecution pluginExecution, final BlockingStateDao blockingStateDao,
-                              final SubscriptionBaseInternalApi subscriptionInternalApi, final BlockingChecker checker,
-                              final NotificationQueueService notificationQueueService, final EntitlementUtils entitlementUtils,
-                              final EntitlementDateHelper dateHelper, final Clock clock, final SecurityApi securityApi,
-                              final InternalCallContextFactory internalCallContextFactory, final InternalTenantContext internalTenantContext) throws EntitlementApiException {
-        this(eventsStreamBuilder.buildForEntitlement(entitlementId, internalTenantContext), eventsStreamBuilder,
-             entitlementApi, pluginExecution, blockingStateDao, subscriptionInternalApi, checker, notificationQueueService,
-             entitlementUtils, dateHelper, clock, securityApi, internalTenantContext, internalCallContextFactory);
-    }
-
-    public DefaultEntitlement(final SubscriptionBaseBundle bundle, final SubscriptionBase subscription, final List<SubscriptionBase> allSubscriptionsForBundle, final EventsStreamBuilder eventsStreamBuilder,
+    public DefaultEntitlement(final SubscriptionBaseBundle bundle, final SubscriptionBase subscription, final Collection<SubscriptionBase> allSubscriptionsForBundle, final EventsStreamBuilder eventsStreamBuilder,
                               final EntitlementApi entitlementApi, final EntitlementPluginExecution pluginExecution, final BlockingStateDao blockingStateDao,
                               final SubscriptionBaseInternalApi subscriptionInternalApi, final BlockingChecker checker,
                               final NotificationQueueService notificationQueueService, final EntitlementUtils entitlementUtils,

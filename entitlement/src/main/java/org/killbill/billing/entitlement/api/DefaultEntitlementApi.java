@@ -36,6 +36,7 @@ import org.killbill.billing.account.api.AccountInternalApi;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.catalog.api.BillingActionPolicy;
+import org.killbill.billing.catalog.api.Catalog;
 import org.killbill.billing.catalog.api.PlanPhasePriceOverride;
 import org.killbill.billing.catalog.api.PlanPhaseSpecifier;
 import org.killbill.billing.catalog.api.ProductCategory;
@@ -70,9 +71,11 @@ import org.killbill.notificationq.api.NotificationQueueService;
 
 import com.google.common.base.Function;
 import com.google.common.base.Predicate;
+import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Multimap;
 
 import static org.killbill.billing.entitlement.logging.EntitlementLoggingHelper.logCreateEntitlement;
 import static org.killbill.billing.entitlement.logging.EntitlementLoggingHelper.logCreateEntitlementsWithAOs;
@@ -272,11 +275,11 @@ public class DefaultEntitlementApi extends DefaultEntitlementApiBase implements 
                                                                                          EntitlementService.ENTITLEMENT_SERVICE_NAME,
                                                                                          false, false, false,
                                                                                          dateHelper.fromLocalDateAndReferenceTime(baseEntitlementWithAddOnsSpecifier.getEntitlementEffectiveDate(), now, contextWithValidAccountRecordId));
-                            blockingStateMap.put(blockingState, subscriptionsWithAddOns.get(i).getBundleId());
+                            blockingStateMap.put(blockingState, subscriptionsWithAddOns.get(i).getBundle().getId());
                         }
                     }
                     entitlementUtils.setBlockingStateAndPostBlockingTransitionEvent(blockingStateMap, contextWithValidAccountRecordId);
-                    return buildEntitlementList(accountId, subscriptionsWithAddOns, contextWithValidAccountRecordId);
+                    return buildEntitlementList(subscriptionsWithAddOns, contextWithValidAccountRecordId);
                 } catch (final SubscriptionBaseApiException e) {
                     throw new EntitlementApiException(e);
                 }
@@ -285,12 +288,16 @@ public class DefaultEntitlementApi extends DefaultEntitlementApiBase implements 
         return pluginExecution.executeWithPlugin(createBaseEntitlementsWithAddOns, pluginContext);
     }
 
-    private List<Entitlement> buildEntitlementList(final UUID accountId, final Iterable<SubscriptionBaseWithAddOns> subscriptionsWithAddOns, final InternalCallContext callContext) throws EntitlementApiException {
+    private List<Entitlement> buildEntitlementList(final Iterable<SubscriptionBaseWithAddOns> subscriptionsWithAddOns, final InternalCallContext internalCallContext) throws EntitlementApiException {
+        // Need to refresh all latest state as some bundles might have existed already
+        final AccountEventsStreams accountEventsStreams = eventsStreamBuilder.buildForAccount(internalCallContext);
+
         final List<Entitlement> result = new ArrayList<Entitlement>();
         for (final SubscriptionBaseWithAddOns subscriptionWithAddOns : subscriptionsWithAddOns) {
             for (final SubscriptionBase subscriptionBase : subscriptionWithAddOns.getSubscriptionBaseList()) {
-                final Entitlement entitlement = new DefaultEntitlement(accountId,
-                                                                       subscriptionBase.getId(),
+                final Entitlement entitlement = new DefaultEntitlement(subscriptionWithAddOns.getBundle(),
+                                                                       subscriptionBase,
+                                                                       accountEventsStreams.getSubscriptions().get(subscriptionBase.getBundleId()),
                                                                        eventsStreamBuilder,
                                                                        entitlementApi,
                                                                        pluginExecution,
@@ -303,7 +310,7 @@ public class DefaultEntitlementApi extends DefaultEntitlementApiBase implements 
                                                                        clock,
                                                                        securityApi,
                                                                        internalCallContextFactory,
-                                                                       callContext);
+                                                                       internalCallContext);
                 result.add(entitlement);
             }
         }

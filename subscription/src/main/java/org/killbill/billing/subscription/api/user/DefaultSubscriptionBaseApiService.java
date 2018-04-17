@@ -135,7 +135,7 @@ public class DefaultSubscriptionBaseApiService implements SubscriptionBaseApiSer
                 createEvents(subscriptionAndAddOns.getSubscriptionSpecifiers(), context, eventsMap, subscriptionBaseList, fullCatalog);
                 subscriptionBaseAndAddOnsList.add(subscriptionBaseList);
 
-                final SubscriptionBaseWithAddOns subscriptionBaseWithAddOns = new DefaultSubscriptionBaseWithAddOns(subscriptionAndAddOns.getBundleId(),
+                final SubscriptionBaseWithAddOns subscriptionBaseWithAddOns = new DefaultSubscriptionBaseWithAddOns(subscriptionAndAddOns.getBundle(),
                                                                                                                     subscriptionBaseList,
                                                                                                                     subscriptionAndAddOns.getEffectiveDate());
                 allSubscriptions.add(subscriptionBaseWithAddOns);

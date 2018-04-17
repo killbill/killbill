@@ -306,18 +306,17 @@ public class DefaultSubscriptionInternalApi extends SubscriptionApiBase implemen
                     }
                 }
 
-                final SubscriptionAndAddOnsSpecifier subscriptionAndAddOnsSpecifier = new SubscriptionAndAddOnsSpecifier(
-                        bundle.getId(),
-                        effectiveDate,
-                        verifyAndBuildSubscriptionSpecifiers(bundle.getId(),
-                                                             bundle.getExternalKey(),
-                                                             reorderedSpecifiers,
-                                                             entitlementWithAddOnsSpecifier.isMigrated(),
-                                                             context,
-                                                             now,
-                                                             effectiveDate,
-                                                             catalog,
-                                                             callContext)
+                final SubscriptionAndAddOnsSpecifier subscriptionAndAddOnsSpecifier = new SubscriptionAndAddOnsSpecifier(bundle,
+                                                                                                                         effectiveDate,
+                                                                                                                         verifyAndBuildSubscriptionSpecifiers(bundle.getId(),
+                                                                                                                                                              bundle.getExternalKey(),
+                                                                                                                                                              reorderedSpecifiers,
+                                                                                                                                                              entitlementWithAddOnsSpecifier.isMigrated(),
+                                                                                                                                                              context,
+                                                                                                                                                              now,
+                                                                                                                                                              effectiveDate,
+                                                                                                                                                              catalog,
+                                                                                                                                                              callContext)
                 );
                 subscriptionAndAddOns.add(subscriptionAndAddOnsSpecifier);
             }
