@@ -31,6 +31,7 @@ import org.killbill.billing.entitlement.EntitlementTestSuiteNoDB;
 import org.killbill.billing.mock.MockAccountBuilder;
 import org.testng.Assert;
 import org.testng.annotations.BeforeClass;
+import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import static org.testng.Assert.assertTrue;
@@ -39,9 +40,9 @@ public class TestEntitlementDateHelper extends EntitlementTestSuiteNoDB {
 
     private EntitlementDateHelper dateHelper;
 
-    @BeforeClass(groups = "fast")
+    @BeforeMethod(groups = "fast")
     public void beforeMethod() throws Exception {
-        super.beforeClass();
+        super.beforeMethod();
 
         dateHelper = new EntitlementDateHelper();
         clock.resetDeltaFromReality();
