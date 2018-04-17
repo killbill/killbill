@@ -164,14 +164,13 @@ public class DefaultEntitlementApi extends DefaultEntitlementApiBase implements 
     }
 
     @Override
-    public List<Entitlement> createBaseEntitlementsWithAddOns(final UUID accountId, final Iterable<BaseEntitlementWithAddOnsSpecifier> baseEntitlementWithAddOnsSpecifiers, final boolean renameCancelledBundleIfExist, final Iterable<PluginProperty> properties, final CallContext callContext) throws EntitlementApiException {
-
-        logCreateEntitlementsWithAOs(log, baseEntitlementWithAddOnsSpecifiers);
+    public List<Entitlement> createBaseEntitlementsWithAddOns(final UUID accountId, final Iterable<BaseEntitlementWithAddOnsSpecifier> originalBaseEntitlementWithAddOnsSpecifiers, final boolean renameCancelledBundleIfExist, final Iterable<PluginProperty> properties, final CallContext callContext) throws EntitlementApiException {
+        logCreateEntitlementsWithAOs(log, originalBaseEntitlementWithAddOnsSpecifiers);
 
         final EntitlementContext pluginContext = new DefaultEntitlementContext(OperationType.CREATE_SHOPPING_CART_SUBSCRIPTIONS,
                                                                                accountId,
                                                                                null,
-                                                                               baseEntitlementWithAddOnsSpecifiers,
+                                                                               originalBaseEntitlementWithAddOnsSpecifiers,
                                                                                null,
                                                                                properties,
                                                                                callContext);
@@ -179,10 +178,11 @@ public class DefaultEntitlementApi extends DefaultEntitlementApiBase implements 
         final WithEntitlementPlugin<List<Entitlement>> createBaseEntitlementsWithAddOns = new WithEntitlementPlugin<List<Entitlement>>() {
             @Override
             public List<Entitlement> doCall(final EntitlementApi entitlementApi, final EntitlementContext updatedPluginContext) throws EntitlementApiException {
+                final Iterable<BaseEntitlementWithAddOnsSpecifier>  baseEntitlementWithAddOnsSpecifiers = updatedPluginContext.getBaseEntitlementWithAddOnsSpecifiers();
+
                 final InternalCallContext contextWithValidAccountRecordId = internalCallContextFactory.createInternalCallContext(accountId, callContext);
 
                 try {
-
                     final DateTime now = clock.getUTCNow();
 
                     // Verify if operation is allowed by looking for is_block_change on Account
