@@ -29,6 +29,7 @@ import org.joda.time.LocalDate;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.catalog.api.BillingActionPolicy;
+import org.killbill.billing.catalog.api.Catalog;
 import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.catalog.api.PlanPhasePriceOverride;
 import org.killbill.billing.catalog.api.PlanPhaseSpecifier;
@@ -74,7 +75,7 @@ public interface SubscriptionBaseInternalApi {
     public List<SubscriptionBase> getSubscriptionsForBundle(UUID bundleId, DryRunArguments dryRunArguments, InternalTenantContext context)
             throws SubscriptionBaseApiException;
 
-    public Map<UUID, List<SubscriptionBase>> getSubscriptionsForAccount(InternalTenantContext context) throws SubscriptionBaseApiException;
+    public Map<UUID, List<SubscriptionBase>> getSubscriptionsForAccount(final Catalog catalog, final InternalTenantContext context) throws SubscriptionBaseApiException;
 
     public SubscriptionBase getBaseSubscription(UUID bundleId, InternalTenantContext context) throws SubscriptionBaseApiException;
 
@@ -99,5 +100,5 @@ public interface SubscriptionBaseInternalApi {
 
     public void updateBCD(final UUID subscriptionId, final int bcd, @Nullable final LocalDate effectiveFromDate, final InternalCallContext internalCallContext) throws SubscriptionBaseApiException;
 
-    public int getDefaultBillCycleDayLocal(final Map<UUID, Integer> bcdCache, final SubscriptionBase subscription, final SubscriptionBase baseSubscription, final PlanPhaseSpecifier planPhaseSpecifier, final int accountBillCycleDayLocal, final DateTime effectiveDate, final InternalTenantContext context) throws SubscriptionBaseApiException;
+    public int getDefaultBillCycleDayLocal(final Map<UUID, Integer> bcdCache, final SubscriptionBase subscription, final SubscriptionBase baseSubscription, final PlanPhaseSpecifier planPhaseSpecifier, final int accountBillCycleDayLocal, final Catalog catalog, final InternalTenantContext context) throws SubscriptionBaseApiException;
 }

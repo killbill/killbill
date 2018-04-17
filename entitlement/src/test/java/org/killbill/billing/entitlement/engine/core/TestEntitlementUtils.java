@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014-2016 Groupon, Inc
- * Copyright 2014-2016 The Billing Project, LLC
+ * Copyright 2014-2018 Groupon, Inc
+ * Copyright 2014-2018 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -31,7 +31,6 @@ import org.killbill.billing.api.TestApiListener.NextEvent;
 import org.killbill.billing.catalog.api.BillingActionPolicy;
 import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.catalog.api.PlanPhaseSpecifier;
-import org.killbill.billing.catalog.api.PlanSpecifier;
 import org.killbill.billing.catalog.api.PriceListSet;
 import org.killbill.billing.entitlement.AccountEventsStreams;
 import org.killbill.billing.entitlement.EntitlementService;
@@ -483,7 +482,7 @@ public class TestEntitlementUtils extends EntitlementTestSuiteWithEmbeddedDB {
     }
 
     private List<BlockingState> blockingStatesForBlockedId(final UUID blockedId) {
-        return ImmutableList.<BlockingState>copyOf(Iterables.<BlockingState>filter(blockingStateDao.getBlockingAllForAccountRecordId(internalCallContext),
+        return ImmutableList.<BlockingState>copyOf(Iterables.<BlockingState>filter(blockingStateDao.getBlockingAllForAccountRecordId(catalog, internalCallContext),
                                                                                    new Predicate<BlockingState>() {
                                                                                        @Override
                                                                                        public boolean apply(final BlockingState input) {

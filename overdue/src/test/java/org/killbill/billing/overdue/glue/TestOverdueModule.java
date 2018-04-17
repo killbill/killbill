@@ -23,6 +23,7 @@ import java.util.UUID;
 
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
+import org.killbill.billing.catalog.api.Catalog;
 import org.killbill.billing.entitlement.api.BlockingState;
 import org.killbill.billing.entitlement.api.BlockingStateType;
 import org.killbill.billing.junction.BlockingInternalApi;
@@ -101,7 +102,7 @@ public class TestOverdueModule extends DefaultOverdueModule {
         }
 
         @Override
-        public List<BlockingState> getBlockingAllForAccount(final InternalTenantContext context) {
+        public List<BlockingState> getBlockingAllForAccount(final Catalog catalog, final InternalTenantContext context) {
             throw new UnsupportedOperationException();
         }
 
