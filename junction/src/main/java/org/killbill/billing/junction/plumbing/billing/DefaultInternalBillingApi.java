@@ -91,8 +91,7 @@ public class DefaultInternalBillingApi implements BillingInternalApi {
 
     @Override
     public BillingEventSet getBillingEventsForAccountAndUpdateAccountBCD(final UUID accountId, final DryRunArguments dryRunArguments, final InternalCallContext context) throws CatalogApiException, AccountApiException, SubscriptionBaseApiException {
-
-        final Catalog currentCatalog =  catalogInternalApi.getFullCatalog(true, true, context);
+        final Catalog fullCatalog = catalogInternalApi.getFullCatalog(true, true, context);
 
         // Check to see if billing is off for the account
         final List<Tag> tagsForAccount = tagApi.getTagsForAccount(false, context);
@@ -111,7 +110,7 @@ public class DefaultInternalBillingApi implements BillingInternalApi {
 
             final ImmutableAccountData account = accountApi.getImmutableAccountDataById(accountId, context);
             result = new DefaultBillingEventSet(false, found_INVOICING_DRAFT, found_INVOICING_REUSE_DRAFT);
-            addBillingEventsForBundles(bundles, account, dryRunArguments, context, result, skippedSubscriptions, currentCatalog, tagsForAccount);
+            addBillingEventsForBundles(bundles, account, dryRunArguments, context, result, skippedSubscriptions, fullCatalog, tagsForAccount);
         }
 
         if (result.isEmpty()) {
@@ -122,7 +121,7 @@ public class DefaultInternalBillingApi implements BillingInternalApi {
         // Pretty-print the events, before and after the blocking calculator does its magic
         final StringBuilder logStringBuilder = new StringBuilder("Computed billing events for accountId='").append(accountId).append("'");
         eventsToString(logStringBuilder, result);
-        if (blockCalculator.insertBlockingEvents(result, skippedSubscriptions, currentCatalog, context)) {
+        if (blockCalculator.insertBlockingEvents(result, skippedSubscriptions, fullCatalog, context)) {
             logStringBuilder.append("\nBilling Events After Blocking");
             eventsToString(logStringBuilder, result);
         }
@@ -154,7 +153,7 @@ public class DefaultInternalBillingApi implements BillingInternalApi {
 
         }
 
-        final Map<UUID, List<SubscriptionBase>> subscriptionsForAccount = subscriptionApi.getSubscriptionsForAccount(context);
+        final Map<UUID, List<SubscriptionBase>> subscriptionsForAccount = subscriptionApi.getSubscriptionsForAccount(catalog, context);
 
         for (final SubscriptionBaseBundle bundle : bundles) {
             final DryRunArguments dryRunArgumentsForBundle = (dryRunArguments != null &&
