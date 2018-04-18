@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014-2016 Groupon, Inc
- * Copyright 2014-2016 The Billing Project, LLC
+ * Copyright 2014-2018 Groupon, Inc
+ * Copyright 2014-2018 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -209,8 +209,8 @@ public class MockSubscriptionDaoMemory extends MockEntityDaoBase<SubscriptionBun
     */
 
     @Override
-    public void createSubscription(final DefaultSubscriptionBase subscription, final List<SubscriptionBaseEvent> initialEvents,
-                                   final Catalog catalog, final InternalCallContext context) {
+    public List<SubscriptionBaseEvent> createSubscription(final DefaultSubscriptionBase subscription, final List<SubscriptionBaseEvent> initialEvents,
+                                                          final Catalog catalog, final InternalCallContext context) {
         synchronized (events) {
             events.addAll(initialEvents);
             for (final SubscriptionBaseEvent cur : initialEvents) {
@@ -220,6 +220,8 @@ public class MockSubscriptionDaoMemory extends MockEntityDaoBase<SubscriptionBun
         final SubscriptionBase updatedSubscription = buildSubscription(subscription, context);
         subscriptions.add(updatedSubscription);
         mockNonEntityDao.addTenantRecordIdMapping(updatedSubscription.getId(), context);
+
+        return initialEvents;
     }
 
     @Override

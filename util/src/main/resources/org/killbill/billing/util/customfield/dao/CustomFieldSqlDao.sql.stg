@@ -63,6 +63,7 @@ and is_active
 searchQuery(prefix) ::= <<
      <idField(prefix)> = :searchKey
   or <prefix>object_type like :likeSearchKey
+  or <prefix>object_id like :likeSearchKey
   or <prefix>field_name like :likeSearchKey
   or <prefix>field_value like :likeSearchKey
 >>

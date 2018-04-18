@@ -1,5 +1,6 @@
 /*
- * Copyright 2016 The Billing Project, LLC
+ * Copyright 2014-2018 Groupon, Inc
+ * Copyright 2014-2018 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -17,7 +18,6 @@
 package org.killbill.billing.subscription.api.user;
 
 import java.util.List;
-import java.util.UUID;
 
 import org.joda.time.DateTime;
 import org.killbill.billing.subscription.api.SubscriptionBase;
@@ -29,19 +29,19 @@ public class DefaultSubscriptionBaseWithAddOns implements SubscriptionBaseWithAd
 
     private static final Logger log = LoggerFactory.getLogger(DefaultSubscriptionBaseWithAddOns.class);
 
-    private final UUID bundleId;
+    private final SubscriptionBaseBundle bundle;
     private final List<SubscriptionBase> subscriptionBaseList;
     private final DateTime effectiveDate;
 
-    public DefaultSubscriptionBaseWithAddOns(final UUID bundleId, final List<SubscriptionBase> subscriptionBaseList, final DateTime effectiveDate) {
-        this.bundleId = bundleId;
+    public DefaultSubscriptionBaseWithAddOns(final SubscriptionBaseBundle bundle, final List<SubscriptionBase> subscriptionBaseList, final DateTime effectiveDate) {
+        this.bundle = bundle;
         this.subscriptionBaseList = subscriptionBaseList;
         this.effectiveDate = effectiveDate;
     }
 
     @Override
-    public UUID getBundleId() {
-        return bundleId;
+    public SubscriptionBaseBundle getBundle() {
+        return bundle;
     }
 
     @Override

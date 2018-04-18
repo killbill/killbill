@@ -48,7 +48,7 @@ jobs:
           name: Save test results
           command: |
             mkdir -p ~/junit/
-            find . -type f -regex ".*/target/surefire-reports/.*xml" -exec cp {} ~/junit/ \;
+            find . -type f -regex ".*/target/surefire-reports/junitreports/.*xml" -exec cp {} ~/junit/ \;
           when: always
       - store_test_results:
           path: ~/junit
@@ -87,7 +87,7 @@ jobs:
           name: Save test results
           command: |
             mkdir -p ~/junit/
-            find . -type f -regex ".*/target/surefire-reports/.*xml" -exec cp {} ~/junit/ \;
+            find . -type f -regex ".*/target/surefire-reports/junitreports/.*xml" -exec cp {} ~/junit/ \;
           when: always
       - store_test_results:
           path: ~/junit
@@ -112,7 +112,7 @@ jobs:
           name: Save test results
           command: |
             mkdir -p ~/junit/
-            find . -type f -regex ".*/target/surefire-reports/.*xml" -exec cp {} ~/junit/ \;
+            find . -type f -regex ".*/target/surefire-reports/junitreports/.*xml" -exec cp {} ~/junit/ \;
           when: always
       - store_test_results:
           path: ~/junit
@@ -142,14 +142,23 @@ jobs:
             mkdir -p /tmp/test-results
             nohup ./bin/start-server -s > /tmp/test-results/killbill.log 2>&1 &
 
+            # Get rid of message "Warning: Permanently added the RSA host key for IP address..." further down
+            ssh git@github.com || true
+
             mkdir -p /home/killbill/killbill-integration-tests
             git clone https://github.com/killbill/killbill-integration-tests.git /home/killbill/killbill-integration-tests
             pushd /home/killbill/killbill-integration-tests
-            if [ "${CIRCLE_BRANCH}" != "master" ]; then
-              if [ -n "$(git ls-remote --heads https://github.com/killbill/killbill-integration-tests.git ${CIRCLE_BRANCH})" ]; then
-                git checkout -b ${CIRCLE_BRANCH} origin/${CIRCLE_BRANCH}
-              fi
-            fi
+            #if [ "${CIRCLE_BRANCH}" != "master" ]; then
+            #  if [ -n "$(git ls-remote --heads https://github.com/killbill/killbill-integration-tests.git ${CIRCLE_BRANCH})" ]; then
+            #    echo "Switching to branch ${CIRCLE_BRANCH}"
+            #    git checkout -b ${CIRCLE_BRANCH} origin/${CIRCLE_BRANCH}
+            #  else
+            #    echo "killbill-integration-tests doesn't have a branch ${CIRCLE_BRANCH}, staying on master"
+            #  fi
+            #fi
+            # For now, always expect work-for-release-0.19.x
+            git checkout -b work-for-release-0.19.x origin/work-for-release-0.19.x
+
             source /usr/share/rvm/scripts/rvm
             rvm use ruby-2.4.2
             bundle install --jobs=4 --retry=3 --path=vendor/bundle
@@ -166,9 +175,9 @@ jobs:
             done
 
             set -e
-            bundle exec rake test:core | tee /tmp/test-results/test.txt 2>&1
+            bundle exec rake ci:core | tee /tmp/test-results/test.txt 2>&1
       - store_test_results:
-          path: /tmp/test-results
+          path: test/reports/
       - store_artifacts:
           path: /tmp/test-results
 
@@ -188,6 +197,4 @@ workflows:
             - build
       - integration-tests:
           requires:
-            - test-h2
             - test-mysql
-            - test-postgresql

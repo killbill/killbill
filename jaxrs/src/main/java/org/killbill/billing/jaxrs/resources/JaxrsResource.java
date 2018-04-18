@@ -292,5 +292,6 @@ public interface JaxrsResource {
     String HEALTHCHECK = "healthcheck";
 
     String QUERY_INCLUDED_DELETED = "includedDeleted";
+    String AUDIT_LOG = "auditLogs";
 
 }

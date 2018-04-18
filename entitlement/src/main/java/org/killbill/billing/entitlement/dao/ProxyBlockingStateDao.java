@@ -33,6 +33,7 @@ import javax.inject.Singleton;
 import org.joda.time.DateTime;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
+import org.killbill.billing.catalog.api.Catalog;
 import org.killbill.billing.catalog.api.ProductCategory;
 import org.killbill.billing.entitlement.EntitlementService;
 import org.killbill.billing.entitlement.EventsStream;
@@ -233,9 +234,9 @@ public class ProxyBlockingStateDao implements BlockingStateDao {
     }
 
     @Override
-    public List<BlockingState> getBlockingAllForAccountRecordId(final InternalTenantContext context) {
-        final List<BlockingState> statesOnDisk = delegate.getBlockingAllForAccountRecordId(context);
-        return addBlockingStatesNotOnDisk(statesOnDisk, context);
+    public List<BlockingState> getBlockingAllForAccountRecordId(final Catalog catalog, final InternalTenantContext context) {
+        final List<BlockingState> statesOnDisk = delegate.getBlockingAllForAccountRecordId(catalog, context);
+        return addBlockingStatesNotOnDisk(statesOnDisk, catalog, context);
     }
 
     @Override
@@ -251,6 +252,7 @@ public class ProxyBlockingStateDao implements BlockingStateDao {
     // Add blocking states for add-ons, which would be impacted by a future cancellation or change of their base plan
     // See DefaultEntitlement#computeAddOnBlockingStates
     private List<BlockingState> addBlockingStatesNotOnDisk(final List<BlockingState> blockingStatesOnDisk,
+                                                           final Catalog catalog,
                                                            final InternalTenantContext context) {
         final Collection<BlockingState> blockingStatesOnDiskCopy = new LinkedList<BlockingState>(blockingStatesOnDisk);
 
@@ -258,7 +260,7 @@ public class ProxyBlockingStateDao implements BlockingStateDao {
         final Iterable<SubscriptionBase> baseSubscriptionsToConsider;
         final Iterable<EventsStream> eventsStreams;
         try {
-            final Map<UUID, List<SubscriptionBase>> subscriptions = subscriptionInternalApi.getSubscriptionsForAccount(context);
+            final Map<UUID, List<SubscriptionBase>> subscriptions = subscriptionInternalApi.getSubscriptionsForAccount(catalog, context);
             baseSubscriptionsToConsider = Iterables.<SubscriptionBase>filter(Iterables.<SubscriptionBase>concat(subscriptions.values()),
                                                                              new Predicate<SubscriptionBase>() {
                                                                                  @Override
@@ -266,11 +268,11 @@ public class ProxyBlockingStateDao implements BlockingStateDao {
                                                                                      return ProductCategory.BASE.equals(input.getCategory());
                                                                                  }
                                                                              });
-            eventsStreams = Iterables.<EventsStream>concat(eventsStreamBuilder.buildForAccount(subscriptions, context).getEventsStreams().values());
-        } catch (EntitlementApiException e) {
+            eventsStreams = Iterables.<EventsStream>concat(eventsStreamBuilder.buildForAccount(subscriptions, catalog, context).getEventsStreams().values());
+        } catch (final EntitlementApiException e) {
             log.error("Error computing blocking states for addons for account record id " + context.getAccountRecordId(), e);
             throw new RuntimeException(e);
-        } catch (SubscriptionBaseApiException e) {
+        } catch (final SubscriptionBaseApiException e) {
             log.error("Error computing blocking states for addons for account record id " + context.getAccountRecordId(), e);
             throw new RuntimeException(e);
         }

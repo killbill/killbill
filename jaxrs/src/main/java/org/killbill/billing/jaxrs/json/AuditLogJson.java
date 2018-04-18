@@ -16,8 +16,11 @@
 
 package org.killbill.billing.jaxrs.json;
 
+import java.util.UUID;
+
 import org.joda.time.DateTime;
 
+import org.killbill.billing.ObjectType;
 import org.killbill.billing.util.audit.AuditLog;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
@@ -36,9 +39,14 @@ public class AuditLogJson {
     private final String comments;
     private final String userToken;
 
+    private final ObjectType objectType;
+    private final UUID objectId;
+
     @JsonCreator
     public AuditLogJson(@JsonProperty("changeType") final String changeType,
                         @JsonProperty("changeDate") final DateTime changeDate,
+                        @JsonProperty("objectType") final ObjectType objectType,
+                        @JsonProperty("objectId") final UUID objectId,
                         @JsonProperty("changedBy") final String changedBy,
                         @JsonProperty("reasonCode") final String reasonCode,
                         @JsonProperty("comments") final String comments,
@@ -49,10 +57,12 @@ public class AuditLogJson {
         this.reasonCode = reasonCode;
         this.comments = comments;
         this.userToken = userToken;
+        this.objectType = objectType;
+        this.objectId = objectId;
     }
 
     public AuditLogJson(final AuditLog auditLog) {
-        this(auditLog.getChangeType().toString(), auditLog.getCreatedDate(), auditLog.getUserName(), auditLog.getReasonCode(),
+        this(auditLog.getChangeType().toString(), auditLog.getCreatedDate(), auditLog.getAuditedObjectType(), auditLog.getAuditedEntityId(), auditLog.getUserName(), auditLog.getReasonCode(),
              auditLog.getComment(), auditLog.getUserToken());
     }
 
@@ -80,12 +90,22 @@ public class AuditLogJson {
         return userToken;
     }
 
+    public ObjectType getObjectType() {
+        return objectType;
+    }
+
+    public UUID getObjectId() {
+        return objectId;
+    }
+
     @Override
     public String toString() {
         final StringBuilder sb = new StringBuilder();
         sb.append("AuditLogJson");
         sb.append("{changeType='").append(changeType).append('\'');
         sb.append(", changeDate=").append(changeDate);
+        sb.append(", objectType='").append(objectType).append('\'');
+        sb.append(", objectId='").append(objectId).append('\'');
         sb.append(", changedBy=").append(changedBy);
         sb.append(", reasonCode='").append(reasonCode).append('\'');
         sb.append(", comments='").append(comments).append('\'');
@@ -123,6 +143,12 @@ public class AuditLogJson {
         if (userToken != null ? !userToken.equals(that.userToken) : that.userToken != null) {
             return false;
         }
+        if (objectType != that.objectType) {
+            return false;
+        }
+        if (objectId != null ? !objectId.equals(that.objectId) : that.objectId != null) {
+            return false;
+        }
 
         return true;
     }
@@ -135,6 +161,8 @@ public class AuditLogJson {
         result = 31 * result + (reasonCode != null ? reasonCode.hashCode() : 0);
         result = 31 * result + (comments != null ? comments.hashCode() : 0);
         result = 31 * result + (userToken != null ? userToken.hashCode() : 0);
+        result = 31 * result + (objectType != null ? objectType.hashCode() : 0);
+        result = 31 * result + (objectId != null ? objectId.hashCode() : 0);
         return result;
     }
 }
