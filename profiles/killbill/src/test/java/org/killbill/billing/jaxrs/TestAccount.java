@@ -42,6 +42,7 @@ import org.killbill.billing.osgi.api.OSGIServiceRegistration;
 import org.killbill.billing.payment.plugin.api.PaymentPluginApi;
 import org.killbill.billing.payment.provider.MockPaymentProviderPlugin;
 import org.killbill.billing.util.api.AuditLevel;
+import org.killbill.billing.util.audit.ChangeType;
 import org.testng.Assert;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
@@ -513,6 +514,41 @@ public class TestAccount extends TestJaxrsBase {
         final Accounts childrenAccounts = killBillClient.getChildrenAccounts(null, true, true, requestOptions);
         Assert.assertEquals(childrenAccounts.size(), 0);
 
+    }
+
+    @Test(groups = "slow", description = "retrieve account logs")
+    public void testGetAccountAuditLogs() throws Exception {
+        final Account accountJson = createAccount();
+        assertNotNull(accountJson);
+
+        // generate more log data
+        final Collection<CustomField> customFields = new LinkedList<CustomField>();
+        customFields.add(new CustomField(null, accountJson.getAccountId(), ObjectType.ACCOUNT, "1", "value1", null));
+        customFields.add(new CustomField(null, accountJson.getAccountId(), ObjectType.ACCOUNT, "2", "value2", null));
+        customFields.add(new CustomField(null, accountJson.getAccountId(), ObjectType.ACCOUNT, "3", "value3", null));
+
+        killBillClient.createAccountCustomFields(accountJson.getAccountId(), customFields, requestOptions);
+
+        final List<CustomField> accountCustomFields = killBillClient.getAccountCustomFields(accountJson.getAccountId(), requestOptions);
+        assertEquals(accountCustomFields.size(), 3);
+
+        final List<AuditLog> auditLogsJson = killBillClient.getAccountAuditLogs(accountJson.getAccountId());
+        assertEquals(auditLogsJson.size(), 4);
+        assertEquals(auditLogsJson.get(0).getChangeType(), ChangeType.INSERT.toString());
+        assertEquals(auditLogsJson.get(0).getObjectType(), ObjectType.ACCOUNT);
+        assertEquals(auditLogsJson.get(0).getObjectId(), accountJson.getAccountId());
+
+        assertEquals(auditLogsJson.get(1).getChangeType(), ChangeType.INSERT.toString());
+        assertEquals(auditLogsJson.get(1).getObjectType(), ObjectType.CUSTOM_FIELD);
+        assertEquals(auditLogsJson.get(1).getObjectId(), accountCustomFields.get(0).getCustomFieldId());
+
+        assertEquals(auditLogsJson.get(2).getChangeType(), ChangeType.INSERT.toString());
+        assertEquals(auditLogsJson.get(2).getObjectType(), ObjectType.CUSTOM_FIELD);
+        assertEquals(auditLogsJson.get(2).getObjectId(), accountCustomFields.get(1).getCustomFieldId());
+
+        assertEquals(auditLogsJson.get(3).getChangeType(), ChangeType.INSERT.toString());
+        assertEquals(auditLogsJson.get(3).getObjectType(), ObjectType.CUSTOM_FIELD);
+        assertEquals(auditLogsJson.get(3).getObjectId(), accountCustomFields.get(2).getCustomFieldId());
     }
 
 }
