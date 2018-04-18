@@ -198,8 +198,8 @@ public class SubscriptionResource extends JaxRsResourceBase {
             Preconditions.checkArgument(entitlement.getExternalKey() != null || entitlement.getBundleId() != null, "SubscriptionJson bundleId or externalKey should be specified for ADD_ON");
         }
 
-        final boolean isReusingExistingBundle = ProductCategory.ADD_ON.name() == entitlement.getProductCategory() ||
-                                                (ProductCategory.STANDALONE.name() == entitlement.getProductCategory() && entitlement.getBundleId() != null);
+        final boolean isReusingExistingBundle = ProductCategory.ADD_ON.name().equals(entitlement.getProductCategory()) ||
+                                                (ProductCategory.STANDALONE.name().equals(entitlement.getProductCategory()) && entitlement.getBundleId() != null);
 
 
         final Iterable<PluginProperty> pluginProperties = extractPluginProperties(pluginPropertiesString);

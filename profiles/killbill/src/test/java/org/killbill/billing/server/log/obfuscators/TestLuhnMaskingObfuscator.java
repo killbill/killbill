@@ -249,6 +249,12 @@ public class TestLuhnMaskingObfuscator extends ServerTestSuiteNoDB {
                event);
     }
 
+    @Test(groups = "fast")
+    public void testIgnoreUUIDs() {
+        Assert.assertTrue(obfuscator.luhnCheck("197760025906126"));
+        verify("169fe72a-eba0-11e1-9776-0025906126aa", "169fe72a-eba0-11e1-9776-0025906126aa");
+    }
+
     private void verify(final String input, final String output) {
         verify(input, output, Mockito.mock(ILoggingEvent.class));
     }

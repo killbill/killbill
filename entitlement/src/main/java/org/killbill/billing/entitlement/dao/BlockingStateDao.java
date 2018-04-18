@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014-2016 Groupon, Inc
- * Copyright 2014-2016 The Billing Project, LLC
+ * Copyright 2014-2018 Groupon, Inc
+ * Copyright 2014-2018 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -25,6 +25,7 @@ import java.util.UUID;
 import org.joda.time.DateTime;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
+import org.killbill.billing.catalog.api.Catalog;
 import org.killbill.billing.entitlement.api.BlockingState;
 import org.killbill.billing.entitlement.api.BlockingStateType;
 import org.killbill.billing.entitlement.api.EntitlementApiException;
@@ -58,10 +59,11 @@ public interface BlockingStateDao extends EntityDao<BlockingStateModelDao, Block
     /**
      * Return all events (past and future) across all services) for a given callcontext (account_record_id)
      *
+     * @param catalog full catalog
      * @param context call context
      * @return list of all blocking states for that account
      */
-    public List<BlockingState> getBlockingAllForAccountRecordId(InternalTenantContext context);
+    public List<BlockingState> getBlockingAllForAccountRecordId(Catalog catalog, InternalTenantContext context);
 
     /**
      * Set new blocking states

@@ -21,6 +21,7 @@ import java.util.UUID;
 
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
+import org.killbill.billing.catalog.api.Catalog;
 import org.killbill.billing.entitlement.api.BlockingState;
 import org.killbill.billing.entitlement.api.BlockingStateType;
 
@@ -28,7 +29,7 @@ public interface BlockingInternalApi {
 
     public BlockingState getBlockingStateForService(UUID blockableId, BlockingStateType blockingStateType, String serviceName, InternalTenantContext context);
 
-    public List<BlockingState> getBlockingAllForAccount(InternalTenantContext context);
+    public List<BlockingState> getBlockingAllForAccount(final Catalog catalog, InternalTenantContext context);
 
     public void setBlockingState(BlockingState state, InternalCallContext context);
 }

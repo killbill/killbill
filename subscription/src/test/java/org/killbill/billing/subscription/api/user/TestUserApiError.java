@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014-2017 Groupon, Inc
- * Copyright 2014-2017 The Billing Project, LLC
+ * Copyright 2014-2018 Groupon, Inc
+ * Copyright 2014-2018 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -17,8 +17,6 @@
  */
 
 package org.killbill.billing.subscription.api.user;
-
-import java.util.UUID;
 
 import javax.annotation.Nullable;
 
@@ -48,15 +46,15 @@ public class TestUserApiError extends SubscriptionTestSuiteNoDB {
     @Test(groups = "fast")
     public void testCreateSubscriptionBadCatalog() {
         // WRONG PRODUCTS
-        tCreateSubscriptionInternal(bundle.getId(), null, BillingPeriod.ANNUAL, PriceListSet.DEFAULT_PRICELIST_NAME, ErrorCode.CAT_NULL_PRODUCT_NAME);
-        tCreateSubscriptionInternal(bundle.getId(), "Whatever", BillingPeriod.ANNUAL, PriceListSet.DEFAULT_PRICELIST_NAME, ErrorCode.CAT_NO_SUCH_PRODUCT);
+        tCreateSubscriptionInternal(bundle, null, BillingPeriod.ANNUAL, PriceListSet.DEFAULT_PRICELIST_NAME, ErrorCode.CAT_NULL_PRODUCT_NAME);
+        tCreateSubscriptionInternal(bundle, "Whatever", BillingPeriod.ANNUAL, PriceListSet.DEFAULT_PRICELIST_NAME, ErrorCode.CAT_NO_SUCH_PRODUCT);
 
         // TODO: MARTIN TO FIX WITH CORRECT ERROR CODE. RIGHT NOW NPE
 
         // WRONG BILLING PERIOD
-        tCreateSubscriptionInternal(bundle.getId(), "Shotgun", null, PriceListSet.DEFAULT_PRICELIST_NAME, ErrorCode.CAT_NULL_BILLING_PERIOD);
+        tCreateSubscriptionInternal(bundle, "Shotgun", null, PriceListSet.DEFAULT_PRICELIST_NAME, ErrorCode.CAT_NULL_BILLING_PERIOD);
         // WRONG PLAN SET
-        tCreateSubscriptionInternal(bundle.getId(), "Shotgun", BillingPeriod.ANNUAL, "Whatever", ErrorCode.CAT_PRICE_LIST_NOT_FOUND);
+        tCreateSubscriptionInternal(bundle, "Shotgun", BillingPeriod.ANNUAL, "Whatever", ErrorCode.CAT_PRICE_LIST_NOT_FOUND);
     }
 
     @Test(groups = "fast")
@@ -66,13 +64,13 @@ public class TestUserApiError extends SubscriptionTestSuiteNoDB {
 
     @Test(groups = "fast")
     public void testCreateSubscriptionNoBP() {
-        tCreateSubscriptionInternal(bundle.getId(), "Telescopic-Scope", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, ErrorCode.SUB_CREATE_NO_BP);
+        tCreateSubscriptionInternal(bundle, "Telescopic-Scope", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, ErrorCode.SUB_CREATE_NO_BP);
     }
 
     @Test(groups = "fast")
     public void testCreateSubscriptionBPExists() throws SubscriptionBaseApiException {
         testUtil.createSubscription(bundle, "Shotgun", BillingPeriod.ANNUAL, PriceListSet.DEFAULT_PRICELIST_NAME);
-        tCreateSubscriptionInternal(bundle.getId(), "Shotgun", BillingPeriod.ANNUAL, PriceListSet.DEFAULT_PRICELIST_NAME, ErrorCode.SUB_CREATE_BP_EXISTS);
+        tCreateSubscriptionInternal(bundle, "Shotgun", BillingPeriod.ANNUAL, PriceListSet.DEFAULT_PRICELIST_NAME, ErrorCode.SUB_CREATE_BP_EXISTS);
     }
 
     @Test(groups = "fast")
@@ -81,8 +79,8 @@ public class TestUserApiError extends SubscriptionTestSuiteNoDB {
         mockNonEntityDao.addTenantRecordIdMapping(aoBundle.getId(), internalCallContext);
         mockNonEntityDao.addAccountRecordIdMapping(aoBundle.getId(), internalCallContext);
 
-        testUtil.createSubscriptionWithBundle(aoBundle.getId(), "Pistol", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, null);
-        tCreateSubscriptionInternal(aoBundle.getId(), "Telescopic-Scope", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, ErrorCode.SUB_CREATE_AO_NOT_AVAILABLE);
+        testUtil.createSubscriptionWithBundle(aoBundle, null, "Pistol", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, null);
+        tCreateSubscriptionInternal(aoBundle, "Telescopic-Scope", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, ErrorCode.SUB_CREATE_AO_NOT_AVAILABLE);
     }
 
     @Test(groups = "fast")
@@ -91,14 +89,23 @@ public class TestUserApiError extends SubscriptionTestSuiteNoDB {
         mockNonEntityDao.addTenantRecordIdMapping(aoBundle.getId(), internalCallContext);
         mockNonEntityDao.addAccountRecordIdMapping(aoBundle.getId(), internalCallContext);
 
-        testUtil.createSubscriptionWithBundle(aoBundle.getId(), "Assault-Rifle", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, null);
-        tCreateSubscriptionInternal(aoBundle.getId(), "Telescopic-Scope", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, ErrorCode.SUB_CREATE_AO_ALREADY_INCLUDED);
+        testUtil.createSubscriptionWithBundle(aoBundle, null, "Assault-Rifle", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, null);
+        tCreateSubscriptionInternal(aoBundle, "Telescopic-Scope", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, ErrorCode.SUB_CREATE_AO_ALREADY_INCLUDED);
     }
 
-    private void tCreateSubscriptionInternal(@Nullable final UUID bundleId, @Nullable final String productName,
+    private void tCreateSubscriptionInternal(@Nullable final SubscriptionBaseBundle bundle, @Nullable final String productName,
                                              @Nullable final BillingPeriod term, final String planSet, final ErrorCode expected) {
+        SubscriptionBase baseSubscription = null;
+        if (bundle != null) {
+            try {
+                baseSubscription = subscriptionInternalApi.getBaseSubscription(bundle.getId(), internalCallContext);
+            } catch (final SubscriptionBaseApiException ignored) {
+            }
+        }
+
         try {
-            subscriptionInternalApi.createSubscription(bundleId,
+            subscriptionInternalApi.createSubscription(bundle,
+                                                       baseSubscription,
                                                        testUtil.getProductSpecifier(productName, planSet, term, null),
                                                        null, clock.getUTCNow(), false, internalCallContext);
             Assert.fail("Exception expected, error code: " + expected);

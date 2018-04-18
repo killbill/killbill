@@ -59,7 +59,7 @@ public class TestUserApiAddOn extends SubscriptionTestSuiteWithEmbeddedDB {
         final BillingPeriod aoTerm = BillingPeriod.MONTHLY;
         final String aoPriceList = PriceListSet.DEFAULT_PRICELIST_NAME;
 
-        DefaultSubscriptionBase aoSubscription = testUtil.createSubscription(bundle, aoProduct, aoTerm, aoPriceList);
+        DefaultSubscriptionBase aoSubscription = testUtil.createSubscription(bundle, baseSubscription, aoProduct, aoTerm, aoPriceList);
         assertEquals(aoSubscription.getState(), EntitlementState.ACTIVE);
 
         testListener.pushExpectedEvent(NextEvent.CANCEL);
@@ -85,7 +85,7 @@ public class TestUserApiAddOn extends SubscriptionTestSuiteWithEmbeddedDB {
         final BillingPeriod aoTerm = BillingPeriod.MONTHLY;
         final String aoPriceList = PriceListSet.DEFAULT_PRICELIST_NAME;
 
-        DefaultSubscriptionBase aoSubscription = testUtil.createSubscription(bundle, aoProduct, aoTerm, aoPriceList);
+        DefaultSubscriptionBase aoSubscription = testUtil.createSubscription(bundle, baseSubscription, aoProduct, aoTerm, aoPriceList);
         assertEquals(aoSubscription.getState(), EntitlementState.ACTIVE);
 
         // Move clock after a month
@@ -159,7 +159,7 @@ public class TestUserApiAddOn extends SubscriptionTestSuiteWithEmbeddedDB {
         final BillingPeriod aoTerm = BillingPeriod.MONTHLY;
         final String aoPriceList = PriceListSet.DEFAULT_PRICELIST_NAME;
 
-        DefaultSubscriptionBase aoSubscription = testUtil.createSubscription(bundle, aoProduct, aoTerm, aoPriceList);
+        DefaultSubscriptionBase aoSubscription = testUtil.createSubscription(bundle, baseSubscription, aoProduct, aoTerm, aoPriceList);
 
         testListener.pushExpectedEvent(NextEvent.PHASE);
         testListener.pushExpectedEvent(NextEvent.PHASE);
@@ -213,7 +213,7 @@ public class TestUserApiAddOn extends SubscriptionTestSuiteWithEmbeddedDB {
         final BillingPeriod aoTerm = BillingPeriod.MONTHLY;
         final String aoPriceList = PriceListSet.DEFAULT_PRICELIST_NAME;
 
-        DefaultSubscriptionBase aoSubscription = testUtil.createSubscription(bundle, aoProduct, aoTerm, aoPriceList);
+        DefaultSubscriptionBase aoSubscription = testUtil.createSubscription(bundle, baseSubscription, aoProduct, aoTerm, aoPriceList);
 
         testListener.pushExpectedEvent(NextEvent.PHASE);
         testListener.pushExpectedEvent(NextEvent.PHASE);
@@ -277,7 +277,7 @@ public class TestUserApiAddOn extends SubscriptionTestSuiteWithEmbeddedDB {
         final BillingPeriod aoTerm = BillingPeriod.MONTHLY;
         final String aoPriceList = PriceListSet.DEFAULT_PRICELIST_NAME;
 
-        DefaultSubscriptionBase aoSubscription = testUtil.createSubscription(bundle, aoProduct, aoTerm, aoPriceList);
+        DefaultSubscriptionBase aoSubscription = testUtil.createSubscription(bundle, baseSubscription, aoProduct, aoTerm, aoPriceList);
 
         testListener.pushExpectedEvent(NextEvent.PHASE);
         testListener.pushExpectedEvent(NextEvent.PHASE);
@@ -335,7 +335,7 @@ public class TestUserApiAddOn extends SubscriptionTestSuiteWithEmbeddedDB {
         final String aoPriceList = PriceListSet.DEFAULT_PRICELIST_NAME;
 
         // CREATE AO
-        DefaultSubscriptionBase aoSubscription = testUtil.createSubscription(bundle, aoProduct, aoTerm, aoPriceList);
+        DefaultSubscriptionBase aoSubscription = testUtil.createSubscription(bundle, baseSubscription, aoProduct, aoTerm, aoPriceList);
 
         testListener.pushExpectedEvent(NextEvent.PHASE);
         testListener.pushExpectedEvent(NextEvent.PHASE);
@@ -434,7 +434,7 @@ public class TestUserApiAddOn extends SubscriptionTestSuiteWithEmbeddedDB {
 
         // CREATE ADDON
         final DateTime beforeAOCreation = clock.getUTCNow();
-        DefaultSubscriptionBase aoSubscription = testUtil.createSubscription(bundle, aoProduct, aoTerm, aoPriceList);
+        DefaultSubscriptionBase aoSubscription = testUtil.createSubscription(bundle, baseSubscription, aoProduct, aoTerm, aoPriceList);
         final DateTime afterAOCreation = clock.getUTCNow();
 
         // CHECK EVERYTHING

@@ -21,7 +21,6 @@ package org.killbill.billing.entitlement.block;
 import java.util.List;
 import java.util.UUID;
 
-import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
 import org.killbill.billing.ErrorCode;
 import org.killbill.billing.account.api.Account;
@@ -108,7 +107,7 @@ public class TestBlockingApi extends EntitlementTestSuiteWithEmbeddedDB {
         blockingInternalApi.setBlockingState(state2, internalCallContext);
         assertListenerStatus();
 
-        final List<BlockingState> blockingAll = blockingInternalApi.getBlockingAllForAccount(internalCallContext);
+        final List<BlockingState> blockingAll = blockingInternalApi.getBlockingAllForAccount(catalog, internalCallContext);
         final List<BlockingState> history = ImmutableList.<BlockingState>copyOf(Collections2.<BlockingState>filter(blockingAll,
                                                                                                                    new Predicate<BlockingState>() {
                                                                                                                        @Override
@@ -178,7 +177,7 @@ public class TestBlockingApi extends EntitlementTestSuiteWithEmbeddedDB {
         baseEntitlement = entitlementApi.getEntitlementForId(baseEntitlement.getId(), callContext);
         assertEquals(baseEntitlement.getState(), EntitlementState.ACTIVE);
 
-        final List<BlockingState> blockingAll = blockingInternalApi.getBlockingAllForAccount(internalCallContext);
+        final List<BlockingState> blockingAll = blockingInternalApi.getBlockingAllForAccount(catalog, internalCallContext);
         final List<BlockingState> history = ImmutableList.<BlockingState>copyOf(Collections2.<BlockingState>filter(blockingAll,
                                                                                                                    new Predicate<BlockingState>() {
                                                                                                                        @Override
