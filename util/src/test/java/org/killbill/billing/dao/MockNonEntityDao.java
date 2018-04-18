@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014-2015 Groupon, Inc
- * Copyright 2014-2015 The Billing Project, LLC
+ * Copyright 2014-2018 Groupon, Inc
+ * Copyright 2014-2018 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -32,10 +32,13 @@ import org.killbill.billing.util.dao.NonEntitySqlDao;
 import org.killbill.billing.util.dao.TableName;
 import org.skife.jdbi.v2.Handle;
 
+import static org.killbill.billing.ObjectType.ACCOUNT;
+
 public class MockNonEntityDao implements NonEntityDao {
 
     private final Map<UUID, Long> tenantRecordIdMappings = new HashMap<UUID, Long>();
     private final Map<UUID, Long> accountRecordIdMappings = new HashMap<UUID, Long>();
+    private final Map<Long, UUID> accountIdMappings = new HashMap<Long, UUID>();
 
     public void addTenantRecordIdMapping(final UUID objectId, final InternalTenantContext context) {
         tenantRecordIdMappings.put(objectId, context.getTenantRecordId());
@@ -43,6 +46,10 @@ public class MockNonEntityDao implements NonEntityDao {
 
     public void addAccountRecordIdMapping(final UUID objectId, final InternalTenantContext context) {
         accountRecordIdMappings.put(objectId, context.getAccountRecordId());
+    }
+
+    public void addAccountIdMapping(final Long objectRecordId, final UUID objectId) {
+        accountIdMappings.put(objectRecordId, objectId);
     }
 
     @Override
@@ -77,7 +84,11 @@ public class MockNonEntityDao implements NonEntityDao {
 
     @Override
     public UUID retrieveIdFromObject(final Long recordId, final ObjectType objectType, @Nullable final CacheController<String, UUID> cache) {
-        return null;
+        if (objectType == ACCOUNT) {
+            return accountIdMappings.get(recordId);
+        } else {
+            return null;
+        }
     }
 
     @Override

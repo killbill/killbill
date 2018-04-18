@@ -12,7 +12,6 @@ defaultOrderBy(prefix) ::= <<
 order by <prefix>effective_date ASC, <recordIdField(prefix)> ASC
 >>
 
-
 tableFields(prefix) ::= <<
   <prefix> event_type
 , <prefix> user_type
@@ -96,17 +95,5 @@ and is_active = true
 ;
 >>
 
-getFutureActiveEventsForAccount() ::= <<
-select <allTableFields("")>
-, record_id as total_ordering
-from <tableName()>
-where
-account_record_id = :accountRecordId
-and is_active = true
-and effective_date > :now
-<AND_CHECK_TENANT("")>
-<defaultOrderBy("")>
-;
->>
 
 

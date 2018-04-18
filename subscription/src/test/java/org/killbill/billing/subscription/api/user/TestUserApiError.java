@@ -58,8 +58,8 @@ public class TestUserApiError extends SubscriptionTestSuiteNoDB {
     }
 
     @Test(groups = "fast")
-    public void testCreateSubscriptionNoBundle() {
-        tCreateSubscriptionInternal(null, "Shotgun", BillingPeriod.ANNUAL, PriceListSet.DEFAULT_PRICELIST_NAME, ErrorCode.SUB_CREATE_NO_BUNDLE);
+    public void testCreateSubscriptionNoBundle() throws SubscriptionBaseApiException {
+        testUtil.createSubscription(null, "Shotgun", BillingPeriod.ANNUAL, PriceListSet.DEFAULT_PRICELIST_NAME);
     }
 
     @Test(groups = "fast")
@@ -75,39 +75,20 @@ public class TestUserApiError extends SubscriptionTestSuiteNoDB {
 
     @Test(groups = "fast")
     public void testCreateSubscriptionAddOnNotAvailable() throws SubscriptionBaseApiException {
-        final SubscriptionBaseBundle aoBundle = subscriptionInternalApi.createBundleForAccount(bundle.getAccountId(), "myAOBundle", true, internalCallContext);
-        mockNonEntityDao.addTenantRecordIdMapping(aoBundle.getId(), internalCallContext);
-        mockNonEntityDao.addAccountRecordIdMapping(aoBundle.getId(), internalCallContext);
-
-        testUtil.createSubscriptionWithBundle(aoBundle, null, "Pistol", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, null);
-        tCreateSubscriptionInternal(aoBundle, "Telescopic-Scope", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, ErrorCode.SUB_CREATE_AO_NOT_AVAILABLE);
+        testUtil.createSubscription(bundle, "Pistol", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME);
+        tCreateSubscriptionInternal(bundle, "Telescopic-Scope", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, ErrorCode.SUB_CREATE_AO_NOT_AVAILABLE);
     }
 
     @Test(groups = "fast")
     public void testCreateSubscriptionAddOnIncluded() throws SubscriptionBaseApiException {
-        final SubscriptionBaseBundle aoBundle = subscriptionInternalApi.createBundleForAccount(bundle.getAccountId(), "myAOBundle", true, internalCallContext);
-        mockNonEntityDao.addTenantRecordIdMapping(aoBundle.getId(), internalCallContext);
-        mockNonEntityDao.addAccountRecordIdMapping(aoBundle.getId(), internalCallContext);
-
-        testUtil.createSubscriptionWithBundle(aoBundle, null, "Assault-Rifle", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, null);
-        tCreateSubscriptionInternal(aoBundle, "Telescopic-Scope", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, ErrorCode.SUB_CREATE_AO_ALREADY_INCLUDED);
+        testUtil.createSubscription(bundle, "Assault-Rifle", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME);
+        tCreateSubscriptionInternal(bundle, "Telescopic-Scope", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, ErrorCode.SUB_CREATE_AO_ALREADY_INCLUDED);
     }
 
     private void tCreateSubscriptionInternal(@Nullable final SubscriptionBaseBundle bundle, @Nullable final String productName,
                                              @Nullable final BillingPeriod term, final String planSet, final ErrorCode expected) {
-        SubscriptionBase baseSubscription = null;
-        if (bundle != null) {
-            try {
-                baseSubscription = subscriptionInternalApi.getBaseSubscription(bundle.getId(), internalCallContext);
-            } catch (final SubscriptionBaseApiException ignored) {
-            }
-        }
-
         try {
-            subscriptionInternalApi.createSubscription(bundle,
-                                                       baseSubscription,
-                                                       testUtil.getProductSpecifier(productName, planSet, term, null),
-                                                       null, clock.getUTCNow(), false, internalCallContext);
+            testUtil.createSubscription(true, bundle, productName, term, planSet);
             Assert.fail("Exception expected, error code: " + expected);
         } catch (final SubscriptionBaseApiException e) {
             assertEquals(e.getCode(), expected.getCode());

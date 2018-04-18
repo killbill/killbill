@@ -19,8 +19,10 @@
 package org.killbill.billing.entitlement.api;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -57,6 +59,7 @@ import org.killbill.billing.security.api.SecurityApi;
 import org.killbill.billing.subscription.api.SubscriptionBase;
 import org.killbill.billing.subscription.api.SubscriptionBaseInternalApi;
 import org.killbill.billing.subscription.api.SubscriptionBaseWithAddOns;
+import org.killbill.billing.subscription.api.SubscriptionBaseWithAddOnsSpecifier;
 import org.killbill.billing.subscription.api.transfer.SubscriptionBaseTransferApi;
 import org.killbill.billing.subscription.api.transfer.SubscriptionBaseTransferApiException;
 import org.killbill.billing.subscription.api.user.SubscriptionBaseApiException;
@@ -182,6 +185,7 @@ public class DefaultEntitlementApi extends DefaultEntitlementApiBase implements 
                 final DateTime now = clock.getUTCNow();
 
                 final Iterable<BaseEntitlementWithAddOnsSpecifier> baseEntitlementWithAddOnsSpecifiersAfterPlugins = updatedPluginContext.getBaseEntitlementWithAddOnsSpecifiers();
+                final Collection<SubscriptionBaseWithAddOnsSpecifier> subscriptionBaseWithAddOnsSpecifiers = new LinkedList<SubscriptionBaseWithAddOnsSpecifier>();
                 DateTime upTo = null;
                 for (final BaseEntitlementWithAddOnsSpecifier baseEntitlementWithAddOnsSpecifier : baseEntitlementWithAddOnsSpecifiersAfterPlugins) {
                     // Entitlement
@@ -189,6 +193,15 @@ public class DefaultEntitlementApi extends DefaultEntitlementApiBase implements 
                                                                                                        now,
                                                                                                        contextWithValidAccountRecordId);
                     upTo = upTo == null || upTo.compareTo(entitlementRequestedDate) < 0 ? entitlementRequestedDate : upTo;
+
+                    final DateTime billingEffectiveDateTime = (baseEntitlementWithAddOnsSpecifier.getBillingEffectiveDate() != null) ?
+                                                              contextWithValidAccountRecordId.toUTCDateTime(baseEntitlementWithAddOnsSpecifier.getBillingEffectiveDate()) : null;
+                    final SubscriptionBaseWithAddOnsSpecifier subscriptionBaseWithAddOnsSpecifier = new SubscriptionBaseWithAddOnsSpecifier(baseEntitlementWithAddOnsSpecifier.getBundleId(),
+                                                                                                                                            baseEntitlementWithAddOnsSpecifier.getExternalKey(),
+                                                                                                                                            baseEntitlementWithAddOnsSpecifier.getEntitlementSpecifier(),
+                                                                                                                                            billingEffectiveDateTime,
+                                                                                                                                            baseEntitlementWithAddOnsSpecifier.isMigrated());
+                    subscriptionBaseWithAddOnsSpecifiers.add(subscriptionBaseWithAddOnsSpecifier);
                 }
 
                 try {
@@ -196,8 +209,7 @@ public class DefaultEntitlementApi extends DefaultEntitlementApiBase implements 
                     // Note that to fully check for block_change we should also look for BlockingState at the BUNDLE/SUBSCRIPTION level in case some of the input contain a BP that already exists.
                     checkForAccountBlockingChange(accountId, upTo, contextWithValidAccountRecordId);
 
-                    final List<SubscriptionBaseWithAddOns> subscriptionsWithAddOns = subscriptionBaseInternalApi.createBaseSubscriptionsWithAddOns(accountId,
-                                                                                                                                                   baseEntitlementWithAddOnsSpecifiersAfterPlugins,
+                    final List<SubscriptionBaseWithAddOns> subscriptionsWithAddOns = subscriptionBaseInternalApi.createBaseSubscriptionsWithAddOns(subscriptionBaseWithAddOnsSpecifiers,
                                                                                                                                                    renameCancelledBundleIfExist,
                                                                                                                                                    contextWithValidAccountRecordId);
                     final Map<BlockingState, UUID> blockingStateMap = new HashMap<BlockingState, UUID>();
@@ -312,25 +324,20 @@ public class DefaultEntitlementApi extends DefaultEntitlementApiBase implements 
                 }
 
                 try {
-                    final BaseEntitlementWithAddOnsSpecifier baseEntitlementWithAddOnsSpecifier = getFirstBaseEntitlementWithAddOnsSpecifier(updatedPluginContext.getBaseEntitlementWithAddOnsSpecifiers());
-                    final EntitlementSpecifier specifier = getFirstEntitlementSpecifier(baseEntitlementWithAddOnsSpecifier);
-
-                    final DateTime billingRequestedDateRaw = dateHelper.fromLocalDateAndReferenceTime(baseEntitlementWithAddOnsSpecifier.getBillingEffectiveDate(), now, context);
-
-                    DateTime billingRequestedDate = billingRequestedDateRaw;
-                    if (!isStandalone) {
-                        final DateTime baseSubscriptionStartDate = eventsStreamForBaseSubscription.getSubscriptionBase().getStartDate();
-                        billingRequestedDate = billingRequestedDateRaw.isBefore(baseSubscriptionStartDate) ? baseSubscriptionStartDate : billingRequestedDateRaw;
-                    }
+                    final BaseEntitlementWithAddOnsSpecifier baseEntitlementWithAddOnsSpecifierAfterPlugins = getFirstBaseEntitlementWithAddOnsSpecifier(updatedPluginContext.getBaseEntitlementWithAddOnsSpecifiers());
+                    final DateTime billingEffectiveDateTime = (baseEntitlementWithAddOnsSpecifierAfterPlugins.getBillingEffectiveDate() != null) ?
+                                                          context.toUTCDateTime(baseEntitlementWithAddOnsSpecifierAfterPlugins.getBillingEffectiveDate()) : null;
+                    final SubscriptionBaseWithAddOnsSpecifier subscriptionBaseWithAddOnsSpecifier = new SubscriptionBaseWithAddOnsSpecifier(baseEntitlementWithAddOnsSpecifierAfterPlugins.getBundleId(),
+                                                                                                                                            baseEntitlementWithAddOnsSpecifierAfterPlugins.getExternalKey(),
+                                                                                                                                            baseEntitlementWithAddOnsSpecifierAfterPlugins.getEntitlementSpecifier(),
+                                                                                                                                            billingEffectiveDateTime,
+                                                                                                                                            baseEntitlementWithAddOnsSpecifierAfterPlugins.isMigrated());
 
                     final SubscriptionBaseBundle baseBundle = subscriptionBaseInternalApi.getBundleFromId(bundleId, context);
-                    final SubscriptionBase subscription = subscriptionBaseInternalApi.createSubscription(baseBundle,
-                                                                                                         eventsStreamForBaseSubscription == null ? null : eventsStreamForBaseSubscription.getSubscriptionBase(),
-                                                                                                         specifier.getPlanPhaseSpecifier(),
-                                                                                                         specifier.getOverrides(),
-                                                                                                         billingRequestedDate,
-                                                                                                         isMigrated,
-                                                                                                         context);
+                    final List<SubscriptionBaseWithAddOns> subscriptionsWithAddOns = subscriptionBaseInternalApi.createBaseSubscriptionsWithAddOns(ImmutableList.<SubscriptionBaseWithAddOnsSpecifier>of(subscriptionBaseWithAddOnsSpecifier),
+                                                                                                                                                   false,
+                                                                                                                                                   context);
+                    final SubscriptionBase subscription = subscriptionsWithAddOns.get(0).getSubscriptionBaseList().get(0);
 
                     final BlockingState newBlockingState = new DefaultBlockingState(subscription.getId(), BlockingStateType.SUBSCRIPTION, DefaultEntitlementApi.ENT_STATE_START, EntitlementService.ENTITLEMENT_SERVICE_NAME, false, false, false, entitlementRequestedDate);
                     entitlementUtils.setBlockingStatesAndPostBlockingTransitionEvent(ImmutableList.<BlockingState>of(newBlockingState), subscription.getBundleId(), context);
