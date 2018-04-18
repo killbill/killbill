@@ -18,8 +18,8 @@
 
 package org.killbill.billing.entitlement.dao;
 
+import java.util.Collection;
 import java.util.LinkedList;
-import java.util.List;
 
 import javax.annotation.Nullable;
 
@@ -74,15 +74,15 @@ public class OptimizedProxyBlockingStateDao extends ProxyBlockingStateDao {
      * @return blocking states for that subscription
      * @throws EntitlementApiException
      */
-    public List<BlockingState> getBlockingHistory(final List<BlockingState> subscriptionBlockingStatesOnDisk,
-                                                  final List<BlockingState> allBlockingStatesOnDiskForAccount,
-                                                  final ImmutableAccountData account,
-                                                  final SubscriptionBaseBundle bundle,
-                                                  @Nullable final SubscriptionBase baseSubscription,
-                                                  final SubscriptionBase subscription,
-                                                  final List<SubscriptionBase> allSubscriptionsForBundle,
-                                                  final Catalog catalog,
-                                                  final InternalTenantContext context) throws EntitlementApiException {
+    public Collection<BlockingState> getBlockingHistory(final Collection<BlockingState> subscriptionBlockingStatesOnDisk,
+                                                        final Collection<BlockingState> allBlockingStatesOnDiskForAccount,
+                                                        final ImmutableAccountData account,
+                                                        final SubscriptionBaseBundle bundle,
+                                                        @Nullable final SubscriptionBase baseSubscription,
+                                                        final SubscriptionBase subscription,
+                                                        final Collection<SubscriptionBase> allSubscriptionsForBundle,
+                                                        final Catalog catalog,
+                                                        final InternalTenantContext context) throws EntitlementApiException {
         // blockable id points to a subscription, but make sure it's an add-on
         if (!ProductCategory.ADD_ON.equals(subscription.getCategory())) {
             // blockable id points to a base or standalone subscription, there is nothing to do

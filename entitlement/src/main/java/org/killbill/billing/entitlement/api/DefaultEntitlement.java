@@ -65,6 +65,7 @@ import org.killbill.billing.security.api.SecurityApi;
 import org.killbill.billing.subscription.api.SubscriptionBase;
 import org.killbill.billing.subscription.api.SubscriptionBaseInternalApi;
 import org.killbill.billing.subscription.api.user.SubscriptionBaseApiException;
+import org.killbill.billing.subscription.api.user.SubscriptionBaseBundle;
 import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.billing.util.callcontext.TenantContext;
@@ -105,15 +106,15 @@ public class DefaultEntitlement extends EntityBase implements Entitlement {
     // Refresh-able
     protected EventsStream eventsStream;
 
-    public DefaultEntitlement(final UUID accountId, final UUID entitlementId, final EventsStreamBuilder eventsStreamBuilder,
+    public DefaultEntitlement(final SubscriptionBaseBundle bundle, final SubscriptionBase subscription, final Collection<SubscriptionBase> allSubscriptionsForBundle, final EventsStreamBuilder eventsStreamBuilder,
                               final EntitlementApi entitlementApi, final EntitlementPluginExecution pluginExecution, final BlockingStateDao blockingStateDao,
                               final SubscriptionBaseInternalApi subscriptionInternalApi, final BlockingChecker checker,
                               final NotificationQueueService notificationQueueService, final EntitlementUtils entitlementUtils,
                               final EntitlementDateHelper dateHelper, final Clock clock, final SecurityApi securityApi,
-                              final InternalCallContextFactory internalCallContextFactory, final TenantContext tenantContext) throws EntitlementApiException {
-        this(eventsStreamBuilder.buildForEntitlement(entitlementId, tenantContext), eventsStreamBuilder,
+                              final InternalCallContextFactory internalCallContextFactory, final InternalTenantContext internalTenantContext) throws EntitlementApiException {
+        this(eventsStreamBuilder.buildForEntitlement(bundle, subscription, allSubscriptionsForBundle, internalTenantContext), eventsStreamBuilder,
              entitlementApi, pluginExecution, blockingStateDao, subscriptionInternalApi, checker, notificationQueueService,
-             entitlementUtils, dateHelper, clock, securityApi, internalCallContextFactory.createInternalTenantContext(accountId, tenantContext), internalCallContextFactory);
+             entitlementUtils, dateHelper, clock, securityApi, internalTenantContext, internalCallContextFactory);
     }
 
     public DefaultEntitlement(final EventsStream eventsStream, final EventsStreamBuilder eventsStreamBuilder,

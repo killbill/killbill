@@ -43,8 +43,13 @@ import org.killbill.billing.util.entity.Pagination;
 
 public interface SubscriptionBaseInternalApi {
 
-    public SubscriptionBase createSubscription(UUID bundleId, PlanPhaseSpecifier spec, List<PlanPhasePriceOverride> overrides, DateTime requestedDateWithMs,
-                                               final boolean isMigrated, InternalCallContext context) throws SubscriptionBaseApiException;
+    public SubscriptionBase createSubscription(SubscriptionBaseBundle bundle,
+                                               @Nullable SubscriptionBase baseSubscription,
+                                               PlanPhaseSpecifier spec,
+                                               List<PlanPhasePriceOverride> overrides,
+                                               DateTime requestedDateWithMs,
+                                               boolean isMigrated,
+                                               InternalCallContext context) throws SubscriptionBaseApiException;
 
     public List<SubscriptionBaseWithAddOns> createBaseSubscriptionsWithAddOns(UUID accountId, Iterable<BaseEntitlementWithAddOnsSpecifier> baseEntitlementWithAddOnsSpecifier,
                                                                               boolean renameCancelledBundleIfExist, InternalCallContext contextWithValidAccountRecordId) throws SubscriptionBaseApiException;

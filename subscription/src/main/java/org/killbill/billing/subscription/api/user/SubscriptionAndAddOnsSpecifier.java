@@ -1,5 +1,6 @@
 /*
- * Copyright 2016 The Billing Project, LLC
+ * Copyright 2014-2018 Groupon, Inc
+ * Copyright 2014-2018 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -17,28 +18,25 @@
 package org.killbill.billing.subscription.api.user;
 
 import java.util.List;
-import java.util.UUID;
 
 import org.joda.time.DateTime;
 
 public class SubscriptionAndAddOnsSpecifier {
 
-    private UUID bundleId;
-    private DateTime effectiveDate;
+    private final SubscriptionBaseBundle bundle;
+    private final DateTime effectiveDate;
     private List<SubscriptionSpecifier> subscriptionSpecifiers;
 
-    public SubscriptionAndAddOnsSpecifier() {
-    }
-
-    public SubscriptionAndAddOnsSpecifier(final UUID bundleId, final DateTime effectiveDate,
+    public SubscriptionAndAddOnsSpecifier(final SubscriptionBaseBundle bundle,
+                                          final DateTime effectiveDate,
                                           final List<SubscriptionSpecifier> subscriptionSpecifiers) {
-        this.bundleId = bundleId;
+        this.bundle = bundle;
         this.effectiveDate = effectiveDate;
         this.subscriptionSpecifiers = subscriptionSpecifiers;
     }
 
-    public UUID getBundleId() {
-        return bundleId;
+    public SubscriptionBaseBundle getBundle() {
+        return bundle;
     }
 
     public DateTime getEffectiveDate() {
