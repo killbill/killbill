@@ -68,12 +68,6 @@ public class TestUserApiError extends SubscriptionTestSuiteNoDB {
     }
 
     @Test(groups = "fast")
-    public void testCreateSubscriptionBPExists() throws SubscriptionBaseApiException {
-        testUtil.createSubscription(bundle, "Shotgun", BillingPeriod.ANNUAL, PriceListSet.DEFAULT_PRICELIST_NAME);
-        tCreateSubscriptionInternal(bundle, "Shotgun", BillingPeriod.ANNUAL, PriceListSet.DEFAULT_PRICELIST_NAME, ErrorCode.SUB_CREATE_BP_EXISTS);
-    }
-
-    @Test(groups = "fast")
     public void testCreateSubscriptionAddOnNotAvailable() throws SubscriptionBaseApiException {
         testUtil.createSubscription(bundle, "Pistol", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME);
         tCreateSubscriptionInternal(bundle, "Telescopic-Scope", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, ErrorCode.SUB_CREATE_AO_NOT_AVAILABLE);

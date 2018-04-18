@@ -146,16 +146,6 @@ public class DefaultSubscriptionInternalApi extends SubscriptionApiBase implemen
                                                                              final Catalog catalog,
                                                                              final CallContext callContext) throws SubscriptionBaseApiException, CatalogApiException {
         final List<SubscriptionSpecifier> subscriptions = new ArrayList<SubscriptionSpecifier>();
-        // TODO We should also look to the specifiers being created for validation
-        final List<SubscriptionBase> subscriptionsForBundle = getSubscriptionsForBundle(bundle.getId(), null, context);
-        SubscriptionBase baseSubscription = null;
-        for (final SubscriptionBase cur : subscriptionsForBundle) {
-            if (cur.getCategory() == ProductCategory.BASE) {
-                baseSubscription = cur;
-                break;
-            }
-        }
-
         for (final EntitlementSpecifier entitlement : entitlements) {
             final PlanPhaseSpecifier spec = entitlement.getPlanPhaseSpecifier();
             if (spec == null) {
@@ -175,6 +165,8 @@ public class DefaultSubscriptionInternalApi extends SubscriptionApiBase implemen
             // verify the number of subscriptions (of the same kind) allowed per bundle and the existing ones
             if (ProductCategory.ADD_ON.toString().equalsIgnoreCase(plan.getProduct().getCategory().toString())) {
                 if (plan.getPlansAllowedInBundle() != -1 && plan.getPlansAllowedInBundle() > 0) {
+                    // TODO We should also look to the specifiers being created for validation
+                    final List<SubscriptionBase> subscriptionsForBundle = getSubscriptionsForBundle(bundle.getId(), null, context);
                     final int existingAddOnsWithSamePlanName = addonUtils.countExistingAddOnsWithSamePlanName(subscriptionsForBundle, plan.getName());
                     final int currentAddOnsWithSamePlanName = countCurrentAddOnsWithSamePlanName(entitlements, catalog, plan.getName(), effectiveDate, callContext);
                     if ((existingAddOnsWithSamePlanName + currentAddOnsWithSamePlanName) > plan.getPlansAllowedInBundle()) {
@@ -184,7 +176,13 @@ public class DefaultSubscriptionInternalApi extends SubscriptionApiBase implemen
                 }
             }
 
-            final DateTime bundleStartDate = baseOrStandalonePlanSpecifier != null ? effectiveDate : getBundleStartDateWithSanity(bundle.getId(), baseSubscription, plan, effectiveDate, catalog, context);
+            final DateTime bundleStartDate;
+            if (baseOrStandalonePlanSpecifier != null) {
+                bundleStartDate = effectiveDate;
+            } else {
+                final SubscriptionBase baseSubscription = dao.getBaseSubscription(bundle.getId(), catalog, context);
+                bundleStartDate = getBundleStartDateWithSanity(bundle.getId(), baseSubscription, plan, effectiveDate, catalog, context);
+            }
 
             final SubscriptionSpecifier subscription = new SubscriptionSpecifier();
             subscription.setRealPriceList(plan.getPriceListName());
@@ -273,13 +271,12 @@ public class DefaultSubscriptionInternalApi extends SubscriptionApiBase implemen
                     if (bundle == null || (subscriptionBaseWithAddOnsSpecifier.getBundleExternalKey() != null && subscriptionBaseWithAddOnsSpecifier.getBundleExternalKey().equals(bundle.getExternalKey()))) {
                         throw new SubscriptionBaseApiException(ErrorCode.SUB_CREATE_INVALID_ENTITLEMENT_SPECIFIER);
                     }
-                } else if (subscriptionBaseWithAddOnsSpecifier.getBundleExternalKey() != null) {
+                } else if (subscriptionBaseWithAddOnsSpecifier.getBundleExternalKey() != null &&
+                           baseOrStandalonePlanSpecifier == null) { // Skip the expensive checks if we are about to create the bundle (validation will be done in SubscriptionDao#createSubscriptionBundle)
                     final List<SubscriptionBaseBundle> existingBundles = dao.getSubscriptionBundlesForKey(subscriptionBaseWithAddOnsSpecifier.getBundleExternalKey(), context);
                     final SubscriptionBaseBundle tmp = getActiveBundleForKeyNotException(existingBundles, dao, clock, catalog, context);
                     if (tmp == null) {
-                        if (baseOrStandalonePlanSpecifier == null) {
-                            throw new SubscriptionBaseApiException(ErrorCode.SUB_CREATE_NO_BP, subscriptionBaseWithAddOnsSpecifier.getBundleExternalKey());
-                        }
+                        throw new SubscriptionBaseApiException(ErrorCode.SUB_CREATE_NO_BP, subscriptionBaseWithAddOnsSpecifier.getBundleExternalKey());
                     } else if (!tmp.getAccountId().equals(accountId)) {
                         throw new SubscriptionBaseApiException(ErrorCode.SUB_CREATE_ACTIVE_BUNDLE_KEY_EXISTS, subscriptionBaseWithAddOnsSpecifier.getBundleExternalKey());
                     } else {

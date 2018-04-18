@@ -76,8 +76,13 @@ import org.killbill.clock.Clock;
 import org.killbill.clock.DefaultClock;
 
 import com.google.common.base.Preconditions;
+import com.google.common.base.Predicate;
+import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.Collections2;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ListMultimap;
+import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 
 public class DefaultSubscriptionBaseApiService implements SubscriptionBaseApiService {
@@ -121,11 +126,15 @@ public class DefaultSubscriptionBaseApiService implements SubscriptionBaseApiSer
                 allSubscriptions.add(subscriptionBaseWithAddOns);
             }
 
-            dao.createSubscriptionsWithAddOns(allSubscriptions, eventsMap, fullCatalog, internalCallContext);
+            final List<SubscriptionBaseEvent> events = dao.createSubscriptionsWithAddOns(allSubscriptions, eventsMap, fullCatalog, internalCallContext);
+            final ListMultimap<UUID, SubscriptionBaseEvent> eventsBySubscription = ArrayListMultimap.<UUID, SubscriptionBaseEvent>create();
+            for (final SubscriptionBaseEvent event : events) {
+                eventsBySubscription.put(event.getSubscriptionId(), event);
+            }
 
             for (final List<SubscriptionBase> subscriptions : subscriptionBaseAndAddOnsList) {
                 for (final SubscriptionBase input : subscriptions) {
-                    ((DefaultSubscriptionBase) input).rebuildTransitions(dao.getEventsForSubscription(input.getId(), internalCallContext), fullCatalog);
+                    ((DefaultSubscriptionBase) input).rebuildTransitions(eventsBySubscription.get(input.getId()), fullCatalog);
                 }
             }
             return allSubscriptions;
