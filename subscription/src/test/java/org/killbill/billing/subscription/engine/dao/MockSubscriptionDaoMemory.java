@@ -198,11 +198,6 @@ public class MockSubscriptionDaoMemory extends MockEntityDaoBase<SubscriptionBun
     }
 
     @Override
-    public UUID getAccountIdFromSubscriptionId(final UUID subscriptionId, final InternalTenantContext context) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
     public List<SubscriptionBaseEvent> createSubscriptionsWithAddOns(final List<SubscriptionBaseWithAddOns> subscriptions,
                                                                      final Map<UUID, List<SubscriptionBaseEvent>> initialEventsMap,
                                                                      final Catalog catalog,

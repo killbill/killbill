@@ -343,34 +343,6 @@ public class DefaultSubscriptionDao extends EntityDaoBase<SubscriptionBundleMode
     }
 
     @Override
-    public UUID getAccountIdFromSubscriptionId(final UUID subscriptionId, final InternalTenantContext context) {
-
-        return transactionalSqlDao.execute(true, new EntitySqlDaoTransactionWrapper<UUID>() {
-            @Override
-            public UUID inTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory) throws Exception {
-                final SubscriptionModelDao subscriptionModel = entitySqlDaoWrapperFactory.become(SubscriptionSqlDao.class).getById(subscriptionId.toString(), context);
-                if (subscriptionModel == null) {
-                    log.warn(String.format(ErrorCode.SUB_INVALID_SUBSCRIPTION_ID.getFormat(), subscriptionId.toString()));
-                    return null;
-                }
-
-                final UUID bundleId = subscriptionModel.getBundleId();
-                if (bundleId == null) {
-                    log.warn(String.format(ErrorCode.SUB_GET_NO_BUNDLE_FOR_SUBSCRIPTION.getFormat(), subscriptionId.toString()));
-                    return null;
-                }
-
-                final SubscriptionBundleModelDao bundleModel = entitySqlDaoWrapperFactory.become(BundleSqlDao.class).getById(bundleId.toString(), context);
-                if (bundleModel == null) {
-                    log.warn(String.format(ErrorCode.SUB_GET_INVALID_BUNDLE_ID.getFormat(), bundleId.toString()));
-                    return null;
-                }
-                return bundleModel.getAccountId();
-            }
-        });
-    }
-
-    @Override
     public SubscriptionBase getBaseSubscription(final UUID bundleId, final Catalog catalog, final InternalTenantContext context) throws CatalogApiException {
         return getBaseSubscription(bundleId, true, catalog, context);
     }

@@ -333,10 +333,9 @@ public class DefaultEntitlementApi extends DefaultEntitlementApiBase implements 
     public List<EntitlementAOStatusDryRun> getDryRunStatusForChange(final UUID bundleId, final String targetProductName, @Nullable final LocalDate effectiveDate, final TenantContext context) throws EntitlementApiException {
         final InternalTenantContext internalContext = internalCallContextFactory.createInternalTenantContext(bundleId, ObjectType.BUNDLE, context);
         try {
-            final SubscriptionBaseBundle bundle = subscriptionBaseInternalApi.getBundleFromId(bundleId, internalContext);
             final SubscriptionBase baseSubscription = subscriptionBaseInternalApi.getBaseSubscription(bundleId, internalContext);
-
-            final InternalTenantContext contextWithValidAccountRecordId = internalCallContextFactory.createInternalTenantContext(bundle.getAccountId(), context);
+            final UUID accountId = subscriptionBaseInternalApi.getAccountIdFromBundleId(bundleId, internalContext);
+            final InternalTenantContext contextWithValidAccountRecordId = internalCallContextFactory.createInternalTenantContext(accountId, context);
             final DateTime now = clock.getUTCNow();
             final DateTime requestedDate = dateHelper.fromLocalDateAndReferenceTime(effectiveDate, now, contextWithValidAccountRecordId);
             return subscriptionBaseInternalApi.getDryRunChangePlanStatus(baseSubscription.getId(), targetProductName, requestedDate, contextWithValidAccountRecordId);
@@ -356,7 +355,7 @@ public class DefaultEntitlementApi extends DefaultEntitlementApiBase implements 
         final InternalTenantContext internalContext = internalCallContextFactory.createInternalTenantContext(bundleId, ObjectType.BUNDLE, tenantContext);
         final UUID accountId;
         try {
-            accountId = subscriptionBaseInternalApi.getBundleFromId(bundleId, internalContext).getAccountId();
+            accountId = subscriptionBaseInternalApi.getAccountIdFromBundleId(bundleId, internalContext);
         } catch (final SubscriptionBaseApiException e) {
             throw new EntitlementApiException(e);
         }
@@ -465,12 +464,12 @@ public class DefaultEntitlementApi extends DefaultEntitlementApiBase implements 
                 try {
 
                     final UUID activeSubscriptionIdForKey = entitlementUtils.getFirstActiveSubscriptionIdForKeyOrNull(externalKey, contextWithSourceAccountRecordId);
-                    final SubscriptionBase baseSubscription = activeSubscriptionIdForKey != null ?
-                                                              subscriptionBaseInternalApi.getSubscriptionFromId(activeSubscriptionIdForKey, contextWithSourceAccountRecordId) : null;
-                    final SubscriptionBaseBundle baseBundle = baseSubscription != null ?
-                                                              subscriptionBaseInternalApi.getBundleFromId(baseSubscription.getBundleId(), contextWithSourceAccountRecordId) : null;
+                    final UUID bundleId = activeSubscriptionIdForKey != null ?
+                                          subscriptionBaseInternalApi.getBundleIdFromSubscriptionId(activeSubscriptionIdForKey, contextWithSourceAccountRecordId) : null;
+                    final UUID baseBundleAccountId = bundleId != null ?
+                                                     subscriptionBaseInternalApi.getAccountIdFromBundleId(bundleId, contextWithSourceAccountRecordId) : null;
 
-                    if (baseBundle == null || !baseBundle.getAccountId().equals(sourceAccountId)) {
+                    if (baseBundleAccountId == null || !baseBundleAccountId.equals(sourceAccountId)) {
                         throw new EntitlementApiException(new SubscriptionBaseApiException(ErrorCode.SUB_GET_INVALID_BUNDLE_KEY, externalKey));
                     }
 
@@ -485,7 +484,7 @@ public class DefaultEntitlementApi extends DefaultEntitlementApiBase implements 
 
                     // Block all associated subscriptions - TODO Do we want to block the bundle as well (this will add an extra STOP_ENTITLEMENT event in the bundle timeline stream)?
                     // Note that there is no un-transfer at the moment, so we effectively add a blocking state on disk for all subscriptions
-                    for (final SubscriptionBase subscriptionBase : subscriptionBaseInternalApi.getSubscriptionsForBundle(baseBundle.getId(), null, contextWithSourceAccountRecordId)) {
+                    for (final SubscriptionBase subscriptionBase : subscriptionBaseInternalApi.getSubscriptionsForBundle(bundleId, null, contextWithSourceAccountRecordId)) {
                         final BlockingState blockingState = new DefaultBlockingState(subscriptionBase.getId(), BlockingStateType.SUBSCRIPTION, DefaultEntitlementApi.ENT_STATE_CANCELLED, EntitlementService.ENTITLEMENT_SERVICE_NAME, true, true, false, requestedDate);
                         blockingStates.put(blockingState, subscriptionBase.getBundleId());
                     }

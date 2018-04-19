@@ -79,6 +79,12 @@ import org.killbill.billing.subscription.events.bcd.BCDEventData;
 import org.killbill.billing.subscription.exceptions.SubscriptionBaseError;
 import org.killbill.billing.util.UUIDs;
 import org.killbill.billing.util.bcd.BillCycleDayCalculator;
+import org.killbill.billing.util.cache.AccountIdFromBundleIdCacheLoader;
+import org.killbill.billing.util.cache.BundleIdFromSubscriptionIdCacheLoader;
+import org.killbill.billing.util.cache.Cachable.CacheType;
+import org.killbill.billing.util.cache.CacheController;
+import org.killbill.billing.util.cache.CacheControllerDispatcher;
+import org.killbill.billing.util.cache.CacheLoaderArgument;
 import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.billing.util.callcontext.TenantContext;
@@ -107,6 +113,8 @@ public class DefaultSubscriptionInternalApi extends SubscriptionApiBase implemen
     private final AddonUtils addonUtils;
     private final InternalCallContextFactory internalCallContextFactory;
     private final CatalogInternalApi catalogInternalApi;
+    private final CacheController<UUID, UUID> accountIdCacheController;
+    private final CacheController<UUID, UUID> bundleIdCacheController;
 
     public static final Comparator<SubscriptionBase> SUBSCRIPTIONS_COMPARATOR = new Comparator<SubscriptionBase>() {
 
@@ -129,11 +137,14 @@ public class DefaultSubscriptionInternalApi extends SubscriptionApiBase implemen
                                           final Clock clock,
                                           final CatalogInternalApi catalogInternalApi,
                                           final AddonUtils addonUtils,
+                                          final CacheControllerDispatcher cacheControllerDispatcher,
                                           final InternalCallContextFactory internalCallContextFactory) {
         super(dao, apiService, clock);
         this.addonUtils = addonUtils;
         this.internalCallContextFactory = internalCallContextFactory;
         this.catalogInternalApi = catalogInternalApi;
+        this.accountIdCacheController = cacheControllerDispatcher.getCacheController(CacheType.ACCOUNT_ID_FROM_BUNDLE_ID);
+        this.bundleIdCacheController = cacheControllerDispatcher.getCacheController(CacheType.BUNDLE_ID_FROM_SUBSCRIPTION_ID);
     }
 
     private List<SubscriptionSpecifier> verifyAndBuildSubscriptionSpecifiers(final SubscriptionBaseBundle bundle,
@@ -317,7 +328,13 @@ public class DefaultSubscriptionInternalApi extends SubscriptionApiBase implemen
                 subscriptionAndAddOns.add(subscriptionAndAddOnsSpecifier);
             }
 
-            return apiService.createPlansWithAddOns(accountId, subscriptionAndAddOns, catalog, callContext);
+            final List<SubscriptionBaseWithAddOns> subscriptionBaseWithAddOns = apiService.createPlansWithAddOns(accountId, subscriptionAndAddOns, catalog, callContext);
+            for (final SubscriptionBaseWithAddOns subscriptionBaseWithAO : subscriptionBaseWithAddOns) {
+                for (final SubscriptionBase subscriptionBase : subscriptionBaseWithAO.getSubscriptionBaseList()) {
+                    bundleIdCacheController.putIfAbsent(subscriptionBase.getId(), subscriptionBaseWithAO.getBundle().getId());
+                }
+            }
+            return subscriptionBaseWithAddOns;
         } catch (final CatalogApiException e) {
             throw new SubscriptionBaseApiException(e);
         }
@@ -378,7 +395,9 @@ public class DefaultSubscriptionInternalApi extends SubscriptionApiBase implemen
         }
         try {
             final Catalog catalog = catalogInternalApi.getFullCatalog(true, true, context);
-            return dao.createSubscriptionBundle(bundle, catalog, renameCancelledBundleIfExist, context);
+            final SubscriptionBaseBundle subscriptionBundle = dao.createSubscriptionBundle(bundle, catalog, renameCancelledBundleIfExist, context);
+            accountIdCacheController.putIfAbsent(bundle.getId(), accountId);
+            return subscriptionBundle;
         } catch (final CatalogApiException e) {
             throw new  SubscriptionBaseApiException(e);
         }
@@ -541,11 +560,6 @@ public class DefaultSubscriptionInternalApi extends SubscriptionApiBase implemen
             throw new SubscriptionBaseApiException(ErrorCode.SUB_GET_INVALID_BUNDLE_ID, id.toString());
         }
         return result;
-    }
-
-    @Override
-    public UUID getAccountIdFromSubscriptionId(final UUID subscriptionId, final InternalTenantContext context) throws SubscriptionBaseApiException {
-        return dao.getAccountIdFromSubscriptionId(subscriptionId, context);
     }
 
     @Override
@@ -788,6 +802,67 @@ public class DefaultSubscriptionInternalApi extends SubscriptionApiBase implemen
         } catch (final CatalogApiException e) {
             throw new SubscriptionBaseApiException(e);
         }
+    }
+
+    @Override
+    public UUID getAccountIdFromBundleId(final UUID bundleId, final InternalTenantContext context) throws SubscriptionBaseApiException {
+        final CacheLoaderArgument arg = createAccountIdFromBundleIdCacheLoaderArgument(context);
+        return accountIdCacheController.get(bundleId, arg);
+    }
+
+    @Override
+    public UUID getBundleIdFromSubscriptionId(final UUID subscriptionId, final InternalTenantContext context) throws SubscriptionBaseApiException {
+        final CacheLoaderArgument arg = createBundleIdFromSubscriptionIdCacheLoaderArgument(context);
+        return bundleIdCacheController.get(subscriptionId, arg);
+    }
+
+    @Override
+    public UUID getAccountIdFromSubscriptionId(final UUID subscriptionId, final InternalTenantContext context) throws SubscriptionBaseApiException {
+        final UUID bundleId = getBundleIdFromSubscriptionId(subscriptionId, context);
+        if (bundleId == null) {
+            throw new SubscriptionBaseApiException(ErrorCode.SUB_GET_NO_BUNDLE_FOR_SUBSCRIPTION, subscriptionId);
+        }
+        final UUID accountId = getAccountIdFromBundleId(bundleId, context);
+        if (accountId == null) {
+            throw new SubscriptionBaseApiException(ErrorCode.SUB_GET_INVALID_BUNDLE_ID, bundleId);
+        }
+        return accountId;
+    }
+
+    private CacheLoaderArgument createAccountIdFromBundleIdCacheLoaderArgument(final InternalTenantContext internalTenantContext) {
+        final AccountIdFromBundleIdCacheLoader.LoaderCallback loaderCallback = new AccountIdFromBundleIdCacheLoader.LoaderCallback() {
+            public UUID loadAccountId(final UUID bundleId, final InternalTenantContext internalTenantContext) {
+                final SubscriptionBaseBundle bundle;
+                try {
+                    bundle = getBundleFromId(bundleId, internalTenantContext);
+                } catch (final SubscriptionBaseApiException e) {
+                    log.warn("Unable to retrieve bundle for id='{}'", bundleId);
+                    return null;
+                }
+                return bundle.getAccountId();
+            }
+        };
+
+        final Object[] args = {loaderCallback};
+        return new CacheLoaderArgument(null, args, internalTenantContext);
+    }
+
+    private CacheLoaderArgument createBundleIdFromSubscriptionIdCacheLoaderArgument(final InternalTenantContext internalTenantContext) {
+        final BundleIdFromSubscriptionIdCacheLoader.LoaderCallback loaderCallback = new BundleIdFromSubscriptionIdCacheLoader.LoaderCallback() {
+            public UUID loadBundleId(final UUID subscriptionId, final InternalTenantContext internalTenantContext) {
+                final SubscriptionBase subscriptionBase;
+                try {
+                    subscriptionBase = getSubscriptionFromId(subscriptionId, internalTenantContext);
+                } catch (final SubscriptionBaseApiException e) {
+                    log.warn("Unable to retrieve subscription for id='{}'", subscriptionId);
+                    return null;
+                }
+                return subscriptionBase.getBundleId();
+            }
+        };
+
+        final Object[] args = {loaderCallback};
+        return new CacheLoaderArgument(null, args, internalTenantContext);
     }
 
     @VisibleForTesting
