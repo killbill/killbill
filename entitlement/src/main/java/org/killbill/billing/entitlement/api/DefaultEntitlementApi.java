@@ -158,14 +158,6 @@ public class DefaultEntitlementApi extends DefaultEntitlementApiBase implements 
         return iterator.next();
     }
 
-    private EntitlementSpecifier getFirstEntitlementSpecifier(final BaseEntitlementWithAddOnsSpecifier entitlementWithAddOnsSpecifier) throws SubscriptionBaseApiException {
-        if (entitlementWithAddOnsSpecifier.getEntitlementSpecifier() == null || !entitlementWithAddOnsSpecifier.getEntitlementSpecifier().iterator().hasNext()) {
-            throw new SubscriptionBaseApiException(ErrorCode.SUB_CREATE_INVALID_ENTITLEMENT_SPECIFIER);
-        } else {
-            return entitlementWithAddOnsSpecifier.getEntitlementSpecifier().iterator().next();
-        }
-    }
-
     @Override
     public List<UUID> createBaseEntitlementsWithAddOns(final UUID accountId, final Iterable<BaseEntitlementWithAddOnsSpecifier> originalBaseEntitlementWithAddOnsSpecifiers, final boolean renameCancelledBundleIfExist, final Iterable<PluginProperty> properties, final CallContext callContext) throws EntitlementApiException {
         logCreateEntitlementsWithAOs(log, originalBaseEntitlementWithAddOnsSpecifiers);
