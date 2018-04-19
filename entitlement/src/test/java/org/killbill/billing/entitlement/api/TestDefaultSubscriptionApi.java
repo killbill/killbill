@@ -501,6 +501,7 @@ public class TestDefaultSubscriptionApi extends EntitlementTestSuiteWithEmbedded
         final Entitlement entitlement = entitlementApi.getEntitlementForId(entitlementId, callContext);
 
         clock.addDays(1);
+        clock.addDeltaFromReality(5000);
         assertListenerStatus();
 
         testListener.pushExpectedEvent(NextEvent.BLOCK);
@@ -517,14 +518,12 @@ public class TestDefaultSubscriptionApi extends EntitlementTestSuiteWithEmbedded
             assertEquals(latestEntitlement.getLastActivePlan().getProduct().getName(), "Shotgun");
         }
 
-        try {
-            entitlement.changePlanWithDate(new PlanPhaseSpecifier("Assault-Rifle", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME), null, clock.getUTCToday(), ImmutableList.<PluginProperty>of(), callContext);
-            fail();
-        } catch (final EntitlementApiException e) {
-            assertEquals(e.getCode(), ErrorCode.BLOCK_BLOCKED_ACTION.getCode());
-            final Entitlement latestEntitlement = entitlementApi.getEntitlementForId(entitlement.getId(), callContext);
-            assertEquals(latestEntitlement.getLastActivePlan().getProduct().getName(), "Shotgun");
-        }
+        // If a LocalDate is passed, it will align with the reference time (2013-08-08T00:00:00.000Z), which will fall before the blocking state above (+5s added above)
+        testListener.pushExpectedEvent(NextEvent.CHANGE);
+        entitlement.changePlanWithDate(new PlanPhaseSpecifier("Assault-Rifle", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME), null, clock.getUTCToday(), ImmutableList.<PluginProperty>of(), callContext);
+        assertListenerStatus();
+        final Entitlement latestEntitlement = entitlementApi.getEntitlementForId(entitlement.getId(), callContext);
+        assertEquals(latestEntitlement.getLastActivePlan().getProduct().getName(), "Assault-Rifle");
     }
 
     @Test(groups = "slow")
