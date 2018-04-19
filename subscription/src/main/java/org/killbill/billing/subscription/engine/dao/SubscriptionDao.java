@@ -59,9 +59,6 @@ public interface SubscriptionDao extends EntityDao<SubscriptionBundleModelDao, S
 
     public SubscriptionBase getSubscriptionFromId(UUID subscriptionId, final Catalog catalog, InternalTenantContext context) throws CatalogApiException;
 
-    // ACCOUNT retrieval
-    public UUID getAccountIdFromSubscriptionId(UUID subscriptionId, InternalTenantContext context);
-
     // SubscriptionBase retrieval
     public SubscriptionBase getBaseSubscription(UUID bundleId, final Catalog catalog, InternalTenantContext context) throws CatalogApiException;
 
@@ -82,9 +79,8 @@ public interface SubscriptionDao extends EntityDao<SubscriptionBundleModelDao, S
     public List<SubscriptionBaseEvent> getPendingEventsForSubscription(UUID subscriptionId, InternalTenantContext context);
 
     // SubscriptionBase creation, cancellation, changePlanWithRequestedDate apis
-    public List<SubscriptionBaseEvent> createSubscription(DefaultSubscriptionBase subscription, List<SubscriptionBaseEvent> initialEvents, final Catalog catalog, InternalCallContext context);
 
-    public void createSubscriptionsWithAddOns(List<SubscriptionBaseWithAddOns> subscriptions, Map<UUID, List<SubscriptionBaseEvent>> initialEventsMap, final Catalog catalog, InternalCallContext context);
+    public List<SubscriptionBaseEvent> createSubscriptionsWithAddOns(List<SubscriptionBaseWithAddOns> subscriptions, Map<UUID, List<SubscriptionBaseEvent>> initialEventsMap, final Catalog catalog, InternalCallContext context);
 
     public void cancelSubscriptionsOnBasePlanEvent(DefaultSubscriptionBase subscription, SubscriptionBaseEvent event, List<DefaultSubscriptionBase> subscriptions, List<SubscriptionBaseEvent> cancelEvents, final Catalog catalog, InternalCallContext context);
 

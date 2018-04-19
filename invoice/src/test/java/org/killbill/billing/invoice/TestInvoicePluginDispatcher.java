@@ -1,6 +1,6 @@
 /*
- * Copyright 2014-2017 Groupon, Inc
- * Copyright 2014-2017 The Billing Project, LLC
+ * Copyright 2014-2018 Groupon, Inc
+ * Copyright 2014-2018 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -39,9 +39,10 @@ import static org.testng.Assert.assertEquals;
 
 public class TestInvoicePluginDispatcher extends InvoiceTestSuiteNoDB {
 
-    private final String PLUGIN_1 = "plugin1";
-    private final String PLUGIN_2 = "plugin2";
-    private final String PLUGIN_3 = "plugin3";
+    // Reversed lexicographic order on purpose to test ordering
+    private final String PLUGIN_1 = "C_plugin1";
+    private final String PLUGIN_2 = "B_plugin2";
+    private final String PLUGIN_3 = "A_plugin3";
 
     @Inject
     protected InvoicePluginDispatcher invoicePluginDispatcher;
@@ -51,6 +52,7 @@ public class TestInvoicePluginDispatcher extends InvoiceTestSuiteNoDB {
     @Inject
     TenantInternalApi tenantInternalApi;
 
+    @Override
     protected KillbillConfigSource getConfigSource() {
         return getConfigSource("/resource.properties", ImmutableMap.<String, String>builder()
                 .put("org.killbill.invoice.plugin", Joiner.on(",").join(PLUGIN_1, PLUGIN_2))
@@ -68,7 +70,6 @@ public class TestInvoicePluginDispatcher extends InvoiceTestSuiteNoDB {
 
     @Test(groups = "fast")
     public void testWithNoConfig() throws Exception {
-
         // We Use the per-tenant config and specify a empty list of plugins
         Mockito.when(tenantInternalApi.getTenantConfig(Mockito.any(InternalCallContext.class))).thenReturn("{\"org.killbill.invoice.plugin\":\"\"}");
         // We register one plugin
@@ -100,11 +101,12 @@ public class TestInvoicePluginDispatcher extends InvoiceTestSuiteNoDB {
         final Iterator<String> iterator = result.iterator();
         assertEquals(iterator.next(), PLUGIN_1);
         assertEquals(iterator.next(), PLUGIN_2);
+
+        assertEquals(invoicePluginDispatcher.getInvoicePlugins(internalCallContext).keySet(), result);
     }
 
     @Test(groups = "fast")
     public void testWithIncorrectCorrectOrder() throws Exception {
-
         // 3 plugins registered in *incorrect* order and  only 2 got specified in config
         registerPlugin(PLUGIN_2);
         registerPlugin(PLUGIN_3);
@@ -115,8 +117,9 @@ public class TestInvoicePluginDispatcher extends InvoiceTestSuiteNoDB {
         final Iterator<String> iterator = result.iterator();
         assertEquals(iterator.next(), PLUGIN_1);
         assertEquals(iterator.next(), PLUGIN_2);
-    }
 
+        assertEquals(invoicePluginDispatcher.getInvoicePlugins(internalCallContext).keySet(), result);
+    }
 
     private void registerPlugin(final String plugin) {
         pluginRegistry.registerService(new OSGIServiceDescriptor() {

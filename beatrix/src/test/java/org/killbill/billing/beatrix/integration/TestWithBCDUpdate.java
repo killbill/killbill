@@ -1,6 +1,6 @@
 /*
- * Copyright 2014-2017 Groupon, Inc
- * Copyright 2014-2017 The Billing Project, LLC
+ * Copyright 2014-2018 Groupon, Inc
+ * Copyright 2014-2018 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -20,6 +20,7 @@ package org.killbill.billing.beatrix.integration;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 import javax.inject.Inject;
 
@@ -33,7 +34,6 @@ import org.killbill.billing.catalog.api.BillingActionPolicy;
 import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.catalog.api.PlanPhasePriceOverride;
 import org.killbill.billing.catalog.api.PlanPhaseSpecifier;
-import org.killbill.billing.catalog.api.PlanSpecifier;
 import org.killbill.billing.catalog.api.ProductCategory;
 import org.killbill.billing.catalog.api.UsagePriceOverride;
 import org.killbill.billing.entitlement.api.BlockingState;
@@ -572,8 +572,9 @@ public class TestWithBCDUpdate extends TestIntegrationBase {
         overrides.add(new DefaultPlanPhasePriceOverride("blowdart-monthly-notrial-evergreen", account.getCurrency(), null, BigDecimal.ZERO, ImmutableList.<UsagePriceOverride>of()));
         busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE);
         // BP creation : Will set Account BCD to the first (DateOfFirstRecurringNonZeroCharge is the subscription start date in this case)
-        final Entitlement baseEntitlement = entitlementApi.createBaseEntitlement(account.getId(), spec, "bundleExternalKey", overrides, null, null, false, true, ImmutableList.<PluginProperty>of(), callContext);
+        final UUID baseEntitlementId = entitlementApi.createBaseEntitlement(account.getId(), spec, "bundleExternalKey", overrides, null, null, false, true, ImmutableList.<PluginProperty>of(), callContext);
         assertListenerStatus();
+        final Entitlement baseEntitlement = entitlementApi.getEntitlementForId(baseEntitlementId, callContext);
 
         invoiceChecker.checkInvoice(account.getId(), 1, callContext,
                                     new ExpectedInvoiceItemCheck(new LocalDate(2016, 4, 1), new LocalDate(2016, 5, 1), InvoiceItemType.RECURRING, BigDecimal.ZERO));
@@ -634,8 +635,9 @@ public class TestWithBCDUpdate extends TestIntegrationBase {
         overrides.add(new DefaultPlanPhasePriceOverride("blowdart-monthly-notrial-evergreen", account.getCurrency(), null, BigDecimal.ZERO, ImmutableList.<UsagePriceOverride>of()));
         busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE);
         // BP creation : Will set Account BCD to the first (DateOfFirstRecurringNonZeroCharge is the subscription start date in this case)
-        final Entitlement baseEntitlement = entitlementApi.createBaseEntitlement(account.getId(), spec, "bundleExternalKey", overrides, null, null, false, true, ImmutableList.<PluginProperty>of(), callContext);
+        final UUID baseEntitlementId = entitlementApi.createBaseEntitlement(account.getId(), spec, "bundleExternalKey", overrides, null, null, false, true, ImmutableList.<PluginProperty>of(), callContext);
         assertListenerStatus();
+        final Entitlement baseEntitlement = entitlementApi.getEntitlementForId(baseEntitlementId, callContext);
 
         invoiceChecker.checkInvoice(account.getId(), 1, callContext,
                                     new ExpectedInvoiceItemCheck(new LocalDate(2016, 5, 1), new LocalDate(2016, 6, 1), InvoiceItemType.RECURRING, BigDecimal.ZERO));
@@ -692,8 +694,9 @@ public class TestWithBCDUpdate extends TestIntegrationBase {
         overrides.add(new DefaultPlanPhasePriceOverride("blowdart-monthly-notrial-evergreen", account.getCurrency(), null, BigDecimal.ZERO, ImmutableList.<UsagePriceOverride>of()));
         busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE);
         // BP creation : Will set Account BCD to the first (DateOfFirstRecurringNonZeroCharge is the subscription start date in this case)
-        final Entitlement baseEntitlement = entitlementApi.createBaseEntitlement(account.getId(), spec, "bundleExternalKey", overrides, null, null, false, true, ImmutableList.<PluginProperty>of(), callContext);
+        final UUID baseEntitlementId = entitlementApi.createBaseEntitlement(account.getId(), spec, "bundleExternalKey", overrides, null, null, false, true, ImmutableList.<PluginProperty>of(), callContext);
         assertListenerStatus();
+        final Entitlement baseEntitlement = entitlementApi.getEntitlementForId(baseEntitlementId, callContext);
 
         invoiceChecker.checkInvoice(account.getId(), 1, callContext,
                                     new ExpectedInvoiceItemCheck(new LocalDate(2016, 4, 1), new LocalDate(2016, 5, 1), InvoiceItemType.RECURRING, BigDecimal.ZERO));

@@ -78,7 +78,7 @@ public class EntitlementUtils {
         // We only need the bundle id in case of subscriptions (at the account level, we don't need it and at the bundle level, we already have it)
         if (state.getType() == BlockingStateType.SUBSCRIPTION) {
             try {
-                bundleId = subscriptionBaseInternalApi.getSubscriptionFromId(state.getBlockedId(), context).getBundleId();
+                bundleId = subscriptionBaseInternalApi.getBundleIdFromSubscriptionId(state.getBlockedId(), context);
             } catch (final SubscriptionBaseApiException e) {
                 throw new RuntimeException(e);
             }

@@ -20,6 +20,7 @@ package org.killbill.billing.invoice;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -267,10 +268,12 @@ public class InvoicePluginDispatcher {
         return existingValue;
     }
 
-    private Map<String, InvoicePluginApi> getInvoicePlugins(final InternalTenantContext tenantContext) {
+    @VisibleForTesting
+    Map<String, InvoicePluginApi> getInvoicePlugins(final InternalTenantContext tenantContext) {
         final Collection<String> resultingPluginList = getResultingPluginNameList(tenantContext);
 
-        final Map<String, InvoicePluginApi> invoicePlugins = new HashMap<String, InvoicePluginApi>();
+        // Keys ordering matters!
+        final Map<String, InvoicePluginApi> invoicePlugins = new LinkedHashMap<String, InvoicePluginApi>();
         for (final String name : resultingPluginList) {
             final InvoicePluginApi serviceForName = pluginRegistry.getServiceForName(name);
             invoicePlugins.put(name, serviceForName);

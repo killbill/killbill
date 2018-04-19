@@ -1,6 +1,6 @@
 /*
- * Copyright 2014-2017 Groupon, Inc
- * Copyright 2014-2017 The Billing Project, LLC
+ * Copyright 2014-2018 Groupon, Inc
+ * Copyright 2014-2018 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -86,7 +86,8 @@ public class TestMigrationSubscriptions extends TestIntegrationBase {
 
         // Entitlement wil be created in PENDING state
         final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("Shotgun", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, null);
-        final Entitlement entitlement = entitlementApi.createBaseEntitlement(account.getId(), spec, "bundleKey", null, entitlementMigrationDate, billingMigrationDate, false, true, ImmutableList.<PluginProperty>of(), callContext);
+        final UUID entitlementId = entitlementApi.createBaseEntitlement(account.getId(), spec, "bundleKey", null, entitlementMigrationDate, billingMigrationDate, false, true, ImmutableList.<PluginProperty>of(), callContext);
+        final Entitlement entitlement = entitlementApi.getEntitlementForId(entitlementId, callContext);
         Assert.assertEquals(entitlement.getState(), EntitlementState.PENDING);
 
         // Move clock to entitlementMigrationDate (migration cutOverDate), and expect the associated event
@@ -142,8 +143,9 @@ public class TestMigrationSubscriptions extends TestIntegrationBase {
         // Entitlement wil be created in ACTIVE state because entitlementMigrationDate was set in the past
         busHandler.pushExpectedEvents(NextEvent.BLOCK);
         final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("Shotgun", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, PhaseType.EVERGREEN);
-        final Entitlement entitlement = entitlementApi.createBaseEntitlement(account.getId(), spec, "bundleKey", null, entitlementMigrationDate, billingMigrationDate, false, true, ImmutableList.<PluginProperty>of(), callContext);
+        final UUID entitlementId = entitlementApi.createBaseEntitlement(account.getId(), spec, "bundleKey", null, entitlementMigrationDate, billingMigrationDate, false, true, ImmutableList.<PluginProperty>of(), callContext);
         assertListenerStatus();
+        final Entitlement entitlement = entitlementApi.getEntitlementForId(entitlementId, callContext);
 
         Assert.assertEquals(entitlement.getState(), EntitlementState.ACTIVE);
 
@@ -187,8 +189,9 @@ public class TestMigrationSubscriptions extends TestIntegrationBase {
         // Entitlement wil be created in ACTIVE state because entitlementMigrationDate was set in the past
         busHandler.pushExpectedEvents(NextEvent.BLOCK);
         final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("Shotgun", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, PhaseType.EVERGREEN);
-        final Entitlement entitlement = entitlementApi.createBaseEntitlement(account.getId(), spec, "bundleKey", null, entitlementMigrationDate, billingMigrationDate, false, true, ImmutableList.<PluginProperty>of(), callContext);
+        final UUID entitlementId = entitlementApi.createBaseEntitlement(account.getId(), spec, "bundleKey", null, entitlementMigrationDate, billingMigrationDate, false, true, ImmutableList.<PluginProperty>of(), callContext);
         assertListenerStatus();
+        final Entitlement entitlement = entitlementApi.getEntitlementForId(entitlementId, callContext);
         Assert.assertEquals(entitlement.getState(), EntitlementState.ACTIVE);
 
         // Perform the cancellation (we did not move the clock, the is is future cancellation done at the time we decide to migrate)
@@ -253,14 +256,14 @@ public class TestMigrationSubscriptions extends TestIntegrationBase {
         List<BaseEntitlementWithAddOnsSpecifier> baseEntitlementWithAddOnsSpecifierList = new ArrayList<BaseEntitlementWithAddOnsSpecifier>();
         baseEntitlementWithAddOnsSpecifierList.add(baseEntitlementWithAddOnsSpecifier);
 
-        final List<Entitlement> baseEntitlements = entitlementApi.createBaseEntitlementsWithAddOns(
-                account.getId(),
-                baseEntitlementWithAddOnsSpecifierList,
-                true,
-                ImmutableList.<PluginProperty>of(),
-                callContext);
+        final List<UUID> baseEntitlements = entitlementApi.createBaseEntitlementsWithAddOns(account.getId(),
+                                                                                                   baseEntitlementWithAddOnsSpecifierList,
+                                                                                                   true,
+                                                                                                   ImmutableList.<PluginProperty>of(),
+                                                                                                   callContext);
         assertListenerStatus();
-        Assert.assertEquals(baseEntitlements.get(0).getState(), EntitlementState.ACTIVE);
+        final Entitlement entitlement = entitlementApi.getEntitlementForId(baseEntitlements.get(0), callContext);
+        Assert.assertEquals(entitlement.getState(), EntitlementState.ACTIVE);
 
         // Billing starts straight on EVERGREEN
         clock.addMonths(1);
@@ -306,15 +309,14 @@ public class TestMigrationSubscriptions extends TestIntegrationBase {
         baseEntitlementWithAddOnsSpecifierList.add(baseEntitlementWithAddOnsSpecifierBundle1);
         baseEntitlementWithAddOnsSpecifierList.add(baseEntitlementWithAddOnsSpecifierBundle2);
 
-        final List<Entitlement> baseEntitlements = entitlementApi.createBaseEntitlementsWithAddOns(
-                account.getId(),
-                baseEntitlementWithAddOnsSpecifierList,
-                true,
-                ImmutableList.<PluginProperty>of(),
-                callContext);
+        final List<UUID> baseEntitlements = entitlementApi.createBaseEntitlementsWithAddOns(account.getId(),
+                                                                                            baseEntitlementWithAddOnsSpecifierList,
+                                                                                            true,
+                                                                                            ImmutableList.<PluginProperty>of(),
+                                                                                            callContext);
         assertListenerStatus();
-        Assert.assertEquals(baseEntitlements.get(0).getState(), EntitlementState.ACTIVE);
-        Assert.assertEquals(baseEntitlements.get(1).getState(), EntitlementState.ACTIVE);
+        Assert.assertEquals(entitlementApi.getEntitlementForId(baseEntitlements.get(0), callContext).getState(), EntitlementState.ACTIVE);
+        Assert.assertEquals(entitlementApi.getEntitlementForId(baseEntitlements.get(1), callContext).getState(), EntitlementState.ACTIVE);
 
         // Billing starts straight on EVERGREEN for Bundle 1 after 1 month
         clock.addMonths(1);
@@ -466,8 +468,9 @@ public class TestMigrationSubscriptions extends TestIntegrationBase {
 
         final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("pistol-monthly-notrial", null);
         busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK);
-        final Entitlement baseEntitlement = entitlementApi.createBaseEntitlement(account.getId(), spec, "bundleExternalKey", ImmutableList.<PlanPhasePriceOverride>of(), null, null, false, true, ImmutableList.<PluginProperty>of(), callContext);
+        final UUID baseEntitlementId = entitlementApi.createBaseEntitlement(account.getId(), spec, "bundleExternalKey", ImmutableList.<PlanPhasePriceOverride>of(), null, null, false, true, ImmutableList.<PluginProperty>of(), callContext);
         assertListenerStatus();
+        final Entitlement baseEntitlement = entitlementApi.getEntitlementForId(baseEntitlementId, callContext);
 
         clock.addDays(1);
 

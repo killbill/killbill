@@ -19,24 +19,17 @@ package org.killbill.billing.subscription.api.user;
 
 import java.util.List;
 
-import org.joda.time.DateTime;
 import org.killbill.billing.subscription.api.SubscriptionBase;
 import org.killbill.billing.subscription.api.SubscriptionBaseWithAddOns;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class DefaultSubscriptionBaseWithAddOns implements SubscriptionBaseWithAddOns {
 
-    private static final Logger log = LoggerFactory.getLogger(DefaultSubscriptionBaseWithAddOns.class);
-
     private final SubscriptionBaseBundle bundle;
     private final List<SubscriptionBase> subscriptionBaseList;
-    private final DateTime effectiveDate;
 
-    public DefaultSubscriptionBaseWithAddOns(final SubscriptionBaseBundle bundle, final List<SubscriptionBase> subscriptionBaseList, final DateTime effectiveDate) {
+    public DefaultSubscriptionBaseWithAddOns(final SubscriptionBaseBundle bundle, final List<SubscriptionBase> subscriptionBaseList) {
         this.bundle = bundle;
         this.subscriptionBaseList = subscriptionBaseList;
-        this.effectiveDate = effectiveDate;
     }
 
     @Override
@@ -47,9 +40,5 @@ public class DefaultSubscriptionBaseWithAddOns implements SubscriptionBaseWithAd
     @Override
     public List<SubscriptionBase> getSubscriptionBaseList() {
         return subscriptionBaseList;
-    }
-
-    public DateTime getEffectiveDate() {
-        return effectiveDate;
     }
 }

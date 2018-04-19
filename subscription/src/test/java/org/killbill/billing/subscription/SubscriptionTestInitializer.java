@@ -39,7 +39,7 @@ public interface SubscriptionTestInitializer {
 
     public AccountData initAccountData(Clock clock);
 
-    public SubscriptionBaseBundle initBundle(final UUID accountId, final SubscriptionBaseInternalApi subscriptionApi, final InternalCallContext callContext) throws Exception;
+    public SubscriptionBaseBundle initBundle(final UUID accountId, final SubscriptionBaseInternalApi subscriptionApi, final Clock clock, final InternalCallContext callContext) throws Exception;
 
     public void startTestFramework(final TestApiListener testListener,
                                    final ClockMock clock,

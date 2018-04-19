@@ -22,6 +22,7 @@ import java.util.List;
 import java.util.UUID;
 
 import org.joda.time.LocalDate;
+import org.killbill.billing.account.api.AccountApiException;
 import org.killbill.billing.api.TestApiListener.NextEvent;
 import org.killbill.billing.entitlement.EntitlementTestSuiteWithEmbeddedDB;
 import org.killbill.billing.entitlement.api.BlockingState;
@@ -36,8 +37,8 @@ import com.google.common.collect.ImmutableMap;
 public class TestBlockingDao extends EntitlementTestSuiteWithEmbeddedDB {
 
     @Test(groups = "slow", description = "Check BlockingStateDao with a single service")
-    public void testDaoWithOneService() {
-        final UUID uuid = UUID.randomUUID();
+    public void testDaoWithOneService() throws AccountApiException {
+        final UUID uuid = createAccount(getAccountData(1)).getId();
         final String overdueStateName = "WayPassedItMan";
         final String service = "TEST";
 
@@ -71,7 +72,7 @@ public class TestBlockingDao extends EntitlementTestSuiteWithEmbeddedDB {
 
     @Test(groups = "slow", description = "Check BlockingStateDao with multiple services")
     public void testDaoWithMultipleServices() throws Exception {
-        final UUID uuid = UUID.randomUUID();
+        final UUID uuid = createAccount(getAccountData(1)).getId();
         final String overdueStateName = "WayPassedItMan";
         final String service1 = "TEST";
 

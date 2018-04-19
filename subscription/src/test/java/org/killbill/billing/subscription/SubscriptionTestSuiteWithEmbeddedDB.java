@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014-2015 Groupon, Inc
- * Copyright 2014-2015 The Billing Project, LLC
+ * Copyright 2014-2018 Groupon, Inc
+ * Copyright 2014-2018 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -120,7 +120,8 @@ public class SubscriptionTestSuiteWithEmbeddedDB extends GuicyKillbillTestSuiteW
         this.catalog = subscriptionTestInitializer.initCatalog(catalogService, internalCallContext);
         this.accountData = subscriptionTestInitializer.initAccountData(clock);
         final Account account = createAccount(accountData);
-        this.bundle = subscriptionTestInitializer.initBundle(account.getId(), subscriptionInternalApi, internalCallContext);
+        final SubscriptionBaseBundle model = subscriptionTestInitializer.initBundle(account.getId(), subscriptionInternalApi, clock, internalCallContext);
+        this.bundle = subscriptionInternalApi.createBundleForAccount(model.getAccountId(), model.getExternalKey(), false, internalCallContext);
     }
 
     @AfterMethod(groups = "slow")
