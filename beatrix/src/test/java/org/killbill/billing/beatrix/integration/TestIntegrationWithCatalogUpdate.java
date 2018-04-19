@@ -1,6 +1,6 @@
 /*
- * Copyright 2014-2016 Groupon, Inc
- * Copyright 2014-2016 The Billing Project, LLC
+ * Copyright 2014-2018 Groupon, Inc
+ * Copyright 2014-2018 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -283,8 +283,9 @@ public class TestIntegrationWithCatalogUpdate extends TestIntegrationBase {
         final PlanPhaseSpecifier specZero = new PlanPhaseSpecifier("zeroDesc-monthly", null);
 
         busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE);
-        final Entitlement baseEntitlement = entitlementApi.createBaseEntitlement(account.getId(), specZero, UUID.randomUUID().toString(), ImmutableList.<PlanPhasePriceOverride>of(), null, null, false, true, ImmutableList.<PluginProperty>of(), testCallContext);
+        final UUID baseEntitlementId = entitlementApi.createBaseEntitlement(account.getId(), specZero, UUID.randomUUID().toString(), ImmutableList.<PlanPhasePriceOverride>of(), null, null, false, true, ImmutableList.<PluginProperty>of(), testCallContext);
         assertListenerStatus();
+        final Entitlement baseEntitlement = entitlementApi.getEntitlementForId(baseEntitlementId, testCallContext);
 
         Subscription refreshedBaseEntitlement = subscriptionApi.getSubscriptionForEntitlementId(baseEntitlement.getId(), testCallContext);
         assertEquals(refreshedBaseEntitlement.getChargedThroughDate(), new LocalDate(2016, 7, 1));
@@ -312,8 +313,9 @@ public class TestIntegrationWithCatalogUpdate extends TestIntegrationBase {
         final PlanPhaseSpecifier specNonZero = new PlanPhaseSpecifier("superfoo-monthly", null);
 
         busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT);
-        final Entitlement baseEntitlement2 = entitlementApi.createBaseEntitlement(account.getId(), specNonZero, UUID.randomUUID().toString(), ImmutableList.<PlanPhasePriceOverride>of(), null, null, false, true, ImmutableList.<PluginProperty>of(), testCallContext);
+        final UUID baseEntitlement2Id = entitlementApi.createBaseEntitlement(account.getId(), specNonZero, UUID.randomUUID().toString(), ImmutableList.<PlanPhasePriceOverride>of(), null, null, false, true, ImmutableList.<PluginProperty>of(), testCallContext);
         assertListenerStatus();
+        final Entitlement baseEntitlement2 = entitlementApi.getEntitlementForId(baseEntitlement2Id, testCallContext);
 
         busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT);
         clock.addMonths(1);
@@ -373,8 +375,9 @@ public class TestIntegrationWithCatalogUpdate extends TestIntegrationBase {
         final PlanPhaseSpecifier planPhaseSpec = new PlanPhaseSpecifier("hello-monthly", null);
 
         busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE);
-        final Entitlement baseEntitlement = entitlementApi.createBaseEntitlement(account.getId(), planPhaseSpec, UUID.randomUUID().toString(), ImmutableList.<PlanPhasePriceOverride>of(), null, null, false, true, ImmutableList.<PluginProperty>of(), testCallContext);
+        final UUID baseEntitlementId = entitlementApi.createBaseEntitlement(account.getId(), planPhaseSpec, UUID.randomUUID().toString(), ImmutableList.<PlanPhasePriceOverride>of(), null, null, false, true, ImmutableList.<PluginProperty>of(), testCallContext);
         assertListenerStatus();
+        final Entitlement baseEntitlement = entitlementApi.getEntitlementForId(baseEntitlementId, testCallContext);
 
         Subscription refreshedBaseEntitlement = subscriptionApi.getSubscriptionForEntitlementId(baseEntitlement.getId(), testCallContext);
         assertEquals(refreshedBaseEntitlement.getChargedThroughDate(), new LocalDate(2016, 6, 1));
@@ -407,9 +410,9 @@ public class TestIntegrationWithCatalogUpdate extends TestIntegrationBase {
         } else {
             busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE);
         }
-        final Entitlement entitlement = entitlementApi.createBaseEntitlement(account.getId(), spec, UUID.randomUUID().toString(), overrides, null, null, false, true, ImmutableList.<PluginProperty>of(), testCallContext);
+        final UUID entitlementId = entitlementApi.createBaseEntitlement(account.getId(), spec, UUID.randomUUID().toString(), overrides, null, null, false, true, ImmutableList.<PluginProperty>of(), testCallContext);
         assertListenerStatus();
-        return entitlement;
+        return entitlementApi.getEntitlementForId(entitlementId, testCallContext);
     }
 
     private void setupTenant() throws TenantApiException {

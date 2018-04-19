@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014-2016 Groupon, Inc
- * Copyright 2014-2016 The Billing Project, LLC
+ * Copyright 2014-2018 Groupon, Inc
+ * Copyright 2014-2018 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -142,8 +142,9 @@ public class TestBlockingApi extends EntitlementTestSuiteWithEmbeddedDB {
         final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("Shotgun", BillingPeriod.ANNUAL, PriceListSet.DEFAULT_PRICELIST_NAME, null);
 
         testListener.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK);
-        Entitlement baseEntitlement = entitlementApi.createBaseEntitlement(account.getId(), spec, account.getExternalKey(), null, null, null, false, true, ImmutableList.<PluginProperty>of(), callContext);
+        final UUID baseEntitlementId = entitlementApi.createBaseEntitlement(account.getId(), spec, account.getExternalKey(), null, null, null, false, true, ImmutableList.<PluginProperty>of(), callContext);
         assertListenerStatus();
+        Entitlement baseEntitlement = entitlementApi.getEntitlementForId(baseEntitlementId, callContext);
 
         assertEquals(baseEntitlement.getState(), EntitlementState.BLOCKED);
 
@@ -234,8 +235,9 @@ public class TestBlockingApi extends EntitlementTestSuiteWithEmbeddedDB {
 
         final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("shotgun-monthly", null);
         testListener.pushExpectedEvents(NextEvent.BLOCK, NextEvent.CREATE);
-        final Entitlement entitlement = entitlementApi.createBaseEntitlement(account.getId(), spec, "xyzqe", null, initialDate.minusDays(3), null, false, true, ImmutableList.<PluginProperty>of(), callContext);
+        final UUID baseEntitlementId = entitlementApi.createBaseEntitlement(account.getId(), spec, "xyzqe", null, initialDate.minusDays(3), null, false, true, ImmutableList.<PluginProperty>of(), callContext);
         assertListenerStatus();
+        final Entitlement entitlement = entitlementApi.getEntitlementForId(baseEntitlementId, callContext);
 
         testListener.pushExpectedEvent(NextEvent.BLOCK);
         final BlockingState blockChangeAccount = new DefaultBlockingState(account.getId(), BlockingStateType.ACCOUNT, "State1", "Service1", true, false, false, clock.getUTCNow());
@@ -276,8 +278,9 @@ public class TestBlockingApi extends EntitlementTestSuiteWithEmbeddedDB {
 
         final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("shotgun-monthly", null);
         testListener.pushExpectedEvents(NextEvent.BLOCK, NextEvent.CREATE);
-        final Entitlement entitlement = entitlementApi.createBaseEntitlement(account.getId(), spec, "xyzqe", null, initialDate.minusDays(3), null, false, true, ImmutableList.<PluginProperty>of(), callContext);
+        final UUID baseEntitlementId = entitlementApi.createBaseEntitlement(account.getId(), spec, "xyzqe", null, initialDate.minusDays(3), null, false, true, ImmutableList.<PluginProperty>of(), callContext);
         assertListenerStatus();
+        final Entitlement entitlement = entitlementApi.getEntitlementForId(baseEntitlementId, callContext);
 
         // Create future BlockingState
         final LocalDate blockingChange = initialDate.plusDays(3);

@@ -76,13 +76,10 @@ import org.killbill.clock.Clock;
 import org.killbill.clock.DefaultClock;
 
 import com.google.common.base.Preconditions;
-import com.google.common.base.Predicate;
 import com.google.common.collect.ArrayListMultimap;
-import com.google.common.collect.Collections2;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ListMultimap;
-import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 
 public class DefaultSubscriptionBaseApiService implements SubscriptionBaseApiService {
@@ -121,8 +118,7 @@ public class DefaultSubscriptionBaseApiService implements SubscriptionBaseApiSer
                 subscriptionBaseAndAddOnsList.add(subscriptionBaseList);
 
                 final SubscriptionBaseWithAddOns subscriptionBaseWithAddOns = new DefaultSubscriptionBaseWithAddOns(subscriptionAndAddOns.getBundle(),
-                                                                                                                    subscriptionBaseList,
-                                                                                                                    subscriptionAndAddOns.getEffectiveDate());
+                                                                                                                    subscriptionBaseList);
                 allSubscriptions.add(subscriptionBaseWithAddOns);
             }
 

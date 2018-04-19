@@ -116,8 +116,7 @@ public class TestSubscriptionDao extends SubscriptionTestSuiteWithEmbeddedDB {
         final DefaultSubscriptionBase subscription = new DefaultSubscriptionBase(builder);
         testListener.pushExpectedEvents(NextEvent.CREATE);
         final SubscriptionBaseWithAddOns subscriptionBaseWithAddOns = new DefaultSubscriptionBaseWithAddOns(bundle,
-                                                                                                            ImmutableList.<SubscriptionBase>of(subscription),
-                                                                                                            clock.getUTCNow());
+                                                                                                            ImmutableList.<SubscriptionBase>of(subscription));
         dao.createSubscriptionsWithAddOns(ImmutableList.<SubscriptionBaseWithAddOns>of(subscriptionBaseWithAddOns),
                                           ImmutableMap.<UUID, List<SubscriptionBaseEvent>>of(subscription.getId(), ImmutableList.<SubscriptionBaseEvent>of(creationEvent)),
                                           catalog,

@@ -18,6 +18,7 @@
 package org.killbill.billing.beatrix.integration;
 
 import java.util.List;
+import java.util.UUID;
 
 import org.joda.time.LocalDate;
 import org.killbill.billing.ErrorCode;
@@ -192,8 +193,9 @@ public class TestCatalogRetireElements extends TestIntegrationBase {
         final PlanPhaseSpecifier spec1 = new PlanPhaseSpecifier(productName, term, "DEFAULT", null);
 
         busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE);
-        Entitlement bpEntitlement = entitlementApi.createBaseEntitlement(account.getId(), spec1, "externalKey", null, null, null, false, true, ImmutableList.<PluginProperty>of(), callContext);
+        final UUID bpEntitlementId = entitlementApi.createBaseEntitlement(account.getId(), spec1, "externalKey", null, null, null, false, true, ImmutableList.<PluginProperty>of(), callContext);
         assertListenerStatus();
+        Entitlement bpEntitlement = entitlementApi.getEntitlementForId(bpEntitlementId, callContext);
 
         assertNotNull(bpEntitlement);
         assertEquals(bpEntitlement.getLastActivePhase().getPhaseType(), PhaseType.TRIAL);
@@ -282,8 +284,9 @@ public class TestCatalogRetireElements extends TestIntegrationBase {
         final PlanPhaseSpecifier spec1 = new PlanPhaseSpecifier(productName, term, "DEFAULT", null);
 
         busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE);
-        Entitlement bpEntitlement = entitlementApi.createBaseEntitlement(account.getId(), spec1, "externalKey", null, null, null, false, true, ImmutableList.<PluginProperty>of(), callContext);
+        final UUID bpEntitlementId = entitlementApi.createBaseEntitlement(account.getId(), spec1, "externalKey", null, null, null, false, true, ImmutableList.<PluginProperty>of(), callContext);
         assertListenerStatus();
+        Entitlement bpEntitlement = entitlementApi.getEntitlementForId(bpEntitlementId, callContext);
 
         assertNotNull(bpEntitlement);
         assertEquals(bpEntitlement.getLastActivePhase().getPhaseType(), PhaseType.TRIAL);
@@ -440,8 +443,9 @@ public class TestCatalogRetireElements extends TestIntegrationBase {
         final PlanPhaseSpecifier spec = new PlanPhaseSpecifier(productName, term, "SpecialDiscount", null);
 
         busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE);
-        final Entitlement bpEntitlement = entitlementApi.createBaseEntitlement(account.getId(), spec, "externalKey", null, null, null, false, true, ImmutableList.<PluginProperty>of(), callContext);
+        final UUID bpEntitlementId = entitlementApi.createBaseEntitlement(account.getId(), spec, "externalKey", null, null, null, false, true, ImmutableList.<PluginProperty>of(), callContext);
         assertListenerStatus();
+        final Entitlement bpEntitlement = entitlementApi.getEntitlementForId(bpEntitlementId, callContext);
 
         assertNotNull(bpEntitlement);
         assertEquals(invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, callContext).size(), 1);

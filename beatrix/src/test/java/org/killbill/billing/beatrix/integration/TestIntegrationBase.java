@@ -659,9 +659,9 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
             public Entitlement apply(@Nullable final Void dontcare) {
                 try {
                     final PlanPhaseSpecifier spec = new PlanPhaseSpecifier(productName, billingPeriod, PriceListSet.DEFAULT_PRICELIST_NAME, null);
-                    final Entitlement entitlement = entitlementApi.createBaseEntitlement(accountId, spec, bundleExternalKey, overrides, null, null, false, true, ImmutableList.<PluginProperty>of(), callContext);
-                    assertNotNull(entitlement);
-                    return entitlement;
+                    final UUID entitlementId = entitlementApi.createBaseEntitlement(accountId, spec, bundleExternalKey, overrides, null, null, false, true, ImmutableList.<PluginProperty>of(), callContext);
+                    assertNotNull(entitlementId);
+                    return entitlementApi.getEntitlementForId(entitlementId, callContext);
                 } catch (final EntitlementApiException e) {
                     fail("Unable to create entitlement", e);
                     return null;
@@ -693,9 +693,9 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
             public Entitlement apply(@Nullable final Void dontcare) {
                 try {
                     final PlanPhaseSpecifier spec = new PlanPhaseSpecifier(productName, billingPeriod, PriceListSet.DEFAULT_PRICELIST_NAME, null);
-                    final Entitlement entitlement = entitlementApi.addEntitlement(bundleId, spec, null, null, null, false, ImmutableList.<PluginProperty>of(), callContext);
-                    assertNotNull(entitlement);
-                    return entitlement;
+                    final UUID entitlementId = entitlementApi.addEntitlement(bundleId, spec, null, null, null, false, ImmutableList.<PluginProperty>of(), callContext);
+                    assertNotNull(entitlementId);
+                    return entitlementApi.getEntitlementForId(entitlementId, callContext);
                 } catch (final EntitlementApiException e) {
                     fail(e.getMessage());
                     return null;
