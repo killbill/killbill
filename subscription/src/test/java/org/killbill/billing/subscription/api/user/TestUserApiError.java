@@ -89,13 +89,14 @@ public class TestUserApiError extends SubscriptionTestSuiteNoDB {
         }
     }
 
-    // Flaky, see https://github.com/killbill/killbill/issues/860
-    @Test(groups = "fast", retryAnalyzer = FlakyRetryAnalyzer.class)
+    @Test(groups = "fast")
     public void testChangeSubscriptionNonActive() throws SubscriptionBaseApiException {
         final SubscriptionBase subscription = testUtil.createSubscription(bundle, "Shotgun", BillingPeriod.ANNUAL, PriceListSet.DEFAULT_PRICELIST_NAME);
 
         testListener.pushExpectedEvent(NextEvent.CANCEL);
         subscription.cancelWithDate(clock.getUTCNow(), callContext);
+        assertListenerStatus();
+
         try {
             subscription.changePlanWithDate(new PlanPhaseSpecifier("Pistol", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME), null, clock.getUTCNow(), callContext);
             Assert.fail("Exception expected, error code: " + ErrorCode.SUB_CHANGE_NON_ACTIVE);
