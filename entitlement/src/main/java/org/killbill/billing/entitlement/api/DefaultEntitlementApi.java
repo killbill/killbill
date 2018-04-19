@@ -19,8 +19,10 @@
 package org.killbill.billing.entitlement.api;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -57,6 +59,7 @@ import org.killbill.billing.security.api.SecurityApi;
 import org.killbill.billing.subscription.api.SubscriptionBase;
 import org.killbill.billing.subscription.api.SubscriptionBaseInternalApi;
 import org.killbill.billing.subscription.api.SubscriptionBaseWithAddOns;
+import org.killbill.billing.subscription.api.SubscriptionBaseWithAddOnsSpecifier;
 import org.killbill.billing.subscription.api.transfer.SubscriptionBaseTransferApi;
 import org.killbill.billing.subscription.api.transfer.SubscriptionBaseTransferApiException;
 import org.killbill.billing.subscription.api.user.SubscriptionBaseApiException;
@@ -124,9 +127,9 @@ public class DefaultEntitlementApi extends DefaultEntitlementApiBase implements 
     }
 
     @Override
-    public Entitlement createBaseEntitlement(final UUID accountId, final PlanPhaseSpecifier planPhaseSpecifier, final String externalKey, final List<PlanPhasePriceOverride> overrides,
-                                             @Nullable final LocalDate entitlementEffectiveDate, @Nullable final LocalDate billingEffectiveDate, final boolean isMigrated, final boolean renameCancelledBundleIfExist,
-                                             final Iterable<PluginProperty> properties, final CallContext callContext) throws EntitlementApiException {
+    public UUID createBaseEntitlement(final UUID accountId, final PlanPhaseSpecifier planPhaseSpecifier, final String externalKey, final List<PlanPhasePriceOverride> overrides,
+                                      @Nullable final LocalDate entitlementEffectiveDate, @Nullable final LocalDate billingEffectiveDate, final boolean isMigrated, final boolean renameCancelledBundleIfExist,
+                                      final Iterable<PluginProperty> properties, final CallContext callContext) throws EntitlementApiException {
         final EntitlementSpecifier entitlementSpecifier = new DefaultEntitlementSpecifier(planPhaseSpecifier, overrides);
         final BaseEntitlementWithAddOnsSpecifier baseEntitlementWithAddOnsSpecifier = new DefaultBaseEntitlementWithAddOnsSpecifier(null,
                                                                                                                                     externalKey,
@@ -134,12 +137,12 @@ public class DefaultEntitlementApi extends DefaultEntitlementApiBase implements 
                                                                                                                                     entitlementEffectiveDate,
                                                                                                                                     billingEffectiveDate,
                                                                                                                                     isMigrated);
-        final List<Entitlement> baseEntitlementsWithAddOns = createBaseEntitlementsWithAddOns(accountId,
-                                                                                              ImmutableList.<BaseEntitlementWithAddOnsSpecifier>of(baseEntitlementWithAddOnsSpecifier),
-                                                                                              renameCancelledBundleIfExist,
-                                                                                              properties,
-                                                                                              callContext);
-        return baseEntitlementsWithAddOns.get(0);
+        final List<UUID> createdEntitlements = createBaseEntitlementsWithAddOns(accountId,
+                                                                                ImmutableList.<BaseEntitlementWithAddOnsSpecifier>of(baseEntitlementWithAddOnsSpecifier),
+                                                                                renameCancelledBundleIfExist,
+                                                                                properties,
+                                                                                callContext);
+        return createdEntitlements.get(0);
     }
 
     private BaseEntitlementWithAddOnsSpecifier getFirstBaseEntitlementWithAddOnsSpecifier(final Iterable<BaseEntitlementWithAddOnsSpecifier> baseEntitlementWithAddOnsSpecifiers) throws SubscriptionBaseApiException {
@@ -155,16 +158,8 @@ public class DefaultEntitlementApi extends DefaultEntitlementApiBase implements 
         return iterator.next();
     }
 
-    private EntitlementSpecifier getFirstEntitlementSpecifier(final BaseEntitlementWithAddOnsSpecifier entitlementWithAddOnsSpecifier) throws SubscriptionBaseApiException {
-        if (entitlementWithAddOnsSpecifier.getEntitlementSpecifier() == null || !entitlementWithAddOnsSpecifier.getEntitlementSpecifier().iterator().hasNext()) {
-            throw new SubscriptionBaseApiException(ErrorCode.SUB_CREATE_INVALID_ENTITLEMENT_SPECIFIER);
-        } else {
-            return entitlementWithAddOnsSpecifier.getEntitlementSpecifier().iterator().next();
-        }
-    }
-
     @Override
-    public List<Entitlement> createBaseEntitlementsWithAddOns(final UUID accountId, final Iterable<BaseEntitlementWithAddOnsSpecifier> originalBaseEntitlementWithAddOnsSpecifiers, final boolean renameCancelledBundleIfExist, final Iterable<PluginProperty> properties, final CallContext callContext) throws EntitlementApiException {
+    public List<UUID> createBaseEntitlementsWithAddOns(final UUID accountId, final Iterable<BaseEntitlementWithAddOnsSpecifier> originalBaseEntitlementWithAddOnsSpecifiers, final boolean renameCancelledBundleIfExist, final Iterable<PluginProperty> properties, final CallContext callContext) throws EntitlementApiException {
         logCreateEntitlementsWithAOs(log, originalBaseEntitlementWithAddOnsSpecifiers);
 
         final EntitlementContext pluginContext = new DefaultEntitlementContext(OperationType.CREATE_SHOPPING_CART_SUBSCRIPTIONS,
@@ -175,13 +170,14 @@ public class DefaultEntitlementApi extends DefaultEntitlementApiBase implements 
                                                                                properties,
                                                                                callContext);
 
-        final WithEntitlementPlugin<List<Entitlement>> createBaseEntitlementsWithAddOns = new WithEntitlementPlugin<List<Entitlement>>() {
+        final WithEntitlementPlugin<List<UUID>> createBaseEntitlementsWithAddOns = new WithEntitlementPlugin<List<UUID>>() {
             @Override
-            public List<Entitlement> doCall(final EntitlementApi entitlementApi, final EntitlementContext updatedPluginContext) throws EntitlementApiException {
+            public List<UUID> doCall(final EntitlementApi entitlementApi, final EntitlementContext updatedPluginContext) throws EntitlementApiException {
                 final InternalCallContext contextWithValidAccountRecordId = internalCallContextFactory.createInternalCallContext(accountId, callContext);
                 final DateTime now = clock.getUTCNow();
 
                 final Iterable<BaseEntitlementWithAddOnsSpecifier> baseEntitlementWithAddOnsSpecifiersAfterPlugins = updatedPluginContext.getBaseEntitlementWithAddOnsSpecifiers();
+                final Collection<SubscriptionBaseWithAddOnsSpecifier> subscriptionBaseWithAddOnsSpecifiers = new LinkedList<SubscriptionBaseWithAddOnsSpecifier>();
                 DateTime upTo = null;
                 for (final BaseEntitlementWithAddOnsSpecifier baseEntitlementWithAddOnsSpecifier : baseEntitlementWithAddOnsSpecifiersAfterPlugins) {
                     // Entitlement
@@ -189,6 +185,15 @@ public class DefaultEntitlementApi extends DefaultEntitlementApiBase implements 
                                                                                                        now,
                                                                                                        contextWithValidAccountRecordId);
                     upTo = upTo == null || upTo.compareTo(entitlementRequestedDate) < 0 ? entitlementRequestedDate : upTo;
+
+                    final DateTime billingEffectiveDateTime = (baseEntitlementWithAddOnsSpecifier.getBillingEffectiveDate() != null) ?
+                                                              contextWithValidAccountRecordId.toUTCDateTime(baseEntitlementWithAddOnsSpecifier.getBillingEffectiveDate()) : null;
+                    final SubscriptionBaseWithAddOnsSpecifier subscriptionBaseWithAddOnsSpecifier = new SubscriptionBaseWithAddOnsSpecifier(baseEntitlementWithAddOnsSpecifier.getBundleId(),
+                                                                                                                                            baseEntitlementWithAddOnsSpecifier.getExternalKey(),
+                                                                                                                                            baseEntitlementWithAddOnsSpecifier.getEntitlementSpecifier(),
+                                                                                                                                            billingEffectiveDateTime,
+                                                                                                                                            baseEntitlementWithAddOnsSpecifier.isMigrated());
+                    subscriptionBaseWithAddOnsSpecifiers.add(subscriptionBaseWithAddOnsSpecifier);
                 }
 
                 try {
@@ -196,10 +201,10 @@ public class DefaultEntitlementApi extends DefaultEntitlementApiBase implements 
                     // Note that to fully check for block_change we should also look for BlockingState at the BUNDLE/SUBSCRIPTION level in case some of the input contain a BP that already exists.
                     checkForAccountBlockingChange(accountId, upTo, contextWithValidAccountRecordId);
 
-                    final List<SubscriptionBaseWithAddOns> subscriptionsWithAddOns = subscriptionBaseInternalApi.createBaseSubscriptionsWithAddOns(accountId,
-                                                                                                                                                   baseEntitlementWithAddOnsSpecifiersAfterPlugins,
-                                                                                                                                                   renameCancelledBundleIfExist,
-                                                                                                                                                   contextWithValidAccountRecordId);
+                    final List<SubscriptionBaseWithAddOns> subscriptionsWithAddOns = subscriptionBaseInternalApi.createBaseSubscriptionsWithAddOns(subscriptionBaseWithAddOnsSpecifiers,
+                                                                                                                            renameCancelledBundleIfExist,
+                                                                                                                            contextWithValidAccountRecordId);
+                    final List<UUID> createdSubscriptionIds = new LinkedList<UUID>();
                     final Map<BlockingState, UUID> blockingStateMap = new HashMap<BlockingState, UUID>();
                     int i = 0;
                     for (final Iterator<BaseEntitlementWithAddOnsSpecifier> it = baseEntitlementWithAddOnsSpecifiersAfterPlugins.iterator(); it.hasNext(); i++) {
@@ -214,10 +219,12 @@ public class DefaultEntitlementApi extends DefaultEntitlementApiBase implements 
                                                                                          false,
                                                                                          dateHelper.fromLocalDateAndReferenceTime(baseEntitlementWithAddOnsSpecifier.getEntitlementEffectiveDate(), now, contextWithValidAccountRecordId));
                             blockingStateMap.put(blockingState, subscriptionsWithAddOns.get(i).getBundle().getId());
+
+                            createdSubscriptionIds.add(subscriptionBase.getId());
                         }
                     }
                     entitlementUtils.setBlockingStateAndPostBlockingTransitionEvent(blockingStateMap, contextWithValidAccountRecordId);
-                    return buildEntitlementList(subscriptionsWithAddOns, contextWithValidAccountRecordId);
+                    return createdSubscriptionIds;
                 } catch (final SubscriptionBaseApiException e) {
                     throw new EntitlementApiException(e);
                 }
@@ -226,40 +233,9 @@ public class DefaultEntitlementApi extends DefaultEntitlementApiBase implements 
         return pluginExecution.executeWithPlugin(createBaseEntitlementsWithAddOns, pluginContext);
     }
 
-    private List<Entitlement> buildEntitlementList(final Iterable<SubscriptionBaseWithAddOns> subscriptionsWithAddOns, final InternalCallContext internalCallContext) throws EntitlementApiException {
-        // Need to refresh all latest state as some bundles might have existed already
-        final AccountEventsStreams accountEventsStreams = eventsStreamBuilder.buildForAccount(internalCallContext);
-
-        final List<Entitlement> result = new ArrayList<Entitlement>();
-        for (final SubscriptionBaseWithAddOns subscriptionWithAddOns : subscriptionsWithAddOns) {
-            for (final SubscriptionBase subscriptionBase : subscriptionWithAddOns.getSubscriptionBaseList()) {
-                final Entitlement entitlement = new DefaultEntitlement(subscriptionWithAddOns.getBundle(),
-                                                                       subscriptionBase,
-                                                                       accountEventsStreams.getSubscriptions().get(subscriptionBase.getBundleId()),
-                                                                       eventsStreamBuilder,
-                                                                       entitlementApi,
-                                                                       pluginExecution,
-                                                                       blockingStateDao,
-                                                                       subscriptionBaseInternalApi,
-                                                                       checker,
-                                                                       notificationQueueService,
-                                                                       entitlementUtils,
-                                                                       dateHelper,
-                                                                       clock,
-                                                                       securityApi,
-                                                                       internalCallContextFactory,
-                                                                       internalCallContext);
-                result.add(entitlement);
-            }
-        }
-        return result;
-    }
-
     @Override
-    public Entitlement addEntitlement(final UUID bundleId, final PlanPhaseSpecifier planPhaseSpecifier, final List<PlanPhasePriceOverride> overrides, @Nullable final LocalDate entitlementEffectiveDate, @Nullable final LocalDate billingEffectiveDate,
+    public UUID addEntitlement(final UUID bundleId, final PlanPhaseSpecifier planPhaseSpecifier, final List<PlanPhasePriceOverride> overrides, @Nullable final LocalDate entitlementEffectiveDate, @Nullable final LocalDate billingEffectiveDate,
             final boolean isMigrated, final Iterable<PluginProperty> properties, final CallContext callContext) throws EntitlementApiException {
-
-
         logCreateEntitlement(log, bundleId, planPhaseSpecifier, overrides, entitlementEffectiveDate, billingEffectiveDate);
 
         final EntitlementSpecifier entitlementSpecifier = new DefaultEntitlementSpecifier(planPhaseSpecifier, overrides);
@@ -283,9 +259,9 @@ public class DefaultEntitlementApi extends DefaultEntitlementApiBase implements 
                                                                                properties,
                                                                                callContext);
 
-        final WithEntitlementPlugin<Entitlement> addEntitlementWithPlugin = new WithEntitlementPlugin<Entitlement>() {
+        final WithEntitlementPlugin<UUID> addEntitlementWithPlugin = new WithEntitlementPlugin<UUID>() {
             @Override
-            public Entitlement doCall(final EntitlementApi entitlementApi, final EntitlementContext updatedPluginContext) throws EntitlementApiException {
+            public UUID doCall(final EntitlementApi entitlementApi, final EntitlementContext updatedPluginContext) throws EntitlementApiException {
                 final InternalCallContext context = internalCallContextFactory.createInternalCallContext(bundleId, ObjectType.BUNDLE, callContext);
                 final DateTime now = clock.getUTCNow();
 
@@ -312,45 +288,25 @@ public class DefaultEntitlementApi extends DefaultEntitlementApiBase implements 
                 }
 
                 try {
-                    final BaseEntitlementWithAddOnsSpecifier baseEntitlementWithAddOnsSpecifier = getFirstBaseEntitlementWithAddOnsSpecifier(updatedPluginContext.getBaseEntitlementWithAddOnsSpecifiers());
-                    final EntitlementSpecifier specifier = getFirstEntitlementSpecifier(baseEntitlementWithAddOnsSpecifier);
+                    final BaseEntitlementWithAddOnsSpecifier baseEntitlementWithAddOnsSpecifierAfterPlugins = getFirstBaseEntitlementWithAddOnsSpecifier(updatedPluginContext.getBaseEntitlementWithAddOnsSpecifiers());
+                    final DateTime billingEffectiveDateTime = (baseEntitlementWithAddOnsSpecifierAfterPlugins.getBillingEffectiveDate() != null) ?
+                                                              context.toUTCDateTime(baseEntitlementWithAddOnsSpecifierAfterPlugins.getBillingEffectiveDate()) : null;
+                    final SubscriptionBaseWithAddOnsSpecifier subscriptionBaseWithAddOnsSpecifier = new SubscriptionBaseWithAddOnsSpecifier(baseEntitlementWithAddOnsSpecifierAfterPlugins.getBundleId(),
+                                                                                                                                            baseEntitlementWithAddOnsSpecifierAfterPlugins.getExternalKey(),
+                                                                                                                                            baseEntitlementWithAddOnsSpecifierAfterPlugins.getEntitlementSpecifier(),
+                                                                                                                                            billingEffectiveDateTime,
+                                                                                                                                            baseEntitlementWithAddOnsSpecifierAfterPlugins.isMigrated());
 
-                    final DateTime billingRequestedDateRaw = dateHelper.fromLocalDateAndReferenceTime(baseEntitlementWithAddOnsSpecifier.getBillingEffectiveDate(), now, context);
+                    final List<SubscriptionBaseWithAddOns> subscriptionsWithAddOns = subscriptionBaseInternalApi.createBaseSubscriptionsWithAddOns(ImmutableList.<SubscriptionBaseWithAddOnsSpecifier>of(subscriptionBaseWithAddOnsSpecifier),
+                                                                                                                                                   false,
+                                                                                                                                                   context);
+                    final SubscriptionBaseWithAddOns subscriptionBaseWithAddOns = subscriptionsWithAddOns.get(0);
+                    final UUID subscriptionId = subscriptionBaseWithAddOns.getSubscriptionBaseList().get(0).getId();
 
-                    DateTime billingRequestedDate = billingRequestedDateRaw;
-                    if (!isStandalone) {
-                        final DateTime baseSubscriptionStartDate = eventsStreamForBaseSubscription.getSubscriptionBase().getStartDate();
-                        billingRequestedDate = billingRequestedDateRaw.isBefore(baseSubscriptionStartDate) ? baseSubscriptionStartDate : billingRequestedDateRaw;
-                    }
+                    final BlockingState newBlockingState = new DefaultBlockingState(subscriptionId, BlockingStateType.SUBSCRIPTION, DefaultEntitlementApi.ENT_STATE_START, EntitlementService.ENTITLEMENT_SERVICE_NAME, false, false, false, entitlementRequestedDate);
+                    entitlementUtils.setBlockingStatesAndPostBlockingTransitionEvent(ImmutableList.<BlockingState>of(newBlockingState), subscriptionBaseWithAddOns.getBundle().getId(), context);
 
-                    final SubscriptionBaseBundle baseBundle = subscriptionBaseInternalApi.getBundleFromId(bundleId, context);
-                    final SubscriptionBase subscription = subscriptionBaseInternalApi.createSubscription(baseBundle,
-                                                                                                         eventsStreamForBaseSubscription == null ? null : eventsStreamForBaseSubscription.getSubscriptionBase(),
-                                                                                                         specifier.getPlanPhaseSpecifier(),
-                                                                                                         specifier.getOverrides(),
-                                                                                                         billingRequestedDate,
-                                                                                                         isMigrated,
-                                                                                                         context);
-
-                    final BlockingState newBlockingState = new DefaultBlockingState(subscription.getId(), BlockingStateType.SUBSCRIPTION, DefaultEntitlementApi.ENT_STATE_START, EntitlementService.ENTITLEMENT_SERVICE_NAME, false, false, false, entitlementRequestedDate);
-                    entitlementUtils.setBlockingStatesAndPostBlockingTransitionEvent(ImmutableList.<BlockingState>of(newBlockingState), subscription.getBundleId(), context);
-
-                    return new DefaultEntitlement(baseBundle,
-                                                  subscription,
-                                                  subscriptionsByBundle,
-                                                  eventsStreamBuilder,
-                                                  entitlementApi,
-                                                  pluginExecution,
-                                                  blockingStateDao,
-                                                  subscriptionBaseInternalApi,
-                                                  checker,
-                                                  notificationQueueService,
-                                                  entitlementUtils,
-                                                  dateHelper,
-                                                  clock,
-                                                  securityApi,
-                                                  internalCallContextFactory,
-                                                  context);
+                    return subscriptionId;
                 } catch (final SubscriptionBaseApiException e) {
                     throw new EntitlementApiException(e);
                 }
@@ -377,10 +333,9 @@ public class DefaultEntitlementApi extends DefaultEntitlementApiBase implements 
     public List<EntitlementAOStatusDryRun> getDryRunStatusForChange(final UUID bundleId, final String targetProductName, @Nullable final LocalDate effectiveDate, final TenantContext context) throws EntitlementApiException {
         final InternalTenantContext internalContext = internalCallContextFactory.createInternalTenantContext(bundleId, ObjectType.BUNDLE, context);
         try {
-            final SubscriptionBaseBundle bundle = subscriptionBaseInternalApi.getBundleFromId(bundleId, internalContext);
             final SubscriptionBase baseSubscription = subscriptionBaseInternalApi.getBaseSubscription(bundleId, internalContext);
-
-            final InternalTenantContext contextWithValidAccountRecordId = internalCallContextFactory.createInternalTenantContext(bundle.getAccountId(), context);
+            final UUID accountId = subscriptionBaseInternalApi.getAccountIdFromBundleId(bundleId, internalContext);
+            final InternalTenantContext contextWithValidAccountRecordId = internalCallContextFactory.createInternalTenantContext(accountId, context);
             final DateTime now = clock.getUTCNow();
             final DateTime requestedDate = dateHelper.fromLocalDateAndReferenceTime(effectiveDate, now, contextWithValidAccountRecordId);
             return subscriptionBaseInternalApi.getDryRunChangePlanStatus(baseSubscription.getId(), targetProductName, requestedDate, contextWithValidAccountRecordId);
@@ -400,7 +355,7 @@ public class DefaultEntitlementApi extends DefaultEntitlementApiBase implements 
         final InternalTenantContext internalContext = internalCallContextFactory.createInternalTenantContext(bundleId, ObjectType.BUNDLE, tenantContext);
         final UUID accountId;
         try {
-            accountId = subscriptionBaseInternalApi.getBundleFromId(bundleId, internalContext).getAccountId();
+            accountId = subscriptionBaseInternalApi.getAccountIdFromBundleId(bundleId, internalContext);
         } catch (final SubscriptionBaseApiException e) {
             throw new EntitlementApiException(e);
         }
@@ -509,12 +464,12 @@ public class DefaultEntitlementApi extends DefaultEntitlementApiBase implements 
                 try {
 
                     final UUID activeSubscriptionIdForKey = entitlementUtils.getFirstActiveSubscriptionIdForKeyOrNull(externalKey, contextWithSourceAccountRecordId);
-                    final SubscriptionBase baseSubscription = activeSubscriptionIdForKey != null ?
-                                                              subscriptionBaseInternalApi.getSubscriptionFromId(activeSubscriptionIdForKey, contextWithSourceAccountRecordId) : null;
-                    final SubscriptionBaseBundle baseBundle = baseSubscription != null ?
-                                                              subscriptionBaseInternalApi.getBundleFromId(baseSubscription.getBundleId(), contextWithSourceAccountRecordId) : null;
+                    final UUID bundleId = activeSubscriptionIdForKey != null ?
+                                          subscriptionBaseInternalApi.getBundleIdFromSubscriptionId(activeSubscriptionIdForKey, contextWithSourceAccountRecordId) : null;
+                    final UUID baseBundleAccountId = bundleId != null ?
+                                                     subscriptionBaseInternalApi.getAccountIdFromBundleId(bundleId, contextWithSourceAccountRecordId) : null;
 
-                    if (baseBundle == null || !baseBundle.getAccountId().equals(sourceAccountId)) {
+                    if (baseBundleAccountId == null || !baseBundleAccountId.equals(sourceAccountId)) {
                         throw new EntitlementApiException(new SubscriptionBaseApiException(ErrorCode.SUB_GET_INVALID_BUNDLE_KEY, externalKey));
                     }
 
@@ -529,7 +484,7 @@ public class DefaultEntitlementApi extends DefaultEntitlementApiBase implements 
 
                     // Block all associated subscriptions - TODO Do we want to block the bundle as well (this will add an extra STOP_ENTITLEMENT event in the bundle timeline stream)?
                     // Note that there is no un-transfer at the moment, so we effectively add a blocking state on disk for all subscriptions
-                    for (final SubscriptionBase subscriptionBase : subscriptionBaseInternalApi.getSubscriptionsForBundle(baseBundle.getId(), null, contextWithSourceAccountRecordId)) {
+                    for (final SubscriptionBase subscriptionBase : subscriptionBaseInternalApi.getSubscriptionsForBundle(bundleId, null, contextWithSourceAccountRecordId)) {
                         final BlockingState blockingState = new DefaultBlockingState(subscriptionBase.getId(), BlockingStateType.SUBSCRIPTION, DefaultEntitlementApi.ENT_STATE_CANCELLED, EntitlementService.ENTITLEMENT_SERVICE_NAME, true, true, false, requestedDate);
                         blockingStates.put(blockingState, subscriptionBase.getBundleId());
                     }

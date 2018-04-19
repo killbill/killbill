@@ -19,7 +19,6 @@ package org.killbill.billing.subscription.api;
 
 import java.util.List;
 
-import org.joda.time.DateTime;
 import org.killbill.billing.subscription.api.user.SubscriptionBaseBundle;
 
 public interface SubscriptionBaseWithAddOns {
@@ -27,6 +26,4 @@ public interface SubscriptionBaseWithAddOns {
     public SubscriptionBaseBundle getBundle();
 
     public List<SubscriptionBase> getSubscriptionBaseList();
-
-    public DateTime getEffectiveDate();
 }

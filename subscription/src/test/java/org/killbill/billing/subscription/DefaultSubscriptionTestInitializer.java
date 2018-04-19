@@ -34,6 +34,7 @@ import org.killbill.billing.lifecycle.api.BusService;
 import org.killbill.billing.mock.MockAccountBuilder;
 import org.killbill.billing.subscription.api.SubscriptionBaseInternalApi;
 import org.killbill.billing.subscription.api.SubscriptionBaseService;
+import org.killbill.billing.subscription.api.user.DefaultSubscriptionBaseBundle;
 import org.killbill.billing.subscription.api.user.SubscriptionBaseBundle;
 import org.killbill.billing.subscription.engine.core.DefaultSubscriptionBaseService;
 import org.killbill.billing.util.UUIDs;
@@ -80,10 +81,9 @@ public class DefaultSubscriptionTestInitializer implements SubscriptionTestIniti
         return accountData;
     }
 
-    public SubscriptionBaseBundle initBundle(final UUID accountId, final SubscriptionBaseInternalApi subscriptionApi, final InternalCallContext callContext) throws Exception {
-        final SubscriptionBaseBundle bundle = subscriptionApi.createBundleForAccount(accountId, DEFAULT_BUNDLE_KEY, true, callContext);
-        assertNotNull(bundle);
-        return bundle;
+    public SubscriptionBaseBundle initBundle(final UUID accountId, final SubscriptionBaseInternalApi subscriptionApi, final Clock clock, final InternalCallContext callContext) throws Exception {
+        final DateTime utcNow = clock.getUTCNow();
+        return new DefaultSubscriptionBaseBundle(DEFAULT_BUNDLE_KEY, accountId, utcNow, utcNow, utcNow, utcNow);
     }
 
     public void startTestFramework(final TestApiListener testListener,

@@ -33,7 +33,6 @@ import org.killbill.billing.catalog.api.Catalog;
 import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.catalog.api.PlanPhasePriceOverride;
 import org.killbill.billing.catalog.api.PlanPhaseSpecifier;
-import org.killbill.billing.entitlement.api.BaseEntitlementWithAddOnsSpecifier;
 import org.killbill.billing.entitlement.api.EntitlementAOStatusDryRun;
 import org.killbill.billing.events.EffectiveSubscriptionInternalEvent;
 import org.killbill.billing.invoice.api.DryRunArguments;
@@ -43,20 +42,14 @@ import org.killbill.billing.util.entity.Pagination;
 
 public interface SubscriptionBaseInternalApi {
 
-    public SubscriptionBase createSubscription(SubscriptionBaseBundle bundle,
-                                               @Nullable SubscriptionBase baseSubscription,
-                                               PlanPhaseSpecifier spec,
-                                               List<PlanPhasePriceOverride> overrides,
-                                               DateTime requestedDateWithMs,
-                                               boolean isMigrated,
-                                               InternalCallContext context) throws SubscriptionBaseApiException;
-
-    public List<SubscriptionBaseWithAddOns> createBaseSubscriptionsWithAddOns(UUID accountId, Iterable<BaseEntitlementWithAddOnsSpecifier> baseEntitlementWithAddOnsSpecifier,
-                                                                              boolean renameCancelledBundleIfExist, InternalCallContext contextWithValidAccountRecordId) throws SubscriptionBaseApiException;
+    public List<SubscriptionBaseWithAddOns> createBaseSubscriptionsWithAddOns(Iterable<SubscriptionBaseWithAddOnsSpecifier> subscriptionWithAddOnsSpecifiers,
+                                                                              boolean renameCancelledBundleIfExist,
+                                                                              InternalCallContext contextWithValidAccountRecordId) throws SubscriptionBaseApiException;
 
     public void cancelBaseSubscriptions(Iterable<SubscriptionBase> subscriptions, BillingActionPolicy policy, int accountBillCycleDayLocal, InternalCallContext context) throws SubscriptionBaseApiException;
 
-    public SubscriptionBaseBundle createBundleForAccount(UUID accountId, String bundleName, boolean renameCancelledBundleIfExist, InternalCallContext context)
+    //@VisibleForTesting
+    SubscriptionBaseBundle createBundleForAccount(UUID accountId, String bundleName, boolean renameCancelledBundleIfExist, InternalCallContext context)
             throws SubscriptionBaseApiException;
 
     public List<SubscriptionBaseBundle> getBundlesForAccountAndKey(UUID accountId, String bundleKey, InternalTenantContext context)
@@ -83,8 +76,6 @@ public interface SubscriptionBaseInternalApi {
 
     public SubscriptionBaseBundle getBundleFromId(UUID id, InternalTenantContext context) throws SubscriptionBaseApiException;
 
-    public UUID getAccountIdFromSubscriptionId(UUID subscriptionId, InternalTenantContext context) throws SubscriptionBaseApiException;
-
     public void setChargedThroughDate(UUID subscriptionId, DateTime chargedThruDate, InternalCallContext context) throws SubscriptionBaseApiException;
 
     public List<EffectiveSubscriptionInternalEvent> getAllTransitions(SubscriptionBase subscription, InternalTenantContext context);
@@ -101,4 +92,10 @@ public interface SubscriptionBaseInternalApi {
     public void updateBCD(final UUID subscriptionId, final int bcd, @Nullable final LocalDate effectiveFromDate, final InternalCallContext internalCallContext) throws SubscriptionBaseApiException;
 
     public int getDefaultBillCycleDayLocal(final Map<UUID, Integer> bcdCache, final SubscriptionBase subscription, final SubscriptionBase baseSubscription, final PlanPhaseSpecifier planPhaseSpecifier, final int accountBillCycleDayLocal, final Catalog catalog, final InternalTenantContext context) throws SubscriptionBaseApiException;
+
+    public UUID getAccountIdFromBundleId(UUID bundleId, InternalTenantContext context) throws SubscriptionBaseApiException;
+
+    public UUID getBundleIdFromSubscriptionId(UUID entitlementId, InternalTenantContext context) throws SubscriptionBaseApiException;
+
+    public UUID getAccountIdFromSubscriptionId(UUID subscriptionId, InternalTenantContext context) throws SubscriptionBaseApiException;
 }

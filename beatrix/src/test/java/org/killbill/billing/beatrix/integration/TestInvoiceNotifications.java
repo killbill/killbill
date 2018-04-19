@@ -1,6 +1,6 @@
 /*
- * Copyright 2014-2016 Groupon, Inc
- * Copyright 2014-2016 The Billing Project, LLC
+ * Copyright 2014-2018 Groupon, Inc
+ * Copyright 2014-2018 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -17,13 +17,14 @@
 
 package org.killbill.billing.beatrix.integration;
 
+import java.util.UUID;
+
 import org.joda.time.LocalDate;
 import org.killbill.billing.account.api.Account;
 import org.killbill.billing.account.api.AccountData;
 import org.killbill.billing.api.TestApiListener.NextEvent;
 import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.catalog.api.PlanPhaseSpecifier;
-import org.killbill.billing.catalog.api.PriceListSet;
 import org.killbill.billing.catalog.api.ProductCategory;
 import org.killbill.billing.entitlement.api.DefaultEntitlement;
 import org.killbill.billing.entitlement.api.Entitlement;
@@ -84,8 +85,9 @@ public class TestInvoiceNotifications extends TestIntegrationBase {
 
 
         busHandler.pushExpectedEvents(NextEvent.BLOCK);
-        final Entitlement entitlement = entitlementApi.createBaseEntitlement(account.getId(), spec, "bundleKey", null, null, billingDate, false, true, ImmutableList.<PluginProperty>of(), callContext);
+        final UUID entitlementId = entitlementApi.createBaseEntitlement(account.getId(), spec, "bundleKey", null, null, billingDate, false, true, ImmutableList.<PluginProperty>of(), callContext);
         busHandler.assertListenerStatus();
+        final Entitlement entitlement = entitlementApi.getEntitlementForId(entitlementId, callContext);
 
         // Move to the notification before the start date =>  2018, 2, 21
         addDaysAndCheckForCompletion(21, NextEvent.INVOICE_NOTIFICATION);

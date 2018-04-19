@@ -494,7 +494,7 @@ public class TestUserApiChangePlan extends SubscriptionTestSuiteWithEmbeddedDB {
 
         // First try with default api (no date -> IMM) => Call should fail because subscription is PENDING
         final DryRunArguments dryRunArguments1 = testUtil.createDryRunArguments(subscription.getId(), subscription.getBundleId(), spec, null, SubscriptionEventType.CHANGE, null);
-        final List<SubscriptionBase> result1 = subscriptionInternalApi.getSubscriptionsForBundle(bundle.getId(), dryRunArguments1, internalCallContext);
+        final List<SubscriptionBase> result1 = subscriptionInternalApi.getSubscriptionsForBundle(subscription.getBundleId(), dryRunArguments1, internalCallContext);
 
         // Check we are seeing the right PENDING transition (pistol-monthly), not the START but the CHANGE on the same date
         assertEquals(((DefaultSubscriptionBase) result1.get(0)).getCurrentOrPendingPlan().getName(), "pistol-monthly");
@@ -503,7 +503,7 @@ public class TestUserApiChangePlan extends SubscriptionTestSuiteWithEmbeddedDB {
         // Second try with date prior to startDate => Call should fail because subscription is PENDING
         try {
             final DryRunArguments dryRunArguments2 = testUtil.createDryRunArguments(subscription.getId(), subscription.getBundleId(), spec, new LocalDate(startDate.minusDays(1)), SubscriptionEventType.CHANGE, null);
-            subscriptionInternalApi.getSubscriptionsForBundle(bundle.getId(), dryRunArguments2, internalCallContext);
+            subscriptionInternalApi.getSubscriptionsForBundle(subscription.getBundleId(), dryRunArguments2, internalCallContext);
             fail("Change plan should have failed : subscription PENDING");
         } catch (final SubscriptionBaseApiException e) {
             assertEquals(e.getCode(), ErrorCode.SUB_CHANGE_NON_ACTIVE.getCode());
@@ -517,7 +517,7 @@ public class TestUserApiChangePlan extends SubscriptionTestSuiteWithEmbeddedDB {
 
         // Third try with date equals to startDate  Call should succeed, but no event because action in future
         final DryRunArguments dryRunArguments3 = testUtil.createDryRunArguments(subscription.getId(), subscription.getBundleId(), spec, internalCallContext.toLocalDate(startDate), SubscriptionEventType.CHANGE, null);
-        final List<SubscriptionBase> result2 = subscriptionInternalApi.getSubscriptionsForBundle(bundle.getId(), dryRunArguments3, internalCallContext);
+        final List<SubscriptionBase> result2 = subscriptionInternalApi.getSubscriptionsForBundle(subscription.getBundleId(), dryRunArguments3, internalCallContext);
         // Check we are seeing the right PENDING transition (pistol-monthly), not the START but the CHANGE on the same date
         assertEquals(((DefaultSubscriptionBase) result2.get(0)).getCurrentOrPendingPlan().getName(), "pistol-monthly");
 
