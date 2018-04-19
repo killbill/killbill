@@ -206,9 +206,8 @@ public class TestUserApiCancel extends SubscriptionTestSuiteWithEmbeddedDB {
 
     // Similar test to testCancelSubscriptionEOTWithChargeThroughDate except we uncancel and check things
     // are as they used to be and we can move forward without hitting cancellation
-    // Flaky, see https://github.com/killbill/killbill/issues/860
-    @Test(groups = "slow", retryAnalyzer = FlakyRetryAnalyzer.class)
-    public void testUncancel() throws SubscriptionBillingApiException, SubscriptionBaseApiException {
+    @Test(groups = "slow")
+    public void testUncancel() throws SubscriptionBaseApiException {
         final String prod = "Shotgun";
         final BillingPeriod term = BillingPeriod.MONTHLY;
         final String planSet = PriceListSet.DEFAULT_PRICELIST_NAME;
@@ -224,8 +223,7 @@ public class TestUserApiCancel extends SubscriptionTestSuiteWithEmbeddedDB {
 
         // MOVE TO NEXT PHASE
         testListener.pushExpectedEvent(NextEvent.PHASE);
-        Interval it = new Interval(clock.getUTCNow(), clock.getUTCNow().plusDays(31));
-        clock.addDeltaFromReality(it.toDurationMillis());
+        clock.addMonths(1);
         assertListenerStatus();
         PlanPhase currentPhase = subscription.getCurrentPhase();
         assertEquals(currentPhase.getPhaseType(), PhaseType.EVERGREEN);
@@ -238,21 +236,21 @@ public class TestUserApiCancel extends SubscriptionTestSuiteWithEmbeddedDB {
 
         // CANCEL EOT
         subscription.cancel(callContext);
+        assertListenerStatus();
 
+        // UNCANCEL
+        testListener.pushExpectedEvent(NextEvent.UNCANCEL);
         subscription.uncancel(callContext);
+        assertListenerStatus();
 
         // MOVE TO EOT + RECHECK
-        testListener.pushExpectedEvent(NextEvent.UNCANCEL);
-        it = new Interval(clock.getUTCNow(), clock.getUTCNow().plusMonths(1));
-        clock.addDeltaFromReality(it.toDurationMillis());
+        clock.addMonths(1);
         assertListenerStatus();
 
         final Plan currentPlan = subscription.getCurrentPlan();
         assertEquals(currentPlan.getProduct().getName(), prod);
         currentPhase = subscription.getCurrentPhase();
         assertEquals(currentPhase.getPhaseType(), PhaseType.EVERGREEN);
-
-        assertListenerStatus();
     }
 
     @Test(groups = "slow", expectedExceptions = SubscriptionBaseApiException.class)
