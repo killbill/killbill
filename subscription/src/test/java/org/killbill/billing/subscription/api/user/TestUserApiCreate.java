@@ -41,6 +41,7 @@ import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertNotEquals;
 import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.assertTrue;
 
@@ -88,17 +89,13 @@ public class TestUserApiCreate extends SubscriptionTestSuiteWithEmbeddedDB {
 
         final SubscriptionBaseBundle newBundle = subscriptionInternalApi.createBundleForAccount(bundle.getAccountId(), DefaultSubscriptionTestInitializer.DEFAULT_BUNDLE_KEY, true, internalCallContext);
         assertNotNull(newBundle);
-        assertEquals(newBundle.getOriginalCreatedDate().compareTo(bundle.getCreatedDate()), 0);
+        assertNotEquals(newBundle.getId(), subscription.getBundleId());
+        assertEquals(newBundle.getExternalKey(), DefaultSubscriptionTestInitializer.DEFAULT_BUNDLE_KEY);
+        assertEquals(newBundle.getOriginalCreatedDate().compareTo(bundle.getCreatedDate()), 0, String.format("OriginalCreatedDate=%s != CreatedDate=%s", newBundle.getOriginalCreatedDate(), bundle.getCreatedDate()));
 
-        testListener.pushExpectedEvents(NextEvent.PHASE);
-        final DefaultSubscriptionBase newSubscription = testUtil.createSubscription(bundle, productName, term, planSetName, requestedDate);
         subscriptionInternalApi.updateExternalKey(newBundle.getId(), "myNewSuperKey", internalCallContext);
-
         final SubscriptionBaseBundle bundleWithNewKey = subscriptionInternalApi.getBundleFromId(newBundle.getId(), internalCallContext);
         assertEquals(bundleWithNewKey.getExternalKey(), "myNewSuperKey");
-
-        assertListenerStatus();
-        assertNotNull(newSubscription);
     }
 
     @Test(groups = "slow")

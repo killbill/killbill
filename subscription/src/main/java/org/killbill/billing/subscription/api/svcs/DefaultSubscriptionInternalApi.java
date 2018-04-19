@@ -227,10 +227,8 @@ public class DefaultSubscriptionInternalApi extends SubscriptionApiBase implemen
                 final boolean isStandalone = isStandaloneSpecifier(catalog, effectiveDate, cur);
                 final boolean isBaseOrStandaloneSpecifier = isBase || isStandalone;
                 if (isBaseOrStandaloneSpecifier) {
-                    if (baseOrStandalonePlanSpecifier == null &&
-                        (isStandalone || (isBase && subscriptionBaseWithAddOnsSpecifier.getBundleId() == null))) {
+                    if (baseOrStandalonePlanSpecifier == null) {
                         baseOrStandalonePlanSpecifier = cur;
-
                     } else {
                         throw new SubscriptionBaseApiException(ErrorCode.SUB_CREATE_INVALID_ENTITLEMENT_SPECIFIER);
                     }
@@ -279,7 +277,8 @@ public class DefaultSubscriptionInternalApi extends SubscriptionApiBase implemen
                 SubscriptionBaseBundle bundle = null;
                 if (subscriptionBaseWithAddOnsSpecifier.getBundleId() != null) {
                     bundle = dao.getSubscriptionBundleFromId(subscriptionBaseWithAddOnsSpecifier.getBundleId(), context);
-                    if (bundle == null || (subscriptionBaseWithAddOnsSpecifier.getBundleExternalKey() != null && subscriptionBaseWithAddOnsSpecifier.getBundleExternalKey().equals(bundle.getExternalKey()))) {
+                    if (bundle == null ||
+                        (subscriptionBaseWithAddOnsSpecifier.getBundleExternalKey() != null && !subscriptionBaseWithAddOnsSpecifier.getBundleExternalKey().equals(bundle.getExternalKey()))) {
                         throw new SubscriptionBaseApiException(ErrorCode.SUB_CREATE_INVALID_ENTITLEMENT_SPECIFIER);
                     }
                 } else if (subscriptionBaseWithAddOnsSpecifier.getBundleExternalKey() != null &&
@@ -295,8 +294,9 @@ public class DefaultSubscriptionInternalApi extends SubscriptionApiBase implemen
                     }
                 }
 
+                SubscriptionBase baseSubscription = null;
                 if (bundle != null) {
-                    final SubscriptionBase baseSubscription = dao.getBaseSubscription(bundle.getId(), catalog, context);
+                    baseSubscription = dao.getBaseSubscription(bundle.getId(), catalog, context);
                     if (baseSubscription != null) {
                         final DateTime baseSubscriptionStartDate = getBaseSubscription(bundle.getId(), context).getStartDate();
                         billingRequestedDate = billingRequestedDateRaw.isBefore(baseSubscriptionStartDate) ? baseSubscriptionStartDate : billingRequestedDateRaw;
@@ -308,7 +308,7 @@ public class DefaultSubscriptionInternalApi extends SubscriptionApiBase implemen
                                                     subscriptionBaseWithAddOnsSpecifier.getBundleExternalKey(),
                                                     renameCancelledBundleIfExist,
                                                     context);
-                } else if (bundle != null && baseOrStandalonePlanSpecifier != null && isBaseSpecifier(catalog, billingRequestedDateRaw, baseOrStandalonePlanSpecifier)) {
+                } else if (bundle != null && baseSubscription != null && baseOrStandalonePlanSpecifier != null && isBaseSpecifier(catalog, billingRequestedDateRaw, baseOrStandalonePlanSpecifier)) {
                     throw new SubscriptionBaseApiException(ErrorCode.SUB_CREATE_BP_EXISTS, bundle.getExternalKey());
                 } else if (bundle == null) {
                     throw new SubscriptionBaseApiException(ErrorCode.SUB_CREATE_INVALID_ENTITLEMENT_SPECIFIER);

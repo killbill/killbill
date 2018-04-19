@@ -120,7 +120,8 @@ public class SubscriptionTestSuiteWithEmbeddedDB extends GuicyKillbillTestSuiteW
         this.catalog = subscriptionTestInitializer.initCatalog(catalogService, internalCallContext);
         this.accountData = subscriptionTestInitializer.initAccountData(clock);
         final Account account = createAccount(accountData);
-        this.bundle = subscriptionTestInitializer.initBundle(account.getId(), subscriptionInternalApi, clock, internalCallContext);
+        final SubscriptionBaseBundle model = subscriptionTestInitializer.initBundle(account.getId(), subscriptionInternalApi, clock, internalCallContext);
+        this.bundle = subscriptionInternalApi.createBundleForAccount(model.getAccountId(), model.getExternalKey(), false, internalCallContext);
     }
 
     @AfterMethod(groups = "slow")
