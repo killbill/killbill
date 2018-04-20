@@ -862,14 +862,7 @@ public class DefaultSubscriptionInternalApi extends SubscriptionApiBase implemen
     private CacheLoaderArgument createBundleIdFromSubscriptionIdCacheLoaderArgument(final InternalTenantContext internalTenantContext) {
         final BundleIdFromSubscriptionIdCacheLoader.LoaderCallback loaderCallback = new BundleIdFromSubscriptionIdCacheLoader.LoaderCallback() {
             public UUID loadBundleId(final UUID subscriptionId, final InternalTenantContext internalTenantContext) {
-                final SubscriptionBase subscriptionBase;
-                try {
-                    subscriptionBase = getSubscriptionFromId(subscriptionId, internalTenantContext);
-                } catch (final SubscriptionBaseApiException e) {
-                    log.warn("Unable to retrieve subscription for id='{}'", subscriptionId);
-                    return null;
-                }
-                return subscriptionBase.getBundleId();
+                return dao.getBundleIdFromSubscriptionId(subscriptionId, internalTenantContext);
             }
         };
 
