@@ -643,10 +643,6 @@ public abstract class JaxRsResourceBase implements JaxrsResource {
         }
     }
 
-    protected void verifyNumberOfElements(int actual, int expected, String errorMessage) {
-        Preconditions.checkArgument(actual == expected, errorMessage);
-    }
-
     protected void logDeprecationParameterWarningIfNeeded(@Nullable final String deprecatedParam, final String... replacementParams) {
         if (deprecatedParam != null) {
             log.warn(String.format("Parameter %s is being deprecated: Instead use parameters %s", deprecatedParam, Joiner.on(",").join(replacementParams)));

@@ -144,10 +144,15 @@ public class DefaultSubscriptionBaseApiService implements SubscriptionBaseApiSer
             try {
                 final DefaultSubscriptionBase subscriptionBase = new DefaultSubscriptionBase(subscription.getBuilder(), this, clock);
                 final InternalCallContext internalCallContext = createCallContextFromBundleId(subscriptionBase.getBundleId(), context);
-                final List<SubscriptionBaseEvent> events = getEventsOnCreation(subscriptionBase.getId(), subscriptionBase.getAlignStartDate(),
-                                                                               subscriptionBase.getBundleStartDate(), subscription.getPlan(),
-                                                                               subscription.getInitialPhase(), subscription.getRealPriceList(),
-                                                                               subscription.getEffectiveDate(), fullCatalog, internalCallContext);
+                final List<SubscriptionBaseEvent> events = getEventsOnCreation(subscriptionBase.getId(),
+                                                                               subscriptionBase.getAlignStartDate(),
+                                                                               subscriptionBase.getBundleStartDate(),
+                                                                               subscription.getPlan(),
+                                                                               subscription.getInitialPhase(),
+                                                                               subscription.getRealPriceList(),
+                                                                               subscription.getEffectiveDate(),
+                                                                               fullCatalog,
+                                                                               internalCallContext);
                 eventsMap.put(subscriptionBase.getId(), events);
                 subscriptionBaseList.add(subscriptionBase);
             } catch (final CatalogApiException e) {
@@ -434,13 +439,23 @@ public class DefaultSubscriptionBaseApiService implements SubscriptionBaseApiSer
     }
 
     @Override
-    public List<SubscriptionBaseEvent> getEventsOnCreation(final UUID subscriptionId, final DateTime alignStartDate, final DateTime bundleStartDate,
-                                                           final Plan plan, final PhaseType initialPhase,
-                                                           final String realPriceList, final DateTime effectiveDate,
+    public List<SubscriptionBaseEvent> getEventsOnCreation(final UUID subscriptionId,
+                                                           final DateTime alignStartDate,
+                                                           final DateTime bundleStartDate,
+                                                           final Plan plan,
+                                                           final PhaseType initialPhase,
+                                                           final String realPriceList,
+                                                           final DateTime effectiveDate,
                                                            final Catalog fullCatalog,
                                                            final InternalTenantContext internalTenantContext) throws CatalogApiException, SubscriptionBaseApiException {
-        final TimedPhase[] curAndNextPhases = planAligner.getCurrentAndNextTimedPhaseOnCreate(alignStartDate, bundleStartDate, plan, initialPhase,
-                                                                                              realPriceList, effectiveDate, fullCatalog, internalTenantContext);
+        final TimedPhase[] curAndNextPhases = planAligner.getCurrentAndNextTimedPhaseOnCreate(alignStartDate,
+                                                                                              bundleStartDate,
+                                                                                              plan,
+                                                                                              initialPhase,
+                                                                                              realPriceList,
+                                                                                              effectiveDate,
+                                                                                              fullCatalog,
+                                                                                              internalTenantContext);
 
         final ApiEventBuilder createBuilder = new ApiEventBuilder()
                 .setSubscriptionId(subscriptionId)
