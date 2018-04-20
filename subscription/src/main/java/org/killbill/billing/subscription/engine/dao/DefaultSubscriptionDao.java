@@ -301,6 +301,7 @@ public class DefaultSubscriptionDao extends EntityDaoBase<SubscriptionBundleMode
 
                 final SubscriptionBaseBundle unusedBundle = findExistingUnusedBundleForExternalKeyAndAccount(existingBundles, entitySqlDaoWrapperFactory);
                 if (unusedBundle != null) {
+                    log.info("Found unused bundle for externalKey='{}': bundleId='{}'", bundle.getExternalKey(), unusedBundle.getId());
                     return unusedBundle;
                 }
                 final BundleSqlDao bundleSqlDao = entitySqlDaoWrapperFactory.become(BundleSqlDao.class);
@@ -319,6 +320,7 @@ public class DefaultSubscriptionDao extends EntityDaoBase<SubscriptionBundleMode
                             if (s.getState() != EntitlementState.CANCELLED) {
                                 throw new SubscriptionBaseApiException(ErrorCode.SUB_CREATE_ACTIVE_BUNDLE_KEY_EXISTS, bundle.getExternalKey());
                             } else if (renameCancelledBundleIfExist) {
+                                log.info("Renaming bundles with externalKey='{}', prefix='cncl'", bundle.getExternalKey());
                                 // Note that if bundle belongs to a different account, context is not the context for this target account,
                                 // but the underlying sql operation does not use the account info
                                 bundleSqlDao.renameBundleExternalKey(bundle.getExternalKey(), "cncl", context);
