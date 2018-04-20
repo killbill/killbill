@@ -53,8 +53,7 @@ public class TestCatalogRetireElements extends TestIntegrationBase {
         return super.getConfigSource("/beatrixCatalogRetireElements.properties");
     }
 
-    // Flaky, see https://github.com/killbill/killbill/issues/860
-    @Test(groups = "slow", retryAnalyzer = FlakyRetryAnalyzer.class)
+    @Test(groups = "slow")
     public void testRetirePlan() throws Exception {
         // Catalog v1 starts in 2011-01-01
         // Catalog v2 starts in 2015-12-01
@@ -111,8 +110,7 @@ public class TestCatalogRetireElements extends TestIntegrationBase {
 
     }
 
-    // Flaky, see https://github.com/killbill/killbill/issues/860
-    @Test(groups = "slow", retryAnalyzer = FlakyRetryAnalyzer.class)
+    @Test(groups = "slow")
     public void testRetirePlanWithUncancel() throws Exception {
         // Catalog v1 starts in 2011-01-01
         // Catalog v2 starts in 2015-12-01
@@ -176,8 +174,7 @@ public class TestCatalogRetireElements extends TestIntegrationBase {
         }
     }
 
-    // Flaky, see https://github.com/killbill/killbill/issues/860
-    @Test(groups = "slow", retryAnalyzer = FlakyRetryAnalyzer.class)
+    @Test(groups = "slow")
     public void testRetirePlanAfterChange() throws Exception {
         // Catalog v1 starts in 2011-01-01
         // Catalog v3 starts in 2016-01-01
