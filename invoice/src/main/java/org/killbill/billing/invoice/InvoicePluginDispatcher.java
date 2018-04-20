@@ -176,7 +176,7 @@ public class InvoicePluginDispatcher {
                     final InvoiceItem sanitizedInvoiceItem = validateAndSanitizeInvoiceItemFromPlugin(originalInvoice, additionalInvoiceItem, invoicePlugin);
                     additionalInvoiceItems.add(sanitizedInvoiceItem);
                 }
-                invoiceUpdated = invoiceUpdated || updateOriginalInvoiceWithPluginInvoiceItems(originalInvoice, additionalInvoiceItems);
+                invoiceUpdated = updateOriginalInvoiceWithPluginInvoiceItems(originalInvoice, additionalInvoiceItems) || invoiceUpdated;
             }
         }
 
