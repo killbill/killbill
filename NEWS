@@ -1,3 +1,7 @@
+0.19.10
+    Entitlement and Subscription performance
+    Fix issue in invoice plugin ordering
+
 0.19.9
     Introduce thread-local dirty DB flag
     Fix NPE in bus and notifications threads
