@@ -195,8 +195,8 @@ public class DefaultSubscriptionApi implements SubscriptionApi {
             }
 
             final InternalTenantContext internalContextWithAccountRecordId =  internalCallContextFactory.createInternalTenantContext(activeSubscriptionIdForKey, ObjectType.SUBSCRIPTION, context);
-            final SubscriptionBase subscriptionBase = subscriptionBaseInternalApi.getSubscriptionFromId(activeSubscriptionIdForKey, internalContextWithAccountRecordId);
-            return getSubscriptionBundle(subscriptionBase.getBundleId(), context);
+            final UUID bundleId = subscriptionBaseInternalApi.getBundleIdFromSubscriptionId(activeSubscriptionIdForKey, internalContextWithAccountRecordId);
+            return getSubscriptionBundle(bundleId, context);
         } catch (final SubscriptionBaseApiException e) {
             throw new SubscriptionApiException(e);
         }
@@ -276,11 +276,10 @@ public class DefaultSubscriptionApi implements SubscriptionApi {
 
         final InternalCallContext internalCallContext = internalCallContextFactory.createInternalCallContext(bundleId, ObjectType.BUNDLE, callContext);
 
-        final SubscriptionBaseBundle bundle;
         final ImmutableAccountData account;
         try {
-            bundle = subscriptionBaseInternalApi.getBundleFromId(bundleId, internalCallContext);
-            account = accountApi.getImmutableAccountDataById(bundle.getAccountId(), internalCallContext);
+            final UUID accountId = subscriptionBaseInternalApi.getAccountIdFromBundleId(bundleId, internalCallContext);
+            account = accountApi.getImmutableAccountDataById(accountId, internalCallContext);
         } catch (final SubscriptionBaseApiException e) {
             throw new EntitlementApiException(e);
         } catch (AccountApiException e) {
@@ -299,7 +298,7 @@ public class DefaultSubscriptionApi implements SubscriptionApi {
         final List<BaseEntitlementWithAddOnsSpecifier> baseEntitlementWithAddOnsSpecifierList = new ArrayList<BaseEntitlementWithAddOnsSpecifier>();
         baseEntitlementWithAddOnsSpecifierList.add(baseEntitlementWithAddOnsSpecifier);
         final EntitlementContext pluginContext = new DefaultEntitlementContext(OperationType.UPDATE_BUNDLE_EXTERNAL_KEY,
-                                                                               bundle.getAccountId(),
+                                                                               account.getId(),
                                                                                null,
                                                                                baseEntitlementWithAddOnsSpecifierList,
                                                                                null,

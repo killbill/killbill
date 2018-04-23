@@ -128,9 +128,9 @@ public class AddonUtils {
         return false;
     }
 
-    public int countExistingAddOnsWithSamePlanName(final List<SubscriptionBase> subscriptionsForBundle, final String planName) {
+    public int countExistingAddOnsWithSamePlanName(final Iterable<SubscriptionBase> subscriptionsForBundle, final String planName) {
         int countExistingAddOns = 0;
-        for (SubscriptionBase subscription : subscriptionsForBundle) {
+        for (final SubscriptionBase subscription : subscriptionsForBundle) {
             if (subscription.getCurrentPlan().getName().equalsIgnoreCase(planName)
                 && subscription.getLastActiveProduct().getCategory() != null
                 && ProductCategory.ADD_ON.equals(subscription.getLastActiveProduct().getCategory())) {

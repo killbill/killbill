@@ -85,9 +85,12 @@ public class DefaultEventsStream implements EventsStream {
     private BlockingState entitlementCancelEvent;
     private EntitlementState entitlementState;
 
-    public DefaultEventsStream(final ImmutableAccountData account, final SubscriptionBaseBundle bundle,
-                               final Collection<BlockingState> blockingStates, final BlockingChecker blockingChecker,
-                               @Nullable final SubscriptionBase baseSubscription, final SubscriptionBase subscription,
+    public DefaultEventsStream(final ImmutableAccountData account,
+                               final SubscriptionBaseBundle bundle,
+                               final Collection<BlockingState> blockingStates,
+                               final BlockingChecker blockingChecker,
+                               @Nullable final SubscriptionBase baseSubscription,
+                               final SubscriptionBase subscription,
                                final Collection<SubscriptionBase> allSubscriptionsForBundle,
                                final int defaultBillCycleDayLocal,
                                final InternalTenantContext contextWithValidAccountRecordId, final DateTime utcNow) {

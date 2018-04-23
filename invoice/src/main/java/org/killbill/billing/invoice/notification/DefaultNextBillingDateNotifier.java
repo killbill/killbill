@@ -23,9 +23,7 @@ import java.util.UUID;
 import org.joda.time.DateTime;
 import org.killbill.billing.invoice.InvoiceListener;
 import org.killbill.billing.invoice.api.DefaultInvoiceService;
-import org.killbill.billing.subscription.api.SubscriptionBase;
 import org.killbill.billing.subscription.api.SubscriptionBaseInternalApi;
-import org.killbill.billing.subscription.api.user.SubscriptionBaseApiException;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.clock.Clock;
 import org.killbill.notificationq.api.NotificationEvent;
@@ -84,21 +82,12 @@ public class DefaultNextBillingDateNotifier extends RetryableService implements 
                 // Just to ensure compatibility with json that might not have that targetDate field (old versions < 0.13.6)
                 final DateTime targetDate = key.getTargetDate() != null ? key.getTargetDate() : eventDate;
                 final UUID firstSubscriptionId = key.getUuidKeys().iterator().next();
-                try {
-                    final SubscriptionBase subscription = subscriptionApi.getSubscriptionFromId(firstSubscriptionId, internalCallContextFactory.createInternalTenantContext(tenantRecordId, accountRecordId));
-                    if (subscription == null) {
-                        log.warn("Unable to retrieve subscriptionId='{}' for event {}", firstSubscriptionId, key);
-                        return;
-                    }
-                    if (key.isDryRunForInvoiceNotification() != null && // Just to ensure compatibility with json that might not have that field (old versions < 0.13.6)
-                        key.isDryRunForInvoiceNotification()) {
-                        processEventForInvoiceNotification(firstSubscriptionId, targetDate, userToken, accountRecordId, tenantRecordId);
-                    } else {
-                        final boolean isRescheduled = key.isRescheduled() == Boolean.TRUE; // Handle null value (old versions < 0.19.7)
-                        processEventForInvoiceGeneration(firstSubscriptionId, targetDate, isRescheduled, userToken, accountRecordId, tenantRecordId);
-                    }
-                } catch (final SubscriptionBaseApiException e) {
-                    log.warn("Error retrieving subscriptionId='{}'", firstSubscriptionId, e);
+                if (key.isDryRunForInvoiceNotification() != null && // Just to ensure compatibility with json that might not have that field (old versions < 0.13.6)
+                    key.isDryRunForInvoiceNotification()) {
+                    processEventForInvoiceNotification(firstSubscriptionId, targetDate, userToken, accountRecordId, tenantRecordId);
+                } else {
+                    final boolean isRescheduled = key.isRescheduled() == Boolean.TRUE; // Handle null value (old versions < 0.19.7)
+                    processEventForInvoiceGeneration(firstSubscriptionId, targetDate, isRescheduled, userToken, accountRecordId, tenantRecordId);
                 }
             }
         };
