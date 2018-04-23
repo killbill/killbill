@@ -38,12 +38,16 @@ import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.entity.EntityPersistenceException;
 import org.killbill.billing.events.AccountChangeInternalEvent;
 import org.killbill.billing.events.AccountCreationInternalEvent;
+import org.killbill.billing.util.api.AuditLevel;
+import org.killbill.billing.util.audit.AuditLogWithHistory;
 import org.killbill.billing.util.audit.ChangeType;
+import org.killbill.billing.util.audit.dao.AuditDao;
 import org.killbill.billing.util.cache.Cachable.CacheType;
 import org.killbill.billing.util.cache.CacheController;
 import org.killbill.billing.util.cache.CacheControllerDispatcher;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.billing.util.dao.NonEntityDao;
+import org.killbill.billing.util.dao.TableName;
 import org.killbill.billing.util.entity.DefaultPagination;
 import org.killbill.billing.util.entity.Pagination;
 import org.killbill.billing.util.entity.dao.DefaultPaginationSqlDaoHelper.Ordering;
@@ -72,15 +76,17 @@ public class DefaultAccountDao extends EntityDaoBase<AccountModelDao, Account, A
     private final PersistentBus eventBus;
     private final InternalCallContextFactory internalCallContextFactory;
     private final Clock clock;
+    private final AuditDao auditDao;
 
     @Inject
     public DefaultAccountDao(final IDBI dbi, @Named(MAIN_RO_IDBI_NAMED) final IDBI roDbi, final PersistentBus eventBus, final Clock clock, final CacheControllerDispatcher cacheControllerDispatcher,
-                             final InternalCallContextFactory internalCallContextFactory, final NonEntityDao nonEntityDao) {
+                             final InternalCallContextFactory internalCallContextFactory, final NonEntityDao nonEntityDao, final AuditDao auditDao) {
         super(new EntitySqlDaoTransactionalJdbiWrapper(dbi, roDbi, clock, cacheControllerDispatcher, nonEntityDao, internalCallContextFactory), AccountSqlDao.class);
         this.accountImmutableCacheController = cacheControllerDispatcher.getCacheController(CacheType.ACCOUNT_IMMUTABLE);
         this.eventBus = eventBus;
         this.internalCallContextFactory = internalCallContextFactory;
         this.clock = clock;
+        this.auditDao = auditDao;
     }
 
     @Override
@@ -314,6 +320,17 @@ public class DefaultAccountDao extends EntityDaoBase<AccountModelDao, Account, A
             @Override
             public List<AccountModelDao> inTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory) throws Exception {
                 return entitySqlDaoWrapperFactory.become(AccountSqlDao.class).getAccountsByParentId(parentAccountId, context);
+            }
+        });
+    }
+
+    @Override
+    public List<AuditLogWithHistory> getAuditLogsWithHistoryForId(final UUID accountId, final AuditLevel auditLevel, final InternalTenantContext context) throws AccountApiException {
+        return transactionalSqlDao.execute(false, AccountApiException.class, new EntitySqlDaoTransactionWrapper<List<AuditLogWithHistory>>() {
+            @Override
+            public List<AuditLogWithHistory> inTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory) throws EntityPersistenceException, EventBusException {
+                final AccountSqlDao transactional = entitySqlDaoWrapperFactory.become(AccountSqlDao.class);
+                return auditDao.getAuditLogsWithHistoryForId(transactional, TableName.ACCOUNT, accountId, auditLevel, context);
             }
         });
     }
