@@ -44,7 +44,7 @@ public class TestAuditLogJson extends JaxrsTestSuiteNoDB {
         final UUID objectId = UUID.randomUUID();
         final ObjectType objectType = ObjectType.BUNDLE;
 
-        final AuditLogJson auditLogJson = new AuditLogJson(changeType, changeDate, objectType, objectId, changedBy, reasonCode, comments, userToken);
+        final AuditLogJson auditLogJson = new AuditLogJson(changeType, changeDate, objectType, objectId, changedBy, reasonCode, comments, userToken, null);
         Assert.assertEquals(auditLogJson.getChangeType(), changeType);
         Assert.assertEquals(auditLogJson.getChangeDate(), changeDate);
         Assert.assertEquals(auditLogJson.getChangedBy(), changedBy);
@@ -63,7 +63,8 @@ public class TestAuditLogJson extends JaxrsTestSuiteNoDB {
                                     "\"changedBy\":\"" + auditLogJson.getChangedBy() + "\"," +
                                     "\"reasonCode\":\"" + auditLogJson.getReasonCode() + "\"," +
                                     "\"comments\":\"" + auditLogJson.getComments() + "\"," +
-                                    "\"userToken\":\"" + auditLogJson.getUserToken() + "\"}");
+                                    "\"userToken\":\"" + auditLogJson.getUserToken() + "\"," +
+                                    "\"history\":" + auditLogJson.getHistory() + "}");
 
         final AuditLogJson fromJson = mapper.readValue(asJson, AuditLogJson.class);
         Assert.assertEquals(fromJson, auditLogJson);

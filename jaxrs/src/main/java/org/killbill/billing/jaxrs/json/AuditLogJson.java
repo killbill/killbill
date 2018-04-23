@@ -22,6 +22,7 @@ import org.joda.time.DateTime;
 
 import org.killbill.billing.ObjectType;
 import org.killbill.billing.util.audit.AuditLog;
+import org.killbill.billing.util.audit.AuditLogWithHistory;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -42,6 +43,8 @@ public class AuditLogJson {
     private final ObjectType objectType;
     private final UUID objectId;
 
+    private final Object history;
+
     @JsonCreator
     public AuditLogJson(@JsonProperty("changeType") final String changeType,
                         @JsonProperty("changeDate") final DateTime changeDate,
@@ -50,7 +53,8 @@ public class AuditLogJson {
                         @JsonProperty("changedBy") final String changedBy,
                         @JsonProperty("reasonCode") final String reasonCode,
                         @JsonProperty("comments") final String comments,
-                        @JsonProperty("userToken") final String userToken) {
+                        @JsonProperty("userToken") final String userToken,
+                        @JsonProperty("history") final Object history) {
         this.changeType = changeType;
         this.changeDate = changeDate;
         this.changedBy = changedBy;
@@ -59,11 +63,17 @@ public class AuditLogJson {
         this.userToken = userToken;
         this.objectType = objectType;
         this.objectId = objectId;
+        this.history = history;
+    }
+
+    public AuditLogJson(final AuditLogWithHistory auditLogWithHistory) {
+        this(auditLogWithHistory.getChangeType().toString(), auditLogWithHistory.getCreatedDate(), auditLogWithHistory.getAuditedObjectType(), auditLogWithHistory.getAuditedEntityId(), auditLogWithHistory.getUserName(), auditLogWithHistory.getReasonCode(),
+             auditLogWithHistory.getComment(), auditLogWithHistory.getUserToken(), auditLogWithHistory.getEntity());
     }
 
     public AuditLogJson(final AuditLog auditLog) {
         this(auditLog.getChangeType().toString(), auditLog.getCreatedDate(), auditLog.getAuditedObjectType(), auditLog.getAuditedEntityId(), auditLog.getUserName(), auditLog.getReasonCode(),
-             auditLog.getComment(), auditLog.getUserToken());
+             auditLog.getComment(), auditLog.getUserToken(), null);
     }
 
     public String getChangeType() {
@@ -96,6 +106,10 @@ public class AuditLogJson {
 
     public UUID getObjectId() {
         return objectId;
+    }
+
+    public Object getHistory() {
+        return history;
     }
 
     @Override

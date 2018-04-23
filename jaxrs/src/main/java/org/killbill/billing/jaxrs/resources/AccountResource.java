@@ -121,6 +121,7 @@ import org.killbill.billing.util.api.TagDefinitionApiException;
 import org.killbill.billing.util.api.TagUserApi;
 import org.killbill.billing.util.audit.AccountAuditLogs;
 import org.killbill.billing.util.audit.AuditLog;
+import org.killbill.billing.util.audit.AuditLogWithHistory;
 import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.TenantContext;
 import org.killbill.billing.util.config.definition.JaxrsConfig;
@@ -1501,8 +1502,29 @@ public class AccountResource extends JaxRsResourceBase {
                                @javax.ws.rs.core.Context final HttpServletRequest request) throws AccountApiException {
         final TenantContext tenantContext = context.createTenantContextWithAccountId(accountId, request);
         final AccountAuditLogs accountAuditLogs = auditUserApi.getAccountAuditLogs(accountId, AuditLevel.FULL, tenantContext);
-
         return Response.status(Status.OK).entity(getAuditLogs(accountAuditLogs)).build();
+    }
+
+    @TimedResource
+    @GET
+    @Path("/{accountId:" + UUID_PATTERN + "}/" + AUDIT_LOG_WITH_HISTORY)
+    @Produces(APPLICATION_JSON)
+    @ApiOperation(value = "Retrieve account audit logs with history by account id", response = AuditLogJson.class, responseContainer = "List")
+    @ApiResponses(value = {@ApiResponse(code = 404, message = "Account not found")})
+    public Response getAccountAuditLogsWithHistory(@PathParam("accountId") final UUID accountId,
+                                        @javax.ws.rs.core.Context final HttpServletRequest request) throws AccountApiException {
+        final TenantContext tenantContext = context.createTenantContextWithAccountId(accountId, request);
+        final List<AuditLogWithHistory> auditLogWithHistory = accountUserApi.getAuditLogsWithHistoryForId(accountId, AuditLevel.FULL, tenantContext);
+        return Response.status(Status.OK).entity(getAuditLogsWithHistory(auditLogWithHistory)).build();
+    }
+
+    private List<AuditLogJson> getAuditLogsWithHistory(List<AuditLogWithHistory> auditLogWithHistory) {
+        return ImmutableList.<AuditLogJson>copyOf(Collections2.transform(auditLogWithHistory, new Function<AuditLogWithHistory, AuditLogJson>() {
+            @Override
+            public AuditLogJson apply(@Nullable final AuditLogWithHistory input) {
+                return new AuditLogJson(input);
+            }
+        }));
     }
 
     private List<AuditLogJson> getAuditLogs(AccountAuditLogs accountAuditLogs) {
