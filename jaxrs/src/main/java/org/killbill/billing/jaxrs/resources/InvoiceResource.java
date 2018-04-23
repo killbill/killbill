@@ -187,9 +187,10 @@ public class InvoiceResource extends JaxRsResourceBase {
         }
     }
 
+
     @TimedResource
     @GET
-    @Path("/{invoiceNumber:" + NUMBER_PATTERN + "}/")
+    @Path("/byNumber/{invoiceNumber:" + NUMBER_PATTERN + "}/")
     @Produces(APPLICATION_JSON)
     @ApiOperation(value = "Retrieve an invoice by number", response = InvoiceJson.class)
     @ApiResponses(value = {@ApiResponse(code = 404, message = "Invoice not found")})
