@@ -31,12 +31,15 @@ import org.killbill.billing.ObjectType;
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.util.api.AuditLevel;
 import org.killbill.billing.util.audit.AuditLog;
+import org.killbill.billing.util.audit.AuditLogWithHistory;
 import org.killbill.billing.util.audit.ChangeType;
 import org.killbill.billing.util.audit.DefaultAccountAuditLogs;
 import org.killbill.billing.util.audit.DefaultAccountAuditLogsForObjectType;
 import org.killbill.billing.util.audit.DefaultAuditLog;
+import org.killbill.billing.util.audit.DefaultAuditLogWithHistory;
 import org.killbill.billing.util.cache.CacheControllerDispatcher;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
+import org.killbill.billing.util.dao.EntityHistoryModelDao;
 import org.killbill.billing.util.dao.NonEntityDao;
 import org.killbill.billing.util.dao.NonEntitySqlDao;
 import org.killbill.billing.util.dao.RecordIdIdMappings;
@@ -49,6 +52,7 @@ import org.killbill.clock.Clock;
 import org.skife.jdbi.v2.IDBI;
 
 import com.google.common.base.Function;
+import com.google.common.collect.Collections2;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterators;
 import com.google.common.collect.Lists;
@@ -171,6 +175,43 @@ public class DefaultAuditDao implements AuditDao {
         } else {
             return doGetAuditLogsForId(tableName, objectId, auditLevel, context);
         }
+    }
+
+    @Override
+    public List<AuditLogWithHistory> getAuditLogsWithHistoryForId(final EntitySqlDao transactional, final TableName tableName, final UUID objectId, final AuditLevel auditLevel, final InternalTenantContext context) {
+        final TableName historyTableName = tableName.getHistoryTableName();
+        if (historyTableName == null) {
+            throw new IllegalStateException("History table shouldn't be null for " + tableName);
+        }
+
+        return transactionalSqlDao.execute(true, new EntitySqlDaoTransactionWrapper<List<AuditLogWithHistory>>() {
+            @Override
+            public List<AuditLogWithHistory> inTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory) throws Exception {
+                final Long targetRecordId = roNonEntitySqlDao.getRecordIdFromObject(objectId.toString(), tableName.getTableName());
+                final List<EntityHistoryModelDao> objectHistory = transactional.getHistoryForTargetRecordId(targetRecordId, context);
+
+                return ImmutableList.<AuditLogWithHistory>copyOf(Collections2.transform(entitySqlDaoWrapperFactory.become(EntitySqlDao.class).getAuditLogsViaHistoryForTargetRecordId(historyTableName.name(),
+                                                                                                                                                                                      historyTableName.getTableName().toLowerCase(),
+                                                                                                                                                                                      targetRecordId,
+                                                                                                                                                                                      context),
+                                                                                 new Function<AuditLogModelDao, AuditLogWithHistory>() {
+                                                                                     @Override
+                                                                                     public AuditLogWithHistory apply(final AuditLogModelDao inputAuditLog) {
+                                                                                         EntityHistoryModelDao historyEntity = null;
+                                                                                         if ( objectHistory != null) {
+                                                                                             for (EntityHistoryModelDao history : objectHistory) {
+                                                                                                 if (history.getHistoryRecordId() == inputAuditLog.getTargetRecordId()) {
+                                                                                                     historyEntity = history;
+                                                                                                     break;
+                                                                                                 }
+                                                                                             }
+                                                                                         }
+
+                                                                                         return new DefaultAuditLogWithHistory((historyEntity == null ? null : historyEntity.getEntity()), inputAuditLog, tableName.getObjectType(), objectId);
+                                                                                     }
+                                                                                 }));
+            }
+        });
     }
 
     private List<AuditLog> doGetAuditLogsForId(final TableName tableName, final UUID objectId, final AuditLevel auditLevel, final InternalTenantContext context) {
