@@ -201,7 +201,6 @@
         <dependency>
             <groupId>org.kill-bill.billing</groupId>
             <artifactId>killbill-platform-osgi-api</artifactId>
-            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.kill-bill.billing</groupId>
