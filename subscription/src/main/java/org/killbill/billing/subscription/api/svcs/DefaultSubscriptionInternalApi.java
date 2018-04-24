@@ -279,7 +279,8 @@ public class DefaultSubscriptionInternalApi extends SubscriptionApiBase implemen
 
             final Collection<SubscriptionAndAddOnsSpecifier> subscriptionAndAddOns = new ArrayList<SubscriptionAndAddOnsSpecifier>();
             for (final SubscriptionBaseWithAddOnsSpecifier subscriptionBaseWithAddOnsSpecifier : subscriptionWithAddOnsSpecifiers) {
-                final DateTime billingRequestedDateRaw = subscriptionBaseWithAddOnsSpecifier.getBillingEffectiveDate() != null ? subscriptionBaseWithAddOnsSpecifier.getBillingEffectiveDate() : now;
+                final DateTime billingRequestedDateRaw = (subscriptionBaseWithAddOnsSpecifier.getBillingEffectiveDate() != null) ?
+                                                         context.toUTCDateTime(subscriptionBaseWithAddOnsSpecifier.getBillingEffectiveDate()) : now;
 
                 final Collection<EntitlementSpecifier> reorderedSpecifiers = new ArrayList<EntitlementSpecifier>();
                 // Note: billingRequestedDateRaw might not be accurate here (add-on with a too early date passed)?

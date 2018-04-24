@@ -186,12 +186,10 @@ public class DefaultEntitlementApi extends DefaultEntitlementApiBase implements 
                                                                                                        contextWithValidAccountRecordId);
                     upTo = upTo == null || upTo.compareTo(entitlementRequestedDate) < 0 ? entitlementRequestedDate : upTo;
 
-                    final DateTime billingEffectiveDateTime = (baseEntitlementWithAddOnsSpecifier.getBillingEffectiveDate() != null) ?
-                                                              contextWithValidAccountRecordId.toUTCDateTime(baseEntitlementWithAddOnsSpecifier.getBillingEffectiveDate()) : null;
                     final SubscriptionBaseWithAddOnsSpecifier subscriptionBaseWithAddOnsSpecifier = new SubscriptionBaseWithAddOnsSpecifier(baseEntitlementWithAddOnsSpecifier.getBundleId(),
                                                                                                                                             baseEntitlementWithAddOnsSpecifier.getExternalKey(),
                                                                                                                                             baseEntitlementWithAddOnsSpecifier.getEntitlementSpecifier(),
-                                                                                                                                            billingEffectiveDateTime,
+                                                                                                                                            baseEntitlementWithAddOnsSpecifier.getBillingEffectiveDate(),
                                                                                                                                             baseEntitlementWithAddOnsSpecifier.isMigrated());
                     subscriptionBaseWithAddOnsSpecifiers.add(subscriptionBaseWithAddOnsSpecifier);
                 }
@@ -289,12 +287,10 @@ public class DefaultEntitlementApi extends DefaultEntitlementApiBase implements 
 
                 try {
                     final BaseEntitlementWithAddOnsSpecifier baseEntitlementWithAddOnsSpecifierAfterPlugins = getFirstBaseEntitlementWithAddOnsSpecifier(updatedPluginContext.getBaseEntitlementWithAddOnsSpecifiers());
-                    final DateTime billingEffectiveDateTime = (baseEntitlementWithAddOnsSpecifierAfterPlugins.getBillingEffectiveDate() != null) ?
-                                                              context.toUTCDateTime(baseEntitlementWithAddOnsSpecifierAfterPlugins.getBillingEffectiveDate()) : null;
                     final SubscriptionBaseWithAddOnsSpecifier subscriptionBaseWithAddOnsSpecifier = new SubscriptionBaseWithAddOnsSpecifier(baseEntitlementWithAddOnsSpecifierAfterPlugins.getBundleId(),
                                                                                                                                             baseEntitlementWithAddOnsSpecifierAfterPlugins.getExternalKey(),
                                                                                                                                             baseEntitlementWithAddOnsSpecifierAfterPlugins.getEntitlementSpecifier(),
-                                                                                                                                            billingEffectiveDateTime,
+                                                                                                                                            baseEntitlementWithAddOnsSpecifierAfterPlugins.getBillingEffectiveDate(),
                                                                                                                                             baseEntitlementWithAddOnsSpecifierAfterPlugins.isMigrated());
 
                     final List<SubscriptionBaseWithAddOns> subscriptionsWithAddOns = subscriptionBaseInternalApi.createBaseSubscriptionsWithAddOns(ImmutableList.<SubscriptionBaseWithAddOnsSpecifier>of(subscriptionBaseWithAddOnsSpecifier),
