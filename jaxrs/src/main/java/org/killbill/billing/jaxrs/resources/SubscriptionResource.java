@@ -57,7 +57,6 @@ import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.catalog.api.PhaseType;
 import org.killbill.billing.catalog.api.PlanPhasePriceOverride;
 import org.killbill.billing.catalog.api.PlanPhaseSpecifier;
-import org.killbill.billing.catalog.api.ProductCategory;
 import org.killbill.billing.entitlement.api.BaseEntitlementWithAddOnsSpecifier;
 import org.killbill.billing.entitlement.api.BlockingStateType;
 import org.killbill.billing.entitlement.api.Entitlement;
@@ -107,8 +106,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Preconditions;
-import com.google.common.base.Predicate;
-import com.google.common.collect.Collections2;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.inject.Inject;
@@ -262,48 +259,38 @@ public class SubscriptionResource extends JaxRsResourceBase {
         final Iterable<PluginProperty> pluginProperties = extractPluginProperties(pluginPropertiesString);
         final CallContext callContext = context.createCallContextNoAccountId(createdBy, reason, comment, request);
 
+        Preconditions.checkArgument(Iterables.size(entitlementsWithAddOns.get(0).getBaseEntitlementAndAddOns()) > 0, "SubscriptionJson body should be specified");
         final Account account = accountUserApi.getAccountById(entitlementsWithAddOns.get(0).getBaseEntitlementAndAddOns().get(0).getAccountId(), callContext);
 
         final Collection<BaseEntitlementWithAddOnsSpecifier> baseEntitlementWithAddOnsSpecifierList = new ArrayList<BaseEntitlementWithAddOnsSpecifier>();
         for (final BulkSubscriptionsBundleJson subscriptionsBundleJson : entitlementsWithAddOns) {
-            final Iterable<SubscriptionJson> baseEntitlements = Iterables.filter(
-                    subscriptionsBundleJson.getBaseEntitlementAndAddOns(), new Predicate<SubscriptionJson>() {
-                        @Override
-                        public boolean apply(final SubscriptionJson subscription) {
-                            return ProductCategory.BASE.toString().equalsIgnoreCase(subscription.getProductCategory());
-                        }
-                    });
-
-            final Collection<SubscriptionJson> standaloneEntitlements = Collections2.filter(subscriptionsBundleJson.getBaseEntitlementAndAddOns(),
-                                                                                            new Predicate<SubscriptionJson>() {
-                                                                                                @Override
-                                                                                                public boolean apply(final SubscriptionJson subscription) {
-                                                                                                    return ProductCategory.STANDALONE.toString().equalsIgnoreCase(subscription.getProductCategory());
-                                                                                                }
-                                                                                            });
-
-            final String bundleExternalKey;
-            if (baseEntitlements.iterator().hasNext()) {
-                Preconditions.checkArgument(Iterables.size(baseEntitlements) == 1, "Only one BASE product is allowed per bundle.");
-                bundleExternalKey = baseEntitlements.iterator().next().getExternalKey();
-            } else {
-                bundleExternalKey = standaloneEntitlements.isEmpty() ? null : standaloneEntitlements.iterator().next().getExternalKey();
-            }
-
             UUID bundleId = null;
+            String bundleExternalKey = null;
             final Collection<EntitlementSpecifier> entitlementSpecifierList = new ArrayList<EntitlementSpecifier>();
             for (final SubscriptionJson entitlement : subscriptionsBundleJson.getBaseEntitlementAndAddOns()) {
                 // verifications
                 verifyNonNullOrEmpty(entitlement, "SubscriptionJson body should be specified for each element");
                 if (entitlement.getPlanName() == null) {
-                    verifyNonNullOrEmpty(entitlement.getProductName(), "SubscriptionJson productName needs to be set for each element",
-                                         entitlement.getProductCategory(), "SubscriptionJson productCategory needs to be set for each element",
-                                         entitlement.getBillingPeriod(), "SubscriptionJson billingPeriod needs to be set for each element",
-                                         entitlement.getPriceList(), "SubscriptionJson priceList needs to be set for each element");
+                    verifyNonNullOrEmpty(entitlement.getProductName(), "SubscriptionJson productName needs to be set when no planName is specified",
+                                         entitlement.getProductCategory(), "SubscriptionJson productCategory needs to be set when no planName is specified",
+                                         entitlement.getBillingPeriod(), "SubscriptionJson billingPeriod needs to be set when no planName is specified",
+                                         entitlement.getPriceList(), "SubscriptionJson priceList needs to be set when no planName is specified");
+                } else {
+                    Preconditions.checkArgument(entitlement.getProductName() == null, "SubscriptionJson productName should not be set when planName is specified");
+                    Preconditions.checkArgument(entitlement.getProductCategory() == null, "SubscriptionJson productCategory should not be set when planName is specified");
+                    Preconditions.checkArgument(entitlement.getBillingPeriod() == null, "SubscriptionJson billingPeriod should not be set when planName is specified");
+                    Preconditions.checkArgument(entitlement.getPriceList() == null, "SubscriptionJson priceList should not be set when planName is specified");
                 }
-                Preconditions.checkState(bundleId == null || bundleId.equals(entitlement.getBundleId()), "SubscriptionJson bundleId mismatch");
+                Preconditions.checkArgument(account.getId().equals(entitlement.getAccountId()), "SubscriptionJson accountId should be the same for each element");
+                // If set on one element, it should be set on all elements
+                Preconditions.checkArgument(bundleId == null || bundleId.equals(entitlement.getBundleId()), "SubscriptionJson bundleId should be the same for each element");
                 if (bundleId == null) {
                     bundleId = entitlement.getBundleId();
+                }
+                // Can be set on a single element (e.g. BASE + ADD_ON for a new bundle)
+                Preconditions.checkArgument(bundleExternalKey == null || entitlement.getExternalKey() == null || bundleExternalKey.equals(entitlement.getExternalKey()), "SubscriptionJson externalKey should be the same for each element");
+                if (bundleExternalKey == null) {
+                    bundleExternalKey = entitlement.getExternalKey();
                 }
                 // create the entitlementSpecifier
                 buildEntitlementSpecifier(entitlement, account.getCurrency(), entitlementSpecifierList);
