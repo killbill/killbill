@@ -323,6 +323,7 @@ public class DefaultSubscriptionInternalApi extends SubscriptionApiBase implemen
                 } else if (bundle != null && baseSubscription != null && baseOrFirstStandalonePlanSpecifier != null && isBaseSpecifier(catalog, billingRequestedDateRaw, baseOrFirstStandalonePlanSpecifier)) {
                     throw new SubscriptionBaseApiException(ErrorCode.SUB_CREATE_BP_EXISTS, bundle.getExternalKey());
                 } else if (bundle == null) {
+                    log.warn("Invalid specifier: {}", subscriptionBaseWithAddOnsSpecifier);
                     throw new SubscriptionBaseApiException(ErrorCode.SUB_CREATE_INVALID_ENTITLEMENT_SPECIFIER);
                 }
 

@@ -36,6 +36,8 @@ import org.killbill.billing.account.dao.AccountEmailModelDao;
 import org.killbill.billing.account.dao.AccountModelDao;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
+import org.killbill.billing.util.api.AuditLevel;
+import org.killbill.billing.util.audit.AuditLogWithHistory;
 import org.killbill.billing.util.cache.CacheControllerDispatcher;
 import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
@@ -231,5 +233,10 @@ public class DefaultAccountUserApi extends DefaultAccountApiBase implements Acco
                                                                                  return new DefaultAccount(input);
                                                                              }
                                                                          }));
+    }
+
+    @Override
+    public List<AuditLogWithHistory> getAuditLogsWithHistoryForId(final UUID uuid, final AuditLevel auditLevel, final TenantContext tenantContext) throws AccountApiException {
+        return null;
     }
 }
