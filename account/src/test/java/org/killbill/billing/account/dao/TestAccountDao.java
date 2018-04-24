@@ -214,9 +214,9 @@ public class TestAccountDao extends AccountTestSuiteWithEmbeddedDB {
         accountDao.create(account, internalCallContext);
         final AccountModelDao createdAccount = accountDao.getAccountByKey(account.getExternalKey(), internalCallContext);
         List<AuditLogWithHistory> auditLogsWithHistory = accountDao.getAuditLogsWithHistoryForId(account.getId(), AuditLevel.FULL, internalCallContext);
+        Assert.assertEquals(auditLogsWithHistory.size(), 1);
 
         final AccountModelDao history1 = (AccountModelDao) auditLogsWithHistory.get(0).getEntity();
-        Assert.assertEquals(auditLogsWithHistory.size(), 1);
         Assert.assertEquals(auditLogsWithHistory.get(0).getChangeType(), ChangeType.INSERT);
         Assert.assertEquals(history1.getAccountRecordId(), createdAccount.getRecordId());
         Assert.assertEquals(history1.getTenantRecordId(), createdAccount.getTenantRecordId());
@@ -237,9 +237,9 @@ public class TestAccountDao extends AccountTestSuiteWithEmbeddedDB {
         final AccountModelDao retrievedAccount = accountDao.getAccountByKey(account.getExternalKey(), internalCallContext);
         checkAccountsEqual(retrievedAccount, updatedAccount);
         auditLogsWithHistory = accountDao.getAuditLogsWithHistoryForId(retrievedAccount.getId(), AuditLevel.FULL, internalCallContext);
+        Assert.assertEquals(auditLogsWithHistory.size(), 2);
 
         final AccountModelDao history2 = (AccountModelDao) auditLogsWithHistory.get(1).getEntity();
-        Assert.assertEquals(auditLogsWithHistory.size(), 2);
         Assert.assertEquals(auditLogsWithHistory.get(0).getChangeType(), ChangeType.INSERT);
         Assert.assertEquals(auditLogsWithHistory.get(1).getChangeType(), ChangeType.UPDATE);
         Assert.assertEquals(history2.getAccountRecordId(), retrievedAccount.getRecordId());
@@ -259,9 +259,9 @@ public class TestAccountDao extends AccountTestSuiteWithEmbeddedDB {
         final AccountModelDao retrievedAccount2 = accountDao.getAccountByKey(account.getExternalKey(), internalCallContext);
         checkAccountsEqual(retrievedAccount2, updatedAccount2);
         auditLogsWithHistory = accountDao.getAuditLogsWithHistoryForId(retrievedAccount2.getId(), AuditLevel.FULL, internalCallContext);
+        Assert.assertEquals(auditLogsWithHistory.size(), 3);
 
         final AccountModelDao history3 = (AccountModelDao) auditLogsWithHistory.get(2).getEntity();
-        Assert.assertEquals(auditLogsWithHistory.size(), 3);
         Assert.assertEquals(auditLogsWithHistory.get(0).getChangeType(), ChangeType.INSERT);
         Assert.assertEquals(auditLogsWithHistory.get(1).getChangeType(), ChangeType.UPDATE);
         Assert.assertEquals(auditLogsWithHistory.get(2).getChangeType(), ChangeType.UPDATE);

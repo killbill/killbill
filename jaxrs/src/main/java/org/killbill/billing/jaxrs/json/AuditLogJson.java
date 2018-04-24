@@ -23,6 +23,7 @@ import org.joda.time.DateTime;
 import org.killbill.billing.ObjectType;
 import org.killbill.billing.util.audit.AuditLog;
 import org.killbill.billing.util.audit.AuditLogWithHistory;
+import org.killbill.billing.util.entity.Entity;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -43,7 +44,7 @@ public class AuditLogJson {
     private final ObjectType objectType;
     private final UUID objectId;
 
-    private final Object history;
+    private final Entity history;
 
     @JsonCreator
     public AuditLogJson(@JsonProperty("changeType") final String changeType,
@@ -54,7 +55,7 @@ public class AuditLogJson {
                         @JsonProperty("reasonCode") final String reasonCode,
                         @JsonProperty("comments") final String comments,
                         @JsonProperty("userToken") final String userToken,
-                        @JsonProperty("history") final Object history) {
+                        @JsonProperty("history") final Entity history) {
         this.changeType = changeType;
         this.changeDate = changeDate;
         this.changedBy = changedBy;
@@ -108,7 +109,7 @@ public class AuditLogJson {
         return objectId;
     }
 
-    public Object getHistory() {
+    public Entity getHistory() {
         return history;
     }
 

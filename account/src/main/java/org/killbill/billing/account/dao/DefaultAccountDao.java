@@ -326,9 +326,9 @@ public class DefaultAccountDao extends EntityDaoBase<AccountModelDao, Account, A
 
     @Override
     public List<AuditLogWithHistory> getAuditLogsWithHistoryForId(final UUID accountId, final AuditLevel auditLevel, final InternalTenantContext context) throws AccountApiException {
-        return transactionalSqlDao.execute(false, AccountApiException.class, new EntitySqlDaoTransactionWrapper<List<AuditLogWithHistory>>() {
+        return transactionalSqlDao.execute(true, AccountApiException.class, new EntitySqlDaoTransactionWrapper<List<AuditLogWithHistory>>() {
             @Override
-            public List<AuditLogWithHistory> inTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory) throws EntityPersistenceException, EventBusException {
+            public List<AuditLogWithHistory> inTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory) {
                 final AccountSqlDao transactional = entitySqlDaoWrapperFactory.become(AccountSqlDao.class);
                 return auditDao.getAuditLogsWithHistoryForId(transactional, TableName.ACCOUNT, accountId, auditLevel, context);
             }

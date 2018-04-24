@@ -1518,15 +1518,6 @@ public class AccountResource extends JaxRsResourceBase {
         return Response.status(Status.OK).entity(getAuditLogsWithHistory(auditLogWithHistory)).build();
     }
 
-    private List<AuditLogJson> getAuditLogsWithHistory(List<AuditLogWithHistory> auditLogWithHistory) {
-        return ImmutableList.<AuditLogJson>copyOf(Collections2.transform(auditLogWithHistory, new Function<AuditLogWithHistory, AuditLogJson>() {
-            @Override
-            public AuditLogJson apply(@Nullable final AuditLogWithHistory input) {
-                return new AuditLogJson(input);
-            }
-        }));
-    }
-
     private List<AuditLogJson> getAuditLogs(AccountAuditLogs accountAuditLogs) {
         if (accountAuditLogs.getAuditLogs() == null) {
             return null;

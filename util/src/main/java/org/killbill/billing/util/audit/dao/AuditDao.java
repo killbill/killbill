@@ -25,8 +25,8 @@ import org.killbill.billing.util.audit.AuditLog;
 import org.killbill.billing.util.audit.AuditLogWithHistory;
 import org.killbill.billing.util.audit.DefaultAccountAuditLogs;
 import org.killbill.billing.util.audit.DefaultAccountAuditLogsForObjectType;
+import org.killbill.billing.util.dao.HistorySqlDao;
 import org.killbill.billing.util.dao.TableName;
-import org.killbill.billing.util.entity.dao.EntitySqlDao;
 
 public interface AuditDao {
 
@@ -38,5 +38,5 @@ public interface AuditDao {
 
     public List<AuditLog> getAuditLogsForId(TableName tableName, UUID objectId, AuditLevel auditLevel, InternalTenantContext context);
 
-    List<AuditLogWithHistory> getAuditLogsWithHistoryForId(EntitySqlDao sqlDao, TableName tableName, UUID objectId, AuditLevel auditLevel, InternalTenantContext context);
+    List<AuditLogWithHistory> getAuditLogsWithHistoryForId(HistorySqlDao sqlDao, TableName tableName, UUID objectId, AuditLevel auditLevel, InternalTenantContext context);
 }

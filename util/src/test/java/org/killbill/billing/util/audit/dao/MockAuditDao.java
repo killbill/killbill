@@ -28,8 +28,8 @@ import org.killbill.billing.util.audit.AuditLog;
 import org.killbill.billing.util.audit.AuditLogWithHistory;
 import org.killbill.billing.util.audit.DefaultAccountAuditLogs;
 import org.killbill.billing.util.audit.DefaultAccountAuditLogsForObjectType;
+import org.killbill.billing.util.dao.HistorySqlDao;
 import org.killbill.billing.util.dao.TableName;
-import org.killbill.billing.util.entity.dao.EntitySqlDao;
 
 import com.google.common.base.MoreObjects;
 import com.google.common.collect.ImmutableList;
@@ -85,7 +85,7 @@ public class MockAuditDao implements AuditDao {
     }
 
     @Override
-    public List<AuditLogWithHistory> getAuditLogsWithHistoryForId(final EntitySqlDao sqlDao, final TableName tableName, final UUID objectId, final AuditLevel auditLevel, final InternalTenantContext context) {
+    public List<AuditLogWithHistory> getAuditLogsWithHistoryForId(final HistorySqlDao sqlDao, final TableName tableName, final UUID objectId, final AuditLevel auditLevel, final InternalTenantContext context) {
         throw new UnsupportedOperationException();
     }
 }

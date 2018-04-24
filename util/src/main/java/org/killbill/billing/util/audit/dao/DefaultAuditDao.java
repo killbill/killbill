@@ -40,6 +40,7 @@ import org.killbill.billing.util.audit.DefaultAuditLogWithHistory;
 import org.killbill.billing.util.cache.CacheControllerDispatcher;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.billing.util.dao.EntityHistoryModelDao;
+import org.killbill.billing.util.dao.HistorySqlDao;
 import org.killbill.billing.util.dao.NonEntityDao;
 import org.killbill.billing.util.dao.NonEntitySqlDao;
 import org.killbill.billing.util.dao.RecordIdIdMappings;
@@ -178,7 +179,7 @@ public class DefaultAuditDao implements AuditDao {
     }
 
     @Override
-    public List<AuditLogWithHistory> getAuditLogsWithHistoryForId(final EntitySqlDao transactional, final TableName tableName, final UUID objectId, final AuditLevel auditLevel, final InternalTenantContext context) {
+    public List<AuditLogWithHistory> getAuditLogsWithHistoryForId(final HistorySqlDao transactional, final TableName tableName, final UUID objectId, final AuditLevel auditLevel, final InternalTenantContext context) {
         final TableName historyTableName = tableName.getHistoryTableName();
         if (historyTableName == null) {
             throw new IllegalStateException("History table shouldn't be null for " + tableName);
