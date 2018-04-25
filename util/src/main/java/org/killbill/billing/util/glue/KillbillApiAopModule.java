@@ -22,6 +22,11 @@ import java.lang.reflect.Method;
 import org.aopalliance.intercept.MethodInterceptor;
 import org.aopalliance.intercept.MethodInvocation;
 import org.killbill.billing.KillbillApi;
+import org.killbill.billing.callcontext.DefaultTenantContext;
+import org.killbill.billing.callcontext.InternalCallContext;
+import org.killbill.billing.callcontext.InternalTenantContext;
+import org.killbill.billing.osgi.api.ROTenantContext;
+import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.commons.profiling.Profiling;
 import org.killbill.commons.profiling.Profiling.WithProfilingCallback;
 import org.killbill.commons.profiling.ProfilingFeature.ProfilingFeatureType;
@@ -59,6 +64,11 @@ public class KillbillApiAopModule extends AbstractModule {
             return prof.executeWithProfiling(ProfilingFeatureType.API, invocation.getMethod().getName(), new WithProfilingCallback() {
                 @Override
                 public Object execute() throws Throwable {
+                    final boolean useRODBIfAvailable = shouldUseRODBIfAvailable(invocation);
+                    if (!useRODBIfAvailable) {
+                        setDirtyDBFlag();
+                    }
+
                     try {
                         logger.debug("Entering API call {}, arguments: {}", invocation.getMethod(), invocation.getArguments());
                         final Object proceed = invocation.proceed();
@@ -69,6 +79,39 @@ public class KillbillApiAopModule extends AbstractModule {
                     }
                 }
             });
+        }
+
+        private boolean shouldUseRODBIfAvailable(final MethodInvocation invocation) {
+            // Verify if the flag is already set for re-entrant calls
+            if (getDirtyDBFlag()) {
+                return false;
+            }
+
+            final Object[] arguments = invocation.getArguments();
+            if (arguments.length == 0) {
+                return false;
+            }
+
+            // Snowflakes from server filters
+            final boolean safeROOperations = "getTenantByApiKey".equals(invocation.getMethod().getName()) || "login".equals(invocation.getMethod().getName());
+            if (safeROOperations) {
+                return true;
+            }
+
+            for (int i = arguments.length - 1; i >= 0; i--) {
+                final Object argument = arguments[i];
+                // DefaultTenantContext belongs to killbill-internal-api and shouldn't be used by plugins
+                final boolean fromJAXRS = argument instanceof DefaultTenantContext && !(argument instanceof CallContext);
+                // Kill Bill internal re-entrant calls
+                final boolean fromInternalAPIs = argument instanceof InternalTenantContext && !(argument instanceof InternalCallContext);
+                // RO DB explicitly requested by a plugin
+                final boolean pluginRequestROInstance = argument instanceof ROTenantContext && !(argument instanceof CallContext);
+                if (fromJAXRS || fromInternalAPIs || pluginRequestROInstance) {
+                    return true;
+                }
+            }
+
+            return false;
         }
     }
 
