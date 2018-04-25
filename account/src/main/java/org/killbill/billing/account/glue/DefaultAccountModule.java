@@ -45,7 +45,6 @@ public class DefaultAccountModule extends KillBillModule implements AccountModul
 
     protected void installAccountDao() {
         bind(AccountDao.class).to(DefaultAccountDao.class).asEagerSingleton();
-        bind(AuditDao.class).to(DefaultAuditDao.class).asEagerSingleton();
     }
 
     @Override
