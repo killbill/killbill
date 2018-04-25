@@ -44,6 +44,9 @@ public class EntityHistoryModelDaoMapper<M extends EntityModelDao<E>, E extends 
         final String changeType = r.getString("change_type");
         final DateTime createdDate = getDateTime(r, "created_date");
 
+        // preserve history record id, as it is needed to reference it with audit log
+        final long historyRecordId = r.getLong("history_record_id");
+
         final M entityModelDao = entityMapper.map(index, r, ctx);
 
         // Hack -- remove the id as it is the history id, not the entity id
@@ -55,6 +58,6 @@ public class EntityHistoryModelDaoMapper<M extends EntityModelDao<E>, E extends 
             ((EntityModelDaoBase) entityModelDao).setAccountRecordId(targetRecordId);
         }
 
-        return new EntityHistoryModelDao(id, entityModelDao, targetRecordId, ChangeType.valueOf(changeType), createdDate);
+        return new EntityHistoryModelDao(id, entityModelDao, targetRecordId, ChangeType.valueOf(changeType), historyRecordId, createdDate);
     }
 }

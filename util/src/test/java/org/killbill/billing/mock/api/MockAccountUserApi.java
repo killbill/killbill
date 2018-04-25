@@ -192,6 +192,6 @@ public class MockAccountUserApi implements AccountUserApi {
 
     @Override
     public List<AuditLogWithHistory> getAuditLogsWithHistoryForId(final UUID uuid, final AuditLevel auditLevel, final TenantContext tenantContext) throws AccountApiException {
-        return null;
+        throw new UnsupportedOperationException();
     }
 }
