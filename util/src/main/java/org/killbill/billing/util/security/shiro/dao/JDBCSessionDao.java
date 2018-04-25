@@ -29,6 +29,7 @@ import javax.inject.Named;
 import org.apache.shiro.session.Session;
 import org.apache.shiro.session.mgt.eis.CachingSessionDAO;
 import org.killbill.billing.util.UUIDs;
+import org.killbill.billing.util.entity.dao.DBRouter;
 import org.skife.jdbi.v2.IDBI;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -42,27 +43,25 @@ public class JDBCSessionDao extends CachingSessionDAO {
 
     private static final Logger log = LoggerFactory.getLogger(JDBCSessionDao.class);
 
-    private final JDBCSessionSqlDao jdbcSessionSqlDao;
-    private final JDBCSessionSqlDao roJdbcSessionSqlDao;
+    private final DBRouter<JDBCSessionSqlDao> dbRouter;
 
     private final Cache<Serializable, Boolean> noUpdateSessionsCache = CacheBuilder.newBuilder().expireAfterWrite(5, TimeUnit.SECONDS).build();
 
     @Inject
     public JDBCSessionDao(final IDBI dbi, @Named(MAIN_RO_IDBI_NAMED) final IDBI roDbi) {
-        this.jdbcSessionSqlDao = dbi.onDemand(JDBCSessionSqlDao.class);
-        this.roJdbcSessionSqlDao = roDbi.onDemand(JDBCSessionSqlDao.class);
+        this.dbRouter = new DBRouter<JDBCSessionSqlDao>(dbi, roDbi, JDBCSessionSqlDao.class);
     }
 
     @Override
     protected void doUpdate(final Session session) {
         if (shouldUpdateSession(session)) {
-            jdbcSessionSqlDao.update(new SessionModelDao(session));
+            dbRouter.onDemand(false).update(new SessionModelDao(session));
         }
     }
 
     @Override
     protected void doDelete(final Session session) {
-        jdbcSessionSqlDao.delete(new SessionModelDao(session));
+        dbRouter.onDemand(false).delete(new SessionModelDao(session));
     }
 
     @Override
@@ -71,7 +70,7 @@ public class JDBCSessionDao extends CachingSessionDAO {
         // See SessionModelDao#toSimpleSession for why we use toString()
         final String sessionIdAsString = sessionId.toString();
         assignSessionId(session, sessionIdAsString);
-        jdbcSessionSqlDao.create(new SessionModelDao(session));
+        dbRouter.onDemand(false).create(new SessionModelDao(session));
         // Make sure to return a String here as well, or Shiro will cache the Session with a UUID key
         // while it is expecting String
         return sessionIdAsString;
@@ -85,7 +84,7 @@ public class JDBCSessionDao extends CachingSessionDAO {
         }
 
         final String sessionIdString = sessionId.toString();
-        final SessionModelDao sessionModelDao = roJdbcSessionSqlDao.read(sessionIdString);
+        final SessionModelDao sessionModelDao = dbRouter.onDemand(true).read(sessionIdString);
 
         if (sessionModelDao == null) {
             return null;

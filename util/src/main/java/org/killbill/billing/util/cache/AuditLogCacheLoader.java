@@ -28,6 +28,7 @@ import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.util.audit.dao.AuditLogModelDao;
 import org.killbill.billing.util.cache.Cachable.CacheType;
 import org.killbill.billing.util.dao.AuditSqlDao;
+import org.killbill.billing.util.entity.dao.DBRouter;
 import org.skife.jdbi.v2.IDBI;
 
 import static org.killbill.billing.util.glue.IDBISetup.MAIN_RO_IDBI_NAMED;
@@ -35,12 +36,12 @@ import static org.killbill.billing.util.glue.IDBISetup.MAIN_RO_IDBI_NAMED;
 @Singleton
 public class AuditLogCacheLoader extends BaseCacheLoader<String, List<AuditLogModelDao>> {
 
-    private final AuditSqlDao roAuditSqlDao;
+    private final DBRouter<AuditSqlDao> dbRouter;
 
     @Inject
-    public AuditLogCacheLoader(@Named(MAIN_RO_IDBI_NAMED) final IDBI roDbi) {
+    public AuditLogCacheLoader(final IDBI dbi, @Named(MAIN_RO_IDBI_NAMED) final IDBI roDbi) {
         super();
-        this.roAuditSqlDao = roDbi.onDemand(AuditSqlDao.class);
+        this.dbRouter = new DBRouter<AuditSqlDao>(dbi, roDbi, AuditSqlDao.class);
     }
 
     @Override
@@ -55,6 +56,6 @@ public class AuditLogCacheLoader extends BaseCacheLoader<String, List<AuditLogMo
         final Long targetRecordId = (Long) args[1];
         final InternalTenantContext internalTenantContext = (InternalTenantContext) args[2];
 
-        return roAuditSqlDao.getAuditLogsForTargetRecordId(tableName, targetRecordId, internalTenantContext);
+        return dbRouter.onDemand(true).getAuditLogsForTargetRecordId(tableName, targetRecordId, internalTenantContext);
     }
 }
