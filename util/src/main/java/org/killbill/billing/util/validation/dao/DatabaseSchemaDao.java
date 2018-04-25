@@ -24,6 +24,7 @@ import javax.annotation.Nullable;
 import javax.inject.Named;
 import javax.inject.Singleton;
 
+import org.killbill.billing.util.entity.dao.DBRouter;
 import org.killbill.billing.util.validation.DefaultColumnInfo;
 import org.skife.jdbi.v2.IDBI;
 
@@ -34,11 +35,11 @@ import static org.killbill.billing.util.glue.IDBISetup.MAIN_RO_IDBI_NAMED;
 @Singleton
 public class DatabaseSchemaDao {
 
-    private final DatabaseSchemaSqlDao roDatabaseSchemaSqlDao;
+    private final DBRouter<DatabaseSchemaSqlDao> dbRouter;
 
     @Inject
-    public DatabaseSchemaDao(@Named(MAIN_RO_IDBI_NAMED) final IDBI roDbi) {
-        this.roDatabaseSchemaSqlDao = roDbi.onDemand(DatabaseSchemaSqlDao.class);
+    public DatabaseSchemaDao(final IDBI dbi, @Named(MAIN_RO_IDBI_NAMED) final IDBI roDbi) {
+        this.dbRouter = new DBRouter<DatabaseSchemaSqlDao>(dbi, roDbi, DatabaseSchemaSqlDao.class);
     }
 
     public List<DefaultColumnInfo> getColumnInfoList() {
@@ -46,6 +47,6 @@ public class DatabaseSchemaDao {
     }
 
     public List<DefaultColumnInfo> getColumnInfoList(@Nullable final String schemaName) {
-        return roDatabaseSchemaSqlDao.getSchemaInfo(schemaName);
+        return dbRouter.onDemand(true).getSchemaInfo(schemaName);
     }
 }
