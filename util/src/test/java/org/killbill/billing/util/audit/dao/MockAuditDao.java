@@ -25,8 +25,10 @@ import java.util.UUID;
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.util.api.AuditLevel;
 import org.killbill.billing.util.audit.AuditLog;
+import org.killbill.billing.util.audit.AuditLogWithHistory;
 import org.killbill.billing.util.audit.DefaultAccountAuditLogs;
 import org.killbill.billing.util.audit.DefaultAccountAuditLogsForObjectType;
+import org.killbill.billing.util.dao.HistorySqlDao;
 import org.killbill.billing.util.dao.TableName;
 
 import com.google.common.base.MoreObjects;
@@ -80,5 +82,10 @@ public class MockAuditDao implements AuditDao {
         } else {
             return allAuditLogs;
         }
+    }
+
+    @Override
+    public List<AuditLogWithHistory> getAuditLogsWithHistoryForId(final HistorySqlDao sqlDao, final TableName tableName, final UUID objectId, final AuditLevel auditLevel, final InternalTenantContext context) {
+        throw new UnsupportedOperationException();
     }
 }

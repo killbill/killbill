@@ -504,7 +504,7 @@ public class EntitySqlDaoWrapperInvocationHandler<S extends EntitySqlDao<M, E>, 
     }
 
     private Long insertHistory(final Long entityRecordId, final M entityModelDao, final ChangeType changeType, final InternalCallContext context) {
-        final EntityHistoryModelDao<M, E> history = new EntityHistoryModelDao<M, E>(entityModelDao, entityRecordId, changeType, clock.getUTCNow());
+        final EntityHistoryModelDao<M, E> history = new EntityHistoryModelDao<M, E>(entityModelDao, entityRecordId, changeType, null, clock.getUTCNow());
         final Long recordId = sqlDao.addHistoryFromTransaction(history, context);
         printSQLWarnings();
         return recordId;

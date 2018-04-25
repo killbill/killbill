@@ -336,6 +336,7 @@ auditTableValues() ::= <<
 getHistoryForTargetRecordId() ::= <<
 select
   <idField("")>
+, <prefix>record_id as history_record_id
 , <historyTableFields("t.")>
 <accountRecordIdFieldWithComma("t.")>
 <tenantRecordIdFieldWithComma("t.")>

@@ -21,6 +21,7 @@ package org.killbill.billing.util.dao;
 import java.util.List;
 
 import org.killbill.billing.callcontext.InternalCallContext;
+import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.util.entity.Entity;
 import org.killbill.billing.util.entity.dao.EntityModelDao;
 import org.skife.jdbi.v2.sqlobject.Bind;
@@ -33,7 +34,7 @@ public interface HistorySqlDao<M extends EntityModelDao<E>, E extends Entity> {
 
     @SqlQuery
     public List<EntityHistoryModelDao<M, E>> getHistoryForTargetRecordId(@Bind("targetRecordId") final long targetRecordId,
-                                                                         @SmartBindBean InternalCallContext context);
+                                                                         @SmartBindBean InternalTenantContext context);
     @SqlUpdate
     @GetGeneratedKeys
     public Long addHistoryFromTransaction(@EntityHistoryBinder EntityHistoryModelDao<M, E> history,

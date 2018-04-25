@@ -61,6 +61,7 @@ import org.killbill.billing.entitlement.api.SubscriptionApi;
 import org.killbill.billing.entitlement.api.SubscriptionApiException;
 import org.killbill.billing.invoice.api.InvoicePayment;
 import org.killbill.billing.invoice.api.InvoicePaymentType;
+import org.killbill.billing.jaxrs.json.AuditLogJson;
 import org.killbill.billing.jaxrs.json.BillingExceptionJson;
 import org.killbill.billing.jaxrs.json.BillingExceptionJson.StackTraceElementJson;
 import org.killbill.billing.jaxrs.json.BlockingStateJson;
@@ -89,6 +90,7 @@ import org.killbill.billing.util.api.TagDefinitionApiException;
 import org.killbill.billing.util.api.TagUserApi;
 import org.killbill.billing.util.audit.AccountAuditLogsForObjectType;
 import org.killbill.billing.util.audit.AuditLog;
+import org.killbill.billing.util.audit.AuditLogWithHistory;
 import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.TenantContext;
 import org.killbill.billing.util.customfield.CustomField;
@@ -723,5 +725,14 @@ public abstract class JaxRsResourceBase implements JaxrsResource {
 
         // If nothing is found, return the latest transaction of given type
         return Iterables.getFirst(matchingTransactions, null);
+    }
+
+    protected List<AuditLogJson> getAuditLogsWithHistory(List<AuditLogWithHistory> auditLogWithHistory) {
+        return ImmutableList.<AuditLogJson>copyOf(Collections2.transform(auditLogWithHistory, new Function<AuditLogWithHistory, AuditLogJson>() {
+            @Override
+            public AuditLogJson apply(@Nullable final AuditLogWithHistory input) {
+                return new AuditLogJson(input);
+            }
+        }));
     }
 }
