@@ -23,8 +23,10 @@ import org.killbill.billing.account.glue.DefaultAccountModule;
 import org.killbill.billing.platform.api.KillbillConfigSource;
 import org.killbill.billing.subscription.engine.dao.MockSubscriptionDaoSql;
 import org.killbill.billing.subscription.engine.dao.SubscriptionDao;
+import org.killbill.billing.util.glue.AuditModule;
 import org.killbill.billing.util.glue.CustomFieldModule;
 import org.killbill.billing.util.glue.NonEntityDaoModule;
+import org.killbill.billing.util.glue.TestUtilModuleNoDB;
 
 public class TestDefaultSubscriptionModuleWithEmbeddedDB extends TestDefaultSubscriptionModule {
 
@@ -41,13 +43,10 @@ public class TestDefaultSubscriptionModuleWithEmbeddedDB extends TestDefaultSubs
     protected void configure() {
 
         install(new GuicyKillbillTestWithEmbeddedDBModule(configSource));
-
         install(new NonEntityDaoModule(configSource));
-
         install(new CustomFieldModule(configSource));
-
         install(new DefaultAccountModule(configSource));
-
+        install(new AuditModule(configSource));
         super.configure();
     }
 }

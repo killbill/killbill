@@ -22,6 +22,7 @@ import java.util.List;
 import javax.inject.Inject;
 import javax.inject.Named;
 
+import org.killbill.billing.util.entity.dao.DBRouter;
 import org.skife.jdbi.v2.Handle;
 import org.skife.jdbi.v2.IDBI;
 import org.skife.jdbi.v2.TransactionCallback;
@@ -31,18 +32,16 @@ import static org.killbill.billing.util.glue.IDBISetup.MAIN_RO_IDBI_NAMED;
 
 public class DefaultBroadcastDao implements BroadcastDao {
 
-    private final IDBI dbi;
-    private final IDBI roDbi;
+    private final DBRouter<BroadcastSqlDao> dbRouter;
 
     @Inject
     public DefaultBroadcastDao(final IDBI dbi, @Named(MAIN_RO_IDBI_NAMED) final IDBI roDbi) {
-        this.dbi = dbi;
-        this.roDbi = roDbi;
+        this.dbRouter = new DBRouter<BroadcastSqlDao>(dbi, roDbi, BroadcastSqlDao.class);
     }
 
     @Override
     public void create(final BroadcastModelDao broadcastModelDao) {
-        dbi.inTransaction(new TransactionCallback<Void>() {
+        dbRouter.inTransaction(false, new TransactionCallback<Void>() {
             @Override
             public Void inTransaction(final Handle handle, final TransactionStatus status) throws Exception {
                 final BroadcastSqlDao sqlDao = handle.attach(BroadcastSqlDao.class);
@@ -54,7 +53,7 @@ public class DefaultBroadcastDao implements BroadcastDao {
 
     @Override
     public List<BroadcastModelDao> getLatestEntriesFrom(final Long recordId) {
-        return roDbi.inTransaction(new TransactionCallback<List<BroadcastModelDao>>() {
+        return dbRouter.inTransaction(true, new TransactionCallback<List<BroadcastModelDao>>() {
             @Override
             public List<BroadcastModelDao> inTransaction(final Handle handle, final TransactionStatus status) throws Exception {
                 final BroadcastSqlDao sqlDao = handle.attach(BroadcastSqlDao.class);
@@ -65,7 +64,7 @@ public class DefaultBroadcastDao implements BroadcastDao {
 
     @Override
     public BroadcastModelDao getLatestEntry() {
-        return roDbi.inTransaction(new TransactionCallback<BroadcastModelDao>() {
+        return dbRouter.inTransaction(true, new TransactionCallback<BroadcastModelDao>() {
             @Override
             public BroadcastModelDao inTransaction(final Handle handle, final TransactionStatus status) throws Exception {
                 final BroadcastSqlDao sqlDao = handle.attach(BroadcastSqlDao.class);
