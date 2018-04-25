@@ -398,7 +398,7 @@ public class DefaultPaymentDao extends EntityDaoBase<PaymentModelDao, Payment, P
                 }
                 paymentAndTransactionModelDao.setPaymentModelDao(paymentModelDao);
 
-                postPaymentEventFromTransaction(accountId, transactionStatus, transactionType, paymentId, transactionId, processedAmount, processedCurrency, clock.getUTCNow(), gatewayErrorCode, entitySqlDaoWrapperFactory, context);
+                postPaymentEventFromTransaction(accountId, transactionStatus, transactionType, paymentId, transactionId, processedAmount, processedCurrency, contextWithUpdatedDate.getCreatedDate(), gatewayErrorCode, entitySqlDaoWrapperFactory, context);
 
                 return paymentAndTransactionModelDao;
             }
@@ -731,7 +731,7 @@ public class DefaultPaymentDao extends EntityDaoBase<PaymentModelDao, Payment, P
     }
 
     private InternalCallContext contextWithUpdatedDate(final InternalCallContext input) {
-        return new InternalCallContext(input, clock.getUTCNow());
+        return new InternalCallContext(input, input.getCreatedDate());
     }
 
     @Override

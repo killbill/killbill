@@ -217,7 +217,7 @@ public class DefaultAccountDao extends EntityDaoBase<AccountModelDao, Account, A
                                                                                              context.getAccountRecordId(),
                                                                                              context.getTenantRecordId(),
                                                                                              context.getUserToken(),
-                                                                                             clock.getUTCNow());
+                                                                                             context.getCreatedDate());
                 try {
                     eventBus.postFromTransaction(changeEvent, entitySqlDaoWrapperFactory.getHandle().getConnection());
                 } catch (final EventBusException e) {
@@ -254,7 +254,7 @@ public class DefaultAccountDao extends EntityDaoBase<AccountModelDao, Account, A
                                                                                              context.getAccountRecordId(),
                                                                                              context.getTenantRecordId(),
                                                                                              context.getUserToken(),
-                                                                                             clock.getUTCNow());
+                                                                                             context.getCreatedDate());
 
                 try {
                     eventBus.postFromTransaction(changeEvent, entitySqlDaoWrapperFactory.getHandle().getConnection());

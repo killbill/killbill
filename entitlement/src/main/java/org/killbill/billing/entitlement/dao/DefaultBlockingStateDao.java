@@ -298,7 +298,7 @@ public class DefaultBlockingStateDao extends EntityDaoBase<BlockingStateModelDao
         final boolean isTransitionToBlockedEntitlement = !previousState.isBlockEntitlement() && currentState.isBlockEntitlement();
         final boolean isTransitionToUnblockedEntitlement = previousState.isBlockEntitlement() && !currentState.isBlockEntitlement();
 
-        if (effectiveDate.compareTo(clock.getUTCNow()) > 0) {
+        if (effectiveDate.compareTo(context.getCreatedDate()) > 0) {
             // Add notification entry to send the bus event at the effective date
             final NotificationEvent notificationEvent = new BlockingTransitionNotificationKey(blockingStateId,
                                                                                               blockableId,

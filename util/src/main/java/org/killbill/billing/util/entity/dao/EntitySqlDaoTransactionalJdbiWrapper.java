@@ -37,7 +37,7 @@ import org.slf4j.LoggerFactory;
  */
 public class EntitySqlDaoTransactionalJdbiWrapper {
 
-    private final Logger logger = LoggerFactory.getLogger(EntitySqlDaoTransactionalJdbiWrapper.class);
+    private static final Logger logger = LoggerFactory.getLogger(EntitySqlDaoTransactionalJdbiWrapper.class);
 
     private final DBRouterUntyped dbRouter;
     private final Clock clock;

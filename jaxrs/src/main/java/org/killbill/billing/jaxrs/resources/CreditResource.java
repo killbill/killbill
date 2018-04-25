@@ -120,7 +120,7 @@ public class CreditResource extends JaxRsResourceBase {
         final CallContext callContext = context.createCallContextNoAccountId(createdBy, reason, comment, request);
 
         final Account account = accountUserApi.getAccountById(json.getAccountId(), callContext);
-        final LocalDate effectiveDate = new LocalDate(clock.getUTCNow(), account.getTimeZone());
+        final LocalDate effectiveDate = new LocalDate(callContext.getCreatedDate(), account.getTimeZone());
 
         final InvoiceItem credit;
         if (json.getInvoiceId() != null) {

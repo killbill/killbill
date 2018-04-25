@@ -44,7 +44,6 @@ import org.killbill.billing.entitlement.api.EntitlementSpecifier;
 import org.killbill.billing.entitlement.api.SubscriptionEventType;
 import org.killbill.billing.invoice.api.DryRunArguments;
 import org.killbill.billing.invoice.api.DryRunType;
-import org.killbill.billing.subscription.api.SubscriptionBase;
 import org.killbill.billing.subscription.api.SubscriptionBaseInternalApi;
 import org.killbill.billing.subscription.api.SubscriptionBaseWithAddOns;
 import org.killbill.billing.subscription.api.SubscriptionBaseWithAddOnsSpecifier;
@@ -138,40 +137,27 @@ public class TestSubscriptionHelper {
         };
     }
 
-    public DefaultSubscriptionBase createSubscription(final SubscriptionBaseBundle bundle, final String productName, final BillingPeriod term, final String planSet, final DateTime requestedDate)
+    public DefaultSubscriptionBase createSubscription(final SubscriptionBaseBundle bundle, final String productName, final BillingPeriod term, final String planSet, final LocalDate requestedDate)
             throws SubscriptionBaseApiException {
         return createSubscription(bundle, productName, term, planSet, null, requestedDate);
     }
 
-    public DefaultSubscriptionBase createSubscription(final SubscriptionBaseBundle bundle, final String productName, final BillingPeriod term, final String planSet, final PhaseType phaseType, final DateTime requestedDate)
-            throws SubscriptionBaseApiException {
-        return createSubscription(bundle, null, productName, term, planSet, phaseType, requestedDate);
-    }
-
-    public DefaultSubscriptionBase createSubscription(final SubscriptionBaseBundle bundle, final SubscriptionBase baseSubscription, final String aoProduct, final BillingPeriod aoTerm, final String aoPriceList) throws SubscriptionBaseApiException {
-        return createSubscription(bundle, baseSubscription, aoProduct, aoTerm, aoPriceList, null, null);
-    }
-
     public DefaultSubscriptionBase createSubscription(final SubscriptionBaseBundle bundle, final String productName, final BillingPeriod term, final String planSet)
             throws SubscriptionBaseApiException {
-        return createSubscription(bundle, null, productName, term, planSet, null, null);
-    }
-
-    public DefaultSubscriptionBase createSubscription(final SubscriptionBaseBundle bundle, final SubscriptionBase baseSubscription, final String productName, final BillingPeriod term, final String planSet, final DateTime requestedDate) throws SubscriptionBaseApiException {
-        return createSubscription(bundle, baseSubscription, productName, term, planSet, null, requestedDate);
+        return createSubscription(bundle, productName, term, planSet, null, null);
     }
 
     public DefaultSubscriptionBase createSubscription(final boolean noEvents, final SubscriptionBaseBundle bundle, final String productName, final BillingPeriod term, final String planSet) throws SubscriptionBaseApiException {
-        return createSubscription(noEvents, bundle, null, productName, term, planSet, null, null);
+        return createSubscription(noEvents, bundle, productName, term, planSet, null, null);
     }
 
-    public DefaultSubscriptionBase createSubscription(final SubscriptionBaseBundle bundle, final SubscriptionBase baseSubscription, final String productName, final BillingPeriod term, final String planSet, final PhaseType phaseType, final DateTime requestedDate)
+    public DefaultSubscriptionBase createSubscription(final SubscriptionBaseBundle bundle, final String productName, final BillingPeriod term, final String planSet, final PhaseType phaseType, final LocalDate requestedDate)
             throws SubscriptionBaseApiException {
-        return createSubscription(false, bundle, baseSubscription, productName, term, planSet, phaseType, requestedDate);
+        return createSubscription(false, bundle, productName, term, planSet, phaseType, requestedDate);
     }
 
-    public DefaultSubscriptionBase createSubscription(final boolean noEvents, @Nullable final SubscriptionBaseBundle bundle, final SubscriptionBase baseSubscription, final String productName, final BillingPeriod term, final String planSet, final PhaseType phaseType, final DateTime requestedDate)
-    throws SubscriptionBaseApiException {
+    private DefaultSubscriptionBase createSubscription(final boolean noEvents, @Nullable final SubscriptionBaseBundle bundle, final String productName, final BillingPeriod term, final String planSet, final PhaseType phaseType, final LocalDate requestedDate)
+            throws SubscriptionBaseApiException {
         // Make sure the right account information is used
         final InternalCallContext internalCallContext = bundle == null ? this.internalCallContext : internalCallContextFactory.createInternalCallContext(bundle.getAccountId(),
                                                                                                                                                          ObjectType.ACCOUNT,
@@ -189,7 +175,7 @@ public class TestSubscriptionHelper {
             }
         }
 
-        if (!noEvents && (requestedDate == null || requestedDate.compareTo(clock.getUTCNow()) <= 0)) {
+        if (!noEvents && (requestedDate == null || requestedDate.compareTo(clock.getUTCToday()) <= 0)) {
             testListener.pushExpectedEvent(NextEvent.CREATE);
         }
 

@@ -471,7 +471,7 @@ public class DefaultSubscriptionDao extends EntityDaoBase<SubscriptionBundleMode
 
                 final BundleSqlDao bundleSqlDao = entitySqlDaoWrapperFactory.become(BundleSqlDao.class);
                 final String bundleId = subscription.getBundleId().toString();
-                bundleSqlDao.updateBundleLastSysTime(bundleId, clock.getUTCNow().toDate(), contextWithUpdatedDate);
+                bundleSqlDao.updateBundleLastSysTime(bundleId, context.getCreatedDate().toDate(), contextWithUpdatedDate);
                 return null;
             }
         });
@@ -553,7 +553,7 @@ public class DefaultSubscriptionDao extends EntityDaoBase<SubscriptionBundleMode
                         for (final SubscriptionBaseEvent cur : initialEvents) {
                             createdEvents.add(createAndRefresh(eventsDaoFromSameTransaction, new SubscriptionEventModelDao(cur), context));
 
-                            final boolean isBusEvent = cur.getEffectiveDate().compareTo(clock.getUTCNow()) <= 0 && (cur.getType() == EventType.API_USER);
+                            final boolean isBusEvent = cur.getEffectiveDate().compareTo(context.getCreatedDate()) <= 0 && (cur.getType() == EventType.API_USER);
                             recordBusOrFutureNotificationFromTransaction(defaultSubscriptionBase, cur, entitySqlDaoWrapperFactory, isBusEvent, 0, catalog, context);
                         }
 
@@ -633,7 +633,7 @@ public class DefaultSubscriptionDao extends EntityDaoBase<SubscriptionBundleMode
                 final UUID subscriptionId = subscription.getId();
 
                 Set<SubscriptionEventModelDao> targetEvents = new HashSet<SubscriptionEventModelDao>();
-                final Date now = clock.getUTCNow().toDate();
+                final Date now = context.getCreatedDate().toDate();
                 final List<SubscriptionEventModelDao> eventModels = transactional.getFutureActiveEventForSubscription(subscriptionId.toString(), now, contextWithUpdatedDate);
 
                 for (final SubscriptionEventModelDao cur : eventModels) {
@@ -719,7 +719,7 @@ public class DefaultSubscriptionDao extends EntityDaoBase<SubscriptionBundleMode
                 for (final SubscriptionBaseEvent cur : inputChangeEvents) {
                     createAndRefresh(transactional, new SubscriptionEventModelDao(cur), context);
 
-                    final boolean isBusEvent = cur.getEffectiveDate().compareTo(clock.getUTCNow()) <= 0 && (cur.getType() == EventType.API_USER);
+                    final boolean isBusEvent = cur.getEffectiveDate().compareTo(context.getCreatedDate()) <= 0 && (cur.getType() == EventType.API_USER);
                     recordBusOrFutureNotificationFromTransaction(subscription, cur, entitySqlDaoWrapperFactory, isBusEvent, 0, catalog, context);
                 }
 
@@ -772,7 +772,7 @@ public class DefaultSubscriptionDao extends EntityDaoBase<SubscriptionBundleMode
         final SubscriptionEventModelDao cancelEventWithUpdatedTotalOrdering = createAndRefresh(subscriptionEventSqlDao, new SubscriptionEventModelDao(cancelEvent), context);
 
         final SubscriptionBaseEvent refreshedSubscriptionEvent = SubscriptionEventModelDao.toSubscriptionEvent(cancelEventWithUpdatedTotalOrdering);
-        final boolean isBusEvent = refreshedSubscriptionEvent.getEffectiveDate().compareTo(clock.getUTCNow()) <= 0;
+        final boolean isBusEvent = refreshedSubscriptionEvent.getEffectiveDate().compareTo(context.getCreatedDate()) <= 0;
         recordBusOrFutureNotificationFromTransaction(subscription, refreshedSubscriptionEvent, entitySqlDaoWrapperFactory, isBusEvent, seqId, catalog, context);
 
         // Notify the Bus of the requested change
@@ -811,7 +811,7 @@ public class DefaultSubscriptionDao extends EntityDaoBase<SubscriptionBundleMode
                                                                      @Nullable final ApiEventType apiType, final InternalCallContext context) {
 
         SubscriptionEventModelDao futureEvent = null;
-        final Date now = clock.getUTCNow().toDate();
+        final Date now = context.getCreatedDate().toDate();
 
         final List<SubscriptionEventModelDao> eventModels = dao.become(SubscriptionEventSqlDao.class).getFutureActiveEventForSubscription(subscriptionId.toString(), now, context);
         for (final SubscriptionEventModelDao cur : eventModels) {
@@ -923,7 +923,6 @@ public class DefaultSubscriptionDao extends EntityDaoBase<SubscriptionBundleMode
                     }
 
                     if (baseTriggerEventForAddOnCancellation != null) {
-                        final DateTime now = clock.getUTCNow();
                         final SubscriptionBaseEvent addOnCancelEvent = new ApiEventCancel(new ApiEventBuilder()
                                                                                                   .setSubscriptionId(reloaded.getId())
                                                                                                   .setEffectiveDate(baseTriggerEventForAddOnCancellation.getEffectiveDate())
@@ -1043,7 +1042,7 @@ public class DefaultSubscriptionDao extends EntityDaoBase<SubscriptionBundleMode
 
                 // Notify the Bus
                 notifyBusOfRequestedChange(entitySqlDaoWrapperFactory, subscription, bcdEvent, SubscriptionBaseTransitionType.BCD_CHANGE, context);
-                final boolean isBusEvent = bcdEvent.getEffectiveDate().compareTo(clock.getUTCNow()) <= 0;
+                final boolean isBusEvent = bcdEvent.getEffectiveDate().compareTo(context.getCreatedDate()) <= 0;
                 recordBusOrFutureNotificationFromTransaction(subscription, bcdEvent, entitySqlDaoWrapperFactory, isBusEvent, 0, catalog, context);
 
                 return null;
@@ -1186,7 +1185,7 @@ public class DefaultSubscriptionDao extends EntityDaoBase<SubscriptionBundleMode
     }
 
     private InternalCallContext contextWithUpdatedDate(final InternalCallContext input) {
-        return new InternalCallContext(input, clock.getUTCNow());
+        return new InternalCallContext(input, input.getCreatedDate());
     }
 
 }

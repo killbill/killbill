@@ -181,13 +181,12 @@ public class DefaultSubscriptionBaseTransferApi extends SubscriptionApiBase impl
         final InternalCallContext fromInternalCallContext = internalCallContextFactory.createInternalCallContext(sourceAccountId, context);
         final InternalCallContext toInternalCallContext = internalCallContextFactory.createInternalCallContext(destAccountId, context);
 
-
         try {
             final Catalog catalog = catalogInternalApi.getFullCatalog(true, true, fromInternalCallContext);
 
 
-            final DateTime effectiveTransferDate = transferDate == null ? clock.getUTCNow() : transferDate;
-            if (effectiveTransferDate.isAfter(clock.getUTCNow())) {
+            final DateTime effectiveTransferDate = transferDate == null ? context.getCreatedDate() : transferDate;
+            if (effectiveTransferDate.isAfter(context.getCreatedDate())) {
                 // The transfer event for the migrated bundle will be the first one, which cannot be in the future
                 // (subscription always expects the first event to be in the past)
                 throw new SubscriptionBaseTransferApiException(ErrorCode.SUB_TRANSFER_INVALID_EFF_DATE, effectiveTransferDate);
@@ -204,7 +203,7 @@ public class DefaultSubscriptionBaseTransferApi extends SubscriptionApiBase impl
             final BundleBaseTimeline bundleBaseTimeline = timelineApi.getBundleTimeline(bundle, context);
 
             final DefaultSubscriptionBaseBundle subscriptionBundleData = new DefaultSubscriptionBaseBundle(bundleKey, destAccountId, effectiveTransferDate,
-                                                                                                           bundle.getOriginalCreatedDate(), clock.getUTCNow(), clock.getUTCNow());
+                                                                                                           bundle.getOriginalCreatedDate(), context.getCreatedDate(), context.getCreatedDate());
             final List<SubscriptionTransferData> subscriptionTransferDataList = new LinkedList<SubscriptionTransferData>();
 
             final List<TransferCancelData> transferCancelDataList = new LinkedList<TransferCancelData>();
