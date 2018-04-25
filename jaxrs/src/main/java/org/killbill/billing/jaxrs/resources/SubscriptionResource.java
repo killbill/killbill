@@ -623,7 +623,7 @@ public class SubscriptionResource extends JaxRsResourceBase {
 
                 final Subscription subscription = subscriptionApi.getSubscriptionForEntitlementId(newEntitlement.getId(), ctx);
 
-                final LocalDate nowInAccountTimeZone = new LocalDate(clock.getUTCNow(), subscription.getBillingEndDate().getChronology().getZone());
+                final LocalDate nowInAccountTimeZone = new LocalDate(callContext.getCreatedDate(), subscription.getBillingEndDate().getChronology().getZone());
                 isImmediateOp = subscription.getBillingEndDate() != null &&
                                 !subscription.getBillingEndDate().isAfter(nowInAccountTimeZone);
                 return Response.status(Status.OK).build();
@@ -670,7 +670,7 @@ public class SubscriptionResource extends JaxRsResourceBase {
         final Entitlement entitlement = entitlementApi.getEntitlementForId(subscriptionId, callContext);
         if (effectiveFromDateStr != null) {
             final Account account = accountUserApi.getAccountById(entitlement.getAccountId(), callContext);
-            final LocalDate accountToday  =  new LocalDate(clock.getUTCNow(), account.getTimeZone());
+            final LocalDate accountToday = new LocalDate(callContext.getCreatedDate(), account.getTimeZone());
             int comp = effectiveFromDate.compareTo(accountToday);
             switch (comp) {
                 case -1:

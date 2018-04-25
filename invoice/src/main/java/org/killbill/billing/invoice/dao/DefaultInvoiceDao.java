@@ -1142,11 +1142,10 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
     private void notifyOfParentInvoiceCreation(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory,
                                                final InvoiceModelDao parentInvoice,
                                                final InternalCallContext context) {
-        final DateTime now = clock.getUTCNow();
         final LocalTime localTime = LocalTime.parse(invoiceConfig.getParentAutoCommitUtcTime(context));
 
-        DateTime targetFutureNotificationDate = now.withTime(localTime);
-        while (targetFutureNotificationDate.compareTo(now) < 0) {
+        DateTime targetFutureNotificationDate = context.getCreatedDate().withTime(localTime);
+        while (targetFutureNotificationDate.compareTo(context.getCreatedDate()) < 0) {
             targetFutureNotificationDate = targetFutureNotificationDate.plusDays(1);
         }
 

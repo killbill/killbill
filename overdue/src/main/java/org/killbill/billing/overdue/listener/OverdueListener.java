@@ -155,7 +155,7 @@ public class OverdueListener {
 
         if (shouldInsertNotification) {
             OverdueAsyncBusNotificationKey notificationKey = new OverdueAsyncBusNotificationKey(accountId, action);
-            asyncPoster.insertOverdueNotification(accountId, clock.getUTCNow(), OverdueAsyncBusNotifier.OVERDUE_ASYNC_BUS_NOTIFIER_QUEUE, notificationKey, callContext);
+            asyncPoster.insertOverdueNotification(accountId, callContext.getCreatedDate(), OverdueAsyncBusNotifier.OVERDUE_ASYNC_BUS_NOTIFIER_QUEUE, notificationKey, callContext);
 
             try {
                 final List<Account> childrenAccounts = accountApi.getChildrenAccounts(accountId, callContext);
@@ -166,7 +166,7 @@ public class OverdueListener {
                             final InternalTenantContext internalTenantContext = internalCallContextFactory.createInternalTenantContext(childAccount.getId(), callContext);
                             final InternalCallContext accountContext = internalCallContextFactory.createInternalCallContext(internalTenantContext.getAccountRecordId(), callContext);
                             notificationKey = new OverdueAsyncBusNotificationKey(childAccount.getId(), action);
-                            asyncPoster.insertOverdueNotification(childAccount.getId(), clock.getUTCNow(), OverdueAsyncBusNotifier.OVERDUE_ASYNC_BUS_NOTIFIER_QUEUE, notificationKey, accountContext);
+                            asyncPoster.insertOverdueNotification(childAccount.getId(), callContext.getCreatedDate(), OverdueAsyncBusNotifier.OVERDUE_ASYNC_BUS_NOTIFIER_QUEUE, notificationKey, accountContext);
                         }
                     }
                 }

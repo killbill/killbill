@@ -92,8 +92,6 @@ public abstract class InvoiceTestSuiteWithEmbeddedDB extends GuicyKillbillTestSu
     @Inject
     protected GlobalLocker locker;
     @Inject
-    protected ClockMock clock;
-    @Inject
     protected InternalCallContextFactory internalCallContextFactory;
     @Inject
     protected InvoiceInternalApi invoiceInternalApi;

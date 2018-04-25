@@ -81,8 +81,6 @@ public class SubscriptionTestSuiteWithEmbeddedDB extends GuicyKillbillTestSuiteW
     @Inject
     protected SubscriptionDao dao;
     @Inject
-    protected ClockMock clock;
-    @Inject
     protected BusService busService;
     @Inject
     protected AddonUtils addonUtils;

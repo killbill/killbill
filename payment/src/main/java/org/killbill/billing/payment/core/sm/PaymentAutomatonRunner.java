@@ -157,7 +157,7 @@ public class PaymentAutomatonRunner {
 
     public PaymentAutomatonDAOHelper buildDaoHelper(final PaymentStateContext paymentStateContext,
                                                     final InternalCallContext internalCallContext) throws PaymentApiException {
-        final DateTime utcNow = clock.getUTCNow();
+        final DateTime utcNow = internalCallContext.getCreatedDate();
 
         return new PaymentAutomatonDAOHelper(paymentStateContext, utcNow, paymentDao, paymentPluginServiceRegistration, internalCallContext, eventBus, paymentSMHelper);
     }

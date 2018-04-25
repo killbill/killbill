@@ -33,7 +33,6 @@ import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.catalog.CatalogUpdater;
 import org.killbill.billing.catalog.StandaloneCatalog;
 import org.killbill.billing.catalog.VersionedCatalog;
-import org.killbill.billing.catalog.api.BillingMode;
 import org.killbill.billing.catalog.api.Catalog;
 import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.catalog.api.CatalogService;
@@ -45,7 +44,6 @@ import org.killbill.billing.catalog.caching.CatalogCache;
 import org.killbill.billing.tenant.api.TenantApiException;
 import org.killbill.billing.tenant.api.TenantKV.TenantKey;
 import org.killbill.billing.tenant.api.TenantUserApi;
-import org.killbill.billing.util.cache.Cachable.CacheType;
 import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.billing.util.callcontext.TenantContext;
@@ -175,7 +173,7 @@ public class DefaultCatalogUserApi implements CatalogUserApi {
             final StandaloneCatalog currentCatalog = getCurrentStandaloneCatalogForTenant(internalTenantContext);
             final CatalogUpdater catalogUpdater = (currentCatalog != null) ?
                                                   new CatalogUpdater(currentCatalog) :
-                                                  new CatalogUpdater(getSafeFirstCatalogEffectiveDate(effectiveDate), null);
+                                                  new CatalogUpdater(getSafeFirstCatalogEffectiveDate(effectiveDate, callContext), null);
 
             catalogCache.clearCatalog(internalTenantContext);
             tenantApi.updateTenantKeyValue(TenantKey.CATALOG.toString(), catalogUpdater.getCatalogXML(), callContext);
@@ -192,7 +190,7 @@ public class DefaultCatalogUserApi implements CatalogUserApi {
             final StandaloneCatalog currentCatalog = getCurrentStandaloneCatalogForTenant(internalTenantContext);
             final CatalogUpdater catalogUpdater = (currentCatalog != null) ?
                                                   new CatalogUpdater(currentCatalog) :
-                                                  new CatalogUpdater(getSafeFirstCatalogEffectiveDate(effectiveDate), descriptor.getCurrency());
+                                                  new CatalogUpdater(getSafeFirstCatalogEffectiveDate(effectiveDate, callContext), descriptor.getCurrency());
             catalogUpdater.addSimplePlanDescriptor(descriptor);
 
             catalogCache.clearCatalog(internalTenantContext);
@@ -209,15 +207,15 @@ public class DefaultCatalogUserApi implements CatalogUserApi {
         try {
             tenantApi.deleteTenantKey(TenantKey.CATALOG.toString(), callContext);
             catalogCache.clearCatalog(internalTenantContext);
-            createDefaultEmptyCatalog(clock.getUTCNow(), callContext);
+            createDefaultEmptyCatalog(callContext.getCreatedDate(), callContext);
         } catch (final TenantApiException e) {
             throw new CatalogApiException(e);
         }
     }
-    private DateTime getSafeFirstCatalogEffectiveDate(@Nullable final DateTime input) {
+    private DateTime getSafeFirstCatalogEffectiveDate(@Nullable final DateTime input, final CallContext callContext) {
         // The effectiveDate for the initial version does not matter too much
         // Because of #760, we want to make that client passing a approximate date (e.g today.toDateTimeAtStartOfDay()) will find the version
-        final DateTime catalogEffectiveDate = clock.getUTCNow().minusDays(1);
+        final DateTime catalogEffectiveDate = callContext.getCreatedDate().minusDays(1);
         return (input == null || input.isAfter(catalogEffectiveDate)) ? catalogEffectiveDate : input;
     }
 
