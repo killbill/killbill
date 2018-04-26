@@ -117,7 +117,7 @@ public class CreditResource extends JaxRsResourceBase {
         verifyNonNullOrEmpty(json.getAccountId(), "CreditJson accountId needs to be set",
                              json.getCreditAmount(), "CreditJson creditAmount needs to be set");
 
-        final CallContext callContext = context.createCallContextNoAccountId(createdBy, reason, comment, request);
+        final CallContext callContext = context.createCallContextWithAccountId(json.getAccountId(), createdBy, reason, comment, request);
 
         final Account account = accountUserApi.getAccountById(json.getAccountId(), callContext);
         final LocalDate effectiveDate = new LocalDate(clock.getUTCNow(), account.getTimeZone());
