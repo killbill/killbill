@@ -124,7 +124,10 @@ public class KillbillApiAopModule extends AbstractModule {
     }
 
     public static Boolean getDirtyDBFlag() {
-        return perThreadDirtyDBFlag.get() == Boolean.TRUE;
+        // If unset, we don't come from an API call (i.e. through KillbillApiAopModule): could be bus events for instance.
+        // In that case, for safety, always go to the RW instance.
+        return perThreadDirtyDBFlag.get() == null ||
+               perThreadDirtyDBFlag.get() == Boolean.TRUE;
     }
 
     private static final Matcher<Method> SYNTHETIC_METHOD_MATCHER = new Matcher<Method>() {
