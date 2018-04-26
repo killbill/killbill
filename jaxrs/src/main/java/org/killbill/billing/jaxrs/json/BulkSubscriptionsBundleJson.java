@@ -32,8 +32,7 @@ public class BulkSubscriptionsBundleJson {
     private final List<SubscriptionJson> baseEntitlementAndAddOns;
 
     @JsonCreator
-    public BulkSubscriptionsBundleJson(
-            @JsonProperty("baseEntitlementAndAddOns") @Nullable final List<SubscriptionJson> baseEntitlementAndAddOns) {
+    public BulkSubscriptionsBundleJson(@JsonProperty("baseEntitlementAndAddOns") @Nullable final List<SubscriptionJson> baseEntitlementAndAddOns) {
         this.baseEntitlementAndAddOns = baseEntitlementAndAddOns;
     }
 

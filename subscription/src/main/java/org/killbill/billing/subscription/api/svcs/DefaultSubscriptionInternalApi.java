@@ -275,11 +275,11 @@ public class DefaultSubscriptionInternalApi extends SubscriptionApiBase implemen
             final Catalog catalog = catalogInternalApi.getFullCatalog(true, true, context);
             final CallContext callContext = internalCallContextFactory.createCallContext(context);
             final UUID accountId = callContext.getAccountId();
-            final DateTime now = clock.getUTCNow();
 
             final Collection<SubscriptionAndAddOnsSpecifier> subscriptionAndAddOns = new ArrayList<SubscriptionAndAddOnsSpecifier>();
             for (final SubscriptionBaseWithAddOnsSpecifier subscriptionBaseWithAddOnsSpecifier : subscriptionWithAddOnsSpecifiers) {
-                final DateTime billingRequestedDateRaw = subscriptionBaseWithAddOnsSpecifier.getBillingEffectiveDate() != null ? subscriptionBaseWithAddOnsSpecifier.getBillingEffectiveDate() : now;
+                final DateTime billingRequestedDateRaw = (subscriptionBaseWithAddOnsSpecifier.getBillingEffectiveDate() != null) ?
+                                                         context.toUTCDateTime(subscriptionBaseWithAddOnsSpecifier.getBillingEffectiveDate()) : context.getCreatedDate();
 
                 final Collection<EntitlementSpecifier> reorderedSpecifiers = new ArrayList<EntitlementSpecifier>();
                 // Note: billingRequestedDateRaw might not be accurate here (add-on with a too early date passed)?
@@ -323,6 +323,7 @@ public class DefaultSubscriptionInternalApi extends SubscriptionApiBase implemen
                 } else if (bundle != null && baseSubscription != null && baseOrFirstStandalonePlanSpecifier != null && isBaseSpecifier(catalog, billingRequestedDateRaw, baseOrFirstStandalonePlanSpecifier)) {
                     throw new SubscriptionBaseApiException(ErrorCode.SUB_CREATE_BP_EXISTS, bundle.getExternalKey());
                 } else if (bundle == null) {
+                    log.warn("Invalid specifier: {}", subscriptionBaseWithAddOnsSpecifier);
                     throw new SubscriptionBaseApiException(ErrorCode.SUB_CREATE_INVALID_ENTITLEMENT_SPECIFIER);
                 }
 
@@ -333,7 +334,7 @@ public class DefaultSubscriptionInternalApi extends SubscriptionApiBase implemen
                                                                                                                                                               reorderedSpecifiers,
                                                                                                                                                               subscriptionBaseWithAddOnsSpecifier.isMigrated(),
                                                                                                                                                               context,
-                                                                                                                                                              now,
+                                                                                                                                                              context.getCreatedDate(),
                                                                                                                                                               billingRequestedDate,
                                                                                                                                                               catalog,
                                                                                                                                                               callContext));
@@ -400,7 +401,7 @@ public class DefaultSubscriptionInternalApi extends SubscriptionApiBase implemen
     @VisibleForTesting
     @Override
     public SubscriptionBaseBundle createBundleForAccount(final UUID accountId, final String bundleKey, final boolean renameCancelledBundleIfExist, final InternalCallContext context) throws SubscriptionBaseApiException {
-        final DateTime now = clock.getUTCNow();
+        final DateTime now = context.getCreatedDate();
         final DefaultSubscriptionBaseBundle bundle = new DefaultSubscriptionBaseBundle(bundleKey, accountId, now, now, now, now);
         if (null != bundleKey && bundleKey.length() > 255) {
             throw new SubscriptionBaseApiException(ErrorCode.EXTERNAL_KEY_LIMIT_EXCEEDED);
@@ -614,9 +615,8 @@ public class DefaultSubscriptionInternalApi extends SubscriptionApiBase implemen
 
         // verify the number of subscriptions (of the same kind) allowed per bundle
         final Catalog catalog = catalogInternalApi.getFullCatalog(true, true, context);
-        final DateTime now = clock.getUTCNow();
         final DateTime effectiveDate = (requestedDateWithMs != null) ? DefaultClock.truncateMs(requestedDateWithMs) : null;
-        final DateTime effectiveCatalogDate = effectiveDate != null ? effectiveDate : now;
+        final DateTime effectiveCatalogDate = effectiveDate != null ? effectiveDate : context.getCreatedDate();
         final PlanPhasePriceOverridesWithCallContext overridesWithContext = new DefaultPlanPhasePriceOverridesWithCallContext(overrides, callContext);
         final Plan plan = catalog.createOrFindPlan(spec, overridesWithContext, effectiveCatalogDate);
         if (ProductCategory.ADD_ON.toString().equalsIgnoreCase(plan.getProduct().getCategory().toString())) {
@@ -877,7 +877,7 @@ public class DefaultSubscriptionInternalApi extends SubscriptionApiBase implemen
         }
 
         // Today as seen by this account
-        final LocalDate startDate = effectiveFromDate != null ? effectiveFromDate : internalCallContext.toLocalDate(clock.getUTCNow());
+        final LocalDate startDate = effectiveFromDate != null ? effectiveFromDate : internalCallContext.toLocalDate(internalCallContext.getCreatedDate());
 
         // We want to compute a LocalDate in account TZ which maps to the provided 'bcd' and then compute an effectiveDate for when that BCD_CHANGE event needs to be triggered
         //
@@ -899,7 +899,7 @@ public class DefaultSubscriptionInternalApi extends SubscriptionApiBase implemen
         } else /* bcd > lastDayOfMonth && bcd > currentDay */ {
             requestedDate = new LocalDate(startDate.getYear(), startDate.getMonthOfYear(), lastDayOfMonth);
         }
-        return requestedDate == null ? clock.getUTCNow() : internalCallContext.toUTCDateTime(requestedDate);
+        return requestedDate == null ? internalCallContext.getCreatedDate() : internalCallContext.toUTCDateTime(requestedDate);
     }
 
     private DateTime getBundleStartDateWithSanity(final UUID bundleId, @Nullable final SubscriptionBase baseSubscription, final Plan plan,

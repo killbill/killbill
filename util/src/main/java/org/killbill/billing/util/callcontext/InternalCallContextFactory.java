@@ -247,7 +247,7 @@ public class InternalCallContextFactory {
         // If tenant id is null, this will default to the default tenant record id (multi-tenancy disabled)
         final Long tenantRecordId = getTenantRecordIdSafe(context);
         populateMDCContext(context.getUserToken(), null, tenantRecordId);
-        return new InternalCallContext(tenantRecordId, context, clock.getUTCNow());
+        return new InternalCallContext(tenantRecordId, context, context.getCreatedDate());
     }
 
     // Used when we need to re-hydrate the callcontext with the account_record_id (when creating the account)
@@ -256,7 +256,7 @@ public class InternalCallContextFactory {
         final DateTimeZone fixedOffsetTimeZone = immutableAccountData.getFixedOffsetTimeZone();
         final DateTime referenceTime = immutableAccountData.getReferenceTime();
         populateMDCContext(context.getUserToken(), accountRecordId, context.getTenantRecordId());
-        return new InternalCallContext(context, accountRecordId, fixedOffsetTimeZone, referenceTime, clock.getUTCNow());
+        return new InternalCallContext(context, accountRecordId, fixedOffsetTimeZone, referenceTime, context.getCreatedDate());
     }
 
     // Used during the account creation transaction (account not visible outside of the transaction yet)
@@ -265,12 +265,12 @@ public class InternalCallContextFactory {
         final DateTimeZone fixedOffsetTimeZone = AccountDateTimeUtils.getFixedOffsetTimeZone(accountModelDao);
         final DateTime referenceTime = accountModelDao.getReferenceTime();
         populateMDCContext(context.getUserToken(), accountRecordId, context.getTenantRecordId());
-        return new InternalCallContext(context, accountRecordId, fixedOffsetTimeZone, referenceTime, clock.getUTCNow());
+        return new InternalCallContext(context, accountRecordId, fixedOffsetTimeZone, referenceTime, context.getCreatedDate());
     }
 
     public InternalCallContext createInternalCallContext(final DateTimeZone fixedOffsetTimeZone, final DateTime referenceTime, final Long accountRecordId, final InternalCallContext context) {
         populateMDCContext(context.getUserToken(), accountRecordId, context.getTenantRecordId());
-        return new InternalCallContext(context, accountRecordId, fixedOffsetTimeZone, referenceTime, clock.getUTCNow());
+        return new InternalCallContext(context, accountRecordId, fixedOffsetTimeZone, referenceTime, context.getCreatedDate());
     }
 
     private InternalCallContext createInternalCallContext(final UUID objectId, final ObjectType objectType, final String userName,

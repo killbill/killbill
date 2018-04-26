@@ -276,13 +276,13 @@ public class IncompletePaymentTransactionTask extends CompletionTaskBase<Payment
     }
 
     @VisibleForTesting
-    DateTime getNextNotificationTime(final TransactionStatus transactionStatus, final Integer attemptNumber, final InternalTenantContext tenantContext) {
+    DateTime getNextNotificationTime(final TransactionStatus transactionStatus, final Integer attemptNumber, final InternalTenantContext internalTenantContext) {
 
         final List<TimeSpan> retries;
         if (TransactionStatus.UNKNOWN.equals(transactionStatus)) {
-            retries = paymentConfig.getUnknownTransactionsRetries(tenantContext);
+            retries = paymentConfig.getUnknownTransactionsRetries(internalTenantContext);
         } else if (TransactionStatus.PENDING.equals(transactionStatus)) {
-            retries = paymentConfig.getPendingTransactionsRetries(tenantContext);
+            retries = paymentConfig.getPendingTransactionsRetries(internalTenantContext);
         } else {
             retries = ImmutableList.of();
             log.warn("Unexpected transactionStatus='{}' from janitor, ignore...", transactionStatus);

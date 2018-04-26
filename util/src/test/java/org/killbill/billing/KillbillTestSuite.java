@@ -20,8 +20,6 @@ package org.killbill.billing;
 
 import java.lang.reflect.Method;
 
-import org.killbill.clock.Clock;
-import org.killbill.clock.ClockMock;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.ITestResult;
@@ -35,8 +33,6 @@ public class KillbillTestSuite {
 
     private boolean hasFailed = false;
 
-    protected Clock clock = new ClockMock();
-
     @BeforeMethod(alwaysRun = true)
     public void startTestSuite(final Method method) throws Exception {
         log.info("***************************************************************************************************");
@@ -48,8 +44,8 @@ public class KillbillTestSuite {
     public void endTestSuite(final Method method, final ITestResult result) throws Exception {
         log.info("***************************************************************************************************");
         log.info("***   Ending test {}:{} {} ({} s.)", new Object[]{method.getDeclaringClass().getName(), method.getName(),
-                result.isSuccess() ? "SUCCESS" : "!!! FAILURE !!!",
-                (result.getEndMillis() - result.getStartMillis()) / 1000});
+                                                                    result.isSuccess() ? "SUCCESS" : "!!! FAILURE !!!",
+                                                                    (result.getEndMillis() - result.getStartMillis()) / 1000});
         log.info("***************************************************************************************************");
         if (!hasFailed && !result.isSuccess()) {
             hasFailed = true;

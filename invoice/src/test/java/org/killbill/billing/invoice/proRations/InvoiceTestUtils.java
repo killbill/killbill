@@ -23,6 +23,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
+import org.joda.time.DateTime;
+import org.joda.time.LocalDate;
 import org.killbill.billing.account.api.Account;
 import org.killbill.billing.account.api.AccountApiException;
 import org.killbill.billing.callcontext.InternalCallContext;
@@ -88,8 +90,9 @@ public class InvoiceTestUtils {
 
         Mockito.when(invoice.getId()).thenReturn(invoiceId);
         Mockito.when(invoice.getAccountId()).thenReturn(accountId);
-        Mockito.when(invoice.getInvoiceDate()).thenReturn(clock.getUTCToday());
-        Mockito.when(invoice.getTargetDate()).thenReturn(clock.getUTCToday());
+        final LocalDate today = clock.getUTCToday();
+        Mockito.when(invoice.getInvoiceDate()).thenReturn(today);
+        Mockito.when(invoice.getTargetDate()).thenReturn(today);
         Mockito.when(invoice.getCurrency()).thenReturn(currency);
         Mockito.when(invoice.isMigrationInvoice()).thenReturn(false);
         Mockito.when(invoice.getStatus()).thenReturn(InvoiceStatus.COMMITTED);
@@ -127,7 +130,8 @@ public class InvoiceTestUtils {
         Mockito.when(payment.getInvoiceId()).thenReturn(invoiceId);
         Mockito.when(payment.getPaymentId()).thenReturn(UUID.randomUUID());
         Mockito.when(payment.getPaymentCookieId()).thenReturn(UUID.randomUUID().toString());
-        Mockito.when(payment.getPaymentDate()).thenReturn(clock.getUTCNow());
+        final DateTime utcNow = clock.getUTCNow();
+        Mockito.when(payment.getPaymentDate()).thenReturn(utcNow);
         Mockito.when(payment.getAmount()).thenReturn(amount);
         Mockito.when(payment.getCurrency()).thenReturn(currency);
         Mockito.when(payment.getProcessedCurrency()).thenReturn(currency);

@@ -104,7 +104,7 @@ public class OverdueWrapper {
         final BlockingState blockingStateForService = api.getBlockingStateForService(overdueable.getId(), BlockingStateType.ACCOUNT, OverdueService.OVERDUE_SERVICE_NAME, context);
         final String previousOverdueStateName = blockingStateForService != null ? blockingStateForService.getStateName() : OverdueWrapper.CLEAR_STATE_NAME;
         final OverdueState currentOverdueState = overdueStateSet.findState(previousOverdueStateName);
-        final OverdueState nextOverdueState = overdueStateSet.calculateOverdueState(billingState, context.toLocalDate(clock.getUTCNow()));
+        final OverdueState nextOverdueState = overdueStateSet.calculateOverdueState(billingState, context.toLocalDate(context.getCreatedDate()));
 
         overdueStateApplicator.apply(effectiveDate, overdueStateSet, billingState, overdueable, currentOverdueState, nextOverdueState, context);
 

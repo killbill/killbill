@@ -27,43 +27,42 @@ import javax.inject.Named;
 import org.joda.time.LocalDate;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
+import org.killbill.billing.util.entity.dao.DBRouter;
 import org.skife.jdbi.v2.IDBI;
 
 import static org.killbill.billing.util.glue.IDBISetup.MAIN_RO_IDBI_NAMED;
 
 public class DefaultRolledUpUsageDao implements RolledUpUsageDao {
 
-    private final RolledUpUsageSqlDao rolledUpUsageSqlDao;
-    private final RolledUpUsageSqlDao roRolledUpUsageSqlDao;
+    private final DBRouter<RolledUpUsageSqlDao> dbRouter;
 
     @Inject
     public DefaultRolledUpUsageDao(final IDBI dbi, @Named(MAIN_RO_IDBI_NAMED) final IDBI roDbi) {
-        this.rolledUpUsageSqlDao = dbi.onDemand(RolledUpUsageSqlDao.class);
-        this.roRolledUpUsageSqlDao = roDbi.onDemand(RolledUpUsageSqlDao.class);
+        this.dbRouter = new DBRouter<RolledUpUsageSqlDao>(dbi, roDbi, RolledUpUsageSqlDao.class);
     }
 
     @Override
     public void record(final Iterable<RolledUpUsageModelDao> usages, final InternalCallContext context) {
-        rolledUpUsageSqlDao.create(usages, context);
+        dbRouter.onDemand(false).create(usages, context);
     }
 
     @Override
     public Boolean recordsWithTrackingIdExist(final UUID subscriptionId, final String trackingId, final InternalTenantContext context) {
-        return rolledUpUsageSqlDao.recordsWithTrackingIdExist(subscriptionId, trackingId, context) != null;
+        return dbRouter.onDemand(false).recordsWithTrackingIdExist(subscriptionId, trackingId, context) != null;
     }
 
     @Override
     public List<RolledUpUsageModelDao> getUsageForSubscription(final UUID subscriptionId, final LocalDate startDate, final LocalDate endDate, final String unitType, final InternalTenantContext context) {
-        return roRolledUpUsageSqlDao.getUsageForSubscription(subscriptionId, startDate.toDate(), endDate.toDate(), unitType, context);
+        return dbRouter.onDemand(true).getUsageForSubscription(subscriptionId, startDate.toDate(), endDate.toDate(), unitType, context);
     }
 
     @Override
     public List<RolledUpUsageModelDao> getAllUsageForSubscription(final UUID subscriptionId, final LocalDate startDate, final LocalDate endDate, final InternalTenantContext context) {
-        return roRolledUpUsageSqlDao.getAllUsageForSubscription(subscriptionId, startDate.toDate(), endDate.toDate(), context);
+        return dbRouter.onDemand(true).getAllUsageForSubscription(subscriptionId, startDate.toDate(), endDate.toDate(), context);
     }
 
     @Override
     public List<RolledUpUsageModelDao> getRawUsageForAccount(final LocalDate startDate, final LocalDate endDate, final InternalTenantContext context) {
-        return roRolledUpUsageSqlDao.getRawUsageForAccount(startDate.toDate(), endDate.toDate(), context);
+        return dbRouter.onDemand(true).getRawUsageForAccount(startDate.toDate(), endDate.toDate(), context);
     }
 }

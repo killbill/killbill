@@ -93,8 +93,9 @@ public class TestInvoiceItemJsonSimple extends JaxrsTestSuiteNoDB {
         Mockito.when(invoiceItem.getPhaseName()).thenReturn(UUID.randomUUID().toString());
         Mockito.when(invoiceItem.getUsageName()).thenReturn(UUID.randomUUID().toString());
         Mockito.when(invoiceItem.getDescription()).thenReturn(UUID.randomUUID().toString());
-        Mockito.when(invoiceItem.getStartDate()).thenReturn(clock.getUTCToday());
-        Mockito.when(invoiceItem.getEndDate()).thenReturn(clock.getUTCToday());
+        final LocalDate utcToday = clock.getUTCToday();
+        Mockito.when(invoiceItem.getStartDate()).thenReturn(utcToday);
+        Mockito.when(invoiceItem.getEndDate()).thenReturn(utcToday);
         Mockito.when(invoiceItem.getAmount()).thenReturn(BigDecimal.TEN);
         Mockito.when(invoiceItem.getCurrency()).thenReturn(Currency.EUR);
         Mockito.when(invoiceItem.getInvoiceItemType()).thenReturn(InvoiceItemType.FIXED);

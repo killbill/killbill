@@ -297,7 +297,7 @@ public final class InvoicePaymentControlPluginApi implements PaymentControlPlugi
         final List<PluginAutoPayOffModelDao> entries = controlDao.getAutoPayOffEntry(accountId);
         for (final PluginAutoPayOffModelDao cur : entries) {
             // TODO In theory we should pass not only PLUGIN_NAME, but also all the plugin list associated which the original call
-            retryServiceScheduler.scheduleRetry(ObjectType.ACCOUNT, accountId, cur.getAttemptId(), internalCallContext.getTenantRecordId(), ImmutableList.<String>of(PLUGIN_NAME), clock.getUTCNow());
+            retryServiceScheduler.scheduleRetry(ObjectType.ACCOUNT, accountId, cur.getAttemptId(), internalCallContext.getTenantRecordId(), ImmutableList.<String>of(PLUGIN_NAME), internalCallContext.getCreatedDate());
         }
         controlDao.removeAutoPayOffEntry(accountId);
     }
@@ -522,11 +522,11 @@ public final class InvoicePaymentControlPluginApi implements PaymentControlPlugi
         final int retryCount = (attemptsInState - 1) >= 0 ? (attemptsInState - 1) : 0;
         if (retryCount < retryDays.size()) {
             final int retryInDays;
-            final DateTime nextRetryDate = clock.getUTCNow();
+            final DateTime nextRetryDate = internalContext.getCreatedDate();
             try {
                 retryInDays = retryDays.get(retryCount);
                 result = nextRetryDate.plusDays(retryInDays);
-                log.debug("Next retryDate={}, retryInDays={}, retryCount={}, now={}", result, retryInDays, retryCount, clock.getUTCNow());
+                log.debug("Next retryDate={}, retryInDays={}, retryCount={}, now={}", result, retryInDays, retryCount, internalContext.getCreatedDate());
             } catch (final NumberFormatException ex) {
                 log.error("Could not get retry day for retry count {}", retryCount);
             }
@@ -546,8 +546,8 @@ public final class InvoicePaymentControlPluginApi implements PaymentControlPlugi
             while (--remainingAttempts > 0) {
                 nbSec = nbSec * paymentConfig.getPluginFailureRetryMultiplier(internalContext);
             }
-            result = clock.getUTCNow().plusSeconds(nbSec);
-            log.debug("Next retryDate={}, retryAttempt={}, now={}", result, retryAttempt, clock.getUTCNow());
+            result = internalContext.getCreatedDate().plusSeconds(nbSec);
+            log.debug("Next retryDate={}, retryAttempt={}, now={}", result, retryAttempt, internalContext.getCreatedDate());
         }
         return result;
     }
@@ -674,7 +674,7 @@ public final class InvoicePaymentControlPluginApi implements PaymentControlPlugi
         final PluginAutoPayOffModelDao data = new PluginAutoPayOffModelDao(paymentControlContext.getAttemptPaymentId(), paymentControlContext.getPaymentExternalKey(), paymentControlContext.getTransactionExternalKey(),
                                                                            paymentControlContext.getAccountId(), PLUGIN_NAME,
                                                                            paymentControlContext.getPaymentId(), paymentControlContext.getPaymentMethodId(),
-                                                                           computedAmount, paymentControlContext.getCurrency(), CREATED_BY, clock.getUTCNow());
+                                                                           computedAmount, paymentControlContext.getCurrency(), CREATED_BY, paymentControlContext.getCreatedDate());
         controlDao.insertAutoPayOff(data);
         return true;
     }

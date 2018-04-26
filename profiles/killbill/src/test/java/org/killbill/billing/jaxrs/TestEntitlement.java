@@ -344,7 +344,6 @@ public class TestEntitlement extends TestJaxrsBase {
 
         final Subscription addOn1 = new Subscription();
         addOn1.setAccountId(accountJson.getAccountId());
-        addOn1.setExternalKey("");
         addOn1.setProductName("Telescopic-Scope");
         addOn1.setProductCategory(ProductCategory.ADD_ON);
         addOn1.setBillingPeriod(BillingPeriod.MONTHLY);
@@ -352,7 +351,6 @@ public class TestEntitlement extends TestJaxrsBase {
 
         final Subscription addOn2 = new Subscription();
         addOn2.setAccountId(accountJson.getAccountId());
-        addOn2.setExternalKey("");
         addOn2.setProductName("Laser-Scope");
         addOn2.setProductCategory(ProductCategory.ADD_ON);
         addOn2.setBillingPeriod(BillingPeriod.MONTHLY);
@@ -466,7 +464,7 @@ public class TestEntitlement extends TestJaxrsBase {
     }
 
     @Test(groups = "slow", description = "Create a bulk of base entitlements and addOns under the same transaction",
-            expectedExceptions = KillBillClientException.class, expectedExceptionsMessageRegExp = "Missing Base Subscription for bundle 12345")
+            expectedExceptions = KillBillClientException.class, expectedExceptionsMessageRegExp = "SubscriptionJson productName needs to be set when no planName is specified")
     public void testCreateEntitlementsWithoutBase() throws Exception {
         final DateTime initialDate = new DateTime(2012, 4, 25, 0, 3, 42, 0);
         clock.setDeltaFromReality(initialDate.getMillis() - clock.getUTCNow().getMillis());
@@ -496,7 +494,7 @@ public class TestEntitlement extends TestJaxrsBase {
         killBillClient.createSubscriptionsWithAddOns(bulkList, null, 10, requestOptions);
     }
 
-    @Test(groups = "slow", description = "Create addOns in a bundle where BP subscrsiptions already exist")
+    @Test(groups = "slow", description = "Create addOns in a bundle where BP subscription already exists")
     public void testEntitlementsWithAddOnsAndAlreadyExistingBP() throws Exception {
         final DateTime initialDate = new DateTime(2012, 4, 25, 0, 3, 42, 0);
         clock.setDeltaFromReality(initialDate.getMillis() - clock.getUTCNow().getMillis());
@@ -512,13 +510,9 @@ public class TestEntitlement extends TestJaxrsBase {
         input.setPriceList(PriceListSet.DEFAULT_PRICELIST_NAME);
         final Subscription subscription = killBillClient.createSubscription(input, null, DEFAULT_WAIT_COMPLETION_TIMEOUT_SEC, requestOptions);
 
-        final Subscription base = new Subscription();
-        base.setAccountId(accountJson.getAccountId());
-        base.setProductCategory(ProductCategory.BASE);
-        base.setExternalKey("foobarxyz");
-
         final Subscription addOn1 = new Subscription();
         addOn1.setAccountId(accountJson.getAccountId());
+        addOn1.setBundleId(subscription.getBundleId());
         addOn1.setProductName("Telescopic-Scope");
         addOn1.setProductCategory(ProductCategory.ADD_ON);
         addOn1.setBillingPeriod(BillingPeriod.MONTHLY);
@@ -526,13 +520,13 @@ public class TestEntitlement extends TestJaxrsBase {
 
         final Subscription addOn2 = new Subscription();
         addOn2.setAccountId(accountJson.getAccountId());
+        addOn2.setBundleId(subscription.getBundleId());
         addOn2.setProductName("Laser-Scope");
         addOn2.setProductCategory(ProductCategory.ADD_ON);
         addOn2.setBillingPeriod(BillingPeriod.MONTHLY);
         addOn2.setPriceList(PriceListSet.DEFAULT_PRICELIST_NAME);
 
         final List<Subscription> subscriptions = new ArrayList<Subscription>();
-        subscriptions.add(base);
         subscriptions.add(addOn1);
         subscriptions.add(addOn2);
 

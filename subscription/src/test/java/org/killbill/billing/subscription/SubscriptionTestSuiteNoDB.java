@@ -91,8 +91,7 @@ public class SubscriptionTestSuiteNoDB extends GuicyKillbillTestSuiteNoDB {
     protected SubscriptionConfig config;
     @Inject
     protected SubscriptionDao dao;
-    @Inject
-    protected ClockMock clock;
+
     @Inject
     protected BusService busService;
 
