@@ -65,6 +65,8 @@ public interface SubscriptionBaseInternalApi {
 
     public Iterable<UUID> getNonAOSubscriptionIdsForKey(String bundleKey, InternalTenantContext context);
 
+    public SubscriptionBaseBundle getActiveBundleForKey(String bundleKey, Catalog catalog, InternalTenantContext context);
+
     public List<SubscriptionBase> getSubscriptionsForBundle(UUID bundleId, DryRunArguments dryRunArguments, InternalTenantContext context)
             throws SubscriptionBaseApiException;
 

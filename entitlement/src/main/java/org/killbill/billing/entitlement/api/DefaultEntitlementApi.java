@@ -38,6 +38,9 @@ import org.killbill.billing.account.api.AccountInternalApi;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.catalog.api.BillingActionPolicy;
+import org.killbill.billing.catalog.api.Catalog;
+import org.killbill.billing.catalog.api.CatalogApiException;
+import org.killbill.billing.catalog.api.CatalogInternalApi;
 import org.killbill.billing.catalog.api.PlanPhasePriceOverride;
 import org.killbill.billing.catalog.api.PlanPhaseSpecifier;
 import org.killbill.billing.catalog.api.ProductCategory;
@@ -102,6 +105,7 @@ public class DefaultEntitlementApi extends DefaultEntitlementApiBase implements 
     private final NotificationQueueService notificationQueueService;
     private final EntitlementPluginExecution pluginExecution;
     private final SecurityApi securityApi;
+    private final CatalogInternalApi catalogInternalApi;
 
     @Inject
     public DefaultEntitlementApi(final PersistentBus eventBus, final InternalCallContextFactory internalCallContextFactory,
@@ -110,6 +114,7 @@ public class DefaultEntitlementApi extends DefaultEntitlementApiBase implements 
                                  final BlockingChecker checker, final NotificationQueueService notificationQueueService,
                                  final EventsStreamBuilder eventsStreamBuilder, final EntitlementUtils entitlementUtils,
                                  final EntitlementPluginExecution pluginExecution,
+                                 final CatalogInternalApi catalogInternalApi,
                                  final SecurityApi securityApi) {
         super(eventBus, null, pluginExecution, internalCallContextFactory, subscriptionInternalApi, accountApi, blockingStateDao, clock, checker, notificationQueueService, eventsStreamBuilder, entitlementUtils, securityApi);
         this.internalCallContextFactory = internalCallContextFactory;
@@ -123,6 +128,7 @@ public class DefaultEntitlementApi extends DefaultEntitlementApiBase implements 
         this.entitlementUtils = entitlementUtils;
         this.pluginExecution = pluginExecution;
         this.securityApi = securityApi;
+        this.catalogInternalApi = catalogInternalApi;
         this.dateHelper = new EntitlementDateHelper();
     }
 
@@ -387,7 +393,15 @@ public class DefaultEntitlementApi extends DefaultEntitlementApiBase implements 
             public List<UUID> doCall(final EntitlementApi entitlementApi, final EntitlementContext updatedPluginContext) throws EntitlementApiException {
                 final InternalCallContext contextWithValidAccountRecordId = internalCallContextFactory.createInternalCallContext(accountId, callContext);
 
+                final Catalog catalog;
+                try {
+                    catalog = catalogInternalApi.getFullCatalog(true, true, contextWithValidAccountRecordId);
+                } catch (final CatalogApiException e) {
+                    throw new EntitlementApiException(e);
+                }
+
                 final Map<UUID, Optional<EventsStream>> eventsStreamForBaseSubscriptionPerBundle = new HashMap<UUID, Optional<EventsStream>>();
+                final Map<String, Optional<UUID>> bundleKeyToIdMapping = new HashMap<String, Optional<UUID>>();
                 final Iterable<BaseEntitlementWithAddOnsSpecifier> baseEntitlementWithAddOnsSpecifiersAfterPlugins = updatedPluginContext.getBaseEntitlementWithAddOnsSpecifiers();
                 final Collection<SubscriptionBaseWithAddOnsSpecifier> subscriptionBaseWithAddOnsSpecifiers = new LinkedList<SubscriptionBaseWithAddOnsSpecifier>();
                 DateTime upTo = null;
@@ -399,7 +413,13 @@ public class DefaultEntitlementApi extends DefaultEntitlementApiBase implements 
                     upTo = upTo == null || upTo.compareTo(entitlementRequestedDate) < 0 ? entitlementRequestedDate : upTo;
 
                     // Verify if the operation is valid for that bundle
-                    preCheckAddEntitlement(baseEntitlementWithAddOnsSpecifier, entitlementRequestedDate, eventsStreamForBaseSubscriptionPerBundle, callContext, contextWithValidAccountRecordId);
+                    preCheckAddEntitlement(baseEntitlementWithAddOnsSpecifier,
+                                           entitlementRequestedDate,
+                                           eventsStreamForBaseSubscriptionPerBundle,
+                                           bundleKeyToIdMapping,
+                                           catalog,
+                                           callContext,
+                                           contextWithValidAccountRecordId);
 
                     final SubscriptionBaseWithAddOnsSpecifier subscriptionBaseWithAddOnsSpecifier = new SubscriptionBaseWithAddOnsSpecifier(baseEntitlementWithAddOnsSpecifier.getBundleId(),
                                                                                                                                             baseEntitlementWithAddOnsSpecifier.getExternalKey(),
@@ -444,43 +464,71 @@ public class DefaultEntitlementApi extends DefaultEntitlementApiBase implements 
     private void preCheckAddEntitlement(final BaseEntitlementWithAddOnsSpecifier baseEntitlementWithAddOnsSpecifier,
                                         final DateTime entitlementRequestedDate,
                                         final Map<UUID, Optional<EventsStream>> eventsStreamForBaseSubscriptionPerBundle,
+                                        final Map<String, Optional<UUID>> bundleKeyToIdMapping,
+                                        final Catalog catalog,
                                         final TenantContext callContext,
                                         final InternalCallContext contextWithValidAccountRecordId) throws EntitlementApiException {
-        // TODO In the addEntitlement codepath, bundleId is always set. But technically an existing bundle could be specified by externalKey in
-        // the createBaseEntitlementsWithAddOns codepath. In that case, we should also check if that bundle is blocked (expensive though, especially
-        // since bundles are pulled again below in subscriptions)
-        if (baseEntitlementWithAddOnsSpecifier.getBundleId() != null) {
-            if (eventsStreamForBaseSubscriptionPerBundle.get(baseEntitlementWithAddOnsSpecifier.getBundleId()) == null) {
-                final List<SubscriptionBase> subscriptionsByBundle;
-                try {
-                    subscriptionsByBundle = subscriptionBaseInternalApi.getSubscriptionsForBundle(baseEntitlementWithAddOnsSpecifier.getBundleId(), null, contextWithValidAccountRecordId);
+        // In the addEntitlement codepath, bundleId is always set. But, technically, an existing bundle could be specified by externalKey in
+        // the createBaseEntitlementsWithAddOns codepath. In that case, we should also check if that bundle is blocked.
+        UUID bundleId = baseEntitlementWithAddOnsSpecifier.getBundleId();
+        if (bundleId == null && baseEntitlementWithAddOnsSpecifier.getExternalKey() != null) {
+            populateBundleKeyToIdMappingCache(baseEntitlementWithAddOnsSpecifier, bundleKeyToIdMapping, catalog, contextWithValidAccountRecordId);
 
-                    if (subscriptionsByBundle == null || subscriptionsByBundle.isEmpty()) {
-                        throw new EntitlementApiException(ErrorCode.SUB_NO_ACTIVE_SUBSCRIPTIONS, baseEntitlementWithAddOnsSpecifier.getBundleId());
-                    }
-                } catch (final SubscriptionBaseApiException e) {
-                    throw new EntitlementApiException(e);
+            final Optional<UUID> bundleIdForKey = bundleKeyToIdMapping.get(baseEntitlementWithAddOnsSpecifier.getExternalKey());
+            if (bundleIdForKey.isPresent()) {
+                bundleId = bundleIdForKey.get();
+            }
+        }
+
+        if (bundleId == null) {
+            return;
+        }
+
+        populateEventsStreamForBaseSubscriptionPerBundleCache(bundleId, eventsStreamForBaseSubscriptionPerBundle, callContext, contextWithValidAccountRecordId);
+
+        final Optional<EventsStream> eventsStreamForBaseSubscription = eventsStreamForBaseSubscriptionPerBundle.get(bundleId);
+        if (eventsStreamForBaseSubscription.isPresent()) {
+            preCheckAddEntitlement(bundleId, entitlementRequestedDate, baseEntitlementWithAddOnsSpecifier, eventsStreamForBaseSubscription.get());
+        }
+    }
+
+    private void populateBundleKeyToIdMappingCache(final BaseEntitlementWithAddOnsSpecifier baseEntitlementWithAddOnsSpecifier, final Map<String, Optional<UUID>> bundleKeyToIdMapping, final Catalog catalog, final InternalCallContext contextWithValidAccountRecordId) throws EntitlementApiException {
+        if (bundleKeyToIdMapping.get(baseEntitlementWithAddOnsSpecifier.getExternalKey()) == null) {
+            final SubscriptionBaseBundle bundle = subscriptionBaseInternalApi.getActiveBundleForKey(baseEntitlementWithAddOnsSpecifier.getExternalKey(), catalog, contextWithValidAccountRecordId);
+            if (bundle != null) {
+                bundleKeyToIdMapping.put(baseEntitlementWithAddOnsSpecifier.getExternalKey(), Optional.<UUID>of(bundle.getId()));
+            } else {
+                bundleKeyToIdMapping.put(baseEntitlementWithAddOnsSpecifier.getExternalKey(), Optional.<UUID>absent());
+            }
+        }
+    }
+
+    private void populateEventsStreamForBaseSubscriptionPerBundleCache(final UUID bundleId, final Map<UUID, Optional<EventsStream>> eventsStreamForBaseSubscriptionPerBundle, final TenantContext callContext, final InternalCallContext contextWithValidAccountRecordId) throws EntitlementApiException {
+        if (eventsStreamForBaseSubscriptionPerBundle.get(bundleId) == null) {
+            final List<SubscriptionBase> subscriptionsByBundle;
+            try {
+                subscriptionsByBundle = subscriptionBaseInternalApi.getSubscriptionsForBundle(bundleId, null, contextWithValidAccountRecordId);
+
+                if (subscriptionsByBundle == null || subscriptionsByBundle.isEmpty()) {
+                    throw new EntitlementApiException(ErrorCode.SUB_NO_ACTIVE_SUBSCRIPTIONS, bundleId);
                 }
-
-                final boolean isStandalone = Iterables.any(subscriptionsByBundle,
-                                                           new Predicate<SubscriptionBase>() {
-                                                               @Override
-                                                               public boolean apply(final SubscriptionBase input) {
-                                                                   return ProductCategory.STANDALONE.equals(input.getCategory());
-                                                               }
-                                                           });
-
-                if (!isStandalone) {
-                    final EventsStream eventsStreamForBaseSubscription = eventsStreamBuilder.buildForBaseSubscription(baseEntitlementWithAddOnsSpecifier.getBundleId(), callContext);
-                    eventsStreamForBaseSubscriptionPerBundle.put(baseEntitlementWithAddOnsSpecifier.getBundleId(), Optional.<EventsStream>of(eventsStreamForBaseSubscription));
-                } else {
-                    eventsStreamForBaseSubscriptionPerBundle.put(baseEntitlementWithAddOnsSpecifier.getBundleId(), Optional.<EventsStream>absent());
-                }
+            } catch (final SubscriptionBaseApiException e) {
+                throw new EntitlementApiException(e);
             }
 
-            final Optional<EventsStream> eventsStreamForBaseSubscription = eventsStreamForBaseSubscriptionPerBundle.get(baseEntitlementWithAddOnsSpecifier.getBundleId());
-            if (eventsStreamForBaseSubscription.isPresent()) {
-                preCheckAddEntitlement(baseEntitlementWithAddOnsSpecifier.getBundleId(), entitlementRequestedDate, baseEntitlementWithAddOnsSpecifier, eventsStreamForBaseSubscription.get());
+            final boolean isStandalone = Iterables.any(subscriptionsByBundle,
+                                                       new Predicate<SubscriptionBase>() {
+                                                           @Override
+                                                           public boolean apply(final SubscriptionBase input) {
+                                                               return ProductCategory.STANDALONE.equals(input.getCategory());
+                                                           }
+                                                       });
+
+            if (!isStandalone) {
+                final EventsStream eventsStreamForBaseSubscription = eventsStreamBuilder.buildForBaseSubscription(bundleId, callContext);
+                eventsStreamForBaseSubscriptionPerBundle.put(bundleId, Optional.<EventsStream>of(eventsStreamForBaseSubscription));
+            } else {
+                eventsStreamForBaseSubscriptionPerBundle.put(bundleId, Optional.<EventsStream>absent());
             }
         }
     }
@@ -496,6 +544,8 @@ public class DefaultEntitlementApi extends DefaultEntitlementApiBase implements 
         // Check the base entitlement state is not blocked
         if (eventsStreamForBaseSubscription.isBlockChange(entitlementRequestedDate)) {
             throw new EntitlementApiException(new BlockingApiException(ErrorCode.BLOCK_BLOCKED_ACTION, BlockingChecker.ACTION_CHANGE, BlockingChecker.TYPE_SUBSCRIPTION, eventsStreamForBaseSubscription.getEntitlementId().toString()));
+        } else if (eventsStreamForBaseSubscription.isBlockEntitlement(entitlementRequestedDate)) {
+            throw new EntitlementApiException(new BlockingApiException(ErrorCode.BLOCK_BLOCKED_ACTION, BlockingChecker.ACTION_ENTITLEMENT, BlockingChecker.TYPE_SUBSCRIPTION, eventsStreamForBaseSubscription.getEntitlementId().toString()));
         }
     }
 
