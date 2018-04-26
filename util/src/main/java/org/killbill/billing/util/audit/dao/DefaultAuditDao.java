@@ -201,7 +201,7 @@ public class DefaultAuditDao implements AuditDao {
                                                                                          EntityHistoryModelDao historyEntity = null;
                                                                                          if ( objectHistory != null) {
                                                                                              for (EntityHistoryModelDao history : objectHistory) {
-                                                                                                 if (history.getHistoryRecordId() == inputAuditLog.getTargetRecordId()) {
+                                                                                                 if (history.getHistoryRecordId().equals(inputAuditLog.getTargetRecordId())) {
                                                                                                      historyEntity = history;
                                                                                                      break;
                                                                                                  }
