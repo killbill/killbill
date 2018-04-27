@@ -17,16 +17,26 @@
 
 package org.killbill.billing.util.entity.dao;
 
-import org.killbill.billing.util.glue.KillbillApiAopModule;
+import org.killbill.commons.profiling.Profiling.WithProfilingCallback;
 import org.skife.jdbi.v2.Handle;
 import org.skife.jdbi.v2.IDBI;
 import org.skife.jdbi.v2.TransactionCallback;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import static org.killbill.billing.util.entity.dao.DBRouterUntyped.THREAD_STATE.RO_ALLOWED;
+import static org.killbill.billing.util.entity.dao.DBRouterUntyped.THREAD_STATE.RW_ONLY;
+
 public class DBRouterUntyped {
 
     private static final Logger logger = LoggerFactory.getLogger(DBRouterUntyped.class);
+
+    private static final ThreadLocal<THREAD_STATE> CURRENT_THREAD_STATE = new ThreadLocal<THREAD_STATE>() {
+        @Override
+        public THREAD_STATE initialValue() {
+            return RW_ONLY;
+        }
+    };
 
     protected final IDBI dbi;
     protected final IDBI roDbi;
@@ -34,6 +44,44 @@ public class DBRouterUntyped {
     public DBRouterUntyped(final IDBI dbi, final IDBI roDbi) {
         this.dbi = dbi;
         this.roDbi = roDbi;
+    }
+
+    public static Object withRODBIAllowed(final boolean allowRODBI,
+                                          final WithProfilingCallback<Object, Throwable> callback) throws Throwable {
+        final THREAD_STATE currentState = CURRENT_THREAD_STATE.get();
+        CURRENT_THREAD_STATE.set(allowRODBI ? RO_ALLOWED : RW_ONLY);
+
+        try {
+            return callback.execute();
+        } finally {
+            CURRENT_THREAD_STATE.set(currentState);
+        }
+    }
+
+    boolean shouldUseRODBI(final boolean requestedRO) {
+        if (requestedRO) {
+            if (isRODBIAllowed()) {
+                logger.debug("Using RO DBI");
+                return true;
+            } else {
+                // Redirect to the rw instance, to work-around any replication delay
+                logger.debug("RO DBI requested, but thread state is {}, using RW DBI", CURRENT_THREAD_STATE.get());
+                return false;
+            }
+        } else {
+            // Disable RO DBI for future calls in this thread
+            disallowRODBI();
+            logger.debug("Using RW DBI");
+            return false;
+        }
+    }
+
+    private boolean isRODBIAllowed() {
+        return CURRENT_THREAD_STATE.get() == RO_ALLOWED;
+    }
+
+    private void disallowRODBI() {
+        CURRENT_THREAD_STATE.set(RW_ONLY);
     }
 
     public Handle getHandle(final boolean requestedRO) {
@@ -60,20 +108,10 @@ public class DBRouterUntyped {
         }
     }
 
-    boolean shouldUseRODBI(final boolean requestedRO) {
-        if (!requestedRO) {
-            KillbillApiAopModule.setDirtyDBFlag();
-            logger.debug("Dirty flag set, using RW DBI");
-            return false;
-        } else {
-            if (KillbillApiAopModule.getDirtyDBFlag()) {
-                // Redirect to the rw instance, to work-around any replication delay
-                logger.debug("RO DBI handle requested, but dirty flag set, using RW DBI");
-                return false;
-            } else {
-                logger.debug("Using RO DBI");
-                return true;
-            }
-        }
+    public enum THREAD_STATE {
+        // Advisory that RO DBI can be used
+        RO_ALLOWED,
+        // Dirty flag, calls must go to RW DBI
+        RW_ONLY
     }
 }

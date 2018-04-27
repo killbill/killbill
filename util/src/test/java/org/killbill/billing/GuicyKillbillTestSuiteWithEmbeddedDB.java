@@ -23,7 +23,6 @@ import javax.inject.Named;
 import javax.sql.DataSource;
 
 import org.killbill.billing.util.cache.CacheControllerDispatcher;
-import org.killbill.billing.util.glue.KillbillApiAopModule;
 import org.killbill.commons.embeddeddb.EmbeddedDB;
 import org.skife.jdbi.v2.IDBI;
 import org.slf4j.Logger;
@@ -64,7 +63,6 @@ public class GuicyKillbillTestSuiteWithEmbeddedDB extends GuicyKillbillTestSuite
     public void beforeMethod() throws Exception {
         cleanupAllTables();
         controlCacheDispatcher.clearAll();
-        KillbillApiAopModule.resetDirtyDBFlag();
     }
 
     protected void cleanupAllTables() {

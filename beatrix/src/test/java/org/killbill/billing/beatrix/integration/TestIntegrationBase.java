@@ -120,6 +120,7 @@ import org.killbill.billing.util.dao.NonEntityDao;
 import org.killbill.billing.util.nodes.KillbillNodesApi;
 import org.killbill.billing.util.tag.ControlTagType;
 import org.killbill.bus.api.PersistentBus;
+import org.killbill.bus.api.PersistentBus.EventBusException;
 import org.skife.config.ConfigurationObjectFactory;
 import org.skife.config.TimeSpan;
 import org.slf4j.Logger;
@@ -335,10 +336,14 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
 
         // Start services
         lifecycle.fireStartupSequencePriorEventRegistration();
-        busService.getBus().register(busHandler);
+        registerHandlers();
         lifecycle.fireStartupSequencePostEventRegistration();
 
         paymentPlugin.clear();
+    }
+
+    protected void registerHandlers() throws EventBusException {
+        busService.getBus().register(busHandler);
     }
 
     @AfterMethod(groups = "slow")
