@@ -226,6 +226,13 @@ public class DefaultEventsStream implements EventsStream {
     }
 
     @Override
+    public boolean isBlockEntitlement(final DateTime effectiveDate) {
+        Preconditions.checkState(effectiveDate != null);
+        final BlockingAggregator aggregator = getBlockingAggregator(effectiveDate);
+        return aggregator.isBlockEntitlement();
+    }
+
+    @Override
     public int getDefaultBillCycleDayLocal() {
         return defaultBillCycleDayLocal;
     }

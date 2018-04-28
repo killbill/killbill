@@ -295,8 +295,7 @@ public class DefaultSubscriptionInternalApi extends SubscriptionApiBase implemen
                     }
                 } else if (subscriptionBaseWithAddOnsSpecifier.getBundleExternalKey() != null &&
                            baseOrFirstStandalonePlanSpecifier == null) { // Skip the expensive checks if we are about to create the bundle (validation will be done in SubscriptionDao#createSubscriptionBundle)
-                    final List<SubscriptionBaseBundle> existingBundles = dao.getSubscriptionBundlesForKey(subscriptionBaseWithAddOnsSpecifier.getBundleExternalKey(), context);
-                    final SubscriptionBaseBundle tmp = getActiveBundleForKeyNotException(existingBundles, dao, clock, catalog, context);
+                    final SubscriptionBaseBundle tmp = getActiveBundleForKey(subscriptionBaseWithAddOnsSpecifier.getBundleExternalKey(), catalog, context);
                     if (tmp == null) {
                         throw new SubscriptionBaseApiException(ErrorCode.SUB_CREATE_NO_BP, subscriptionBaseWithAddOnsSpecifier.getBundleExternalKey());
                     } else if (!tmp.getAccountId().equals(accountId)) {
@@ -474,7 +473,9 @@ public class DefaultSubscriptionInternalApi extends SubscriptionApiBase implemen
         return dao.getNonAOSubscriptionIdsForKey(bundleKey, context);
     }
 
-    public static SubscriptionBaseBundle getActiveBundleForKeyNotException(final Iterable<SubscriptionBaseBundle> existingBundles, final SubscriptionDao dao, final Clock clock, final Catalog catalog, final InternalTenantContext context) {
+    @Override
+    public SubscriptionBaseBundle getActiveBundleForKey(final String bundleKey, final Catalog catalog, final InternalTenantContext context) {
+        final List<SubscriptionBaseBundle> existingBundles = dao.getSubscriptionBundlesForKey(bundleKey, context);
         for (final SubscriptionBaseBundle cur : existingBundles) {
             final List<SubscriptionBase> subscriptions;
             try {
