@@ -240,6 +240,10 @@ public class TestJaxrsBase extends KillbillClient {
 
     @BeforeClass(groups = "slow")
     public void beforeClass() throws Exception {
+        if (hasFailed()) {
+            return;
+        }
+
         // TODO PIERRE Unclear why both are needed in beforeClass and beforeSuite
         if (config == null) {
             config = new ConfigurationObjectFactory(System.getProperties()).build(HttpServerConfig.class);
@@ -252,6 +256,10 @@ public class TestJaxrsBase extends KillbillClient {
 
     @BeforeSuite(groups = "slow")
     public void beforeSuite() throws Exception {
+        if (hasFailed()) {
+            return;
+        }
+
         super.beforeSuite();
 
         if (config == null) {

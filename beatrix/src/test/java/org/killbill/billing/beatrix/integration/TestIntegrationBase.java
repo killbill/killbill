@@ -306,6 +306,10 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
 
     @BeforeClass(groups = "slow")
     public void beforeClass() throws Exception {
+        if (hasFailed()) {
+            return;
+        }
+
         final InvoiceConfig defaultInvoiceConfig = new ConfigurationObjectFactory(skifeConfigSource).build(InvoiceConfig.class);
         invoiceConfig = new ConfigurableInvoiceConfig(defaultInvoiceConfig);
         // The default value is 50, i.e. wait 50 x 100ms = 5s to get the lock. This isn't always enough and can lead to random tests failures

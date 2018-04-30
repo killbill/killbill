@@ -105,6 +105,10 @@ public class SubscriptionTestSuiteWithEmbeddedDB extends GuicyKillbillTestSuiteW
 
     @BeforeClass(groups = "slow")
     public void beforeClass() throws Exception {
+        if (hasFailed()) {
+            return;
+        }
+
         final Injector g = Guice.createInjector(Stage.PRODUCTION, new TestDefaultSubscriptionModuleWithEmbeddedDB(configSource));
         g.injectMembers(this);
     }
@@ -112,6 +116,10 @@ public class SubscriptionTestSuiteWithEmbeddedDB extends GuicyKillbillTestSuiteW
     @Override
     @BeforeMethod(groups = "slow")
     public void beforeMethod() throws Exception {
+        if (hasFailed()) {
+            return;
+        }
+
         super.beforeMethod();
         subscriptionTestInitializer.startTestFramework(testListener, clock, busService, subscriptionBaseService);
 
@@ -124,6 +132,10 @@ public class SubscriptionTestSuiteWithEmbeddedDB extends GuicyKillbillTestSuiteW
 
     @AfterMethod(groups = "slow")
     public void afterMethod() throws Exception {
+        if (hasFailed()) {
+            return;
+        }
+
         subscriptionTestInitializer.stopTestFramework(testListener, busService, subscriptionBaseService);
     }
 

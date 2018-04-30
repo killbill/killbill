@@ -47,6 +47,10 @@ public class CatalogTestSuiteWithEmbeddedDB extends GuicyKillbillTestSuiteWithEm
 
     @BeforeClass(groups = "slow")
     protected void beforeClass() throws Exception {
+        if (hasFailed()) {
+            return;
+        }
+
         final Injector injector = Guice.createInjector(new TestCatalogModuleWithEmbeddedDB(configSource));
         injector.injectMembers(this);
     }

@@ -108,12 +108,20 @@ public abstract class OverdueTestSuiteNoDB extends GuicyKillbillTestSuiteNoDB {
 
     @BeforeClass(groups = "fast")
     protected void beforeClass() throws Exception {
+        if (hasFailed()) {
+            return;
+        }
+
         final Injector injector = Guice.createInjector(new TestOverdueModuleNoDB(configSource));
         injector.injectMembers(this);
     }
 
     @BeforeMethod(groups = "fast")
     public void beforeMethod() throws Exception {
+        if (hasFailed()) {
+            return;
+        }
+
         bus.start();
         service.initialize();
         service.start();
@@ -121,6 +129,10 @@ public abstract class OverdueTestSuiteNoDB extends GuicyKillbillTestSuiteNoDB {
 
     @AfterMethod(groups = "fast")
     public void afterMethod() {
+        if (hasFailed()) {
+            return;
+        }
+
         service.stop();
         bus.stop();
     }
