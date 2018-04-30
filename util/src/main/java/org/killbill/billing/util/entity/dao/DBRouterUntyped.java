@@ -24,6 +24,8 @@ import org.skife.jdbi.v2.TransactionCallback;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.annotations.VisibleForTesting;
+
 import static org.killbill.billing.util.entity.dao.DBRouterUntyped.THREAD_STATE.RO_ALLOWED;
 import static org.killbill.billing.util.entity.dao.DBRouterUntyped.THREAD_STATE.RW_ONLY;
 
@@ -48,7 +50,7 @@ public class DBRouterUntyped {
 
     public static Object withRODBIAllowed(final boolean allowRODBI,
                                           final WithProfilingCallback<Object, Throwable> callback) throws Throwable {
-        final THREAD_STATE currentState = CURRENT_THREAD_STATE.get();
+        final THREAD_STATE currentState = getCurrentState();
         CURRENT_THREAD_STATE.set(allowRODBI ? RO_ALLOWED : RW_ONLY);
 
         try {
@@ -58,6 +60,11 @@ public class DBRouterUntyped {
         }
     }
 
+    @VisibleForTesting
+    public static THREAD_STATE getCurrentState() {
+        return CURRENT_THREAD_STATE.get();
+    }
+
     boolean shouldUseRODBI(final boolean requestedRO) {
         if (requestedRO) {
             if (isRODBIAllowed()) {
@@ -65,7 +72,7 @@ public class DBRouterUntyped {
                 return true;
             } else {
                 // Redirect to the rw instance, to work-around any replication delay
-                logger.debug("RO DBI requested, but thread state is {}, using RW DBI", CURRENT_THREAD_STATE.get());
+                logger.debug("RO DBI requested, but thread state is {}, using RW DBI", getCurrentState());
                 return false;
             }
         } else {
@@ -77,7 +84,7 @@ public class DBRouterUntyped {
     }
 
     private boolean isRODBIAllowed() {
-        return CURRENT_THREAD_STATE.get() == RO_ALLOWED;
+        return getCurrentState() == RO_ALLOWED;
     }
 
     private void disallowRODBI() {
