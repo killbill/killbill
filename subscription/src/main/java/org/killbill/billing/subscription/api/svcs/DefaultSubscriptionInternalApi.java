@@ -148,7 +148,7 @@ public class DefaultSubscriptionInternalApi extends SubscriptionApiBase implemen
     }
 
     private List<SubscriptionSpecifier> verifyAndBuildSubscriptionSpecifiers(final SubscriptionBaseBundle bundle,
-                                                                             @Nullable final EntitlementSpecifier baseOrFirstStandalonePlanSpecifier,
+                                                                             final boolean hasBaseOrStandalonePlanSpecifier,
                                                                              final Iterable<EntitlementSpecifier> entitlements,
                                                                              final boolean isMigrated,
                                                                              final InternalCallContext context,
@@ -188,7 +188,7 @@ public class DefaultSubscriptionInternalApi extends SubscriptionApiBase implemen
             }
 
             final DateTime bundleStartDate;
-            if (baseOrFirstStandalonePlanSpecifier != null) {
+            if (hasBaseOrStandalonePlanSpecifier) {
                 bundleStartDate = effectiveDate;
             } else {
                 final SubscriptionBase baseSubscription = dao.getBaseSubscription(bundle.getId(), catalog, context);
@@ -215,13 +215,13 @@ public class DefaultSubscriptionInternalApi extends SubscriptionApiBase implemen
         return subscriptions;
     }
 
-    private EntitlementSpecifier sanityAndReorderBPOrStandaloneSpecFirst(final Catalog catalog,
-                                                                         final SubscriptionBaseWithAddOnsSpecifier subscriptionBaseWithAddOnsSpecifier,
-                                                                         final DateTime effectiveDate,
-                                                                         final Collection<EntitlementSpecifier> outputEntitlementSpecifier) throws SubscriptionBaseApiException {
+    private boolean sanityAndReorderBPOrStandaloneSpecFirst(final Catalog catalog,
+                                                            final SubscriptionBaseWithAddOnsSpecifier subscriptionBaseWithAddOnsSpecifier,
+                                                            final DateTime effectiveDate,
+                                                            final Collection<EntitlementSpecifier> outputEntitlementSpecifier) throws SubscriptionBaseApiException {
         EntitlementSpecifier basePlanSpecifier = null;
         final Collection<EntitlementSpecifier> addOnSpecifiers = new ArrayList<EntitlementSpecifier>();
-        final List<EntitlementSpecifier> standaloneSpecifiers = new ArrayList<EntitlementSpecifier>();
+        final Collection<EntitlementSpecifier> standaloneSpecifiers = new ArrayList<EntitlementSpecifier>();
         try {
             for (final EntitlementSpecifier cur : subscriptionBaseWithAddOnsSpecifier.getEntitlementSpecifiers()) {
                 final boolean isBase = isBaseSpecifier(catalog, effectiveDate, cur);
@@ -252,10 +252,10 @@ public class DefaultSubscriptionInternalApi extends SubscriptionApiBase implemen
         }
 
         if (standaloneSpecifiers.isEmpty()) {
-            return basePlanSpecifier;
+            return basePlanSpecifier != null;
         } else {
             outputEntitlementSpecifier.addAll(standaloneSpecifiers);
-            return standaloneSpecifiers.get(0);
+            return true;
         }
     }
 
@@ -283,7 +283,7 @@ public class DefaultSubscriptionInternalApi extends SubscriptionApiBase implemen
 
                 final Collection<EntitlementSpecifier> reorderedSpecifiers = new ArrayList<EntitlementSpecifier>();
                 // Note: billingRequestedDateRaw might not be accurate here (add-on with a too early date passed)?
-                final EntitlementSpecifier baseOrFirstStandalonePlanSpecifier = sanityAndReorderBPOrStandaloneSpecFirst(catalog, subscriptionBaseWithAddOnsSpecifier, billingRequestedDateRaw, reorderedSpecifiers);
+                final boolean hasBaseOrStandalonePlanSpecifier = sanityAndReorderBPOrStandaloneSpecFirst(catalog, subscriptionBaseWithAddOnsSpecifier, billingRequestedDateRaw, reorderedSpecifiers);
 
                 DateTime billingRequestedDate = billingRequestedDateRaw;
                 SubscriptionBaseBundle bundle = null;
@@ -294,7 +294,7 @@ public class DefaultSubscriptionInternalApi extends SubscriptionApiBase implemen
                         throw new SubscriptionBaseApiException(ErrorCode.SUB_CREATE_INVALID_ENTITLEMENT_SPECIFIER);
                     }
                 } else if (subscriptionBaseWithAddOnsSpecifier.getBundleExternalKey() != null &&
-                           baseOrFirstStandalonePlanSpecifier == null) { // Skip the expensive checks if we are about to create the bundle (validation will be done in SubscriptionDao#createSubscriptionBundle)
+                           !hasBaseOrStandalonePlanSpecifier) { // Skip the expensive checks if we are about to create the bundle (validation will be done in SubscriptionDao#createSubscriptionBundle)
                     final SubscriptionBaseBundle tmp = getActiveBundleForKey(subscriptionBaseWithAddOnsSpecifier.getBundleExternalKey(), catalog, context);
                     if (tmp == null) {
                         throw new SubscriptionBaseApiException(ErrorCode.SUB_CREATE_NO_BP, subscriptionBaseWithAddOnsSpecifier.getBundleExternalKey());
@@ -314,12 +314,12 @@ public class DefaultSubscriptionInternalApi extends SubscriptionApiBase implemen
                     }
                 }
 
-                if (bundle == null && baseOrFirstStandalonePlanSpecifier != null) {
+                if (bundle == null && hasBaseOrStandalonePlanSpecifier) {
                     bundle = createBundleForAccount(accountId,
                                                     subscriptionBaseWithAddOnsSpecifier.getBundleExternalKey(),
                                                     renameCancelledBundleIfExist,
                                                     context);
-                } else if (bundle != null && baseSubscription != null && baseOrFirstStandalonePlanSpecifier != null && isBaseSpecifier(catalog, billingRequestedDateRaw, baseOrFirstStandalonePlanSpecifier)) {
+                } else if (bundle != null && baseSubscription != null && hasBaseOrStandalonePlanSpecifier) {
                     throw new SubscriptionBaseApiException(ErrorCode.SUB_CREATE_BP_EXISTS, bundle.getExternalKey());
                 } else if (bundle == null) {
                     log.warn("Invalid specifier: {}", subscriptionBaseWithAddOnsSpecifier);
@@ -329,7 +329,7 @@ public class DefaultSubscriptionInternalApi extends SubscriptionApiBase implemen
                 final SubscriptionAndAddOnsSpecifier subscriptionAndAddOnsSpecifier = new SubscriptionAndAddOnsSpecifier(bundle,
                                                                                                                          billingRequestedDate,
                                                                                                                          verifyAndBuildSubscriptionSpecifiers(bundle,
-                                                                                                                                                              baseOrFirstStandalonePlanSpecifier,
+                                                                                                                                                              hasBaseOrStandalonePlanSpecifier,
                                                                                                                                                               reorderedSpecifiers,
                                                                                                                                                               subscriptionBaseWithAddOnsSpecifier.isMigrated(),
                                                                                                                                                               context,

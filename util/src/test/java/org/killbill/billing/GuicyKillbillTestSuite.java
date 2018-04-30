@@ -258,6 +258,6 @@ public class GuicyKillbillTestSuite implements IHookable {
     }
 
     public boolean hasFailed() {
-        return hasFailed;
+        return hasFailed || AbortAfterFirstFailureListener.hasFailures();
     }
 }

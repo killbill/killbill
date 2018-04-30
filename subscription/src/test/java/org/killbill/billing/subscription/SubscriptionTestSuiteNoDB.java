@@ -126,6 +126,10 @@ public class SubscriptionTestSuiteNoDB extends GuicyKillbillTestSuiteNoDB {
 
     @BeforeClass(groups = "fast")
     public void beforeClass() throws Exception {
+        if (hasFailed()) {
+            return;
+        }
+
         final Injector g = Guice.createInjector(Stage.PRODUCTION, new TestDefaultSubscriptionModuleNoDB(configSource));
         g.injectMembers(this);
 
@@ -135,6 +139,10 @@ public class SubscriptionTestSuiteNoDB extends GuicyKillbillTestSuiteNoDB {
 
     @BeforeMethod(groups = "fast")
     public void beforeMethod() throws Exception {
+        if (hasFailed()) {
+            return;
+        }
+
         // CLEANUP ALL DB TABLES OR IN MEMORY STRUCTURES
         ((MockSubscriptionDaoMemory) dao).reset();
 
@@ -167,6 +175,10 @@ public class SubscriptionTestSuiteNoDB extends GuicyKillbillTestSuiteNoDB {
 
     @AfterMethod(groups = "fast")
     public void afterMethod() throws Exception {
+        if (hasFailed()) {
+            return;
+        }
+
         subscriptionTestInitializer.stopTestFramework(testListener, busService, subscriptionBaseService);
     }
 

@@ -49,12 +49,20 @@ public class TestDefaultAdminPaymentApi extends PaymentTestSuiteWithEmbeddedDB {
 
     @BeforeClass(groups = "slow")
     protected void beforeClass() throws Exception {
+        if (hasFailed()) {
+            return;
+        }
+
         super.beforeClass();
         mockPaymentProviderPlugin = (MockPaymentProviderPlugin) registry.getServiceForName(MockPaymentProviderPlugin.PLUGIN_NAME);
     }
 
     @BeforeMethod(groups = "slow")
     public void beforeMethod() throws Exception {
+        if (hasFailed()) {
+            return;
+        }
+
         super.beforeMethod();
 
         mockPaymentProviderPlugin.clear();
@@ -104,6 +112,7 @@ public class TestDefaultAdminPaymentApi extends PaymentTestSuiteWithEmbeddedDB {
                                                                                  ImmutableList.<PluginProperty>of(),
                                                                                  paymentOptions,
                                                                                  callContext);
+        Assert.assertEquals(payment.getTransactions().size(), 1);
 
         final PaymentModelDao paymentModelDao = paymentDao.getPayment(payment.getId(), internalCallContext);
         final PaymentTransactionModelDao paymentTransactionModelDao = paymentDao.getPaymentTransaction(payment.getTransactions().get(0).getId(), internalCallContext);
@@ -117,6 +126,7 @@ public class TestDefaultAdminPaymentApi extends PaymentTestSuiteWithEmbeddedDB {
 
         adminPaymentApi.fixPaymentTransactionState(payment, payment.getTransactions().get(0), TransactionStatus.PAYMENT_FAILURE, null, "AUTH_ERRORED", ImmutableList.<PluginProperty>of(), callContext);
 
+        Assert.assertEquals(paymentApi.getPayment(payment.getId(), false, false, ImmutableList.<PluginProperty>of(), callContext).getTransactions().size(), 1);
         final PaymentModelDao refreshedPaymentModelDao = paymentDao.getPayment(payment.getId(), internalCallContext);
         final PaymentTransactionModelDao refreshedPaymentTransactionModelDao = paymentDao.getPaymentTransaction(payment.getTransactions().get(0).getId(), internalCallContext);
         Assert.assertEquals(refreshedPaymentModelDao.getStateName(), "AUTH_ERRORED");
@@ -126,6 +136,10 @@ public class TestDefaultAdminPaymentApi extends PaymentTestSuiteWithEmbeddedDB {
         Assert.assertEquals(refreshedPaymentTransactionModelDao.getProcessedCurrency(), Currency.EUR);
         Assert.assertEquals(refreshedPaymentTransactionModelDao.getGatewayErrorCode(), "");
         Assert.assertEquals(refreshedPaymentTransactionModelDao.getGatewayErrorMsg(), "");
+
+        // Advance the clock to make sure the effective date of the new transaction is after the first one
+        clock.addDays(1);
+        assertListenerStatus();
 
         // Verify subsequent payment retries work
         retryService.retryPaymentTransaction(refreshedPaymentTransactionModelDao.getAttemptId(), ImmutableList.<String>of(MockPaymentControlProviderPlugin.PLUGIN_NAME), internalCallContext);

@@ -35,6 +35,8 @@ import org.killbill.billing.payment.dispatcher.PluginDispatcher;
 import org.killbill.billing.payment.dispatcher.PluginDispatcher.PluginDispatcherReturnType;
 import org.killbill.billing.util.config.definition.PaymentConfig;
 import org.killbill.commons.locker.GlobalLocker;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
@@ -43,6 +45,8 @@ import com.google.common.collect.ImmutableList;
 // Used from AttemptCompletionTask to resume an incomplete payment that went through control API.
 //
 public class CompletionControlOperation extends OperationControlCallback {
+
+    private static final Logger logger = LoggerFactory.getLogger(CompletionControlOperation.class);
 
     private static final Joiner JOINER = Joiner.on(", ");
 
@@ -84,6 +88,7 @@ public class CompletionControlOperation extends OperationControlCallback {
                                                                                                             paymentStateContext.getCallContext());
                 try {
                     final Payment result = doCallSpecificOperationCallback();
+                    logger.debug("doOperationCallback payment='{}', transaction='{}'", result, transaction);
                     ((PaymentStateControlContext) paymentStateContext).setResult(result);
 
                     final boolean success = transaction.getTransactionStatus() == TransactionStatus.SUCCESS || transaction.getTransactionStatus() == TransactionStatus.PENDING;
