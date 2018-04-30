@@ -412,14 +412,19 @@ public class DefaultEntitlementApi extends DefaultEntitlementApiBase implements 
                                                                                                        contextWithValidAccountRecordId);
                     upTo = upTo == null || upTo.compareTo(entitlementRequestedDate) < 0 ? entitlementRequestedDate : upTo;
 
-                    // Verify if the operation is valid for that bundle
-                    preCheckAddEntitlement(baseEntitlementWithAddOnsSpecifier,
-                                           entitlementRequestedDate,
-                                           eventsStreamForBaseSubscriptionPerBundle,
-                                           bundleKeyToIdMapping,
-                                           catalog,
-                                           callContext,
-                                           contextWithValidAccountRecordId);
+                    final UUID bundleId = populateCaches(baseEntitlementWithAddOnsSpecifier,
+                                                         eventsStreamForBaseSubscriptionPerBundle,
+                                                         bundleKeyToIdMapping,
+                                                         catalog,
+                                                         callContext,
+                                                         contextWithValidAccountRecordId);
+                    if (bundleId != null) {
+                        final Optional<EventsStream> eventsStreamForBaseSubscription = eventsStreamForBaseSubscriptionPerBundle.get(bundleId);
+                        if (eventsStreamForBaseSubscription.isPresent()) {
+                            // Verify if the operation is valid for that bundle
+                            preCheckAddEntitlement(bundleId, entitlementRequestedDate, baseEntitlementWithAddOnsSpecifier, eventsStreamForBaseSubscription.get());
+                        }
+                    }
 
                     final SubscriptionBaseWithAddOnsSpecifier subscriptionBaseWithAddOnsSpecifier = new SubscriptionBaseWithAddOnsSpecifier(baseEntitlementWithAddOnsSpecifier.getBundleId(),
                                                                                                                                             baseEntitlementWithAddOnsSpecifier.getExternalKey(),
@@ -461,13 +466,12 @@ public class DefaultEntitlementApi extends DefaultEntitlementApiBase implements 
         return iterator.next();
     }
 
-    private void preCheckAddEntitlement(final BaseEntitlementWithAddOnsSpecifier baseEntitlementWithAddOnsSpecifier,
-                                        final DateTime entitlementRequestedDate,
-                                        final Map<UUID, Optional<EventsStream>> eventsStreamForBaseSubscriptionPerBundle,
-                                        final Map<String, Optional<UUID>> bundleKeyToIdMapping,
-                                        final Catalog catalog,
-                                        final TenantContext callContext,
-                                        final InternalCallContext contextWithValidAccountRecordId) throws EntitlementApiException {
+    private UUID populateCaches(final BaseEntitlementWithAddOnsSpecifier baseEntitlementWithAddOnsSpecifier,
+                                final Map<UUID, Optional<EventsStream>> eventsStreamForBaseSubscriptionPerBundle,
+                                final Map<String, Optional<UUID>> bundleKeyToIdMapping,
+                                final Catalog catalog,
+                                final TenantContext callContext,
+                                final InternalCallContext contextWithValidAccountRecordId) throws EntitlementApiException {
         // In the addEntitlement codepath, bundleId is always set. But, technically, an existing bundle could be specified by externalKey in
         // the createBaseEntitlementsWithAddOns codepath. In that case, we should also check if that bundle is blocked.
         UUID bundleId = baseEntitlementWithAddOnsSpecifier.getBundleId();
@@ -481,15 +485,12 @@ public class DefaultEntitlementApi extends DefaultEntitlementApiBase implements 
         }
 
         if (bundleId == null) {
-            return;
+            return null;
         }
 
         populateEventsStreamForBaseSubscriptionPerBundleCache(bundleId, eventsStreamForBaseSubscriptionPerBundle, callContext, contextWithValidAccountRecordId);
 
-        final Optional<EventsStream> eventsStreamForBaseSubscription = eventsStreamForBaseSubscriptionPerBundle.get(bundleId);
-        if (eventsStreamForBaseSubscription.isPresent()) {
-            preCheckAddEntitlement(bundleId, entitlementRequestedDate, baseEntitlementWithAddOnsSpecifier, eventsStreamForBaseSubscription.get());
-        }
+        return bundleId;
     }
 
     private void populateBundleKeyToIdMappingCache(final BaseEntitlementWithAddOnsSpecifier baseEntitlementWithAddOnsSpecifier, final Map<String, Optional<UUID>> bundleKeyToIdMapping, final Catalog catalog, final InternalCallContext contextWithValidAccountRecordId) throws EntitlementApiException {
