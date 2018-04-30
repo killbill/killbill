@@ -24,6 +24,7 @@ import org.killbill.billing.GuicyKillbillTestWithEmbeddedDBModule;
 import org.killbill.billing.account.glue.DefaultAccountModule;
 import org.killbill.billing.api.TestApiListener;
 import org.killbill.billing.beatrix.glue.BeatrixModule;
+import org.killbill.billing.beatrix.integration.db.TestDBRouterAPI;
 import org.killbill.billing.beatrix.integration.overdue.IntegrationTestOverdueModule;
 import org.killbill.billing.beatrix.util.AccountChecker;
 import org.killbill.billing.beatrix.util.AuditChecker;
@@ -57,6 +58,7 @@ import org.killbill.billing.util.glue.ExportModule;
 import org.killbill.billing.util.glue.GlobalLockerModule;
 import org.killbill.billing.util.glue.KillBillModule;
 import org.killbill.billing.util.glue.KillBillShiroModule;
+import org.killbill.billing.util.glue.KillbillApiAopModule;
 import org.killbill.billing.util.glue.NodesModule;
 import org.killbill.billing.util.glue.NonEntityDaoModule;
 import org.killbill.billing.util.glue.RecordIdModule;
@@ -111,6 +113,7 @@ public class BeatrixIntegrationModule extends KillBillModule {
         install(new BroadcastModule(configSource));
         install(new KillBillShiroModuleOnlyIniRealm(configSource));
         install(new BeatrixModule(configSource));
+        install(new KillbillApiAopModule());
 
         bind(AccountChecker.class).asEagerSingleton();
         bind(SubscriptionChecker.class).asEagerSingleton();
@@ -119,6 +122,7 @@ public class BeatrixIntegrationModule extends KillBillModule {
         bind(RefundChecker.class).asEagerSingleton();
         bind(AuditChecker.class).asEagerSingleton();
         bind(TestApiListener.class).asEagerSingleton();
+        bind(TestDBRouterAPI.class).asEagerSingleton();
     }
 
     private final class DefaultInvoiceModuleWithSwitchRepairLogic extends DefaultInvoiceModule {
