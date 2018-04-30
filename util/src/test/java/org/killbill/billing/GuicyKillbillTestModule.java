@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014-2016 Groupon, Inc
- * Copyright 2014-2016 The Billing Project, LLC
+ * Copyright 2014-2018 Groupon, Inc
+ * Copyright 2014-2018 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -22,6 +22,7 @@ import java.util.UUID;
 
 import org.joda.time.DateTimeZone;
 import org.killbill.billing.callcontext.InternalCallContext;
+import org.killbill.billing.callcontext.MutableCallContext;
 import org.killbill.billing.callcontext.MutableInternalCallContext;
 import org.killbill.billing.platform.api.KillbillConfigSource;
 import org.killbill.billing.util.callcontext.CallContext;
@@ -52,7 +53,7 @@ public class GuicyKillbillTestModule extends KillBillModule {
                                                                                                   GuicyKillbillTestSuite.getClock().getUTCNow(),
                                                                                                   GuicyKillbillTestSuite.getClock().getUTCNow());
 
-    private final CallContext callContext = internalCallContext.toCallContext(null,null);
+    private final MutableCallContext callContext = new MutableCallContext(internalCallContext);
 
     public GuicyKillbillTestModule(final KillbillConfigSource configSource) {
         super(configSource);
@@ -65,5 +66,6 @@ public class GuicyKillbillTestModule extends KillBillModule {
         bind(InternalCallContext.class).toInstance(internalCallContext);
         bind(MutableInternalCallContext.class).toInstance(internalCallContext);
         bind(CallContext.class).toInstance(callContext);
+        bind(MutableCallContext.class).toInstance(callContext);
     }
 }

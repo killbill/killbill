@@ -98,6 +98,10 @@ public abstract class UtilTestSuiteWithEmbeddedDB extends GuicyKillbillTestSuite
 
     @BeforeClass(groups = "slow")
     public void beforeClass() throws Exception {
+        if (hasFailed()) {
+            return;
+        }
+
         final Injector g = Guice.createInjector(Stage.PRODUCTION, new TestUtilModuleWithEmbeddedDB(configSource));
         g.injectMembers(this);
 
@@ -114,6 +118,10 @@ public abstract class UtilTestSuiteWithEmbeddedDB extends GuicyKillbillTestSuite
     @Override
     @BeforeMethod(groups = "slow")
     public void beforeMethod() throws Exception {
+        if (hasFailed()) {
+            return;
+        }
+
         super.beforeMethod();
 
         eventsListener.reset();
@@ -124,6 +132,10 @@ public abstract class UtilTestSuiteWithEmbeddedDB extends GuicyKillbillTestSuite
 
     @AfterMethod(groups = "slow")
     public void afterMethod() throws Exception {
+        if (hasFailed()) {
+            return;
+        }
+
         eventBus.unregister(eventsListener);
         eventBus.stop();
     }

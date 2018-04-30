@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014-2015 Groupon, Inc
- * Copyright 2014-2015 The Billing Project, LLC
+ * Copyright 2014-2018 Groupon, Inc
+ * Copyright 2014-2018 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -25,12 +25,13 @@ import java.util.UUID;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.entitlement.api.BlockingState;
+import org.killbill.billing.entitlement.api.BlockingStateType;
 import org.killbill.billing.util.audit.ChangeType;
 import org.killbill.billing.util.entity.dao.Audited;
 import org.killbill.billing.util.entity.dao.EntitySqlDao;
+import org.killbill.commons.jdbi.binder.SmartBindBean;
 import org.killbill.commons.jdbi.template.KillBillSqlDaoStringTemplate;
 import org.skife.jdbi.v2.sqlobject.Bind;
-import org.killbill.commons.jdbi.binder.SmartBindBean;
 import org.skife.jdbi.v2.sqlobject.SqlQuery;
 import org.skife.jdbi.v2.sqlobject.SqlUpdate;
 
@@ -45,8 +46,13 @@ public interface BlockingStateSqlDao extends EntitySqlDao<BlockingStateModelDao,
 
     @SqlQuery
     public abstract List<BlockingStateModelDao> getBlockingState(@Bind("blockableId") UUID blockableId,
+                                                                 @Bind("type") BlockingStateType blockingStateType,
                                                                  @Bind("effectiveDate") Date effectiveDate,
                                                                  @SmartBindBean final InternalTenantContext context);
+
+    @SqlQuery
+    public abstract List<BlockingStateModelDao> getBlockingAllUpToForAccount(@Bind("effectiveDate") Date effectiveDate,
+                                                                             @SmartBindBean final InternalTenantContext context);
 
     @SqlQuery
     public abstract List<BlockingStateModelDao> getBlockingHistoryForService(@Bind("blockableId") UUID blockableId,

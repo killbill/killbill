@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014-2015 Groupon, Inc
- * Copyright 2014-2015 The Billing Project, LLC
+ * Copyright 2014-2018 Groupon, Inc
+ * Copyright 2014-2018 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -35,6 +35,7 @@ import org.killbill.billing.catalog.api.ProductCategory;
 import org.killbill.billing.entitlement.api.Entitlement.EntitlementState;
 import org.killbill.billing.subscription.api.SubscriptionApiBase;
 import org.killbill.billing.subscription.api.SubscriptionBaseApiService;
+import org.killbill.billing.subscription.api.SubscriptionBaseInternalApi;
 import org.killbill.billing.subscription.api.svcs.DefaultSubscriptionInternalApi;
 import org.killbill.billing.subscription.api.timeline.BundleBaseTimeline;
 import org.killbill.billing.subscription.api.timeline.SubscriptionBaseRepairException;
@@ -66,14 +67,16 @@ public class DefaultSubscriptionBaseTransferApi extends SubscriptionApiBase impl
 
     private final CatalogInternalApi catalogInternalApi;
     private final SubscriptionBaseTimelineApi timelineApi;
+    private final SubscriptionBaseInternalApi subscriptionBaseInternalApi;
     private final InternalCallContextFactory internalCallContextFactory;
 
     @Inject
     public DefaultSubscriptionBaseTransferApi(final Clock clock, final SubscriptionDao dao, final SubscriptionBaseTimelineApi timelineApi, final CatalogInternalApi catalogInternalApi,
-                                              final SubscriptionBaseApiService apiService, final InternalCallContextFactory internalCallContextFactory) {
+                                              final SubscriptionBaseInternalApi subscriptionBaseInternalApi, final SubscriptionBaseApiService apiService, final InternalCallContextFactory internalCallContextFactory) {
         super(dao, apiService, clock);
         this.catalogInternalApi = catalogInternalApi;
         this.timelineApi = timelineApi;
+        this.subscriptionBaseInternalApi = subscriptionBaseInternalApi;
         this.internalCallContextFactory = internalCallContextFactory;
     }
 
@@ -181,30 +184,27 @@ public class DefaultSubscriptionBaseTransferApi extends SubscriptionApiBase impl
         final InternalCallContext fromInternalCallContext = internalCallContextFactory.createInternalCallContext(sourceAccountId, context);
         final InternalCallContext toInternalCallContext = internalCallContextFactory.createInternalCallContext(destAccountId, context);
 
-
         try {
             final Catalog catalog = catalogInternalApi.getFullCatalog(true, true, fromInternalCallContext);
 
 
-            final DateTime effectiveTransferDate = transferDate == null ? clock.getUTCNow() : transferDate;
-            if (effectiveTransferDate.isAfter(clock.getUTCNow())) {
+            final DateTime effectiveTransferDate = transferDate == null ? context.getCreatedDate() : transferDate;
+            if (effectiveTransferDate.isAfter(context.getCreatedDate())) {
                 // The transfer event for the migrated bundle will be the first one, which cannot be in the future
                 // (subscription always expects the first event to be in the past)
                 throw new SubscriptionBaseTransferApiException(ErrorCode.SUB_TRANSFER_INVALID_EFF_DATE, effectiveTransferDate);
             }
 
-            final SubscriptionBaseBundle bundleForAccountAndKey = dao.getSubscriptionBundlesForAccountAndKey(sourceAccountId, bundleKey, fromInternalCallContext);
-            final SubscriptionBaseBundle bundle = DefaultSubscriptionInternalApi.getActiveBundleForKeyNotException(ImmutableList.of(bundleForAccountAndKey), dao, clock, catalog, fromInternalCallContext);
+            final SubscriptionBaseBundle bundle = subscriptionBaseInternalApi.getActiveBundleForKey(bundleKey, catalog, fromInternalCallContext);
             if (bundle == null) {
                 throw new SubscriptionBaseTransferApiException(ErrorCode.SUB_CREATE_NO_BUNDLE, bundleKey);
             }
-
 
             // Get the bundle timeline for the old account
             final BundleBaseTimeline bundleBaseTimeline = timelineApi.getBundleTimeline(bundle, context);
 
             final DefaultSubscriptionBaseBundle subscriptionBundleData = new DefaultSubscriptionBaseBundle(bundleKey, destAccountId, effectiveTransferDate,
-                                                                                                           bundle.getOriginalCreatedDate(), clock.getUTCNow(), clock.getUTCNow());
+                                                                                                           bundle.getOriginalCreatedDate(), context.getCreatedDate(), context.getCreatedDate());
             final List<SubscriptionTransferData> subscriptionTransferDataList = new LinkedList<SubscriptionTransferData>();
 
             final List<TransferCancelData> transferCancelDataList = new LinkedList<TransferCancelData>();

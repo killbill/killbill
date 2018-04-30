@@ -312,12 +312,20 @@ public class TestWithFakeKPMPlugin extends TestIntegrationBase {
 
     @BeforeClass(groups = "slow")
     public void beforeClass() throws Exception {
+        if (hasFailed()) {
+            return;
+        }
+
         final Injector g = Guice.createInjector(Stage.PRODUCTION, Modules.override(new BeatrixIntegrationModule(configSource)).with(new OverrideModuleForOSGI()));
         g.injectMembers(this);
     }
 
     @BeforeMethod(groups = "slow")
     public void beforeMethod() throws Exception {
+        if (hasFailed()) {
+            return;
+        }
+
         log.debug("RESET TEST FRAMEWORK");
 
         cleanupAllTables();

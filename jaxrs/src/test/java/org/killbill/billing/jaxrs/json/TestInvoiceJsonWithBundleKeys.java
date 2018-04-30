@@ -84,8 +84,9 @@ public class TestInvoiceJsonWithBundleKeys extends JaxrsTestSuiteNoDB {
         Mockito.when(invoice.getCreditedAmount()).thenReturn(BigDecimal.ONE);
         Mockito.when(invoice.getRefundedAmount()).thenReturn(BigDecimal.ONE);
         Mockito.when(invoice.getId()).thenReturn(UUID.randomUUID());
-        Mockito.when(invoice.getInvoiceDate()).thenReturn(clock.getUTCToday());
-        Mockito.when(invoice.getTargetDate()).thenReturn(clock.getUTCToday());
+        final LocalDate utcToday = clock.getUTCToday();
+        Mockito.when(invoice.getInvoiceDate()).thenReturn(utcToday);
+        Mockito.when(invoice.getTargetDate()).thenReturn(utcToday);
         Mockito.when(invoice.getInvoiceNumber()).thenReturn(Integer.MAX_VALUE);
         Mockito.when(invoice.getBalance()).thenReturn(BigDecimal.ZERO);
         Mockito.when(invoice.getAccountId()).thenReturn(UUID.randomUUID());

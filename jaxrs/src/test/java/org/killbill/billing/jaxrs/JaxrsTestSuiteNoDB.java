@@ -34,6 +34,10 @@ public abstract class JaxrsTestSuiteNoDB extends GuicyKillbillTestSuiteNoDB {
 
     @BeforeClass(groups = "fast")
     protected void beforeClass() throws Exception {
+        if (hasFailed()) {
+            return;
+        }
+
         final Injector injector = Guice.createInjector(new TestJaxrsModuleNoDB(configSource));
         injector.injectMembers(this);
     }

@@ -59,9 +59,12 @@ import org.killbill.billing.util.callcontext.TenantContext;
 import org.killbill.clock.Clock;
 import org.killbill.commons.metrics.TimedResource;
 
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
+import com.google.common.collect.Ordering;
 import com.google.inject.Singleton;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -125,13 +128,38 @@ public class UsageResource extends JaxRsResourceBase {
         final CallContext callContext = context.createCallContextNoAccountId(createdBy, reason, comment, request);
         // Verify subscription exists..
         final Entitlement entitlement = entitlementApi.getEntitlementForId(json.getSubscriptionId(), callContext);
-        if (entitlement.getState() != EntitlementState.ACTIVE) {
-            return Response.status(Status.BAD_REQUEST).build();
+        if (entitlement.getEffectiveEndDate() != null) {
+            final LocalDate highestRecordDate = getHighestRecordDate(json.getUnitUsageRecords());
+            if (entitlement.getEffectiveEndDate().compareTo(highestRecordDate) < 0) {
+                return Response.status(Status.BAD_REQUEST).build();
+            }
         }
 
         final SubscriptionUsageRecord record = json.toSubscriptionUsageRecord();
         usageUserApi.recordRolledUpUsage(record, callContext);
         return Response.status(Status.CREATED).build();
+    }
+
+    @VisibleForTesting
+    LocalDate getHighestRecordDate(final List<UnitUsageRecordJson> records) {
+        final Iterable<Iterable<LocalDate>> recordedDates = Iterables.transform(records, new Function<UnitUsageRecordJson, Iterable<LocalDate>>() {
+
+            @Override
+            public Iterable<LocalDate> apply(final UnitUsageRecordJson input) {
+                final Iterable<LocalDate> result = Iterables.transform(input.getUsageRecords(), new Function<UsageRecordJson, LocalDate>() {
+                    @Override
+                    public LocalDate apply(final UsageRecordJson input) {
+                        return input.getRecordDate();
+                    }
+                });
+                return result;
+            }
+        });
+        final Iterable<LocalDate> sortedRecordedDates = Ordering.<LocalDate>natural()
+                .reverse()
+                .sortedCopy(Iterables.concat(recordedDates));
+
+        return Iterables.getFirst(sortedRecordedDates, null);
     }
 
     @TimedResource

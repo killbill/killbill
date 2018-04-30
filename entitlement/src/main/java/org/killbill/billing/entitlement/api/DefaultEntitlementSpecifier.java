@@ -42,4 +42,16 @@ public class DefaultEntitlementSpecifier implements EntitlementSpecifier {
         return overrides;
     }
 
+    @Override
+    public String toString() {
+        final StringBuilder sb = new StringBuilder("DefaultEntitlementSpecifier{");
+        sb.append("planName=").append(planPhaseSpecifier.getPlanName());
+        sb.append(", productName=").append(planPhaseSpecifier.getProductName());
+        sb.append(", billingPeriod=").append(planPhaseSpecifier.getBillingPeriod());
+        sb.append(", phaseType=").append(planPhaseSpecifier.getPhaseType());
+        sb.append(", priceListName=").append(planPhaseSpecifier.getPriceListName());
+        sb.append(", overrides=").append(overrides);
+        sb.append('}');
+        return sb.toString();
+    }
 }

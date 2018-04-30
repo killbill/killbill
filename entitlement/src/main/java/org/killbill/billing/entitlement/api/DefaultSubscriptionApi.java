@@ -287,7 +287,7 @@ public class DefaultSubscriptionApi implements SubscriptionApi {
         }
 
 
-        final LocalDate effectiveDate = internalCallContext.toLocalDate(clock.getUTCNow());
+        final LocalDate effectiveDate = internalCallContext.toLocalDate(callContext.getCreatedDate());
         final BaseEntitlementWithAddOnsSpecifier baseEntitlementWithAddOnsSpecifier = new DefaultBaseEntitlementWithAddOnsSpecifier(
                 bundleId,
                 newExternalKey,
@@ -375,7 +375,7 @@ public class DefaultSubscriptionApi implements SubscriptionApi {
             throw new EntitlementApiException(e);
         }
 
-        final DateTime effectiveDate = inputEffectiveDate == null ? clock.getUTCNow() : internalCallContextWithValidAccountId.toUTCDateTime(inputEffectiveDate);
+        final DateTime effectiveDate = inputEffectiveDate == null ? callContext.getCreatedDate() : internalCallContextWithValidAccountId.toUTCDateTime(inputEffectiveDate);
         final DefaultBlockingState blockingState = new DefaultBlockingState(inputBlockingState, effectiveDate);
 
         final BaseEntitlementWithAddOnsSpecifier baseEntitlementWithAddOnsSpecifier = new DefaultBaseEntitlementWithAddOnsSpecifier(

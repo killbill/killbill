@@ -74,8 +74,9 @@ public abstract class EntitlementLoggingHelper {
             final StringBuilder logLine = new StringBuilder("Create Entitlements with AddOns: ");
 
             if (baseEntitlementSpecifiersWithAddOns != null && baseEntitlementSpecifiersWithAddOns.iterator().hasNext()) {
-                for (BaseEntitlementWithAddOnsSpecifier cur : baseEntitlementSpecifiersWithAddOns) {
-                    logCreateEntitlementWithAOs(log, cur.getExternalKey(),
+                for (final BaseEntitlementWithAddOnsSpecifier cur : baseEntitlementSpecifiersWithAddOns) {
+                    logCreateEntitlementWithAOs(logLine,
+                                                cur.getExternalKey(),
                                                 cur.getEntitlementSpecifier(),
                                                 cur.getEntitlementEffectiveDate(),
                                                 cur.getBillingEffectiveDate());
@@ -85,33 +86,27 @@ public abstract class EntitlementLoggingHelper {
         }
     }
 
-    public static void logCreateEntitlementWithAOs(final Logger log,
-                                                   final String externalKey,
-                                                   final Iterable<EntitlementSpecifier> entitlementSpecifiers,
-                                                   final LocalDate entitlementDate,
-                                                   final LocalDate billingDate) {
-        if (log.isInfoEnabled()) {
-            final StringBuilder logLine = new StringBuilder("Create Entitlements: ");
-
-            if (externalKey != null) {
-                logLine.append("key='")
-                       .append(externalKey)
-                       .append("'");
-            }
-            if (entitlementDate != null) {
-                logLine.append(", entDate='")
-                       .append(entitlementDate)
-                       .append("'");
-            }
-            if (billingDate != null) {
-                logLine.append(", billDate='")
-                       .append(billingDate)
-                       .append("'");
-            }
-            logEntitlementSpecifier(logLine, entitlementSpecifiers);
-            log.info(logLine.toString());
+    private static void logCreateEntitlementWithAOs(final StringBuilder logLine,
+                                                    final String externalKey,
+                                                    final Iterable<EntitlementSpecifier> entitlementSpecifiers,
+                                                    final LocalDate entitlementDate,
+                                                    final LocalDate billingDate) {
+        if (externalKey != null) {
+            logLine.append("key='")
+                   .append(externalKey)
+                   .append("'");
         }
-
+        if (entitlementDate != null) {
+            logLine.append(", entDate='")
+                   .append(entitlementDate)
+                   .append("'");
+        }
+        if (billingDate != null) {
+            logLine.append(", billDate='")
+                   .append(billingDate)
+                   .append("'");
+        }
+        logEntitlementSpecifier(logLine, entitlementSpecifiers);
     }
 
     public static void logPauseResumeEntitlement(final Logger log,

@@ -73,7 +73,7 @@ public class TestEntitlement extends TestJaxrsBase {
         final BillingPeriod term = BillingPeriod.MONTHLY;
 
         final Subscription entitlementJson = createSubscription(accountJson.getAccountId(), "99999", productName,
-                                                               ProductCategory.BASE, term, true);
+                                                                ProductCategory.BASE, term, true);
 
         // Retrieves with GET
         Subscription objFromJson = subscriptionApi.getSubscription(entitlementJson.getSubscriptionId(), requestOptions);
@@ -127,7 +127,7 @@ public class TestEntitlement extends TestJaxrsBase {
         final BillingPeriod term = BillingPeriod.MONTHLY;
 
         final Subscription entitlementJson = createSubscription(accountJson.getAccountId(), "99999", productName,
-                                                               ProductCategory.BASE, term, true);
+                                                                ProductCategory.BASE, term, true);
 
         // Retrieves with GET
         Subscription objFromJson = subscriptionApi.getSubscription(entitlementJson.getSubscriptionId(), requestOptions);
@@ -153,7 +153,7 @@ public class TestEntitlement extends TestJaxrsBase {
 
         // Cancel EOT
         subscriptionApi.cancelSubscriptionPlan(entitlementJson.getSubscriptionId(), null, EntitlementActionPolicy.END_OF_TERM,
-                                              BillingActionPolicy.END_OF_TERM, NULL_PLUGIN_PROPERTIES, requestOptions);
+                                               BillingActionPolicy.END_OF_TERM, NULL_PLUGIN_PROPERTIES, requestOptions);
 
         // Retrieves to check EndDate
         objFromJson = subscriptionApi.getSubscription(entitlementJson.getSubscriptionId(), requestOptions);
@@ -209,7 +209,7 @@ public class TestEntitlement extends TestJaxrsBase {
         final BillingPeriod term = BillingPeriod.ANNUAL;
 
         final Subscription subscriptionJson = createSubscription(accountJson.getAccountId(), "99999", productName,
-                                                                ProductCategory.BASE, term, true);
+                                                                 ProductCategory.BASE, term, true);
 
         // Retrieves with GET
         Subscription objFromJson = subscriptionApi.getSubscription(subscriptionJson.getSubscriptionId(), requestOptions);
@@ -344,7 +344,6 @@ public class TestEntitlement extends TestJaxrsBase {
 
         final Subscription addOn1 = new Subscription();
         addOn1.setAccountId(accountJson.getAccountId());
-        addOn1.setExternalKey("");
         addOn1.setProductName("Telescopic-Scope");
         addOn1.setProductCategory(ProductCategory.ADD_ON);
         addOn1.setBillingPeriod(BillingPeriod.MONTHLY);
@@ -352,7 +351,6 @@ public class TestEntitlement extends TestJaxrsBase {
 
         final Subscription addOn2 = new Subscription();
         addOn2.setAccountId(accountJson.getAccountId());
-        addOn2.setExternalKey("");
         addOn2.setProductName("Laser-Scope");
         addOn2.setProductCategory(ProductCategory.ADD_ON);
         addOn2.setBillingPeriod(BillingPeriod.MONTHLY);
@@ -469,7 +467,7 @@ public class TestEntitlement extends TestJaxrsBase {
     }
 
     @Test(groups = "slow", description = "Create a bulk of base entitlements and addOns under the same transaction",
-            expectedExceptions = KillBillClientException.class, expectedExceptionsMessageRegExp = "Missing Base Subscription for bundle 12345")
+            expectedExceptions = KillBillClientException.class, expectedExceptionsMessageRegExp = "SubscriptionJson productName needs to be set when no planName is specified")
     public void testcreateSubscriptionsWithoutBase() throws Exception {
         final DateTime initialDate = new DateTime(2012, 4, 25, 0, 3, 42, 0);
         clock.setDeltaFromReality(initialDate.getMillis() - clock.getUTCNow().getMillis());
@@ -520,13 +518,9 @@ public class TestEntitlement extends TestJaxrsBase {
         input.setPriceList(PriceListSet.DEFAULT_PRICELIST_NAME);
         final Subscription subscription = subscriptionApi.createSubscription(input, null, null, null, null, null, true, DEFAULT_WAIT_COMPLETION_TIMEOUT_SEC, NULL_PLUGIN_PROPERTIES, requestOptions);
 
-        final Subscription base = new Subscription();
-        base.setAccountId(accountJson.getAccountId());
-        base.setProductCategory(ProductCategory.BASE);
-        base.setExternalKey("foobarxyz");
-
         final Subscription addOn1 = new Subscription();
         addOn1.setAccountId(accountJson.getAccountId());
+        addOn1.setBundleId(subscription.getBundleId());
         addOn1.setProductName("Telescopic-Scope");
         addOn1.setProductCategory(ProductCategory.ADD_ON);
         addOn1.setBillingPeriod(BillingPeriod.MONTHLY);
@@ -534,13 +528,13 @@ public class TestEntitlement extends TestJaxrsBase {
 
         final Subscription addOn2 = new Subscription();
         addOn2.setAccountId(accountJson.getAccountId());
+        addOn2.setBundleId(subscription.getBundleId());
         addOn2.setProductName("Laser-Scope");
         addOn2.setProductCategory(ProductCategory.ADD_ON);
         addOn2.setBillingPeriod(BillingPeriod.MONTHLY);
         addOn2.setPriceList(PriceListSet.DEFAULT_PRICELIST_NAME);
 
         final List<Subscription> subscriptions = new ArrayList<Subscription>();
-        subscriptions.add(base);
         subscriptions.add(addOn1);
         subscriptions.add(addOn2);
 
@@ -633,7 +627,7 @@ public class TestEntitlement extends TestJaxrsBase {
         final BillingPeriod term = BillingPeriod.MONTHLY;
 
         final Subscription entitlementJson = createSubscription(accountJson.getAccountId(), "99999", productName,
-                                                               ProductCategory.BASE, term, true);
+                                                                ProductCategory.BASE, term, true);
 
         Assert.assertEquals(entitlementJson.getBillCycleDayLocal(), new Integer(25));
 
@@ -696,7 +690,7 @@ public class TestEntitlement extends TestJaxrsBase {
         final BillingPeriod term = BillingPeriod.MONTHLY;
 
         final Subscription entitlementJson = createSubscription(accountJson.getAccountId(), "99999", productName,
-                                                               ProductCategory.BASE, term, true);
+                                                                ProductCategory.BASE, term, true);
 
         // Change plan in the future
         final String newProductName = "Assault-Rifle";

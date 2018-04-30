@@ -327,6 +327,7 @@ public class PluginControlPaymentProcessor extends ProcessorBase {
                                                                  callContext,
                                                                  internalCallContext);
 
+            log.debug("retryPaymentTransaction result: payment='{}'", payment);
             paymentTransaction = Iterables.<PaymentTransaction>find(Lists.<PaymentTransaction>reverse(payment.getTransactions()),
                                                                     new Predicate<PaymentTransaction>() {
                                                                         @Override

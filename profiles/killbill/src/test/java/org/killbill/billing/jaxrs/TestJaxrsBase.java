@@ -30,7 +30,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-import javax.annotation.Nullable;
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.servlet.Servlet;
@@ -42,6 +41,7 @@ import org.eclipse.jetty.servlet.FilterHolder;
 import org.joda.time.LocalDate;
 import org.killbill.billing.GuicyKillbillTestWithEmbeddedDBModule;
 import org.killbill.billing.api.TestApiListener;
+import org.killbill.billing.beatrix.integration.db.TestDBRouterAPI;
 import org.killbill.billing.client.KillBillClientException;
 import org.killbill.billing.client.KillBillHttpClient;
 import org.killbill.billing.client.api.gen.AccountApi;
@@ -72,6 +72,7 @@ import org.killbill.billing.client.model.gen.Payment;
 import org.killbill.billing.client.model.gen.PaymentTransaction;
 import org.killbill.billing.client.model.gen.Tenant;
 import org.killbill.billing.invoice.glue.DefaultInvoiceModule;
+import org.killbill.billing.jaxrs.resources.TestDBRouterResource;
 import org.killbill.billing.jetty.HttpServer;
 import org.killbill.billing.jetty.HttpServerConfig;
 import org.killbill.billing.lifecycle.glue.BusModule;
@@ -106,6 +107,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 import com.google.common.io.Files;
 import com.google.common.io.Resources;
+import com.google.inject.Binder;
 import com.google.inject.Module;
 import com.google.inject.util.Modules;
 
@@ -177,7 +179,14 @@ public class TestJaxrsBase extends KillbillClient {
         protected Module getModule(final ServletContext servletContext) {
             return Modules.override(new KillbillServerModule(servletContext, serverConfig, configSource)).with(new GuicyKillbillTestWithEmbeddedDBModule(configSource),
                                                                                                                new InvoiceModuleWithMockSender(configSource),
-                                                                                                               new PaymentMockModule(configSource));
+                                                                                                               new PaymentMockModule(configSource),
+                                                                                                               new Module() {
+                                                                                                                   @Override
+                                                                                                                   public void configure(final Binder binder) {
+                                                                                                                       binder.bind(TestDBRouterAPI.class).asEagerSingleton();
+                                                                                                                       binder.bind(TestDBRouterResource.class).asEagerSingleton();
+                                                                                                                   }
+                                                                                                               });
         }
 
     }
@@ -294,6 +303,10 @@ public class TestJaxrsBase extends KillbillClient {
 
     @BeforeClass(groups = "slow")
     public void beforeClass() throws Exception {
+        if (hasFailed()) {
+            return;
+        }
+
         // TODO PIERRE Unclear why both are needed in beforeClass and beforeSuite
         if (config == null) {
             config = new ConfigurationObjectFactory(System.getProperties()).build(HttpServerConfig.class);
@@ -306,6 +319,10 @@ public class TestJaxrsBase extends KillbillClient {
 
     @BeforeSuite(groups = "slow")
     public void beforeSuite() throws Exception {
+        if (hasFailed()) {
+            return;
+        }
+
         super.beforeSuite();
 
         if (config == null) {
@@ -322,7 +339,6 @@ public class TestJaxrsBase extends KillbillClient {
         server.configure(config, getListeners(), getFilters());
         server.start();
     }
-
 
     protected Iterable<EventListener> getListeners() {
         return new Iterable<EventListener>() {
@@ -357,7 +373,6 @@ public class TestJaxrsBase extends KillbillClient {
         return filterTransactions(transform, transactionType);
     }
 
-
     protected static List<PaymentTransaction> getPaymentTransactions(final List<Payment> payments, final TransactionType transactionType) {
         final Iterable<PaymentTransaction> transform = Iterables.concat(Iterables.transform(payments, new Function<Payment, Iterable<PaymentTransaction>>() {
             @Override
@@ -367,7 +382,6 @@ public class TestJaxrsBase extends KillbillClient {
         }));
         return filterTransactions(transform, transactionType);
     }
-
 
     protected static List<PaymentTransaction> filterTransactions(final Iterable<PaymentTransaction> paymentTransaction, final TransactionType transactionType) {
         return ImmutableList.copyOf(Iterables.filter(paymentTransaction, new Predicate<PaymentTransaction>() {
@@ -383,7 +397,6 @@ public class TestJaxrsBase extends KillbillClient {
         catalogApi.uploadCatalogXml(body, requestOptions);
         return fetch ? catalogApi.getCatalogXml(null, requestOptions) : null;
     }
-
 
     protected void uploadTenantOverdueConfig(final String overdue) throws IOException, KillBillClientException {
         final String body = getResourceBodyString(overdue);

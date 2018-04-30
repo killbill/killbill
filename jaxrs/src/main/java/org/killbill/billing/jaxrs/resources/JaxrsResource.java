@@ -293,5 +293,5 @@ public interface JaxrsResource {
 
     String QUERY_INCLUDED_DELETED = "includedDeleted";
     String AUDIT_LOG = "auditLogs";
-
+    String AUDIT_LOG_WITH_HISTORY = "auditLogsWithHistory";
 }

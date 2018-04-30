@@ -18,17 +18,11 @@
 
 package org.killbill.billing.account;
 
-import org.killbill.billing.account.api.ImmutableAccountInternalApi;
-import org.testng.annotations.AfterMethod;
-import org.testng.annotations.BeforeClass;
-import org.testng.annotations.BeforeMethod;
-
 import org.killbill.billing.GuicyKillbillTestSuiteNoDB;
 import org.killbill.billing.account.api.AccountUserApi;
+import org.killbill.billing.account.api.ImmutableAccountInternalApi;
 import org.killbill.billing.account.dao.AccountDao;
 import org.killbill.billing.account.glue.TestAccountModuleNoDB;
-import org.killbill.bus.api.PersistentBus;
-import org.killbill.clock.Clock;
 import org.killbill.billing.util.audit.dao.AuditDao;
 import org.killbill.billing.util.cache.CacheControllerDispatcher;
 import org.killbill.billing.util.customfield.dao.CustomFieldDao;
@@ -36,6 +30,11 @@ import org.killbill.billing.util.dao.NonEntityDao;
 import org.killbill.billing.util.tag.api.user.TagEventBuilder;
 import org.killbill.billing.util.tag.dao.TagDao;
 import org.killbill.billing.util.tag.dao.TagDefinitionDao;
+import org.killbill.bus.api.PersistentBus;
+import org.killbill.clock.Clock;
+import org.testng.annotations.AfterMethod;
+import org.testng.annotations.BeforeClass;
+import org.testng.annotations.BeforeMethod;
 
 import com.google.inject.Guice;
 import com.google.inject.Inject;
@@ -70,12 +69,20 @@ public abstract class AccountTestSuiteNoDB extends GuicyKillbillTestSuiteNoDB {
 
     @BeforeClass(groups = "fast")
     protected void beforeClass() throws Exception {
+        if (hasFailed()) {
+            return;
+        }
+
         final Injector injector = Guice.createInjector(new TestAccountModuleNoDB(configSource));
         injector.injectMembers(this);
     }
 
     @BeforeMethod(groups = "fast")
     public void beforeMethod() throws Exception {
+        if (hasFailed()) {
+            return;
+        }
+
         bus.start();
     }
 

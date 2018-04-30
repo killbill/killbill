@@ -34,12 +34,16 @@ import org.killbill.billing.payment.dao.PaymentTransactionModelDao;
 import org.killbill.billing.payment.dao.PluginPropertySerializer;
 import org.killbill.billing.payment.dao.PluginPropertySerializer.PluginPropertySerializerException;
 import org.killbill.billing.payment.retry.BaseRetryService.RetryServiceScheduler;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 
 public class DefaultControlCompleted implements EnteringStateCallback {
+
+    private static final Logger logger = LoggerFactory.getLogger(DefaultControlCompleted.class);
 
     private final PaymentStateControlContext paymentStateContext;
     private final RetryServiceScheduler retryServiceScheduler;
@@ -61,6 +65,7 @@ public class DefaultControlCompleted implements EnteringStateCallback {
                                    paymentStateContext.getCurrentTransaction().getId() :
                                    null;
 
+        logger.debug("enteringState attemptId='{}', transactionId='{}', state='{}'", attempt.getId(), transactionId, state.getName());
         // At this stage we can update the paymentAttempt state AND serialize the plugin properties. Control plugins will have had the opportunity to erase sensitive data if required.
         retryablePaymentAutomatonRunner.getPaymentDao().updatePaymentAttemptWithProperties(attempt.getId(),
                                                                                            paymentStateContext.getPaymentMethodId(),
