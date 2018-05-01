@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014 Groupon, Inc
- * Copyright 2014 The Billing Project, LLC
+ * Copyright 2014-2018 Groupon, Inc
+ * Copyright 2014-2018 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -62,6 +62,7 @@ import org.killbill.billing.client.model.gen.PaymentMethod;
 import org.killbill.billing.client.model.gen.PaymentMethodPluginDetail;
 import org.killbill.billing.client.model.gen.PluginProperty;
 import org.killbill.billing.client.model.gen.Subscription;
+import org.killbill.billing.notification.plugin.api.ExtBusEventType;
 import org.killbill.billing.payment.provider.ExternalPaymentProviderPlugin;
 import org.killbill.billing.util.UUIDs;
 import org.killbill.billing.util.tag.ControlTagType;
@@ -85,6 +86,9 @@ public abstract class KillbillClient extends GuicyKillbillTestSuiteWithEmbeddedD
     protected static final String PLUGIN_NAME = "noop";
 
     protected static final Currency DEFAULT_CURRENCY = Currency.USD;
+
+    // static to be shared across test class instances (initialized once in @BeforeSuite)
+    protected static CallbackServlet callbackServlet;
 
     // Multi-Tenancy information, if enabled
     protected String DEFAULT_API_KEY = UUID.randomUUID().toString();
@@ -166,10 +170,12 @@ public abstract class KillbillClient extends GuicyKillbillTestSuiteWithEmbeddedD
     protected Account createAccountWithDefaultPaymentMethod(final String externalkey, @Nullable final List<PluginProperty> pmProperties) throws Exception {
         final Account input = createAccount();
 
+        callbackServlet.pushExpectedEvent(ExtBusEventType.ACCOUNT_CHANGE);
         final PaymentMethodPluginDetail info = new PaymentMethodPluginDetail();
         info.setProperties(pmProperties);
         final PaymentMethod paymentMethodJson = new PaymentMethod(null, externalkey, input.getAccountId(), true, PLUGIN_NAME, info, EMPTY_AUDIT_LOGS);
         accountApi.createPaymentMethod(input.getAccountId(), paymentMethodJson, true, false, NULL_PLUGIN_NAMES, NULL_PLUGIN_PROPERTIES, requestOptions);
+        callbackServlet.assertListenerStatus();
         return accountApi.getAccount(input.getAccountId(), requestOptions);
     }
 
@@ -180,9 +186,14 @@ public abstract class KillbillClient extends GuicyKillbillTestSuiteWithEmbeddedD
     }
 
     protected PaymentMethod createPaymentMethod(final Account input, final boolean isDefault) throws KillBillClientException {
+        if (isDefault) {
+            callbackServlet.pushExpectedEvent(ExtBusEventType.ACCOUNT_CHANGE);
+        }
         final PaymentMethodPluginDetail info = new PaymentMethodPluginDetail();
         final PaymentMethod paymentMethodJson = new PaymentMethod(null, UUIDs.randomUUID().toString(), input.getAccountId(),
                                                                   isDefault, ExternalPaymentProviderPlugin.PLUGIN_NAME, info, EMPTY_AUDIT_LOGS);
+        callbackServlet.assertListenerStatus();
+
         return accountApi.createPaymentMethod(input.getAccountId(), paymentMethodJson, NULL_PLUGIN_NAMES, NULL_PLUGIN_PROPERTIES, requestOptions);
     }
 
@@ -191,12 +202,17 @@ public abstract class KillbillClient extends GuicyKillbillTestSuiteWithEmbeddedD
     }
 
     protected Account createAccount(final UUID parentAccountId) throws Exception {
+        callbackServlet.pushExpectedEvent(ExtBusEventType.ACCOUNT_CREATION);
         final Account input = getAccount(parentAccountId);
-        return accountApi.createAccount(input, requestOptions);
+        final Account account = accountApi.createAccount(input, requestOptions);
+        callbackServlet.assertListenerStatus();
+        return account;
     }
 
     protected Subscription createSubscription(final UUID accountId, final String bundleExternalKey, final String productName,
                                              final ProductCategory productCategory, final BillingPeriod billingPeriod, final boolean waitCompletion) throws Exception {
+        callbackServlet.pushExpectedEvents(ExtBusEventType.ACCOUNT_CHANGE, ExtBusEventType.ENTITLEMENT_CREATION, ExtBusEventType.SUBSCRIPTION_CREATION, ExtBusEventType.SUBSCRIPTION_CREATION, ExtBusEventType.INVOICE_CREATION);
+
         final Subscription input = new Subscription();
         input.setAccountId(accountId);
         input.setExternalKey(bundleExternalKey);
@@ -204,19 +220,37 @@ public abstract class KillbillClient extends GuicyKillbillTestSuiteWithEmbeddedD
         input.setProductCategory(productCategory);
         input.setBillingPeriod(billingPeriod);
         input.setPriceList(PriceListSet.DEFAULT_PRICELIST_NAME);
-        return subscriptionApi.createSubscription(input, null, null, true, false, null, waitCompletion, waitCompletion ? DEFAULT_WAIT_COMPLETION_TIMEOUT_SEC : -1L, NULL_PLUGIN_PROPERTIES, requestOptions);
+        final Subscription subscription = subscriptionApi.createSubscription(input, null, null, true, false, null, waitCompletion, waitCompletion ? DEFAULT_WAIT_COMPLETION_TIMEOUT_SEC : -1L, NULL_PLUGIN_PROPERTIES, requestOptions);
+        callbackServlet.assertListenerStatus();
+
+        return subscription;
     }
 
     protected Account createAccountWithPMBundleAndSubscriptionAndWaitForFirstInvoice() throws Exception {
+        return createAccountWithPMBundleAndSubscriptionAndWaitForFirstInvoice(true);
+    }
+
+    protected Account createAccountWithPMBundleAndSubscriptionAndWaitForFirstInvoice(final boolean paymentSuccess) throws Exception {
+        return createAccountWithPMBundleAndSubscriptionAndWaitForFirstInvoice("Shotgun", paymentSuccess);
+    }
+
+    protected Account createAccountWithPMBundleAndSubscriptionAndWaitForFirstInvoice(final String productName, final boolean paymentSuccess) throws Exception {
         final Account accountJson = createAccountWithDefaultPaymentMethod();
         assertNotNull(accountJson);
 
         // Add a bundle, subscription and move the clock to get the first invoice
-        final Subscription subscriptionJson = createSubscription(accountJson.getAccountId(), UUID.randomUUID().toString(), "Shotgun",
-                                                                ProductCategory.BASE, BillingPeriod.MONTHLY, true);
+        final Subscription subscriptionJson = createSubscription(accountJson.getAccountId(), UUID.randomUUID().toString(), productName,
+                                                                 ProductCategory.BASE, BillingPeriod.MONTHLY, true);
         assertNotNull(subscriptionJson);
+
+        callbackServlet.pushExpectedEvents(ExtBusEventType.SUBSCRIPTION_PHASE, ExtBusEventType.INVOICE_CREATION);
+        if (paymentSuccess) {
+            callbackServlet.pushExpectedEvents(ExtBusEventType.INVOICE_PAYMENT_SUCCESS, ExtBusEventType.PAYMENT_SUCCESS);
+        } else {
+            callbackServlet.pushExpectedEvents(ExtBusEventType.INVOICE_PAYMENT_FAILED, ExtBusEventType.PAYMENT_FAILED);
+        }
         clock.addDays(32);
-        crappyWaitForLackOfProperSynchonization();
+        callbackServlet.assertListenerStatus();
 
         return accountJson;
     }
@@ -225,7 +259,9 @@ public abstract class KillbillClient extends GuicyKillbillTestSuiteWithEmbeddedD
         final Account accountJson = createAccountWithExternalPaymentMethod();
         assertNotNull(accountJson);
 
+        callbackServlet.pushExpectedEvent(ExtBusEventType.TAG_CREATION);
         final Tags accountTag = accountApi.createAccountTags(accountJson.getAccountId(), ImmutableList.<UUID>of(ControlTagType.MANUAL_PAY.getId()), requestOptions);
+        callbackServlet.assertListenerStatus();
         assertNotNull(accountTag);
         assertEquals(accountTag.get(0).getTagDefinitionId(), ControlTagType.MANUAL_PAY.getId());
 
@@ -233,8 +269,10 @@ public abstract class KillbillClient extends GuicyKillbillTestSuiteWithEmbeddedD
         final Subscription subscriptionJson = createSubscription(accountJson.getAccountId(), UUID.randomUUID().toString(), "Shotgun",
                                                                 ProductCategory.BASE, BillingPeriod.MONTHLY, true);
         assertNotNull(subscriptionJson);
+
+        callbackServlet.pushExpectedEvents(ExtBusEventType.SUBSCRIPTION_PHASE, ExtBusEventType.INVOICE_CREATION);
         clock.addDays(32);
-        crappyWaitForLackOfProperSynchonization();
+        callbackServlet.assertListenerStatus();
 
         return accountJson;
     }
@@ -261,10 +299,11 @@ public abstract class KillbillClient extends GuicyKillbillTestSuiteWithEmbeddedD
         final Subscription subscriptionJson = createSubscription(accountJson.getAccountId(), UUID.randomUUID().toString(), "Shotgun",
                                                                 ProductCategory.BASE, BillingPeriod.MONTHLY, true);
         assertNotNull(subscriptionJson);
-        clock.addMonths(1);
-        crappyWaitForLackOfProperSynchonization();
 
         // No payment will be triggered as the account doesn't have a payment method
+        callbackServlet.pushExpectedEvent(ExtBusEventType.INVOICE_CREATION);
+        clock.addMonths(1);
+        callbackServlet.assertListenerStatus();
 
         return accountJson;
     }

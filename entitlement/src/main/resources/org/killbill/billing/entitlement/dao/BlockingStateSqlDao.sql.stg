@@ -78,6 +78,7 @@ join (
 on t.record_id = tmp.record_id
 where t.type = :type
 and <accountRecordIdField("t.")> = :accountRecordId
+<AND_CHECK_TENANT("t.")>
 <defaultOrderBy("t.")>
 ;
  >>
@@ -99,6 +100,7 @@ join (
 ) tmp
 on t.record_id = tmp.record_id
 where <accountRecordIdField("t.")> = :accountRecordId
+<AND_CHECK_TENANT("t.")>
 <defaultOrderBy("t.")>
 ;
  >>

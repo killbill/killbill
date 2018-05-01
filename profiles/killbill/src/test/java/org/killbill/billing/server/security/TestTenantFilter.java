@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014 Groupon, Inc
- * Copyright 2014 The Billing Project, LLC
+ * Copyright 2014-2018 Groupon, Inc
+ * Copyright 2014-2018 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -32,6 +32,10 @@ public class TestTenantFilter extends TestJaxrsBase {
 
     @AfterMethod(groups = "slow")
     public void tearDown() throws Exception {
+        if (hasFailed()) {
+            return;
+        }
+
         // Default credentials
         loginTenant(DEFAULT_API_KEY, DEFAULT_API_SECRET);
     }
@@ -46,15 +50,10 @@ public class TestTenantFilter extends TestJaxrsBase {
         } catch (final KillBillClientException e) {
             Assert.assertEquals(e.getResponse().getStatusCode(), Status.UNAUTHORIZED.getStatusCode());
         }
+        callbackServlet.assertListenerStatus();
 
         // Create the tenant
-        final String apiKeyTenant1 = "pierre";
-        final String apiSecretTenant1 = "pierreIsFr3nch";
-        loginTenant(apiKeyTenant1, apiSecretTenant1);
-        final Tenant tenant1 = new Tenant();
-        tenant1.setApiKey(apiKeyTenant1);
-        tenant1.setApiSecret(apiSecretTenant1);
-        tenantApi.createTenant(tenant1, requestOptions);
+        final Tenant tenant1 = createTenant("pierre", "pierreIsFr3nch", true);
 
         final Account account1 = createAccount();
         Assert.assertEquals(accountApi.getAccountByKey(account1.getExternalKey(), requestOptions), account1);
@@ -62,13 +61,7 @@ public class TestTenantFilter extends TestJaxrsBase {
         logoutTenant();
 
         // Create another tenant
-        final String apiKeyTenant2 = "stephane";
-        final String apiSecretTenant2 = "stephane1sAlsoFr3nch";
-        loginTenant(apiKeyTenant2, apiSecretTenant2);
-        final Tenant tenant2 = new Tenant();
-        tenant2.setApiKey(apiKeyTenant2);
-        tenant2.setApiSecret(apiSecretTenant2);
-        tenantApi.createTenant(tenant2, requestOptions);
+        createTenant("stephane", "stephane1sAlsoFr3nch", true);
 
         final Account account2 = createAccount();
         Assert.assertEquals(accountApi.getAccountByKey(account2.getExternalKey(), requestOptions), account2);
@@ -77,7 +70,7 @@ public class TestTenantFilter extends TestJaxrsBase {
         Assert.assertNull(accountApi.getAccountByKey(account1.getExternalKey(), requestOptions));
 
         // Same for tenant1 and account2
-        loginTenant(apiKeyTenant1, apiSecretTenant1);
+        loginTenant(tenant1.getApiKey(), tenant1.getApiSecret());
         Assert.assertNull(accountApi.getAccountByKey(account2.getExternalKey(), requestOptions));
     }
 }
