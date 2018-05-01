@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014-2016 Groupon, Inc
- * Copyright 2014-2016 The Billing Project, LLC
+ * Copyright 2014-2018 Groupon, Inc
+ * Copyright 2014-2018 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -20,6 +20,7 @@ package org.killbill.billing;
 
 import java.lang.reflect.Method;
 
+import org.killbill.billing.api.AbortAfterFirstFailureListener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.ITestResult;
@@ -35,6 +36,10 @@ public class KillbillTestSuite {
 
     @BeforeMethod(alwaysRun = true)
     public void startTestSuite(final Method method) throws Exception {
+        if (hasFailed()) {
+            return;
+        }
+
         log.info("***************************************************************************************************");
         log.info("*** Starting test {}:{}", method.getDeclaringClass().getName(), method.getName());
         log.info("***************************************************************************************************");
@@ -42,6 +47,10 @@ public class KillbillTestSuite {
 
     @AfterMethod(alwaysRun = true)
     public void endTestSuite(final Method method, final ITestResult result) throws Exception {
+        if (hasFailed()) {
+            return;
+        }
+
         log.info("***************************************************************************************************");
         log.info("***   Ending test {}:{} {} ({} s.)", new Object[]{method.getDeclaringClass().getName(), method.getName(),
                                                                     result.isSuccess() ? "SUCCESS" : "!!! FAILURE !!!",
@@ -53,6 +62,6 @@ public class KillbillTestSuite {
     }
 
     public boolean hasFailed() {
-        return hasFailed;
+        return hasFailed || AbortAfterFirstFailureListener.hasFailures();
     }
 }

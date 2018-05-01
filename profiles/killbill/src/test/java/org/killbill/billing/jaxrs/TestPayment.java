@@ -79,6 +79,10 @@ public class TestPayment extends TestJaxrsBase {
 
     @BeforeMethod(groups = "slow")
     public void beforeMethod() throws Exception {
+        if (hasFailed()) {
+            return;
+        }
+
         super.beforeMethod();
         mockPaymentProviderPlugin = (MockPaymentProviderPlugin) registry.getServiceForName(PLUGIN_NAME);
 
@@ -103,6 +107,10 @@ public class TestPayment extends TestJaxrsBase {
 
     @AfterMethod(groups = "slow")
     public void tearDown() throws Exception {
+        if (hasFailed()) {
+            return;
+        }
+
         mockPaymentProviderPlugin.clear();
     }
 

@@ -1,7 +1,9 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
+ * Copyright 2014-2018 Groupon, Inc
+ * Copyright 2014-2018 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -77,5 +79,53 @@ public class NotificationJson {
 
     public String getMetaData() {
         return metaData;
+    }
+
+    @Override
+    public String toString() {
+        final StringBuilder sb = new StringBuilder("NotificationJson{");
+        sb.append("eventType='").append(eventType).append('\'');
+        sb.append(", accountId=").append(accountId);
+        sb.append(", objectType='").append(objectType).append('\'');
+        sb.append(", objectId=").append(objectId);
+        sb.append(", metaData='").append(metaData).append('\'');
+        sb.append('}');
+        return sb.toString();
+    }
+
+    @Override
+    public boolean equals(final Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+
+        final NotificationJson that = (NotificationJson) o;
+
+        if (eventType != null ? !eventType.equals(that.eventType) : that.eventType != null) {
+            return false;
+        }
+        if (accountId != null ? !accountId.equals(that.accountId) : that.accountId != null) {
+            return false;
+        }
+        if (objectType != null ? !objectType.equals(that.objectType) : that.objectType != null) {
+            return false;
+        }
+        if (objectId != null ? !objectId.equals(that.objectId) : that.objectId != null) {
+            return false;
+        }
+        return metaData != null ? metaData.equals(that.metaData) : that.metaData == null;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = eventType != null ? eventType.hashCode() : 0;
+        result = 31 * result + (accountId != null ? accountId.hashCode() : 0);
+        result = 31 * result + (objectType != null ? objectType.hashCode() : 0);
+        result = 31 * result + (objectId != null ? objectId.hashCode() : 0);
+        result = 31 * result + (metaData != null ? metaData.hashCode() : 0);
+        return result;
     }
 }

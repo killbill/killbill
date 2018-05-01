@@ -32,9 +32,6 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.awaitility.Awaitility;
-import org.eclipse.jetty.server.Server;
-import org.eclipse.jetty.servlet.ServletContextHandler;
-import org.eclipse.jetty.servlet.ServletHolder;
 import org.joda.time.DateTime;
 import org.killbill.CreatorName;
 import org.killbill.billing.api.FlakyRetryAnalyzer;
@@ -68,9 +65,6 @@ public class TestPushNotification extends TestJaxrsBase {
 
     private CallbackServer callbackServer;
 
-    private static final int SERVER_PORT = 8087;
-    private static final String CALLBACK_ENDPOINT = "/callmeback";
-
     private volatile boolean callbackCompleted;
     private volatile boolean callbackCompletedWithError;
     private volatile int expectedNbCalls = 1;
@@ -80,8 +74,12 @@ public class TestPushNotification extends TestJaxrsBase {
     @Override
     @BeforeMethod(groups = "slow")
     public void beforeMethod() throws Exception {
+        if (hasFailed()) {
+            return;
+        }
+
         super.beforeMethod();
-        callbackServer = new CallbackServer(this, SERVER_PORT, CALLBACK_ENDPOINT);
+        callbackServer = new CallbackServer(new CallmebackServlet(this));
         resetCallbackStatusProperties();
         callbackServer.startServer();
         this.expectedNbCalls = 1;
@@ -89,6 +87,10 @@ public class TestPushNotification extends TestJaxrsBase {
 
     @AfterMethod(groups = "slow")
     public void afterMethod() throws Exception {
+        if (hasFailed()) {
+            return;
+        }
+
         callbackServer.stopServer();
     }
 
@@ -220,8 +222,9 @@ public class TestPushNotification extends TestJaxrsBase {
         Assert.assertEquals(result2.getValues().size(), 0);
     }
 
-    private String registerTenantForCallback() throws KillBillClientException, InterruptedException {// Register tenant for callback
-        final String callback = "http://127.0.0.1:" + SERVER_PORT + CALLBACK_ENDPOINT;
+    // Register tenant for callback
+    private String registerTenantForCallback() throws KillBillClientException, InterruptedException {
+        final String callback = callbackServer.getServletEndpoint();
         final TenantKey result0 = killBillClient.registerCallbackNotificationForTenant(callback, requestOptions);
 
         Assert.assertTrue(waitForCallbacksToComplete());
@@ -364,31 +367,6 @@ public class TestPushNotification extends TestJaxrsBase {
     public void setCompleted(final boolean withError) {
         callbackCompleted = true;
         callbackCompletedWithError = withError;
-    }
-
-    public static class CallbackServer {
-
-        private final Server server;
-        private final String callbackEndpoint;
-        private final TestPushNotification test;
-
-        public CallbackServer(final TestPushNotification test, final int port, final String callbackEndpoint) {
-            this.callbackEndpoint = callbackEndpoint;
-            this.test = test;
-            this.server = new Server(port);
-        }
-
-        public void startServer() throws Exception {
-            final ServletContextHandler context = new ServletContextHandler();
-            context.setContextPath("/");
-            server.setHandler(context);
-            context.addServlet(new ServletHolder(new CallmebackServlet(test)), callbackEndpoint);
-            server.start();
-        }
-
-        public void stopServer() throws Exception {
-            server.stop();
-        }
     }
 
     public static class CallmebackServlet extends HttpServlet {

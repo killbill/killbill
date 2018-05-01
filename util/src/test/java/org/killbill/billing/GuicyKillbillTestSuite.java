@@ -42,7 +42,6 @@ import org.mockito.stubbing.Answer;
 import org.skife.config.ConfigSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.testng.Assert;
 import org.testng.IHookCallBack;
 import org.testng.IHookable;
 import org.testng.ITestResult;
@@ -149,7 +148,7 @@ public class GuicyKillbillTestSuite implements IHookable {
 
     @BeforeMethod(alwaysRun = true)
     public void beforeMethodAlwaysRun(final Method method) throws Exception {
-        if (AbortAfterFirstFailureListener.hasFailures()) {
+        if (hasFailed()) {
             return;
         }
 
@@ -198,7 +197,7 @@ public class GuicyKillbillTestSuite implements IHookable {
 
     @AfterMethod(alwaysRun = true)
     public void afterMethodAlwaysRun(final Method method, final ITestResult result) throws Exception {
-        if (AbortAfterFirstFailureListener.hasFailures()) {
+        if (hasFailed()) {
             return;
         }
 
