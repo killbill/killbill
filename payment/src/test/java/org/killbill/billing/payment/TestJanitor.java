@@ -133,6 +133,10 @@ public class TestJanitor extends PaymentTestSuiteWithEmbeddedDB {
 
     @BeforeMethod(groups = "slow")
     public void beforeMethod() throws Exception {
+        if (hasFailed()) {
+            return;
+        }
+
         super.beforeMethod();
 
         retryService.initialize();

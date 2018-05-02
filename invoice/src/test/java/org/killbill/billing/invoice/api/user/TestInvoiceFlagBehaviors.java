@@ -44,6 +44,10 @@ public class TestInvoiceFlagBehaviors extends InvoiceTestSuiteWithEmbeddedDB {
     @Override
     @BeforeMethod(groups = "slow")
     public void beforeMethod() throws Exception {
+        if (hasFailed()) {
+            return;
+        }
+
         super.beforeMethod();
         final Account account = invoiceUtil.createAccount(callContext);
         accountId = account.getId();

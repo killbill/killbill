@@ -75,6 +75,10 @@ public class TestPaymentRefund extends TestIntegrationBase {
     @Override
     @BeforeMethod(groups = "slow")
     public void beforeMethod() throws Exception {
+        if (hasFailed()) {
+            return;
+        }
+
         super.beforeMethod();
         invoiceItemCount = 1;
         setupRefundTest();

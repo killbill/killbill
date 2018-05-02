@@ -41,6 +41,10 @@ public class TestPaymentMethodProcessorRefreshWithDB extends PaymentTestSuiteWit
 
     @BeforeMethod(groups = "slow")
     public void beforeMethod() throws Exception {
+        if (hasFailed()) {
+            return;
+        }
+
         super.beforeMethod();
         getPluginApi().resetPaymentMethods(null, null, PLUGIN_PROPERTIES, callContext);
     }

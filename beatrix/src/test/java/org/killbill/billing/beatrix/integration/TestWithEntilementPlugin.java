@@ -88,6 +88,10 @@ public class TestWithEntilementPlugin extends TestIntegrationBase {
 
     @BeforeMethod(groups = "slow")
     public void beforeMethod() throws Exception {
+        if (hasFailed()) {
+            return;
+        }
+
         super.beforeMethod();
         testEntitlementPluginApi.setPlanPhasePriceOverride(null);
     }

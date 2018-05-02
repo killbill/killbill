@@ -56,6 +56,10 @@ public class TestDBRouter extends TestIntegrationBase {
     @Override
     @BeforeMethod(groups = "slow")
     public void beforeMethod() throws Exception {
+        if (hasFailed()) {
+            return;
+        }
+
         super.beforeMethod();
 
         this.externalBusCount = new AtomicInteger(0);
