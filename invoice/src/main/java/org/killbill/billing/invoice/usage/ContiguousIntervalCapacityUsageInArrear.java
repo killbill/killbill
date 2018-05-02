@@ -69,7 +69,7 @@ public class ContiguousIntervalCapacityUsageInArrear extends ContiguousIntervalU
 
         if (amountToBill.compareTo(BigDecimal.ZERO) > 0) {
             final String itemDetails = areAllBilledItemsWithDetails ? toJson(toBeBilledUsageDetails) : null;
-            final InvoiceItem item = new UsageInvoiceItem(invoiceId, accountId, getBundleId(), getSubscriptionId(), getPlanName(),
+            final InvoiceItem item = new UsageInvoiceItem(invoiceId, accountId, getBundleId(), getSubscriptionId(), getProductName(), getPlanName(),
                                                           getPhaseName(), usage.getName(), startDate, endDate, amountToBill, null, getCurrency(), null, itemDetails);
             result.add(item);
         } else if (amountToBill.compareTo(BigDecimal.ZERO) < 0) {

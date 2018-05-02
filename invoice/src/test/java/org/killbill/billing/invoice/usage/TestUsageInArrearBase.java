@@ -36,6 +36,7 @@ import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.catalog.api.Plan;
 import org.killbill.billing.catalog.api.PlanPhase;
+import org.killbill.billing.catalog.api.Product;
 import org.killbill.billing.catalog.api.TierBlockPolicy;
 import org.killbill.billing.catalog.api.Usage;
 import org.killbill.billing.catalog.api.UsageType;
@@ -55,6 +56,7 @@ public abstract class TestUsageInArrearBase extends InvoiceTestSuiteNoDB {
     protected UUID bundleId;
     protected UUID subscriptionId;
     protected UUID invoiceId;
+    protected String productName;
     protected String planName;
     protected String phaseName;
     protected Currency currency;
@@ -71,6 +73,7 @@ public abstract class TestUsageInArrearBase extends InvoiceTestSuiteNoDB {
         bundleId = UUID.randomUUID();
         subscriptionId = UUID.randomUUID();
         invoiceId = UUID.randomUUID();
+        productName = "productName";
         planName = "planName";
         phaseName = "phaseName";
         currency = Currency.BTC;
@@ -174,8 +177,12 @@ public abstract class TestUsageInArrearBase extends InvoiceTestSuiteNoDB {
         Mockito.when(subscription.getBundleId()).thenReturn(bundleId);
         Mockito.when(result.getSubscription()).thenReturn(subscription);
 
+        final Product product = Mockito.mock(Product.class);
+        Mockito.when(product.getName()).thenReturn(productName);
+
         final Plan plan = Mockito.mock(Plan.class);
         Mockito.when(plan.getName()).thenReturn(planName);
+        Mockito.when(plan.getProduct()).thenReturn(product);
         Mockito.when(result.getPlan()).thenReturn(plan);
 
         final PlanPhase phase = Mockito.mock(PlanPhase.class);
