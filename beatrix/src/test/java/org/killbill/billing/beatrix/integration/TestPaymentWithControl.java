@@ -104,6 +104,10 @@ public class TestPaymentWithControl extends TestIntegrationBase {
 
     @BeforeMethod(groups = "slow")
     public void beforeMethod() throws Exception {
+        if (hasFailed()) {
+            return;
+        }
+
         super.beforeMethod();
         testPaymentControlWithControl.reset();
     }

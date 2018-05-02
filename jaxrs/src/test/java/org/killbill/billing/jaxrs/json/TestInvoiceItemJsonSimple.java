@@ -42,6 +42,7 @@ public class TestInvoiceItemJsonSimple extends JaxrsTestSuiteNoDB {
         final UUID childAccountId = UUID.randomUUID();
         final UUID bundleId = UUID.randomUUID();
         final UUID subscriptionId = UUID.randomUUID();
+        final String productName = UUID.randomUUID().toString();
         final String planName = UUID.randomUUID().toString();
         final String phaseName = UUID.randomUUID().toString();
         final String usageName = UUID.randomUUID().toString();
@@ -53,8 +54,8 @@ public class TestInvoiceItemJsonSimple extends JaxrsTestSuiteNoDB {
         final Currency currency = Currency.MXN;
         final List<AuditLogJson> auditLogs = createAuditLogsJson(clock.getUTCNow());
         final InvoiceItemJson invoiceItemJson = new InvoiceItemJson(invoiceItemId, invoiceId, linkedInvoiceItemId, accountId, childAccountId,
-                                                                    bundleId, subscriptionId, planName, phaseName, usageName,
-                                                                    null, null, null,
+                                                                    bundleId, subscriptionId, productName, planName, phaseName, usageName,
+                                                                    null, null, null, null,
                                                                     type, description,
                                                                     startDate, endDate, amount, null, currency, null, null, null, auditLogs);
         Assert.assertEquals(invoiceItemJson.getInvoiceItemId(), invoiceItemId);
@@ -64,6 +65,7 @@ public class TestInvoiceItemJsonSimple extends JaxrsTestSuiteNoDB {
         Assert.assertEquals(invoiceItemJson.getChildAccountId(), childAccountId);
         Assert.assertEquals(invoiceItemJson.getBundleId(), bundleId);
         Assert.assertEquals(invoiceItemJson.getSubscriptionId(), subscriptionId);
+        Assert.assertEquals(invoiceItemJson.getProductName(), productName);
         Assert.assertEquals(invoiceItemJson.getPlanName(), planName);
         Assert.assertEquals(invoiceItemJson.getPhaseName(), phaseName);
         Assert.assertEquals(invoiceItemJson.getUsageName(), usageName);

@@ -61,6 +61,10 @@ public class TestIncompletePaymentTransactionTaskWithDB extends PaymentTestSuite
 
     @BeforeMethod(groups = "slow")
     public void beforeMethod() throws Exception {
+        if (hasFailed()) {
+            return;
+        }
+
         super.beforeMethod();
 
         mockPaymentProviderPlugin.clear();

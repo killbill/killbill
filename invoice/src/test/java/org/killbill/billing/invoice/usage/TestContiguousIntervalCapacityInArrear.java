@@ -92,21 +92,21 @@ public class TestContiguousIntervalCapacityInArrear extends TestUsageInArrearBas
                                                                                                                  );
 
         final List<InvoiceItem> existingUsage = Lists.newArrayList();
-        final UsageInvoiceItem ii1 = new UsageInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, usage.getName(), startDate, endDate, BigDecimal.TEN, currency);
+        final UsageInvoiceItem ii1 = new UsageInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, productName, planName, phaseName, usage.getName(), startDate, endDate, BigDecimal.TEN, currency);
         existingUsage.add(ii1);
-        final UsageInvoiceItem ii2 = new UsageInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, usage.getName(), startDate, endDate, BigDecimal.TEN, currency);
+        final UsageInvoiceItem ii2 = new UsageInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, productName, planName, phaseName, usage.getName(), startDate, endDate, BigDecimal.TEN, currency);
         existingUsage.add(ii2);
 
         // Will be ignored as is starts one day earlier.
-        final UsageInvoiceItem ii3 = new UsageInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, usage.getName(), startDate.minusDays(1), endDate, BigDecimal.TEN, currency);
+        final UsageInvoiceItem ii3 = new UsageInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, productName, planName, phaseName, usage.getName(), startDate.minusDays(1), endDate, BigDecimal.TEN, currency);
         existingUsage.add(ii3);
 
         // Will be ignored as it is for a different udsage section
-        final UsageInvoiceItem ii4 = new UsageInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, "other", startDate, endDate, BigDecimal.TEN, currency);
+        final UsageInvoiceItem ii4 = new UsageInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, productName, planName, phaseName, "other", startDate, endDate, BigDecimal.TEN, currency);
         existingUsage.add(ii4);
 
         // Will be ignored because non usage item
-        final FixedPriceInvoiceItem ii5 = new FixedPriceInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, startDate, BigDecimal.TEN, currency);
+        final FixedPriceInvoiceItem ii5 = new FixedPriceInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, productName, planName, phaseName, startDate, BigDecimal.TEN, currency);
         existingUsage.add(ii5);
 
         final Iterable<InvoiceItem> billedItems = intervalCapacityInArrear.getBilledItems(startDate, endDate, existingUsage);
@@ -216,10 +216,10 @@ public class TestContiguousIntervalCapacityInArrear extends TestUsageInArrearBas
         final ContiguousIntervalCapacityUsageInArrear intervalCapacityInArrear = createContiguousIntervalCapacityInArrear(usage, rawUsages, targetDate, true, event1, event2);
 
         final List<InvoiceItem> invoiceItems = new ArrayList<InvoiceItem>();
-        final InvoiceItem ii1 = new UsageInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, usage.getName(), startDate, firstBCDDate, BigDecimal.ONE, currency);
+        final InvoiceItem ii1 = new UsageInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, productName, planName, phaseName, usage.getName(), startDate, firstBCDDate, BigDecimal.ONE, currency);
         invoiceItems.add(ii1);
 
-        final InvoiceItem ii2 = new UsageInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, usage.getName(), firstBCDDate, endDate, BigDecimal.ONE, currency);
+        final InvoiceItem ii2 = new UsageInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, productName, planName, phaseName, usage.getName(), firstBCDDate, endDate, BigDecimal.ONE, currency);
         invoiceItems.add(ii2);
 
         final UsageInArrearItemsAndNextNotificationDate usageResult = intervalCapacityInArrear.computeMissingItemsAndNextNotificationDate(invoiceItems);
@@ -362,7 +362,7 @@ public class TestContiguousIntervalCapacityInArrear extends TestUsageInArrearBas
         final String existingUsageJson = objectMapper.writeValueAsString(new UsageCapacityInArrearAggregate(existingUsage, BigDecimal.TEN));
 
         final List<InvoiceItem> existingItems = new ArrayList<InvoiceItem>();
-        final InvoiceItem ii1 = new UsageInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, usageName, new LocalDate(2014, 03, 20), new LocalDate(2014, 04, 15), BigDecimal.TEN, null, currency, null, existingUsageJson);
+        final InvoiceItem ii1 = new UsageInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, productName, planName, phaseName, usageName, new LocalDate(2014, 03, 20), new LocalDate(2014, 04, 15), BigDecimal.TEN, null, currency, null, existingUsageJson);
         existingItems.add(ii1);
 
         List<InvoiceItem> result = produceInvoiceItems(rawUsages, UsageDetailMode.AGGREGATE, existingItems);

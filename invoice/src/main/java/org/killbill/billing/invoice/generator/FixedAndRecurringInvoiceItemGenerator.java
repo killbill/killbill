@@ -237,6 +237,7 @@ public class FixedAndRecurringInvoiceItemGenerator extends InvoiceItemGenerator 
                                                                                                 accountId,
                                                                                                 thisEvent.getSubscription().getBundleId(),
                                                                                                 thisEvent.getSubscription().getId(),
+                                                                                                thisEvent.getPlan().getProduct().getName(),
                                                                                                 thisEvent.getPlan().getName(),
                                                                                                 thisEvent.getPlanPhase().getName(),
                                                                                                 itemDatum.getStartDate(),
@@ -398,7 +399,7 @@ public class FixedAndRecurringInvoiceItemGenerator extends InvoiceItemGenerator 
             if (fixedPrice != null) {
                 final FixedPriceInvoiceItem fixedPriceInvoiceItem = new FixedPriceInvoiceItem(invoiceId, accountId, thisEvent.getSubscription().getBundleId(),
                                                                                               thisEvent.getSubscription().getId(),
-                                                                                              thisEvent.getPlan().getName(), thisEvent.getPlanPhase().getName(),
+                                                                                              thisEvent.getPlan().getProduct().getName(), thisEvent.getPlan().getName(), thisEvent.getPlanPhase().getName(),
                                                                                               roundedStartDate, fixedPrice, currency);
 
                 // For debugging purposes

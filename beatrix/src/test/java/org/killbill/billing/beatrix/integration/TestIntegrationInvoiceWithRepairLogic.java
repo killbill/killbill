@@ -675,39 +675,39 @@ public class TestIntegrationInvoiceWithRepairLogic extends TestIntegrationBase {
                                                                  lastInvoice.getInvoiceDate(), lastInvoice.getTargetDate(), lastInvoice.getCurrency(), false, InvoiceStatus.COMMITTED, false);
 
         final InvoiceItemModelDao recurring1 = new InvoiceItemModelDao(lastInvoice.getCreatedDate(), InvoiceItemType.RECURRING, lastInvoice.getId(), lastInvoice.getAccountId(),
-                                                                       bpEntitlement.getBundleId(), bpEntitlement.getBaseEntitlementId(), "", "shotgun-monthly", "shotgun-monthly-evergreen",
+                                                                       bpEntitlement.getBundleId(), bpEntitlement.getBaseEntitlementId(), "", "Shotgun", "shotgun-monthly", "shotgun-monthly-evergreen",
                                                                        null, new LocalDate(2012, 5, 1), new LocalDate(2012, 6, 1), new BigDecimal("249.95"), new BigDecimal("249.95"), account.getCurrency(), null);
 
         final InvoiceItemModelDao repair1 = new InvoiceItemModelDao(lastInvoice.getCreatedDate(), InvoiceItemType.REPAIR_ADJ, lastInvoice.getId(), lastInvoice.getAccountId(),
-                                                                    bpEntitlement.getBundleId(), bpEntitlement.getBaseEntitlementId(), null, null, null,
+                                                                    bpEntitlement.getBundleId(), bpEntitlement.getBaseEntitlementId(), null, null, null, null,
                                                                     null, new LocalDate(2012, 5, 1), new LocalDate(2012, 6, 1), new BigDecimal("-249.95"), new BigDecimal("-249.95"), account.getCurrency(), recurring1.getId());
 
         final InvoiceItemModelDao recurring2 = new InvoiceItemModelDao(lastInvoice.getCreatedDate(), InvoiceItemType.RECURRING, lastInvoice.getId(), lastInvoice.getAccountId(),
-                                                                       bpEntitlement.getBundleId(), bpEntitlement.getBaseEntitlementId(), "", "shotgun-monthly", "shotgun-monthly-evergreen",
+                                                                       bpEntitlement.getBundleId(), bpEntitlement.getBaseEntitlementId(), "", "Shotgun", "shotgun-monthly", "shotgun-monthly-evergreen",
                                                                        null, new LocalDate(2012, 5, 1), new LocalDate(2012, 6, 1), new BigDecimal("249.95"), new BigDecimal("249.95"), account.getCurrency(), null);
 
 
         final InvoiceItemModelDao repair21 = new InvoiceItemModelDao(lastInvoice.getCreatedDate(), InvoiceItemType.REPAIR_ADJ, lastInvoice.getId(), lastInvoice.getAccountId(),
-                                                                     bpEntitlement.getBundleId(), bpEntitlement.getBaseEntitlementId(), null, null, null,
+                                                                     bpEntitlement.getBundleId(), bpEntitlement.getBaseEntitlementId(), null, null, null, null,
                                                                      null, new LocalDate(2012, 5, 1), new LocalDate(2012, 5, 13), new BigDecimal("-100.95"), new BigDecimal("-100.95"), account.getCurrency(), recurring2.getId());
 
         final InvoiceItemModelDao repair22 = new InvoiceItemModelDao(lastInvoice.getCreatedDate(), InvoiceItemType.REPAIR_ADJ, lastInvoice.getId(), lastInvoice.getAccountId(),
-                                                                     bpEntitlement.getBundleId(), bpEntitlement.getBaseEntitlementId(), null, null, null,
+                                                                     bpEntitlement.getBundleId(), bpEntitlement.getBaseEntitlementId(), null, null, null, null,
                                                                      null, new LocalDate(2012, 5, 13), new LocalDate(2012, 5, 22), new BigDecimal("-100"), new BigDecimal("-100"), account.getCurrency(), recurring2.getId());
 
         final InvoiceItemModelDao repair23 = new InvoiceItemModelDao(lastInvoice.getCreatedDate(), InvoiceItemType.REPAIR_ADJ, lastInvoice.getId(), lastInvoice.getAccountId(),
-                                                                     bpEntitlement.getBundleId(), bpEntitlement.getBaseEntitlementId(), null, null, null,
+                                                                     bpEntitlement.getBundleId(), bpEntitlement.getBaseEntitlementId(), null, null, null, null,
                                                                      null, new LocalDate(2012, 5, 22), new LocalDate(2012, 6, 1), new BigDecimal("-49"), new BigDecimal("-49"), account.getCurrency(), recurring2.getId());
 
 
 
         final InvoiceItemModelDao recurring3 = new InvoiceItemModelDao(lastInvoice.getCreatedDate(), InvoiceItemType.RECURRING, lastInvoice.getId(), lastInvoice.getAccountId(),
-                                                                       bpEntitlement.getBundleId(), bpEntitlement.getBaseEntitlementId(), "", "shotgun-monthly", "shotgun-monthly-evergreen",
+                                                                       bpEntitlement.getBundleId(), bpEntitlement.getBaseEntitlementId(), "", "Shotgun", "shotgun-monthly", "shotgun-monthly-evergreen",
                                                                        null, new LocalDate(2012, 5, 1), new LocalDate(2012, 6, 1), new BigDecimal("249.95"), new BigDecimal("249.95"), account.getCurrency(), null);
 
 
         final InvoiceItemModelDao repair3 = new InvoiceItemModelDao(lastInvoice.getCreatedDate(), InvoiceItemType.REPAIR_ADJ, lastInvoice.getId(), lastInvoice.getAccountId(),
-                                                                    bpEntitlement.getBundleId(), bpEntitlement.getBaseEntitlementId(), null, null, null,
+                                                                    bpEntitlement.getBundleId(), bpEntitlement.getBaseEntitlementId(), null, null, null, null,
                                                                     null, new LocalDate(2012, 5, 1), new LocalDate(2012, 6, 1), new BigDecimal("-249.95"), new BigDecimal("-249.95"), account.getCurrency(), recurring3.getId());
 
         List<InvoiceItemModelDao> newItems = new ArrayList<InvoiceItemModelDao>();

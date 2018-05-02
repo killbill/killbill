@@ -71,6 +71,10 @@ public class TestInvoiceDispatcher extends InvoiceTestSuiteWithEmbeddedDB {
     @Override
     @BeforeMethod(groups = "slow")
     public void beforeMethod() throws Exception {
+        if (hasFailed()) {
+            return;
+        }
+
         super.beforeMethod();
         account = invoiceUtil.createAccount(callContext);
         subscription = invoiceUtil.createSubscription();
@@ -163,6 +167,7 @@ public class TestInvoiceDispatcher extends InvoiceTestSuiteWithEmbeddedDB {
                                                                                  subscription.getBundleId(),
                                                                                  subscription.getId(),
                                                                                  "Bad data",
+                                                                                 null,
                                                                                  plan.getName(),
                                                                                  planPhase.getName(),
                                                                                  null,
@@ -179,6 +184,7 @@ public class TestInvoiceDispatcher extends InvoiceTestSuiteWithEmbeddedDB {
                                                                                  subscription.getBundleId(),
                                                                                  subscription.getId(),
                                                                                  "Bad data",
+                                                                                 null,
                                                                                  plan.getName(),
                                                                                  planPhase.getName(),
                                                                                  null,

@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014-2016 Groupon, Inc
- * Copyright 2014-2016 The Billing Project, LLC
+ * Copyright 2014-2018 Groupon, Inc
+ * Copyright 2014-2018 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -22,6 +22,7 @@ import java.math.BigDecimal;
 
 import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
+import org.killbill.billing.api.FlakyRetryAnalyzer;
 import org.killbill.billing.api.TestApiListener.NextEvent;
 import org.killbill.billing.beatrix.util.InvoiceChecker.ExpectedInvoiceItemCheck;
 import org.killbill.billing.catalog.api.BillingPeriod;
@@ -65,7 +66,7 @@ public class TestOverdueWithSubscriptionCancellation extends TestOverdueBase {
         return configXml;
     }
 
-    @Test(groups = "slow")
+    @Test(groups = "slow", retryAnalyzer = FlakyRetryAnalyzer.class)
     public void testCheckSubscriptionCancellation() throws Exception {
         clock.setTime(new DateTime(2012, 5, 1, 0, 3, 42, 0));
 
@@ -112,7 +113,7 @@ public class TestOverdueWithSubscriptionCancellation extends TestOverdueBase {
         assertTrue(cancelledAddon1.getState() == EntitlementState.CANCELLED);
     }
 
-    @Test(groups = "slow")
+    @Test(groups = "slow", retryAnalyzer = FlakyRetryAnalyzer.class)
     public void testCheckSubscriptionCancellationWithMultipleBundles() throws Exception {
         // 2012-05-01T00:03:53.000Z
         clock.setTime(new DateTime(2012, 5, 1, 0, 3, 42, 0));

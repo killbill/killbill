@@ -44,6 +44,10 @@ public class TestInvoiceFlagBehaviors extends InvoiceTestSuiteWithEmbeddedDB {
     @Override
     @BeforeMethod(groups = "slow")
     public void beforeMethod() throws Exception {
+        if (hasFailed()) {
+            return;
+        }
+
         super.beforeMethod();
         final Account account = invoiceUtil.createAccount(callContext);
         accountId = account.getId();
@@ -135,7 +139,7 @@ public class TestInvoiceFlagBehaviors extends InvoiceTestSuiteWithEmbeddedDB {
         // Add credit on the account
         invoiceUserApi.insertCredit(accountId, BigDecimal.TEN, null, accountCurrency, true, null, null, callContext);
 
-        final UUID invoiceId = invoiceUserApi.createMigrationInvoice(accountId, null, ImmutableList.<InvoiceItem>of(new FixedPriceInvoiceItem(UUID.randomUUID(), clock.getUTCNow(), null, accountId, null, null, "foo", "bar", null, null, BigDecimal.ONE, accountCurrency)), callContext);
+        final UUID invoiceId = invoiceUserApi.createMigrationInvoice(accountId, null, ImmutableList.<InvoiceItem>of(new FixedPriceInvoiceItem(UUID.randomUUID(), clock.getUTCNow(), null, accountId, null, null, null, "foo", "bar", null, null, BigDecimal.ONE, accountCurrency)), callContext);
 
         final Invoice invoice1 = invoiceUserApi.getInvoice(invoiceId, callContext);
         assertEquals(invoice1.getBalance().compareTo(BigDecimal.ZERO), 0);

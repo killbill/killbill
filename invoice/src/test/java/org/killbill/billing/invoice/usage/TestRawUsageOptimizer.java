@@ -127,6 +127,6 @@ public class TestRawUsageOptimizer extends TestUsageInArrearBase {
     }
 
     private InvoiceItem createUsageItem(final LocalDate startDate) {
-        return new UsageInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, usageName, startDate, startDate.plusMonths(1), BigDecimal.TEN, Currency.USD);
+        return new UsageInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, productName, planName, phaseName, usageName, startDate, startDate.plusMonths(1), BigDecimal.TEN, Currency.USD);
     }
 }

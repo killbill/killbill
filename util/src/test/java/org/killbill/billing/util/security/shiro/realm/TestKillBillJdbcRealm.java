@@ -50,6 +50,10 @@ public class TestKillBillJdbcRealm extends UtilTestSuiteWithEmbeddedDB {
     @Override
     @BeforeMethod(groups = "slow")
     public void beforeMethod() throws Exception {
+        if (hasFailed()) {
+            return;
+        }
+
         super.beforeMethod();
         final KillBillJdbcRealm realm = new KillBillJdbcRealm(helper.getDataSource(), securityConfig);
         securityManager = new DefaultSecurityManager(realm);
