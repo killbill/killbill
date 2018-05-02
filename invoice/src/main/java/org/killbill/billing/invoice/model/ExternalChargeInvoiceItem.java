@@ -43,13 +43,13 @@ public class ExternalChargeInvoiceItem extends InvoiceItemCatalogBase {
 
     public ExternalChargeInvoiceItem(final UUID id, @Nullable final DateTime createdDate, final UUID invoiceId, final UUID accountId, @Nullable final UUID bundleId,
                                      @Nullable final String description, final LocalDate startDate, final LocalDate endDate, final BigDecimal amount, final Currency currency, @Nullable final String itemDetails) {
-        super(id, createdDate, invoiceId, accountId, bundleId, null, description, null, null, null, startDate, endDate, amount, null, currency, null, null, itemDetails, InvoiceItemType.EXTERNAL_CHARGE);
+        super(id, createdDate, invoiceId, accountId, bundleId, null, description, null, null, null, null, startDate, endDate, amount, null, currency, null, null, itemDetails, InvoiceItemType.EXTERNAL_CHARGE);
     }
 
     public ExternalChargeInvoiceItem(final UUID id, @Nullable final DateTime createdDate, final UUID invoiceId, final UUID accountId, final UUID bundleId, final UUID subscriptionId,
-                                     final String planName, final String phaseName, final String prettyPlanName, final String prettyPhaseName, @Nullable final String description, final LocalDate startDate, final LocalDate endDate,
+                                     final String productName, final String planName, final String phaseName, final String prettyProductName, final String prettyPlanName, final String prettyPhaseName, @Nullable final String description, final LocalDate startDate, final LocalDate endDate,
                                      final BigDecimal amount, final BigDecimal rate, final Currency currency, @Nullable final UUID linkedItemId, @Nullable String itemDetails) {
-        super(id, createdDate, invoiceId, accountId, bundleId, subscriptionId, description, planName, phaseName, null, prettyPlanName, prettyPhaseName, null, startDate, endDate, amount, rate, currency, linkedItemId, null, itemDetails, InvoiceItemType.EXTERNAL_CHARGE);
+        super(id, createdDate, invoiceId, accountId, bundleId, subscriptionId, description, productName, planName, phaseName, null, prettyProductName, prettyPlanName, prettyPhaseName, null, startDate, endDate, amount, rate, currency, linkedItemId, null, itemDetails, InvoiceItemType.EXTERNAL_CHARGE);
     }
 
     @Override

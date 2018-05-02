@@ -37,14 +37,14 @@ public class TaxInvoiceItem extends InvoiceItemCatalogBase {
 
     public TaxInvoiceItem(final UUID id, final UUID invoiceId, final UUID accountId, @Nullable final UUID bundleId,
                           @Nullable final String description, final LocalDate date, final BigDecimal amount, final Currency currency) {
-        this(id, null, invoiceId, accountId, bundleId, null, null, null, null, null, null, null, date, description, amount, currency, null);
+        this(id, null, invoiceId, accountId, bundleId, null, null, null, null, null, null, null, null, null, date, description, amount, currency, null);
     }
 
     public TaxInvoiceItem(final UUID id, @Nullable final DateTime createdDate, final UUID invoiceId, final UUID accountId, @Nullable final UUID bundleId,
-                          @Nullable final UUID subscriptionId, @Nullable final String planName, @Nullable final String phaseName, @Nullable final String usageName,
-                          @Nullable final String prettyPlanName, @Nullable final String prettyPhaseName, @Nullable final String prettyUsageName,
+                          @Nullable final UUID subscriptionId, @Nullable final String productName, @Nullable final String planName, @Nullable final String phaseName, @Nullable final String usageName,
+                          @Nullable final String prettyProductName, @Nullable final String prettyPlanName, @Nullable final String prettyPhaseName, @Nullable final String prettyUsageName,
                           final LocalDate date, @Nullable final String description, final BigDecimal amount, final Currency currency, @Nullable final UUID linkedItemId) {
-        super(id, createdDate, invoiceId, accountId, bundleId, subscriptionId, description, planName, phaseName, usageName, prettyPlanName, prettyPhaseName, prettyUsageName, date, null, amount, null, currency, linkedItemId, InvoiceItemType.TAX);
+        super(id, createdDate, invoiceId, accountId, bundleId, subscriptionId, description, productName, planName, phaseName, usageName, prettyProductName, prettyPlanName, prettyPhaseName, prettyUsageName, date, null, amount, null, currency, linkedItemId, InvoiceItemType.TAX);
     }
 
     @Override

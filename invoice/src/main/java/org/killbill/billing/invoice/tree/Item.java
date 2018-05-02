@@ -48,6 +48,7 @@ public class Item {
     private final UUID subscriptionId;
     private final UUID targetInvoiceId;
     private final UUID invoiceId;
+    private final String productName;
     private final String planName;
     private final String phaseName;
     private final LocalDate startDate;
@@ -75,6 +76,7 @@ public class Item {
         this.subscriptionId = item.subscriptionId;
         this.targetInvoiceId = item.targetInvoiceId;
         this.invoiceId = item.invoiceId;
+        this.productName = item.productName;
         this.planName = item.planName;
         this.phaseName = item.phaseName;
         this.startDate = item.startDate;
@@ -102,6 +104,7 @@ public class Item {
         this.subscriptionId = item.getSubscriptionId();
         this.targetInvoiceId = targetInvoiceId;
         this.invoiceId = item.getInvoiceId();
+        this.productName = item.getProductName();
         this.planName = item.getPlanName();
         this.phaseName = item.getPhaseName();
         this.startDate = startDate;
@@ -131,7 +134,7 @@ public class Item {
                                                                      .multiply(amount) : amount;
 
         if (action == ItemAction.ADD) {
-            return new RecurringInvoiceItem(id, createdDate, invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, newStartDate, newEndDate, positiveAmount, rate, currency);
+            return new RecurringInvoiceItem(id, createdDate, invoiceId, accountId, bundleId, subscriptionId, productName, planName, phaseName, newStartDate, newEndDate, positiveAmount, rate, currency);
         } else {
             // We first compute the maximum amount after adjustment and that sets the amount limit of how much can be repaired.
             final BigDecimal maxAvailableAmountForRepair = getNetAmount();
@@ -214,6 +217,7 @@ public class Item {
         sb.append(", subscriptionId=").append(subscriptionId);
         sb.append(", targetInvoiceId=").append(targetInvoiceId);
         sb.append(", invoiceId=").append(invoiceId);
+        sb.append(", productName='").append(productName).append('\'');
         sb.append(", planName='").append(planName).append('\'');
         sb.append(", phaseName='").append(phaseName).append('\'');
         sb.append(", startDate=").append(startDate);
@@ -281,6 +285,9 @@ public class Item {
             return false;
         }
         if (planName != null ? !planName.equals(item.planName) : item.planName != null) {
+            return false;
+        }
+        if (productName != null ? !productName.equals(item.productName) : item.productName != null) {
             return false;
         }
         if (rate != null ? rate.compareTo(item.rate) != 0 : item.rate != null) {

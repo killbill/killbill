@@ -155,6 +155,16 @@ public abstract class InvoiceItemBase extends EntityBase implements InvoiceItem 
     }
 
     @Override
+    public String getProductName() {
+        return null;
+    }
+
+    @Override
+    public String getPrettyProductName() {
+        return null;
+    }
+
+    @Override
     public String getPlanName() {
         return null;
     }

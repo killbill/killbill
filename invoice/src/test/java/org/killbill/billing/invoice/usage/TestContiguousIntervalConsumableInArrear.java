@@ -113,7 +113,7 @@ public class TestContiguousIntervalConsumableInArrear extends TestUsageInArrearB
         final String existingUsageJson = objectMapper.writeValueAsString(usageConsumableInArrearDetail);
 
         final List<InvoiceItem> existingItems = new ArrayList<InvoiceItem>();
-        final InvoiceItem ii1 = new UsageInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, usageName, new LocalDate(2014, 03, 20), new LocalDate(2014, 04, 15), new BigDecimal("570.00"), null, currency, null, existingUsageJson);
+        final InvoiceItem ii1 = new UsageInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, productName, planName, phaseName, usageName, new LocalDate(2014, 03, 20), new LocalDate(2014, 04, 15), new BigDecimal("570.00"), null, currency, null, existingUsageJson);
         existingItems.add(ii1);
 
         final List<UsageConsumableInArrearTierUnitAggregate> aggregateDetails = intervalConsumableInArrear.getBilledDetailsForUnitType(existingItems, "FOO");
@@ -145,21 +145,21 @@ public class TestContiguousIntervalConsumableInArrear extends TestUsageInArrearB
                                                                                                                      );
 
         final List<InvoiceItem> existingUsage = Lists.newArrayList();
-        final UsageInvoiceItem ii1 = new UsageInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, usage.getName(), startDate, endDate, BigDecimal.TEN, currency);
+        final UsageInvoiceItem ii1 = new UsageInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, productName, planName, phaseName, usage.getName(), startDate, endDate, BigDecimal.TEN, currency);
         existingUsage.add(ii1);
-        final UsageInvoiceItem ii2 = new UsageInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, usage.getName(), startDate, endDate, BigDecimal.TEN, currency);
+        final UsageInvoiceItem ii2 = new UsageInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, productName, planName, phaseName, usage.getName(), startDate, endDate, BigDecimal.TEN, currency);
         existingUsage.add(ii2);
 
         // Will be ignored as is starts one day earlier.
-        final UsageInvoiceItem ii3 = new UsageInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, usage.getName(), startDate.minusDays(1), endDate, BigDecimal.TEN, currency);
+        final UsageInvoiceItem ii3 = new UsageInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, productName, planName, phaseName, usage.getName(), startDate.minusDays(1), endDate, BigDecimal.TEN, currency);
         existingUsage.add(ii3);
 
         // Will be ignored as it is for a different udsage section
-        final UsageInvoiceItem ii4 = new UsageInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, "other", startDate, endDate, BigDecimal.TEN, currency);
+        final UsageInvoiceItem ii4 = new UsageInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, productName, planName, phaseName, "other", startDate, endDate, BigDecimal.TEN, currency);
         existingUsage.add(ii4);
 
         // Will be ignored because non usage item
-        final FixedPriceInvoiceItem ii5 = new FixedPriceInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, startDate, BigDecimal.TEN, currency);
+        final FixedPriceInvoiceItem ii5 = new FixedPriceInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, productName, planName, phaseName, startDate, BigDecimal.TEN, currency);
         existingUsage.add(ii5);
 
         final BigDecimal result = intervalConsumableInArrear.computeBilledUsage(intervalConsumableInArrear.getBilledItems(startDate, endDate, existingUsage));
@@ -381,10 +381,10 @@ public class TestContiguousIntervalConsumableInArrear extends TestUsageInArrearB
         final ContiguousIntervalUsageInArrear intervalConsumableInArrear = createContiguousIntervalConsumableInArrear(usage, rawUsages, targetDate, true, event1, event2);
 
         final List<InvoiceItem> invoiceItems = new ArrayList<InvoiceItem>();
-        final InvoiceItem ii1 = new UsageInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, usage.getName(), startDate, firstBCDDate, BigDecimal.ONE, currency);
+        final InvoiceItem ii1 = new UsageInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, productName, planName, phaseName, usage.getName(), startDate, firstBCDDate, BigDecimal.ONE, currency);
         invoiceItems.add(ii1);
 
-        final InvoiceItem ii2 = new UsageInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, usage.getName(), firstBCDDate, endDate, BigDecimal.ONE, currency);
+        final InvoiceItem ii2 = new UsageInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, productName, planName, phaseName, usage.getName(), firstBCDDate, endDate, BigDecimal.ONE, currency);
         invoiceItems.add(ii2);
 
         final UsageInArrearItemsAndNextNotificationDate usageResult = intervalConsumableInArrear.computeMissingItemsAndNextNotificationDate(invoiceItems);
@@ -880,7 +880,7 @@ public class TestContiguousIntervalConsumableInArrear extends TestUsageInArrearB
         rawUsages.add(new DefaultRawUsage(subscriptionId, new LocalDate(2014, 03, 21), "BAR", 80L /* already built */ + 120L)); // tier 2
 
         final List<InvoiceItem> existingItems = new ArrayList<InvoiceItem>();
-        final InvoiceItem ii1 = new UsageInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, usageName, new LocalDate(2014, 03, 20), new LocalDate(2014, 04, 15), new BigDecimal("570.00"), null, currency, null, existingUsageJson);
+        final InvoiceItem ii1 = new UsageInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, productName, planName, phaseName, usageName, new LocalDate(2014, 03, 20), new LocalDate(2014, 04, 15), new BigDecimal("570.00"), null, currency, null, existingUsageJson);
         existingItems.add(ii1);
 
         List<InvoiceItem> result = produceInvoiceItems(rawUsages, TierBlockPolicy.ALL_TIERS, UsageDetailMode.AGGREGATE, existingItems);
@@ -945,9 +945,9 @@ public class TestContiguousIntervalConsumableInArrear extends TestUsageInArrearB
 
         // Same as previous example bu instead of creating JSON we create one item per type/tier
         final List<InvoiceItem> existingItems = new ArrayList<InvoiceItem>();
-        final InvoiceItem i1 = new UsageInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, usageName, new LocalDate(2014, 03, 20), new LocalDate(2014, 04, 15), new BigDecimal("10.00") /* amount */, new BigDecimal("1.00") /* rate = tierPrice*/, currency, 10 /* # units*/, usageInArrearDetail1);
-        final InvoiceItem i2 = new UsageInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, usageName, new LocalDate(2014, 03, 20), new LocalDate(2014, 04, 15), new BigDecimal("400.00"), new BigDecimal("10.00"), currency, 40, usageInArrearDetail2);
-        final InvoiceItem i3 = new UsageInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, usageName, new LocalDate(2014, 03, 20), new LocalDate(2014, 04, 15), new BigDecimal("160.00"), new BigDecimal("2.00"), currency, 80, usageInArrearDetail3);
+        final InvoiceItem i1 = new UsageInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, productName, planName, phaseName, usageName, new LocalDate(2014, 03, 20), new LocalDate(2014, 04, 15), new BigDecimal("10.00") /* amount */, new BigDecimal("1.00") /* rate = tierPrice*/, currency, 10 /* # units*/, usageInArrearDetail1);
+        final InvoiceItem i2 = new UsageInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, productName, planName, phaseName, usageName, new LocalDate(2014, 03, 20), new LocalDate(2014, 04, 15), new BigDecimal("400.00"), new BigDecimal("10.00"), currency, 40, usageInArrearDetail2);
+        final InvoiceItem i3 = new UsageInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, productName, planName, phaseName, usageName, new LocalDate(2014, 03, 20), new LocalDate(2014, 04, 15), new BigDecimal("160.00"), new BigDecimal("2.00"), currency, 80, usageInArrearDetail3);
         existingItems.addAll(ImmutableList.<InvoiceItem>of(i1, i2, i3));
 
         List<InvoiceItem> result = produceInvoiceItems(rawUsages, TierBlockPolicy.ALL_TIERS, UsageDetailMode.DETAIL, existingItems);

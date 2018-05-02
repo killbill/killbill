@@ -33,23 +33,23 @@ import com.google.common.base.MoreObjects;
 public class UsageInvoiceItem extends InvoiceItemCatalogBase {
 
     public UsageInvoiceItem(final UUID invoiceId, final UUID accountId, @Nullable final UUID bundleId, @Nullable final UUID subscriptionId,
-                            final String planName, final String phaseName, final String usageName,
+                            final String productName, final String planName, final String phaseName, final String usageName,
                             final LocalDate startDate, final LocalDate endDate, final BigDecimal amount, final Currency currency) {
-        this(UUIDs.randomUUID(), null, invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, usageName, null, null, null, startDate, endDate, null, amount, null, currency, null, null);
+        this(UUIDs.randomUUID(), null, invoiceId, accountId, bundleId, subscriptionId, productName, planName, phaseName, usageName, null, null, null, null, startDate, endDate, null, amount, null, currency, null, null);
     }
 
     public UsageInvoiceItem(final UUID invoiceId, final UUID accountId, @Nullable final UUID bundleId, @Nullable final UUID subscriptionId,
-                            final String planName, final String phaseName, final String usageName,
+                            final String productName, final String planName, final String phaseName, final String usageName,
                             final LocalDate startDate, final LocalDate endDate, final BigDecimal amount, final BigDecimal rate, final Currency currency, @Nullable final Integer quantity, @Nullable final String itemDetails) {
-        this(UUIDs.randomUUID(), null, invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, usageName, null, null, null, startDate, endDate, null, amount, rate, currency, quantity, itemDetails);
+        this(UUIDs.randomUUID(), null, invoiceId, accountId, bundleId, subscriptionId, productName, planName, phaseName, usageName, null, null, null, null, startDate, endDate, null, amount, rate, currency, quantity, itemDetails);
     }
 
     public UsageInvoiceItem(final UUID id, @Nullable final DateTime createdDate, final UUID invoiceId, final UUID accountId, final UUID bundleId,
-                            final UUID subscriptionId, final String planName, final String phaseName, final String usageName,
-                            final String prettyPlanName, final String prettyPhaseName, final String prettyUsageName,
+                            final UUID subscriptionId, final String productName, final String planName, final String phaseName, final String usageName,
+                            final String prettyProductName, final String prettyPlanName, final String prettyPhaseName, final String prettyUsageName,
                             final LocalDate startDate, final LocalDate endDate, @Nullable final String description, final BigDecimal amount, final BigDecimal rate,
                             final Currency currency, @Nullable final Integer quantity, @Nullable final String itemDetails) {
-        super(id, createdDate, invoiceId, accountId, bundleId, subscriptionId, description, planName, phaseName, usageName, prettyPlanName, prettyPhaseName, prettyUsageName, startDate, endDate, amount, rate, currency, null, quantity, itemDetails, InvoiceItemType.USAGE);
+        super(id, createdDate, invoiceId, accountId, bundleId, subscriptionId, description, productName, planName, phaseName, usageName, prettyProductName, prettyPlanName, prettyPhaseName, prettyUsageName, startDate, endDate, amount, rate, currency, null, quantity, itemDetails, InvoiceItemType.USAGE);
     }
 
     @Override

@@ -82,12 +82,22 @@ public class TestInvoice extends TestJaxrsBase {
         }
 
         final Invoice invoiceJson = invoices.get(0);
+        assertEquals(invoiceJson.getItems().size(), 1);
+        final InvoiceItem invoiceItem = invoiceJson.getItems().get(0);
+        assertEquals(invoiceItem.getProductName(), "Shotgun");
+        assertEquals(invoiceItem.getPrettyProductName(), "Shotgun");
+        assertEquals(invoiceItem.getPlanName(), "shotgun-monthly");
+        assertEquals(invoiceItem.getPrettyPlanName(), "Shotgun Monthly");
+        assertEquals(invoiceItem.getPhaseName(), "shotgun-monthly-trial");
+        assertEquals(invoiceItem.getPrettyPhaseName(), "shotgun-monthly-trial");
 
         // Check get with & without items
         assertTrue(killBillClient.getInvoice(invoiceJson.getInvoiceId(), Boolean.FALSE, Boolean.FALSE, requestOptions).getItems().isEmpty());
         assertTrue(killBillClient.getInvoice(invoiceJson.getInvoiceNumber(), Boolean.FALSE, Boolean.FALSE, requestOptions).getItems().isEmpty());
         assertEquals(killBillClient.getInvoice(invoiceJson.getInvoiceId(), Boolean.TRUE, Boolean.FALSE, requestOptions).getItems().size(), invoiceJson.getItems().size());
         assertEquals(killBillClient.getInvoice(invoiceJson.getInvoiceNumber(), Boolean.TRUE, Boolean.FALSE, requestOptions).getItems().size(), invoiceJson.getItems().size());
+
+
 
         // Check we can retrieve an individual invoice
         final Invoice firstInvoice = killBillClient.getInvoice(invoiceJson.getInvoiceId(), requestOptions);
