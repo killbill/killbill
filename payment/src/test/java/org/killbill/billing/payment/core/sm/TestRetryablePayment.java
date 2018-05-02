@@ -154,6 +154,9 @@ public class TestRetryablePayment extends PaymentTestSuiteNoDB {
 
     @BeforeMethod(groups = "fast")
     public void beforeMethod() throws Exception {
+        if (hasFailed()) {
+            return;
+        }
         super.beforeMethod();
         this.utcNow = clock.getUTCNow();
 
