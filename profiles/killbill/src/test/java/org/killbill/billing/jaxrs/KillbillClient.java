@@ -315,7 +315,7 @@ public abstract class KillbillClient extends GuicyKillbillTestSuiteWithEmbeddedD
     }
 
 
-    protected void crappyWaitForLackOfProperSynchonization(int sleepValueMSec) throws Exception {
+    private void crappyWaitForLackOfProperSynchonization(int sleepValueMSec) throws Exception {
         Thread.sleep(sleepValueMSec);
     }
 

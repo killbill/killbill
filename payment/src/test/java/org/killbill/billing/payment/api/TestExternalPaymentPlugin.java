@@ -37,11 +37,6 @@ public class TestExternalPaymentPlugin extends PaymentTestSuiteWithEmbeddedDB {
 
     private Account account;
 
-    @BeforeClass(groups = "slow")
-    protected void beforeClass() throws Exception {
-        super.beforeClass();
-    }
-
     @BeforeMethod(groups = "slow")
     public void beforeMethod() throws Exception {
         if (hasFailed()) {
