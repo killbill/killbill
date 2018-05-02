@@ -22,6 +22,8 @@ import java.io.InputStreamReader;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.Stack;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
@@ -56,8 +58,18 @@ public class CallbackServlet extends HttpServlet {
     private String listenerFailedMsg;
     private boolean completed = true;
 
+    final AtomicInteger receivedCalls = new AtomicInteger(0);
+    final AtomicBoolean forceToFail = new AtomicBoolean(false);
+
     @Override
     protected void doPost(final HttpServletRequest request, final HttpServletResponse response) throws ServletException, IOException {
+        final int current = receivedCalls.incrementAndGet();
+        if (forceToFail.get()) {
+            response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+            log.info("CallmebackServlet is forced to fail for testing purposes");
+            return;
+        }
+
         final String body = CharStreams.toString(new InputStreamReader(request.getInputStream(), "UTF-8"));
         response.setStatus(HttpServletResponse.SC_OK);
 
@@ -87,6 +99,8 @@ public class CallbackServlet extends HttpServlet {
     }
 
     public synchronized void reset() {
+        receivedCalls.set(0);
+        forceToFail.set(false);
         nextExpectedEvent.clear();
         completed = true;
 
