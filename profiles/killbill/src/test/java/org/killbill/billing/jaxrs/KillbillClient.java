@@ -149,10 +149,14 @@ public abstract class KillbillClient extends GuicyKillbillTestSuiteWithEmbeddedD
 
     protected Account createAccount(final UUID parentAccountId) throws Exception {
         callbackServlet.pushExpectedEvent(ExtBusEventType.ACCOUNT_CREATION);
-        final Account input = getAccount(parentAccountId);
-        final Account account = killBillClient.createAccount(input, createdBy, reason, comment);
+        final Account account = createAccountNoEvent(parentAccountId);
         callbackServlet.assertListenerStatus();
         return account;
+    }
+
+    protected Account createAccountNoEvent(final UUID parentAccountId) throws KillBillClientException {
+        final Account input = getAccount(parentAccountId);
+        return killBillClient.createAccount(input, createdBy, reason, comment);
     }
 
     protected Subscription createEntitlement(final UUID accountId, final String bundleExternalKey, final String productName,
