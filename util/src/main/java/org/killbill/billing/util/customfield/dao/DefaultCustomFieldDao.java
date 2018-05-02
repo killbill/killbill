@@ -85,7 +85,8 @@ public class DefaultCustomFieldDao extends EntityDaoBase<CustomFieldModelDao, Cu
     }
 
     @Override
-    public List<CustomFieldModelDao> getCustomFieldsForAccountType(final ObjectType objectType, final InternalTenantContext context) {
+    public List<CustomFieldModelDao>
+    getCustomFieldsForAccountType(final ObjectType objectType, final InternalTenantContext context) {
         final List<CustomFieldModelDao> allFields = getCustomFieldsForAccount(context);
 
         return ImmutableList.<CustomFieldModelDao>copyOf(Collections2.filter(allFields, new Predicate<CustomFieldModelDao>() {

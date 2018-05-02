@@ -11,6 +11,7 @@ CREATE TABLE invoice_items (
     bundle_id varchar(36),
     subscription_id varchar(36),
     description varchar(255),
+    product_name varchar(255),
     plan_name varchar(255),
     phase_name varchar(255),
     usage_name varchar(255),

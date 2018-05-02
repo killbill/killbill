@@ -101,6 +101,7 @@ public class TestInvoiceWithMetadata extends InvoiceTestSuiteNoDB {
                                                                   account.getId(),
                                                                   subscription.getBundleId(),
                                                                   subscription.getId(),
+                                                                  null,
                                                                   event.getPlan().getName(),
                                                                   event.getPlanPhase().getName(),
                                                                   invoiceDate,

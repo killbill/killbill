@@ -176,7 +176,7 @@ public abstract class ContiguousIntervalUsageInArrear {
         LocalDate prevDate = null;
         for (final LocalDate curDate : transitionTimes) {
             if (prevDate != null) {
-                final InvoiceItem item = new UsageInvoiceItem(invoiceId, accountId, getBundleId(), getSubscriptionId(), getPlanName(),
+                final InvoiceItem item = new UsageInvoiceItem(invoiceId, accountId, getBundleId(), getSubscriptionId(), getProductName(), getPlanName(),
                                                               getPhaseName(), usage.getName(), prevDate, curDate, BigDecimal.ZERO, getCurrency());
                 result.add(item);
             }
@@ -420,6 +420,10 @@ public abstract class ContiguousIntervalUsageInArrear {
     // STEPH_USAGE planName/phaseName,BCD,... might not be correct if we changed plan but Usage section was exactly similar
     public String getPlanName() {
         return billingEvents.get(0).getPlan().getName();
+    }
+
+    public String getProductName() {
+        return billingEvents.get(0).getPlan().getProduct().getName();
     }
 
     public String getPhaseName() {
