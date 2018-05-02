@@ -444,7 +444,9 @@ public class TestJaxrsBase extends KillbillClient {
 
     protected void uploadTenantOverdueConfig(final String overdue) throws IOException, KillBillClientException {
         final String body = getResourceBodyString(overdue);
+        callbackServlet.pushExpectedEvent(ExtBusEventType.TENANT_CONFIG_CHANGE);
         overdueApi.uploadOverdueConfigXml(body, requestOptions);
+        callbackServlet.assertListenerStatus();
     }
 
     protected String getResourceBodyString(final String resource) throws IOException {
