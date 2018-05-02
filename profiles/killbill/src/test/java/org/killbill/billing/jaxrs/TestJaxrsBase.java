@@ -38,12 +38,14 @@ import org.eclipse.jetty.servlet.FilterHolder;
 import org.joda.time.LocalDate;
 import org.killbill.billing.GuicyKillbillTestWithEmbeddedDBModule;
 import org.killbill.billing.api.TestApiListener;
+import org.killbill.billing.beatrix.integration.db.TestDBRouterAPI;
 import org.killbill.billing.client.KillBillClient;
 import org.killbill.billing.client.KillBillHttpClient;
 import org.killbill.billing.client.model.Payment;
 import org.killbill.billing.client.model.PaymentTransaction;
 import org.killbill.billing.client.model.Tenant;
 import org.killbill.billing.invoice.glue.DefaultInvoiceModule;
+import org.killbill.billing.jaxrs.resources.TestDBRouterResource;
 import org.killbill.billing.jetty.HttpServer;
 import org.killbill.billing.jetty.HttpServerConfig;
 import org.killbill.billing.lifecycle.glue.BusModule;
@@ -75,6 +77,7 @@ import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
+import com.google.inject.Binder;
 import com.google.inject.Module;
 import com.google.inject.util.Modules;
 
@@ -146,7 +149,14 @@ public class TestJaxrsBase extends KillbillClient {
         protected Module getModule(final ServletContext servletContext) {
             return Modules.override(new KillbillServerModule(servletContext, serverConfig, configSource)).with(new GuicyKillbillTestWithEmbeddedDBModule(configSource),
                                                                                                                new InvoiceModuleWithMockSender(configSource),
-                                                                                                               new PaymentMockModule(configSource));
+                                                                                                               new PaymentMockModule(configSource),
+                                                                                                               new Module() {
+                                                                                                                   @Override
+                                                                                                                   public void configure(final Binder binder) {
+                                                                                                                       binder.bind(TestDBRouterAPI.class).asEagerSingleton();
+                                                                                                                       binder.bind(TestDBRouterResource.class).asEagerSingleton();
+                                                                                                                   }
+                                                                                                               });
         }
 
     }
@@ -240,6 +250,10 @@ public class TestJaxrsBase extends KillbillClient {
 
     @BeforeClass(groups = "slow")
     public void beforeClass() throws Exception {
+        if (hasFailed()) {
+            return;
+        }
+
         // TODO PIERRE Unclear why both are needed in beforeClass and beforeSuite
         if (config == null) {
             config = new ConfigurationObjectFactory(System.getProperties()).build(HttpServerConfig.class);
@@ -252,6 +266,10 @@ public class TestJaxrsBase extends KillbillClient {
 
     @BeforeSuite(groups = "slow")
     public void beforeSuite() throws Exception {
+        if (hasFailed()) {
+            return;
+        }
+
         super.beforeSuite();
 
         if (config == null) {

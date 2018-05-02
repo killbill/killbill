@@ -56,7 +56,10 @@ import org.killbill.billing.payment.provider.DefaultNoOpPaymentInfoPlugin;
 import org.killbill.billing.payment.provider.MockPaymentProviderPlugin;
 import org.killbill.billing.platform.api.KillbillConfigSource;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
+import org.killbill.billing.util.entity.dao.DBRouterUntyped;
+import org.killbill.billing.util.entity.dao.DBRouterUntyped.THREAD_STATE;
 import org.killbill.bus.api.PersistentBus.EventBusException;
+import org.killbill.commons.profiling.Profiling.WithProfilingCallback;
 import org.killbill.notificationq.api.NotificationEvent;
 import org.killbill.notificationq.api.NotificationEventWithMetadata;
 import org.killbill.notificationq.api.NotificationQueueService;
@@ -75,8 +78,8 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 import com.google.inject.Inject;
 
-import static org.awaitility.Awaitility.await;
 import static java.util.concurrent.TimeUnit.SECONDS;
+import static org.awaitility.Awaitility.await;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.fail;
 
@@ -472,6 +475,45 @@ public class TestJanitor extends PaymentTestSuiteWithEmbeddedDB {
         });
     }
 
+    @Test(groups = "slow")
+    public void testDBRouterThreadState() throws Throwable {
+        final Payment payment = (Payment) DBRouterUntyped.withRODBIAllowed(true,
+                                                                           new WithProfilingCallback<Object, Throwable>() {
+                                                                               @Override
+                                                                               public Payment execute() throws Throwable {
+                                                                                   // Shouldn't happen in practice, but it's just to verify the behavior
+                                                                                   assertEquals(DBRouterUntyped.getCurrentState(), THREAD_STATE.RO_ALLOWED);
+
+                                                                                   final BigDecimal requestedAmount = BigDecimal.TEN;
+                                                                                   testListener.pushExpectedEvent(NextEvent.PAYMENT);
+                                                                                   final Payment payment = paymentApi.createAuthorization(account, account.getPaymentMethodId(), null, requestedAmount, account.getCurrency(), null, UUID.randomUUID().toString(),
+                                                                                                                                          UUID.randomUUID().toString(), ImmutableList.<PluginProperty>of(), callContext);
+                                                                                   testListener.assertListenerStatus();
+
+                                                                                   // Thread switch, RW by default
+                                                                                   assertEquals(mockPaymentProviderPlugin.getLastThreadState(), THREAD_STATE.RW_ONLY);
+                                                                                   // Switched to RW, because of RW DAO call
+                                                                                   assertEquals(DBRouterUntyped.getCurrentState(), THREAD_STATE.RW_ONLY);
+                                                                                   return payment;
+                                                                               }
+                                                                           });
+
+        DBRouterUntyped.withRODBIAllowed(true,
+                                         new WithProfilingCallback<Object, Throwable>() {
+                                             @Override
+                                             public Object execute() throws Throwable {
+                                                 assertEquals(DBRouterUntyped.getCurrentState(), THREAD_STATE.RO_ALLOWED);
+
+                                                 final Payment retrievedPayment2 = paymentApi.getPayment(payment.getId(), true, false, ImmutableList.<PluginProperty>of(), callContext);
+                                                 Assert.assertEquals(retrievedPayment2.getTransactions().get(0).getTransactionStatus(), TransactionStatus.SUCCESS);
+
+                                                 // No thread switch, RO as well
+                                                 assertEquals(mockPaymentProviderPlugin.getLastThreadState(), THREAD_STATE.RO_ALLOWED);
+                                                 assertEquals(DBRouterUntyped.getCurrentState(), THREAD_STATE.RO_ALLOWED);
+                                                 return null;
+                                             }
+                                         });
+    }
 
     private List<PluginProperty> createPropertiesForInvoice(final Invoice invoice) {
         final List<PluginProperty> result = new ArrayList<PluginProperty>();

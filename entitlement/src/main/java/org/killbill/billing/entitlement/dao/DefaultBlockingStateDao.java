@@ -157,9 +157,20 @@ public class DefaultBlockingStateDao extends EntityDaoBase<BlockingStateModelDao
 
     private List<BlockingState> getBlockingState(final BlockingStateSqlDao sqlDao, final UUID blockableId, final BlockingStateType blockingStateType, final DateTime upToDate, final InternalTenantContext context) {
         final Date upTo = upToDate.toDate();
-        final List<BlockingStateModelDao> models = sqlDao.getBlockingState(blockableId, upTo, context);
-        final Collection<BlockingStateModelDao> modelsFiltered = filterBlockingStates(models, blockingStateType);
-        return new ArrayList<BlockingState>(Collections2.transform(modelsFiltered,
+        final List<BlockingStateModelDao> models = sqlDao.getBlockingState(blockableId, blockingStateType, upTo, context);
+        return new ArrayList<BlockingState>(Collections2.transform(models,
+                                                                   new Function<BlockingStateModelDao, BlockingState>() {
+                                                                       @Override
+                                                                       public BlockingState apply(@Nullable final BlockingStateModelDao src) {
+                                                                           return BlockingStateModelDao.toBlockingState(src);
+                                                                       }
+                                                                   }));
+    }
+
+    private List<BlockingState> getBlockingAllUpToForAccountRecordId(final BlockingStateSqlDao sqlDao, final DateTime upToDate, final InternalTenantContext context) {
+        final Date upTo = upToDate.toDate();
+        final List<BlockingStateModelDao> models = sqlDao.getBlockingAllUpToForAccount(upTo, context);
+        return new ArrayList<BlockingState>(Collections2.transform(models,
                                                                    new Function<BlockingStateModelDao, BlockingState>() {
                                                                        @Override
                                                                        public BlockingState apply(@Nullable final BlockingStateModelDao src) {
@@ -265,13 +276,15 @@ public class DefaultBlockingStateDao extends EntityDaoBase<BlockingStateModelDao
         final List<BlockingState> subscriptionBlockingStates;
         if (type == BlockingStateType.SUBSCRIPTION) {
             final UUID accountId = nonEntityDao.retrieveIdFromObjectInTransaction(context.getAccountRecordId(), ObjectType.ACCOUNT, objectIdCacheController, handle);
-            accountBlockingStates = getBlockingState(sqlDao, accountId, BlockingStateType.ACCOUNT, upToDate, context);
-            bundleBlockingStates = getBlockingState(sqlDao, bundleId, BlockingStateType.SUBSCRIPTION_BUNDLE, upToDate, context);
-            subscriptionBlockingStates = getBlockingState(sqlDao, blockableId, BlockingStateType.SUBSCRIPTION, upToDate, context);
+            final List<BlockingState> allBlockingStatesForAccount = getBlockingAllUpToForAccountRecordId(sqlDao, upToDate, context);
+            accountBlockingStates = filterBlockingStates(allBlockingStatesForAccount, accountId, BlockingStateType.ACCOUNT);
+            bundleBlockingStates = filterBlockingStates(allBlockingStatesForAccount, bundleId, BlockingStateType.SUBSCRIPTION_BUNDLE);
+            subscriptionBlockingStates = filterBlockingStates(allBlockingStatesForAccount, blockableId, BlockingStateType.SUBSCRIPTION);
         } else if (type == BlockingStateType.SUBSCRIPTION_BUNDLE) {
             final UUID accountId = nonEntityDao.retrieveIdFromObjectInTransaction(context.getAccountRecordId(), ObjectType.ACCOUNT, objectIdCacheController, handle);
-            accountBlockingStates = getBlockingState(sqlDao, accountId, BlockingStateType.ACCOUNT, upToDate, context);
-            bundleBlockingStates = getBlockingState(sqlDao, blockableId, BlockingStateType.SUBSCRIPTION_BUNDLE, upToDate, context);
+            final List<BlockingState> allBlockingStatesForAccount = getBlockingAllUpToForAccountRecordId(sqlDao, upToDate, context);
+            accountBlockingStates = filterBlockingStates(allBlockingStatesForAccount, accountId, BlockingStateType.ACCOUNT);
+            bundleBlockingStates = filterBlockingStates(allBlockingStatesForAccount, blockableId, BlockingStateType.SUBSCRIPTION_BUNDLE);
             subscriptionBlockingStates = ImmutableList.<BlockingState>of();
         } else { // BlockingStateType.ACCOUNT {
             accountBlockingStates = getBlockingState(sqlDao, blockableId, BlockingStateType.ACCOUNT, upToDate, context);
@@ -373,13 +386,13 @@ public class DefaultBlockingStateDao extends EntityDaoBase<BlockingStateModelDao
         });
     }
 
-    private Collection<BlockingStateModelDao> filterBlockingStates(final Collection<BlockingStateModelDao> models, final BlockingStateType blockingStateType) {
-        return Collections2.<BlockingStateModelDao>filter(models,
-                                                          new Predicate<BlockingStateModelDao>() {
-                                                              @Override
-                                                              public boolean apply(final BlockingStateModelDao input) {
-                                                                  return input.getType().equals(blockingStateType);
-                                                              }
-                                                          });
+    private List<BlockingState> filterBlockingStates(final Collection<BlockingState> models, final UUID objectId, final BlockingStateType blockingStateType) {
+        return ImmutableList.<BlockingState>copyOf(Collections2.<BlockingState>filter(models,
+                                                                                      new Predicate<BlockingState>() {
+                                                                                          @Override
+                                                                                          public boolean apply(final BlockingState input) {
+                                                                                              return input.getBlockedId().equals(objectId) && input.getType().equals(blockingStateType);
+                                                                                          }
+                                                                                      }));
     }
 }

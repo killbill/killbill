@@ -123,27 +123,6 @@ public abstract class PaymentOperation extends OperationCallbackBase<PaymentTran
     @Override
     protected abstract PaymentTransactionInfoPlugin doCallSpecificOperationCallback() throws PaymentPluginApiException;
 
-    protected Iterable<PaymentTransactionModelDao> getOnLeavingStateExistingTransactionsForType(final TransactionType transactionType) {
-        if (paymentStateContext.getOnLeavingStateExistingTransactions() == null || paymentStateContext.getOnLeavingStateExistingTransactions().isEmpty()) {
-            return ImmutableList.of();
-        }
-        return Iterables.filter(paymentStateContext.getOnLeavingStateExistingTransactions(), new Predicate<PaymentTransactionModelDao>() {
-            @Override
-            public boolean apply(final PaymentTransactionModelDao input) {
-                return input.getTransactionStatus() == TransactionStatus.SUCCESS && input.getTransactionType() == transactionType;
-            }
-        });
-    }
-
-    protected BigDecimal getSumAmount(final Iterable<PaymentTransactionModelDao> transactions) {
-        BigDecimal result = BigDecimal.ZERO;
-        final Iterator<PaymentTransactionModelDao> iterator = transactions.iterator();
-        while (iterator.hasNext()) {
-            result = result.add(iterator.next().getAmount());
-        }
-        return result;
-    }
-
     private OperationResult doOperationCallbackWithDispatchAndAccountLock(String pluginName) throws OperationException {
         return dispatchWithAccountLockAndTimeout(pluginName, new DispatcherCallback<PluginDispatcherReturnType<OperationResult>, OperationException>() {
             @Override
@@ -181,6 +160,7 @@ public abstract class PaymentOperation extends OperationCallbackBase<PaymentTran
                     throw new IllegalStateException("Payment plugin returned a null result");
                 }
 
+                logger.debug("Plugin returned paymentTransactionInfoPlugin='{}'", paymentInfoPlugin);
                 paymentStateContext.setPaymentTransactionInfoPlugin(paymentInfoPlugin);
                 return PaymentTransactionInfoPluginConverter.toOperationResult(paymentStateContext.getPaymentTransactionInfoPlugin());
             } else {
@@ -194,6 +174,7 @@ public abstract class PaymentOperation extends OperationCallbackBase<PaymentTran
                                                                                                         buildPaymentPluginStatusFromOperationResult(paymentStateContext.getOverridePluginOperationResult()),
                                                                                                         null,
                                                                                                         null);
+                logger.debug("Plugin bypassed, paymentTransactionInfoPlugin='{}'", paymentInfoPlugin);
                 paymentStateContext.setPaymentTransactionInfoPlugin(paymentInfoPlugin);
                 return paymentStateContext.getOverridePluginOperationResult();
             }

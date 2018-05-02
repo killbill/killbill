@@ -73,7 +73,7 @@ public class TestDefaultSubscriptionTransferApi extends SubscriptionTestSuiteNoD
         final CatalogInternalApi catalogInternalApiWithMockCatalogService = new DefaultCatalogInternalApi(catalogService, internalCallContextFactory);
         final SubscriptionBaseApiService apiService = Mockito.mock(SubscriptionBaseApiService.class);
         final SubscriptionBaseTimelineApi timelineApi = Mockito.mock(SubscriptionBaseTimelineApi.class);
-        transferApi = new DefaultSubscriptionBaseTransferApi(clock, dao, timelineApi, catalogInternalApiWithMockCatalogService, apiService, internalCallContextFactory);
+        transferApi = new DefaultSubscriptionBaseTransferApi(clock, dao, timelineApi, catalogInternalApiWithMockCatalogService, subscriptionInternalApi, apiService, internalCallContextFactory);
         // Overrride catalog with our Mock CatalogService
         this.catalog = catalogInternalApiWithMockCatalogService.getFullCatalog(true, true, internalCallContext);
     }

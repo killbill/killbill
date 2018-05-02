@@ -219,7 +219,7 @@ public class InvoiceDaoHelper {
         // Finally, create the adjustment
         // Note! The amount is negated here!
         return new InvoiceItemModelDao(context.getCreatedDate(), InvoiceItemType.ITEM_ADJ, invoiceItemToBeAdjusted.getInvoiceId(), invoiceItemToBeAdjusted.getAccountId(),
-                                       null, null, null, null, null, null, effectiveDate, effectiveDate, amountToAdjust.negate(), null, currencyForAdjustment, invoiceItemToBeAdjusted.getId());
+                                       null, null, null, null, null, null, null, effectiveDate, effectiveDate, amountToAdjust.negate(), null, currencyForAdjustment, invoiceItemToBeAdjusted.getId());
     }
 
     public void populateChildren(final InvoiceModelDao invoice, final List<Tag> invoicesTags, final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory, final InternalTenantContext context) {

@@ -112,17 +112,29 @@ public abstract class InvoiceTestSuiteNoDB extends GuicyKillbillTestSuiteNoDB {
 
     @BeforeClass(groups = "fast")
     protected void beforeClass() throws Exception {
+        if (hasFailed()) {
+            return;
+        }
+
         final Injector injector = Guice.createInjector(new TestInvoiceModuleNoDB(configSource));
         injector.injectMembers(this);
     }
 
     @BeforeMethod(groups = "fast")
     public void beforeMethod() {
+        if (hasFailed()) {
+            return;
+        }
+
         bus.start();
     }
 
     @AfterMethod(groups = "fast")
     public void afterMethod() {
+        if (hasFailed()) {
+            return;
+        }
+
         bus.stop();
     }
 }

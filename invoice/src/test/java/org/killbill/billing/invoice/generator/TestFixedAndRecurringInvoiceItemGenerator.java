@@ -115,7 +115,7 @@ public class TestFixedAndRecurringInvoiceItemGenerator extends InvoiceTestSuiteN
         final PlanPhase phase = new MockPlanPhase(null, fixedPrice, BillingPeriod.NO_BILLING_PERIOD, PhaseType.TRIAL);
 
         final UUID invoiceId = UUID.randomUUID();
-        final InvoiceItem prevInvoiceItem = new FixedPriceInvoiceItem(invoiceId, account.getId(), UUID.randomUUID(), UUID.randomUUID(), plan.getName(),
+        final InvoiceItem prevInvoiceItem = new FixedPriceInvoiceItem(invoiceId, account.getId(), UUID.randomUUID(), UUID.randomUUID(), null, plan.getName(),
                                                                       phase.getName(), invoiceItemDate, fixedPriceAmount, Currency.USD);
 
         final BillingEvent event = invoiceUtil.createMockBillingEvent(account, subscription, new DateTime("2016-01-08"),
@@ -138,7 +138,7 @@ public class TestFixedAndRecurringInvoiceItemGenerator extends InvoiceTestSuiteN
         final PlanPhase phase = new MockPlanPhase(null, fixedPrice, BillingPeriod.NO_BILLING_PERIOD, PhaseType.TRIAL);
 
         final UUID invoiceId = UUID.randomUUID();
-        final InvoiceItem prevInvoiceItem = new FixedPriceInvoiceItem(invoiceId, account.getId(), subscription.getBundleId(), subscription.getId(), plan.getName(),
+        final InvoiceItem prevInvoiceItem = new FixedPriceInvoiceItem(invoiceId, account.getId(), subscription.getBundleId(), subscription.getId(), null, plan.getName(),
                                                                       phase.getName(), invoiceItemDate, fixedPriceAmount, Currency.USD);
 
         final BillingEvent event = invoiceUtil.createMockBillingEvent(account, subscription, new DateTime("2016-02-01"),
@@ -161,7 +161,7 @@ public class TestFixedAndRecurringInvoiceItemGenerator extends InvoiceTestSuiteN
         final PlanPhase phase = new MockPlanPhase(null, fixedPrice, BillingPeriod.NO_BILLING_PERIOD, PhaseType.TRIAL);
 
         final UUID invoiceId = UUID.randomUUID();
-        final InvoiceItem prevInvoiceItem = new FixedPriceInvoiceItem(invoiceId, account.getId(), subscription.getBundleId(), subscription.getId(), plan.getName(),
+        final InvoiceItem prevInvoiceItem = new FixedPriceInvoiceItem(invoiceId, account.getId(), subscription.getBundleId(), subscription.getId(), null, plan.getName(),
                                                                       phase.getName(), invoiceItemDate, fixedPriceAmount, Currency.USD);
 
         final BillingEvent event = invoiceUtil.createMockBillingEvent(account, subscription, new DateTime("2016-01-08"),
@@ -326,6 +326,7 @@ public class TestFixedAndRecurringInvoiceItemGenerator extends InvoiceTestSuiteN
                                                             account.getId(),
                                                             subscription.getBundleId(),
                                                             subscription.getId(),
+                                                            null,
                                                             event.getPlan().getName(),
                                                             event.getPlanPhase().getName(),
                                                             startDate.plusMonths(i),
@@ -354,6 +355,7 @@ public class TestFixedAndRecurringInvoiceItemGenerator extends InvoiceTestSuiteN
                                                             account.getId(),
                                                             subscription.getBundleId(),
                                                             subscription.getId(),
+                                                            null,
                                                             event.getPlan().getName(),
                                                             event.getPlanPhase().getName(),
                                                             startDate.plusMonths(i),
@@ -414,6 +416,7 @@ public class TestFixedAndRecurringInvoiceItemGenerator extends InvoiceTestSuiteN
                                                              account.getId(),
                                                              subscription.getBundleId(),
                                                              subscription.getId(),
+                                                             null,
                                                              event.getPlan().getName(),
                                                              event.getPlanPhase().getName(),
                                                              "Buggy fixed item",
@@ -471,6 +474,7 @@ public class TestFixedAndRecurringInvoiceItemGenerator extends InvoiceTestSuiteN
                                                             account.getId(),
                                                             subscription.getBundleId(),
                                                             subscription.getId(),
+                                                            null,
                                                             event.getPlan().getName(),
                                                             event.getPlanPhase().getName(),
                                                             startDate,
@@ -532,6 +536,7 @@ public class TestFixedAndRecurringInvoiceItemGenerator extends InvoiceTestSuiteN
                                                         account.getId(),
                                                         subscription.getBundleId(),
                                                         subscription.getId(),
+                                                        null,
                                                         event.getPlan().getName(),
                                                         event.getPlanPhase().getName(),
                                                         startDate,
@@ -594,6 +599,7 @@ public class TestFixedAndRecurringInvoiceItemGenerator extends InvoiceTestSuiteN
                                                         account.getId(),
                                                         subscription.getBundleId(),
                                                         subscription.getId(),
+                                                        null,
                                                         event.getPlan().getName(),
                                                         event.getPlanPhase().getName(),
                                                         startDate,
@@ -608,6 +614,7 @@ public class TestFixedAndRecurringInvoiceItemGenerator extends InvoiceTestSuiteN
                                                         account.getId(),
                                                         subscription.getBundleId(),
                                                         subscription.getId(),
+                                                        null,
                                                         event.getPlan().getName(),
                                                         event.getPlanPhase().getName(),
                                                         startDate,
@@ -675,6 +682,7 @@ public class TestFixedAndRecurringInvoiceItemGenerator extends InvoiceTestSuiteN
                                                         account.getId(),
                                                         subscription.getBundleId(),
                                                         subscription.getId(),
+                                                        null,
                                                         event.getPlan().getName(),
                                                         event.getPlanPhase().getName(),
                                                         startDate,
@@ -744,6 +752,7 @@ public class TestFixedAndRecurringInvoiceItemGenerator extends InvoiceTestSuiteN
                                                         account.getId(),
                                                         subscription.getBundleId(),
                                                         subscription.getId(),
+                                                        null,
                                                         event.getPlan().getName(),
                                                         event.getPlanPhase().getName(),
                                                         startDate,
@@ -823,6 +832,7 @@ public class TestFixedAndRecurringInvoiceItemGenerator extends InvoiceTestSuiteN
                                                         account.getId(),
                                                         subscription.getBundleId(),
                                                         subscription.getId(),
+                                                        null,
                                                         event.getPlan().getName(),
                                                         event.getPlanPhase().getName(),
                                                         startDate,
@@ -947,6 +957,7 @@ public class TestFixedAndRecurringInvoiceItemGenerator extends InvoiceTestSuiteN
                                                         account.getId(),
                                                         subscription.getBundleId(),
                                                         subscription.getId(),
+                                                        null,
                                                         "my-plan",
                                                         "my-plan-monthly",
                                                         startDate,
@@ -1035,6 +1046,7 @@ public class TestFixedAndRecurringInvoiceItemGenerator extends InvoiceTestSuiteN
                                                         account.getId(),
                                                         subscription.getBundleId(),
                                                         subscription.getId(),
+                                                        null,
                                                         plan.getName(),
                                                         planPhase.getName(),
                                                         startDate,
@@ -1119,6 +1131,7 @@ public class TestFixedAndRecurringInvoiceItemGenerator extends InvoiceTestSuiteN
                                                         account.getId(),
                                                         subscription.getBundleId(),
                                                         subscription.getId(),
+                                                        null,
                                                         plan.getName(),
                                                         planPhase.getName(),
                                                         startDate,
@@ -1203,6 +1216,7 @@ public class TestFixedAndRecurringInvoiceItemGenerator extends InvoiceTestSuiteN
                                                         account.getId(),
                                                         subscription.getBundleId(),
                                                         subscription.getId(),
+                                                        null,
                                                         plan.getName(),
                                                         planPhase.getName(),
                                                         startDate,
@@ -1256,6 +1270,7 @@ public class TestFixedAndRecurringInvoiceItemGenerator extends InvoiceTestSuiteN
                                                                             account.getId(),
                                                                             subscription.getBundleId(),
                                                                             subscription.getId(),
+                                                                            null,
                                                                             "planName",
                                                                             "phaseName",
                                                                             "description",
@@ -1280,6 +1295,7 @@ public class TestFixedAndRecurringInvoiceItemGenerator extends InvoiceTestSuiteN
                                                          account.getId(),
                                                          subscription.getBundleId(),
                                                          subscription.getId(),
+                                                         null,
                                                          "planName",
                                                          "phaseName",
                                                          "description",
@@ -1310,6 +1326,7 @@ public class TestFixedAndRecurringInvoiceItemGenerator extends InvoiceTestSuiteN
                                                                           account.getId(),
                                                                           subscription.getBundleId(),
                                                                           subscription.getId(),
+                                                                          null,
                                                                           "planName",
                                                                           "phaseName",
                                                                           startDate,
@@ -1335,6 +1352,7 @@ public class TestFixedAndRecurringInvoiceItemGenerator extends InvoiceTestSuiteN
                                                         account.getId(),
                                                         subscription.getBundleId(),
                                                         subscription.getId(),
+                                                        null,
                                                         "planName",
                                                         "phaseName",
                                                         startDate,

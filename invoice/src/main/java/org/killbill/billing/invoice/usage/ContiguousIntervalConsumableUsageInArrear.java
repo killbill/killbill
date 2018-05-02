@@ -82,13 +82,13 @@ public class ContiguousIntervalConsumableUsageInArrear extends ContiguousInterva
 
                 for (UsageConsumableInArrearTierUnitAggregate toBeBilledUsageDetail : ((UsageConsumableInArrearAggregate) toBeBilledUsageDetails).getTierDetails()) {
                     final String itemDetails = toJson(toBeBilledUsageDetail);
-                    final InvoiceItem item = new UsageInvoiceItem(invoiceId, accountId, getBundleId(), getSubscriptionId(), getPlanName(),
+                    final InvoiceItem item = new UsageInvoiceItem(invoiceId, accountId, getBundleId(), getSubscriptionId(), getProductName(), getPlanName(),
                                                                   getPhaseName(), usage.getName(), startDate, endDate, toBeBilledUsageDetail.getAmount(), toBeBilledUsageDetail.getTierPrice(), getCurrency(), toBeBilledUsageDetail.getQuantity(), itemDetails);
                     result.add(item);
                 }
             } else {
                 final String itemDetails = toJson(toBeBilledUsageDetails);
-                final InvoiceItem item = new UsageInvoiceItem(invoiceId, accountId, getBundleId(), getSubscriptionId(), getPlanName(),
+                final InvoiceItem item = new UsageInvoiceItem(invoiceId, accountId, getBundleId(), getSubscriptionId(), getProductName(), getPlanName(),
                                                               getPhaseName(), usage.getName(), startDate, endDate, amountToBill, null, getCurrency(), null, itemDetails);
                 result.add(item);
             }

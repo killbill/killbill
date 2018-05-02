@@ -1,3 +1,7 @@
+0.19.13
+    Entitlement/subscription refactoring and incremental perf improvements
+    New implementation pass to allow a mix of RO and RW calls
+
 0.19.12
     New API to retrieve history info from any objects
     Entitlement/subscription refactoring and incremental perf improvements

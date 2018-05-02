@@ -120,6 +120,7 @@ import org.killbill.billing.util.dao.NonEntityDao;
 import org.killbill.billing.util.nodes.KillbillNodesApi;
 import org.killbill.billing.util.tag.ControlTagType;
 import org.killbill.bus.api.PersistentBus;
+import org.killbill.bus.api.PersistentBus.EventBusException;
 import org.skife.config.ConfigurationObjectFactory;
 import org.skife.config.TimeSpan;
 import org.slf4j.Logger;
@@ -306,6 +307,10 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
 
     @BeforeClass(groups = "slow")
     public void beforeClass() throws Exception {
+        if (hasFailed()) {
+            return;
+        }
+
         final InvoiceConfig defaultInvoiceConfig = new ConfigurationObjectFactory(skifeConfigSource).build(InvoiceConfig.class);
         invoiceConfig = new ConfigurableInvoiceConfig(defaultInvoiceConfig);
         // The default value is 50, i.e. wait 50 x 100ms = 5s to get the lock. This isn't always enough and can lead to random tests failures
@@ -335,10 +340,14 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
 
         // Start services
         lifecycle.fireStartupSequencePriorEventRegistration();
-        busService.getBus().register(busHandler);
+        registerHandlers();
         lifecycle.fireStartupSequencePostEventRegistration();
 
         paymentPlugin.clear();
+    }
+
+    protected void registerHandlers() throws EventBusException {
+        busService.getBus().register(busHandler);
     }
 
     @AfterMethod(groups = "slow")

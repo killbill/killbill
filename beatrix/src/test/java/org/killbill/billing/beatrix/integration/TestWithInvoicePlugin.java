@@ -146,6 +146,8 @@ public class TestWithInvoicePlugin extends TestIntegrationBase {
                                                                                    null,
                                                                                    null,
                                                                                    null,
+                                                                                   null,
+                                                                                   null,
                                                                                    "My charge",
                                                                                    clock.getUTCToday(),
                                                                                    null,

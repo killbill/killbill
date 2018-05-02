@@ -119,12 +119,20 @@ public abstract class PaymentTestSuiteWithEmbeddedDB extends GuicyKillbillTestSu
 
     @BeforeClass(groups = "slow")
     protected void beforeClass() throws Exception {
+        if (hasFailed()) {
+            return;
+        }
+
         final Injector injector = Guice.createInjector(new TestPaymentModuleWithEmbeddedDB(configSource, getClock()));
         injector.injectMembers(this);
     }
 
     @BeforeMethod(groups = "slow")
     public void beforeMethod() throws Exception {
+        if (hasFailed()) {
+            return;
+        }
+
         super.beforeMethod();
 
         stateMachineConfigCache.clearPaymentStateMachineConfig(PLUGIN_NAME, internalCallContext);
@@ -141,6 +149,10 @@ public abstract class PaymentTestSuiteWithEmbeddedDB extends GuicyKillbillTestSu
 
     @AfterMethod(groups = "slow")
     public void afterMethod() throws Exception {
+        if (hasFailed()) {
+            return;
+        }
+
         janitor.stop();
         eventBus.stop();
         paymentExecutors.stop();
