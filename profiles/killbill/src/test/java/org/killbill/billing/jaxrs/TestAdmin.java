@@ -76,7 +76,7 @@ public class TestAdmin extends TestJaxrsBase {
         final Payment updatedPayment = paymentApi.getPayment(authPayment.getPaymentId(), NULL_PLUGIN_PROPERTIES, requestOptions);
         Assert.assertEquals(updatedPayment.getTransactions().size(), 1);
         final PaymentTransaction authTransaction2 = updatedPayment.getTransactions().get(0);
-        Assert.assertEquals(authTransaction2.getStatus(), TransactionStatus.PAYMENT_FAILURE.toString());
+        Assert.assertEquals(authTransaction2.getStatus(), TransactionStatus.PAYMENT_FAILURE);
 
         // Capture should fail because lastSuccessPaymentState was moved to AUTH_FAILED
         doCapture(updatedPayment, true);

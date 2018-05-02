@@ -192,9 +192,9 @@ public abstract class KillbillClient extends GuicyKillbillTestSuiteWithEmbeddedD
         final PaymentMethodPluginDetail info = new PaymentMethodPluginDetail();
         final PaymentMethod paymentMethodJson = new PaymentMethod(null, UUIDs.randomUUID().toString(), input.getAccountId(),
                                                                   isDefault, ExternalPaymentProviderPlugin.PLUGIN_NAME, info, EMPTY_AUDIT_LOGS);
+        final PaymentMethod paymentMethod = accountApi.createPaymentMethod(input.getAccountId(), paymentMethodJson, isDefault, false, NULL_PLUGIN_NAMES, NULL_PLUGIN_PROPERTIES, requestOptions);
         callbackServlet.assertListenerStatus();
-
-        return accountApi.createPaymentMethod(input.getAccountId(), paymentMethodJson, NULL_PLUGIN_NAMES, NULL_PLUGIN_PROPERTIES, requestOptions);
+        return paymentMethod;
     }
 
     protected Account createAccount() throws Exception {

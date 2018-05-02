@@ -214,6 +214,11 @@ public class TestJaxrsBase extends KillbillClient {
     }
 
     protected void setupClient(final String username, final String password, final String apiKey, final String apiSecret) {
+        requestOptions = requestOptions.extend()
+                                       .withTenantApiKey(apiKey)
+                                       .withTenantApiSecret(apiSecret)
+                                       .build();
+
         killBillHttpClient = new KillBillHttpClient(String.format("http://%s:%d", config.getServerHost(), config.getServerPort()),
                                                     username,
                                                     password,
@@ -255,10 +260,6 @@ public class TestJaxrsBase extends KillbillClient {
 
     protected void logoutTenant() {
         setupClient(USERNAME, PASSWORD, null, null);
-    }
-
-    protected void login() {
-        login(USERNAME, PASSWORD);
     }
 
     protected void login(final String username, final String password) {
@@ -317,7 +318,7 @@ public class TestJaxrsBase extends KillbillClient {
             callbackServlet.pushExpectedEvent(ExtBusEventType.TENANT_CONFIG_CHANGE);
         }
 
-        final Tenant createdTenant = tenantApi.createTenant(tenant, true, requestOptions);
+        final Tenant createdTenant = tenantApi.createTenant(tenant, useGlobalDefault, requestOptions);
 
         // Register tenant for callback
         final String callback = callbackServer.getServletEndpoint();
