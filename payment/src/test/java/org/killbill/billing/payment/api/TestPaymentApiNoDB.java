@@ -72,6 +72,9 @@ public class TestPaymentApiNoDB extends PaymentTestSuiteNoDB {
 
     @BeforeMethod(groups = "fast")
     public void beforeMethod() throws Exception {
+        if (hasFailed()) {
+            return;
+        }
         super.beforeMethod();
         final PaymentMethodPlugin paymentMethodInfo = new DefaultNoOpPaymentMethodPlugin(UUID.randomUUID().toString(), true, null);
         account = testHelper.addTestPaymentMethod(account, paymentMethodInfo);
