@@ -61,16 +61,19 @@ public class TestOverdue extends TestJaxrsBase {
         // We're still clear - see the configuration
         Assert.assertTrue(accountApi.getOverdueAccount(accountJson.getAccountId(), requestOptions).isClearState());
 
+        callbackServlet.pushExpectedEvents(ExtBusEventType.INVOICE_CREATION, ExtBusEventType.INVOICE_PAYMENT_FAILED, ExtBusEventType.BLOCKING_STATE, ExtBusEventType.OVERDUE_CHANGE);
         clock.addDays(30);
-        crappyWaitForLackOfProperSynchonization();
+        callbackServlet.assertListenerStatus();
         Assert.assertEquals(accountApi.getOverdueAccount(accountJson.getAccountId(), requestOptions).getName(), "OD1");
 
+        callbackServlet.pushExpectedEvents(ExtBusEventType.TAG_CREATION, ExtBusEventType.BLOCKING_STATE, ExtBusEventType.OVERDUE_CHANGE);
         clock.addDays(10);
-        crappyWaitForLackOfProperSynchonization();
+        callbackServlet.assertListenerStatus();
         Assert.assertEquals(accountApi.getOverdueAccount(accountJson.getAccountId(), requestOptions).getName(), "OD2");
 
+        callbackServlet.pushExpectedEvents(ExtBusEventType.BLOCKING_STATE, ExtBusEventType.OVERDUE_CHANGE);
         clock.addDays(10);
-        crappyWaitForLackOfProperSynchonization();
+        callbackServlet.assertListenerStatus();
         Assert.assertEquals(accountApi.getOverdueAccount(accountJson.getAccountId(), requestOptions).getName(), "OD3");
 
         // Post external payments, paying the most recent invoice first: this is to avoid a race condition where
