@@ -301,10 +301,8 @@ public class TestInvoicePayment extends TestJaxrsBase {
         }
     }
 
-
     @Test(groups = "slow")
     public void testManualInvoicePayment() throws Exception {
-
         final Account accountJson = createAccountWithDefaultPaymentMethod();
         assertNotNull(accountJson);
 
@@ -317,12 +315,14 @@ public class TestInvoicePayment extends TestJaxrsBase {
         final Subscription subscriptionJson = createEntitlement(accountJson.getAccountId(), UUID.randomUUID().toString(), "Shotgun",
                                                                 ProductCategory.BASE, BillingPeriod.MONTHLY, true);
         assertNotNull(subscriptionJson);
+
+        callbackServlet.pushExpectedEvents(ExtBusEventType.SUBSCRIPTION_PHASE,
+                                           ExtBusEventType.INVOICE_CREATION);
         clock.addDays(32);
-        crappyWaitForLackOfProperSynchonization();
+        callbackServlet.assertListenerStatus();
 
         final List<Invoice> invoices = killBillClient.getInvoicesForAccount(accountJson.getAccountId(), requestOptions);
         assertEquals(invoices.size(), 2);
-
 
         final InvoicePayment invoicePayment1 = new InvoicePayment();
         invoicePayment1.setPurchasedAmount(invoices.get(1).getBalance().add(BigDecimal.TEN));
@@ -336,7 +336,6 @@ public class TestInvoicePayment extends TestJaxrsBase {
         } catch (final KillBillClientException e) {
             assertTrue(true);
         }
-
 
         final InvoicePayment invoicePayment2 = new InvoicePayment();
         invoicePayment2.setPurchasedAmount(invoices.get(1).getBalance());

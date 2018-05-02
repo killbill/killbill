@@ -45,6 +45,7 @@ import org.killbill.billing.entitlement.api.SubscriptionEventType;
 import org.killbill.billing.invoice.api.DryRunType;
 import org.killbill.billing.invoice.api.InvoiceItemType;
 import org.killbill.billing.invoice.api.InvoiceStatus;
+import org.killbill.billing.notification.plugin.api.ExtBusEventType;
 import org.killbill.billing.payment.provider.ExternalPaymentProviderPlugin;
 import org.killbill.billing.util.api.AuditLevel;
 import org.testng.Assert;
@@ -633,8 +634,9 @@ public class TestInvoice extends TestJaxrsBase {
         createAccountWithPMBundleAndSubscriptionAndWaitForFirstInvoice();
 
         for (int i = 0; i < 3; i++) {
+            callbackServlet.pushExpectedEvents(ExtBusEventType.INVOICE_CREATION, ExtBusEventType.INVOICE_PAYMENT_SUCCESS, ExtBusEventType.PAYMENT_SUCCESS);
             clock.addMonths(1);
-            crappyWaitForLackOfProperSynchonization();
+            callbackServlet.assertListenerStatus();
         }
 
         final Invoices allInvoices = killBillClient.getInvoices(requestOptions);
@@ -782,9 +784,15 @@ public class TestInvoice extends TestJaxrsBase {
         createEntitlement(childAccount3.getAccountId(), UUID.randomUUID().toString(), "Shotgun",
                           ProductCategory.BASE, BillingPeriod.MONTHLY, true);
 
-
+        callbackServlet.pushExpectedEvents(ExtBusEventType.SUBSCRIPTION_PHASE,
+                                           ExtBusEventType.SUBSCRIPTION_PHASE,
+                                           ExtBusEventType.SUBSCRIPTION_PHASE,
+                                           ExtBusEventType.INVOICE_CREATION,
+                                           ExtBusEventType.INVOICE_CREATION,
+                                           ExtBusEventType.INVOICE_CREATION,
+                                           ExtBusEventType.INVOICE_CREATION);
         clock.addDays(32);
-        crappyWaitForLackOfProperSynchonization();
+        callbackServlet.assertListenerStatus();
 
         final List<Invoice> child1Invoices = killBillClient.getInvoicesForAccount(childAccount1.getAccountId(), true, false, requestOptions);
         final List<Invoice> child2Invoices = killBillClient.getInvoicesForAccount(childAccount2.getAccountId(), true, false, requestOptions);

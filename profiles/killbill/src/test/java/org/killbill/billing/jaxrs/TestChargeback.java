@@ -33,6 +33,7 @@ import org.killbill.billing.client.model.InvoicePayments;
 import org.killbill.billing.client.model.Payment;
 import org.killbill.billing.client.model.PaymentTransaction;
 import org.killbill.billing.client.model.Subscription;
+import org.killbill.billing.notification.plugin.api.ExtBusEventType;
 import org.killbill.billing.payment.api.TransactionType;
 import org.testng.Assert;
 import org.testng.annotations.Test;
@@ -174,8 +175,12 @@ public class TestChargeback extends TestJaxrsBase {
         assertNotNull(subscriptionJson);
 
         // Move after the trial period to trigger an invoice with a non-zero invoice item
+        callbackServlet.pushExpectedEvents(ExtBusEventType.SUBSCRIPTION_PHASE,
+                                           ExtBusEventType.INVOICE_CREATION,
+                                           ExtBusEventType.INVOICE_PAYMENT_SUCCESS,
+                                           ExtBusEventType.PAYMENT_SUCCESS);
         clock.addDays(32);
-        crappyWaitForLackOfProperSynchonization();
+        callbackServlet.assertListenerStatus();
 
         // Retrieve the invoice
         final List<Invoice> invoices = killBillClient.getInvoicesForAccount(accountJson.getAccountId());
