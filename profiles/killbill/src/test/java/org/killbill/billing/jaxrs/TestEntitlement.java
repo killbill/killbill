@@ -90,6 +90,10 @@ public class TestEntitlement extends TestJaxrsBase {
         entitlementJson.setPriceOverrides(null);
         Assert.assertTrue(objFromJson.equals(entitlementJson));
 
+        // Change the clock otherwise the CREATE event might be replaced (instead of having a CHANGE event)
+        clock.addDays(1);
+        callbackServlet.assertListenerStatus();
+
         // Change plan IMM
         final String newProductName = "Assault-Rifle";
 
@@ -110,7 +114,7 @@ public class TestEntitlement extends TestJaxrsBase {
                                            ExtBusEventType.INVOICE_CREATION,
                                            ExtBusEventType.INVOICE_PAYMENT_SUCCESS,
                                            ExtBusEventType.PAYMENT_SUCCESS);
-        clock.addDays(31);
+        clock.addDays(30);
         callbackServlet.assertListenerStatus();
 
         // Cancel IMM (Billing EOT)
@@ -266,8 +270,11 @@ public class TestEntitlement extends TestJaxrsBase {
                                            ExtBusEventType.ENTITLEMENT_CREATION,
                                            ExtBusEventType.SUBSCRIPTION_CREATION,
                                            ExtBusEventType.SUBSCRIPTION_CREATION,
-                                           ExtBusEventType.INVOICE_CREATION);
+                                           ExtBusEventType.INVOICE_CREATION,
+                                           ExtBusEventType.INVOICE_PAYMENT_SUCCESS,
+                                           ExtBusEventType.PAYMENT_SUCCESS);
         final Subscription subscription = killBillClient.createSubscription(input, null, DEFAULT_WAIT_COMPLETION_TIMEOUT_SEC, requestOptions);
+        callbackServlet.assertListenerStatus();
         Assert.assertEquals(subscription.getPriceOverrides().size(), 2);
 
         Assert.assertEquals(subscription.getEvents().size(), 3);
