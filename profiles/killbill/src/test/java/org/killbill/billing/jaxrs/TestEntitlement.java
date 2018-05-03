@@ -491,6 +491,9 @@ public class TestEntitlement extends TestJaxrsBase {
             }
         }
 
+        clock.addDays(1);
+        callbackServlet.assertListenerStatus();
+
         callbackServlet.pushExpectedEvents(ExtBusEventType.ENTITLEMENT_CANCEL,
                                            ExtBusEventType.ENTITLEMENT_CANCEL,
                                            ExtBusEventType.ENTITLEMENT_CANCEL,
@@ -508,7 +511,14 @@ public class TestEntitlement extends TestJaxrsBase {
                                            ExtBusEventType.SUBSCRIPTION_CANCEL,
                                            ExtBusEventType.SUBSCRIPTION_CANCEL,
                                            ExtBusEventType.SUBSCRIPTION_CANCEL,
-                                           ExtBusEventType.SUBSCRIPTION_CANCEL);
+                                           ExtBusEventType.SUBSCRIPTION_CANCEL,
+                                           ExtBusEventType.INVOICE_CREATION,
+                                           ExtBusEventType.INVOICE_PAYMENT_FAILED,
+                                           ExtBusEventType.INVOICE_ADJUSTMENT,
+                                           ExtBusEventType.INVOICE_ADJUSTMENT,
+                                           ExtBusEventType.INVOICE_ADJUSTMENT,
+                                           ExtBusEventType.INVOICE_ADJUSTMENT,
+                                           ExtBusEventType.BLOCKING_STATE);
         killBillClient.closeAccount(accountJson.getAccountId(), true, false, true, requestOptions);
         callbackServlet.assertListenerStatus();
 
@@ -521,7 +531,7 @@ public class TestEntitlement extends TestJaxrsBase {
         }
 
         final List<Invoice> invoicesAfterClose = killBillClient.getInvoicesForAccount(accountJson.getAccountId(), true, false, false, requestOptions);
-        assertEquals(invoicesAfterClose.size(), 1);
+        assertEquals(invoicesAfterClose.size(), 2);
         assertEquals(invoicesAfterClose.get(0).getBalance().compareTo(BigDecimal.ZERO), 0);
         assertEquals(killBillClient.getInvoiceTags(invoicesAfterClose.get(0).getInvoiceId(), requestOptions).size(), 0);
     }
