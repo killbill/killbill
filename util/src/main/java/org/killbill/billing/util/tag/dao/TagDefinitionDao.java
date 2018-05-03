@@ -22,7 +22,9 @@ import java.util.UUID;
 
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
+import org.killbill.billing.util.api.AuditLevel;
 import org.killbill.billing.util.api.TagDefinitionApiException;
+import org.killbill.billing.util.audit.AuditLogWithHistory;
 import org.killbill.billing.util.entity.dao.EntityDao;
 import org.killbill.billing.util.tag.TagDefinition;
 
@@ -37,4 +39,6 @@ public interface TagDefinitionDao extends EntityDao<TagDefinitionModelDao, TagDe
     public TagDefinitionModelDao create(String definitionName, String description, String tagDefinitionObjectTypes, InternalCallContext context) throws TagDefinitionApiException;
 
     public void deleteById(UUID definitionId, InternalCallContext context) throws TagDefinitionApiException;
+
+    List<AuditLogWithHistory> getTagDefinitionAuditLogsWithHistoryForId(UUID tagDefinitionId, AuditLevel auditLevel, InternalTenantContext context);
 }
