@@ -358,16 +358,4 @@ public abstract class KillbillClient extends GuicyKillbillTestSuiteWithEmbeddedD
         return new Account(accountId, name, length, externalKey, email, null, currency, parentAccountId, isPaymentDelegatedToParent, null, null, timeZone,
                            address1, address2, postalCode, company, city, state, country, locale, phone, notes, false, false, null, null, EMPTY_AUDIT_LOGS);
     }
-
-    /**
-     * We could implement a ClockResource in jaxrs with the ability to sync on user token
-     * but until we have a strong need for it, this is in the TODO list...
-     */
-    protected void crappyWaitForLackOfProperSynchonization() throws Exception {
-        crappyWaitForLackOfProperSynchonization(5000);
-    }
-
-    private void crappyWaitForLackOfProperSynchonization(int sleepValueMSec) throws Exception {
-        Thread.sleep(sleepValueMSec);
-    }
 }

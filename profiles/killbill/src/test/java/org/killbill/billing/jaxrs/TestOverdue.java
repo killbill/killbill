@@ -88,17 +88,19 @@ public class TestOverdue extends TestJaxrsBase {
         }).reverse().sortedCopy(invoicesForAccount);
         for (final Invoice invoice : mostRecentInvoiceFirst) {
             if (invoice.getBalance().compareTo(BigDecimal.ZERO) > 0) {
-
                 final InvoicePayment invoicePayment = new InvoicePayment();
                 invoicePayment.setPurchasedAmount(invoice.getAmount());
                 invoicePayment.setAccountId(accountJson.getAccountId());
                 invoicePayment.setTargetInvoiceId(invoice.getInvoiceId());
+                callbackServlet.pushExpectedEvents(ExtBusEventType.INVOICE_PAYMENT_SUCCESS, ExtBusEventType.PAYMENT_SUCCESS);
                 invoiceApi.createInstantPayment(invoice.getInvoiceId(), invoicePayment, true, NULL_PLUGIN_PROPERTIES, requestOptions);
+                callbackServlet.assertListenerStatus();
             }
         }
 
         // Wait a bit for overdue to pick up the payment events...
-        crappyWaitForLackOfProperSynchonization();
+        callbackServlet.pushExpectedEvents(ExtBusEventType.TAG_DELETION, ExtBusEventType.BLOCKING_STATE, ExtBusEventType.OVERDUE_CHANGE);
+        callbackServlet.assertListenerStatus();
 
         // Verify we're in clear state
         Assert.assertTrue(accountApi.getOverdueAccount(accountJson.getAccountId(), requestOptions).isClearState());
@@ -167,8 +169,14 @@ public class TestOverdue extends TestJaxrsBase {
 
         // move a month a wait for invoicing
         // No payment will be triggered as the account doesn't have a payment method
+        callbackServlet.pushExpectedEvents(ExtBusEventType.SUBSCRIPTION_PHASE,
+                                           ExtBusEventType.INVOICE_CREATION,
+                                           ExtBusEventType.INVOICE_PAYMENT_FAILED,
+                                           ExtBusEventType.SUBSCRIPTION_PHASE,
+                                           ExtBusEventType.INVOICE_CREATION,
+                                           ExtBusEventType.INVOICE_PAYMENT_FAILED);
         clock.addMonths(1);
-        crappyWaitForLackOfProperSynchonization();
+        callbackServlet.assertListenerStatus();
 
         // Get the invoices
         final List<Invoice> invoices = accountApi.getInvoicesForAccount(accountJson.getAccountId(), requestOptions);
@@ -183,8 +191,14 @@ public class TestOverdue extends TestJaxrsBase {
         Assert.assertTrue(accountApi.getOverdueAccount(accountJson.getAccountId(), requestOptions).isClearState());
         Assert.assertTrue(accountApi.getOverdueAccount(accountJsonNoTag.getAccountId(), requestOptions).isClearState());
 
+        callbackServlet.pushExpectedEvents(ExtBusEventType.INVOICE_CREATION,
+                                           ExtBusEventType.INVOICE_CREATION,
+                                           ExtBusEventType.INVOICE_PAYMENT_FAILED,
+                                           ExtBusEventType.INVOICE_PAYMENT_FAILED,
+                                           ExtBusEventType.BLOCKING_STATE,
+                                           ExtBusEventType.OVERDUE_CHANGE);
         clock.addDays(30);
-        crappyWaitForLackOfProperSynchonization();
+        callbackServlet.assertListenerStatus();
 
         // This account is not expected to move to OD1 state because it does not match with exclusion controlTag defined
         Assert.assertTrue(accountApi.getOverdueAccount(accountJson.getAccountId(), requestOptions).isClearState());
