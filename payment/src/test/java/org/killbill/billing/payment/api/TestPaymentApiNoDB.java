@@ -66,6 +66,10 @@ public class TestPaymentApiNoDB extends PaymentTestSuiteNoDB {
 
     @BeforeClass(groups = "fast")
     public void beforeClass() throws Exception {
+        if (hasFailed()) {
+            return;
+        }
+
         super.beforeClass();
         account = testHelper.createTestAccount("yoyo.yahoo.com", false);
     }
