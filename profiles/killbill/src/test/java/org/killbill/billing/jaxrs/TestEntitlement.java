@@ -27,7 +27,6 @@ import java.util.regex.Pattern;
 import org.joda.time.DateTime;
 import org.joda.time.Interval;
 import org.joda.time.LocalDate;
-import org.killbill.billing.api.FlakyRetryAnalyzer;
 import org.killbill.billing.catalog.DefaultPriceListSet;
 import org.killbill.billing.catalog.api.BillingActionPolicy;
 import org.killbill.billing.catalog.api.BillingPeriod;
@@ -414,8 +413,7 @@ public class TestEntitlement extends TestJaxrsBase {
         assertEquals(killBillClient.getInvoiceTags(invoicesAfterClose.get(0).getInvoiceId(), requestOptions).size(), 1);
     }
 
-    // Flaky, see https://github.com/killbill/killbill/issues/860
-    @Test(groups = "slow", description = "Create a bulk of base entitlement and addOns under the same transaction", retryAnalyzer = FlakyRetryAnalyzer.class)
+    @Test(groups = "slow", description = "Create a bulk of base entitlement and addOns under the same transaction")
     public void testCreateEntitlementsWithAddOnsThenCloseAccountWithItemAdjustment() throws Exception {
         final DateTime initialDate = new DateTime(2012, 4, 25, 0, 3, 42, 0);
         clock.setDeltaFromReality(initialDate.getMillis() - clock.getUTCNow().getMillis());
@@ -452,7 +450,30 @@ public class TestEntitlement extends TestJaxrsBase {
         bulkList.add(new BulkBaseSubscriptionAndAddOns(subscriptions));
         bulkList.add(new BulkBaseSubscriptionAndAddOns(subscriptions));
 
+        callbackServlet.pushExpectedEvents(ExtBusEventType.ACCOUNT_CHANGE,
+                                           ExtBusEventType.ENTITLEMENT_CREATION,
+                                           ExtBusEventType.ENTITLEMENT_CREATION,
+                                           ExtBusEventType.ENTITLEMENT_CREATION,
+                                           ExtBusEventType.ENTITLEMENT_CREATION,
+                                           ExtBusEventType.ENTITLEMENT_CREATION,
+                                           ExtBusEventType.ENTITLEMENT_CREATION,
+                                           ExtBusEventType.SUBSCRIPTION_CREATION,
+                                           ExtBusEventType.SUBSCRIPTION_CREATION,
+                                           ExtBusEventType.SUBSCRIPTION_CREATION,
+                                           ExtBusEventType.SUBSCRIPTION_CREATION,
+                                           ExtBusEventType.SUBSCRIPTION_CREATION,
+                                           ExtBusEventType.SUBSCRIPTION_CREATION,
+                                           ExtBusEventType.SUBSCRIPTION_CREATION,
+                                           ExtBusEventType.SUBSCRIPTION_CREATION,
+                                           ExtBusEventType.SUBSCRIPTION_CREATION,
+                                           ExtBusEventType.SUBSCRIPTION_CREATION,
+                                           ExtBusEventType.SUBSCRIPTION_CREATION,
+                                           ExtBusEventType.SUBSCRIPTION_CREATION,
+                                           ExtBusEventType.INVOICE_CREATION,
+                                           ExtBusEventType.INVOICE_PAYMENT_FAILED);
         final Bundles bundles = killBillClient.createSubscriptionsWithAddOns(bulkList, null, 10, requestOptions);
+        callbackServlet.assertListenerStatus();
+
         assertNotNull(bundles);
         assertEquals(bundles.size(), 2);
         assertFalse(bundles.get(0).getExternalKey().equals(bundles.get(1).getExternalKey()));
@@ -470,7 +491,26 @@ public class TestEntitlement extends TestJaxrsBase {
             }
         }
 
+        callbackServlet.pushExpectedEvents(ExtBusEventType.ENTITLEMENT_CANCEL,
+                                           ExtBusEventType.ENTITLEMENT_CANCEL,
+                                           ExtBusEventType.ENTITLEMENT_CANCEL,
+                                           ExtBusEventType.ENTITLEMENT_CANCEL,
+                                           ExtBusEventType.ENTITLEMENT_CANCEL,
+                                           ExtBusEventType.ENTITLEMENT_CANCEL,
+                                           ExtBusEventType.SUBSCRIPTION_CANCEL,
+                                           ExtBusEventType.SUBSCRIPTION_CANCEL,
+                                           ExtBusEventType.SUBSCRIPTION_CANCEL,
+                                           ExtBusEventType.SUBSCRIPTION_CANCEL,
+                                           ExtBusEventType.SUBSCRIPTION_CANCEL,
+                                           ExtBusEventType.SUBSCRIPTION_CANCEL,
+                                           ExtBusEventType.SUBSCRIPTION_CANCEL,
+                                           ExtBusEventType.SUBSCRIPTION_CANCEL,
+                                           ExtBusEventType.SUBSCRIPTION_CANCEL,
+                                           ExtBusEventType.SUBSCRIPTION_CANCEL,
+                                           ExtBusEventType.SUBSCRIPTION_CANCEL,
+                                           ExtBusEventType.SUBSCRIPTION_CANCEL);
         killBillClient.closeAccount(accountJson.getAccountId(), true, false, true, requestOptions);
+        callbackServlet.assertListenerStatus();
 
         final Bundles accountBundlesAfterClose = killBillClient.getAccountBundles(accountJson.getAccountId(), requestOptions);
         assertEquals(accountBundlesAfterClose.size(), 2);
