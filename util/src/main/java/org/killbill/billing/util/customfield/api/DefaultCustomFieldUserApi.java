@@ -152,8 +152,8 @@ public class DefaultCustomFieldUserApi implements CustomFieldUserApi {
     }
 
     @Override
-    public List<AuditLogWithHistory> getCustomFieldAuditLogsWithHistoryForId(final UUID accountId, final UUID customFieldId, final AuditLevel auditLevel, final TenantContext tenantContext) {
-        return customFieldDao.getCustomFieldAuditLogsWithHistoryForId(customFieldId, auditLevel, internalCallContextFactory.createInternalTenantContext(accountId, tenantContext));
+    public List<AuditLogWithHistory> getCustomFieldAuditLogsWithHistoryForId(final UUID customFieldId, final AuditLevel auditLevel, final TenantContext tenantContext) {
+        return customFieldDao.getCustomFieldAuditLogsWithHistoryForId(customFieldId, auditLevel, internalCallContextFactory.createInternalTenantContext(customFieldId, ObjectType.CUSTOM_FIELD, tenantContext));
     }
 
     private List<CustomField> withCustomFieldsTransform(final Collection<CustomFieldModelDao> input) {

@@ -356,10 +356,9 @@ public class PaymentMethodResource extends JaxRsResourceBase {
     @ApiOperation(value = "Retrieve payment method audit logs with history by id", response = AuditLogJson.class, responseContainer = "List")
     @ApiResponses(value = {@ApiResponse(code = 404, message = "Account not found")})
     public Response getPaymentMethodAuditLogsWithHistory(@PathParam("paymentMethodId") final UUID paymentMethodId,
-                                                   @QueryParam(QUERY_ACCOUNT_ID) final UUID accountId,
                                                    @javax.ws.rs.core.Context final HttpServletRequest request) throws AccountApiException {
-        final TenantContext tenantContext = context.createTenantContextWithAccountId(accountId, request);
-        final List<AuditLogWithHistory> auditLogWithHistory = paymentApi.getPaymentMethodAuditLogsWithHistoryForId(accountId, paymentMethodId, AuditLevel.FULL, tenantContext);
+        final TenantContext tenantContext = context.createTenantContextNoAccountId(request);
+        final List<AuditLogWithHistory> auditLogWithHistory = paymentApi.getPaymentMethodAuditLogsWithHistoryForId(paymentMethodId, AuditLevel.FULL, tenantContext);
         return Response.status(Status.OK).entity(getAuditLogsWithHistory(auditLogWithHistory)).build();
     }
 

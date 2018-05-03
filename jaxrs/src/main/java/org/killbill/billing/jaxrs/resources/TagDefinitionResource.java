@@ -164,10 +164,9 @@ public class TagDefinitionResource extends JaxRsResourceBase {
     @ApiOperation(value = "Retrieve tag definition audit logs with history by id", response = AuditLogJson.class, responseContainer = "List")
     @ApiResponses(value = {@ApiResponse(code = 404, message = "Account not found")})
     public Response getTagDefinitionAuditLogsWithHistory(@PathParam("tagDefinitionId") final UUID tagDefinitionId,
-                                                   @QueryParam(QUERY_ACCOUNT_ID) final UUID accountId,
                                                    @javax.ws.rs.core.Context final HttpServletRequest request) throws AccountApiException {
-        final TenantContext tenantContext = context.createTenantContextWithAccountId(accountId, request);
-        final List<AuditLogWithHistory> auditLogWithHistory = tagUserApi.getTagDefinitionAuditLogsWithHistoryForId(accountId, tagDefinitionId, AuditLevel.FULL, tenantContext);
+        final TenantContext tenantContext = context.createTenantContextNoAccountId(request);
+        final List<AuditLogWithHistory> auditLogWithHistory = tagUserApi.getTagDefinitionAuditLogsWithHistoryForId(tagDefinitionId, AuditLevel.FULL, tenantContext);
         return Response.status(Status.OK).entity(getAuditLogsWithHistory(auditLogWithHistory)).build();
     }
 

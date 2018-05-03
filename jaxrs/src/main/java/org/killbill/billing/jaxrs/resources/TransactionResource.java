@@ -272,10 +272,9 @@ public class TransactionResource extends JaxRsResourceBase {
     @ApiOperation(value = "Retrieve payment transaction audit logs with history by id", response = AuditLogJson.class, responseContainer = "List")
     @ApiResponses(value = {@ApiResponse(code = 404, message = "Account not found")})
     public Response getTransactionAuditLogsWithHistory(@PathParam("transactionId") final UUID transactionId,
-                                                   @QueryParam(QUERY_ACCOUNT_ID) final UUID accountId,
                                                    @javax.ws.rs.core.Context final HttpServletRequest request) throws AccountApiException {
-        final TenantContext tenantContext = context.createTenantContextWithAccountId(accountId, request);
-        final List<AuditLogWithHistory> auditLogWithHistory = paymentApi.getPaymentTransactionAuditLogsWithHistoryForId(accountId, transactionId, AuditLevel.FULL, tenantContext);
+        final TenantContext tenantContext = context.createTenantContextNoAccountId(request);
+        final List<AuditLogWithHistory> auditLogWithHistory = paymentApi.getPaymentTransactionAuditLogsWithHistoryForId(transactionId, AuditLevel.FULL, tenantContext);
         return Response.status(Status.OK).entity(getAuditLogsWithHistory(auditLogWithHistory)).build();
     }
 

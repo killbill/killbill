@@ -1077,23 +1077,23 @@ public class DefaultPaymentApi extends DefaultApiBase implements PaymentApi {
     }
 
     @Override
-    public List<AuditLogWithHistory> getPaymentAuditLogsWithHistoryForId(final UUID accountId, final UUID paymentId, final AuditLevel auditLevel, final TenantContext tenantContext) {
-        return paymentDao.getPaymentAuditLogsWithHistoryForId(paymentId, auditLevel, internalCallContextFactory.createInternalTenantContext(accountId, tenantContext));
+    public List<AuditLogWithHistory> getPaymentAuditLogsWithHistoryForId(final UUID paymentId, final AuditLevel auditLevel, final TenantContext tenantContext) {
+        return paymentDao.getPaymentAuditLogsWithHistoryForId(paymentId, auditLevel, internalCallContextFactory.createInternalTenantContext(paymentId, ObjectType.PAYMENT, tenantContext));
     }
 
     @Override
-    public List<AuditLogWithHistory> getPaymentMethodAuditLogsWithHistoryForId(final UUID accountId, final UUID paymentMethodId, final AuditLevel auditLevel, final TenantContext tenantContext) {
-        return paymentDao.getPaymentMethodAuditLogsWithHistoryForId(paymentMethodId, auditLevel, internalCallContextFactory.createInternalTenantContext(accountId, tenantContext));
+    public List<AuditLogWithHistory> getPaymentMethodAuditLogsWithHistoryForId(final UUID paymentMethodId, final AuditLevel auditLevel, final TenantContext tenantContext) {
+        return paymentDao.getPaymentMethodAuditLogsWithHistoryForId(paymentMethodId, auditLevel, internalCallContextFactory.createInternalTenantContext(paymentMethodId, ObjectType.PAYMENT_METHOD, tenantContext));
     }
 
     @Override
-    public List<AuditLogWithHistory> getPaymentAttemptAuditLogsWithHistoryForId(final UUID accountId, final UUID paymentAttemptId, final AuditLevel auditLevel, final TenantContext tenantContext) {
-        return paymentDao.getPaymentAttemptAuditLogsWithHistoryForId(paymentAttemptId, auditLevel, internalCallContextFactory.createInternalTenantContext(accountId, tenantContext));
+    public List<AuditLogWithHistory> getPaymentAttemptAuditLogsWithHistoryForId(final UUID paymentAttemptId, final AuditLevel auditLevel, final TenantContext tenantContext) {
+        return paymentDao.getPaymentAttemptAuditLogsWithHistoryForId(paymentAttemptId, auditLevel, internalCallContextFactory.createInternalTenantContext(paymentAttemptId, ObjectType.PAYMENT_ATTEMPT, tenantContext));
     }
 
     @Override
-    public List<AuditLogWithHistory> getPaymentTransactionAuditLogsWithHistoryForId(final UUID accountId, final UUID paymentTransactionId, final AuditLevel auditLevel, final TenantContext tenantContext) {
-        return paymentDao.getPaymentTransactionAuditLogsWithHistoryForId(paymentTransactionId, auditLevel, internalCallContextFactory.createInternalTenantContext(accountId, tenantContext));
+    public List<AuditLogWithHistory> getPaymentTransactionAuditLogsWithHistoryForId(final UUID paymentTransactionId, final AuditLevel auditLevel, final TenantContext tenantContext) {
+        return paymentDao.getPaymentTransactionAuditLogsWithHistoryForId(paymentTransactionId, auditLevel, internalCallContextFactory.createInternalTenantContext(paymentTransactionId, ObjectType.TRANSACTION, tenantContext));
     }
 
     @Override

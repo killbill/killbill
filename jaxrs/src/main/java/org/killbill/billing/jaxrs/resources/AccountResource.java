@@ -1444,7 +1444,7 @@ public class AccountResource extends JaxRsResourceBase {
                                                         @PathParam("accountEmailId") final UUID accountEmailId,
                                                         @javax.ws.rs.core.Context final HttpServletRequest request) throws AccountApiException {
         final TenantContext tenantContext = context.createTenantContextWithAccountId(accountId, request);
-        final List<AuditLogWithHistory> auditLogWithHistory = accountUserApi.getEmailAuditLogsWithHistoryForId(accountId, accountEmailId, AuditLevel.FULL, tenantContext);
+        final List<AuditLogWithHistory> auditLogWithHistory = accountUserApi.getEmailAuditLogsWithHistoryForId(accountEmailId, AuditLevel.FULL, tenantContext);
         return Response.status(Status.OK).entity(getAuditLogsWithHistory(auditLogWithHistory)).build();
     }
 

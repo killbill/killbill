@@ -139,10 +139,9 @@ public class CustomFieldResource extends JaxRsResourceBase {
     @ApiOperation(value = "Retrieve custom field audit logs with history by id", response = AuditLogJson.class, responseContainer = "List")
     @ApiResponses(value = {@ApiResponse(code = 404, message = "Account not found")})
     public Response getCustomFieldAuditLogsWithHistory(@PathParam("customFieldId") final UUID customFieldId,
-                                                   @QueryParam(QUERY_ACCOUNT_ID) final UUID accountId,
                                                    @javax.ws.rs.core.Context final HttpServletRequest request) throws AccountApiException {
-        final TenantContext tenantContext = context.createTenantContextWithAccountId(accountId, request);
-        final List<AuditLogWithHistory> auditLogWithHistory = customFieldUserApi.getCustomFieldAuditLogsWithHistoryForId(accountId, customFieldId, AuditLevel.FULL, tenantContext);
+        final TenantContext tenantContext = context.createTenantContextNoAccountId(request);
+        final List<AuditLogWithHistory> auditLogWithHistory = customFieldUserApi.getCustomFieldAuditLogsWithHistoryForId(customFieldId, AuditLevel.FULL, tenantContext);
         return Response.status(Status.OK).entity(getAuditLogsWithHistory(auditLogWithHistory)).build();
     }
 }

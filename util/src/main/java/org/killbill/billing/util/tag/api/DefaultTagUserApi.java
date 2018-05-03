@@ -210,13 +210,13 @@ public class DefaultTagUserApi implements TagUserApi {
     }
 
     @Override
-    public List<AuditLogWithHistory> getTagAuditLogsWithHistoryForId(final UUID accountId, final UUID tagId, final AuditLevel auditLevel, final TenantContext tenantContext) {
-        return tagDao.getTagAuditLogsWithHistoryForId(tagId, auditLevel, internalCallContextFactory.createInternalTenantContext(accountId, tenantContext));
+    public List<AuditLogWithHistory> getTagAuditLogsWithHistoryForId(final UUID tagId, final AuditLevel auditLevel, final TenantContext tenantContext) {
+        return tagDao.getTagAuditLogsWithHistoryForId(tagId, auditLevel, internalCallContextFactory.createInternalTenantContext(tagId, ObjectType.TAG, tenantContext));
     }
 
     @Override
-    public List<AuditLogWithHistory> getTagDefinitionAuditLogsWithHistoryForId(final UUID accountId, final UUID tagDefinitionId, final AuditLevel auditLevel, final TenantContext tenantContext) {
-        return tagDefinitionDao.getTagDefinitionAuditLogsWithHistoryForId(tagDefinitionId, auditLevel, internalCallContextFactory.createInternalTenantContext(accountId, tenantContext));
+    public List<AuditLogWithHistory> getTagDefinitionAuditLogsWithHistoryForId(final UUID tagDefinitionId, final AuditLevel auditLevel, final TenantContext tenantContext) {
+        return tagDefinitionDao.getTagDefinitionAuditLogsWithHistoryForId(tagDefinitionId, auditLevel, internalCallContextFactory.createInternalTenantContext(tagDefinitionId, ObjectType.TAG_DEFINITION, tenantContext));
     }
 
     private List<Tag> withModelTransform(final Collection<TagModelDao> input) {

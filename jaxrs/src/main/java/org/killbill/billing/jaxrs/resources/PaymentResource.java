@@ -906,10 +906,9 @@ public class PaymentResource extends ComboPaymentResource {
     @ApiOperation(value = "Retrieve payment audit logs with history by id", response = AuditLogJson.class, responseContainer = "List")
     @ApiResponses(value = {@ApiResponse(code = 404, message = "Account not found")})
     public Response getPaymentAuditLogsWithHistory(@PathParam("paymentId") final UUID paymentId,
-                                                   @QueryParam(QUERY_ACCOUNT_ID) final UUID accountId,
                                                    @javax.ws.rs.core.Context final HttpServletRequest request) throws AccountApiException {
-        final TenantContext tenantContext = context.createTenantContextWithAccountId(accountId, request);
-        final List<AuditLogWithHistory> auditLogWithHistory = paymentApi.getPaymentAuditLogsWithHistoryForId(accountId, paymentId, AuditLevel.FULL, tenantContext);
+        final TenantContext tenantContext = context.createTenantContextNoAccountId(request);
+        final List<AuditLogWithHistory> auditLogWithHistory = paymentApi.getPaymentAuditLogsWithHistoryForId(paymentId, AuditLevel.FULL, tenantContext);
         return Response.status(Status.OK).entity(getAuditLogsWithHistory(auditLogWithHistory)).build();
     }
 
@@ -920,10 +919,9 @@ public class PaymentResource extends ComboPaymentResource {
     @ApiOperation(value = "Retrieve payment attempt audit logs with history by id", response = AuditLogJson.class, responseContainer = "List")
     @ApiResponses(value = {@ApiResponse(code = 404, message = "Account not found")})
     public Response getPaymentAttemptAuditLogsWithHistory(@PathParam("paymentAttemptId") final UUID paymentAttemptId,
-                                                   @QueryParam(QUERY_ACCOUNT_ID) final UUID accountId,
                                                    @javax.ws.rs.core.Context final HttpServletRequest request) throws AccountApiException {
-        final TenantContext tenantContext = context.createTenantContextWithAccountId(accountId, request);
-        final List<AuditLogWithHistory> auditLogWithHistory = paymentApi.getPaymentAttemptAuditLogsWithHistoryForId(accountId, paymentAttemptId, AuditLevel.FULL, tenantContext);
+        final TenantContext tenantContext = context.createTenantContextNoAccountId(request);
+        final List<AuditLogWithHistory> auditLogWithHistory = paymentApi.getPaymentAttemptAuditLogsWithHistoryForId(paymentAttemptId, AuditLevel.FULL, tenantContext);
         return Response.status(Status.OK).entity(getAuditLogsWithHistory(auditLogWithHistory)).build();
     }
 

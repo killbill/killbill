@@ -26,11 +26,9 @@ import java.util.UUID;
 
 import org.joda.time.DateTime;
 import org.killbill.billing.account.api.Account;
-import org.killbill.billing.account.dao.AccountModelDao;
 import org.killbill.billing.api.FlakyRetryAnalyzer;
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.payment.PaymentTestSuiteWithEmbeddedDB;
-import org.killbill.billing.payment.api.Payment;
 import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.payment.api.TransactionStatus;
 import org.killbill.billing.payment.api.TransactionType;
@@ -38,7 +36,6 @@ import org.killbill.billing.payment.dao.PluginPropertySerializer.PluginPropertyS
 import org.killbill.billing.util.api.AuditLevel;
 import org.killbill.billing.util.audit.AuditLogWithHistory;
 import org.killbill.billing.util.audit.ChangeType;
-import org.killbill.billing.util.dao.EntityHistoryModelDao;
 import org.killbill.billing.util.entity.Pagination;
 import org.testng.Assert;
 import org.testng.annotations.Test;
