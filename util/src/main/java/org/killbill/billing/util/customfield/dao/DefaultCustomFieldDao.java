@@ -31,14 +31,18 @@ import org.killbill.billing.ObjectType;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.events.BusInternalEvent;
+import org.killbill.billing.util.api.AuditLevel;
 import org.killbill.billing.util.api.CustomFieldApiException;
+import org.killbill.billing.util.audit.AuditLogWithHistory;
 import org.killbill.billing.util.audit.ChangeType;
+import org.killbill.billing.util.audit.dao.AuditDao;
 import org.killbill.billing.util.cache.CacheControllerDispatcher;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.billing.util.customfield.CustomField;
 import org.killbill.billing.util.customfield.api.DefaultCustomFieldCreationEvent;
 import org.killbill.billing.util.customfield.api.DefaultCustomFieldDeletionEvent;
 import org.killbill.billing.util.dao.NonEntityDao;
+import org.killbill.billing.util.dao.TableName;
 import org.killbill.billing.util.entity.Pagination;
 import org.killbill.billing.util.entity.dao.DefaultPaginationSqlDaoHelper.Ordering;
 import org.killbill.billing.util.entity.dao.DefaultPaginationSqlDaoHelper.PaginationIteratorBuilder;
@@ -47,6 +51,7 @@ import org.killbill.billing.util.entity.dao.EntitySqlDao;
 import org.killbill.billing.util.entity.dao.EntitySqlDaoTransactionWrapper;
 import org.killbill.billing.util.entity.dao.EntitySqlDaoTransactionalJdbiWrapper;
 import org.killbill.billing.util.entity.dao.EntitySqlDaoWrapperFactory;
+import org.killbill.billing.util.tag.dao.TagSqlDao;
 import org.killbill.bus.api.PersistentBus;
 import org.killbill.clock.Clock;
 import org.skife.jdbi.v2.IDBI;
@@ -66,12 +71,14 @@ public class DefaultCustomFieldDao extends EntityDaoBase<CustomFieldModelDao, Cu
     private static final Logger log = LoggerFactory.getLogger(DefaultCustomFieldDao.class);
 
     private final PersistentBus bus;
+    private final AuditDao auditDao;
 
     @Inject
     public DefaultCustomFieldDao(final IDBI dbi, @Named(MAIN_RO_IDBI_NAMED) final IDBI roDbi, final Clock clock, final CacheControllerDispatcher controllerDispatcher,
-                                 final NonEntityDao nonEntityDao, final InternalCallContextFactory internalCallContextFactory, final PersistentBus bus) {
+                                 final NonEntityDao nonEntityDao, final InternalCallContextFactory internalCallContextFactory, final PersistentBus bus, final AuditDao auditDao) {
         super(new EntitySqlDaoTransactionalJdbiWrapper(dbi, roDbi, clock, controllerDispatcher, nonEntityDao, internalCallContextFactory), CustomFieldSqlDao.class);
         this.bus = bus;
+        this.auditDao = auditDao;
     }
 
     @Override
@@ -161,6 +168,17 @@ public class DefaultCustomFieldDao extends EntityDaoBase<CustomFieldModelDao, Cu
 
                 }
                 return null;
+            }
+        });
+    }
+
+    @Override
+    public List<AuditLogWithHistory> getCustomFieldAuditLogsWithHistoryForId(final UUID customFieldId, final AuditLevel auditLevel, final InternalTenantContext context) {
+        return transactionalSqlDao.execute(true, new EntitySqlDaoTransactionWrapper<List<AuditLogWithHistory>>() {
+            @Override
+            public List<AuditLogWithHistory> inTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory) {
+                final CustomFieldSqlDao transactional = entitySqlDaoWrapperFactory.become(CustomFieldSqlDao.class);
+                return auditDao.getAuditLogsWithHistoryForId(transactional, TableName.CUSTOM_FIELD, customFieldId, auditLevel, context);
             }
         });
     }
