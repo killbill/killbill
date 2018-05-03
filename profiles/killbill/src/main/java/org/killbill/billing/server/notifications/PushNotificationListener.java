@@ -127,6 +127,7 @@ public class PushNotificationListener {
 
     private boolean doPost(final UUID tenantId, final String url, final String body, final NotificationJson notification,
                            final int timeoutSec, final int attemptRetryNumber) {
+        log.info("Sending push notification url='{}', body='{}', attemptRetryNumber='{}'", url, body, attemptRetryNumber);
         final BoundRequestBuilder builder = httpClient.preparePost(url);
         builder.setBody(body == null ? "{}" : body);
         builder.addHeader(HTTP_HEADER_CONTENT_TYPE, CONTENT_TYPE_JSON);
@@ -142,7 +143,7 @@ public class PushNotificationListener {
                     });
             response = futureStatus.get(timeoutSec, TimeUnit.SECONDS);
         } catch (final TimeoutException toe) {
-            saveRetryPushNotificationInQueue(tenantId, url, notification, attemptRetryNumber);
+            saveRetryPushNotificationInQueue(tenantId, url, notification, attemptRetryNumber, "Timeout");
             return false;
         } catch (final Exception e) {
             log.warn("Failed to push notification url='{}', tenantId='{}'", url, tenantId, e);
@@ -152,7 +153,7 @@ public class PushNotificationListener {
         if (response.getStatusCode() >= 200 && response.getStatusCode() < 300) {
             return true;
         } else {
-            saveRetryPushNotificationInQueue(tenantId, url, notification, attemptRetryNumber);
+            saveRetryPushNotificationInQueue(tenantId, url, notification, attemptRetryNumber, "statusCode=" + response.getStatusCode());
             return false;
         }
     }
@@ -168,7 +169,7 @@ public class PushNotificationListener {
         doPost(key.getTenantId(), key.getUrl(), body, notification, TIMEOUT_NOTIFICATION, key.getAttemptNumber());
     }
 
-    private void saveRetryPushNotificationInQueue(final UUID tenantId, final String url, final NotificationJson notificationJson, final int attemptRetryNumber) {
+    private void saveRetryPushNotificationInQueue(final UUID tenantId, final String url, final NotificationJson notificationJson, final int attemptRetryNumber, final String reason) {
         final PushNotificationKey key = new PushNotificationKey(tenantId,
                                                                 notificationJson.getAccountId(),
                                                                 notificationJson.getEventType(),
@@ -185,16 +186,16 @@ public class PushNotificationListener {
             log.warn("Max attempt number reached for push notification url='{}', tenantId='{}'", key.getUrl(), key.getTenantId());
             return;
         }
-        log.debug("Push notification is scheduled to send at {} for url='{}', tenantId='{}'", nextNotificationTime, key.getUrl(), key.getTenantId());
+        log.warn("Push notification {} is re-scheduled to be sent at {}, url='{}', reason='{}'", key, nextNotificationTime, key.getUrl(), reason);
 
         final Long accountRecordId = internalCallContextFactory.getRecordIdFromObject(key.getAccountId(), ObjectType.ACCOUNT, tenantContext);
         final Long tenantRecordId = internalCallContextFactory.getRecordIdFromObject(key.getTenantId(), ObjectType.TENANT, tenantContext);
         try {
             final NotificationQueue notificationQueue = notificationQueueService.getNotificationQueue(DefaultServerService.SERVER_SERVICE, PushNotificationRetryService.QUEUE_NAME);
             notificationQueue.recordFutureNotification(nextNotificationTime, key, null, MoreObjects.firstNonNull(accountRecordId, new Long(0)), tenantRecordId);
-        } catch (NoSuchNotificationQueue noSuchNotificationQueue) {
+        } catch (final NoSuchNotificationQueue noSuchNotificationQueue) {
             log.error("Failed to push notification url='{}', tenantId='{}'", key.getUrl(), key.getTenantId(), noSuchNotificationQueue);
-        } catch (IOException e) {
+        } catch (final IOException e) {
             log.error("Failed to push notification url='{}', tenantId='{}'", key.getUrl(), key.getTenantId(), e);
         }
     }

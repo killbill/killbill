@@ -129,6 +129,10 @@ public class TestRetryablePayment extends PaymentTestSuiteNoDB {
 
     @BeforeClass(groups = "fast")
     public void beforeClass() throws Exception {
+        if (hasFailed()) {
+            return;
+        }
+
         super.beforeClass();
         account = testHelper.createTestAccount("lolo@gmail.com", false);
         Mockito.when(accountInternalApi.getAccountById(Mockito.<UUID>any(), Mockito.<InternalTenantContext>any())).thenReturn(account);
