@@ -20,19 +20,25 @@ package org.killbill.billing.jaxrs;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.UUID;
 
 import org.killbill.billing.ObjectType;
 import org.killbill.billing.client.model.Account;
+import org.killbill.billing.client.model.AuditLog;
 import org.killbill.billing.client.model.CustomField;
 import org.killbill.billing.client.model.CustomFields;
 import org.killbill.billing.client.model.PaymentMethod;
 import org.killbill.billing.client.model.PaymentMethods;
 import org.killbill.billing.client.model.PluginProperty;
 import org.killbill.billing.util.api.AuditLevel;
+import org.killbill.billing.util.audit.ChangeType;
 import org.testng.Assert;
 import org.testng.annotations.Test;
+
+import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertNotNull;
 
 public class TestPaymentMethod extends TestJaxrsBase {
 
@@ -135,6 +141,24 @@ public class TestPaymentMethod extends TestJaxrsBase {
         killBillClient.deletePaymentMethodCustomFields(paymentMethodId, Collections.<UUID>singletonList(createdCustomField.getCustomFieldId()), createdBy, reason, comment);
         final CustomFields deletedCustomFields = killBillClient.getPaymentMethodCustomFields(paymentMethodId, AuditLevel.NONE);
         Assert.assertEquals(deletedCustomFields.size(), 0);
+    }
+
+    @Test(groups = "slow", description = "retrieve account logs")
+    public void testPaymentMethodAuditLogsWithHistory() throws Exception {
+        final Account account = createAccountWithDefaultPaymentMethod();
+        assertNotNull(account);
+        final UUID paymentMethodId = account.getPaymentMethodId();
+
+        final List<AuditLog> paymentMethodAuditLogWithHistory = killBillClient.getPaymentMethodAuditLogsWithHistory(account.getAccountId(), paymentMethodId);
+        assertEquals(paymentMethodAuditLogWithHistory.size(), 1);
+        assertEquals(paymentMethodAuditLogWithHistory.get(0).getChangeType(), ChangeType.INSERT.toString());
+        assertEquals(paymentMethodAuditLogWithHistory.get(0).getObjectType(), ObjectType.PAYMENT_METHOD);
+        assertEquals(paymentMethodAuditLogWithHistory.get(0).getObjectId(), paymentMethodId);
+
+        final LinkedHashMap history1 = (LinkedHashMap) paymentMethodAuditLogWithHistory.get(0).getHistory();
+        assertNotNull(history1);
+        assertEquals(history1.get("accountId"), account.getAccountId().toString());
+
     }
 
     private void doSearch(final String searchKey, final PaymentMethod paymentMethodJson) throws Exception {

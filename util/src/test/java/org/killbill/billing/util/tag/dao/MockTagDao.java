@@ -26,7 +26,9 @@ import java.util.UUID;
 import org.killbill.billing.ObjectType;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
+import org.killbill.billing.util.api.AuditLevel;
 import org.killbill.billing.util.api.TagApiException;
+import org.killbill.billing.util.audit.AuditLogWithHistory;
 import org.killbill.billing.util.entity.Pagination;
 import org.killbill.billing.util.entity.dao.MockEntityDaoBase;
 import org.killbill.billing.util.tag.Tag;
@@ -104,6 +106,11 @@ public class MockTagDao extends MockEntityDaoBase<TagModelDao, Tag, TagApiExcept
         }
 
         return tagStore.get(getAccountId(internalTenantContext.getAccountRecordId()));
+    }
+
+    @Override
+    public List<AuditLogWithHistory> getTagAuditLogsWithHistoryForId(final UUID tagId, final AuditLevel auditLevel, final InternalTenantContext context) {
+        throw new UnsupportedOperationException();
     }
 
     public void clear() {
