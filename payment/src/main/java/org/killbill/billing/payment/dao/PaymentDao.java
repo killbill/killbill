@@ -28,8 +28,14 @@ import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.payment.api.Payment;
 import org.killbill.billing.payment.api.PaymentApiException;
+import org.killbill.billing.payment.api.PaymentAttempt;
+import org.killbill.billing.payment.api.PaymentMethod;
+import org.killbill.billing.payment.api.PaymentTransaction;
 import org.killbill.billing.payment.api.TransactionStatus;
 import org.killbill.billing.payment.api.TransactionType;
+import org.killbill.billing.util.api.AuditLevel;
+import org.killbill.billing.util.audit.AuditLogWithHistory;
+import org.killbill.billing.util.entity.Entity;
 import org.killbill.billing.util.entity.Pagination;
 import org.killbill.billing.util.entity.dao.EntityDao;
 
@@ -104,4 +110,12 @@ public interface PaymentDao extends EntityDao<PaymentModelDao, Payment, PaymentA
     public void deletedPaymentMethod(UUID paymentMethodId, InternalCallContext context);
 
     public List<PaymentMethodModelDao> refreshPaymentMethods(String pluginName, List<PaymentMethodModelDao> paymentMethods, InternalCallContext context);
+
+    List<AuditLogWithHistory> getPaymentAuditLogsWithHistoryForId(UUID paymentId, AuditLevel auditLevel, InternalTenantContext context);
+
+    List<AuditLogWithHistory> getPaymentMethodAuditLogsWithHistoryForId(UUID paymentMethodId, AuditLevel auditLevel, InternalTenantContext context);
+
+    List<AuditLogWithHistory> getPaymentAttemptAuditLogsWithHistoryForId(UUID paymentAttemptId, AuditLevel auditLevel, InternalTenantContext context);
+
+    List<AuditLogWithHistory> getPaymentTransactionAuditLogsWithHistoryForId(UUID paymentTransactionId, AuditLevel auditLevel, InternalTenantContext context);
 }
