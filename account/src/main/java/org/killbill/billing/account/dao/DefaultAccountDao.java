@@ -334,4 +334,15 @@ public class DefaultAccountDao extends EntityDaoBase<AccountModelDao, Account, A
             }
         });
     }
+
+    @Override
+    public List<AuditLogWithHistory> getEmailAuditLogsWithHistoryForId(final UUID accountEmailId, final AuditLevel auditLevel, final InternalTenantContext context) throws AccountApiException {
+        return transactionalSqlDao.execute(true, AccountApiException.class, new EntitySqlDaoTransactionWrapper<List<AuditLogWithHistory>>() {
+            @Override
+            public List<AuditLogWithHistory> inTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory) {
+                final AccountEmailSqlDao transactional = entitySqlDaoWrapperFactory.become(AccountEmailSqlDao.class);
+                return auditDao.getAuditLogsWithHistoryForId(transactional, TableName.ACCOUNT_EMAIL, accountEmailId, auditLevel, context);
+            }
+        });
+    }
 }
