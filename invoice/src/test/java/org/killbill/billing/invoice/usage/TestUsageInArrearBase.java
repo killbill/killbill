@@ -66,6 +66,10 @@ public abstract class TestUsageInArrearBase extends InvoiceTestSuiteNoDB {
 
     @BeforeClass(groups = "fast")
     protected void beforeClass() throws Exception {
+        if (hasFailed()) {
+            return;
+        }
+
         super.beforeClass();
         BCD = 15;
         usageName = "foo";

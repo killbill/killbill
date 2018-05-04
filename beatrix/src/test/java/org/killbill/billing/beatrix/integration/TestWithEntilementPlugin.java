@@ -65,6 +65,10 @@ public class TestWithEntilementPlugin extends TestIntegrationBase {
 
     @BeforeClass(groups = "slow")
     public void beforeClass() throws Exception {
+        if (hasFailed()) {
+            return;
+        }
+
         super.beforeClass();
 
         this.testEntitlementPluginApi = new TestEntitlementPluginApi();

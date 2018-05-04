@@ -76,16 +76,6 @@ public class TestContiguousIntervalConsumableInArrear extends TestUsageInArrearB
                                                                                                    }
                                                                                                });
 
-    @BeforeClass(groups = "fast")
-    protected void beforeClass() throws Exception {
-        super.beforeClass();
-    }
-
-    @BeforeMethod(groups = "fast")
-    public void beforeMethod() {
-        super.beforeMethod();
-    }
-
     @Test(groups = "fast")
     public void testBilledDetailsForUnitType() throws JsonProcessingException {
 
