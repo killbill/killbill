@@ -16,26 +16,33 @@
 
 package org.killbill.billing.util.tag.dao;
 
-import java.io.ObjectOutput;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
+import org.killbill.billing.ErrorCode;
 import org.killbill.billing.ObjectType;
-import org.testng.Assert;
-import org.testng.annotations.AfterMethod;
-import org.testng.annotations.BeforeMethod;
-import org.testng.annotations.Test;
-
-import org.killbill.billing.api.TestApiListener;
 import org.killbill.billing.api.TestApiListener.NextEvent;
-import org.killbill.billing.util.UtilTestSuiteWithEmbeddedDB;
 import org.killbill.billing.events.BusInternalEvent;
 import org.killbill.billing.events.TagDefinitionInternalEvent;
+import org.killbill.billing.util.UtilTestSuiteWithEmbeddedDB;
+import org.killbill.billing.util.api.TagDefinitionApiException;
+import org.testng.Assert;
+import org.testng.annotations.Test;
 
 import com.google.common.eventbus.Subscribe;
 
 public class TestDefaultTagDefinitionDao extends UtilTestSuiteWithEmbeddedDB {
+
+    @Test(groups = "slow" )
+    public void testInvalidTagDefinition() throws TagDefinitionApiException {
+        try {
+            tagDefinitionDao.getByName("fooNexistePas", internalCallContext);
+            Assert.fail("Retrieving tag definition fooNexistePas should fail");
+        } catch (final TagDefinitionApiException e) {
+            Assert.assertEquals(e.getCode(), ErrorCode.TAG_DEFINITION_DOES_NOT_EXIST.getCode());
+        }
+    }
 
     @Test(groups = "slow")
     public void testCatchEventsOnCreateAndDelete() throws Exception {
