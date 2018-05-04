@@ -16,6 +16,7 @@
 
 package org.killbill.billing.util.export.dao;
 
+import java.io.IOException;
 import java.sql.Blob;
 import java.util.ArrayList;
 import java.util.List;
@@ -34,9 +35,13 @@ import org.skife.jdbi.v2.Handle;
 import org.skife.jdbi.v2.IDBI;
 import org.skife.jdbi.v2.ResultIterator;
 import org.skife.jdbi.v2.tweak.HandleCallback;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @Singleton
 public class DatabaseExportDao {
+
+    private static final Logger logger = LoggerFactory.getLogger(DatabaseExportDao.class);
 
     private final DatabaseSchemaDao databaseSchemaDao;
     private final IDBI dbi;
@@ -172,7 +177,12 @@ public class DatabaseExportDao {
                             }
                         }
 
-                        out.write(row);
+                        try {
+                            out.write(row);
+                        } catch (final IOException e) {
+                            logger.warn("Unable to write row: {}", row, e);
+                            throw e;
+                        }
                     }
                 } finally {
                     iterator.close();
