@@ -155,7 +155,7 @@ public class CallbackServlet extends HttpServlet {
             if (ev == received) {
                 it.remove();
                 foundIt = true;
-                log.info("Found expected event: {}", received);
+                log.info("Found expected event: {}; remaining expected events [{}]", received, SPACE_JOINER.join(nextExpectedEvent));
                 break;
             }
         }

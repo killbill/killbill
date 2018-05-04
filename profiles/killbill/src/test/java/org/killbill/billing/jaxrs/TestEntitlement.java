@@ -27,7 +27,6 @@ import java.util.regex.Pattern;
 import org.joda.time.DateTime;
 import org.joda.time.Interval;
 import org.joda.time.LocalDate;
-import org.killbill.billing.api.FlakyRetryAnalyzer;
 import org.killbill.billing.catalog.DefaultPriceListSet;
 import org.killbill.billing.catalog.api.BillingActionPolicy;
 import org.killbill.billing.catalog.api.BillingPeriod;
@@ -415,9 +414,8 @@ public class TestEntitlement extends TestJaxrsBase {
         assertEquals(invoiceApi.getInvoiceTags(invoicesAfterClose.get(0).getInvoiceId(), requestOptions).size(), 1);
     }
 
-    // , see https://github.com/killbill/killbill/issues/860
-    @Test(groups = "slow", description = "Create a bulk of base entitlement and addOns under the same transaction", retryAnalyzer = FlakyRetryAnalyzer.class)
-    public void testcreateSubscriptionsWithAddOnsThenCloseAccountWithItemAdjustment() throws Exception {
+    @Test(groups = "slow", description = "Create a bulk of base entitlement and addOns under the same transaction")
+    public void testCreateEntitlementsWithAddOnsThenCloseAccountWithItemAdjustment() throws Exception {
         final DateTime initialDate = new DateTime(2012, 4, 25, 0, 3, 42, 0);
         clock.setDeltaFromReality(initialDate.getMillis() - clock.getUTCNow().getMillis());
 
@@ -456,7 +454,30 @@ public class TestEntitlement extends TestJaxrsBase {
         input.add(bulkList);
         input.add(bulkList);
 
+        callbackServlet.pushExpectedEvents(ExtBusEventType.ACCOUNT_CHANGE,
+                                           ExtBusEventType.ENTITLEMENT_CREATION,
+                                           ExtBusEventType.ENTITLEMENT_CREATION,
+                                           ExtBusEventType.ENTITLEMENT_CREATION,
+                                           ExtBusEventType.ENTITLEMENT_CREATION,
+                                           ExtBusEventType.ENTITLEMENT_CREATION,
+                                           ExtBusEventType.ENTITLEMENT_CREATION,
+                                           ExtBusEventType.SUBSCRIPTION_CREATION,
+                                           ExtBusEventType.SUBSCRIPTION_CREATION,
+                                           ExtBusEventType.SUBSCRIPTION_CREATION,
+                                           ExtBusEventType.SUBSCRIPTION_CREATION,
+                                           ExtBusEventType.SUBSCRIPTION_CREATION,
+                                           ExtBusEventType.SUBSCRIPTION_CREATION,
+                                           ExtBusEventType.SUBSCRIPTION_CREATION,
+                                           ExtBusEventType.SUBSCRIPTION_CREATION,
+                                           ExtBusEventType.SUBSCRIPTION_CREATION,
+                                           ExtBusEventType.SUBSCRIPTION_CREATION,
+                                           ExtBusEventType.SUBSCRIPTION_CREATION,
+                                           ExtBusEventType.SUBSCRIPTION_CREATION,
+                                           ExtBusEventType.INVOICE_CREATION,
+                                           ExtBusEventType.INVOICE_PAYMENT_FAILED);
         final Bundles bundles = subscriptionApi.createSubscriptionsWithAddOns(input, null, null, false, false, true, DEFAULT_WAIT_COMPLETION_TIMEOUT_SEC, NULL_PLUGIN_PROPERTIES, requestOptions);
+        callbackServlet.assertListenerStatus();
+
         assertNotNull(bundles);
         assertEquals(bundles.size(), 2);
         assertFalse(bundles.get(0).getExternalKey().equals(bundles.get(1).getExternalKey()));
@@ -474,7 +495,36 @@ public class TestEntitlement extends TestJaxrsBase {
             }
         }
 
+        clock.addDays(1);
+        callbackServlet.assertListenerStatus();
+
+        callbackServlet.pushExpectedEvents(ExtBusEventType.ENTITLEMENT_CANCEL,
+                                           ExtBusEventType.ENTITLEMENT_CANCEL,
+                                           ExtBusEventType.ENTITLEMENT_CANCEL,
+                                           ExtBusEventType.ENTITLEMENT_CANCEL,
+                                           ExtBusEventType.ENTITLEMENT_CANCEL,
+                                           ExtBusEventType.ENTITLEMENT_CANCEL,
+                                           ExtBusEventType.SUBSCRIPTION_CANCEL,
+                                           ExtBusEventType.SUBSCRIPTION_CANCEL,
+                                           ExtBusEventType.SUBSCRIPTION_CANCEL,
+                                           ExtBusEventType.SUBSCRIPTION_CANCEL,
+                                           ExtBusEventType.SUBSCRIPTION_CANCEL,
+                                           ExtBusEventType.SUBSCRIPTION_CANCEL,
+                                           ExtBusEventType.SUBSCRIPTION_CANCEL,
+                                           ExtBusEventType.SUBSCRIPTION_CANCEL,
+                                           ExtBusEventType.SUBSCRIPTION_CANCEL,
+                                           ExtBusEventType.SUBSCRIPTION_CANCEL,
+                                           ExtBusEventType.SUBSCRIPTION_CANCEL,
+                                           ExtBusEventType.SUBSCRIPTION_CANCEL,
+                                           ExtBusEventType.INVOICE_CREATION,
+                                           ExtBusEventType.INVOICE_PAYMENT_FAILED,
+                                           ExtBusEventType.INVOICE_ADJUSTMENT,
+                                           ExtBusEventType.INVOICE_ADJUSTMENT,
+                                           ExtBusEventType.INVOICE_ADJUSTMENT,
+                                           ExtBusEventType.INVOICE_ADJUSTMENT,
+                                           ExtBusEventType.BLOCKING_STATE);
         accountApi.closeAccount(accountJson.getAccountId(), true, false, true, true, requestOptions);
+        callbackServlet.assertListenerStatus();
 
         final Bundles accountBundlesAfterClose = accountApi.getAccountBundles(accountJson.getAccountId(), null, null, requestOptions);
         assertEquals(accountBundlesAfterClose.size(), 2);

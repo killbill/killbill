@@ -181,6 +181,8 @@ public class TestInvoiceVoid extends TestJaxrsBase {
         callbackServlet.pushExpectedEvents(ExtBusEventType.SUBSCRIPTION_PHASE,
                                            ExtBusEventType.INVOICE_CREATION,
                                            ExtBusEventType.OVERDUE_CHANGE,
+                                           ExtBusEventType.BLOCKING_STATE,
+                                           ExtBusEventType.OVERDUE_CHANGE,
                                            ExtBusEventType.BLOCKING_STATE);
         clock.addDays(31);
         callbackServlet.assertListenerStatus();

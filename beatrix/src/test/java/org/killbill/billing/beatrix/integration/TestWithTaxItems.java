@@ -70,6 +70,10 @@ public class TestWithTaxItems extends TestIntegrationBase {
 
     @BeforeClass(groups = "slow")
     public void beforeClass() throws Exception {
+        if (hasFailed()) {
+            return;
+        }
+
         super.beforeClass();
 
         this.testInvoicePluginApi = new TestInvoicePluginApi();

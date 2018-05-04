@@ -35,6 +35,10 @@ public class TestVersionedCatalog extends CatalogTestSuiteNoDB {
 
     @BeforeClass(groups = "fast")
     public void beforeClass() throws Exception {
+        if (hasFailed()) {
+            return;
+        }
+
         super.beforeClass();
         vc = loader.loadDefaultCatalog("versionedCatalog");
     }

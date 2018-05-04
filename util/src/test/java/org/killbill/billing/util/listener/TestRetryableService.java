@@ -61,6 +61,10 @@ public class TestRetryableService extends UtilTestSuiteWithEmbeddedDB {
 
     @BeforeClass(groups = "slow")
     public void setUpClass() throws Exception {
+        if (hasFailed()) {
+            return;
+        }
+
         final ImmutableAccountData immutableAccountData = Mockito.mock(ImmutableAccountData.class);
         Mockito.when(immutableAccountInternalApi.getImmutableAccountDataByRecordId(Mockito.<Long>eq(internalCallContext.getAccountRecordId()), Mockito.<InternalTenantContext>any())).thenReturn(immutableAccountData);
     }
