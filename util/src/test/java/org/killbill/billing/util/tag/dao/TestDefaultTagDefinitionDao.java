@@ -34,15 +34,6 @@ import com.google.common.eventbus.Subscribe;
 
 public class TestDefaultTagDefinitionDao extends UtilTestSuiteWithEmbeddedDB {
 
-    @Test(groups = "slow" )
-    public void testInvalidTagDefinition() throws TagDefinitionApiException {
-        try {
-            tagDefinitionDao.getByName("fooNexistePas", internalCallContext);
-            Assert.fail("Retrieving tag definition fooNexistePas should fail");
-        } catch (final TagDefinitionApiException e) {
-            Assert.assertEquals(e.getCode(), ErrorCode.TAG_DEFINITION_DOES_NOT_EXIST.getCode());
-        }
-    }
 
     @Test(groups = "slow")
     public void testCatchEventsOnCreateAndDelete() throws Exception {
@@ -77,7 +68,14 @@ public class TestDefaultTagDefinitionDao extends UtilTestSuiteWithEmbeddedDB {
         assertListenerStatus();
 
         // Make sure the tag definition is deleted
-        Assert.assertNull(tagDefinitionDao.getByName(definitionName, internalCallContext));
+        try {
+            tagDefinitionDao.getByName(definitionName, internalCallContext);
+            Assert.fail("Retrieving tag definition should fail");
+        } catch (final TagDefinitionApiException e) {
+            Assert.assertEquals(e.getCode(), ErrorCode.TAG_DEFINITION_DOES_NOT_EXIST.getCode());
+        }
+
+
 
         /*
         // Verify we caught an event on the bus
