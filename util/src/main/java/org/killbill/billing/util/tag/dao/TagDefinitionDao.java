@@ -30,7 +30,7 @@ public interface TagDefinitionDao extends EntityDao<TagDefinitionModelDao, TagDe
 
     public List<TagDefinitionModelDao> getTagDefinitions(boolean includeSystemTags, InternalTenantContext context);
 
-    public TagDefinitionModelDao getByName(String definitionName, InternalTenantContext context);
+    public TagDefinitionModelDao getByName(String definitionName, InternalTenantContext context) throws TagDefinitionApiException;
 
     public List<TagDefinitionModelDao> getByIds(Collection<UUID> definitionIds, InternalTenantContext context);
 

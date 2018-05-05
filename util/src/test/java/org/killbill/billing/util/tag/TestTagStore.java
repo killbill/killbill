@@ -19,6 +19,7 @@ package org.killbill.billing.util.tag;
 import java.util.List;
 import java.util.UUID;
 
+import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import org.killbill.billing.ObjectType;
@@ -93,8 +94,11 @@ public class TestTagStore extends UtilTestSuiteWithEmbeddedDB {
         tagDefinitionDao.deleteById(tagDefinition.getId(), internalCallContext);
         assertListenerStatus();
 
-        tagDefinition = tagDefinitionDao.getByName(definitionName, internalCallContext);
-        assertNull(tagDefinition);
+        try {
+            tagDefinitionDao.getByName(definitionName, internalCallContext);
+            Assert.fail("Call should fail");
+        } catch (TagDefinitionApiException expected) {
+        }
     }
 
     @Test(groups = "slow", expectedExceptions = TagDefinitionApiException.class)
