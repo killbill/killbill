@@ -16,7 +16,9 @@
 
 package org.killbill.billing.util.export.dao;
 
+import java.io.IOException;
 import java.sql.Blob;
+import java.sql.Clob;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -34,9 +36,13 @@ import org.skife.jdbi.v2.Handle;
 import org.skife.jdbi.v2.IDBI;
 import org.skife.jdbi.v2.ResultIterator;
 import org.skife.jdbi.v2.tweak.HandleCallback;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @Singleton
 public class DatabaseExportDao {
+
+    private static final Logger logger = LoggerFactory.getLogger(DatabaseExportDao.class);
 
     private final DatabaseSchemaDao databaseSchemaDao;
     private final IDBI dbi;
@@ -164,15 +170,24 @@ public class DatabaseExportDao {
 
                         for (final String k : row.keySet()) {
                             final Object value = row.get(k);
-                            // For h2, transform a JdbcBlob into a byte[]
+                            // For h2, transform a JdbcBlob and a JdbcClob into a byte[]
                             // See also LowerToCamelBeanMapper
                             if (value instanceof Blob) {
                                 final Blob blob = (Blob) value;
                                 row.put(k, blob.getBytes(0, (int) blob.length()));
+                            } else if (value instanceof Clob) {
+                                // TODO Update LowerToCamelBeanMapper?
+                                final Clob clob = (Clob) value;
+                                row.put(k, clob.getSubString(1, (int) clob.length()));
                             }
                         }
 
-                        out.write(row);
+                        try {
+                            out.write(row);
+                        } catch (final IOException e) {
+                            logger.warn("Unable to write row: {}", row, e);
+                            throw e;
+                        }
                     }
                 } finally {
                     iterator.close();

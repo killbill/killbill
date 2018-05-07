@@ -41,6 +41,10 @@ public class TestBroadcastService extends UtilTestSuiteWithEmbeddedDB {
 
     @BeforeMethod(groups = "slow")
     public void beforeMethod() throws Exception {
+        if (hasFailed()) {
+            return;
+        }
+
         super.beforeMethod();
         ((DefaultBroadcastService) broadcastService).initialize();
         ((DefaultBroadcastService) broadcastService).start();

@@ -61,6 +61,10 @@ public class TestRetryService extends PaymentTestSuiteNoDB {
     @Override
     @BeforeMethod(groups = "fast")
     public void beforeMethod() throws Exception {
+        if (hasFailed()) {
+            return;
+        }
+
         super.beforeMethod();
 
         setDefaultPollInterval(Duration.ONE_HUNDRED_MILLISECONDS);
@@ -74,6 +78,10 @@ public class TestRetryService extends PaymentTestSuiteNoDB {
     @Override
     @AfterMethod(groups = "fast")
     public void afterMethod() throws Exception {
+        if (hasFailed()) {
+            return;
+        }
+
         super.afterMethod();
         retryService.stop();
     }

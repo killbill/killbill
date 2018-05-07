@@ -294,7 +294,7 @@ public class TestApiListener {
         }
     }
 
-    public boolean isCompleted(final long timeout) {
+    private boolean isCompleted(final long timeout) {
         synchronized (this) {
             long waitTimeMs = timeout;
             do {

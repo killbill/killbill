@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014-2017 Groupon, Inc
- * Copyright 2014-2017 The Billing Project, LLC
+ * Copyright 2014-2018 Groupon, Inc
+ * Copyright 2014-2018 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -18,16 +18,13 @@
 
 package org.killbill.billing.jaxrs;
 
-import java.io.File;
-import java.io.IOException;
 import java.math.BigDecimal;
-import java.nio.charset.Charset;
-import java.sql.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
+import org.joda.time.DateTime;
 import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
 import org.killbill.billing.catalog.api.BillingPeriod;
@@ -35,21 +32,17 @@ import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.catalog.api.ProductCategory;
 import org.killbill.billing.catalog.api.TimeUnit;
 import org.killbill.billing.client.KillBillClientException;
-import org.killbill.billing.client.RequestOptions;
 import org.killbill.billing.client.model.Catalogs;
 import org.killbill.billing.client.model.gen.Catalog;
 import org.killbill.billing.client.model.gen.Plan;
 import org.killbill.billing.client.model.gen.PlanDetail;
 import org.killbill.billing.client.model.gen.Product;
 import org.killbill.billing.client.model.gen.SimplePlan;
-import org.killbill.billing.client.model.gen.Tenant;
 import org.killbill.billing.client.model.gen.Usage;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import com.google.common.collect.ImmutableList;
-import com.google.common.io.Files;
-import com.google.common.io.Resources;
 
 public class TestCatalog extends TestJaxrsBase {
 
@@ -183,22 +176,14 @@ public class TestCatalog extends TestJaxrsBase {
     @Test(groups = "slow", description = "Upload and retrieve a per plugin payment state machine config")
     public void testAddSimplePlanWithoutKBDefault() throws Exception {
         // Create another tenant initialized with no default catalog,...
-        final Tenant otherTenantNoKBDefault = new Tenant();
-        otherTenantNoKBDefault.setApiKey(UUID.randomUUID().toString());
-        otherTenantNoKBDefault.setApiSecret(UUID.randomUUID().toString());
+        createTenant(UUID.randomUUID().toString(), UUID.randomUUID().toString(), false);
 
-        tenantApi.createTenant(otherTenantNoKBDefault, false, requestOptions);
-
-        final RequestOptions requestOptionsOtherTenant = requestOptions.extend()
-                                                                       .withTenantApiKey(otherTenantNoKBDefault.getApiKey())
-                                                                       .withTenantApiSecret(otherTenantNoKBDefault.getApiSecret())
-                                                                       .build();
         // Verify the template catalog is not returned
-        List<Catalog> catalogsJson = catalogApi.getCatalogJson(null, requestOptionsOtherTenant);
+        List<Catalog> catalogsJson = catalogApi.getCatalogJson(null, requestOptions);
         Assert.assertEquals(catalogsJson.size(), 0);
 
-        catalogApi.addSimplePlan(new SimplePlan("foo-monthly", "Foo", ProductCategory.BASE, Currency.USD, BigDecimal.TEN, BillingPeriod.MONTHLY, 0, TimeUnit.UNLIMITED, ImmutableList.<String>of()), requestOptionsOtherTenant);
-        catalogsJson = catalogApi.getCatalogJson(null, requestOptionsOtherTenant);
+        catalogApi.addSimplePlan(new SimplePlan("foo-monthly", "Foo", ProductCategory.BASE, Currency.USD, BigDecimal.TEN, BillingPeriod.MONTHLY, 0, TimeUnit.UNLIMITED, ImmutableList.<String>of()), requestOptions);
+        catalogsJson = catalogApi.getCatalogJson(null, requestOptions);
         Assert.assertEquals(catalogsJson.size(), 1);
         Assert.assertEquals(catalogsJson.get(0).getProducts().size(), 1);
         Assert.assertEquals(catalogsJson.get(0).getProducts().get(0).getName(), "Foo");
@@ -207,9 +192,9 @@ public class TestCatalog extends TestJaxrsBase {
         Assert.assertEquals(catalogsJson.get(0).getPriceLists().get(0).getPlans().size(), 1);
         Assert.assertEquals(catalogsJson.get(0).getPriceLists().get(0).getPlans().get(0), "foo-monthly");
 
-        catalogApi.addSimplePlan(new SimplePlan("foo-annual", "Foo", ProductCategory.BASE, Currency.USD, new BigDecimal("100.00"), BillingPeriod.ANNUAL, 0, TimeUnit.UNLIMITED, ImmutableList.<String>of()), requestOptionsOtherTenant);
+        catalogApi.addSimplePlan(new SimplePlan("foo-annual", "Foo", ProductCategory.BASE, Currency.USD, new BigDecimal("100.00"), BillingPeriod.ANNUAL, 0, TimeUnit.UNLIMITED, ImmutableList.<String>of()), requestOptions);
 
-        catalogsJson = catalogApi.getCatalogJson(null, requestOptionsOtherTenant);
+        catalogsJson = catalogApi.getCatalogJson(null, requestOptions);
         Assert.assertEquals(catalogsJson.size(), 1);
         Assert.assertEquals(catalogsJson.get(0).getProducts().size(), 1);
         Assert.assertEquals(catalogsJson.get(0).getProducts().get(0).getName(), "Foo");

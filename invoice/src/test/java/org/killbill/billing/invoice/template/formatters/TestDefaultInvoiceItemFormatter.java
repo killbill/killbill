@@ -47,6 +47,10 @@ public class TestDefaultInvoiceItemFormatter extends InvoiceTestSuiteNoDB {
     @Override
     @BeforeClass(groups = "fast")
     public void beforeClass() throws Exception {
+        if (hasFailed()) {
+            return;
+        }
+
         super.beforeClass();
         config = new ConfigurationObjectFactory(skifeConfigSource).build(TranslatorConfig.class);
         templateEngine = new MustacheTemplateEngine();

@@ -27,7 +27,6 @@ import java.util.regex.Pattern;
 import org.joda.time.DateTime;
 import org.joda.time.Interval;
 import org.joda.time.LocalDate;
-import org.killbill.billing.api.FlakyRetryAnalyzer;
 import org.killbill.billing.catalog.DefaultPriceListSet;
 import org.killbill.billing.catalog.api.BillingActionPolicy;
 import org.killbill.billing.catalog.api.BillingPeriod;
@@ -48,6 +47,7 @@ import org.killbill.billing.client.model.gen.Subscription;
 import org.killbill.billing.entitlement.api.Entitlement.EntitlementActionPolicy;
 import org.killbill.billing.entitlement.api.Entitlement.EntitlementState;
 import org.killbill.billing.entitlement.api.SubscriptionEventType;
+import org.killbill.billing.notification.plugin.api.ExtBusEventType;
 import org.killbill.billing.util.api.AuditLevel;
 import org.testng.Assert;
 import org.testng.annotations.Test;
@@ -89,6 +89,10 @@ public class TestEntitlement extends TestJaxrsBase {
         entitlementJson.setPriceOverrides(null);
         Assert.assertTrue(objFromJson.equals(entitlementJson));
 
+        // Change the clock otherwise the CREATE event might be replaced (instead of having a CHANGE event)
+        clock.addDays(1);
+        callbackServlet.assertListenerStatus();
+
         // Change plan IMM
         final String newProductName = "Assault-Rifle";
 
@@ -99,13 +103,18 @@ public class TestEntitlement extends TestJaxrsBase {
         newInput.setProductCategory(ProductCategory.BASE);
         newInput.setBillingPeriod(entitlementJson.getBillingPeriod());
         newInput.setPriceList(entitlementJson.getPriceList());
+        callbackServlet.pushExpectedEvents(ExtBusEventType.SUBSCRIPTION_CHANGE, ExtBusEventType.SUBSCRIPTION_CHANGE, ExtBusEventType.INVOICE_CREATION);
         subscriptionApi.changeSubscriptionPlan(entitlementJson.getSubscriptionId(), newInput, null, null, NULL_PLUGIN_PROPERTIES, requestOptions);
+        callbackServlet.assertListenerStatus();
+        Assert.assertNotNull(objFromJson);
 
         // MOVE AFTER TRIAL
-        final Interval it = new Interval(clock.getUTCNow(), clock.getUTCNow().plusDays(31));
-        clock.addDeltaFromReality(it.toDurationMillis());
-
-        crappyWaitForLackOfProperSynchonization();
+        callbackServlet.pushExpectedEvents(ExtBusEventType.SUBSCRIPTION_PHASE,
+                                           ExtBusEventType.INVOICE_CREATION,
+                                           ExtBusEventType.INVOICE_PAYMENT_SUCCESS,
+                                           ExtBusEventType.PAYMENT_SUCCESS);
+        clock.addDays(30);
+        callbackServlet.assertListenerStatus();
 
         // Cancel IMM (Billing EOT)
         subscriptionApi.cancelSubscriptionPlan(newInput.getSubscriptionId(), null, null, null, NULL_PLUGIN_PROPERTIES, requestOptions);
@@ -146,10 +155,12 @@ public class TestEntitlement extends TestJaxrsBase {
         Assert.assertTrue(objFromJson.equals(entitlementJson));
 
         // MOVE AFTER TRIAL
-        final Interval it = new Interval(clock.getUTCNow(), clock.getUTCNow().plusDays(31));
-        clock.addDeltaFromReality(it.toDurationMillis());
-
-        crappyWaitForLackOfProperSynchonization();
+        callbackServlet.pushExpectedEvents(ExtBusEventType.SUBSCRIPTION_PHASE,
+                                           ExtBusEventType.INVOICE_CREATION,
+                                           ExtBusEventType.INVOICE_PAYMENT_SUCCESS,
+                                           ExtBusEventType.PAYMENT_SUCCESS);
+        clock.addDays(31);
+        callbackServlet.assertListenerStatus();
 
         // Cancel EOT
         subscriptionApi.cancelSubscriptionPlan(entitlementJson.getSubscriptionId(), null, EntitlementActionPolicy.END_OF_TERM,
@@ -255,7 +266,15 @@ public class TestEntitlement extends TestJaxrsBase {
         overrides.add(new PhasePriceOverride(null, null, PhaseType.TRIAL.toString(), BigDecimal.TEN, null, null));
         input.setPriceOverrides(overrides);
 
+        callbackServlet.pushExpectedEvents(ExtBusEventType.ACCOUNT_CHANGE,
+                                           ExtBusEventType.ENTITLEMENT_CREATION,
+                                           ExtBusEventType.SUBSCRIPTION_CREATION,
+                                           ExtBusEventType.SUBSCRIPTION_CREATION,
+                                           ExtBusEventType.INVOICE_CREATION,
+                                           ExtBusEventType.INVOICE_PAYMENT_SUCCESS,
+                                           ExtBusEventType.PAYMENT_SUCCESS);
         final Subscription subscription = subscriptionApi.createSubscription(input, null, null, null, null, null, true, DEFAULT_WAIT_COMPLETION_TIMEOUT_SEC, NULL_PLUGIN_PROPERTIES, requestOptions);
+        callbackServlet.assertListenerStatus();
         Assert.assertEquals(subscription.getPriceOverrides().size(), 2);
 
         Assert.assertEquals(subscription.getEvents().size(), 3);
@@ -282,8 +301,12 @@ public class TestEntitlement extends TestJaxrsBase {
         assertEquals(invoices.get(0).getAmount().compareTo(BigDecimal.TEN), 0);
 
         // Move clock after phase
+        callbackServlet.pushExpectedEvents(ExtBusEventType.SUBSCRIPTION_PHASE,
+                                           ExtBusEventType.INVOICE_CREATION,
+                                           ExtBusEventType.INVOICE_PAYMENT_SUCCESS,
+                                           ExtBusEventType.PAYMENT_SUCCESS);
         clock.addDays(30);
-        crappyWaitForLackOfProperSynchonization();
+        callbackServlet.assertListenerStatus();
 
         final Subscription subscription2 = subscriptionApi.getSubscription(subscription.getSubscriptionId(), requestOptions);
         Assert.assertEquals(subscription2.getEvents().size(), 3);
@@ -391,9 +414,8 @@ public class TestEntitlement extends TestJaxrsBase {
         assertEquals(invoiceApi.getInvoiceTags(invoicesAfterClose.get(0).getInvoiceId(), requestOptions).size(), 1);
     }
 
-    // , see https://github.com/killbill/killbill/issues/860
-    @Test(groups = "slow", description = "Create a bulk of base entitlement and addOns under the same transaction", retryAnalyzer = FlakyRetryAnalyzer.class)
-    public void testcreateSubscriptionsWithAddOnsThenCloseAccountWithItemAdjustment() throws Exception {
+    @Test(groups = "slow", description = "Create a bulk of base entitlement and addOns under the same transaction")
+    public void testCreateEntitlementsWithAddOnsThenCloseAccountWithItemAdjustment() throws Exception {
         final DateTime initialDate = new DateTime(2012, 4, 25, 0, 3, 42, 0);
         clock.setDeltaFromReality(initialDate.getMillis() - clock.getUTCNow().getMillis());
 
@@ -432,7 +454,30 @@ public class TestEntitlement extends TestJaxrsBase {
         input.add(bulkList);
         input.add(bulkList);
 
+        callbackServlet.pushExpectedEvents(ExtBusEventType.ACCOUNT_CHANGE,
+                                           ExtBusEventType.ENTITLEMENT_CREATION,
+                                           ExtBusEventType.ENTITLEMENT_CREATION,
+                                           ExtBusEventType.ENTITLEMENT_CREATION,
+                                           ExtBusEventType.ENTITLEMENT_CREATION,
+                                           ExtBusEventType.ENTITLEMENT_CREATION,
+                                           ExtBusEventType.ENTITLEMENT_CREATION,
+                                           ExtBusEventType.SUBSCRIPTION_CREATION,
+                                           ExtBusEventType.SUBSCRIPTION_CREATION,
+                                           ExtBusEventType.SUBSCRIPTION_CREATION,
+                                           ExtBusEventType.SUBSCRIPTION_CREATION,
+                                           ExtBusEventType.SUBSCRIPTION_CREATION,
+                                           ExtBusEventType.SUBSCRIPTION_CREATION,
+                                           ExtBusEventType.SUBSCRIPTION_CREATION,
+                                           ExtBusEventType.SUBSCRIPTION_CREATION,
+                                           ExtBusEventType.SUBSCRIPTION_CREATION,
+                                           ExtBusEventType.SUBSCRIPTION_CREATION,
+                                           ExtBusEventType.SUBSCRIPTION_CREATION,
+                                           ExtBusEventType.SUBSCRIPTION_CREATION,
+                                           ExtBusEventType.INVOICE_CREATION,
+                                           ExtBusEventType.INVOICE_PAYMENT_FAILED);
         final Bundles bundles = subscriptionApi.createSubscriptionsWithAddOns(input, null, null, false, false, true, DEFAULT_WAIT_COMPLETION_TIMEOUT_SEC, NULL_PLUGIN_PROPERTIES, requestOptions);
+        callbackServlet.assertListenerStatus();
+
         assertNotNull(bundles);
         assertEquals(bundles.size(), 2);
         assertFalse(bundles.get(0).getExternalKey().equals(bundles.get(1).getExternalKey()));
@@ -450,7 +495,36 @@ public class TestEntitlement extends TestJaxrsBase {
             }
         }
 
+        clock.addDays(1);
+        callbackServlet.assertListenerStatus();
+
+        callbackServlet.pushExpectedEvents(ExtBusEventType.ENTITLEMENT_CANCEL,
+                                           ExtBusEventType.ENTITLEMENT_CANCEL,
+                                           ExtBusEventType.ENTITLEMENT_CANCEL,
+                                           ExtBusEventType.ENTITLEMENT_CANCEL,
+                                           ExtBusEventType.ENTITLEMENT_CANCEL,
+                                           ExtBusEventType.ENTITLEMENT_CANCEL,
+                                           ExtBusEventType.SUBSCRIPTION_CANCEL,
+                                           ExtBusEventType.SUBSCRIPTION_CANCEL,
+                                           ExtBusEventType.SUBSCRIPTION_CANCEL,
+                                           ExtBusEventType.SUBSCRIPTION_CANCEL,
+                                           ExtBusEventType.SUBSCRIPTION_CANCEL,
+                                           ExtBusEventType.SUBSCRIPTION_CANCEL,
+                                           ExtBusEventType.SUBSCRIPTION_CANCEL,
+                                           ExtBusEventType.SUBSCRIPTION_CANCEL,
+                                           ExtBusEventType.SUBSCRIPTION_CANCEL,
+                                           ExtBusEventType.SUBSCRIPTION_CANCEL,
+                                           ExtBusEventType.SUBSCRIPTION_CANCEL,
+                                           ExtBusEventType.SUBSCRIPTION_CANCEL,
+                                           ExtBusEventType.INVOICE_CREATION,
+                                           ExtBusEventType.INVOICE_PAYMENT_FAILED,
+                                           ExtBusEventType.INVOICE_ADJUSTMENT,
+                                           ExtBusEventType.INVOICE_ADJUSTMENT,
+                                           ExtBusEventType.INVOICE_ADJUSTMENT,
+                                           ExtBusEventType.INVOICE_ADJUSTMENT,
+                                           ExtBusEventType.BLOCKING_STATE);
         accountApi.closeAccount(accountJson.getAccountId(), true, false, true, true, requestOptions);
+        callbackServlet.assertListenerStatus();
 
         final Bundles accountBundlesAfterClose = accountApi.getAccountBundles(accountJson.getAccountId(), null, null, requestOptions);
         assertEquals(accountBundlesAfterClose.size(), 2);
@@ -461,7 +535,7 @@ public class TestEntitlement extends TestJaxrsBase {
         }
 
         final List<Invoice> invoicesAfterClose = accountApi.getInvoicesForAccount(accountJson.getAccountId(), true, false, false, false, AuditLevel.NONE, requestOptions);
-        assertEquals(invoicesAfterClose.size(), 1);
+        assertEquals(invoicesAfterClose.size(), 2);
         assertEquals(invoicesAfterClose.get(0).getBalance().compareTo(BigDecimal.ZERO), 0);
         assertEquals(invoiceApi.getInvoiceTags(invoicesAfterClose.get(0).getInvoiceId(), requestOptions).size(), 0);
     }
@@ -634,15 +708,18 @@ public class TestEntitlement extends TestJaxrsBase {
         final Subscription updatedSubscription = new Subscription();
         updatedSubscription.setSubscriptionId(entitlementJson.getSubscriptionId());
         updatedSubscription.setBillCycleDayLocal(9);
+        callbackServlet.pushExpectedEvents(ExtBusEventType.SUBSCRIPTION_BCD_CHANGE);
         subscriptionApi.updateSubscriptionBCD(entitlementJson.getSubscriptionId(), updatedSubscription, null, requestOptions);
+        callbackServlet.assertListenerStatus();
 
         final Subscription result = subscriptionApi.getSubscription(entitlementJson.getSubscriptionId(), requestOptions);
         // Still shows as the 4 (BCD did not take effect)
         Assert.assertEquals(result.getBillCycleDayLocal(), new Integer(25));
 
         // 2012, 5, 9
+        callbackServlet.pushExpectedEvents(ExtBusEventType.SUBSCRIPTION_BCD_CHANGE);
         clock.addDays(14);
-        crappyWaitForLackOfProperSynchonization();
+        callbackServlet.assertListenerStatus();
 
         final Subscription result2 = subscriptionApi.getSubscription(entitlementJson.getSubscriptionId(), requestOptions);
         // Still shows as the 4 (BCD did not take effect)
@@ -702,8 +779,11 @@ public class TestEntitlement extends TestJaxrsBase {
         newInput.setProductCategory(ProductCategory.BASE);
         newInput.setBillingPeriod(entitlementJson.getBillingPeriod());
         newInput.setPriceList(entitlementJson.getPriceList());
+
+        callbackServlet.pushExpectedEvents(ExtBusEventType.SUBSCRIPTION_CHANGE);
         subscriptionApi.changeSubscriptionPlan(entitlementJson.getSubscriptionId(), newInput, new LocalDate(2012, 4, 28), null, NULL_PLUGIN_PROPERTIES, requestOptions);
         Subscription refreshedSubscription = subscriptionApi.getSubscription(entitlementJson.getSubscriptionId(), requestOptions);
+        callbackServlet.assertListenerStatus();
         Assert.assertNotNull(refreshedSubscription);
 
         final Interval it = new Interval(clock.getUTCNow(), clock.getUTCNow().plusDays(1));
@@ -712,10 +792,12 @@ public class TestEntitlement extends TestJaxrsBase {
         subscriptionApi.undoChangeSubscriptionPlan(refreshedSubscription.getSubscriptionId(), NULL_PLUGIN_PROPERTIES, requestOptions);
 
         // MOVE AFTER TRIAL
-        final Interval it2 = new Interval(clock.getUTCNow(), clock.getUTCNow().plusDays(30));
-        clock.addDeltaFromReality(it2.toDurationMillis());
-
-        crappyWaitForLackOfProperSynchonization();
+        callbackServlet.pushExpectedEvents(ExtBusEventType.SUBSCRIPTION_PHASE,
+                                           ExtBusEventType.INVOICE_CREATION,
+                                           ExtBusEventType.INVOICE_PAYMENT_SUCCESS,
+                                           ExtBusEventType.PAYMENT_SUCCESS);
+        clock.addDays(30);
+        callbackServlet.assertListenerStatus();
 
         // Retrieves to check EndDate
         refreshedSubscription = subscriptionApi.getSubscription(entitlementJson.getSubscriptionId(), requestOptions);

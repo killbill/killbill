@@ -39,6 +39,7 @@ import org.killbill.billing.client.model.gen.Payment;
 import org.killbill.billing.client.model.gen.PaymentMethod;
 import org.killbill.billing.client.model.gen.PaymentTransaction;
 import org.killbill.billing.client.model.gen.Subscription;
+import org.killbill.billing.notification.plugin.api.ExtBusEventType;
 import org.killbill.billing.osgi.api.OSGIServiceRegistration;
 import org.killbill.billing.payment.api.TransactionStatus;
 import org.killbill.billing.payment.api.TransactionType;
@@ -67,13 +68,17 @@ public class TestInvoicePayment extends TestJaxrsBase {
 
     @BeforeMethod(groups = "slow")
     public void beforeMethod() throws Exception {
+        if (hasFailed()) {
+            return;
+        }
+
         super.beforeMethod();
         mockPaymentProviderPlugin = (MockPaymentProviderPlugin) registry.getServiceForName(PLUGIN_NAME);
     }
 
     @Test(groups = "slow")
     public void testRetrievePayment() throws Exception {
-        final InvoicePayment paymentJson = setupScenarioWithPayment();
+        final InvoicePayment paymentJson = setupScenarioWithPayment(true);
         final Payment retrievedPaymentJson = paymentApi.getPayment(paymentJson.getPaymentId(), NULL_PLUGIN_PROPERTIES, requestOptions);
         verifyInvoicePaymentAgainstPayment(paymentJson, retrievedPaymentJson);
     }
@@ -82,7 +87,7 @@ public class TestInvoicePayment extends TestJaxrsBase {
     public void testInvoicePaymentCompletion() throws Exception {
         mockPaymentProviderPlugin.makeNextPaymentPending();
 
-        final InvoicePayment paymentJson = setupScenarioWithPayment();
+        final InvoicePayment paymentJson = setupScenarioWithPayment(false);
 
         final Payment retrievedPaymentJson = paymentApi.getPayment(paymentJson.getPaymentId(), NULL_PLUGIN_PROPERTIES, requestOptions);
         verifyInvoicePaymentAgainstPayment(paymentJson, retrievedPaymentJson);
@@ -106,7 +111,7 @@ public class TestInvoicePayment extends TestJaxrsBase {
 
     @Test(groups = "slow", description = "Can create a full refund with no adjustment")
     public void testFullRefundWithNoAdjustment() throws Exception {
-        final InvoicePayment invoicePaymentJson = setupScenarioWithPayment();
+        final InvoicePayment invoicePaymentJson = setupScenarioWithPayment(true);
 
         // Issue a refund for the full amount
         final BigDecimal refundAmount = invoicePaymentJson.getPurchasedAmount();
@@ -126,7 +131,7 @@ public class TestInvoicePayment extends TestJaxrsBase {
 
     @Test(groups = "slow", description = "Can create a partial refund with no adjustment")
     public void testPartialRefundWithNoAdjustment() throws Exception {
-        final InvoicePayment paymentJson = setupScenarioWithPayment();
+        final InvoicePayment paymentJson = setupScenarioWithPayment(true);
 
         // Issue a refund for a fraction of the amount
         final BigDecimal refundAmount = getFractionOfAmount(paymentJson.getPurchasedAmount());
@@ -147,7 +152,7 @@ public class TestInvoicePayment extends TestJaxrsBase {
 
     @Test(groups = "slow", description = "Can create a full refund with invoice item adjustment")
     public void testRefundWithFullInvoiceItemAdjustment() throws Exception {
-        final InvoicePayment paymentJson = setupScenarioWithPayment();
+        final InvoicePayment paymentJson = setupScenarioWithPayment(true);
 
         // Get the individual items for the invoice
         final Invoice invoice = invoiceApi.getInvoice(paymentJson.getTargetInvoiceId(), true, false, AuditLevel.NONE, requestOptions);
@@ -177,7 +182,7 @@ public class TestInvoicePayment extends TestJaxrsBase {
 
     @Test(groups = "slow", description = "Can create a partial refund with invoice item adjustment")
     public void testPartialRefundWithInvoiceItemAdjustment() throws Exception {
-        final InvoicePayment paymentJson = setupScenarioWithPayment();
+        final InvoicePayment paymentJson = setupScenarioWithPayment(true);
 
         // Get the individual items for the invoice
         final Invoice invoice = invoiceApi.getInvoice(paymentJson.getTargetInvoiceId(), true, false, AuditLevel.NONE, requestOptions);
@@ -206,7 +211,7 @@ public class TestInvoicePayment extends TestJaxrsBase {
 
     @Test(groups = "slow", description = "Cannot create invoice item adjustments for more than the refund amount")
     public void testPartialRefundWithFullInvoiceItemAdjustment() throws Exception {
-        final InvoicePayment paymentJson = setupScenarioWithPayment();
+        final InvoicePayment paymentJson = setupScenarioWithPayment(true);
 
         // Get the individual items for the invoice
         final Invoice invoice = invoiceApi.getInvoice(paymentJson.getTargetInvoiceId(), true, false, AuditLevel.NONE, requestOptions);
@@ -239,7 +244,7 @@ public class TestInvoicePayment extends TestJaxrsBase {
 
     @Test(groups = "slow", description = "Can paginate through all payments and refunds")
     public void testPaymentsAndRefundsPagination() throws Exception {
-        InvoicePayment lastPayment = setupScenarioWithPayment();
+        InvoicePayment lastPayment = setupScenarioWithPayment(true);
 
         for (int i = 0; i < 5; i++) {
             final InvoicePaymentTransaction refund = new InvoicePaymentTransaction();
@@ -280,7 +285,7 @@ public class TestInvoicePayment extends TestJaxrsBase {
         final DateTime initialDate = new DateTime(2012, 4, 25, 0, 3, 42, 0);
         clock.setDeltaFromReality(initialDate.getMillis() - clock.getUTCNow().getMillis());
 
-        final Account accountJson = createAccountWithPMBundleAndSubscriptionAndWaitForFirstInvoice();
+        final Account accountJson = createAccountWithPMBundleAndSubscriptionAndWaitForFirstInvoice(false);
 
         InvoicePayments invoicePayments = accountApi.getInvoicePayments(accountJson.getAccountId(), NULL_PLUGIN_PROPERTIES, requestOptions);
         assertEquals(invoicePayments.size(), 1);
@@ -306,19 +311,23 @@ public class TestInvoicePayment extends TestJaxrsBase {
 
     @Test(groups = "slow")
     public void testManualInvoicePayment() throws Exception {
-
         final Account accountJson = createAccountWithDefaultPaymentMethod();
         assertNotNull(accountJson);
 
         // Disable automatic payments
+        callbackServlet.pushExpectedEvent(ExtBusEventType.TAG_CREATION);
         accountApi.createAccountTags(accountJson.getAccountId(), ImmutableList.<UUID>of(ControlTagType.AUTO_PAY_OFF.getId()), requestOptions);
+        callbackServlet.assertListenerStatus();
 
         // Add a bundle, subscription and move the clock to get the first invoice
         final Subscription subscriptionJson = createSubscription(accountJson.getAccountId(), UUID.randomUUID().toString(), "Shotgun",
                                                                  ProductCategory.BASE, BillingPeriod.MONTHLY, true);
         assertNotNull(subscriptionJson);
+
+        callbackServlet.pushExpectedEvents(ExtBusEventType.SUBSCRIPTION_PHASE,
+                                           ExtBusEventType.INVOICE_CREATION);
         clock.addDays(32);
-        crappyWaitForLackOfProperSynchonization();
+        callbackServlet.assertListenerStatus();
 
         final List<Invoice> invoices = accountApi.getInvoicesForAccount(accountJson.getAccountId(), requestOptions);
         assertEquals(invoices.size(), 2);
@@ -355,8 +364,8 @@ public class TestInvoicePayment extends TestJaxrsBase {
         return amount.divide(BigDecimal.TEN).setScale(2, BigDecimal.ROUND_HALF_UP);
     }
 
-    private InvoicePayment setupScenarioWithPayment() throws Exception {
-        final Account accountJson = createAccountWithPMBundleAndSubscriptionAndWaitForFirstInvoice();
+    private InvoicePayment setupScenarioWithPayment(final boolean invoicePaymentSuccess) throws Exception {
+        final Account accountJson = createAccountWithPMBundleAndSubscriptionAndWaitForFirstInvoice("Shotgun", invoicePaymentSuccess, true);
 
         final List<InvoicePayment> paymentsForAccount = accountApi.getInvoicePayments(accountJson.getAccountId(), NULL_PLUGIN_PROPERTIES, requestOptions);
         Assert.assertEquals(paymentsForAccount.size(), 1);

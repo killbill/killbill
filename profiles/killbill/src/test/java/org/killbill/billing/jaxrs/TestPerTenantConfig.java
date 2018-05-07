@@ -1,6 +1,6 @@
 /*
- * Copyright 2014-2016 Groupon, Inc
- * Copyright 2014-2016 The Billing Project, LLC
+ * Copyright 2014-2018 Groupon, Inc
+ * Copyright 2014-2018 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -18,15 +18,11 @@
 package org.killbill.billing.jaxrs;
 
 import java.util.HashMap;
-import java.util.concurrent.Callable;
-import java.util.concurrent.TimeUnit;
 
-import org.awaitility.Awaitility;
-import org.awaitility.Duration;
 import org.killbill.billing.client.model.Payments;
 import org.killbill.billing.client.model.gen.Account;
-import org.killbill.billing.client.model.gen.Tenant;
 import org.killbill.billing.client.model.gen.TenantKeyValue;
+import org.killbill.billing.notification.plugin.api.ExtBusEventType;
 import org.killbill.billing.osgi.api.OSGIServiceRegistration;
 import org.killbill.billing.payment.api.TransactionStatus;
 import org.killbill.billing.payment.plugin.api.PaymentPluginApi;
@@ -48,25 +44,27 @@ public class TestPerTenantConfig extends TestJaxrsBase {
 
     @BeforeMethod(groups = "slow")
     public void beforeMethod() throws Exception {
+        if (hasFailed()) {
+            return;
+        }
+
         super.beforeMethod();
         mockPaymentProviderPlugin = (MockPaymentProviderPlugin) registry.getServiceForName(PLUGIN_NAME);
     }
 
     @AfterMethod(groups = "slow")
     public void tearDown() throws Exception {
+        if (hasFailed()) {
+            return;
+        }
+
         mockPaymentProviderPlugin.clear();
     }
 
     @Test(groups = "slow")
     public void testFailedPaymentWithPerTenantRetryConfig() throws Exception {
         // Create the tenant
-        final String apiKeyTenant1 = "tenantSuperTuned";
-        final String apiSecretTenant1 = "2367$$ffr79";
-        loginTenant(apiKeyTenant1, apiSecretTenant1);
-        final Tenant tenant1 = new Tenant();
-        tenant1.setApiKey(apiKeyTenant1);
-        tenant1.setApiSecret(apiSecretTenant1);
-        tenantApi.createTenant(tenant1, true, requestOptions);
+        createTenant("tenantSuperTuned", "2367$$ffr79", true);
 
         // Configure our plugin to fail
         mockPaymentProviderPlugin.makeAllInvoicesFailWithError(true);
@@ -77,9 +75,11 @@ public class TestPerTenantConfig extends TestJaxrsBase {
         perTenantProperties.put("org.killbill.payment.retry.days", "1,1,1");
         final String perTenantConfig = mapper.writeValueAsString(perTenantProperties);
 
+        callbackServlet.pushExpectedEvent(ExtBusEventType.TENANT_CONFIG_CHANGE);
         final TenantKeyValue tenantKey = tenantApi.uploadPerTenantConfiguration(perTenantConfig, requestOptions);
+        callbackServlet.assertListenerStatus();
 
-        final Account accountJson = createAccountWithPMBundleAndSubscriptionAndWaitForFirstInvoice();
+        final Account accountJson = createAccountWithPMBundleAndSubscriptionAndWaitForFirstInvoice(false);
 
         final Payments payments = accountApi.getPaymentsForAccount(accountJson.getAccountId(), NULL_PLUGIN_PROPERTIES, requestOptions);
         Assert.assertEquals(payments.size(), 1);
@@ -92,23 +92,14 @@ public class TestPerTenantConfig extends TestJaxrsBase {
         //
         // Now unregister special per tenant config and we the first retry occurs one day after (and still fails), it now sets a retry date of 8 days
         //
-
+        callbackServlet.pushExpectedEvents(ExtBusEventType.TENANT_CONFIG_DELETION);
         tenantApi.deletePerTenantConfiguration(requestOptions);
-        // org.killbill.tenant.broadcast.rate has been set to 1s
-        crappyWaitForLackOfProperSynchonization(2000);
+        callbackServlet.assertListenerStatus();
 
+        callbackServlet.pushExpectedEvents(ExtBusEventType.INVOICE_PAYMENT_FAILED, ExtBusEventType.PAYMENT_FAILED);
         clock.addDays(1);
+        callbackServlet.assertListenerStatus();
 
-        Awaitility.await()
-                  .atMost(4, TimeUnit.SECONDS)
-                  .pollInterval(Duration.ONE_SECOND)
-                  .until(new Callable<Boolean>() {
-                      @Override
-                      public Boolean call() throws Exception {
-
-                          return accountApi.getPaymentsForAccount(accountJson.getAccountId(), NULL_PLUGIN_PROPERTIES, requestOptions).get(0).getTransactions().size() == 2;
-                      }
-                  });
         final Payments payments2 = accountApi.getPaymentsForAccount(accountJson.getAccountId(), NULL_PLUGIN_PROPERTIES, requestOptions);
         Assert.assertEquals(payments2.size(), 1);
         Assert.assertEquals(payments2.get(0).getTransactions().size(), 2);
@@ -116,7 +107,7 @@ public class TestPerTenantConfig extends TestJaxrsBase {
         Assert.assertEquals(payments2.get(0).getTransactions().get(1).getStatus(), TransactionStatus.PAYMENT_FAILURE);
 
         clock.addDays(1);
-        crappyWaitForLackOfProperSynchonization(3000);
+        callbackServlet.assertListenerStatus();
 
         // No retry with default config
         final Payments payments3 = accountApi.getPaymentsForAccount(accountJson.getAccountId(), NULL_PLUGIN_PROPERTIES, requestOptions);
@@ -124,17 +115,10 @@ public class TestPerTenantConfig extends TestJaxrsBase {
         Assert.assertEquals(payments3.get(0).getTransactions().size(), 2);
 
         mockPaymentProviderPlugin.makeAllInvoicesFailWithError(false);
+        callbackServlet.pushExpectedEvents(ExtBusEventType.INVOICE_PAYMENT_SUCCESS, ExtBusEventType.PAYMENT_SUCCESS);
         clock.addDays(7);
+        callbackServlet.assertListenerStatus();
 
-        Awaitility.await()
-                  .atMost(4, TimeUnit.SECONDS)
-                  .pollInterval(Duration.ONE_SECOND)
-                  .until(new Callable<Boolean>() {
-                      @Override
-                      public Boolean call() throws Exception {
-                          return accountApi.getPaymentsForAccount(accountJson.getAccountId(), NULL_PLUGIN_PROPERTIES, requestOptions).get(0).getTransactions().size() == 3;
-                      }
-                  });
         final Payments payments4 = accountApi.getPaymentsForAccount(accountJson.getAccountId(), NULL_PLUGIN_PROPERTIES, requestOptions);
         Assert.assertEquals(payments4.size(), 1);
         Assert.assertEquals(payments4.get(0).getTransactions().size(), 3);

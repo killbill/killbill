@@ -54,8 +54,8 @@ public class TestPaymentDao extends PaymentTestSuiteWithEmbeddedDB {
     @Test(groups = "slow")
     public void testPaymentAttempt() throws PluginPropertySerializerException {
         final UUID transactionId = UUID.randomUUID();
-        final String paymentExternalKey = "vraiment?";
-        final String transactionExternalKey = "tduteuqweq";
+        final String paymentExternalKey = UUID.randomUUID().toString();
+        final String transactionExternalKey = UUID.randomUUID().toString();
         final String stateName = "INIT";
         final TransactionType transactionType = TransactionType.AUTHORIZE;
         final String pluginName = "superPlugin";
@@ -100,9 +100,9 @@ public class TestPaymentDao extends PaymentTestSuiteWithEmbeddedDB {
     public void testPaymentAndTransactions() {
         final UUID paymentMethodId = UUID.randomUUID();
         final UUID accountId = UUID.randomUUID();
-        final String externalKey = "hhhhooo";
-        final String transactionExternalKey = "grrrrrr";
-        final String transactionExternalKey2 = "hahahaha";
+        final String externalKey = UUID.randomUUID().toString();
+        final String transactionExternalKey = UUID.randomUUID().toString();
+        final String transactionExternalKey2 = UUID.randomUUID().toString();
 
         final DateTime utcNow = clock.getUTCNow();
 
@@ -301,11 +301,11 @@ public class TestPaymentDao extends PaymentTestSuiteWithEmbeddedDB {
 
         final UUID paymentMethodId = UUID.randomUUID();
         final UUID accountId = UUID.randomUUID();
-        final String externalKey = "hhhhooo";
-        final String transactionExternalKey1 = "transaction1";
-        final String transactionExternalKey2 = "transaction2";
-        final String transactionExternalKey3 = "transaction3";
-        final String transactionExternalKey4 = "transaction4";
+        final String externalKey = UUID.randomUUID().toString();
+        final String transactionExternalKey1 = UUID.randomUUID().toString();
+        final String transactionExternalKey2 = UUID.randomUUID().toString();
+        final String transactionExternalKey3 = UUID.randomUUID().toString();
+        final String transactionExternalKey4 = UUID.randomUUID().toString();
 
         final DateTime initialTime = clock.getUTCNow().minusMinutes(1);
 
@@ -376,20 +376,20 @@ public class TestPaymentDao extends PaymentTestSuiteWithEmbeddedDB {
 
     @Test(groups = "slow")
     public void testPaymentByStatesAcrossTenants() throws Exception {
-        final String externalKey1 = "XXhhhhooo1";
-        final String transactionExternalKey1 = "transactionXX1";
+        final String externalKey1 = UUID.randomUUID().toString();
+        final String transactionExternalKey1 = UUID.randomUUID().toString();
 
-        final String externalKey2 = "XXhhhhooo2";
-        final String transactionExternalKey2 = "transactionXX2";
+        final String externalKey2 = UUID.randomUUID().toString();
+        final String transactionExternalKey2 = UUID.randomUUID().toString();
 
-        final String externalKey3 = "XXhhhhooo3";
-        final String transactionExternalKey3 = "transactionXX3";
+        final String externalKey3 = UUID.randomUUID().toString();
+        final String transactionExternalKey3 = UUID.randomUUID().toString();
 
-        final String externalKey4 = "XXhhhhooo4";
-        final String transactionExternalKey4 = "transactionXX4";
+        final String externalKey4 = UUID.randomUUID().toString();
+        final String transactionExternalKey4 = UUID.randomUUID().toString();
 
-        final String externalKey5 = "XXhhhhooo5";
-        final String transactionExternalKey5 = "transactionXX5";
+        final String externalKey5 = UUID.randomUUID().toString();
+        final String transactionExternalKey5 = UUID.randomUUID().toString();
 
         final DateTime createdAfterDate = clock.getUTCNow().minusDays(10);
         final DateTime createdBeforeDate = clock.getUTCNow().minusDays(1);
@@ -542,8 +542,8 @@ public class TestPaymentDao extends PaymentTestSuiteWithEmbeddedDB {
 
         final Account account = testHelper.createTestAccount(UUID.randomUUID().toString(), true);
 
-        final String externalKey1 = "2354";
-        final String transactionExternalKey1 = "jkjkjk";
+        final String externalKey1 = UUID.randomUUID().toString();
+        final String transactionExternalKey1 = UUID.randomUUID().toString();
 
         final String stateName = "RRRRR";
         final String pluginName = "elated";

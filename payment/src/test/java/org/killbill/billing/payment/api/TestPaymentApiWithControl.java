@@ -67,6 +67,10 @@ public class TestPaymentApiWithControl extends PaymentTestSuiteWithEmbeddedDB {
 
     @BeforeMethod(groups = "slow")
     public void beforeMethod() throws Exception {
+        if (hasFailed()) {
+            return;
+        }
+
         super.beforeMethod();
         account = testHelper.createTestAccount("bobo@gmail.com", true);
 

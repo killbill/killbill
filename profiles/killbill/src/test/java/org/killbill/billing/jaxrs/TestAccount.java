@@ -69,12 +69,20 @@ public class TestAccount extends TestJaxrsBase {
 
     @BeforeMethod(groups = "slow")
     public void beforeMethod() throws Exception {
+        if (hasFailed()) {
+            return;
+        }
+
         super.beforeMethod();
         mockPaymentProviderPlugin = (MockPaymentProviderPlugin) registry.getServiceForName(PLUGIN_NAME);
     }
 
     @AfterMethod(groups = "slow")
     public void tearDown() throws Exception {
+        if (hasFailed()) {
+            return;
+        }
+
         mockPaymentProviderPlugin.clear();
     }
 
