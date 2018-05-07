@@ -92,6 +92,10 @@ public class TestWithInvoicePlugin extends TestIntegrationBase {
 
     @BeforeClass(groups = "slow")
     public void beforeClass() throws Exception {
+        if (hasFailed()) {
+            return;
+        }
+
         super.beforeClass();
 
         this.testInvoicePluginApi = new TestInvoicePluginApi();
@@ -656,7 +660,7 @@ public class TestWithInvoicePlugin extends TestIntegrationBase {
 
     private void checkRetryBusEvents(final int retryNb, final int expectedFutureInvoiceNotifications) throws NoSuchNotificationQueue {
         // Verify notification(s) moved to the retry queue
-        Awaitility.await().atMost(5, TimeUnit.SECONDS).until(new Callable<Boolean>() {
+        Awaitility.await().atMost(15, TimeUnit.SECONDS).until(new Callable<Boolean>() {
             @Override
             public Boolean call() throws Exception {
                 final List<NotificationEventWithMetadata> futureInvoiceRetryableBusEvents = getFutureInvoiceRetryableBusEvents();
@@ -668,7 +672,7 @@ public class TestWithInvoicePlugin extends TestIntegrationBase {
 
     private void checkRetryNotifications(final String retryDateTime, final int expectedFutureInvoiceNotifications) throws NoSuchNotificationQueue {
         // Verify notification(s) moved to the retry queue
-        Awaitility.await().atMost(5, TimeUnit.SECONDS).until(new Callable<Boolean>() {
+        Awaitility.await().atMost(15, TimeUnit.SECONDS).until(new Callable<Boolean>() {
             @Override
             public Boolean call() throws Exception {
                 final List<NotificationEventWithMetadata> futureInvoiceRetryableNotifications = getFutureInvoiceRetryableNotifications();

@@ -65,6 +65,9 @@ public class TestPaymentProcessor extends PaymentTestSuiteWithEmbeddedDB {
 
     @BeforeMethod(groups = "slow")
     public void setUp() throws Exception {
+        if (hasFailed()) {
+            return;
+        }
         mockPaymentProviderPlugin = (MockPaymentProviderPlugin) registry.getServiceForName(MockPaymentProviderPlugin.PLUGIN_NAME);
 
         account = testHelper.createTestAccount(UUID.randomUUID().toString(), true);
