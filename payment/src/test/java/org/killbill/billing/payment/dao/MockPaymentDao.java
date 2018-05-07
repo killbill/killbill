@@ -39,6 +39,8 @@ import org.killbill.billing.payment.api.Payment;
 import org.killbill.billing.payment.api.PaymentApiException;
 import org.killbill.billing.payment.api.TransactionStatus;
 import org.killbill.billing.payment.api.TransactionType;
+import org.killbill.billing.util.api.AuditLevel;
+import org.killbill.billing.util.audit.AuditLogWithHistory;
 import org.killbill.billing.util.entity.DefaultPagination;
 import org.killbill.billing.util.entity.Pagination;
 import org.killbill.billing.util.entity.dao.MockEntityDaoBase;
@@ -423,6 +425,26 @@ public class MockPaymentDao extends MockEntityDaoBase<PaymentModelDao, Payment, 
     @Override
     public List<PaymentMethodModelDao> refreshPaymentMethods(final String pluginName, final List<PaymentMethodModelDao> paymentMethods, final InternalCallContext context) {
         return ImmutableList.<PaymentMethodModelDao>of();
+    }
+
+    @Override
+    public List<AuditLogWithHistory> getPaymentAuditLogsWithHistoryForId(final UUID paymentId, final AuditLevel auditLevel, final InternalTenantContext context) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public List<AuditLogWithHistory> getPaymentMethodAuditLogsWithHistoryForId(final UUID paymentMethodId, final AuditLevel auditLevel, final InternalTenantContext context) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public List<AuditLogWithHistory> getPaymentAttemptAuditLogsWithHistoryForId(final UUID paymentAttemptId, final AuditLevel auditLevel, final InternalTenantContext context) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public List<AuditLogWithHistory> getPaymentTransactionAuditLogsWithHistoryForId(final UUID paymentTransactionId, final AuditLevel auditLevel, final InternalTenantContext context) {
+        throw new UnsupportedOperationException();
     }
 
     @Override

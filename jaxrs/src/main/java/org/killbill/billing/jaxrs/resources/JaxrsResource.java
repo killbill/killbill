@@ -18,9 +18,6 @@
 
 package org.killbill.billing.jaxrs.resources;
 
-import javax.ws.rs.DefaultValue;
-import javax.ws.rs.QueryParam;
-
 public interface JaxrsResource {
 
     public static final String API_PREFIX = "";
@@ -196,6 +193,7 @@ public interface JaxrsResource {
     public static final String CHARGES = "charges";
     public static final String CHARGES_PATH = PREFIX + "/" + INVOICES + "/" + CHARGES;
 
+    public static final String ATTEMPTS = "attempts";
     public static final String PAYMENTS = "payments";
     public static final String PAYMENTS_PATH = PREFIX + "/" + PAYMENTS;
 

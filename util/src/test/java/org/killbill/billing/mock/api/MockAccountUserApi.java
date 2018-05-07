@@ -191,7 +191,12 @@ public class MockAccountUserApi implements AccountUserApi {
     }
 
     @Override
-    public List<AuditLogWithHistory> getAuditLogsWithHistoryForId(final UUID uuid, final AuditLevel auditLevel, final TenantContext tenantContext) throws AccountApiException {
+    public List<AuditLogWithHistory> getAuditLogsWithHistoryForId(final UUID accountId, final AuditLevel auditLevel, final TenantContext tenantContext) throws AccountApiException {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public List<AuditLogWithHistory> getEmailAuditLogsWithHistoryForId(final UUID accountEmailId, final AuditLevel auditLevel, final TenantContext tenantContext) throws AccountApiException {
         throw new UnsupportedOperationException();
     }
 }

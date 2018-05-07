@@ -58,4 +58,7 @@ public interface AccountDao extends EntityDao<AccountModelDao, Account, AccountA
     List<AccountModelDao> getAccountsByParentId(UUID parentAccountId, InternalTenantContext context);
 
     List<AuditLogWithHistory> getAuditLogsWithHistoryForId(UUID accountId, AuditLevel auditLevel, InternalTenantContext context) throws AccountApiException;
+
+    List<AuditLogWithHistory> getEmailAuditLogsWithHistoryForId(UUID accountEmailId, AuditLevel auditLevel, InternalTenantContext context) throws AccountApiException;
+
 }
