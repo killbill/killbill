@@ -535,7 +535,7 @@ public class TestEntitlement extends TestJaxrsBase {
         }
 
         final List<Invoice> invoicesAfterClose = accountApi.getInvoicesForAccount(accountJson.getAccountId(), true, false, false, false, AuditLevel.NONE, requestOptions);
-        assertEquals(invoicesAfterClose.size(), 1);
+        assertEquals(invoicesAfterClose.size(), 2);
         assertEquals(invoicesAfterClose.get(0).getBalance().compareTo(BigDecimal.ZERO), 0);
         assertEquals(invoiceApi.getInvoiceTags(invoicesAfterClose.get(0).getInvoiceId(), requestOptions).size(), 0);
     }
