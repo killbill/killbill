@@ -90,24 +90,28 @@ public class DefaultTagDefinitionDao extends EntityDaoBase<TagDefinitionModelDao
     }
 
     @Override
-    public TagDefinitionModelDao getByName(final String definitionName, final InternalTenantContext context) {
-        return transactionalSqlDao.execute(true, new EntitySqlDaoTransactionWrapper<TagDefinitionModelDao>() {
+    public TagDefinitionModelDao getByName(final String definitionName, final InternalTenantContext context) throws TagDefinitionApiException {
+        return transactionalSqlDao.execute(true, TagDefinitionApiException.class, new EntitySqlDaoTransactionWrapper<TagDefinitionModelDao>() {
             @Override
             public TagDefinitionModelDao inTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory) throws Exception {
-                final TagDefinitionModelDao tagDefinitionModelDao = SystemTags.lookup(definitionName);
-                return tagDefinitionModelDao != null ? tagDefinitionModelDao : entitySqlDaoWrapperFactory.become(TagDefinitionSqlDao.class).getByName(definitionName, context);
+                final TagDefinitionModelDao systemTag = SystemTags.lookup(definitionName);
+                final TagDefinitionModelDao tag = systemTag != null ? systemTag : entitySqlDaoWrapperFactory.become(TagDefinitionSqlDao.class).getByName(definitionName, context);
+                if (tag == null) {
+                    throw new TagDefinitionApiException(ErrorCode.TAG_DEFINITION_DOES_NOT_EXIST, definitionName);
+                }
+                return tag;
             }
         });
     }
 
     @Override
-    public TagDefinitionModelDao getById(final UUID definitionId, final InternalTenantContext context) {
-        return transactionalSqlDao.execute(true, new EntitySqlDaoTransactionWrapper<TagDefinitionModelDao>() {
+    public TagDefinitionModelDao getById(final UUID definitionId, final InternalTenantContext context) /* throws TagDefinitionApiException */ {
+        return transactionalSqlDao.execute(true, /*TagDefinitionApiException.class,*/ new EntitySqlDaoTransactionWrapper<TagDefinitionModelDao>() {
             @Override
             public TagDefinitionModelDao inTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory) throws Exception {
                 final TagDefinitionModelDao systemTag = SystemTags.lookup(definitionId);
                 final TagDefinitionModelDao tag = systemTag != null ? systemTag : entitySqlDaoWrapperFactory.become(TagDefinitionSqlDao.class).getById(definitionId.toString(), context);
-                if(tag == null) {
+                if (tag == null) {
                     throw new TagDefinitionApiException(ErrorCode.TAG_DEFINITION_DOES_NOT_EXIST, definitionId);
                 }
                 return tag;

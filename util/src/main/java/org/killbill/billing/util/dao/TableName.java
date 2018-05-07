@@ -48,8 +48,6 @@ public enum TableName {
     SERVICE_BRODCASTS("service_broadcasts", ObjectType.SERVICE_BROADCAST),
     SUBSCRIPTIONS("subscriptions", ObjectType.SUBSCRIPTION),
     SUBSCRIPTION_EVENTS("subscription_events", ObjectType.SUBSCRIPTION_EVENT),
-    REFUND_HISTORY("refund_history"),
-    REFUNDS("refunds", ObjectType.REFUND, REFUND_HISTORY),
     TAG_DEFINITION_HISTORY("tag_definition_history"),
     TAG_DEFINITIONS("tag_definitions", ObjectType.TAG_DEFINITION, TAG_DEFINITION_HISTORY),
     TAG_HISTORY("tag_history"),

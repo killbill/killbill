@@ -903,16 +903,19 @@ public class InvoiceDispatcher {
             public FutureAccountNotificationsBuilder() {
             }
 
-            public void setNotificationListForTrigger(final Map<LocalDate, Set<UUID>> notificationListForTrigger) {
+            public FutureAccountNotificationsBuilder setNotificationListForTrigger(final Map<LocalDate, Set<UUID>> notificationListForTrigger) {
                 this.notificationListForTrigger = notificationListForTrigger;
+                return this;
             }
 
-            public void setNotificationListForDryRun(final Map<LocalDate, Set<UUID>> notificationListForDryRun) {
+            public FutureAccountNotificationsBuilder setNotificationListForDryRun(final Map<LocalDate, Set<UUID>> notificationListForDryRun) {
                 this.notificationListForDryRun = notificationListForDryRun;
+                return this;
             }
 
-            public void setRescheduled(final boolean rescheduled) {
+            public FutureAccountNotificationsBuilder setRescheduled(final boolean rescheduled) {
                 isRescheduled = rescheduled;
+                return this;
             }
 
             public Map<LocalDate, Set<UUID>> getNotificationListForTrigger() {
