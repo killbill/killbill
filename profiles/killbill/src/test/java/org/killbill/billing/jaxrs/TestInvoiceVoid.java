@@ -180,6 +180,7 @@ public class TestInvoiceVoid extends TestJaxrsBase {
         //  move the clock 1 month to check if invoices change
         callbackServlet.pushExpectedEvents(ExtBusEventType.SUBSCRIPTION_PHASE,
                                            ExtBusEventType.INVOICE_CREATION,
+                                           // Overdue state is computed from the parent state
                                            ExtBusEventType.OVERDUE_CHANGE,
                                            ExtBusEventType.BLOCKING_STATE,
                                            ExtBusEventType.OVERDUE_CHANGE,
@@ -187,7 +188,7 @@ public class TestInvoiceVoid extends TestJaxrsBase {
         clock.addDays(31);
         callbackServlet.assertListenerStatus();
 
-        // The parent added other invoice, now it has two (duplicate)
+        // The parent added another invoice, now it has two (duplicate)
         parentInvoices = killBillClient.getInvoicesForAccount(parentAccount.getAccountId(), true, false, requestOptions);
         assertEquals(parentInvoices.size(), 2);
 
