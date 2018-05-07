@@ -168,10 +168,8 @@ public class TestInvoiceDao extends InvoiceTestSuiteWithEmbeddedDB {
         try {
             invoiceDao.getById(UUID.randomUUID(), context);
             Assert.fail();
-        } catch (TransactionFailedException e) {
-            // TODO FIXME getById defined in EntityDaoBase
-            Assert.assertTrue(e.getCause() instanceof InvoiceApiException);
-            Assert.assertEquals(((InvoiceApiException) e.getCause()).getCode(), ErrorCode.INVOICE_NOT_FOUND.getCode());
+        } catch (InvoiceApiException e) {
+            Assert.assertEquals(e.getCode(), ErrorCode.INVOICE_NOT_FOUND.getCode());
         }
 
         try {
@@ -1010,7 +1008,7 @@ public class TestInvoiceDao extends InvoiceTestSuiteWithEmbeddedDB {
     }
 
     @Test(groups = "slow")
-    public void testInvoiceCreditWithBalancePositive() throws EntityPersistenceException {
+    public void testInvoiceCreditWithBalancePositive() throws EntityPersistenceException, InvoiceApiException {
         final BigDecimal creditAmount = new BigDecimal("2.0");
         final BigDecimal expectedBalance = new BigDecimal("3.0");
         final boolean expectCBA = false;
@@ -1018,7 +1016,7 @@ public class TestInvoiceDao extends InvoiceTestSuiteWithEmbeddedDB {
     }
 
     @Test(groups = "slow")
-    public void testInvoiceCreditWithBalanceNegative() throws EntityPersistenceException {
+    public void testInvoiceCreditWithBalanceNegative() throws EntityPersistenceException, InvoiceApiException {
         final BigDecimal creditAmount = new BigDecimal("7.0");
         final BigDecimal expectedBalance = new BigDecimal("0.0");
         final boolean expectCBA = true;
@@ -1026,14 +1024,14 @@ public class TestInvoiceDao extends InvoiceTestSuiteWithEmbeddedDB {
     }
 
     @Test(groups = "slow")
-    public void testInvoiceCreditWithBalanceZero() throws EntityPersistenceException {
+    public void testInvoiceCreditWithBalanceZero() throws EntityPersistenceException, InvoiceApiException {
         final BigDecimal creditAmount = new BigDecimal("5.0");
         final BigDecimal expectedBalance = new BigDecimal("0.0");
         final boolean expectCBA = false;
         testInvoiceCreditInternal(creditAmount, expectedBalance, expectCBA);
     }
 
-    private void testInvoiceCreditInternal(final BigDecimal creditAmount, final BigDecimal expectedBalance, final boolean expectCBA) throws EntityPersistenceException {
+    private void testInvoiceCreditInternal(final BigDecimal creditAmount, final BigDecimal expectedBalance, final boolean expectCBA) throws EntityPersistenceException, InvoiceApiException {
         final UUID accountId = account.getId();
         final UUID bundleId = UUID.randomUUID();
 
@@ -1133,7 +1131,7 @@ public class TestInvoiceDao extends InvoiceTestSuiteWithEmbeddedDB {
     }
 
     @Test(groups = "slow")
-    public void testGetUnpaidInvoicesByAccountIdWithDraftInvoice() throws EntityPersistenceException {
+    public void testGetUnpaidInvoicesByAccountIdWithDraftInvoice() throws EntityPersistenceException, InvoiceApiException {
         final UUID accountId = account.getId();
         final UUID bundleId = UUID.randomUUID();
         final LocalDate targetDate1 = new LocalDate(2011, 10, 6);
@@ -1760,11 +1758,11 @@ public class TestInvoiceDao extends InvoiceTestSuiteWithEmbeddedDB {
     }
 
 
-    private InvoiceItemModelDao createCredit(final UUID accountId, final LocalDate effectiveDate, final BigDecimal creditAmount, final boolean draft) {
+    private InvoiceItemModelDao createCredit(final UUID accountId, final LocalDate effectiveDate, final BigDecimal creditAmount, final boolean draft)throws InvoiceApiException {
         return createCredit(accountId, null, effectiveDate, creditAmount, draft);
     }
 
-    private InvoiceItemModelDao createCredit(final UUID accountId, @Nullable final UUID invoiceId, final LocalDate effectiveDate, final BigDecimal creditAmount, final boolean draft) {
+    private InvoiceItemModelDao createCredit(final UUID accountId, @Nullable final UUID invoiceId, final LocalDate effectiveDate, final BigDecimal creditAmount, final boolean draft) throws InvoiceApiException {
         final InvoiceModelDao invoiceModelDao;
         if (invoiceId == null) {
             invoiceModelDao = new InvoiceModelDao(accountId, effectiveDate, effectiveDate, Currency.USD, false, draft ? InvoiceStatus.DRAFT : InvoiceStatus.COMMITTED);
