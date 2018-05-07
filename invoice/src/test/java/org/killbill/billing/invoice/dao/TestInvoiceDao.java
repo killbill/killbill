@@ -168,10 +168,8 @@ public class TestInvoiceDao extends InvoiceTestSuiteWithEmbeddedDB {
         try {
             invoiceDao.getById(UUID.randomUUID(), context);
             Assert.fail();
-        } catch (TransactionFailedException e) {
-            // TODO FIXME getById defined in EntityDaoBase
-            Assert.assertTrue(e.getCause() instanceof InvoiceApiException);
-            Assert.assertEquals(((InvoiceApiException) e.getCause()).getCode(), ErrorCode.INVOICE_NOT_FOUND.getCode());
+        } catch (InvoiceApiException e) {
+            Assert.assertEquals(e.getCode(), ErrorCode.INVOICE_NOT_FOUND.getCode());
         }
 
         try {
