@@ -17,6 +17,7 @@
 
 package org.killbill.billing.jaxrs;
 
+import java.io.ByteArrayOutputStream;
 import java.io.OutputStream;
 
 import org.killbill.billing.client.model.gen.Account;
@@ -26,20 +27,13 @@ import org.testng.annotations.Test;
 
 public class TestExportAccount extends TestJaxrsBase {
 
-    @BeforeMethod(groups = "slow")
-    public void beforeMethod() throws Exception {
-        super.beforeMethod();
-    }
-
     @Test(groups = "slow")
     public void testExportAccount() throws Exception {
-
         final Account emptyAccount = new Account();
         final Account account = accountApi.createAccount(emptyAccount, requestOptions);
-        final OutputStream outputStream = System.out;
+        final OutputStream outputStream = new ByteArrayOutputStream();
         final int statusCode = exportApi.exportDataForAccount(account.getAccountId(), outputStream, requestOptions);
         outputStream.flush();
         Assert.assertEquals(statusCode, 200);
     }
-
 }
