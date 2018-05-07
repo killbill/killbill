@@ -175,11 +175,15 @@ public class DefaultEntitlementService implements EntitlementService {
         }
     }
 
-    private void processBlockingNotification(final BlockingTransitionNotificationKey key, final InternalCallContext internalCallContext) {
+    private void processBlockingNotification(final BlockingTransitionNotificationKey key, final InternalCallContext internalCallContext){
         // Check if the blocking state has been deleted since
-        if (blockingStateDao.getById(key.getBlockingStateId(), internalCallContext) == null) {
-            log.debug("BlockingState {} has been deleted, not sending a bus event", key.getBlockingStateId());
-            return;
+        try {
+            if (blockingStateDao.getById(key.getBlockingStateId(), internalCallContext) == null) {
+                log.debug("BlockingState {} has been deleted, not sending a bus event", key.getBlockingStateId());
+                return;
+            }
+        } catch (final EntitlementApiException e) {
+            throw new IllegalStateException(String.format("Unexpected exception when fetching blockingState='%s'", key.getBlockingStateId()), e);
         }
 
         final BusEvent event = new DefaultBlockingTransitionInternalEvent(key.getBlockableId(),

@@ -105,8 +105,8 @@ public class DefaultTagDefinitionDao extends EntityDaoBase<TagDefinitionModelDao
     }
 
     @Override
-    public TagDefinitionModelDao getById(final UUID definitionId, final InternalTenantContext context) /* throws TagDefinitionApiException */ {
-        return transactionalSqlDao.execute(true, /*TagDefinitionApiException.class,*/ new EntitySqlDaoTransactionWrapper<TagDefinitionModelDao>() {
+    public TagDefinitionModelDao getById(final UUID definitionId, final InternalTenantContext context) throws TagDefinitionApiException  {
+        return transactionalSqlDao.execute(true, TagDefinitionApiException.class, new EntitySqlDaoTransactionWrapper<TagDefinitionModelDao>() {
             @Override
             public TagDefinitionModelDao inTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory) throws Exception {
                 final TagDefinitionModelDao systemTag = SystemTags.lookup(definitionId);

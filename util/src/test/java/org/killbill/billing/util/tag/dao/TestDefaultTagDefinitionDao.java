@@ -75,6 +75,13 @@ public class TestDefaultTagDefinitionDao extends UtilTestSuiteWithEmbeddedDB {
             Assert.assertEquals(e.getCode(), ErrorCode.TAG_DEFINITION_DOES_NOT_EXIST.getCode());
         }
 
+        try {
+            tagDefinitionDao.getById(UUID.randomUUID(), internalCallContext);
+            Assert.fail("Retrieving random tag definition should fail");
+        } catch (final TagDefinitionApiException e) {
+            Assert.assertEquals(e.getCode(), ErrorCode.TAG_DEFINITION_DOES_NOT_EXIST.getCode());
+        }
+
 
 
         /*
