@@ -41,11 +41,6 @@ import static org.testng.Assert.assertTrue;
 
 public class TestSubscriptionConsumableInArrear extends TestUsageInArrearBase {
 
-    @BeforeClass(groups = "fast")
-    protected void beforeClass() throws Exception {
-        super.beforeClass();
-    }
-
     @Test(groups = "fast")
     public void testComputeInArrearUsageInterval() {
 

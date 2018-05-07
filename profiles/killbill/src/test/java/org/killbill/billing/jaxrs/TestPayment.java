@@ -79,6 +79,10 @@ public class TestPayment extends TestJaxrsBase {
 
     @BeforeMethod(groups = "slow")
     public void beforeMethod() throws Exception {
+        if (hasFailed()) {
+            return;
+        }
+
         super.beforeMethod();
         mockPaymentProviderPlugin = (MockPaymentProviderPlugin) registry.getServiceForName(PLUGIN_NAME);
 
@@ -103,6 +107,10 @@ public class TestPayment extends TestJaxrsBase {
 
     @AfterMethod(groups = "slow")
     public void tearDown() throws Exception {
+        if (hasFailed()) {
+            return;
+        }
+
         mockPaymentProviderPlugin.clear();
     }
 
@@ -208,7 +216,7 @@ public class TestPayment extends TestJaxrsBase {
     @Test(groups = "slow")
     public void testWithFailedPaymentAndScheduledAttemptsGetInvoicePayment() throws Exception {
         mockPaymentProviderPlugin.makeNextPaymentFailWithError();
-        final Account account = createAccountWithPMBundleAndSubscriptionAndWaitForFirstInvoice();
+        final Account account = createAccountWithPMBundleAndSubscriptionAndWaitForFirstInvoice(false);
         // Getting Invoice #2 (first after Trial period)
         UUID failedInvoiceId = killBillClient.getInvoicesForAccount(account.getAccountId(), false, false, RequestOptions.empty()).get(1).getInvoiceId();
 
@@ -239,7 +247,7 @@ public class TestPayment extends TestJaxrsBase {
     @Test(groups = "slow")
     public void testWithFailedPaymentAndScheduledAttemptsGetPaymentsForAccount() throws Exception {
         mockPaymentProviderPlugin.makeNextPaymentFailWithError();
-        final Account account = createAccountWithPMBundleAndSubscriptionAndWaitForFirstInvoice();
+        final Account account = createAccountWithPMBundleAndSubscriptionAndWaitForFirstInvoice(false);
 
         HashMultimap<String, String> queryParams = HashMultimap.create();
         queryParams.put("withAttempts", "true");
@@ -259,7 +267,7 @@ public class TestPayment extends TestJaxrsBase {
     @Test(groups = "slow")
     public void testWithFailedPaymentAndScheduledAttemptsGetPayments() throws Exception {
         mockPaymentProviderPlugin.makeNextPaymentFailWithError();
-        createAccountWithPMBundleAndSubscriptionAndWaitForFirstInvoice();
+        createAccountWithPMBundleAndSubscriptionAndWaitForFirstInvoice(false);
 
         HashMultimap<String, String> queryParams = HashMultimap.create();
         queryParams.put("withAttempts", "true");
@@ -279,7 +287,7 @@ public class TestPayment extends TestJaxrsBase {
     @Test(groups = "slow")
     public void testWithFailedPaymentAndScheduledAttemptsSearchPayments() throws Exception {
         mockPaymentProviderPlugin.makeNextPaymentFailWithError();
-        createAccountWithPMBundleAndSubscriptionAndWaitForFirstInvoice();
+        createAccountWithPMBundleAndSubscriptionAndWaitForFirstInvoice(false);
 
         HashMultimap<String, String> queryParams = HashMultimap.create();
         queryParams.put("withAttempts", "true");
@@ -299,7 +307,7 @@ public class TestPayment extends TestJaxrsBase {
     @Test(groups = "slow")
     public void testWithFailedPaymentAndScheduledAttemptsGetPaymentById() throws Exception {
         mockPaymentProviderPlugin.makeNextPaymentFailWithError();
-        createAccountWithPMBundleAndSubscriptionAndWaitForFirstInvoice();
+        createAccountWithPMBundleAndSubscriptionAndWaitForFirstInvoice(false);
 
         Payments payments = killBillClient.searchPayments("", 0L, 100L, AuditLevel.NONE, requestOptions);
         Assert.assertNotNull(payments.get(0));

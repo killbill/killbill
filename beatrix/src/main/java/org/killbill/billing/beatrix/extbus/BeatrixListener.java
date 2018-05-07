@@ -106,6 +106,7 @@ public class BeatrixListener {
         try {
             final BusEvent externalEvent = computeExtBusEventEntryFromBusInternalEvent(event, internalContext);
             if (externalEvent != null) {
+                log.info("Sending extBusEvent='{}' from busEvent='{}'", externalEvent, event);
                 externalBus.post(externalEvent);
             }
         } catch (final EventBusException e) {

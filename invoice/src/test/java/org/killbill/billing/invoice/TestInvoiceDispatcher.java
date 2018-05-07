@@ -71,6 +71,10 @@ public class TestInvoiceDispatcher extends InvoiceTestSuiteWithEmbeddedDB {
     @Override
     @BeforeMethod(groups = "slow")
     public void beforeMethod() throws Exception {
+        if (hasFailed()) {
+            return;
+        }
+
         super.beforeMethod();
         account = invoiceUtil.createAccount(callContext);
         subscription = invoiceUtil.createSubscription();

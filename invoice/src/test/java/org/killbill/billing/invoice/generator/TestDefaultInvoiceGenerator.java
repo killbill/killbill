@@ -108,6 +108,10 @@ public class TestDefaultInvoiceGenerator extends InvoiceTestSuiteNoDB {
 
     @BeforeClass(groups = "fast")
     protected void beforeClass() throws Exception {
+        if (hasFailed()) {
+            return;
+        }
+
         super.beforeClass();
         final Clock clock = new DefaultClock();
         this.account = new MockAccountBuilder().name(UUID.randomUUID().toString().substring(1, 8))

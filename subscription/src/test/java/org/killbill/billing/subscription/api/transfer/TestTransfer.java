@@ -57,6 +57,10 @@ public class TestTransfer extends SubscriptionTestSuiteWithEmbeddedDB {
     @Override
     @BeforeMethod(groups = "slow")
     public void beforeMethod() throws Exception {
+        if (hasFailed()) {
+            return;
+        }
+
         // Note: this will cleanup all tables
         super.beforeMethod();
 

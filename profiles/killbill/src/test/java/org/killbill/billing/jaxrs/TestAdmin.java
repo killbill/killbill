@@ -37,6 +37,7 @@ import org.killbill.billing.client.model.Invoice;
 import org.killbill.billing.client.model.Payment;
 import org.killbill.billing.client.model.PaymentTransaction;
 import org.killbill.billing.jaxrs.json.AdminPaymentJson;
+import org.killbill.billing.notification.plugin.api.ExtBusEventType;
 import org.killbill.billing.payment.api.TransactionStatus;
 import org.killbill.billing.util.api.AuditLevel;
 import org.killbill.billing.util.jackson.ObjectMapper;
@@ -55,8 +56,7 @@ import static org.testng.Assert.assertNotNull;
 
 public class TestAdmin extends TestJaxrsBase {
 
-    // Flaky, see https://github.com/killbill/killbill/issues/860
-    @Test(groups = "slow", retryAnalyzer = FlakyRetryAnalyzer.class)
+    @Test(groups = "slow")
     public void testAdminPaymentEndpoint() throws Exception {
         final Account account = createAccountWithDefaultPaymentMethod();
 
@@ -70,32 +70,19 @@ public class TestAdmin extends TestJaxrsBase {
         authTransaction.setPaymentExternalKey(paymentExternalKey);
         authTransaction.setTransactionExternalKey(authTransactionExternalKey);
         authTransaction.setTransactionType("AUTHORIZE");
+        callbackServlet.pushExpectedEvent(ExtBusEventType.PAYMENT_SUCCESS);
         final Payment authPayment = killBillClient.createPayment(account.getAccountId(), account.getPaymentMethodId(), authTransaction, requestOptions);
-
-        // First fix transactionStatus and paymentSstate (but not lastSuccessPaymentState
-        // Note that state is not consistent between TransactionStatus and lastSuccessPaymentState but we don't care.
-        fixPaymentState(authPayment, null, "AUTH_FAILED", TransactionStatus.PAYMENT_FAILURE);
-
-        final Payment updatedPayment1 = killBillClient.getPayment(authPayment.getPaymentId());
-        Assert.assertEquals(updatedPayment1.getTransactions().size(), 1);
-        final PaymentTransaction authTransaction1 = updatedPayment1.getTransactions().get(0);
-        Assert.assertEquals(authTransaction1.getStatus(), TransactionStatus.PAYMENT_FAILURE.toString());
-
-        // Capture should succeed because lastSuccessPaymentState was left untouched
-        doCapture(updatedPayment1, false);
+        callbackServlet.assertListenerStatus();
 
         fixPaymentState(authPayment, "AUTH_FAILED", "AUTH_FAILED", TransactionStatus.PAYMENT_FAILURE);
 
-        final Payment updatedPayment2 = killBillClient.getPayment(authPayment.getPaymentId());
-        Assert.assertEquals(updatedPayment2.getTransactions().size(), 2);
-        final PaymentTransaction authTransaction2 = updatedPayment2.getTransactions().get(0);
+        final Payment updatedPayment = killBillClient.getPayment(authPayment.getPaymentId());
+        Assert.assertEquals(updatedPayment.getTransactions().size(), 1);
+        final PaymentTransaction authTransaction2 = updatedPayment.getTransactions().get(0);
         Assert.assertEquals(authTransaction2.getStatus(), TransactionStatus.PAYMENT_FAILURE.toString());
 
-        final PaymentTransaction captureTransaction2 = updatedPayment2.getTransactions().get(1);
-        Assert.assertEquals(captureTransaction2.getStatus(), TransactionStatus.SUCCESS.toString());
-
-        // Capture should now failed because lastSuccessPaymentState was moved to AUTH_FAILED
-        doCapture(updatedPayment2, true);
+        // Capture should fail because lastSuccessPaymentState was moved to AUTH_FAILED
+        doCapture(updatedPayment, true);
     }
 
     @Test(groups = "slow")
@@ -116,7 +103,6 @@ public class TestAdmin extends TestJaxrsBase {
                               BillingPeriod.MONTHLY,
                               true);
             clock.addDays(2);
-            crappyWaitForLackOfProperSynchonization();
 
             Assert.assertEquals(killBillClient.getInvoices(requestOptions).getPaginationMaxNbRecords(), i + 1);
             final List<Invoice> invoices = killBillClient.getInvoicesForAccount(accountJson.getAccountId(), false, false, false, false, AuditLevel.NONE, requestOptions);
@@ -124,8 +110,11 @@ public class TestAdmin extends TestJaxrsBase {
         }
 
         // Trigger first non-trial invoice
+        for (int i = 0; i < 5; i++) {
+            callbackServlet.pushExpectedEvents(ExtBusEventType.SUBSCRIPTION_PHASE, ExtBusEventType.INVOICE_CREATION, ExtBusEventType.INVOICE_PAYMENT_SUCCESS, ExtBusEventType.PAYMENT_SUCCESS);
+        }
         clock.addDays(32);
-        crappyWaitForLackOfProperSynchonization();
+        callbackServlet.assertListenerStatus();
 
         Assert.assertEquals(killBillClient.getInvoices(requestOptions).getPaginationMaxNbRecords(), 10);
         for (final UUID accountId : accounts) {
@@ -138,12 +127,16 @@ public class TestAdmin extends TestJaxrsBase {
         final Map<String, String> perTenantProperties = new HashMap<String, String>();
         perTenantProperties.put("org.killbill.invoice.enabled", "false");
         final String perTenantConfig = mapper.writeValueAsString(perTenantProperties);
+        callbackServlet.pushExpectedEvent(ExtBusEventType.TENANT_CONFIG_CHANGE);
         killBillClient.postConfigurationPropertiesForTenant(perTenantConfig, requestOptions);
-        crappyWaitForLackOfProperSynchonization();
+        callbackServlet.assertListenerStatus();
 
         // Verify the second invoice isn't generated
+        for (int i = 0; i < 5; i++) {
+            callbackServlet.pushExpectedEvents(ExtBusEventType.TAG_CREATION);
+        }
         clock.addDays(32);
-        crappyWaitForLackOfProperSynchonization();
+        callbackServlet.assertListenerStatus();
 
         Assert.assertEquals(killBillClient.getInvoices(requestOptions).getPaginationMaxNbRecords(), 10);
         for (final UUID accountId : accounts) {
@@ -157,7 +150,7 @@ public class TestAdmin extends TestJaxrsBase {
         Assert.assertEquals(killBillClient.getInvoices(requestOptions).getPaginationMaxNbRecords(), 11);
 
         // Fix all accounts
-        final Response response2 = triggerInvoiceGenerationForParkedAccounts(5);
+        final Response response2 = triggerInvoiceGenerationForParkedAccounts(4);
         final Map<String,String> fixedAccounts = mapper.readValue(response2.getResponseBody(), new TypeReference<Map<String,String>>() {});
         Assert.assertEquals(fixedAccounts.size(), 4);
         Assert.assertEquals(fixedAccounts.get(accounts.get(1).toString()), "OK");
@@ -202,7 +195,9 @@ public class TestAdmin extends TestJaxrsBase {
         result.put(KillBillHttpClient.AUDIT_OPTION_CREATED_BY, createdBy);
         result.put(KillBillHttpClient.AUDIT_OPTION_REASON, reason);
         result.put(KillBillHttpClient.AUDIT_OPTION_COMMENT, comment);
+        callbackServlet.pushExpectedEvent(ExtBusEventType.PAYMENT_FAILED);
         killBillHttpClient.doPut(uri, body, result);
+        callbackServlet.assertListenerStatus();
     }
 
     private Response triggerInvoiceGenerationForParkedAccounts(final int limit) throws KillBillClientException {
@@ -213,6 +208,11 @@ public class TestAdmin extends TestJaxrsBase {
                                                             .withCreatedBy(createdBy)
                                                             .withReason(reason)
                                                             .withComment(comment).build();
-        return killBillHttpClient.doPost(uri, null, requestOptions);
+        for (int i = 0; i < limit; i++) {
+            callbackServlet.pushExpectedEvents(ExtBusEventType.TAG_DELETION, ExtBusEventType.INVOICE_CREATION, ExtBusEventType.INVOICE_PAYMENT_SUCCESS, ExtBusEventType.PAYMENT_SUCCESS);
+        }
+        final Response response = killBillHttpClient.doPost(uri, null, requestOptions);
+        callbackServlet.assertListenerStatus();
+        return response;
     }
 }

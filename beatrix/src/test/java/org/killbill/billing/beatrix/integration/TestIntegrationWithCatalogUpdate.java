@@ -81,6 +81,10 @@ public class TestIntegrationWithCatalogUpdate extends TestIntegrationBase {
 
     @BeforeMethod(groups = "slow")
     public void beforeMethod() throws Exception {
+        if (hasFailed()) {
+            return;
+        }
+
         super.beforeMethod();
 
         // Set original time

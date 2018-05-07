@@ -44,6 +44,9 @@ public class TestExternalPaymentProviderPlugin extends PaymentTestSuiteNoDB {
     @Override
     @BeforeMethod(groups = "fast")
     public void beforeMethod() throws Exception {
+        if (hasFailed()) {
+            return;
+        }
         super.beforeMethod();
         plugin = new ExternalPaymentProviderPlugin(clock, paymentConfig);
     }

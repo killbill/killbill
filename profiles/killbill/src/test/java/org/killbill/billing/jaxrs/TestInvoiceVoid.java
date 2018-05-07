@@ -24,7 +24,6 @@ import java.util.UUID;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDate;
-import org.killbill.billing.api.FlakyRetryAnalyzer;
 import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.catalog.api.ProductCategory;
 import org.killbill.billing.client.KillBillClientException;
@@ -35,6 +34,7 @@ import org.killbill.billing.client.model.InvoicePaymentTransaction;
 import org.killbill.billing.client.model.InvoicePayments;
 import org.killbill.billing.client.model.PaymentTransaction;
 import org.killbill.billing.invoice.api.InvoiceStatus;
+import org.killbill.billing.notification.plugin.api.ExtBusEventType;
 import org.killbill.billing.payment.api.TransactionType;
 import org.killbill.billing.util.api.AuditLevel;
 import org.testng.Assert;
@@ -147,8 +147,7 @@ public class TestInvoiceVoid extends TestJaxrsBase {
 
     }
 
-    // Flaky, see https://github.com/killbill/killbill/issues/860
-    @Test(groups = "slow", description = "Void a child invoice", retryAnalyzer = FlakyRetryAnalyzer.class)
+    @Test(groups = "slow", description = "Void a child invoice")
     public void testChildVoidInvoice() throws Exception {
         final DateTime initialDate = new DateTime(2012, 4, 25, 0, 3, 42, 0);
         final LocalDate triggeredDate = new LocalDate(2012, 5, 26);
@@ -162,13 +161,16 @@ public class TestInvoiceVoid extends TestJaxrsBase {
                           ProductCategory.BASE, BillingPeriod.MONTHLY, true);
 
         // trigger an invoice generation
+        callbackServlet.pushExpectedEvent(ExtBusEventType.INVOICE_CREATION);
         killBillClient.createInvoice(childAccount1.getAccountId(), triggeredDate, requestOptions);
+        callbackServlet.assertListenerStatus();
         List<Invoice> child1Invoices = killBillClient.getInvoicesForAccount(childAccount1.getAccountId(), true, false, requestOptions);
         assertEquals(child1Invoices.size(), 2);
 
         // move one day so that the parent invoice is committed
+        callbackServlet.pushExpectedEvents(ExtBusEventType.INVOICE_CREATION, ExtBusEventType.INVOICE_PAYMENT_FAILED);
         clock.addDays(1);
-        crappyWaitForLackOfProperSynchonization();
+        callbackServlet.assertListenerStatus();
         List<Invoice> parentInvoices = killBillClient.getInvoicesForAccount(parentAccount.getAccountId(), true, false, requestOptions);
         assertEquals(parentInvoices.size(), 1);
 
@@ -176,10 +178,17 @@ public class TestInvoiceVoid extends TestJaxrsBase {
         killBillClient.voidInvoice(child1Invoices.get(1).getInvoiceId(), requestOptions);
 
         //  move the clock 1 month to check if invoices change
+        callbackServlet.pushExpectedEvents(ExtBusEventType.SUBSCRIPTION_PHASE,
+                                           ExtBusEventType.INVOICE_CREATION,
+                                           // Overdue state is computed from the parent state
+                                           ExtBusEventType.OVERDUE_CHANGE,
+                                           ExtBusEventType.BLOCKING_STATE,
+                                           ExtBusEventType.OVERDUE_CHANGE,
+                                           ExtBusEventType.BLOCKING_STATE);
         clock.addDays(31);
-        crappyWaitForLackOfProperSynchonization();
+        callbackServlet.assertListenerStatus();
 
-        // The parent added other invoice, now it has two (duplicate)
+        // The parent added another invoice, now it has two (duplicate)
         parentInvoices = killBillClient.getInvoicesForAccount(parentAccount.getAccountId(), true, false, requestOptions);
         assertEquals(parentInvoices.size(), 2);
 
@@ -188,8 +197,7 @@ public class TestInvoiceVoid extends TestJaxrsBase {
         assertEquals(child1Invoices.size(), 2);
     }
 
-    // Flaky, see https://github.com/killbill/killbill/issues/860
-    @Test(groups = "slow", description = "Void a parent invoice", retryAnalyzer = FlakyRetryAnalyzer.class)
+    @Test(groups = "slow", description = "Void a parent invoice")
     public void testParentVoidInvoice() throws Exception {
         final DateTime initialDate = new DateTime(2012, 4, 25, 0, 3, 42, 0);
         final LocalDate triggeredDate = new LocalDate(2012, 5, 26);
@@ -203,13 +211,16 @@ public class TestInvoiceVoid extends TestJaxrsBase {
                           ProductCategory.BASE, BillingPeriod.MONTHLY, true);
 
         // trigger an invoice generation
+        callbackServlet.pushExpectedEvents(ExtBusEventType.INVOICE_CREATION);
         killBillClient.createInvoice(childAccount1.getAccountId(), triggeredDate, requestOptions);
+        callbackServlet.assertListenerStatus();
         List<Invoice> child1Invoices = killBillClient.getInvoicesForAccount(childAccount1.getAccountId(), true, false, requestOptions);
         assertEquals(child1Invoices.size(), 2);
 
         // move one day so that the parent invoice is committed
+        callbackServlet.pushExpectedEvents(ExtBusEventType.INVOICE_CREATION, ExtBusEventType.INVOICE_PAYMENT_FAILED);
         clock.addDays(1);
-        crappyWaitForLackOfProperSynchonization();
+        callbackServlet.assertListenerStatus();
         List<Invoice> parentInvoices = killBillClient.getInvoicesForAccount(parentAccount.getAccountId(), true, false, requestOptions);
         assertEquals(parentInvoices.size(), 1);
 
@@ -217,8 +228,9 @@ public class TestInvoiceVoid extends TestJaxrsBase {
         killBillClient.voidInvoice(parentInvoices.get(0).getInvoiceId(), requestOptions);
 
         //  move the clock 1 month to check if invoices change
+        callbackServlet.pushExpectedEvents(ExtBusEventType.SUBSCRIPTION_PHASE);
         clock.addDays(31);
-        crappyWaitForLackOfProperSynchonization();
+        callbackServlet.assertListenerStatus();
 
         // since the child did not have any change, the parent does not have an invoice
         // after the void.
