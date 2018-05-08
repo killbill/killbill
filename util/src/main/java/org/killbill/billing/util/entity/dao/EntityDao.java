@@ -32,7 +32,7 @@ public interface EntityDao<M extends EntityModelDao<E>, E extends Entity, U exte
 
     public M getByRecordId(Long recordId, InternalTenantContext context);
 
-    public M getById(UUID id, InternalTenantContext context);
+    public M getById(UUID id, InternalTenantContext context) throws U;
 
     public Pagination<M> getAll(InternalTenantContext context);
 

@@ -193,4 +193,9 @@ public class MockAccountDao extends MockEntityDaoBase<AccountModelDao, Account, 
     public List<AuditLogWithHistory> getAuditLogsWithHistoryForId(final UUID accountId, final AuditLevel auditLevel, final InternalTenantContext context) throws AccountApiException {
         throw new UnsupportedOperationException();
     }
+
+    @Override
+    public List<AuditLogWithHistory> getEmailAuditLogsWithHistoryForId(final UUID accountEmailId, final AuditLevel auditLevel, final InternalTenantContext context) throws AccountApiException {
+        throw new UnsupportedOperationException();
+    }
 }

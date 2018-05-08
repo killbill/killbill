@@ -19,8 +19,7 @@
 package org.killbill.billing.jaxrs;
 
 import java.math.BigDecimal;
-import java.util.Collection;
-import java.util.LinkedList;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.UUID;
 
@@ -56,6 +55,7 @@ import com.google.inject.Inject;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertFalse;
+import static org.testng.Assert.assertNotEquals;
 import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.assertTrue;
 import static org.testng.Assert.fail;
@@ -550,6 +550,38 @@ public class TestAccount extends TestJaxrsBase {
         assertEquals(auditLogsJson.get(3).getChangeType(), ChangeType.INSERT.toString());
         assertEquals(auditLogsJson.get(3).getObjectType(), ObjectType.CUSTOM_FIELD);
         assertEquals(auditLogsJson.get(3).getObjectId(), accountCustomFields.get(2).getCustomFieldId());
+    }
+
+    @Test(groups = "slow", description = "retrieve account logs")
+    public void testGetAccountAuditLogsWithHistory() throws Exception {
+        final Account accountJson = createAccount();
+        assertNotNull(accountJson);
+
+        // Update Account
+        final Account newInput = new Account()
+                .setAccountId(accountJson.getAccountId())
+                .setExternalKey(accountJson.getExternalKey())
+                .setName("zozo");
+
+
+        accountApi.updateAccount(accountJson.getAccountId(), newInput, requestOptions);
+
+        final List<AuditLog> auditLogWithHistories = accountApi.getAccountAuditLogsWithHistory(accountJson.getAccountId(), requestOptions);
+        assertEquals(auditLogWithHistories.size(), 2);
+        assertEquals(auditLogWithHistories.get(0).getChangeType(), ChangeType.INSERT.toString());
+        assertEquals(auditLogWithHistories.get(0).getObjectType(), ObjectType.ACCOUNT);
+        assertEquals(auditLogWithHistories.get(0).getObjectId(), accountJson.getAccountId());
+
+        final LinkedHashMap<String, Object> history1 = (LinkedHashMap<String, Object>) auditLogWithHistories.get(0).getHistory();
+        assertNotNull(history1);
+        assertEquals(history1.get("externalKey"), accountJson.getExternalKey());
+        assertEquals(history1.get("name"), accountJson.getName());
+
+        final LinkedHashMap history2 = (LinkedHashMap) auditLogWithHistories.get(1).getHistory();
+        assertNotNull(history2);
+        assertEquals(history2.get("externalKey"), accountJson.getExternalKey());
+        assertNotEquals(history2.get("name"), accountJson.getName());
+        assertEquals(history2.get("name"), "zozo");
     }
 
 }

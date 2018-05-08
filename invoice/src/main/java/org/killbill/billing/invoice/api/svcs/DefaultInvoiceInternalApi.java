@@ -78,7 +78,7 @@ public class DefaultInvoiceInternalApi implements InvoiceInternalApi {
         return getInvoiceByIdInternal(invoiceId, context);
     }
 
-    private DefaultInvoice getInvoiceByIdInternal(final UUID invoiceId, final InternalTenantContext context) {
+    private DefaultInvoice getInvoiceByIdInternal(final UUID invoiceId, final InternalTenantContext context)throws InvoiceApiException {
         return new DefaultInvoice(dao.getById(invoiceId, context));
     }
 

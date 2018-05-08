@@ -191,7 +191,7 @@ public class DefaultAuditDao implements AuditDao {
             @Override
             public List<AuditLogWithHistory> inTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory) throws Exception {
                 final Long targetRecordId = dbRouter.onDemand(true).getRecordIdFromObject(objectId.toString(), tableName.getTableName());
-                final List<EntityHistoryModelDao> objectHistory = transactional.getHistoryForTargetRecordId(targetRecordId, context);
+                final List<EntityHistoryModelDao> objectHistory = transactional.getHistoryForTargetRecordId(true, targetRecordId, context);
 
                 return ImmutableList.<AuditLogWithHistory>copyOf(Collections2.transform(entitySqlDaoWrapperFactory.become(EntitySqlDao.class).getAuditLogsViaHistoryForTargetRecordId(historyTableName.name(),
                                                                                                                                                                                       historyTableName.getTableName().toLowerCase(),

@@ -222,10 +222,10 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
     }
 
     @Override
-    public InvoiceModelDao getById(final UUID invoiceId, final InternalTenantContext context) {
+    public InvoiceModelDao getById(final UUID invoiceId, final InternalTenantContext context) throws InvoiceApiException {
         final List<Tag> invoicesTags = getInvoicesTags(context);
 
-        return transactionalSqlDao.execute(true, new EntitySqlDaoTransactionWrapper<InvoiceModelDao>() {
+        return transactionalSqlDao.execute(true, InvoiceApiException.class, new EntitySqlDaoTransactionWrapper<InvoiceModelDao>() {
             @Override
             public InvoiceModelDao inTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory) throws Exception {
                 final InvoiceSqlDao invoiceSqlDao = entitySqlDaoWrapperFactory.become(InvoiceSqlDao.class);

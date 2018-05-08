@@ -1443,6 +1443,20 @@ public class AccountResource extends JaxRsResourceBase {
         return Response.status(Status.NO_CONTENT).build();
     }
 
+    @TimedResource
+    @GET
+    @Path("/{accountId:" + UUID_PATTERN + "}/" + EMAILS + "/{accountEmailId:" + UUID_PATTERN + "}/" + AUDIT_LOG_WITH_HISTORY)
+    @Produces(APPLICATION_JSON)
+    @ApiOperation(value = "Retrieve account email audit logs with history by id", response = AuditLogJson.class, responseContainer = "List")
+    @ApiResponses(value = {@ApiResponse(code = 404, message = "Account not found")})
+    public Response getAccountEmailAuditLogsWithHistory(@PathParam("accountId") final UUID accountId,
+                                                        @PathParam("accountEmailId") final UUID accountEmailId,
+                                                        @javax.ws.rs.core.Context final HttpServletRequest request) throws AccountApiException {
+        final TenantContext tenantContext = context.createTenantContextWithAccountId(accountId, request);
+        final List<AuditLogWithHistory> auditLogWithHistory = accountUserApi.getEmailAuditLogsWithHistoryForId(accountEmailId, AuditLevel.FULL, tenantContext);
+        return Response.status(Status.OK).entity(getAuditLogsWithHistory(auditLogWithHistory)).build();
+    }
+
     @Override
     protected ObjectType getObjectType() {
         return ObjectType.ACCOUNT;

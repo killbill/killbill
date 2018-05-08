@@ -18,6 +18,8 @@
 
 package org.killbill.billing.jaxrs;
 
+import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.UUID;
 
 import javax.annotation.Nullable;
@@ -26,12 +28,17 @@ import org.killbill.billing.ObjectType;
 import org.killbill.billing.client.KillBillClientException;
 import org.killbill.billing.client.model.CustomFields;
 import org.killbill.billing.client.model.gen.Account;
+import org.killbill.billing.client.model.gen.AuditLog;
 import org.killbill.billing.client.model.gen.CustomField;
 import org.killbill.billing.util.api.AuditLevel;
+import org.killbill.billing.util.audit.ChangeType;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import com.google.common.collect.ImmutableList;
+
+import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertNotNull;
 
 public class TestCustomField extends TestJaxrsBase {
 
@@ -110,6 +117,41 @@ public class TestCustomField extends TestJaxrsBase {
 
         final CustomFields allBundleCustomFieldsForAccount = accountApi.getAllCustomFields(account.getAccountId(), ObjectType.ACCOUNT, AuditLevel.FULL, requestOptions);
         Assert.assertEquals(allBundleCustomFieldsForAccount.size(), 5);
+    }
+
+    @Test(groups = "slow", description = "retrieve account logs")
+    public void testCustomFieldTagAuditLogsWithHistory() throws Exception {
+        final Account accountJson = createAccount();
+        assertNotNull(accountJson);
+
+        final CustomField customField = new CustomField();
+        customField.setName("custom");
+        customField.setValue(UUID.randomUUID().toString().substring(0, 5));
+        final CustomFields body = new CustomFields();
+        body.add(customField);
+
+        CustomFields result = accountApi.createAccountCustomFields(accountJson.getAccountId(), body, requestOptions);
+
+        // get all audit for the account
+        final List<AuditLog> auditLogsJson = accountApi.getAccountAuditLogs(accountJson.getAccountId(), requestOptions);
+        Assert.assertEquals(auditLogsJson.size(), 2);
+        UUID objectId = null;
+        for (AuditLog auditLog : auditLogsJson) {
+            if (auditLog.getObjectType().equals(ObjectType.CUSTOM_FIELD)) {
+                objectId = auditLog.getObjectId();
+                break;
+            }
+        }
+        assertNotNull(objectId);
+        final List<AuditLog> customFieldAuditLogWithHistory = customFieldApi.getCustomFieldAuditLogsWithHistory(result.get(0).getCustomFieldId(), requestOptions);
+        assertEquals(customFieldAuditLogWithHistory.size(), 1);
+        assertEquals(customFieldAuditLogWithHistory.get(0).getChangeType(), ChangeType.INSERT.toString());
+        assertEquals(customFieldAuditLogWithHistory.get(0).getObjectType(), ObjectType.CUSTOM_FIELD);
+        assertEquals(customFieldAuditLogWithHistory.get(0).getObjectId(), objectId);
+
+        final LinkedHashMap history1 = (LinkedHashMap) customFieldAuditLogWithHistory.get(0).getHistory();
+        assertNotNull(history1);
+        assertEquals(history1.get("fieldName"), "custom");
     }
 
     private void doSearchCustomField(final String searchKey, @Nullable final CustomField expectedCustomField) throws KillBillClientException {

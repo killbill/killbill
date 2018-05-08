@@ -24,9 +24,11 @@ import java.util.UUID;
 import org.killbill.billing.ErrorCode;
 import org.killbill.billing.ObjectType;
 import org.killbill.billing.callcontext.InternalCallContext;
+import org.killbill.billing.util.api.AuditLevel;
 import org.killbill.billing.util.api.TagApiException;
 import org.killbill.billing.util.api.TagDefinitionApiException;
 import org.killbill.billing.util.api.TagUserApi;
+import org.killbill.billing.util.audit.AuditLogWithHistory;
 import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.billing.util.callcontext.TenantContext;
@@ -205,6 +207,16 @@ public class DefaultTagUserApi implements TagUserApi {
     @Override
     public List<Tag> getTagsForAccount(final UUID accountId, final boolean includedDeleted, final TenantContext context) {
         return withModelTransform(tagDao.getTagsForAccount(includedDeleted, internalCallContextFactory.createInternalTenantContext(accountId, context)));
+    }
+
+    @Override
+    public List<AuditLogWithHistory> getTagAuditLogsWithHistoryForId(final UUID tagId, final AuditLevel auditLevel, final TenantContext tenantContext) {
+        return tagDao.getTagAuditLogsWithHistoryForId(tagId, auditLevel, internalCallContextFactory.createInternalTenantContext(tagId, ObjectType.TAG, tenantContext));
+    }
+
+    @Override
+    public List<AuditLogWithHistory> getTagDefinitionAuditLogsWithHistoryForId(final UUID tagDefinitionId, final AuditLevel auditLevel, final TenantContext tenantContext) {
+        return tagDefinitionDao.getTagDefinitionAuditLogsWithHistoryForId(tagDefinitionId, auditLevel, internalCallContextFactory.createInternalTenantContext(tagDefinitionId, ObjectType.TAG_DEFINITION, tenantContext));
     }
 
     private List<Tag> withModelTransform(final Collection<TagModelDao> input) {

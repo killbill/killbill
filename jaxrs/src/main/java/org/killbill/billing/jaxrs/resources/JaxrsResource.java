@@ -193,6 +193,7 @@ public interface JaxrsResource {
 
     String PAYMENT_TRANSACTIONS = "paymentTransactions";
     String PAYMENT_TRANSACTIONS_PATH = PREFIX + "/" + PAYMENT_TRANSACTIONS;
+    String ATTEMPTS = "attempts";
 
     String PAYMENT_GATEWAYS = "paymentGateways";
     String PAYMENT_GATEWAYS_PATH = PREFIX + "/" + PAYMENT_GATEWAYS;

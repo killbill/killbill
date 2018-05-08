@@ -199,7 +199,7 @@ public class ProxyBlockingStateDao implements BlockingStateDao {
     }
 
     @Override
-    public BlockingStateModelDao getById(final UUID id, final InternalTenantContext context) {
+    public BlockingStateModelDao getById(final UUID id, final InternalTenantContext context) throws EntitlementApiException {
         return delegate.getById(id, context);
     }
 

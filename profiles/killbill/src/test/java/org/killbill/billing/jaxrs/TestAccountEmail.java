@@ -18,13 +18,20 @@
 
 package org.killbill.billing.jaxrs;
 
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.UUID;
 
+import org.killbill.billing.ObjectType;
 import org.killbill.billing.client.model.gen.Account;
 import org.killbill.billing.client.model.gen.AccountEmail;
+import org.killbill.billing.client.model.gen.AuditLog;
+import org.killbill.billing.util.audit.ChangeType;
 import org.testng.Assert;
 import org.testng.annotations.Test;
+
+import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertNotNull;
 
 public class TestAccountEmail extends TestJaxrsBase {
 
@@ -74,5 +81,30 @@ public class TestAccountEmail extends TestJaxrsBase {
         // Try to add the same email
         accountApi.addEmail(accountId, accountEmailJson2, requestOptions);
         Assert.assertEquals(accountApi.getEmails(accountId, requestOptions), fourthEmails);
+    }
+
+    @Test(groups = "slow", description = "retrieve account logs")
+    public void testGetAccountEmailAuditLogsWithHistory() throws Exception {
+        final Account accountJson = createAccount();
+        assertNotNull(accountJson);
+
+        final String email1 = UUID.randomUUID().toString();
+        final AccountEmail accountEmailJson1 = new AccountEmail(accountJson.getAccountId(), email1, EMPTY_AUDIT_LOGS);
+
+        // Add an email
+        accountApi.addEmail(accountJson.getAccountId(), accountEmailJson1, requestOptions);
+
+        // get all audit for the account
+        final List<AuditLog> auditLogsJson = accountApi.getAccountAuditLogs(accountJson.getAccountId(), requestOptions);
+        Assert.assertEquals(auditLogsJson.size(), 2);
+        final List<AuditLog> emailAuditLogWithHistories = accountApi.getAccountEmailAuditLogsWithHistory(accountJson.getAccountId(), auditLogsJson.get(0).getObjectId(), requestOptions);
+        assertEquals(emailAuditLogWithHistories.size(), 1);
+        assertEquals(emailAuditLogWithHistories.get(0).getChangeType(), ChangeType.INSERT.toString());
+        assertEquals(emailAuditLogWithHistories.get(0).getObjectType(), ObjectType.ACCOUNT_EMAIL);
+        assertEquals(emailAuditLogWithHistories.get(0).getObjectId(), auditLogsJson.get(0).getObjectId());
+
+        final LinkedHashMap history1 = (LinkedHashMap) emailAuditLogWithHistories.get(0).getHistory();
+        assertNotNull(history1);
+        assertEquals(history1.get("email"), email1);
     }
 }

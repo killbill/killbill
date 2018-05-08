@@ -239,4 +239,9 @@ public class DefaultAccountUserApi extends DefaultAccountApiBase implements Acco
     public List<AuditLogWithHistory> getAuditLogsWithHistoryForId(final UUID accountId, final AuditLevel auditLevel, final TenantContext tenantContext) throws AccountApiException {
         return accountDao.getAuditLogsWithHistoryForId(accountId, auditLevel, internalCallContextFactory.createInternalTenantContext(accountId, tenantContext));
     }
+
+    @Override
+    public List<AuditLogWithHistory> getEmailAuditLogsWithHistoryForId(final UUID accountEmailId, final AuditLevel auditLevel, final TenantContext tenantContext) throws AccountApiException {
+        return accountDao.getEmailAuditLogsWithHistoryForId(accountEmailId, auditLevel, internalCallContextFactory.createInternalTenantContext(tenantContext.getAccountId(), tenantContext));
+    }
 }

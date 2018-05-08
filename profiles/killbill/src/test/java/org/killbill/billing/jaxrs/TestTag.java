@@ -18,6 +18,7 @@
 
 package org.killbill.billing.jaxrs;
 
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.UUID;
 
@@ -30,10 +31,12 @@ import org.killbill.billing.catalog.api.ProductCategory;
 import org.killbill.billing.client.KillBillClientException;
 import org.killbill.billing.client.model.Tags;
 import org.killbill.billing.client.model.gen.Account;
+import org.killbill.billing.client.model.gen.AuditLog;
 import org.killbill.billing.client.model.gen.Subscription;
 import org.killbill.billing.client.model.gen.Tag;
 import org.killbill.billing.client.model.gen.TagDefinition;
 import org.killbill.billing.util.api.AuditLevel;
+import org.killbill.billing.util.audit.ChangeType;
 import org.killbill.billing.util.tag.ControlTagType;
 import org.killbill.billing.util.tag.dao.SystemTags;
 import org.testng.Assert;
@@ -163,6 +166,42 @@ public class TestTag extends TestJaxrsBase {
         } catch (final Exception e) {
             Assert.assertTrue(true);
         }
+    }
+
+    @Test(groups = "slow", description = "retrieve account logs")
+    public void testGetTagAuditLogsWithHistory() throws Exception {
+        final Account accountJson = createAccount();
+        assertNotNull(accountJson);
+        final TagDefinition accountTagDefInput = new TagDefinition()
+                .setName("tag_name")
+                .setDescription("nothing special")
+                .setApplicableObjectTypes(ImmutableList.<ObjectType>of(ObjectType.ACCOUNT));
+
+        final TagDefinition accountTagDef = tagDefinitionApi.createTagDefinition(accountTagDefInput, requestOptions);
+        accountApi.createAccountTags(accountJson.getAccountId(), ImmutableList.<UUID>of(accountTagDef.getId()), requestOptions);
+
+        // get all audit for the account
+        final List<AuditLog> auditLogsJson = accountApi.getAccountAuditLogs(accountJson.getAccountId(), requestOptions);
+        Assert.assertEquals(auditLogsJson.size(), 2);
+        UUID objectId = null;
+        for (AuditLog auditLog : auditLogsJson) {
+            if (auditLog.getObjectType().equals(ObjectType.TAG)) {
+                objectId = auditLog.getObjectId();
+                break;
+            }
+        }
+        assertNotNull(objectId);
+        final List<AuditLog> tagAuditLogWithHistories = tagApi.getTagAuditLogsWithHistory(objectId, requestOptions);
+        assertEquals(tagAuditLogWithHistories.size(), 1);
+        assertEquals(tagAuditLogWithHistories.get(0).getChangeType(), ChangeType.INSERT.toString());
+        assertEquals(tagAuditLogWithHistories.get(0).getObjectType(), ObjectType.TAG);
+        assertEquals(tagAuditLogWithHistories.get(0).getObjectId(), objectId);
+
+        final LinkedHashMap history1 = (LinkedHashMap) tagAuditLogWithHistories.get(0).getHistory();
+        assertNotNull(history1);
+        assertEquals(history1.get("tagDefinitionId"), accountTagDef.getId().toString());
+        assertEquals(history1.get("objectId"), accountJson.getAccountId().toString());
+        assertEquals(history1.get("objectType"), ObjectType.ACCOUNT.toString());
     }
 
     @Test(groups = "slow", description = "Can paginate through all tags")

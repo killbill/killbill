@@ -19,6 +19,10 @@ package org.killbill.billing.jaxrs;
 
 import java.math.BigDecimal;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -32,6 +36,7 @@ import org.killbill.billing.client.model.InvoicePayments;
 import org.killbill.billing.client.model.Payments;
 import org.killbill.billing.client.model.Tags;
 import org.killbill.billing.client.model.gen.Account;
+import org.killbill.billing.client.model.gen.AuditLog;
 import org.killbill.billing.client.model.gen.ComboPaymentTransaction;
 import org.killbill.billing.client.model.gen.Payment;
 import org.killbill.billing.client.model.gen.PaymentMethod;
@@ -49,6 +54,7 @@ import org.killbill.billing.payment.plugin.api.PaymentPluginStatus;
 import org.killbill.billing.payment.provider.MockPaymentControlProviderPlugin;
 import org.killbill.billing.payment.provider.MockPaymentProviderPlugin;
 import org.killbill.billing.util.api.AuditLevel;
+import org.killbill.billing.util.audit.ChangeType;
 import org.testng.Assert;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
@@ -62,6 +68,7 @@ import com.google.inject.Inject;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertFalse;
+import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.assertTrue;
 import static org.testng.Assert.fail;
 
@@ -780,6 +787,47 @@ public class TestPayment extends TestJaxrsBase {
 
         Assert.assertNotNull(paymentTransactionTag);
         Assert.assertEquals(paymentTransactionTag.get(0).getTagDefinitionName(), tagDefinitionName);
+    }
+
+    @Test(groups = "slow", description = "retrieve account logs")
+    public void testPaymentAuditLogsWithHistory() throws Exception {
+        final Account account = createAccountWithDefaultPaymentMethod();
+        final String externalPaymentKey = UUID.randomUUID().toString();
+        final UUID paymentId = testCreateRetrievePayment(account, null, externalPaymentKey, 1);
+        final Payment payment = paymentApi.getPaymentByExternalKey(externalPaymentKey, NULL_PLUGIN_PROPERTIES, requestOptions);
+        assertEquals(payment.getPaymentId(), paymentId);
+
+        final List<AuditLog> paymentAuditLogWithHistory = paymentApi.getPaymentAuditLogsWithHistory(paymentId, requestOptions);
+        assertEquals(paymentAuditLogWithHistory.size(), 8);
+        assertEquals(paymentAuditLogWithHistory.get(0).getChangeType(), ChangeType.INSERT.toString());
+        assertEquals(paymentAuditLogWithHistory.get(0).getObjectType(), ObjectType.PAYMENT);
+        assertEquals(paymentAuditLogWithHistory.get(0).getObjectId(), paymentId);
+
+        final LinkedHashMap history1 = (LinkedHashMap) paymentAuditLogWithHistory.get(0).getHistory();
+        assertNotNull(history1);
+        assertEquals(history1.get("stateName"), null );
+        final LinkedHashMap history2 = (LinkedHashMap) paymentAuditLogWithHistory.get(1).getHistory();
+        assertNotNull(history2);
+        assertEquals(history2.get("stateName"), "AUTH_SUCCESS" );
+        final LinkedHashMap history3 = (LinkedHashMap) paymentAuditLogWithHistory.get(2).getHistory();
+        assertNotNull(history3);
+        assertEquals(history3.get("stateName"), "AUTH_SUCCESS" );
+        final LinkedHashMap history4 = (LinkedHashMap) paymentAuditLogWithHistory.get(3).getHistory();
+        assertNotNull(history4);
+        assertEquals(history4.get("stateName"), "CAPTURE_SUCCESS" );
+        final LinkedHashMap history5 = (LinkedHashMap) paymentAuditLogWithHistory.get(4).getHistory();
+        assertNotNull(history5);
+        assertEquals(history5.get("stateName"), "CAPTURE_SUCCESS" );
+        final LinkedHashMap history6 = (LinkedHashMap) paymentAuditLogWithHistory.get(5).getHistory();
+        assertNotNull(history6);
+        assertEquals(history6.get("stateName"), "CAPTURE_SUCCESS" );
+        final LinkedHashMap history7 = (LinkedHashMap) paymentAuditLogWithHistory.get(6).getHistory();
+        assertNotNull(history7);
+        assertEquals(history7.get("stateName"), "CAPTURE_SUCCESS" );
+        final LinkedHashMap history8 = (LinkedHashMap) paymentAuditLogWithHistory.get(7).getHistory();
+        assertNotNull(history8);
+        assertEquals(history8.get("stateName"), "REFUND_SUCCESS" );
+
     }
 
     private UUID testCreateRetrievePayment(final Account account, @Nullable final UUID paymentMethodId,

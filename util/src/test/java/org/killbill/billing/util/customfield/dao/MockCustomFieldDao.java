@@ -23,7 +23,9 @@ import java.util.UUID;
 import org.killbill.billing.ObjectType;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
+import org.killbill.billing.util.api.AuditLevel;
 import org.killbill.billing.util.api.CustomFieldApiException;
+import org.killbill.billing.util.audit.AuditLogWithHistory;
 import org.killbill.billing.util.customfield.CustomField;
 import org.killbill.billing.util.entity.Pagination;
 import org.killbill.billing.util.entity.dao.MockEntityDaoBase;
@@ -59,6 +61,11 @@ public class MockCustomFieldDao extends MockEntityDaoBase<CustomFieldModelDao, C
 
     @Override
     public void updateCustomFields(final Iterable<CustomFieldModelDao> customFieldIds, final InternalCallContext context) throws CustomFieldApiException {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public List<AuditLogWithHistory> getCustomFieldAuditLogsWithHistoryForId(final UUID customFieldId, final AuditLevel auditLevel, final InternalTenantContext context) {
         throw new UnsupportedOperationException();
     }
 
