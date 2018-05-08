@@ -62,14 +62,16 @@ public class TestKillBillJdbcRealm extends UtilTestSuiteWithEmbeddedDB {
 
     @AfterMethod(groups = "slow")
     public void afterMethod() throws Exception {
+        if (hasFailed()) {
+            return;
+        }
+
         super.afterMethod();
         ThreadContext.unbindSecurityManager();
-
     }
 
     @Test(groups = "slow")
     public void testAuthentication() throws SecurityApiException {
-
         final String username = "toto";
         final String password = "supperCompli43cated";
 

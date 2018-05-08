@@ -23,7 +23,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
-import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
 import org.killbill.billing.ObjectType;
 import org.killbill.billing.account.api.Account;
@@ -57,22 +56,14 @@ public class TestNextBillingDatePoster extends InvoiceTestSuiteWithEmbeddedDB {
         final Account account = invoiceUtil.createAccount(callContext);
         final Long accountRecordId = nonEntityDao.retrieveAccountRecordIdFromObject(account.getId(), ObjectType.ACCOUNT, null);
 
-        final DateTime now = clock.getUTCNow();
-        final LocalDate nowLocal = internalCallContext.toLocalDate(now);
+        final LocalDate notificationDate = clock.getUTCToday().plusDays(30);
 
         final SubscriptionBase subscription = invoiceUtil.createSubscription();
         final UUID subscriptionId = subscription.getId();
 
-        final FutureAccountNotifications futureAccountNotifications = createFutureAccountNotifications(subscriptionId, nowLocal);
-
-        // Add 3 seconds to make it more interesting
-        clock.addDeltaFromReality(3000);
+        final FutureAccountNotifications futureAccountNotifications = createFutureAccountNotifications(subscriptionId, notificationDate);
 
         invoiceDao.setFutureAccountNotificationsForEmptyInvoice(account.getId(), futureAccountNotifications, internalCallContext);
-
-
-        // Add 3 seconds to make it more interesting
-        clock.addDeltaFromReality(3000);
         invoiceDao.setFutureAccountNotificationsForEmptyInvoice(account.getId(), futureAccountNotifications, internalCallContext);
 
         final NotificationQueue nextBillingQueue = notificationQueueService.getNotificationQueue(DefaultInvoiceService.INVOICE_SERVICE_NAME,
@@ -83,7 +74,7 @@ public class TestNextBillingDatePoster extends InvoiceTestSuiteWithEmbeddedDB {
 
         // We expect only one notification for which effectiveDate matches our original effectiveDate (conversion DateTime -> LocalDate -> DateTime)
         final NotificationEventWithMetadata<NextBillingDateNotificationKey> notification = futureNotificationsList.get(0);
-        Assert.assertEquals(notification.getEffectiveDate(), internalCallContext.toUTCDateTime(nowLocal));
+        Assert.assertEquals(notification.getEffectiveDate(), internalCallContext.toUTCDateTime(notificationDate));
 
         final Iterable<UUID> uuidKeys = notification.getEvent().getUuidKeys();
         Assert.assertFalse(Iterables.isEmpty(uuidKeys));
@@ -97,19 +88,18 @@ public class TestNextBillingDatePoster extends InvoiceTestSuiteWithEmbeddedDB {
         final Account account = invoiceUtil.createAccount(callContext);
         final Long accountRecordId = nonEntityDao.retrieveAccountRecordIdFromObject(account.getId(), ObjectType.ACCOUNT, null);
 
-        final DateTime now = clock.getUTCNow();
-        final LocalDate nowLocal = internalCallContext.toLocalDate(now);
+        final LocalDate notificationDate = clock.getUTCToday().plusDays(30);
 
         final SubscriptionBase subscription1 = invoiceUtil.createSubscription();
         final UUID subscriptionId1 = subscription1.getId();
 
-        final FutureAccountNotifications futureAccountNotifications1 = createFutureAccountNotifications(subscriptionId1, nowLocal);
+        final FutureAccountNotifications futureAccountNotifications1 = createFutureAccountNotifications(subscriptionId1, notificationDate);
         invoiceDao.setFutureAccountNotificationsForEmptyInvoice(account.getId(), futureAccountNotifications1, internalCallContext);
 
         final SubscriptionBase subscription2 = invoiceUtil.createSubscription();
         final UUID subscriptionId2 = subscription2.getId();
 
-        final FutureAccountNotifications futureAccountNotifications2 = createFutureAccountNotifications(subscriptionId2, nowLocal);
+        final FutureAccountNotifications futureAccountNotifications2 = createFutureAccountNotifications(subscriptionId2, notificationDate);
         invoiceDao.setFutureAccountNotificationsForEmptyInvoice(account.getId(), futureAccountNotifications2, internalCallContext);
 
 
@@ -122,7 +112,7 @@ public class TestNextBillingDatePoster extends InvoiceTestSuiteWithEmbeddedDB {
 
         // We expect only one notification but this time we should see a list with both subscriptionIds.
         final NotificationEventWithMetadata<NextBillingDateNotificationKey> notification = futureNotificationsList.get(0);
-        Assert.assertEquals(notification.getEffectiveDate(), internalCallContext.toUTCDateTime(nowLocal));
+        Assert.assertEquals(notification.getEffectiveDate(), internalCallContext.toUTCDateTime(notificationDate));
 
         final Iterable<UUID> uuidKeys = notification.getEvent().getUuidKeys();
         Assert.assertFalse(Iterables.isEmpty(uuidKeys));
@@ -138,25 +128,22 @@ public class TestNextBillingDatePoster extends InvoiceTestSuiteWithEmbeddedDB {
         final Account account = invoiceUtil.createAccount(callContext);
         final Long accountRecordId = nonEntityDao.retrieveAccountRecordIdFromObject(account.getId(), ObjectType.ACCOUNT, null);
 
-        final DateTime now = clock.getUTCNow();
-        final LocalDate nowLocal = internalCallContext.toLocalDate(now);
+        final LocalDate notificationDate1 = clock.getUTCToday().plusDays(30);
 
         final SubscriptionBase subscription = invoiceUtil.createSubscription();
         final UUID subscriptionId = subscription.getId();
 
-        final FutureAccountNotifications futureAccountNotifications1 = createFutureAccountNotifications(subscriptionId, nowLocal);
+        final FutureAccountNotifications futureAccountNotifications1 = createFutureAccountNotifications(subscriptionId, notificationDate1);
 
         // Add 3 seconds to make it more interesting
         clock.addDeltaFromReality(3000);
 
         invoiceDao.setFutureAccountNotificationsForEmptyInvoice(account.getId(), futureAccountNotifications1, internalCallContext);
 
-
         clock.addDays(1);
-        final DateTime newNow = clock.getUTCNow();
-        final LocalDate newNowLocal = internalCallContext.toLocalDate(newNow);
+        final LocalDate notificationDate2 = clock.getUTCToday().plusDays(30);
 
-        final FutureAccountNotifications futureAccountNotifications2 = createFutureAccountNotifications(subscriptionId, newNowLocal);
+        final FutureAccountNotifications futureAccountNotifications2 = createFutureAccountNotifications(subscriptionId, notificationDate2);
 
 
         invoiceDao.setFutureAccountNotificationsForEmptyInvoice(account.getId(), futureAccountNotifications2, internalCallContext);
@@ -169,7 +156,7 @@ public class TestNextBillingDatePoster extends InvoiceTestSuiteWithEmbeddedDB {
         Assert.assertEquals(futureNotificationsList.size(), 2);
 
         final NotificationEventWithMetadata<NextBillingDateNotificationKey> notification1 = futureNotificationsList.get(0);
-        Assert.assertEquals(notification1.getEffectiveDate(), internalCallContext.toUTCDateTime(nowLocal));
+        Assert.assertEquals(notification1.getEffectiveDate(), internalCallContext.toUTCDateTime(notificationDate1));
 
         final Iterable<UUID> uuidKeys1 = notification1.getEvent().getUuidKeys();
         Assert.assertFalse(Iterables.isEmpty(uuidKeys1));
@@ -179,7 +166,7 @@ public class TestNextBillingDatePoster extends InvoiceTestSuiteWithEmbeddedDB {
 
 
         final NotificationEventWithMetadata<NextBillingDateNotificationKey> notification2 = futureNotificationsList.get(1);
-        Assert.assertEquals(notification2.getEffectiveDate(), internalCallContext.toUTCDateTime(newNowLocal));
+        Assert.assertEquals(notification2.getEffectiveDate(), internalCallContext.toUTCDateTime(notificationDate2));
 
         final Iterable<UUID> uuidKeys2 = notification2.getEvent().getUuidKeys();
         Assert.assertFalse(Iterables.isEmpty(uuidKeys2));
