@@ -1006,10 +1006,8 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
                                              final InternalCallContext internalCallContext) {
         for (final LocalDate notificationDate : callbackDateTimePerSubscriptions.getNotificationsForTrigger().keySet()) {
             final DateTime notificationDateTime = internalCallContext.toUTCDateTime(notificationDate);
-            if (notificationDateTime.compareTo(internalCallContext.getCreatedDate()) > 0) {
-                final Set<UUID> subscriptionIds = callbackDateTimePerSubscriptions.getNotificationsForTrigger().get(notificationDate);
-                nextBillingDatePoster.insertNextBillingNotificationFromTransaction(entitySqlDaoWrapperFactory, accountId, subscriptionIds, notificationDateTime, callbackDateTimePerSubscriptions.isRescheduled(), internalCallContext);
-            }
+            final Set<UUID> subscriptionIds = callbackDateTimePerSubscriptions.getNotificationsForTrigger().get(notificationDate);
+            nextBillingDatePoster.insertNextBillingNotificationFromTransaction(entitySqlDaoWrapperFactory, accountId, subscriptionIds, notificationDateTime, callbackDateTimePerSubscriptions.isRescheduled(), internalCallContext);
         }
 
         final long dryRunNotificationTime = invoiceConfig.getDryRunNotificationSchedule(internalCallContext).getMillis();

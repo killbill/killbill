@@ -116,6 +116,7 @@ public class TestInvoiceNotifications extends TestIntegrationBase {
 
         // Future create the entitlement
         // Note: we need to use a plan without a trial to verify the fix, because we don't send invoice notifications for $0 invoices
+        // Also, even though we have the 7d dryRunNotificationSchedule configured, the system will not to set a dry run notification in the past (3/26/2012)
         final DefaultEntitlement bpSubscription = createBaseEntitlementWithPriceOverrideAndCheckForCompletion(account.getId(),
                                                                                                               "bundleKey",
                                                                                                               "Pistol",
