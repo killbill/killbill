@@ -34,7 +34,10 @@ import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.payment.core.PaymentMethodProcessor;
 import org.killbill.billing.payment.core.PaymentProcessor;
 import org.killbill.billing.payment.core.PluginControlPaymentProcessor;
+import org.killbill.billing.payment.dao.PaymentDao;
 import org.killbill.billing.util.UUIDs;
+import org.killbill.billing.util.api.AuditLevel;
+import org.killbill.billing.util.audit.AuditLogWithHistory;
 import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.billing.util.callcontext.TenantContext;
@@ -61,13 +64,15 @@ public class DefaultPaymentApi extends DefaultApiBase implements PaymentApi {
     private final PaymentProcessor paymentProcessor;
     private final PaymentMethodProcessor paymentMethodProcessor;
     private final PluginControlPaymentProcessor pluginControlPaymentProcessor;
+    private final PaymentDao paymentDao;
 
     @Inject
-    public DefaultPaymentApi(final PaymentConfig paymentConfig, final PaymentProcessor paymentProcessor, final PaymentMethodProcessor paymentMethodProcessor, final PluginControlPaymentProcessor pluginControlPaymentProcessor, final InternalCallContextFactory internalCallContextFactory) {
+    public DefaultPaymentApi(final PaymentConfig paymentConfig, final PaymentProcessor paymentProcessor, final PaymentMethodProcessor paymentMethodProcessor, final PluginControlPaymentProcessor pluginControlPaymentProcessor, final PaymentDao paymentDao, final InternalCallContextFactory internalCallContextFactory) {
         super(paymentConfig, internalCallContextFactory);
         this.paymentProcessor = paymentProcessor;
         this.paymentMethodProcessor = paymentMethodProcessor;
         this.pluginControlPaymentProcessor = pluginControlPaymentProcessor;
+        this.paymentDao = paymentDao;
     }
 
     @Override
@@ -1069,6 +1074,26 @@ public class DefaultPaymentApi extends DefaultApiBase implements PaymentApi {
         }
 
         return paymentMethods;
+    }
+
+    @Override
+    public List<AuditLogWithHistory> getPaymentAuditLogsWithHistoryForId(final UUID paymentId, final AuditLevel auditLevel, final TenantContext tenantContext) {
+        return paymentDao.getPaymentAuditLogsWithHistoryForId(paymentId, auditLevel, internalCallContextFactory.createInternalTenantContext(paymentId, ObjectType.PAYMENT, tenantContext));
+    }
+
+    @Override
+    public List<AuditLogWithHistory> getPaymentMethodAuditLogsWithHistoryForId(final UUID paymentMethodId, final AuditLevel auditLevel, final TenantContext tenantContext) {
+        return paymentDao.getPaymentMethodAuditLogsWithHistoryForId(paymentMethodId, auditLevel, internalCallContextFactory.createInternalTenantContext(paymentMethodId, ObjectType.PAYMENT_METHOD, tenantContext));
+    }
+
+    @Override
+    public List<AuditLogWithHistory> getPaymentAttemptAuditLogsWithHistoryForId(final UUID paymentAttemptId, final AuditLevel auditLevel, final TenantContext tenantContext) {
+        return paymentDao.getPaymentAttemptAuditLogsWithHistoryForId(paymentAttemptId, auditLevel, internalCallContextFactory.createInternalTenantContext(paymentAttemptId, ObjectType.PAYMENT_ATTEMPT, tenantContext));
+    }
+
+    @Override
+    public List<AuditLogWithHistory> getPaymentTransactionAuditLogsWithHistoryForId(final UUID paymentTransactionId, final AuditLevel auditLevel, final TenantContext tenantContext) {
+        return paymentDao.getPaymentTransactionAuditLogsWithHistoryForId(paymentTransactionId, auditLevel, internalCallContextFactory.createInternalTenantContext(paymentTransactionId, ObjectType.TRANSACTION, tenantContext));
     }
 
     @Override

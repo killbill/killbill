@@ -20,6 +20,7 @@ package org.killbill.billing.jaxrs;
 
 import java.math.BigDecimal;
 import java.util.Collection;
+import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.UUID;
@@ -53,6 +54,7 @@ import com.google.inject.Inject;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertFalse;
+import static org.testng.Assert.assertNotEquals;
 import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.assertTrue;
 import static org.testng.Assert.fail;
@@ -66,12 +68,20 @@ public class TestAccount extends TestJaxrsBase {
 
     @BeforeMethod(groups = "slow")
     public void beforeMethod() throws Exception {
+        if (hasFailed()) {
+            return;
+        }
+
         super.beforeMethod();
         mockPaymentProviderPlugin = (MockPaymentProviderPlugin) registry.getServiceForName(PLUGIN_NAME);
     }
 
     @AfterMethod(groups = "slow")
     public void tearDown() throws Exception {
+        if (hasFailed()) {
+            return;
+        }
+
         mockPaymentProviderPlugin.clear();
     }
 
@@ -549,6 +559,39 @@ public class TestAccount extends TestJaxrsBase {
         assertEquals(auditLogsJson.get(3).getChangeType(), ChangeType.INSERT.toString());
         assertEquals(auditLogsJson.get(3).getObjectType(), ObjectType.CUSTOM_FIELD);
         assertEquals(auditLogsJson.get(3).getObjectId(), accountCustomFields.get(2).getCustomFieldId());
+    }
+
+    @Test(groups = "slow", description = "retrieve account logs")
+    public void testGetAccountAuditLogsWithHistory() throws Exception {
+        final Account accountJson = createAccount();
+        assertNotNull(accountJson);
+
+        // Update Account
+        final Account newInput = new Account(accountJson.getAccountId(),
+                                             "zozo", 4, accountJson.getExternalKey(), "rr@google.com", 18,
+                                             "USD", null, false, null, null, "UTC",
+                                             "bl1", "bh2", "", "", "ca", "San Francisco", "usa", "en", "415-255-2991",
+                                             "notes", false, false, null, null);
+
+        final Account updatedAccount = killBillClient.updateAccount(newInput, requestOptions);
+
+
+        final List<AuditLog> auditLogWithHistories = killBillClient.getAccountAuditLogsWithHistory(accountJson.getAccountId());
+        assertEquals(auditLogWithHistories.size(), 2);
+        assertEquals(auditLogWithHistories.get(0).getChangeType(), ChangeType.INSERT.toString());
+        assertEquals(auditLogWithHistories.get(0).getObjectType(), ObjectType.ACCOUNT);
+        assertEquals(auditLogWithHistories.get(0).getObjectId(), accountJson.getAccountId());
+
+        final LinkedHashMap history1 = (LinkedHashMap) auditLogWithHistories.get(0).getHistory();
+        assertNotNull(history1);
+        assertEquals(history1.get("externalKey"), accountJson.getExternalKey());
+        assertEquals(history1.get("name"), accountJson.getName());
+
+        final LinkedHashMap history2 = (LinkedHashMap) auditLogWithHistories.get(1).getHistory();
+        assertNotNull(history2);
+        assertEquals(history2.get("externalKey"), accountJson.getExternalKey());
+        assertNotEquals(history2.get("name"), accountJson.getName());
+        assertEquals(history2.get("name"), "zozo");
     }
 
 }

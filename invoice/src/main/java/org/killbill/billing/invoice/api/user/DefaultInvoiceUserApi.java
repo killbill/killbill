@@ -207,7 +207,7 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
         return getInvoiceInternal(invoiceId, context);
     }
 
-    private DefaultInvoice getInvoiceInternal(final UUID invoiceId, final TenantContext context) {
+    private DefaultInvoice getInvoiceInternal(final UUID invoiceId, final TenantContext context) throws InvoiceApiException  {
         final InternalTenantContext internalTenantContext = internalCallContextFactory.createInternalTenantContext(invoiceId, ObjectType.INVOICE, context);
         return new DefaultInvoice(dao.getById(invoiceId, internalTenantContext), getCatalogSafelyForPrettyNames(internalTenantContext));
     }

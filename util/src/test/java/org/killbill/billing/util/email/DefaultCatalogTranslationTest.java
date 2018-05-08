@@ -39,12 +39,6 @@ import static org.testng.Assert.assertEquals;
 
 public class DefaultCatalogTranslationTest extends UtilTestSuiteNoDB {
 
-    @Override
-    @BeforeClass(groups = "fast")
-    public void beforeClass() throws Exception {
-        super.beforeClass();
-    }
-
     private ResourceBundle getBundle(final Locale locale) throws IOException, URISyntaxException {
         final String propertiesFileNameWithCountry = "org/killbill/billing/util/template/translation/CatalogTranslation" + "_" + locale.getLanguage() + "_" + locale.getCountry() + ".properties";
         final InputStream inputStream = UriAccessor.accessUri(propertiesFileNameWithCountry);

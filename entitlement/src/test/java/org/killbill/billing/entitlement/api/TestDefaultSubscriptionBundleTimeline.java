@@ -56,6 +56,10 @@ public class TestDefaultSubscriptionBundleTimeline extends EntitlementTestSuiteN
 
     @BeforeClass(groups = "fast")
     protected void beforeClass() throws Exception {
+        if (hasFailed()) {
+            return;
+        }
+
         super.beforeClass();
         bundleId = UUID.randomUUID();
         bundleExternalKey = bundleId.toString();

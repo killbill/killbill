@@ -27,6 +27,7 @@ import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.killbill.billing.api.AbortAfterFirstFailureListener;
 import org.killbill.billing.api.FlakyInvokedMethodListener;
+import org.killbill.billing.api.FlakyRetryAnalyzer;
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.callcontext.MutableCallContext;
 import org.killbill.billing.callcontext.MutableInternalCallContext;
@@ -42,7 +43,6 @@ import org.mockito.stubbing.Answer;
 import org.skife.config.ConfigSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.testng.Assert;
 import org.testng.IHookCallBack;
 import org.testng.IHookable;
 import org.testng.ITestResult;
@@ -149,7 +149,7 @@ public class GuicyKillbillTestSuite implements IHookable {
 
     @BeforeMethod(alwaysRun = true)
     public void beforeMethodAlwaysRun(final Method method) throws Exception {
-        if (AbortAfterFirstFailureListener.hasFailures()) {
+        if (hasFailed()) {
             return;
         }
 
@@ -198,7 +198,7 @@ public class GuicyKillbillTestSuite implements IHookable {
 
     @AfterMethod(alwaysRun = true)
     public void afterMethodAlwaysRun(final Method method, final ITestResult result) throws Exception {
-        if (AbortAfterFirstFailureListener.hasFailures()) {
+        if (hasFailed()) {
             return;
         }
 
@@ -233,7 +233,11 @@ public class GuicyKillbillTestSuite implements IHookable {
                                                                     (result.getEndMillis() - result.getStartMillis()) / 1000});
         log.info("***************************************************************************************************");
         if (!hasFailed && !result.isSuccess()) {
-            hasFailed = true;
+            // Ignore if the current test method is flaky
+            final boolean isFlakyTest = result.getMethod().getRetryAnalyzer() != null && result.getMethod().getRetryAnalyzer() instanceof FlakyRetryAnalyzer;
+            if (!isFlakyTest) {
+                hasFailed = true;
+            }
         }
     }
 

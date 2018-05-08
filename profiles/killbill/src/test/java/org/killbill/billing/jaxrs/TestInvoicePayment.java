@@ -39,6 +39,7 @@ import org.killbill.billing.client.model.PaymentMethod;
 import org.killbill.billing.client.model.PaymentTransaction;
 import org.killbill.billing.client.model.Payments;
 import org.killbill.billing.client.model.Subscription;
+import org.killbill.billing.notification.plugin.api.ExtBusEventType;
 import org.killbill.billing.osgi.api.OSGIServiceRegistration;
 import org.killbill.billing.payment.api.TransactionType;
 import org.killbill.billing.payment.plugin.api.PaymentPluginApi;
@@ -66,6 +67,10 @@ public class TestInvoicePayment extends TestJaxrsBase {
 
     @BeforeMethod(groups = "slow")
     public void beforeMethod() throws Exception {
+        if (hasFailed()) {
+            return;
+        }
+
         super.beforeMethod();
         mockPaymentProviderPlugin = (MockPaymentProviderPlugin) registry.getServiceForName(PLUGIN_NAME);
     }
@@ -75,7 +80,7 @@ public class TestInvoicePayment extends TestJaxrsBase {
 
     @Test(groups = "slow")
     public void testRetrievePayment() throws Exception {
-        final InvoicePayment paymentJson = setupScenarioWithPayment();
+        final InvoicePayment paymentJson = setupScenarioWithPayment(true);
         final Payment retrievedPaymentJson = killBillClient.getPayment(paymentJson.getPaymentId(), false, requestOptions);
         Assert.assertTrue(retrievedPaymentJson.equals((Payment) paymentJson));
     }
@@ -85,7 +90,7 @@ public class TestInvoicePayment extends TestJaxrsBase {
     public void testInvoicePaymentCompletion() throws Exception {
         mockPaymentProviderPlugin.makeNextPaymentPending();
 
-        final InvoicePayment paymentJson = setupScenarioWithPayment();
+        final InvoicePayment paymentJson = setupScenarioWithPayment(false);
 
         final Payment retrievedPaymentJson = killBillClient.getPayment(paymentJson.getPaymentId(), false, requestOptions);
         Assert.assertTrue(retrievedPaymentJson.equals((Payment) paymentJson));
@@ -108,7 +113,7 @@ public class TestInvoicePayment extends TestJaxrsBase {
 
     @Test(groups = "slow", description = "Can create a full refund with no adjustment")
     public void testFullRefundWithNoAdjustment() throws Exception {
-        final InvoicePayment invoicePaymentJson = setupScenarioWithPayment();
+        final InvoicePayment invoicePaymentJson = setupScenarioWithPayment(true);
 
         // Issue a refund for the full amount
         final BigDecimal refundAmount = invoicePaymentJson.getPurchasedAmount();
@@ -127,7 +132,7 @@ public class TestInvoicePayment extends TestJaxrsBase {
 
     @Test(groups = "slow", description = "Can create a partial refund with no adjustment")
     public void testPartialRefundWithNoAdjustment() throws Exception {
-        final InvoicePayment paymentJson = setupScenarioWithPayment();
+        final InvoicePayment paymentJson = setupScenarioWithPayment(true);
 
         // Issue a refund for a fraction of the amount
         final BigDecimal refundAmount = getFractionOfAmount(paymentJson.getPurchasedAmount());
@@ -146,7 +151,7 @@ public class TestInvoicePayment extends TestJaxrsBase {
 
     @Test(groups = "slow", description = "Can create a full refund with invoice item adjustment")
     public void testRefundWithFullInvoiceItemAdjustment() throws Exception {
-        final InvoicePayment paymentJson = setupScenarioWithPayment();
+        final InvoicePayment paymentJson = setupScenarioWithPayment(true);
 
         // Get the individual items for the invoice
         final Invoice invoice = killBillClient.getInvoice(paymentJson.getTargetInvoiceId(), true, false, requestOptions);
@@ -174,7 +179,7 @@ public class TestInvoicePayment extends TestJaxrsBase {
 
     @Test(groups = "slow", description = "Can create a partial refund with invoice item adjustment")
     public void testPartialRefundWithInvoiceItemAdjustment() throws Exception {
-        final InvoicePayment paymentJson = setupScenarioWithPayment();
+        final InvoicePayment paymentJson = setupScenarioWithPayment(true);
 
         // Get the individual items for the invoice
         final Invoice invoice = killBillClient.getInvoice(paymentJson.getTargetInvoiceId(), true, false, requestOptions);
@@ -201,7 +206,7 @@ public class TestInvoicePayment extends TestJaxrsBase {
 
     @Test(groups = "slow", description = "Cannot create invoice item adjustments for more than the refund amount")
     public void testPartialRefundWithFullInvoiceItemAdjustment() throws Exception {
-        final InvoicePayment paymentJson = setupScenarioWithPayment();
+        final InvoicePayment paymentJson = setupScenarioWithPayment(true);
 
         // Get the individual items for the invoice
         final Invoice invoice = killBillClient.getInvoice(paymentJson.getTargetInvoiceId(), true, false, requestOptions);
@@ -232,7 +237,7 @@ public class TestInvoicePayment extends TestJaxrsBase {
 
     @Test(groups = "slow", description = "Can paginate through all payments and refunds")
     public void testPaymentsAndRefundsPagination() throws Exception {
-        InvoicePayment lastPayment = setupScenarioWithPayment();
+        InvoicePayment lastPayment = setupScenarioWithPayment(true);
 
         for (int i = 0; i < 5; i++) {
             final InvoicePaymentTransaction refund = new InvoicePaymentTransaction();
@@ -272,7 +277,7 @@ public class TestInvoicePayment extends TestJaxrsBase {
         final DateTime initialDate = new DateTime(2012, 4, 25, 0, 3, 42, 0);
         clock.setDeltaFromReality(initialDate.getMillis() - clock.getUTCNow().getMillis());
 
-        final Account accountJson = createAccountWithPMBundleAndSubscriptionAndWaitForFirstInvoice();
+        final Account accountJson = createAccountWithPMBundleAndSubscriptionAndWaitForFirstInvoice(false);
 
         InvoicePayments invoicePayments = killBillClient.getInvoicePaymentsForAccount(accountJson.getAccountId(), requestOptions);
         assertEquals(invoicePayments.size(), 1);
@@ -296,26 +301,28 @@ public class TestInvoicePayment extends TestJaxrsBase {
         }
     }
 
-
     @Test(groups = "slow")
     public void testManualInvoicePayment() throws Exception {
-
         final Account accountJson = createAccountWithDefaultPaymentMethod();
         assertNotNull(accountJson);
 
         // Disable automatic payments
+        callbackServlet.pushExpectedEvent(ExtBusEventType.TAG_CREATION);
         killBillClient.createAccountTag(accountJson.getAccountId(), ControlTagType.AUTO_PAY_OFF.getId(), requestOptions);
+        callbackServlet.assertListenerStatus();
 
         // Add a bundle, subscription and move the clock to get the first invoice
         final Subscription subscriptionJson = createEntitlement(accountJson.getAccountId(), UUID.randomUUID().toString(), "Shotgun",
                                                                 ProductCategory.BASE, BillingPeriod.MONTHLY, true);
         assertNotNull(subscriptionJson);
+
+        callbackServlet.pushExpectedEvents(ExtBusEventType.SUBSCRIPTION_PHASE,
+                                           ExtBusEventType.INVOICE_CREATION);
         clock.addDays(32);
-        crappyWaitForLackOfProperSynchonization();
+        callbackServlet.assertListenerStatus();
 
         final List<Invoice> invoices = killBillClient.getInvoicesForAccount(accountJson.getAccountId(), requestOptions);
         assertEquals(invoices.size(), 2);
-
 
         final InvoicePayment invoicePayment1 = new InvoicePayment();
         invoicePayment1.setPurchasedAmount(invoices.get(1).getBalance().add(BigDecimal.TEN));
@@ -329,7 +336,6 @@ public class TestInvoicePayment extends TestJaxrsBase {
         } catch (final KillBillClientException e) {
             assertTrue(true);
         }
-
 
         final InvoicePayment invoicePayment2 = new InvoicePayment();
         invoicePayment2.setPurchasedAmount(invoices.get(1).getBalance());
@@ -350,8 +356,8 @@ public class TestInvoicePayment extends TestJaxrsBase {
         return amount.divide(BigDecimal.TEN).setScale(2, BigDecimal.ROUND_HALF_UP);
     }
 
-    private InvoicePayment setupScenarioWithPayment() throws Exception {
-        final Account accountJson = createAccountWithPMBundleAndSubscriptionAndWaitForFirstInvoice();
+    private InvoicePayment setupScenarioWithPayment(final boolean invoicePaymentSuccess) throws Exception {
+        final Account accountJson = createAccountWithPMBundleAndSubscriptionAndWaitForFirstInvoice("Shotgun", invoicePaymentSuccess, true);
 
         final List<InvoicePayment> paymentsForAccount = killBillClient.getInvoicePaymentsForAccount(accountJson.getAccountId(), requestOptions);
         Assert.assertEquals(paymentsForAccount.size(), 1);

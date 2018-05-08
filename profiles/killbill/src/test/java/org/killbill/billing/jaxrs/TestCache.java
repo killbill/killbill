@@ -19,20 +19,12 @@ package org.killbill.billing.jaxrs;
 
 import java.util.UUID;
 
-import org.joda.time.LocalDate;
 import org.killbill.automaton.StateMachineConfig;
 import org.killbill.billing.account.api.ImmutableAccountData;
-import org.killbill.billing.api.FlakyRetryAnalyzer;
-import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.catalog.api.Catalog;
-import org.killbill.billing.catalog.api.PriceListSet;
-import org.killbill.billing.catalog.api.ProductCategory;
-import org.killbill.billing.client.RequestOptions;
 import org.killbill.billing.client.model.Account;
-import org.killbill.billing.client.model.PaymentMethod;
-import org.killbill.billing.client.model.PaymentMethodPluginDetail;
-import org.killbill.billing.client.model.Subscription;
 import org.killbill.billing.client.model.Tenant;
+import org.killbill.billing.notification.plugin.api.ExtBusEventType;
 import org.killbill.billing.overdue.api.OverdueConfig;
 import org.killbill.billing.util.cache.Cachable.CacheType;
 import org.killbill.billing.util.cache.CacheController;
@@ -102,32 +94,18 @@ public class TestCache extends TestJaxrsBase {
         Assert.assertFalse(accountBcdCache.isKeyInCache(input.getAccountId()));
     }
 
-    // Flaky, see https://github.com/killbill/killbill/issues/860
-    @Test(groups = "slow", description = "Can Invalidate (clear) all Tenant Caches for current Tenant", retryAnalyzer = FlakyRetryAnalyzer.class)
+    @Test(groups = "slow", description = "Can Invalidate (clear) all Tenant Caches for current Tenant")
     public void testInvalidateCacheByTenant() throws Exception {
         // creating a new Tenant for this test
-        final String testApiKey = "testApiKey";
-        final String testApiSecret = "testApiSecret";
-        final Tenant tenant = new Tenant();
-        tenant.setApiKey(testApiKey);
-        tenant.setApiSecret(testApiSecret);
-        loginTenant(testApiKey, testApiSecret);
-        Tenant currentTenant = killBillClient.createTenant(tenant, false, requestOptions);
-
-        // using custom RequestOptions with the new Tenant created before
-        RequestOptions inputOptions = RequestOptions.builder()
-                                                    .withCreatedBy(createdBy)
-                                                    .withReason(reason)
-                                                    .withComment(comment)
-                                                    .withTenantApiKey(currentTenant.getApiKey())
-                                                    .withTenantApiSecret(currentTenant.getApiSecret())
-                                                    .build();
+        final Tenant currentTenant = createTenant("testApiKey", "testApiSecret", false);
 
         // Uploading the test catalog using the new Tenant created before
-        killBillClient.uploadXMLCatalog(Resources.getResource("SpyCarAdvanced.xml").getPath(), inputOptions);
+        callbackServlet.pushExpectedEvent(ExtBusEventType.TENANT_CONFIG_CHANGE);
+        killBillClient.uploadXMLCatalog(Resources.getResource("SpyCarAdvanced.xml").getPath(), requestOptions);
+        callbackServlet.assertListenerStatus();
 
         // creating an Account with PaymentMethod and a Subscription
-        createAccountWithPMBundleAndSubscriptionAndWaitForFirstInvoiceWithInputOptions(inputOptions);
+        createAccountWithPMBundleAndSubscriptionAndWaitForFirstInvoice("Sports", true);
 
         // get all caches per tenant level
         final CacheController<String, Long> tenantRecordIdCache = cacheControllerDispatcher.getCacheController(CacheType.TENANT_RECORD_ID);
@@ -143,19 +121,19 @@ public class TestCache extends TestJaxrsBase {
         final Long tenantRecordId = tenantRecordIdCache.get(currentTenant.getTenantId().toString(), null);
 
         assertTrue(hasKeysByTenantRecordId(tenantPaymentStateMachineConfigCache, tenantRecordId.toString()));
-        assertTrue(tenantCache.isKeyInCache(testApiKey));
+        assertTrue(tenantCache.isKeyInCache(currentTenant.getApiKey()));
         assertTrue(hasKeysByTenantRecordId(tenantKvCache, tenantRecordId.toString()));
         assertTrue(tenantConfigCache.isKeyInCache(tenantRecordId));
         assertTrue(tenantOverdueConfigCache.isKeyInCache(tenantRecordId));
         assertTrue(tenantCatalogCache.isKeyInCache(tenantRecordId));
 
         // invalidate caches per tenant level
-        killBillClient.invalidateCacheByTenant(inputOptions);
+        killBillClient.invalidateCacheByTenant(requestOptions);
 
         // verify that now the caches don't have the previous values
         assertFalse(tenantRecordIdCache.isKeyInCache(currentTenant.getTenantId().toString()));
         assertFalse(hasKeysByTenantRecordId(tenantPaymentStateMachineConfigCache, tenantRecordId.toString()));
-        assertFalse(tenantCache.isKeyInCache(testApiKey));
+        assertFalse(tenantCache.isKeyInCache(currentTenant.getApiKey()));
         assertFalse(hasKeysByTenantRecordId(tenantKvCache, tenantRecordId.toString()));
         assertFalse(tenantConfigCache.isKeyInCache(tenantRecordId));
         assertFalse(tenantOverdueConfigCache.isKeyInCache(tenantRecordId));
@@ -169,30 +147,5 @@ public class TestCache extends TestJaxrsBase {
             }
         }
         return false;
-    }
-
-    private void createAccountWithPMBundleAndSubscriptionAndWaitForFirstInvoiceWithInputOptions(final RequestOptions inputOptions) throws Exception {
-        Account account = killBillClient.createAccount(getAccount(), inputOptions);
-
-        final PaymentMethodPluginDetail info = new PaymentMethodPluginDetail();
-        info.setProperties(null);
-        final PaymentMethod paymentMethodJson = new PaymentMethod(null, UUID.randomUUID().toString(), account.getAccountId(), true, PLUGIN_NAME, info);
-        killBillClient.createPaymentMethod(paymentMethodJson, inputOptions);
-
-        final Subscription subscription = new Subscription();
-        subscription.setAccountId(account.getAccountId());
-        subscription.setExternalKey(UUID.randomUUID().toString());
-        subscription.setProductName("Sports");
-        subscription.setProductCategory(ProductCategory.BASE);
-        subscription.setBillingPeriod(BillingPeriod.MONTHLY);
-        subscription.setPriceList(PriceListSet.DEFAULT_PRICELIST_NAME);
-
-        clock.resetDeltaFromReality();
-        clock.setDay(new LocalDate(2013, 3, 1));
-        final Subscription subscriptionJson = killBillClient.createSubscription(subscription, clock.getUTCToday(), DEFAULT_WAIT_COMPLETION_TIMEOUT_SEC, inputOptions);
-
-        assertNotNull(subscriptionJson);
-        clock.addDays(32);
-        crappyWaitForLackOfProperSynchonization();
     }
 }

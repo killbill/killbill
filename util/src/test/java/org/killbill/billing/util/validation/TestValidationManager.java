@@ -40,6 +40,10 @@ public class TestValidationManager extends UtilTestSuiteWithEmbeddedDB {
     @Override
     @BeforeClass(groups = "slow")
     public void beforeClass() throws Exception {
+        if (hasFailed()) {
+            return;
+        }
+
         super.beforeClass();
         final DatabaseSchemaDao dao = new DatabaseSchemaDao(dbi, roDbi);
         vm = new ValidationManager(dao);

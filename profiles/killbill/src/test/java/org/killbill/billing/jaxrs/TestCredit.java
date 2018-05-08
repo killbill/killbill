@@ -39,6 +39,10 @@ public class TestCredit extends TestJaxrsBase {
 
     @BeforeMethod(groups = "slow")
     public void setUp() throws Exception {
+        if (hasFailed()) {
+            return;
+        }
+
         accountJson = createAccountWithPMBundleAndSubscriptionAndWaitForFirstInvoice();
     }
 

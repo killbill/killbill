@@ -40,6 +40,7 @@ import org.killbill.billing.GuicyKillbillTestWithEmbeddedDBModule;
 import org.killbill.billing.api.TestApiListener;
 import org.killbill.billing.beatrix.integration.db.TestDBRouterAPI;
 import org.killbill.billing.client.KillBillClient;
+import org.killbill.billing.client.KillBillClientException;
 import org.killbill.billing.client.KillBillHttpClient;
 import org.killbill.billing.client.model.Payment;
 import org.killbill.billing.client.model.PaymentTransaction;
@@ -49,6 +50,7 @@ import org.killbill.billing.jaxrs.resources.TestDBRouterResource;
 import org.killbill.billing.jetty.HttpServer;
 import org.killbill.billing.jetty.HttpServerConfig;
 import org.killbill.billing.lifecycle.glue.BusModule;
+import org.killbill.billing.notification.plugin.api.ExtBusEventType;
 import org.killbill.billing.osgi.api.OSGIServiceRegistration;
 import org.killbill.billing.payment.glue.PaymentModule;
 import org.killbill.billing.payment.provider.MockPaymentProviderPluginModule;
@@ -128,6 +130,7 @@ public class TestJaxrsBase extends KillbillClient {
 
     protected HttpServerConfig config;
     private HttpServer server;
+    private CallbackServer callbackServer;
 
     @Override
     protected KillbillConfigSource getConfigSource() {
@@ -217,6 +220,10 @@ public class TestJaxrsBase extends KillbillClient {
 
     @BeforeMethod(groups = "slow")
     public void beforeMethod() throws Exception {
+        if (hasFailed()) {
+            return;
+        }
+
         super.beforeMethod();
 
         // Because we truncate the tables, the database record_id auto_increment will be reset
@@ -226,23 +233,57 @@ public class TestJaxrsBase extends KillbillClient {
         internalBus.start();
         cacheControllerDispatcher.clearAll();
         busHandler.reset();
+        callbackServlet.reset();
+
         clock.resetDeltaFromReality();
         clock.setDay(new LocalDate(2012, 8, 25));
 
         // Make sure to re-generate the api key and secret (could be cached by Shiro)
         DEFAULT_API_KEY = UUID.randomUUID().toString();
         DEFAULT_API_SECRET = UUID.randomUUID().toString();
-        loginTenant(DEFAULT_API_KEY, DEFAULT_API_SECRET);
 
         // Recreate the tenant (tables have been cleaned-up)
+        createTenant(DEFAULT_API_KEY, DEFAULT_API_SECRET, true);
+    }
+
+    protected Tenant createTenant(final String apiKey, final String apiSecret, final boolean useGlobalDefault) throws KillBillClientException {
+        callbackServlet.assertListenerStatus();
+        callbackServlet.reset();
+
+        loginTenant(apiKey, apiSecret);
         final Tenant tenant = new Tenant();
-        tenant.setApiKey(DEFAULT_API_KEY);
-        tenant.setApiSecret(DEFAULT_API_SECRET);
-        killBillClient.createTenant(tenant, createdBy, reason, comment);
+        tenant.setApiKey(apiKey);
+        tenant.setApiSecret(apiSecret);
+
+        requestOptions = requestOptions.extend()
+                                       .withTenantApiKey(apiKey)
+                                       .withTenantApiSecret(apiSecret)
+                                       .build();
+
+        callbackServlet.pushExpectedEvent(ExtBusEventType.TENANT_CONFIG_CHANGE);
+        if (!useGlobalDefault) {
+            // Catalog
+            callbackServlet.pushExpectedEvent(ExtBusEventType.TENANT_CONFIG_CHANGE);
+        }
+
+        final Tenant createdTenant = killBillClient.createTenant(tenant, useGlobalDefault, requestOptions);
+
+        // Register tenant for callback
+        final String callback = callbackServer.getServletEndpoint();
+        killBillClient.registerCallbackNotificationForTenant(callback, requestOptions);
+        callbackServlet.assertListenerStatus();
+
+        createdTenant.setApiSecret(apiSecret);
+
+        return createdTenant;
     }
 
     @AfterMethod(groups = "slow")
     public void afterMethod() throws Exception {
+        if (hasFailed()) {
+            return;
+        }
+
         killBillClient.close();
         externalBus.stop();
         internalBus.stop();
@@ -285,6 +326,10 @@ public class TestJaxrsBase extends KillbillClient {
         server = new HttpServer();
         server.configure(config, getListeners(), getFilters());
         server.start();
+
+        callbackServlet = new CallbackServlet();
+        callbackServer = new CallbackServer(callbackServlet);
+        callbackServer.startServer();
     }
 
 
@@ -307,6 +352,7 @@ public class TestJaxrsBase extends KillbillClient {
     public void afterSuite() {
         try {
             server.stop();
+            callbackServer.stopServer();
         } catch (final Exception ignored) {
         }
     }

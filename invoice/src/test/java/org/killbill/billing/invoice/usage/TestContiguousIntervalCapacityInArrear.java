@@ -60,16 +60,6 @@ import static org.testng.Assert.assertTrue;
 
 public class TestContiguousIntervalCapacityInArrear extends TestUsageInArrearBase {
 
-    @BeforeClass(groups = "fast")
-    protected void beforeClass() throws Exception {
-        super.beforeClass();
-    }
-
-    @BeforeMethod(groups = "fast")
-    public void beforeMethod() {
-        super.beforeMethod();
-    }
-
     @Test(groups = "fast")
     public void testComputeToBeBilledUsage() {
 
