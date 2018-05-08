@@ -39,6 +39,8 @@ import org.killbill.billing.mock.glue.MockAccountModule;
 import org.killbill.billing.mock.glue.MockNonEntityDaoModule;
 import org.killbill.billing.mock.glue.MockTagModule;
 import org.killbill.billing.platform.api.KillbillConfigSource;
+import org.killbill.billing.util.audit.dao.AuditDao;
+import org.killbill.billing.util.audit.dao.MockAuditDao;
 import org.mockito.Mockito;
 
 public class TestInvoiceModuleNoDB extends TestInvoiceModule {
@@ -58,7 +60,7 @@ public class TestInvoiceModuleNoDB extends TestInvoiceModule {
         install(new MockNonEntityDaoModule(configSource));
         install(new MockTagModule(configSource));
         install(new MockAccountModule(configSource));
-
+        bind(AuditDao.class).toInstance(new MockAuditDao());
         installCurrencyConversionApi();
     }
 
