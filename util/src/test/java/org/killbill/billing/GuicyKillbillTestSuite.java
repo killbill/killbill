@@ -45,6 +45,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.IHookCallBack;
 import org.testng.IHookable;
+import org.testng.ITestNGMethod;
 import org.testng.ITestResult;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
@@ -234,7 +235,8 @@ public class GuicyKillbillTestSuite implements IHookable {
         log.info("***************************************************************************************************");
         if (!hasFailed && !result.isSuccess()) {
             // Ignore if the current test method is flaky
-            final boolean isFlakyTest = result.getMethod().getRetryAnalyzer() != null && result.getMethod().getRetryAnalyzer() instanceof FlakyRetryAnalyzer;
+            final ITestNGMethod testNGMethod = result.getMethod();
+            final boolean isFlakyTest = testNGMethod != null && testNGMethod.getRetryAnalyzer() != null && testNGMethod.getRetryAnalyzer() instanceof FlakyRetryAnalyzer;
             if (!isFlakyTest) {
                 hasFailed = true;
             }

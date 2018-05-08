@@ -70,7 +70,6 @@ public class TestInvoiceNotifications extends TestIntegrationBase {
         addDaysAndCheckForCompletion(7, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
     }
 
-
     @Test(groups = "slow")
     public void testInvoiceNotificationWithFutureSubscriptionEvents() throws Exception {
         clock.setDay(new LocalDate(2018, 1, 31));
@@ -79,10 +78,8 @@ public class TestInvoiceNotifications extends TestIntegrationBase {
         final Account account = createAccountWithNonOsgiPaymentMethod(accountData);
         accountChecker.checkAccount(account.getId(), accountData, callContext);
 
-
         final LocalDate billingDate = new LocalDate(2018, 2, 28);
         final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("pistol-monthly-notrial");
-
 
         busHandler.pushExpectedEvents(NextEvent.BLOCK);
         final UUID entitlementId = entitlementApi.createBaseEntitlement(account.getId(), spec, "bundleKey", null, null, billingDate, false, true, ImmutableList.<PluginProperty>of(), callContext);
@@ -103,11 +100,46 @@ public class TestInvoiceNotifications extends TestIntegrationBase {
         // Move to the notification before the start date =>  2018, 3, 21
         addDaysAndCheckForCompletion(21, NextEvent.INVOICE_NOTIFICATION);
 
-
         // Move to the change date => 2018, 3, 28
         addDaysAndCheckForCompletion(7, NextEvent.CHANGE, NextEvent.INVOICE, NextEvent.NULL_INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
-
     }
 
+    @Test(groups = "slow")
+    public void testInvoiceNotificationInThePast() throws Exception {
+        // We take april as it has 30 days (easier to play with BCD)
+        // Set clock to the initial start date - we implicitly assume here that the account timezone is UTC
+        clock.setDay(new LocalDate(2012, 4, 1));
 
+        final AccountData accountData = getAccountData(1);
+        final Account account = createAccountWithNonOsgiPaymentMethod(accountData);
+        accountChecker.checkAccount(account.getId(), accountData, callContext);
+
+        // Future create the entitlement
+        // Note: we need to use a plan without a trial to verify the fix, because we don't send invoice notifications for $0 invoices
+        // Also, even though we have the 7d dryRunNotificationSchedule configured, the system will not to set a dry run notification in the past (3/26/2012)
+        final DefaultEntitlement bpSubscription = createBaseEntitlementWithPriceOverrideAndCheckForCompletion(account.getId(),
+                                                                                                              "bundleKey",
+                                                                                                              "Pistol",
+                                                                                                              ProductCategory.BASE,
+                                                                                                              BillingPeriod.MONTHLY,
+                                                                                                              null,
+                                                                                                              new LocalDate(2012, 4, 2),
+                                                                                                              "notrial",
+                                                                                                              NextEvent.BLOCK);
+
+        // Move to subscription start date
+        addDaysAndCheckForCompletion(1, NextEvent.CREATE, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
+
+        // Move to notification date
+        addDaysAndCheckForCompletion(23, NextEvent.INVOICE_NOTIFICATION);
+
+        // Move to next invoice
+        addDaysAndCheckForCompletion(7, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
+
+        // Move to notification date
+        addDaysAndCheckForCompletion(24, NextEvent.INVOICE_NOTIFICATION);
+
+        // Move to next invoice
+        addDaysAndCheckForCompletion(7, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
+    }
 }
