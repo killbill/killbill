@@ -34,6 +34,7 @@ public class TestCreditJson extends JaxrsTestSuiteNoDB {
 
     @Test(groups = "fast")
     public void testJson() throws Exception {
+        final UUID creditId = UUID.randomUUID();
         final BigDecimal creditAmount = BigDecimal.TEN;
         final Currency currency = Currency.AED;
         final UUID invoiceId = UUID.randomUUID();
@@ -41,8 +42,9 @@ public class TestCreditJson extends JaxrsTestSuiteNoDB {
         final LocalDate effectiveDate = clock.getUTCToday();
         final UUID accountId = UUID.randomUUID();
         final List<AuditLogJson> auditLogs = createAuditLogsJson(clock.getUTCNow());
-        final CreditJson creditJson = new CreditJson(creditAmount, currency, invoiceId, invoiceNumber, effectiveDate,
+        final CreditJson creditJson = new CreditJson(creditId, creditAmount, currency, invoiceId, invoiceNumber, effectiveDate,
                                                      accountId, null, null, auditLogs);
+        Assert.assertEquals(creditJson.getCreditId(), creditId);
         Assert.assertEquals(creditJson.getEffectiveDate(), effectiveDate);
         Assert.assertEquals(creditJson.getCreditAmount(), creditAmount);
         Assert.assertEquals(creditJson.getInvoiceId(), invoiceId);
