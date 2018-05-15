@@ -1,6 +1,6 @@
 /*
- * Copyright 2014-2016 Groupon, Inc
- * Copyright 2014-2016 The Billing Project, LLC
+ * Copyright 2014-2018 Groupon, Inc
+ * Copyright 2014-2018 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -35,6 +35,7 @@ import org.killbill.billing.client.model.PaymentTransaction;
 import org.killbill.billing.client.model.PluginProperty;
 import org.killbill.billing.client.model.Tenant;
 import org.killbill.billing.client.model.TenantKey;
+import org.killbill.billing.notification.plugin.api.ExtBusEventType;
 import org.killbill.billing.payment.api.TransactionStatus;
 import org.killbill.billing.tenant.api.TenantKV;
 import org.testng.Assert;
@@ -53,7 +54,9 @@ public class TestTenantKV extends TestJaxrsBase {
         final String pluginName = "PLUGIN_FOO";
 
         final String pluginPath = Resources.getResource("plugin.yml").getPath();
+        callbackServlet.pushExpectedEvent(ExtBusEventType.TENANT_CONFIG_CHANGE);
         final TenantKey tenantKey0 = killBillClient.registerPluginConfigurationForTenant(pluginName, pluginPath, createdBy, reason, comment);
+        callbackServlet.assertListenerStatus();
         Assert.assertEquals(tenantKey0.getKey(), TenantKV.TenantKey.PLUGIN_CONFIG_.toString() + pluginName);
 
         final TenantKey tenantKey1 = killBillClient.getPluginConfigurationForTenant(pluginName);
@@ -68,53 +71,55 @@ public class TestTenantKV extends TestJaxrsBase {
 
     @Test(groups = "slow", description = "Upload and retrieve a per plugin payment state machine config")
     public void testPerTenantPluginPaymentStateMachineConfig() throws Exception {
+        final RequestOptions requestOptionsForOriginalTenant = requestOptions;
+
         // Create another tenant - it will have a different state machine
-        final Tenant otherTenantWithDifferentStateMachine = new Tenant();
-        otherTenantWithDifferentStateMachine.setApiKey(UUID.randomUUID().toString());
-        otherTenantWithDifferentStateMachine.setApiSecret(UUID.randomUUID().toString());
-        killBillClient.createTenant(otherTenantWithDifferentStateMachine, true, requestOptions);
-        final RequestOptions requestOptionsOtherTenant = requestOptions.extend()
-                                                                       .withTenantApiKey(otherTenantWithDifferentStateMachine.getApiKey())
-                                                                       .withTenantApiSecret(otherTenantWithDifferentStateMachine.getApiSecret())
-                                                                       .build();
+        final Tenant otherTenantWithDifferentStateMachine = createTenant(UUID.randomUUID().toString(), UUID.randomUUID().toString(), true);
 
         // Verify initial state
-        final TenantKey emptyTenantKey = killBillClient.getPluginPaymentStateMachineConfigurationForTenant(PLUGIN_NAME, requestOptions);
+        final TenantKey emptyTenantKey = killBillClient.getPluginPaymentStateMachineConfigurationForTenant(PLUGIN_NAME, requestOptionsForOriginalTenant);
         Assert.assertEquals(emptyTenantKey.getValues().size(), 0);
-        final TenantKey emptyTenantKeyOtherTenant = killBillClient.getPluginPaymentStateMachineConfigurationForTenant(PLUGIN_NAME, requestOptionsOtherTenant);
+        final TenantKey emptyTenantKeyOtherTenant = killBillClient.getPluginPaymentStateMachineConfigurationForTenant(PLUGIN_NAME, requestOptions);
         Assert.assertEquals(emptyTenantKeyOtherTenant.getValues().size(), 0);
 
+        callbackServlet.pushExpectedEvent(ExtBusEventType.TENANT_CONFIG_CHANGE);
         final String stateMachineConfigPath = Resources.getResource("SimplePaymentStates.xml").getPath();
-        final TenantKey tenantKey0 = killBillClient.registerPluginPaymentStateMachineConfigurationForTenant(PLUGIN_NAME, stateMachineConfigPath, requestOptionsOtherTenant);
+        final TenantKey tenantKey0 = killBillClient.registerPluginPaymentStateMachineConfigurationForTenant(PLUGIN_NAME, stateMachineConfigPath, requestOptions);
+        callbackServlet.assertListenerStatus();
         Assert.assertEquals(tenantKey0.getKey(), TenantKV.TenantKey.PLUGIN_PAYMENT_STATE_MACHINE_.toString() + PLUGIN_NAME);
 
         // Verify only the other tenant has the new state machine
-        final TenantKey emptyTenantKey1 = killBillClient.getPluginPaymentStateMachineConfigurationForTenant(PLUGIN_NAME, requestOptions);
+        final TenantKey emptyTenantKey1 = killBillClient.getPluginPaymentStateMachineConfigurationForTenant(PLUGIN_NAME, requestOptionsForOriginalTenant);
         Assert.assertEquals(emptyTenantKey1.getValues().size(), 0);
-        final TenantKey tenantKey1OtherTenant = killBillClient.getPluginPaymentStateMachineConfigurationForTenant(PLUGIN_NAME, requestOptionsOtherTenant);
+        final TenantKey tenantKey1OtherTenant = killBillClient.getPluginPaymentStateMachineConfigurationForTenant(PLUGIN_NAME, requestOptions);
         Assert.assertEquals(tenantKey1OtherTenant.getKey(), TenantKV.TenantKey.PLUGIN_PAYMENT_STATE_MACHINE_.toString() + PLUGIN_NAME);
         Assert.assertEquals(tenantKey1OtherTenant.getValues().size(), 1);
 
         // Create an auth in both tenant
-        final Payment payment = createComboPaymentTransaction(requestOptions);
-        final Payment paymentOtherTenant = createComboPaymentTransaction(requestOptionsOtherTenant);
+        final Payment payment = createComboPaymentTransaction(requestOptionsForOriginalTenant);
+        final Payment paymentOtherTenant = createComboPaymentTransaction(requestOptions);
 
         // Void in the first tenant (allowed by the default state machine)
-        final Payment voidPayment = killBillClient.voidPayment(payment.getPaymentId(), payment.getPaymentExternalKey(), UUID.randomUUID().toString(), ImmutableList.<String>of(), ImmutableMap.<String, String>of(), requestOptions);
+        callbackServlet.pushExpectedEvent(ExtBusEventType.PAYMENT_SUCCESS);
+        final Payment voidPayment = killBillClient.voidPayment(payment.getPaymentId(), payment.getPaymentExternalKey(), UUID.randomUUID().toString(), ImmutableList.<String>of(), ImmutableMap.<String, String>of(), requestOptionsForOriginalTenant);
+        callbackServlet.assertListenerStatus();
         Assert.assertEquals(voidPayment.getTransactions().get(0).getStatus(), TransactionStatus.SUCCESS.toString());
         Assert.assertEquals(voidPayment.getTransactions().get(1).getStatus(), TransactionStatus.SUCCESS.toString());
 
         // Void in the other tenant (disallowed)
         try {
-            killBillClient.voidPayment(paymentOtherTenant.getPaymentId(), paymentOtherTenant.getPaymentExternalKey(), UUID.randomUUID().toString(), ImmutableList.<String>of(), ImmutableMap.<String, String>of(), requestOptionsOtherTenant);
+            killBillClient.voidPayment(paymentOtherTenant.getPaymentId(), paymentOtherTenant.getPaymentExternalKey(), UUID.randomUUID().toString(), ImmutableList.<String>of(), ImmutableMap.<String, String>of(), requestOptions);
             Assert.fail();
         } catch (final KillBillClientException e) {
             Assert.assertEquals((int) e.getBillingException().getCode(), ErrorCode.PAYMENT_INVALID_OPERATION.getCode());
         }
+        callbackServlet.assertListenerStatus();
 
         // Remove the custom state machine
-        killBillClient.unregisterPluginPaymentStateMachineConfigurationForTenant(PLUGIN_NAME, requestOptionsOtherTenant);
-        final TenantKey tenantKey2 = killBillClient.getPluginPaymentStateMachineConfigurationForTenant(PLUGIN_NAME, requestOptionsOtherTenant);
+        callbackServlet.pushExpectedEvent(ExtBusEventType.TENANT_CONFIG_DELETION);
+        killBillClient.unregisterPluginPaymentStateMachineConfigurationForTenant(PLUGIN_NAME, requestOptions);
+        callbackServlet.assertListenerStatus();
+        final TenantKey tenantKey2 = killBillClient.getPluginPaymentStateMachineConfigurationForTenant(PLUGIN_NAME, requestOptions);
         Assert.assertEquals(tenantKey2.getKey(), TenantKV.TenantKey.PLUGIN_PAYMENT_STATE_MACHINE_.toString() + PLUGIN_NAME);
         Assert.assertEquals(tenantKey2.getValues().size(), 0);
 
@@ -127,7 +132,9 @@ public class TestTenantKV extends TestJaxrsBase {
                       public Boolean call() throws Exception {
                           // The void should now go through
                           try {
-                              final Payment voidPaymentOtherTenant2 = killBillClient.voidPayment(paymentOtherTenant.getPaymentId(), paymentOtherTenant.getPaymentExternalKey(), UUID.randomUUID().toString(), ImmutableList.<String>of(), ImmutableMap.<String, String>of(), requestOptionsOtherTenant);
+                              callbackServlet.pushExpectedEvent(ExtBusEventType.PAYMENT_SUCCESS);
+                              final Payment voidPaymentOtherTenant2 = killBillClient.voidPayment(paymentOtherTenant.getPaymentId(), paymentOtherTenant.getPaymentExternalKey(), UUID.randomUUID().toString(), ImmutableList.<String>of(), ImmutableMap.<String, String>of(), requestOptions);
+                              callbackServlet.assertListenerStatus();
                               voidPaymentOtherTenant2Ref.set(voidPaymentOtherTenant2);
                               return voidPaymentOtherTenant2 != null;
                           } catch (final KillBillClientException e) {
@@ -158,8 +165,10 @@ public class TestTenantKV extends TestJaxrsBase {
         authTransactionJson.setTransactionExternalKey(authTransactionExternalKey);
         authTransactionJson.setTransactionType("AUTHORIZE");
 
+        callbackServlet.pushExpectedEvents(ExtBusEventType.ACCOUNT_CREATION, ExtBusEventType.ACCOUNT_CHANGE, ExtBusEventType.PAYMENT_SUCCESS);
         final ComboPaymentTransaction comboAuthorization = new ComboPaymentTransaction(accountJson, paymentMethodJson, authTransactionJson, ImmutableList.<PluginProperty>of(), ImmutableList.<PluginProperty>of());
         final Payment payment = killBillClient.createPayment(comboAuthorization, ImmutableMap.<String, String>of(), requestOptions);
+        callbackServlet.assertListenerStatus();
         Assert.assertEquals(payment.getTransactions().get(0).getStatus(), TransactionStatus.SUCCESS.toString());
 
         return payment;

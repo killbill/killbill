@@ -50,6 +50,10 @@ public class TestPlanAligner extends SubscriptionTestSuiteNoDB {
     @Override
     @BeforeClass(groups = "fast")
     public void beforeClass() throws Exception {
+        if (hasFailed()) {
+            return;
+        }
+
         super.beforeClass();
         planAligner = new PlanAligner();
 

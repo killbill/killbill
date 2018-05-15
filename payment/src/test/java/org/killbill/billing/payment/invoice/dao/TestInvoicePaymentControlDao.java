@@ -35,6 +35,10 @@ public class TestInvoicePaymentControlDao extends PaymentTestSuiteWithEmbeddedDB
 
     @BeforeClass(groups = "slow")
     protected void beforeClass() throws Exception {
+        if (hasFailed()) {
+            return;
+        }
+
         super.beforeClass();
         dao = new InvoicePaymentControlDao(dbi);
     }

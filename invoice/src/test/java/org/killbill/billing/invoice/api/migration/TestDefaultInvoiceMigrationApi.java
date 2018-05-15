@@ -55,6 +55,10 @@ public class TestDefaultInvoiceMigrationApi extends InvoiceTestSuiteWithEmbedded
     @Override
     @BeforeMethod(groups = "slow")
     public void beforeMethod() throws Exception {
+        if (hasFailed()) {
+            return;
+        }
+
         super.beforeMethod();
         date_migrated = clock.getUTCToday().minusYears(1);
         date_regular = clock.getUTCToday();

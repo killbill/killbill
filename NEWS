@@ -1,3 +1,10 @@
+0.19.14
+    Expose and persist invoice item product name
+    New history apis
+    Test hardening
+    Fix swallowed TAG_DEFINITION_DOES_NOT_EXIST when doing a TagDefinitionDao#getById
+    Make sure invoice item adjustment correctly reflect the catalog info from the item being adjusted
+
 0.19.13
     Entitlement/subscription refactoring and incremental perf improvements
     New implementation pass to allow a mix of RO and RW calls

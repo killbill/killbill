@@ -324,6 +324,10 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
 
     @BeforeMethod(groups = "slow")
     public void beforeMethod() throws Exception {
+        if (hasFailed()) {
+            return;
+        }
+
         super.beforeMethod();
 
         log.debug("beforeMethod callcontext classLoader = " + (Thread.currentThread().getContextClassLoader() != null ? Thread.currentThread().getContextClassLoader().toString() : "null"));
@@ -352,6 +356,10 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
 
     @AfterMethod(groups = "slow")
     public void afterMethod() throws Exception {
+        if (hasFailed()) {
+            return;
+        }
+
         lifecycle.fireShutdownSequencePriorEventUnRegistration();
         busService.getBus().unregister(busHandler);
         lifecycle.fireShutdownSequencePostEventUnRegistration();
@@ -664,6 +672,26 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
                                                                                              final BillingPeriod billingPeriod,
                                                                                              final List<PlanPhasePriceOverride> overrides,
                                                                                              final NextEvent... events) {
+        return createBaseEntitlementWithPriceOverrideAndCheckForCompletion(accountId,
+                                                                           bundleExternalKey,
+                                                                           productName,
+                                                                           productCategory,
+                                                                           billingPeriod,
+                                                                           overrides,
+                                                                           null,
+                                                                           PriceListSet.DEFAULT_PRICELIST_NAME,
+                                                                           events);
+    }
+
+    protected DefaultEntitlement createBaseEntitlementWithPriceOverrideAndCheckForCompletion(final UUID accountId,
+                                                                                             final String bundleExternalKey,
+                                                                                             final String productName,
+                                                                                             final ProductCategory productCategory,
+                                                                                             final BillingPeriod billingPeriod,
+                                                                                             final List<PlanPhasePriceOverride> overrides,
+                                                                                             final LocalDate billingEffectiveDate,
+                                                                                             final String priceList,
+                                                                                             final NextEvent... events) {
         if (productCategory == ProductCategory.ADD_ON) {
             throw new RuntimeException("Unxepected Call for creating ADD_ON");
         }
@@ -672,8 +700,8 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
             @Override
             public Entitlement apply(@Nullable final Void dontcare) {
                 try {
-                    final PlanPhaseSpecifier spec = new PlanPhaseSpecifier(productName, billingPeriod, PriceListSet.DEFAULT_PRICELIST_NAME, null);
-                    final UUID entitlementId = entitlementApi.createBaseEntitlement(accountId, spec, bundleExternalKey, overrides, null, null, false, true, ImmutableList.<PluginProperty>of(), callContext);
+                    final PlanPhaseSpecifier spec = new PlanPhaseSpecifier(productName, billingPeriod, priceList, null);
+                    final UUID entitlementId = entitlementApi.createBaseEntitlement(accountId, spec, bundleExternalKey, overrides, null, billingEffectiveDate, false, true, ImmutableList.<PluginProperty>of(), callContext);
                     assertNotNull(entitlementId);
                     return entitlementApi.getEntitlementForId(entitlementId, callContext);
                 } catch (final EntitlementApiException e) {

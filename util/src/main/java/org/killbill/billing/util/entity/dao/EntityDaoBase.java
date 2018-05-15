@@ -157,7 +157,7 @@ public abstract class EntityDaoBase<M extends EntityModelDao<E>, E extends Entit
     }
 
     @Override
-    public M getById(final UUID id, final InternalTenantContext context) {
+    public M getById(final UUID id, final InternalTenantContext context) throws U /* Does not throw anything, but allows class overriding this method to throw */{
         return transactionalSqlDao.execute(true, new EntitySqlDaoTransactionWrapper<M>() {
 
             @Override
