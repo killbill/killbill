@@ -20,7 +20,6 @@ package org.killbill.billing.invoice.generator;
 import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -28,7 +27,6 @@ import javax.annotation.Nullable;
 
 import org.joda.time.LocalDate;
 import org.killbill.billing.catalog.api.BillingMode;
-import org.killbill.billing.invoice.api.Invoice;
 import org.killbill.billing.invoice.api.InvoiceItem;
 import org.killbill.billing.invoice.api.InvoiceItemType;
 import org.killbill.billing.invoice.model.DefaultInvoice;
@@ -46,7 +44,7 @@ public class InvoiceWithMetadata {
         this.invoice = originalInvoice;
         this.perSubscriptionFutureNotificationDates = perSubscriptionFutureNotificationDates;
         build();
-        remove$0UsageItems();
+        removeMarkerUsageItems();
     }
 
     public DefaultInvoice getInvoice() {
@@ -80,13 +78,12 @@ public class InvoiceWithMetadata {
         });
     }
 
-    protected void remove$0UsageItems() {
+    protected void removeMarkerUsageItems() {
         if (invoice != null) {
             final Iterator<InvoiceItem> it = invoice.getInvoiceItems().iterator();
             while (it.hasNext()) {
                 final InvoiceItem item = it.next();
-                if ((item.getInvoiceItemType() == InvoiceItemType.USAGE) &&
-                    item.getAmount().compareTo(BigDecimal.ZERO) == 0) {
+                if (isMarkerUsageItem(item)) {
                     it.remove();
                 }
             }
@@ -94,6 +91,16 @@ public class InvoiceWithMetadata {
                 invoice = null;
             }
         }
+    }
+
+    //
+    // $0 Usage item with no detail section
+    // ($0 Usage item *with* detail section are valid items in case of tiers defined with $0 amount)
+    //
+    private boolean isMarkerUsageItem(final InvoiceItem item) {
+        return item.getInvoiceItemType() == InvoiceItemType.USAGE &&
+               item.getItemDetails() == null &&
+               item.getAmount().compareTo(BigDecimal.ZERO) == 0;
     }
 
 
