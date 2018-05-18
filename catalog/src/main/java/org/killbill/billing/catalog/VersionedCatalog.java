@@ -160,20 +160,22 @@ public class VersionedCatalog extends ValidatingConfig<VersionedCatalog> impleme
 
     private CatalogPlanEntry findCatalogPlanEntry(final PlanRequestWrapper wrapper,
                                                   final DateTime requestedDate,
-                                                  final DateTime subscriptionStartDate)
-            throws CatalogApiException {
+                                                  final DateTime subscriptionStartDate) throws CatalogApiException {
         final List<StandaloneCatalog> catalogs = versionsBeforeDate(requestedDate.toDate());
         if (catalogs.isEmpty()) {
             throw new CatalogApiException(ErrorCode.CAT_NO_CATALOG_FOR_GIVEN_DATE, requestedDate.toDate().toString());
         }
 
+        CatalogPlanEntry candidateInSubsequentCatalog = null;
         for (int i = catalogs.size() - 1; i >= 0; i--) { // Working backwards to find the latest applicable plan
             final StandaloneCatalog c = catalogs.get(i);
+
             final Plan plan;
             try {
                 plan = wrapper.findPlan(c);
             } catch (final CatalogApiException e) {
-                if (e.getCode() != ErrorCode.CAT_NO_SUCH_PLAN.getCode()) {
+                if (e.getCode() != ErrorCode.CAT_NO_SUCH_PLAN.getCode() &&
+                    e.getCode() != ErrorCode.CAT_PLAN_NOT_FOUND.getCode()) {
                     throw e;
                 } else {
                     // If we can't find an entry it probably means the plan has been retired so we keep looking...
@@ -182,19 +184,27 @@ public class VersionedCatalog extends ValidatingConfig<VersionedCatalog> impleme
             }
 
 
-            final boolean initialVersion = (i == 0);
+            final boolean oldestCatalog = (i == 0);
             final DateTime catalogEffectiveDate = CatalogDateHelper.toUTCDateTime(c.getEffectiveDate());
-            if (initialVersion || // Prevent issue with time granularity -- see #760
-                !subscriptionStartDate.isBefore(catalogEffectiveDate)) { // It's a new subscription this plan always applies
+            final boolean catalogOlderThanSubscriptionStartDate = !subscriptionStartDate.isBefore(catalogEffectiveDate);
+            if (oldestCatalog || // Prevent issue with time granularity -- see #760
+                catalogOlderThanSubscriptionStartDate) { // It's a new subscription, this plan always applies
                 return new CatalogPlanEntry(c, plan);
-            } else { //Its an existing subscription
-                if (plan.getEffectiveDateForExistingSubscriptions() != null) { //if it is null any change to this does not apply to existing subscriptions
+            } else { // It's an existing subscription
+                if (plan.getEffectiveDateForExistingSubscriptions() != null) { // If it is null, any change to this catalog does not apply to existing subscriptions
                     final DateTime existingSubscriptionDate = CatalogDateHelper.toUTCDateTime(plan.getEffectiveDateForExistingSubscriptions());
-                    if (requestedDate.isAfter(existingSubscriptionDate)) { // this plan is now applicable to existing subs
+                    if (requestedDate.isAfter(existingSubscriptionDate)) { // This plan is now applicable to existing subs
                         return new CatalogPlanEntry(c, plan);
                     }
+                } else if (candidateInSubsequentCatalog == null) {
+                    // Keep the most recent one
+                    candidateInSubsequentCatalog = new CatalogPlanEntry(c, plan);
                 }
             }
+        }
+
+        if (candidateInSubsequentCatalog != null) {
+            return candidateInSubsequentCatalog;
         }
 
         final PlanSpecifier spec = wrapper.getSpec();

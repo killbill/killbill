@@ -408,7 +408,7 @@ public class DefaultSubscriptionBaseApiService implements SubscriptionBaseApiSer
                               final CallContext context) throws SubscriptionBaseApiException, CatalogApiException {
         final InternalCallContext internalCallContext = createCallContextFromBundleId(subscription.getBundleId(), context);
         final PlanPhasePriceOverridesWithCallContext overridesWithContext = new DefaultPlanPhasePriceOverridesWithCallContext(overrides, context);
-        final Plan newPlan = catalogService.getFullCatalog(true, true, internalCallContext).createOrFindPlan(spec, overridesWithContext, effectiveDate, subscription.getStartDate());
+        final Plan newPlan = catalogService.getFullCatalog(true, true, internalCallContext).createOrFindPlan(spec, overridesWithContext, effectiveDate);
 
         final PhaseType initialPhaseType;
         if (overrides != null &&

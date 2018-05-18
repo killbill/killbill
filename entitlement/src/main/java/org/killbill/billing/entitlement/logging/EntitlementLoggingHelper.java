@@ -243,7 +243,7 @@ public abstract class EntitlementLoggingHelper {
             }
             if (spec.getPriceListName() != null) {
                 logLine.append(", priceList='")
-                       .append(spec.getBillingPeriod())
+                       .append(spec.getPriceListName())
                        .append("'");
             }
             logPlanPhasePriceOverrides(logLine, overrides);
