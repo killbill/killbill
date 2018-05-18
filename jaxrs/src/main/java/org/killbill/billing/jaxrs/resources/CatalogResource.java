@@ -122,8 +122,12 @@ public class CatalogResource extends JaxRsResourceBase {
     @ApiOperation(value = "Retrieve the full catalog as XML", response = String.class, hidden = true)
     @ApiResponses(value = {})
     public Response getCatalogXmlOriginal(@QueryParam(QUERY_REQUESTED_DT) final String requestedDate,
+                                          @QueryParam(QUERY_ACCOUNT_ID) final UUID accountId,
                                           @javax.ws.rs.core.Context final HttpServletRequest request) throws Exception {
-        final TenantContext tenantContext = context.createTenantContextNoAccountId(request);
+        final TenantContext tenantContext = accountId != null ?
+                                            context.createTenantContextWithAccountId(accountId, request) :
+                                            context.createTenantContextNoAccountId(request);
+
         final DateTime catalogDateVersion = requestedDate != null ?
                                             DATE_TIME_FORMATTER.parseDateTime(requestedDate).toDateTime(DateTimeZone.UTC) :
                                             null;
@@ -153,8 +157,9 @@ public class CatalogResource extends JaxRsResourceBase {
     @ApiOperation(value = "Retrieve the full catalog as XML", response = String.class)
     @ApiResponses(value = {})
     public Response getCatalogXml(@QueryParam(QUERY_REQUESTED_DT) final String requestedDate,
-        @javax.ws.rs.core.Context final HttpServletRequest request) throws Exception {
-        return getCatalogXmlOriginal(requestedDate, request);
+                                  @QueryParam(QUERY_ACCOUNT_ID) final UUID accountId,
+                                  @javax.ws.rs.core.Context final HttpServletRequest request) throws Exception {
+        return getCatalogXmlOriginal(requestedDate, accountId, request);
     }
 
 
@@ -197,9 +202,12 @@ public class CatalogResource extends JaxRsResourceBase {
     @ApiOperation(value = "Retrieve the catalog as JSON", responseContainer = "List", response = CatalogJson.class)
     @ApiResponses(value = {})
     public Response getCatalogJson(@QueryParam(QUERY_REQUESTED_DT) final String requestedDate,
+                                   @QueryParam(QUERY_ACCOUNT_ID) final UUID accountId,
                                    @javax.ws.rs.core.Context final HttpServletRequest request) throws Exception {
 
-        final TenantContext tenantContext = context.createTenantContextNoAccountId(request);
+        final TenantContext tenantContext = accountId != null ?
+                                            context.createTenantContextWithAccountId(accountId, request) :
+                                            context.createTenantContextNoAccountId(request);
         final DateTime catalogDateVersion = requestedDate != null ?
                                             DATE_TIME_FORMATTER.parseDateTime(requestedDate).toDateTime(DateTimeZone.UTC) :
                                             null;
@@ -224,9 +232,11 @@ public class CatalogResource extends JaxRsResourceBase {
     @Produces(APPLICATION_JSON)
     @ApiOperation(value = "Retrieve a list of catalog versions", response = DateTime.class, responseContainer = "List")
     @ApiResponses(value = {})
-    public Response getCatalogVersions(@javax.ws.rs.core.Context final HttpServletRequest request) throws Exception {
-
-        final TenantContext tenantContext = context.createTenantContextNoAccountId(request);
+    public Response getCatalogVersions(@QueryParam(QUERY_ACCOUNT_ID) final UUID accountId,
+                                       @javax.ws.rs.core.Context final HttpServletRequest request) throws Exception {
+        final TenantContext tenantContext = accountId != null ?
+                                            context.createTenantContextWithAccountId(accountId, request) :
+                                            context.createTenantContextNoAccountId(request);
         final VersionedCatalog catalog = (VersionedCatalog) catalogUserApi.getCatalog(catalogName, tenantContext);
 
         final List<DateTime> result = new ArrayList<DateTime>();
@@ -259,8 +269,13 @@ public class CatalogResource extends JaxRsResourceBase {
     @ApiResponses(value = {})
     public Response getAvailableAddons(@QueryParam("baseProductName") final String baseProductName,
                                        @Nullable @QueryParam("priceListName") final String priceListName,
+                                       @QueryParam(QUERY_ACCOUNT_ID) final UUID accountId,
                                        @javax.ws.rs.core.Context final HttpServletRequest request) throws CatalogApiException {
-        final TenantContext tenantContext = context.createTenantContextNoAccountId(request);
+
+        final TenantContext tenantContext = accountId != null ?
+                                            context.createTenantContextWithAccountId(accountId, request) :
+                                            context.createTenantContextNoAccountId(request);
+
         final StaticCatalog catalog = catalogUserApi.getCurrentCatalog(catalogName, tenantContext);
         final List<Listing> listings = catalog.getAvailableAddOnListings(baseProductName, priceListName);
         final List<PlanDetailJson> details = new ArrayList<PlanDetailJson>();
@@ -276,8 +291,12 @@ public class CatalogResource extends JaxRsResourceBase {
     @Produces(APPLICATION_JSON)
     @ApiOperation(value = "Retrieve available base plans", response = PlanDetailJson.class, responseContainer = "List")
     @ApiResponses(value = {})
-    public Response getAvailableBasePlans(@javax.ws.rs.core.Context final HttpServletRequest request) throws CatalogApiException {
-        final TenantContext tenantContext = context.createTenantContextNoAccountId(request);
+    public Response getAvailableBasePlans(@QueryParam(QUERY_ACCOUNT_ID) final UUID accountId,
+                                          @javax.ws.rs.core.Context final HttpServletRequest request) throws CatalogApiException {
+        final TenantContext tenantContext = accountId != null ?
+                                            context.createTenantContextWithAccountId(accountId, request) :
+                                            context.createTenantContextNoAccountId(request);
+
         final StaticCatalog catalog = catalogUserApi.getCurrentCatalog(catalogName, tenantContext);
         final List<Listing> listings = catalog.getAvailableBasePlanListings();
         final List<PlanDetailJson> details = new ArrayList<PlanDetailJson>();
