@@ -1,3 +1,6 @@
+0.18.20
+    Fix issue when changing a Plan defined in a subsequent catalog version
+
 0.18.18
     See https://github.com/killbill/killbill/releases/tag/killbill-0.18.18
 
