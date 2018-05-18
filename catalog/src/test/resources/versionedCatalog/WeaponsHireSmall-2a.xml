@@ -19,16 +19,14 @@
 
 <!---
 
-Changes compared to WeaponsHireSmall-1.xml:
-  * default change policy IMMEDIATE
-  * pistol-monthly price change
-  * new shotgun-quarterly plan
+Changes compared to WeaponsHireSmall-2.xml:
+  * shotgun-quarterly price change
 
 -->
 <catalog xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:noNamespaceSchemaLocation="http://docs.killbill.io/latest/catalog.xsd">
 
-    <effectiveDate>2011-02-02T00:00:00+00:00</effectiveDate>
+    <effectiveDate>2011-02-03T00:00:00+00:00</effectiveDate>
     <catalogName>WeaponsHireSmall</catalogName>
 
     <recurringBillingMode>IN_ADVANCE</recurringBillingMode>
@@ -194,6 +192,8 @@ Changes compared to WeaponsHireSmall-1.xml:
             </finalPhase>
         </plan>
         <plan name="shotgun-quarterly">
+            <effectiveDateForExistingSubscriptions>2011-02-14T00:00:00+00:00</effectiveDateForExistingSubscriptions>
+
             <product>Shotgun</product>
             <initialPhases>
                 <phase type="TRIAL">
@@ -217,15 +217,15 @@ Changes compared to WeaponsHireSmall-1.xml:
                     <recurringPrice>
                         <price>
                             <currency>USD</currency>
-                            <value>249.95</value>
+                            <value>259.95</value>
                         </price>
                         <price>
                             <currency>EUR</currency>
-                            <value>149.95</value>
+                            <value>159.95</value>
                         </price>
                         <price>
                             <currency>GBP</currency>
-                            <value>169.95</value>
+                            <value>179.95</value>
                         </price>
                     </recurringPrice>
                 </recurring>
