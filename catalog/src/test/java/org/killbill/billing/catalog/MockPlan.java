@@ -96,6 +96,7 @@ public class MockPlan extends DefaultPlan {
         setInitialPhases(planPhases);
         setPlansAllowedInBundle(plansAllowedInBundle);
         setRecurringBillingMode(BillingMode.IN_ADVANCE);
+        setPriceListName(DefaultPriceListSet.DEFAULT_PRICELIST_NAME);
 
         finalPhase.setPlan(this);
         for (final DefaultPlanPhase pp : planPhases) {
