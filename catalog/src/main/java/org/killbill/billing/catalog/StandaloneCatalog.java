@@ -79,14 +79,14 @@ public class StandaloneCatalog extends ValidatingConfig<StandaloneCatalog> imple
     private DefaultUnit[] units;
 
     @XmlElementWrapper(name = "products", required = true)
-    @XmlElement(type=DefaultProduct.class, name = "product", required = false)
+    @XmlElement(type = DefaultProduct.class, name = "product", required = false)
     private CatalogEntityCollection<Product> products;
 
     @XmlElement(name = "rules", required = true)
     private DefaultPlanRules planRules;
 
     @XmlElementWrapper(name = "plans", required = true)
-    @XmlElement(type=DefaultPlan.class, name = "plan", required = false)
+    @XmlElement(type = DefaultPlan.class, name = "plan", required = false)
     private CatalogEntityCollection<Plan> plans;
 
     @XmlElement(name = "priceLists", required = true)
@@ -103,12 +103,14 @@ public class StandaloneCatalog extends ValidatingConfig<StandaloneCatalog> imple
         this.effectiveDate = effectiveDate;
     }
 
-    /* (non-Javadoc)
-      * @see org.killbill.billing.catalog.ICatalog#getCalalogName()
-      */
     @Override
     public String getCatalogName() {
         return catalogName;
+    }
+
+    public StandaloneCatalog setCatalogName(final String catalogName) {
+        this.catalogName = catalogName;
+        return this;
     }
 
     @Override
@@ -116,22 +118,20 @@ public class StandaloneCatalog extends ValidatingConfig<StandaloneCatalog> imple
         return effectiveDate;
     }
 
-    /* (non-Javadoc)
-     * @see org.killbill.billing.catalog.ICatalog#getProducts()
-     */
+    public StandaloneCatalog setEffectiveDate(final Date effectiveDate) {
+        this.effectiveDate = effectiveDate;
+        return this;
+    }
+
     @Override
     public Collection<Product> getCurrentProducts() {
         return products.getEntries();
     }
 
-
-    public CatalogEntityCollection<Product>  getCatalogEntityCollectionProduct() {
+    public CatalogEntityCollection<Product> getCatalogEntityCollectionProduct() {
         return products;
     }
 
-    /* (non-Javadoc)
-     * @see org.killbill.billing.catalog.ICatalog#getProducts()
-     */
     @Override
     public DefaultUnit[] getCurrentUnits() {
         return units;
@@ -142,21 +142,18 @@ public class StandaloneCatalog extends ValidatingConfig<StandaloneCatalog> imple
         return supportedCurrencies;
     }
 
-
-
     @Override
     public Collection<Plan> getCurrentPlans() {
         return plans.getEntries();
     }
-
 
     public CatalogEntityCollection<Plan> getCatalogEntityCollectionPlan() {
         return plans;
     }
 
     public boolean isTemplateCatalog() {
-        return (products == null || products.size() == 0) &&
-               (plans == null || plans.size() == 0) &&
+        return (products == null || products.isEmpty()) &&
+               (plans == null || plans.isEmpty()) &&
                (supportedCurrencies == null || supportedCurrencies.length == 0);
     }
 
@@ -168,12 +165,22 @@ public class StandaloneCatalog extends ValidatingConfig<StandaloneCatalog> imple
         return planRules;
     }
 
+    public StandaloneCatalog setPlanRules(final DefaultPlanRules planRules) {
+        this.planRules = planRules;
+        return this;
+    }
+
     public DefaultPriceList findCurrentPriceList(final String priceListName) throws CatalogApiException {
         return priceLists.findPriceListFrom(priceListName);
     }
 
     public DefaultPriceListSet getPriceLists() {
         return this.priceLists;
+    }
+
+    public StandaloneCatalog setPriceLists(final DefaultPriceListSet priceLists) {
+        this.priceLists = priceLists;
+        return this;
     }
 
     @Override
@@ -194,13 +201,19 @@ public class StandaloneCatalog extends ValidatingConfig<StandaloneCatalog> imple
         }
         if (result == null) {
             throw new CatalogApiException(ErrorCode.CAT_PLAN_NOT_FOUND,
-                                          spec.getPlanName() !=  null ? spec.getPlanName() : "undefined",
+                                          spec.getPlanName() != null ? spec.getPlanName() : "undefined",
                                           spec.getProductName() != null ? spec.getProductName() : "undefined",
                                           spec.getBillingPeriod() != null ? spec.getBillingPeriod() : "undefined",
                                           spec.getPriceListName() != null ? spec.getPriceListName() : "undefined");
         }
         return result;
     }
+
+    //////////////////////////////////////////////////////////////////////////////
+    //
+    // RULES
+    //
+    //////////////////////////////////////////////////////////////////////////////
 
     @Override
     public DefaultPlan findCurrentPlan(final String name) throws CatalogApiException {
@@ -245,16 +258,6 @@ public class StandaloneCatalog extends ValidatingConfig<StandaloneCatalog> imple
         return priceLists.findPriceListFrom(name);
     }
 
-    //////////////////////////////////////////////////////////////////////////////
-    //
-    // RULES
-    //
-    //////////////////////////////////////////////////////////////////////////////
-    @Override
-    public BillingActionPolicy planChangePolicy(final PlanPhaseSpecifier from, final PlanSpecifier to) throws CatalogApiException {
-        return planRules.getPlanChangePolicy(from, to, this);
-    }
-
     @Override
     public PlanAlignmentChange planChangeAlignment(final PlanPhaseSpecifier from, final PlanSpecifier to) throws CatalogApiException {
         return planRules.getPlanChangeAlignment(from, to, this);
@@ -275,6 +278,12 @@ public class StandaloneCatalog extends ValidatingConfig<StandaloneCatalog> imple
         return planRules.getBillingAlignment(planPhase, this);
     }
 
+    //////////////////////////////////////////////////////////////////////////////
+    //
+    // UNIT LIMIT
+    //
+    //////////////////////////////////////////////////////////////////////////////
+
     @Override
     public PlanChangeResult planChange(final PlanPhaseSpecifier from, final PlanSpecifier to)
             throws CatalogApiException {
@@ -283,8 +292,8 @@ public class StandaloneCatalog extends ValidatingConfig<StandaloneCatalog> imple
 
     @Override
     public ValidationErrors validate(final StandaloneCatalog catalog, final ValidationErrors errors) {
-        validateCollection(catalog, errors, (DefaultProduct[])  products.toArray(new DefaultProduct[products.size()]));
-        validateCollection(catalog, errors, (DefaultPlan[])  plans.toArray(new DefaultPlan[plans.size()]));
+        validateCollection(catalog, errors, (DefaultProduct[]) products.toArray(new DefaultProduct[0]));
+        validateCollection(catalog, errors, (DefaultPlan[]) plans.toArray(new DefaultPlan[0]));
         priceLists.validate(catalog, errors);
         planRules.validate(catalog, errors);
         return errors;
@@ -303,7 +312,7 @@ public class StandaloneCatalog extends ValidatingConfig<StandaloneCatalog> imple
             cur.initialize(catalog, sourceURI);
         }
         for (final Product p : products.getEntries()) {
-            ((DefaultProduct)p).initialize(catalog, sourceURI);
+            ((DefaultProduct) p).initialize(catalog, sourceURI);
         }
         for (final Plan p : plans.getEntries()) {
             ((DefaultPlan) p).initialize(catalog, sourceURI);
@@ -314,16 +323,9 @@ public class StandaloneCatalog extends ValidatingConfig<StandaloneCatalog> imple
         return recurringBillingMode;
     }
 
-    //////////////////////////////////////////////////////////////////////////////
-    //
-    // UNIT LIMIT
-    //
-    //////////////////////////////////////////////////////////////////////////////
-
-    @Override
-    public boolean compliesWithLimits(final String phaseName, final String unit, final double value) throws CatalogApiException {
-        PlanPhase phase = findCurrentPhase(phaseName);
-        return phase.compliesWithLimits(unit, value);
+    public StandaloneCatalog setRecurringBillingMode(final BillingMode recurringBillingMode) {
+        this.recurringBillingMode = recurringBillingMode;
+        return this;
     }
 
     public StandaloneCatalog setProducts(final Iterable<Product> products) {
@@ -341,45 +343,9 @@ public class StandaloneCatalog extends ValidatingConfig<StandaloneCatalog> imple
         return this;
     }
 
-    public StandaloneCatalog setCatalogName(final String catalogName) {
-        this.catalogName = catalogName;
-        return this;
-    }
-
-    public StandaloneCatalog setEffectiveDate(final Date effectiveDate) {
-        this.effectiveDate = effectiveDate;
-        return this;
-    }
-
-    public StandaloneCatalog setRecurringBillingMode(final BillingMode recurringBillingMode) {
-        this.recurringBillingMode = recurringBillingMode;
-        return this;
-    }
-
-    public StandaloneCatalog setPlanRules(final DefaultPlanRules planRules) {
-        this.planRules = planRules;
-        return this;
-    }
-
-    public StandaloneCatalog setPriceLists(final DefaultPriceListSet priceLists) {
-        this.priceLists = priceLists;
-        return this;
-    }
-
     public StandaloneCatalog setUnits(final DefaultUnit[] units) {
         this.units = units;
         return this;
-    }
-
-    @Override
-    public boolean canCreatePlan(final PlanSpecifier specifier) throws CatalogApiException {
-        final Product product = findCurrentProduct(specifier.getProductName());
-        final Plan plan = createOrFindCurrentPlan(specifier, null);
-        final DefaultPriceList priceList = findCurrentPriceList(specifier.getPriceListName());
-
-        return (product != null) &&
-               (plan != null) &&
-               (priceList != null);
     }
 
     @Override
@@ -387,14 +353,14 @@ public class StandaloneCatalog extends ValidatingConfig<StandaloneCatalog> imple
         final List<Listing> availAddons = new ArrayList<Listing>();
 
         try {
-            Product product = findCurrentProduct(baseProductName);
+            final Product product = findCurrentProduct(baseProductName);
             if (product != null) {
-                for (Product availAddon : product.getAvailable()) {
-                    for (BillingPeriod billingPeriod : BillingPeriod.values()) {
-                        for (PriceList priceList : getPriceLists().getAllPriceLists()) {
+                for (final Product availAddon : product.getAvailable()) {
+                    for (final BillingPeriod billingPeriod : BillingPeriod.values()) {
+                        for (final PriceList priceList : getPriceLists().getAllPriceLists()) {
                             if (priceListName == null || priceListName.equals(priceList.getName())) {
-                                Collection<Plan> addonInList = priceList.findPlans(availAddon, billingPeriod);
-                                for (Plan cur : addonInList) {
+                                final Collection<Plan> addonInList = priceList.findPlans(availAddon, billingPeriod);
+                                for (final Plan cur : addonInList) {
                                     availAddons.add(new DefaultListing(cur, priceList));
                                 }
                             }
@@ -402,7 +368,7 @@ public class StandaloneCatalog extends ValidatingConfig<StandaloneCatalog> imple
                     }
                 }
             }
-        } catch (CatalogApiException e) {
+        } catch (final CatalogApiException e) {
             // No such product - just return an empty list
         }
         return availAddons;
@@ -412,10 +378,10 @@ public class StandaloneCatalog extends ValidatingConfig<StandaloneCatalog> imple
     public List<Listing> getAvailableBasePlanListings() {
         final List<Listing> availBasePlans = new ArrayList<Listing>();
 
-        for (Plan plan : getCurrentPlans()) {
+        for (final Plan plan : getCurrentPlans()) {
             if (plan.getProduct().getCategory().equals(ProductCategory.BASE)) {
-                for (PriceList priceList : getPriceLists().getAllPriceLists()) {
-                    for (Plan priceListPlan : priceList.getPlans()) {
+                for (final PriceList priceList : getPriceLists().getAllPriceLists()) {
+                    for (final Plan priceListPlan : priceList.getPlans()) {
                         if (priceListPlan.getName().equals(plan.getName()) &&
                             priceListPlan.getProduct().getName().equals(plan.getProduct().getName())) {
                             availBasePlans.add(new DefaultListing(priceListPlan, priceList));
