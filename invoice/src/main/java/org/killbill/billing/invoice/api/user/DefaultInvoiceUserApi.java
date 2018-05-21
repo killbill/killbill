@@ -281,7 +281,7 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
     @Override
     public List<InvoiceItem> insertExternalCharges(final UUID accountId, final LocalDate effectiveDate, final Iterable<InvoiceItem> charges, final boolean autoCommit, final CallContext context) throws InvoiceApiException {
         for (final InvoiceItem charge : charges) {
-            if (charge.getAmount() == null || charge.getAmount().compareTo(BigDecimal.ZERO) <= 0) {
+            if (charge.getAmount() == null) {
                 throw new InvoiceApiException(ErrorCode.EXTERNAL_CHARGE_AMOUNT_INVALID, charge.getAmount());
             }
         }
