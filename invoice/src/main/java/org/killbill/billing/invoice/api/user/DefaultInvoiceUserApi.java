@@ -207,7 +207,7 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
         return getInvoiceInternal(invoiceId, context);
     }
 
-    private DefaultInvoice getInvoiceInternal(final UUID invoiceId, final TenantContext context) throws InvoiceApiException  {
+    private DefaultInvoice getInvoiceInternal(final UUID invoiceId, final TenantContext context) throws InvoiceApiException {
         final InternalTenantContext internalTenantContext = internalCallContextFactory.createInternalTenantContext(invoiceId, ObjectType.INVOICE, context);
         return new DefaultInvoice(dao.getById(invoiceId, internalTenantContext), getCatalogSafelyForPrettyNames(internalTenantContext));
     }
@@ -281,7 +281,7 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
     @Override
     public List<InvoiceItem> insertExternalCharges(final UUID accountId, final LocalDate effectiveDate, final Iterable<InvoiceItem> charges, final boolean autoCommit, final CallContext context) throws InvoiceApiException {
         for (final InvoiceItem charge : charges) {
-            if (charge.getAmount() == null) {
+            if (charge.getAmount() == null || charge.getAmount().compareTo(BigDecimal.ZERO) < 0) {
                 throw new InvoiceApiException(ErrorCode.EXTERNAL_CHARGE_AMOUNT_INVALID, charge.getAmount());
             }
         }
@@ -643,7 +643,7 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
     private void canInvoiceBeVoided(final Invoice invoice) throws InvoiceApiException {
         final List<InvoicePayment> invoicePayments = invoice.getPayments();
         final BigDecimal amountPaid = InvoiceCalculatorUtils.computeInvoiceAmountPaid(invoice.getCurrency(), invoicePayments)
-                .add(InvoiceCalculatorUtils.computeInvoiceAmountRefunded(invoice.getCurrency(), invoicePayments));
+                                                            .add(InvoiceCalculatorUtils.computeInvoiceAmountRefunded(invoice.getCurrency(), invoicePayments));
 
         if (amountPaid.compareTo(BigDecimal.ZERO) != 0) {
             throw new InvoiceApiException(ErrorCode.CAN_NOT_VOID_INVOICE_THAT_IS_PAID, invoice.getId().toString());
