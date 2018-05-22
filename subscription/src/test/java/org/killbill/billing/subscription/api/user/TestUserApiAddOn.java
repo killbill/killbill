@@ -400,10 +400,11 @@ public class TestUserApiAddOn extends SubscriptionTestSuiteWithEmbeddedDB {
         final PlanSpecifier planSpecifier = new PlanSpecifier(aoProduct,
                                                               aoTerm,
                                                               aoPriceList);
-        final PlanAlignmentCreate alignement = catalog.planCreateAlignment(planSpecifier, clock.getUTCNow());
-        assertEquals(alignement, PlanAlignmentCreate.START_OF_BUNDLE);
+        final DateTime utcNow = clock.getUTCNow();
+        final PlanAlignmentCreate alignment = catalog.planCreateAlignment(planSpecifier, utcNow, utcNow);
+        assertEquals(alignment, PlanAlignmentCreate.START_OF_BUNDLE);
 
-        testAddonCreateInternal(aoProduct, aoTerm, aoPriceList, alignement);
+        testAddonCreateInternal(aoProduct, aoTerm, aoPriceList, alignment);
     }
 
     @Test(groups = "slow")
@@ -416,10 +417,11 @@ public class TestUserApiAddOn extends SubscriptionTestSuiteWithEmbeddedDB {
         final PlanSpecifier planSpecifier = new PlanSpecifier(aoProduct,
                                                               aoTerm,
                                                               aoPriceList);
-        final PlanAlignmentCreate alignement = catalog.planCreateAlignment(planSpecifier, clock.getUTCNow());
-        assertEquals(alignement, PlanAlignmentCreate.START_OF_SUBSCRIPTION);
+        final DateTime utcNow = clock.getUTCNow();
+        final PlanAlignmentCreate alignment = catalog.planCreateAlignment(planSpecifier, utcNow, utcNow);
+        assertEquals(alignment, PlanAlignmentCreate.START_OF_SUBSCRIPTION);
 
-        testAddonCreateInternal(aoProduct, aoTerm, aoPriceList, alignement);
+        testAddonCreateInternal(aoProduct, aoTerm, aoPriceList, alignment);
     }
 
     private void testAddonCreateInternal(final String aoProduct, final BillingPeriod aoTerm, final String aoPriceList, final PlanAlignmentCreate expAlignement) throws SubscriptionBaseApiException {

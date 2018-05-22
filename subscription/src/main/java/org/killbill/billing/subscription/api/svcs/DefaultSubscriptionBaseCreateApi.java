@@ -40,6 +40,7 @@ import org.killbill.billing.subscription.api.SubscriptionBase;
 import org.killbill.billing.subscription.api.SubscriptionBaseApiService;
 import org.killbill.billing.subscription.api.SubscriptionBaseWithAddOns;
 import org.killbill.billing.subscription.api.SubscriptionBaseWithAddOnsSpecifier;
+import org.killbill.billing.subscription.api.user.DefaultSubscriptionBase;
 import org.killbill.billing.subscription.api.user.SubscriptionAndAddOnsSpecifier;
 import org.killbill.billing.subscription.api.user.SubscriptionBaseApiException;
 import org.killbill.billing.subscription.api.user.SubscriptionBaseBundle;
@@ -230,7 +231,7 @@ public class DefaultSubscriptionBaseCreateApi extends SubscriptionApiBase {
             if (ProductCategory.ADD_ON.toString().equalsIgnoreCase(plan.getProduct().getCategory().toString())) {
                 if (plan.getPlansAllowedInBundle() != -1 && plan.getPlansAllowedInBundle() > 0) {
                     // TODO We should also look to the specifiers being created for validation
-                    final List<SubscriptionBase> subscriptionsForBundle = getSubscriptionsForBundle(bundle.getId(), null, catalog, addonUtils, callContext, context);
+                    final List<DefaultSubscriptionBase> subscriptionsForBundle = getSubscriptionsForBundle(bundle.getId(), null, catalog, addonUtils, callContext, context);
                     final int existingAddOnsWithSamePlanName = addonUtils.countExistingAddOnsWithSamePlanName(subscriptionsForBundle, plan.getName());
                     final int currentAddOnsWithSamePlanName = countCurrentAddOnsWithSamePlanName(entitlementsPlans, plan);
                     if ((existingAddOnsWithSamePlanName + currentAddOnsWithSamePlanName) > plan.getPlansAllowedInBundle()) {
@@ -245,7 +246,7 @@ public class DefaultSubscriptionBaseCreateApi extends SubscriptionApiBase {
                 bundleStartDate = effectiveDate;
             } else {
                 final SubscriptionBase baseSubscription = dao.getBaseSubscription(bundle.getId(), catalog, context);
-                bundleStartDate = getBundleStartDateWithSanity(bundle.getId(), baseSubscription, plan, effectiveDate, catalog, addonUtils, context);
+                bundleStartDate = getBundleStartDateWithSanity(bundle.getId(), baseSubscription, plan, effectiveDate, addonUtils, context);
             }
 
             final SubscriptionSpecifier subscription = new SubscriptionSpecifier();

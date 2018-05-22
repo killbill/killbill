@@ -18,6 +18,7 @@
 
 package org.killbill.billing.subscription.api.svcs;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -39,10 +40,10 @@ import org.killbill.billing.catalog.api.Catalog;
 import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.catalog.api.CatalogInternalApi;
 import org.killbill.billing.catalog.api.Plan;
-import org.killbill.billing.catalog.api.PlanChangeResult;
 import org.killbill.billing.catalog.api.PlanPhasePriceOverride;
 import org.killbill.billing.catalog.api.PlanPhasePriceOverridesWithCallContext;
 import org.killbill.billing.catalog.api.PlanPhaseSpecifier;
+import org.killbill.billing.catalog.api.Product;
 import org.killbill.billing.catalog.api.ProductCategory;
 import org.killbill.billing.entitlement.api.Entitlement.EntitlementState;
 import org.killbill.billing.entitlement.api.EntitlementAOStatusDryRun;
@@ -69,7 +70,6 @@ import org.killbill.billing.subscription.engine.dao.model.SubscriptionBundleMode
 import org.killbill.billing.subscription.events.SubscriptionBaseEvent;
 import org.killbill.billing.subscription.events.bcd.BCDEvent;
 import org.killbill.billing.subscription.events.bcd.BCDEventData;
-import org.killbill.billing.util.UUIDs;
 import org.killbill.billing.util.bcd.BillCycleDayCalculator;
 import org.killbill.billing.util.cache.AccountIdFromBundleIdCacheLoader;
 import org.killbill.billing.util.cache.BundleIdFromSubscriptionIdCacheLoader;
@@ -273,7 +273,8 @@ public class DefaultSubscriptionInternalApi extends DefaultSubscriptionBaseCreat
         try {
             final Catalog catalog = catalogInternalApi.getFullCatalog(true, true, context);
             final TenantContext tenantContext = internalCallContextFactory.createTenantContext(context);
-            return super.getSubscriptionsForBundle(bundleId, dryRunArguments, catalog, addonUtils, tenantContext, context);
+            final List<DefaultSubscriptionBase> subscriptionsForBundle = super.getSubscriptionsForBundle(bundleId, dryRunArguments, catalog, addonUtils, tenantContext, context);
+            return new ArrayList<SubscriptionBase>(subscriptionsForBundle);
         } catch (final CatalogApiException e) {
             throw new SubscriptionBaseApiException(e);
         }
@@ -282,10 +283,11 @@ public class DefaultSubscriptionInternalApi extends DefaultSubscriptionBaseCreat
     @Override
     public Map<UUID, List<SubscriptionBase>> getSubscriptionsForAccount(final Catalog catalog, final InternalTenantContext context) throws SubscriptionBaseApiException {
         try {
-            final Map<UUID, List<SubscriptionBase>> internalSubscriptions = dao.getSubscriptionsForAccount(catalog, context);
+            final Map<UUID, List<DefaultSubscriptionBase>> internalSubscriptions = dao.getSubscriptionsForAccount(catalog, context);
             final Map<UUID, List<SubscriptionBase>> result = new HashMap<UUID, List<SubscriptionBase>>();
             for (final UUID bundleId : internalSubscriptions.keySet()) {
-                result.put(bundleId, createSubscriptionsForApiUse(internalSubscriptions.get(bundleId)));
+                final List<DefaultSubscriptionBase> subscriptionsForApiUse = createSubscriptionsForApiUse(internalSubscriptions.get(bundleId));
+                result.put(bundleId, new ArrayList<SubscriptionBase>(subscriptionsForApiUse));
             }
             return result;
         } catch (final CatalogApiException e) {
@@ -375,7 +377,7 @@ public class DefaultSubscriptionInternalApi extends DefaultSubscriptionBaseCreat
         if (ProductCategory.ADD_ON.toString().equalsIgnoreCase(plan.getProduct().getCategory().toString())) {
             if (plan.getPlansAllowedInBundle() != -1
                 && plan.getPlansAllowedInBundle() > 0
-                && addonUtils.countExistingAddOnsWithSamePlanName(getSubscriptionsForBundle(subscription.getBundleId(), null, context), plan.getName())
+                && addonUtils.countExistingAddOnsWithSamePlanName(getSubscriptionsForBundle(subscription.getBundleId(), null, catalog, addonUtils, callContext, context), plan.getName())
                    >= plan.getPlansAllowedInBundle()) {
                 // the plan can be changed to the new value, because it has reached its limit by bundle
                 throw new SubscriptionBaseApiException(ErrorCode.SUB_CHANGE_AO_MAX_PLAN_ALLOWED_BY_BUNDLE, plan.getName());
@@ -400,7 +402,7 @@ public class DefaultSubscriptionInternalApi extends DefaultSubscriptionBaseCreat
 
             final List<EntitlementAOStatusDryRun> result = new LinkedList<EntitlementAOStatusDryRun>();
 
-            final List<SubscriptionBase> bundleSubscriptions = dao.getSubscriptions(subscription.getBundleId(), ImmutableList.<SubscriptionBaseEvent>of(), catalog, context);
+            final List<DefaultSubscriptionBase> bundleSubscriptions = dao.getSubscriptions(subscription.getBundleId(), ImmutableList.<SubscriptionBaseEvent>of(), catalog, context);
             for (final SubscriptionBase cur : bundleSubscriptions) {
                 if (cur.getId().equals(subscriptionId)) {
                     continue;
@@ -411,11 +413,13 @@ public class DefaultSubscriptionInternalApi extends DefaultSubscriptionBaseCreat
                     continue;
                 }
 
+                final Product baseProduct = baseProductName != null ? catalog.findProduct(baseProductName, requestedDate) : null;
+
                 final DryRunChangeReason reason;
                 // If baseProductName is null, it's a cancellation dry-run. In this case, return all addons, so they are cancelled
-                if (baseProductName != null && addonUtils.isAddonIncludedFromProdName(baseProductName, cur.getCurrentPlan(), requestedDate, catalog, context)) {
+                if (baseProduct != null && addonUtils.isAddonIncluded(baseProduct, cur.getCurrentPlan())) {
                     reason = DryRunChangeReason.AO_INCLUDED_IN_NEW_PLAN;
-                } else if (baseProductName != null && addonUtils.isAddonAvailableFromProdName(baseProductName, cur.getCurrentPlan(), requestedDate, catalog, context)) {
+                } else if (baseProduct != null && addonUtils.isAddonAvailable(baseProduct, cur.getCurrentPlan())) {
                     reason = DryRunChangeReason.AO_AVAILABLE_IN_NEW_PLAN;
                 } else {
                     reason = DryRunChangeReason.AO_NOT_AVAILABLE_IN_NEW_PLAN;
@@ -431,7 +435,6 @@ public class DefaultSubscriptionInternalApi extends DefaultSubscriptionBaseCreat
         } catch (final CatalogApiException e) {
             throw new SubscriptionBaseApiException(e);
         }
-
     }
 
     @Override
@@ -457,7 +460,7 @@ public class DefaultSubscriptionInternalApi extends DefaultSubscriptionBaseCreat
     @Override
     public int getDefaultBillCycleDayLocal(final Map<UUID, Integer> bcdCache, final SubscriptionBase subscription, final SubscriptionBase baseSubscription, final PlanPhaseSpecifier planPhaseSpecifier, final int accountBillCycleDayLocal, final Catalog catalog, final InternalTenantContext context) throws SubscriptionBaseApiException {
         try {
-            final BillingAlignment alignment = catalog.billingAlignment(planPhaseSpecifier, subscription.getStartDate());
+            final BillingAlignment alignment = catalog.billingAlignment(planPhaseSpecifier, clock.getUTCNow(), subscription.getStartDate());
             return BillCycleDayCalculator.calculateBcdForAlignment(bcdCache, subscription, baseSubscription, alignment, context, accountBillCycleDayLocal);
         } catch (final CatalogApiException e) {
             throw new SubscriptionBaseApiException(e);

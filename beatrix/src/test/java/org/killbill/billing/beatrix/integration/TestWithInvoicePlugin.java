@@ -119,6 +119,10 @@ public class TestWithInvoicePlugin extends TestIntegrationBase {
 
     @BeforeMethod(groups = "slow")
     public void setUp() throws Exception {
+        if (hasFailed()) {
+            return;
+        }
+
         testInvoicePluginApi.additionalInvoiceItem = null;
         testInvoicePluginApi.shouldAddTaxItem = true;
         testInvoicePluginApi.isAborted = false;

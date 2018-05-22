@@ -74,6 +74,10 @@ public class TestPublicBus extends TestIntegrationBase {
     @Override
     @BeforeMethod(groups = "slow")
     public void beforeMethod() throws Exception {
+        if (hasFailed()) {
+            return;
+        }
+
         /*
         We copy the initialization instead of invoking the super method so we can add the registration
         of the publicBus event;

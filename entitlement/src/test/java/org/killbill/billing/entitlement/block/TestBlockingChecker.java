@@ -47,6 +47,10 @@ public class TestBlockingChecker extends EntitlementTestSuiteNoDB {
 
     @BeforeMethod(groups = "fast")
     public void beforeMethod() throws Exception {
+        if (hasFailed()) {
+            return;
+        }
+
         super.beforeMethod();
         final UUID accountId = UUID.randomUUID();
         account = Mockito.mock(Account.class);
