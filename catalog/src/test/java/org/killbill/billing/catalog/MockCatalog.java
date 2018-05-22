@@ -142,13 +142,8 @@ public class MockCatalog extends StandaloneCatalog implements Catalog {
     }
 
     @Override
-    public PriceList findPriceList(final String name, final DateTime requestedDate) throws CatalogApiException {
-        return findCurrentPricelist(name);
-    }
-
-    @Override
     public PriceList findPriceListForPlan(final String name, final DateTime requestedDate, final DateTime subscriptionStartDate) throws CatalogApiException {
-        return findCurrentPricelist(name);
+        return findCurrentPricelist(findCurrentPlan(name).getPriceListName());
     }
 
     @Override
