@@ -45,6 +45,12 @@ public class ItemAdjInvoiceItem extends AdjInvoiceItem {
         super(id, createdDate, invoiceId, accountId, startDate, startDate, description, amount, currency, linkedItemId, itemDetails, InvoiceItemType.ITEM_ADJ);
     }
 
+    public ItemAdjInvoiceItem(final UUID id, @Nullable final DateTime createdDate, final UUID invoiceId, final UUID accountId, final LocalDate startDate,
+                              @Nullable final String description, final BigDecimal amount, final Currency currency, final UUID linkedItemId, @Nullable final String itemDetails,
+                              @Nullable final BigDecimal rate, @Nullable final Integer quantity) {
+        super(id, createdDate, invoiceId, accountId, startDate, startDate, description, amount, currency, linkedItemId, itemDetails, InvoiceItemType.ITEM_ADJ, rate, quantity);
+    }
+
     @Override
     public String getDescription() {
         return MoreObjects.firstNonNull(description, "Invoice item adjustment");
