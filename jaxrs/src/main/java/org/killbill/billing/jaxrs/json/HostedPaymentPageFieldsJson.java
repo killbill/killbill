@@ -24,16 +24,17 @@ import io.swagger.annotations.ApiModel;
 
 
 @ApiModel(value="HostedPaymentPageFields")
-public class HostedPaymentPageFieldsJson extends JsonBase {
+public class HostedPaymentPageFieldsJson  {
 
     private final List<PluginPropertyJson> formFields;
+
 
     @JsonCreator
     public HostedPaymentPageFieldsJson(@JsonProperty("formFields") final List<PluginPropertyJson> formFields) {
         this.formFields = formFields;
     }
 
-    public List<PluginPropertyJson> getCustomFields() {
+    public List<PluginPropertyJson> getFormFields() {
         return formFields;
     }
 

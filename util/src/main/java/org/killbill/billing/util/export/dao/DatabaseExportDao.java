@@ -18,6 +18,7 @@ package org.killbill.billing.util.export.dao;
 
 import java.io.IOException;
 import java.sql.Blob;
+import java.sql.Clob;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -169,11 +170,15 @@ public class DatabaseExportDao {
 
                         for (final String k : row.keySet()) {
                             final Object value = row.get(k);
-                            // For h2, transform a JdbcBlob into a byte[]
+                            // For h2, transform a JdbcBlob and a JdbcClob into a byte[]
                             // See also LowerToCamelBeanMapper
                             if (value instanceof Blob) {
                                 final Blob blob = (Blob) value;
                                 row.put(k, blob.getBytes(0, (int) blob.length()));
+                            } else if (value instanceof Clob) {
+                                // TODO Update LowerToCamelBeanMapper?
+                                final Clob clob = (Clob) value;
+                                row.put(k, clob.getSubString(1, (int) clob.length()));
                             }
                         }
 

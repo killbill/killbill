@@ -103,8 +103,9 @@ public class CreditResource extends JaxRsResourceBase {
     @POST
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
-    @ApiOperation(value = "Create a credit")
-    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid account id supplied"),
+    @ApiOperation(value = "Create a credit", response = CreditJson.class)
+    @ApiResponses(value = {@ApiResponse(code = 201, message = "Created credit successfully"),
+                           @ApiResponse(code = 400, message = "Invalid account id supplied"),
                            @ApiResponse(code = 404, message = "Account not found")})
     public Response createCredit(final CreditJson json,
                                  @QueryParam(QUERY_AUTO_COMMIT) @DefaultValue("false") final Boolean autoCommit,

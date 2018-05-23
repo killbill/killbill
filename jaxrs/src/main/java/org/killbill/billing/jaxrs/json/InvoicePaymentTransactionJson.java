@@ -24,6 +24,8 @@ import java.util.UUID;
 import javax.annotation.Nullable;
 
 import org.joda.time.DateTime;
+import org.killbill.billing.catalog.api.Currency;
+import org.killbill.billing.payment.api.TransactionType;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -40,12 +42,12 @@ public class InvoicePaymentTransactionJson extends PaymentTransactionJson {
                                          @JsonProperty("transactionExternalKey") final String transactionExternalKey,
                                          @JsonProperty("paymentId") final UUID paymentId,
                                          @JsonProperty("paymentExternalKey") final String paymentExternalKey,
-                                         @JsonProperty("transactionType") final String transactionType,
+                                         @JsonProperty("transactionType") final TransactionType transactionType,
                                          @JsonProperty("amount") final BigDecimal amount,
-                                         @JsonProperty("currency") final String currency,
+                                         @JsonProperty("currency") final Currency currency,
                                          @JsonProperty("effectiveDate") final DateTime effectiveDate,
                                          @JsonProperty("processedAmount") final BigDecimal processedAmount,
-                                         @JsonProperty("processedCurrency") final String processedCurrency,
+                                         @JsonProperty("processedCurrency") final Currency processedCurrency,
                                          @JsonProperty("status") final String status,
                                          @JsonProperty("gatewayErrorCode") final String gatewayErrorCode,
                                          @JsonProperty("gatewayErrorMsg") final String gatewayErrorMsg,

@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014-2015 Groupon, Inc
- * Copyright 2014-2015 The Billing Project, LLC
+ * Copyright 2014-2018 Groupon, Inc
+ * Copyright 2014-2018 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -27,19 +27,13 @@ import java.net.URL;
 import java.util.Iterator;
 import java.util.List;
 
-import javax.xml.bind.JAXBException;
-import javax.xml.transform.TransformerException;
-
 import org.joda.time.DateTime;
 import org.killbill.billing.catalog.CatalogTestSuiteNoDB;
 import org.killbill.billing.catalog.StandaloneCatalog;
-import org.killbill.billing.catalog.StandaloneCatalogWithPriceOverride;
 import org.killbill.billing.catalog.VersionedCatalog;
 import org.killbill.billing.catalog.api.CatalogApiException;
-import org.killbill.billing.catalog.api.InvalidConfigException;
 import org.testng.Assert;
 import org.testng.annotations.Test;
-import org.xml.sax.SAXException;
 
 import com.google.common.io.Files;
 import com.google.common.io.Resources;
@@ -118,13 +112,15 @@ public class TestVersionedCatalogLoader extends CatalogTestSuiteNoDB {
     }
 
     @Test(groups = "fast")
-    public void testLoad() throws IOException, SAXException, InvalidConfigException, JAXBException, TransformerException, URISyntaxException, CatalogApiException {
+    public void testLoad() throws CatalogApiException {
         final VersionedCatalog c = loader.loadDefaultCatalog(Resources.getResource("versionedCatalog").toString());
-        Assert.assertEquals(c.size(), 3);
+        Assert.assertEquals(c.size(), 4);
         final Iterator<StandaloneCatalog> it = c.iterator();
         DateTime dt = new DateTime("2011-01-01T00:00:00+00:00");
         Assert.assertEquals(it.next().getEffectiveDate(), dt.toDate());
         dt = new DateTime("2011-02-02T00:00:00+00:00");
+        Assert.assertEquals(it.next().getEffectiveDate(), dt.toDate());
+        dt = new DateTime("2011-02-03T00:00:00+00:00");
         Assert.assertEquals(it.next().getEffectiveDate(), dt.toDate());
         dt = new DateTime("2011-03-03T00:00:00+00:00");
         Assert.assertEquals(it.next().getEffectiveDate(), dt.toDate());
@@ -145,7 +141,7 @@ public class TestVersionedCatalogLoader extends CatalogTestSuiteNoDB {
     }
 
     @Test(groups = "fast")
-    public void testLoadCatalogFromInsideResourceFolder() throws CatalogApiException, URISyntaxException, IOException {
+    public void testLoadCatalogFromInsideResourceFolder() throws CatalogApiException {
         final VersionedCatalog c = loader.loadDefaultCatalog("com/acme/SpyCarCustom.xml");
         Assert.assertEquals(c.size(), 1);
         final DateTime dt = new DateTime("2015-10-04T00:00:00+00:00");

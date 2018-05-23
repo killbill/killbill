@@ -74,6 +74,10 @@ public class TestPublicBus extends TestIntegrationBase {
     @Override
     @BeforeMethod(groups = "slow")
     public void beforeMethod() throws Exception {
+        if (hasFailed()) {
+            return;
+        }
+
         /*
         We copy the initialization instead of invoking the super method so we can add the registration
         of the publicBus event;
@@ -107,6 +111,10 @@ public class TestPublicBus extends TestIntegrationBase {
 
     @AfterMethod(groups = "slow")
     public void afterMethod() throws Exception {
+        if (hasFailed()) {
+            return;
+        }
+
         externalBus.unregister(publicListener);
         super.afterMethod();
     }
@@ -180,7 +188,7 @@ public class TestPublicBus extends TestIntegrationBase {
                 event.getEventType() == ExtBusEventType.SUBSCRIPTION_UNCANCEL ||
                 event.getEventType() == ExtBusEventType.SUBSCRIPTION_BCD_CHANGE) {
                 try {
-                    final SubscriptionMetadata obj = (SubscriptionMetadata) mapper.readValue(event.getMetaData(), SubscriptionMetadata.class);
+                    final SubscriptionMetadata obj = mapper.readValue(event.getMetaData(), SubscriptionMetadata.class);
                     Assert.assertNotNull(obj.getBundleExternalKey());
                     Assert.assertNotNull(obj.getActionType());
                 } catch (final JsonParseException e) {

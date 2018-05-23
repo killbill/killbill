@@ -77,6 +77,9 @@ public class TestSubscriptionDao extends SubscriptionTestSuiteWithEmbeddedDB {
     @Override // to ignore events
     @AfterMethod(groups = "slow")
     public void afterMethod() throws Exception {
+        if (hasFailed()) {
+            return;
+        }
         subscriptionTestInitializer.stopTestFramework(testListener, busService, subscriptionBaseService);
     }
 

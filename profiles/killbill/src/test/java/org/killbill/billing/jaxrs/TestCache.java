@@ -17,13 +17,15 @@
 
 package org.killbill.billing.jaxrs;
 
+import java.io.File;
+import java.nio.charset.Charset;
 import java.util.UUID;
 
 import org.killbill.automaton.StateMachineConfig;
 import org.killbill.billing.account.api.ImmutableAccountData;
 import org.killbill.billing.catalog.api.Catalog;
-import org.killbill.billing.client.model.Account;
-import org.killbill.billing.client.model.Tenant;
+import org.killbill.billing.client.model.gen.Account;
+import org.killbill.billing.client.model.gen.Tenant;
 import org.killbill.billing.notification.plugin.api.ExtBusEventType;
 import org.killbill.billing.overdue.api.OverdueConfig;
 import org.killbill.billing.util.cache.Cachable.CacheType;
@@ -32,6 +34,7 @@ import org.killbill.billing.util.config.tenant.PerTenantConfig;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
+import com.google.common.io.Files;
 import com.google.common.io.Resources;
 
 import static org.testng.Assert.assertFalse;
@@ -49,7 +52,7 @@ public class TestCache extends TestJaxrsBase {
         Assert.assertEquals(cache.size(), 1);
 
         // invalidate the specified cache
-        killBillClient.invalidateCacheByName(CacheType.RECORD_ID.getCacheName(), requestOptions);
+        adminApi.invalidatesCache(CacheType.RECORD_ID.getCacheName(), requestOptions);
 
         // verify that now the cache is empty and has no keys stored
         Assert.assertEquals(cache.size(), 0);
@@ -64,7 +67,7 @@ public class TestCache extends TestJaxrsBase {
         Assert.assertEquals(cache.size(), 1);
 
         // invalidate all caches
-        killBillClient.invalidateAllCaches(requestOptions);
+        adminApi.invalidatesCache(null, requestOptions);
 
         // verify that now the cache is empty and has no keys stored
         Assert.assertEquals(cache.size(), 0);
@@ -86,7 +89,7 @@ public class TestCache extends TestJaxrsBase {
         assertTrue(accountBcdCache.isKeyInCache(input.getAccountId()));
 
         // invalidate caches per account level by accountId
-        killBillClient.invalidateCacheByAccount(input.getAccountId().toString(), requestOptions);
+        adminApi.invalidatesCacheByAccount(input.getAccountId(), requestOptions);
 
         // verify that now the caches don't have the accountId key stored
         Assert.assertFalse(accountRecordIdCache.isKeyInCache(input.getAccountId().toString()));
@@ -101,7 +104,10 @@ public class TestCache extends TestJaxrsBase {
 
         // Uploading the test catalog using the new Tenant created before
         callbackServlet.pushExpectedEvent(ExtBusEventType.TENANT_CONFIG_CHANGE);
-        killBillClient.uploadXMLCatalog(Resources.getResource("SpyCarAdvanced.xml").getPath(), requestOptions);
+        final String catalogPath = Resources.getResource("SpyCarAdvanced.xml").getPath();
+        final File catalogFile = new File(catalogPath);
+        final String body = Files.toString(catalogFile, Charset.forName("UTF-8"));
+        catalogApi.uploadCatalogXml(body, requestOptions);
         callbackServlet.assertListenerStatus();
 
         // creating an Account with PaymentMethod and a Subscription
@@ -128,7 +134,7 @@ public class TestCache extends TestJaxrsBase {
         assertTrue(tenantCatalogCache.isKeyInCache(tenantRecordId));
 
         // invalidate caches per tenant level
-        killBillClient.invalidateCacheByTenant(requestOptions);
+        adminApi.invalidatesCache(null, requestOptions);
 
         // verify that now the caches don't have the previous values
         assertFalse(tenantRecordIdCache.isKeyInCache(currentTenant.getTenantId().toString()));

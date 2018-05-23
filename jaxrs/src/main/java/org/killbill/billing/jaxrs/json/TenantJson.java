@@ -26,7 +26,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 
-@ApiModel(value="Tenant")
+@ApiModel(value="Tenant", parent = JsonBase.class)
 public class TenantJson extends JsonBase {
 
     private final UUID tenantId;

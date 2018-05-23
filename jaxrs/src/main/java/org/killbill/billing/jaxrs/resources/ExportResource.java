@@ -28,6 +28,7 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.core.Response;
 import javax.ws.rs.core.StreamingOutput;
 
 import org.killbill.billing.account.api.AccountUserApi;
@@ -48,7 +49,7 @@ import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 
-import static javax.ws.rs.core.MediaType.TEXT_PLAIN;
+import static javax.ws.rs.core.MediaType.APPLICATION_OCTET_STREAM;
 
 @Singleton
 @Path(JaxrsResource.EXPORT_PATH)
@@ -74,9 +75,10 @@ public class ExportResource extends JaxRsResourceBase {
     @TimedResource
     @GET
     @Path("/{accountId:" + UUID_PATTERN + "}")
-    @Produces(TEXT_PLAIN)
-    @ApiOperation(value = "Export account data", response = String.class)
-    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid account id supplied"),
+    @Produces(APPLICATION_OCTET_STREAM)
+    @ApiOperation(value = "Export account data", response = Response.class)
+    @ApiResponses(value = {@ApiResponse(code = 200, message = "Success"),
+                           @ApiResponse(code = 400, message = "Invalid account id supplied"),
                            @ApiResponse(code = 404, message = "Account not found")})
     public StreamingOutput exportDataForAccount(@PathParam("accountId") final UUID accountId,
                                                 @HeaderParam(HDR_CREATED_BY) final String createdBy,

@@ -23,9 +23,10 @@ import java.util.UUID;
 
 import org.joda.time.DateTime;
 import org.killbill.billing.client.KillBillClientException;
-import org.killbill.billing.client.model.Account;
-import org.killbill.billing.client.model.Credit;
-import org.killbill.billing.client.model.Invoice;
+import org.killbill.billing.client.model.gen.Account;
+import org.killbill.billing.client.model.gen.Credit;
+import org.killbill.billing.client.model.gen.Invoice;
+import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
@@ -48,8 +49,6 @@ public class TestCredit extends TestJaxrsBase {
 
     @Test(groups = "slow", description = "Can add a credit to an existing invoice")
     public void testAddCreditToInvoice() throws Exception {
-        //final Invoice invoice = killBillClient.getInvoicesForAccount(accountJson.getAccountId()).get(1);
-
         final DateTime effectiveDate = clock.getUTCNow();
         final BigDecimal creditAmount = BigDecimal.ONE;
         final Credit credit = new Credit();
@@ -57,11 +56,11 @@ public class TestCredit extends TestJaxrsBase {
         credit.setCreditAmount(creditAmount);
         credit.setDescription("description");
         credit.setItemDetails("itemDetails");
-        Credit objFromJson = killBillClient.createCredit(credit, false, createdBy, reason, comment);
+        Credit objFromJson = creditApi.createCredit(credit, false, requestOptions);
 
         final UUID invoiceId = objFromJson.getInvoiceId();
         credit.setInvoiceId(invoiceId);
-        objFromJson = killBillClient.createCredit(credit, false, createdBy, reason, comment);
+        objFromJson = creditApi.createCredit(credit, false, requestOptions);
 
         // We can't just compare the object via .equals() due e.g. to the invoice id
         assertEquals(objFromJson.getAccountId(), accountJson.getAccountId());
@@ -74,15 +73,15 @@ public class TestCredit extends TestJaxrsBase {
     @Test(groups = "slow", description = "Can add a credit to an existing account",
             expectedExceptions = KillBillClientException.class, expectedExceptionsMessageRegExp = ".*it is already in COMMITTED status")
     public void testAddCreditToCommittedInvoice() throws Exception {
-        final Invoice invoice = killBillClient.getInvoicesForAccount(accountJson.getAccountId()).get(1);
+        final Invoice invoice = accountApi.getInvoicesForAccount(accountJson.getAccountId(), requestOptions).get(1);
 
-        final DateTime effectiveDate = clock.getUTCNow();
         final BigDecimal creditAmount = BigDecimal.ONE;
         final Credit credit = new Credit();
         credit.setAccountId(accountJson.getAccountId());
         credit.setInvoiceId(invoice.getInvoiceId());
         credit.setCreditAmount(creditAmount);
-        final Credit objFromJson = killBillClient.createCredit(credit, true, createdBy, reason, comment);
+        final Credit objFromJson = creditApi.createCredit(credit, true, requestOptions);
+        Assert.assertTrue(objFromJson.getCreditAmount().compareTo(creditAmount) == 0);
     }
 
     @Test(groups = "slow", description = "Cannot add a credit if the account doesn't exist")
@@ -92,7 +91,7 @@ public class TestCredit extends TestJaxrsBase {
         credit.setCreditAmount(BigDecimal.TEN);
 
         // Try to create the credit
-        assertNull(killBillClient.createCredit(credit, true, createdBy, reason, comment));
+        assertNull(creditApi.createCredit(credit, true, requestOptions));
     }
 
     @Test(groups = "slow", description = "Cannot credit a badly formatted credit")
@@ -103,7 +102,7 @@ public class TestCredit extends TestJaxrsBase {
 
         // Try to create the credit
         try {
-            killBillClient.createCredit(credit, true, createdBy, reason, comment);
+            creditApi.createCredit(credit, true, requestOptions);
             fail();
         } catch (final KillBillClientException e) {
         }
@@ -111,6 +110,6 @@ public class TestCredit extends TestJaxrsBase {
 
     @Test(groups = "slow", description = "Cannot retrieve a non existing credit")
     public void testCreditDoesNotExist() throws Exception {
-        assertNull(killBillClient.getCredit(UUID.randomUUID()));
+        assertNull(creditApi.getCredit(UUID.randomUUID(), requestOptions));
     }
 }

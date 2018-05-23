@@ -25,7 +25,7 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.annotations.ApiModel;
 
-@ApiModel(value="ComboPayment")
+@ApiModel(value="ComboPayment", parent = JsonBase.class)
 public abstract class ComboPaymentJson extends JsonBase {
 
     private final AccountJson account;

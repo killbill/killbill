@@ -72,11 +72,11 @@ import org.killbill.billing.util.api.TagUserApi;
 import org.killbill.billing.util.audit.AccountAuditLogs;
 import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.TenantContext;
+import org.killbill.billing.util.customfield.CustomField;
 import org.killbill.clock.Clock;
 import org.killbill.commons.metrics.TimedResource;
 
 import com.google.common.base.Predicate;
-import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.inject.Inject;
@@ -146,11 +146,12 @@ public class InvoicePaymentResource extends JaxRsResourceBase {
     @Path("/{paymentId:" + UUID_PATTERN + "}/" + REFUNDS)
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
-    @ApiOperation(value = "Refund a payment, and adjust the invoice if needed")
-    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid payment id supplied"),
+    @ApiOperation(value = "Refund a payment, and adjust the invoice if needed", response = InvoicePaymentJson.class)
+    @ApiResponses(value = {@ApiResponse(code = 201, message = "Created refund successfully"),
+                           @ApiResponse(code = 400, message = "Invalid payment id supplied"),
                            @ApiResponse(code = 404, message = "Account or payment not found")})
-    public Response createRefundWithAdjustments(final InvoicePaymentTransactionJson json,
-                                                @PathParam("paymentId") final UUID paymentId,
+    public Response createRefundWithAdjustments(@PathParam("paymentId") final UUID paymentId,
+                                                final InvoicePaymentTransactionJson json,
                                                 @QueryParam(QUERY_PAYMENT_EXTERNAL) @DefaultValue("false") final Boolean externalPayment,
                                                 @QueryParam(QUERY_PAYMENT_METHOD_ID) final UUID paymentMethodId,
                                                 @QueryParam(QUERY_PLUGIN_PROPERTY) final List<String> pluginPropertiesString,
@@ -209,11 +210,12 @@ public class InvoicePaymentResource extends JaxRsResourceBase {
     @Path("/{paymentId:" + UUID_PATTERN + "}/" + CHARGEBACKS)
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
-    @ApiOperation(value = "Record a chargeback")
-    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid payment id supplied"),
+    @ApiOperation(value = "Record a chargeback", response = InvoicePaymentJson.class)
+    @ApiResponses(value = {@ApiResponse(code = 201, message = "Created chargeback successfully"),
+                           @ApiResponse(code = 400, message = "Invalid payment id supplied"),
                            @ApiResponse(code = 404, message = "Account or payment not found")})
-    public Response createChargeback(final InvoicePaymentTransactionJson json,
-                                     @PathParam("paymentId") final UUID paymentId,
+    public Response createChargeback(@PathParam("paymentId") final UUID paymentId,
+                                     final InvoicePaymentTransactionJson json,
                                      @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                      @HeaderParam(HDR_REASON) final String reason,
                                      @HeaderParam(HDR_COMMENT) final String comment,
@@ -237,11 +239,12 @@ public class InvoicePaymentResource extends JaxRsResourceBase {
     @Path("/{paymentId:" + UUID_PATTERN + "}/" + CHARGEBACK_REVERSALS)
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
-    @ApiOperation(value = "Record a chargebackReversal")
-    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid payment id supplied"),
+    @ApiOperation(value = "Record a chargebackReversal", response = InvoicePaymentJson.class)
+    @ApiResponses(value = {@ApiResponse(code = 201, message = "Created chargeback reversal successfully"),
+                           @ApiResponse(code = 400, message = "Invalid payment id supplied"),
                            @ApiResponse(code = 404, message = "Account or payment not found")})
-    public Response createChargebackReversal(final InvoicePaymentTransactionJson json,
-                                             @PathParam("paymentId") final UUID paymentId,
+    public Response createChargebackReversal(@PathParam("paymentId") final UUID paymentId,
+                                             final InvoicePaymentTransactionJson json,
                                              @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                              @HeaderParam(HDR_REASON) final String reason,
                                              @HeaderParam(HDR_COMMENT) final String comment,
@@ -265,7 +268,7 @@ public class InvoicePaymentResource extends JaxRsResourceBase {
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
     @ApiOperation(value = "Complete an existing transaction")
-    @ApiResponses(value = {@ApiResponse(code = 201, message = "Payment transaction created successfully"),
+    @ApiResponses(value = {@ApiResponse(code = 204, message = "Successful operation"),
                            @ApiResponse(code = 400, message = "Invalid paymentId supplied"),
                            @ApiResponse(code = 404, message = "Account or payment not found"),
                            @ApiResponse(code = 402, message = "Transaction declined by gateway"),
@@ -273,15 +276,15 @@ public class InvoicePaymentResource extends JaxRsResourceBase {
                            @ApiResponse(code = 502, message = "Failed to submit payment transaction"),
                            @ApiResponse(code = 503, message = "Payment in unknown status, failed to receive gateway response"),
                            @ApiResponse(code = 504, message = "Payment operation timeout")})
-    public Response completeInvoicePaymentTransaction(final PaymentTransactionJson json,
-                                        @PathParam("paymentId") final UUID paymentId,
-                                        @QueryParam(QUERY_PAYMENT_CONTROL_PLUGIN_NAME) final List<String> paymentControlPluginNames,
-                                        @QueryParam(QUERY_PLUGIN_PROPERTY) final List<String> pluginPropertiesString,
-                                        @HeaderParam(HDR_CREATED_BY) final String createdBy,
-                                        @HeaderParam(HDR_REASON) final String reason,
-                                        @HeaderParam(HDR_COMMENT) final String comment,
-                                        @javax.ws.rs.core.Context final UriInfo uriInfo,
-                                        @javax.ws.rs.core.Context final HttpServletRequest request) throws PaymentApiException, AccountApiException {
+    public Response completeInvoicePaymentTransaction(@PathParam("paymentId") final UUID paymentId,
+                                                      final PaymentTransactionJson json,
+                                                      @QueryParam(QUERY_PAYMENT_CONTROL_PLUGIN_NAME) final List<String> paymentControlPluginNames,
+                                                      @QueryParam(QUERY_PLUGIN_PROPERTY) final List<String> pluginPropertiesString,
+                                                      @HeaderParam(HDR_CREATED_BY) final String createdBy,
+                                                      @HeaderParam(HDR_REASON) final String reason,
+                                                      @HeaderParam(HDR_COMMENT) final String comment,
+                                                      @javax.ws.rs.core.Context final UriInfo uriInfo,
+                                                      @javax.ws.rs.core.Context final HttpServletRequest request) throws PaymentApiException, AccountApiException {
 
         final TenantContext tenantContext = context.createTenantContextNoAccountId(request);
         final Payment payment = paymentApi.getPayment(paymentId, false, false, ImmutableList.<PluginProperty>of(), tenantContext);
@@ -307,7 +310,8 @@ public class InvoicePaymentResource extends JaxRsResourceBase {
         controlPluginNames.add("__INVOICE_PAYMENT_CONTROL_PLUGIN__");
         controlPluginNames.addAll(paymentControlPluginNames);
 
-        return completeTransactionInternal(json, payment, controlPluginNames, pluginProperties, tenantContext, createdBy, reason, comment, uriInfo, request);
+        completeTransactionInternal(json, payment, controlPluginNames, pluginProperties, tenantContext, createdBy, reason, comment, uriInfo, request);
+        return Response.status(Status.NO_CONTENT).build();
     }
 
 
@@ -315,7 +319,7 @@ public class InvoicePaymentResource extends JaxRsResourceBase {
     @GET
     @Path("/{paymentId:" + UUID_PATTERN + "}/" + CUSTOM_FIELDS)
     @Produces(APPLICATION_JSON)
-    @ApiOperation(value = "Retrieve payment custom fields", response = CustomFieldJson.class, responseContainer = "List")
+    @ApiOperation(value = "Retrieve payment custom fields", response = CustomFieldJson.class, responseContainer = "List", nickname = "getInvoicePaymentCustomFields")
     @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid payment id supplied")})
     public Response getCustomFields(@PathParam(ID_PARAM_NAME) final UUID id,
                                     @QueryParam(QUERY_AUDIT) @DefaultValue("NONE") final AuditMode auditMode,
@@ -328,15 +332,16 @@ public class InvoicePaymentResource extends JaxRsResourceBase {
     @Path("/{paymentId:" + UUID_PATTERN + "}/" + CUSTOM_FIELDS)
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
-    @ApiOperation(value = "Add custom fields to payment")
-    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid payment id supplied")})
-    public Response createCustomFields(@PathParam(ID_PARAM_NAME) final UUID id,
-                                       final List<CustomFieldJson> customFields,
-                                       @HeaderParam(HDR_CREATED_BY) final String createdBy,
-                                       @HeaderParam(HDR_REASON) final String reason,
-                                       @HeaderParam(HDR_COMMENT) final String comment,
-                                       @javax.ws.rs.core.Context final HttpServletRequest request,
-                                       @javax.ws.rs.core.Context final UriInfo uriInfo) throws CustomFieldApiException {
+    @ApiOperation(value = "Add custom fields to payment", response = CustomField.class, responseContainer = "List")
+    @ApiResponses(value = {@ApiResponse(code = 201, message = "Custom field created successfully"),
+                           @ApiResponse(code = 400, message = "Invalid payment id supplied")})
+    public Response createInvoicePaymentCustomFields(@PathParam(ID_PARAM_NAME) final UUID id,
+                                                     final List<CustomFieldJson> customFields,
+                                                     @HeaderParam(HDR_CREATED_BY) final String createdBy,
+                                                     @HeaderParam(HDR_REASON) final String reason,
+                                                     @HeaderParam(HDR_COMMENT) final String comment,
+                                                     @javax.ws.rs.core.Context final HttpServletRequest request,
+                                                     @javax.ws.rs.core.Context final UriInfo uriInfo) throws CustomFieldApiException {
         return super.createCustomFields(id, customFields,
                                         context.createCallContextNoAccountId(createdBy, reason, comment, request), uriInfo, request);
     }
@@ -348,13 +353,14 @@ public class InvoicePaymentResource extends JaxRsResourceBase {
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
     @ApiOperation(value = "Modify custom fields to payment")
-    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid payment id supplied")})
-    public Response modifyCustomFields(@PathParam(ID_PARAM_NAME) final UUID id,
-                                       final List<CustomFieldJson> customFields,
-                                       @HeaderParam(HDR_CREATED_BY) final String createdBy,
-                                       @HeaderParam(HDR_REASON) final String reason,
-                                       @HeaderParam(HDR_COMMENT) final String comment,
-                                       @javax.ws.rs.core.Context final HttpServletRequest request) throws CustomFieldApiException {
+    @ApiResponses(value = {@ApiResponse(code = 204, message = "Successful operation"),
+                           @ApiResponse(code = 400, message = "Invalid payment id supplied")})
+    public Response modifyInvoicePaymentCustomFields(@PathParam(ID_PARAM_NAME) final UUID id,
+                                                     final List<CustomFieldJson> customFields,
+                                                     @HeaderParam(HDR_CREATED_BY) final String createdBy,
+                                                     @HeaderParam(HDR_REASON) final String reason,
+                                                     @HeaderParam(HDR_COMMENT) final String comment,
+                                                     @javax.ws.rs.core.Context final HttpServletRequest request) throws CustomFieldApiException {
         return super.modifyCustomFields(id, customFields,
                                         context.createCallContextNoAccountId(createdBy, reason, comment, request));
     }
@@ -366,13 +372,14 @@ public class InvoicePaymentResource extends JaxRsResourceBase {
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
     @ApiOperation(value = "Remove custom fields from payment")
-    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid payment id supplied")})
-    public Response deleteCustomFields(@PathParam(ID_PARAM_NAME) final UUID id,
-                                       @QueryParam(QUERY_CUSTOM_FIELDS) final String customFieldList,
-                                       @HeaderParam(HDR_CREATED_BY) final String createdBy,
-                                       @HeaderParam(HDR_REASON) final String reason,
-                                       @HeaderParam(HDR_COMMENT) final String comment,
-                                       @javax.ws.rs.core.Context final HttpServletRequest request) throws CustomFieldApiException {
+    @ApiResponses(value = {@ApiResponse(code = 204, message = "Successful operation"),
+                           @ApiResponse(code = 400, message = "Invalid payment id supplied")})
+    public Response deleteInvoicePaymentCustomFields(@PathParam(ID_PARAM_NAME) final UUID id,
+                                                     @QueryParam(QUERY_CUSTOM_FIELD) final List<UUID> customFieldList,
+                                                     @HeaderParam(HDR_CREATED_BY) final String createdBy,
+                                                     @HeaderParam(HDR_REASON) final String reason,
+                                                     @HeaderParam(HDR_COMMENT) final String comment,
+                                                     @javax.ws.rs.core.Context final HttpServletRequest request) throws CustomFieldApiException {
         return super.deleteCustomFields(id, customFieldList,
                                         context.createCallContextNoAccountId(createdBy, reason, comment, request));
     }
@@ -381,13 +388,13 @@ public class InvoicePaymentResource extends JaxRsResourceBase {
     @GET
     @Path("/{paymentId:" + UUID_PATTERN + "}/" + TAGS)
     @Produces(APPLICATION_JSON)
-    @ApiOperation(value = "Retrieve payment tags", response = TagJson.class, responseContainer = "List")
+    @ApiOperation(value = "Retrieve payment tags", response = TagJson.class, responseContainer = "List", nickname = "getInvoicePaymentTags")
     @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid payment id supplied"),
                            @ApiResponse(code = 404, message = "Payment not found")})
     public Response getTags(@PathParam(ID_PARAM_NAME) final UUID paymentId,
+                            @QueryParam(QUERY_INCLUDED_DELETED) @DefaultValue("false") final Boolean includedDeleted,
                             @QueryParam(QUERY_PLUGIN_PROPERTY) final List<String> pluginPropertiesString,
                             @QueryParam(QUERY_AUDIT) @DefaultValue("NONE") final AuditMode auditMode,
-                            @QueryParam(QUERY_INCLUDED_DELETED) @DefaultValue("false") final Boolean includedDeleted,
                             @javax.ws.rs.core.Context final HttpServletRequest request) throws TagDefinitionApiException, PaymentApiException {
         final Iterable<PluginProperty> pluginProperties = extractPluginProperties(pluginPropertiesString);
         final TenantContext tenantContext = context.createTenantContextNoAccountId(request);
@@ -400,15 +407,16 @@ public class InvoicePaymentResource extends JaxRsResourceBase {
     @Path("/{paymentId:" + UUID_PATTERN + "}/" + TAGS)
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
-    @ApiOperation(value = "Add tags to payment")
-    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid payment id supplied")})
-    public Response createTags(@PathParam(ID_PARAM_NAME) final UUID id,
-                               @QueryParam(QUERY_TAGS) final String tagList,
-                               @HeaderParam(HDR_CREATED_BY) final String createdBy,
-                               @HeaderParam(HDR_REASON) final String reason,
-                               @HeaderParam(HDR_COMMENT) final String comment,
-                               @javax.ws.rs.core.Context final UriInfo uriInfo,
-                               @javax.ws.rs.core.Context final HttpServletRequest request) throws TagApiException {
+    @ApiOperation(value = "Add tags to payment", response = TagJson.class, responseContainer = "List")
+    @ApiResponses(value = {@ApiResponse(code = 201, message = "Tag created successfully"),
+                           @ApiResponse(code = 400, message = "Invalid payment id supplied")})
+    public Response createInvoicePaymentTags(@PathParam(ID_PARAM_NAME) final UUID id,
+                                             final List<UUID> tagList,
+                                             @HeaderParam(HDR_CREATED_BY) final String createdBy,
+                                             @HeaderParam(HDR_REASON) final String reason,
+                                             @HeaderParam(HDR_COMMENT) final String comment,
+                                             @javax.ws.rs.core.Context final UriInfo uriInfo,
+                                             @javax.ws.rs.core.Context final HttpServletRequest request) throws TagApiException {
         return super.createTags(id, tagList, uriInfo,
                                 context.createCallContextNoAccountId(createdBy, reason, comment, request), request);
     }
@@ -419,13 +427,14 @@ public class InvoicePaymentResource extends JaxRsResourceBase {
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
     @ApiOperation(value = "Remove tags from payment")
-    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid payment id supplied")})
-    public Response deleteTags(@PathParam(ID_PARAM_NAME) final UUID id,
-                               @QueryParam(QUERY_TAGS) final String tagList,
-                               @HeaderParam(HDR_CREATED_BY) final String createdBy,
-                               @HeaderParam(HDR_REASON) final String reason,
-                               @HeaderParam(HDR_COMMENT) final String comment,
-                               @javax.ws.rs.core.Context final HttpServletRequest request) throws TagApiException {
+    @ApiResponses(value = {@ApiResponse(code = 204, message = "Successful operation"),
+                           @ApiResponse(code = 400, message = "Invalid payment id supplied")})
+    public Response deleteInvoicePaymentTags(@PathParam(ID_PARAM_NAME) final UUID id,
+                                             @QueryParam(QUERY_TAG) final List<UUID> tagList,
+                                             @HeaderParam(HDR_CREATED_BY) final String createdBy,
+                                             @HeaderParam(HDR_REASON) final String reason,
+                                             @HeaderParam(HDR_COMMENT) final String comment,
+                                             @javax.ws.rs.core.Context final HttpServletRequest request) throws TagApiException {
         return super.deleteTags(id, tagList,
                                 context.createCallContextNoAccountId(createdBy, reason, comment, request));
     }

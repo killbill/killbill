@@ -25,6 +25,7 @@ import java.util.UUID;
 import javax.annotation.Nullable;
 
 import org.joda.time.LocalDate;
+import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.invoice.api.Invoice;
 import org.killbill.billing.invoice.api.InvoiceItem;
 import org.killbill.billing.util.audit.AuditLog;
@@ -34,9 +35,10 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 
-@ApiModel(value = "Credit")
+@ApiModel(value="Credit", parent = JsonBase.class)
 public class CreditJson extends JsonBase {
 
+    private final UUID creditId;
     @ApiModelProperty(required = true)
     private final BigDecimal creditAmount;
     private final UUID invoiceId;
@@ -45,12 +47,13 @@ public class CreditJson extends JsonBase {
     @ApiModelProperty(required = true)
     private final UUID accountId;
     private final String description;
+    private final Currency currency;
     private final String itemDetails;
-    private final String currency;
 
     @JsonCreator
-    public CreditJson(@JsonProperty("creditAmount") final BigDecimal creditAmount,
-                      @JsonProperty("currency") final String currency,
+    public CreditJson(@JsonProperty("creditId") final UUID creditId,
+                      @JsonProperty("creditAmount") final BigDecimal creditAmount,
+                      @JsonProperty("currency") final Currency currency,
                       @JsonProperty("invoiceId") final UUID invoiceId,
                       @JsonProperty("invoiceNumber") final String invoiceNumber,
                       @JsonProperty("effectiveDate") final LocalDate effectiveDate,
@@ -59,6 +62,7 @@ public class CreditJson extends JsonBase {
                       @JsonProperty("itemDetails") final String itemDetails,
                       @JsonProperty("auditLogs") @Nullable final List<AuditLogJson> auditLogs) {
         super(auditLogs);
+        this.creditId = creditId;
         this.creditAmount = creditAmount;
         this.currency = currency;
         this.invoiceId = invoiceId;
@@ -71,9 +75,10 @@ public class CreditJson extends JsonBase {
 
     public CreditJson(final Invoice invoice, final InvoiceItem credit, final List<AuditLog> auditLogs) {
         super(toAuditLogJson(auditLogs));
+        this.creditId = credit.getId();
         this.accountId = credit.getAccountId();
         this.creditAmount = credit.getAmount();
-        this.currency = credit.getCurrency().name();
+        this.currency = credit.getCurrency();
         this.invoiceId = credit.getInvoiceId();
         this.invoiceNumber = invoice.getInvoiceNumber().toString();
         this.effectiveDate = credit.getStartDate();
@@ -109,19 +114,24 @@ public class CreditJson extends JsonBase {
         return description;
     }
 
+    public Currency getCurrency() {
+        return currency;
+    }
+
     public String getItemDetails() {
         return itemDetails;
     }
 
-    public String getCurrency() {
-        return currency;
+    public UUID getCreditId() {
+        return creditId;
     }
 
     @Override
     public String toString() {
         final StringBuilder sb = new StringBuilder();
         sb.append("CreditJson");
-        sb.append("{creditAmount=").append(creditAmount);
+        sb.append("{creditId=").append(creditId);
+        sb.append(", creditAmount=").append(creditAmount);
         sb.append(", currency=").append(currency);
         sb.append(", invoiceId=").append(invoiceId);
         sb.append(", invoiceNumber='").append(invoiceNumber).append('\'');
@@ -144,6 +154,9 @@ public class CreditJson extends JsonBase {
 
         final CreditJson that = (CreditJson) o;
 
+        if (creditId != null ? !creditId.equals(that.creditId) : that.creditId != null) {
+            return false;
+        }
         if (!((creditAmount == null && that.creditAmount == null) ||
               (creditAmount != null && that.creditAmount != null && creditAmount.compareTo(that.creditAmount) == 0))) {
             return false;
@@ -174,6 +187,7 @@ public class CreditJson extends JsonBase {
     @Override
     public int hashCode() {
         int result = creditAmount != null ? creditAmount.hashCode() : 0;
+        result = 31 * result + (creditId != null ? creditId.hashCode() : 0);
         result = 31 * result + (currency != null ? currency.hashCode() : 0);
         result = 31 * result + (invoiceId != null ? invoiceId.hashCode() : 0);
         result = 31 * result + (description != null ? description.hashCode() : 0);

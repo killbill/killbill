@@ -53,6 +53,7 @@ import org.killbill.billing.util.api.TagApiException;
 import org.killbill.billing.util.api.TagDefinitionApiException;
 import org.killbill.billing.util.api.TagUserApi;
 import org.killbill.billing.util.callcontext.TenantContext;
+import org.killbill.billing.util.customfield.CustomField;
 import org.killbill.clock.Clock;
 import org.killbill.commons.metrics.TimedResource;
 
@@ -80,7 +81,7 @@ public class InvoiceItemResource extends JaxRsResourceBase {
     @GET
     @Path("/{invoiceItemId:" + UUID_PATTERN + "}/" + CUSTOM_FIELDS)
     @Produces(APPLICATION_JSON)
-    @ApiOperation(value = "Retrieve invoice item custom fields", response = CustomFieldJson.class, responseContainer = "List")
+    @ApiOperation(value = "Retrieve invoice item custom fields", response = CustomFieldJson.class, responseContainer = "List", nickname = "getInvoiceItemCustomFields")
     @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid invoice item id supplied")})
     public Response getCustomFields(@PathParam(ID_PARAM_NAME) final UUID id,
                                     @QueryParam(QUERY_AUDIT) @DefaultValue("NONE") final AuditMode auditMode,
@@ -93,15 +94,16 @@ public class InvoiceItemResource extends JaxRsResourceBase {
     @Path("/{invoiceItemId:" + UUID_PATTERN + "}/" + CUSTOM_FIELDS)
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
-    @ApiOperation(value = "Add custom fields to invoice item")
-    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid invoice item id supplied")})
-    public Response createCustomFields(@PathParam(ID_PARAM_NAME) final UUID id,
-                                       final List<CustomFieldJson> customFields,
-                                       @HeaderParam(HDR_CREATED_BY) final String createdBy,
-                                       @HeaderParam(HDR_REASON) final String reason,
-                                       @HeaderParam(HDR_COMMENT) final String comment,
-                                       @javax.ws.rs.core.Context final HttpServletRequest request,
-                                       @javax.ws.rs.core.Context final UriInfo uriInfo) throws CustomFieldApiException {
+    @ApiOperation(value = "Add custom fields to invoice item", response = CustomField.class, responseContainer = "List")
+    @ApiResponses(value = {@ApiResponse(code = 201, message = "Custom field created successfully"),
+                           @ApiResponse(code = 400, message = "Invalid invoice item id supplied")})
+    public Response createInvoiceItemCustomFields(@PathParam(ID_PARAM_NAME) final UUID id,
+                                                  final List<CustomFieldJson> customFields,
+                                                  @HeaderParam(HDR_CREATED_BY) final String createdBy,
+                                                  @HeaderParam(HDR_REASON) final String reason,
+                                                  @HeaderParam(HDR_COMMENT) final String comment,
+                                                  @javax.ws.rs.core.Context final HttpServletRequest request,
+                                                  @javax.ws.rs.core.Context final UriInfo uriInfo) throws CustomFieldApiException {
         return super.createCustomFields(id, customFields,
                                         context.createCallContextNoAccountId(createdBy, reason, comment, request), uriInfo, request);
     }
@@ -113,13 +115,14 @@ public class InvoiceItemResource extends JaxRsResourceBase {
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
     @ApiOperation(value = "Modify custom fields to invoice item")
-    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid invoice item id supplied")})
-    public Response modifyCustomFields(@PathParam(ID_PARAM_NAME) final UUID id,
-                                       final List<CustomFieldJson> customFields,
-                                       @HeaderParam(HDR_CREATED_BY) final String createdBy,
-                                       @HeaderParam(HDR_REASON) final String reason,
-                                       @HeaderParam(HDR_COMMENT) final String comment,
-                                       @javax.ws.rs.core.Context final HttpServletRequest request) throws CustomFieldApiException {
+    @ApiResponses(value = {@ApiResponse(code = 204, message = "Successful operation"),
+                           @ApiResponse(code = 400, message = "Invalid invoice item id supplied")})
+    public Response modifyInvoiceItemCustomFields(@PathParam(ID_PARAM_NAME) final UUID id,
+                                                  final List<CustomFieldJson> customFields,
+                                                  @HeaderParam(HDR_CREATED_BY) final String createdBy,
+                                                  @HeaderParam(HDR_REASON) final String reason,
+                                                  @HeaderParam(HDR_COMMENT) final String comment,
+                                                  @javax.ws.rs.core.Context final HttpServletRequest request) throws CustomFieldApiException {
         return super.modifyCustomFields(id, customFields,
                                         context.createCallContextNoAccountId(createdBy, reason, comment, request));
     }
@@ -131,13 +134,14 @@ public class InvoiceItemResource extends JaxRsResourceBase {
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
     @ApiOperation(value = "Remove custom fields from invoice item")
-    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid invoice item id supplied")})
-    public Response deleteCustomFields(@PathParam(ID_PARAM_NAME) final UUID id,
-                                       @QueryParam(QUERY_CUSTOM_FIELDS) final String customFieldList,
-                                       @HeaderParam(HDR_CREATED_BY) final String createdBy,
-                                       @HeaderParam(HDR_REASON) final String reason,
-                                       @HeaderParam(HDR_COMMENT) final String comment,
-                                       @javax.ws.rs.core.Context final HttpServletRequest request) throws CustomFieldApiException {
+    @ApiResponses(value = {@ApiResponse(code = 204, message = "Successful operation"),
+                           @ApiResponse(code = 400, message = "Invalid invoice item id supplied")})
+    public Response deleteInvoiceItemCustomFields(@PathParam(ID_PARAM_NAME) final UUID id,
+                                                  @QueryParam(QUERY_CUSTOM_FIELD) final List<UUID> customFieldList,
+                                                  @HeaderParam(HDR_CREATED_BY) final String createdBy,
+                                                  @HeaderParam(HDR_REASON) final String reason,
+                                                  @HeaderParam(HDR_COMMENT) final String comment,
+                                                  @javax.ws.rs.core.Context final HttpServletRequest request) throws CustomFieldApiException {
         return super.deleteCustomFields(id, customFieldList,
                                         context.createCallContextNoAccountId(createdBy, reason, comment, request));
     }
@@ -146,13 +150,13 @@ public class InvoiceItemResource extends JaxRsResourceBase {
     @GET
     @Path("/{invoiceItemId:" + UUID_PATTERN + "}/" + TAGS)
     @Produces(APPLICATION_JSON)
-    @ApiOperation(value = "Retrieve invoice item tags", response = TagJson.class, responseContainer = "List")
+    @ApiOperation(value = "Retrieve invoice item tags", response = TagJson.class, responseContainer = "List", nickname = "getInvoiceItemTags")
     @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid invoice item id supplied"),
                            @ApiResponse(code = 404, message = "Account not found")})
     public Response getTags(@PathParam(ID_PARAM_NAME) final UUID id,
                             @ApiParam(required=true) @QueryParam(QUERY_ACCOUNT_ID) final UUID accountId,
-                            @QueryParam(QUERY_AUDIT) @DefaultValue("NONE") final AuditMode auditMode,
                             @QueryParam(QUERY_TAGS_INCLUDED_DELETED) @DefaultValue("false") final Boolean includedDeleted,
+                            @QueryParam(QUERY_AUDIT) @DefaultValue("NONE") final AuditMode auditMode,
                             @javax.ws.rs.core.Context final HttpServletRequest request) throws TagDefinitionApiException, AccountApiException {
         final TenantContext tenantContext = context.createTenantContextWithAccountId(accountId, request);
         final Account account = accountUserApi.getAccountById(accountId, tenantContext);
@@ -165,15 +169,16 @@ public class InvoiceItemResource extends JaxRsResourceBase {
     @Path("/{invoiceItemId:" + UUID_PATTERN + "}/" + TAGS)
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
-    @ApiOperation(value = "Add tags to invoice item")
-    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid invoice item id supplied")})
-    public Response createTags(@PathParam(ID_PARAM_NAME) final UUID id,
-                               @QueryParam(QUERY_TAGS) final String tagList,
-                               @HeaderParam(HDR_CREATED_BY) final String createdBy,
-                               @HeaderParam(HDR_REASON) final String reason,
-                               @HeaderParam(HDR_COMMENT) final String comment,
-                               @javax.ws.rs.core.Context final UriInfo uriInfo,
-                               @javax.ws.rs.core.Context final HttpServletRequest request) throws TagApiException {
+    @ApiOperation(value = "Add tags to invoice item", response = TagJson.class, responseContainer = "List")
+    @ApiResponses(value = {@ApiResponse(code = 201, message = "Tag created successfully"),
+                           @ApiResponse(code = 400, message = "Invalid invoice item id supplied")})
+    public Response createInvoiceItemTags(@PathParam(ID_PARAM_NAME) final UUID id,
+                                          final List<UUID> tagList,
+                                          @HeaderParam(HDR_CREATED_BY) final String createdBy,
+                                          @HeaderParam(HDR_REASON) final String reason,
+                                          @HeaderParam(HDR_COMMENT) final String comment,
+                                          @javax.ws.rs.core.Context final UriInfo uriInfo,
+                                          @javax.ws.rs.core.Context final HttpServletRequest request) throws TagApiException {
         return super.createTags(id, tagList, uriInfo,
                                 context.createCallContextNoAccountId(createdBy, reason, comment, request), request);
     }
@@ -184,13 +189,14 @@ public class InvoiceItemResource extends JaxRsResourceBase {
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
     @ApiOperation(value = "Remove tags from invoice item")
-    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid invoice item id supplied")})
-    public Response deleteTags(@PathParam(ID_PARAM_NAME) final UUID id,
-                               @QueryParam(QUERY_TAGS) final String tagList,
-                               @HeaderParam(HDR_CREATED_BY) final String createdBy,
-                               @HeaderParam(HDR_REASON) final String reason,
-                               @HeaderParam(HDR_COMMENT) final String comment,
-                               @javax.ws.rs.core.Context final HttpServletRequest request) throws TagApiException {
+    @ApiResponses(value = {@ApiResponse(code = 204, message = "Successful operation"),
+                           @ApiResponse(code = 400, message = "Invalid invoice item id supplied")})
+    public Response deleteInvoiceItemTags(@PathParam(ID_PARAM_NAME) final UUID id,
+                                          @QueryParam(QUERY_TAG) final List<UUID> tagList,
+                                          @HeaderParam(HDR_CREATED_BY) final String createdBy,
+                                          @HeaderParam(HDR_REASON) final String reason,
+                                          @HeaderParam(HDR_COMMENT) final String comment,
+                                          @javax.ws.rs.core.Context final HttpServletRequest request) throws TagApiException {
         return super.deleteTags(id, tagList,
                                 context.createCallContextNoAccountId(createdBy, reason, comment, request));
     }

@@ -1,7 +1,9 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
+ * Copyright 2014-2018 Groupon, Inc
+ * Copyright 2014-2018 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -398,10 +400,11 @@ public class TestUserApiAddOn extends SubscriptionTestSuiteWithEmbeddedDB {
         final PlanSpecifier planSpecifier = new PlanSpecifier(aoProduct,
                                                               aoTerm,
                                                               aoPriceList);
-        final PlanAlignmentCreate alignement = catalog.planCreateAlignment(planSpecifier, clock.getUTCNow());
-        assertEquals(alignement, PlanAlignmentCreate.START_OF_BUNDLE);
+        final DateTime utcNow = clock.getUTCNow();
+        final PlanAlignmentCreate alignment = catalog.planCreateAlignment(planSpecifier, utcNow, utcNow);
+        assertEquals(alignment, PlanAlignmentCreate.START_OF_BUNDLE);
 
-        testAddonCreateInternal(aoProduct, aoTerm, aoPriceList, alignement);
+        testAddonCreateInternal(aoProduct, aoTerm, aoPriceList, alignment);
     }
 
     @Test(groups = "slow")
@@ -414,10 +417,11 @@ public class TestUserApiAddOn extends SubscriptionTestSuiteWithEmbeddedDB {
         final PlanSpecifier planSpecifier = new PlanSpecifier(aoProduct,
                                                               aoTerm,
                                                               aoPriceList);
-        final PlanAlignmentCreate alignement = catalog.planCreateAlignment(planSpecifier, clock.getUTCNow());
-        assertEquals(alignement, PlanAlignmentCreate.START_OF_SUBSCRIPTION);
+        final DateTime utcNow = clock.getUTCNow();
+        final PlanAlignmentCreate alignment = catalog.planCreateAlignment(planSpecifier, utcNow, utcNow);
+        assertEquals(alignment, PlanAlignmentCreate.START_OF_SUBSCRIPTION);
 
-        testAddonCreateInternal(aoProduct, aoTerm, aoPriceList, alignement);
+        testAddonCreateInternal(aoProduct, aoTerm, aoPriceList, alignment);
     }
 
     private void testAddonCreateInternal(final String aoProduct, final BillingPeriod aoTerm, final String aoPriceList, final PlanAlignmentCreate expAlignement) throws SubscriptionBaseApiException {

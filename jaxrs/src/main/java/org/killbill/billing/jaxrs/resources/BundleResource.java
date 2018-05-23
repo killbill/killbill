@@ -70,6 +70,7 @@ import org.killbill.billing.util.api.TagUserApi;
 import org.killbill.billing.util.audit.AccountAuditLogs;
 import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.TenantContext;
+import org.killbill.billing.util.customfield.CustomField;
 import org.killbill.billing.util.entity.Pagination;
 import org.killbill.clock.Clock;
 import org.killbill.commons.metrics.TimedResource;
@@ -132,7 +133,7 @@ public class BundleResource extends JaxRsResourceBase {
     @TimedResource
     @GET
     @Produces(APPLICATION_JSON)
-    @ApiOperation(value = "Retrieve a bundle by external key", response = BundleJson.class)
+    @ApiOperation(value = "Retrieve a bundle by external key", response = BundleJson.class, responseContainer = "List")
     @ApiResponses(value = {@ApiResponse(code = 404, message = "Bundle not found")})
     public Response getBundleByKey(@ApiParam(required=true) @QueryParam(QUERY_EXTERNAL_KEY) final String externalKey,
                                    @QueryParam(QUERY_INCLUDED_DELETED) @DefaultValue("false") final Boolean includedDeleted,
@@ -233,7 +234,8 @@ public class BundleResource extends JaxRsResourceBase {
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
     @ApiOperation(value = "Pause a bundle")
-    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid bundle id supplied"),
+    @ApiResponses(value = {@ApiResponse(code = 204, message = "Successful operation"),
+                           @ApiResponse(code = 400, message = "Invalid bundle id supplied"),
                            @ApiResponse(code = 404, message = "Bundle not found")})
     public Response pauseBundle(@PathParam(ID_PARAM_NAME) final UUID bundleId,
                                 @QueryParam(QUERY_REQUESTED_DT) final String requestedDate,
@@ -246,7 +248,7 @@ public class BundleResource extends JaxRsResourceBase {
         final CallContext callContext = context.createCallContextNoAccountId(createdBy, reason, comment, request);
         final LocalDate inputLocalDate = toLocalDate(requestedDate);
         entitlementApi.pause(bundleId, inputLocalDate, pluginProperties, callContext);
-        return Response.status(Status.OK).build();
+        return Response.status(Status.NO_CONTENT).build();
     }
 
     @TimedResource
@@ -255,7 +257,8 @@ public class BundleResource extends JaxRsResourceBase {
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
     @ApiOperation(value = "Resume a bundle")
-    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid bundle id supplied"),
+    @ApiResponses(value = {@ApiResponse(code = 204, message = "Successful operation"),
+                           @ApiResponse(code = 400, message = "Invalid bundle id supplied"),
                            @ApiResponse(code = 404, message = "Bundle not found")})
     public Response resumeBundle(@PathParam(ID_PARAM_NAME) final UUID bundleId,
                                  @QueryParam(QUERY_REQUESTED_DT) final String requestedDate,
@@ -268,25 +271,29 @@ public class BundleResource extends JaxRsResourceBase {
         final CallContext callContext = context.createCallContextNoAccountId(createdBy, reason, comment, request);
         final LocalDate inputLocalDate = toLocalDate(requestedDate);
         entitlementApi.resume(bundleId, inputLocalDate, pluginProperties, callContext);
-        return Response.status(Status.OK).build();
+        return Response.status(Status.NO_CONTENT).build();
     }
 
     @TimedResource
-    @PUT
+    @POST
     @Path("/{bundleId:" + UUID_PATTERN + "}/" + BLOCK)
     @Consumes(APPLICATION_JSON)
-    @ApiOperation(value = "Block a bundle")
-    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid bundle id supplied"),
+    @ApiOperation(value = "Block a bundle", response = BlockingStateJson.class, responseContainer = "List")
+    @ApiResponses(value = {@ApiResponse(code = 201, message = "Blocking state created successfully"),
+                           @ApiResponse(code = 400, message = "Invalid bundle id supplied"),
                            @ApiResponse(code = 404, message = "Bundle not found")})
-    public Response addBundleBlockingState(final BlockingStateJson json,
-                                           @PathParam(ID_PARAM_NAME) final UUID id,
+    public Response addBundleBlockingState(@PathParam(ID_PARAM_NAME) final UUID id,
+                                           final BlockingStateJson json,
                                            @QueryParam(QUERY_REQUESTED_DT) final String requestedDate,
                                            @QueryParam(QUERY_PLUGIN_PROPERTY) final List<String> pluginPropertiesString,
                                            @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                            @HeaderParam(HDR_REASON) final String reason,
                                            @HeaderParam(HDR_COMMENT) final String comment,
-                                           @javax.ws.rs.core.Context final HttpServletRequest request) throws SubscriptionApiException, EntitlementApiException, AccountApiException {
-        return addBlockingState(json, id, BlockingStateType.SUBSCRIPTION_BUNDLE, requestedDate, pluginPropertiesString, createdBy, reason, comment, request);
+                                           @javax.ws.rs.core.Context final HttpServletRequest request,
+                                           @javax.ws.rs.core.Context final UriInfo uriInfo) throws SubscriptionApiException, EntitlementApiException, AccountApiException {
+        final TenantContext tenantContext = context.createTenantContextNoAccountId(request);
+        final SubscriptionBundle bundle = subscriptionApi.getSubscriptionBundle(id, tenantContext);
+        return addBlockingState(json, bundle.getAccountId(), id, BlockingStateType.SUBSCRIPTION_BUNDLE, requestedDate, pluginPropertiesString, createdBy, reason, comment, request, uriInfo);
     }
 
 
@@ -295,7 +302,7 @@ public class BundleResource extends JaxRsResourceBase {
     @GET
     @Path("/{bundleId:" + UUID_PATTERN + "}/" + CUSTOM_FIELDS)
     @Produces(APPLICATION_JSON)
-    @ApiOperation(value = "Retrieve bundle custom fields", response = CustomFieldJson.class, responseContainer = "List")
+    @ApiOperation(value = "Retrieve bundle custom fields", response = CustomFieldJson.class, responseContainer = "List", nickname = "getBundleCustomFields")
     @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid bundle id supplied")})
     public Response getCustomFields(@PathParam(ID_PARAM_NAME) final UUID bundleId,
                                     @QueryParam(QUERY_AUDIT) @DefaultValue("NONE") final AuditMode auditMode,
@@ -308,15 +315,16 @@ public class BundleResource extends JaxRsResourceBase {
     @Path("/{bundleId:" + UUID_PATTERN + "}/" + CUSTOM_FIELDS)
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
-    @ApiOperation(value = "Add custom fields to bundle")
-    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid bundle id supplied")})
-    public Response createCustomFields(@PathParam(ID_PARAM_NAME) final UUID bundleId,
-                                       final List<CustomFieldJson> customFields,
-                                       @HeaderParam(HDR_CREATED_BY) final String createdBy,
-                                       @HeaderParam(HDR_REASON) final String reason,
-                                       @HeaderParam(HDR_COMMENT) final String comment,
-                                       @javax.ws.rs.core.Context final HttpServletRequest request,
-                                       @javax.ws.rs.core.Context final UriInfo uriInfo) throws CustomFieldApiException {
+    @ApiOperation(value = "Add custom fields to bundle", response = CustomField.class, responseContainer = "List")
+    @ApiResponses(value = {@ApiResponse(code = 201, message = "Custom field created successfully"),
+                           @ApiResponse(code = 400, message = "Invalid bundle id supplied")})
+    public Response createBundleCustomFields(@PathParam(ID_PARAM_NAME) final UUID bundleId,
+                                             final List<CustomFieldJson> customFields,
+                                             @HeaderParam(HDR_CREATED_BY) final String createdBy,
+                                             @HeaderParam(HDR_REASON) final String reason,
+                                             @HeaderParam(HDR_COMMENT) final String comment,
+                                             @javax.ws.rs.core.Context final HttpServletRequest request,
+                                             @javax.ws.rs.core.Context final UriInfo uriInfo) throws CustomFieldApiException {
         return super.createCustomFields(bundleId, customFields,
                                         context.createCallContextNoAccountId(createdBy, reason, comment, request), uriInfo, request);
     }
@@ -327,13 +335,14 @@ public class BundleResource extends JaxRsResourceBase {
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
     @ApiOperation(value = "Modify custom fields to bundle")
-    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid bundle id supplied")})
-    public Response modifyCustomFields(@PathParam(ID_PARAM_NAME) final UUID bundleId,
-                                       final List<CustomFieldJson> customFields,
-                                       @HeaderParam(HDR_CREATED_BY) final String createdBy,
-                                       @HeaderParam(HDR_REASON) final String reason,
-                                       @HeaderParam(HDR_COMMENT) final String comment,
-                                       @javax.ws.rs.core.Context final HttpServletRequest request) throws CustomFieldApiException {
+    @ApiResponses(value = {@ApiResponse(code = 204, message = "Successful operation"),
+                           @ApiResponse(code = 400, message = "Invalid bundle id supplied")})
+    public Response modifyBundleCustomFields(@PathParam(ID_PARAM_NAME) final UUID bundleId,
+                                             final List<CustomFieldJson> customFields,
+                                             @HeaderParam(HDR_CREATED_BY) final String createdBy,
+                                             @HeaderParam(HDR_REASON) final String reason,
+                                             @HeaderParam(HDR_COMMENT) final String comment,
+                                             @javax.ws.rs.core.Context final HttpServletRequest request) throws CustomFieldApiException {
         return super.modifyCustomFields(bundleId, customFields,
                                         context.createCallContextNoAccountId(createdBy, reason, comment, request));
     }
@@ -347,13 +356,14 @@ public class BundleResource extends JaxRsResourceBase {
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
     @ApiOperation(value = "Remove custom fields from bundle")
-    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid bundle id supplied")})
-    public Response deleteCustomFields(@PathParam(ID_PARAM_NAME) final UUID bundleId,
-                                       @QueryParam(QUERY_CUSTOM_FIELDS) final String customFieldList,
-                                       @HeaderParam(HDR_CREATED_BY) final String createdBy,
-                                       @HeaderParam(HDR_REASON) final String reason,
-                                       @HeaderParam(HDR_COMMENT) final String comment,
-                                       @javax.ws.rs.core.Context final HttpServletRequest request) throws CustomFieldApiException {
+    @ApiResponses(value = {@ApiResponse(code = 204, message = "Successful operation"),
+                           @ApiResponse(code = 400, message = "Invalid bundle id supplied")})
+    public Response deleteBundleCustomFields(@PathParam(ID_PARAM_NAME) final UUID bundleId,
+                                             @QueryParam(QUERY_CUSTOM_FIELD) final List<UUID> customFieldList,
+                                             @HeaderParam(HDR_CREATED_BY) final String createdBy,
+                                             @HeaderParam(HDR_REASON) final String reason,
+                                             @HeaderParam(HDR_COMMENT) final String comment,
+                                             @javax.ws.rs.core.Context final HttpServletRequest request) throws CustomFieldApiException {
         return super.deleteCustomFields(bundleId, customFieldList,
                                         context.createCallContextNoAccountId(createdBy, reason, comment, request));
     }
@@ -362,12 +372,12 @@ public class BundleResource extends JaxRsResourceBase {
     @GET
     @Path("/{bundleId:" + UUID_PATTERN + "}/" + TAGS)
     @Produces(APPLICATION_JSON)
-    @ApiOperation(value = "Retrieve bundle tags", response = TagJson.class, responseContainer = "List")
+    @ApiOperation(value = "Retrieve bundle tags", response = TagJson.class, responseContainer = "List", nickname = "getBundleTags")
     @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid bundle id supplied"),
                            @ApiResponse(code = 404, message = "Bundle not found")})
     public Response getTags(@PathParam(ID_PARAM_NAME) final UUID bundleId,
-                            @QueryParam(QUERY_AUDIT) @DefaultValue("NONE") final AuditMode auditMode,
                             @QueryParam(QUERY_INCLUDED_DELETED) @DefaultValue("false") final Boolean includedDeleted,
+                            @QueryParam(QUERY_AUDIT) @DefaultValue("NONE") final AuditMode auditMode,
                             @javax.ws.rs.core.Context final HttpServletRequest request) throws TagDefinitionApiException, SubscriptionApiException {
         final TenantContext tenantContext = context.createTenantContextNoAccountId(request);
         final SubscriptionBundle bundle = subscriptionApi.getSubscriptionBundle(bundleId, tenantContext);
@@ -375,17 +385,18 @@ public class BundleResource extends JaxRsResourceBase {
     }
 
     @TimedResource
-    @PUT
+    @POST
     @Path("/{bundleId:" + UUID_PATTERN + "}")
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
-    @ApiOperation(value = "Transfer a bundle to another account")
-    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid bundle id, requested date or policy supplied"),
+    @ApiOperation(value = "Transfer a bundle to another account", response = BundleJson.class)
+    @ApiResponses(value = {@ApiResponse(code = 201, message = "Bundle transferred successfully"),
+                           @ApiResponse(code = 400, message = "Invalid bundle id, requested date or policy supplied"),
                            @ApiResponse(code = 404, message = "Bundle not found")})
-    public Response transferBundle(final BundleJson json,
-                                   @PathParam(ID_PARAM_NAME) final UUID bundleId,
+    public Response transferBundle(@PathParam(ID_PARAM_NAME) final UUID bundleId,
+                                   final BundleJson json,
                                    @QueryParam(QUERY_REQUESTED_DT) final String requestedDate,
-                                   @QueryParam(QUERY_BILLING_POLICY) @DefaultValue("END_OF_TERM") final String policyString,
+                                   @QueryParam(QUERY_BILLING_POLICY) @DefaultValue("END_OF_TERM") final BillingActionPolicy billingPolicy,
                                    @QueryParam(QUERY_PLUGIN_PROPERTY) final List<String> pluginPropertiesString,
                                    @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                    @HeaderParam(HDR_REASON) final String reason,
@@ -396,13 +407,12 @@ public class BundleResource extends JaxRsResourceBase {
         verifyNonNullOrEmpty(json.getAccountId(), "BundleJson accountId needs to be set");
 
         final Iterable<PluginProperty> pluginProperties = extractPluginProperties(pluginPropertiesString);
-        final BillingActionPolicy policy = BillingActionPolicy.valueOf(policyString.toUpperCase());
 
         final CallContext callContext = context.createCallContextNoAccountId(createdBy, reason, comment, request);
         final SubscriptionBundle bundle = subscriptionApi.getSubscriptionBundle(bundleId, callContext);
         final LocalDate inputLocalDate = toLocalDate(requestedDate);
 
-        final UUID newBundleId = entitlementApi.transferEntitlementsOverrideBillingPolicy(bundle.getAccountId(), json.getAccountId(), bundle.getExternalKey(), inputLocalDate, policy, pluginProperties, callContext);
+        final UUID newBundleId = entitlementApi.transferEntitlementsOverrideBillingPolicy(bundle.getAccountId(), json.getAccountId(), bundle.getExternalKey(), inputLocalDate, billingPolicy, pluginProperties, callContext);
         return uriBuilder.buildResponse(uriInfo, BundleResource.class, "getBundle", newBundleId, request);
     }
 
@@ -412,10 +422,11 @@ public class BundleResource extends JaxRsResourceBase {
     @Path("/{bundleId:" + UUID_PATTERN + "}/" + RENAME_KEY)
     @Consumes(APPLICATION_JSON)
     @ApiOperation(value = "Update a bundle externalKey")
-    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid argumnent supplied"),
+    @ApiResponses(value = {@ApiResponse(code = 204, message = "Successful operation"),
+                           @ApiResponse(code = 400, message = "Invalid argumnent supplied"),
                            @ApiResponse(code = 404, message = "Bundle not found")})
-    public Response renameExternalKey(final BundleJson json,
-                                      @PathParam(ID_PARAM_NAME) final UUID bundleId,
+    public Response renameExternalKey(@PathParam(ID_PARAM_NAME) final UUID bundleId,
+                                      final BundleJson json,
                                       /* @QueryParam(QUERY_PLUGIN_PROPERTY) final List<String> pluginPropertiesString, */
                                       @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                       @HeaderParam(HDR_REASON) final String reason,
@@ -428,7 +439,7 @@ public class BundleResource extends JaxRsResourceBase {
 
         final CallContext callContext = context.createCallContextNoAccountId(createdBy, reason, comment, request);
         subscriptionApi.updateExternalKey(bundleId, json.getExternalKey(), callContext);
-        return uriBuilder.buildResponse(uriInfo, BundleResource.class, "getBundle", bundleId, request);
+        return Response.status(Status.NO_CONTENT).build();
     }
 
 
@@ -438,15 +449,16 @@ public class BundleResource extends JaxRsResourceBase {
     @Path("/{bundleId:" + UUID_PATTERN + "}/" + TAGS)
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
-    @ApiOperation(value = "Add tags to bundle")
-    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid bundle id supplied")})
-    public Response createTags(@PathParam(ID_PARAM_NAME) final UUID bundleId,
-                               @QueryParam(QUERY_TAGS) final String tagList,
-                               @HeaderParam(HDR_CREATED_BY) final String createdBy,
-                               @HeaderParam(HDR_REASON) final String reason,
-                               @HeaderParam(HDR_COMMENT) final String comment,
-                               @javax.ws.rs.core.Context final UriInfo uriInfo,
-                               @javax.ws.rs.core.Context final HttpServletRequest request) throws TagApiException {
+    @ApiOperation(value = "Add tags to bundle", response = TagJson.class, responseContainer = "List")
+    @ApiResponses(value = {@ApiResponse(code = 201, message = "Tag created successfully"),
+                           @ApiResponse(code = 400, message = "Invalid bundle id supplied")})
+    public Response createBundleTags(@PathParam(ID_PARAM_NAME) final UUID bundleId,
+                                     final List<UUID> tagList,
+                                     @HeaderParam(HDR_CREATED_BY) final String createdBy,
+                                     @HeaderParam(HDR_REASON) final String reason,
+                                     @HeaderParam(HDR_COMMENT) final String comment,
+                                     @javax.ws.rs.core.Context final UriInfo uriInfo,
+                                     @javax.ws.rs.core.Context final HttpServletRequest request) throws TagApiException {
         return super.createTags(bundleId, tagList, uriInfo,
                                 context.createCallContextNoAccountId(createdBy, reason, comment, request), request);
     }
@@ -457,13 +469,14 @@ public class BundleResource extends JaxRsResourceBase {
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
     @ApiOperation(value = "Remove tags from bundle")
-    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid bundle id supplied")})
-    public Response deleteTags(@PathParam(ID_PARAM_NAME) final UUID bundleId,
-                               @QueryParam(QUERY_TAGS) final String tagList,
-                               @HeaderParam(HDR_CREATED_BY) final String createdBy,
-                               @HeaderParam(HDR_REASON) final String reason,
-                               @HeaderParam(HDR_COMMENT) final String comment,
-                               @javax.ws.rs.core.Context final HttpServletRequest request) throws TagApiException {
+    @ApiResponses(value = {@ApiResponse(code = 204, message = "Successful operation"),
+                           @ApiResponse(code = 400, message = "Invalid bundle id supplied")})
+    public Response deleteBundleTags(@PathParam(ID_PARAM_NAME) final UUID bundleId,
+                                     @QueryParam(QUERY_TAG) final List<UUID> tagList,
+                                     @HeaderParam(HDR_CREATED_BY) final String createdBy,
+                                     @HeaderParam(HDR_REASON) final String reason,
+                                     @HeaderParam(HDR_COMMENT) final String comment,
+                                     @javax.ws.rs.core.Context final HttpServletRequest request) throws TagApiException {
         return super.deleteTags(bundleId, tagList,
                                 context.createCallContextNoAccountId(createdBy, reason, comment, request));
     }

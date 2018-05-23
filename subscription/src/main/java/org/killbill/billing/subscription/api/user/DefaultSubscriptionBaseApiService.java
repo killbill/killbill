@@ -174,7 +174,7 @@ public class DefaultSubscriptionBaseApiService implements SubscriptionBaseApiSer
         try {
             final InternalCallContext internalCallContext = createCallContextFromBundleId(subscription.getBundleId(), context);
             final Catalog fullCatalog = catalogInternalApi.getFullCatalog(true, true, internalCallContext);
-            final BillingActionPolicy policy = fullCatalog.planCancelPolicy(planPhase, subscription.getStartDate());
+            final BillingActionPolicy policy = fullCatalog.planCancelPolicy(planPhase, clock.getUTCNow(), subscription.getStartDate());
 
             Preconditions.checkState(policy != BillingActionPolicy.START_OF_TERM, "A default START_OF_TERM policy is not availaible");
 
@@ -227,7 +227,9 @@ public class DefaultSubscriptionBaseApiService implements SubscriptionBaseApiSer
 
         try {
             for (final DefaultSubscriptionBase subscription : subscriptions) {
-                final BillingAlignment billingAlignment = (subscription.getState() == EntitlementState.PENDING ? null : catalog.billingAlignment(new PlanPhaseSpecifier(subscription.getLastActivePlan().getName(), subscription.getLastActivePhase().getPhaseType()), subscription.getStartDate()));
+                final BillingAlignment billingAlignment = (subscription.getState() == EntitlementState.PENDING ? null : catalog.billingAlignment(new PlanPhaseSpecifier(subscription.getLastActivePlan().getName(), subscription.getLastActivePhase().getPhaseType()),
+                                                                                                                                                 clock.getUTCNow(),
+                                                                                                                                                 subscription.getStartDate()));
                 final DateTime effectiveDate = subscription.getPlanChangeEffectiveDate(policy, billingAlignment, accountBillCycleDayLocal, context);
                 subscriptionsWithEffectiveDate.put(subscription, effectiveDate);
             }
@@ -389,7 +391,7 @@ public class DefaultSubscriptionBaseApiService implements SubscriptionBaseApiSer
 
             final PlanPhaseSpecifier fromPlanPhase = new PlanPhaseSpecifier(currentPlan.getName(),
                                                                             subscription.getCurrentOrPendingPhase().getPhaseType());
-            planChangeResult = catalogInternalApi.getFullCatalog(true, true, internalCallContext).planChange(fromPlanPhase, toPlanPhase, subscription.getStartDate());
+            planChangeResult = catalogInternalApi.getFullCatalog(true, true, internalCallContext).planChange(fromPlanPhase, toPlanPhase, effectiveDate, subscription.getStartDate());
         } catch (final CatalogApiException e) {
             throw new SubscriptionBaseApiException(e);
         }
@@ -606,7 +608,7 @@ public class DefaultSubscriptionBaseApiService implements SubscriptionBaseApiSer
         }
     }
 
-    private List<DefaultSubscriptionBase> computeAddOnsToCancel(final Collection<SubscriptionBaseEvent> cancelEvents, final CatalogEntity baseProduct, final UUID bundleId, final DateTime effectiveDate, final Catalog catalog, final InternalCallContext internalCallContext) throws CatalogApiException {
+    private List<DefaultSubscriptionBase> computeAddOnsToCancel(final Collection<SubscriptionBaseEvent> cancelEvents, final Product baseProduct, final UUID bundleId, final DateTime effectiveDate, final Catalog catalog, final InternalCallContext internalCallContext) throws CatalogApiException {
         // If cancellation/change occur in the future, there is nothing to do
         if (effectiveDate.compareTo(internalCallContext.getCreatedDate()) > 0) {
             return ImmutableList.<DefaultSubscriptionBase>of();
@@ -615,12 +617,12 @@ public class DefaultSubscriptionBaseApiService implements SubscriptionBaseApiSer
         }
     }
 
-    private List<DefaultSubscriptionBase> addCancellationAddOnForEventsIfRequired(final Collection<SubscriptionBaseEvent> events, final CatalogEntity baseProduct, final UUID bundleId,
+    private List<DefaultSubscriptionBase> addCancellationAddOnForEventsIfRequired(final Collection<SubscriptionBaseEvent> events, final Product baseProduct, final UUID bundleId,
                                                                                   final DateTime effectiveDate, final Catalog catalog, final InternalTenantContext internalTenantContext) throws CatalogApiException {
 
         final List<DefaultSubscriptionBase> subscriptionsToBeCancelled = new ArrayList<DefaultSubscriptionBase>();
 
-        final List<SubscriptionBase> subscriptions = dao.getSubscriptions(bundleId, ImmutableList.<SubscriptionBaseEvent>of(), catalog, internalTenantContext);
+        final List<DefaultSubscriptionBase> subscriptions = dao.getSubscriptions(bundleId, ImmutableList.<SubscriptionBaseEvent>of(), catalog, internalTenantContext);
 
         for (final SubscriptionBase subscription : subscriptions) {
             final DefaultSubscriptionBase cur = (DefaultSubscriptionBase) subscription;
@@ -631,8 +633,8 @@ public class DefaultSubscriptionBaseApiService implements SubscriptionBaseApiSer
 
             final Plan addonCurrentPlan = cur.getCurrentPlan();
             if (baseProduct == null ||
-                addonUtils.isAddonIncludedFromProdName(baseProduct.getName(), addonCurrentPlan, effectiveDate, catalog, internalTenantContext) ||
-                !addonUtils.isAddonAvailableFromProdName(baseProduct.getName(), addonCurrentPlan, effectiveDate, catalog, internalTenantContext)) {
+                addonUtils.isAddonIncluded(baseProduct, addonCurrentPlan) ||
+                !addonUtils.isAddonAvailable(baseProduct, addonCurrentPlan)) {
                 //
                 // Perform AO cancellation using the effectiveDate of the BP
                 //

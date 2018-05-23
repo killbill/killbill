@@ -235,7 +235,7 @@ public class DefaultInternalBillingApi implements BillingInternalApi {
 
     private int calculateBcdForTransition(final Catalog catalog, final Map<UUID, Integer> bcdCache, final SubscriptionBase baseSubscription, final SubscriptionBase subscription, final int accountBillCycleDayLocal, final EffectiveSubscriptionInternalEvent transition, final InternalTenantContext internalTenantContext)
             throws CatalogApiException, AccountApiException, SubscriptionBaseApiException {
-        final BillingAlignment alignment = catalog.billingAlignment(getPlanPhaseSpecifierFromTransition(catalog, transition), subscription.getStartDate());
+        final BillingAlignment alignment = catalog.billingAlignment(getPlanPhaseSpecifierFromTransition(catalog, transition), transition.getEffectiveTransitionTime(), subscription.getStartDate());
         return BillCycleDayCalculator.calculateBcdForAlignment(bcdCache, subscription, baseSubscription, alignment, internalTenantContext, accountBillCycleDayLocal);
     }
 

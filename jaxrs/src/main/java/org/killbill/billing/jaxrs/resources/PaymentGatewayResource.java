@@ -92,7 +92,8 @@ public class PaymentGatewayResource extends ComboPaymentResource {
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
     @ApiOperation(value = "Combo API to generate form data to redirect the customer to the gateway", response = HostedPaymentPageFormDescriptorJson.class)
-    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid data for Account or PaymentMethod")})
+    @ApiResponses(value = {/*@ApiResponse(code = 200, message = "Successful"),*/
+                           @ApiResponse(code = 400, message = "Invalid data for Account or PaymentMethod")})
     public Response buildComboFormDescriptor(final ComboHostedPaymentPageJson json,
                                              @QueryParam(QUERY_PAYMENT_CONTROL_PLUGIN_NAME) final List<String> paymentControlPluginNames,
                                              @QueryParam(QUERY_PLUGIN_PROPERTY) final List<String> pluginPropertiesString,
@@ -112,8 +113,8 @@ public class PaymentGatewayResource extends ComboPaymentResource {
         final Iterable<PluginProperty> paymentMethodPluginProperties = extractPluginProperties(json.getPaymentMethodPluginProperties());
         final UUID paymentMethodId = getOrCreatePaymentMethod(account, json.getPaymentMethod(), paymentMethodPluginProperties, callContext);
 
-        final HostedPaymentPageFieldsJson hostedPaymentPageFields = json.getHostedPaymentPageFieldsJson();
-        final Iterable<PluginProperty> customFields = extractPluginProperties(hostedPaymentPageFields != null ? hostedPaymentPageFields.getCustomFields() : null);
+        final HostedPaymentPageFieldsJson hostedPaymentPageFields = json.getHostedPaymentPageFields();
+        final Iterable<PluginProperty> customFields = extractPluginProperties(hostedPaymentPageFields != null ? hostedPaymentPageFields.getFormFields() : null);
 
         final HostedPaymentPageFormDescriptor descriptor = paymentGatewayApi.buildFormDescriptorWithPaymentControl(account, paymentMethodId, customFields, pluginProperties, paymentOptions, callContext);
         final HostedPaymentPageFormDescriptorJson result = new HostedPaymentPageFormDescriptorJson(descriptor);
@@ -127,10 +128,10 @@ public class PaymentGatewayResource extends ComboPaymentResource {
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
     @ApiOperation(value = "Generate form data to redirect the customer to the gateway", response = HostedPaymentPageFormDescriptorJson.class)
-    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid accountId supplied"),
+    @ApiResponses(value = {/* @ApiResponse(code = 200, message = "Successful"),*/
                            @ApiResponse(code = 404, message = "Account not found")})
-    public Response buildFormDescriptor(final HostedPaymentPageFieldsJson json,
-                                        @PathParam("accountId") final UUID accountId,
+    public Response buildFormDescriptor(@PathParam("accountId") final UUID accountId,
+                                        final HostedPaymentPageFieldsJson json,
                                         @QueryParam(QUERY_PAYMENT_METHOD_ID) final UUID inputPaymentMethodId,
                                         @QueryParam(QUERY_PAYMENT_CONTROL_PLUGIN_NAME) final List<String> paymentControlPluginNames,
                                         @QueryParam(QUERY_PLUGIN_PROPERTY) final List<String> pluginPropertiesString,
@@ -147,7 +148,7 @@ public class PaymentGatewayResource extends ComboPaymentResource {
 
         validatePaymentMethodForAccount(accountId, paymentMethodId, callContext);
 
-        final Iterable<PluginProperty> customFields = extractPluginProperties(json.getCustomFields());
+        final Iterable<PluginProperty> customFields = extractPluginProperties(json.getFormFields());
 
         final HostedPaymentPageFormDescriptor descriptor = paymentGatewayApi.buildFormDescriptorWithPaymentControl(account, paymentMethodId, customFields, pluginProperties, paymentOptions, callContext);
         final HostedPaymentPageFormDescriptorJson result = new HostedPaymentPageFormDescriptorJson(descriptor);
@@ -161,9 +162,9 @@ public class PaymentGatewayResource extends ComboPaymentResource {
     @Consumes(WILDCARD)
     @Produces(APPLICATION_JSON)
     @ApiOperation(value = "Process a gateway notification", notes = "The response is built by the appropriate plugin")
-    @ApiResponses(value = {})
-    public Response processNotification(final String body,
-                                        @PathParam(QUERY_PAYMENT_PLUGIN_NAME) final String pluginName,
+    @ApiResponses(value = {@ApiResponse(code = 200, message = "Successful")})
+    public Response processNotification(@PathParam(PATH_PAYMENT_PLUGIN_NAME) final String pluginName,
+                                        final String body,
                                         @QueryParam(QUERY_PAYMENT_CONTROL_PLUGIN_NAME) final List<String> paymentControlPluginNames,
                                         @QueryParam(QUERY_PLUGIN_PROPERTY) final List<String> pluginPropertiesString,
                                         @HeaderParam(HDR_CREATED_BY) final String createdBy,

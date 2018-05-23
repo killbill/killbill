@@ -53,7 +53,7 @@ public class TestInvoiceJsonWithBundleKeys extends JaxrsTestSuiteNoDB {
         final CreditJson creditJson = createCreditJson();
         final List<CreditJson> credits = ImmutableList.<CreditJson>of(creditJson);
         final List<AuditLogJson> auditLogs = createAuditLogsJson(clock.getUTCNow());
-        final InvoiceJson invoiceJsonSimple = new InvoiceJson(amount, Currency.USD.toString(), InvoiceStatus.COMMITTED.toString(),
+        final InvoiceJson invoiceJsonSimple = new InvoiceJson(amount, Currency.USD, InvoiceStatus.COMMITTED,
                                                               creditAdj, refundAdj, invoiceId, invoiceDate,
                                                               targetDate, invoiceNumber, balance, accountId, bundleKeys,
                                                               credits, null, false, null, null, auditLogs);
@@ -69,7 +69,7 @@ public class TestInvoiceJsonWithBundleKeys extends JaxrsTestSuiteNoDB {
         Assert.assertEquals(invoiceJsonSimple.getBundleKeys(), bundleKeys);
         Assert.assertEquals(invoiceJsonSimple.getCredits(), credits);
         Assert.assertEquals(invoiceJsonSimple.getAuditLogs(), auditLogs);
-        Assert.assertEquals(invoiceJsonSimple.getStatus(), InvoiceStatus.COMMITTED.toString());
+        Assert.assertEquals(invoiceJsonSimple.getStatus(), InvoiceStatus.COMMITTED);
         Assert.assertFalse(invoiceJsonSimple.getIsParentInvoice());
 
         final String asJson = mapper.writeValueAsString(invoiceJsonSimple);
@@ -109,17 +109,18 @@ public class TestInvoiceJsonWithBundleKeys extends JaxrsTestSuiteNoDB {
         Assert.assertEquals(invoiceJson.getAccountId(), invoice.getAccountId());
         Assert.assertEquals(invoiceJson.getBundleKeys(), bundleKeys);
         Assert.assertEquals(invoiceJson.getCredits(), credits);
-        Assert.assertNull(invoiceJson.getAuditLogs());
-        Assert.assertEquals(invoiceJson.getStatus(), InvoiceStatus.COMMITTED.toString());
+        Assert.assertEquals(invoiceJson.getAuditLogs().size(),0);
+        Assert.assertEquals(invoiceJson.getStatus(), InvoiceStatus.COMMITTED);
     }
 
     private CreditJson createCreditJson() {
         final BigDecimal creditAmount = BigDecimal.TEN;
+        final UUID creditId = UUID.randomUUID();
         final Currency currency = Currency.USD;
         final UUID invoiceId = UUID.randomUUID();
         final String invoiceNumber = UUID.randomUUID().toString();
         final LocalDate effectiveDate = clock.getUTCToday();
         final UUID accountId = UUID.randomUUID();
-        return new CreditJson(creditAmount, currency.name(), invoiceId, invoiceNumber, effectiveDate,  accountId, null, null, null);
+        return new CreditJson(creditId, creditAmount, currency, invoiceId, invoiceNumber, effectiveDate,  accountId, null, null, null);
     }
 }

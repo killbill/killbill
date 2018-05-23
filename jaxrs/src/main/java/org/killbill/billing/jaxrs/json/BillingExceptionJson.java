@@ -163,19 +163,19 @@ public class BillingExceptionJson {
         private final String fileName;
         private final Integer lineNumber;
         private final String methodName;
-        private final Boolean nativeMethod;
+        private final Boolean isNativeMethod;
 
         @JsonCreator
         public StackTraceElementJson(@JsonProperty("className") final String className,
                                      @JsonProperty("fileName") final String fileName,
                                      @JsonProperty("lineNumber") final Integer lineNumber,
                                      @JsonProperty("methodName") final String methodName,
-                                     @JsonProperty("nativeMethod") final Boolean nativeMethod) {
+                                     @JsonProperty("isNativeMethod") final Boolean isNativeMethod) {
             this.className = className;
             this.fileName = fileName;
             this.lineNumber = lineNumber;
             this.methodName = methodName;
-            this.nativeMethod = nativeMethod;
+            this.isNativeMethod = isNativeMethod;
         }
 
         public String getClassName() {
@@ -194,8 +194,9 @@ public class BillingExceptionJson {
             return methodName;
         }
 
-        public Boolean getNativeMethod() {
-            return nativeMethod;
+        @JsonProperty("isNativeMethod")
+        public Boolean isNativeMethod() {
+            return isNativeMethod;
         }
 
         @Override
@@ -205,7 +206,7 @@ public class BillingExceptionJson {
             sb.append(", fileName='").append(fileName).append('\'');
             sb.append(", lineNumber=").append(lineNumber);
             sb.append(", methodName='").append(methodName).append('\'');
-            sb.append(", nativeMethod=").append(nativeMethod);
+            sb.append(", isNativeMethod=").append(isNativeMethod);
             sb.append('}');
             return sb.toString();
         }
@@ -233,7 +234,7 @@ public class BillingExceptionJson {
             if (methodName != null ? !methodName.equals(that.methodName) : that.methodName != null) {
                 return false;
             }
-            if (nativeMethod != null ? !nativeMethod.equals(that.nativeMethod) : that.nativeMethod != null) {
+            if (isNativeMethod != null ? !isNativeMethod.equals(that.isNativeMethod) : that.isNativeMethod != null) {
                 return false;
             }
 
@@ -246,7 +247,7 @@ public class BillingExceptionJson {
             result = 31 * result + (fileName != null ? fileName.hashCode() : 0);
             result = 31 * result + (lineNumber != null ? lineNumber.hashCode() : 0);
             result = 31 * result + (methodName != null ? methodName.hashCode() : 0);
-            result = 31 * result + (nativeMethod != null ? nativeMethod.hashCode() : 0);
+            result = 31 * result + (isNativeMethod != null ? isNativeMethod.hashCode() : 0);
             return result;
         }
     }

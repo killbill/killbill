@@ -63,6 +63,7 @@ import org.killbill.billing.util.audit.AccountAuditLogs;
 import org.killbill.billing.util.audit.AuditLogWithHistory;
 import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.TenantContext;
+import org.killbill.billing.util.customfield.CustomField;
 import org.killbill.billing.util.entity.Pagination;
 import org.killbill.clock.Clock;
 import org.killbill.commons.metrics.TimedResource;
@@ -105,10 +106,10 @@ public class PaymentMethodResource extends JaxRsResourceBase {
     @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid paymentMethodId supplied"),
                            @ApiResponse(code = 404, message = "Account or payment method not found")})
     public Response getPaymentMethod(@PathParam("paymentMethodId") final UUID paymentMethodId,
-                                     @QueryParam(QUERY_PLUGIN_PROPERTY) final List<String> pluginPropertiesString,
                                      @QueryParam(QUERY_INCLUDED_DELETED) @DefaultValue("false") final Boolean includedDeleted,
-                                     @QueryParam(QUERY_AUDIT) @DefaultValue("NONE") final AuditMode auditMode,
                                      @QueryParam(QUERY_WITH_PLUGIN_INFO) @DefaultValue("false") final Boolean withPluginInfo,
+                                     @QueryParam(QUERY_PLUGIN_PROPERTY) final List<String> pluginPropertiesString,
+                                     @QueryParam(QUERY_AUDIT) @DefaultValue("NONE") final AuditMode auditMode,
                                      @javax.ws.rs.core.Context final HttpServletRequest request) throws AccountApiException, PaymentApiException {
         final Iterable<PluginProperty> pluginProperties = extractPluginProperties(pluginPropertiesString);
         final TenantContext tenantContext = context.createTenantContextNoAccountId(request);
@@ -127,10 +128,10 @@ public class PaymentMethodResource extends JaxRsResourceBase {
     @ApiOperation(value = "Retrieve a payment method by external key", response = PaymentMethodJson.class)
     @ApiResponses(value = {@ApiResponse(code = 404, message = "Account or payment method not found")})
     public Response getPaymentMethodByKey(@ApiParam(required=true) @QueryParam(QUERY_EXTERNAL_KEY) final String externalKey,
-                                          @QueryParam(QUERY_PLUGIN_PROPERTY) final List<String> pluginPropertiesString,
                                           @QueryParam(QUERY_INCLUDED_DELETED) @DefaultValue("false") final Boolean includedDeleted,
-                                          @QueryParam(QUERY_AUDIT) @DefaultValue("NONE") final AuditMode auditMode,
                                           @QueryParam(QUERY_WITH_PLUGIN_INFO) @DefaultValue("false") final Boolean withPluginInfo,
+                                          @QueryParam(QUERY_PLUGIN_PROPERTY) final List<String> pluginPropertiesString,
+                                          @QueryParam(QUERY_AUDIT) @DefaultValue("NONE") final AuditMode auditMode,
                                           @javax.ws.rs.core.Context final HttpServletRequest request) throws AccountApiException, PaymentApiException {
         final Iterable<PluginProperty> pluginProperties = extractPluginProperties(pluginPropertiesString);
         final TenantContext tenantContext = context.createTenantContextNoAccountId(request);
@@ -151,9 +152,9 @@ public class PaymentMethodResource extends JaxRsResourceBase {
     public Response getPaymentMethods(@QueryParam(QUERY_SEARCH_OFFSET) @DefaultValue("0") final Long offset,
                                       @QueryParam(QUERY_SEARCH_LIMIT) @DefaultValue("100") final Long limit,
                                       @QueryParam(QUERY_PAYMENT_METHOD_PLUGIN_NAME) final String pluginName,
+                                      @QueryParam(QUERY_WITH_PLUGIN_INFO) @DefaultValue("false") final Boolean withPluginInfo,
                                       @QueryParam(QUERY_PLUGIN_PROPERTY) final List<String> pluginPropertiesString,
                                       @QueryParam(QUERY_AUDIT) @DefaultValue("NONE") final AuditMode auditMode,
-                                      @QueryParam(QUERY_WITH_PLUGIN_INFO) @DefaultValue("false") final Boolean withPluginInfo,
                                       @javax.ws.rs.core.Context final HttpServletRequest request) throws PaymentApiException {
         final Iterable<PluginProperty> pluginProperties = extractPluginProperties(pluginPropertiesString);
         final TenantContext tenantContext = context.createTenantContextNoAccountId(request);
@@ -208,9 +209,9 @@ public class PaymentMethodResource extends JaxRsResourceBase {
                                          @QueryParam(QUERY_SEARCH_OFFSET) @DefaultValue("0") final Long offset,
                                          @QueryParam(QUERY_SEARCH_LIMIT) @DefaultValue("100") final Long limit,
                                          @QueryParam(QUERY_PAYMENT_METHOD_PLUGIN_NAME) final String pluginName,
+                                         @QueryParam(QUERY_WITH_PLUGIN_INFO) @DefaultValue("false") final Boolean withPluginInfo,
                                          @QueryParam(QUERY_PLUGIN_PROPERTY) final List<String> pluginPropertiesString,
                                          @QueryParam(QUERY_AUDIT) @DefaultValue("NONE") final AuditMode auditMode,
-                                         @QueryParam(QUERY_WITH_PLUGIN_INFO) @DefaultValue("false") final Boolean withPluginInfo,
                                          @javax.ws.rs.core.Context final HttpServletRequest request) throws PaymentApiException, AccountApiException {
         final Iterable<PluginProperty> pluginProperties = extractPluginProperties(pluginPropertiesString);
         final TenantContext tenantContext = context.createTenantContextNoAccountId(request);
@@ -262,7 +263,8 @@ public class PaymentMethodResource extends JaxRsResourceBase {
     @Produces(APPLICATION_JSON)
     @Path("/{paymentMethodId:" + UUID_PATTERN + "}")
     @ApiOperation(value = "Delete a payment method")
-    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid paymentMethodId supplied"),
+    @ApiResponses(value = {@ApiResponse(code = 204, message = "Successful operation"),
+                           @ApiResponse(code = 400, message = "Invalid paymentMethodId supplied"),
                            @ApiResponse(code = 404, message = "Account or payment method not found")})
     public Response deletePaymentMethod(@PathParam("paymentMethodId") final UUID paymentMethodId,
                                         @QueryParam(QUERY_DELETE_DEFAULT_PM_WITH_AUTO_PAY_OFF) @DefaultValue("false") final Boolean deleteDefaultPaymentMethodWithAutoPayOff,
@@ -280,14 +282,14 @@ public class PaymentMethodResource extends JaxRsResourceBase {
 
         paymentApi.deletePaymentMethod(account, paymentMethodId, deleteDefaultPaymentMethodWithAutoPayOff, forceDefaultPaymentMethodDeletion, pluginProperties, callContext);
 
-        return Response.status(Status.OK).build();
+        return Response.status(Status.NO_CONTENT).build();
     }
 
     @TimedResource
     @GET
     @Path("/{paymentMethodId:" + UUID_PATTERN + "}/" + CUSTOM_FIELDS)
     @Produces(APPLICATION_JSON)
-    @ApiOperation(value = "Retrieve payment method custom fields", response = CustomFieldJson.class, responseContainer = "List")
+    @ApiOperation(value = "Retrieve payment method custom fields", response = CustomFieldJson.class, responseContainer = "List", nickname = "getPaymentMethodCustomFields")
     @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid payment method id supplied")})
     public Response getCustomFields(@PathParam("paymentMethodId") final UUID paymentMethodId,
                                     @QueryParam(QUERY_AUDIT) @DefaultValue("NONE") final AuditMode auditMode,
@@ -300,15 +302,16 @@ public class PaymentMethodResource extends JaxRsResourceBase {
     @Path("/{paymentMethodId:" + UUID_PATTERN + "}/" + CUSTOM_FIELDS)
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
-    @ApiOperation(value = "Add custom fields to payment method")
-    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid payment method id supplied")})
-    public Response createCustomFields(@PathParam("paymentMethodId") final UUID paymentMethodId,
-                                       final List<CustomFieldJson> customFields,
-                                       @HeaderParam(HDR_CREATED_BY) final String createdBy,
-                                       @HeaderParam(HDR_REASON) final String reason,
-                                       @HeaderParam(HDR_COMMENT) final String comment,
-                                       @javax.ws.rs.core.Context final HttpServletRequest request,
-                                       @javax.ws.rs.core.Context final UriInfo uriInfo) throws CustomFieldApiException {
+    @ApiOperation(value = "Add custom fields to payment method", response = CustomField.class, responseContainer = "List")
+    @ApiResponses(value = {@ApiResponse(code = 201, message = "Custom field created successfully"),
+                           @ApiResponse(code = 400, message = "Invalid payment method id supplied")})
+    public Response createPaymentMethodCustomFields(@PathParam("paymentMethodId") final UUID paymentMethodId,
+                                                    final List<CustomFieldJson> customFields,
+                                                    @HeaderParam(HDR_CREATED_BY) final String createdBy,
+                                                    @HeaderParam(HDR_REASON) final String reason,
+                                                    @HeaderParam(HDR_COMMENT) final String comment,
+                                                    @javax.ws.rs.core.Context final HttpServletRequest request,
+                                                    @javax.ws.rs.core.Context final UriInfo uriInfo) throws CustomFieldApiException {
         return super.createCustomFields(paymentMethodId, customFields,
                                         context.createCallContextNoAccountId(createdBy, reason, comment, request), uriInfo, request);
     }
@@ -320,13 +323,14 @@ public class PaymentMethodResource extends JaxRsResourceBase {
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
     @ApiOperation(value = "Modify custom fields to payment method")
-    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid payment method id supplied")})
-    public Response modifyCustomFields(@PathParam("paymentMethodId") final UUID paymentMethodId,
-                                       final List<CustomFieldJson> customFields,
-                                       @HeaderParam(HDR_CREATED_BY) final String createdBy,
-                                       @HeaderParam(HDR_REASON) final String reason,
-                                       @HeaderParam(HDR_COMMENT) final String comment,
-                                       @javax.ws.rs.core.Context final HttpServletRequest request) throws CustomFieldApiException {
+    @ApiResponses(value = {@ApiResponse(code = 204, message = "Successful operation"),
+                           @ApiResponse(code = 400, message = "Invalid payment method id supplied")})
+    public Response modifyPaymentMethodCustomFields(@PathParam("paymentMethodId") final UUID paymentMethodId,
+                                                    final List<CustomFieldJson> customFields,
+                                                    @HeaderParam(HDR_CREATED_BY) final String createdBy,
+                                                    @HeaderParam(HDR_REASON) final String reason,
+                                                    @HeaderParam(HDR_COMMENT) final String comment,
+                                                    @javax.ws.rs.core.Context final HttpServletRequest request) throws CustomFieldApiException {
         return super.modifyCustomFields(paymentMethodId, customFields,
                                         context.createCallContextNoAccountId(createdBy, reason, comment, request));
     }
@@ -338,13 +342,14 @@ public class PaymentMethodResource extends JaxRsResourceBase {
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
     @ApiOperation(value = "Remove custom fields from payment method")
-    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid payment method id supplied")})
-    public Response deleteCustomFields(@PathParam("paymentMethodId") final UUID paymentMethodId,
-                                       @QueryParam(QUERY_CUSTOM_FIELDS) final String customFieldList,
-                                       @HeaderParam(HDR_CREATED_BY) final String createdBy,
-                                       @HeaderParam(HDR_REASON) final String reason,
-                                       @HeaderParam(HDR_COMMENT) final String comment,
-                                       @javax.ws.rs.core.Context final HttpServletRequest request) throws CustomFieldApiException {
+    @ApiResponses(value = {@ApiResponse(code = 204, message = "Successful operation"),
+                           @ApiResponse(code = 400, message = "Invalid payment method id supplied")})
+    public Response deletePaymentMethodCustomFields(@PathParam("paymentMethodId") final UUID paymentMethodId,
+                                                    @QueryParam(QUERY_CUSTOM_FIELD) final List<UUID> customFieldList,
+                                                    @HeaderParam(HDR_CREATED_BY) final String createdBy,
+                                                    @HeaderParam(HDR_REASON) final String reason,
+                                                    @HeaderParam(HDR_COMMENT) final String comment,
+                                                    @javax.ws.rs.core.Context final HttpServletRequest request) throws CustomFieldApiException {
         return super.deleteCustomFields(paymentMethodId, customFieldList,
                                         context.createCallContextNoAccountId(createdBy, reason, comment, request));
     }

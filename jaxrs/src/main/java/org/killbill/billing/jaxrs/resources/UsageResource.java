@@ -102,7 +102,8 @@ public class UsageResource extends JaxRsResourceBase {
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
     @ApiOperation(value = "Record usage for a subscription")
-    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid subscription (e.g. inactive)")})
+    @ApiResponses(value = {@ApiResponse(code = 200, message = "Successfully recorded usage data change"),
+                           @ApiResponse(code = 400, message = "Invalid subscription (e.g. inactive)")})
     public Response recordUsage(final SubscriptionUsageRecordJson json,
                                 @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                 @HeaderParam(HDR_REASON) final String reason,

@@ -65,7 +65,7 @@ public class TestBillingExceptionJson extends JaxrsTestSuiteNoDB {
             Assert.assertFalse(exceptionJson.getStackTrace().isEmpty());
             Assert.assertEquals(exceptionJson.getStackTrace().get(0).getClassName(), TestBillingExceptionJson.class.getName());
             Assert.assertEquals(exceptionJson.getStackTrace().get(0).getMethodName(), "testFromException");
-            Assert.assertFalse(exceptionJson.getStackTrace().get(0).getNativeMethod());
+            Assert.assertFalse(exceptionJson.getStackTrace().get(0).isNativeMethod());
 
             final BillingExceptionJson exceptionJsonNoStackTrace = new BillingExceptionJson(e, false);
             Assert.assertEquals(exceptionJsonNoStackTrace.getClassName(), e.getClass().getName());

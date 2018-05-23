@@ -21,8 +21,8 @@ package org.killbill.billing.server.security;
 import javax.ws.rs.core.Response.Status;
 
 import org.killbill.billing.client.KillBillClientException;
-import org.killbill.billing.client.model.Account;
-import org.killbill.billing.client.model.Tenant;
+import org.killbill.billing.client.model.gen.Account;
+import org.killbill.billing.client.model.gen.Tenant;
 import org.killbill.billing.jaxrs.TestJaxrsBase;
 import org.testng.Assert;
 import org.testng.annotations.AfterMethod;
@@ -45,7 +45,7 @@ public class TestTenantFilter extends TestJaxrsBase {
         // Try to create an account without being logged-in
         logoutTenant();
         try {
-            killBillClient.createAccount(getAccount(), createdBy, reason, comment);
+            accountApi.createAccount(getAccount(), requestOptions);
             Assert.fail();
         } catch (final KillBillClientException e) {
             Assert.assertEquals(e.getResponse().getStatusCode(), Status.UNAUTHORIZED.getStatusCode());
@@ -56,7 +56,7 @@ public class TestTenantFilter extends TestJaxrsBase {
         final Tenant tenant1 = createTenant("pierre", "pierreIsFr3nch", true);
 
         final Account account1 = createAccount();
-        Assert.assertEquals(killBillClient.getAccount(account1.getExternalKey()), account1);
+        Assert.assertEquals(accountApi.getAccountByKey(account1.getExternalKey(), requestOptions), account1);
 
         logoutTenant();
 
@@ -64,13 +64,13 @@ public class TestTenantFilter extends TestJaxrsBase {
         createTenant("stephane", "stephane1sAlsoFr3nch", true);
 
         final Account account2 = createAccount();
-        Assert.assertEquals(killBillClient.getAccount(account2.getExternalKey()), account2);
+        Assert.assertEquals(accountApi.getAccountByKey(account2.getExternalKey(), requestOptions), account2);
 
         // We should not be able to retrieve the first account as tenant2
-        Assert.assertNull(killBillClient.getAccount(account1.getExternalKey()));
+        Assert.assertNull(accountApi.getAccountByKey(account1.getExternalKey(), requestOptions));
 
         // Same for tenant1 and account2
         loginTenant(tenant1.getApiKey(), tenant1.getApiSecret());
-        Assert.assertNull(killBillClient.getAccount(account2.getExternalKey()));
+        Assert.assertNull(accountApi.getAccountByKey(account2.getExternalKey(), requestOptions));
     }
 }

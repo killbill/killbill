@@ -102,6 +102,7 @@ import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
+import static javax.ws.rs.core.MediaType.APPLICATION_OCTET_STREAM;
 
 @Singleton
 @Path(JaxrsResource.ADMIN_PATH)
@@ -149,9 +150,11 @@ public class AdminResource extends JaxRsResourceBase {
 
     @GET
     @Path("/queues")
-    @Produces(APPLICATION_JSON)
-    @ApiOperation(value = "Get queues entries", response = Response.class, hidden=true)
-    @ApiResponses(value = {})
+    @Produces(APPLICATION_OCTET_STREAM)
+    @ApiOperation(value = "Get queues entries", response = Response.class)
+    @ApiResponses(value = {@ApiResponse(code = 200, message = "Success"),
+                           @ApiResponse(code = 400, message = "Invalid account id supplied"),
+                           @ApiResponse(code = 404, message = "Account not found")})
     public Response getQueueEntries(@QueryParam("accountId") final UUID accountId,
                                     @QueryParam("queueName") final String queueName,
                                     @QueryParam("serviceName") final String serviceName,
@@ -231,10 +234,11 @@ public class AdminResource extends JaxRsResourceBase {
     @Produces(APPLICATION_JSON)
     @Path("/payments/{paymentId:" + UUID_PATTERN + "}/transactions/{paymentTransactionId:" + UUID_PATTERN + "}")
     @ApiOperation(value = "Update existing paymentTransaction and associated payment state")
-    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid account data supplied")})
-    public Response updatePaymentTransactionState(final AdminPaymentJson json,
-                                                  @PathParam("paymentId") final UUID paymentId,
+    @ApiResponses(value = {@ApiResponse(code = 204, message = "Successful operation"),
+                           @ApiResponse(code = 400, message = "Invalid account data supplied")})
+    public Response updatePaymentTransactionState(@PathParam("paymentId") final UUID paymentId,
                                                   @PathParam("paymentTransactionId") final UUID paymentTransactionId,
+                                                  final AdminPaymentJson json,
                                                   @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                                   @HeaderParam(HDR_REASON) final String reason,
                                                   @HeaderParam(HDR_COMMENT) final String comment,
@@ -252,7 +256,7 @@ public class AdminResource extends JaxRsResourceBase {
 
         adminPaymentApi.fixPaymentTransactionState(payment, paymentTransaction, TransactionStatus.valueOf(json.getTransactionStatus()),
                                                    json.getLastSuccessPaymentState(), json.getCurrentPaymentStateName(), ImmutableList.<PluginProperty>of(), callContext);
-        return Response.status(Status.OK).build();
+        return Response.status(Status.NO_CONTENT).build();
     }
 
     @POST
@@ -260,7 +264,7 @@ public class AdminResource extends JaxRsResourceBase {
     @Produces(APPLICATION_JSON)
     @Path("/invoices")
     @ApiOperation(value = "Trigger an invoice generation for all parked accounts")
-    @ApiResponses(value = {})
+    @ApiResponses(value = {@ApiResponse(code = 200, message = "Successful operation")})
     public Response triggerInvoiceGenerationForParkedAccounts(@QueryParam(QUERY_SEARCH_OFFSET) @DefaultValue("0") final Long offset,
                                                               @QueryParam(QUERY_SEARCH_LIMIT) @DefaultValue("100") final Long limit,
                                                               @HeaderParam(HDR_CREATED_BY) final String createdBy,
@@ -322,7 +326,8 @@ public class AdminResource extends JaxRsResourceBase {
     @Path("/" + CACHE)
     @Produces(APPLICATION_JSON)
     @ApiOperation(value = "Invalidates the given Cache if specified, otherwise invalidates all caches")
-    @ApiResponses(value = {@ApiResponse(code = 400, message = "Cache name does not exist or is not alive")})
+    @ApiResponses(value = {@ApiResponse(code = 204, message = "Successful operation"),
+                           @ApiResponse(code = 400, message = "Cache name does not exist or is not alive")})
     public Response invalidatesCache(@QueryParam("cacheName") final String cacheName,
                                      @javax.ws.rs.core.Context final HttpServletRequest request) {
         if (null != cacheName && !cacheName.isEmpty()) {
@@ -338,14 +343,15 @@ public class AdminResource extends JaxRsResourceBase {
             // if not given a specific cacheName, clear all
             cacheControllerDispatcher.clearAll();
         }
-        return Response.status(Status.OK).build();
+        return Response.status(Status.NO_CONTENT).build();
     }
 
     @DELETE
     @Path("/" + CACHE + "/" + ACCOUNTS + "/{accountId:" + UUID_PATTERN + "}/")
     @Produces(APPLICATION_JSON)
     @ApiOperation(value = "Invalidates Caches per account level")
-    @ApiResponses(value = {})
+    @ApiResponses(value = {@ApiResponse(code = 204, message = "Successful operation"),
+                           @ApiResponse(code = 400, message = "Invalid account id supplied")})
     public Response invalidatesCacheByAccount(@PathParam("accountId") final UUID accountId,
                                               @javax.ws.rs.core.Context final HttpServletRequest request) {
 
@@ -364,16 +370,15 @@ public class AdminResource extends JaxRsResourceBase {
         final CacheController<UUID, Integer> accountBCDCacheController = cacheControllerDispatcher.getCacheController(CacheType.ACCOUNT_BCD);
         accountBCDCacheController.remove(accountId);
 
-        return Response.status(Status.OK).build();
+        return Response.status(Status.NO_CONTENT).build();
     }
 
     @DELETE
     @Path("/" + CACHE + "/" + TENANTS)
     @Produces(APPLICATION_JSON)
     @ApiOperation(value = "Invalidates Caches per tenant level")
-    @ApiResponses(value = {})
-    public Response invalidatesCacheByTenant(@QueryParam("tenantApiKey") final String tenantApiKey,
-                                             @javax.ws.rs.core.Context final HttpServletRequest request) throws TenantApiException {
+    @ApiResponses(value = {@ApiResponse(code = 204, message = "Successful operation")})
+    public Response invalidatesCacheByTenant(@javax.ws.rs.core.Context final HttpServletRequest request) throws TenantApiException {
 
         // creating Tenant Context from Request
         final TenantContext tenantContext = context.createTenantContextNoAccountId(request);
@@ -418,27 +423,27 @@ public class AdminResource extends JaxRsResourceBase {
         final CacheController<Long, Catalog> tenantCatalogCacheController = cacheControllerDispatcher.getCacheController(CacheType.TENANT_CATALOG);
         tenantCatalogCacheController.remove(tenantRecordId);
 
-        return Response.status(Status.OK).build();
+        return Response.status(Status.NO_CONTENT).build();
     }
 
-    @POST
+    @PUT
     @Path("/" + HEALTHCHECK)
     @Produces(APPLICATION_JSON)
     @ApiOperation(value = "Put the host back into rotation")
-    @ApiResponses(value = {})
+    @ApiResponses(value = {@ApiResponse(code = 204, message = "Successful operation")})
     public Response putInRotation(@javax.ws.rs.core.Context final HttpServletRequest request) {
         killbillHealthcheck.putInRotation();
-        return Response.status(Status.OK).build();
+        return Response.status(Status.NO_CONTENT).build();
     }
 
     @DELETE
     @Path("/" + HEALTHCHECK)
     @Produces(APPLICATION_JSON)
     @ApiOperation(value = "Put the host out of rotation")
-    @ApiResponses(value = {})
+    @ApiResponses(value = {@ApiResponse(code = 204, message = "Successful operation")})
     public Response putOutOfRotation(@javax.ws.rs.core.Context final HttpServletRequest request) {
         killbillHealthcheck.putOutOfRotation();
-        return Response.status(Status.OK).build();
+        return Response.status(Status.NO_CONTENT).build();
     }
 
     private Iterable<NotificationEventWithMetadata<NotificationEvent>> getNotifications(@Nullable final String queueName,

@@ -22,6 +22,7 @@ import java.util.UUID;
 
 import javax.annotation.Nullable;
 
+import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.payment.api.Payment;
 import org.killbill.billing.payment.api.PaymentAttempt;
 import org.killbill.billing.payment.api.PaymentTransaction;
@@ -36,7 +37,7 @@ import com.google.common.collect.Iterables;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 
-@ApiModel(value="Payment")
+@ApiModel(value="Payment", parent = JsonBase.class)
 public class PaymentJson extends JsonBase {
 
     private final UUID accountId;
@@ -48,7 +49,7 @@ public class PaymentJson extends JsonBase {
     private final BigDecimal purchasedAmount;
     private final BigDecimal refundedAmount;
     private final BigDecimal creditedAmount;
-    private final String currency;
+    private final Currency currency;
     private final UUID paymentMethodId;
     private final List<? extends PaymentTransactionJson> transactions;
     private final List<PaymentAttemptJson> paymentAttempts;
@@ -63,7 +64,7 @@ public class PaymentJson extends JsonBase {
                        @JsonProperty("purchasedAmount") final BigDecimal purchasedAmount,
                        @JsonProperty("refundedAmount") final BigDecimal refundedAmount,
                        @JsonProperty("creditedAmount") final BigDecimal creditedAmount,
-                       @JsonProperty("currency") final String currency,
+                       @JsonProperty("currency") final Currency currency,
                        @JsonProperty("paymentMethodId") final UUID paymentMethodId,
                        @JsonProperty("transactions") final List<? extends PaymentTransactionJson> transactions,
                        @JsonProperty("paymentAttempts") final List<PaymentAttemptJson> paymentAttempts,
@@ -94,7 +95,7 @@ public class PaymentJson extends JsonBase {
              dp.getPurchasedAmount(),
              dp.getRefundedAmount(),
              dp.getCreditedAmount(),
-             dp.getCurrency() != null ? dp.getCurrency().toString() : null,
+             dp.getCurrency() != null ? dp.getCurrency() : null,
              dp.getPaymentMethodId(),
              getTransactions(dp.getTransactions(), dp.getExternalKey(), accountAuditLogs),
              getAttempts(dp.getPaymentAttempts(), dp.getExternalKey(), accountAuditLogs),
@@ -161,7 +162,7 @@ public class PaymentJson extends JsonBase {
         return creditedAmount;
     }
 
-    public String getCurrency() {
+    public Currency getCurrency() {
         return currency;
     }
 

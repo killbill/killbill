@@ -31,7 +31,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 
-@ApiModel(value="Tag")
+@ApiModel(value="Tag", parent = JsonBase.class)
 public class TagJson extends JsonBase {
 
     private final UUID tagId;

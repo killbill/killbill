@@ -25,9 +25,11 @@ import javax.annotation.Nullable;
 
 import org.apache.shiro.util.CollectionUtils;
 import org.joda.time.LocalDate;
+import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.invoice.api.Invoice;
 import org.killbill.billing.invoice.api.InvoiceItem;
 import org.killbill.billing.invoice.api.InvoiceItemType;
+import org.killbill.billing.invoice.api.InvoiceStatus;
 import org.killbill.billing.util.audit.AccountAuditLogs;
 import org.killbill.billing.util.audit.AuditLog;
 
@@ -39,11 +41,11 @@ import com.google.common.collect.Iterables;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 
-@ApiModel(value="Invoice")
+@ApiModel(value="Invoice", parent = JsonBase.class)
 public class InvoiceJson extends JsonBase {
 
     private final BigDecimal amount;
-    private final String currency;
+    private final Currency currency;
     private final UUID invoiceId;
     private final LocalDate invoiceDate;
     private final LocalDate targetDate;
@@ -55,15 +57,15 @@ public class InvoiceJson extends JsonBase {
     private final List<InvoiceItemJson> items;
     private final String bundleKeys;
     private final List<CreditJson> credits;
-    private final String status;
+    private final InvoiceStatus status;
     private final Boolean isParentInvoice;
     private final UUID parentInvoiceId;
     private final UUID parentAccountId;
 
     @JsonCreator
     public InvoiceJson(@JsonProperty("amount") final BigDecimal amount,
-                       @JsonProperty("currency") final String currency,
-                       @JsonProperty("status") final String status,
+                       @JsonProperty("currency") final Currency currency,
+                       @JsonProperty("status") final InvoiceStatus status,
                        @JsonProperty("creditAdj") final BigDecimal creditAdj,
                        @JsonProperty("refundAdj") final BigDecimal refundAdj,
                        @JsonProperty("invoiceId") final UUID invoiceId,
@@ -104,7 +106,7 @@ public class InvoiceJson extends JsonBase {
     }
 
     public InvoiceJson(final Invoice input, final String bundleKeys, final List<CreditJson> credits, final List<AuditLog> auditLogs) {
-        this(input.getChargedAmount(), input.getCurrency().toString(), input.getStatus().toString(), input.getCreditedAmount(), input.getRefundedAmount(),
+        this(input.getChargedAmount(), input.getCurrency(), input.getStatus(), input.getCreditedAmount(), input.getRefundedAmount(),
              input.getId(), input.getInvoiceDate(), input.getTargetDate(), String.valueOf(input.getInvoiceNumber()),
              input.getBalance(), input.getAccountId(), bundleKeys, credits, null, input.isParentInvoice(),
              input.getParentInvoiceId(),
@@ -130,8 +132,8 @@ public class InvoiceJson extends JsonBase {
             }
         }
         this.amount = input.getChargedAmount();
-        this.currency = input.getCurrency().toString();
-        this.status = input.getStatus().toString();
+        this.currency = input.getCurrency();
+        this.status = input.getStatus();
         this.creditAdj = input.getCreditedAmount();
         this.refundAdj = input.getRefundedAmount();
         this.invoiceId = input.getId();
@@ -152,7 +154,7 @@ public class InvoiceJson extends JsonBase {
         return amount;
     }
 
-    public String getCurrency() {
+    public Currency getCurrency() {
         return currency;
     }
 
@@ -200,7 +202,7 @@ public class InvoiceJson extends JsonBase {
         return credits;
     }
 
-    public String getStatus() {
+    public InvoiceStatus getStatus() {
         return status;
     }
 

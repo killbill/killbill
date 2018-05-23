@@ -27,7 +27,7 @@ import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 
 
-@ApiModel(value="AccountEmail")
+@ApiModel(value="AccountEmail", parent = JsonBase.class)
 public class AccountEmailJson extends JsonBase {
 
     private final UUID accountId;

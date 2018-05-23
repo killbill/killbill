@@ -128,7 +128,7 @@ public class CatalogJson {
         Price[] prices = (internationalPrice != null) ? internationalPrice.getPrices() : null;
         if (prices != null && prices.length > 0) {
             for (int i=0; i < prices.length; i++) {
-                pricesJson.add(new PriceJson(prices[i].getCurrency().name(),
+                pricesJson.add(new PriceJson(prices[i].getCurrency(),
                                              prices[i].getValue()));
             }
         }
@@ -932,21 +932,21 @@ public class CatalogJson {
     @ApiModel(value="Price")
     public static class PriceJson {
 
-        private final String currency;
+        private final Currency currency;
         private final BigDecimal value;
 
         @JsonCreator
-        public PriceJson(@JsonProperty("currency") final String currency,
+        public PriceJson(@JsonProperty("currency") final Currency currency,
                          @JsonProperty("value") final BigDecimal value) {
             this.currency = currency;
             this.value = value;
         }
 
         public PriceJson(final Price price) throws CurrencyValueNull {
-            this(price.getCurrency().toString(), price.getValue());
+            this(price.getCurrency(), price.getValue());
         }
 
-        public String getCurrency() {
+        public Currency getCurrency() {
             return currency;
         }
 

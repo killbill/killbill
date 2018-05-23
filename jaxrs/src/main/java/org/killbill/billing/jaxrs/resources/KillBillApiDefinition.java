@@ -19,13 +19,9 @@ package org.killbill.billing.jaxrs.resources;
 
 import java.util.List;
 
-import javax.annotation.Nullable;
-
 import org.killbill.billing.util.api.AuditLevel;
-import org.killbill.billing.util.audit.AuditLog;
 
 import com.google.common.base.Function;
-import com.google.common.base.Functions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import io.swagger.annotations.SwaggerDefinition;
@@ -33,6 +29,7 @@ import io.swagger.jaxrs.config.ReaderListener;
 import io.swagger.models.Model;
 import io.swagger.models.Operation;
 import io.swagger.models.Path;
+import io.swagger.models.Response;
 import io.swagger.models.Swagger;
 import io.swagger.models.auth.BasicAuthDefinition;
 import io.swagger.models.parameters.BodyParameter;
@@ -90,6 +87,18 @@ public class KillBillApiDefinition implements ReaderListener {
 
     private void decorateOperation(final Operation op, final String pathName, final String httpMethod, final HeaderParameter apiKeyParam, final HeaderParameter apiSecretParam) {
         if (op != null) {
+
+            // Bug in swagger ? somehow when we only specify a 201, swagger adds a 200 response with the schema response
+            if (httpMethod.equals("POST")) {
+                if (op.getResponses().containsKey("201") && op.getResponses().containsKey("200")) {
+                    final Response resp200 =op.getResponses().remove("200");
+                    final Response resp201 = op.getResponses().get("201");
+                    if (resp201.getSchema() == null) {
+                        resp201.setSchema(resp200.getSchema());
+                    }
+                }
+            }
+
             op.addSecurity(BASIC_AUTH_SCHEME, null);
             if (requiresTenantInformation(pathName, httpMethod)) {
                 op.addParameter(apiKeyParam);
@@ -108,7 +117,6 @@ public class KillBillApiDefinition implements ReaderListener {
                 } else if (p instanceof QueryParameter) {
                     QueryParameter qp = (QueryParameter) p;
                     if (qp.getName().equals(QUERY_AUDIT)) {
-                        qp.setName("auditLevel");
                         qp.setRequired(false);
                         qp.setType("string");
                         final List<String> values = ImmutableList.copyOf(Iterables.transform(ImmutableList.<AuditLevel>copyOf(AuditLevel.values()), new Function<AuditLevel, String>() {
@@ -118,6 +126,20 @@ public class KillBillApiDefinition implements ReaderListener {
                             }
                         }));
                         qp.setEnum(values);
+                    } else if (qp.getName().equals(JaxrsResource.QUERY_REQUESTED_DT) ||
+                               qp.getName().equals(JaxrsResource.QUERY_ENTITLEMENT_REQUESTED_DT) ||
+                               qp.getName().equals(JaxrsResource.QUERY_BILLING_REQUESTED_DT) ||
+                               qp.getName().equals(JaxrsResource.QUERY_ENTITLEMENT_EFFECTIVE_FROM_DT) ||
+                               qp.getName().equals(JaxrsResource.QUERY_START_DATE) ||
+                               qp.getName().equals(JaxrsResource.QUERY_END_DATE) ||
+                               qp.getName().equals(JaxrsResource.QUERY_TARGET_DATE)) {
+                        qp.setType("string");
+                        // Yack... See #922
+                        if (op.getOperationId().equals("getCatalogJson") || op.getOperationId().equals("setTestClockTime")) {
+                            qp.setFormat("date-time");
+                        } else {
+                            qp.setFormat("date");
+                        }
                     }
                 }
             }
@@ -146,7 +168,7 @@ public class KillBillApiDefinition implements ReaderListener {
     }
 
     private static boolean isTenantCreationRequest(final String path, final String httpMethod) {
-        return JaxrsResource.TENANTS_PATH.equals(path) && "POST".equalsIgnoreCase(httpMethod);
+        return JaxrsResource.TENANTS_PATH.equals(path);
     }
 
     private static boolean isNodeInfoRequest(final String path) {

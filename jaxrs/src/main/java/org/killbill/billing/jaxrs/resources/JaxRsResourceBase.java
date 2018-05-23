@@ -18,7 +18,6 @@
 
 package org.killbill.billing.jaxrs.resources;
 
-import java.io.Closeable;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.math.BigDecimal;
@@ -114,6 +113,7 @@ import com.google.common.base.Predicate;
 import com.google.common.base.Strings;
 import com.google.common.collect.Collections2;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 
@@ -163,15 +163,17 @@ public abstract class JaxRsResourceBase implements JaxrsResource {
         return null;
     }
 
-    public Response addBlockingState(final BlockingStateJson json,
-                                     final UUID blockableId,
-                                     final BlockingStateType type,
-                                     final String requestedDate,
-                                     final List<String> pluginPropertiesString,
-                                     final String createdBy,
-                                     final String reason,
-                                     final String comment,
-                                     final HttpServletRequest request) throws SubscriptionApiException, EntitlementApiException, AccountApiException {
+    protected Response addBlockingState(final BlockingStateJson json,
+                                        final UUID accountId,
+                                        final UUID blockableId,
+                                        final BlockingStateType type,
+                                        final String requestedDate,
+                                        final List<String> pluginPropertiesString,
+                                        final String createdBy,
+                                        final String reason,
+                                        final String comment,
+                                        final HttpServletRequest request,
+                                        @Nullable final UriInfo uriInfo) throws SubscriptionApiException, EntitlementApiException, AccountApiException {
 
         final Iterable<PluginProperty> pluginProperties = extractPluginProperties(pluginPropertiesString);
         final CallContext callContext = context.createCallContextNoAccountId(createdBy, reason, comment, request);
@@ -183,7 +185,9 @@ public abstract class JaxRsResourceBase implements JaxrsResource {
         final LocalDate resolvedRequestedDate = toLocalDate(requestedDate);
         final BlockingState input = new DefaultBlockingState(blockableId, type, json.getStateName(), json.getService(), isBlockChange, isBlockEntitlement, isBlockBilling, null);
         subscriptionApi.addBlockingState(input, resolvedRequestedDate, pluginProperties, callContext);
-        return Response.status(Status.OK).build();
+        return uriInfo != null ?
+               uriBuilder.buildResponse(uriInfo, AccountResource.class, "getBlockingStates", accountId, ImmutableMap.<String, String>of(QUERY_BLOCKING_STATE_TYPES, type.name()) , request) :
+               null;
     }
 
     protected Response getTags(final UUID accountId, final UUID taggedObjectId, final AuditMode auditMode, final boolean includeDeleted, final TenantContext context) throws TagDefinitionApiException {
@@ -209,19 +213,17 @@ public abstract class JaxRsResourceBase implements JaxrsResource {
     }
 
     protected Response createTags(final UUID id,
-                                  final String tagList,
+                                  final List<UUID> tagList,
                                   final UriInfo uriInfo,
                                   final CallContext context,
                                   final HttpServletRequest request) throws TagApiException {
-        final Collection<UUID> input = getTagDefinitionUUIDs(tagList);
-        tagUserApi.addTags(id, getObjectType(), input, context);
+        tagUserApi.addTags(id, getObjectType(), tagList, context);
         // TODO This will always return 201, even if some (or all) tags already existed (in which case we don't do anything)
         return uriBuilder.buildResponse(uriInfo, this.getClass(), "getTags", id, request);
     }
 
-    protected Collection<UUID> getTagDefinitionUUIDs(final String tagList) {
-        final String[] tagParts = tagList.split(",\\s*");
-        return Collections2.transform(ImmutableList.copyOf(tagParts), new Function<String, UUID>() {
+    protected Collection<UUID> getTagDefinitionUUIDs(final List<String> tagList) {
+        return Collections2.transform(tagList, new Function<String, UUID>() {
             @Override
             public UUID apply(final String input) {
                 return UUID.fromString(input);
@@ -230,12 +232,10 @@ public abstract class JaxRsResourceBase implements JaxrsResource {
     }
 
     protected Response deleteTags(final UUID id,
-                                  final String tagList,
+                                  final List<UUID> tagList,
                                   final CallContext context) throws TagApiException {
-        final Collection<UUID> input = getTagDefinitionUUIDs(tagList);
-        tagUserApi.removeTags(id, getObjectType(), input, context);
-
-        return Response.status(Response.Status.OK).build();
+        tagUserApi.removeTags(id, getObjectType(), tagList, context);
+        return Response.status(Status.NO_CONTENT).build();
     }
 
     protected Response getCustomFields(final UUID id, final AuditMode auditMode, final TenantContext context) {
@@ -270,7 +270,6 @@ public abstract class JaxRsResourceBase implements JaxrsResource {
         return uriBuilder.buildResponse(uriInfo, this.getClass(), "getCustomFields", id, request);
     }
 
-
     protected Response modifyCustomFields(final UUID id,
                                           final List<CustomFieldJson> customFields,
                                           final CallContext context) throws CustomFieldApiException {
@@ -282,10 +281,8 @@ public abstract class JaxRsResourceBase implements JaxrsResource {
         }
 
         customFieldUserApi.updateCustomFields(input, context);
-        return Response.status(Response.Status.OK).build();
+        return Response.status(Status.NO_CONTENT).build();
     }
-
-
 
     /**
      * @param id              the if of the object for which the custom fields apply
@@ -295,23 +292,20 @@ public abstract class JaxRsResourceBase implements JaxrsResource {
      * @throws CustomFieldApiException
      */
     protected Response deleteCustomFields(final UUID id,
-                                          @Nullable final String customFieldList,
+                                          final List<UUID> customFieldList,
                                           final CallContext context) throws CustomFieldApiException {
 
         // Retrieve all the custom fields for the object
         final List<CustomField> fields = customFieldUserApi.getCustomFieldsForObject(id, getObjectType(), context);
 
-        final String[] requestedIds = customFieldList != null ? customFieldList.split("\\s*,\\s*") : null;
-
         // Filter the proposed list to only keep the one that exist and indeed match our object
         final Iterable inputIterable = Iterables.filter(fields, new Predicate<CustomField>() {
             @Override
             public boolean apply(final CustomField input) {
-                if (customFieldList == null) {
+                if (customFieldList.isEmpty()) {
                     return true;
                 }
-                for (final String cur : requestedIds) {
-                    final UUID curId = UUID.fromString(cur);
+                for (final UUID curId : customFieldList) {
                     if (input.getId().equals(curId)) {
                         return true;
                     }
@@ -324,7 +318,7 @@ public abstract class JaxRsResourceBase implements JaxrsResource {
             final List<CustomField> input = ImmutableList.<CustomField>copyOf(inputIterable);
             customFieldUserApi.removeCustomFields(input, context);
         }
-        return Response.status(Response.Status.OK).build();
+        return Response.status(Status.NO_CONTENT).build();
     }
 
     protected <E extends Entity, J extends JsonBase> Response buildStreamingPaginationResponse(final Pagination<E> entities,
@@ -384,8 +378,7 @@ public abstract class JaxRsResourceBase implements JaxrsResource {
         }
     }
 
-
-    protected Response completeTransactionInternal(final PaymentTransactionJson json,
+    protected void completeTransactionInternal(final PaymentTransactionJson json,
                                                    final Payment initialPayment,
                                                    final List<String> paymentControlPluginNames,
                                                    final Iterable<PluginProperty> pluginProperties,
@@ -398,7 +391,7 @@ public abstract class JaxRsResourceBase implements JaxrsResource {
 
         final Account account = accountUserApi.getAccountById(initialPayment.getAccountId(), contextNoAccountId);
         final BigDecimal amount = json == null ? null : json.getAmount();
-        final Currency currency = json == null || json.getCurrency() == null ? null : Currency.valueOf(json.getCurrency());
+        final Currency currency = json == null ? null: json.getCurrency();
 
         final CallContext callContext = context.createCallContextWithAccountId(account.getId(), createdBy, reason, comment, request);
 
@@ -408,45 +401,41 @@ public abstract class JaxRsResourceBase implements JaxrsResource {
                                                                                                  json != null ? json.getTransactionType() : null);
         // If transaction was already completed, return early (See #626)
         if (pendingOrSuccessTransaction.getTransactionStatus() == TransactionStatus.SUCCESS) {
-            return uriBuilder.buildResponse(uriInfo, PaymentResource.class, "getPayment", pendingOrSuccessTransaction.getPaymentId(), request);
+            return;
         }
 
         final PaymentTransaction pendingTransaction = pendingOrSuccessTransaction;
         final PaymentOptions paymentOptions = createControlPluginApiPaymentOptions(paymentControlPluginNames);
-        final Payment result;
         switch (pendingTransaction.getTransactionType()) {
             case AUTHORIZE:
-                result = paymentApi.createAuthorizationWithPaymentControl(account, initialPayment.getPaymentMethodId(), initialPayment.getId(), amount, currency, null,
-                                                                          initialPayment.getExternalKey(), pendingTransaction.getExternalKey(),
-                                                                          pluginProperties, paymentOptions, callContext);
+                paymentApi.createAuthorizationWithPaymentControl(account, initialPayment.getPaymentMethodId(), initialPayment.getId(), amount, currency, null,
+                                                                 initialPayment.getExternalKey(), pendingTransaction.getExternalKey(),
+                                                                 pluginProperties, paymentOptions, callContext);
                 break;
             case CAPTURE:
-                result = paymentApi.createCaptureWithPaymentControl(account, initialPayment.getId(), amount, currency, null, pendingTransaction.getExternalKey(),
-                                                                    pluginProperties, paymentOptions, callContext);
+                paymentApi.createCaptureWithPaymentControl(account, initialPayment.getId(), amount, currency, null, pendingTransaction.getExternalKey(),
+                                                           pluginProperties, paymentOptions, callContext);
                 break;
             case PURCHASE:
-                result = paymentApi.createPurchaseWithPaymentControl(account, initialPayment.getPaymentMethodId(), initialPayment.getId(), amount, currency, null,
-                                                                     initialPayment.getExternalKey(), pendingTransaction.getExternalKey(),
-                                                                     pluginProperties, paymentOptions, callContext);
+                paymentApi.createPurchaseWithPaymentControl(account, initialPayment.getPaymentMethodId(), initialPayment.getId(), amount, currency, null,
+                                                            initialPayment.getExternalKey(), pendingTransaction.getExternalKey(),
+                                                            pluginProperties, paymentOptions, callContext);
                 break;
             case CREDIT:
-                result = paymentApi.createCreditWithPaymentControl(account, initialPayment.getPaymentMethodId(), initialPayment.getId(), amount, currency, null,
-                                                                   initialPayment.getExternalKey(), pendingTransaction.getExternalKey(),
-                                                                   pluginProperties, paymentOptions, callContext);
+                paymentApi.createCreditWithPaymentControl(account, initialPayment.getPaymentMethodId(), initialPayment.getId(), amount, currency, null,
+                                                          initialPayment.getExternalKey(), pendingTransaction.getExternalKey(),
+                                                          pluginProperties, paymentOptions, callContext);
                 break;
             case REFUND:
-                result = paymentApi.createRefundWithPaymentControl(account, initialPayment.getId(), amount, currency, null,
-                                                                   pendingTransaction.getExternalKey(), pluginProperties, paymentOptions, callContext);
+                paymentApi.createRefundWithPaymentControl(account, initialPayment.getId(), amount, currency, null,
+                                                          pendingTransaction.getExternalKey(), pluginProperties, paymentOptions, callContext);
                 break;
             default:
-                return Response.status(Status.PRECONDITION_FAILED).entity("TransactionType " + pendingTransaction.getTransactionType() + " cannot be completed").build();
+                throw new IllegalStateException("TransactionType " + pendingTransaction.getTransactionType() + " cannot be completed");
         }
-        return createPaymentResponse(uriInfo, result, pendingTransaction.getTransactionType(), pendingTransaction.getExternalKey(), request);
-
     }
 
-
-    protected PaymentTransaction lookupPendingOrSuccessTransaction(final Payment initialPayment, @Nullable final UUID transactionId, @Nullable final String transactionExternalKey, @Nullable final String transactionType) throws PaymentApiException {
+    protected PaymentTransaction lookupPendingOrSuccessTransaction(final Payment initialPayment, @Nullable final UUID transactionId, @Nullable final String transactionExternalKey, @Nullable final TransactionType transactionType) throws PaymentApiException {
         final Collection<PaymentTransaction> pendingTransaction = Collections2.filter(initialPayment.getTransactions(), new Predicate<PaymentTransaction>() {
             @Override
             public boolean apply(final PaymentTransaction input) {
@@ -459,7 +448,7 @@ public abstract class JaxRsResourceBase implements JaxrsResource {
                 if (transactionExternalKey != null && !transactionExternalKey.equals(input.getExternalKey())) {
                     return false;
                 }
-                if (transactionType != null && !transactionType.equals(input.getTransactionType().name())) {
+                if (transactionType != null && !transactionType.equals(input.getTransactionType())) {
                     return false;
                 }
                 //
@@ -482,7 +471,7 @@ public abstract class JaxRsResourceBase implements JaxrsResource {
                     parameterValue = transactionExternalKey;
                 } else if (transactionType != null) {
                     parameterType = "transactionType";
-                    parameterValue = transactionType;
+                    parameterValue = transactionType.name();
                 } else {
                     parameterType = "paymentId";
                     parameterValue = initialPayment.getId().toString();

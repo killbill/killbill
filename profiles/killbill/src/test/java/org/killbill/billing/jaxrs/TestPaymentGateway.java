@@ -19,20 +19,17 @@ package org.killbill.billing.jaxrs;
 
 import java.util.UUID;
 
-import org.killbill.billing.client.model.Account;
-import org.killbill.billing.client.model.ComboHostedPaymentPage;
-import org.killbill.billing.client.model.HostedPaymentPageFields;
-import org.killbill.billing.client.model.HostedPaymentPageFormDescriptor;
-import org.killbill.billing.client.model.PaymentMethod;
-import org.killbill.billing.client.model.PaymentMethodPluginDetail;
-import org.killbill.billing.client.model.PluginProperty;
+import org.killbill.billing.client.model.gen.Account;
+import org.killbill.billing.client.model.gen.ComboHostedPaymentPage;
+import org.killbill.billing.client.model.gen.HostedPaymentPageFields;
+import org.killbill.billing.client.model.gen.HostedPaymentPageFormDescriptor;
+import org.killbill.billing.client.model.gen.PaymentMethod;
+import org.killbill.billing.client.model.gen.PaymentMethodPluginDetail;
+import org.killbill.billing.client.model.gen.PluginProperty;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
-import com.ning.http.client.Response;
-
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 
 public class TestPaymentGateway extends TestJaxrsBase {
 
@@ -42,7 +39,7 @@ public class TestPaymentGateway extends TestJaxrsBase {
 
         final HostedPaymentPageFields hppFields = new HostedPaymentPageFields();
 
-        final HostedPaymentPageFormDescriptor hostedPaymentPageFormDescriptor = killBillClient.buildFormDescriptor(hppFields, account.getAccountId(), null, ImmutableMap.<String, String>of(), requestOptions);
+        final HostedPaymentPageFormDescriptor hostedPaymentPageFormDescriptor = paymentGatewayApi.buildFormDescriptor(account.getAccountId(), hppFields, null, NULL_PLUGIN_NAMES, NULL_PLUGIN_PROPERTIES, requestOptions);
         Assert.assertEquals(hostedPaymentPageFormDescriptor.getKbAccountId(), account.getAccountId());
     }
 
@@ -52,19 +49,18 @@ public class TestPaymentGateway extends TestJaxrsBase {
         account.setAccountId(null);
 
         final PaymentMethodPluginDetail info = new PaymentMethodPluginDetail();
-        final PaymentMethod paymentMethod = new PaymentMethod(null, UUID.randomUUID().toString(), null, true, PLUGIN_NAME, info);
+        final PaymentMethod paymentMethod = new PaymentMethod(null, UUID.randomUUID().toString(), null, true, PLUGIN_NAME, info, null);
 
         final HostedPaymentPageFields hppFields = new HostedPaymentPageFields();
 
-        final ComboHostedPaymentPage comboHostedPaymentPage = new ComboHostedPaymentPage(account, paymentMethod, ImmutableList.<PluginProperty>of(), hppFields);
+        final ComboHostedPaymentPage comboHostedPaymentPage = new ComboHostedPaymentPage(account, paymentMethod, hppFields, ImmutableList.<PluginProperty>of(), null);
 
-        final HostedPaymentPageFormDescriptor hostedPaymentPageFormDescriptor = killBillClient.buildFormDescriptor(comboHostedPaymentPage, ImmutableMap.<String, String>of(), requestOptions);
+        final HostedPaymentPageFormDescriptor hostedPaymentPageFormDescriptor = paymentGatewayApi.buildComboFormDescriptor(comboHostedPaymentPage, NULL_PLUGIN_NAMES, NULL_PLUGIN_PROPERTIES, requestOptions);
         Assert.assertNotNull(hostedPaymentPageFormDescriptor.getKbAccountId());
     }
 
     @Test(groups = "slow")
     public void testProcessNotification() throws Exception {
-        final Response response = killBillClient.processNotification("TOTO", PLUGIN_NAME, ImmutableMap.<String, String>of(), createdBy, reason, comment);
-        Assert.assertEquals(response.getStatusCode(), 200);
+        paymentGatewayApi.processNotification(PLUGIN_NAME, "TOTO", NULL_PLUGIN_NAMES, NULL_PLUGIN_PROPERTIES, requestOptions);
     }
 }

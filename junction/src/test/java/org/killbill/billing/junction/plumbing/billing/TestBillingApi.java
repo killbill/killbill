@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014-2016 Groupon, Inc
- * Copyright 2014-2016 The Billing Project, LLC
+ * Copyright 2014-2018 Groupon, Inc
+ * Copyright 2014-2018 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -286,7 +286,7 @@ public class TestBillingApi extends JunctionTestSuiteNoDB {
     private DateTime createSubscriptionCreationEvent(final Plan nextPlan, final PlanPhase nextPhase) throws CatalogApiException {
         final DateTime now = clock.getUTCNow();
         final DateTime then = now.minusDays(1);
-        final PriceList nextPriceList = catalog.findPriceList(PriceListSet.DEFAULT_PRICELIST_NAME, now);
+        final PriceList nextPriceList = catalog.findPriceListForPlan(nextPlan.getName(), now, now);
 
         final EffectiveSubscriptionInternalEvent t = new MockEffectiveSubscriptionEvent(
                 eventId, subId, bunId, bunKey, then, now, null, null, null, null, null, EntitlementState.ACTIVE,

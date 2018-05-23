@@ -24,6 +24,11 @@ import java.util.UUID;
 
 import org.joda.time.LocalDate;
 import org.killbill.billing.catalog.api.BillingPeriod;
+import org.killbill.billing.catalog.api.PhaseType;
+import org.killbill.billing.catalog.api.ProductCategory;
+import org.killbill.billing.entitlement.api.Entitlement.EntitlementSourceType;
+import org.killbill.billing.entitlement.api.Entitlement.EntitlementState;
+import org.killbill.billing.entitlement.api.SubscriptionEventType;
 import org.killbill.billing.jaxrs.JaxrsTestSuiteNoDB;
 import org.killbill.billing.jaxrs.json.SubscriptionJson.EventSubscriptionJson;
 import org.testng.Assert;
@@ -43,12 +48,12 @@ public class TestBundleJsonWithSubscriptions extends JaxrsTestSuiteNoDB {
         final List<AuditLogJson> auditLogs = createAuditLogsJson(clock.getUTCNow());
 
         final EventSubscriptionJson event = new EventSubscriptionJson(UUID.randomUUID(),
-                                                                      BillingPeriod.NO_BILLING_PERIOD.toString(),
+                                                                      BillingPeriod.NO_BILLING_PERIOD,
                                                                       new LocalDate(),
                                                                       UUID.randomUUID().toString(),
                                                                       UUID.randomUUID().toString(),
                                                                       UUID.randomUUID().toString(),
-                                                                      UUID.randomUUID().toString(),
+                                                                      SubscriptionEventType.START_BILLING,
                                                                       true,
                                                                       false,
                                                                       UUID.randomUUID().toString(),
@@ -64,13 +69,13 @@ public class TestBundleJsonWithSubscriptions extends JaxrsTestSuiteNoDB {
                                                                    externalKey,
                                                                    new LocalDate(),
                                                                    UUID.randomUUID().toString(),
+                                                                   ProductCategory.BASE,
+                                                                   BillingPeriod.MONTHLY,
+                                                                   PhaseType.EVERGREEN,
                                                                    UUID.randomUUID().toString(),
                                                                    UUID.randomUUID().toString(),
-                                                                   UUID.randomUUID().toString(),
-                                                                   UUID.randomUUID().toString(),
-                                                                   UUID.randomUUID().toString(),
-                                                                   UUID.randomUUID().toString(),
-                                                                   UUID.randomUUID().toString(),
+                                                                   EntitlementState.ACTIVE,
+                                                                   EntitlementSourceType.NATIVE,
                                                                    new LocalDate(),
                                                                    new LocalDate(),
                                                                    new LocalDate(),
