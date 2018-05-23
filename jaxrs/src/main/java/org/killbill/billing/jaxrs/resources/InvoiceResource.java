@@ -558,7 +558,7 @@ public class InvoiceResource extends JaxRsResourceBase {
                     } else {
                         return new InvoiceItemJson(null,
                                                    input.getInvoiceId(),
-                                                   null,
+                                                   input.getLinkedInvoiceItemId(),
                                                    input.getAccountId(),
                                                    input.getChildAccountId(),
                                                    input.getBundleId(),
