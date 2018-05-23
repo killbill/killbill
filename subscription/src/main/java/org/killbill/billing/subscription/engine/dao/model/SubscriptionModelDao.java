@@ -105,7 +105,7 @@ public class SubscriptionModelDao extends EntityModelDaoBase implements EntityMo
         this.migrated = migrated;
     }
 
-    public static SubscriptionBase toSubscription(final SubscriptionModelDao src, final String externalKey) {
+    public static DefaultSubscriptionBase toSubscription(final SubscriptionModelDao src, final String externalKey) {
         if (src == null) {
             return null;
         }

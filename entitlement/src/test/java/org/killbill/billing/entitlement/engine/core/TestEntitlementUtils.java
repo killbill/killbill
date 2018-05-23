@@ -65,6 +65,9 @@ public class TestEntitlementUtils extends EntitlementTestSuiteWithEmbeddedDB {
 
     @BeforeMethod(groups = "slow")
     public void setUp() throws Exception {
+        if (hasFailed()) {
+            return;
+        }
         clock.setDay(initialDate);
         final Account account = createAccount(getAccountData(7));
 

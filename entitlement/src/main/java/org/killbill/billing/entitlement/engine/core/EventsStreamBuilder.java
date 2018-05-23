@@ -36,14 +36,11 @@ import org.killbill.billing.account.api.AccountApiException;
 import org.killbill.billing.account.api.AccountInternalApi;
 import org.killbill.billing.account.api.ImmutableAccountData;
 import org.killbill.billing.callcontext.InternalTenantContext;
-import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.catalog.api.Catalog;
 import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.catalog.api.CatalogInternalApi;
 import org.killbill.billing.catalog.api.PhaseType;
-import org.killbill.billing.catalog.api.PlanPhase;
 import org.killbill.billing.catalog.api.PlanPhaseSpecifier;
-import org.killbill.billing.catalog.api.Product;
 import org.killbill.billing.catalog.api.ProductCategory;
 import org.killbill.billing.entitlement.AccountEventsStreams;
 import org.killbill.billing.entitlement.EventsStream;
@@ -423,36 +420,17 @@ public class EventsStreamBuilder {
     }
 
     private PlanPhaseSpecifier createPlanPhaseSpecifier(final SubscriptionBase subscription) {
-
-        final String lastActiveProductName;
-        final BillingPeriod billingPeriod;
-        final ProductCategory productCategory;
-        final String priceListName;
+        final String planName;
         final PhaseType phaseType;
-
         if (subscription.getState() == EntitlementState.PENDING) {
             final SubscriptionBaseTransition transition = subscription.getPendingTransition();
-            final Product pendingProduct = transition.getNextPlan().getProduct();
-            lastActiveProductName = pendingProduct.getName();
-            productCategory = pendingProduct.getCategory();
-            final PlanPhase pendingPlanPhase = transition.getNextPhase();
-            billingPeriod = pendingPlanPhase.getRecurring() != null ? pendingPlanPhase.getRecurring().getBillingPeriod() : BillingPeriod.NO_BILLING_PERIOD;
-            priceListName = transition.getNextPriceList().getName();
+            planName = transition.getNextPlan().getName();
             phaseType = transition.getNextPhase().getPhaseType();
         } else {
-            final Product lastActiveProduct = subscription.getLastActiveProduct();
-            lastActiveProductName = lastActiveProduct.getName();
-            productCategory = lastActiveProduct.getCategory();
-            final PlanPhase lastActivePlanPhase = subscription.getLastActivePhase();
-            billingPeriod = lastActivePlanPhase.getRecurring() != null ? lastActivePlanPhase.getRecurring().getBillingPeriod() : BillingPeriod.NO_BILLING_PERIOD;
-            priceListName = subscription.getLastActivePlan().getPriceListName();
+            planName = subscription.getLastActivePlan().getName();
             phaseType = subscription.getLastActivePhase().getPhaseType();
         }
-        return new PlanPhaseSpecifier(lastActiveProductName,
-                                      billingPeriod,
-                                      priceListName,
-                                      phaseType);
-
+        return new PlanPhaseSpecifier(planName, phaseType);
     }
 
     private Catalog getCatalog(final InternalTenantContext internalTenantContext) throws EntitlementApiException {

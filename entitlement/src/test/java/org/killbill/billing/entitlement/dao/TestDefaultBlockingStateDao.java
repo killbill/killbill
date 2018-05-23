@@ -48,6 +48,9 @@ public class TestDefaultBlockingStateDao extends EntitlementTestSuiteWithEmbedde
 
     @BeforeMethod(groups = "slow")
     public void setUp() throws Exception {
+        if (hasFailed()) {
+            return;
+        }
         account = createAccount(getAccountData(7));
     }
 
