@@ -440,7 +440,7 @@ public class TestJaxrsBase extends KillbillClient {
     protected String uploadTenantCatalog(final String catalog, final boolean fetch) throws IOException, KillBillClientException {
         final String body = getResourceBodyString(catalog);
         catalogApi.uploadCatalogXml(body, requestOptions);
-        return fetch ? catalogApi.getCatalogXml(null, requestOptions) : null;
+        return fetch ? catalogApi.getCatalogXml(null, null, requestOptions) : null;
     }
 
     protected void uploadTenantOverdueConfig(final String overdue) throws IOException, KillBillClientException {

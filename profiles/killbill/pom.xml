@@ -262,8 +262,7 @@
         </dependency>
         <dependency>
             <groupId>org.kill-bill.billing</groupId>
-            <artifactId>killbill-client-java-swagger-gen-exp</artifactId>
-            <version>0.0.9</version>
+            <artifactId>killbill-client-java</artifactId>
         </dependency>
         <dependency>
             <groupId>org.kill-bill.billing</groupId>
