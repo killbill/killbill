@@ -147,28 +147,28 @@ public class MockCatalog extends StandaloneCatalog implements Catalog {
     }
 
     @Override
-    public PlanChangeResult planChange(final PlanPhaseSpecifier from, final PlanSpecifier to, final DateTime requestedDate) {
+    public PlanChangeResult planChange(final PlanPhaseSpecifier from, final PlanSpecifier to, final DateTime requestedDate, final DateTime subscriptionStartDate) {
         return planChange(from, to);
     }
 
     @Override
-    public BillingActionPolicy planCancelPolicy(final PlanPhaseSpecifier planPhase, final DateTime requestedDate)
+    public BillingActionPolicy planCancelPolicy(final PlanPhaseSpecifier planPhase, final DateTime requestedDate, final DateTime subscriptionStartDate)
             throws CatalogApiException {
         return planCancelPolicy(planPhase);
     }
 
     @Override
-    public PlanAlignmentCreate planCreateAlignment(final PlanSpecifier specifier, final DateTime requestedDate) {
+    public PlanAlignmentCreate planCreateAlignment(final PlanSpecifier specifier, final DateTime requestedDate, final DateTime subscriptionStartDate) {
         return planCreateAlignment(specifier);
     }
 
     @Override
-    public BillingAlignment billingAlignment(final PlanPhaseSpecifier planPhase, final DateTime requestedDate) {
+    public BillingAlignment billingAlignment(final PlanPhaseSpecifier planPhase, final DateTime requestedDate, final DateTime subscriptionStartDate) {
         return billingAlignment(planPhase);
     }
 
     @Override
-    public PlanAlignmentChange planChangeAlignment(final PlanPhaseSpecifier from, final PlanSpecifier to, final DateTime requestedDate)
+    public PlanAlignmentChange planChangeAlignment(final PlanPhaseSpecifier from, final PlanSpecifier to, final DateTime requestedDate, final DateTime subscriptionStartDate)
             throws CatalogApiException {
         return planChangeAlignment(from, to);
     }

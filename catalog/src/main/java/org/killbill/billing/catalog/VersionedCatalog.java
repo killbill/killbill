@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014-2017 Groupon, Inc
- * Copyright 2014-2017 The Billing Project, LLC
+ * Copyright 2014-2018 Groupon, Inc
+ * Copyright 2014-2018 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -310,36 +310,53 @@ public class VersionedCatalog extends ValidatingConfig<VersionedCatalog> impleme
         return entry.getStaticCatalog().findCurrentPricelist(entry.getPlan().getPriceListName());
     }
 
-    public PriceList findPriceList(final String name, final DateTime requestedDate)
-            throws CatalogApiException {
-        return versionForDate(requestedDate).findCurrentPriceList(name);
-    }
-
     @Override
-    public BillingActionPolicy planCancelPolicy(final PlanPhaseSpecifier planPhase, final DateTime requestedDate) throws CatalogApiException {
-        return versionForDate(requestedDate).planCancelPolicy(planPhase);
+    public BillingActionPolicy planCancelPolicy(final PlanPhaseSpecifier planPhase,
+                                                final DateTime requestedDate,
+                                                final DateTime subscriptionStartDate) throws CatalogApiException {
+        final StaticCatalog staticCatalog = getStaticCatalog(planPhase, requestedDate, subscriptionStartDate);
+        return staticCatalog.planCancelPolicy(planPhase);
     }
 
     @Override
     public PlanAlignmentChange planChangeAlignment(final PlanPhaseSpecifier from,
-                                                   final PlanSpecifier to, final DateTime requestedDate) throws CatalogApiException {
-        return versionForDate(requestedDate).planChangeAlignment(from, to);
+                                                   final PlanSpecifier to,
+                                                   final DateTime requestedDate,
+                                                   final DateTime subscriptionStartDate) throws CatalogApiException {
+        final StaticCatalog staticCatalog = getStaticCatalog(from, requestedDate, subscriptionStartDate);
+        return staticCatalog.planChangeAlignment(from, to);
     }
 
     @Override
-    public PlanAlignmentCreate planCreateAlignment(final PlanSpecifier specifier, final DateTime requestedDate) throws CatalogApiException {
-        return versionForDate(requestedDate).planCreateAlignment(specifier);
+    public PlanAlignmentCreate planCreateAlignment(final PlanSpecifier specifier,
+                                                   final DateTime requestedDate,
+                                                   final DateTime subscriptionStartDate) throws CatalogApiException {
+        final StaticCatalog staticCatalog = getStaticCatalog(specifier, requestedDate, subscriptionStartDate);
+        return staticCatalog.planCreateAlignment(specifier);
     }
 
     @Override
-    public BillingAlignment billingAlignment(final PlanPhaseSpecifier planPhase, final DateTime requestedDate) throws CatalogApiException {
-        return versionForDate(requestedDate).billingAlignment(planPhase);
+    public BillingAlignment billingAlignment(final PlanPhaseSpecifier planPhase,
+                                             final DateTime requestedDate,
+                                             final DateTime subscriptionStartDate) throws CatalogApiException {
+        final StaticCatalog staticCatalog = getStaticCatalog(planPhase, requestedDate, subscriptionStartDate);
+        return staticCatalog.billingAlignment(planPhase);
     }
 
     @Override
-    public PlanChangeResult planChange(final PlanPhaseSpecifier from, final PlanSpecifier to, final DateTime requestedDate)
+    public PlanChangeResult planChange(final PlanPhaseSpecifier from,
+                                       final PlanSpecifier to,
+                                       final DateTime requestedDate,
+                                       final DateTime subscriptionStartDate)
             throws CatalogApiException {
-        return versionForDate(requestedDate).planChange(from, to);
+        final StaticCatalog staticCatalog = getStaticCatalog(from, requestedDate, subscriptionStartDate);
+        return staticCatalog.planChange(from, to);
+    }
+
+    // Note that the PlanSpecifier billing period must refer here to the recurring phase one when a plan name isn't specified
+    private StaticCatalog getStaticCatalog(final PlanSpecifier spec, final DateTime requestedDate, final DateTime subscriptionStartDate) throws CatalogApiException {
+        final CatalogPlanEntry entry = findCatalogPlanEntry(new PlanRequestWrapper(spec), requestedDate, subscriptionStartDate);
+        return entry.getStaticCatalog();
     }
 
     @Override
@@ -507,8 +524,11 @@ public class VersionedCatalog extends ValidatingConfig<VersionedCatalog> impleme
         private final PlanPhasePriceOverridesWithCallContext overrides;
 
         public PlanRequestWrapper(final String planName) {
-            this.spec = new PlanSpecifier(planName);
-            this.overrides = null;
+            this(new PlanSpecifier(planName));
+        }
+
+        public PlanRequestWrapper(final PlanSpecifier spec) {
+            this(spec, null);
         }
 
         public PlanRequestWrapper(final PlanSpecifier spec,
