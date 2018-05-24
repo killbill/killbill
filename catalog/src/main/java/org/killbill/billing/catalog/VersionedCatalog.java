@@ -340,7 +340,8 @@ public class VersionedCatalog extends ValidatingConfig<VersionedCatalog> impleme
                                        final DateTime requestedDate,
                                        final DateTime subscriptionStartDate)
             throws CatalogApiException {
-        final StaticCatalog staticCatalog = getStaticCatalog(from, requestedDate, subscriptionStartDate);
+        // Use the "to" specifier, to make sure the new plan always exists
+        final StaticCatalog staticCatalog = getStaticCatalog(to, requestedDate, subscriptionStartDate);
         return staticCatalog.planChange(from, to);
     }
 
