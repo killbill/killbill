@@ -43,6 +43,7 @@ import org.killbill.billing.catalog.api.PlanPhase;
 import org.killbill.billing.catalog.api.PlanPhaseSpecifier;
 import org.killbill.billing.entitlement.api.SubscriptionEventType;
 import org.killbill.billing.events.EffectiveSubscriptionInternalEvent;
+import org.killbill.billing.events.SubscriptionInternalEvent;
 import org.killbill.billing.invoice.api.DryRunArguments;
 import org.killbill.billing.junction.BillingEvent;
 import org.killbill.billing.junction.BillingEventSet;
@@ -239,18 +240,18 @@ public class DefaultInternalBillingApi implements BillingInternalApi {
         return BillCycleDayCalculator.calculateBcdForAlignment(bcdCache, subscription, baseSubscription, alignment, internalTenantContext, accountBillCycleDayLocal);
     }
 
-    private PlanPhaseSpecifier getPlanPhaseSpecifierFromTransition(final Catalog catalog, final EffectiveSubscriptionInternalEvent transition) throws CatalogApiException {
+    private PlanPhaseSpecifier getPlanPhaseSpecifierFromTransition(final Catalog catalog, final SubscriptionInternalEvent transition) throws CatalogApiException {
         final Plan prevPlan = (transition.getPreviousPlan() != null) ? catalog.findPlan(transition.getPreviousPlan(), transition.getEffectiveTransitionTime(), transition.getSubscriptionStartDate()) : null;
         final Plan nextPlan = (transition.getNextPlan() != null) ? catalog.findPlan(transition.getNextPlan(), transition.getEffectiveTransitionTime(), transition.getSubscriptionStartDate()) : null;
 
         final Plan plan = (transition.getTransitionType() != SubscriptionBaseTransitionType.CANCEL) ? nextPlan : prevPlan;
 
-        final PlanPhase prevPhase = (transition.getPreviousPhase() != null) ? catalog.findPhase(transition.getPreviousPhase(), transition.getEffectiveTransitionTime(), transition.getSubscriptionStartDate()) : null;
-        final PlanPhase nextPhase = (transition.getNextPhase() != null) ? catalog.findPhase(transition.getNextPhase(), transition.getEffectiveTransitionTime(), transition.getSubscriptionStartDate()) : null;
+        final PlanPhase prevPhase = prevPlan != null && transition.getPreviousPhase() != null ? prevPlan.findPhase(transition.getPreviousPhase()) : null;
+        final PlanPhase nextPhase = nextPlan != null && transition.getNextPhase() != null ? nextPlan.findPhase(transition.getNextPhase()) : null;
+
         final PlanPhase phase = (transition.getTransitionType() != SubscriptionBaseTransitionType.CANCEL) ? nextPhase : prevPhase;
 
         return new PlanPhaseSpecifier(plan.getName(), phase.getPhaseType());
-
     }
 
     private boolean is_AUTO_INVOICING_OFF(final List<Tag> tags) {

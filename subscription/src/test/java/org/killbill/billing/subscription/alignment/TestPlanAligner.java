@@ -1,7 +1,9 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
+ * Copyright 2014-2018 Groupon, Inc
+ * Copyright 2014-2018 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -143,7 +145,6 @@ public class TestPlanAligner extends SubscriptionTestSuiteNoDB {
         Assert.assertNull(newPhase);
     }
 
-
     //
     // Scenario : change Plan with START_OF_SUBSCRIPTION after skipping TRIAL on Create to a new Plan that only has EVERGREEN
     //
@@ -173,7 +174,6 @@ public class TestPlanAligner extends SubscriptionTestSuiteNoDB {
         Assert.assertEquals(currentPhase.getPhase().getPhaseType(), PhaseType.EVERGREEN);
     }
 
-
     //
     // Scenario : change Plan with START_OF_SUBSCRIPTION after skipping TRIAL on Create to a new Plan that has {TRIAL, EVERGREEN}
     //
@@ -202,7 +202,6 @@ public class TestPlanAligner extends SubscriptionTestSuiteNoDB {
         Assert.assertEquals(currentPhase.getStartPhase(), alignStartDate);
         Assert.assertEquals(currentPhase.getPhase().getPhaseType(), PhaseType.EVERGREEN);
     }
-
 
     //
     // Scenario : change Plan with START_OF_SUBSCRIPTION after skipping TRIAL on Create to a new Plan that has {TRIAL, DISCOUNT, EVERGREEN}
@@ -300,7 +299,6 @@ public class TestPlanAligner extends SubscriptionTestSuiteNoDB {
         Assert.assertEquals(nextPhase.getPhase().getPhaseType(), PhaseType.FIXEDTERM);
     }
 
-
     //
     // Scenario : change Plan with START_OF_SUBSCRIPTION to a new Plan that has {TRIAL, DISCOUNT, EVERGREEN} and specifying a target PhaseType = DISCOUNT
     //
@@ -371,7 +369,6 @@ public class TestPlanAligner extends SubscriptionTestSuiteNoDB {
         final TimedPhase nextPhase  = planAligner.getNextTimedPhaseOnChange(defaultSubscriptionBase, newPlan, effectiveChangeDate, PhaseType.EVERGREEN, catalog, internalCallContext);
         Assert.assertNull(nextPhase);
     }
-
 
     private DefaultSubscriptionBase createSubscription(final DateTime bundleStartDate, final DateTime alignStartDate, final String productName, final PhaseType phaseType) throws CatalogApiException {
         final SubscriptionBuilder builder = new SubscriptionBuilder();

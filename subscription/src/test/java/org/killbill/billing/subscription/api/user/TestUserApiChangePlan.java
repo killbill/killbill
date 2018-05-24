@@ -521,25 +521,6 @@ public class TestUserApiChangePlan extends SubscriptionTestSuiteWithEmbeddedDB {
         // Check we are seeing the right PENDING transition (pistol-monthly), not the START but the CHANGE on the same date
         assertEquals(((DefaultSubscriptionBase) result2.get(0)).getCurrentOrPendingPlan().getName(), "pistol-monthly");
 
-        // To spice up the test, we insert manually an additional CHANGE event on the exact same dateas the CREATE to verify that code will also invalidate such event when doing the changePlanXX
-
-        final SubscriptionEventModelDao event = new SubscriptionEventModelDao(subscription.getEvents().get(0));
-        event.setId(UUID.randomUUID());
-        event.setUserType(ApiEventType.CHANGE);
-        event.setPlanName("blowdart-monthly");
-        event.setPhaseName("blowdart-monthly-trial");
-        dbi.withHandle(new HandleCallback<Void>() {
-            @Override
-            public Void withHandle(Handle handle) throws Exception {
-                final SubscriptionEventSqlDao sqlDao = handle.attach(SubscriptionEventSqlDao.class);
-                sqlDao.create(event, internalCallContext);
-                return null;
-            }
-        });
-
-        final DefaultSubscriptionBase refreshed1 = (DefaultSubscriptionBase) subscriptionInternalApi.getSubscriptionFromId(subscription.getId(), internalCallContext);
-        assertEquals(refreshed1.getEvents().size(), subscription.getEvents().size() + 1);
-
         subscription.changePlanWithDate(spec, null, subscription.getStartDate(), callContext);
         assertListenerStatus();
 

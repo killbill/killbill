@@ -263,7 +263,7 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
     }
 
     @Override
-    public boolean cancelWithPolicy(final BillingActionPolicy policy, int accountBillCycleDayLocal, final CallContext context) throws SubscriptionBaseApiException {
+    public boolean cancelWithPolicy(final BillingActionPolicy policy, final int accountBillCycleDayLocal, final CallContext context) throws SubscriptionBaseApiException {
         return apiService.cancelWithPolicy(this, policy, accountBillCycleDayLocal, context);
     }
 
@@ -695,10 +695,10 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
 
         removeEverythingPastCancelEvent(events);
 
-        UUID nextUserToken = null;
+        final UUID nextUserToken = null;
 
-        UUID nextEventId = null;
-        DateTime nextCreatedDate = null;
+        UUID nextEventId;
+        DateTime nextCreatedDate;
         EntitlementState nextState = null;
         String nextPlanName = null;
         String nextPhaseName = null;
@@ -777,13 +777,9 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
                             "Unexpected Event type = %s", cur.getType()));
             }
 
-            Plan nextPlan = null;
-            PlanPhase nextPhase = null;
-            PriceList nextPriceList = null;
-
-            nextPlan = (nextPlanName != null) ? catalog.findPlan(nextPlanName, cur.getEffectiveDate(), getAlignStartDate()) : null;
-            nextPhase = (nextPhaseName != null) ? catalog.findPhase(nextPhaseName, cur.getEffectiveDate(), getAlignStartDate()) : null;
-            nextPriceList = (nextPlan != null) ? catalog.findPriceListForPlan(nextPlanName, cur.getEffectiveDate(), getAlignStartDate()) : null;
+            final Plan nextPlan = (nextPlanName != null) ? catalog.findPlan(nextPlanName, cur.getEffectiveDate(), getAlignStartDate()) : null;
+            final PlanPhase nextPhase = (nextPlan != null && nextPhaseName != null) ? nextPlan.findPhase(nextPhaseName) : null;
+            final PriceList nextPriceList = (nextPlan != null) ? catalog.findPriceListForPlan(nextPlanName, cur.getEffectiveDate(), getAlignStartDate()) : null;
 
             final SubscriptionBaseTransitionData transition = new SubscriptionBaseTransitionData(
                     cur.getId(), id, bundleId, bundleExternalKey, cur.getType(), apiEventType,
