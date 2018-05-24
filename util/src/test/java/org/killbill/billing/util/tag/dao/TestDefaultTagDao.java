@@ -154,6 +154,15 @@ public class TestDefaultTagDao extends UtilTestSuiteWithEmbeddedDB {
         Assert.assertEquals(tagDao.getTagsForAccount(false, internalCallContext).size(), 0);
         Assert.assertEquals(tagDao.getTagsForObject(objectId, objectType, true, internalCallContext).size(), 1);
         Assert.assertEquals(tagDao.getTagsForAccount(true, internalCallContext).size(), 1);
+
+        // Delete tag again, check correct error
+        try {
+            tagDao.deleteTag(objectId, objectType, createdTagDefinition.getId(), internalCallContext);
+            Assert.fail("Deleting same tag again should fail");
+        } catch (final TagApiException e) {
+            Assert.assertEquals(e.getCode(), ErrorCode.TAG_DOES_NOT_EXIST.getCode());
+        }
+
     }
 
     @Test(groups = "slow")

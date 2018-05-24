@@ -207,7 +207,7 @@ public class DefaultTagDao extends EntityDaoBase<TagModelDao, Tag, TagApiExcepti
     @Override
     public void deleteTag(final UUID objectId, final ObjectType objectType, final UUID tagDefinitionId, final InternalCallContext context) throws TagApiException {
 
-        transactionalSqlDao.execute(false, new EntitySqlDaoTransactionWrapper<Void>() {
+        transactionalSqlDao.execute(false, TagApiException.class, new EntitySqlDaoTransactionWrapper<Void>() {
 
             @Override
             public Void inTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory) throws Exception {
