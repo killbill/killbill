@@ -319,15 +319,6 @@ public class VersionedCatalog extends ValidatingConfig<VersionedCatalog> impleme
     }
 
     @Override
-    public PlanAlignmentChange planChangeAlignment(final PlanPhaseSpecifier from,
-                                                   final PlanSpecifier to,
-                                                   final DateTime requestedDate,
-                                                   final DateTime subscriptionStartDate) throws CatalogApiException {
-        final StaticCatalog staticCatalog = getStaticCatalog(from, requestedDate, subscriptionStartDate);
-        return staticCatalog.planChangeAlignment(from, to);
-    }
-
-    @Override
     public PlanAlignmentCreate planCreateAlignment(final PlanSpecifier specifier,
                                                    final DateTime requestedDate,
                                                    final DateTime subscriptionStartDate) throws CatalogApiException {
@@ -471,12 +462,6 @@ public class VersionedCatalog extends ValidatingConfig<VersionedCatalog> impleme
     public BillingAlignment billingAlignment(final PlanPhaseSpecifier planPhase)
             throws CatalogApiException {
         return versionForDate(clock.getUTCNow()).billingAlignment(planPhase);
-    }
-
-    @Override
-    public PlanAlignmentChange planChangeAlignment(final PlanPhaseSpecifier from,
-                                                   final PlanSpecifier to) throws CatalogApiException {
-        return versionForDate(clock.getUTCNow()).planChangeAlignment(from, to);
     }
 
     @Override
