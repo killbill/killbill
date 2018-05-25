@@ -86,7 +86,7 @@ public class InvoiceItemFactory {
         final InvoiceItem item;
         switch (type) {
             case EXTERNAL_CHARGE:
-                item = new ExternalChargeInvoiceItem(id, createdDate, invoiceId, accountId, bundleId, subscriptionId, productName, planName, phaseName, prettyProductName, prettyPlanName, prettyPlanPhaseName, description, startDate, endDate, amount, rate, currency, linkedItemId, itemDetails, quantity);
+                item = new ExternalChargeInvoiceItem(id, createdDate, invoiceId, accountId, bundleId, subscriptionId, productName, planName, phaseName, prettyProductName, prettyPlanName, prettyPlanPhaseName, description, startDate, endDate, amount, rate, currency, linkedItemId, quantity, itemDetails);
                 break;
             case FIXED:
                 item = new FixedPriceInvoiceItem(id, createdDate, invoiceId, accountId, bundleId, subscriptionId, productName, planName, phaseName, prettyProductName, prettyPlanName, prettyPlanPhaseName, description, startDate, amount, currency);
@@ -98,13 +98,13 @@ public class InvoiceItemFactory {
                 item = new CreditBalanceAdjInvoiceItem(id, createdDate, invoiceId, accountId, startDate, linkedItemId, description, amount, currency);
                 break;
             case CREDIT_ADJ:
-                item = new CreditAdjInvoiceItem(id, createdDate, invoiceId, accountId, startDate, description, amount, currency, itemDetails, rate, quantity);
+                item = new CreditAdjInvoiceItem(id, createdDate, invoiceId, accountId, startDate, description, amount, rate, currency, quantity, itemDetails);
                 break;
             case REPAIR_ADJ:
                 item = new RepairAdjInvoiceItem(id, createdDate, invoiceId, accountId, startDate, endDate, description, amount, currency, linkedItemId);
                 break;
             case ITEM_ADJ:
-                item = new ItemAdjInvoiceItem(id, createdDate, invoiceId, accountId, startDate, description, amount, currency, linkedItemId, itemDetails, rate, quantity);
+                item = new ItemAdjInvoiceItem(id, createdDate, invoiceId, accountId, startDate, description, amount, rate, currency, linkedItemId, quantity, itemDetails);
                 break;
             case USAGE:
                 item = new UsageInvoiceItem(id, createdDate, invoiceId, accountId, bundleId, subscriptionId, productName, planName, phaseName, usageName, prettyProductName, prettyPlanName, prettyPlanPhaseName, prettyUsageName, startDate, endDate, description, amount, rate, currency, quantity, itemDetails);
