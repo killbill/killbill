@@ -516,8 +516,7 @@ public class DefaultSubscriptionDao extends EntityDaoBase<SubscriptionBundleMode
         return transactionalSqlDao.execute(true, new EntitySqlDaoTransactionWrapper<List<SubscriptionBaseEvent>>() {
             @Override
             public List<SubscriptionBaseEvent> inTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory) throws Exception {
-                final List<SubscriptionEventModelDao> models = entitySqlDaoWrapperFactory.become(SubscriptionEventSqlDao.class).getActiveEventsForSubscription(subscriptionId.toString(), context);
-                return filterSubscriptionBaseEvents(models);
+                return getEventsForSubscriptionInTransaction(entitySqlDaoWrapperFactory, subscriptionId, context);
             }
         });
     }
@@ -1087,13 +1086,18 @@ public class DefaultSubscriptionDao extends EntityDaoBase<SubscriptionBundleMode
         }
     }
 
+    private List<SubscriptionBaseEvent> getEventsForSubscriptionInTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory, final UUID subscriptionId, final InternalTenantContext context) {
+        final List<SubscriptionEventModelDao> models = entitySqlDaoWrapperFactory.become(SubscriptionEventSqlDao.class).getActiveEventsForSubscription(subscriptionId.toString(), context);
+        return filterSubscriptionBaseEvents(models);
+    }
+
     // Sends bus notification for event on effective date -- only used for operation that happen immediately
     private void rebuildSubscriptionAndNotifyBusOfEffectiveImmediateChange(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory, final DefaultSubscriptionBase subscription,
                                                                            final SubscriptionBaseEvent immediateEvent, final int seqId, final Catalog catalog, final InternalCallContext context) {
         try {
             // We need to rehydrate the subscription, as some events might have been canceled on disk (e.g. future PHASE after while doing a change plan)
-            final List<SubscriptionEventModelDao> activeSubscriptionEvents = entitySqlDaoWrapperFactory.become(SubscriptionEventSqlDao.class).getActiveEventsForSubscription(subscription.getId().toString(), context);
-            subscription.rebuildTransitions(toSubscriptionBaseEvents(activeSubscriptionEvents), catalog);
+            final List<SubscriptionBaseEvent> activeSubscriptionEvents = getEventsForSubscriptionInTransaction(entitySqlDaoWrapperFactory, subscription.getId(), context);
+            subscription.rebuildTransitions(activeSubscriptionEvents, catalog);
             notifyBusOfEffectiveImmediateChange(entitySqlDaoWrapperFactory, subscription, immediateEvent, seqId, context);
         } catch (final CatalogApiException e) {
             log.warn("Failed to post effective event for subscriptionId='{}'", subscription.getId(), e);
