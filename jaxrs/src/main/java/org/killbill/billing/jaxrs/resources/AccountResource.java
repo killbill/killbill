@@ -791,13 +791,8 @@ public class AccountResource extends JaxRsResourceBase {
 
         final Account account = accountUserApi.getAccountById(accountId, callContext);
 
-        LocalDate inputDate;
-        if(targetDate == null){
-            inputDate = clock.getUTCToday();
-        }
-        else{
-            inputDate = toLocalDate(targetDate);
-        }
+        final LocalDate inputDate = targetDate == null ? clock.getUTCToday() : toLocalDate(targetDate);
+
         final Collection<Invoice> unpaidInvoices = invoiceApi.getUnpaidInvoicesByAccountId(account.getId(), inputDate, callContext);
 
         BigDecimal remainingRequestPayment = paymentAmount;
@@ -812,14 +807,7 @@ public class AccountResource extends JaxRsResourceBase {
             final BigDecimal amountToPay = (remainingRequestPayment.compareTo(invoice.getBalance()) >= 0) ?
                                            invoice.getBalance() : remainingRequestPayment;
             if (amountToPay.compareTo(BigDecimal.ZERO) > 0) {
-                UUID paymentMethodId;
-                if(inputPaymentMethodId == null){
-                    paymentMethodId = externalPayment ? null : account.getPaymentMethodId();
-                }
-                else{
-                    paymentMethodId = inputPaymentMethodId;
-                }
-
+                final UUID paymentMethodId = externalPayment ? account.getPaymentMethodId() : inputPaymentMethodId;
                 createPurchaseForInvoice(account, invoice.getId(), amountToPay, paymentMethodId, externalPayment, null, null, pluginProperties, callContext);
             }
             remainingRequestPayment = remainingRequestPayment.subtract(amountToPay);
