@@ -807,7 +807,9 @@ public class AccountResource extends JaxRsResourceBase {
             final BigDecimal amountToPay = (remainingRequestPayment.compareTo(invoice.getBalance()) >= 0) ?
                                            invoice.getBalance() : remainingRequestPayment;
             if (amountToPay.compareTo(BigDecimal.ZERO) > 0) {
-                final UUID paymentMethodId = externalPayment ? account.getPaymentMethodId() : inputPaymentMethodId;
+                final UUID paymentMethodId = externalPayment ?
+                                             null :
+                                             (inputPaymentMethodId != null ? inputPaymentMethodId : account.getPaymentMethodId());
                 createPurchaseForInvoice(account, invoice.getId(), amountToPay, paymentMethodId, externalPayment, null, null, pluginProperties, callContext);
             }
             remainingRequestPayment = remainingRequestPayment.subtract(amountToPay);
