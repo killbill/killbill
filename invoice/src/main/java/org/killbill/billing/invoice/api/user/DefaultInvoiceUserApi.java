@@ -342,6 +342,7 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
                                                                                      charge.getRate(),
                                                                                      charge.getCurrency(),
                                                                                      charge.getLinkedItemId(),
+                                                                                     charge.getQuantity(),
                                                                                      charge.getItemDetails());
 
                     invoiceForExternalCharge.addInvoiceItem(externalCharge);
