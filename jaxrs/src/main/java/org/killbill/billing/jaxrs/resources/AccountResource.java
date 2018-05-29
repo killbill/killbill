@@ -51,6 +51,7 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.UriInfo;
 
+import org.joda.time.LocalDate;
 import org.killbill.billing.ErrorCode;
 import org.killbill.billing.ObjectType;
 import org.killbill.billing.OrderingType;
@@ -775,8 +776,10 @@ public class AccountResource extends JaxRsResourceBase {
     @ApiResponses(value = {@ApiResponse(code = 204, message = "Successful operation"),
                            @ApiResponse(code = 404, message = "Invalid account id supplied")})
     public Response payAllInvoices(@PathParam("accountId") final UUID accountId,
+                                   @QueryParam(QUERY_PAYMENT_METHOD_ID) final UUID inputPaymentMethodId,
                                    @QueryParam(QUERY_PAYMENT_EXTERNAL) @DefaultValue("false") final Boolean externalPayment,
                                    @QueryParam(QUERY_PAYMENT_AMOUNT) final BigDecimal paymentAmount,
+                                   @QueryParam(QUERY_TARGET_DATE) final String targetDate,
                                    @QueryParam(QUERY_PLUGIN_PROPERTY) final List<String> pluginPropertiesString,
                                    @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                    @HeaderParam(HDR_REASON) final String reason,
@@ -787,7 +790,15 @@ public class AccountResource extends JaxRsResourceBase {
         final CallContext callContext = context.createCallContextWithAccountId(accountId, createdBy, reason, comment, request);
 
         final Account account = accountUserApi.getAccountById(accountId, callContext);
-        final Collection<Invoice> unpaidInvoices = invoiceApi.getUnpaidInvoicesByAccountId(account.getId(), clock.getUTCToday(), callContext);
+
+        LocalDate inputDate;
+        if(targetDate == null){
+            inputDate = clock.getUTCToday();
+        }
+        else{
+            inputDate = toLocalDate(targetDate);
+        }
+        final Collection<Invoice> unpaidInvoices = invoiceApi.getUnpaidInvoicesByAccountId(account.getId(), inputDate, callContext);
 
         BigDecimal remainingRequestPayment = paymentAmount;
         if (remainingRequestPayment == null) {
@@ -801,7 +812,14 @@ public class AccountResource extends JaxRsResourceBase {
             final BigDecimal amountToPay = (remainingRequestPayment.compareTo(invoice.getBalance()) >= 0) ?
                                            invoice.getBalance() : remainingRequestPayment;
             if (amountToPay.compareTo(BigDecimal.ZERO) > 0) {
-                final UUID paymentMethodId = externalPayment ? null : account.getPaymentMethodId();
+                UUID paymentMethodId;
+                if(inputPaymentMethodId == null){
+                    paymentMethodId = externalPayment ? null : account.getPaymentMethodId();
+                }
+                else{
+                    paymentMethodId = inputPaymentMethodId;
+                }
+
                 createPurchaseForInvoice(account, invoice.getId(), amountToPay, paymentMethodId, externalPayment, null, null, pluginProperties, callContext);
             }
             remainingRequestPayment = remainingRequestPayment.subtract(amountToPay);
