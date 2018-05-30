@@ -301,7 +301,7 @@ public class TestInvoicePayment extends TestJaxrsBase {
         assertEquals(invoicePayment.getTargetInvoiceId(), invoice.getInvoiceId());
 
         // Make a payment and verify both invoice payment point to the same targetInvoiceId
-        accountApi.payAllInvoices(accountJson.getAccountId(), false, null, NULL_PLUGIN_PROPERTIES, requestOptions);
+        accountApi.payAllInvoices(accountJson.getAccountId(), null, false, null, null, NULL_PLUGIN_PROPERTIES, requestOptions);
         invoicePayments = accountApi.getInvoicePayments(accountJson.getAccountId(), NULL_PLUGIN_PROPERTIES, requestOptions);
         assertEquals(invoicePayments.size(), 2);
         for (final InvoicePayment cur : invoicePayments) {
