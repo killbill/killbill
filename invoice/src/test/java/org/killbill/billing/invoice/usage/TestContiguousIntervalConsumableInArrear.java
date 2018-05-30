@@ -466,23 +466,34 @@ public class TestContiguousIntervalConsumableInArrear extends TestUsageInArrearB
         final ContiguousIntervalUsageInArrear intervalConsumableInArrear = createContiguousIntervalConsumableInArrear(usage, rawUsage, targetDate, true, eventT0, eventT1, eventT2, eventT3);
 
         final List<RolledUpUsage> unsortedRolledUpUsage = intervalConsumableInArrear.getRolledUpUsage();
-        Assert.assertEquals(unsortedRolledUpUsage.size(), 2);
+        Assert.assertEquals(unsortedRolledUpUsage.size(), 3);
 
         final List<RolledUpUsage> rolledUpUsage = TEST_ROLLED_UP_FIRST_USAGE_ORDERING.sortedCopy(unsortedRolledUpUsage);
 
         Assert.assertEquals(rolledUpUsage.get(0).getStart().compareTo(t0), 0);
         Assert.assertEquals(rolledUpUsage.get(0).getEnd().compareTo(t1), 0);
-        Assert.assertEquals(rolledUpUsage.get(0).getRolledUpUnits().size(), 1);
+        Assert.assertEquals(rolledUpUsage.get(0).getRolledUpUnits().size(), 2);
         Assert.assertEquals(rolledUpUsage.get(0).getRolledUpUnits().get(0).getUnitType(), "unit");
         Assert.assertEquals(rolledUpUsage.get(0).getRolledUpUnits().get(0).getAmount(), new Long(10L));
+        Assert.assertEquals(rolledUpUsage.get(0).getRolledUpUnits().get(1).getUnitType(), "unit2");
+        Assert.assertEquals(rolledUpUsage.get(0).getRolledUpUnits().get(1).getAmount(), new Long(0L));
 
-        Assert.assertEquals(rolledUpUsage.get(1).getStart().compareTo(t2), 0);
-        Assert.assertEquals(rolledUpUsage.get(1).getEnd().compareTo(t3), 0);
+        Assert.assertEquals(rolledUpUsage.get(1).getStart().compareTo(t1), 0);
+        Assert.assertEquals(rolledUpUsage.get(1).getEnd().compareTo(t2), 0);
         Assert.assertEquals(rolledUpUsage.get(1).getRolledUpUnits().size(), 2);
         Assert.assertEquals(rolledUpUsage.get(1).getRolledUpUnits().get(0).getUnitType(), "unit");
-        Assert.assertEquals(rolledUpUsage.get(1).getRolledUpUnits().get(0).getAmount(), new Long(20L));
+        Assert.assertEquals(rolledUpUsage.get(1).getRolledUpUnits().get(0).getAmount(), new Long(0L));
         Assert.assertEquals(rolledUpUsage.get(1).getRolledUpUnits().get(1).getUnitType(), "unit2");
-        Assert.assertEquals(rolledUpUsage.get(1).getRolledUpUnits().get(1).getAmount(), new Long(21L));
+        Assert.assertEquals(rolledUpUsage.get(1).getRolledUpUnits().get(1).getAmount(), new Long(0L));
+
+
+        Assert.assertEquals(rolledUpUsage.get(2).getStart().compareTo(t2), 0);
+        Assert.assertEquals(rolledUpUsage.get(2).getEnd().compareTo(t3), 0);
+        Assert.assertEquals(rolledUpUsage.get(2).getRolledUpUnits().size(), 2);
+        Assert.assertEquals(rolledUpUsage.get(2).getRolledUpUnits().get(0).getUnitType(), "unit");
+        Assert.assertEquals(rolledUpUsage.get(2).getRolledUpUnits().get(0).getAmount(), new Long(20L));
+        Assert.assertEquals(rolledUpUsage.get(2).getRolledUpUnits().get(1).getUnitType(), "unit2");
+        Assert.assertEquals(rolledUpUsage.get(2).getRolledUpUnits().get(1).getAmount(), new Long(21L));
     }
 
     @Test(groups = "fast", description = "See https://github.com/killbill/killbill/issues/706")
@@ -893,18 +904,25 @@ public class TestContiguousIntervalConsumableInArrear extends TestUsageInArrearB
 
         // FOO item detail
         assertEquals(itemDetails.get(2).getTierUnit(), "FOO");
-        assertEquals(itemDetails.get(2).getTier(), 2);
+        assertEquals(itemDetails.get(2).getTier(), 1);
         assertEquals(itemDetails.get(2).getTierBlockSize(), 1);
-        assertEquals(itemDetails.get(2).getQuantity().intValue(), 10);
-        assertEquals(itemDetails.get(2).getTierPrice().compareTo(new BigDecimal("10.00")), 0);
-        assertEquals(itemDetails.get(2).getAmount().compareTo(new BigDecimal("100.00")), 0);
+        assertEquals(itemDetails.get(2).getQuantity().intValue(), 0);
+        assertEquals(itemDetails.get(2).getTierPrice().compareTo(new BigDecimal("1.00")), 0);
+        assertEquals(itemDetails.get(2).getAmount().compareTo(new BigDecimal("0.00")), 0);
 
         assertEquals(itemDetails.get(3).getTierUnit(), "FOO");
-        assertEquals(itemDetails.get(3).getTier(), 3);
+        assertEquals(itemDetails.get(3).getTier(), 2);
         assertEquals(itemDetails.get(3).getTierBlockSize(), 1);
         assertEquals(itemDetails.get(3).getQuantity().intValue(), 10);
-        assertEquals(itemDetails.get(3).getTierPrice().compareTo(new BigDecimal("100.00")), 0);
-        assertEquals(itemDetails.get(3).getAmount().compareTo(new BigDecimal("1000.00")), 0);
+        assertEquals(itemDetails.get(3).getTierPrice().compareTo(new BigDecimal("10.00")), 0);
+        assertEquals(itemDetails.get(3).getAmount().compareTo(new BigDecimal("100.00")), 0);
+
+        assertEquals(itemDetails.get(4).getTierUnit(), "FOO");
+        assertEquals(itemDetails.get(4).getTier(), 3);
+        assertEquals(itemDetails.get(4).getTierBlockSize(), 1);
+        assertEquals(itemDetails.get(4).getQuantity().intValue(), 10);
+        assertEquals(itemDetails.get(4).getTierPrice().compareTo(new BigDecimal("100.00")), 0);
+        assertEquals(itemDetails.get(4).getAmount().compareTo(new BigDecimal("1000.00")), 0);
     }
 
     @Test(groups = "fast")

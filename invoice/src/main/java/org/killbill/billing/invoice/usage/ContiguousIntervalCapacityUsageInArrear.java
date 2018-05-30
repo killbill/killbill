@@ -63,19 +63,21 @@ public class ContiguousIntervalCapacityUsageInArrear extends ContiguousIntervalU
     }
 
     @Override
-    protected void populateResults(final LocalDate startDate, final LocalDate endDate, final BigDecimal billedUsage, final BigDecimal toBeBilledUsage, final UsageInArrearAggregate toBeBilledUsageDetails, final boolean areAllBilledItemsWithDetails, final List<InvoiceItem> result) throws InvoiceApiException {
+    protected void populateResults(final LocalDate startDate, final LocalDate endDate, final BigDecimal billedUsage, final BigDecimal toBeBilledUsage, final UsageInArrearAggregate toBeBilledUsageDetails, final boolean areAllBilledItemsWithDetails, final boolean isPeriodPreviouslyBilled, final List<InvoiceItem> result) throws InvoiceApiException {
         // Compute final amount by subtracting  amount that was already billed.
         final BigDecimal amountToBill = toBeBilledUsage.subtract(billedUsage);
 
-        if (amountToBill.compareTo(BigDecimal.ZERO) > 0) {
-            final String itemDetails = areAllBilledItemsWithDetails ? toJson(toBeBilledUsageDetails) : null;
-            final InvoiceItem item = new UsageInvoiceItem(invoiceId, accountId, getBundleId(), getSubscriptionId(), getProductName(), getPlanName(),
-                                                          getPhaseName(), usage.getName(), startDate, endDate, amountToBill, null, getCurrency(), null, itemDetails);
-            result.add(item);
-        } else if (amountToBill.compareTo(BigDecimal.ZERO) < 0) {
+        if (amountToBill.compareTo(BigDecimal.ZERO) < 0) {
             throw new InvoiceApiException(ErrorCode.UNEXPECTED_ERROR,
                                           String.format("ILLEGAL INVOICING STATE: Usage period start='%s', end='%s', previously billed amount='%.2f', new proposed amount='%.2f'",
                                                         startDate, endDate, billedUsage, toBeBilledUsage));
+        } else /* amountToBill.compareTo(BigDecimal.ZERO) >= 0 */ {
+            if (!isPeriodPreviouslyBilled || amountToBill.compareTo(BigDecimal.ZERO) > 0) {
+                final String itemDetails = areAllBilledItemsWithDetails ? toJson(toBeBilledUsageDetails) : null;
+                final InvoiceItem item = new UsageInvoiceItem(invoiceId, accountId, getBundleId(), getSubscriptionId(), getProductName(), getPlanName(),
+                                                              getPhaseName(), usage.getName(), startDate, endDate, amountToBill, null, getCurrency(), null, itemDetails);
+                result.add(item);
+            }
         }
     }
 
@@ -105,22 +107,29 @@ public class ContiguousIntervalCapacityUsageInArrear extends ContiguousIntervalU
         final List<UsageInArrearTierUnitDetail> toBeBilledDetails = Lists.newLinkedList();
         for (final Tier cur : tiers) {
             tierNum++;
+            final BigDecimal curTierPrice = cur.getRecurringPrice().getPrice(getCurrency());
+
             boolean complies = true;
+            boolean allUnitAmountToZero = true;  // Support for $0 Usage item
             for (final RolledUpUnit ro : roUnits) {
+
                 final Limit tierLimit = getTierLimit(cur, ro.getUnitType());
                 // We ignore the min and only look at the max Limit as the tiers should be contiguous.
                 // Specifying a -1 value for last max tier will make the validation works
                 if (tierLimit.getMax() != (double) -1 && ro.getAmount().doubleValue() > tierLimit.getMax()) {
                     complies = false;
                 } else {
+
+                    allUnitAmountToZero = ro.getAmount() > 0 ? false : allUnitAmountToZero;
+
                     if (!perUnitTypeDetailTierLevel.contains(ro.getUnitType())) {
-                        toBeBilledDetails.add(new UsageInArrearTierUnitDetail(tierNum, ro.getUnitType(), cur.getRecurringPrice().getPrice(getCurrency()), ro.getAmount().intValue()));
+                        toBeBilledDetails.add(new UsageInArrearTierUnitDetail(tierNum, ro.getUnitType(), curTierPrice, ro.getAmount().intValue()));
                         perUnitTypeDetailTierLevel.add(ro.getUnitType());
                     }
                 }
             }
             if (complies) {
-                return new UsageCapacityInArrearAggregate(toBeBilledDetails, cur.getRecurringPrice().getPrice(getCurrency()));
+                return new UsageCapacityInArrearAggregate(toBeBilledDetails, allUnitAmountToZero ? BigDecimal.ZERO : curTierPrice);
             }
         }
         // Probably invalid catalog config
