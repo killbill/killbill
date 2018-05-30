@@ -378,15 +378,9 @@ public class TestContiguousIntervalConsumableInArrear extends TestUsageInArrearB
         invoiceItems.add(ii2);
 
         final UsageInArrearItemsAndNextNotificationDate usageResult = intervalConsumableInArrear.computeMissingItemsAndNextNotificationDate(invoiceItems);
-        final List<InvoiceItem> rawResults = usageResult.getInvoiceItems();
-        assertEquals(rawResults.size(), 4);
+        final List<InvoiceItem> result = usageResult.getInvoiceItems();
+        assertEquals(result.size(), 2);
 
-        final List<InvoiceItem> result = ImmutableList.copyOf(Iterables.filter(rawResults, new Predicate<InvoiceItem>() {
-            @Override
-            public boolean apply(final InvoiceItem input) {
-                return input.getAmount().compareTo(BigDecimal.ZERO) > 0;
-            }
-        }));
 
         // Invoiced for 1 BTC and used 130 + 271 = 401 => 5 blocks => 5 BTC so remaining piece should be 4 BTC
         assertEquals(result.get(0).getAmount().compareTo(new BigDecimal("4.0")), 0, String.format("%s != 4.0", result.get(0).getAmount()));

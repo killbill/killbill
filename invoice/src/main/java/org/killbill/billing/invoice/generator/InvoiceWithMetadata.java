@@ -44,7 +44,6 @@ public class InvoiceWithMetadata {
         this.invoice = originalInvoice;
         this.perSubscriptionFutureNotificationDates = perSubscriptionFutureNotificationDates;
         build();
-        removeMarkerUsageItems();
     }
 
     public DefaultInvoice getInvoice() {
@@ -66,6 +65,9 @@ public class InvoiceWithMetadata {
                 tmp.resetNextRecurringDate();
             }
         }
+        if (invoice != null && invoice.getInvoiceItems().isEmpty()) {
+            invoice = null;
+        }
     }
 
     private boolean hasItemsForSubscription(final UUID subscriptionId, final InvoiceItemType invoiceItemType) {
@@ -77,32 +79,6 @@ public class InvoiceWithMetadata {
             }
         });
     }
-
-    protected void removeMarkerUsageItems() {
-        if (invoice != null) {
-            final Iterator<InvoiceItem> it = invoice.getInvoiceItems().iterator();
-            while (it.hasNext()) {
-                final InvoiceItem item = it.next();
-                if (isMarkerUsageItem(item)) {
-                    it.remove();
-                }
-            }
-            if (invoice.getInvoiceItems().isEmpty()) {
-                invoice = null;
-            }
-        }
-    }
-
-    //
-    // $0 Usage item with no detail section
-    // ($0 Usage item *with* detail section are valid items in case of tiers defined with $0 amount)
-    //
-    private boolean isMarkerUsageItem(final InvoiceItem item) {
-        return item.getInvoiceItemType() == InvoiceItemType.USAGE &&
-               item.getItemDetails() == null &&
-               item.getAmount().compareTo(BigDecimal.ZERO) == 0;
-    }
-
 
     public static class SubscriptionFutureNotificationDates {
 

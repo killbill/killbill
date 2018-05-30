@@ -170,19 +170,6 @@ public abstract class ContiguousIntervalUsageInArrear {
         }
 
         final List<InvoiceItem> result = Lists.newLinkedList();
-
-        // We start by generating 'marker' USAGE items with $0 that will allow to correctly insert the next notification for when there is no USAGE to bill.
-        // Those will be removed by the invoicing code later so as to not end up with superfluous $0 items
-        LocalDate prevDate = null;
-        for (final LocalDate curDate : transitionTimes) {
-            if (prevDate != null) {
-                final InvoiceItem item = new UsageInvoiceItem(invoiceId, accountId, getBundleId(), getSubscriptionId(), getProductName(), getPlanName(),
-                                                              getPhaseName(), usage.getName(), prevDate, curDate, BigDecimal.ZERO, getCurrency());
-                result.add(item);
-            }
-            prevDate = curDate;
-        }
-
         final List<RolledUpUsage> allUsage = getRolledUpUsage();
         // Each RolledUpUsage 'ru' is for a specific time period and across all units
         for (final RolledUpUsage ru : allUsage) {

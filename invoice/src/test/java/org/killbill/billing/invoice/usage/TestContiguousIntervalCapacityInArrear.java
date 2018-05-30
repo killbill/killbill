@@ -213,15 +213,9 @@ public class TestContiguousIntervalCapacityInArrear extends TestUsageInArrearBas
         invoiceItems.add(ii2);
 
         final UsageInArrearItemsAndNextNotificationDate usageResult = intervalCapacityInArrear.computeMissingItemsAndNextNotificationDate(invoiceItems);
-        final List<InvoiceItem> rawResults = usageResult.getInvoiceItems();
-        assertEquals(rawResults.size(), 4);
+        final List<InvoiceItem> result = usageResult.getInvoiceItems();
+        assertEquals(result.size(), 2);
 
-        final List<InvoiceItem> result = ImmutableList.copyOf(Iterables.filter(rawResults, new Predicate<InvoiceItem>() {
-            @Override
-            public boolean apply(final InvoiceItem input) {
-                return input.getAmount().compareTo(BigDecimal.ZERO) > 0;
-            }
-        }));
 
         assertEquals(result.get(0).getAmount().compareTo(new BigDecimal("9.0")), 0, String.format("%s != 9.0", result.get(0).getAmount()));
         assertEquals(result.get(0).getCurrency(), Currency.BTC);
