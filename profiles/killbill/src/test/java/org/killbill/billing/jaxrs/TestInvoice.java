@@ -279,8 +279,9 @@ public class TestInvoice extends TestJaxrsBase {
         final Invoice invoiceToPay = invoices.get(1);
         assertEquals(invoiceToPay.getBalance().compareTo(BigDecimal.ZERO), 1);
 
+
         // Pay all invoices
-        accountApi.payAllInvoices(accountJson.getAccountId(), true, null, null, requestOptions);
+        accountApi.payAllInvoices(accountJson.getAccountId(), null, true, null, null, NULL_PLUGIN_PROPERTIES, requestOptions);
         for (final Invoice invoice : accountApi.getInvoicesForAccount(accountJson.getAccountId(), requestOptions)) {
             assertEquals(invoice.getBalance().compareTo(BigDecimal.ZERO), 0);
         }
