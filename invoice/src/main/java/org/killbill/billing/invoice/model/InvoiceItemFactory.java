@@ -77,7 +77,7 @@ public class InvoiceItemFactory {
 
         final InvoiceItemType type = invoiceItemModelDao.getType();
 
-        final String [] prettyNames = computePrettyName(type, createdDate, productName, planName, phaseName, usageName, catalog);
+        final String[] prettyNames = computePrettyName(type, createdDate, productName, planName, phaseName, usageName, catalog);
         String prettyProductName = prettyNames[0];
         String prettyPlanName = prettyNames[1];
         String prettyPlanPhaseName = prettyNames[2];
@@ -86,7 +86,7 @@ public class InvoiceItemFactory {
         final InvoiceItem item;
         switch (type) {
             case EXTERNAL_CHARGE:
-                item = new ExternalChargeInvoiceItem(id, createdDate, invoiceId, accountId, bundleId, subscriptionId, productName, planName, phaseName, prettyProductName, prettyPlanName, prettyPlanPhaseName, description, startDate, endDate, amount, rate, currency, linkedItemId, itemDetails);
+                item = new ExternalChargeInvoiceItem(id, createdDate, invoiceId, accountId, bundleId, subscriptionId, productName, planName, phaseName, prettyProductName, prettyPlanName, prettyPlanPhaseName, description, startDate, endDate, amount, rate, currency, linkedItemId, quantity, itemDetails);
                 break;
             case FIXED:
                 item = new FixedPriceInvoiceItem(id, createdDate, invoiceId, accountId, bundleId, subscriptionId, productName, planName, phaseName, prettyProductName, prettyPlanName, prettyPlanPhaseName, description, startDate, amount, currency);
@@ -98,19 +98,19 @@ public class InvoiceItemFactory {
                 item = new CreditBalanceAdjInvoiceItem(id, createdDate, invoiceId, accountId, startDate, linkedItemId, description, amount, currency);
                 break;
             case CREDIT_ADJ:
-                item = new CreditAdjInvoiceItem(id, createdDate, invoiceId, accountId, startDate, description, amount, currency, itemDetails);
+                item = new CreditAdjInvoiceItem(id, createdDate, invoiceId, accountId, startDate, description, amount, rate, currency, quantity, itemDetails);
                 break;
             case REPAIR_ADJ:
                 item = new RepairAdjInvoiceItem(id, createdDate, invoiceId, accountId, startDate, endDate, description, amount, currency, linkedItemId);
                 break;
             case ITEM_ADJ:
-                item = new ItemAdjInvoiceItem(id, createdDate, invoiceId, accountId, startDate, description, amount, currency, linkedItemId, itemDetails);
+                item = new ItemAdjInvoiceItem(id, createdDate, invoiceId, accountId, startDate, description, amount, rate, currency, linkedItemId, quantity, itemDetails);
                 break;
             case USAGE:
                 item = new UsageInvoiceItem(id, createdDate, invoiceId, accountId, bundleId, subscriptionId, productName, planName, phaseName, usageName, prettyProductName, prettyPlanName, prettyPlanPhaseName, prettyUsageName, startDate, endDate, description, amount, rate, currency, quantity, itemDetails);
                 break;
             case TAX:
-                item = new TaxInvoiceItem(id, createdDate, invoiceId, accountId, bundleId, subscriptionId, productName, planName, phaseName, usageName, prettyProductName, prettyPlanName, prettyPlanPhaseName, prettyUsageName, startDate, description, amount, currency, linkedItemId);
+                item = new TaxInvoiceItem(id, createdDate, invoiceId, accountId, bundleId, subscriptionId, productName, planName, phaseName, usageName, prettyProductName, prettyPlanName, prettyPlanPhaseName, prettyUsageName, startDate, description, amount, currency, linkedItemId, itemDetails);
                 break;
             case PARENT_SUMMARY:
                 item = new ParentInvoiceItem(id, createdDate, invoiceId, accountId, childAccountId, amount, currency, description);
@@ -124,9 +124,9 @@ public class InvoiceItemFactory {
     //
     // Returns an array of string for 'pretty' names [prettyPlanName, prettyPlanPhaseName, prettyUsageName]
     //
-    private static String [] computePrettyName(final InvoiceItemType type, final DateTime createdDate, @Nullable final String productName, @Nullable final String planName, @Nullable final String phaseName, @Nullable final String usageName, @Nullable final Catalog catalog) {
+    private static String[] computePrettyName(final InvoiceItemType type, final DateTime createdDate, @Nullable final String productName, @Nullable final String planName, @Nullable final String phaseName, @Nullable final String usageName, @Nullable final Catalog catalog) {
 
-        final String [] result = new String[4];
+        final String[] result = new String[4];
 
         final boolean computePrettyName = catalog != null &&
                                           (type == InvoiceItemType.FIXED || type == InvoiceItemType.RECURRING || type == InvoiceItemType.TAX || type == InvoiceItemType.USAGE);

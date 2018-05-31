@@ -29,7 +29,6 @@ import org.killbill.billing.catalog.api.Catalog;
 import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.catalog.api.Plan;
-import org.killbill.billing.catalog.api.PlanAlignmentChange;
 import org.killbill.billing.catalog.api.PlanAlignmentCreate;
 import org.killbill.billing.catalog.api.PlanChangeResult;
 import org.killbill.billing.catalog.api.PlanPhase;
@@ -165,18 +164,6 @@ public class MockCatalog extends StandaloneCatalog implements Catalog {
     @Override
     public BillingAlignment billingAlignment(final PlanPhaseSpecifier planPhase, final DateTime requestedDate, final DateTime subscriptionStartDate) {
         return billingAlignment(planPhase);
-    }
-
-    @Override
-    public PlanAlignmentChange planChangeAlignment(final PlanPhaseSpecifier from, final PlanSpecifier to, final DateTime requestedDate, final DateTime subscriptionStartDate)
-            throws CatalogApiException {
-        return planChangeAlignment(from, to);
-    }
-
-    @Override
-    public PlanAlignmentChange planChangeAlignment(final PlanPhaseSpecifier from, final PlanSpecifier to)
-            throws CatalogApiException {
-        return super.planChangeAlignment(from, to);
     }
 
     @Override

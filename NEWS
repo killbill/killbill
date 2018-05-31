@@ -1,3 +1,7 @@
+0.19.16
+    Catalog api cleanup and enhancements for mutli-versions
+    Fix missing fields in invoice items and remove constraint for generating stricly positive external charges
+
 0.19.15
     Fix issue in usage billing (DETAIL mode)
     Catalog endpoints enhancements

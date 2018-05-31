@@ -1,7 +1,9 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
+ * Copyright 2014-2018 Groupon, Inc
+ * Copyright 2014-2018 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -146,14 +148,14 @@ public class DefaultPlanRules extends ValidatingConfig<StandaloneCatalog> implem
         return new PlanChangeResult(toPriceList, policy, alignment);
     }
 
-    public PlanAlignmentChange getPlanChangeAlignment(final PlanPhaseSpecifier from,
-                                                      final PlanSpecifier to, final StaticCatalog catalog) throws CatalogApiException {
+    private PlanAlignmentChange getPlanChangeAlignment(final PlanPhaseSpecifier from,
+                                                       final PlanSpecifier to, final StaticCatalog catalog) throws CatalogApiException {
         final PlanAlignmentChange result = DefaultCaseChange.getResult(changeAlignmentCase, from, to, catalog);
         return (result != null) ? result : PlanAlignmentChange.START_OF_BUNDLE;
     }
 
-    public BillingActionPolicy getPlanChangePolicy(final PlanPhaseSpecifier from,
-                                                   final PlanSpecifier to, final StaticCatalog catalog) throws CatalogApiException {
+    private BillingActionPolicy getPlanChangePolicy(final PlanPhaseSpecifier from,
+                                                    final PlanSpecifier to, final StaticCatalog catalog) throws CatalogApiException {
         final BillingActionPolicy result = DefaultCaseChange.getResult(changeCase, from, to, catalog);
         return (result != null) ? result : BillingActionPolicy.END_OF_TERM;
     }
@@ -166,7 +168,6 @@ public class DefaultPlanRules extends ValidatingConfig<StandaloneCatalog> implem
         }
         return result;
     }
-
 
     @Override
     public ValidationErrors validate(final StandaloneCatalog catalog, final ValidationErrors errors) {
