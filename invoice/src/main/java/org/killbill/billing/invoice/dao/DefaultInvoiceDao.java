@@ -355,15 +355,8 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
                             createdInvoiceItems.add(createInvoiceItemFromTransaction(transInvoiceItemSqlDao, invoiceItemModelDao, context));
                             allInvoiceIds.add(invoiceItemModelDao.getInvoiceId());
                         } else if (InvoicePluginDispatcher.ALLOWED_INVOICE_ITEM_TYPES.contains(invoiceItemModelDao.getType()) &&
-                                   (invoiceItemModelDao.getAmount().compareTo(existingInvoiceItem.getAmount()) != 0)) {
-                            checkAgainstExistingInvoiceItemState(existingInvoiceItem, invoiceItemModelDao);
-
-                            // We allow plugins to override these 3 fields
-                            final BigDecimal updatedAmount = invoiceItemModelDao.getAmount();
-                            final String updatedDescription = invoiceItemModelDao.getDescription() != null ? invoiceItemModelDao.getDescription() : existingInvoiceItem.getDescription();
-                            final String updatedItemDetails = invoiceItemModelDao.getItemDetails() != null ? invoiceItemModelDao.getItemDetails() : existingInvoiceItem.getItemDetails();
-
-                            transInvoiceItemSqlDao.updateItemFields(invoiceItemModelDao.getId().toString(), updatedAmount, updatedDescription, updatedItemDetails, context);
+                                   checkAgainstExistingInvoiceItemState(existingInvoiceItem, invoiceItemModelDao)) {
+                            transInvoiceItemSqlDao.updateItemFields(invoiceItemModelDao.getId().toString(), invoiceItemModelDao.getAmount(), invoiceItemModelDao.getDescription(), invoiceItemModelDao.getItemDetails(), context);
                         }
                     }
 
@@ -1325,7 +1318,7 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
         return tagInternalApi.getTagsForAccountType(ObjectType.INVOICE, false, context);
     }
 
-    private static void checkAgainstExistingInvoiceItemState(final InvoiceItemModelDao existingInvoiceItem, final InvoiceItemModelDao inputInvoiceItem) {
+    private static boolean checkAgainstExistingInvoiceItemState(final InvoiceItemModelDao existingInvoiceItem, final InvoiceItemModelDao inputInvoiceItem) {
         Preconditions.checkState(existingInvoiceItem.getAccountId().equals(inputInvoiceItem.getAccountId()), String.format("Unexpected account ID '%s' for invoice item '%s'",
                                                                                                                            inputInvoiceItem.getAccountId(), existingInvoiceItem.getId()));
         if (existingInvoiceItem.getChildAccountId() != null) {
@@ -1367,6 +1360,16 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
                                                                                                                     inputInvoiceItem.getCurrency(), existingInvoiceItem.getId()));
         Preconditions.checkState(existingInvoiceItem.getType() == inputInvoiceItem.getType(), String.format("Unexpected item type '%s' for invoice item '%s'",
                                                                                                             inputInvoiceItem.getType(), existingInvoiceItem.getId()));
+
+        boolean itemShouldBeUpdated = false;
+        if (inputInvoiceItem.getAmount() != null) {
+            itemShouldBeUpdated = existingInvoiceItem.getAmount() == null /* unlikely */|| inputInvoiceItem.getAmount().compareTo(existingInvoiceItem.getAmount()) != 0;
+        } else if (!itemShouldBeUpdated && inputInvoiceItem.getDescription() != null) {
+            itemShouldBeUpdated = existingInvoiceItem.getDescription() == null || inputInvoiceItem.getDescription().compareTo(existingInvoiceItem.getDescription()) != 0;
+        } else if (!itemShouldBeUpdated && inputInvoiceItem.getItemDetails() != null) {
+            itemShouldBeUpdated = existingInvoiceItem.getItemDetails() == null || inputInvoiceItem.getItemDetails().compareTo(existingInvoiceItem.getItemDetails()) != 0;
+        }
+        return itemShouldBeUpdated;
     }
 
 }
