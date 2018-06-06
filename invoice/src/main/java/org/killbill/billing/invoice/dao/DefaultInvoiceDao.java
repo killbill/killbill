@@ -359,7 +359,7 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
                             checkAgainstExistingInvoiceItemState(existingInvoiceItem, invoiceItemModelDao);
 
                             // We allow plugins to override these 3 fields
-                            final BigDecimal updatedAmount = invoiceItemModelDao.getAmount() != null ? invoiceItemModelDao.getAmount() :  existingInvoiceItem.getAmount();
+                            final BigDecimal updatedAmount = invoiceItemModelDao.getAmount();
                             final String updatedDescription = invoiceItemModelDao.getDescription() != null ? invoiceItemModelDao.getDescription() : existingInvoiceItem.getDescription();
                             final String updatedItemDetails = invoiceItemModelDao.getItemDetails() != null ? invoiceItemModelDao.getItemDetails() : existingInvoiceItem.getItemDetails();
 
@@ -1214,7 +1214,7 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
                     throw new InvoiceApiException(ErrorCode.INVOICE_ITEM_NOT_FOUND, invoiceItemId);
                 }
 
-                transactional.updateAmount(invoiceItemId.toString(), amount, context);
+                transactional.updateItemFields(invoiceItemId.toString(), amount, null, null, context);
                 return null;
             }
         });
