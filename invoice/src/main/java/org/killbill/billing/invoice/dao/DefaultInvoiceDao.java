@@ -84,6 +84,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Function;
+import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
@@ -357,7 +358,12 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
                                    (invoiceItemModelDao.getAmount().compareTo(existingInvoiceItem.getAmount()) != 0)) {
                             checkAgainstExistingInvoiceItemState(existingInvoiceItem, invoiceItemModelDao);
 
-                            transInvoiceItemSqlDao.updateAmount(invoiceItemModelDao.getId().toString(), invoiceItemModelDao.getAmount(), context);
+                            // We allow plugins to override these 3 fields
+                            final BigDecimal updatedAmount = invoiceItemModelDao.getAmount() != null ? invoiceItemModelDao.getAmount() :  existingInvoiceItem.getAmount();
+                            final String updatedDescription = invoiceItemModelDao.getDescription() != null ? invoiceItemModelDao.getDescription() : existingInvoiceItem.getDescription();
+                            final String updatedItemDetails = invoiceItemModelDao.getItemDetails() != null ? invoiceItemModelDao.getItemDetails() : existingInvoiceItem.getItemDetails();
+
+                            transInvoiceItemSqlDao.updateItemFields(invoiceItemModelDao.getId().toString(), updatedAmount, updatedDescription, updatedItemDetails, context);
                         }
                     }
 

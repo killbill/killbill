@@ -190,6 +190,48 @@ public class TestWithInvoicePlugin extends TestIntegrationBase {
         assertEquals(externalCharge.getId(), pluginInvoiceItemId);
         // verify the ID is the one passed by the plugin #887
         assertEquals(externalCharge.getLinkedItemId(), pluginLinkedItemId);
+
+
+        // On next invoice we will update the amount and the description of the previously inserted EXTERNAL_CHARGE item
+        testInvoicePluginApi.additionalInvoiceItem = new ExternalChargeInvoiceItem(pluginInvoiceItemId,
+                                                                                   clock.getUTCNow(),
+                                                                                   invoices.get(0).getId(),
+                                                                                   account.getId(),
+                                                                                   null,
+                                                                                   null,
+                                                                                   null,
+                                                                                   null,
+                                                                                   null,
+                                                                                   null,
+                                                                                   null,
+                                                                                   null,
+                                                                                   "Update Description",
+                                                                                   clock.getUTCToday(),
+                                                                                   null,
+                                                                                   BigDecimal.ONE,
+                                                                                   null,
+                                                                                   Currency.USD,
+                                                                                   pluginLinkedItemId,
+                                                                                   null);
+
+        busHandler.pushExpectedEvents(NextEvent.PHASE, NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT);
+        clock.addDays(30);
+        assertListenerStatus();
+        invoiceChecker.checkInvoice(account.getId(), 2, callContext,
+                                    new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 1), new LocalDate(2012, 6, 1), InvoiceItemType.RECURRING, new BigDecimal("29.95")));
+
+
+        final List<Invoice> invoices2 = invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, callContext);
+        final List<InvoiceItem> invoiceItems2 = invoices2.get(0).getInvoiceItems();
+        final InvoiceItem externalCharge2 = Iterables.tryFind(invoiceItems2, new Predicate<InvoiceItem>() {
+            @Override
+            public boolean apply(final InvoiceItem input) {
+                return input.getInvoiceItemType() == InvoiceItemType.EXTERNAL_CHARGE;
+            }
+        }).orNull();
+        assertNotNull(externalCharge2);
+
+        assertEquals(externalCharge2.getAmount().compareTo(BigDecimal.ONE), 0);
     }
 
     @Test(groups = "slow")
