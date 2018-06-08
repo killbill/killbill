@@ -483,7 +483,7 @@ public class TestInvoice extends TestJaxrsBase {
         final InvoiceItems itemsForCharge = new InvoiceItems();
         itemsForCharge.add(externalCharge);
 
-        final List<InvoiceItem> createdExternalCharges = invoiceApi.createExternalCharges(accountJson.getAccountId(), itemsForCharge, clock.getUTCToday(), false, null, true, null, null, requestOptions);
+        final List<InvoiceItem> createdExternalCharges = invoiceApi.createExternalCharges(accountJson.getAccountId(), itemsForCharge, clock.getUTCToday(),  null, true, requestOptions);
         assertEquals(createdExternalCharges.size(), 1);
         final Invoice invoiceWithItems = invoiceApi.getInvoice(createdExternalCharges.get(0).getInvoiceId(), true, false, AuditLevel.NONE, requestOptions);
         assertEquals(invoiceWithItems.getBalance().compareTo(chargeAmount), 0);
@@ -525,7 +525,7 @@ public class TestInvoice extends TestJaxrsBase {
         externalCharge2.setDescription(UUID.randomUUID().toString());
         externalCharges.add(externalCharge2);
 
-        final List<InvoiceItem> createdExternalCharges = invoiceApi.createExternalCharges(accountJson.getAccountId(), externalCharges, clock.getUTCToday(), false, null, true, null, null, requestOptions);
+        final List<InvoiceItem> createdExternalCharges = invoiceApi.createExternalCharges(accountJson.getAccountId(), externalCharges, clock.getUTCToday(), null, true, requestOptions);
         assertEquals(createdExternalCharges.size(), 2);
         assertEquals(createdExternalCharges.get(0).getCurrency(), accountJson.getCurrency());
         assertEquals(createdExternalCharges.get(1).getCurrency(), accountJson.getCurrency());
@@ -534,8 +534,8 @@ public class TestInvoice extends TestJaxrsBase {
         assertEquals(accountApi.getInvoicesForAccount(accountJson.getAccountId(), requestOptions).size(), 3);
     }
 
-    @Test(groups = "slow", description = "Can create multiple external charges with same invoice and external keys")
-    public void testExternalChargesWithSameInvoiceAndExternalKeys() throws Exception {
+    @Test(groups = "slow", description = "Can create multiple external charges with same invoice and external keys"/* , invocationCount = 10*/)
+    public void testExternalChargesWithSameInvoice() throws Exception {
         final Account accountJson = createAccountWithPMBundleAndSubscriptionAndWaitForFirstInvoice();
 
         // Get the invoices
@@ -560,51 +560,13 @@ public class TestInvoice extends TestJaxrsBase {
         externalCharge2.setDescription(UUID.randomUUID().toString());
         externalCharges.add(externalCharge2);
 
-        final String paymentExternalKey = "anyPaymentExternalKey";
-        final String transactionExternalKey = "anyTransactionExternalKey";
 
-        final List<InvoiceItem> createdExternalCharges = invoiceApi.createExternalCharges(accountJson.getAccountId(), externalCharges, clock.getUTCToday(), true, null, true, paymentExternalKey, transactionExternalKey, requestOptions);
+        final List<InvoiceItem> createdExternalCharges = invoiceApi.createExternalCharges(accountJson.getAccountId(), externalCharges, clock.getUTCToday(), null, true, requestOptions);
         assertEquals(createdExternalCharges.size(), 2);
         assertEquals(createdExternalCharges.get(0).getCurrency(), accountJson.getCurrency());
         assertEquals(createdExternalCharges.get(1).getCurrency(), accountJson.getCurrency());
-
-        // Verify the total number of invoices
-        assertEquals(accountApi.getInvoicesForAccount(accountJson.getAccountId(), requestOptions).size(), 3);
-
-        final Payments payments = accountApi.getPaymentsForAccount(accountJson.getAccountId(), null, requestOptions);
-        assertNotNull(payments);
-        // Verify payment with paymentExternalKey provided
-        assertEquals(payments.get(payments.size() - 1).getPaymentExternalKey(), paymentExternalKey);
-        // Verify transactions with transactionExternalKey provided
-        assertEquals(payments.get(payments.size() - 1).getTransactions().get(0).getTransactionExternalKey(), transactionExternalKey);
     }
 
-    @Test(groups = "slow", description = "Can create an external charge and trigger a payment")
-    public void testExternalChargeOnNewInvoiceWithAutomaticPayment() throws Exception {
-        final Account accountJson = createAccountWithPMBundleAndSubscriptionAndWaitForFirstInvoice();
-
-        // Get the invoices
-        assertEquals(accountApi.getInvoicesForAccount(accountJson.getAccountId(), true, false, false, false, AuditLevel.NONE, requestOptions).size(), 2);
-
-        // Post an external charge
-        final BigDecimal chargeAmount = BigDecimal.TEN;
-        final InvoiceItem externalCharge = new InvoiceItem();
-        externalCharge.setAccountId(accountJson.getAccountId());
-        externalCharge.setAmount(chargeAmount);
-        externalCharge.setCurrency(accountJson.getCurrency());
-        final InvoiceItems inputExternalCharges = new InvoiceItems();
-        inputExternalCharges.add(externalCharge);
-
-        final List<InvoiceItem> createdExternalCharges = invoiceApi.createExternalCharges(accountJson.getAccountId(), inputExternalCharges, clock.getUTCToday(), true, null, true, null, null, requestOptions);
-        assertEquals(createdExternalCharges.size(), 1);
-        final Invoice invoiceWithItems = invoiceApi.getInvoice(createdExternalCharges.get(0).getInvoiceId(), true, false, AuditLevel.NONE, requestOptions);
-        assertEquals(invoiceWithItems.getBalance().compareTo(BigDecimal.ZERO), 0);
-        assertEquals(invoiceWithItems.getItems().size(), 1);
-        assertNull(invoiceWithItems.getItems().get(0).getBundleId());
-
-        // Verify the total number of invoices
-        assertEquals(accountApi.getInvoicesForAccount(accountJson.getAccountId(), requestOptions).size(), 3);
-    }
 
     @Test(groups = "slow", description = "Can create an external charge for a bundle")
     public void testExternalChargeForBundleOnNewInvoice() throws Exception {
@@ -623,7 +585,7 @@ public class TestInvoice extends TestJaxrsBase {
         externalCharge.setBundleId(bundleId);
         final InvoiceItems input = new InvoiceItems();
         input.add(externalCharge);
-        final List<InvoiceItem> createdExternalCharges = invoiceApi.createExternalCharges(accountJson.getAccountId(), input, clock.getUTCToday(), false, null, true, null, null, requestOptions);
+        final List<InvoiceItem> createdExternalCharges = invoiceApi.createExternalCharges(accountJson.getAccountId(), input, clock.getUTCToday(), null, true, requestOptions);
         assertEquals(createdExternalCharges.size(), 1);
         final Invoice invoiceWithItems = invoiceApi.getInvoice(createdExternalCharges.get(0).getInvoiceId(), true, null, AuditLevel.NONE, requestOptions);
         assertEquals(invoiceWithItems.getBalance().compareTo(chargeAmount), 0);

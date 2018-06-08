@@ -23,10 +23,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Comparator;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -498,11 +496,8 @@ public class InvoiceResource extends JaxRsResourceBase {
     public Response createExternalCharges(@PathParam("accountId") final UUID accountId,
                                           final List<InvoiceItemJson> externalChargesJson,
                                           @QueryParam(QUERY_REQUESTED_DT) final String requestedDateTimeString,
-                                          @QueryParam(QUERY_PAY_INVOICE) @DefaultValue("false") final Boolean payInvoice,
                                           @QueryParam(QUERY_PLUGIN_PROPERTY) final List<String> pluginPropertiesString,
                                           @QueryParam(QUERY_AUTO_COMMIT) @DefaultValue("false") final Boolean autoCommit,
-                                          @QueryParam(QUERY_PAYMENT_EXTERNAL_KEY) final String paymentExternalKey,
-                                          @QueryParam(QUERY_TRANSACTION_EXTERNAL_KEY) final String transactionExternalKey,
                                           @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                           @HeaderParam(HDR_REASON) final String reason,
                                           @HeaderParam(HDR_COMMENT) final String comment,
@@ -518,28 +513,6 @@ public class InvoiceResource extends JaxRsResourceBase {
         // Get the effective date of the external charge, in the account timezone
         final LocalDate requestedDate = toLocalDateDefaultToday(account, requestedDateTimeString, callContext);
         final List<InvoiceItem> createdExternalCharges = invoiceApi.insertExternalCharges(account.getId(), requestedDate, sanitizedExternalChargesJson, autoCommit, callContext);
-
-        // if all createdExternalCharges point to the same invoiceId, use the provided paymentExternalKey and / or transactionExternalKey
-        final boolean haveSameInvoiceId = Iterables.all(createdExternalCharges, new Predicate<InvoiceItem>() {
-            @Override
-            public boolean apply(final InvoiceItem input) {
-                return input.getInvoiceId().equals(createdExternalCharges.get(0).getInvoiceId());
-            }
-        });
-
-        if (payInvoice) {
-            final Collection<UUID> paidInvoices = new HashSet<UUID>();
-            for (final InvoiceItem externalCharge : createdExternalCharges) {
-                if (!paidInvoices.contains(externalCharge.getInvoiceId())) {
-                    paidInvoices.add(externalCharge.getInvoiceId());
-                    final Invoice invoice = invoiceApi.getInvoice(externalCharge.getInvoiceId(), callContext);
-                    createPurchaseForInvoice(account, invoice.getId(), invoice.getBalance(), account.getPaymentMethodId(), false,
-                                             (haveSameInvoiceId && paymentExternalKey != null) ? paymentExternalKey : null,
-                                             (haveSameInvoiceId && transactionExternalKey != null) ? transactionExternalKey : null,
-                                             pluginProperties, callContext);
-                }
-            }
-        }
 
         final List<InvoiceItemJson> createdExternalChargesJson = Lists.<InvoiceItem, InvoiceItemJson>transform(createdExternalCharges,
                                                                                                                new Function<InvoiceItem, InvoiceItemJson>() {
