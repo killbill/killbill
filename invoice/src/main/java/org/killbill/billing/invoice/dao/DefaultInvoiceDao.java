@@ -84,7 +84,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Function;
-import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
@@ -355,7 +354,10 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
                             createdInvoiceItems.add(createInvoiceItemFromTransaction(transInvoiceItemSqlDao, invoiceItemModelDao, context));
                             allInvoiceIds.add(invoiceItemModelDao.getInvoiceId());
                         } else if (InvoicePluginDispatcher.ALLOWED_INVOICE_ITEM_TYPES.contains(invoiceItemModelDao.getType()) &&
-                                   checkAgainstExistingInvoiceItemState(existingInvoiceItem, invoiceItemModelDao)) {
+                                   // The restriction on the amount is to deal with https://github.com/killbill/killbill/issues/993 - and esnure that duplicate
+                                   // items would not be re-written
+                                   (invoiceItemModelDao.getAmount().compareTo(existingInvoiceItem.getAmount()) != 0)) {
+                            checkAgainstExistingInvoiceItemState(existingInvoiceItem, invoiceItemModelDao);
                             transInvoiceItemSqlDao.updateItemFields(invoiceItemModelDao.getId().toString(), invoiceItemModelDao.getAmount(), invoiceItemModelDao.getDescription(), invoiceItemModelDao.getItemDetails(), context);
                         }
                     }
