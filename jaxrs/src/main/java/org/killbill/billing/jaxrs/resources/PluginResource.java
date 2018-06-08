@@ -190,11 +190,9 @@ public class PluginResource extends JaxRsResourceBase {
             if (response.getStatus() >= 400) {
                 log.warn("{} responded {}", request.getPathInfo(), response.getStatus());
             }
-            // Jersey will want to return 204, but the servlet should have done the right thing already
-            return null;
-        } else {
-            return Response.status(response.getStatus()).build();
         }
+
+        return Response.status(response.getStatus()).build();
     }
 
     private InputStream createInputStream(final HttpServletRequest request, final MultivaluedMap<String, String> form) throws IOException {
