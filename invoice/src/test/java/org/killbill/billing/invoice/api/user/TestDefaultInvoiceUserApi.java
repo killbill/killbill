@@ -41,6 +41,7 @@ import org.killbill.billing.invoice.api.InvoicePaymentType;
 import org.killbill.billing.invoice.api.InvoiceStatus;
 import org.killbill.billing.invoice.model.DefaultInvoicePayment;
 import org.killbill.billing.invoice.model.ExternalChargeInvoiceItem;
+import org.killbill.billing.invoice.model.TaxInvoiceItem;
 import org.killbill.billing.util.api.TagApiException;
 import org.killbill.billing.util.currency.KillBillMoney;
 import org.killbill.billing.util.tag.ControlTagType;
@@ -144,25 +145,6 @@ public class TestDefaultInvoiceUserApi extends InvoiceTestSuiteWithEmbeddedDB {
         Assert.assertEquals(externalChargeInvoiceItem.getBundleId(), bundleId);
     }
 
-    private void verifyExternalChargeOnExistingInvoice(final BigDecimal initialInvoiceBalance, @Nullable final UUID bundleId,
-                                                       final BigDecimal externalChargeAmount, final InvoiceItem externalChargeInvoiceItem) throws InvoiceApiException {
-        Assert.assertEquals(externalChargeInvoiceItem.getInvoiceId(), invoiceId);
-        Assert.assertEquals(externalChargeInvoiceItem.getBundleId(), bundleId);
-        Assert.assertEquals(externalChargeInvoiceItem.getInvoiceItemType(), InvoiceItemType.EXTERNAL_CHARGE);
-        Assert.assertEquals(externalChargeInvoiceItem.getAccountId(), accountId);
-        Assert.assertEquals(externalChargeInvoiceItem.getAmount().compareTo(externalChargeAmount), 0);
-        Assert.assertEquals(externalChargeInvoiceItem.getCurrency(), accountCurrency);
-        Assert.assertNull(externalChargeInvoiceItem.getLinkedItemId());
-
-        // Verify the adjusted invoice balance
-        final BigDecimal adjustedInvoiceBalance = invoiceUserApi.getInvoice(invoiceId, callContext).getBalance();
-        Assert.assertEquals(adjustedInvoiceBalance.compareTo(initialInvoiceBalance.add(externalChargeAmount)), 0);
-
-        // Verify the adjusted account balance
-        final BigDecimal adjustedAccountBalance = invoiceUserApi.getAccountBalance(accountId, callContext);
-        Assert.assertEquals(adjustedAccountBalance, adjustedInvoiceBalance);
-    }
-
     @Test(groups = "slow", expectedExceptions = InvoiceApiException.class, expectedExceptionsMessageRegExp = ".*it is already in COMMITTED status")
     public void testAdjustCommittedInvoice() throws Exception {
         // Verify the initial invoice balance
@@ -249,6 +231,20 @@ public class TestDefaultInvoiceUserApi extends InvoiceTestSuiteWithEmbeddedDB {
     public void testAdjustPartialFixedInvoiceItem() throws Exception {
         testAdjustPartialInvoiceItem(false);
     }
+
+
+    @Test(groups = "slow")
+    public void testAddTaxItems() throws Exception {
+        final BigDecimal taxItemAmount = BigDecimal.TEN;
+        final UUID bundleId = UUID.randomUUID();
+        final InvoiceItem taxItem = new TaxInvoiceItem(null, accountId, bundleId, UUID.randomUUID().toString(), clock.getUTCToday(), taxItemAmount, accountCurrency);
+
+        final List<InvoiceItem> resultTaxInvoiceItems = invoiceUserApi.insertTaxItems(accountId, clock.getUTCToday(), ImmutableList.<InvoiceItem>of(taxItem), true, callContext);
+        Assert.assertEquals(resultTaxInvoiceItems.size(), 1);
+        Assert.assertEquals(resultTaxInvoiceItems.get(0).getAmount().compareTo(taxItemAmount), 0);
+        Assert.assertEquals(resultTaxInvoiceItems.get(0).getBundleId(), bundleId);
+    }
+
 
     private void testAdjustPartialInvoiceItem(final boolean recurring) throws Exception {
         final Account account = invoiceUtil.createAccount(callContext);

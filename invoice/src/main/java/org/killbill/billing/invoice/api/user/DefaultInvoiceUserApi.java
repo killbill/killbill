@@ -60,6 +60,7 @@ import org.killbill.billing.invoice.model.CreditAdjInvoiceItem;
 import org.killbill.billing.invoice.model.DefaultInvoice;
 import org.killbill.billing.invoice.model.ExternalChargeInvoiceItem;
 import org.killbill.billing.invoice.model.InvoiceItemFactory;
+import org.killbill.billing.invoice.model.TaxInvoiceItem;
 import org.killbill.billing.invoice.template.HtmlInvoice;
 import org.killbill.billing.invoice.template.HtmlInvoiceGenerator;
 import org.killbill.billing.tag.TagInternalApi;
@@ -288,6 +289,11 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
     }
 
     @Override
+    public List<InvoiceItem> insertTaxItems(final UUID accountId, final LocalDate effectiveDate, final Iterable<InvoiceItem> taxItems, final boolean autoCommit, final CallContext context) throws InvoiceApiException {
+        return insertItems(accountId, effectiveDate, InvoiceItemType.TAX, taxItems, autoCommit, context);
+    }
+
+    @Override
     public InvoiceItem getCreditById(final UUID creditId, final TenantContext context) throws InvoiceApiException {
         final InvoiceItem creditItem = InvoiceItemFactory.fromModelDao(dao.getCreditById(creditId, internalCallContextFactory.createInternalTenantContext(creditId, ObjectType.INVOICE_ITEM, context)));
         if (creditItem == null) {
@@ -508,8 +514,6 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
                     final InvoiceItem newInvoiceItem;
                     switch (itemType) {
                         case EXTERNAL_CHARGE:
-                            final LocalDate startDate = MoreObjects.firstNonNull(inputItem.getStartDate(), effectiveDate);
-                            final LocalDate endDate = inputItem.getEndDate();
                             newInvoiceItem = new ExternalChargeInvoiceItem(UUIDs.randomUUID(),
                                                                            context.getCreatedDate(),
                                                                            curInvoiceForItem.getId(),
@@ -523,8 +527,8 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
                                                                            inputItem.getPrettyPlanName(),
                                                                            inputItem.getPrettyPhaseName(),
                                                                            inputItem.getDescription(),
-                                                                           startDate,
-                                                                           endDate,
+                                                                           MoreObjects.firstNonNull(inputItem.getStartDate(), effectiveDate),
+                                                                           inputItem.getEndDate(),
                                                                            inputItem.getAmount(),
                                                                            inputItem.getRate(),
                                                                            accountCurrency,
@@ -545,6 +549,16 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
                                                                       accountCurrency,
                                                                       inputItem.getDescription());
 
+                            break;
+                        case TAX:
+                            newInvoiceItem = new TaxInvoiceItem(UUIDs.randomUUID(),
+                                                                curInvoiceForItem.getId(),
+                                                                accountId,
+                                                                inputItem.getBundleId(),
+                                                                inputItem.getDescription(),
+                                                                MoreObjects.firstNonNull(inputItem.getStartDate(), effectiveDate),
+                                                                inputItem.getAmount(),
+                                                                accountCurrency);
                             break;
                         default:
                             throw new IllegalStateException(String.format("Unsupported to add item of type '%s'", itemType));

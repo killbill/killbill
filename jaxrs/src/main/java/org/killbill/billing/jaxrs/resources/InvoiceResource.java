@@ -106,7 +106,6 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -504,7 +503,7 @@ public class InvoiceResource extends JaxRsResourceBase {
                                           @javax.ws.rs.core.Context final UriInfo uriInfo,
                                           @javax.ws.rs.core.Context final HttpServletRequest request) throws AccountApiException, InvoiceApiException, PaymentApiException {
 
-        final Iterable<PluginProperty> pluginProperties = extractPluginProperties(pluginPropertiesString);
+        //final Iterable<PluginProperty> pluginProperties = extractPluginProperties(pluginPropertiesString);
         final CallContext callContext = context.createCallContextWithAccountId(accountId, createdBy, reason, comment, request);
 
         final Account account = accountUserApi.getAccountById(accountId, callContext);
@@ -524,6 +523,50 @@ public class InvoiceResource extends JaxRsResourceBase {
                                                                                                               );
         return Response.status(Status.OK).entity(createdExternalChargesJson).build();
     }
+
+    @POST
+    @Consumes(APPLICATION_JSON)
+    @Produces(APPLICATION_JSON)
+    @Path("/" + TAXES + "/{accountId:" + UUID_PATTERN + "}")
+    @ApiOperation(value = "Create tax items", response = InvoiceItemJson.class, responseContainer = "List")
+    @ApiResponses(value = {@ApiResponse(code = 201, message = "Create tax items successfully"),
+                           @ApiResponse(code = 400, message = "Invalid account id supplied"),
+                           @ApiResponse(code = 404, message = "Account not found")})
+    public Response createTaxItems(@PathParam("accountId") final UUID accountId,
+                                   final List<InvoiceItemJson> taxItemJson,
+                                   @QueryParam(QUERY_AUTO_COMMIT) @DefaultValue("false") final Boolean autoCommit,
+                                   @QueryParam(QUERY_REQUESTED_DT) final String requestedDateTimeString,
+                                   @QueryParam(QUERY_PLUGIN_PROPERTY) final List<String> pluginPropertiesString,
+                                   @HeaderParam(HDR_CREATED_BY) final String createdBy,
+                                   @HeaderParam(HDR_REASON) final String reason,
+                                   @HeaderParam(HDR_COMMENT) final String comment,
+                                   @javax.ws.rs.core.Context final HttpServletRequest request,
+                                   @javax.ws.rs.core.Context final UriInfo uriInfo) throws AccountApiException, InvoiceApiException {
+        verifyNonNullOrEmpty(taxItemJson, "Body should be specified");
+        verifyNonNullOrEmpty(accountId, "AccountId needs to be set");
+
+        // TODO do we actually support passing that to invoice for invoice plugins  ?
+        // final Iterable<PluginProperty> pluginProperties = extractPluginProperties(pluginPropertiesString);
+        final CallContext callContext = context.createCallContextWithAccountId(accountId, createdBy, reason, comment, request);
+
+        final Account account = accountUserApi.getAccountById(accountId, callContext);
+        final Iterable<InvoiceItem> sanitizedTaxItemsJson = validateSanitizeAndTranformInputItems(account.getCurrency(), taxItemJson);
+
+        final LocalDate requestedDate = toLocalDateDefaultToday(account, requestedDateTimeString, callContext);
+        final List<InvoiceItem> createdTaxItems = invoiceApi.insertTaxItems(account.getId(), requestedDate, sanitizedTaxItemsJson, autoCommit, callContext);
+
+        final List<InvoiceItemJson> createdTaxItemJson = Lists.<InvoiceItem, InvoiceItemJson>transform(createdTaxItems,
+                                                                                                       new Function<InvoiceItem, InvoiceItemJson>() {
+                                                                                                           @Override
+                                                                                                           public InvoiceItemJson apply(final InvoiceItem input) {
+                                                                                                               return new InvoiceItemJson(input);
+                                                                                                           }
+                                                                                                       }
+                                                                                                      );
+        return Response.status(Status.OK).entity(createdTaxItemJson).build();
+    }
+
+
 
     private Iterable<InvoiceItem> validateSanitizeAndTranformInputItems(final Currency accountCurrency, final Iterable<InvoiceItemJson> inputItems) throws InvoiceApiException {
         try {
