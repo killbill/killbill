@@ -361,9 +361,9 @@ public class InvoiceResource extends JaxRsResourceBase {
         final CallContext callContext = context.createCallContextWithAccountId(accountId, createdBy, reason, comment, request);
         final LocalDate inputDate;
         if (dryRunSubscriptionSpec != null) {
-            if (DryRunType.UPCOMING_INVOICE.name().equals(dryRunSubscriptionSpec.getDryRunType())) {
+            if (DryRunType.UPCOMING_INVOICE.equals(dryRunSubscriptionSpec.getDryRunType())) {
                 inputDate = null;
-            } else if (DryRunType.SUBSCRIPTION_ACTION.name().equals(dryRunSubscriptionSpec.getDryRunType()) && dryRunSubscriptionSpec.getEffectiveDate() != null) {
+            } else if (DryRunType.SUBSCRIPTION_ACTION.equals(dryRunSubscriptionSpec.getDryRunType()) && dryRunSubscriptionSpec.getEffectiveDate() != null) {
                 inputDate = dryRunSubscriptionSpec.getEffectiveDate();
             } else {
                 inputDate = toLocalDate(targetDate);
