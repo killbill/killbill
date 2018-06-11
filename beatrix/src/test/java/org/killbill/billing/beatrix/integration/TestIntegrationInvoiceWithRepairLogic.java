@@ -112,7 +112,7 @@ public class TestIntegrationInvoiceWithRepairLogic extends TestIntegrationBase {
         //
         busHandler.pushExpectedEvents(NextEvent.INVOICE_ADJUSTMENT);
         invoiceUserApi.insertInvoiceItemAdjustment(account.getId(), invoices.get(1).getId(), invoices.get(1).getInvoiceItems().get(0).getId(), clock.getUTCToday(),
-                                                   BigDecimal.TEN, account.getCurrency(), null, null, callContext);
+                                                   BigDecimal.TEN, account.getCurrency(), null, null, null, callContext);
         assertListenerStatus();
 
         invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, callContext);

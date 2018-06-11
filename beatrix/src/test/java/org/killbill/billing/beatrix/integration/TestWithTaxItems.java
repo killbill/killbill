@@ -219,7 +219,7 @@ public class TestWithTaxItems extends TestIntegrationBase {
         subscriptionChecker.checkSubscriptionCreated(bpSubscription.getId(), internalCallContext);
 
         busHandler.pushExpectedEvents(NextEvent.INVOICE);
-        invoiceUserApi.insertCredit(account.getId(), new BigDecimal("100"), clock.getUTCToday(), account.getCurrency(), true, "VIP", null, callContext);
+        invoiceUserApi.insertCredit(account.getId(), new BigDecimal("100"), clock.getUTCToday(), account.getCurrency(), true, "VIP", null, null, callContext);
         assertListenerStatus();
 
         invoiceChecker.checkInvoice(account.getId(), 2, callContext,
@@ -272,7 +272,8 @@ public class TestWithTaxItems extends TestIntegrationBase {
         testInvoicePluginApi.addTaxItem(new TaxInvoiceItem(invoiceTaxItemId, null, account.getId(), null, "Tax Item", new LocalDate(2012, 4, 1), BigDecimal.ONE, account.getCurrency()));
 
         // Insert external charge autoCommit = false => Invoice will be in DRAFT
-        invoiceUserApi.insertExternalCharges(account.getId(), clock.getUTCNow().toLocalDate(), ImmutableList.<InvoiceItem>of(new ExternalChargeInvoiceItem(null, account.getId(), null, "foo", new LocalDate(2012, 4, 1), null, new BigDecimal("33.80"), account.getCurrency(), null)), false, callContext);
+        invoiceUserApi.insertExternalCharges(account.getId(), clock.getUTCNow().toLocalDate(), ImmutableList.<InvoiceItem>of(new ExternalChargeInvoiceItem(null, account.getId(), null, "foo", new LocalDate(2012, 4, 1), null, new BigDecimal("33.80"),
+                                                                                                                                                           account.getCurrency(), null)), false, null, callContext);
 
         // Make sure TestInvoicePluginApi **update** the original TAX item
         testInvoicePluginApi.addTaxItem(new TaxInvoiceItem(invoiceTaxItemId, null, account.getId(), null, "Tax Item", new LocalDate(2012, 4, 1), new BigDecimal("12.45"), account.getCurrency()));

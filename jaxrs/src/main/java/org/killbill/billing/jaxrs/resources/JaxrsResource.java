@@ -188,6 +188,8 @@ public interface JaxrsResource {
     String CHARGES = "charges";
     String CHARGES_PATH = PREFIX + "/" + INVOICES + "/" + CHARGES;
 
+    String TAXES = "taxes";
+
     String PAYMENTS = "payments";
     String PAYMENTS_PATH = PREFIX + "/" + PAYMENTS;
 

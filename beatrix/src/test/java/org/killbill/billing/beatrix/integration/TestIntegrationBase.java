@@ -836,6 +836,7 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
                                                                    invoice.getInvoiceDate(),
                                                                    null,
                                                                    null,
+                                                                   null,
                                                                    callContext);
                     }
 
@@ -853,7 +854,7 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
             public Void apply(@Nullable final Void input) {
                 try {
                     invoiceUserApi.insertInvoiceItemAdjustment(account.getId(), invoice.getId(), invoice.getInvoiceItems().get(itemNb - 1).getId(),
-                                                               invoice.getInvoiceDate(), null, null, callContext);
+                                                               invoice.getInvoiceDate(), null, null, null, callContext);
                 } catch (final InvoiceApiException e) {
                     fail(e.toString());
                 }

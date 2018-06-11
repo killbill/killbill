@@ -83,6 +83,7 @@ import org.killbill.billing.invoice.notification.NextBillingDateNotificationKey;
 import org.killbill.billing.junction.BillingEvent;
 import org.killbill.billing.junction.BillingEventSet;
 import org.killbill.billing.junction.BillingInternalApi;
+import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.subscription.api.SubscriptionBaseInternalApi;
 import org.killbill.billing.subscription.api.user.SubscriptionBaseApiException;
 import org.killbill.billing.util.UUIDs;
@@ -516,11 +517,11 @@ public class InvoiceDispatcher {
             account = accountApi.getImmutableAccountDataById(accountId, internalCallContext);
         } catch (final AccountApiException e) {
             log.error("Unable to generate invoice for accountId='{}', a future notification has NOT been recorded", accountId, e);
-            invoicePluginDispatcher.onFailureCall(targetDate, null, existingInvoices, isDryRun, isRescheduled, callContext, internalCallContext);
+            invoicePluginDispatcher.onFailureCall(targetDate, null, existingInvoices, isDryRun, isRescheduled, callContext, ImmutableList.<PluginProperty>of(), internalCallContext);
             return null;
         }
 
-        final DateTime rescheduleDate = invoicePluginDispatcher.priorCall(targetDate, existingInvoices, isDryRun, isRescheduled, callContext, internalCallContext);
+        final DateTime rescheduleDate = invoicePluginDispatcher.priorCall(targetDate, existingInvoices, isDryRun, isRescheduled, callContext, ImmutableList.<PluginProperty>of(), internalCallContext);
         if (rescheduleDate != null) {
             if (isDryRun) {
                 log.warn("Ignoring rescheduleDate='{}', delayed scheduling is unsupported in dry-run", rescheduleDate);
@@ -539,7 +540,7 @@ public class InvoiceDispatcher {
 
         // If invoice comes back null, there is nothing new to generate, we can bail early
         if (invoice == null) {
-            invoicePluginDispatcher.onSuccessCall(targetDate, null, existingInvoices, isDryRun, isRescheduled, callContext, internalCallContext);
+            invoicePluginDispatcher.onSuccessCall(targetDate, null, existingInvoices, isDryRun, isRescheduled, callContext, ImmutableList.<PluginProperty>of(), internalCallContext);
 
             if (isDryRun) {
                 log.info("Generated null dryRun invoice for accountId='{}', targetDate='{}'", accountId, targetDate);
@@ -566,7 +567,7 @@ public class InvoiceDispatcher {
             //
             // Ask external invoice plugins if additional items (tax, etc) shall be added to the invoice
             //
-            final boolean invoiceUpdated = invoicePluginDispatcher.updateOriginalInvoiceWithPluginInvoiceItems(invoice, isDryRun, callContext, internalCallContext);
+            final boolean invoiceUpdated = invoicePluginDispatcher.updateOriginalInvoiceWithPluginInvoiceItems(invoice, isDryRun, callContext, ImmutableList.<PluginProperty>of(), internalCallContext);
             if (invoiceUpdated) {
                 // Remove the temporary CBA item as we need to re-compute CBA
                 if (cbaItemPreInvoicePlugins != null) {
@@ -612,9 +613,9 @@ public class InvoiceDispatcher {
 
             if (isDryRun || success) {
                 final DefaultInvoice refreshedInvoice = isDryRun ? invoice : new DefaultInvoice(invoiceDao.getById(invoice.getId(), internalCallContext));
-                invoicePluginDispatcher.onSuccessCall(targetDate, refreshedInvoice, existingInvoices, isDryRun, isRescheduled, callContext, internalCallContext);
+                invoicePluginDispatcher.onSuccessCall(targetDate, refreshedInvoice, existingInvoices, isDryRun, isRescheduled, callContext,  ImmutableList.<PluginProperty>of(),internalCallContext);
             } else {
-                invoicePluginDispatcher.onFailureCall(targetDate, invoice, existingInvoices, isDryRun, isRescheduled, callContext, internalCallContext);
+                invoicePluginDispatcher.onFailureCall(targetDate, invoice, existingInvoices, isDryRun, isRescheduled, callContext, ImmutableList.<PluginProperty>of(), internalCallContext);
             }
         }
 
