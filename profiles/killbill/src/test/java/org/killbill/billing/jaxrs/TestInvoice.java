@@ -619,6 +619,7 @@ public class TestInvoice extends TestJaxrsBase {
         assertEquals(invoiceWithItems.getBalance().compareTo(taxAmount), 0);
         assertEquals(invoiceWithItems.getItems().size(), 1);
         assertEquals(invoiceWithItems.getItems().get(0).getBundleId(), bundleId);
+        assertEquals(invoiceWithItems.getItems().get(0).getItemType(), InvoiceItemType.TAX);
 
         // Verify the total number of invoices
         assertEquals(accountApi.getInvoicesForAccount(accountJson.getAccountId(), requestOptions).size(), 3);
