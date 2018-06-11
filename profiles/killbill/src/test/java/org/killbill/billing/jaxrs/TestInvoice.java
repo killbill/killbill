@@ -596,6 +596,36 @@ public class TestInvoice extends TestJaxrsBase {
         assertEquals(accountApi.getInvoicesForAccount(accountJson.getAccountId(), requestOptions).size(), 3);
     }
 
+    @Test(groups = "slow", description = "Can create tax items for a bundle")
+    public void testAddTaxItemsOnNewInvoice() throws Exception {
+        final Account accountJson = createAccountNoPMBundleAndSubscriptionAndWaitForFirstInvoice();
+
+        // Get the invoices
+        assertEquals(accountApi.getInvoicesForAccount(accountJson.getAccountId(), true, false, false, false, AuditLevel.NONE, requestOptions).size(), 2);
+
+        // Post an external charge
+        final BigDecimal taxAmount = BigDecimal.TEN;
+        final UUID bundleId = UUID.randomUUID();
+        final InvoiceItem taxItem = new InvoiceItem();
+        taxItem.setAccountId(accountJson.getAccountId());
+        taxItem.setAmount(taxAmount);
+        taxItem.setCurrency(accountJson.getCurrency());
+        taxItem.setBundleId(bundleId);
+        final InvoiceItems input = new InvoiceItems();
+        input.add(taxItem);
+        final List<InvoiceItem> createdTaxItems = invoiceApi.createTaxItems(accountJson.getAccountId(), input, true, clock.getUTCToday(), NULL_PLUGIN_PROPERTIES, requestOptions);
+        assertEquals(createdTaxItems.size(), 1);
+        final Invoice invoiceWithItems = invoiceApi.getInvoice(createdTaxItems.get(0).getInvoiceId(), true, null, AuditLevel.NONE, requestOptions);
+        assertEquals(invoiceWithItems.getBalance().compareTo(taxAmount), 0);
+        assertEquals(invoiceWithItems.getItems().size(), 1);
+        assertEquals(invoiceWithItems.getItems().get(0).getBundleId(), bundleId);
+
+        // Verify the total number of invoices
+        assertEquals(accountApi.getInvoicesForAccount(accountJson.getAccountId(), requestOptions).size(), 3);
+    }
+
+
+
     @Test(groups = "slow", description = "Can paginate and search through all invoices")
     public void testInvoicesPagination() throws Exception {
         createAccountWithPMBundleAndSubscriptionAndWaitForFirstInvoice();
