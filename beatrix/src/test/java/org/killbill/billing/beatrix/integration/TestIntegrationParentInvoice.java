@@ -262,7 +262,7 @@ public class TestIntegrationParentInvoice extends TestIntegrationBase {
 
         // add credit to child account when invoice is still unpaid
         busHandler.pushExpectedEvents(NextEvent.INVOICE);
-        invoiceUserApi.insertCredit(childAccount.getId(), BigDecimal.TEN, clock.getUTCToday(), Currency.USD, true, "test", null, callContext);
+        invoiceUserApi.insertCredit(childAccount.getId(), BigDecimal.TEN, clock.getUTCToday(), Currency.USD, true, "test", null, null, callContext);
         assertListenerStatus();
 
         final List<Invoice> childInvoices = invoiceUserApi.getInvoicesByAccount(childAccount.getId(), false, false, callContext);
@@ -343,7 +343,7 @@ public class TestIntegrationParentInvoice extends TestIntegrationBase {
 
         // add credit to child account after invoice has been paid
         busHandler.pushExpectedEvents(NextEvent.INVOICE);
-        invoiceUserApi.insertCredit(childAccount.getId(), BigDecimal.TEN, clock.getUTCToday(), Currency.USD, true, "test", null, callContext);
+        invoiceUserApi.insertCredit(childAccount.getId(), BigDecimal.TEN, clock.getUTCToday(), Currency.USD, true, "test", null, null, callContext);
         assertListenerStatus();
 
         List<Invoice> childInvoices = invoiceUserApi.getInvoicesByAccount(childAccount.getId(), false, false, callContext);
@@ -422,7 +422,7 @@ public class TestIntegrationParentInvoice extends TestIntegrationBase {
         invoiceUserApi.insertInvoiceItemAdjustment(childAccount.getId(), childInvoice.getId(),
                                                    childInvoice.getInvoiceItems().get(0).getId(),
                                                    clock.getToday(childAccount.getTimeZone()), BigDecimal.TEN,
-                                                   childAccount.getCurrency(), "test adjustment", null, callContext);
+                                                   childAccount.getCurrency(), "test adjustment", null, null, callContext);
         assertListenerStatus();
 
         // expected child invoice
@@ -580,7 +580,7 @@ public class TestIntegrationParentInvoice extends TestIntegrationBase {
         invoiceUserApi.insertInvoiceItemAdjustment(childAccount.getId(), childInvoice.getId(),
                                                    childInvoice.getInvoiceItems().get(0).getId(),
                                                    clock.getToday(childAccount.getTimeZone()), amount,
-                                                   childAccount.getCurrency(), "test adjustment", null, callContext);
+                                                   childAccount.getCurrency(), "test adjustment", null, null, callContext);
         assertListenerStatus();
     }
 
@@ -640,7 +640,7 @@ public class TestIntegrationParentInvoice extends TestIntegrationBase {
                                                    childInvoice.getInvoiceItems().get(0).getId(),
                                                    clock.getToday(childAccount.getTimeZone()),
                                                    BigDecimal.TEN,
-                                                   childAccount.getCurrency(), "test adjustment", null, callContext);
+                                                   childAccount.getCurrency(), "test adjustment", null, null, callContext);
         assertListenerStatus();
 
         // expected child invoice
@@ -983,7 +983,8 @@ public class TestIntegrationParentInvoice extends TestIntegrationBase {
         final Account childAccount = createAccountWithNonOsgiPaymentMethod(getChildAccountData(billingDay, parentAccount.getId(), true));
 
         busHandler.pushExpectedEvents(NextEvent.INVOICE);
-        invoiceUserApi.insertCredit(childAccount.getId(), new BigDecimal("250"), new LocalDate(clock.getUTCNow(), childAccount.getTimeZone()), childAccount.getCurrency(), true, null, null, callContext);
+        invoiceUserApi.insertCredit(childAccount.getId(), new BigDecimal("250"), new LocalDate(clock.getUTCNow(), childAccount.getTimeZone()), childAccount.getCurrency(),
+                                    true, null, null, null, callContext);
         assertListenerStatus();
 
         BigDecimal childAccountCBA = invoiceUserApi.getAccountCBA(childAccount.getId(), callContext);

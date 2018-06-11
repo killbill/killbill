@@ -460,7 +460,7 @@ public class AccountResource extends JaxRsResourceBase {
             for (final Invoice invoice : unpaidInvoices) {
                 for (final InvoiceItem item : invoice.getInvoiceItems()) {
                     if (ADJUSTABLE_TYPES.contains(item.getInvoiceItemType())) {
-                        invoiceApi.insertInvoiceItemAdjustment(accountId, invoice.getId(), item.getId(), clock.getUTCToday(), description, null, callContext);
+                        invoiceApi.insertInvoiceItemAdjustment(accountId, invoice.getId(), item.getId(), clock.getUTCToday(), description, null, null, callContext);
                     }
                 }
             }
@@ -822,7 +822,7 @@ public class AccountResource extends JaxRsResourceBase {
         // then we apply some credit on the account.
         //
         if (externalPayment && remainingRequestPayment.compareTo(BigDecimal.ZERO) > 0) {
-            invoiceApi.insertCredit(account.getId(), remainingRequestPayment, clock.getUTCToday(), account.getCurrency(), true, "pay all invoices", null, callContext);
+            invoiceApi.insertCredit(account.getId(), remainingRequestPayment, clock.getUTCToday(), account.getCurrency(), true, "pay all invoices", null, pluginProperties, callContext);
         }
         return Response.status(Status.NO_CONTENT).build();
     }

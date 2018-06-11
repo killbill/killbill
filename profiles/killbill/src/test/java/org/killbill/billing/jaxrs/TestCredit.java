@@ -56,11 +56,11 @@ public class TestCredit extends TestJaxrsBase {
         credit.setCreditAmount(creditAmount);
         credit.setDescription("description");
         credit.setItemDetails("itemDetails");
-        Credit objFromJson = creditApi.createCredit(credit, false, requestOptions);
+        Credit objFromJson = creditApi.createCredit(credit, false, NULL_PLUGIN_PROPERTIES, requestOptions);
 
         final UUID invoiceId = objFromJson.getInvoiceId();
         credit.setInvoiceId(invoiceId);
-        objFromJson = creditApi.createCredit(credit, false, requestOptions);
+        objFromJson = creditApi.createCredit(credit, false, NULL_PLUGIN_PROPERTIES, requestOptions);
 
         // We can't just compare the object via .equals() due e.g. to the invoice id
         assertEquals(objFromJson.getAccountId(), accountJson.getAccountId());
@@ -80,7 +80,7 @@ public class TestCredit extends TestJaxrsBase {
         credit.setAccountId(accountJson.getAccountId());
         credit.setInvoiceId(invoice.getInvoiceId());
         credit.setCreditAmount(creditAmount);
-        final Credit objFromJson = creditApi.createCredit(credit, true, requestOptions);
+        final Credit objFromJson = creditApi.createCredit(credit, true, NULL_PLUGIN_PROPERTIES, requestOptions);
         Assert.assertTrue(objFromJson.getCreditAmount().compareTo(creditAmount) == 0);
     }
 
@@ -91,7 +91,7 @@ public class TestCredit extends TestJaxrsBase {
         credit.setCreditAmount(BigDecimal.TEN);
 
         // Try to create the credit
-        assertNull(creditApi.createCredit(credit, true, requestOptions));
+        assertNull(creditApi.createCredit(credit, true, NULL_PLUGIN_PROPERTIES, requestOptions));
     }
 
     @Test(groups = "slow", description = "Cannot credit a badly formatted credit")
@@ -102,7 +102,7 @@ public class TestCredit extends TestJaxrsBase {
 
         // Try to create the credit
         try {
-            creditApi.createCredit(credit, true, requestOptions);
+            creditApi.createCredit(credit, true, NULL_PLUGIN_PROPERTIES, requestOptions);
             fail();
         } catch (final KillBillClientException e) {
         }

@@ -84,7 +84,7 @@ public class TestAccountTimeline extends TestJaxrsBase {
         final Credit credit = new Credit();
         credit.setAccountId(accountJson.getAccountId());
         credit.setCreditAmount(creditAmount);
-        creditApi.createCredit(credit, true, requestOptions);
+        creditApi.createCredit(credit, true, NULL_PLUGIN_PROPERTIES, requestOptions);
 
         // Add refund
         final Payment postedPayment = accountApi.getPaymentsForAccount(accountJson.getAccountId(), NULL_PLUGIN_PROPERTIES, requestOptions).get(0);

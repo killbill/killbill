@@ -442,6 +442,7 @@ public class InvoiceResource extends JaxRsResourceBase {
     public Response adjustInvoiceItem(@PathParam("invoiceId") final UUID invoiceId,
                                       final InvoiceItemJson json,
                                       @QueryParam(QUERY_REQUESTED_DT) final String requestedDateTimeString,
+                                      @QueryParam(QUERY_PLUGIN_PROPERTY) final List<String> pluginPropertiesString,
                                       @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                       @HeaderParam(HDR_REASON) final String reason,
                                       @HeaderParam(HDR_COMMENT) final String comment,
@@ -451,6 +452,7 @@ public class InvoiceResource extends JaxRsResourceBase {
         verifyNonNullOrEmpty(json.getAccountId(), "InvoiceItemJson accountId needs to be set",
                              json.getInvoiceItemId(), "InvoiceItemJson invoiceItemId needs to be set");
 
+        final Iterable<PluginProperty> pluginProperties = extractPluginProperties(pluginPropertiesString);
         final UUID accountId = json.getAccountId();
         final CallContext callContext = context.createCallContextWithAccountId(accountId, createdBy, reason, comment, request);
 
@@ -463,6 +465,7 @@ public class InvoiceResource extends JaxRsResourceBase {
                                                                     requestedDate,
                                                                     json.getDescription(),
                                                                     json.getItemDetails(),
+                                                                    pluginProperties,
                                                                     callContext);
         } else {
             adjustmentItem = invoiceApi.insertInvoiceItemAdjustment(accountId,
@@ -473,6 +476,7 @@ public class InvoiceResource extends JaxRsResourceBase {
                                                                     json.getCurrency(),
                                                                     json.getDescription(),
                                                                     json.getItemDetails(),
+                                                                    pluginProperties,
                                                                     callContext);
         }
 
@@ -495,15 +499,14 @@ public class InvoiceResource extends JaxRsResourceBase {
     public Response createExternalCharges(@PathParam("accountId") final UUID accountId,
                                           final List<InvoiceItemJson> externalChargesJson,
                                           @QueryParam(QUERY_REQUESTED_DT) final String requestedDateTimeString,
-                                          @QueryParam(QUERY_PLUGIN_PROPERTY) final List<String> pluginPropertiesString,
                                           @QueryParam(QUERY_AUTO_COMMIT) @DefaultValue("false") final Boolean autoCommit,
+                                          @QueryParam(QUERY_PLUGIN_PROPERTY) final List<String> pluginPropertiesString,
                                           @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                           @HeaderParam(HDR_REASON) final String reason,
                                           @HeaderParam(HDR_COMMENT) final String comment,
                                           @javax.ws.rs.core.Context final UriInfo uriInfo,
                                           @javax.ws.rs.core.Context final HttpServletRequest request) throws AccountApiException, InvoiceApiException, PaymentApiException {
-
-        //final Iterable<PluginProperty> pluginProperties = extractPluginProperties(pluginPropertiesString);
+        final Iterable<PluginProperty> pluginProperties = extractPluginProperties(pluginPropertiesString);
         final CallContext callContext = context.createCallContextWithAccountId(accountId, createdBy, reason, comment, request);
 
         final Account account = accountUserApi.getAccountById(accountId, callContext);
@@ -511,7 +514,7 @@ public class InvoiceResource extends JaxRsResourceBase {
 
         // Get the effective date of the external charge, in the account timezone
         final LocalDate requestedDate = toLocalDateDefaultToday(account, requestedDateTimeString, callContext);
-        final List<InvoiceItem> createdExternalCharges = invoiceApi.insertExternalCharges(account.getId(), requestedDate, sanitizedExternalChargesJson, autoCommit, callContext);
+        final List<InvoiceItem> createdExternalCharges = invoiceApi.insertExternalCharges(account.getId(), requestedDate, sanitizedExternalChargesJson, autoCommit, pluginProperties, callContext);
 
         final List<InvoiceItemJson> createdExternalChargesJson = Lists.<InvoiceItem, InvoiceItemJson>transform(createdExternalCharges,
                                                                                                                new Function<InvoiceItem, InvoiceItemJson>() {
@@ -545,15 +548,14 @@ public class InvoiceResource extends JaxRsResourceBase {
         verifyNonNullOrEmpty(taxItemJson, "Body should be specified");
         verifyNonNullOrEmpty(accountId, "AccountId needs to be set");
 
-        // TODO do we actually support passing that to invoice for invoice plugins  ?
-        // final Iterable<PluginProperty> pluginProperties = extractPluginProperties(pluginPropertiesString);
+        final Iterable<PluginProperty> pluginProperties = extractPluginProperties(pluginPropertiesString);
         final CallContext callContext = context.createCallContextWithAccountId(accountId, createdBy, reason, comment, request);
 
         final Account account = accountUserApi.getAccountById(accountId, callContext);
         final Iterable<InvoiceItem> sanitizedTaxItemsJson = validateSanitizeAndTranformInputItems(account.getCurrency(), taxItemJson);
 
         final LocalDate requestedDate = toLocalDateDefaultToday(account, requestedDateTimeString, callContext);
-        final List<InvoiceItem> createdTaxItems = invoiceApi.insertTaxItems(account.getId(), requestedDate, sanitizedTaxItemsJson, autoCommit, callContext);
+        final List<InvoiceItem> createdTaxItems = invoiceApi.insertTaxItems(account.getId(), requestedDate, sanitizedTaxItemsJson, autoCommit, pluginProperties, callContext);
 
         final List<InvoiceItemJson> createdTaxItemJson = Lists.<InvoiceItem, InvoiceItemJson>transform(createdTaxItems,
                                                                                                        new Function<InvoiceItem, InvoiceItemJson>() {
