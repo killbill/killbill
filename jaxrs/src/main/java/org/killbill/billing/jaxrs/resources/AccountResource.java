@@ -188,7 +188,7 @@ public class AccountResource extends JaxRsResourceBase {
                            final Context context,
                            final RecordIdApi recordIdApi,
                            final NotificationQueueService notificationQueueService) {
-        super(uriBuilder, tagUserApi, customFieldUserApi, auditUserApi, accountApi, paymentApi, subscriptionApi, clock, context);
+        super(uriBuilder, tagUserApi, customFieldUserApi, auditUserApi, accountApi, paymentApi, invoicePaymentApi, subscriptionApi, clock, context);
         this.subscriptionApi = subscriptionApi;
         this.invoiceApi = invoiceApi;
         this.invoicePaymentApi = invoicePaymentApi;

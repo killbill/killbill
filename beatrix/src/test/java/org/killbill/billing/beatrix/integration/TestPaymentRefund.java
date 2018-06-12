@@ -22,7 +22,6 @@ import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
@@ -48,7 +47,6 @@ import org.killbill.billing.payment.api.Payment;
 import org.killbill.billing.payment.api.PaymentApiException;
 import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.payment.api.TransactionStatus;
-import org.killbill.billing.payment.invoice.InvoicePaymentControlPluginApi;
 import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
@@ -56,8 +54,8 @@ import org.testng.annotations.Test;
 import com.google.common.base.Function;
 import com.google.common.base.Predicate;
 import com.google.common.collect.Collections2;
+import com.google.common.collect.ImmutableList;
 
-import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.assertTrue;
 import static org.testng.Assert.fail;
@@ -116,13 +114,9 @@ public class TestPaymentRefund extends TestIntegrationBase {
 
     @Test(groups = "slow")
     public void testFailedRefundWithInvoiceAdjustment() throws Exception {
-
-        final List<PluginProperty> properties = new ArrayList<PluginProperty>();
-        final PluginProperty prop1 = new PluginProperty(InvoicePaymentControlPluginApi.PROP_IPCD_REFUND_WITH_ADJUSTMENTS, "true", false);
-        properties.add(prop1);
         try {
-            paymentApi.createRefundWithPaymentControl(account, payment.getId(), payment.getPurchasedAmount(), payment.getCurrency(), null, UUID.randomUUID().toString(),
-                                                             properties, PAYMENT_OPTIONS, callContext);
+            invoicePaymentApi.createRefundForInvoice(true, null, account, payment.getId(), payment.getPurchasedAmount(), payment.getCurrency(), null, UUID.randomUUID().toString(),
+                                                     ImmutableList.<PluginProperty>of(), PAYMENT_OPTIONS, callContext);
             fail("Refund with invoice adjustment should now throw an Exception");
         } catch (final PaymentApiException e) {
             Assert.assertEquals(e.getCause(), null);

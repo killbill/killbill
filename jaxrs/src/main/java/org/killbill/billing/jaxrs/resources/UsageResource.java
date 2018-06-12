@@ -1,5 +1,6 @@
 /*
- * Copyright 2014 The Billing Project, LLC
+ * Copyright 2014-2018 Groupon, Inc
+ * Copyright 2014-2018 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -37,9 +38,9 @@ import org.joda.time.LocalDate;
 import org.killbill.billing.account.api.AccountApiException;
 import org.killbill.billing.account.api.AccountUserApi;
 import org.killbill.billing.entitlement.api.Entitlement;
-import org.killbill.billing.entitlement.api.Entitlement.EntitlementState;
 import org.killbill.billing.entitlement.api.EntitlementApi;
 import org.killbill.billing.entitlement.api.EntitlementApiException;
+import org.killbill.billing.invoice.api.InvoicePaymentApi;
 import org.killbill.billing.jaxrs.json.RolledUpUsageJson;
 import org.killbill.billing.jaxrs.json.SubscriptionUsageRecordJson;
 import org.killbill.billing.jaxrs.json.SubscriptionUsageRecordJson.UnitUsageRecordJson;
@@ -89,10 +90,11 @@ public class UsageResource extends JaxRsResourceBase {
                          final AccountUserApi accountUserApi,
                          final UsageUserApi usageUserApi,
                          final PaymentApi paymentApi,
+                         final InvoicePaymentApi invoicePaymentApi,
                          final EntitlementApi entitlementApi,
                          final Clock clock,
                          final Context context) {
-        super(uriBuilder, tagUserApi, customFieldUserApi, auditUserApi, accountUserApi, paymentApi, null, clock, context);
+        super(uriBuilder, tagUserApi, customFieldUserApi, auditUserApi, accountUserApi, paymentApi, invoicePaymentApi, null, clock, context);
         this.usageUserApi = usageUserApi;
         this.entitlementApi = entitlementApi;
     }

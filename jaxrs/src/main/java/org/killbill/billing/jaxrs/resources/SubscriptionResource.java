@@ -76,6 +76,7 @@ import org.killbill.billing.events.NullInvoiceInternalEvent;
 import org.killbill.billing.events.PaymentErrorInternalEvent;
 import org.killbill.billing.events.PaymentInfoInternalEvent;
 import org.killbill.billing.events.PaymentPluginErrorInternalEvent;
+import org.killbill.billing.invoice.api.InvoicePaymentApi;
 import org.killbill.billing.jaxrs.json.BlockingStateJson;
 import org.killbill.billing.jaxrs.json.BulkSubscriptionsBundleJson;
 import org.killbill.billing.jaxrs.json.BundleJson;
@@ -136,9 +137,10 @@ public class SubscriptionResource extends JaxRsResourceBase {
                                 final SubscriptionApi subscriptionApi,
                                 final AccountUserApi accountUserApi,
                                 final PaymentApi paymentApi,
+                                final InvoicePaymentApi invoicePaymentApi,
                                 final Clock clock,
                                 final Context context) {
-        super(uriBuilder, tagUserApi, customFieldUserApi, auditUserApi, accountUserApi, paymentApi, subscriptionApi, clock, context);
+        super(uriBuilder, tagUserApi, customFieldUserApi, auditUserApi, accountUserApi, paymentApi, invoicePaymentApi, subscriptionApi, clock, context);
         this.killbillHandler = killbillHandler;
         this.entitlementApi = entitlementApi;
         this.subscriptionApi = subscriptionApi;

@@ -46,8 +46,7 @@ public class DefaultApiBase {
         final List<String> controlPluginNames = paymentConfig.getPaymentControlPluginNames(internalTenantContext);
         if (controlPluginNames != null &&
             paymentOptions.getPaymentControlPluginNames() != null &&
-            paymentOptions.getPaymentControlPluginNames().size() == 1 &&
-            InvoicePaymentControlPluginApi.PLUGIN_NAME.equals(paymentOptions.getPaymentControlPluginNames().get(0))) {
+            paymentOptions.getPaymentControlPluginNames().isEmpty()) {
             final List<String> paymentControlPluginNames = new LinkedList<String>(paymentOptions.getPaymentControlPluginNames());
             paymentControlPluginNames.addAll(controlPluginNames);
             return paymentControlPluginNames;

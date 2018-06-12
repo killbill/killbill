@@ -57,6 +57,7 @@ import org.killbill.billing.entitlement.api.Subscription;
 import org.killbill.billing.entitlement.api.SubscriptionApi;
 import org.killbill.billing.entitlement.api.SubscriptionApiException;
 import org.killbill.billing.entitlement.api.SubscriptionEvent;
+import org.killbill.billing.invoice.api.InvoicePaymentApi;
 import org.killbill.billing.jaxrs.json.CatalogJson;
 import org.killbill.billing.jaxrs.json.CatalogJson.PhaseJson;
 import org.killbill.billing.jaxrs.json.CatalogJson.PlanJson;
@@ -102,11 +103,12 @@ public class CatalogResource extends JaxRsResourceBase {
                            final AuditUserApi auditUserApi,
                            final AccountUserApi accountUserApi,
                            final PaymentApi paymentApi,
+                           final InvoicePaymentApi invoicePaymentApi,
                            final CatalogUserApi catalogUserApi,
                            final SubscriptionApi subscriptionApi,
                            final Clock clock,
                            final Context context) {
-        super(uriBuilder, tagUserApi, customFieldUserApi, auditUserApi, accountUserApi, paymentApi, null, clock, context);
+        super(uriBuilder, tagUserApi, customFieldUserApi, auditUserApi, accountUserApi, paymentApi, invoicePaymentApi, null, clock, context);
         this.catalogUserApi = catalogUserApi;
         this.subscriptionApi = subscriptionApi;
     }

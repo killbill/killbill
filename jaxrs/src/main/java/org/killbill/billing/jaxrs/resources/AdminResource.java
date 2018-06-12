@@ -17,7 +17,6 @@
 
 package org.killbill.billing.jaxrs.resources;
 
-import java.io.Closeable;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.URI;
@@ -51,6 +50,7 @@ import org.killbill.billing.account.api.AccountUserApi;
 import org.killbill.billing.account.api.ImmutableAccountData;
 import org.killbill.billing.catalog.api.Catalog;
 import org.killbill.billing.invoice.api.InvoiceApiException;
+import org.killbill.billing.invoice.api.InvoicePaymentApi;
 import org.killbill.billing.invoice.api.InvoiceUserApi;
 import org.killbill.billing.jaxrs.json.AdminPaymentJson;
 import org.killbill.billing.jaxrs.util.Context;
@@ -127,6 +127,7 @@ public class AdminResource extends JaxRsResourceBase {
                          final AuditUserApi auditUserApi,
                          final AccountUserApi accountUserApi,
                          final PaymentApi paymentApi,
+                         final InvoicePaymentApi invoicePaymentApi,
                          final AdminPaymentApi adminPaymentApi,
                          final InvoiceUserApi invoiceUserApi,
                          final CacheControllerDispatcher cacheControllerDispatcher,
@@ -137,7 +138,7 @@ public class AdminResource extends JaxRsResourceBase {
                          final KillbillHealthcheck killbillHealthcheck,
                          final Clock clock,
                          final Context context) {
-        super(uriBuilder, tagUserApi, customFieldUserApi, auditUserApi, accountUserApi, paymentApi, null, clock, context);
+        super(uriBuilder, tagUserApi, customFieldUserApi, auditUserApi, accountUserApi, paymentApi, invoicePaymentApi, null, clock, context);
         this.adminPaymentApi = adminPaymentApi;
         this.invoiceUserApi = invoiceUserApi;
         this.tenantApi = tenantApi;

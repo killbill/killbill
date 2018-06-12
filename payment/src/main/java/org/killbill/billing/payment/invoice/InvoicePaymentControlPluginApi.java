@@ -1,6 +1,6 @@
 /*
- * Copyright 2014-2017 Groupon, Inc
- * Copyright 2014-2017 The Billing Project, LLC
+ * Copyright 2014-2018 Groupon, Inc
+ * Copyright 2014-2018 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -88,12 +88,12 @@ public final class InvoicePaymentControlPluginApi implements PaymentControlPlugi
 
     public static final String CREATED_BY = "InvoicePaymentControlPluginApi";
 
-    /* Don't change value String for properties as they are referenced from jaxrs without the constants which are not accessible */
     public static final String PLUGIN_NAME = "__INVOICE_PAYMENT_CONTROL_PLUGIN__";
-    public static final String PROP_IPCD_INVOICE_ID = "IPCD_INVOICE_ID";
-    public static final String PROP_IPCD_REFUND_IDS_WITH_AMOUNT_KEY = "IPCD_REFUND_IDS_AMOUNTS";
-    public static final String PROP_IPCD_REFUND_WITH_ADJUSTMENTS = "IPCD_REFUND_WITH_ADJUSTMENTS";
-    public static final String PROP_IPCD_PAYMENT_ID = "IPCD_PAYMENT_ID";
+
+    private static final String PROP_IPCD_INVOICE_ID = "IPCD_INVOICE_ID";
+    private static final String PROP_IPCD_REFUND_IDS_WITH_AMOUNT_KEY = "IPCD_REFUND_IDS_AMOUNTS";
+    private static final String PROP_IPCD_REFUND_WITH_ADJUSTMENTS = "IPCD_REFUND_WITH_ADJUSTMENTS";
+    private static final String PROP_IPCD_PAYMENT_ID = "IPCD_PAYMENT_ID";
 
     private final PaymentConfig paymentConfig;
     private final InvoiceInternalApi invoiceApi;

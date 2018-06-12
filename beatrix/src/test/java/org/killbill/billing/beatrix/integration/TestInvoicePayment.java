@@ -20,7 +20,6 @@ package org.killbill.billing.beatrix.integration;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.math.BigDecimal;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -1065,12 +1064,19 @@ public class TestInvoicePayment extends TestIntegrationBase {
         // We expect an INVOICE_PAYMENT that indicates the invoice was repaired, and also an exception because plugin aborts payment call since there is nothing to do.
         //
         busHandler.pushExpectedEvents(NextEvent.INVOICE_PAYMENT);
-        final List<PluginProperty> properties = new ArrayList<PluginProperty>();
-        final PluginProperty prop1 = new PluginProperty(InvoicePaymentControlPluginApi.PROP_IPCD_INVOICE_ID, updateInvoice2.getId().toString(), false);
-        properties.add(prop1);
         try {
-            paymentApi.createPurchaseWithPaymentControl(account, account.getPaymentMethodId(), null, updateInvoice2.getBalance(), updateInvoice2.getCurrency(), null, UUID.randomUUID().toString(),
-                                                        UUID.randomUUID().toString(), properties, PAYMENT_OPTIONS, callContext);
+            invoicePaymentApi.createPurchaseForInvoice(account,
+                                                       updateInvoice2.getId(),
+                                                       account.getPaymentMethodId(),
+                                                       null,
+                                                       updateInvoice2.getBalance(),
+                                                       updateInvoice2.getCurrency(),
+                                                       null,
+                                                       UUID.randomUUID().toString(),
+                                                       UUID.randomUUID().toString(),
+                                                       ImmutableList.<PluginProperty>of(),
+                                                       PAYMENT_OPTIONS,
+                                                       callContext);
             Assert.fail("The payment should not succeed (and yet it will repair the broken state....)");
         } catch (final PaymentApiException expected) {
             Assert.assertEquals(expected.getCode(), ErrorCode.PAYMENT_PLUGIN_API_ABORTED.getCode());

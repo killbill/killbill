@@ -22,7 +22,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
@@ -37,6 +36,7 @@ import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.invoice.api.Invoice;
 import org.killbill.billing.invoice.api.InvoiceApiException;
 import org.killbill.billing.invoice.api.InvoiceItem;
+import org.killbill.billing.invoice.api.InvoicePayment;
 import org.killbill.billing.payment.api.Payment;
 import org.killbill.billing.payment.api.PaymentApiException;
 import org.killbill.billing.payment.api.PaymentOptions;
@@ -47,7 +47,6 @@ import org.killbill.billing.payment.api.TransactionType;
 import org.killbill.billing.payment.bus.PaymentBusEventHandler;
 import org.killbill.billing.payment.core.janitor.Janitor;
 import org.killbill.billing.payment.dao.PaymentAttemptModelDao;
-import org.killbill.billing.payment.dao.PaymentModelDao;
 import org.killbill.billing.payment.dao.PaymentTransactionModelDao;
 import org.killbill.billing.payment.glue.DefaultPaymentService;
 import org.killbill.billing.payment.invoice.InvoicePaymentControlPluginApi;
@@ -68,8 +67,6 @@ import org.killbill.notificationq.api.NotificationEventWithMetadata;
 import org.killbill.notificationq.api.NotificationQueueService;
 import org.killbill.notificationq.api.NotificationQueueService.NoSuchNotificationQueue;
 import org.skife.config.TimeSpan;
-import org.skife.jdbi.v2.Handle;
-import org.skife.jdbi.v2.tweak.HandleCallback;
 import org.testng.Assert;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeClass;
@@ -191,8 +188,19 @@ public class TestJanitor extends PaymentTestSuiteWithEmbeddedDB {
                                                             Currency.USD));
 
         testListener.pushExpectedEvent(NextEvent.PAYMENT);
-        final Payment payment = paymentApi.createPurchaseWithPaymentControl(account, account.getPaymentMethodId(), null, requestedAmount, Currency.USD, null, paymentExternalKey, transactionExternalKey,
-                                                                            createPropertiesForInvoice(invoice), INVOICE_PAYMENT, callContext);
+        final InvoicePayment invoicePayment = invoicePaymentApi.createPurchaseForInvoice(account,
+                                                                                         invoice.getId(),
+                                                                                         account.getPaymentMethodId(),
+                                                                                         null,
+                                                                                         requestedAmount,
+                                                                                         Currency.USD,
+                                                                                         null,
+                                                                                         paymentExternalKey,
+                                                                                         transactionExternalKey,
+                                                                                         ImmutableList.<PluginProperty>of(),
+                                                                                         INVOICE_PAYMENT,
+                                                                                         callContext);
+        final Payment payment = paymentApi.getPayment(invoicePayment.getPaymentId(), false, false, ImmutableList.<PluginProperty>of(), callContext);
         testListener.assertListenerStatus();
         assertEquals(payment.getTransactions().size(), 1);
         assertEquals(payment.getTransactions().get(0).getTransactionStatus(), TransactionStatus.SUCCESS);
@@ -247,19 +255,29 @@ public class TestJanitor extends PaymentTestSuiteWithEmbeddedDB {
         invoice.addInvoiceItem(invoiceItem);
 
         testListener.pushExpectedEvent(NextEvent.PAYMENT);
-        final Payment payment = paymentApi.createPurchaseWithPaymentControl(account, account.getPaymentMethodId(), null, requestedAmount, Currency.USD, null, paymentExternalKey, transactionExternalKey,
-                                                                            createPropertiesForInvoice(invoice), INVOICE_PAYMENT, callContext);
+        final InvoicePayment invoicePayment = invoicePaymentApi.createPurchaseForInvoice(account,
+                                                                                         invoice.getId(),
+                                                                                         account.getPaymentMethodId(),
+                                                                                         null,
+                                                                                         requestedAmount,
+                                                                                         Currency.USD,
+                                                                                         null,
+                                                                                         paymentExternalKey,
+                                                                                         transactionExternalKey,
+                                                                                         ImmutableList.<PluginProperty>of(),
+                                                                                         INVOICE_PAYMENT,
+                                                                                         callContext);
+        final Payment payment = paymentApi.getPayment(invoicePayment.getPaymentId(), false, false, ImmutableList.<PluginProperty>of(), callContext);
         testListener.assertListenerStatus();
 
         final List<PluginProperty> refundProperties = new ArrayList<PluginProperty>();
         final HashMap<UUID, BigDecimal> uuidBigDecimalHashMap = new HashMap<UUID, BigDecimal>();
         uuidBigDecimalHashMap.put(invoiceItem.getId(), new BigDecimal("1.0"));
-        final PluginProperty refundIdsProp = new PluginProperty(InvoicePaymentControlPluginApi.PROP_IPCD_REFUND_IDS_WITH_AMOUNT_KEY, uuidBigDecimalHashMap, false);
-        refundProperties.add(refundIdsProp);
 
         testListener.pushExpectedEvent(NextEvent.PAYMENT);
-        final Payment payment2 = paymentApi.createRefundWithPaymentControl(account, payment.getId(), null, Currency.USD, null, transactionExternalKey2,
-                                                                           refundProperties, INVOICE_PAYMENT, callContext);
+        final InvoicePayment invoicePayment2 = invoicePaymentApi.createRefundForInvoice(false, uuidBigDecimalHashMap, account, payment.getId(), null, Currency.USD, null, transactionExternalKey2,
+                                                                                        refundProperties, INVOICE_PAYMENT, callContext);
+        final Payment payment2 = paymentApi.getPayment(invoicePayment2.getPaymentId(), false, false, refundProperties, callContext);
         testListener.assertListenerStatus();
 
         assertEquals(payment2.getTransactions().size(), 2);
@@ -525,12 +543,6 @@ public class TestJanitor extends PaymentTestSuiteWithEmbeddedDB {
                                                  return null;
                                              }
                                          });
-    }
-
-    private List<PluginProperty> createPropertiesForInvoice(final Invoice invoice) {
-        final List<PluginProperty> result = new ArrayList<PluginProperty>();
-        result.add(new PluginProperty(InvoicePaymentControlPluginApi.PROP_IPCD_INVOICE_ID, invoice.getId().toString(), false));
-        return result;
     }
 
     private void assertNotificationsCompleted(final InternalCallContext internalCallContext, final long timeoutSec) {
