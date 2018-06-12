@@ -357,8 +357,9 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
                                    // The restriction on the amount is to deal with https://github.com/killbill/killbill/issues/993 - and esnure that duplicate
                                    // items would not be re-written
                                    (invoiceItemModelDao.getAmount().compareTo(existingInvoiceItem.getAmount()) != 0)) {
-                            checkAgainstExistingInvoiceItemState(existingInvoiceItem, invoiceItemModelDao);
-                            transInvoiceItemSqlDao.updateItemFields(invoiceItemModelDao.getId().toString(), invoiceItemModelDao.getAmount(), invoiceItemModelDao.getDescription(), invoiceItemModelDao.getItemDetails(), context);
+                            if (checkAgainstExistingInvoiceItemState(existingInvoiceItem, invoiceItemModelDao)) {
+                                transInvoiceItemSqlDao.updateItemFields(invoiceItemModelDao.getId().toString(), invoiceItemModelDao.getAmount(), invoiceItemModelDao.getDescription(), invoiceItemModelDao.getItemDetails(), context);
+                            }
                         }
                     }
 
@@ -1321,48 +1322,6 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
     }
 
     private static boolean checkAgainstExistingInvoiceItemState(final InvoiceItemModelDao existingInvoiceItem, final InvoiceItemModelDao inputInvoiceItem) {
-        Preconditions.checkState(existingInvoiceItem.getAccountId().equals(inputInvoiceItem.getAccountId()), String.format("Unexpected account ID '%s' for invoice item '%s'",
-                                                                                                                           inputInvoiceItem.getAccountId(), existingInvoiceItem.getId()));
-        if (existingInvoiceItem.getChildAccountId() != null) {
-            Preconditions.checkState(existingInvoiceItem.getChildAccountId().equals(inputInvoiceItem.getChildAccountId()), String.format("Unexpected child account ID '%s' for invoice item '%s'",
-                                                                                                                                         inputInvoiceItem.getChildAccountId(), existingInvoiceItem.getId()));
-        }
-        Preconditions.checkState(existingInvoiceItem.getInvoiceId().equals(inputInvoiceItem.getInvoiceId()), String.format("Unexpected invoice ID '%s' for invoice item '%s'",
-                                                                                                                           inputInvoiceItem.getInvoiceId(), existingInvoiceItem.getId()));
-        if (existingInvoiceItem.getBundleId() != null) {
-            Preconditions.checkState(existingInvoiceItem.getBundleId().equals(inputInvoiceItem.getBundleId()), String.format("Unexpected bundle ID '%s' for invoice item '%s'",
-                                                                                                                             inputInvoiceItem.getBundleId(), existingInvoiceItem.getId()));
-        }
-        if (existingInvoiceItem.getSubscriptionId() != null) {
-            Preconditions.checkState(existingInvoiceItem.getSubscriptionId().equals(inputInvoiceItem.getSubscriptionId()), String.format("Unexpected subscription ID '%s' for invoice item '%s'",
-                                                                                                                                         inputInvoiceItem.getSubscriptionId(), existingInvoiceItem.getId()));
-        }
-        if (existingInvoiceItem.getPlanName() != null) {
-            Preconditions.checkState(existingInvoiceItem.getPlanName().equals(inputInvoiceItem.getPlanName()), String.format("Unexpected plan name '%s' for invoice item '%s'",
-                                                                                                                             inputInvoiceItem.getPlanName(), existingInvoiceItem.getId()));
-        }
-        if (existingInvoiceItem.getPhaseName() != null) {
-            Preconditions.checkState(existingInvoiceItem.getPhaseName().equals(inputInvoiceItem.getPhaseName()), String.format("Unexpected phase name '%s' for invoice item '%s'",
-                                                                                                                               inputInvoiceItem.getPhaseName(), existingInvoiceItem.getId()));
-        }
-        if (existingInvoiceItem.getUsageName() != null) {
-            Preconditions.checkState(existingInvoiceItem.getUsageName().equals(inputInvoiceItem.getUsageName()), String.format("Unexpected usage name '%s' for invoice item '%s'",
-                                                                                                                               inputInvoiceItem.getUsageName(), existingInvoiceItem.getId()));
-        }
-        if (existingInvoiceItem.getStartDate() != null) {
-            Preconditions.checkState(existingInvoiceItem.getStartDate().equals(inputInvoiceItem.getStartDate()), String.format("Unexpected startDate '%s' for invoice item '%s'",
-                                                                                                                               inputInvoiceItem.getStartDate(), existingInvoiceItem.getId()));
-        }
-        if (existingInvoiceItem.getEndDate() != null) {
-            Preconditions.checkState(existingInvoiceItem.getEndDate().equals(inputInvoiceItem.getEndDate()), String.format("Unexpected endDate '%s' for invoice item '%s'",
-                                                                                                                           inputInvoiceItem.getEndDate(), existingInvoiceItem.getId()));
-        }
-
-        Preconditions.checkState(existingInvoiceItem.getCurrency() == inputInvoiceItem.getCurrency(), String.format("Unexpected currency '%s' for invoice item '%s'",
-                                                                                                                    inputInvoiceItem.getCurrency(), existingInvoiceItem.getId()));
-        Preconditions.checkState(existingInvoiceItem.getType() == inputInvoiceItem.getType(), String.format("Unexpected item type '%s' for invoice item '%s'",
-                                                                                                            inputInvoiceItem.getType(), existingInvoiceItem.getId()));
-
         boolean itemShouldBeUpdated = false;
         if (inputInvoiceItem.getAmount() != null) {
             itemShouldBeUpdated = existingInvoiceItem.getAmount() == null /* unlikely */|| inputInvoiceItem.getAmount().compareTo(existingInvoiceItem.getAmount()) != 0;
