@@ -29,7 +29,7 @@ import org.killbill.billing.account.api.AccountInternalApi;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.events.InvoiceCreationInternalEvent;
 import org.killbill.billing.events.PaymentInternalEvent;
-import org.killbill.billing.invoice.api.InvoicePaymentApi;
+import org.killbill.billing.payment.api.InvoicePaymentApi;
 import org.killbill.billing.payment.api.PaymentApiException;
 import org.killbill.billing.payment.api.PaymentOptions;
 import org.killbill.billing.payment.api.PluginProperty;

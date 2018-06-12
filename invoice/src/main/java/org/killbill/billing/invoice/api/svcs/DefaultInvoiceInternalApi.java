@@ -29,6 +29,7 @@ import javax.inject.Inject;
 import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
 import org.killbill.billing.ErrorCode;
+import org.killbill.billing.ObjectType;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.catalog.api.Currency;
@@ -48,6 +49,7 @@ import org.killbill.billing.invoice.model.DefaultInvoicePayment;
 import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
+import org.killbill.billing.util.callcontext.TenantContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -189,5 +191,29 @@ public class DefaultInvoiceInternalApi implements InvoiceInternalApi {
     @Override
     public void commitInvoice(final UUID invoiceId, final InternalCallContext context) throws InvoiceApiException {
         dao.changeInvoiceStatus(invoiceId, InvoiceStatus.COMMITTED, context);
+    }
+
+    @Override
+    public List<InvoicePayment> getInvoicePayments(final UUID paymentId, final TenantContext context) {
+        return ImmutableList.<InvoicePayment>copyOf(Collections2.transform(dao.getInvoicePaymentsByPaymentId(paymentId, internalCallContextFactory.createInternalTenantContext(paymentId, ObjectType.PAYMENT, context)),
+                                                                           new Function<InvoicePaymentModelDao, InvoicePayment>() {
+                                                                               @Override
+                                                                               public InvoicePayment apply(final InvoicePaymentModelDao input) {
+                                                                                   return new DefaultInvoicePayment(input);
+                                                                               }
+                                                                           }
+                                                                          ));
+    }
+
+    @Override
+    public List<InvoicePayment> getInvoicePaymentsByAccount(final UUID accountId, final TenantContext context) {
+        return ImmutableList.<InvoicePayment>copyOf(Collections2.transform(dao.getInvoicePaymentsByAccount(internalCallContextFactory.createInternalTenantContext(accountId, ObjectType.ACCOUNT, context)),
+                                                                           new Function<InvoicePaymentModelDao, InvoicePayment>() {
+                                                                               @Override
+                                                                               public InvoicePayment apply(final InvoicePaymentModelDao input) {
+                                                                                   return new DefaultInvoicePayment(input);
+                                                                               }
+                                                                           }
+                                                                          ));
     }
 }

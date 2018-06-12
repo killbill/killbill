@@ -20,6 +20,7 @@ package org.killbill.billing.invoice.api;
 
 import java.math.BigDecimal;
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -28,6 +29,7 @@ import org.joda.time.LocalDate;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.catalog.api.Currency;
+import org.killbill.billing.util.callcontext.TenantContext;
 
 public interface InvoiceInternalApi {
 
@@ -77,4 +79,8 @@ public interface InvoiceInternalApi {
     public Map<UUID, BigDecimal> validateInvoiceItemAdjustments(final UUID paymentId, final Map<UUID, BigDecimal> idWithAmount, final InternalTenantContext context) throws InvoiceApiException;
 
     public void commitInvoice(UUID invoiceId, InternalCallContext context) throws InvoiceApiException;
+
+    public List<InvoicePayment> getInvoicePayments(UUID paymentId, TenantContext context);
+
+    public List<InvoicePayment> getInvoicePaymentsByAccount(UUID accountId, TenantContext context);
 }
