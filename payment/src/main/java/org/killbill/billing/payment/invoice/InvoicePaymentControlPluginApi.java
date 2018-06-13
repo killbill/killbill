@@ -198,7 +198,7 @@ public final class InvoicePaymentControlPluginApi implements PaymentControlPlugi
                 case REFUND:
                     final Map<UUID, BigDecimal> idWithAmount = extractIdsWithAmountFromProperties(pluginProperties);
                     final PluginProperty prop = getPluginProperty(pluginProperties, PROP_IPCD_REFUND_WITH_ADJUSTMENTS);
-                    final boolean isAdjusted = prop != null ? Boolean.valueOf((String) prop.getValue()) : false;
+                    final boolean isAdjusted = prop != null && prop.getValue() != null ? Boolean.valueOf(prop.getValue().toString()) : false;
                     invoiceApi.recordRefund(paymentControlContext.getPaymentId(), paymentControlContext.getAmount(), isAdjusted, idWithAmount, paymentControlContext.getTransactionExternalKey(), internalContext);
                     break;
 
@@ -230,7 +230,7 @@ public final class InvoicePaymentControlPluginApi implements PaymentControlPlugi
                 case CREDIT:
                     final Map<UUID, BigDecimal> idWithAmountMap = extractIdsWithAmountFromProperties(pluginProperties);
                     final PluginProperty properties = getPluginProperty(pluginProperties, PROP_IPCD_REFUND_WITH_ADJUSTMENTS);
-                    final boolean isInvoiceAdjusted = properties != null ? Boolean.valueOf((String) properties.getValue()) : false;
+                    final boolean isInvoiceAdjusted = properties != null && properties.getValue() != null ? Boolean.valueOf(properties.getValue().toString()) : false;
 
                     final PluginProperty legacyPayment = getPluginProperty(pluginProperties, PROP_IPCD_PAYMENT_ID);
                     final UUID paymentId = legacyPayment != null ? (UUID) legacyPayment.getValue() : paymentControlContext.getPaymentId();
@@ -416,7 +416,7 @@ public final class InvoicePaymentControlPluginApi implements PaymentControlPlugi
         }
 
         final PluginProperty prop = getPluginProperty(pluginProperties, PROP_IPCD_REFUND_WITH_ADJUSTMENTS);
-        final boolean isAdjusted = prop != null ? Boolean.valueOf((String) prop.getValue()) : false;
+        final boolean isAdjusted = prop != null && prop.getValue() != null ? Boolean.valueOf(prop.getValue().toString()) : false;
         if (isAdjusted) {
             try {
                 invoiceApi.validateInvoiceItemAdjustments(paymentControlPluginContext.getPaymentId(), idWithAmount, internalContext);

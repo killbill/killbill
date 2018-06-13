@@ -36,7 +36,6 @@ import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.invoice.api.Invoice;
 import org.killbill.billing.invoice.api.InvoiceApiException;
 import org.killbill.billing.invoice.api.InvoiceItem;
-import org.killbill.billing.invoice.api.InvoicePayment;
 import org.killbill.billing.payment.api.Payment;
 import org.killbill.billing.payment.api.PaymentApiException;
 import org.killbill.billing.payment.api.PaymentOptions;
@@ -154,6 +153,10 @@ public class TestJanitor extends PaymentTestSuiteWithEmbeddedDB {
 
     @AfterMethod(groups = "slow")
     public void afterMethod() throws Exception {
+        if (hasFailed()) {
+            return;
+        }
+
         retryService.stop();
 
         eventBus.unregister(handler);
@@ -188,19 +191,19 @@ public class TestJanitor extends PaymentTestSuiteWithEmbeddedDB {
                                                             Currency.USD));
 
         testListener.pushExpectedEvent(NextEvent.PAYMENT);
-        final InvoicePayment invoicePayment = invoicePaymentApi.createPurchaseForInvoice(account,
-                                                                                         invoice.getId(),
-                                                                                         account.getPaymentMethodId(),
-                                                                                         null,
-                                                                                         requestedAmount,
-                                                                                         Currency.USD,
-                                                                                         null,
-                                                                                         paymentExternalKey,
-                                                                                         transactionExternalKey,
-                                                                                         ImmutableList.<PluginProperty>of(),
-                                                                                         INVOICE_PAYMENT,
-                                                                                         callContext);
-        final Payment payment = paymentApi.getPayment(invoicePayment.getPaymentId(), false, false, ImmutableList.<PluginProperty>of(), callContext);
+        invoicePaymentApi.createPurchaseForInvoice(account,
+                                                   invoice.getId(),
+                                                   account.getPaymentMethodId(),
+                                                   null,
+                                                   requestedAmount,
+                                                   Currency.USD,
+                                                   null,
+                                                   paymentExternalKey,
+                                                   transactionExternalKey,
+                                                   ImmutableList.<PluginProperty>of(),
+                                                   INVOICE_PAYMENT,
+                                                   callContext);
+        final Payment payment = paymentApi.getPaymentByExternalKey(paymentExternalKey, false, false, ImmutableList.<PluginProperty>of(), callContext);
         testListener.assertListenerStatus();
         assertEquals(payment.getTransactions().size(), 1);
         assertEquals(payment.getTransactions().get(0).getTransactionStatus(), TransactionStatus.SUCCESS);
@@ -255,19 +258,19 @@ public class TestJanitor extends PaymentTestSuiteWithEmbeddedDB {
         invoice.addInvoiceItem(invoiceItem);
 
         testListener.pushExpectedEvent(NextEvent.PAYMENT);
-        final InvoicePayment invoicePayment = invoicePaymentApi.createPurchaseForInvoice(account,
-                                                                                         invoice.getId(),
-                                                                                         account.getPaymentMethodId(),
-                                                                                         null,
-                                                                                         requestedAmount,
-                                                                                         Currency.USD,
-                                                                                         null,
-                                                                                         paymentExternalKey,
-                                                                                         transactionExternalKey,
-                                                                                         ImmutableList.<PluginProperty>of(),
-                                                                                         INVOICE_PAYMENT,
-                                                                                         callContext);
-        final Payment payment = paymentApi.getPayment(invoicePayment.getPaymentId(), false, false, ImmutableList.<PluginProperty>of(), callContext);
+        invoicePaymentApi.createPurchaseForInvoice(account,
+                                                   invoice.getId(),
+                                                   account.getPaymentMethodId(),
+                                                   null,
+                                                   requestedAmount,
+                                                   Currency.USD,
+                                                   null,
+                                                   paymentExternalKey,
+                                                   transactionExternalKey,
+                                                   ImmutableList.<PluginProperty>of(),
+                                                   INVOICE_PAYMENT,
+                                                   callContext);
+        final Payment payment = paymentApi.getPaymentByExternalKey(paymentExternalKey, false, false, ImmutableList.<PluginProperty>of(), callContext);
         testListener.assertListenerStatus();
 
         final List<PluginProperty> refundProperties = new ArrayList<PluginProperty>();
@@ -275,9 +278,9 @@ public class TestJanitor extends PaymentTestSuiteWithEmbeddedDB {
         uuidBigDecimalHashMap.put(invoiceItem.getId(), new BigDecimal("1.0"));
 
         testListener.pushExpectedEvent(NextEvent.PAYMENT);
-        final InvoicePayment invoicePayment2 = invoicePaymentApi.createRefundForInvoice(false, uuidBigDecimalHashMap, account, payment.getId(), null, Currency.USD, null, transactionExternalKey2,
-                                                                                        refundProperties, INVOICE_PAYMENT, callContext);
-        final Payment payment2 = paymentApi.getPayment(invoicePayment2.getPaymentId(), false, false, refundProperties, callContext);
+        invoicePaymentApi.createRefundForInvoice(false, uuidBigDecimalHashMap, account, payment.getId(), null, Currency.USD, null, transactionExternalKey2,
+                                                 refundProperties, INVOICE_PAYMENT, callContext);
+        final Payment payment2 = paymentApi.getPayment(payment.getId(), false, false, refundProperties, callContext);
         testListener.assertListenerStatus();
 
         assertEquals(payment2.getTransactions().size(), 2);

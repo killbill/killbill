@@ -70,8 +70,6 @@ public abstract class InvoiceTestSuiteWithEmbeddedDB extends GuicyKillbillTestSu
     @Inject
     protected InvoiceUserApi invoiceUserApi;
     @Inject
-    protected InvoicePaymentApi invoicePaymentApi;
-    @Inject
     protected InvoiceGenerator generator;
     @Inject
     protected BillingInternalApi billingApi;

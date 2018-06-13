@@ -26,10 +26,8 @@ import org.joda.time.LocalDate;
 import org.killbill.billing.account.api.Account;
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.invoice.api.Invoice;
-import org.killbill.billing.invoice.api.InvoicePayment;
 import org.killbill.billing.payment.MockRecurringInvoiceItem;
 import org.killbill.billing.payment.PaymentTestSuiteNoDB;
-import org.killbill.billing.payment.invoice.InvoicePaymentControlPluginApi;
 import org.killbill.billing.payment.provider.DefaultNoOpPaymentMethodPlugin;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -37,6 +35,7 @@ import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
+import com.google.common.base.MoreObjects;
 import com.google.common.collect.ImmutableList;
 
 import static org.testng.Assert.assertEquals;
@@ -73,7 +72,7 @@ public class TestPaymentApiNoDB extends PaymentTestSuiteNoDB {
 
     @Test(groups = "fast")
     public void testSimpleInvoicePaymentWithNoAmount() throws Exception {
-        final BigDecimal invoiceAmount = new BigDecimal("10.0011");
+        final BigDecimal invoiceAmount = new BigDecimal("10");
         final BigDecimal requestedAmount = null;
         final BigDecimal expectedAmount = null;
 
@@ -125,28 +124,28 @@ public class TestPaymentApiNoDB extends PaymentTestSuiteNoDB {
                                                             Currency.USD));
 
         try {
-            final InvoicePayment invoicePayment = invoicePaymentApi.createPurchaseForInvoice(account,
-                                                                                             invoice.getId(),
-                                                                                             account.getPaymentMethodId(),
-                                                                                             null,
-                                                                                             requestedAmount,
-                                                                                             account.getCurrency(),
-                                                                                             null,
-                                                                                             invoice.getId().toString(),
-                                                                                             UUID.randomUUID().toString(),
-                                                                                             ImmutableList.<PluginProperty>of(),
-                                                                                             PAYMENT_OPTIONS,
-                                                                                             callContext);
-            final Payment paymentInfo = paymentApi.getPayment(invoicePayment.getPaymentId(), false, false, ImmutableList.<PluginProperty>of(), callContext);
-            if (expectedAmount == null) {
+            invoicePaymentApi.createPurchaseForInvoice(account,
+                                                       invoice.getId(),
+                                                       account.getPaymentMethodId(),
+                                                       null,
+                                                       requestedAmount,
+                                                       account.getCurrency(),
+                                                       null,
+                                                       invoice.getId().toString(),
+                                                       UUID.randomUUID().toString(),
+                                                       ImmutableList.<PluginProperty>of(),
+                                                       PAYMENT_OPTIONS,
+                                                       callContext);
+            final Payment paymentInfo = paymentApi.getPaymentByExternalKey(invoice.getId().toString(), false, false, ImmutableList.<PluginProperty>of(), callContext);
+            if (requestedAmount != null && expectedAmount == null) {
                 fail("Expected to fail because requested amount > invoice amount");
             }
             assertNotNull(paymentInfo.getId());
-            assertTrue(paymentInfo.getPurchasedAmount().compareTo(expectedAmount) == 0);
+            assertTrue(paymentInfo.getPurchasedAmount().compareTo(MoreObjects.firstNonNull(expectedAmount, invoiceAmount)) == 0);
             assertNotNull(paymentInfo.getPaymentNumber());
             assertEquals(paymentInfo.getExternalKey(), invoice.getId().toString());
             assertEquals(paymentInfo.getCurrency(), Currency.USD);
-            assertTrue(paymentInfo.getTransactions().get(0).getAmount().compareTo(expectedAmount) == 0);
+            assertTrue(paymentInfo.getTransactions().get(0).getAmount().compareTo(MoreObjects.firstNonNull(expectedAmount, invoiceAmount)) == 0);
             assertEquals(paymentInfo.getTransactions().get(0).getCurrency(), Currency.USD);
             assertEquals(paymentInfo.getTransactions().get(0).getPaymentId(), paymentInfo.getId());
             assertEquals(paymentInfo.getTransactions().get(0).getTransactionType(), TransactionType.PURCHASE);

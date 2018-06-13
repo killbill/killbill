@@ -65,8 +65,6 @@ public abstract class InvoiceTestSuiteNoDB extends GuicyKillbillTestSuiteNoDB {
     @Inject
     protected InvoiceUserApi invoiceUserApi;
     @Inject
-    protected InvoicePaymentApi invoicePaymentApi;
-    @Inject
     protected InvoiceGenerator generator;
     @Inject
     protected InvoiceConfig invoiceConfig;
