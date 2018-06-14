@@ -188,7 +188,7 @@ public class DefaultSecurityApi implements SecurityApi {
     }
 
     @Override
-    public List<String> getUserRoles(final String username, final TenantContext tenantContext) {
+    public List<String> getUserRoles(final String username, final TenantContext tenantContext) throws SecurityApiException {
         final List<UserRolesModelDao> permissionsModelDao = userDao.getUserRoles(username);
         return ImmutableList.copyOf(Iterables.transform(permissionsModelDao, new Function<UserRolesModelDao, String>() {
             @Nullable
