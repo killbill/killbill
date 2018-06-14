@@ -375,7 +375,7 @@ public class TestInvoice extends TestJaxrsBase {
                                    "  \"reason\": \"SLA not met\"\n" +
                                    "}";
         adjustmentInvoiceItem.setItemDetails(itemDetails);
-        invoiceApi.adjustInvoiceItem(invoice.getInvoiceId(), adjustmentInvoiceItem, null, requestOptions);
+        invoiceApi.adjustInvoiceItem(invoice.getInvoiceId(), adjustmentInvoiceItem, null, NULL_PLUGIN_PROPERTIES, requestOptions);
 
         // Verify the new invoice balance is zero
         final Invoice adjustedInvoice = invoiceApi.getInvoice(invoice.getInvoiceId(), true, false, AuditLevel.FULL, requestOptions);
@@ -447,7 +447,7 @@ public class TestInvoice extends TestJaxrsBase {
         adjustmentInvoiceItem.setInvoiceItemId(invoiceItem.getInvoiceItemId());
         adjustmentInvoiceItem.setAmount(adjustedAmount);
         adjustmentInvoiceItem.setCurrency(invoice.getCurrency());
-        invoiceApi.adjustInvoiceItem(invoice.getInvoiceId(), adjustmentInvoiceItem, null, requestOptions);
+        invoiceApi.adjustInvoiceItem(invoice.getInvoiceId(), adjustmentInvoiceItem, null, NULL_PLUGIN_PROPERTIES, requestOptions);
 
         // Verify the new invoice balance
         final Invoice adjustedInvoice = invoiceApi.getInvoice(invoice.getInvoiceId(), requestOptions);
@@ -483,7 +483,7 @@ public class TestInvoice extends TestJaxrsBase {
         final InvoiceItems itemsForCharge = new InvoiceItems();
         itemsForCharge.add(externalCharge);
 
-        final List<InvoiceItem> createdExternalCharges = invoiceApi.createExternalCharges(accountJson.getAccountId(), itemsForCharge, clock.getUTCToday(), false, null, true, null, null, requestOptions);
+        final List<InvoiceItem> createdExternalCharges = invoiceApi.createExternalCharges(accountJson.getAccountId(), itemsForCharge, clock.getUTCToday(),  true, NULL_PLUGIN_PROPERTIES, requestOptions);
         assertEquals(createdExternalCharges.size(), 1);
         final Invoice invoiceWithItems = invoiceApi.getInvoice(createdExternalCharges.get(0).getInvoiceId(), true, false, AuditLevel.NONE, requestOptions);
         assertEquals(invoiceWithItems.getBalance().compareTo(chargeAmount), 0);
@@ -525,7 +525,7 @@ public class TestInvoice extends TestJaxrsBase {
         externalCharge2.setDescription(UUID.randomUUID().toString());
         externalCharges.add(externalCharge2);
 
-        final List<InvoiceItem> createdExternalCharges = invoiceApi.createExternalCharges(accountJson.getAccountId(), externalCharges, clock.getUTCToday(), false, null, true, null, null, requestOptions);
+        final List<InvoiceItem> createdExternalCharges = invoiceApi.createExternalCharges(accountJson.getAccountId(), externalCharges, clock.getUTCToday(), true, NULL_PLUGIN_PROPERTIES, requestOptions);
         assertEquals(createdExternalCharges.size(), 2);
         assertEquals(createdExternalCharges.get(0).getCurrency(), accountJson.getCurrency());
         assertEquals(createdExternalCharges.get(1).getCurrency(), accountJson.getCurrency());
@@ -534,8 +534,8 @@ public class TestInvoice extends TestJaxrsBase {
         assertEquals(accountApi.getInvoicesForAccount(accountJson.getAccountId(), requestOptions).size(), 3);
     }
 
-    @Test(groups = "slow", description = "Can create multiple external charges with same invoice and external keys")
-    public void testExternalChargesWithSameInvoiceAndExternalKeys() throws Exception {
+    @Test(groups = "slow", description = "Can create multiple external charges with same invoice and external keys"/* , invocationCount = 10*/)
+    public void testExternalChargesWithSameInvoice() throws Exception {
         final Account accountJson = createAccountWithPMBundleAndSubscriptionAndWaitForFirstInvoice();
 
         // Get the invoices
@@ -560,51 +560,13 @@ public class TestInvoice extends TestJaxrsBase {
         externalCharge2.setDescription(UUID.randomUUID().toString());
         externalCharges.add(externalCharge2);
 
-        final String paymentExternalKey = "anyPaymentExternalKey";
-        final String transactionExternalKey = "anyTransactionExternalKey";
 
-        final List<InvoiceItem> createdExternalCharges = invoiceApi.createExternalCharges(accountJson.getAccountId(), externalCharges, clock.getUTCToday(), true, null, true, paymentExternalKey, transactionExternalKey, requestOptions);
+        final List<InvoiceItem> createdExternalCharges = invoiceApi.createExternalCharges(accountJson.getAccountId(), externalCharges, clock.getUTCToday(), true, NULL_PLUGIN_PROPERTIES, requestOptions);
         assertEquals(createdExternalCharges.size(), 2);
         assertEquals(createdExternalCharges.get(0).getCurrency(), accountJson.getCurrency());
         assertEquals(createdExternalCharges.get(1).getCurrency(), accountJson.getCurrency());
-
-        // Verify the total number of invoices
-        assertEquals(accountApi.getInvoicesForAccount(accountJson.getAccountId(), requestOptions).size(), 3);
-
-        final Payments payments = accountApi.getPaymentsForAccount(accountJson.getAccountId(), null, requestOptions);
-        assertNotNull(payments);
-        // Verify payment with paymentExternalKey provided
-        assertEquals(payments.get(payments.size() - 1).getPaymentExternalKey(), paymentExternalKey);
-        // Verify transactions with transactionExternalKey provided
-        assertEquals(payments.get(payments.size() - 1).getTransactions().get(0).getTransactionExternalKey(), transactionExternalKey);
     }
 
-    @Test(groups = "slow", description = "Can create an external charge and trigger a payment")
-    public void testExternalChargeOnNewInvoiceWithAutomaticPayment() throws Exception {
-        final Account accountJson = createAccountWithPMBundleAndSubscriptionAndWaitForFirstInvoice();
-
-        // Get the invoices
-        assertEquals(accountApi.getInvoicesForAccount(accountJson.getAccountId(), true, false, false, false, AuditLevel.NONE, requestOptions).size(), 2);
-
-        // Post an external charge
-        final BigDecimal chargeAmount = BigDecimal.TEN;
-        final InvoiceItem externalCharge = new InvoiceItem();
-        externalCharge.setAccountId(accountJson.getAccountId());
-        externalCharge.setAmount(chargeAmount);
-        externalCharge.setCurrency(accountJson.getCurrency());
-        final InvoiceItems inputExternalCharges = new InvoiceItems();
-        inputExternalCharges.add(externalCharge);
-
-        final List<InvoiceItem> createdExternalCharges = invoiceApi.createExternalCharges(accountJson.getAccountId(), inputExternalCharges, clock.getUTCToday(), true, null, true, null, null, requestOptions);
-        assertEquals(createdExternalCharges.size(), 1);
-        final Invoice invoiceWithItems = invoiceApi.getInvoice(createdExternalCharges.get(0).getInvoiceId(), true, false, AuditLevel.NONE, requestOptions);
-        assertEquals(invoiceWithItems.getBalance().compareTo(BigDecimal.ZERO), 0);
-        assertEquals(invoiceWithItems.getItems().size(), 1);
-        assertNull(invoiceWithItems.getItems().get(0).getBundleId());
-
-        // Verify the total number of invoices
-        assertEquals(accountApi.getInvoicesForAccount(accountJson.getAccountId(), requestOptions).size(), 3);
-    }
 
     @Test(groups = "slow", description = "Can create an external charge for a bundle")
     public void testExternalChargeForBundleOnNewInvoice() throws Exception {
@@ -623,7 +585,7 @@ public class TestInvoice extends TestJaxrsBase {
         externalCharge.setBundleId(bundleId);
         final InvoiceItems input = new InvoiceItems();
         input.add(externalCharge);
-        final List<InvoiceItem> createdExternalCharges = invoiceApi.createExternalCharges(accountJson.getAccountId(), input, clock.getUTCToday(), false, null, true, null, null, requestOptions);
+        final List<InvoiceItem> createdExternalCharges = invoiceApi.createExternalCharges(accountJson.getAccountId(), input, clock.getUTCToday(), true, NULL_PLUGIN_PROPERTIES, requestOptions);
         assertEquals(createdExternalCharges.size(), 1);
         final Invoice invoiceWithItems = invoiceApi.getInvoice(createdExternalCharges.get(0).getInvoiceId(), true, null, AuditLevel.NONE, requestOptions);
         assertEquals(invoiceWithItems.getBalance().compareTo(chargeAmount), 0);
@@ -633,6 +595,37 @@ public class TestInvoice extends TestJaxrsBase {
         // Verify the total number of invoices
         assertEquals(accountApi.getInvoicesForAccount(accountJson.getAccountId(), requestOptions).size(), 3);
     }
+
+    @Test(groups = "slow", description = "Can create tax items for a bundle")
+    public void testAddTaxItemsOnNewInvoice() throws Exception {
+        final Account accountJson = createAccountNoPMBundleAndSubscriptionAndWaitForFirstInvoice();
+
+        // Get the invoices
+        assertEquals(accountApi.getInvoicesForAccount(accountJson.getAccountId(), true, false, false, false, AuditLevel.NONE, requestOptions).size(), 2);
+
+        // Post an external charge
+        final BigDecimal taxAmount = BigDecimal.TEN;
+        final UUID bundleId = UUID.randomUUID();
+        final InvoiceItem taxItem = new InvoiceItem();
+        taxItem.setAccountId(accountJson.getAccountId());
+        taxItem.setAmount(taxAmount);
+        taxItem.setCurrency(accountJson.getCurrency());
+        taxItem.setBundleId(bundleId);
+        final InvoiceItems input = new InvoiceItems();
+        input.add(taxItem);
+        final List<InvoiceItem> createdTaxItems = invoiceApi.createTaxItems(accountJson.getAccountId(), input, true, clock.getUTCToday(), NULL_PLUGIN_PROPERTIES, requestOptions);
+        assertEquals(createdTaxItems.size(), 1);
+        final Invoice invoiceWithItems = invoiceApi.getInvoice(createdTaxItems.get(0).getInvoiceId(), true, null, AuditLevel.NONE, requestOptions);
+        assertEquals(invoiceWithItems.getBalance().compareTo(taxAmount), 0);
+        assertEquals(invoiceWithItems.getItems().size(), 1);
+        assertEquals(invoiceWithItems.getItems().get(0).getBundleId(), bundleId);
+        assertEquals(invoiceWithItems.getItems().get(0).getItemType(), InvoiceItemType.TAX);
+
+        // Verify the total number of invoices
+        assertEquals(accountApi.getInvoicesForAccount(accountJson.getAccountId(), requestOptions).size(), 3);
+    }
+
+
 
     @Test(groups = "slow", description = "Can paginate and search through all invoices")
     public void testInvoicesPagination() throws Exception {
@@ -674,7 +667,7 @@ public class TestInvoice extends TestJaxrsBase {
         credit.setAccountId(account.getAccountId());
         credit.setInvoiceId(null);
         credit.setCreditAmount(creditAmount);
-        final Credit creditJson = creditApi.createCredit(credit, false, requestOptions);
+        final Credit creditJson = creditApi.createCredit(credit, false, NULL_PLUGIN_PROPERTIES, requestOptions);
 
         Invoice invoice = invoiceApi.getInvoice(creditJson.getInvoiceId(), requestOptions);
         Assert.assertEquals(invoice.getStatus(), InvoiceStatus.DRAFT);
@@ -733,7 +726,7 @@ public class TestInvoice extends TestJaxrsBase {
         credit.setCreditAmount(creditAmount);
 
         // insert credit to child account
-        final Credit creditJson = creditApi.createCredit(credit, true, requestOptions);
+        final Credit creditJson = creditApi.createCredit(credit, true, NULL_PLUGIN_PROPERTIES, requestOptions);
 
         Invoices childInvoices = accountApi.getInvoicesForAccount(childAccount.getAccountId(), true, false, false, false, AuditLevel.NONE, requestOptions);
         Assert.assertEquals(childInvoices.size(), 1);
@@ -831,7 +824,7 @@ public class TestInvoice extends TestJaxrsBase {
         adjustmentInvoiceItem.setInvoiceItemId(child1RecurringInvoiceItem.getInvoiceItemId());
         adjustmentInvoiceItem.setAmount(BigDecimal.TEN);
         adjustmentInvoiceItem.setCurrency(child1RecurringInvoiceItem.getCurrency());
-        final Invoice invoiceAdjustment = invoiceApi.adjustInvoiceItem(child1RecurringInvoice.getInvoiceId(), adjustmentInvoiceItem, null, requestOptions);
+        final Invoice invoiceAdjustment = invoiceApi.adjustInvoiceItem(child1RecurringInvoice.getInvoiceId(), adjustmentInvoiceItem, null, NULL_PLUGIN_PROPERTIES, requestOptions);
         final InvoiceItem child1AdjInvoiceItem = invoiceApi.getInvoice(invoiceAdjustment.getInvoiceId(), true, true, AuditLevel.NONE, requestOptions).getItems().get(1);
 
         // check parent invoice with child invoice items and adjustments

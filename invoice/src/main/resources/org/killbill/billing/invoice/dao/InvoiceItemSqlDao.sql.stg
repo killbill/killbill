@@ -76,12 +76,15 @@ getAdjustedOrRepairedInvoiceItemsByLinkedId() ::= <<
   ;
 >>
 
-updateAmount() ::= <<
+updateItemFields() ::= <<
     UPDATE <tableName()>
-    SET amount = :amount
+    SET amount = coalesce(:amount, amount),
+        description = coalesce(:description, description),
+        item_details = coalesce(:itemDetails, item_details)
     WHERE id = :id
     <AND_CHECK_TENANT("")>;
 >>
+
 
 getInvoiceItemsByParentInvoice() ::= <<
   SELECT <allTableFields(("items."))>

@@ -72,30 +72,33 @@ public class ContiguousIntervalConsumableUsageInArrear extends ContiguousInterva
     }
 
     @Override
-    protected void populateResults(final LocalDate startDate, final LocalDate endDate, final BigDecimal billedUsage, final BigDecimal toBeBilledUsage, final UsageInArrearAggregate toBeBilledUsageDetails, final boolean areAllBilledItemsWithDetails, final List<InvoiceItem> result) throws InvoiceApiException {
+    protected void populateResults(final LocalDate startDate, final LocalDate endDate, final BigDecimal billedUsage, final BigDecimal toBeBilledUsage, final UsageInArrearAggregate toBeBilledUsageDetails, final boolean areAllBilledItemsWithDetails, final boolean isPeriodPreviouslyBilled, final List<InvoiceItem> result) throws InvoiceApiException {
         // In the case past invoice items showed the details (areAllBilledItemsWithDetails=true), billed usage has already been taken into account
         // as it part of the reconciliation logic, so no need to subtract it here
         final BigDecimal amountToBill = (usage.getTierBlockPolicy() == TierBlockPolicy.ALL_TIERS && areAllBilledItemsWithDetails) ? toBeBilledUsage : toBeBilledUsage.subtract(billedUsage);
 
-        if (amountToBill.compareTo(BigDecimal.ZERO) > 0) {
-            if (UsageDetailMode.DETAIL == usageDetailMode) {
-
-                for (UsageConsumableInArrearTierUnitAggregate toBeBilledUsageDetail : ((UsageConsumableInArrearAggregate) toBeBilledUsageDetails).getTierDetails()) {
-                    final String itemDetails = toJson(toBeBilledUsageDetail);
-                    final InvoiceItem item = new UsageInvoiceItem(invoiceId, accountId, getBundleId(), getSubscriptionId(), getProductName(), getPlanName(),
-                                                                  getPhaseName(), usage.getName(), startDate, endDate, toBeBilledUsageDetail.getAmount(), toBeBilledUsageDetail.getTierPrice(), getCurrency(), toBeBilledUsageDetail.getQuantity(), itemDetails);
-                    result.add(item);
-                }
-            } else {
-                final String itemDetails = toJson(toBeBilledUsageDetails);
-                final InvoiceItem item = new UsageInvoiceItem(invoiceId, accountId, getBundleId(), getSubscriptionId(), getProductName(), getPlanName(),
-                                                              getPhaseName(), usage.getName(), startDate, endDate, amountToBill, null, getCurrency(), null, itemDetails);
-                result.add(item);
-            }
-        } else if (amountToBill.compareTo(BigDecimal.ZERO) < 0) {
+        if (amountToBill.compareTo(BigDecimal.ZERO) < 0) {
             throw new InvoiceApiException(ErrorCode.UNEXPECTED_ERROR,
                                           String.format("ILLEGAL INVOICING STATE: Usage period start='%s', end='%s', previously billed amount='%.2f', new proposed amount='%.2f'",
                                                         startDate, endDate, billedUsage, toBeBilledUsage));
+
+        } else /* amountToBill.compareTo(BigDecimal.ZERO) >= 0 */ {
+            if (!isPeriodPreviouslyBilled || amountToBill.compareTo(BigDecimal.ZERO) > 0) {
+                if (UsageDetailMode.DETAIL == usageDetailMode) {
+
+                    for (UsageConsumableInArrearTierUnitAggregate toBeBilledUsageDetail : ((UsageConsumableInArrearAggregate) toBeBilledUsageDetails).getTierDetails()) {
+                        final String itemDetails = toJson(toBeBilledUsageDetail);
+                        final InvoiceItem item = new UsageInvoiceItem(invoiceId, accountId, getBundleId(), getSubscriptionId(), getProductName(), getPlanName(),
+                                                                      getPhaseName(), usage.getName(), startDate, endDate, toBeBilledUsageDetail.getAmount(), toBeBilledUsageDetail.getTierPrice(), getCurrency(), toBeBilledUsageDetail.getQuantity(), itemDetails);
+                        result.add(item);
+                    }
+                } else {
+                    final String itemDetails = toJson(toBeBilledUsageDetails);
+                    final InvoiceItem item = new UsageInvoiceItem(invoiceId, accountId, getBundleId(), getSubscriptionId(), getProductName(), getPlanName(),
+                                                                  getPhaseName(), usage.getName(), startDate, endDate, amountToBill, null, getCurrency(), null, itemDetails);
+                    result.add(item);
+                }
+            }
         }
     }
 
@@ -204,8 +207,8 @@ public class ContiguousIntervalConsumableUsageInArrear extends ContiguousInterva
                 nbUsedTierBlocks = tmp;
                 remainingUnits = 0;
             }
-
-            if (nbUsedTierBlocks > 0) {
+            // We generate an entry if we consumed anything on this tier or if this is the first tier to also support $0 Usage item
+            if (tierNum == 1 || nbUsedTierBlocks > 0) {
                 if (hasPreviousUsage) {
                     final Integer previousUsageQuantity = tierNum <= lastPreviousUsageTier ? previousUsage.get(tierNum - 1).getQuantity() : 0;
                     if (tierNum < lastPreviousUsageTier) {
@@ -217,7 +220,7 @@ public class ContiguousIntervalConsumableUsageInArrear extends ContiguousInterva
                     }
                     nbUsedTierBlocks = nbUsedTierBlocks - previousUsageQuantity;
                 }
-                if (nbUsedTierBlocks > 0) {
+                if (tierNum == 1 || nbUsedTierBlocks > 0) {
                     toBeBilledDetails.add(new UsageConsumableInArrearTierUnitAggregate(tierNum, tieredBlock.getUnit().getName(), tieredBlock.getPrice().getPrice(getCurrency()), blockTierSize, nbUsedTierBlocks));
                 }
             }

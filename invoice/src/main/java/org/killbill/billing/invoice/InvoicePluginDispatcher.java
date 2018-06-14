@@ -76,7 +76,7 @@ public class InvoicePluginDispatcher {
         this.invoiceConfig = invoiceConfig;
     }
 
-    public DateTime priorCall(final LocalDate targetDate, final List<Invoice> existingInvoices, final boolean isDryRun, final boolean isRescheduled, final CallContext callContext, final InternalTenantContext internalTenantContext) throws InvoiceApiException {
+    public DateTime priorCall(final LocalDate targetDate, final List<Invoice> existingInvoices, final boolean isDryRun, final boolean isRescheduled, final CallContext callContext, final Iterable<PluginProperty> properties, final InternalTenantContext internalTenantContext) throws InvoiceApiException {
         log.debug("Invoking invoice plugins priorCall: targetDate='{}', isDryRun='{}', isRescheduled='{}'", targetDate, isDryRun, isRescheduled);
         final Map<String, InvoicePluginApi> invoicePlugins = getInvoicePlugins(internalTenantContext);
         if (invoicePlugins.isEmpty()) {
@@ -86,7 +86,7 @@ public class InvoicePluginDispatcher {
         DateTime earliestRescheduleDate = null;
         final InvoiceContext invoiceContext = new DefaultInvoiceContext(targetDate, null, existingInvoices, isDryRun, isRescheduled, callContext);
         for (final String invoicePluginName : invoicePlugins.keySet()) {
-            final PriorInvoiceResult priorInvoiceResult = invoicePlugins.get(invoicePluginName).priorCall(invoiceContext, ImmutableList.<PluginProperty>of());
+            final PriorInvoiceResult priorInvoiceResult = invoicePlugins.get(invoicePluginName).priorCall(invoiceContext, properties);
             log.debug("Invoice plugin {} returned priorInvoiceResult='{}'", invoicePluginName, priorInvoiceResult);
             if (priorInvoiceResult == null) {
                 // Naughty plugin...
@@ -114,9 +114,10 @@ public class InvoicePluginDispatcher {
                               final boolean isDryRun,
                               final boolean isRescheduled,
                               final CallContext callContext,
+                              final Iterable<PluginProperty> properties,
                               final InternalTenantContext internalTenantContext) {
         log.debug("Invoking invoice plugins onSuccessCall: targetDate='{}', isDryRun='{}', isRescheduled='{}', invoice='{}'", targetDate, isDryRun, isRescheduled, invoice);
-        onCompletionCall(true, targetDate, invoice, existingInvoices, isDryRun, isRescheduled, callContext, internalTenantContext);
+        onCompletionCall(true, targetDate, invoice, existingInvoices, isDryRun, isRescheduled, callContext, properties, internalTenantContext);
     }
 
     public void onFailureCall(final LocalDate targetDate,
@@ -125,9 +126,10 @@ public class InvoicePluginDispatcher {
                               final boolean isDryRun,
                               final boolean isRescheduled,
                               final CallContext callContext,
+                              final Iterable<PluginProperty> properties,
                               final InternalTenantContext internalTenantContext) {
         log.debug("Invoking invoice plugins onFailureCall: targetDate='{}', isDryRun='{}', isRescheduled='{}', invoice='{}'", targetDate, isDryRun, isRescheduled, invoice);
-        onCompletionCall(false, targetDate, invoice, existingInvoices, isDryRun, isRescheduled, callContext, internalTenantContext);
+        onCompletionCall(false, targetDate, invoice, existingInvoices, isDryRun, isRescheduled, callContext, properties, internalTenantContext);
     }
 
     private void onCompletionCall(final boolean isSuccess,
@@ -137,6 +139,7 @@ public class InvoicePluginDispatcher {
                                   final boolean isDryRun,
                                   final boolean isRescheduled,
                                   final CallContext callContext,
+                                  final Iterable<PluginProperty> properties,
                                   final InternalTenantContext internalTenantContext) {
         final Collection<InvoicePluginApi> invoicePlugins = getInvoicePlugins(internalTenantContext).values();
         if (invoicePlugins.isEmpty()) {
@@ -149,14 +152,14 @@ public class InvoicePluginDispatcher {
 
         for (final InvoicePluginApi invoicePlugin : invoicePlugins) {
             if (isSuccess) {
-                invoicePlugin.onSuccessCall(invoiceContext, ImmutableList.<PluginProperty>of());
+                invoicePlugin.onSuccessCall(invoiceContext, properties);
             } else {
-                invoicePlugin.onFailureCall(invoiceContext, ImmutableList.<PluginProperty>of());
+                invoicePlugin.onFailureCall(invoiceContext, properties);
             }
         }
     }
 
-    public boolean updateOriginalInvoiceWithPluginInvoiceItems(final DefaultInvoice originalInvoice, final boolean isDryRun, final CallContext callContext, final InternalTenantContext tenantContext) throws InvoiceApiException {
+    public boolean updateOriginalInvoiceWithPluginInvoiceItems(final DefaultInvoice originalInvoice, final boolean isDryRun, final CallContext callContext, final Iterable<PluginProperty> properties, final InternalTenantContext tenantContext) throws InvoiceApiException {
         log.debug("Invoking invoice plugins getAdditionalInvoiceItems: isDryRun='{}', originalInvoice='{}'", isDryRun, originalInvoice);
 
         final Collection<InvoicePluginApi> invoicePlugins = getInvoicePlugins(tenantContext).values();
@@ -168,7 +171,7 @@ public class InvoicePluginDispatcher {
         for (final InvoicePluginApi invoicePlugin : invoicePlugins) {
             // We clone the original invoice so plugins don't remove/add items
             final Invoice clonedInvoice = (Invoice) originalInvoice.clone();
-            final List<InvoiceItem> additionalInvoiceItemsForPlugin = invoicePlugin.getAdditionalInvoiceItems(clonedInvoice, isDryRun, ImmutableList.<PluginProperty>of(), callContext);
+            final List<InvoiceItem> additionalInvoiceItemsForPlugin = invoicePlugin.getAdditionalInvoiceItems(clonedInvoice, isDryRun, properties, callContext);
 
             if (additionalInvoiceItemsForPlugin != null && !additionalInvoiceItemsForPlugin.isEmpty()) {
                 final Collection<InvoiceItem> additionalInvoiceItems = new LinkedList<InvoiceItem>();

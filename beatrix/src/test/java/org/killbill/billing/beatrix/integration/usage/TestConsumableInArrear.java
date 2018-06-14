@@ -88,10 +88,13 @@ public class TestConsumableInArrear extends TestIntegrationBase {
                                     new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 1), new LocalDate(2013, 5, 1), InvoiceItemType.RECURRING, new BigDecimal("2399.95")),
                                     new ExpectedInvoiceItemCheck(new LocalDate(2012, 4, 1), new LocalDate(2012, 5, 1), InvoiceItemType.USAGE, new BigDecimal("5.90")));
 
-        // We don't expect any invoice
-        busHandler.pushExpectedEvents(NextEvent.NULL_INVOICE);
+        // $0 invoice
+        busHandler.pushExpectedEvents(NextEvent.INVOICE);
         clock.addMonths(1);
         assertListenerStatus();
+
+        invoiceChecker.checkInvoice(account.getId(), 3, callContext,
+                                    new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 1), new LocalDate(2012, 6, 1), InvoiceItemType.USAGE, BigDecimal.ZERO));
 
         setUsage(aoSubscription.getId(), "bullets", new LocalDate(2012, 6, 1), 50L, callContext);
         setUsage(aoSubscription.getId(), "bullets", new LocalDate(2012, 6, 16), 300L, callContext);
@@ -100,7 +103,7 @@ public class TestConsumableInArrear extends TestIntegrationBase {
         clock.addMonths(1);
         assertListenerStatus();
 
-        invoiceChecker.checkInvoice(account.getId(), 3, callContext,
+        invoiceChecker.checkInvoice(account.getId(), 4, callContext,
                                     new ExpectedInvoiceItemCheck(new LocalDate(2012, 6, 1), new LocalDate(2012, 7, 1), InvoiceItemType.USAGE, new BigDecimal("11.80")));
 
         // Should be ignored because this is outside of optimization range (org.killbill.invoice.readMaxRawUsagePreviousPeriod = 2) => we will only look for items > 2012-7-1 - 2 months = 2012-5-1
@@ -117,14 +120,14 @@ public class TestConsumableInArrear extends TestIntegrationBase {
         clock.addMonths(1);
         assertListenerStatus();
 
-        invoiceChecker.checkInvoice(account.getId(), 4, callContext,
+        invoiceChecker.checkInvoice(account.getId(), 5, callContext,
                                     new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 1), new LocalDate(2012, 6, 1), InvoiceItemType.USAGE, new BigDecimal("5.90")),
                                     new ExpectedInvoiceItemCheck(new LocalDate(2012, 7, 1), new LocalDate(2012, 8, 1), InvoiceItemType.USAGE, new BigDecimal("11.80")));
 
 
         // Add a few more month of usage data and check correctness of invoice: iterate 8 times until 2013-4-1 (prior ANNUAL renewal)
         LocalDate startDate = new LocalDate(2012, 8, 1);
-        int currentInvoice = 5;
+        int currentInvoice = 6;
         for (int i = 0; i < 8; i++) {
 
             setUsage(aoSubscription.getId(), "bullets", startDate.plusDays(15), 350L, callContext);
@@ -225,12 +228,18 @@ public class TestConsumableInArrear extends TestIntegrationBase {
         final DateTime firstExpectedCTD = account.getReferenceTime().withMonthOfYear(5).withDayOfMonth(1);
         Assert.assertEquals(subscriptionBaseInternalApiApi.getSubscriptionFromId(bpSubscription.getId(), internalCallContext).getChargedThroughDate().compareTo(firstExpectedCTD), 0);
 
-        // No usage in second month
-        busHandler.pushExpectedEvents(NextEvent.NULL_INVOICE);
+        // $0 invoice
+        busHandler.pushExpectedEvents(NextEvent.INVOICE);
         clock.addMonths(1);
         assertListenerStatus();
 
-        Assert.assertEquals(subscriptionBaseInternalApiApi.getSubscriptionFromId(bpSubscription.getId(), internalCallContext).getChargedThroughDate().compareTo(firstExpectedCTD), 0);
+
+        invoiceChecker.checkInvoice(account.getId(), 2, callContext,
+                                    new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 1), new LocalDate(2012, 6, 1), InvoiceItemType.USAGE, BigDecimal.ZERO));
+
+        final DateTime secondExpectedCTD = account.getReferenceTime().withMonthOfYear(6).withDayOfMonth(1);
+
+        Assert.assertEquals(subscriptionBaseInternalApiApi.getSubscriptionFromId(bpSubscription.getId(), internalCallContext).getChargedThroughDate().compareTo(secondExpectedCTD), 0);
 
         // Record usage for third month (verify invoicing resumes)
         setUsage(bpSubscription.getId(), "stones", new LocalDate(2012, 6, 5), 25L, callContext);
@@ -240,11 +249,11 @@ public class TestConsumableInArrear extends TestIntegrationBase {
         clock.addMonths(1);
         assertListenerStatus();
 
-        invoiceChecker.checkInvoice(account.getId(), 2, callContext,
+        invoiceChecker.checkInvoice(account.getId(), 3, callContext,
                                     new ExpectedInvoiceItemCheck(new LocalDate(2012, 6, 1), new LocalDate(2012, 7, 1), InvoiceItemType.USAGE, new BigDecimal("100")));
 
-        final DateTime secondExpectedCTD = account.getReferenceTime().withMonthOfYear(7).withDayOfMonth(1);
-        Assert.assertEquals(subscriptionBaseInternalApiApi.getSubscriptionFromId(bpSubscription.getId(), internalCallContext).getChargedThroughDate().compareTo(secondExpectedCTD), 0);
+        final DateTime thirdExpectedCTD = account.getReferenceTime().withMonthOfYear(7).withDayOfMonth(1);
+        Assert.assertEquals(subscriptionBaseInternalApiApi.getSubscriptionFromId(bpSubscription.getId(), internalCallContext).getChargedThroughDate().compareTo(thirdExpectedCTD), 0);
     }
 
     private void setUsage(final UUID subscriptionId, final String unitType, final LocalDate startDate, final Long amount, final CallContext context) throws UsageApiException {

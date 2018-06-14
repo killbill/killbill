@@ -45,6 +45,7 @@ import org.killbill.billing.invoice.dao.InvoiceModelDao;
 import org.killbill.billing.invoice.dao.InvoicePaymentModelDao;
 import org.killbill.billing.invoice.model.DefaultInvoice;
 import org.killbill.billing.invoice.model.DefaultInvoicePayment;
+import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.slf4j.Logger;
@@ -143,7 +144,7 @@ public class DefaultInvoiceInternalApi implements InvoiceInternalApi {
                 return ImmutableList.<DefaultInvoice>of(invoice);
             }
         };
-        invoiceApiHelper.dispatchToInvoicePluginsAndInsertItems(accountId, false, withAccountLock, callContext);
+        invoiceApiHelper.dispatchToInvoicePluginsAndInsertItems(accountId, false, withAccountLock, ImmutableList.<PluginProperty>of(), callContext);
         return new DefaultInvoicePayment(refund);
     }
 

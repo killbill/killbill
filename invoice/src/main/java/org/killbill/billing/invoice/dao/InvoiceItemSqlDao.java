@@ -27,9 +27,9 @@ import org.killbill.billing.invoice.api.InvoiceItem;
 import org.killbill.billing.util.audit.ChangeType;
 import org.killbill.billing.util.entity.dao.Audited;
 import org.killbill.billing.util.entity.dao.EntitySqlDao;
+import org.killbill.commons.jdbi.binder.SmartBindBean;
 import org.killbill.commons.jdbi.template.KillBillSqlDaoStringTemplate;
 import org.skife.jdbi.v2.sqlobject.Bind;
-import org.killbill.commons.jdbi.binder.SmartBindBean;
 import org.skife.jdbi.v2.sqlobject.SqlQuery;
 import org.skife.jdbi.v2.sqlobject.SqlUpdate;
 
@@ -39,7 +39,6 @@ public interface InvoiceItemSqlDao extends EntitySqlDao<InvoiceItemModelDao, Inv
     @SqlQuery
     List<InvoiceItemModelDao> getInvoiceItemsByInvoice(@Bind("invoiceId") final String invoiceId,
                                                        @SmartBindBean final InternalTenantContext context);
-
     @SqlQuery
     List<InvoiceItemModelDao> getInvoiceItemsBySubscription(@Bind("subscriptionId") final String subscriptionId,
                                                             @SmartBindBean final InternalTenantContext context);
@@ -51,9 +50,11 @@ public interface InvoiceItemSqlDao extends EntitySqlDao<InvoiceItemModelDao, Inv
 
     @SqlUpdate
     @Audited(ChangeType.UPDATE)
-    void updateAmount(@Bind("id") String invoiceItemId,
-                      @Bind("amount")BigDecimal amount,
-                      @SmartBindBean final InternalCallContext context);
+    void updateItemFields(@Bind("id") String invoiceItemId,
+                          @Bind("amount") BigDecimal amount,
+                          @Bind("description") String description,
+                          @Bind("itemDetails") String itemDetails,
+                          @SmartBindBean final InternalCallContext context);
 
     @SqlQuery
     List<InvoiceItemModelDao> getInvoiceItemsByParentInvoice(@Bind("parentInvoiceId") final String parentInvoiceId,

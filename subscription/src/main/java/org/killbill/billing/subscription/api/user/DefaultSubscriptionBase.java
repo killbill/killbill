@@ -47,6 +47,7 @@ import org.killbill.billing.catalog.api.ProductCategory;
 import org.killbill.billing.entitlement.api.Entitlement.EntitlementSourceType;
 import org.killbill.billing.entitlement.api.Entitlement.EntitlementState;
 import org.killbill.billing.entity.EntityBase;
+import org.killbill.billing.payment.api.TransactionType;
 import org.killbill.billing.subscription.api.SubscriptionBase;
 import org.killbill.billing.subscription.api.SubscriptionBaseApiService;
 import org.killbill.billing.subscription.api.SubscriptionBaseTransitionType;
@@ -580,8 +581,18 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
 
 
     public boolean isPendingChangePlan() {
-        final SubscriptionBaseTransition pendingTransition = getPendingTransition();
-        return pendingTransition != null && pendingTransition.getTransitionType() == SubscriptionBaseTransitionType.CHANGE;
+
+        final SubscriptionBaseTransitionDataIterator it = new SubscriptionBaseTransitionDataIterator(
+                clock, transitions, Order.ASC_FROM_PAST,
+                Visibility.ALL, TimeLimit.FUTURE_ONLY);
+
+        while (it.hasNext()) {
+            final SubscriptionBaseTransition next = it.next();
+            if (next.getTransitionType() == SubscriptionBaseTransitionType.CHANGE) {
+                return true;
+            }
+        }
+        return false;
     }
 
 

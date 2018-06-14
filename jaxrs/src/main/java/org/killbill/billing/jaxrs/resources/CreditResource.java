@@ -18,6 +18,7 @@
 
 package org.killbill.billing.jaxrs.resources;
 
+import java.util.List;
 import java.util.UUID;
 
 import javax.servlet.http.HttpServletRequest;
@@ -46,6 +47,7 @@ import org.killbill.billing.jaxrs.json.CreditJson;
 import org.killbill.billing.jaxrs.util.Context;
 import org.killbill.billing.jaxrs.util.JaxrsUriBuilder;
 import org.killbill.billing.payment.api.PaymentApi;
+import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.util.api.AuditUserApi;
 import org.killbill.billing.util.api.CustomFieldUserApi;
 import org.killbill.billing.util.api.TagUserApi;
@@ -109,6 +111,7 @@ public class CreditResource extends JaxRsResourceBase {
                            @ApiResponse(code = 404, message = "Account not found")})
     public Response createCredit(final CreditJson json,
                                  @QueryParam(QUERY_AUTO_COMMIT) @DefaultValue("false") final Boolean autoCommit,
+                                 @QueryParam(QUERY_PLUGIN_PROPERTY) final List<String> pluginPropertiesString,
                                  @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                  @HeaderParam(HDR_REASON) final String reason,
                                  @HeaderParam(HDR_COMMENT) final String comment,
@@ -118,6 +121,7 @@ public class CreditResource extends JaxRsResourceBase {
         verifyNonNullOrEmpty(json.getAccountId(), "CreditJson accountId needs to be set",
                              json.getCreditAmount(), "CreditJson creditAmount needs to be set");
 
+        final Iterable<PluginProperty> pluginProperties = extractPluginProperties(pluginPropertiesString);
         final CallContext callContext = context.createCallContextWithAccountId(json.getAccountId(), createdBy, reason, comment, request);
 
         final Account account = accountUserApi.getAccountById(json.getAccountId(), callContext);
@@ -127,11 +131,11 @@ public class CreditResource extends JaxRsResourceBase {
         if (json.getInvoiceId() != null) {
             // Apply an invoice level credit
             credit = invoiceUserApi.insertCreditForInvoice(account.getId(), json.getInvoiceId(), json.getCreditAmount(),
-                                                           effectiveDate, account.getCurrency(), json.getDescription(), json.getItemDetails(), callContext);
+                                                           effectiveDate, account.getCurrency(), json.getDescription(), json.getItemDetails(), pluginProperties, callContext);
         } else {
             // Apply a account level credit
             credit = invoiceUserApi.insertCredit(account.getId(), json.getCreditAmount(), effectiveDate,
-                                                 account.getCurrency(), autoCommit, json.getDescription(), json.getItemDetails(), callContext);
+                                                 account.getCurrency(), autoCommit, json.getDescription(), json.getItemDetails(), pluginProperties, callContext);
         }
 
         return uriBuilder.buildResponse(uriInfo, CreditResource.class, "getCredit", credit.getId(), request);

@@ -84,7 +84,7 @@ public class TestIntegrationInvoice extends TestIntegrationBase {
         assertTrue(accountBalance1.compareTo(new BigDecimal("249.95")) == 0);
 
         busHandler.pushExpectedEvents(NextEvent.INVOICE);
-        invoiceUserApi.insertCredit(account.getId(), new BigDecimal("300"), new LocalDate(clock.getUTCNow(), account.getTimeZone()), account.getCurrency(), true, null, null, callContext);
+        invoiceUserApi.insertCredit(account.getId(), new BigDecimal("300"), new LocalDate(clock.getUTCNow(), account.getTimeZone()), account.getCurrency(), true, null, null, null, callContext);
         assertListenerStatus();
 
         final BigDecimal accountBalance2 = invoiceUserApi.getAccountBalance(account.getId(), callContext);
@@ -145,7 +145,7 @@ public class TestIntegrationInvoice extends TestIntegrationBase {
         final List<InvoiceItem> invoiceItemList = new ArrayList<InvoiceItem>();
         ExternalChargeInvoiceItem item = new ExternalChargeInvoiceItem(null, account.getId(), subscription.getBundleId(), "", date, date, BigDecimal.TEN, account.getCurrency(), null);
         invoiceItemList.add(item);
-        final List<InvoiceItem> draftInvoiceItems = invoiceUserApi.insertExternalCharges(account.getId(), date, invoiceItemList, false, callContext);
+        final List<InvoiceItem> draftInvoiceItems = invoiceUserApi.insertExternalCharges(account.getId(), date, invoiceItemList, false, null, callContext);
 
         // add expected invoice
         final List<ExpectedInvoiceItemCheck> expectedDraftInvoices = new ArrayList<ExpectedInvoiceItemCheck>();

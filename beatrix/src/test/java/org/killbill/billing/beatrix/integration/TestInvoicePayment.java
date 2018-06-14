@@ -118,7 +118,7 @@ public class TestInvoicePayment extends TestIntegrationBase {
         Assert.assertNotNull(itemForBPEntitlement1);
 
         busHandler.pushExpectedEvents(NextEvent.INVOICE_ADJUSTMENT);
-        invoiceUserApi.insertInvoiceItemAdjustment(account.getId(), thirdInvoice.getId(), itemForBPEntitlement1.getId(), new LocalDate(2016, 10, 2), UUID.randomUUID().toString(), UUID.randomUUID().toString(), callContext);
+        invoiceUserApi.insertInvoiceItemAdjustment(account.getId(), thirdInvoice.getId(), itemForBPEntitlement1.getId(), new LocalDate(2016, 10, 2), UUID.randomUUID().toString(), UUID.randomUUID().toString(), null, callContext);
         assertListenerStatus();
 
         // Expect also payment for previous invoice
@@ -456,7 +456,7 @@ public class TestInvoicePayment extends TestIntegrationBase {
         final LocalDate startDate = clock.getUTCToday();
         final LocalDate endDate = startDate.plusDays(5);
         final InvoiceItem externalCharge = new ExternalChargeInvoiceItem(null, account.getId(), null, "Initial external charge", startDate, endDate, BigDecimal.TEN, Currency.USD, null);
-        final InvoiceItem item1 = invoiceUserApi.insertExternalCharges(account.getId(), clock.getUTCToday(), ImmutableList.<InvoiceItem>of(externalCharge), true, callContext).get(0);
+        final InvoiceItem item1 = invoiceUserApi.insertExternalCharges(account.getId(), clock.getUTCToday(), ImmutableList.<InvoiceItem>of(externalCharge), true, null, callContext).get(0);
         assertListenerStatus();
         // Verify service period for external charge -- seee #151
         assertEquals(item1.getStartDate().compareTo(startDate), 0);

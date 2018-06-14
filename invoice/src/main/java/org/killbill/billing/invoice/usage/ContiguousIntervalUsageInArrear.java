@@ -170,19 +170,6 @@ public abstract class ContiguousIntervalUsageInArrear {
         }
 
         final List<InvoiceItem> result = Lists.newLinkedList();
-
-        // We start by generating 'marker' USAGE items with $0 that will allow to correctly insert the next notification for when there is no USAGE to bill.
-        // Those will be removed by the invoicing code later so as to not end up with superfluous $0 items
-        LocalDate prevDate = null;
-        for (final LocalDate curDate : transitionTimes) {
-            if (prevDate != null) {
-                final InvoiceItem item = new UsageInvoiceItem(invoiceId, accountId, getBundleId(), getSubscriptionId(), getProductName(), getPlanName(),
-                                                              getPhaseName(), usage.getName(), prevDate, curDate, BigDecimal.ZERO, getCurrency());
-                result.add(item);
-            }
-            prevDate = curDate;
-        }
-
         final List<RolledUpUsage> allUsage = getRolledUpUsage();
         // Each RolledUpUsage 'ru' is for a specific time period and across all units
         for (final RolledUpUsage ru : allUsage) {
@@ -194,20 +181,22 @@ public abstract class ContiguousIntervalUsageInArrear {
             final Iterable<InvoiceItem> billedItems = getBilledItems(ru.getStart(), ru.getEnd(), existingUsage);
             // 2. Verify whether previously built items have the item_details section
             final boolean areAllBilledItemsWithDetails = areAllBilledItemsWithDetails(billedItems);
-            // 3. Computes total billed usage amount
+            // 3. verify if we already billed that period - use to decide whether we should include $0 items when there is nothing to bill for.
+            final boolean isPeriodPreviouslyBilled = !Iterables.isEmpty(billedItems);
+            // 4. Computes total billed usage amount
             final BigDecimal billedUsage = computeBilledUsage(billedItems);
 
             final List<RolledUpUnit> rolledUpUnits = ru.getRolledUpUnits();
 
             final UsageInArrearAggregate toBeBilledUsageDetails = getToBeBilledUsageDetails(rolledUpUnits, billedItems, areAllBilledItemsWithDetails);
             final BigDecimal toBeBilledUsage = toBeBilledUsageDetails.getAmount();
-            populateResults(ru.getStart(), ru.getEnd(), billedUsage, toBeBilledUsage, toBeBilledUsageDetails, areAllBilledItemsWithDetails, result);
+            populateResults(ru.getStart(), ru.getEnd(), billedUsage, toBeBilledUsage, toBeBilledUsageDetails, areAllBilledItemsWithDetails, isPeriodPreviouslyBilled, result);
         }
         final LocalDate nextNotificationDate = computeNextNotificationDate();
         return new UsageInArrearItemsAndNextNotificationDate(result, nextNotificationDate);
     }
 
-    protected abstract void populateResults(final LocalDate startDate, final LocalDate endDate, final BigDecimal billedUsage, final BigDecimal toBeBilledUsage, final UsageInArrearAggregate toBeBilledUsageDetails, final boolean areAllBilledItemsWithDetails, final List<InvoiceItem> result) throws InvoiceApiException;
+    protected abstract void populateResults(final LocalDate startDate, final LocalDate endDate, final BigDecimal billedUsage, final BigDecimal toBeBilledUsage, final UsageInArrearAggregate toBeBilledUsageDetails, final boolean areAllBilledItemsWithDetails, final boolean isPeriodPreviouslyBilled, final List<InvoiceItem> result) throws InvoiceApiException;
 
     protected abstract UsageInArrearAggregate getToBeBilledUsageDetails(final List<RolledUpUnit> rolledUpUnits, final Iterable<InvoiceItem> billedItems, final boolean areAllBilledItemsWithDetails) throws CatalogApiException;
 
@@ -272,16 +261,19 @@ public abstract class ContiguousIntervalUsageInArrear {
 
         //
         // Loop through each interval [prevDate, curDate) and consume as many rawSubscriptionUsage elements within that range
-        // to create one RolledUpUsage per interval. If an interval does not have any rawSubscriptionUsage element, there will be no
-        // matching RolledUpUsage for that interval, and we'll detect that in the 'computeMissingItems' logic
+        // to create one RolledUpUsage per interval.
         //
         LocalDate prevDate = null;
         for (final LocalDate curDate : transitionTimes) {
 
             if (prevDate != null) {
 
-                // Allocate new perRangeUnitToAmount for this interval and populate with rawSubscriptionUsage items
+                // Allocate and initialize new perRangeUnitToAmount for this interval and populate with rawSubscriptionUsage items
                 final Map<String, Long> perRangeUnitToAmount = new HashMap<String, Long>();
+                for (String unitType : unitTypes) {
+                    perRangeUnitToAmount.put(unitType, 0L);
+                }
+
 
                 // Start consuming prevRawUsage element if it exists and falls into the range
                 if (prevRawUsage != null) {
