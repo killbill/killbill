@@ -66,9 +66,10 @@ public class TestPublicBus extends TestIntegrationBase {
 
     @Override
     protected KillbillConfigSource getConfigSource() {
-        final ImmutableMap<String, String> additionalProperties = new ImmutableMap.Builder<String, String>().put("org.killbill.billing.util.broadcast.rate", "500ms")
-                                                                                                            .build();
-        return getConfigSource("/beatrix.properties", additionalProperties);
+        return getConfigSource(null, new ImmutableMap.Builder()
+                .putAll(DEFAULT_BEATRIX_PROPERTIES)
+                .put("org.killbill.billing.util.broadcast.rate", "500ms")
+                .build());
     }
 
     @Override
