@@ -548,7 +548,7 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
                                                                       // Note! The amount is negated here!
                                                                       inputItem.getAmount().negate(),
                                                                       accountCurrency,
-                                                                      inputItem.getDescription());
+                                                                      inputItem.getItemDetails());
 
                             break;
                         case TAX:
