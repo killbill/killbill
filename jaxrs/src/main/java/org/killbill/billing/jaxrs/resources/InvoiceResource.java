@@ -701,7 +701,7 @@ public class InvoiceResource extends JaxRsResourceBase {
         final InvoicePayment result = createPurchaseForInvoice(account, invoiceId, payment.getPurchasedAmount(), paymentMethodId, externalPayment,
                                                                payment.getPaymentExternalKey(), null, pluginProperties, callContext);
         return result != null ?
-               uriBuilder.buildResponse(uriInfo, InvoicePaymentResource.class, "getInvoicePayment", result.getId(), request) :
+               uriBuilder.buildResponse(uriInfo, InvoicePaymentResource.class, "getInvoicePayment", result.getPaymentId(), request) :
                Response.status(Status.NO_CONTENT).build();
     }
 

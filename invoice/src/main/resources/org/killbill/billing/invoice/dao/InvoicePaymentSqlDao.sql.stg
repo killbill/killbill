@@ -73,6 +73,14 @@ getAllPaymentsForInvoiceIncludedInit() ::= <<
 >>
 
 
+getInvoicePaymentsByPaymentCookieId() ::= <<
+  SELECT <allTableFields("")>
+  FROM <tableName()>
+  WHERE payment_cookie_id = :paymentCookieId
+  <AND_CHECK_TENANT("")>
+  <defaultOrderBy("")>
+  ;
+>>
 
 getInvoicePayments() ::= <<
     SELECT <allTableFields("")>

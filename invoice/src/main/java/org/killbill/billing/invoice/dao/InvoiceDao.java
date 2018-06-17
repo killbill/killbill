@@ -64,6 +64,8 @@ public interface InvoiceDao extends EntityDao<InvoiceModelDao, Invoice, InvoiceA
 
     List<InvoicePaymentModelDao> getInvoicePaymentsByAccount(InternalTenantContext context);
 
+    List<InvoicePaymentModelDao> getInvoicePaymentsByCookieId(String cookieId, InternalTenantContext internalTenantContext);
+
     BigDecimal getAccountBalance(UUID accountId, InternalTenantContext context);
 
     BigDecimal getAccountCBA(UUID accountId, InternalTenantContext context);
@@ -173,7 +175,6 @@ public interface InvoiceDao extends EntityDao<InvoiceModelDao, Invoice, InvoiceA
      * @throws InvoiceApiException if any unexpected error occurs
      */
     List<InvoiceParentChildModelDao> getChildInvoicesByParentInvoiceId(UUID parentInvoiceId, final InternalCallContext context) throws InvoiceApiException;
-
 
     /**
      * Retrieve parent invoice by the parent account id

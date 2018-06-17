@@ -26,12 +26,16 @@ import org.killbill.billing.util.callcontext.UserType;
 
 public class MutableCallContext implements CallContext {
 
-    private final CallContext delegate;
+    private CallContext delegate;
     private DateTime createdDate;
 
     public MutableCallContext(final MutableInternalCallContext internalCallContext) {
         this.delegate = internalCallContext.toCallContext(null, null);
         this.createdDate = delegate.getCreatedDate();
+    }
+
+    public void setDelegate(final UUID accountId, final MutableInternalCallContext internalCallContext) {
+        this.delegate = internalCallContext.toCallContext(accountId, null);
     }
 
     @Override

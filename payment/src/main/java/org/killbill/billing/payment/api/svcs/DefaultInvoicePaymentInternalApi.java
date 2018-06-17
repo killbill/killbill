@@ -47,7 +47,6 @@ import org.killbill.billing.util.config.definition.PaymentConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.MoreObjects;
 import com.google.inject.Inject;
 
 import static org.killbill.billing.payment.logging.PaymentLoggingHelper.logEnterAPICall;
@@ -147,15 +146,11 @@ public class DefaultInvoicePaymentInternalApi extends DefaultApiBase implements 
                            exception);
         }
 
-        return paymentTransaction != null ? getInvoicePayment(payment.getId(), paymentTransaction.getExternalKey(), callContext) : null;
+        return paymentTransaction != null ? getInvoicePayment(paymentTransaction.getExternalKey(), callContext) : null;
     }
 
-    private InvoicePayment getInvoicePayment(final UUID paymentId, final String paymentTransactionExternalKey, final TenantContext context) {
-        for (final InvoicePayment invoicePayment : invoiceInternalApi.getInvoicePayments(paymentId, context)) {
-            if (invoicePayment.getPaymentCookieId().compareTo(paymentTransactionExternalKey) == 0) {
-                return invoicePayment;
-            }
-        }
-        return null;
+    private InvoicePayment getInvoicePayment(final String paymentTransactionExternalKey, final TenantContext context) {
+        final List<InvoicePayment> invoicePayments = invoiceInternalApi.getInvoicePaymentsByCookieId(paymentTransactionExternalKey, context);
+        return invoicePayments.isEmpty() ? null : invoicePayments.get(invoicePayments.size() - 1);
     }
 }

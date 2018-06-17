@@ -30,6 +30,7 @@ import org.killbill.billing.account.api.AccountUserApi;
 import org.killbill.billing.account.api.ImmutableAccountInternalApi;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
+import org.killbill.billing.callcontext.MutableCallContext;
 import org.killbill.billing.callcontext.MutableInternalCallContext;
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.events.InvoiceCreationInternalEvent;
@@ -148,14 +149,16 @@ public class TestPaymentHelper {
         Mockito.when(accountData.getCreatedDate()).thenReturn(clock.getUTCNow());
         Mockito.when(accountData.getReferenceTime()).thenReturn(clock.getUTCNow());
 
+        final MutableCallContext mutableCallContext = new MutableCallContext(internalCallContext);
+
         Account account;
         if (isFastTest()) {
-            account = GuicyKillbillTestSuiteNoDB.createMockAccount(accountData, accountApi, accountInternalApi, immutableAccountInternalApi, nonEntityDao, clock, internalCallContextFactory, context, internalCallContext);
+            account = GuicyKillbillTestSuiteNoDB.createMockAccount(accountData, accountApi, accountInternalApi, immutableAccountInternalApi, nonEntityDao, clock, internalCallContextFactory, mutableCallContext, internalCallContext);
         } else {
             account = accountApi.createAccount(accountData, context);
         }
 
-        GuicyKillbillTestSuite.refreshCallContext(account.getId(), clock, internalCallContextFactory, context, internalCallContext);
+        GuicyKillbillTestSuite.refreshCallContext(account.getId(), clock, internalCallContextFactory, mutableCallContext, internalCallContext);
 
         if (addPaymentMethod) {
             final PaymentMethodPlugin pm = new DefaultNoOpPaymentMethodPlugin(UUID.randomUUID().toString(), true, null);

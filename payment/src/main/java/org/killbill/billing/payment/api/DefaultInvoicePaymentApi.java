@@ -101,17 +101,17 @@ public class DefaultInvoicePaymentApi implements InvoicePaymentApi {
         final Collection<PluginProperty> pluginProperties = preparePluginPropertiesForRefundOrCredit(isAdjusted, adjustments, originalProperties);
         final String paymentTransactionExternalKey = MoreObjects.firstNonNull(originalPaymentTransactionExternalKey, UUIDs.randomUUID().toString());
 
-        final Payment payment = paymentApi.createRefundWithPaymentControl(account,
-                                                                          paymentId,
-                                                                          amount,
-                                                                          currency,
-                                                                          effectiveDate,
-                                                                          paymentTransactionExternalKey,
-                                                                          pluginProperties,
-                                                                          InvoicePaymentPaymentOptions.create(paymentOptions),
-                                                                          context);
+        paymentApi.createRefundWithPaymentControl(account,
+                                                  paymentId,
+                                                  amount,
+                                                  currency,
+                                                  effectiveDate,
+                                                  paymentTransactionExternalKey,
+                                                  pluginProperties,
+                                                  InvoicePaymentPaymentOptions.create(paymentOptions),
+                                                  context);
 
-        return getInvoicePayment(payment.getId(), paymentTransactionExternalKey, context);
+        return getInvoicePayment(paymentTransactionExternalKey, context);
     }
 
     @Override
@@ -134,19 +134,19 @@ public class DefaultInvoicePaymentApi implements InvoicePaymentApi {
 
         final String paymentTransactionExternalKey = MoreObjects.firstNonNull(originalPaymentTransactionExternalKey, UUIDs.randomUUID().toString());
 
-        final Payment payment = paymentApi.createCreditWithPaymentControl(account,
-                                                                          paymentMethodId,
-                                                                          paymentId,
-                                                                          amount,
-                                                                          currency,
-                                                                          effectiveDate,
-                                                                          paymentExternalKey,
-                                                                          paymentTransactionExternalKey,
-                                                                          pluginProperties,
-                                                                          InvoicePaymentPaymentOptions.create(paymentOptions),
-                                                                          context);
+        paymentApi.createCreditWithPaymentControl(account,
+                                                  paymentMethodId,
+                                                  paymentId,
+                                                  amount,
+                                                  currency,
+                                                  effectiveDate,
+                                                  paymentExternalKey,
+                                                  paymentTransactionExternalKey,
+                                                  pluginProperties,
+                                                  InvoicePaymentPaymentOptions.create(paymentOptions),
+                                                  context);
 
-        return getInvoicePayment(payment.getId(), paymentTransactionExternalKey, context);
+        return getInvoicePayment(paymentTransactionExternalKey, context);
     }
 
     @Override
@@ -175,12 +175,8 @@ public class DefaultInvoicePaymentApi implements InvoicePaymentApi {
         return pluginProperties;
     }
 
-    private InvoicePayment getInvoicePayment(final UUID paymentId, final String paymentTransactionExternalKey, final TenantContext context) {
-        for (final InvoicePayment invoicePayment : getInvoicePayments(paymentId, context)) {
-            if (invoicePayment.getPaymentCookieId().compareTo(paymentTransactionExternalKey) == 0) {
-                return invoicePayment;
-            }
-        }
-        return null;
+    private InvoicePayment getInvoicePayment(final String paymentTransactionExternalKey, final TenantContext context) {
+        final List<InvoicePayment> invoicePayments = invoiceInternalApi.getInvoicePaymentsByCookieId(paymentTransactionExternalKey, context);
+        return invoicePayments.isEmpty() ? null : invoicePayments.get(invoicePayments.size() - 1);
     }
 }
