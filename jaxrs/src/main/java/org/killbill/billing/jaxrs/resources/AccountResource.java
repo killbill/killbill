@@ -693,7 +693,7 @@ public class AccountResource extends JaxRsResourceBase {
                                                   @HeaderParam(HDR_COMMENT) final String comment,
                                                   @javax.ws.rs.core.Context final HttpServletRequest request) throws AccountApiException {
         final CallContext callContext = context.createCallContextWithAccountId(accountId, createdBy, reason, comment, request);
-        invoiceApi.consumeExstingCBAOnAccountWithUnpaidInvoices(accountId, callContext);
+        invoiceApi.consumeExistingCBAOnAccountWithUnpaidInvoices(accountId, callContext);
         return Response.status(Status.NO_CONTENT).build();
     }
 

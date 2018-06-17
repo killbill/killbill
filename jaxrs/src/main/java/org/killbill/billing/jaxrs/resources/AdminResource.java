@@ -289,7 +289,7 @@ public class AdminResource extends JaxRsResourceBase {
                         final Tag tag = iterator.next();
                         final UUID accountId = tag.getObjectId();
                         try {
-                            invoiceUserApi.triggerInvoiceGeneration(accountId, clock.getUTCToday(), null, callContext);
+                            invoiceUserApi.triggerInvoiceGeneration(accountId, clock.getUTCToday(), callContext);
                             generator.writeStringField(accountId.toString(), OK);
                         } catch (final InvoiceApiException e) {
                             if (e.getCode() != ErrorCode.INVOICE_NOTHING_TO_DO.getCode()) {
