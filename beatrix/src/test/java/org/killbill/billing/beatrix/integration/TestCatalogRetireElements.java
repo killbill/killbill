@@ -40,6 +40,7 @@ import org.killbill.billing.platform.api.KillbillConfigSource;
 import org.testng.annotations.Test;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
@@ -50,7 +51,7 @@ public class TestCatalogRetireElements extends TestIntegrationBase {
 
     @Override
     protected KillbillConfigSource getConfigSource() {
-        return super.getConfigSource("/beatrixCatalogRetireElements.properties");
+        return super.getConfigSource(null, ImmutableMap.of("org.killbill.catalog.uri", "catalogs/testCatalogRetireElements"));
     }
 
     @Test(groups = "slow")

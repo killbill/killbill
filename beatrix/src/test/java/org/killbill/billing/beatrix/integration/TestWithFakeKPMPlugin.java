@@ -95,10 +95,10 @@ public class TestWithFakeKPMPlugin extends TestIntegrationBase {
 
     @Override
     protected KillbillConfigSource getConfigSource() {
-        ImmutableMap additionalProperties = new ImmutableMap.Builder()
+        return getConfigSource(null, new ImmutableMap.Builder()
+                .putAll(DEFAULT_BEATRIX_PROPERTIES)
                 .put("org.killbill.billing.util.broadcast.rate", "100ms")
-                .build();
-        return getConfigSource("/beatrix.properties", additionalProperties);
+                .build());
     }
 
     public class FakeKPMPlugin {

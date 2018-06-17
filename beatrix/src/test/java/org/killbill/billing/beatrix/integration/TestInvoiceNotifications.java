@@ -39,10 +39,11 @@ public class TestInvoiceNotifications extends TestIntegrationBase {
 
     @Override
     protected KillbillConfigSource getConfigSource() {
-        ImmutableMap additionalProperties = new ImmutableMap.Builder()
+
+        return getConfigSource(null, new ImmutableMap.Builder()
+                .putAll(DEFAULT_BEATRIX_PROPERTIES)
                 .put("org.killbill.invoice.dryRunNotificationSchedule", "7d")
-                .build();
-        return getConfigSource("/beatrix.properties", additionalProperties);
+                .build());
     }
 
     @Test(groups = "slow")
