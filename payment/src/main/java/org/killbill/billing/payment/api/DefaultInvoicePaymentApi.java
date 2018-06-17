@@ -29,9 +29,10 @@ import org.killbill.billing.account.api.Account;
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.invoice.api.InvoiceInternalApi;
 import org.killbill.billing.invoice.api.InvoicePayment;
-import org.killbill.billing.payment.invoice.InvoicePaymentControlPluginApi;
+import org.killbill.billing.payment.api.svcs.InvoicePaymentPaymentOptions;
 import org.killbill.billing.util.UUIDs;
 import org.killbill.billing.util.callcontext.CallContext;
+import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.billing.util.callcontext.TenantContext;
 
 import com.google.common.base.MoreObjects;
@@ -41,11 +42,18 @@ public class DefaultInvoicePaymentApi implements InvoicePaymentApi {
 
     private final PaymentApi paymentApi;
     private final InvoiceInternalApi invoiceInternalApi;
+    private final InvoicePaymentInternalApi invoicePaymentInternalApi;
+    private final InternalCallContextFactory internalCallContextFactory;
 
     @Inject
-    public DefaultInvoicePaymentApi(final PaymentApi paymentApi, final InvoiceInternalApi invoiceInternalApi) {
+    public DefaultInvoicePaymentApi(final PaymentApi paymentApi,
+                                    final InvoiceInternalApi invoiceInternalApi,
+                                    final InvoicePaymentInternalApi invoicePaymentInternalApi,
+                                    final InternalCallContextFactory internalCallContextFactory) {
         this.paymentApi = paymentApi;
         this.invoiceInternalApi = invoiceInternalApi;
+        this.invoicePaymentInternalApi = invoicePaymentInternalApi;
+        this.internalCallContextFactory = internalCallContextFactory;
     }
 
     @Override
@@ -57,32 +65,23 @@ public class DefaultInvoicePaymentApi implements InvoicePaymentApi {
                                                    final Currency currency,
                                                    final DateTime effectiveDate,
                                                    final String paymentExternalKey,
-                                                   final String originalPaymentTransactionExternalKey,
-                                                   final Iterable<PluginProperty> originalProperties,
+                                                   final String paymentTransactionExternalKey,
+                                                   final Iterable<PluginProperty> properties,
                                                    final PaymentOptions paymentOptions,
                                                    final CallContext context) throws PaymentApiException {
-        final Collection<PluginProperty> pluginProperties = new LinkedList<PluginProperty>();
-        if (originalProperties != null) {
-            for (final PluginProperty pluginProperty : originalProperties) {
-                pluginProperties.add(pluginProperty);
-            }
-        }
-        pluginProperties.add(new PluginProperty("IPCD_INVOICE_ID", invoiceId.toString(), false));
-
-        final String paymentTransactionExternalKey = MoreObjects.firstNonNull(originalPaymentTransactionExternalKey, UUIDs.randomUUID().toString());
-        final Payment payment = paymentApi.createPurchaseWithPaymentControl(account,
-                                                                            paymentMethodId,
-                                                                            null,
-                                                                            amount,
-                                                                            currency,
-                                                                            null,
-                                                                            paymentExternalKey,
-                                                                            paymentTransactionExternalKey,
-                                                                            pluginProperties,
-                                                                            buildPaymentOptions(paymentOptions),
-                                                                            context);
-
-        return getInvoicePayment(payment.getId(), paymentTransactionExternalKey, context);
+        return invoicePaymentInternalApi.createPurchaseForInvoice(true,
+                                                                  account,
+                                                                  invoiceId,
+                                                                  paymentMethodId,
+                                                                  paymentId,
+                                                                  amount,
+                                                                  currency,
+                                                                  effectiveDate,
+                                                                  paymentExternalKey,
+                                                                  paymentTransactionExternalKey,
+                                                                  properties,
+                                                                  paymentOptions,
+                                                                  internalCallContextFactory.createInternalCallContext(account.getId(), context));
     }
 
     @Override
@@ -107,7 +106,7 @@ public class DefaultInvoicePaymentApi implements InvoicePaymentApi {
                                                                           effectiveDate,
                                                                           paymentTransactionExternalKey,
                                                                           pluginProperties,
-                                                                          buildPaymentOptions(paymentOptions),
+                                                                          InvoicePaymentPaymentOptions.create(paymentOptions),
                                                                           context);
 
         return getInvoicePayment(payment.getId(), paymentTransactionExternalKey, context);
@@ -142,7 +141,7 @@ public class DefaultInvoicePaymentApi implements InvoicePaymentApi {
                                                                           paymentExternalKey,
                                                                           paymentTransactionExternalKey,
                                                                           pluginProperties,
-                                                                          buildPaymentOptions(paymentOptions),
+                                                                          InvoicePaymentPaymentOptions.create(paymentOptions),
                                                                           context);
 
         return getInvoicePayment(payment.getId(), paymentTransactionExternalKey, context);
@@ -179,45 +178,5 @@ public class DefaultInvoicePaymentApi implements InvoicePaymentApi {
             }
         }
         return null;
-    }
-
-    private PaymentOptions buildPaymentOptions(final PaymentOptions paymentOptions) {
-        final List<String> paymentControlPluginNames = new LinkedList<String>();
-        paymentControlPluginNames.addAll(paymentOptions.getPaymentControlPluginNames());
-        if (!paymentControlPluginNames.contains(InvoicePaymentControlPluginApi.PLUGIN_NAME)) {
-            paymentControlPluginNames.add(InvoicePaymentControlPluginApi.PLUGIN_NAME);
-        }
-
-        return new InvoicePaymentPaymentOptions(paymentOptions.isExternalPayment(), paymentControlPluginNames);
-    }
-
-    private static final class InvoicePaymentPaymentOptions implements PaymentOptions {
-
-        private final boolean isExternalPayment;
-        private final List<String> paymentControlPluginNames;
-
-        public InvoicePaymentPaymentOptions(final boolean isExternalPayment, final List<String> getPaymentControlPluginNames) {
-            this.isExternalPayment = isExternalPayment;
-            this.paymentControlPluginNames = getPaymentControlPluginNames;
-        }
-
-        @Override
-        public boolean isExternalPayment() {
-            return isExternalPayment;
-        }
-
-        @Override
-        public List<String> getPaymentControlPluginNames() {
-            return paymentControlPluginNames;
-        }
-
-        @Override
-        public String toString() {
-            final StringBuilder sb = new StringBuilder("InvoicePaymentPaymentOptions{");
-            sb.append("isExternalPayment=").append(isExternalPayment);
-            sb.append(", paymentControlPluginNames=").append(paymentControlPluginNames);
-            sb.append('}');
-            return sb.toString();
-        }
     }
 }

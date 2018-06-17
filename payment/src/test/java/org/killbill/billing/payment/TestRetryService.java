@@ -19,7 +19,6 @@
 package org.killbill.billing.payment;
 
 import java.math.BigDecimal;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
@@ -36,7 +35,6 @@ import org.killbill.billing.payment.api.PaymentApiException;
 import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.payment.dao.PaymentAttemptModelDao;
 import org.killbill.billing.payment.dao.PaymentTransactionModelDao;
-import org.killbill.billing.payment.invoice.InvoicePaymentControlPluginApi;
 import org.killbill.billing.payment.provider.MockPaymentProviderPlugin;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
@@ -55,6 +53,7 @@ import static org.testng.Assert.assertTrue;
 public class TestRetryService extends PaymentTestSuiteNoDB {
 
     private static final int TIMEOUT = 10;
+    private static final ImmutableList<PluginProperty> NO_PROPERTIES = ImmutableList.<PluginProperty>of();
 
     private MockPaymentProviderPlugin mockPaymentProviderPlugin;
 
@@ -128,7 +127,7 @@ public class TestRetryService extends PaymentTestSuiteNoDB {
                                                        null,
                                                        paymentExternalKey,
                                                        transactionExternalKey,
-                                                       ImmutableList.<PluginProperty>of(),
+                                                       NO_PROPERTIES,
                                                        PAYMENT_OPTIONS,
                                                        callContext);
         } catch (final PaymentApiException e) {
@@ -183,7 +182,7 @@ public class TestRetryService extends PaymentTestSuiteNoDB {
                                                    null,
                                                    paymentExternalKey,
                                                    transactionExternalKey,
-                                                   ImmutableList.<PluginProperty>of(),
+                                                   NO_PROPERTIES,
                                                    PAYMENT_OPTIONS,
                                                    callContext);
 
@@ -266,7 +265,7 @@ public class TestRetryService extends PaymentTestSuiteNoDB {
                                                    null,
                                                    paymentExternalKey,
                                                    transactionExternalKey,
-                                                   ImmutableList.<PluginProperty>of(),
+                                                   NO_PROPERTIES,
                                                    PAYMENT_OPTIONS,
                                                    callContext);
 
@@ -359,7 +358,7 @@ public class TestRetryService extends PaymentTestSuiteNoDB {
                                                    null,
                                                    paymentExternalKey,
                                                    transactionExternalKey,
-                                                   ImmutableList.<PluginProperty>of(),
+                                                   NO_PROPERTIES,
                                                    PAYMENT_OPTIONS,
                                                    callContext);
 

@@ -29,12 +29,11 @@ import org.killbill.billing.account.api.AccountInternalApi;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.events.InvoiceCreationInternalEvent;
 import org.killbill.billing.events.PaymentInternalEvent;
-import org.killbill.billing.payment.api.InvoicePaymentApi;
+import org.killbill.billing.payment.api.InvoicePaymentInternalApi;
 import org.killbill.billing.payment.api.PaymentApiException;
 import org.killbill.billing.payment.api.PaymentOptions;
 import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.payment.core.janitor.Janitor;
-import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.CallOrigin;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.billing.util.callcontext.UserType;
@@ -52,7 +51,7 @@ public class PaymentBusEventHandler {
     private static final Logger log = LoggerFactory.getLogger(PaymentBusEventHandler.class);
 
     private final AccountInternalApi accountApi;
-    private final InvoicePaymentApi invoicePaymentApi;
+    private final InvoicePaymentInternalApi invoicePaymentInternalApi;
     private final InternalCallContextFactory internalCallContextFactory;
     private final PaymentConfig paymentConfig;
     private final Janitor janitor;
@@ -60,12 +59,12 @@ public class PaymentBusEventHandler {
     @Inject
     public PaymentBusEventHandler(final PaymentConfig paymentConfig,
                                   final AccountInternalApi accountApi,
-                                  final InvoicePaymentApi invoicePaymentApi,
+                                  final InvoicePaymentInternalApi invoicePaymentInternalApi,
                                   final Janitor janitor,
                                   final InternalCallContextFactory internalCallContextFactory) {
         this.paymentConfig = paymentConfig;
         this.accountApi = accountApi;
-        this.invoicePaymentApi = invoicePaymentApi;
+        this.invoicePaymentInternalApi = invoicePaymentInternalApi;
         this.janitor = janitor;
         this.internalCallContextFactory = internalCallContextFactory;
     }
@@ -82,37 +81,37 @@ public class PaymentBusEventHandler {
         log.info("Received invoice creation notification for accountId='{}', invoiceId='{}'", event.getAccountId(), event.getInvoiceId());
 
         final InternalCallContext internalContext = internalCallContextFactory.createInternalCallContext(event.getSearchKey2(), event.getSearchKey1(), "PaymentRequestProcessor", CallOrigin.INTERNAL, UserType.SYSTEM, event.getUserToken());
-        final CallContext callContext = internalCallContextFactory.createCallContext(internalContext);
 
         final BigDecimal amountToBePaid = null; // We let the plugin compute how much should be paid
         final List<String> paymentControlPluginNames = paymentConfig.getPaymentControlPluginNames(internalContext) != null ? new LinkedList<String>(paymentConfig.getPaymentControlPluginNames(internalContext)) : new LinkedList<String>();
 
-        Account account;
+        final Account account;
         try {
             account = accountApi.getAccountById(event.getAccountId(), internalContext);
 
-            invoicePaymentApi.createPurchaseForInvoice(account,
-                                                       event.getInvoiceId(),
-                                                       account.getPaymentMethodId(),
-                                                       null,
-                                                       amountToBePaid,
-                                                       account.getCurrency(),
-                                                       null,
-                                                       null,
-                                                       null,
-                                                       ImmutableList.<PluginProperty>of(),
-                                                       new PaymentOptions() {
-                                                           @Override
-                                                           public boolean isExternalPayment() {
-                                                               return false;
-                                                           }
+            invoicePaymentInternalApi.createPurchaseForInvoice(false,
+                                                               account,
+                                                               event.getInvoiceId(),
+                                                               account.getPaymentMethodId(),
+                                                               null,
+                                                               amountToBePaid,
+                                                               account.getCurrency(),
+                                                               null,
+                                                               null,
+                                                               null,
+                                                               ImmutableList.<PluginProperty>of(),
+                                                               new PaymentOptions() {
+                                                                   @Override
+                                                                   public boolean isExternalPayment() {
+                                                                       return false;
+                                                                   }
 
-                                                           @Override
-                                                           public List<String> getPaymentControlPluginNames() {
-                                                               return paymentControlPluginNames;
-                                                           }
-                                                       },
-                                                       callContext);
+                                                                   @Override
+                                                                   public List<String> getPaymentControlPluginNames() {
+                                                                       return paymentControlPluginNames;
+                                                                   }
+                                                               },
+                                                               internalContext);
         } catch (final AccountApiException e) {
             log.warn("Failed to process invoice payment", e);
         } catch (final PaymentApiException e) {
