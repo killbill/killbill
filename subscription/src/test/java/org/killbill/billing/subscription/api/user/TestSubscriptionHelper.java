@@ -93,7 +93,7 @@ public class TestSubscriptionHelper {
         this.internalCallContextFactory = internalCallContextFactory;
     }
 
-    public DryRunArguments createDryRunArguments(final UUID subscriptionId, final UUID bundleId, final PlanPhaseSpecifier spec, final LocalDate requestedDate, final SubscriptionEventType type, final BillingActionPolicy billingActionPolicy) {
+    public DryRunArguments createDryRunArguments(final UUID subscriptionId, final UUID bundleId, final EntitlementSpecifier spec, final LocalDate requestedDate, final SubscriptionEventType type, final BillingActionPolicy billingActionPolicy) {
         return new DryRunArguments() {
             @Override
             public DryRunType getDryRunType() {
@@ -101,7 +101,7 @@ public class TestSubscriptionHelper {
             }
 
             @Override
-            public PlanPhaseSpecifier getPlanPhaseSpecifier() {
+            public EntitlementSpecifier getEntitlementSpecifier() {
                 return spec;
             }
 
@@ -130,10 +130,6 @@ public class TestSubscriptionHelper {
                 return billingActionPolicy;
             }
 
-            @Override
-            public List<PlanPhasePriceOverride> getPlanPhasePriceOverrides() {
-                return null;
-            }
         };
     }
 
@@ -183,6 +179,11 @@ public class TestSubscriptionHelper {
             @Override
             public PlanPhaseSpecifier getPlanPhaseSpecifier() {
                 return new PlanPhaseSpecifier(productName, term, planSet, phaseType);
+            }
+
+            @Override
+            public Integer getBillCycleDay() {
+                return null;
             }
 
             @Override

@@ -48,6 +48,7 @@ import org.killbill.billing.catalog.api.ProductCategory;
 import org.killbill.billing.entitlement.api.Entitlement.EntitlementState;
 import org.killbill.billing.entitlement.api.EntitlementAOStatusDryRun;
 import org.killbill.billing.entitlement.api.EntitlementAOStatusDryRun.DryRunChangeReason;
+import org.killbill.billing.entitlement.api.EntitlementSpecifier;
 import org.killbill.billing.events.EffectiveSubscriptionInternalEvent;
 import org.killbill.billing.invoice.api.DryRunArguments;
 import org.killbill.billing.subscription.api.SubscriptionBase;
@@ -360,10 +361,9 @@ public class DefaultSubscriptionInternalApi extends DefaultSubscriptionBaseCreat
 
     @Override
     public DateTime getDryRunChangePlanEffectiveDate(final SubscriptionBase subscription,
-                                                     final PlanPhaseSpecifier spec,
+                                                     final EntitlementSpecifier spec,
                                                      final DateTime requestedDateWithMs,
                                                      final BillingActionPolicy requestedPolicy,
-                                                     final List<PlanPhasePriceOverride> overrides,
                                                      final InternalCallContext context) throws SubscriptionBaseApiException, CatalogApiException {
         final TenantContext tenantContext = internalCallContextFactory.createTenantContext(context);
         final CallContext callContext = internalCallContextFactory.createCallContext(context);
@@ -372,8 +372,8 @@ public class DefaultSubscriptionInternalApi extends DefaultSubscriptionBaseCreat
         final Catalog catalog = catalogInternalApi.getFullCatalog(true, true, context);
         final DateTime effectiveDate = (requestedDateWithMs != null) ? DefaultClock.truncateMs(requestedDateWithMs) : null;
         final DateTime effectiveCatalogDate = effectiveDate != null ? effectiveDate : context.getCreatedDate();
-        final PlanPhasePriceOverridesWithCallContext overridesWithContext = new DefaultPlanPhasePriceOverridesWithCallContext(overrides, callContext);
-        final Plan plan = catalog.createOrFindPlan(spec, overridesWithContext, effectiveCatalogDate, subscription.getStartDate());
+        final PlanPhasePriceOverridesWithCallContext overridesWithContext = new DefaultPlanPhasePriceOverridesWithCallContext(spec.getOverrides(), callContext);
+        final Plan plan = catalog.createOrFindPlan(spec.getPlanPhaseSpecifier(), overridesWithContext, effectiveCatalogDate, subscription.getStartDate());
         if (ProductCategory.ADD_ON.toString().equalsIgnoreCase(plan.getProduct().getCategory().toString())) {
             if (plan.getPlansAllowedInBundle() != -1
                 && plan.getPlansAllowedInBundle() > 0

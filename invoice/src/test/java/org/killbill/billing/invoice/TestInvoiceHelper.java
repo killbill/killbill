@@ -51,6 +51,7 @@ import org.killbill.billing.catalog.api.PlanPhase;
 import org.killbill.billing.catalog.api.PlanPhasePriceOverride;
 import org.killbill.billing.catalog.api.PlanPhaseSpecifier;
 import org.killbill.billing.catalog.api.Usage;
+import org.killbill.billing.entitlement.api.EntitlementSpecifier;
 import org.killbill.billing.entitlement.api.SubscriptionEventType;
 import org.killbill.billing.entity.EntityPersistenceException;
 import org.killbill.billing.invoice.api.DryRunArguments;
@@ -449,7 +450,7 @@ public class TestInvoiceHelper {
         }
 
         @Override
-        public PlanPhaseSpecifier getPlanPhaseSpecifier() {
+        public EntitlementSpecifier getEntitlementSpecifier() {
             return null;
         }
 
@@ -475,11 +476,6 @@ public class TestInvoiceHelper {
 
         @Override
         public BillingActionPolicy getBillingActionPolicy() {
-            return null;
-        }
-
-        @Override
-        public List<PlanPhasePriceOverride> getPlanPhasePriceOverrides() {
             return null;
         }
     }

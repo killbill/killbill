@@ -62,6 +62,7 @@ import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.catalog.api.PlanPhasePriceOverride;
 import org.killbill.billing.catalog.api.PlanPhaseSpecifier;
 import org.killbill.billing.catalog.api.ProductCategory;
+import org.killbill.billing.entitlement.api.EntitlementSpecifier;
 import org.killbill.billing.entitlement.api.SubscriptionApiException;
 import org.killbill.billing.entitlement.api.SubscriptionEventType;
 import org.killbill.billing.invoice.api.DryRunArguments;
@@ -1073,10 +1074,9 @@ public class InvoiceResource extends JaxRsResourceBase {
         private final SubscriptionEventType action;
         private final UUID subscriptionId;
         private final LocalDate effectiveDate;
-        private final PlanPhaseSpecifier specifier;
+        private final EntitlementSpecifier specifier;
         private final UUID bundleId;
         private final BillingActionPolicy billingPolicy;
-        private final List<PlanPhasePriceOverride> overrides;
 
         public DefaultDryRunArguments(final InvoiceDryRunJson input, final Account account) {
             if (input == null) {
@@ -1087,7 +1087,6 @@ public class InvoiceResource extends JaxRsResourceBase {
                 this.specifier = null;
                 this.bundleId = null;
                 this.billingPolicy = null;
-                this.overrides = null;
             } else {
                 this.dryRunType = input.getDryRunType() != null ? input.getDryRunType() : DryRunType.TARGET_DATE;
                 this.action = input.getDryRunAction() != null ? input.getDryRunAction() : null;
@@ -1103,8 +1102,7 @@ public class InvoiceResource extends JaxRsResourceBase {
                                                                                      input.getPriceListName(),
                                                                                      input.getPhaseType() != null ? input.getPhaseType() : null) :
                                                               null;
-                this.specifier = planPhaseSpecifier;
-                this.overrides = input.getPriceOverrides() != null ?
+                final List<PlanPhasePriceOverride> overrides = input.getPriceOverrides() != null ?
                                  ImmutableList.copyOf(Iterables.transform(input.getPriceOverrides(), new Function<PhasePriceOverrideJson, PlanPhasePriceOverride>() {
                                      @Nullable
                                      @Override
@@ -1117,6 +1115,20 @@ public class InvoiceResource extends JaxRsResourceBase {
                                          }
                                      }
                                  })) : ImmutableList.<PlanPhasePriceOverride>of();
+                this.specifier = new EntitlementSpecifier() {
+                    @Override
+                    public PlanPhaseSpecifier getPlanPhaseSpecifier() {
+                        return planPhaseSpecifier;
+                    }
+                    @Override
+                    public Integer getBillCycleDay() {
+                        return null;
+                    }
+                    @Override
+                    public List<PlanPhasePriceOverride> getOverrides() {
+                        return overrides;
+                    }
+                };
             }
         }
 
@@ -1126,7 +1138,7 @@ public class InvoiceResource extends JaxRsResourceBase {
         }
 
         @Override
-        public PlanPhaseSpecifier getPlanPhaseSpecifier() {
+        public EntitlementSpecifier getEntitlementSpecifier() {
             return specifier;
         }
 
@@ -1155,10 +1167,6 @@ public class InvoiceResource extends JaxRsResourceBase {
             return billingPolicy;
         }
 
-        @Override
-        public List<PlanPhasePriceOverride> getPlanPhasePriceOverrides() {
-            return overrides;
-        }
 
         @Override
         public String toString() {
@@ -1170,7 +1178,6 @@ public class InvoiceResource extends JaxRsResourceBase {
             sb.append(", specifier=").append(specifier);
             sb.append(", bundleId=").append(bundleId);
             sb.append(", billingPolicy=").append(billingPolicy);
-            sb.append(", overrides=").append(overrides);
             sb.append('}');
             return sb.toString();
         }

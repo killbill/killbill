@@ -33,6 +33,7 @@ import org.killbill.billing.catalog.api.PlanChangeResult;
 import org.killbill.billing.catalog.api.PlanPhasePriceOverride;
 import org.killbill.billing.catalog.api.PlanPhaseSpecifier;
 import org.killbill.billing.catalog.api.PlanSpecifier;
+import org.killbill.billing.entitlement.api.EntitlementSpecifier;
 import org.killbill.billing.subscription.api.user.DefaultSubscriptionBase;
 import org.killbill.billing.subscription.api.user.SubscriptionAndAddOnsSpecifier;
 import org.killbill.billing.subscription.api.user.SubscriptionBaseApiException;
@@ -61,20 +62,20 @@ public interface SubscriptionBaseApiService {
             throws SubscriptionBaseApiException;
 
     // Return the effective date of the change
-    public DateTime dryRunChangePlan(DefaultSubscriptionBase subscription, PlanPhaseSpecifier spec, DateTime requestedDate, BillingActionPolicy policy, TenantContext context) throws SubscriptionBaseApiException;
+    public DateTime dryRunChangePlan(DefaultSubscriptionBase subscription, EntitlementSpecifier spec, DateTime requestedDate, BillingActionPolicy policy, TenantContext context) throws SubscriptionBaseApiException;
 
     // Return the effective date of the change
-    public DateTime changePlan(DefaultSubscriptionBase subscription, PlanPhaseSpecifier spec, List<PlanPhasePriceOverride> overrides, CallContext context)
+    public DateTime changePlan(DefaultSubscriptionBase subscription, EntitlementSpecifier spec, CallContext context)
             throws SubscriptionBaseApiException;
 
     // Return the effective date of the change
-    public DateTime changePlanWithRequestedDate(DefaultSubscriptionBase subscription, PlanPhaseSpecifier spec,
-                                                List<PlanPhasePriceOverride> overrides, DateTime requestedDate, CallContext context)
+    public DateTime changePlanWithRequestedDate(DefaultSubscriptionBase subscription, EntitlementSpecifier spec,
+                                                 DateTime requestedDate, CallContext context)
             throws SubscriptionBaseApiException;
 
     // Return the effective date of the change
-    public DateTime changePlanWithPolicy(DefaultSubscriptionBase subscription, PlanPhaseSpecifier spec,
-                                         List<PlanPhasePriceOverride> overrides, BillingActionPolicy policy, CallContext context)
+    public DateTime changePlanWithPolicy(DefaultSubscriptionBase subscription, EntitlementSpecifier spec,
+                                          BillingActionPolicy policy, CallContext context)
             throws SubscriptionBaseApiException;
 
     public int handleBasePlanEvent(final DefaultSubscriptionBase subscription, final SubscriptionBaseEvent event, Catalog fullCatalog, final CallContext context) throws CatalogApiException;

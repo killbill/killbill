@@ -40,14 +40,13 @@ import org.killbill.billing.catalog.api.PhaseType;
 import org.killbill.billing.catalog.api.Plan;
 import org.killbill.billing.catalog.api.PlanPhase;
 import org.killbill.billing.catalog.api.PlanPhasePriceOverride;
-import org.killbill.billing.catalog.api.PlanPhaseSpecifier;
 import org.killbill.billing.catalog.api.PriceList;
 import org.killbill.billing.catalog.api.Product;
 import org.killbill.billing.catalog.api.ProductCategory;
 import org.killbill.billing.entitlement.api.Entitlement.EntitlementSourceType;
 import org.killbill.billing.entitlement.api.Entitlement.EntitlementState;
+import org.killbill.billing.entitlement.api.EntitlementSpecifier;
 import org.killbill.billing.entity.EntityBase;
-import org.killbill.billing.payment.api.TransactionType;
 import org.killbill.billing.subscription.api.SubscriptionBase;
 import org.killbill.billing.subscription.api.SubscriptionBaseApiService;
 import org.killbill.billing.subscription.api.SubscriptionBaseTransitionType;
@@ -203,7 +202,6 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
         }
     }
 
-
     @Override
     public Plan getCurrentPlan() {
         return (getPreviousTransition() == null) ? null
@@ -275,9 +273,9 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
     }
 
     @Override
-    public DateTime changePlan(final PlanPhaseSpecifier spec,
-                               final List<PlanPhasePriceOverride> overrides, final CallContext context) throws SubscriptionBaseApiException {
-        return apiService.changePlan(this, spec, overrides, context);
+    public DateTime changePlan(final EntitlementSpecifier spec,
+                                final CallContext context) throws SubscriptionBaseApiException {
+        return apiService.changePlan(this, spec, context);
     }
 
     @Override
@@ -286,15 +284,15 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
     }
 
     @Override
-    public DateTime changePlanWithDate(final PlanPhaseSpecifier spec, final List<PlanPhasePriceOverride> overrides,
+    public DateTime changePlanWithDate(final EntitlementSpecifier spec,
                                        final DateTime requestedDate, final CallContext context) throws SubscriptionBaseApiException {
-        return apiService.changePlanWithRequestedDate(this, spec, overrides, requestedDate, context);
+        return apiService.changePlanWithRequestedDate(this, spec, requestedDate, context);
     }
 
     @Override
-    public DateTime changePlanWithPolicy(final PlanPhaseSpecifier spec,
-                                         final List<PlanPhasePriceOverride> overrides, final BillingActionPolicy policy, final CallContext context) throws SubscriptionBaseApiException {
-        return apiService.changePlanWithPolicy(this, spec, overrides, policy, context);
+    public DateTime changePlanWithPolicy(final EntitlementSpecifier spec,
+                                         final BillingActionPolicy policy, final CallContext context) throws SubscriptionBaseApiException {
+        return apiService.changePlanWithPolicy(this, spec, policy, context);
     }
 
     @Override
@@ -579,7 +577,6 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
         return getFutureEndDate() != null;
     }
 
-
     public boolean isPendingChangePlan() {
 
         final SubscriptionBaseTransitionDataIterator it = new SubscriptionBaseTransitionDataIterator(
@@ -595,8 +592,6 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
         return false;
     }
 
-
-
     public DateTime getPlanChangeEffectiveDate(final BillingActionPolicy policy, @Nullable final BillingAlignment alignment, @Nullable final Integer accountBillCycleDayLocal, final InternalTenantContext context) {
 
         final DateTime candidateResult;
@@ -607,7 +602,7 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
             case START_OF_TERM:
                 if (chargedThroughDate == null) {
                     candidateResult = getStartDate();
-                // Will take care of billing IN_ARREAR or subscriptions that are not invoiced up to date
+                    // Will take care of billing IN_ARREAR or subscriptions that are not invoiced up to date
                 } else if (!chargedThroughDate.isAfter(clock.getUTCNow())) {
                     candidateResult = chargedThroughDate;
                 } else {
@@ -615,7 +610,7 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
                     // In certain path (dryRun, or default catalog START_OF_TERM policy), the info is not easily available and as a result, such policy is not implemented
                     Preconditions.checkState(alignment != null && context != null && accountBillCycleDayLocal != null, "START_OF_TERM not implemented in dryRun use case");
 
-                    Preconditions.checkState(alignment != BillingAlignment.BUNDLE || category != ProductCategory.ADD_ON,  "START_OF_TERM not implemented for AO configured with a BUNDLE billing alignment");
+                    Preconditions.checkState(alignment != BillingAlignment.BUNDLE || category != ProductCategory.ADD_ON, "START_OF_TERM not implemented for AO configured with a BUNDLE billing alignment");
 
                     // If BCD was overriden at the subscription level, we take its latest value (it should also be reflected in the chargedThroughDate) but still required for
                     // alignment purpose
@@ -630,7 +625,7 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
                         proposedDate = proposedDate.minus(billingPeriod.getPeriod());
                     }
 
-                    final LocalDate resultingLocalDate  = BillCycleDayCalculator.alignProposedBillCycleDate(proposedDate, bcd, billingPeriod, context);
+                    final LocalDate resultingLocalDate = BillCycleDayCalculator.alignProposedBillCycleDate(proposedDate, bcd, billingPeriod, context);
                     candidateResult = context.toUTCDateTime(resultingLocalDate);
                 }
 

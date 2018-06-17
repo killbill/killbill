@@ -24,7 +24,6 @@ import org.joda.time.LocalDate;
 import org.killbill.billing.catalog.api.BillingActionPolicy;
 import org.killbill.billing.catalog.api.PlanPhasePriceOverride;
 import org.killbill.billing.catalog.api.PlanPhaseSpecifier;
-import org.killbill.billing.catalog.api.PlanSpecifier;
 import org.killbill.billing.entitlement.api.BaseEntitlementWithAddOnsSpecifier;
 import org.killbill.billing.entitlement.api.BlockingState;
 import org.killbill.billing.entitlement.api.Entitlement;
@@ -219,8 +218,8 @@ public abstract class EntitlementLoggingHelper {
         }
     }
 
-    public static void logChangePlan(final Logger log, final Entitlement entitlement, final PlanSpecifier spec,
-                                     final List<PlanPhasePriceOverride> overrides, final LocalDate entitlementEffectiveDate, final BillingActionPolicy actionPolicy) {
+    public static void logChangePlan(final Logger log, final Entitlement entitlement, final EntitlementSpecifier entitlementSpecifier,
+                                     final LocalDate entitlementEffectiveDate, final BillingActionPolicy actionPolicy) {
         if (log.isInfoEnabled()) {
             final StringBuilder logLine = new StringBuilder("Change Entitlement Plan: ")
                     .append(" id = '")
@@ -231,31 +230,34 @@ public abstract class EntitlementLoggingHelper {
                        .append(entitlementEffectiveDate)
                        .append("'");
             }
-            if (spec.getPlanName() != null) {
-                logLine.append(", plan='")
-                       .append(spec.getPlanName())
-                       .append("'");
-            }
-            if (spec.getProductName() != null) {
-                logLine.append(", product='")
-                       .append(spec.getProductName())
-                       .append("'");
-            }
-            if (spec.getBillingPeriod() != null) {
-                logLine.append(", billingPeriod='")
-                       .append(spec.getBillingPeriod())
-                       .append("'");
-            }
-            if (spec.getPriceListName() != null) {
-                logLine.append(", priceList='")
-                       .append(spec.getPriceListName())
-                       .append("'");
-            }
-            logPlanPhasePriceOverrides(logLine, overrides);
-            if (actionPolicy != null) {
-                logLine.append(", actionPolicy='")
-                       .append(actionPolicy)
-                       .append("'");
+            if (entitlementSpecifier.getPlanPhaseSpecifier() != null) {
+
+                if (entitlementSpecifier.getPlanPhaseSpecifier().getPlanName() != null) {
+                    logLine.append(", plan='")
+                           .append(entitlementSpecifier.getPlanPhaseSpecifier().getPlanName())
+                           .append("'");
+                }
+                if (entitlementSpecifier.getPlanPhaseSpecifier().getProductName() != null) {
+                    logLine.append(", product='")
+                           .append(entitlementSpecifier.getPlanPhaseSpecifier().getProductName())
+                           .append("'");
+                }
+                if (entitlementSpecifier.getPlanPhaseSpecifier().getBillingPeriod() != null) {
+                    logLine.append(", billingPeriod='")
+                           .append(entitlementSpecifier.getPlanPhaseSpecifier().getBillingPeriod())
+                           .append("'");
+                }
+                if (entitlementSpecifier.getPlanPhaseSpecifier().getPriceListName() != null) {
+                    logLine.append(", priceList='")
+                           .append(entitlementSpecifier.getPlanPhaseSpecifier().getPriceListName())
+                           .append("'");
+                }
+                logPlanPhasePriceOverrides(logLine, entitlementSpecifier.getOverrides());
+                if (actionPolicy != null) {
+                    logLine.append(", actionPolicy='")
+                           .append(actionPolicy)
+                           .append("'");
+                }
             }
             log.info(logLine.toString());
         }
