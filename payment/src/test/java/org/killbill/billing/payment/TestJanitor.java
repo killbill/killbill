@@ -191,18 +191,18 @@ public class TestJanitor extends PaymentTestSuiteWithEmbeddedDB {
                                                             Currency.USD));
 
         testListener.pushExpectedEvent(NextEvent.PAYMENT);
-        invoicePaymentApi.createPurchaseForInvoice(account,
-                                                   invoice.getId(),
-                                                   account.getPaymentMethodId(),
-                                                   null,
-                                                   requestedAmount,
-                                                   Currency.USD,
-                                                   null,
-                                                   paymentExternalKey,
-                                                   transactionExternalKey,
-                                                   ImmutableList.<PluginProperty>of(),
-                                                   INVOICE_PAYMENT,
-                                                   callContext);
+        invoicePaymentApi.createPurchaseForInvoicePayment(account,
+                                                          invoice.getId(),
+                                                          account.getPaymentMethodId(),
+                                                          null,
+                                                          requestedAmount,
+                                                          Currency.USD,
+                                                          null,
+                                                          paymentExternalKey,
+                                                          transactionExternalKey,
+                                                          ImmutableList.<PluginProperty>of(),
+                                                          INVOICE_PAYMENT,
+                                                          callContext);
         final Payment payment = paymentApi.getPaymentByExternalKey(paymentExternalKey, false, false, ImmutableList.<PluginProperty>of(), callContext);
         testListener.assertListenerStatus();
         assertEquals(payment.getTransactions().size(), 1);
@@ -258,18 +258,18 @@ public class TestJanitor extends PaymentTestSuiteWithEmbeddedDB {
         invoice.addInvoiceItem(invoiceItem);
 
         testListener.pushExpectedEvent(NextEvent.PAYMENT);
-        invoicePaymentApi.createPurchaseForInvoice(account,
-                                                   invoice.getId(),
-                                                   account.getPaymentMethodId(),
-                                                   null,
-                                                   requestedAmount,
-                                                   Currency.USD,
-                                                   null,
-                                                   paymentExternalKey,
-                                                   transactionExternalKey,
-                                                   ImmutableList.<PluginProperty>of(),
-                                                   INVOICE_PAYMENT,
-                                                   callContext);
+        invoicePaymentApi.createPurchaseForInvoicePayment(account,
+                                                          invoice.getId(),
+                                                          account.getPaymentMethodId(),
+                                                          null,
+                                                          requestedAmount,
+                                                          Currency.USD,
+                                                          null,
+                                                          paymentExternalKey,
+                                                          transactionExternalKey,
+                                                          ImmutableList.<PluginProperty>of(),
+                                                          INVOICE_PAYMENT,
+                                                          callContext);
         final Payment payment = paymentApi.getPaymentByExternalKey(paymentExternalKey, false, false, ImmutableList.<PluginProperty>of(), callContext);
         testListener.assertListenerStatus();
 
@@ -278,8 +278,8 @@ public class TestJanitor extends PaymentTestSuiteWithEmbeddedDB {
         uuidBigDecimalHashMap.put(invoiceItem.getId(), new BigDecimal("1.0"));
 
         testListener.pushExpectedEvent(NextEvent.PAYMENT);
-        invoicePaymentApi.createRefundForInvoice(false, uuidBigDecimalHashMap, account, payment.getId(), null, Currency.USD, null, transactionExternalKey2,
-                                                 refundProperties, INVOICE_PAYMENT, callContext);
+        invoicePaymentApi.createRefundForInvoicePayment(false, uuidBigDecimalHashMap, account, payment.getId(), null, Currency.USD, null, transactionExternalKey2,
+                                                        refundProperties, INVOICE_PAYMENT, callContext);
         final Payment payment2 = paymentApi.getPayment(payment.getId(), false, false, refundProperties, callContext);
         testListener.assertListenerStatus();
 

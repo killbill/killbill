@@ -28,17 +28,17 @@ import org.killbill.billing.invoice.api.InvoicePayment;
 
 public interface InvoicePaymentInternalApi {
 
-    public InvoicePayment createPurchaseForInvoice(boolean isApiPayment,
-                                                   Account account,
-                                                   UUID invoiceId,
-                                                   UUID paymentMethodId,
-                                                   UUID paymentId,
-                                                   BigDecimal amount,
-                                                   Currency currency,
-                                                   DateTime effectiveDate,
-                                                   String paymentExternalKey,
-                                                   String paymentTransactionExternalKey,
-                                                   Iterable<PluginProperty> properties,
-                                                   PaymentOptions paymentOptions,
-                                                   InternalCallContext context) throws PaymentApiException;
+    public InvoicePayment createPurchaseForInvoicePayment(boolean isApiPayment,
+                                                          Account account,
+                                                          UUID invoiceId,
+                                                          UUID paymentMethodId,
+                                                          UUID paymentId,
+                                                          BigDecimal amount,
+                                                          Currency currency,
+                                                          DateTime effectiveDate,
+                                                          String paymentExternalKey,
+                                                          String paymentTransactionExternalKey,
+                                                          Iterable<PluginProperty> properties,
+                                                          PaymentOptions paymentOptions,
+                                                          InternalCallContext context) throws PaymentApiException;
 }

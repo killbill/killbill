@@ -124,18 +124,18 @@ public class TestPaymentApiNoDB extends PaymentTestSuiteNoDB {
                                                             Currency.USD));
 
         try {
-            invoicePaymentApi.createPurchaseForInvoice(account,
-                                                       invoice.getId(),
-                                                       account.getPaymentMethodId(),
-                                                       null,
-                                                       requestedAmount,
-                                                       account.getCurrency(),
-                                                       null,
-                                                       invoice.getId().toString(),
-                                                       UUID.randomUUID().toString(),
-                                                       ImmutableList.<PluginProperty>of(),
-                                                       PAYMENT_OPTIONS,
-                                                       callContext);
+            invoicePaymentApi.createPurchaseForInvoicePayment(account,
+                                                              invoice.getId(),
+                                                              account.getPaymentMethodId(),
+                                                              null,
+                                                              requestedAmount,
+                                                              account.getCurrency(),
+                                                              null,
+                                                              invoice.getId().toString(),
+                                                              UUID.randomUUID().toString(),
+                                                              ImmutableList.<PluginProperty>of(),
+                                                              PAYMENT_OPTIONS,
+                                                              callContext);
             final Payment paymentInfo = paymentApi.getPaymentByExternalKey(invoice.getId().toString(), false, false, ImmutableList.<PluginProperty>of(), callContext);
             if (requestedAmount != null && expectedAmount == null) {
                 fail("Expected to fail because requested amount > invoice amount");

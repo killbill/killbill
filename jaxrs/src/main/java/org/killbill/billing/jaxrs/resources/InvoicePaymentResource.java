@@ -189,32 +189,32 @@ public class InvoicePaymentResource extends JaxRsResourceBase {
 
         final InvoicePayment result;
         if (externalPayment) {
-            result = invoicePaymentApi.createCreditForInvoice(isAdjusted,
-                                                              adjustments,
-                                                              account,
-                                                              paymentId,
-                                                              paymentMethodId,
-                                                              null,
-                                                              json.getAmount(),
-                                                              account.getCurrency(),
-                                                              json.getEffectiveDate(),
-                                                              paymentExternalKey,
-                                                              transactionExternalKey,
-                                                              pluginProperties,
-                                                              createInvoicePaymentControlPluginApiPaymentOptions(true),
-                                                              callContext);
+            result = invoicePaymentApi.createCreditForInvoicePayment(isAdjusted,
+                                                                     adjustments,
+                                                                     account,
+                                                                     paymentId,
+                                                                     paymentMethodId,
+                                                                     null,
+                                                                     json.getAmount(),
+                                                                     account.getCurrency(),
+                                                                     json.getEffectiveDate(),
+                                                                     paymentExternalKey,
+                                                                     transactionExternalKey,
+                                                                     pluginProperties,
+                                                                     createInvoicePaymentControlPluginApiPaymentOptions(true),
+                                                                     callContext);
         } else {
-            result = invoicePaymentApi.createRefundForInvoice(isAdjusted,
-                                                              adjustments,
-                                                              account,
-                                                              payment.getId(),
-                                                              json.getAmount(),
-                                                              account.getCurrency(),
-                                                              json.getEffectiveDate(),
-                                                              transactionExternalKey,
-                                                              pluginProperties,
-                                                              createInvoicePaymentControlPluginApiPaymentOptions(false),
-                                                              callContext);
+            result = invoicePaymentApi.createRefundForInvoicePayment(isAdjusted,
+                                                                     adjustments,
+                                                                     account,
+                                                                     payment.getId(),
+                                                                     json.getAmount(),
+                                                                     account.getCurrency(),
+                                                                     json.getEffectiveDate(),
+                                                                     transactionExternalKey,
+                                                                     pluginProperties,
+                                                                     createInvoicePaymentControlPluginApiPaymentOptions(false),
+                                                                     callContext);
         }
 
         return uriBuilder.buildResponse(uriInfo, InvoicePaymentResource.class, "getInvoicePayment", result.getId(), request);
@@ -336,9 +336,9 @@ public class InvoicePaymentResource extends JaxRsResourceBase {
         }
 
         final PaymentOptions paymentOptions = createControlPluginApiPaymentOptions(paymentControlPluginNames);
-        invoicePaymentApi.createPurchaseForInvoice(account, invoiceId, payment.getPaymentMethodId(), payment.getId(), amount, currency, null,
-                                                   payment.getExternalKey(), pendingOrSuccessTransaction.getExternalKey(),
-                                                   pluginProperties, paymentOptions, callContext);
+        invoicePaymentApi.createPurchaseForInvoicePayment(account, invoiceId, payment.getPaymentMethodId(), payment.getId(), amount, currency, null,
+                                                          payment.getExternalKey(), pendingOrSuccessTransaction.getExternalKey(),
+                                                          pluginProperties, paymentOptions, callContext);
 
         return Response.status(Status.NO_CONTENT).build();
     }

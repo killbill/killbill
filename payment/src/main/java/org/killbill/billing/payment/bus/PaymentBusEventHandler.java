@@ -89,18 +89,18 @@ public class PaymentBusEventHandler {
         try {
             account = accountApi.getAccountById(event.getAccountId(), internalContext);
 
-            invoicePaymentInternalApi.createPurchaseForInvoice(false,
-                                                               account,
-                                                               event.getInvoiceId(),
-                                                               account.getPaymentMethodId(),
-                                                               null,
-                                                               amountToBePaid,
-                                                               account.getCurrency(),
-                                                               null,
-                                                               null,
-                                                               null,
-                                                               ImmutableList.<PluginProperty>of(),
-                                                               new PaymentOptions() {
+            invoicePaymentInternalApi.createPurchaseForInvoicePayment(false,
+                                                                      account,
+                                                                      event.getInvoiceId(),
+                                                                      account.getPaymentMethodId(),
+                                                                      null,
+                                                                      amountToBePaid,
+                                                                      account.getCurrency(),
+                                                                      null,
+                                                                      null,
+                                                                      null,
+                                                                      ImmutableList.<PluginProperty>of(),
+                                                                      new PaymentOptions() {
                                                                    @Override
                                                                    public boolean isExternalPayment() {
                                                                        return false;
@@ -111,7 +111,7 @@ public class PaymentBusEventHandler {
                                                                        return paymentControlPluginNames;
                                                                    }
                                                                },
-                                                               internalContext);
+                                                                      internalContext);
         } catch (final AccountApiException e) {
             log.warn("Failed to process invoice payment", e);
         } catch (final PaymentApiException e) {

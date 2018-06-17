@@ -115,8 +115,8 @@ public class TestPaymentRefund extends TestIntegrationBase {
     @Test(groups = "slow")
     public void testFailedRefundWithInvoiceAdjustment() throws Exception {
         try {
-            invoicePaymentApi.createRefundForInvoice(true, null, account, payment.getId(), payment.getPurchasedAmount(), payment.getCurrency(), null, UUID.randomUUID().toString(),
-                                                     ImmutableList.<PluginProperty>of(), PAYMENT_OPTIONS, callContext);
+            invoicePaymentApi.createRefundForInvoicePayment(true, null, account, payment.getId(), payment.getPurchasedAmount(), payment.getCurrency(), null, UUID.randomUUID().toString(),
+                                                            ImmutableList.<PluginProperty>of(), PAYMENT_OPTIONS, callContext);
             fail("Refund with invoice adjustment should now throw an Exception");
         } catch (final PaymentApiException e) {
             Assert.assertEquals(e.getCause(), null);

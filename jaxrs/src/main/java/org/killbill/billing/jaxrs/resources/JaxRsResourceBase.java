@@ -546,19 +546,18 @@ public abstract class JaxRsResourceBase implements JaxrsResource {
 
     protected InvoicePayment createPurchaseForInvoice(final Account account, final UUID invoiceId, final BigDecimal amountToPay, final UUID paymentMethodId, final Boolean externalPayment, final String paymentExternalKey, final String transactionExternalKey, final Iterable<PluginProperty> pluginProperties, final CallContext callContext) throws PaymentApiException {
         try {
-            return invoicePaymentApi.createPurchaseForInvoice(account,
-                                                              invoiceId,
-                                                              paymentMethodId,
-                                                              null, amountToPay,
-                                                              account.getCurrency(),
-                                                              null,
-                                                              paymentExternalKey,
-                                                              transactionExternalKey,
-                                                              pluginProperties,
-                                                              createInvoicePaymentControlPluginApiPaymentOptions(externalPayment),
-                                                              callContext);
+            return invoicePaymentApi.createPurchaseForInvoicePayment(account,
+                                                                     invoiceId,
+                                                                     paymentMethodId,
+                                                                     null, amountToPay,
+                                                                     account.getCurrency(),
+                                                                     null,
+                                                                     paymentExternalKey,
+                                                                     transactionExternalKey,
+                                                                     pluginProperties,
+                                                                     createInvoicePaymentControlPluginApiPaymentOptions(externalPayment),
+                                                                     callContext);
         } catch (final PaymentApiException e) {
-
             if (e.getCode() == ErrorCode.PAYMENT_PLUGIN_EXCEPTION.getCode() /* &&
                 e.getMessage().contains("Invalid amount") */) { /* Plugin received bad input */
                 throw e;

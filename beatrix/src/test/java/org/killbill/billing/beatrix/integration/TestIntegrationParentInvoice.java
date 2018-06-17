@@ -1155,24 +1155,23 @@ public class TestIntegrationParentInvoice extends TestIntegrationBase {
         assertEquals(invoiceUserApi.getAccountBalance(parentAccount.getId(), callContext).compareTo(new BigDecimal("249.95")), 0);
         assertEquals(invoiceUserApi.getAccountBalance(childAccount.getId(), callContext).compareTo(new BigDecimal("249.95")), 0);
 
-
         // Verify Invoice apis getParentAccountId/getParentInvoiceId
         assertEquals(childInvoices.get(1).getParentAccountId(), parentAccount.getId());
         assertEquals(childInvoices.get(1).getParentInvoiceId(), parentInvoice.getId());
 
         try {
-            invoicePaymentApi.createPurchaseForInvoice(childAccount,
-                                                       childInvoices.get(1).getId(),
-                                                       childAccount.getPaymentMethodId(),
-                                                       null,
-                                                       childInvoices.get(1).getBalance(),
-                                                       childInvoices.get(1).getCurrency(),
-                                                       null,
-                                                       UUID.randomUUID().toString(),
-                                                       UUID.randomUUID().toString(),
-                                                       ImmutableList.<PluginProperty>of(),
-                                                       PAYMENT_OPTIONS,
-                                                       callContext);
+            invoicePaymentApi.createPurchaseForInvoicePayment(childAccount,
+                                                              childInvoices.get(1).getId(),
+                                                              childAccount.getPaymentMethodId(),
+                                                              null,
+                                                              childInvoices.get(1).getBalance(),
+                                                              childInvoices.get(1).getCurrency(),
+                                                              null,
+                                                              UUID.randomUUID().toString(),
+                                                              UUID.randomUUID().toString(),
+                                                              ImmutableList.<PluginProperty>of(),
+                                                              PAYMENT_OPTIONS,
+                                                              callContext);
             Assert.fail("Payment should fail, invoice belongs to parent");
         } catch (final PaymentApiException e) {
             assertEquals(ErrorCode.PAYMENT_PLUGIN_API_ABORTED.getCode(), e.getCode());

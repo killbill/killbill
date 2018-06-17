@@ -57,45 +57,45 @@ public class DefaultInvoicePaymentApi implements InvoicePaymentApi {
     }
 
     @Override
-    public InvoicePayment createPurchaseForInvoice(final Account account,
-                                                   final UUID invoiceId,
-                                                   final UUID paymentMethodId,
-                                                   final UUID paymentId,
-                                                   final BigDecimal amount,
-                                                   final Currency currency,
-                                                   final DateTime effectiveDate,
-                                                   final String paymentExternalKey,
-                                                   final String paymentTransactionExternalKey,
-                                                   final Iterable<PluginProperty> properties,
-                                                   final PaymentOptions paymentOptions,
-                                                   final CallContext context) throws PaymentApiException {
-        return invoicePaymentInternalApi.createPurchaseForInvoice(true,
-                                                                  account,
-                                                                  invoiceId,
-                                                                  paymentMethodId,
-                                                                  paymentId,
-                                                                  amount,
-                                                                  currency,
-                                                                  effectiveDate,
-                                                                  paymentExternalKey,
-                                                                  paymentTransactionExternalKey,
-                                                                  properties,
-                                                                  paymentOptions,
-                                                                  internalCallContextFactory.createInternalCallContext(account.getId(), context));
+    public InvoicePayment createPurchaseForInvoicePayment(final Account account,
+                                                          final UUID invoiceId,
+                                                          final UUID paymentMethodId,
+                                                          final UUID paymentId,
+                                                          final BigDecimal amount,
+                                                          final Currency currency,
+                                                          final DateTime effectiveDate,
+                                                          final String paymentExternalKey,
+                                                          final String paymentTransactionExternalKey,
+                                                          final Iterable<PluginProperty> properties,
+                                                          final PaymentOptions paymentOptions,
+                                                          final CallContext context) throws PaymentApiException {
+        return invoicePaymentInternalApi.createPurchaseForInvoicePayment(true,
+                                                                         account,
+                                                                         invoiceId,
+                                                                         paymentMethodId,
+                                                                         paymentId,
+                                                                         amount,
+                                                                         currency,
+                                                                         effectiveDate,
+                                                                         paymentExternalKey,
+                                                                         paymentTransactionExternalKey,
+                                                                         properties,
+                                                                         paymentOptions,
+                                                                         internalCallContextFactory.createInternalCallContext(account.getId(), context));
     }
 
     @Override
-    public InvoicePayment createRefundForInvoice(final boolean isAdjusted,
-                                                 final Map<UUID, BigDecimal> adjustments,
-                                                 final Account account,
-                                                 final UUID paymentId,
-                                                 final BigDecimal amount,
-                                                 final Currency currency,
-                                                 final DateTime effectiveDate,
-                                                 final String originalPaymentTransactionExternalKey,
-                                                 final Iterable<PluginProperty> originalProperties,
-                                                 final PaymentOptions paymentOptions,
-                                                 final CallContext context) throws PaymentApiException {
+    public InvoicePayment createRefundForInvoicePayment(final boolean isAdjusted,
+                                                        final Map<UUID, BigDecimal> adjustments,
+                                                        final Account account,
+                                                        final UUID paymentId,
+                                                        final BigDecimal amount,
+                                                        final Currency currency,
+                                                        final DateTime effectiveDate,
+                                                        final String originalPaymentTransactionExternalKey,
+                                                        final Iterable<PluginProperty> originalProperties,
+                                                        final PaymentOptions paymentOptions,
+                                                        final CallContext context) throws PaymentApiException {
         final Collection<PluginProperty> pluginProperties = preparePluginPropertiesForRefundOrCredit(isAdjusted, adjustments, originalProperties);
         final String paymentTransactionExternalKey = MoreObjects.firstNonNull(originalPaymentTransactionExternalKey, UUIDs.randomUUID().toString());
 
@@ -113,28 +113,28 @@ public class DefaultInvoicePaymentApi implements InvoicePaymentApi {
     }
 
     @Override
-    public InvoicePayment createCreditForInvoice(final boolean isAdjusted,
-                                                 final Map<UUID, BigDecimal> adjustments,
-                                                 final Account account,
-                                                 final UUID originalPaymentId,
-                                                 final UUID paymentMethodId,
-                                                 final UUID paymentId,
-                                                 final BigDecimal amount,
-                                                 final Currency currency,
-                                                 final DateTime effectiveDate,
-                                                 final String paymentExternalKey,
-                                                 final String originalPaymentTransactionExternalKey,
-                                                 final Iterable<PluginProperty> originalProperties,
-                                                 final PaymentOptions paymentOptions,
-                                                 final CallContext context) throws PaymentApiException {
+    public InvoicePayment createCreditForInvoicePayment(final boolean isAdjusted,
+                                                        final Map<UUID, BigDecimal> adjustments,
+                                                        final Account account,
+                                                        final UUID originalPaymentId,
+                                                        final UUID paymentMethodId,
+                                                        final UUID paymentId,
+                                                        final BigDecimal amount,
+                                                        final Currency currency,
+                                                        final DateTime effectiveDate,
+                                                        final String paymentExternalKey,
+                                                        final String originalPaymentTransactionExternalKey,
+                                                        final Iterable<PluginProperty> originalProperties,
+                                                        final PaymentOptions paymentOptions,
+                                                        final CallContext context) throws PaymentApiException {
         final Collection<PluginProperty> pluginProperties = preparePluginPropertiesForRefundOrCredit(isAdjusted, adjustments, originalProperties);
         pluginProperties.add(new PluginProperty("IPCD_PAYMENT_ID", originalPaymentId, false));
 
         final String paymentTransactionExternalKey = MoreObjects.firstNonNull(originalPaymentTransactionExternalKey, UUIDs.randomUUID().toString());
 
         final Payment payment = paymentApi.createCreditWithPaymentControl(account,
+                                                                          paymentMethodId,
                                                                           paymentId,
-                                                                          null,
                                                                           amount,
                                                                           currency,
                                                                           effectiveDate,

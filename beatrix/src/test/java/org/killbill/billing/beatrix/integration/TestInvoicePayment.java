@@ -1065,18 +1065,18 @@ public class TestInvoicePayment extends TestIntegrationBase {
         //
         busHandler.pushExpectedEvents(NextEvent.INVOICE_PAYMENT);
         try {
-            invoicePaymentApi.createPurchaseForInvoice(account,
-                                                       updateInvoice2.getId(),
-                                                       account.getPaymentMethodId(),
-                                                       null,
-                                                       updateInvoice2.getBalance(),
-                                                       updateInvoice2.getCurrency(),
-                                                       null,
-                                                       UUID.randomUUID().toString(),
-                                                       UUID.randomUUID().toString(),
-                                                       ImmutableList.<PluginProperty>of(),
-                                                       PAYMENT_OPTIONS,
-                                                       callContext);
+            invoicePaymentApi.createPurchaseForInvoicePayment(account,
+                                                              updateInvoice2.getId(),
+                                                              account.getPaymentMethodId(),
+                                                              null,
+                                                              updateInvoice2.getBalance(),
+                                                              updateInvoice2.getCurrency(),
+                                                              null,
+                                                              UUID.randomUUID().toString(),
+                                                              UUID.randomUUID().toString(),
+                                                              ImmutableList.<PluginProperty>of(),
+                                                              PAYMENT_OPTIONS,
+                                                              callContext);
             Assert.fail("The payment should not succeed (and yet it will repair the broken state....)");
         } catch (final PaymentApiException expected) {
             Assert.assertEquals(expected.getCode(), ErrorCode.PAYMENT_PLUGIN_API_ABORTED.getCode());
