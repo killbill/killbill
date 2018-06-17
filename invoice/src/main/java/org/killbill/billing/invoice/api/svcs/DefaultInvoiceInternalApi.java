@@ -81,7 +81,7 @@ public class DefaultInvoiceInternalApi implements InvoiceInternalApi {
         return getInvoiceByIdInternal(invoiceId, context);
     }
 
-    private DefaultInvoice getInvoiceByIdInternal(final UUID invoiceId, final InternalTenantContext context)throws InvoiceApiException {
+    private DefaultInvoice getInvoiceByIdInternal(final UUID invoiceId, final InternalTenantContext context) throws InvoiceApiException {
         return new DefaultInvoice(dao.getById(invoiceId, context));
     }
 
@@ -182,7 +182,7 @@ public class DefaultInvoiceInternalApi implements InvoiceInternalApi {
             @Override
             public boolean apply(final InvoicePaymentModelDao input) {
                 return input.getType() == type &&
-                        input.getSuccess();
+                       input.getSuccess();
             }
         }).orNull();
         return resultOrNull != null ? new DefaultInvoicePayment(resultOrNull) : null;
@@ -218,14 +218,8 @@ public class DefaultInvoiceInternalApi implements InvoiceInternalApi {
     }
 
     @Override
-    public List<InvoicePayment> getInvoicePaymentsByCookieId(final String cookieId, final TenantContext context) {
-        return ImmutableList.<InvoicePayment>copyOf(Collections2.transform(dao.getInvoicePaymentsByCookieId(cookieId, internalCallContextFactory.createInternalTenantContext(context.getAccountId(), ObjectType.ACCOUNT, context)),
-                                                                           new Function<InvoicePaymentModelDao, InvoicePayment>() {
-                                                                               @Override
-                                                                               public InvoicePayment apply(final InvoicePaymentModelDao input) {
-                                                                                   return new DefaultInvoicePayment(input);
-                                                                               }
-                                                                           }
-                                                                          ));
+    public InvoicePayment getInvoicePaymentByCookieId(final String cookieId, final TenantContext context) {
+        final InvoicePaymentModelDao invoicePaymentModelDao = dao.getInvoicePaymentByCookieId(cookieId, internalCallContextFactory.createInternalTenantContext(context.getAccountId(), ObjectType.ACCOUNT, context));
+        return new DefaultInvoicePayment(invoicePaymentModelDao);
     }
 }

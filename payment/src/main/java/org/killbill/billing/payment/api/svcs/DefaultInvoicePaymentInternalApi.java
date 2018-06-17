@@ -42,7 +42,6 @@ import org.killbill.billing.payment.core.PluginControlPaymentProcessor;
 import org.killbill.billing.util.UUIDs;
 import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
-import org.killbill.billing.util.callcontext.TenantContext;
 import org.killbill.billing.util.config.definition.PaymentConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -146,11 +145,6 @@ public class DefaultInvoicePaymentInternalApi extends DefaultApiBase implements 
                            exception);
         }
 
-        return paymentTransaction != null ? getInvoicePayment(paymentTransaction.getExternalKey(), callContext) : null;
-    }
-
-    private InvoicePayment getInvoicePayment(final String paymentTransactionExternalKey, final TenantContext context) {
-        final List<InvoicePayment> invoicePayments = invoiceInternalApi.getInvoicePaymentsByCookieId(paymentTransactionExternalKey, context);
-        return invoicePayments.isEmpty() ? null : invoicePayments.get(invoicePayments.size() - 1);
+        return paymentTransaction != null ? invoiceInternalApi.getInvoicePaymentByCookieId(paymentTransactionExternalKey, callContext) : null;
     }
 }

@@ -245,7 +245,7 @@ public class MockInvoiceDao extends MockEntityDaoBase<InvoiceModelDao, Invoice, 
     }
 
     @Override
-    public List<InvoicePaymentModelDao> getInvoicePaymentsByCookieId(final String cookieId, final InternalTenantContext internalTenantContext) {
+    public InvoicePaymentModelDao getInvoicePaymentByCookieId(final String cookieId, final InternalTenantContext internalTenantContext) {
         throw new UnsupportedOperationException();
     }
 

@@ -111,7 +111,7 @@ public class DefaultInvoicePaymentApi implements InvoicePaymentApi {
                                                   InvoicePaymentPaymentOptions.create(paymentOptions),
                                                   context);
 
-        return getInvoicePayment(paymentTransactionExternalKey, context);
+        return invoiceInternalApi.getInvoicePaymentByCookieId(paymentTransactionExternalKey, context);
     }
 
     @Override
@@ -146,7 +146,7 @@ public class DefaultInvoicePaymentApi implements InvoicePaymentApi {
                                                   InvoicePaymentPaymentOptions.create(paymentOptions),
                                                   context);
 
-        return getInvoicePayment(paymentTransactionExternalKey, context);
+        return invoiceInternalApi.getInvoicePaymentByCookieId(paymentTransactionExternalKey, context);
     }
 
     @Override
@@ -173,10 +173,5 @@ public class DefaultInvoicePaymentApi implements InvoicePaymentApi {
             pluginProperties.add(new PluginProperty("IPCD_REFUND_IDS_AMOUNTS", adjustments, false));
         }
         return pluginProperties;
-    }
-
-    private InvoicePayment getInvoicePayment(final String paymentTransactionExternalKey, final TenantContext context) {
-        final List<InvoicePayment> invoicePayments = invoiceInternalApi.getInvoicePaymentsByCookieId(paymentTransactionExternalKey, context);
-        return invoicePayments.isEmpty() ? null : invoicePayments.get(invoicePayments.size() - 1);
     }
 }

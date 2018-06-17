@@ -36,22 +36,17 @@ import org.skife.jdbi.v2.sqlobject.SqlUpdate;
 @KillBillSqlDaoStringTemplate
 public interface InvoicePaymentSqlDao extends EntitySqlDao<InvoicePaymentModelDao, InvoicePayment> {
 
-
     @SqlQuery
     public List<InvoicePaymentModelDao> getByPaymentId(@Bind("paymentId") final String paymentId,
                                                        @SmartBindBean final InternalTenantContext context);
 
     @SqlQuery
     public List<InvoicePaymentModelDao> getAllPaymentsForInvoiceIncludedInit(@Bind("invoiceId") final String invoiceId,
-                                                              @SmartBindBean final InternalTenantContext context);
+                                                                             @SmartBindBean final InternalTenantContext context);
 
     @SqlQuery
     List<InvoicePaymentModelDao> getInvoicePayments(@Bind("paymentId") final String paymentId,
                                                     @SmartBindBean final InternalTenantContext context);
-
-    @SqlQuery
-    List<InvoicePaymentModelDao> getInvoicePaymentsByPaymentCookieId(@Bind("paymentCookieId") final String paymentId,
-                                                                     @SmartBindBean final InternalTenantContext context);
 
     @SqlQuery
     InvoicePaymentModelDao getPaymentForCookieId(@Bind("paymentCookieId") final String paymentCookieId,
