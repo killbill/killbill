@@ -95,10 +95,10 @@ public class DefaultInvoicePaymentInternalApi extends DefaultApiBase implements 
         }
         pluginProperties.add(new PluginProperty("IPCD_INVOICE_ID", invoiceId.toString(), false));
 
-        // TODO should we add paymentConfig.getPaymentControlPluginNames(internalTenantContext)?
-        final List<String> paymentControlPluginNames = InvoicePaymentPaymentOptions.create(paymentOptions).getPaymentControlPluginNames();
-
         final CallContext callContext = internalCallContextFactory.createCallContext(internalCallContext);
+
+        final List<String> defaultOrUserSpecifiedPaymentControlPluginNames = toPaymentControlPluginNames(paymentOptions, callContext);
+        final List<String> paymentControlPluginNames = InvoicePaymentPaymentOptions.addInvoicePaymentControlPlugin(defaultOrUserSpecifiedPaymentControlPluginNames);
 
         final UUID resolvedPaymentMethodId = (paymentMethodId == null && paymentOptions.isExternalPayment()) ?
                                              paymentMethodProcessor.createOrGetExternalPaymentMethod(UUIDs.randomUUID().toString(), account, pluginProperties, callContext, internalCallContext) :
