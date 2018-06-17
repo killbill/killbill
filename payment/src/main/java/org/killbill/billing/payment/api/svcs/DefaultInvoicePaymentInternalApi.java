@@ -145,6 +145,6 @@ public class DefaultInvoicePaymentInternalApi extends DefaultApiBase implements 
                            exception);
         }
 
-        return paymentTransaction != null ? invoiceInternalApi.getInvoicePaymentByCookieId(paymentTransactionExternalKey, callContext) : null;
+        return paymentTransaction != null ? invoiceInternalApi.getInvoicePaymentByCookieId(paymentTransaction.getExternalKey(), callContext) : null;
     }
 }

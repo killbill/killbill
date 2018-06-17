@@ -190,35 +190,36 @@ public class InvoicePaymentResource extends JaxRsResourceBase {
 
         final UUID paymentIdToRedirectTo;
         if (externalPayment) {
-            final InvoicePayment result = invoicePaymentApi.createCreditForInvoicePayment(isAdjusted,
-                                                                                          adjustments,
-                                                                                          account,
-                                                                                          paymentId,
-                                                                                          paymentMethodId,
-                                                                                          null,
-                                                                                          json.getAmount(),
-                                                                                          account.getCurrency(),
-                                                                                          json.getEffectiveDate(),
-                                                                                          paymentExternalKey,
-                                                                                          transactionExternalKey,
-                                                                                          pluginProperties,
-                                                                                          createInvoicePaymentControlPluginApiPaymentOptions(true),
-                                                                                          callContext);
+            invoicePaymentApi.createCreditForInvoicePayment(isAdjusted,
+                                                            adjustments,
+                                                            account,
+                                                            paymentId,
+                                                            paymentMethodId,
+                                                            null,
+                                                            json.getAmount(),
+                                                            account.getCurrency(),
+                                                            json.getEffectiveDate(),
+                                                            paymentExternalKey,
+                                                            transactionExternalKey,
+                                                            pluginProperties,
+                                                            createInvoicePaymentControlPluginApiPaymentOptions(true),
+                                                            callContext);
             // /!\ Note! The invoicePayment#paymentId points to the original payment (PURCHASE) here, NOT the new one (CREDIT)
             paymentIdToRedirectTo = paymentApi.getPaymentByTransactionExternalKey(transactionExternalKey, false, false, ImmutableList.<PluginProperty>of(), callContext).getId();
         } else {
-            final InvoicePayment result = invoicePaymentApi.createRefundForInvoicePayment(isAdjusted,
-                                                                                          adjustments,
-                                                                                          account,
-                                                                                          payment.getId(),
-                                                                                          json.getAmount(),
-                                                                                          account.getCurrency(),
-                                                                                          json.getEffectiveDate(),
-                                                                                          transactionExternalKey,
-                                                                                          pluginProperties,
-                                                                                          createInvoicePaymentControlPluginApiPaymentOptions(false),
-                                                                                          callContext);
-            paymentIdToRedirectTo = result.getPaymentId();
+            invoicePaymentApi.createRefundForInvoicePayment(isAdjusted,
+                                                            adjustments,
+                                                            account,
+                                                            payment.getId(),
+                                                            json.getAmount(),
+                                                            account.getCurrency(),
+                                                            json.getEffectiveDate(),
+                                                            transactionExternalKey,
+                                                            pluginProperties,
+                                                            createInvoicePaymentControlPluginApiPaymentOptions(false),
+                                                            callContext);
+            // Note that the InvoicePayment may not be created (i.e. return null), even though the refund went through (wrong item adjustments for instance)
+            paymentIdToRedirectTo = payment.getId();
         }
 
         return uriBuilder.buildResponse(uriInfo, InvoicePaymentResource.class, "getInvoicePayment", paymentIdToRedirectTo, request);
