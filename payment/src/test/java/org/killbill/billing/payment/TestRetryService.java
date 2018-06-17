@@ -118,18 +118,19 @@ public class TestRetryService extends PaymentTestSuiteNoDB {
         final String paymentExternalKey = UUID.randomUUID().toString();
         final String transactionExternalKey = UUID.randomUUID().toString();
         try {
-            invoicePaymentApi.createPurchaseForInvoicePayment(account,
-                                                              invoice.getId(),
-                                                              account.getPaymentMethodId(),
-                                                              null,
-                                                              amount,
-                                                              Currency.USD,
-                                                              null,
-                                                              paymentExternalKey,
-                                                              transactionExternalKey,
-                                                              NO_PROPERTIES,
-                                                              PAYMENT_OPTIONS,
-                                                              callContext);
+            invoicePaymentInternalApi.createPurchaseForInvoicePayment(false,
+                                                                      account,
+                                                                      invoice.getId(),
+                                                                      account.getPaymentMethodId(),
+                                                                      null,
+                                                                      amount,
+                                                                      Currency.USD,
+                                                                      null,
+                                                                      paymentExternalKey,
+                                                                      transactionExternalKey,
+                                                                      NO_PROPERTIES,
+                                                                      PAYMENT_OPTIONS,
+                                                                      internalCallContext);
         } catch (final PaymentApiException e) {
             failed = true;
         }
@@ -173,18 +174,19 @@ public class TestRetryService extends PaymentTestSuiteNoDB {
 
         final String paymentExternalKey = UUID.randomUUID().toString();
         final String transactionExternalKey = UUID.randomUUID().toString();
-        invoicePaymentApi.createPurchaseForInvoicePayment(account,
-                                                          invoice.getId(),
-                                                          account.getPaymentMethodId(),
-                                                          null,
-                                                          amount,
-                                                          Currency.USD,
-                                                          null,
-                                                          paymentExternalKey,
-                                                          transactionExternalKey,
-                                                          NO_PROPERTIES,
-                                                          PAYMENT_OPTIONS,
-                                                          callContext);
+        invoicePaymentInternalApi.createPurchaseForInvoicePayment(false,
+                                                                  account,
+                                                                  invoice.getId(),
+                                                                  account.getPaymentMethodId(),
+                                                                  null,
+                                                                  amount,
+                                                                  Currency.USD,
+                                                                  null,
+                                                                  paymentExternalKey,
+                                                                  transactionExternalKey,
+                                                                  NO_PROPERTIES,
+                                                                  PAYMENT_OPTIONS,
+                                                                  internalCallContext);
 
         Payment payment = getPaymentForExternalKey(paymentExternalKey);
         List<PaymentAttemptModelDao> attempts = paymentDao.getPaymentAttempts(paymentExternalKey, internalCallContext);
@@ -256,18 +258,19 @@ public class TestRetryService extends PaymentTestSuiteNoDB {
 
         final String paymentExternalKey = UUID.randomUUID().toString();
         final String transactionExternalKey = UUID.randomUUID().toString();
-        invoicePaymentApi.createPurchaseForInvoicePayment(account,
-                                                          invoice.getId(),
-                                                          account.getPaymentMethodId(),
-                                                          null,
-                                                          amount,
-                                                          Currency.USD,
-                                                          null,
-                                                          paymentExternalKey,
-                                                          transactionExternalKey,
-                                                          NO_PROPERTIES,
-                                                          PAYMENT_OPTIONS,
-                                                          callContext);
+        invoicePaymentInternalApi.createPurchaseForInvoicePayment(false,
+                                                                  account,
+                                                                  invoice.getId(),
+                                                                  account.getPaymentMethodId(),
+                                                                  null,
+                                                                  amount,
+                                                                  Currency.USD,
+                                                                  null,
+                                                                  paymentExternalKey,
+                                                                  transactionExternalKey,
+                                                                  NO_PROPERTIES,
+                                                                  PAYMENT_OPTIONS,
+                                                                  internalCallContext);
 
         Payment payment = getPaymentForExternalKey(paymentExternalKey);
         List<PaymentAttemptModelDao> attempts = paymentDao.getPaymentAttempts(paymentExternalKey, internalCallContext);
@@ -349,18 +352,19 @@ public class TestRetryService extends PaymentTestSuiteNoDB {
 
         final String paymentExternalKey = UUID.randomUUID().toString();
         final String transactionExternalKey = UUID.randomUUID().toString();
-        invoicePaymentApi.createPurchaseForInvoicePayment(account,
-                                                          invoice.getId(),
-                                                          account.getPaymentMethodId(),
-                                                          null,
-                                                          amount,
-                                                          Currency.USD,
-                                                          null,
-                                                          paymentExternalKey,
-                                                          transactionExternalKey,
-                                                          NO_PROPERTIES,
-                                                          PAYMENT_OPTIONS,
-                                                          callContext);
+        invoicePaymentInternalApi.createPurchaseForInvoicePayment(false,
+                                                                  account,
+                                                                  invoice.getId(),
+                                                                  account.getPaymentMethodId(),
+                                                                  null,
+                                                                  amount,
+                                                                  Currency.USD,
+                                                                  null,
+                                                                  paymentExternalKey,
+                                                                  transactionExternalKey,
+                                                                  NO_PROPERTIES,
+                                                                  PAYMENT_OPTIONS,
+                                                                  internalCallContext);
 
         Payment payment = getPaymentForExternalKey(paymentExternalKey);
         List<PaymentAttemptModelDao> attempts = paymentDao.getPaymentAttempts(paymentExternalKey, internalCallContext);

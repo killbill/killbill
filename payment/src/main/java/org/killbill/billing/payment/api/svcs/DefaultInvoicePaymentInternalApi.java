@@ -29,6 +29,7 @@ import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.invoice.api.InvoiceInternalApi;
 import org.killbill.billing.invoice.api.InvoicePayment;
+import org.killbill.billing.payment.api.DefaultApiBase;
 import org.killbill.billing.payment.api.InvoicePaymentInternalApi;
 import org.killbill.billing.payment.api.Payment;
 import org.killbill.billing.payment.api.PaymentApiException;
@@ -36,11 +37,13 @@ import org.killbill.billing.payment.api.PaymentOptions;
 import org.killbill.billing.payment.api.PaymentTransaction;
 import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.payment.api.TransactionType;
+import org.killbill.billing.payment.core.PaymentMethodProcessor;
 import org.killbill.billing.payment.core.PluginControlPaymentProcessor;
 import org.killbill.billing.util.UUIDs;
 import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.billing.util.callcontext.TenantContext;
+import org.killbill.billing.util.config.definition.PaymentConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -50,21 +53,24 @@ import com.google.inject.Inject;
 import static org.killbill.billing.payment.logging.PaymentLoggingHelper.logEnterAPICall;
 import static org.killbill.billing.payment.logging.PaymentLoggingHelper.logExitAPICall;
 
-public class DefaultInvoicePaymentInternalApi implements InvoicePaymentInternalApi {
+public class DefaultInvoicePaymentInternalApi extends DefaultApiBase implements InvoicePaymentInternalApi {
 
     private static final Logger log = LoggerFactory.getLogger(DefaultInvoicePaymentInternalApi.class);
 
     private final InvoiceInternalApi invoiceInternalApi;
     private final PluginControlPaymentProcessor pluginControlPaymentProcessor;
-    private final InternalCallContextFactory internalCallContextFactory;
+    private final PaymentMethodProcessor paymentMethodProcessor;
 
     @Inject
     public DefaultInvoicePaymentInternalApi(final InvoiceInternalApi invoiceInternalApi,
                                             final PluginControlPaymentProcessor pluginControlPaymentProcessor,
+                                            final PaymentMethodProcessor paymentMethodProcessor,
+                                            final PaymentConfig paymentConfig,
                                             final InternalCallContextFactory internalCallContextFactory) {
+        super(paymentConfig, internalCallContextFactory);
         this.invoiceInternalApi = invoiceInternalApi;
         this.pluginControlPaymentProcessor = pluginControlPaymentProcessor;
-        this.internalCallContextFactory = internalCallContextFactory;
+        this.paymentMethodProcessor = paymentMethodProcessor;
     }
 
     @Override
@@ -77,10 +83,12 @@ public class DefaultInvoicePaymentInternalApi implements InvoicePaymentInternalA
                                                           final Currency currency,
                                                           final DateTime effectiveDate,
                                                           final String paymentExternalKey,
-                                                          final String originalPaymentTransactionExternalKey,
+                                                          final String paymentTransactionExternalKey,
                                                           final Iterable<PluginProperty> originalProperties,
                                                           final PaymentOptions paymentOptions,
                                                           final InternalCallContext internalCallContext) throws PaymentApiException {
+        checkExternalKeyLength(paymentTransactionExternalKey);
+
         final Collection<PluginProperty> pluginProperties = new LinkedList<PluginProperty>();
         if (originalProperties != null) {
             for (final PluginProperty pluginProperty : originalProperties) {
@@ -89,10 +97,14 @@ public class DefaultInvoicePaymentInternalApi implements InvoicePaymentInternalA
         }
         pluginProperties.add(new PluginProperty("IPCD_INVOICE_ID", invoiceId.toString(), false));
 
-        final String paymentTransactionExternalKey = MoreObjects.firstNonNull(originalPaymentTransactionExternalKey, UUIDs.randomUUID().toString());
+        // TODO should we add paymentConfig.getPaymentControlPluginNames(internalTenantContext)?
+        final List<String> paymentControlPluginNames = InvoicePaymentPaymentOptions.create(paymentOptions).getPaymentControlPluginNames();
+
         final CallContext callContext = internalCallContextFactory.createCallContext(internalCallContext);
 
-        final List<String> paymentControlPluginNames = InvoicePaymentPaymentOptions.create(paymentOptions).getPaymentControlPluginNames();
+        final UUID resolvedPaymentMethodId = (paymentMethodId == null && paymentOptions.isExternalPayment()) ?
+                                             paymentMethodProcessor.createOrGetExternalPaymentMethod(UUIDs.randomUUID().toString(), account, pluginProperties, callContext, internalCallContext) :
+                                             paymentMethodId;
 
         final String transactionType = TransactionType.PURCHASE.name();
         Payment payment = null;
@@ -103,7 +115,7 @@ public class DefaultInvoicePaymentInternalApi implements InvoicePaymentInternalA
 
             payment = pluginControlPaymentProcessor.createPurchase(isApiPayment,
                                                                    account,
-                                                                   paymentMethodId,
+                                                                   resolvedPaymentMethodId,
                                                                    paymentId,
                                                                    amount,
                                                                    currency,
@@ -135,7 +147,7 @@ public class DefaultInvoicePaymentInternalApi implements InvoicePaymentInternalA
                            exception);
         }
 
-        return getInvoicePayment(payment.getId(), paymentTransactionExternalKey, callContext);
+        return paymentTransaction != null ? getInvoicePayment(payment.getId(), paymentTransaction.getExternalKey(), callContext) : null;
     }
 
     private InvoicePayment getInvoicePayment(final UUID paymentId, final String paymentTransactionExternalKey, final TenantContext context) {

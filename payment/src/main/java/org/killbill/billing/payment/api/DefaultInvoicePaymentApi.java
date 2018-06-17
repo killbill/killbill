@@ -24,6 +24,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import javax.annotation.Nullable;
+
 import org.joda.time.DateTime;
 import org.killbill.billing.account.api.Account;
 import org.killbill.billing.catalog.api.Currency;
@@ -158,7 +160,7 @@ public class DefaultInvoicePaymentApi implements InvoicePaymentApi {
     }
 
     private Collection<PluginProperty> preparePluginPropertiesForRefundOrCredit(final boolean isAdjusted,
-                                                                                final Map<UUID, BigDecimal> adjustments,
+                                                                                @Nullable final Map<UUID, BigDecimal> adjustments,
                                                                                 final Iterable<PluginProperty> originalProperties) {
         final Collection<PluginProperty> pluginProperties = new LinkedList<PluginProperty>();
         if (originalProperties != null) {
@@ -167,7 +169,9 @@ public class DefaultInvoicePaymentApi implements InvoicePaymentApi {
             }
         }
         pluginProperties.add(new PluginProperty("IPCD_REFUND_WITH_ADJUSTMENTS", isAdjusted, false));
-        pluginProperties.add(new PluginProperty("IPCD_REFUND_IDS_AMOUNTS", adjustments, false));
+        if (adjustments != null) {
+            pluginProperties.add(new PluginProperty("IPCD_REFUND_IDS_AMOUNTS", adjustments, false));
+        }
         return pluginProperties;
     }
 

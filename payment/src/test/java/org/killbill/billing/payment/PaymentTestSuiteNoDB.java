@@ -27,6 +27,7 @@ import org.killbill.billing.account.api.AccountInternalApi;
 import org.killbill.billing.invoice.api.InvoiceInternalApi;
 import org.killbill.billing.osgi.api.OSGIServiceRegistration;
 import org.killbill.billing.payment.api.InvoicePaymentApi;
+import org.killbill.billing.payment.api.InvoicePaymentInternalApi;
 import org.killbill.billing.payment.api.PaymentApi;
 import org.killbill.billing.payment.api.PaymentGatewayApi;
 import org.killbill.billing.payment.api.PaymentOptions;
@@ -82,6 +83,8 @@ public abstract class PaymentTestSuiteNoDB extends GuicyKillbillTestSuiteNoDB {
     protected PaymentApi paymentApi;
     @Inject
     protected InvoicePaymentApi invoicePaymentApi;
+    @Inject
+    protected InvoicePaymentInternalApi invoicePaymentInternalApi;
     @Inject
     protected PaymentGatewayApi paymentGatewayApi;
     @Inject
