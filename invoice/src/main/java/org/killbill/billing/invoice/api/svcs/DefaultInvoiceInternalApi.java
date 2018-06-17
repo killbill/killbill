@@ -220,6 +220,6 @@ public class DefaultInvoiceInternalApi implements InvoiceInternalApi {
     @Override
     public InvoicePayment getInvoicePaymentByCookieId(final String cookieId, final TenantContext context) {
         final InvoicePaymentModelDao invoicePaymentModelDao = dao.getInvoicePaymentByCookieId(cookieId, internalCallContextFactory.createInternalTenantContext(context.getAccountId(), ObjectType.ACCOUNT, context));
-        return new DefaultInvoicePayment(invoicePaymentModelDao);
+        return invoicePaymentModelDao == null ? null : new DefaultInvoicePayment(invoicePaymentModelDao);
     }
 }

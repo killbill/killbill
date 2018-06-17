@@ -66,6 +66,7 @@ public class GuicyKillbillTestSuiteWithEmbeddedDB extends GuicyKillbillTestSuite
         }
 
         cleanupAllTables();
+        callContext.setDelegate(null, internalCallContext);
         controlCacheDispatcher.clearAll();
     }
 

@@ -435,10 +435,20 @@ public class PaymentProcessor extends ProcessorBase {
     public Payment getPaymentByTransactionId(final UUID transactionId, final boolean withPluginInfo, final boolean withAttempts, final Iterable<PluginProperty> properties, final TenantContext tenantContext, final InternalTenantContext internalTenantContext) throws PaymentApiException {
         final PaymentTransactionModelDao paymentTransactionDao = paymentDao.getPaymentTransaction(transactionId, internalTenantContext);
         if (null != paymentTransactionDao) {
-            PaymentModelDao paymentModelDao = paymentDao.getPayment(paymentTransactionDao.getPaymentId(), internalTenantContext);
+            final PaymentModelDao paymentModelDao = paymentDao.getPayment(paymentTransactionDao.getPaymentId(), internalTenantContext);
             return toPayment(paymentModelDao, withPluginInfo, withAttempts, properties, tenantContext, internalTenantContext);
         }
         return null;
+    }
+
+    public Payment getPaymentByTransactionExternalKey(final String transactionExternalKey, final boolean withPluginInfo, final boolean withAttempts, final Iterable<PluginProperty> properties, final TenantContext tenantContext, final InternalTenantContext internalTenantContext) throws PaymentApiException {
+        final List<PaymentTransactionModelDao> paymentTransactionDao = paymentDao.getPaymentTransactionsByExternalKey(transactionExternalKey, internalTenantContext);
+        if (paymentTransactionDao.isEmpty()) {
+            return null;
+        }
+        // All transactions must be on the same payment (see sanity in buildPaymentStateContext)
+        final PaymentModelDao paymentModelDao = paymentDao.getPayment(paymentTransactionDao.get(0).getPaymentId(), internalTenantContext);
+        return toPayment(paymentModelDao, withPluginInfo, withAttempts, properties, tenantContext, internalTenantContext);
     }
 
     private Payment performOperation(final boolean isApiPayment,

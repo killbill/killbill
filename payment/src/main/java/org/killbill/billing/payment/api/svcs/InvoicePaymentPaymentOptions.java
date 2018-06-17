@@ -17,6 +17,7 @@
 
 package org.killbill.billing.payment.api.svcs;
 
+import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -34,13 +35,18 @@ public class InvoicePaymentPaymentOptions implements PaymentOptions {
     }
 
     public static InvoicePaymentPaymentOptions create(final PaymentOptions paymentOptions) {
+        final List<String> controlPluginNamesFromUser = paymentOptions.getPaymentControlPluginNames();
+        final List<String> paymentControlPluginNames = addInvoicePaymentControlPlugin(controlPluginNamesFromUser);
+        return new InvoicePaymentPaymentOptions(paymentOptions.isExternalPayment(), paymentControlPluginNames);
+    }
+
+    public static List<String> addInvoicePaymentControlPlugin(final Collection<String> controlPluginNamesFromUser) {
         final List<String> paymentControlPluginNames = new LinkedList<String>();
-        paymentControlPluginNames.addAll(paymentOptions.getPaymentControlPluginNames());
+        paymentControlPluginNames.addAll(controlPluginNamesFromUser);
         if (!paymentControlPluginNames.contains(InvoicePaymentControlPluginApi.PLUGIN_NAME)) {
             paymentControlPluginNames.add(InvoicePaymentControlPluginApi.PLUGIN_NAME);
         }
-
-        return new InvoicePaymentPaymentOptions(paymentOptions.isExternalPayment(), paymentControlPluginNames);
+        return paymentControlPluginNames;
     }
 
     @Override
