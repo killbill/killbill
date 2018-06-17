@@ -78,7 +78,6 @@ import org.killbill.billing.invoice.api.InvoiceApiException;
 import org.killbill.billing.invoice.api.InvoiceItem;
 import org.killbill.billing.invoice.api.InvoiceItemType;
 import org.killbill.billing.invoice.api.InvoicePayment;
-import org.killbill.billing.invoice.api.InvoicePaymentApi;
 import org.killbill.billing.invoice.api.InvoiceUserApi;
 import org.killbill.billing.jaxrs.JaxrsExecutors;
 import org.killbill.billing.jaxrs.json.AccountEmailJson;
@@ -102,6 +101,7 @@ import org.killbill.billing.overdue.api.OverdueApi;
 import org.killbill.billing.overdue.api.OverdueApiException;
 import org.killbill.billing.overdue.api.OverdueState;
 import org.killbill.billing.overdue.config.api.OverdueException;
+import org.killbill.billing.payment.api.InvoicePaymentApi;
 import org.killbill.billing.payment.api.Payment;
 import org.killbill.billing.payment.api.PaymentApi;
 import org.killbill.billing.payment.api.PaymentApiException;
@@ -188,7 +188,7 @@ public class AccountResource extends JaxRsResourceBase {
                            final Context context,
                            final RecordIdApi recordIdApi,
                            final NotificationQueueService notificationQueueService) {
-        super(uriBuilder, tagUserApi, customFieldUserApi, auditUserApi, accountApi, paymentApi, subscriptionApi, clock, context);
+        super(uriBuilder, tagUserApi, customFieldUserApi, auditUserApi, accountApi, paymentApi, invoicePaymentApi, subscriptionApi, clock, context);
         this.subscriptionApi = subscriptionApi;
         this.invoiceApi = invoiceApi;
         this.invoicePaymentApi = invoicePaymentApi;

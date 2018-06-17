@@ -20,7 +20,6 @@ package org.killbill.billing.beatrix.integration;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -72,7 +71,7 @@ import org.killbill.billing.invoice.api.DryRunType;
 import org.killbill.billing.invoice.api.Invoice;
 import org.killbill.billing.invoice.api.InvoiceApiException;
 import org.killbill.billing.invoice.api.InvoiceItem;
-import org.killbill.billing.invoice.api.InvoicePaymentApi;
+import org.killbill.billing.invoice.api.InvoicePayment;
 import org.killbill.billing.invoice.api.InvoiceService;
 import org.killbill.billing.invoice.api.InvoiceUserApi;
 import org.killbill.billing.junction.BlockingInternalApi;
@@ -89,6 +88,7 @@ import org.killbill.billing.overdue.listener.OverdueListener;
 import org.killbill.billing.overdue.wrapper.OverdueWrapper;
 import org.killbill.billing.overdue.wrapper.OverdueWrapperFactory;
 import org.killbill.billing.payment.api.AdminPaymentApi;
+import org.killbill.billing.payment.api.InvoicePaymentApi;
 import org.killbill.billing.payment.api.Payment;
 import org.killbill.billing.payment.api.PaymentApi;
 import org.killbill.billing.payment.api.PaymentApiException;
@@ -519,11 +519,19 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
             @Override
             public Payment apply(@Nullable final Void input) {
                 try {
-                    final List<PluginProperty> properties = new ArrayList<PluginProperty>();
-                    final PluginProperty prop1 = new PluginProperty(InvoicePaymentControlPluginApi.PROP_IPCD_INVOICE_ID, invoice.getId().toString(), false);
-                    properties.add(prop1);
-                    return paymentApi.createPurchaseWithPaymentControl(account, account.getPaymentMethodId(), null, amount, currency, null, UUID.randomUUID().toString(),
-                                                                       UUID.randomUUID().toString(), properties, PAYMENT_OPTIONS, callContext);
+                    final InvoicePayment invoicePayment = invoicePaymentApi.createPurchaseForInvoicePayment(account,
+                                                                                                            invoice.getId(),
+                                                                                                            account.getPaymentMethodId(),
+                                                                                                            null,
+                                                                                                            amount,
+                                                                                                            currency,
+                                                                                                            null,
+                                                                                                            UUID.randomUUID().toString(),
+                                                                                                            UUID.randomUUID().toString(),
+                                                                                                            ImmutableList.<PluginProperty>of(),
+                                                                                                            PAYMENT_OPTIONS,
+                                                                                                            callContext);
+                    return paymentApi.getPayment(invoicePayment.getPaymentId(), false, false, ImmutableList.<PluginProperty>of(), callContext);
                 } catch (final PaymentApiException e) {
                     fail(e.toString());
                     return null;
@@ -533,22 +541,7 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
     }
 
     protected Payment createPaymentAndCheckForCompletion(final Account account, final Invoice invoice, final NextEvent... events) {
-        return doCallAndCheckForCompletion(new Function<Void, Payment>() {
-            @Override
-            public Payment apply(@Nullable final Void input) {
-                try {
-                    final List<PluginProperty> properties = new ArrayList<PluginProperty>();
-                    final PluginProperty prop1 = new PluginProperty(InvoicePaymentControlPluginApi.PROP_IPCD_INVOICE_ID, invoice.getId().toString(), false);
-                    properties.add(prop1);
-
-                    return paymentApi.createPurchaseWithPaymentControl(account, account.getPaymentMethodId(), null, invoice.getBalance(), invoice.getCurrency(), null, UUID.randomUUID().toString(),
-                                                                       UUID.randomUUID().toString(), properties, PAYMENT_OPTIONS, callContext);
-                } catch (final PaymentApiException e) {
-                    fail(e.toString());
-                    return null;
-                }
-            }
-        }, events);
+        return createPaymentAndCheckForCompletion(account, invoice, invoice.getBalance(), invoice.getCurrency(), events);
     }
 
     protected Payment createExternalPaymentAndCheckForCompletion(final Account account, final Invoice invoice, final NextEvent... events) {
@@ -556,13 +549,19 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
             @Override
             public Payment apply(@Nullable final Void input) {
                 try {
-
-                    final List<PluginProperty> properties = new ArrayList<PluginProperty>();
-                    final PluginProperty prop1 = new PluginProperty(InvoicePaymentControlPluginApi.PROP_IPCD_INVOICE_ID, invoice.getId().toString(), false);
-                    properties.add(prop1);
-
-                    return paymentApi.createPurchaseWithPaymentControl(account, account.getPaymentMethodId(), null, invoice.getBalance(), invoice.getCurrency(), null, UUID.randomUUID().toString(),
-                                                                       UUID.randomUUID().toString(), properties, EXTERNAL_PAYMENT_OPTIONS, callContext);
+                    final InvoicePayment invoicePayment = invoicePaymentApi.createPurchaseForInvoicePayment(account,
+                                                                                                            invoice.getId(),
+                                                                                                            account.getPaymentMethodId(),
+                                                                                                            null,
+                                                                                                            invoice.getBalance(),
+                                                                                                            invoice.getCurrency(),
+                                                                                                            null,
+                                                                                                            UUID.randomUUID().toString(),
+                                                                                                            UUID.randomUUID().toString(),
+                                                                                                            ImmutableList.<PluginProperty>of(),
+                                                                                                            EXTERNAL_PAYMENT_OPTIONS,
+                                                                                                            callContext);
+                    return paymentApi.getPayment(invoicePayment.getPaymentId(), false, false, ImmutableList.<PluginProperty>of(), callContext);
                 } catch (final PaymentApiException e) {
                     fail(e.toString());
                     return null;
@@ -599,15 +598,10 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
         return doCallAndCheckForCompletion(new Function<Void, Payment>() {
             @Override
             public Payment apply(@Nullable final Void input) {
-                final Collection<PluginProperty> properties = new ArrayList<PluginProperty>();
-                final PluginProperty prop1 = new PluginProperty(InvoicePaymentControlPluginApi.PROP_IPCD_REFUND_WITH_ADJUSTMENTS, "true", false);
-                properties.add(prop1);
-                final PluginProperty prop2 = new PluginProperty(InvoicePaymentControlPluginApi.PROP_IPCD_REFUND_IDS_WITH_AMOUNT_KEY, iias, false);
-                properties.add(prop2);
-
                 try {
-                    return paymentApi.createRefundWithPaymentControl(account, payment.getId(), amount, currency, null, UUID.randomUUID().toString(),
-                                                                     properties, PAYMENT_OPTIONS, callContext);
+                    final InvoicePayment invoicePayment = invoicePaymentApi.createRefundForInvoicePayment(true, iias, account, payment.getId(), amount, currency, null, UUID.randomUUID().toString(),
+                                                                                                          ImmutableList.<PluginProperty>of(), PAYMENT_OPTIONS, callContext);
+                    return paymentApi.getPayment(invoicePayment.getPaymentId(), false, false, ImmutableList.<PluginProperty>of(), callContext);
                 } catch (final PaymentApiException e) {
                     fail(e.toString());
                     return null;

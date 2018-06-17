@@ -539,6 +539,16 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
     }
 
     @Override
+    public InvoicePaymentModelDao getInvoicePaymentByCookieId(final String cookieId, final InternalTenantContext context) {
+        return transactionalSqlDao.execute(true, new EntitySqlDaoTransactionWrapper<InvoicePaymentModelDao>() {
+            @Override
+            public InvoicePaymentModelDao inTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory) throws Exception {
+                return entitySqlDaoWrapperFactory.become(InvoicePaymentSqlDao.class).getPaymentForCookieId(cookieId, context);
+            }
+        });
+    }
+
+    @Override
     public InvoicePaymentModelDao createRefund(final UUID paymentId, final BigDecimal requestedRefundAmount, final boolean isInvoiceAdjusted,
                                                final Map<UUID, BigDecimal> invoiceItemIdsWithNullAmounts, final String transactionExternalKey,
                                                final InternalCallContext context) throws InvoiceApiException {

@@ -131,10 +131,6 @@ public class DefaultPaymentApi extends DefaultApiBase implements PaymentApi {
         }
 
         checkNotNullParameter(account, "account");
-        if (paymentId == null) {
-            checkNotNullParameter(amount, "amount");
-            checkNotNullParameter(currency, "currency");
-        }
         checkNotNullParameter(properties, "plugin properties");
         checkExternalKeyLength(paymentExternalKey);
 
@@ -228,8 +224,6 @@ public class DefaultPaymentApi extends DefaultApiBase implements PaymentApi {
 
         checkNotNullParameter(account, "account");
         checkNotNullParameter(paymentId, "paymentId");
-        checkNotNullParameter(amount, "amount");
-        checkNotNullParameter(currency, "currency");
         checkNotNullParameter(properties, "plugin properties");
         checkExternalKeyLength(paymentTransactionExternalKey);
 
@@ -323,11 +317,6 @@ public class DefaultPaymentApi extends DefaultApiBase implements PaymentApi {
         }
 
         checkNotNullParameter(account, "account");
-        if (paymentId == null) {
-            checkNotNullParameter(amount, "amount");
-            checkNotNullParameter(currency, "currency");
-        }
-
         checkNotNullParameter(properties, "plugin properties");
         checkExternalKeyLength(paymentTransactionExternalKey);
 
@@ -515,9 +504,6 @@ public class DefaultPaymentApi extends DefaultApiBase implements PaymentApi {
         }
 
         checkNotNullParameter(account, "account");
-        if (paymentId == null) {
-            checkNotNullParameter(currency, "currency");
-        }
         checkNotNullParameter(paymentId, "paymentId");
         checkNotNullParameter(properties, "plugin properties");
         checkExternalKeyLength(paymentTransactionExternalKey);
@@ -617,10 +603,6 @@ public class DefaultPaymentApi extends DefaultApiBase implements PaymentApi {
         }
 
         checkNotNullParameter(account, "account");
-        if (paymentId == null) {
-            checkNotNullParameter(amount, "amount");
-            checkNotNullParameter(currency, "currency");
-        }
         checkNotNullParameter(properties, "plugin properties");
         checkExternalKeyLength(paymentTransactionExternalKey);
 
@@ -816,8 +798,6 @@ public class DefaultPaymentApi extends DefaultApiBase implements PaymentApi {
         }
 
         checkNotNullParameter(account, "account");
-        checkNotNullParameter(amount, "amount");
-        checkNotNullParameter(currency, "currency");
         checkNotNullParameter(paymentId, "paymentId");
 
         final String transactionType = TransactionType.CHARGEBACK.name();

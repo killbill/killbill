@@ -86,6 +86,7 @@ import org.killbill.billing.jaxrs.json.TagJson;
 import org.killbill.billing.jaxrs.util.Context;
 import org.killbill.billing.jaxrs.util.JaxrsUriBuilder;
 import org.killbill.billing.jaxrs.util.KillbillEventHandler;
+import org.killbill.billing.payment.api.InvoicePaymentApi;
 import org.killbill.billing.payment.api.PaymentApi;
 import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.util.api.AuditUserApi;
@@ -136,9 +137,10 @@ public class SubscriptionResource extends JaxRsResourceBase {
                                 final SubscriptionApi subscriptionApi,
                                 final AccountUserApi accountUserApi,
                                 final PaymentApi paymentApi,
+                                final InvoicePaymentApi invoicePaymentApi,
                                 final Clock clock,
                                 final Context context) {
-        super(uriBuilder, tagUserApi, customFieldUserApi, auditUserApi, accountUserApi, paymentApi, subscriptionApi, clock, context);
+        super(uriBuilder, tagUserApi, customFieldUserApi, auditUserApi, accountUserApi, paymentApi, invoicePaymentApi, subscriptionApi, clock, context);
         this.killbillHandler = killbillHandler;
         this.entitlementApi = entitlementApi;
         this.subscriptionApi = subscriptionApi;

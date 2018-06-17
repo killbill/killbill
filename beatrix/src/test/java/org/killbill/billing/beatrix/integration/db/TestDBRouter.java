@@ -76,6 +76,10 @@ public class TestDBRouter extends TestIntegrationBase {
 
     @AfterMethod(groups = "slow")
     public void afterMethod() throws Exception {
+        if (hasFailed()) {
+            return;
+        }
+
         externalBus.unregister(publicListener);
         super.afterMethod();
     }
