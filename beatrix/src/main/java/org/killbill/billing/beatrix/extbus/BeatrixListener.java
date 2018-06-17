@@ -58,6 +58,7 @@ import org.killbill.billing.lifecycle.glue.BusModule;
 import org.killbill.billing.notification.plugin.api.BlockingStateMetadata;
 import org.killbill.billing.notification.plugin.api.BroadcastMetadata;
 import org.killbill.billing.notification.plugin.api.ExtBusEventType;
+import org.killbill.billing.notification.plugin.api.InvoiceNotificationMetadata;
 import org.killbill.billing.notification.plugin.api.InvoicePaymentMetadata;
 import org.killbill.billing.notification.plugin.api.PaymentMetadata;
 import org.killbill.billing.notification.plugin.api.SubscriptionMetadata;
@@ -212,6 +213,11 @@ public class BeatrixListener {
                 objectId = null;
                 accountId = realEventInvNotification.getAccountId(); // has to be set here because objectId is null with a dryRun Invoice
                 eventBusType = ExtBusEventType.INVOICE_NOTIFICATION;
+
+                final InvoiceNotificationMetadata metaDataObj = new InvoiceNotificationMetadata(realEventInvNotification.getTargetDate(),
+                                                                                                realEventInvNotification.getAmountOwed(),
+                                                                                                realEventInvNotification.getCurrency());
+                metaData = objectMapper.writeValueAsString(metaDataObj);
                 break;
 
 
