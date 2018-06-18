@@ -38,6 +38,7 @@ import org.killbill.billing.account.api.AccountUserApi;
 import org.killbill.billing.account.api.ImmutableAccountInternalApi;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
+import org.killbill.billing.callcontext.MutableCallContext;
 import org.killbill.billing.callcontext.MutableInternalCallContext;
 import org.killbill.billing.catalog.MockPlan;
 import org.killbill.billing.catalog.MockPlanPhase;
@@ -50,6 +51,7 @@ import org.killbill.billing.catalog.api.PlanPhase;
 import org.killbill.billing.catalog.api.PlanPhasePriceOverride;
 import org.killbill.billing.catalog.api.PlanPhaseSpecifier;
 import org.killbill.billing.catalog.api.Usage;
+import org.killbill.billing.entitlement.api.EntitlementSpecifier;
 import org.killbill.billing.entitlement.api.SubscriptionEventType;
 import org.killbill.billing.entity.EntityPersistenceException;
 import org.killbill.billing.invoice.api.DryRunArguments;
@@ -264,16 +266,18 @@ public class TestInvoiceHelper {
                                                             .paymentMethodId(UUID.randomUUID())
                                                             .timeZone(DateTimeZone.UTC)
                                                             .createdDate(clock.getUTCNow())
+
                                                             .build();
+        final MutableCallContext mutableCallContext = new MutableCallContext(internalCallContext);
 
         final Account account;
         if (isFastTest()) {
-            account = GuicyKillbillTestSuiteNoDB.createMockAccount(accountData, accountUserApi, accountApi, immutableAccountApi, nonEntityDao, clock, internalCallContextFactory, callContext, internalCallContext);
+            account = GuicyKillbillTestSuiteNoDB.createMockAccount(accountData, accountUserApi, accountApi, immutableAccountApi, nonEntityDao, clock, internalCallContextFactory, mutableCallContext, internalCallContext);
         } else {
             account = accountUserApi.createAccount(accountData, callContext);
         }
 
-        GuicyKillbillTestSuite.refreshCallContext(account.getId(), clock, internalCallContextFactory, callContext, internalCallContext);
+        GuicyKillbillTestSuite.refreshCallContext(account.getId(), clock, internalCallContextFactory, mutableCallContext, internalCallContext);
 
         return account;
     }
@@ -446,7 +450,7 @@ public class TestInvoiceHelper {
         }
 
         @Override
-        public PlanPhaseSpecifier getPlanPhaseSpecifier() {
+        public EntitlementSpecifier getEntitlementSpecifier() {
             return null;
         }
 
@@ -472,11 +476,6 @@ public class TestInvoiceHelper {
 
         @Override
         public BillingActionPolicy getBillingActionPolicy() {
-            return null;
-        }
-
-        @Override
-        public List<PlanPhasePriceOverride> getPlanPhasePriceOverrides() {
             return null;
         }
     }

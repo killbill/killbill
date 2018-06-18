@@ -50,6 +50,7 @@ import org.killbill.billing.catalog.api.PlanSpecifier;
 import org.killbill.billing.catalog.api.Product;
 import org.killbill.billing.catalog.api.ProductCategory;
 import org.killbill.billing.entitlement.api.Entitlement.EntitlementState;
+import org.killbill.billing.entitlement.api.EntitlementSpecifier;
 import org.killbill.billing.subscription.alignment.PlanAligner;
 import org.killbill.billing.subscription.alignment.TimedPhase;
 import org.killbill.billing.subscription.api.SubscriptionBase;
@@ -313,7 +314,7 @@ public class DefaultSubscriptionBaseApiService implements SubscriptionBaseApiSer
 
     @Override
     public DateTime dryRunChangePlan(final DefaultSubscriptionBase subscription,
-                                     final PlanPhaseSpecifier spec,
+                                     final EntitlementSpecifier spec,
                                      @Nullable final DateTime requestedDateWithMs,
                                      @Nullable final BillingActionPolicy requestedPolicy,
                                      final TenantContext context) throws SubscriptionBaseApiException {
@@ -321,7 +322,7 @@ public class DefaultSubscriptionBaseApiService implements SubscriptionBaseApiSer
 
         BillingActionPolicy policyMaybeNull = requestedPolicy;
         if (requestedDateWithMs == null && requestedPolicy == null) {
-            final PlanChangeResult planChangeResult = getPlanChangeResult(subscription, spec, now, context);
+            final PlanChangeResult planChangeResult = getPlanChangeResult(subscription, spec.getPlanPhaseSpecifier(), now, context);
             policyMaybeNull = planChangeResult.getPolicy();
         }
 
@@ -335,15 +336,15 @@ public class DefaultSubscriptionBaseApiService implements SubscriptionBaseApiSer
     }
 
     @Override
-    public DateTime changePlan(final DefaultSubscriptionBase subscription, final PlanPhaseSpecifier spec, final List<PlanPhasePriceOverride> overrides, final CallContext context) throws SubscriptionBaseApiException {
+    public DateTime changePlan(final DefaultSubscriptionBase subscription, final EntitlementSpecifier spec, final CallContext context) throws SubscriptionBaseApiException {
         validateSubscriptionStateForChangePlan(subscription, null);
 
-        final PlanChangeResult planChangeResult = getPlanChangeResult(subscription, spec, context.getCreatedDate(), context);
+        final PlanChangeResult planChangeResult = getPlanChangeResult(subscription, spec.getPlanPhaseSpecifier(), context.getCreatedDate(), context);
         final DateTime effectiveDate = dryRunChangePlan(subscription, spec, null, planChangeResult.getPolicy(), context);
         validateEffectiveDate(subscription, effectiveDate);
 
         try {
-            doChangePlan(subscription, spec, overrides, effectiveDate, context);
+            doChangePlan(subscription, spec, effectiveDate, context);
         } catch (final CatalogApiException e) {
             throw new SubscriptionBaseApiException(e);
         }
@@ -352,14 +353,14 @@ public class DefaultSubscriptionBaseApiService implements SubscriptionBaseApiSer
     }
 
     @Override
-    public DateTime changePlanWithRequestedDate(final DefaultSubscriptionBase subscription, final PlanPhaseSpecifier spec, final List<PlanPhasePriceOverride> overrides,
+    public DateTime changePlanWithRequestedDate(final DefaultSubscriptionBase subscription, final EntitlementSpecifier spec,
                                                 final DateTime requestedDateWithMs, final CallContext context) throws SubscriptionBaseApiException {
         final DateTime effectiveDate = dryRunChangePlan(subscription, spec, requestedDateWithMs, null, context);
         validateEffectiveDate(subscription, effectiveDate);
         validateSubscriptionStateForChangePlan(subscription, requestedDateWithMs);
 
         try {
-            doChangePlan(subscription, spec, overrides, effectiveDate, context);
+            doChangePlan(subscription, spec, effectiveDate, context);
         } catch (final CatalogApiException e) {
             throw new SubscriptionBaseApiException(e);
         }
@@ -368,13 +369,13 @@ public class DefaultSubscriptionBaseApiService implements SubscriptionBaseApiSer
     }
 
     @Override
-    public DateTime changePlanWithPolicy(final DefaultSubscriptionBase subscription, final PlanPhaseSpecifier spec, final List<PlanPhasePriceOverride> overrides, final BillingActionPolicy policy, final CallContext context) throws SubscriptionBaseApiException {
+    public DateTime changePlanWithPolicy(final DefaultSubscriptionBase subscription, final EntitlementSpecifier spec, final BillingActionPolicy policy, final CallContext context) throws SubscriptionBaseApiException {
 
         final DateTime effectiveDate = dryRunChangePlan(subscription, spec, null, policy, context);
 
         validateSubscriptionStateForChangePlan(subscription, effectiveDate);
         try {
-            doChangePlan(subscription, spec, overrides, effectiveDate, context);
+            doChangePlan(subscription, spec, effectiveDate, context);
         } catch (final CatalogApiException e) {
             throw new SubscriptionBaseApiException(e);
         }
@@ -400,18 +401,18 @@ public class DefaultSubscriptionBaseApiService implements SubscriptionBaseApiSer
     }
 
     private void doChangePlan(final DefaultSubscriptionBase subscription,
-                              final PlanPhaseSpecifier spec,
-                              final List<PlanPhasePriceOverride> overrides,
+                              final EntitlementSpecifier spec,
                               final DateTime effectiveDate,
                               final CallContext context) throws SubscriptionBaseApiException, CatalogApiException {
 
         final InternalCallContext internalCallContext = createCallContextFromBundleId(subscription.getBundleId(), context);
-        final PlanPhasePriceOverridesWithCallContext overridesWithContext = new DefaultPlanPhasePriceOverridesWithCallContext(overrides, context);
+        final PlanPhasePriceOverridesWithCallContext overridesWithContext = new DefaultPlanPhasePriceOverridesWithCallContext(spec.getOverrides(), context);
 
         final Catalog fullCatalog = catalogInternalApi.getFullCatalog(true, true, internalCallContext);
-        final Plan newPlan = fullCatalog.createOrFindPlan(spec, overridesWithContext, effectiveDate, subscription.getStartDate());
+        final PlanPhaseSpecifier planPhaseSpecifier = spec.getPlanPhaseSpecifier();
+        final Plan newPlan = fullCatalog.createOrFindPlan(planPhaseSpecifier, overridesWithContext, effectiveDate, subscription.getStartDate());
 
-        final PhaseType initialPhaseType = spec.getPhaseType();
+        final PhaseType initialPhaseType = planPhaseSpecifier.getPhaseType();
         if (ProductCategory.ADD_ON.toString().equalsIgnoreCase(newPlan.getProduct().getCategory().toString())) {
             if (newPlan.getPlansAllowedInBundle() != -1
                 && newPlan.getPlansAllowedInBundle() > 0

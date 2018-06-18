@@ -62,6 +62,7 @@ import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.catalog.api.PlanPhasePriceOverride;
 import org.killbill.billing.catalog.api.PlanPhaseSpecifier;
 import org.killbill.billing.catalog.api.ProductCategory;
+import org.killbill.billing.entitlement.api.EntitlementSpecifier;
 import org.killbill.billing.entitlement.api.SubscriptionApiException;
 import org.killbill.billing.entitlement.api.SubscriptionEventType;
 import org.killbill.billing.invoice.api.DryRunArguments;
@@ -80,6 +81,7 @@ import org.killbill.billing.jaxrs.json.PhasePriceOverrideJson;
 import org.killbill.billing.jaxrs.json.TagJson;
 import org.killbill.billing.jaxrs.util.Context;
 import org.killbill.billing.jaxrs.util.JaxrsUriBuilder;
+import org.killbill.billing.payment.api.InvoicePaymentApi;
 import org.killbill.billing.payment.api.Payment;
 import org.killbill.billing.payment.api.PaymentApi;
 import org.killbill.billing.payment.api.PaymentApiException;
@@ -146,6 +148,7 @@ public class InvoiceResource extends JaxRsResourceBase {
     public InvoiceResource(final AccountUserApi accountUserApi,
                            final InvoiceUserApi invoiceApi,
                            final PaymentApi paymentApi,
+                           final InvoicePaymentApi invoicePaymentApi,
                            final Clock clock,
                            final JaxrsUriBuilder uriBuilder,
                            final TagUserApi tagUserApi,
@@ -153,7 +156,7 @@ public class InvoiceResource extends JaxRsResourceBase {
                            final AuditUserApi auditUserApi,
                            final TenantUserApi tenantApi,
                            final Context context) {
-        super(uriBuilder, tagUserApi, customFieldUserApi, auditUserApi, accountUserApi, paymentApi, null, clock, context);
+        super(uriBuilder, tagUserApi, customFieldUserApi, auditUserApi, accountUserApi, paymentApi, invoicePaymentApi, null, clock, context);
         this.invoiceApi = invoiceApi;
         this.tenantApi = tenantApi;
         this.defaultLocale = Locale.getDefault();
@@ -304,8 +307,7 @@ public class InvoiceResource extends JaxRsResourceBase {
         final LocalDate inputDate = toLocalDate(targetDate);
 
         try {
-            final Invoice generatedInvoice = invoiceApi.triggerInvoiceGeneration(accountId, inputDate, null,
-                                                                                 callContext);
+            final Invoice generatedInvoice = invoiceApi.triggerInvoiceGeneration(accountId, inputDate, callContext);
             return uriBuilder.buildResponse(uriInfo, InvoiceResource.class, "getInvoice", generatedInvoice.getId(), request);
         } catch (InvoiceApiException e) {
             if (e.getCode() == ErrorCode.INVOICE_NOTHING_TO_DO.getCode()) {
@@ -394,8 +396,7 @@ public class InvoiceResource extends JaxRsResourceBase {
 
         final DryRunArguments dryRunArguments = new DefaultDryRunArguments(dryRunSubscriptionSpec, account);
         try {
-            final Invoice generatedInvoice = invoiceApi.triggerInvoiceGeneration(accountId, inputDate, dryRunArguments,
-                                                                                 callContext);
+            final Invoice generatedInvoice = invoiceApi.triggerDryRunInvoiceGeneration(accountId, inputDate, dryRunArguments, callContext);
             return Response.status(Status.OK).entity(new InvoiceJson(generatedInvoice, true, null, null)).build();
         } catch (InvoiceApiException e) {
             if (e.getCode() == ErrorCode.INVOICE_NOTHING_TO_DO.getCode()) {
@@ -696,10 +697,10 @@ public class InvoiceResource extends JaxRsResourceBase {
         final UUID paymentMethodId = externalPayment ? null :
                                      (payment.getPaymentMethodId() != null ? payment.getPaymentMethodId() : account.getPaymentMethodId());
 
-        final Payment result = createPurchaseForInvoice(account, invoiceId, payment.getPurchasedAmount(), paymentMethodId, externalPayment,
-                                                        payment.getPaymentExternalKey(), null, pluginProperties, callContext);
+        final InvoicePayment result = createPurchaseForInvoice(account, invoiceId, payment.getPurchasedAmount(), paymentMethodId, externalPayment,
+                                                               payment.getPaymentExternalKey(), null, pluginProperties, callContext);
         return result != null ?
-               uriBuilder.buildResponse(uriInfo, InvoicePaymentResource.class, "getInvoicePayment", result.getId(), request) :
+               uriBuilder.buildResponse(uriInfo, InvoicePaymentResource.class, "getInvoicePayment", result.getPaymentId(), request) :
                Response.status(Status.NO_CONTENT).build();
     }
 
@@ -1073,10 +1074,9 @@ public class InvoiceResource extends JaxRsResourceBase {
         private final SubscriptionEventType action;
         private final UUID subscriptionId;
         private final LocalDate effectiveDate;
-        private final PlanPhaseSpecifier specifier;
+        private final EntitlementSpecifier specifier;
         private final UUID bundleId;
         private final BillingActionPolicy billingPolicy;
-        private final List<PlanPhasePriceOverride> overrides;
 
         public DefaultDryRunArguments(final InvoiceDryRunJson input, final Account account) {
             if (input == null) {
@@ -1087,7 +1087,6 @@ public class InvoiceResource extends JaxRsResourceBase {
                 this.specifier = null;
                 this.bundleId = null;
                 this.billingPolicy = null;
-                this.overrides = null;
             } else {
                 this.dryRunType = input.getDryRunType() != null ? input.getDryRunType() : DryRunType.TARGET_DATE;
                 this.action = input.getDryRunAction() != null ? input.getDryRunAction() : null;
@@ -1103,8 +1102,7 @@ public class InvoiceResource extends JaxRsResourceBase {
                                                                                      input.getPriceListName(),
                                                                                      input.getPhaseType() != null ? input.getPhaseType() : null) :
                                                               null;
-                this.specifier = planPhaseSpecifier;
-                this.overrides = input.getPriceOverrides() != null ?
+                final List<PlanPhasePriceOverride> overrides = input.getPriceOverrides() != null ?
                                  ImmutableList.copyOf(Iterables.transform(input.getPriceOverrides(), new Function<PhasePriceOverrideJson, PlanPhasePriceOverride>() {
                                      @Nullable
                                      @Override
@@ -1117,6 +1115,20 @@ public class InvoiceResource extends JaxRsResourceBase {
                                          }
                                      }
                                  })) : ImmutableList.<PlanPhasePriceOverride>of();
+                this.specifier = new EntitlementSpecifier() {
+                    @Override
+                    public PlanPhaseSpecifier getPlanPhaseSpecifier() {
+                        return planPhaseSpecifier;
+                    }
+                    @Override
+                    public Integer getBillCycleDay() {
+                        return null;
+                    }
+                    @Override
+                    public List<PlanPhasePriceOverride> getOverrides() {
+                        return overrides;
+                    }
+                };
             }
         }
 
@@ -1126,7 +1138,7 @@ public class InvoiceResource extends JaxRsResourceBase {
         }
 
         @Override
-        public PlanPhaseSpecifier getPlanPhaseSpecifier() {
+        public EntitlementSpecifier getEntitlementSpecifier() {
             return specifier;
         }
 
@@ -1155,10 +1167,6 @@ public class InvoiceResource extends JaxRsResourceBase {
             return billingPolicy;
         }
 
-        @Override
-        public List<PlanPhasePriceOverride> getPlanPhasePriceOverrides() {
-            return overrides;
-        }
 
         @Override
         public String toString() {
@@ -1170,7 +1178,6 @@ public class InvoiceResource extends JaxRsResourceBase {
             sb.append(", specifier=").append(specifier);
             sb.append(", bundleId=").append(bundleId);
             sb.append(", billingPolicy=").append(billingPolicy);
-            sb.append(", overrides=").append(overrides);
             sb.append('}');
             return sb.toString();
         }

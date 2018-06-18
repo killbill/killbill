@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014-2017 Groupon, Inc
- * Copyright 2014-2017 The Billing Project, LLC
+ * Copyright 2014-2018 Groupon, Inc
+ * Copyright 2014-2018 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -18,14 +18,19 @@
 
 package org.killbill.billing.payment;
 
+import java.util.List;
+
 import javax.inject.Named;
 
 import org.killbill.billing.GuicyKillbillTestSuiteNoDB;
 import org.killbill.billing.account.api.AccountInternalApi;
 import org.killbill.billing.invoice.api.InvoiceInternalApi;
 import org.killbill.billing.osgi.api.OSGIServiceRegistration;
+import org.killbill.billing.payment.api.InvoicePaymentApi;
+import org.killbill.billing.payment.api.InvoicePaymentInternalApi;
 import org.killbill.billing.payment.api.PaymentApi;
 import org.killbill.billing.payment.api.PaymentGatewayApi;
+import org.killbill.billing.payment.api.PaymentOptions;
 import org.killbill.billing.payment.caching.StateMachineConfigCache;
 import org.killbill.billing.payment.core.PaymentExecutors;
 import org.killbill.billing.payment.core.PaymentMethodProcessor;
@@ -52,6 +57,7 @@ import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Guice;
 import com.google.inject.Inject;
@@ -75,6 +81,10 @@ public abstract class PaymentTestSuiteNoDB extends GuicyKillbillTestSuiteNoDB {
     protected PersistentBus eventBus;
     @Inject
     protected PaymentApi paymentApi;
+    @Inject
+    protected InvoicePaymentApi invoicePaymentApi;
+    @Inject
+    protected InvoicePaymentInternalApi invoicePaymentInternalApi;
     @Inject
     protected PaymentGatewayApi paymentGatewayApi;
     @Inject
@@ -104,6 +114,18 @@ public abstract class PaymentTestSuiteNoDB extends GuicyKillbillTestSuiteNoDB {
     protected CacheInvalidationCallback cacheInvalidationCallback;
     @Inject
     protected TenantInternalApi tenantInternalApi;
+
+    protected static final PaymentOptions PAYMENT_OPTIONS = new PaymentOptions() {
+        @Override
+        public boolean isExternalPayment() {
+            return false;
+        }
+
+        @Override
+        public List<String> getPaymentControlPluginNames() {
+            return ImmutableList.<String>of();
+        }
+    };
 
     @Override
     protected KillbillConfigSource getConfigSource() {

@@ -105,7 +105,7 @@ public class GuicyKillbillTestSuite implements IHookable {
     public static void refreshCallContext(final UUID accountId,
                                           final Clock clock,
                                           final InternalCallContextFactory internalCallContextFactory,
-                                          final TenantContext callContext,
+                                          final MutableCallContext callContext,
                                           final MutableInternalCallContext internalCallContext) {
         final InternalTenantContext tmp = internalCallContextFactory.createInternalTenantContext(accountId, callContext);
         internalCallContext.setAccountRecordId(tmp.getAccountRecordId());
@@ -113,6 +113,8 @@ public class GuicyKillbillTestSuite implements IHookable {
         internalCallContext.setReferenceTime(tmp.getReferenceLocalTime());
         internalCallContext.setCreatedDate(clock.getUTCNow());
         internalCallContext.setUpdatedDate(clock.getUTCNow());
+
+        callContext.setDelegate(accountId, internalCallContext);
     }
 
     protected KillbillConfigSource getConfigSource() {

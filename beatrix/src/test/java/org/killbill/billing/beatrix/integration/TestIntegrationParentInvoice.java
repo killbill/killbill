@@ -18,7 +18,6 @@
 package org.killbill.billing.beatrix.integration;
 
 import java.math.BigDecimal;
-import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.UUID;
@@ -40,6 +39,7 @@ import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.catalog.api.PlanPhaseSpecifier;
 import org.killbill.billing.catalog.api.ProductCategory;
 import org.killbill.billing.entitlement.api.DefaultEntitlement;
+import org.killbill.billing.entitlement.api.DefaultEntitlementSpecifier;
 import org.killbill.billing.invoice.api.DefaultInvoiceService;
 import org.killbill.billing.invoice.api.Invoice;
 import org.killbill.billing.invoice.api.InvoiceApiException;
@@ -50,7 +50,6 @@ import org.killbill.billing.invoice.notification.ParentInvoiceCommitmentNotifier
 import org.killbill.billing.payment.api.Payment;
 import org.killbill.billing.payment.api.PaymentApiException;
 import org.killbill.billing.payment.api.PluginProperty;
-import org.killbill.billing.payment.invoice.InvoicePaymentControlPluginApi;
 import org.killbill.notificationq.api.NotificationEvent;
 import org.killbill.notificationq.api.NotificationEventWithMetadata;
 import org.killbill.notificationq.api.NotificationQueue;
@@ -208,7 +207,8 @@ public class TestIntegrationParentInvoice extends TestIntegrationBase {
 
         // upgrade plan
         busHandler.pushExpectedEvents(NextEvent.CHANGE, NextEvent.INVOICE);
-        baseEntitlementChild.changePlanWithDate(new PlanPhaseSpecifier("Shotgun", BillingPeriod.MONTHLY, baseEntitlementChild.getLastActivePriceList().getName()), null, null, null, callContext);
+        final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("Shotgun", BillingPeriod.MONTHLY, baseEntitlementChild.getLastActivePriceList().getName());
+        baseEntitlementChild.changePlanWithDate(new DefaultEntitlementSpecifier(spec), null, null, callContext);
         assertListenerStatus();
 
         // check parent invoice. Expected to have the same invoice item with the amount updated
@@ -1157,17 +1157,23 @@ public class TestIntegrationParentInvoice extends TestIntegrationBase {
         assertEquals(invoiceUserApi.getAccountBalance(parentAccount.getId(), callContext).compareTo(new BigDecimal("249.95")), 0);
         assertEquals(invoiceUserApi.getAccountBalance(childAccount.getId(), callContext).compareTo(new BigDecimal("249.95")), 0);
 
-
         // Verify Invoice apis getParentAccountId/getParentInvoiceId
         assertEquals(childInvoices.get(1).getParentAccountId(), parentAccount.getId());
         assertEquals(childInvoices.get(1).getParentInvoiceId(), parentInvoice.getId());
 
         try {
-            final List<PluginProperty> properties = new ArrayList<PluginProperty>();
-            final PluginProperty prop1 = new PluginProperty(InvoicePaymentControlPluginApi.PROP_IPCD_INVOICE_ID, childInvoices.get(1).getId().toString(), false);
-            properties.add(prop1);
-            paymentApi.createPurchaseWithPaymentControl(childAccount, childAccount.getPaymentMethodId(), null, childInvoices.get(1).getBalance(), childInvoices.get(1).getCurrency(), null, UUID.randomUUID().toString(),
-                                                        UUID.randomUUID().toString(), properties, PAYMENT_OPTIONS, callContext);
+            invoicePaymentApi.createPurchaseForInvoicePayment(childAccount,
+                                                              childInvoices.get(1).getId(),
+                                                              childAccount.getPaymentMethodId(),
+                                                              null,
+                                                              childInvoices.get(1).getBalance(),
+                                                              childInvoices.get(1).getCurrency(),
+                                                              null,
+                                                              UUID.randomUUID().toString(),
+                                                              UUID.randomUUID().toString(),
+                                                              ImmutableList.<PluginProperty>of(),
+                                                              PAYMENT_OPTIONS,
+                                                              callContext);
             Assert.fail("Payment should fail, invoice belongs to parent");
         } catch (final PaymentApiException e) {
             assertEquals(ErrorCode.PAYMENT_PLUGIN_API_ABORTED.getCode(), e.getCode());

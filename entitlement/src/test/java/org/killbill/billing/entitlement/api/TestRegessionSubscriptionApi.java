@@ -47,9 +47,10 @@ public class TestRegessionSubscriptionApi extends EntitlementTestSuiteWithEmbedd
         final LocalDate entitlementEffectiveDate = initialDate.minusDays(1);
 
         final Account account = createAccount(getAccountData(7));
-        final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("Shotgun",  BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, null);
+        final PlanPhaseSpecifier planPhaseSpecifier = new PlanPhaseSpecifier("Shotgun",  BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, null);
+        final EntitlementSpecifier spec = new DefaultEntitlementSpecifier(planPhaseSpecifier);
         testListener.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK);
-        final UUID entitlementId = entitlementApi.createBaseEntitlement(account.getId(), spec, UUID.randomUUID().toString(), null, entitlementEffectiveDate, null, false, true, ImmutableList.<PluginProperty>of(), callContext);
+        final UUID entitlementId = entitlementApi.createBaseEntitlement(account.getId(), spec, UUID.randomUUID().toString(), entitlementEffectiveDate, null, false, true, ImmutableList.<PluginProperty>of(), callContext);
         final Entitlement entitlement = entitlementApi.getEntitlementForId(entitlementId, callContext);
         // Because of the BlockingState event ENT_STARTED, the entitlement date should be correctly set
         Assert.assertEquals(entitlement.getEffectiveStartDate(), entitlementEffectiveDate);

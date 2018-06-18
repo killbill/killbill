@@ -171,7 +171,7 @@ public class TestSecurity extends TestJaxrsBase {
         securityApi.updateUserRoles(username, new UserRoles(username, null, ImmutableList.of(newRoleDefinition)), requestOptions);
         permissions = securityApi.getCurrentUserPermissions(requestOptions);
         // This will only work if correct shiro cache invalidation was performed... requires lots of sweat to get it to work ;-)
-        Assert.assertEquals(permissions.size(), 2);
+        Assert.assertEquals(permissions.size(), 1);
 
         securityApi.invalidateUser(username, requestOptions);
         try {

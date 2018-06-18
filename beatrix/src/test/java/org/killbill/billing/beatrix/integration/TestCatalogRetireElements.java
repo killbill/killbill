@@ -31,6 +31,7 @@ import org.killbill.billing.catalog.api.PlanPhaseSpecifier;
 import org.killbill.billing.catalog.api.PriceListSet;
 import org.killbill.billing.catalog.api.ProductCategory;
 import org.killbill.billing.entitlement.api.DefaultEntitlement;
+import org.killbill.billing.entitlement.api.DefaultEntitlementSpecifier;
 import org.killbill.billing.entitlement.api.Entitlement;
 import org.killbill.billing.entitlement.api.Entitlement.EntitlementState;
 import org.killbill.billing.entitlement.api.EntitlementApiException;
@@ -87,7 +88,7 @@ public class TestCatalogRetireElements extends TestIntegrationBase {
 
         final PlanPhaseSpecifier spec = new PlanPhaseSpecifier(productName, term, PriceListSet.DEFAULT_PRICELIST_NAME, null);
         try {
-            entitlementApi.createBaseEntitlement(account.getId(), spec, "externalKey2", null, null, null, false, true, ImmutableList.<PluginProperty>of(), callContext);
+            entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec), "externalKey2", null, null, false, true, ImmutableList.<PluginProperty>of(), callContext);
             fail(); // force to fail is there is not an exception
         } catch (final EntitlementApiException e) {
             assertEquals(e.getCode(), ErrorCode.CAT_PLAN_NOT_FOUND.getCode());
@@ -152,7 +153,7 @@ public class TestCatalogRetireElements extends TestIntegrationBase {
 
         final PlanPhaseSpecifier spec = new PlanPhaseSpecifier(productName, term, PriceListSet.DEFAULT_PRICELIST_NAME, null);
         try {
-            entitlementApi.createBaseEntitlement(account.getId(), spec, "externalKey2", null, null, null, false, true, ImmutableList.<PluginProperty>of(), callContext);
+            entitlementApi.createBaseEntitlement(account.getId(),  new DefaultEntitlementSpecifier(spec), "externalKey2", null, null, false, true, ImmutableList.<PluginProperty>of(), callContext);
             fail(); // force to fail is there is not an exception
         } catch (final EntitlementApiException e) {
             assertEquals(e.getCode(), ErrorCode.CAT_PLAN_NOT_FOUND.getCode());
@@ -191,7 +192,7 @@ public class TestCatalogRetireElements extends TestIntegrationBase {
         final PlanPhaseSpecifier spec1 = new PlanPhaseSpecifier(productName, term, "DEFAULT", null);
 
         busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE);
-        final UUID bpEntitlementId = entitlementApi.createBaseEntitlement(account.getId(), spec1, "externalKey", null, null, null, false, true, ImmutableList.<PluginProperty>of(), callContext);
+        final UUID bpEntitlementId = entitlementApi.createBaseEntitlement(account.getId(),  new DefaultEntitlementSpecifier(spec1), "externalKey", null,  null, false, true, ImmutableList.<PluginProperty>of(), callContext);
         assertListenerStatus();
         Entitlement bpEntitlement = entitlementApi.getEntitlementForId(bpEntitlementId, callContext);
 
@@ -215,7 +216,7 @@ public class TestCatalogRetireElements extends TestIntegrationBase {
         // Note that we need to trigger a CHANGE outside a TRIAL phase to generate a CHANGE event (otherwise, a CREATE is generated)
         final PlanPhaseSpecifier spec2 = new PlanPhaseSpecifier(productName, term, "SpecialDiscount", null);
         busHandler.pushExpectedEvents(NextEvent.CHANGE, NextEvent.INVOICE);
-        bpEntitlement = bpEntitlement.changePlanWithDate(spec2, null, clock.getUTCToday(), ImmutableList.<PluginProperty>of(), callContext);
+        bpEntitlement = bpEntitlement.changePlanWithDate( new DefaultEntitlementSpecifier(spec2), clock.getUTCToday(), ImmutableList.<PluginProperty>of(), callContext);
         assertListenerStatus();
 
         assertEquals(entitlementApi.getEntitlementForId(bpEntitlement.getId(), callContext).getLastActivePhase().getPhaseType(), PhaseType.DISCOUNT);
@@ -251,7 +252,7 @@ public class TestCatalogRetireElements extends TestIntegrationBase {
         // Catalog v3 should start now.
 
         try {
-            entitlementApi.createBaseEntitlement(account.getId(), spec2, "externalKey2", null, null, null, false, true, ImmutableList.<PluginProperty>of(), callContext);
+            entitlementApi.createBaseEntitlement(account.getId(),  new DefaultEntitlementSpecifier(spec2), "externalKey2", null, null, false, true, ImmutableList.<PluginProperty>of(), callContext);
             fail(); // force to fail is there is not an exception
         } catch (final EntitlementApiException e) {
             assertEquals(e.getCode(), ErrorCode.CAT_NO_SUCH_PRODUCT.getCode());
@@ -282,7 +283,7 @@ public class TestCatalogRetireElements extends TestIntegrationBase {
         final PlanPhaseSpecifier spec1 = new PlanPhaseSpecifier(productName, term, "DEFAULT", null);
 
         busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE);
-        final UUID bpEntitlementId = entitlementApi.createBaseEntitlement(account.getId(), spec1, "externalKey", null, null, null, false, true, ImmutableList.<PluginProperty>of(), callContext);
+        final UUID bpEntitlementId = entitlementApi.createBaseEntitlement(account.getId(),  new DefaultEntitlementSpecifier(spec1), "externalKey", null, null, false, true, ImmutableList.<PluginProperty>of(), callContext);
         assertListenerStatus();
         Entitlement bpEntitlement = entitlementApi.getEntitlementForId(bpEntitlementId, callContext);
 
@@ -306,7 +307,7 @@ public class TestCatalogRetireElements extends TestIntegrationBase {
         // Note that we need to trigger a CHANGE outside a TRIAL phase to generate a CHANGE event (otherwise, a CREATE is generated)
         final PlanPhaseSpecifier spec2 = new PlanPhaseSpecifier(productName, term, "SpecialDiscount", null);
         busHandler.pushExpectedEvents(NextEvent.CHANGE, NextEvent.INVOICE);
-        bpEntitlement = bpEntitlement.changePlanWithDate(spec2, null, clock.getUTCToday(), ImmutableList.<PluginProperty>of(), callContext);
+        bpEntitlement = bpEntitlement.changePlanWithDate( new DefaultEntitlementSpecifier(spec2), clock.getUTCToday(), ImmutableList.<PluginProperty>of(), callContext);
         assertListenerStatus();
 
         assertEquals(entitlementApi.getEntitlementForId(bpEntitlement.getId(), callContext).getLastActivePhase().getPhaseType(), PhaseType.DISCOUNT);
@@ -352,7 +353,7 @@ public class TestCatalogRetireElements extends TestIntegrationBase {
         // Catalog v3 should start now.
 
         try {
-            entitlementApi.createBaseEntitlement(account.getId(), spec2, "externalKey2", null, null, null, false, true, ImmutableList.<PluginProperty>of(), callContext);
+            entitlementApi.createBaseEntitlement(account.getId(),  new DefaultEntitlementSpecifier(spec2), "externalKey2", null, null, false, true, ImmutableList.<PluginProperty>of(), callContext);
             fail(); // force to fail is there is not an exception
         } catch (final EntitlementApiException e) {
             assertEquals(e.getCode(), ErrorCode.CAT_NO_SUCH_PRODUCT.getCode());
@@ -405,7 +406,7 @@ public class TestCatalogRetireElements extends TestIntegrationBase {
 
         final PlanPhaseSpecifier spec = new PlanPhaseSpecifier(productName, term, PriceListSet.DEFAULT_PRICELIST_NAME, null);
         try {
-            entitlementApi.createBaseEntitlement(account.getId(), spec, "externalKey2", null, null, null, false, true, ImmutableList.<PluginProperty>of(), callContext);
+            entitlementApi.createBaseEntitlement(account.getId(),  new DefaultEntitlementSpecifier(spec), "externalKey2", null, null, false, true, ImmutableList.<PluginProperty>of(), callContext);
             fail(); // force to fail is there is not an exception
         } catch (final EntitlementApiException e) {
             assertTrue(e.getLocalizedMessage().startsWith("Could not find any product named 'Pistol'"));
@@ -441,7 +442,7 @@ public class TestCatalogRetireElements extends TestIntegrationBase {
         final PlanPhaseSpecifier spec = new PlanPhaseSpecifier(productName, term, "SpecialDiscount", null);
 
         busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE);
-        final UUID bpEntitlementId = entitlementApi.createBaseEntitlement(account.getId(), spec, "externalKey", null, null, null, false, true, ImmutableList.<PluginProperty>of(), callContext);
+        final UUID bpEntitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec), "externalKey", null, null, false, true, ImmutableList.<PluginProperty>of(), callContext);
         assertListenerStatus();
         final Entitlement bpEntitlement = entitlementApi.getEntitlementForId(bpEntitlementId, callContext);
 
@@ -461,7 +462,7 @@ public class TestCatalogRetireElements extends TestIntegrationBase {
         // PriceList "SpecialDiscount" at this point.
 
         try {
-            entitlementApi.createBaseEntitlement(account.getId(), spec, "externalKey2", null, null, null, false, true, ImmutableList.<PluginProperty>of(), callContext);
+            entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec), "externalKey2", null, null, false, true, ImmutableList.<PluginProperty>of(), callContext);
             fail(); // force to fail is there is not an exception
         } catch (final EntitlementApiException e) {
             assertTrue(e.getLocalizedMessage().startsWith("Could not find any product named 'Pistol'"));

@@ -22,7 +22,6 @@ import org.killbill.billing.GuicyKillbillTestSuiteNoDB;
 import org.killbill.billing.account.api.AccountInternalApi;
 import org.killbill.billing.currency.api.CurrencyConversionApi;
 import org.killbill.billing.invoice.api.InvoiceInternalApi;
-import org.killbill.billing.invoice.api.InvoicePaymentApi;
 import org.killbill.billing.invoice.api.InvoiceUserApi;
 import org.killbill.billing.invoice.api.formatters.ResourceBundleFactory;
 import org.killbill.billing.invoice.dao.InvoiceDao;
@@ -33,6 +32,7 @@ import org.killbill.billing.invoice.glue.TestInvoiceModuleNoDB;
 import org.killbill.billing.invoice.usage.RawUsageOptimizer;
 import org.killbill.billing.junction.BillingInternalApi;
 import org.killbill.billing.lifecycle.api.BusService;
+import org.killbill.billing.payment.api.InvoicePaymentApi;
 import org.killbill.billing.platform.api.KillbillConfigSource;
 import org.killbill.billing.subscription.api.SubscriptionBaseInternalApi;
 import org.killbill.billing.usage.api.UsageUserApi;
@@ -64,8 +64,6 @@ public abstract class InvoiceTestSuiteNoDB extends GuicyKillbillTestSuiteNoDB {
     protected CacheControllerDispatcher controllerDispatcher;
     @Inject
     protected InvoiceUserApi invoiceUserApi;
-    @Inject
-    protected InvoicePaymentApi invoicePaymentApi;
     @Inject
     protected InvoiceGenerator generator;
     @Inject
