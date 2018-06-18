@@ -110,12 +110,17 @@ import org.killbill.billing.subscription.api.timeline.SubscriptionBaseTimelineAp
 import org.killbill.billing.subscription.api.transfer.SubscriptionBaseTransferApi;
 import org.killbill.billing.subscription.api.user.DefaultSubscriptionBase;
 import org.killbill.billing.tenant.api.TenantUserApi;
+import org.killbill.billing.usage.api.SubscriptionUsageRecord;
+import org.killbill.billing.usage.api.UnitUsageRecord;
+import org.killbill.billing.usage.api.UsageApiException;
+import org.killbill.billing.usage.api.UsageRecord;
 import org.killbill.billing.usage.api.UsageUserApi;
 import org.killbill.billing.util.api.RecordIdApi;
 import org.killbill.billing.util.api.TagApiException;
 import org.killbill.billing.util.api.TagDefinitionApiException;
 import org.killbill.billing.util.api.TagUserApi;
 import org.killbill.billing.util.cache.CacheControllerDispatcher;
+import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.config.definition.InvoiceConfig;
 import org.killbill.billing.util.config.definition.PaymentConfig;
 import org.killbill.billing.util.dao.NonEntityDao;
@@ -912,6 +917,16 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
         log.debug("            ************    DONE WITH BUS HANDLER CHECK    ********************");
         return result;
     }
+
+    protected void setUsage(final UUID subscriptionId, final String unitType, final LocalDate startDate, final Long amount, final CallContext context) throws UsageApiException {
+        final List<UsageRecord> usageRecords = new ArrayList<UsageRecord>();
+        usageRecords.add(new UsageRecord(startDate, amount));
+        final List<UnitUsageRecord> unitUsageRecords = new ArrayList<UnitUsageRecord>();
+        unitUsageRecords.add(new UnitUsageRecord(unitType, usageRecords));
+        final SubscriptionUsageRecord record = new SubscriptionUsageRecord(subscriptionId, UUID.randomUUID().toString(), unitUsageRecords);
+        usageUserApi.recordRolledUpUsage(record, context);
+    }
+
 
     protected static class TestDryRunArguments implements DryRunArguments {
 

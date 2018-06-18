@@ -212,11 +212,11 @@ public class ContiguousIntervalConsumableUsageInArrear extends ContiguousInterva
                 if (hasPreviousUsage) {
                     final Integer previousUsageQuantity = tierNum <= lastPreviousUsageTier ? previousUsage.get(tierNum - 1).getQuantity() : 0;
                     if (tierNum < lastPreviousUsageTier) {
-                        Preconditions.checkState(nbUsedTierBlocks == previousUsageQuantity, "Expected usage for tier='%d', unit='%s' to be full, instead found units='[%d/%d]'",
-                                                 tierNum, tieredBlock.getUnit().getName(), nbUsedTierBlocks, previousUsageQuantity);
+                        Preconditions.checkState(nbUsedTierBlocks == previousUsageQuantity, String.format("Expected usage for tier='%d', unit='%s' to be full, instead found units='[%d/%d]'",
+                                                 tierNum, tieredBlock.getUnit().getName(), nbUsedTierBlocks, previousUsageQuantity));
                     } else {
-                        Preconditions.checkState(nbUsedTierBlocks - previousUsageQuantity >= 0, "Expected usage for tier='%d', unit='%s' to contain at least as mush as current usage, instead found units='[%d/%d]",
-                                                 tierNum, tieredBlock.getUnit().getName(), nbUsedTierBlocks, previousUsageQuantity);
+                        Preconditions.checkState(nbUsedTierBlocks - previousUsageQuantity >= 0, String.format("Expected usage for tier='%d', unit='%s' to contain at least as mush as current usage, instead found units='[%d/%d]",
+                                                 tierNum, tieredBlock.getUnit().getName(), nbUsedTierBlocks, previousUsageQuantity));
                     }
                     nbUsedTierBlocks = nbUsedTierBlocks - previousUsageQuantity;
                 }

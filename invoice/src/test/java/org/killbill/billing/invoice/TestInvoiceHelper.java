@@ -425,6 +425,11 @@ public class TestInvoiceHelper {
             }
 
             @Override
+            public DateTime getCatalogEffectiveDate() {
+                return null;
+            }
+
+            @Override
             public int compareTo(final BillingEvent e1) {
                 if (!getSubscription().getId().equals(e1.getSubscription().getId())) { // First order by subscription
                     return getSubscription().getId().compareTo(e1.getSubscription().getId());

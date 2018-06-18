@@ -24,6 +24,7 @@ import java.util.List;
 import javax.annotation.Nullable;
 
 import org.joda.time.DateTime;
+import org.killbill.billing.catalog.DefaultPlan;
 import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.catalog.api.Catalog;
 import org.killbill.billing.catalog.api.CatalogApiException;
@@ -59,6 +60,8 @@ public class DefaultBillingEvent implements BillingEvent {
     private final boolean isDisableEvent;
     private final PlanPhase nextPlanPhase;
 
+    private final DateTime catalogEffectiveDate;
+
     public DefaultBillingEvent(final SubscriptionInternalEvent transition,
                                final SubscriptionBase subscription,
                                final int billCycleDayLocal,
@@ -88,6 +91,8 @@ public class DefaultBillingEvent implements BillingEvent {
             final PlanPhase prevPlanPhase = (prevPhaseName != null && prevPlan != null) ? prevPlan.findPhase(prevPhaseName) : null;
             this.billingPeriod = getRecurringBillingPeriod(prevPlanPhase);
         }
+        // TODO It would be nice to have an Plan api to get that date; actually the following would be nice
+        this.catalogEffectiveDate = ((DefaultPlan) plan).getCatalogEffectiveDate();
 
         this.billCycleDayLocal = billCycleDayLocal;
         this.catalog = catalog;
@@ -124,6 +129,8 @@ public class DefaultBillingEvent implements BillingEvent {
         this.usages = initializeUsage(isActive);
         this.isDisableEvent = isDisableEvent;
         this.nextPlanPhase = isDisableEvent ? null : planPhase;
+        this.catalogEffectiveDate = ((DefaultPlan) plan).getCatalogEffectiveDate();
+
     }
 
     @Override
@@ -347,5 +354,10 @@ public class DefaultBillingEvent implements BillingEvent {
             }
         }
         return result;
+    }
+
+    @Override
+    public DateTime getCatalogEffectiveDate() {
+        return catalogEffectiveDate;
     }
 }

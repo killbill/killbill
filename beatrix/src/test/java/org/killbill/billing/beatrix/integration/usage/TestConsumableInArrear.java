@@ -255,13 +255,4 @@ public class TestConsumableInArrear extends TestIntegrationBase {
         final DateTime thirdExpectedCTD = account.getReferenceTime().withMonthOfYear(7).withDayOfMonth(1);
         Assert.assertEquals(subscriptionBaseInternalApiApi.getSubscriptionFromId(bpSubscription.getId(), internalCallContext).getChargedThroughDate().compareTo(thirdExpectedCTD), 0);
     }
-
-    private void setUsage(final UUID subscriptionId, final String unitType, final LocalDate startDate, final Long amount, final CallContext context) throws UsageApiException {
-        final List<UsageRecord> usageRecords = new ArrayList<UsageRecord>();
-        usageRecords.add(new UsageRecord(startDate, amount));
-        final List<UnitUsageRecord> unitUsageRecords = new ArrayList<UnitUsageRecord>();
-        unitUsageRecords.add(new UnitUsageRecord(unitType, usageRecords));
-        final SubscriptionUsageRecord record = new SubscriptionUsageRecord(subscriptionId, UUID.randomUUID().toString(), unitUsageRecords);
-        usageUserApi.recordRolledUpUsage(record, context);
-    }
 }

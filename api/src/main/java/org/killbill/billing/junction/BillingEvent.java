@@ -33,11 +33,10 @@ import org.killbill.billing.subscription.api.SubscriptionBaseTransitionType;
 
 public interface BillingEvent extends Comparable<BillingEvent> {
 
-
     /**
      * @return the billCycleDay in the account timezone as seen for that subscription at that time
-     *         <p/>
-     *         Note: The billCycleDay may come from the Account, or the bundle or the subscription itself
+     * <p/>
+     * Note: The billCycleDay may come from the Account, or the bundle or the subscription itself
      */
     int getBillCycleDayLocal();
 
@@ -97,9 +96,13 @@ public interface BillingEvent extends Comparable<BillingEvent> {
     Long getTotalOrdering();
 
     /**
-     *
      * @return the list of {@code Usage} section
      */
     List<Usage> getUsages();
 
+    /**
+     *
+     * @return the catalog version (effective date) associated with this billing event.
+     */
+    public DateTime getCatalogEffectiveDate();
 }
