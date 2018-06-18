@@ -54,6 +54,8 @@ import org.killbill.billing.jaxrs.resources.TransactionResource;
 import org.killbill.billing.jaxrs.resources.UsageResource;
 import org.killbill.billing.jaxrs.util.KillbillEventHandler;
 import org.killbill.billing.junction.glue.DefaultJunctionModule;
+import org.killbill.billing.osgi.api.Healthcheck;
+import org.killbill.billing.osgi.api.OSGIServiceRegistration;
 import org.killbill.billing.overdue.glue.DefaultOverdueModule;
 import org.killbill.billing.payment.glue.PaymentModule;
 import org.killbill.billing.platform.api.KillbillConfigSource;
@@ -94,6 +96,7 @@ import org.skife.jdbi.v2.ResultSetMapperFactory;
 import org.skife.jdbi.v2.tweak.ResultSetMapper;
 
 import ch.qos.logback.classic.helpers.MDCInsertingServletFilter;
+import com.google.inject.TypeLiteral;
 import com.google.inject.multibindings.Multibinder;
 import com.google.inject.name.Names;
 
@@ -114,6 +117,8 @@ public class KillbillServerModule extends KillbillPlatformModule {
         configureResources();
         configureFilters();
         configurePushNotification();
+
+        bind(new TypeLiteral<OSGIServiceRegistration<Healthcheck>>() {}).to(DefaultHealthcheckPluginRegistry.class).asEagerSingleton();
     }
 
     @Override
