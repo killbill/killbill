@@ -130,6 +130,8 @@ import org.killbill.bus.api.PersistentBus;
 import org.killbill.bus.api.PersistentBus.EventBusException;
 import org.skife.config.ConfigurationObjectFactory;
 import org.skife.config.TimeSpan;
+import org.skife.jdbi.v2.Handle;
+import org.skife.jdbi.v2.tweak.HandleCallback;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
@@ -918,13 +920,25 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
         return result;
     }
 
-    protected void setUsage(final UUID subscriptionId, final String unitType, final LocalDate startDate, final Long amount, final CallContext context) throws UsageApiException {
+    protected void recordUsageData(final UUID subscriptionId, final String unitType, final LocalDate startDate, final Long amount, final CallContext context) throws UsageApiException {
         final List<UsageRecord> usageRecords = new ArrayList<UsageRecord>();
         usageRecords.add(new UsageRecord(startDate, amount));
         final List<UnitUsageRecord> unitUsageRecords = new ArrayList<UnitUsageRecord>();
         unitUsageRecords.add(new UnitUsageRecord(unitType, usageRecords));
         final SubscriptionUsageRecord record = new SubscriptionUsageRecord(subscriptionId, UUID.randomUUID().toString(), unitUsageRecords);
         usageUserApi.recordRolledUpUsage(record, context);
+    }
+
+
+    protected void removeUsageData(final UUID subscriptionId, final String unitType, final LocalDate recordedDate) {
+        dbi.withHandle(new HandleCallback<Void>() {
+            @Override
+            public Void withHandle(final Handle handle) throws Exception {
+                handle.execute("delete from rolled_up_usage where subscription_id = ? and unit_type = ? and record_date = ?",
+                               subscriptionId, unitType, recordedDate);
+                return null;
+            }
+        });
     }
 
 

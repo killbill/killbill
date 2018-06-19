@@ -41,7 +41,8 @@ public class TestInArrearWithCatalogVersions extends TestIntegrationBase {
 
     @Override
     protected KillbillConfigSource getConfigSource() {
-        return super.getConfigSource(null, ImmutableMap.of("org.killbill.catalog.uri", "catalogs/testInArrearWithCatalogVersions"));
+        return super.getConfigSource(null, ImmutableMap.of("org.killbill.catalog.uri", "catalogs/testInArrearWithCatalogVersions",
+                                                           "org.killbill.invoice.readMaxRawUsagePreviousPeriod", "0"));
     }
 
     @Test(groups = "slow")
@@ -58,8 +59,8 @@ public class TestInArrearWithCatalogVersions extends TestIntegrationBase {
         final UUID entitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec), null, null, null, false, true, ImmutableList.<PluginProperty>of(), callContext);
         assertListenerStatus();
 
-        setUsage(entitlementId, "kilowatt-hour", new LocalDate(2016, 4, 1), 143L, callContext);
-        setUsage(entitlementId, "kilowatt-hour", new LocalDate(2016, 4, 18), 57L, callContext);
+        recordUsageData(entitlementId, "kilowatt-hour", new LocalDate(2016, 4, 1), 143L, callContext);
+        recordUsageData(entitlementId, "kilowatt-hour", new LocalDate(2016, 4, 18), 57L, callContext);
 
         busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT);
         clock.addMonths(1);
@@ -68,7 +69,7 @@ public class TestInArrearWithCatalogVersions extends TestIntegrationBase {
         invoiceChecker.checkInvoice(account.getId(), 1, callContext,
                                     new ExpectedInvoiceItemCheck(new LocalDate(2016, 4, 1), new LocalDate(2016, 5, 1), InvoiceItemType.USAGE, new BigDecimal("300.00")));
 
-        setUsage(entitlementId, "kilowatt-hour", new LocalDate(2016, 5, 2), 100L, callContext); // -> Uses v1 : $150
+        recordUsageData(entitlementId, "kilowatt-hour", new LocalDate(2016, 5, 2), 100L, callContext); // -> Uses v1 : $150
 
         // Catalog change with new price on 2016-05-08
         // Schedule CHANGE_PLAN on 2016-05-09
@@ -85,7 +86,7 @@ public class TestInArrearWithCatalogVersions extends TestIntegrationBase {
                                     new ExpectedInvoiceItemCheck(new LocalDate(2016, 5, 1), new LocalDate(2016, 5, 9), InvoiceItemType.USAGE, new BigDecimal("150.00")));
 
 
-        setUsage(entitlementId, "kilowatt-hour", new LocalDate(2016, 5, 10), 100L, callContext); // -> Uses v2 : $250
+        recordUsageData(entitlementId, "kilowatt-hour", new LocalDate(2016, 5, 10), 100L, callContext); // -> Uses v2 : $250
 
 
         busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT);
@@ -95,6 +96,80 @@ public class TestInArrearWithCatalogVersions extends TestIntegrationBase {
         invoiceChecker.checkInvoice(account.getId(), 3, callContext,
                                     new ExpectedInvoiceItemCheck(new LocalDate(2016, 5, 9), new LocalDate(2016, 6, 1), InvoiceItemType.USAGE, new BigDecimal("250.00")));
 
-
     }
+
+
+    // We are not using catalog versions in this test but testing the overridden value of 'readMaxRawUsagePreviousPeriod = 0'
+    @Test(groups = "slow")
+    public void testWithRemovedData() throws Exception {
+        // 30 days month
+        clock.setDay(new LocalDate(2016, 4, 1));
+
+        final AccountData accountData = getAccountData(1);
+        final Account account = createAccountWithNonOsgiPaymentMethod(accountData);
+        accountChecker.checkAccount(account.getId(), accountData, callContext);
+
+        final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("electricity-monthly");
+        busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.NULL_INVOICE);
+        final UUID entitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec), null, null, null, false, true, ImmutableList.<PluginProperty>of(), callContext);
+        assertListenerStatus();
+
+        recordUsageData(entitlementId, "kilowatt-hour", new LocalDate(2016, 4, 5), 1L, callContext);
+        recordUsageData(entitlementId, "kilowatt-hour", new LocalDate(2016, 4, 5), 99L, callContext);
+
+        busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT);
+        clock.addMonths(1);
+        assertListenerStatus();
+
+        invoiceChecker.checkInvoice(account.getId(), 1, callContext,
+                                    new ExpectedInvoiceItemCheck(new LocalDate(2016, 4, 1), new LocalDate(2016, 5, 1), InvoiceItemType.USAGE, new BigDecimal("150.00")));
+
+
+
+        recordUsageData(entitlementId, "kilowatt-hour", new LocalDate(2016, 5, 5), 100L, callContext);
+        recordUsageData(entitlementId, "kilowatt-hour", new LocalDate(2016, 5, 8), 900L, callContext);
+        recordUsageData(entitlementId, "kilowatt-hour", new LocalDate(2016, 5, 9), 200L, callContext); // Move to tier 2.
+
+        busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT);
+        clock.addMonths(1);
+        assertListenerStatus();
+
+        invoiceChecker.checkInvoice(account.getId(), 2, callContext,
+                                    new ExpectedInvoiceItemCheck(new LocalDate(2016, 5, 1), new LocalDate(2016, 6, 1), InvoiceItemType.USAGE, new BigDecimal("1900.00")));
+
+
+
+        // Remove Usage data from period 2016-5-1 -> 2016-6-1 and verify there is no issue (readMaxRawUsagePreviousPeriod = 0 => We ignore any past invoiced period)
+        // Full deletion on the second tier
+        removeUsageData(entitlementId, "kilowatt-hour", new LocalDate(2016, 5, 9));
+
+        //
+        recordUsageData(entitlementId, "kilowatt-hour", new LocalDate(2016, 6, 5), 100L, callContext);
+        recordUsageData(entitlementId, "kilowatt-hour", new LocalDate(2016, 6, 8), 900L, callContext);
+        recordUsageData(entitlementId, "kilowatt-hour", new LocalDate(2016, 6, 12), 50L, callContext); // Move to tier 2.
+        recordUsageData(entitlementId, "kilowatt-hour", new LocalDate(2016, 6, 13), 50L, callContext);
+
+        busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT);
+        clock.addMonths(1);
+        assertListenerStatus();
+
+        invoiceChecker.checkInvoice(account.getId(), 3, callContext, ImmutableList.<ExpectedInvoiceItemCheck>of(
+                new ExpectedInvoiceItemCheck(new LocalDate(2016, 6, 1), new LocalDate(2016, 7, 1), InvoiceItemType.USAGE, new BigDecimal("1700.00"))));
+
+
+        // Remove Usage data from period 2016-6-1 -> 2016-7-1 and verify there is no issue (readMaxRawUsagePreviousPeriod = 0 => We ignore any past invoiced period)
+        // Partial deletion on the second tier
+        removeUsageData(entitlementId, "kilowatt-hour", new LocalDate(2016, 6, 13));
+
+        // No usage this MONTH
+        busHandler.pushExpectedEvents(NextEvent.INVOICE);
+        clock.addMonths(1);
+        assertListenerStatus();
+
+        // Check invoicing occurred and - i.e system did not detect deletion of passed invoiced data.
+        invoiceChecker.checkInvoice(account.getId(), 4, callContext,
+                                    new ExpectedInvoiceItemCheck(new LocalDate(2016, 7, 1), new LocalDate(2016, 8, 1), InvoiceItemType.USAGE, BigDecimal.ZERO));
+    }
+
+
 }

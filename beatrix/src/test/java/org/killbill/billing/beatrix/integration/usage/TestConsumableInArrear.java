@@ -18,13 +18,8 @@
 package org.killbill.billing.beatrix.integration.usage;
 
 import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
 
 import org.joda.time.DateTime;
-import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDate;
 import org.killbill.billing.account.api.Account;
 import org.killbill.billing.account.api.AccountData;
@@ -33,21 +28,11 @@ import org.killbill.billing.beatrix.integration.TestIntegrationBase;
 import org.killbill.billing.beatrix.util.InvoiceChecker.ExpectedInvoiceItemCheck;
 import org.killbill.billing.catalog.api.BillingActionPolicy;
 import org.killbill.billing.catalog.api.BillingPeriod;
-import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.catalog.api.ProductCategory;
 import org.killbill.billing.entitlement.api.DefaultEntitlement;
 import org.killbill.billing.invoice.api.InvoiceItemType;
-import org.killbill.billing.mock.MockAccountBuilder;
 import org.killbill.billing.payment.api.PluginProperty;
-import org.killbill.billing.usage.api.SubscriptionUsageRecord;
-import org.killbill.billing.usage.api.UnitUsageRecord;
-import org.killbill.billing.usage.api.UsageApiException;
-import org.killbill.billing.usage.api.UsageRecord;
-import org.killbill.billing.util.callcontext.CallContext;
-import org.skife.jdbi.v2.Handle;
-import org.skife.jdbi.v2.tweak.HandleCallback;
 import org.testng.Assert;
-import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import com.google.common.collect.ImmutableList;
@@ -77,8 +62,8 @@ public class TestConsumableInArrear extends TestIntegrationBase {
         //
         final DefaultEntitlement aoSubscription = addAOEntitlementAndCheckForCompletion(bpSubscription.getBundleId(), "Bullets", ProductCategory.ADD_ON, BillingPeriod.NO_BILLING_PERIOD, NextEvent.CREATE, NextEvent.BLOCK, NextEvent.NULL_INVOICE);
 
-        setUsage(aoSubscription.getId(), "bullets", new LocalDate(2012, 4, 1), 99L, callContext);
-        setUsage(aoSubscription.getId(), "bullets", new LocalDate(2012, 4, 15), 100L, callContext);
+        recordUsageData(aoSubscription.getId(), "bullets", new LocalDate(2012, 4, 1), 99L, callContext);
+        recordUsageData(aoSubscription.getId(), "bullets", new LocalDate(2012, 4, 15), 100L, callContext);
 
         busHandler.pushExpectedEvents(NextEvent.PHASE, NextEvent.NULL_INVOICE, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
         clock.addDays(30);
@@ -96,8 +81,8 @@ public class TestConsumableInArrear extends TestIntegrationBase {
         invoiceChecker.checkInvoice(account.getId(), 3, callContext,
                                     new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 1), new LocalDate(2012, 6, 1), InvoiceItemType.USAGE, BigDecimal.ZERO));
 
-        setUsage(aoSubscription.getId(), "bullets", new LocalDate(2012, 6, 1), 50L, callContext);
-        setUsage(aoSubscription.getId(), "bullets", new LocalDate(2012, 6, 16), 300L, callContext);
+        recordUsageData(aoSubscription.getId(), "bullets", new LocalDate(2012, 6, 1), 50L, callContext);
+        recordUsageData(aoSubscription.getId(), "bullets", new LocalDate(2012, 6, 16), 300L, callContext);
 
         busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
         clock.addMonths(1);
@@ -107,14 +92,18 @@ public class TestConsumableInArrear extends TestIntegrationBase {
                                     new ExpectedInvoiceItemCheck(new LocalDate(2012, 6, 1), new LocalDate(2012, 7, 1), InvoiceItemType.USAGE, new BigDecimal("11.80")));
 
         // Should be ignored because this is outside of optimization range (org.killbill.invoice.readMaxRawUsagePreviousPeriod = 2) => we will only look for items > 2012-7-1 - 2 months = 2012-5-1
-        setUsage(aoSubscription.getId(), "bullets", new LocalDate(2012, 4, 30), 100L, callContext);
+        recordUsageData(aoSubscription.getId(), "bullets", new LocalDate(2012, 4, 30), 100L, callContext);
 
         // Should be invoiced from past period
-        setUsage(aoSubscription.getId(), "bullets", new LocalDate(2012, 5, 1), 199L, callContext);
+        recordUsageData(aoSubscription.getId(), "bullets", new LocalDate(2012, 5, 1), 199L, callContext);
 
         // New usage for this past period
-        setUsage(aoSubscription.getId(), "bullets", new LocalDate(2012, 7, 1), 50L, callContext);
-        setUsage(aoSubscription.getId(), "bullets", new LocalDate(2012, 7, 16), 300L, callContext);
+        recordUsageData(aoSubscription.getId(), "bullets", new LocalDate(2012, 7, 1), 50L, callContext);
+        recordUsageData(aoSubscription.getId(), "bullets", new LocalDate(2012, 7, 16), 300L, callContext);
+
+        // Remove old data, should be ignored by the system because readMaxRawUsagePreviousPeriod = 2, so:
+        // * Last endDate invoiced is 2012-7-1 => Anything 2 period prior that will be ignored => Anything prior 2012-5-1 should be ignored
+        removeUsageData(aoSubscription.getId(), "bullets", new LocalDate(2012, 4, 15));
 
         busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
         clock.addMonths(1);
@@ -130,7 +119,7 @@ public class TestConsumableInArrear extends TestIntegrationBase {
         int currentInvoice = 6;
         for (int i = 0; i < 8; i++) {
 
-            setUsage(aoSubscription.getId(), "bullets", startDate.plusDays(15), 350L, callContext);
+            recordUsageData(aoSubscription.getId(), "bullets", startDate.plusDays(15), 350L, callContext);
 
             busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
             clock.addMonths(1);
@@ -168,8 +157,8 @@ public class TestConsumableInArrear extends TestIntegrationBase {
         //
         final DefaultEntitlement aoSubscription = addAOEntitlementAndCheckForCompletion(bpSubscription.getBundleId(), "Bullets", ProductCategory.ADD_ON, BillingPeriod.NO_BILLING_PERIOD, NextEvent.CREATE, NextEvent.BLOCK, NextEvent.NULL_INVOICE);
 
-        setUsage(aoSubscription.getId(), "bullets", new LocalDate(2012, 4, 1), 99L, callContext);
-        setUsage(aoSubscription.getId(), "bullets", new LocalDate(2012, 4, 15), 100L, callContext);
+        recordUsageData(aoSubscription.getId(), "bullets", new LocalDate(2012, 4, 1), 99L, callContext);
+        recordUsageData(aoSubscription.getId(), "bullets", new LocalDate(2012, 4, 15), 100L, callContext);
 
         busHandler.pushExpectedEvents(NextEvent.PHASE, NextEvent.NULL_INVOICE, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
         clock.addDays(30);
@@ -178,11 +167,11 @@ public class TestConsumableInArrear extends TestIntegrationBase {
                                     new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 1), new LocalDate(2013, 5, 1), InvoiceItemType.RECURRING, new BigDecimal("2399.95")),
                                     new ExpectedInvoiceItemCheck(new LocalDate(2012, 4, 1), new LocalDate(2012, 5, 1), InvoiceItemType.USAGE, new BigDecimal("5.90")));
 
-        setUsage(aoSubscription.getId(), "bullets", new LocalDate(2012, 5, 3), 99L, callContext);
-        setUsage(aoSubscription.getId(), "bullets", new LocalDate(2012, 5, 5), 100L, callContext);
+        recordUsageData(aoSubscription.getId(), "bullets", new LocalDate(2012, 5, 3), 99L, callContext);
+        recordUsageData(aoSubscription.getId(), "bullets", new LocalDate(2012, 5, 5), 100L, callContext);
 
         // This one should be ignored
-        setUsage(aoSubscription.getId(), "bullets", new LocalDate(2012, 5, 29), 100L, callContext);
+        recordUsageData(aoSubscription.getId(), "bullets", new LocalDate(2012, 5, 29), 100L, callContext);
 
         clock.addDays(27);
         busHandler.pushExpectedEvents(NextEvent.BLOCK, NextEvent.CANCEL, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
@@ -215,8 +204,8 @@ public class TestConsumableInArrear extends TestIntegrationBase {
         Assert.assertNull(bpSubscription.getSubscriptionBase().getChargedThroughDate());
 
         // Record usage for first month
-        setUsage(bpSubscription.getId(), "stones", new LocalDate(2012, 4, 5), 85L, callContext);
-        setUsage(bpSubscription.getId(), "stones", new LocalDate(2012, 4, 15), 150L, callContext);
+        recordUsageData(bpSubscription.getId(), "stones", new LocalDate(2012, 4, 5), 85L, callContext);
+        recordUsageData(bpSubscription.getId(), "stones", new LocalDate(2012, 4, 15), 150L, callContext);
 
         busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
         clock.addMonths(1);
@@ -242,8 +231,8 @@ public class TestConsumableInArrear extends TestIntegrationBase {
         Assert.assertEquals(subscriptionBaseInternalApiApi.getSubscriptionFromId(bpSubscription.getId(), internalCallContext).getChargedThroughDate().compareTo(secondExpectedCTD), 0);
 
         // Record usage for third month (verify invoicing resumes)
-        setUsage(bpSubscription.getId(), "stones", new LocalDate(2012, 6, 5), 25L, callContext);
-        setUsage(bpSubscription.getId(), "stones", new LocalDate(2012, 6, 15), 50L, callContext);
+        recordUsageData(bpSubscription.getId(), "stones", new LocalDate(2012, 6, 5), 25L, callContext);
+        recordUsageData(bpSubscription.getId(), "stones", new LocalDate(2012, 6, 15), 50L, callContext);
 
         busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
         clock.addMonths(1);
