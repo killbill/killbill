@@ -97,6 +97,8 @@ public class DefaultPlan extends ValidatingConfig<StandaloneCatalog> implements 
 
     private String priceListName;
 
+    private DateTime catalogEffectiveDate;
+
     // For deserialization
     public DefaultPlan() {
         initialPhases = new DefaultPlanPhase[0];
@@ -219,6 +221,7 @@ public class DefaultPlan extends ValidatingConfig<StandaloneCatalog> implements 
         }
 
         this.priceListName = this.priceListName != null ? this.priceListName : findPriceListForPlan(catalog);
+        this.catalogEffectiveDate = new DateTime(catalog.getEffectiveDate());
     }
 
     @Override
@@ -401,5 +404,9 @@ public class DefaultPlan extends ValidatingConfig<StandaloneCatalog> implements 
     @Override
     public void writeExternal(final ObjectOutput oo) throws IOException {
         MapperHolder.mapper().writeValue(new ExternalizableOutput(oo), this);
+    }
+
+    public DateTime getCatalogEffectiveDate() {
+        return catalogEffectiveDate;
     }
 }
