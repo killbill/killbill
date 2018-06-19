@@ -129,7 +129,7 @@ public class DefaultBillingEvent implements BillingEvent {
         this.usages = initializeUsage(isActive);
         this.isDisableEvent = isDisableEvent;
         this.nextPlanPhase = isDisableEvent ? null : planPhase;
-        this.catalogEffectiveDate = ((DefaultPlan) plan).getCatalogEffectiveDate();
+        this.catalogEffectiveDate = plan != null ? ((DefaultPlan) plan).getCatalogEffectiveDate() : null;
 
     }
 
