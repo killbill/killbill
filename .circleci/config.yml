@@ -180,7 +180,7 @@ jobs:
           name: Save test results
           command: |
             mkdir -p ~/junit/
-            find test/reports -type f -name "*.xml"
+            find test/reports -type f -name "*.xml" -exec cp {} ~/junit/ \;
           when: always
       - store_test_results:
           path: ~/junit
