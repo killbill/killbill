@@ -78,6 +78,10 @@
                                         </prices>
                                         <max>1000</max>
                                     </tieredBlock>
+                                </blocks>
+                            </tier>
+                            <tier>
+                                <blocks>
                                     <tieredBlock>
                                         <unit>kilowatt-hour</unit>
                                         <size>1</size>
