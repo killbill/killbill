@@ -176,10 +176,16 @@ jobs:
 
             set -e
             bundle exec rake ci:core | tee /tmp/test-results/test.txt 2>&1
+      - run:
+          name: Save test results
+          command: |
+            mkdir -p ~/junit/
+            find test/reports -type f -name "*.xml"
+          when: always
       - store_test_results:
-          path: test/reports/
+          path: ~/junit
       - store_artifacts:
-          path: /tmp/test-results
+          path: ~/junit
 
 workflows:
   version: 2
