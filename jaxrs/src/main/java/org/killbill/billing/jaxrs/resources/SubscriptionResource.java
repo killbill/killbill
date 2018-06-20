@@ -81,7 +81,7 @@ import org.killbill.billing.jaxrs.json.BlockingStateJson;
 import org.killbill.billing.jaxrs.json.BulkSubscriptionsBundleJson;
 import org.killbill.billing.jaxrs.json.BundleJson;
 import org.killbill.billing.jaxrs.json.CustomFieldJson;
-import org.killbill.billing.jaxrs.json.PhasePriceOverrideJson;
+import org.killbill.billing.jaxrs.json.PhasePriceJson;
 import org.killbill.billing.jaxrs.json.SubscriptionJson;
 import org.killbill.billing.jaxrs.json.TagJson;
 import org.killbill.billing.jaxrs.util.Context;
@@ -370,9 +370,9 @@ public class SubscriptionResource extends JaxRsResourceBase {
                                                                              subscriptionJson.getBillingPeriod(),
                                                                              subscriptionJson.getPriceList(),
                                                                              subscriptionJson.getPhaseType());
-        final List<PlanPhasePriceOverride> overrides = PhasePriceOverrideJson.toPlanPhasePriceOverrides(subscriptionJson.getPriceOverrides(),
-                                                                                                        planPhaseSpecifier,
-                                                                                                        currency);
+        final List<PlanPhasePriceOverride> overrides = PhasePriceJson.toPlanPhasePriceOverrides(subscriptionJson.getPriceOverrides(),
+                                                                                                planPhaseSpecifier,
+                                                                                                currency);
 
         final EntitlementSpecifier specifier = new EntitlementSpecifier() {
             @Override
@@ -534,7 +534,7 @@ public class SubscriptionResource extends JaxRsResourceBase {
                                                     new PlanPhaseSpecifier(entitlement.getPlanName(), phaseType) :
                                                     new PlanPhaseSpecifier(entitlement.getProductName(),
                                                                            entitlement.getBillingPeriod(), entitlement.getPriceList(), phaseType);
-                final List<PlanPhasePriceOverride> overrides = PhasePriceOverrideJson.toPlanPhasePriceOverrides(entitlement.getPriceOverrides(), planSpec, account.getCurrency());
+                final List<PlanPhasePriceOverride> overrides = PhasePriceJson.toPlanPhasePriceOverrides(entitlement.getPriceOverrides(), planSpec, account.getCurrency());
 
                 if (requestedDate == null && billingPolicy == null) {
                     newEntitlement = current.changePlan(new DefaultEntitlementSpecifier(planSpec, null, overrides), pluginProperties, ctx);

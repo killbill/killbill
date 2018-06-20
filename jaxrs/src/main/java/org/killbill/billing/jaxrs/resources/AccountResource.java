@@ -724,7 +724,7 @@ public class AccountResource extends JaxRsResourceBase {
 
         final TenantContext tenantContext = context.createTenantContextWithAccountId(accountId, request);
 
-        final LocalDate startDate = LOCAL_DATE_FORMATTER.parseLocalDate(startDateStr);
+        final LocalDate startDate = startDateStr != null ? LOCAL_DATE_FORMATTER.parseLocalDate(startDateStr) : null;
 
         // Verify the account exists
         accountUserApi.getAccountById(accountId, tenantContext);

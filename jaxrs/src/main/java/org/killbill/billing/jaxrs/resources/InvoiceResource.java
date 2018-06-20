@@ -77,7 +77,7 @@ import org.killbill.billing.jaxrs.json.InvoiceDryRunJson;
 import org.killbill.billing.jaxrs.json.InvoiceItemJson;
 import org.killbill.billing.jaxrs.json.InvoiceJson;
 import org.killbill.billing.jaxrs.json.InvoicePaymentJson;
-import org.killbill.billing.jaxrs.json.PhasePriceOverrideJson;
+import org.killbill.billing.jaxrs.json.PhasePriceJson;
 import org.killbill.billing.jaxrs.json.TagJson;
 import org.killbill.billing.jaxrs.util.Context;
 import org.killbill.billing.jaxrs.util.JaxrsUriBuilder;
@@ -1103,10 +1103,10 @@ public class InvoiceResource extends JaxRsResourceBase {
                                                                                      input.getPhaseType() != null ? input.getPhaseType() : null) :
                                                               null;
                 final List<PlanPhasePriceOverride> overrides = input.getPriceOverrides() != null ?
-                                 ImmutableList.copyOf(Iterables.transform(input.getPriceOverrides(), new Function<PhasePriceOverrideJson, PlanPhasePriceOverride>() {
+                                 ImmutableList.copyOf(Iterables.transform(input.getPriceOverrides(), new Function<PhasePriceJson, PlanPhasePriceOverride>() {
                                      @Nullable
                                      @Override
-                                     public PlanPhasePriceOverride apply(@Nullable final PhasePriceOverrideJson input) {
+                                     public PlanPhasePriceOverride apply(@Nullable final PhasePriceJson input) {
                                          if (input.getPhaseName() != null) {
 
                                              return new DefaultPlanPhasePriceOverride(input.getPhaseName(), account.getCurrency(), input.getFixedPrice(), input.getRecurringPrice(), null);
