@@ -73,7 +73,7 @@ public class TestCredit extends TestJaxrsBase {
     @Test(groups = "slow", description = "Can add a credit to an existing account",
             expectedExceptions = KillBillClientException.class, expectedExceptionsMessageRegExp = ".*it is already in COMMITTED status")
     public void testAddCreditToCommittedInvoice() throws Exception {
-        final Invoice invoice = accountApi.getInvoicesForAccount(accountJson.getAccountId(), requestOptions).get(1);
+        final Invoice invoice = accountApi.getInvoicesForAccount(accountJson.getAccountId(), null, requestOptions).get(1);
 
         final BigDecimal creditAmount = BigDecimal.ONE;
         final Credit credit = new Credit();

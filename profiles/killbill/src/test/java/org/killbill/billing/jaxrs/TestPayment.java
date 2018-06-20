@@ -224,7 +224,7 @@ public class TestPayment extends TestJaxrsBase {
         mockPaymentProviderPlugin.makeNextPaymentFailWithError();
         final Account account = createAccountWithPMBundleAndSubscriptionAndWaitForFirstInvoice(false);
         // Getting Invoice #2 (first after Trial period)
-        UUID failedInvoiceId = accountApi.getInvoicesForAccount(account.getAccountId(), RequestOptions.empty()).get(1).getInvoiceId();
+        UUID failedInvoiceId = accountApi.getInvoicesForAccount(account.getAccountId(), null, RequestOptions.empty()).get(1).getInvoiceId();
 
         HashMultimap<String, String> queryParams = HashMultimap.create();
         queryParams.put("withAttempts", "true");
