@@ -1,6 +1,10 @@
-## Kill Bill
+<p align="center">
+  <img src="https://github.com/killbill/killbill-docs/raw/v3-0.19/userguide/assets/img/logo.png" alt="Kill Bill logo" style="max-width:100%;">
+</p>
 
-Kill Bill is the Open-Source Billing & Payment Platform.
+# Kill Bill
+
+Kill Bill is the open-source subscription billing and payments platform.
 
 ## Among features
 
@@ -13,7 +17,7 @@ You can find more information on [killbill.io](http://killbill.io).
 
 ## Getting started
 
-All of our documentation can be found at http://docs.killbill.io/ (source in the [killbill-docs](https://github.com/killbill/killbill-docs) repository).
+All of our documentation can be found at [docs.killbill.io](http://docs.killbill.io) (sources in the [killbill/killbill-docs](https://github.com/killbill/killbill-docs) repository).
 
 ## License
 
