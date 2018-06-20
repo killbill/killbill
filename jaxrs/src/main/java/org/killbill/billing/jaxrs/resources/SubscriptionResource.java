@@ -58,6 +58,7 @@ import org.killbill.billing.catalog.api.PlanPhasePriceOverride;
 import org.killbill.billing.catalog.api.PlanPhaseSpecifier;
 import org.killbill.billing.entitlement.api.BaseEntitlementWithAddOnsSpecifier;
 import org.killbill.billing.entitlement.api.BlockingStateType;
+import org.killbill.billing.entitlement.api.DefaultEntitlementSpecifier;
 import org.killbill.billing.entitlement.api.Entitlement;
 import org.killbill.billing.entitlement.api.Entitlement.EntitlementActionPolicy;
 import org.killbill.billing.entitlement.api.EntitlementApi;
@@ -86,6 +87,7 @@ import org.killbill.billing.jaxrs.json.TagJson;
 import org.killbill.billing.jaxrs.util.Context;
 import org.killbill.billing.jaxrs.util.JaxrsUriBuilder;
 import org.killbill.billing.jaxrs.util.KillbillEventHandler;
+import org.killbill.billing.payment.api.InvoicePaymentApi;
 import org.killbill.billing.payment.api.PaymentApi;
 import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.util.api.AuditUserApi;
@@ -136,9 +138,10 @@ public class SubscriptionResource extends JaxRsResourceBase {
                                 final SubscriptionApi subscriptionApi,
                                 final AccountUserApi accountUserApi,
                                 final PaymentApi paymentApi,
+                                final InvoicePaymentApi invoicePaymentApi,
                                 final Clock clock,
                                 final Context context) {
-        super(uriBuilder, tagUserApi, customFieldUserApi, auditUserApi, accountUserApi, paymentApi, subscriptionApi, clock, context);
+        super(uriBuilder, tagUserApi, customFieldUserApi, auditUserApi, accountUserApi, paymentApi, invoicePaymentApi, subscriptionApi, clock, context);
         this.killbillHandler = killbillHandler;
         this.entitlementApi = entitlementApi;
         this.subscriptionApi = subscriptionApi;
@@ -378,6 +381,11 @@ public class SubscriptionResource extends JaxRsResourceBase {
             }
 
             @Override
+            public Integer getBillCycleDay() {
+                return null;
+            }
+
+            @Override
             public List<PlanPhasePriceOverride> getOverrides() {
                 return overrides;
             }
@@ -529,11 +537,11 @@ public class SubscriptionResource extends JaxRsResourceBase {
                 final List<PlanPhasePriceOverride> overrides = PhasePriceOverrideJson.toPlanPhasePriceOverrides(entitlement.getPriceOverrides(), planSpec, account.getCurrency());
 
                 if (requestedDate == null && billingPolicy == null) {
-                    newEntitlement = current.changePlan(planSpec, overrides, pluginProperties, ctx);
+                    newEntitlement = current.changePlan(new DefaultEntitlementSpecifier(planSpec, null, overrides), pluginProperties, ctx);
                 } else if (billingPolicy == null) {
-                    newEntitlement = current.changePlanWithDate(planSpec, overrides, inputLocalDate, pluginProperties, ctx);
+                    newEntitlement = current.changePlanWithDate(new DefaultEntitlementSpecifier(planSpec, null, overrides), inputLocalDate, pluginProperties, ctx);
                 } else {
-                    newEntitlement = current.changePlanOverrideBillingPolicy(planSpec, overrides, null, billingPolicy, pluginProperties, ctx);
+                    newEntitlement = current.changePlanOverrideBillingPolicy(new DefaultEntitlementSpecifier(planSpec, null, overrides), null, billingPolicy, pluginProperties, ctx);
                 }
                 isImmediateOp = newEntitlement.getLastActiveProduct().getName().equals(entitlement.getProductName()) &&
                                 newEntitlement.getLastActivePlan().getRecurringBillingPeriod() == entitlement.getBillingPeriod() &&

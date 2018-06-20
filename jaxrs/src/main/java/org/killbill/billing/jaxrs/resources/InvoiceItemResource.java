@@ -45,6 +45,7 @@ import org.killbill.billing.jaxrs.json.CustomFieldJson;
 import org.killbill.billing.jaxrs.json.TagJson;
 import org.killbill.billing.jaxrs.util.Context;
 import org.killbill.billing.jaxrs.util.JaxrsUriBuilder;
+import org.killbill.billing.payment.api.InvoicePaymentApi;
 import org.killbill.billing.payment.api.PaymentApi;
 import org.killbill.billing.util.api.AuditUserApi;
 import org.killbill.billing.util.api.CustomFieldApiException;
@@ -73,8 +74,8 @@ public class InvoiceItemResource extends JaxRsResourceBase {
     @Inject
     public InvoiceItemResource(final JaxrsUriBuilder uriBuilder, final TagUserApi tagUserApi, final CustomFieldUserApi customFieldUserApi,
                                final AuditUserApi auditUserApi, final AccountUserApi accountUserApi, final PaymentApi paymentApi,
-                               final SubscriptionApi subscriptionApi, final Clock clock, final Context context) {
-        super(uriBuilder, tagUserApi, customFieldUserApi, auditUserApi, accountUserApi, paymentApi, subscriptionApi, clock, context);
+                               final InvoicePaymentApi invoicePaymentApi, final SubscriptionApi subscriptionApi, final Clock clock, final Context context) {
+        super(uriBuilder, tagUserApi, customFieldUserApi, auditUserApi, accountUserApi, paymentApi, invoicePaymentApi, subscriptionApi, clock, context);
     }
 
     @TimedResource

@@ -35,6 +35,7 @@ import org.killbill.billing.catalog.api.PlanSpecifier;
 import org.killbill.billing.catalog.api.PriceListSet;
 import org.killbill.billing.catalog.api.ProductCategory;
 import org.killbill.billing.entitlement.api.DefaultEntitlement;
+import org.killbill.billing.entitlement.api.DefaultEntitlementSpecifier;
 import org.killbill.billing.invoice.api.InvoiceItemType;
 import org.killbill.billing.payment.api.PluginProperty;
 import org.testng.annotations.Test;
@@ -118,7 +119,8 @@ public class TestWithPriceOverride extends TestIntegrationBase {
         overrides.add(new DefaultPlanPhasePriceOverride("shotgun-monthly-evergreen", account.getCurrency(), null, new BigDecimal("279.95"), null));
 
         busHandler.pushExpectedEvents(NextEvent.CHANGE, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
-        bpSubscription.changePlanOverrideBillingPolicy(new PlanPhaseSpecifier("Shotgun", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME), overrides, null, BillingActionPolicy.IMMEDIATE, ImmutableList.<PluginProperty>of(), callContext);
+        final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("Shotgun", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME);
+        bpSubscription.changePlanOverrideBillingPolicy(new DefaultEntitlementSpecifier(spec, null, overrides), null, BillingActionPolicy.IMMEDIATE, ImmutableList.<PluginProperty>of(), callContext);
         assertListenerStatus();
 
         invoiceChecker.checkInvoice(account.getId(), 3, callContext,
@@ -165,7 +167,8 @@ public class TestWithPriceOverride extends TestIntegrationBase {
         overrides.add(new DefaultPlanPhasePriceOverride("telescopic-scope-monthly-evergreen", account.getCurrency(), null, new BigDecimal("1200.00"), null));
 
         busHandler.pushExpectedEvents(NextEvent.CHANGE, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
-        aoEntitlement.changePlanOverrideBillingPolicy(new PlanPhaseSpecifier("Telescopic-Scope", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME), overrides, null, BillingActionPolicy.IMMEDIATE, ImmutableList.<PluginProperty>of(), callContext);
+        final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("Telescopic-Scope", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME);
+        aoEntitlement.changePlanOverrideBillingPolicy(new DefaultEntitlementSpecifier(spec, null, overrides), null, BillingActionPolicy.IMMEDIATE, ImmutableList.<PluginProperty>of(), callContext);
         assertListenerStatus();
     }
 }

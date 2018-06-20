@@ -37,7 +37,9 @@ import org.killbill.billing.catalog.api.PlanPhase;
 import org.killbill.billing.catalog.api.PlanPhaseSpecifier;
 import org.killbill.billing.catalog.api.PriceListSet;
 import org.killbill.billing.catalog.api.ProductCategory;
+import org.killbill.billing.entitlement.api.DefaultEntitlementSpecifier;
 import org.killbill.billing.entitlement.api.Entitlement;
+import org.killbill.billing.entitlement.api.EntitlementSpecifier;
 import org.killbill.billing.entitlement.api.SubscriptionEventType;
 import org.killbill.billing.invoice.api.DryRunArguments;
 import org.killbill.billing.subscription.SubscriptionTestSuiteWithEmbeddedDB;
@@ -104,7 +106,8 @@ public class TestUserApiChangePlan extends SubscriptionTestSuiteWithEmbeddedDB {
 
             // CHANGE PLAN
             testListener.pushExpectedEvent(NextEvent.CHANGE);
-            subscription.changePlan(new PlanPhaseSpecifier(toProd, toTerm, toPlanSet), null, callContext);
+            final PlanPhaseSpecifier planPhaseSpecifier = new PlanPhaseSpecifier(toProd, toTerm, toPlanSet);
+            subscription.changePlan(new DefaultEntitlementSpecifier(planPhaseSpecifier), callContext);
             assertListenerStatus();
 
             // CHECK CHANGE PLAN
@@ -145,7 +148,8 @@ public class TestUserApiChangePlan extends SubscriptionTestSuiteWithEmbeddedDB {
 
         // RE READ SUBSCRIPTION + CHANGE PLAN
         subscription = (DefaultSubscriptionBase) subscriptionInternalApi.getSubscriptionFromId(subscription.getId(), internalCallContext);
-        subscription.changePlan(new PlanPhaseSpecifier(toProd, toTerm, toPlanSet), null, callContext);
+        final PlanPhaseSpecifier planPhaseSpecifier = new PlanPhaseSpecifier(toProd, toTerm, toPlanSet);
+        subscription.changePlan(new DefaultEntitlementSpecifier(planPhaseSpecifier), callContext);
         assertListenerStatus();
 
         // CHECK CHANGE PLAN
@@ -188,7 +192,8 @@ public class TestUserApiChangePlan extends SubscriptionTestSuiteWithEmbeddedDB {
         clock.addDeltaFromReality(it.toDurationMillis());
 
         // CHANGE PLAN IMM
-        subscription.changePlan(new PlanPhaseSpecifier(toProd, toTerm, toPlanSet), null, callContext);
+        final PlanPhaseSpecifier planPhaseSpecifier = new PlanPhaseSpecifier(toProd, toTerm, toPlanSet);
+        subscription.changePlan(new DefaultEntitlementSpecifier(planPhaseSpecifier), callContext);
         checkChangePlan(subscription, toProd, ProductCategory.BASE, toTerm, PhaseType.TRIAL);
 
         assertListenerStatus();
@@ -242,7 +247,8 @@ public class TestUserApiChangePlan extends SubscriptionTestSuiteWithEmbeddedDB {
 
         // CHANGE PLAN
         currentTime = clock.getUTCNow();
-        subscription.changePlan(new PlanPhaseSpecifier(toProd, toTerm, toPlanSet), null, callContext);
+        final PlanPhaseSpecifier planPhaseSpecifier = new PlanPhaseSpecifier(toProd, toTerm, toPlanSet);
+        subscription.changePlan(new DefaultEntitlementSpecifier(planPhaseSpecifier), callContext);
 
         checkChangePlan(subscription, fromProd, ProductCategory.BASE, fromTerm, PhaseType.EVERGREEN);
 
@@ -308,12 +314,14 @@ public class TestUserApiChangePlan extends SubscriptionTestSuiteWithEmbeddedDB {
         subscription = (DefaultSubscriptionBase) subscriptionInternalApi.getSubscriptionFromId(subscription.getId(), internalCallContext);
 
         // CHANGE EOT
-        subscription.changePlan(new PlanPhaseSpecifier("Pistol", BillingPeriod.MONTHLY, "gunclubDiscount"), null, callContext);
+        final PlanPhaseSpecifier planPhaseSpecifier = new PlanPhaseSpecifier("Pistol", BillingPeriod.MONTHLY, "gunclubDiscount");
+        subscription.changePlan(new DefaultEntitlementSpecifier(planPhaseSpecifier), callContext);
         assertListenerStatus();
 
         // CHANGE
         testListener.pushExpectedEvent(NextEvent.CHANGE);
-        subscription.changePlan(new PlanPhaseSpecifier("Assault-Rifle", BillingPeriod.ANNUAL, "gunclubDiscount"), null, callContext);
+        final PlanPhaseSpecifier planPhaseSpecifier1 = new PlanPhaseSpecifier("Assault-Rifle", BillingPeriod.ANNUAL, "gunclubDiscount");
+        subscription.changePlan(new DefaultEntitlementSpecifier(planPhaseSpecifier1), callContext);
         assertListenerStatus();
 
         final Plan currentPlan = subscription.getCurrentPlan();
@@ -350,11 +358,13 @@ public class TestUserApiChangePlan extends SubscriptionTestSuiteWithEmbeddedDB {
         subscription = (DefaultSubscriptionBase) subscriptionInternalApi.getSubscriptionFromId(subscription.getId(), internalCallContext);
 
         // CHANGE EOT
-        subscription.changePlan(new PlanPhaseSpecifier("Shotgun", BillingPeriod.MONTHLY, "gunclubDiscount"), null, callContext);
+        final PlanPhaseSpecifier planPhaseSpecifier = new PlanPhaseSpecifier("Shotgun", BillingPeriod.MONTHLY, "gunclubDiscount");
+        subscription.changePlan(new DefaultEntitlementSpecifier(planPhaseSpecifier), callContext);
         assertListenerStatus();
 
         // CHANGE EOT
-        subscription.changePlan(new PlanPhaseSpecifier("Pistol", BillingPeriod.ANNUAL, "gunclubDiscount"), null, callContext);
+        final PlanPhaseSpecifier planPhaseSpecifier1 = new PlanPhaseSpecifier("Pistol", BillingPeriod.ANNUAL, "gunclubDiscount");
+        subscription.changePlan(new DefaultEntitlementSpecifier(planPhaseSpecifier1), callContext);
         assertListenerStatus();
 
         // CHECK NO CHANGE OCCURED YET
@@ -416,7 +426,8 @@ public class TestUserApiChangePlan extends SubscriptionTestSuiteWithEmbeddedDB {
 
         // CHANGE IMMEDIATE TO A 3 PHASES PLAN
         testListener.pushExpectedEvent(NextEvent.CHANGE);
-        subscription.changePlan(new PlanPhaseSpecifier("Assault-Rifle", BillingPeriod.ANNUAL, "gunclubDiscount"), null, callContext);
+        final PlanPhaseSpecifier planPhaseSpecifier = new PlanPhaseSpecifier("Assault-Rifle", BillingPeriod.ANNUAL, "gunclubDiscount");
+        subscription.changePlan(new DefaultEntitlementSpecifier(planPhaseSpecifier), callContext);
         assertListenerStatus();
 
         // CHECK EVERYTHING LOOKS CORRECT
@@ -470,7 +481,8 @@ public class TestUserApiChangePlan extends SubscriptionTestSuiteWithEmbeddedDB {
         DefaultSubscriptionBase aoSubscription = testUtil.createSubscription(bundle, aoProduct, aoTerm, aoPriceList);
 
         try {
-            aoSubscription.changePlanWithDate(new PlanPhaseSpecifier(baseProduct, baseTerm, basePriceList), null, clock.getUTCNow(), callContext);
+            final PlanPhaseSpecifier planPhaseSpecifier = new PlanPhaseSpecifier(baseProduct, baseTerm, basePriceList);
+            aoSubscription.changePlanWithDate(new DefaultEntitlementSpecifier(planPhaseSpecifier), clock.getUTCNow(), callContext);
             Assert.fail("Should not allow plan change across product type");
         } catch (final SubscriptionBaseApiException e) {
             Assert.assertEquals(e.getCode(), ErrorCode.SUB_CHANGE_INVALID.getCode());
@@ -490,7 +502,8 @@ public class TestUserApiChangePlan extends SubscriptionTestSuiteWithEmbeddedDB {
         assertEquals(subscription.getState(), Entitlement.EntitlementState.PENDING);
         assertEquals(subscription.getStartDate().compareTo(startDate.toDateTime(accountData.getReferenceTime())), 0);
 
-        final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("Pistol", baseTerm, basePriceList, null);
+        final PlanPhaseSpecifier planPhaseSpecifier = new PlanPhaseSpecifier("Pistol", baseTerm, basePriceList);
+        final EntitlementSpecifier spec = new DefaultEntitlementSpecifier(planPhaseSpecifier, null, null);
 
         // First try with default api (no date -> IMM) => Call should fail because subscription is PENDING
         final DryRunArguments dryRunArguments1 = testUtil.createDryRunArguments(subscription.getId(), subscription.getBundleId(), spec, null, SubscriptionEventType.CHANGE, null);
@@ -509,7 +522,7 @@ public class TestUserApiChangePlan extends SubscriptionTestSuiteWithEmbeddedDB {
             assertEquals(e.getCode(), ErrorCode.SUB_CHANGE_NON_ACTIVE.getCode());
         }
         try {
-            subscription.changePlanWithDate(spec, null, subscription.getStartDate().minusDays(1), callContext);
+            subscription.changePlanWithDate(spec, subscription.getStartDate().minusDays(1), callContext);
             fail("Change plan should have failed : subscription PENDING");
         } catch (final SubscriptionBaseApiException e) {
             assertEquals(e.getCode(), ErrorCode.SUB_INVALID_REQUESTED_DATE.getCode());
@@ -521,7 +534,7 @@ public class TestUserApiChangePlan extends SubscriptionTestSuiteWithEmbeddedDB {
         // Check we are seeing the right PENDING transition (pistol-monthly), not the START but the CHANGE on the same date
         assertEquals(((DefaultSubscriptionBase) result2.get(0)).getCurrentOrPendingPlan().getName(), "pistol-monthly");
 
-        subscription.changePlanWithDate(spec, null, subscription.getStartDate(), callContext);
+        subscription.changePlanWithDate(spec, subscription.getStartDate(), callContext);
         assertListenerStatus();
 
         // Move clock to startDate
@@ -543,7 +556,8 @@ public class TestUserApiChangePlan extends SubscriptionTestSuiteWithEmbeddedDB {
 
         // CHANGE PLAN IMMEDIATELY: the CHANGE event will be transformed into a CREATE
         testListener.pushExpectedEvent(NextEvent.CREATE);
-        subscription.changePlanWithDate(new PlanPhaseSpecifier("Pistol", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME), null, subscription.getStartDate(), callContext);
+        final PlanPhaseSpecifier planPhaseSpecifier = new PlanPhaseSpecifier("Pistol", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME);
+        subscription.changePlanWithDate(new DefaultEntitlementSpecifier(planPhaseSpecifier), subscription.getStartDate(), callContext);
         assertListenerStatus();
 
         checkChangePlan(subscription, "Pistol", ProductCategory.BASE, BillingPeriod.MONTHLY, PhaseType.TRIAL);
@@ -562,7 +576,8 @@ public class TestUserApiChangePlan extends SubscriptionTestSuiteWithEmbeddedDB {
 
         // CHANGE PLAN ALMOST IMMEDIATELY
         testListener.pushExpectedEvent(NextEvent.CHANGE);
-        subscription.changePlan(new PlanPhaseSpecifier("Pistol", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME), null, callContext);
+        final PlanPhaseSpecifier planPhaseSpecifier = new PlanPhaseSpecifier("Pistol", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME);
+        subscription.changePlan(new DefaultEntitlementSpecifier(planPhaseSpecifier), callContext);
         assertListenerStatus();
 
         checkChangePlan(subscription, "Pistol", ProductCategory.BASE, BillingPeriod.MONTHLY, PhaseType.TRIAL);
@@ -583,7 +598,8 @@ public class TestUserApiChangePlan extends SubscriptionTestSuiteWithEmbeddedDB {
 
         // Change plan in the future
         final DateTime targetDate = clock.getUTCNow().plusDays(3);
-        subscription.changePlanWithDate(new PlanPhaseSpecifier("Pistol", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME), null, targetDate, callContext);assertListenerStatus();
+        final PlanPhaseSpecifier planPhaseSpecifier = new PlanPhaseSpecifier("Pistol", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME);
+        subscription.changePlanWithDate(new DefaultEntitlementSpecifier(planPhaseSpecifier), targetDate, callContext);assertListenerStatus();
 
         DefaultSubscriptionBase refreshedSubscription = (DefaultSubscriptionBase) subscriptionInternalApi.getSubscriptionFromId(subscription.getId(), internalCallContext);
         assertEquals(refreshedSubscription.getAllTransitions().size(), 3);
@@ -626,7 +642,8 @@ public class TestUserApiChangePlan extends SubscriptionTestSuiteWithEmbeddedDB {
 
         // Change plan in the future
         final DateTime futureChangeDate = futureStartDate.plusDays(5);
-        subscription.changePlanWithDate(new PlanPhaseSpecifier("Pistol", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME), null, futureChangeDate, callContext);
+        final PlanPhaseSpecifier planPhaseSpecifier = new PlanPhaseSpecifier("Pistol", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME);
+        subscription.changePlanWithDate(new DefaultEntitlementSpecifier(planPhaseSpecifier), futureChangeDate, callContext);
         assertListenerStatus();
 
         DefaultSubscriptionBase refreshedSubscription = (DefaultSubscriptionBase) subscriptionInternalApi.getSubscriptionFromId(subscription.getId(), internalCallContext);

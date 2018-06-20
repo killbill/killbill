@@ -27,6 +27,7 @@ import org.killbill.billing.account.api.AccountInternalApi;
 import org.killbill.billing.account.api.AccountUserApi;
 import org.killbill.billing.account.api.ImmutableAccountInternalApi;
 import org.killbill.billing.callcontext.InternalTenantContext;
+import org.killbill.billing.callcontext.MutableCallContext;
 import org.killbill.billing.callcontext.MutableInternalCallContext;
 import org.killbill.billing.dao.MockNonEntityDao;
 import org.killbill.billing.util.callcontext.CallContext;
@@ -44,7 +45,7 @@ public class GuicyKillbillTestSuiteNoDB extends GuicyKillbillTestSuite {
                                             final NonEntityDao nonEntityDao,
                                             final Clock clock,
                                             final InternalCallContextFactory internalCallContextFactory,
-                                            final CallContext callContext,
+                                            final MutableCallContext callContext,
                                             final MutableInternalCallContext internalCallContext) throws AccountApiException {
         final Account account = accountUserApi.createAccount(accountData, callContext);
 

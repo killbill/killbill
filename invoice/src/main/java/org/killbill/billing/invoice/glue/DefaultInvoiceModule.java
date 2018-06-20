@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014-2015 Groupon, Inc
- * Copyright 2014-2015 The Billing Project, LLC
+ * Copyright 2014-2018 Groupon, Inc
+ * Copyright 2014-2018 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -27,12 +27,10 @@ import org.killbill.billing.invoice.api.DefaultInvoiceService;
 import org.killbill.billing.invoice.api.InvoiceApiHelper;
 import org.killbill.billing.invoice.api.InvoiceInternalApi;
 import org.killbill.billing.invoice.api.InvoiceListenerService;
-import org.killbill.billing.invoice.api.InvoicePaymentApi;
 import org.killbill.billing.invoice.api.InvoiceService;
 import org.killbill.billing.invoice.api.InvoiceUserApi;
 import org.killbill.billing.invoice.api.formatters.InvoiceFormatterFactory;
 import org.killbill.billing.invoice.api.formatters.ResourceBundleFactory;
-import org.killbill.billing.invoice.api.invoice.DefaultInvoicePaymentApi;
 import org.killbill.billing.invoice.api.svcs.DefaultInvoiceInternalApi;
 import org.killbill.billing.invoice.api.user.DefaultInvoiceUserApi;
 import org.killbill.billing.invoice.config.MultiTenantInvoiceConfig;
@@ -83,11 +81,6 @@ public class DefaultInvoiceModule extends KillBillModule implements InvoiceModul
     @Override
     public void installInvoiceInternalApi() {
         bind(InvoiceInternalApi.class).to(DefaultInvoiceInternalApi.class).asEagerSingleton();
-    }
-
-    @Override
-    public void installInvoicePaymentApi() {
-        bind(InvoicePaymentApi.class).to(DefaultInvoicePaymentApi.class).asEagerSingleton();
     }
 
     protected void installConfig() {
@@ -154,7 +147,6 @@ public class DefaultInvoiceModule extends KillBillModule implements InvoiceModul
         installInvoiceDao();
         installInvoiceUserApi();
         installInvoiceInternalApi();
-        installInvoicePaymentApi();
         installResourceBundleFactory();
         bind(RawUsageOptimizer.class).asEagerSingleton();
         bind(InvoiceApiHelper.class).asEagerSingleton();

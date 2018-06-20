@@ -34,6 +34,7 @@ import org.killbill.billing.catalog.api.PlanPhaseSpecifier;
 import org.killbill.billing.catalog.api.PlanSpecifier;
 import org.killbill.billing.catalog.api.PriceListSet;
 import org.killbill.billing.catalog.api.ProductCategory;
+import org.killbill.billing.entitlement.api.DefaultEntitlementSpecifier;
 import org.killbill.billing.entitlement.api.Entitlement.EntitlementState;
 import org.killbill.billing.entitlement.api.EntitlementAOStatusDryRun;
 import org.killbill.billing.entitlement.api.EntitlementAOStatusDryRun.DryRunChangeReason;
@@ -313,7 +314,8 @@ public class TestUserApiAddOn extends SubscriptionTestSuiteWithEmbeddedDB {
 
         testListener.pushExpectedEvent(NextEvent.CHANGE);
         testListener.pushExpectedEvent(NextEvent.CANCEL);
-        baseSubscription.changePlan(new PlanPhaseSpecifier(newBaseProduct, newBaseTerm, newBasePriceList, null), null, callContext);
+        final PlanPhaseSpecifier planPhaseSpecifier = new PlanPhaseSpecifier(newBaseProduct, newBaseTerm, newBasePriceList, null);
+        baseSubscription.changePlan(new DefaultEntitlementSpecifier(planPhaseSpecifier), callContext);
         assertListenerStatus();
 
         // REFETCH AO SUBSCRIPTION AND CHECK THIS CANCELLED
@@ -369,7 +371,8 @@ public class TestUserApiAddOn extends SubscriptionTestSuiteWithEmbeddedDB {
         assertEquals(aoStatus.get(0).getPriceList(), aoSubscription.getCurrentPriceList().getName());
         assertEquals(aoStatus.get(0).getReason(), DryRunChangeReason.AO_NOT_AVAILABLE_IN_NEW_PLAN);
 
-        baseSubscription.changePlan(new PlanPhaseSpecifier(newBaseProduct, newBaseTerm, newBasePriceList), null, callContext);
+        final PlanPhaseSpecifier planPhaseSpecifier = new PlanPhaseSpecifier(newBaseProduct, newBaseTerm, newBasePriceList);
+        baseSubscription.changePlan(new DefaultEntitlementSpecifier(planPhaseSpecifier), callContext);
 
         // REFETCH AO SUBSCRIPTION AND CHECK THIS IS ACTIVE
         aoSubscription = (DefaultSubscriptionBase) subscriptionInternalApi.getSubscriptionFromId(aoSubscription.getId(), internalCallContext);

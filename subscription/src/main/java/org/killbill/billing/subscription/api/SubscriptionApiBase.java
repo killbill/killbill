@@ -38,6 +38,7 @@ import org.killbill.billing.catalog.api.PlanPhasePriceOverridesWithCallContext;
 import org.killbill.billing.catalog.api.PlanPhaseSpecifier;
 import org.killbill.billing.catalog.api.ProductCategory;
 import org.killbill.billing.entitlement.api.Entitlement.EntitlementState;
+import org.killbill.billing.entitlement.api.EntitlementSpecifier;
 import org.killbill.billing.invoice.api.DryRunArguments;
 import org.killbill.billing.subscription.api.svcs.DefaultPlanPhasePriceOverridesWithCallContext;
 import org.killbill.billing.subscription.api.svcs.DefaultSubscriptionInternalApi;
@@ -132,12 +133,13 @@ public class SubscriptionApiBase {
 
         final DateTime utcNow = clock.getUTCNow();
         List<SubscriptionBaseEvent> dryRunEvents = null;
-        final PlanPhaseSpecifier inputSpec = dryRunArguments.getPlanPhaseSpecifier();
+        final EntitlementSpecifier entitlementSpecifier = dryRunArguments.getEntitlementSpecifier();
+        final PlanPhaseSpecifier inputSpec = entitlementSpecifier.getPlanPhaseSpecifier();
         final boolean isInputSpecNullOrEmpty = inputSpec == null ||
                                                (inputSpec.getPlanName() == null && inputSpec.getProductName() == null && inputSpec.getBillingPeriod() == null);
 
         // Create an overridesWithContext with a null context to indicate this is dryRun and no price overridden plan should be created.
-        final PlanPhasePriceOverridesWithCallContext overridesWithContext = new DefaultPlanPhasePriceOverridesWithCallContext(dryRunArguments.getPlanPhasePriceOverrides(), null);
+        final PlanPhasePriceOverridesWithCallContext overridesWithContext = new DefaultPlanPhasePriceOverridesWithCallContext(entitlementSpecifier.getOverrides(), null);
         final Plan plan = isInputSpecNullOrEmpty ?
                           null :
                           catalog.createOrFindPlan(inputSpec, overridesWithContext, utcNow);

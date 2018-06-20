@@ -39,6 +39,7 @@ import org.killbill.billing.catalog.api.UsagePriceOverride;
 import org.killbill.billing.entitlement.api.BlockingState;
 import org.killbill.billing.entitlement.api.BlockingStateType;
 import org.killbill.billing.entitlement.api.DefaultEntitlement;
+import org.killbill.billing.entitlement.api.DefaultEntitlementSpecifier;
 import org.killbill.billing.entitlement.api.Entitlement;
 import org.killbill.billing.entitlement.api.Entitlement.EntitlementActionPolicy;
 import org.killbill.billing.entitlement.api.Subscription;
@@ -572,7 +573,7 @@ public class TestWithBCDUpdate extends TestIntegrationBase {
         overrides.add(new DefaultPlanPhasePriceOverride("blowdart-monthly-notrial-evergreen", account.getCurrency(), null, BigDecimal.ZERO, ImmutableList.<UsagePriceOverride>of()));
         busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE);
         // BP creation : Will set Account BCD to the first (DateOfFirstRecurringNonZeroCharge is the subscription start date in this case)
-        final UUID baseEntitlementId = entitlementApi.createBaseEntitlement(account.getId(), spec, "bundleExternalKey", overrides, null, null, false, true, ImmutableList.<PluginProperty>of(), callContext);
+        final UUID baseEntitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec, null, overrides), "bundleExternalKey", null, null, false, true, ImmutableList.<PluginProperty>of(), callContext);
         assertListenerStatus();
         final Entitlement baseEntitlement = entitlementApi.getEntitlementForId(baseEntitlementId, callContext);
 
@@ -595,7 +596,7 @@ public class TestWithBCDUpdate extends TestIntegrationBase {
         // Change to the paying plan (alignment is CHANGE_OF_PLAN: we end up in TRIAL)
         final PlanPhaseSpecifier specWithTrial = new PlanPhaseSpecifier("Blowdart", BillingPeriod.MONTHLY, "trial", null);
         busHandler.pushExpectedEvents(NextEvent.CHANGE, NextEvent.INVOICE);
-        baseEntitlement.changePlanOverrideBillingPolicy(specWithTrial, ImmutableList.<PlanPhasePriceOverride>of(), clock.getUTCToday(), BillingActionPolicy.IMMEDIATE, ImmutableList.<PluginProperty>of(), callContext);
+        baseEntitlement.changePlanOverrideBillingPolicy(new DefaultEntitlementSpecifier(specWithTrial), clock.getUTCToday(), BillingActionPolicy.IMMEDIATE, ImmutableList.<PluginProperty>of(), callContext);
         assertListenerStatus();
 
         // Trial invoice
@@ -635,7 +636,7 @@ public class TestWithBCDUpdate extends TestIntegrationBase {
         overrides.add(new DefaultPlanPhasePriceOverride("blowdart-monthly-notrial-evergreen", account.getCurrency(), null, BigDecimal.ZERO, ImmutableList.<UsagePriceOverride>of()));
         busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE);
         // BP creation : Will set Account BCD to the first (DateOfFirstRecurringNonZeroCharge is the subscription start date in this case)
-        final UUID baseEntitlementId = entitlementApi.createBaseEntitlement(account.getId(), spec, "bundleExternalKey", overrides, null, null, false, true, ImmutableList.<PluginProperty>of(), callContext);
+        final UUID baseEntitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec, null, overrides), "bundleExternalKey", null, null, false, true, ImmutableList.<PluginProperty>of(), callContext);
         assertListenerStatus();
         final Entitlement baseEntitlement = entitlementApi.getEntitlementForId(baseEntitlementId, callContext);
 
@@ -654,7 +655,7 @@ public class TestWithBCDUpdate extends TestIntegrationBase {
         // Extra NULL_INVOICE event because invoice computes a future notification effective right away
         final PlanPhaseSpecifier specWithTrial = new PlanPhaseSpecifier("Blowdart", BillingPeriod.MONTHLY, "trial", null);
         busHandler.pushExpectedEvents(NextEvent.CHANGE, NextEvent.NULL_INVOICE, NextEvent.INVOICE);
-        baseEntitlement.changePlanOverrideBillingPolicy(specWithTrial, ImmutableList.<PlanPhasePriceOverride>of(), clock.getUTCToday(), BillingActionPolicy.IMMEDIATE, ImmutableList.<PluginProperty>of(), callContext);
+        baseEntitlement.changePlanOverrideBillingPolicy(new DefaultEntitlementSpecifier(specWithTrial), clock.getUTCToday(), BillingActionPolicy.IMMEDIATE, ImmutableList.<PluginProperty>of(), callContext);
         assertListenerStatus();
 
         // Trial invoice (with re-alignment invoice item from free plan)
@@ -694,7 +695,7 @@ public class TestWithBCDUpdate extends TestIntegrationBase {
         overrides.add(new DefaultPlanPhasePriceOverride("blowdart-monthly-notrial-evergreen", account.getCurrency(), null, BigDecimal.ZERO, ImmutableList.<UsagePriceOverride>of()));
         busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE);
         // BP creation : Will set Account BCD to the first (DateOfFirstRecurringNonZeroCharge is the subscription start date in this case)
-        final UUID baseEntitlementId = entitlementApi.createBaseEntitlement(account.getId(), spec, "bundleExternalKey", overrides, null, null, false, true, ImmutableList.<PluginProperty>of(), callContext);
+        final UUID baseEntitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec, null, overrides), "bundleExternalKey", null, null, false, true, ImmutableList.<PluginProperty>of(), callContext);
         assertListenerStatus();
         final Entitlement baseEntitlement = entitlementApi.getEntitlementForId(baseEntitlementId, callContext);
 
@@ -716,7 +717,7 @@ public class TestWithBCDUpdate extends TestIntegrationBase {
 
         // Change to the paying plan
         busHandler.pushExpectedEvents(NextEvent.CHANGE, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
-        baseEntitlement.changePlanOverrideBillingPolicy(toSpec, ImmutableList.<PlanPhasePriceOverride>of(), clock.getUTCToday(), BillingActionPolicy.IMMEDIATE, ImmutableList.<PluginProperty>of(), callContext);
+        baseEntitlement.changePlanOverrideBillingPolicy(new DefaultEntitlementSpecifier(toSpec), clock.getUTCToday(), BillingActionPolicy.IMMEDIATE, ImmutableList.<PluginProperty>of(), callContext);
         assertListenerStatus();
 
         // First paying invoice

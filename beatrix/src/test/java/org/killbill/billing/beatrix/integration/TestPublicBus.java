@@ -19,6 +19,7 @@
 package org.killbill.billing.beatrix.integration;
 
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.util.UUID;
 import java.util.concurrent.Callable;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -28,10 +29,12 @@ import org.killbill.billing.account.api.Account;
 import org.killbill.billing.api.TestApiListener.NextEvent;
 import org.killbill.billing.callcontext.DefaultCallContext;
 import org.killbill.billing.catalog.api.BillingPeriod;
+import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.catalog.api.ProductCategory;
 import org.killbill.billing.entitlement.api.DefaultEntitlement;
 import org.killbill.billing.notification.plugin.api.ExtBusEvent;
 import org.killbill.billing.notification.plugin.api.ExtBusEventType;
+import org.killbill.billing.notification.plugin.api.InvoiceNotificationMetadata;
 import org.killbill.billing.notification.plugin.api.SubscriptionMetadata;
 import org.killbill.billing.overdue.api.OverdueConfig;
 import org.killbill.billing.platform.api.KillbillConfigSource;
@@ -66,9 +69,11 @@ public class TestPublicBus extends TestIntegrationBase {
 
     @Override
     protected KillbillConfigSource getConfigSource() {
-        final ImmutableMap<String, String> additionalProperties = new ImmutableMap.Builder<String, String>().put("org.killbill.billing.util.broadcast.rate", "500ms")
-                                                                                                            .build();
-        return getConfigSource("/beatrix.properties", additionalProperties);
+        return getConfigSource(null, new ImmutableMap.Builder()
+                .putAll(DEFAULT_BEATRIX_PROPERTIES)
+                .put("org.killbill.billing.util.broadcast.rate", "500ms")
+                .put("org.killbill.invoice.dryRunNotificationSchedule", "1d")
+                .build());
     }
 
     @Override
@@ -124,12 +129,13 @@ public class TestPublicBus extends TestIntegrationBase {
         final DateTime initialDate = new DateTime(2012, 2, 1, 0, 3, 42, 0, testTimeZone);
         final int billingDay = 2;
 
+        // set clock to the initial start date
+        clock.setDeltaFromReality(initialDate.getMillis() - clock.getUTCNow().getMillis());
+
         log.info("Beginning test with BCD of " + billingDay);
         final Account account = createAccountWithNonOsgiPaymentMethod(getAccountData(billingDay));
         assertNotNull(account);
 
-        // set clock to the initial start date
-        clock.setDeltaFromReality(initialDate.getMillis() - clock.getUTCNow().getMillis());
 
         //
         // CREATE SUBSCRIPTION AND EXPECT BOTH EVENTS: NextEvent.CREATE, NextEvent.BLOCK NextEvent.INVOICE
@@ -145,13 +151,15 @@ public class TestPublicBus extends TestIntegrationBase {
             }
         });
 
-        addDaysAndCheckForCompletion(31, NextEvent.PHASE, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
+        addDaysAndCheckForCompletion(29, NextEvent.INVOICE_NOTIFICATION);
+
+        addDaysAndCheckForCompletion(1, NextEvent.PHASE, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
 
         await().atMost(10, SECONDS).until(new Callable<Boolean>() {
             @Override
             public Boolean call() throws Exception {
                 // 5 + SUBSCRIPTION_TRANSITION, INVOICE, PAYMENT, INVOICE_PAYMENT
-                return externalBusCount.get() == 10;
+                return externalBusCount.get() == 11;
             }
         });
     }
@@ -181,27 +189,31 @@ public class TestPublicBus extends TestIntegrationBase {
         public void handleExternalEvents(final ExtBusEvent event) {
             log.info("GOT EXT EVENT " + event);
 
-            if (event.getEventType() == ExtBusEventType.SUBSCRIPTION_CREATION ||
-                event.getEventType() == ExtBusEventType.SUBSCRIPTION_CANCEL ||
-                event.getEventType() == ExtBusEventType.SUBSCRIPTION_PHASE ||
-                event.getEventType() == ExtBusEventType.SUBSCRIPTION_CHANGE ||
-                event.getEventType() == ExtBusEventType.SUBSCRIPTION_UNCANCEL ||
-                event.getEventType() == ExtBusEventType.SUBSCRIPTION_BCD_CHANGE) {
-                try {
+            try {
+                if (event.getEventType() == ExtBusEventType.SUBSCRIPTION_CREATION ||
+                    event.getEventType() == ExtBusEventType.SUBSCRIPTION_CANCEL ||
+                    event.getEventType() == ExtBusEventType.SUBSCRIPTION_PHASE ||
+                    event.getEventType() == ExtBusEventType.SUBSCRIPTION_CHANGE ||
+                    event.getEventType() == ExtBusEventType.SUBSCRIPTION_UNCANCEL ||
+                    event.getEventType() == ExtBusEventType.SUBSCRIPTION_BCD_CHANGE) {
                     final SubscriptionMetadata obj = mapper.readValue(event.getMetaData(), SubscriptionMetadata.class);
                     Assert.assertNotNull(obj.getBundleExternalKey());
                     Assert.assertNotNull(obj.getActionType());
-                } catch (final JsonParseException e) {
-                    Assert.fail("Could not deserialize metada section", e);
-                } catch (final JsonMappingException e) {
-                    Assert.fail("Could not deserialize metada section", e);
-                } catch (final IOException e) {
-                    Assert.fail("Could not deserialize metada section", e);
+                } else if (event.getEventType() == ExtBusEventType.INVOICE_NOTIFICATION) {
+                    final InvoiceNotificationMetadata obj = mapper.readValue(event.getMetaData(), InvoiceNotificationMetadata.class);
+                    Assert.assertEquals(obj.getAmountOwed().compareTo(new BigDecimal("249.95")), 0);
+                    Assert.assertEquals(obj.getCurrency(), Currency.USD);
+                    Assert.assertNotNull(obj.getTargetDate());
                 }
+
+            } catch (final JsonParseException e) {
+                Assert.fail("Could not deserialize metada section", e);
+            } catch (final JsonMappingException e) {
+                Assert.fail("Could not deserialize metada section", e);
+            } catch (final IOException e) {
+                Assert.fail("Could not deserialize metada section", e);
             }
-
             externalBusCount.incrementAndGet();
-
         }
     }
 }

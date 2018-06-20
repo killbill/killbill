@@ -27,6 +27,7 @@ import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.catalog.api.PlanPhaseSpecifier;
 import org.killbill.billing.catalog.api.ProductCategory;
 import org.killbill.billing.entitlement.api.DefaultEntitlement;
+import org.killbill.billing.entitlement.api.DefaultEntitlementSpecifier;
 import org.killbill.billing.entitlement.api.Entitlement;
 import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.platform.api.KillbillConfigSource;
@@ -39,10 +40,11 @@ public class TestInvoiceNotifications extends TestIntegrationBase {
 
     @Override
     protected KillbillConfigSource getConfigSource() {
-        ImmutableMap additionalProperties = new ImmutableMap.Builder()
+
+        return getConfigSource(null, new ImmutableMap.Builder()
+                .putAll(DEFAULT_BEATRIX_PROPERTIES)
                 .put("org.killbill.invoice.dryRunNotificationSchedule", "7d")
-                .build();
-        return getConfigSource("/beatrix.properties", additionalProperties);
+                .build());
     }
 
     @Test(groups = "slow")
@@ -82,7 +84,7 @@ public class TestInvoiceNotifications extends TestIntegrationBase {
         final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("pistol-monthly-notrial");
 
         busHandler.pushExpectedEvents(NextEvent.BLOCK);
-        final UUID entitlementId = entitlementApi.createBaseEntitlement(account.getId(), spec, "bundleKey", null, null, billingDate, false, true, ImmutableList.<PluginProperty>of(), callContext);
+        final UUID entitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec), "bundleKey", null, billingDate, false, true, ImmutableList.<PluginProperty>of(), callContext);
         busHandler.assertListenerStatus();
         final Entitlement entitlement = entitlementApi.getEntitlementForId(entitlementId, callContext);
 
@@ -94,7 +96,8 @@ public class TestInvoiceNotifications extends TestIntegrationBase {
 
         final LocalDate futureChangeDate = new LocalDate(2018, 3, 28);
 
-        entitlement.changePlanWithDate(new PlanPhaseSpecifier("shotgun-monthly"), null, futureChangeDate, null, callContext);
+        final PlanPhaseSpecifier spec2 = new PlanPhaseSpecifier("shotgun-monthly");
+        entitlement.changePlanWithDate(new DefaultEntitlementSpecifier(spec2), futureChangeDate, null, callContext);
         assertListenerStatus();
 
         // Move to the notification before the start date =>  2018, 3, 21

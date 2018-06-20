@@ -21,10 +21,24 @@ package org.killbill.billing.beatrix;
 import org.killbill.billing.GuicyKillbillTestSuiteWithEmbeddedDB;
 import org.killbill.billing.platform.api.KillbillConfigSource;
 
+import com.google.common.collect.ImmutableMap;
+
 public abstract class BeatrixTestSuiteWithEmbeddedDB extends GuicyKillbillTestSuiteWithEmbeddedDB {
+
+    final static protected ImmutableMap DEFAULT_BEATRIX_PROPERTIES = ImmutableMap.builder()
+                                                                                 .put("org.killbill.catalog.uri", "catalogs/default/catalogTest.xml")
+                                                                                 .put("org.killbill.invoice.maxDailyNumberOfItemsSafetyBound", "30")
+                                                                                 .put("org.killbill.payment.retry.days", "8,8,8,8,8,8,8,8")
+                                                                                 .put("org.killbill.osgi.bundle.install.dir", "/var/tmp/beatrix-bundles")
+                                                                                 // The default value is 50, i.e. wait 50 x 100ms = 5s to get the lock. This isn't always enough and can lead to random tests failures
+                                                                                 // in the listener status: after moving the clock, if there are two notifications triggering an invoice run, we typically expect
+                                                                                 // both an INVOICE and a NULL_INVOICE event. If the invoice generation takes too long, the NULL_INVOICE event is never generated
+                                                                                 // (LockFailedException): the test itself doesn't fail (the correct invoice is generated), but assertListenerStatus() would.
+                                                                                 .put("org.killbill.invoice.globalLock.retries", 150)
+                                                                                 .build();
 
     @Override
     protected KillbillConfigSource getConfigSource() {
-        return getConfigSource("/beatrix.properties");
+        return getConfigSource(null, DEFAULT_BEATRIX_PROPERTIES);
     }
 }

@@ -30,6 +30,7 @@ import org.killbill.billing.catalog.api.Duration;
 import org.killbill.billing.catalog.api.PlanPhase;
 import org.killbill.billing.catalog.api.PlanPhaseSpecifier;
 import org.killbill.billing.catalog.api.PriceListSet;
+import org.killbill.billing.entitlement.api.DefaultEntitlementSpecifier;
 import org.killbill.billing.subscription.SubscriptionTestSuiteNoDB;
 import org.killbill.billing.subscription.api.SubscriptionBase;
 import org.killbill.billing.subscription.exceptions.SubscriptionBaseError;
@@ -97,7 +98,8 @@ public class TestUserApiError extends SubscriptionTestSuiteNoDB {
         assertListenerStatus();
 
         try {
-            subscription.changePlanWithDate(new PlanPhaseSpecifier("Pistol", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME), null, clock.getUTCNow(), callContext);
+            final PlanPhaseSpecifier planPhaseSpecifier = new PlanPhaseSpecifier("Pistol", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME);
+            subscription.changePlanWithDate(new DefaultEntitlementSpecifier(planPhaseSpecifier), clock.getUTCNow(), callContext);
             Assert.fail("Exception expected, error code: " + ErrorCode.SUB_CHANGE_NON_ACTIVE);
         } catch (final SubscriptionBaseApiException e) {
             assertEquals(e.getCode(), ErrorCode.SUB_CHANGE_NON_ACTIVE.getCode());
@@ -109,7 +111,8 @@ public class TestUserApiError extends SubscriptionTestSuiteNoDB {
         final SubscriptionBase subscription = testUtil.createSubscription(bundle, "Shotgun", BillingPeriod.ANNUAL, PriceListSet.DEFAULT_PRICELIST_NAME);
 
         try {
-            subscription.changePlanWithPolicy(new PlanPhaseSpecifier("Pistol", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME), null, BillingActionPolicy.ILLEGAL, callContext);
+            final PlanPhaseSpecifier planPhaseSpecifier = new PlanPhaseSpecifier("Pistol", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME);
+            subscription.changePlanWithPolicy(new DefaultEntitlementSpecifier(planPhaseSpecifier), BillingActionPolicy.ILLEGAL, callContext);
             Assert.fail("Call changePlanWithPolicy should have failed");
         } catch (final SubscriptionBaseError error) {
             assertTrue(true);
@@ -117,7 +120,8 @@ public class TestUserApiError extends SubscriptionTestSuiteNoDB {
         }
 
         // Assume the call takes less than a second
-        assertEquals(DefaultClock.truncateMs(subscription.changePlanWithPolicy(new PlanPhaseSpecifier("Pistol", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME), null, BillingActionPolicy.IMMEDIATE, callContext)),
+        final PlanPhaseSpecifier planPhaseSpecifier = new PlanPhaseSpecifier("Pistol", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME);
+        assertEquals(DefaultClock.truncateMs(subscription.changePlanWithPolicy(new DefaultEntitlementSpecifier(planPhaseSpecifier), BillingActionPolicy.IMMEDIATE, callContext)),
                      DefaultClock.truncateMs(clock.getUTCNow()));
         assertEquals(subscriptionInternalApi.getSubscriptionFromId(subscription.getId(), internalCallContext).getCurrentPlan().getRecurringBillingPeriod(), BillingPeriod.MONTHLY);
     }
@@ -144,7 +148,8 @@ public class TestUserApiError extends SubscriptionTestSuiteNoDB {
 
         subscription.cancelWithPolicy(BillingActionPolicy.END_OF_TERM, -1, callContext);
         try {
-            subscription.changePlanWithDate(new PlanPhaseSpecifier("Pistol", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME), null, clock.getUTCNow(), callContext);
+            final PlanPhaseSpecifier planPhaseSpecifier = new PlanPhaseSpecifier("Pistol", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME);
+            subscription.changePlanWithDate(new DefaultEntitlementSpecifier(planPhaseSpecifier), clock.getUTCNow(), callContext);
             Assert.fail("Exception expected, error code: " + ErrorCode.SUB_CHANGE_FUTURE_CANCELLED);
         } catch (final SubscriptionBaseApiException e) {
             assertEquals(e.getCode(), ErrorCode.SUB_CHANGE_FUTURE_CANCELLED.getCode());

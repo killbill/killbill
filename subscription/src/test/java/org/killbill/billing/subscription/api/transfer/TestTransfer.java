@@ -31,6 +31,7 @@ import org.killbill.billing.catalog.api.Plan;
 import org.killbill.billing.catalog.api.PlanPhaseSpecifier;
 import org.killbill.billing.catalog.api.PriceListSet;
 import org.killbill.billing.catalog.api.Product;
+import org.killbill.billing.entitlement.api.DefaultEntitlementSpecifier;
 import org.killbill.billing.entitlement.api.Entitlement.EntitlementState;
 import org.killbill.billing.subscription.SubscriptionTestSuiteWithEmbeddedDB;
 import org.killbill.billing.subscription.api.SubscriptionBase;
@@ -270,7 +271,8 @@ public class TestTransfer extends SubscriptionTestSuiteWithEmbeddedDB {
         final String newBaseProduct1 = "Assault-Rifle";
         final BillingPeriod newBaseTerm1 = BillingPeriod.ANNUAL;
         testListener.pushExpectedEvent(NextEvent.CHANGE);
-        newBaseSubscription.changePlan(new PlanPhaseSpecifier(newBaseProduct1, newBaseTerm1, basePriceList), null, callContext);
+        final PlanPhaseSpecifier planPhaseSpecifier = new PlanPhaseSpecifier(newBaseProduct1, newBaseTerm1, basePriceList);
+        newBaseSubscription.changePlan(new DefaultEntitlementSpecifier(planPhaseSpecifier, null, null), callContext);
         assertListenerStatus();
 
         newPlan = newBaseSubscription.getCurrentPlan();
@@ -286,7 +288,8 @@ public class TestTransfer extends SubscriptionTestSuiteWithEmbeddedDB {
 
         final String newBaseProduct2 = "Pistol";
         final BillingPeriod newBaseTerm2 = BillingPeriod.ANNUAL;
-        newBaseSubscriptionWithCtd.changePlan(new PlanPhaseSpecifier(newBaseProduct2, newBaseTerm2, basePriceList), null, callContext);
+        final PlanPhaseSpecifier planPhaseSpecifier1 = new PlanPhaseSpecifier(newBaseProduct2, newBaseTerm2, basePriceList);
+        newBaseSubscriptionWithCtd.changePlan(new DefaultEntitlementSpecifier(planPhaseSpecifier1, null, null), callContext);
 
         newPlan = newBaseSubscriptionWithCtd.getCurrentPlan();
         assertEquals(newPlan.getProduct().getName(), newBaseProduct1);

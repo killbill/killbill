@@ -234,12 +234,22 @@ public abstract class ContiguousIntervalUsageInArrear {
 
     @VisibleForTesting
     List<RolledUpUsage> getRolledUpUsage() {
-        final Iterator<RawUsage> rawUsageIterator = rawSubscriptionUsage.iterator();
-        if (!rawUsageIterator.hasNext()) {
-            return ImmutableList.of();
-        }
 
         final List<RolledUpUsage> result = new ArrayList<RolledUpUsage>();
+
+        final Iterator<RawUsage> rawUsageIterator = rawSubscriptionUsage.iterator();
+        if (!rawUsageIterator.hasNext()) {
+            final LocalDate startDate = transitionTimes.get(transitionTimes.size() - 2);
+            final LocalDate endDate = transitionTimes.get(transitionTimes.size() - 1);
+            for (String unitType : unitTypes) {
+                final List<RolledUpUnit> emptyRolledUptUnits = new ArrayList<RolledUpUnit>();
+                emptyRolledUptUnits.add(new DefaultRolledUpUnit(unitType, 0L));
+                final DefaultRolledUpUsage defaultForUnit = new DefaultRolledUpUsage(getSubscriptionId(), startDate, endDate, emptyRolledUptUnits);
+                result.add(defaultForUnit);
+            }
+            return result;
+        }
+
 
         //
         // Skip all items before our first transition date

@@ -32,6 +32,7 @@ import org.killbill.billing.catalog.api.PriceListSet;
 import org.killbill.billing.entitlement.EntitlementTestSuiteWithEmbeddedDB;
 import org.killbill.billing.entitlement.api.BlockingState;
 import org.killbill.billing.entitlement.api.BlockingStateType;
+import org.killbill.billing.entitlement.api.DefaultEntitlementSpecifier;
 import org.killbill.billing.entitlement.api.Entitlement;
 import org.killbill.billing.entitlement.api.Entitlement.EntitlementState;
 import org.killbill.billing.entitlement.api.EntitlementApiException;
@@ -146,7 +147,7 @@ public class TestBlockingApi extends EntitlementTestSuiteWithEmbeddedDB {
         final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("Shotgun", BillingPeriod.ANNUAL, PriceListSet.DEFAULT_PRICELIST_NAME, null);
 
         testListener.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK);
-        final UUID baseEntitlementId = entitlementApi.createBaseEntitlement(account.getId(), spec, account.getExternalKey(), null, null, null, false, true, ImmutableList.<PluginProperty>of(), callContext);
+        final UUID baseEntitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec), account.getExternalKey(), null, null, false, true, ImmutableList.<PluginProperty>of(), callContext);
         assertListenerStatus();
         Entitlement baseEntitlement = entitlementApi.getEntitlementForId(baseEntitlementId, callContext);
 
@@ -208,7 +209,7 @@ public class TestBlockingApi extends EntitlementTestSuiteWithEmbeddedDB {
         // Try create subscription right now
         try {
             final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("shotgun-monthly", null);
-            entitlementApi.createBaseEntitlement(account.getId(), spec, "xyzqe", null, null, null, false, true, ImmutableList.<PluginProperty>of(), callContext);
+            entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec), "xyzqe", null, null, false, true, ImmutableList.<PluginProperty>of(), callContext);
             fail("Should fail to create entitlement when ACCOUNT has been 'change' blocked");
         } catch (final EntitlementApiException e) {
             assertEquals(e.getCode(), ErrorCode.BLOCK_BLOCKED_ACTION.getCode());
@@ -217,7 +218,7 @@ public class TestBlockingApi extends EntitlementTestSuiteWithEmbeddedDB {
         // Try create subscription in the future
         try {
             final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("shotgun-monthly", null);
-            entitlementApi.createBaseEntitlement(account.getId(), spec, "xyzqe", null, initialDate.plusDays(3), null, false, true, ImmutableList.<PluginProperty>of(), callContext);
+            entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec), "xyzqe", null, initialDate.plusDays(3), false, true, ImmutableList.<PluginProperty>of(), callContext);
             fail("Should fail to create entitlement when ACCOUNT has been 'change' blocked");
         } catch (final EntitlementApiException e) {
             assertEquals(e.getCode(), ErrorCode.BLOCK_BLOCKED_ACTION.getCode());
@@ -226,7 +227,7 @@ public class TestBlockingApi extends EntitlementTestSuiteWithEmbeddedDB {
         // Try create subscription in the past
         final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("shotgun-monthly", null);
         testListener.pushExpectedEvents(NextEvent.BLOCK, NextEvent.CREATE);
-        entitlementApi.createBaseEntitlement(account.getId(), spec, "xyzqe", null, initialDate.minusDays(3), null, false, true, ImmutableList.<PluginProperty>of(), callContext);
+        entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec), "xyzqe", initialDate.minusDays(3), null, false, true, ImmutableList.<PluginProperty>of(), callContext);
         assertListenerStatus();
     }
 
@@ -239,7 +240,7 @@ public class TestBlockingApi extends EntitlementTestSuiteWithEmbeddedDB {
 
         final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("shotgun-monthly", null);
         testListener.pushExpectedEvents(NextEvent.BLOCK, NextEvent.CREATE);
-        final UUID baseEntitlementId = entitlementApi.createBaseEntitlement(account.getId(), spec, "xyzqe", null, initialDate.minusDays(3), null, false, true, ImmutableList.<PluginProperty>of(), callContext);
+        final UUID baseEntitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec), "xyzqe", null, initialDate.minusDays(3), false, true, ImmutableList.<PluginProperty>of(), callContext);
         assertListenerStatus();
         final Entitlement entitlement = entitlementApi.getEntitlementForId(baseEntitlementId, callContext);
 
@@ -251,7 +252,7 @@ public class TestBlockingApi extends EntitlementTestSuiteWithEmbeddedDB {
         // Try create subscription right now
         try {
             final PlanPhaseSpecifier addOnSpec = new PlanPhaseSpecifier("Telescopic-Scope", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, null);
-            entitlementApi.addEntitlement(entitlement.getBundleId(), addOnSpec, null, null, null, false, ImmutableList.<PluginProperty>of(), callContext);
+            entitlementApi.addEntitlement(entitlement.getBundleId(), new DefaultEntitlementSpecifier(addOnSpec), null, null, false, ImmutableList.<PluginProperty>of(), callContext);
             fail("Should fail to create ADD_ON");
         } catch (final EntitlementApiException e) {
             assertEquals(e.getCode(), ErrorCode.BLOCK_BLOCKED_ACTION.getCode());
@@ -260,7 +261,7 @@ public class TestBlockingApi extends EntitlementTestSuiteWithEmbeddedDB {
         // Try create subscription in the future
         try {
             final PlanPhaseSpecifier addOnSpec = new PlanPhaseSpecifier("Telescopic-Scope", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, null);
-            entitlementApi.addEntitlement(entitlement.getBundleId(), addOnSpec, null, initialDate.plusDays(2), null, false, ImmutableList.<PluginProperty>of(), callContext);
+            entitlementApi.addEntitlement(entitlement.getBundleId(), new DefaultEntitlementSpecifier(addOnSpec), null, initialDate.plusDays(2), false, ImmutableList.<PluginProperty>of(), callContext);
             fail("Should fail to create ADD_ON");
         } catch (final EntitlementApiException e) {
             assertEquals(e.getCode(), ErrorCode.BLOCK_BLOCKED_ACTION.getCode());
@@ -269,7 +270,7 @@ public class TestBlockingApi extends EntitlementTestSuiteWithEmbeddedDB {
         // Try create subscription in the past
         final PlanPhaseSpecifier addOnSpec = new PlanPhaseSpecifier("Telescopic-Scope", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, null);
         testListener.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK);
-        entitlementApi.addEntitlement(entitlement.getBundleId(), addOnSpec, null, initialDate.minusDays(2), null, false, ImmutableList.<PluginProperty>of(), callContext);
+        entitlementApi.addEntitlement(entitlement.getBundleId(), new DefaultEntitlementSpecifier(addOnSpec), initialDate.minusDays(2), null, false, ImmutableList.<PluginProperty>of(), callContext);
         assertListenerStatus();
     }
 
@@ -282,7 +283,7 @@ public class TestBlockingApi extends EntitlementTestSuiteWithEmbeddedDB {
 
         final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("shotgun-monthly", null);
         testListener.pushExpectedEvents(NextEvent.BLOCK, NextEvent.CREATE);
-        final UUID baseEntitlementId = entitlementApi.createBaseEntitlement(account.getId(), spec, "xyzqe", null, initialDate.minusDays(3), null, false, true, ImmutableList.<PluginProperty>of(), callContext);
+        final UUID baseEntitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec), "xyzqe", null, initialDate.minusDays(3), false, true, ImmutableList.<PluginProperty>of(), callContext);
         assertListenerStatus();
         final Entitlement entitlement = entitlementApi.getEntitlementForId(baseEntitlementId, callContext);
 
@@ -295,7 +296,7 @@ public class TestBlockingApi extends EntitlementTestSuiteWithEmbeddedDB {
         try {
             final PlanPhaseSpecifier addOnSpec = new PlanPhaseSpecifier("Telescopic-Scope", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, null);
             testListener.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK);
-            entitlementApi.addEntitlement(entitlement.getBundleId(), addOnSpec, null, blockingChange, null, false, ImmutableList.<PluginProperty>of(), callContext);
+            entitlementApi.addEntitlement(entitlement.getBundleId(), new DefaultEntitlementSpecifier(addOnSpec), blockingChange, null, false, ImmutableList.<PluginProperty>of(), callContext);
             assertListenerStatus();
         } catch (final EntitlementApiException e) {
             assertEquals(e.getCode(), ErrorCode.BLOCK_BLOCKED_ACTION.getCode());
@@ -303,7 +304,7 @@ public class TestBlockingApi extends EntitlementTestSuiteWithEmbeddedDB {
 
         // Create ADD_ON now (prior future BlockingState)
         final PlanPhaseSpecifier addOnSpec = new PlanPhaseSpecifier("Telescopic-Scope", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, null);
-        entitlementApi.addEntitlement(entitlement.getBundleId(), addOnSpec, null, null, null, false, ImmutableList.<PluginProperty>of(), callContext);
+        entitlementApi.addEntitlement(entitlement.getBundleId(), new DefaultEntitlementSpecifier(addOnSpec), null, null, false, ImmutableList.<PluginProperty>of(), callContext);
         assertListenerStatus();
     }
 

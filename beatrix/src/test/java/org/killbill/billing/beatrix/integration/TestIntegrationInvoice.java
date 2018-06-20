@@ -36,6 +36,7 @@ import org.killbill.billing.catalog.api.PlanPhaseSpecifier;
 import org.killbill.billing.catalog.api.ProductCategory;
 import org.killbill.billing.catalog.api.UsagePriceOverride;
 import org.killbill.billing.entitlement.api.DefaultEntitlement;
+import org.killbill.billing.entitlement.api.DefaultEntitlementSpecifier;
 import org.killbill.billing.entitlement.api.Entitlement;
 import org.killbill.billing.invoice.api.Invoice;
 import org.killbill.billing.invoice.api.InvoiceItem;
@@ -181,7 +182,7 @@ public class TestIntegrationInvoice extends TestIntegrationBase {
 
         final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("Blowdart", BillingPeriod.MONTHLY, "notrial", null);
         busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT);
-        entitlementApi.createBaseEntitlement(account.getId(), spec, "bundleExternalKey", ImmutableList.<PlanPhasePriceOverride>of(), null, null, false, true, ImmutableList.<PluginProperty>of(), callContext);
+        entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec), "bundleExternalKey", null, null, false, true, ImmutableList.<PluginProperty>of(), callContext);
         assertListenerStatus();
 
         // 2017-02-28
@@ -216,7 +217,7 @@ public class TestIntegrationInvoice extends TestIntegrationBase {
         final List<PlanPhasePriceOverride> overrides = new ArrayList<PlanPhasePriceOverride>();
         overrides.add(new DefaultPlanPhasePriceOverride("blowdart-monthly-notrial-evergreen", account.getCurrency(), null, BigDecimal.ZERO, ImmutableList.<UsagePriceOverride>of()));
         busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE);
-        final UUID entitlementId = entitlementApi.createBaseEntitlement(account.getId(), spec, "bundleExternalKey", overrides, null, null, false, true, ImmutableList.<PluginProperty>of(), callContext);
+        final UUID entitlementId = entitlementApi.createBaseEntitlement(account.getId(),  new DefaultEntitlementSpecifier(spec, null, overrides), "bundleExternalKey", null, null, false, true, ImmutableList.<PluginProperty>of(), callContext);
         assertListenerStatus();
         final Entitlement entitlement = entitlementApi.getEntitlementForId(entitlementId, callContext);
 
@@ -232,7 +233,7 @@ public class TestIntegrationInvoice extends TestIntegrationBase {
                                     new ExpectedInvoiceItemCheck(new LocalDate(2017, 2, 1), new LocalDate(2017, 3, 1), InvoiceItemType.RECURRING, BigDecimal.ZERO));
 
         // Do the change mid-month so the repair triggers the bug in https://github.com/killbill/killbill/issues/783
-        entitlement.changePlanWithDate(spec, ImmutableList.<PlanPhasePriceOverride>of(), new LocalDate("2017-02-15"), ImmutableList.<PluginProperty>of(), callContext);
+        entitlement.changePlanWithDate( new DefaultEntitlementSpecifier(spec), new LocalDate("2017-02-15"), ImmutableList.<PluginProperty>of(), callContext);
         assertListenerStatus();
 
         // 2017-02-15

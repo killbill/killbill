@@ -33,6 +33,7 @@ import org.killbill.billing.catalog.api.Product;
 import org.killbill.billing.catalog.api.ProductCategory;
 import org.killbill.billing.entitlement.api.Entitlement.EntitlementSourceType;
 import org.killbill.billing.entitlement.api.Entitlement.EntitlementState;
+import org.killbill.billing.entitlement.api.EntitlementSpecifier;
 import org.killbill.billing.subscription.api.SubscriptionBase;
 import org.killbill.billing.subscription.api.user.SubscriptionBaseApiException;
 import org.killbill.billing.subscription.api.user.SubscriptionBaseTransition;
@@ -83,8 +84,8 @@ public class MockSubscription implements SubscriptionBase {
     }
 
     @Override
-    public DateTime changePlan(final PlanPhaseSpecifier spec, final List<PlanPhasePriceOverride> overrides, final CallContext context) throws SubscriptionBaseApiException {
-        return sub.changePlan(spec, overrides, context);
+    public DateTime changePlan(final EntitlementSpecifier spec, final CallContext context) throws SubscriptionBaseApiException {
+        return sub.changePlan(spec, context);
     }
 
     @Override
@@ -93,15 +94,14 @@ public class MockSubscription implements SubscriptionBase {
     }
 
     @Override
-    public DateTime changePlanWithDate(final PlanPhaseSpecifier spec, final List<PlanPhasePriceOverride> overrides, final DateTime requestedDate,
+    public DateTime changePlanWithDate(final EntitlementSpecifier spec,final DateTime requestedDate,
                                        final CallContext context) throws SubscriptionBaseApiException {
-        return sub.changePlanWithDate(spec, overrides, requestedDate, context);
+        return sub.changePlanWithDate(spec, requestedDate, context);
     }
 
     @Override
-    public DateTime changePlanWithPolicy(final PlanPhaseSpecifier spec,
-                                         final List<PlanPhasePriceOverride> overrides, final BillingActionPolicy policy, final CallContext context) throws SubscriptionBaseApiException {
-        return sub.changePlanWithPolicy(spec, overrides, policy, context);
+    public DateTime changePlanWithPolicy(final EntitlementSpecifier spec, final BillingActionPolicy policy, final CallContext context) throws SubscriptionBaseApiException {
+        return sub.changePlanWithPolicy(spec, policy, context);
     }
 
     @Override

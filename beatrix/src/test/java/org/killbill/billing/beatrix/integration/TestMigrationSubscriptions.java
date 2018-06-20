@@ -86,7 +86,7 @@ public class TestMigrationSubscriptions extends TestIntegrationBase {
 
         // Entitlement wil be created in PENDING state
         final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("Shotgun", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, null);
-        final UUID entitlementId = entitlementApi.createBaseEntitlement(account.getId(), spec, "bundleKey", null, entitlementMigrationDate, billingMigrationDate, false, true, ImmutableList.<PluginProperty>of(), callContext);
+        final UUID entitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec), "bundleKey", entitlementMigrationDate, billingMigrationDate, false, true, ImmutableList.<PluginProperty>of(), callContext);
         final Entitlement entitlement = entitlementApi.getEntitlementForId(entitlementId, callContext);
         Assert.assertEquals(entitlement.getState(), EntitlementState.PENDING);
 
@@ -143,7 +143,7 @@ public class TestMigrationSubscriptions extends TestIntegrationBase {
         // Entitlement wil be created in ACTIVE state because entitlementMigrationDate was set in the past
         busHandler.pushExpectedEvents(NextEvent.BLOCK);
         final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("Shotgun", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, PhaseType.EVERGREEN);
-        final UUID entitlementId = entitlementApi.createBaseEntitlement(account.getId(), spec, "bundleKey", null, entitlementMigrationDate, billingMigrationDate, false, true, ImmutableList.<PluginProperty>of(), callContext);
+        final UUID entitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec), "bundleKey", entitlementMigrationDate, billingMigrationDate, false, true, ImmutableList.<PluginProperty>of(), callContext);
         assertListenerStatus();
         final Entitlement entitlement = entitlementApi.getEntitlementForId(entitlementId, callContext);
 
@@ -189,7 +189,7 @@ public class TestMigrationSubscriptions extends TestIntegrationBase {
         // Entitlement wil be created in ACTIVE state because entitlementMigrationDate was set in the past
         busHandler.pushExpectedEvents(NextEvent.BLOCK);
         final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("Shotgun", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, PhaseType.EVERGREEN);
-        final UUID entitlementId = entitlementApi.createBaseEntitlement(account.getId(), spec, "bundleKey", null, entitlementMigrationDate, billingMigrationDate, false, true, ImmutableList.<PluginProperty>of(), callContext);
+        final UUID entitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec), "bundleKey", entitlementMigrationDate, billingMigrationDate, false, true, ImmutableList.<PluginProperty>of(), callContext);
         assertListenerStatus();
         final Entitlement entitlement = entitlementApi.getEntitlementForId(entitlementId, callContext);
         Assert.assertEquals(entitlement.getState(), EntitlementState.ACTIVE);
@@ -244,8 +244,8 @@ public class TestMigrationSubscriptions extends TestIntegrationBase {
         final PlanPhaseSpecifier addOnSpec1 = new PlanPhaseSpecifier("Telescopic-Scope", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, PhaseType.EVERGREEN);
 
         final String externalKey = "baseExternalKey";
-        EntitlementSpecifier baseEntitlementSpecifier = new DefaultEntitlementSpecifier(baseSpec, null);
-        EntitlementSpecifier addOnEntitlementSpecifier1 = new DefaultEntitlementSpecifier(addOnSpec1, null);
+        EntitlementSpecifier baseEntitlementSpecifier = new DefaultEntitlementSpecifier(baseSpec);
+        EntitlementSpecifier addOnEntitlementSpecifier1 = new DefaultEntitlementSpecifier(addOnSpec1);
 
         final List<EntitlementSpecifier> specifierList = new ArrayList<EntitlementSpecifier>();
         specifierList.add(baseEntitlementSpecifier);
@@ -293,8 +293,8 @@ public class TestMigrationSubscriptions extends TestIntegrationBase {
         final PlanPhaseSpecifier addOnSpec1 = new PlanPhaseSpecifier("Telescopic-Scope", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, PhaseType.EVERGREEN);
 
         final String externalKey = "baseExternalKey";
-        EntitlementSpecifier baseEntitlementSpecifier = new DefaultEntitlementSpecifier(baseSpec, null);
-        EntitlementSpecifier addOnEntitlementSpecifier1 = new DefaultEntitlementSpecifier(addOnSpec1, null);
+        EntitlementSpecifier baseEntitlementSpecifier = new DefaultEntitlementSpecifier(baseSpec);
+        EntitlementSpecifier addOnEntitlementSpecifier1 = new DefaultEntitlementSpecifier(addOnSpec1);
 
         final List<EntitlementSpecifier> specifierList = new ArrayList<EntitlementSpecifier>();
         specifierList.add(baseEntitlementSpecifier);
@@ -356,7 +356,7 @@ public class TestMigrationSubscriptions extends TestIntegrationBase {
 
         final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("pistol-monthly-notrial", null);
         busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK);
-        entitlementApi.createBaseEntitlement(account.getId(), spec, "bundleExternalKey", ImmutableList.<PlanPhasePriceOverride>of(), null, null, false, true, ImmutableList.<PluginProperty>of(), callContext);
+        entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec), "bundleExternalKey", null, null, false, true, ImmutableList.<PluginProperty>of(), callContext);
         assertListenerStatus();
 
         clock.addMonths(1);
@@ -385,7 +385,7 @@ public class TestMigrationSubscriptions extends TestIntegrationBase {
         // Unlike the previous scenario, we create the subscription and set the blocking state at the same time
         busHandler.pushExpectedEvents(NextEvent.BLOCK, NextEvent.CREATE, NextEvent.BLOCK);
         subscriptionApi.addBlockingState(blockingState1, null, ImmutableList.<PluginProperty>of(), callContext);
-        entitlementApi.createBaseEntitlement(account.getId(), spec, "bundleExternalKey", ImmutableList.<PlanPhasePriceOverride>of(), null, null, false, true, ImmutableList.<PluginProperty>of(), callContext);
+        entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec), "bundleExternalKey", null, null, false, true, ImmutableList.<PluginProperty>of(), callContext);
         assertListenerStatus();
 
         clock.addMonths(1);
@@ -424,7 +424,7 @@ public class TestMigrationSubscriptions extends TestIntegrationBase {
 
         final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("pistol-monthly-notrial", null);
         busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK);
-        entitlementApi.createBaseEntitlement(account.getId(), spec, "bundleExternalKey", ImmutableList.<PlanPhasePriceOverride>of(), null, null, false, true, ImmutableList.<PluginProperty>of(), callContext);
+        entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec), "bundleExternalKey", null, null, false, true, ImmutableList.<PluginProperty>of(), callContext);
         assertListenerStatus();
 
         // Add less than a day between the CREATE and the BLOCK, to verify invoicing behavior
@@ -468,7 +468,7 @@ public class TestMigrationSubscriptions extends TestIntegrationBase {
 
         final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("pistol-monthly-notrial", null);
         busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK);
-        final UUID baseEntitlementId = entitlementApi.createBaseEntitlement(account.getId(), spec, "bundleExternalKey", ImmutableList.<PlanPhasePriceOverride>of(), null, null, false, true, ImmutableList.<PluginProperty>of(), callContext);
+        final UUID baseEntitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec), "bundleExternalKey", null, null, false, true, ImmutableList.<PluginProperty>of(), callContext);
         assertListenerStatus();
         final Entitlement baseEntitlement = entitlementApi.getEntitlementForId(baseEntitlementId, callContext);
 
@@ -477,7 +477,7 @@ public class TestMigrationSubscriptions extends TestIntegrationBase {
         // Add an add-on while bundle is already blocked
         final PlanPhaseSpecifier spec2 = new PlanPhaseSpecifier("cleaning-monthly", null);
         busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK);
-        entitlementApi.addEntitlement(baseEntitlement.getBundleId(), spec2, ImmutableList.<PlanPhasePriceOverride>of(), null, null, false, ImmutableList.<PluginProperty>of(), callContext);
+        entitlementApi.addEntitlement(baseEntitlement.getBundleId(), new DefaultEntitlementSpecifier(spec2), null, null, false, ImmutableList.<PluginProperty>of(), callContext);
         assertListenerStatus();
 
         clock.addMonths(1);

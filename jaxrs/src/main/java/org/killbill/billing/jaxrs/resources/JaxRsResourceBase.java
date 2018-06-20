@@ -22,7 +22,6 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.math.BigDecimal;
 import java.net.URI;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -72,6 +71,7 @@ import org.killbill.billing.jaxrs.json.TagJson;
 import org.killbill.billing.jaxrs.util.Context;
 import org.killbill.billing.jaxrs.util.JaxrsUriBuilder;
 import org.killbill.billing.junction.DefaultBlockingState;
+import org.killbill.billing.payment.api.InvoicePaymentApi;
 import org.killbill.billing.payment.api.Payment;
 import org.killbill.billing.payment.api.PaymentApi;
 import org.killbill.billing.payment.api.PaymentApiException;
@@ -132,6 +132,7 @@ public abstract class JaxRsResourceBase implements JaxrsResource {
     protected final AuditUserApi auditUserApi;
     protected final AccountUserApi accountUserApi;
     protected final PaymentApi paymentApi;
+    protected final InvoicePaymentApi invoicePaymentApi;
     protected final SubscriptionApi subscriptionApi;
     protected final Context context;
     protected final Clock clock;
@@ -145,6 +146,7 @@ public abstract class JaxRsResourceBase implements JaxrsResource {
                              final AuditUserApi auditUserApi,
                              final AccountUserApi accountUserApi,
                              final PaymentApi paymentApi,
+                             final InvoicePaymentApi invoicePaymentApi,
                              final SubscriptionApi subscriptionApi,
                              final Clock clock,
                              final Context context) {
@@ -154,6 +156,7 @@ public abstract class JaxRsResourceBase implements JaxrsResource {
         this.auditUserApi = auditUserApi;
         this.accountUserApi = accountUserApi;
         this.paymentApi = paymentApi;
+        this.invoicePaymentApi = invoicePaymentApi;
         this.subscriptionApi = subscriptionApi;
         this.clock = clock;
         this.context = context;
@@ -541,22 +544,20 @@ public abstract class JaxRsResourceBase implements JaxrsResource {
         return properties;
     }
 
-    protected Payment createPurchaseForInvoice(final Account account, final UUID invoiceId, final BigDecimal amountToPay, final UUID paymentMethodId, final Boolean externalPayment, final String paymentExternalKey, final String transactionExternalKey, final Iterable<PluginProperty> pluginProperties, final CallContext callContext) throws PaymentApiException {
-
-        final List<PluginProperty> properties = new ArrayList<PluginProperty>();
-        final Iterator<PluginProperty> pluginPropertyIterator = pluginProperties.iterator();
-        while (pluginPropertyIterator.hasNext()) {
-            properties.add(pluginPropertyIterator.next());
-        }
-
-        final PluginProperty invoiceProperty = new PluginProperty("IPCD_INVOICE_ID" /* InvoicePaymentControlPluginApi.PROP_IPCD_INVOICE_ID (contract with plugin)  */,
-                                                                  invoiceId.toString(), false);
-        properties.add(invoiceProperty);
+    protected InvoicePayment createPurchaseForInvoice(final Account account, final UUID invoiceId, final BigDecimal amountToPay, final UUID paymentMethodId, final Boolean externalPayment, final String paymentExternalKey, final String transactionExternalKey, final Iterable<PluginProperty> pluginProperties, final CallContext callContext) throws PaymentApiException {
         try {
-            return paymentApi.createPurchaseWithPaymentControl(account, paymentMethodId, null, amountToPay, account.getCurrency(), null, paymentExternalKey, transactionExternalKey,
-                                                               properties, createInvoicePaymentControlPluginApiPaymentOptions(externalPayment), callContext);
+            return invoicePaymentApi.createPurchaseForInvoicePayment(account,
+                                                                     invoiceId,
+                                                                     paymentMethodId,
+                                                                     null, amountToPay,
+                                                                     account.getCurrency(),
+                                                                     null,
+                                                                     paymentExternalKey,
+                                                                     transactionExternalKey,
+                                                                     pluginProperties,
+                                                                     createInvoicePaymentControlPluginApiPaymentOptions(externalPayment),
+                                                                     callContext);
         } catch (final PaymentApiException e) {
-
             if (e.getCode() == ErrorCode.PAYMENT_PLUGIN_EXCEPTION.getCode() /* &&
                 e.getMessage().contains("Invalid amount") */) { /* Plugin received bad input */
                 throw e;
@@ -568,7 +569,7 @@ public abstract class JaxRsResourceBase implements JaxrsResource {
     }
 
     protected PaymentOptions createInvoicePaymentControlPluginApiPaymentOptions(final boolean isExternalPayment) {
-        return createControlPluginApiPaymentOptions(isExternalPayment, ImmutableList.<String>of("__INVOICE_PAYMENT_CONTROL_PLUGIN__"));
+        return createControlPluginApiPaymentOptions(isExternalPayment, ImmutableList.<String>of());
     }
 
     protected PaymentOptions createControlPluginApiPaymentOptions(@Nullable final List<String> paymentControlPluginNames) {

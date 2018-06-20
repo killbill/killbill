@@ -226,18 +226,35 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
     }
 
     @Override
+    public Invoice getInvoiceByInvoiceItem(final UUID uuid, final TenantContext tenantContext) throws InvoiceApiException {
+        return null;
+    }
+
+    @Override
     public List<Invoice> getUnpaidInvoicesByAccountId(final UUID accountId, final LocalDate upToDate, final TenantContext context) {
         final InternalTenantContext internalTenantContext = internalCallContextFactory.createInternalTenantContext(accountId, context);
         final List<InvoiceModelDao> unpaidInvoicesByAccountId = dao.getUnpaidInvoicesByAccountId(accountId, upToDate, internalTenantContext);
         return fromInvoiceModelDao(unpaidInvoicesByAccountId, getCatalogSafelyForPrettyNames(internalTenantContext));
     }
 
+
     @Override
-    public Invoice triggerInvoiceGeneration(final UUID accountId, @Nullable final LocalDate targetDate, final DryRunArguments dryRunArguments,
-                                            final CallContext context) throws InvoiceApiException {
+    public Invoice triggerDryRunInvoiceGeneration(final UUID accountId, final LocalDate targetDate, final DryRunArguments dryRunArguments, final CallContext context) throws InvoiceApiException {
         final InternalCallContext internalContext = internalCallContextFactory.createInternalCallContext(accountId, context);
 
         final Invoice result = dispatcher.processAccount(true, accountId, targetDate, dryRunArguments, false, internalContext);
+        if (result == null) {
+            throw new InvoiceApiException(ErrorCode.INVOICE_NOTHING_TO_DO, accountId, targetDate != null ? targetDate : "null");
+        } else {
+            return result;
+        }
+    }
+
+    @Override
+    public Invoice triggerInvoiceGeneration(final UUID accountId, @Nullable final LocalDate targetDate, final CallContext context) throws InvoiceApiException {
+        final InternalCallContext internalContext = internalCallContextFactory.createInternalCallContext(accountId, context);
+
+        final Invoice result = dispatcher.processAccount(true, accountId, targetDate, null, false, internalContext);
         if (result == null) {
             throw new InvoiceApiException(ErrorCode.INVOICE_NOTHING_TO_DO, accountId, targetDate != null ? targetDate : "null");
         } else {
@@ -412,7 +429,7 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
     }
 
     @Override
-    public void consumeExstingCBAOnAccountWithUnpaidInvoices(final UUID accountId, final CallContext context) {
+    public void consumeExistingCBAOnAccountWithUnpaidInvoices(final UUID accountId, final CallContext context) {
         dao.consumeExstingCBAOnAccountWithUnpaidInvoices(accountId, internalCallContextFactory.createInternalCallContext(accountId, context));
     }
 
@@ -548,7 +565,7 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
                                                                       // Note! The amount is negated here!
                                                                       inputItem.getAmount().negate(),
                                                                       accountCurrency,
-                                                                      inputItem.getDescription());
+                                                                      inputItem.getItemDetails());
 
                             break;
                         case TAX:

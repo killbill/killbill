@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014-2016 Groupon, Inc
- * Copyright 2014-2016 The Billing Project, LLC
+ * Copyright 2014-2018 Groupon, Inc
+ * Copyright 2014-2018 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -26,10 +26,8 @@ import java.util.List;
 import java.util.UUID;
 
 import javax.annotation.Nullable;
-import javax.annotation.concurrent.Immutable;
 
 import org.joda.time.LocalDate;
-import org.joda.time.LocalDate.Property;
 import org.killbill.billing.ErrorCode;
 import org.killbill.billing.account.api.Account;
 import org.killbill.billing.catalog.api.Currency;
@@ -868,9 +866,19 @@ public class TestPaymentApi extends PaymentTestSuiteWithEmbeddedDB {
                                                             requestedAmount,
                                                             new BigDecimal("1.0"),
                                                             Currency.USD));
-        final Payment payment = paymentApi.createPurchaseWithPaymentControl(account, account.getPaymentMethodId(), null, requestedAmount, Currency.USD, null, paymentExternalKey, transactionExternalKey,
-                                                                            createPropertiesForInvoice(invoice), INVOICE_PAYMENT, callContext);
-
+        invoicePaymentApi.createPurchaseForInvoicePayment(account,
+                                                          invoice.getId(),
+                                                          account.getPaymentMethodId(),
+                                                          null,
+                                                          requestedAmount,
+                                                          Currency.USD,
+                                                          null,
+                                                          paymentExternalKey,
+                                                          transactionExternalKey,
+                                                          ImmutableList.<PluginProperty>of(),
+                                                          INVOICE_PAYMENT,
+                                                          callContext);
+        final Payment payment = paymentApi.getPaymentByExternalKey(paymentExternalKey, false, false, ImmutableList.<PluginProperty>of(), callContext);
         assertEquals(payment.getExternalKey(), paymentExternalKey);
         assertEquals(payment.getPaymentMethodId(), account.getPaymentMethodId());
         assertEquals(payment.getAccountId(), account.getId());
@@ -899,7 +907,7 @@ public class TestPaymentApi extends PaymentTestSuiteWithEmbeddedDB {
     }
 
     @Test(groups = "slow")
-    public void testCreatePurchaseWithExternalKeyOverLimit() throws PaymentApiException, InvoiceApiException, EventBusException {
+    public void testCreatePurchaseWithExternalKeyOverLimit() throws InvoiceApiException, EventBusException {
         final BigDecimal requestedAmount = BigDecimal.TEN;
         final LocalDate now = clock.getUTCToday();
 
@@ -909,13 +917,22 @@ public class TestPaymentApi extends PaymentTestSuiteWithEmbeddedDB {
         final String transactionExternalKey = "Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Aenean commodo ligula eget dolor. Aenean massa. Cum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. Donec quam felis, ultricies nec, pellentesque eu, pretium quis,.";
 
         try {
-            paymentApi.createPurchaseWithPaymentControl(account, account.getPaymentMethodId(), null, requestedAmount, Currency.USD, null, paymentExternalKey, transactionExternalKey,
-                                                        createPropertiesForInvoice(invoice), INVOICE_PAYMENT, callContext);
+            invoicePaymentApi.createPurchaseForInvoicePayment(account,
+                                                              invoice.getId(),
+                                                              account.getPaymentMethodId(),
+                                                              null,
+                                                              requestedAmount,
+                                                              Currency.USD,
+                                                              null,
+                                                              paymentExternalKey,
+                                                              transactionExternalKey,
+                                                              ImmutableList.<PluginProperty>of(),
+                                                              INVOICE_PAYMENT,
+                                                              callContext);
             Assert.fail();
         } catch (final PaymentApiException e) {
             assertEquals(e.getCode(), ErrorCode.EXTERNAL_KEY_LIMIT_EXCEEDED.getCode());
         }
-
     }
 
     @Test(groups = "slow")
@@ -943,8 +960,18 @@ public class TestPaymentApi extends PaymentTestSuiteWithEmbeddedDB {
                                                             new BigDecimal("1.0"),
                                                             Currency.USD));
         try {
-            paymentApi.createPurchaseWithPaymentControl(account, account.getPaymentMethodId(), null, requestedAmount, Currency.USD, null, paymentExternalKey, transactionExternalKey,
-                                                        createPropertiesForInvoice(invoice), INVOICE_PAYMENT, callContext);
+            invoicePaymentApi.createPurchaseForInvoicePayment(account,
+                                                              invoice.getId(),
+                                                              account.getPaymentMethodId(),
+                                                              null,
+                                                              requestedAmount,
+                                                              Currency.USD,
+                                                              null,
+                                                              paymentExternalKey,
+                                                              transactionExternalKey,
+                                                              ImmutableList.<PluginProperty>of(),
+                                                              INVOICE_PAYMENT,
+                                                              callContext);
         } catch (final PaymentApiException expected) {
             assertTrue(true);
         }
@@ -1000,8 +1027,18 @@ public class TestPaymentApi extends PaymentTestSuiteWithEmbeddedDB {
                                                             new BigDecimal("1.0"),
                                                             Currency.USD));
         try {
-            paymentApi.createPurchaseWithPaymentControl(account, account.getPaymentMethodId(), null, requestedAmount, Currency.USD, null, paymentExternalKey, transactionExternalKey,
-                                                        createPropertiesForInvoice(invoice), INVOICE_PAYMENT, callContext);
+            invoicePaymentApi.createPurchaseForInvoicePayment(account,
+                                                              invoice.getId(),
+                                                              account.getPaymentMethodId(),
+                                                              null,
+                                                              requestedAmount,
+                                                              Currency.USD,
+                                                              null,
+                                                              paymentExternalKey,
+                                                              transactionExternalKey,
+                                                              ImmutableList.<PluginProperty>of(),
+                                                              INVOICE_PAYMENT,
+                                                              callContext);
         } catch (final PaymentApiException expected) {
             assertTrue(true);
         }
@@ -1031,9 +1068,18 @@ public class TestPaymentApi extends PaymentTestSuiteWithEmbeddedDB {
         assertEquals(payment.getTransactions().get(0).getTransactionType(), TransactionType.PURCHASE);
 
         // Make sure we can retry and that works
-        paymentApi.createPurchaseWithPaymentControl(account, account.getPaymentMethodId(), null, requestedAmount, Currency.USD, null, paymentExternalKey, transactionExternalKey,
-                                                    createPropertiesForInvoice(invoice), INVOICE_PAYMENT, callContext);
-
+        invoicePaymentApi.createPurchaseForInvoicePayment(account,
+                                                          invoice.getId(),
+                                                          account.getPaymentMethodId(),
+                                                          null,
+                                                          requestedAmount,
+                                                          Currency.USD,
+                                                          null,
+                                                          paymentExternalKey,
+                                                          transactionExternalKey,
+                                                          ImmutableList.<PluginProperty>of(),
+                                                          INVOICE_PAYMENT,
+                                                          callContext);
 
         final List<Payment> accountPayments2 = paymentApi.getAccountPayments(account.getId(), false, false, ImmutableList.<PluginProperty>of(), callContext);
         assertEquals(accountPayments2.size(), 1);
@@ -1075,8 +1121,18 @@ public class TestPaymentApi extends PaymentTestSuiteWithEmbeddedDB {
                                                             Currency.USD));
 
         try {
-            paymentApi.createPurchaseWithPaymentControl(account, account.getPaymentMethodId(), null, requestedAmount, Currency.USD, null, paymentExternalKey, transactionExternalKey,
-                                                        createPropertiesForInvoice(invoice), INVOICE_PAYMENT, callContext);
+            invoicePaymentApi.createPurchaseForInvoicePayment(account,
+                                                              invoice.getId(),
+                                                              account.getPaymentMethodId(),
+                                                              null,
+                                                              requestedAmount,
+                                                              Currency.USD,
+                                                              null,
+                                                              paymentExternalKey,
+                                                              transactionExternalKey,
+                                                              ImmutableList.<PluginProperty>of(),
+                                                              INVOICE_PAYMENT,
+                                                              callContext);
             Assert.fail("Unexpected success");
         } catch (final PaymentApiException e) {
         }
@@ -1107,8 +1163,19 @@ public class TestPaymentApi extends PaymentTestSuiteWithEmbeddedDB {
                                                                      Currency.USD);
         invoice.addInvoiceItem(invoiceItem);
 
-        final Payment payment = paymentApi.createPurchaseWithPaymentControl(account, account.getPaymentMethodId(), null, requestedAmount, Currency.USD, null, paymentExternalKey, transactionExternalKey,
-                                                                            createPropertiesForInvoice(invoice), INVOICE_PAYMENT, callContext);
+        invoicePaymentApi.createPurchaseForInvoicePayment(account,
+                                                          invoice.getId(),
+                                                          account.getPaymentMethodId(),
+                                                          null,
+                                                          requestedAmount,
+                                                          Currency.USD,
+                                                          null,
+                                                          paymentExternalKey,
+                                                          transactionExternalKey,
+                                                          ImmutableList.<PluginProperty>of(),
+                                                          INVOICE_PAYMENT,
+                                                          callContext);
+        final Payment payment = paymentApi.getPaymentByExternalKey(paymentExternalKey, false, false, ImmutableList.<PluginProperty>of(), callContext);
 
         final List<PluginProperty> refundProperties = ImmutableList.<PluginProperty>of();
         final Payment payment2 = paymentApi.createRefundWithPaymentControl(account, payment.getId(), requestedAmount, Currency.USD, null, transactionExternalKey2,
@@ -1150,8 +1217,19 @@ public class TestPaymentApi extends PaymentTestSuiteWithEmbeddedDB {
                                                                      Currency.USD);
         invoice.addInvoiceItem(invoiceItem);
 
-        final Payment payment = paymentApi.createPurchaseWithPaymentControl(account, account.getPaymentMethodId(), null, requestedAmount, Currency.USD, null, paymentExternalKey, transactionExternalKey,
-                                                                            createPropertiesForInvoice(invoice), INVOICE_PAYMENT, callContext);
+        invoicePaymentApi.createPurchaseForInvoicePayment(account,
+                                                          invoice.getId(),
+                                                          account.getPaymentMethodId(),
+                                                          null,
+                                                          requestedAmount,
+                                                          Currency.USD,
+                                                          null,
+                                                          paymentExternalKey,
+                                                          transactionExternalKey,
+                                                          ImmutableList.<PluginProperty>of(),
+                                                          INVOICE_PAYMENT,
+                                                          callContext);
+        final Payment payment = paymentApi.getPaymentByExternalKey(paymentExternalKey, false, false, ImmutableList.<PluginProperty>of(), callContext);
 
         final List<PluginProperty> refundProperties = ImmutableList.<PluginProperty>of();
 
@@ -1188,17 +1266,27 @@ public class TestPaymentApi extends PaymentTestSuiteWithEmbeddedDB {
                                                                      Currency.USD);
         invoice.addInvoiceItem(invoiceItem);
 
-        final Payment payment = paymentApi.createPurchaseWithPaymentControl(account, account.getPaymentMethodId(), null, requestedAmount, Currency.USD, null, paymentExternalKey, transactionExternalKey,
-                                                                            createPropertiesForInvoice(invoice), INVOICE_PAYMENT, callContext);
+        invoicePaymentApi.createPurchaseForInvoicePayment(account,
+                                                          invoice.getId(),
+                                                          account.getPaymentMethodId(),
+                                                          null,
+                                                          requestedAmount,
+                                                          Currency.USD,
+                                                          null,
+                                                          paymentExternalKey,
+                                                          transactionExternalKey,
+                                                          ImmutableList.<PluginProperty>of(),
+                                                          INVOICE_PAYMENT,
+                                                          callContext);
+        final Payment payment = paymentApi.getPaymentByExternalKey(paymentExternalKey, false, false, ImmutableList.<PluginProperty>of(), callContext);
 
         final List<PluginProperty> refundProperties = new ArrayList<PluginProperty>();
         final HashMap<UUID, BigDecimal> uuidBigDecimalHashMap = new HashMap<UUID, BigDecimal>();
         uuidBigDecimalHashMap.put(invoiceItem.getId(), null);
-        final PluginProperty refundIdsProp = new PluginProperty(InvoicePaymentControlPluginApi.PROP_IPCD_REFUND_IDS_WITH_AMOUNT_KEY, uuidBigDecimalHashMap, false);
-        refundProperties.add(refundIdsProp);
 
-        final Payment payment2 = paymentApi.createRefundWithPaymentControl(account, payment.getId(), null, Currency.USD, null, transactionExternalKey2,
-                                                                           refundProperties, INVOICE_PAYMENT, callContext);
+        invoicePaymentApi.createRefundForInvoicePayment(true, uuidBigDecimalHashMap, account, payment.getId(), null, Currency.USD, null, transactionExternalKey2,
+                                                        refundProperties, INVOICE_PAYMENT, callContext);
+        final Payment payment2 = paymentApi.getPayment(payment.getId(), false, false, ImmutableList.<PluginProperty>of(), callContext);
 
         assertEquals(payment2.getTransactions().size(), 2);
         assertEquals(payment2.getExternalKey(), paymentExternalKey);
@@ -2574,12 +2662,6 @@ public class TestPaymentApi extends PaymentTestSuiteWithEmbeddedDB {
                 Assert.fail();
                 return null;
         }
-    }
-
-    private List<PluginProperty> createPropertiesForInvoice(final Invoice invoice) {
-        final List<PluginProperty> result = new ArrayList<PluginProperty>();
-        result.add(new PluginProperty(InvoicePaymentControlPluginApi.PROP_IPCD_INVOICE_ID, invoice.getId().toString(), false));
-        return result;
     }
 
     // Search by a key supported by the search in MockPaymentProviderPlugin

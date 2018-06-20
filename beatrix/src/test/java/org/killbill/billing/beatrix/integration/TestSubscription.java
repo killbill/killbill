@@ -104,7 +104,7 @@ public class TestSubscription extends TestIntegrationBase {
 
         TestDryRunArguments dryRun = new TestDryRunArguments(DryRunType.SUBSCRIPTION_ACTION, productName, ProductCategory.BASE, BillingPeriod.MONTHLY, null, null,
                                                              SubscriptionEventType.CHANGE, bpEntitlement.getId(), bpEntitlement.getBundleId(), null, BillingActionPolicy.IMMEDIATE);
-        Invoice dryRunInvoice = invoiceUserApi.triggerInvoiceGeneration(account.getId(), clock.getUTCToday(), dryRun, callContext);
+        Invoice dryRunInvoice = invoiceUserApi.triggerDryRunInvoiceGeneration(account.getId(), clock.getUTCToday(), dryRun, callContext);
         invoiceChecker.checkInvoiceNoAudits(dryRunInvoice, toBeChecked);
 
         changeEntitlementAndCheckForCompletion(bpEntitlement, productName, BillingPeriod.MONTHLY, BillingActionPolicy.IMMEDIATE, NextEvent.CHANGE, NextEvent.INVOICE);
@@ -202,9 +202,9 @@ public class TestSubscription extends TestIntegrationBase {
         final PlanPhaseSpecifier addOnSpec2 = new PlanPhaseSpecifier("Laser-Scope", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, null);
 
         final String externalKeyA = "baseExternalKeyAAA";
-        final EntitlementSpecifier baseEntitlementSpecifier = new DefaultEntitlementSpecifier(baseSpec, null);
-        final EntitlementSpecifier addOnEntitlementSpecifier1 = new DefaultEntitlementSpecifier(addOnSpec1, null);
-        final EntitlementSpecifier addOnEntitlementSpecifier2 = new DefaultEntitlementSpecifier(addOnSpec2, null);
+        final EntitlementSpecifier baseEntitlementSpecifier = new DefaultEntitlementSpecifier(baseSpec);
+        final EntitlementSpecifier addOnEntitlementSpecifier1 = new DefaultEntitlementSpecifier(addOnSpec1);
+        final EntitlementSpecifier addOnEntitlementSpecifier2 = new DefaultEntitlementSpecifier(addOnSpec2);
 
         final List<EntitlementSpecifier> specifierListA = new ArrayList<EntitlementSpecifier>();
         specifierListA.add(baseEntitlementSpecifier);
@@ -290,9 +290,9 @@ public class TestSubscription extends TestIntegrationBase {
         final PlanPhaseSpecifier addOnSpec2 = new PlanPhaseSpecifier("Laser-Scope", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, null);
 
         final String externalKeyA = "baseExternalKeyAAA";
-        final EntitlementSpecifier baseEntitlementSpecifier = new DefaultEntitlementSpecifier(baseSpec, null);
-        final EntitlementSpecifier addOnEntitlementSpecifier1 = new DefaultEntitlementSpecifier(addOnSpec1, null);
-        final EntitlementSpecifier addOnEntitlementSpecifier2 = new DefaultEntitlementSpecifier(addOnSpec2, null);
+        final EntitlementSpecifier baseEntitlementSpecifier = new DefaultEntitlementSpecifier(baseSpec);
+        final EntitlementSpecifier addOnEntitlementSpecifier1 = new DefaultEntitlementSpecifier(addOnSpec1);
+        final EntitlementSpecifier addOnEntitlementSpecifier2 = new DefaultEntitlementSpecifier(addOnSpec2);
 
         final List<EntitlementSpecifier> specifierListA = new ArrayList<EntitlementSpecifier>();
         specifierListA.add(baseEntitlementSpecifier);
@@ -340,9 +340,9 @@ public class TestSubscription extends TestIntegrationBase {
         final PlanPhaseSpecifier addOnSpec2 = new PlanPhaseSpecifier("Laser-Scope", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, null);
 
         final String externalKeyA = "baseExternalKeyAAA";
-        final EntitlementSpecifier baseEntitlementSpecifier = new DefaultEntitlementSpecifier(baseSpec, null);
-        final EntitlementSpecifier addOnEntitlementSpecifier1 = new DefaultEntitlementSpecifier(addOnSpec1, null);
-        final EntitlementSpecifier addOnEntitlementSpecifier2 = new DefaultEntitlementSpecifier(addOnSpec2, null);
+        final EntitlementSpecifier baseEntitlementSpecifier = new DefaultEntitlementSpecifier(baseSpec);
+        final EntitlementSpecifier addOnEntitlementSpecifier1 = new DefaultEntitlementSpecifier(addOnSpec1);
+        final EntitlementSpecifier addOnEntitlementSpecifier2 = new DefaultEntitlementSpecifier(addOnSpec2);
 
         final List<EntitlementSpecifier> specifierListA = new ArrayList<EntitlementSpecifier>();
         specifierListA.add(baseEntitlementSpecifier);
@@ -375,17 +375,17 @@ public class TestSubscription extends TestIntegrationBase {
 
         // Create first add_on subscription
         busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
-        entitlementApi.addEntitlement(baseEntitlement.getBundleId(), addOnSpec1, null, initialDate, initialDate, false, ImmutableList.<PluginProperty>of(), callContext);
+        entitlementApi.addEntitlement(baseEntitlement.getBundleId(), new DefaultEntitlementSpecifier(addOnSpec1), initialDate, initialDate, false, ImmutableList.<PluginProperty>of(), callContext);
         assertListenerStatus();
 
         // Create second add_on subscription with the same plan
         busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
-        entitlementApi.addEntitlement(baseEntitlement.getBundleId(), addOnSpec2, null, initialDate, initialDate, false, ImmutableList.<PluginProperty>of(), callContext);
+        entitlementApi.addEntitlement(baseEntitlement.getBundleId(), new DefaultEntitlementSpecifier(addOnSpec2), initialDate, initialDate, false, ImmutableList.<PluginProperty>of(), callContext);
         assertListenerStatus();
 
         // Trying to add the third add_on with the same plan should throw an exception (the limit is 2 for this plan)
         try {
-            entitlementApi.addEntitlement(baseEntitlement.getBundleId(), addOnSpec3, null, initialDate, initialDate, false, ImmutableList.<PluginProperty>of(), callContext);
+            entitlementApi.addEntitlement(baseEntitlement.getBundleId(), new DefaultEntitlementSpecifier(addOnSpec3), initialDate, initialDate, false, ImmutableList.<PluginProperty>of(), callContext);
         } catch (final EntitlementApiException e) {
             assertEquals(e.getCode(), ErrorCode.SUB_CREATE_AO_MAX_PLAN_ALLOWED_BY_BUNDLE.getCode());
         }
@@ -408,24 +408,24 @@ public class TestSubscription extends TestIntegrationBase {
 
         // Create first add_on subscription
         busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
-        entitlementApi.addEntitlement(baseEntitlement.getBundleId(), addOnSpec1, null, initialDate, initialDate, false, ImmutableList.<PluginProperty>of(), callContext);
+        entitlementApi.addEntitlement(baseEntitlement.getBundleId(), new DefaultEntitlementSpecifier(addOnSpec1), initialDate, initialDate, false, ImmutableList.<PluginProperty>of(), callContext);
         assertListenerStatus();
 
         // Create second add_on subscription with the same plan
         busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
-        entitlementApi.addEntitlement(baseEntitlement.getBundleId(), addOnSpec2, null, initialDate, initialDate, false, ImmutableList.<PluginProperty>of(), callContext);
+        entitlementApi.addEntitlement(baseEntitlement.getBundleId(), new DefaultEntitlementSpecifier(addOnSpec2), initialDate, initialDate, false, ImmutableList.<PluginProperty>of(), callContext);
         assertListenerStatus();
 
         // Create third add_on subscription with another plan
         busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
-        final UUID addOn3Id = entitlementApi.addEntitlement(baseEntitlement.getBundleId(), addOnSpec3, null, initialDate, initialDate, false, ImmutableList.<PluginProperty>of(), callContext);
+        final UUID addOn3Id = entitlementApi.addEntitlement(baseEntitlement.getBundleId(), new DefaultEntitlementSpecifier(addOnSpec3), initialDate, initialDate, false, ImmutableList.<PluginProperty>of(), callContext);
         assertListenerStatus();
         final Entitlement addOn3 = entitlementApi.getEntitlementForId(addOn3Id, callContext);
 
         // Trying to change the plan of the third add_on to 'Laser-Scope' plan, should throw an exception (the limit is 2 for this plan)
         try {
             final PlanPhaseSpecifier addOnSpecChangedPlan = new PlanPhaseSpecifier("Laser-Scope", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, null);
-            addOn3.changePlan(addOnSpecChangedPlan, null, ImmutableList.<PluginProperty>of(), callContext);
+            addOn3.changePlan(new DefaultEntitlementSpecifier(addOnSpecChangedPlan), ImmutableList.<PluginProperty>of(), callContext);
         } catch (final EntitlementApiException e) {
             assertEquals(e.getCode(), ErrorCode.SUB_CHANGE_AO_MAX_PLAN_ALLOWED_BY_BUNDLE.getCode());
         }
@@ -443,7 +443,7 @@ public class TestSubscription extends TestIntegrationBase {
         final LocalDate futureDate = new LocalDate(2015, 10, 1);
 
         // No CREATE event as this is set in the future
-        final UUID createdEntitlementId = entitlementApi.createBaseEntitlement(account.getId(), spec, account.getExternalKey(), null, futureDate, futureDate, false, true, ImmutableList.<PluginProperty>of(), callContext);
+        final UUID createdEntitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec), account.getExternalKey(), futureDate, futureDate, false, true, ImmutableList.<PluginProperty>of(), callContext);
         final Entitlement createdEntitlement = entitlementApi.getEntitlementForId(createdEntitlementId, callContext);
         assertEquals(createdEntitlement.getEffectiveStartDate().compareTo(futureDate), 0);
         assertEquals(createdEntitlement.getEffectiveEndDate(), null);
@@ -476,7 +476,7 @@ public class TestSubscription extends TestIntegrationBase {
         final LocalDate futureDate = new LocalDate(2015, 10, 1);
 
         // No CREATE event as this is set in the future
-        final UUID createdEntitlementId = entitlementApi.createBaseEntitlement(account.getId(), spec, account.getExternalKey(), null, futureDate, futureDate, false, true, ImmutableList.<PluginProperty>of(), callContext);
+        final UUID createdEntitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec), account.getExternalKey(), futureDate, futureDate, false, true, ImmutableList.<PluginProperty>of(), callContext);
         final Entitlement createdEntitlement = entitlementApi.getEntitlementForId(createdEntitlementId, callContext);
         assertEquals(createdEntitlement.getState(), EntitlementState.PENDING);
         assertEquals(createdEntitlement.getEffectiveStartDate().compareTo(futureDate), 0);
@@ -521,7 +521,7 @@ public class TestSubscription extends TestIntegrationBase {
         final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("Shotgun", BillingPeriod.ANNUAL, PriceListSet.DEFAULT_PRICELIST_NAME, null);
 
         busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE);
-        final UUID createdEntitlementId = entitlementApi.createBaseEntitlement(account.getId(), spec, account.getExternalKey(), null, initialDate, initialDate, false, true, ImmutableList.<PluginProperty>of(), callContext);
+        final UUID createdEntitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec), account.getExternalKey(), initialDate, initialDate, false, true, ImmutableList.<PluginProperty>of(), callContext);
         final Entitlement createdEntitlement = entitlementApi.getEntitlementForId(createdEntitlementId, callContext);
         assertEquals(createdEntitlement.getEffectiveStartDate().compareTo(initialDate), 0);
         assertEquals(createdEntitlement.getEffectiveEndDate(), null);
@@ -551,7 +551,7 @@ public class TestSubscription extends TestIntegrationBase {
         final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("Shotgun", BillingPeriod.ANNUAL, PriceListSet.DEFAULT_PRICELIST_NAME, null);
 
         busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE);
-        final UUID createdEntitlementId = entitlementApi.createBaseEntitlement(account.getId(), spec, account.getExternalKey(), null, initialDate, initialDate, false, true, ImmutableList.<PluginProperty>of(), callContext);
+        final UUID createdEntitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec), account.getExternalKey(), initialDate, initialDate, false, true, ImmutableList.<PluginProperty>of(), callContext);
         final Entitlement createdEntitlement = entitlementApi.getEntitlementForId(createdEntitlementId, callContext);
         assertEquals(createdEntitlement.getEffectiveStartDate().compareTo(initialDate), 0);
         assertEquals(createdEntitlement.getEffectiveEndDate(), null);

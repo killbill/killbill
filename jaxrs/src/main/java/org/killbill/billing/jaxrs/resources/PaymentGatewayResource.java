@@ -1,6 +1,6 @@
 /*
- * Copyright 2014-2015 Groupon, Inc
- * Copyright 2014-2015 The Billing Project, LLC
+ * Copyright 2014-2018 Groupon, Inc
+ * Copyright 2014-2018 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -41,6 +41,7 @@ import org.killbill.billing.jaxrs.json.HostedPaymentPageFieldsJson;
 import org.killbill.billing.jaxrs.json.HostedPaymentPageFormDescriptorJson;
 import org.killbill.billing.jaxrs.util.Context;
 import org.killbill.billing.jaxrs.util.JaxrsUriBuilder;
+import org.killbill.billing.payment.api.InvoicePaymentApi;
 import org.killbill.billing.payment.api.PaymentApi;
 import org.killbill.billing.payment.api.PaymentApiException;
 import org.killbill.billing.payment.api.PaymentGatewayApi;
@@ -80,9 +81,10 @@ public class PaymentGatewayResource extends ComboPaymentResource {
                                   final AccountUserApi accountUserApi,
                                   final PaymentGatewayApi paymentGatewayApi,
                                   final PaymentApi paymentApi,
+                                  final InvoicePaymentApi invoicePaymentApi,
                                   final Clock clock,
                                   final Context context) {
-        super(uriBuilder, tagUserApi, customFieldUserApi, auditUserApi, accountUserApi, paymentApi, clock, context);
+        super(uriBuilder, tagUserApi, customFieldUserApi, auditUserApi, accountUserApi, paymentApi, invoicePaymentApi, clock, context);
         this.paymentGatewayApi = paymentGatewayApi;
     }
 
