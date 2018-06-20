@@ -15,4 +15,6 @@ You can find more information on [killbill.io](http://killbill.io).
 
 All of our documentation can be found at http://docs.killbill.io/ (source in the [killbill-docs](https://github.com/killbill/killbill-docs) repository).
 
+## License
+
 Kill Bill is released under the [Apache license 2.0](http://www.apache.org/licenses/LICENSE-2.0).
