@@ -98,6 +98,37 @@
             </finalPhase>
         </plan>
 
+        <plan name="electricity-monthly-special">
+            <product>Electricity</product>
+            <finalPhase type="EVERGREEN">
+                <duration>
+                    <unit>UNLIMITED</unit>
+                </duration>
+                <usages>
+                    <usage name="electricity-monthly-special-uusage" billingMode="IN_ARREAR" usageType="CONSUMABLE" tierBlockPolicy="ALL_TIERS">
+                        <billingPeriod>MONTHLY</billingPeriod>
+                        <tiers>
+                            <tier>
+                                <blocks>
+                                    <tieredBlock>
+                                        <unit>kilowatt-hour</unit>
+                                        <size>1</size>
+                                        <prices>
+                                            <price>
+                                                <currency>USD</currency>
+                                                <value>1.00</value>
+                                            </price>
+                                        </prices>
+                                        <max>1000</max>
+                                    </tieredBlock>
+                                </blocks>
+                            </tier>
+                        </tiers>
+                    </usage>
+                </usages>
+            </finalPhase>
+        </plan>
+
     </plans>
     <priceLists>
         <defaultPriceList name="DEFAULT">
@@ -105,5 +136,11 @@
                 <plan>electricity-monthly</plan>
             </plans>
         </defaultPriceList>
+        <childPriceList name="Special">
+            <plans>
+                <plan>electricity-monthly-special</plan>
+            </plans>
+        </childPriceList>
+
     </priceLists>
 </catalog>

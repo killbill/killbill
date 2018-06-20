@@ -46,7 +46,7 @@ public class TestInArrearWithCatalogVersions extends TestIntegrationBase {
     }
 
     @Test(groups = "slow")
-    public void testWithNoUsageInPeriodAndOldUsage() throws Exception {
+    public void testWithChangeAcrossCatalogs() throws Exception {
         // 30 days month
         clock.setDay(new LocalDate(2016, 4, 1));
 
@@ -97,6 +97,62 @@ public class TestInArrearWithCatalogVersions extends TestIntegrationBase {
                                     new ExpectedInvoiceItemCheck(new LocalDate(2016, 5, 9), new LocalDate(2016, 6, 1), InvoiceItemType.USAGE, new BigDecimal("250.00")));
 
     }
+
+
+    @Test(groups = "slow")
+    public void testWithChangeWithinCatalog() throws Exception {
+        // 30 days month
+        clock.setDay(new LocalDate(2016, 4, 1));
+
+        final AccountData accountData = getAccountData(1);
+        final Account account = createAccountWithNonOsgiPaymentMethod(accountData);
+        accountChecker.checkAccount(account.getId(), accountData, callContext);
+
+        final PlanPhaseSpecifier spec1 = new PlanPhaseSpecifier("electricity-monthly");
+        busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.NULL_INVOICE);
+        final UUID entitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec1), null, null, null, false, true, ImmutableList.<PluginProperty>of(), callContext);
+        assertListenerStatus();
+
+        recordUsageData(entitlementId, "kilowatt-hour", new LocalDate(2016, 4, 1), 143L, callContext);
+        recordUsageData(entitlementId, "kilowatt-hour", new LocalDate(2016, 4, 18), 57L, callContext);
+
+        busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT);
+        clock.addMonths(1);
+        assertListenerStatus();
+
+        invoiceChecker.checkInvoice(account.getId(), 1, callContext,
+                                    new ExpectedInvoiceItemCheck(new LocalDate(2016, 4, 1), new LocalDate(2016, 5, 1), InvoiceItemType.USAGE, new BigDecimal("300.00")));
+
+        recordUsageData(entitlementId, "kilowatt-hour", new LocalDate(2016, 5, 2), 100L, callContext); // -> Uses v1 : $150
+
+        final Entitlement bp = entitlementApi.getEntitlementForId(entitlementId, callContext);
+
+        final PlanPhaseSpecifier spec2 = new PlanPhaseSpecifier("electricity-monthly-special");
+
+        bp.changePlanWithDate(new DefaultEntitlementSpecifier(spec2), new LocalDate("2016-05-09"), null, callContext);
+        assertListenerStatus();
+
+        busHandler.pushExpectedEvents(NextEvent.CHANGE, NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT);
+        clock.addDays(8);
+        assertListenerStatus();
+
+        invoiceChecker.checkInvoice(account.getId(), 2, callContext,
+                                    new ExpectedInvoiceItemCheck(new LocalDate(2016, 5, 1), new LocalDate(2016, 5, 9), InvoiceItemType.USAGE, new BigDecimal("150.00")));
+
+
+        recordUsageData(entitlementId, "kilowatt-hour", new LocalDate(2016, 5, 10), 100L, callContext); // -> Uses special plan : $100
+
+
+        busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT);
+        clock.addDays(23);
+        assertListenerStatus();
+
+        invoiceChecker.checkInvoice(account.getId(), 3, callContext,
+                                    new ExpectedInvoiceItemCheck(new LocalDate(2016, 5, 9), new LocalDate(2016, 6, 1), InvoiceItemType.USAGE, new BigDecimal("100.00")));
+
+    }
+
+
 
 
     // We are not using catalog versions in this test but testing the overridden value of 'readMaxRawUsagePreviousPeriod = 0'
