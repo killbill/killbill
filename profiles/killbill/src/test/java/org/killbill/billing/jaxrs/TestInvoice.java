@@ -98,6 +98,8 @@ public class TestInvoice extends TestJaxrsBase {
         assertTrue(invoiceApi.getInvoiceByNumber(Integer.valueOf(invoiceJson.getInvoiceNumber()), Boolean.FALSE, Boolean.FALSE, AuditLevel.NONE, requestOptions).getItems().isEmpty());
         assertEquals(invoiceApi.getInvoice(invoiceJson.getInvoiceId(), Boolean.TRUE, Boolean.FALSE, AuditLevel.NONE, requestOptions).getItems().size(), invoiceJson.getItems().size());
         assertEquals(invoiceApi.getInvoiceByNumber(Integer.valueOf(invoiceJson.getInvoiceNumber()), Boolean.TRUE, Boolean.FALSE, AuditLevel.NONE, requestOptions).getItems().size(), invoiceJson.getItems().size());
+        assertEquals(invoiceApi.getInvoiceByItemId(invoiceItem.getInvoiceItemId(), true, false, AuditLevel.NONE, requestOptions).getItems().size(), invoiceJson.getItems().size() );
+
 
         // Check we can retrieve an individual invoice
         final Invoice firstInvoice = invoiceApi.getInvoice(invoiceJson.getInvoiceId(), true, false, AuditLevel.FULL, requestOptions);

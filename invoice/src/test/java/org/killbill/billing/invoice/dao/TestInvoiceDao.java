@@ -1851,4 +1851,25 @@ public class TestInvoiceDao extends InvoiceTestSuiteWithEmbeddedDB {
 
     }
 
+    @Test(groups = "slow")
+    public void testGetByInvoiceItemId() throws EntityPersistenceException, InvoiceApiException {
+        final Invoice invoice1 = new DefaultInvoice(account.getId(), clock.getUTCToday(), clock.getUTCToday(), Currency.USD);
+        invoiceUtil.createInvoice(invoice1, context);
+
+        final UUID invoiceId1 = invoice1.getId();
+
+        LocalDate startDate = new LocalDate(2011, 3, 1);
+        LocalDate endDate = startDate.plusMonths(1);
+
+        final RecurringInvoiceItem recurringItem1 = new RecurringInvoiceItem(invoiceId1, account.getId(), UUID.randomUUID(), UUID.randomUUID(), "test product", "test plan", "test A", startDate, endDate,
+                                                                             BigDecimal.ONE, BigDecimal.ONE, Currency.USD);
+        invoiceUtil.createInvoiceItem(recurringItem1, context);
+
+        final InvoiceModelDao targetInvoice = invoiceDao.getByInvoiceItem(recurringItem1.getId(), internalCallContext);
+        assertNotNull(targetInvoice);
+        assertEquals(targetInvoice.getId(), invoiceId1);
+        assertEquals(targetInvoice.getInvoiceItems().size(), 1);
+        assertEquals(targetInvoice.getInvoiceItems().get(0).getId(), recurringItem1.getId());
+    }
+
 }

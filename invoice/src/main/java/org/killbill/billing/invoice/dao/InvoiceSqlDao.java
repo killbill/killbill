@@ -46,6 +46,9 @@ public interface InvoiceSqlDao extends EntitySqlDao<InvoiceModelDao, Invoice> {
     UUID getInvoiceIdByPaymentId(@Bind("paymentId") final String paymentId,
                                  @SmartBindBean final InternalTenantContext context);
 
+    @SqlQuery
+    InvoiceModelDao getInvoiceByInvoiceItemId(@Bind("invoiceItemId") final String invoiceItemId,
+                                              @SmartBindBean final InternalTenantContext context);
     @SqlUpdate
     @Audited(ChangeType.UPDATE)
     void updateStatus(@Bind("id") String invoiceId,
@@ -60,5 +63,7 @@ public interface InvoiceSqlDao extends EntitySqlDao<InvoiceModelDao, Invoice> {
     @SqlQuery
     List<InvoiceModelDao> getByIds(@BindIn("ids") final Collection<String> invoiceIds,
                                    @SmartBindBean final InternalTenantContext context);
+
+
 }
 

@@ -226,8 +226,12 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
     }
 
     @Override
-    public Invoice getInvoiceByInvoiceItem(final UUID uuid, final TenantContext tenantContext) throws InvoiceApiException {
-        return null;
+    public Invoice getInvoiceByInvoiceItem(final UUID invoiceItemId, final TenantContext context) throws InvoiceApiException {
+        final InternalTenantContext internalTenantContextWithoutAccountRecordId = internalCallContextFactory.createInternalTenantContextWithoutAccountRecordId(context);
+        final InvoiceModelDao invoice = dao.getByInvoiceItem(invoiceItemId, internalTenantContextWithoutAccountRecordId);
+
+        final InternalTenantContext internalTenantContext = internalCallContextFactory.createInternalTenantContext(invoice.getAccountId(), context);
+        return new DefaultInvoice(invoice, getCatalogSafelyForPrettyNames(internalTenantContext));
     }
 
     @Override
