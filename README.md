@@ -13,18 +13,6 @@ You can find more information on [killbill.io](http://killbill.io).
 
 ## Getting started
 
-* [Tutorials](http://killbill.io/tutorials/)
-* [User guides](http://killbill.io/userguide/) (source in the [killbill-docs](https://github.com/killbill/killbill-docs) repo)
-* [Wiki](https://github.com/killbill/killbill/wiki)
+All of our documentation can be found at http://docs.killbill.io/ (source in the [killbill-docs](https://github.com/killbill/killbill-docs) repository).
 
-## Build
-
-Build is handled by Maven:
-
-```
-mvn clean install -DskipTests=true
-```
-
-## License
-
-Kill Bill is released under the [Apache license](http://www.apache.org/licenses/LICENSE-2.0).
+Kill Bill is released under the [Apache license 2.0](http://www.apache.org/licenses/LICENSE-2.0).
