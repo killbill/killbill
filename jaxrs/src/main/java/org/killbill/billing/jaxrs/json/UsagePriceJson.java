@@ -29,8 +29,8 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.annotations.ApiModel;
 
-@ApiModel(value="UsagePriceOverride")
-public class UsagePriceOverrideJson {
+@ApiModel(value="UsagePrice")
+public class UsagePriceJson {
 
     private final String usageName;
 
@@ -40,19 +40,19 @@ public class UsagePriceOverrideJson {
 
     private final TierBlockPolicy tierBlockPolicy;
 
-    private final List<TierPriceOverrideJson> tierPriceOverrides;
+    private final List<TierPriceJson> tierPrices;
 
     @JsonCreator
-    public UsagePriceOverrideJson(@JsonProperty("usageName") final String usageName,
-                                  @Nullable @JsonProperty("usageType") final UsageType usageType,
-                                  @Nullable @JsonProperty("billingMode") final BillingMode billingMode,
-                                  @Nullable @JsonProperty("tierBlockPolicy") final TierBlockPolicy tierBlockPolicy,
-                                  @Nullable @JsonProperty("tierPriceOverrides") final List<TierPriceOverrideJson> tierPriceOverrides) {
+    public UsagePriceJson(@JsonProperty("usageName") final String usageName,
+                          @Nullable @JsonProperty("usageType") final UsageType usageType,
+                          @Nullable @JsonProperty("billingMode") final BillingMode billingMode,
+                          @Nullable @JsonProperty("tierBlockPolicy") final TierBlockPolicy tierBlockPolicy,
+                          @Nullable @JsonProperty("tierPrices") final List<TierPriceJson> tierPrices) {
         this.usageName = usageName;
         this.usageType = usageType;
         this.billingMode = billingMode;
         this.tierBlockPolicy = tierBlockPolicy;
-        this.tierPriceOverrides = tierPriceOverrides;
+        this.tierPrices = tierPrices;
     }
 
     public String getUsageName() {
@@ -71,19 +71,19 @@ public class UsagePriceOverrideJson {
         return tierBlockPolicy;
     }
 
-    public List<TierPriceOverrideJson> getTierPriceOverrides() {
-        return tierPriceOverrides;
+    public List<TierPriceJson> getTierPrices() {
+        return tierPrices;
     }
 
     @Override
     public String toString() {
-        return "UsagePriceOverrideJson{" +
-                "usageName='" + usageName + '\'' +
-                "usageType='" + usageType + '\'' +
-                ", billingMode=" + billingMode +
-                ", tierBlockPolicy=" + tierBlockPolicy +
-                ", tierPriceOverrides=" + tierPriceOverrides +
-                '}';
+        return "UsagePriceJson{" +
+               "usageName='" + usageName + '\'' +
+               "usageType='" + usageType + '\'' +
+               ", billingMode=" + billingMode +
+               ", tierBlockPolicy=" + tierBlockPolicy +
+               ", tierPrices=" + tierPrices +
+               '}';
     }
 
     @Override
@@ -91,11 +91,11 @@ public class UsagePriceOverrideJson {
         if (this == o) {
             return true;
         }
-        if (!(o instanceof UsagePriceOverrideJson)) {
+        if (!(o instanceof UsagePriceJson)) {
             return false;
         }
 
-        final UsagePriceOverrideJson that = (UsagePriceOverrideJson) o;
+        final UsagePriceJson that = (UsagePriceJson) o;
 
         if (usageName != null ? !usageName.equals(that.usageName) : that.usageName != null) {
             return false;
@@ -109,7 +109,7 @@ public class UsagePriceOverrideJson {
         if (tierBlockPolicy != null ? !tierBlockPolicy.equals(that.tierBlockPolicy) : that.tierBlockPolicy != null) {
             return false;
         }
-        if (tierPriceOverrides != null ? !tierPriceOverrides.equals(that.tierPriceOverrides)  : that.tierPriceOverrides != null) {
+        if (tierPrices != null ? !tierPrices.equals(that.tierPrices) : that.tierPrices != null) {
             return false;
         }
         return true;
@@ -121,7 +121,7 @@ public class UsagePriceOverrideJson {
         result = 31 * result + (usageType != null ? usageType.hashCode() : 0);
         result = 31 * result + (billingMode != null ? billingMode.hashCode() : 0);
         result = 31 * result + (tierBlockPolicy != null ? tierBlockPolicy.hashCode() : 0);
-        result = 31 * result + (tierPriceOverrides != null ? tierPriceOverrides.hashCode() : 0);
+        result = 31 * result + (tierPrices != null ? tierPrices.hashCode() : 0);
         return result;
     }
 

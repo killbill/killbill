@@ -183,7 +183,7 @@ public class TestChargeback extends TestJaxrsBase {
         callbackServlet.assertListenerStatus();
 
         // Retrieve the invoice
-        final List<Invoice> invoices = accountApi.getInvoicesForAccount(accountJson.getAccountId(), requestOptions);
+        final List<Invoice> invoices = accountApi.getInvoicesForAccount(accountJson.getAccountId(), null, requestOptions);
         // We should have two invoices, one for the trial (zero dollar amount) and one for the first month
         assertEquals(invoices.size(), 2);
         assertTrue(invoices.get(1).getAmount().doubleValue() > 0);

@@ -48,7 +48,7 @@ public class InvoiceDryRunJson {
     private final UUID subscriptionId;
     private final UUID bundleId;
     private final BillingActionPolicy billingPolicy;
-    private final List<PhasePriceOverrideJson> priceOverrides;
+    private final List<PhasePriceJson> priceOverrides;
 
     @JsonCreator
     public InvoiceDryRunJson(@JsonProperty("dryRunType") @Nullable final DryRunType dryRunType,
@@ -62,7 +62,7 @@ public class InvoiceDryRunJson {
                              @JsonProperty("bundleId") @Nullable final UUID bundleId,
                              @JsonProperty("effectiveDate") @Nullable final LocalDate effectiveDate,
                              @JsonProperty("billingPolicy") @Nullable final BillingActionPolicy billingPolicy,
-                             @JsonProperty("priceOverrides") @Nullable final List<PhasePriceOverrideJson> priceOverrides) {
+                             @JsonProperty("priceOverrides") @Nullable final List<PhasePriceJson> priceOverrides) {
         this.dryRunType = dryRunType;
         this.dryRunAction = dryRunAction;
         this.phaseType = phaseType;
@@ -121,7 +121,7 @@ public class InvoiceDryRunJson {
         return billingPolicy;
     }
 
-    public List<PhasePriceOverrideJson> getPriceOverrides() {
+    public List<PhasePriceJson> getPriceOverrides() {
         return priceOverrides;
     }
 

@@ -269,6 +269,27 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
     }
 
     @Override
+    public InvoiceModelDao getByInvoiceItem(final UUID invoiceItemId, final InternalTenantContext context) throws InvoiceApiException {
+
+        final List<Tag> invoicesTags = getInvoicesTags(context);
+
+        return transactionalSqlDao.execute(false, InvoiceApiException.class, new EntitySqlDaoTransactionWrapper<InvoiceModelDao>() {
+            @Override
+            public InvoiceModelDao inTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory) throws Exception {
+                final InvoiceSqlDao invoiceSqlDao = entitySqlDaoWrapperFactory.become(InvoiceSqlDao.class);
+                final InvoiceModelDao invoice = invoiceSqlDao.getInvoiceByInvoiceItemId(invoiceItemId.toString(), context);
+                if (invoice == null) {
+                    throw new InvoiceApiException(ErrorCode.INVOICE_ITEM_NOT_FOUND, invoiceItemId);
+                }
+
+                final InternalTenantContext contextWithAccountRecordId = internalCallContextFactory.createInternalTenantContext(invoice.getAccountId(), context);
+                invoiceDaoHelper.populateChildren(invoice, invoicesTags, entitySqlDaoWrapperFactory, contextWithAccountRecordId);
+                return invoice;
+            }
+        });
+    }
+
+    @Override
     public void setFutureAccountNotificationsForEmptyInvoice(final UUID accountId, final FutureAccountNotifications callbackDateTimePerSubscriptions,
                                                              final InternalCallContext context) {
 

@@ -76,7 +76,8 @@ public class SubscriptionJson extends JsonBase {
     private final LocalDate billingEndDate;
     private final Integer billCycleDayLocal;
     private final List<EventSubscriptionJson> events;
-    private final List<PhasePriceOverrideJson> priceOverrides;
+    private final List<PhasePriceJson> prices;
+    private final List<PhasePriceJson> priceOverrides;
 
     @ApiModel(value="EventSubscription", parent = JsonBase.class)
     public static class EventSubscriptionJson extends JsonBase {
@@ -315,7 +316,8 @@ public class SubscriptionJson extends JsonBase {
                             @JsonProperty("billingEndDate") @Nullable final LocalDate billingEndDate,
                             @JsonProperty("billCycleDayLocal") @Nullable final Integer billCycleDayLocal,
                             @JsonProperty("events") @Nullable final List<EventSubscriptionJson> events,
-                            @JsonProperty("priceOverrides") final List<PhasePriceOverrideJson> priceOverrides,
+                            @JsonProperty("priceOverrides") final List<PhasePriceJson> priceOverrides,
+                            @JsonProperty("prices") final List<PhasePriceJson> prices,
                             @JsonProperty("auditLogs") @Nullable final List<AuditLogJson> auditLogs) {
         super(auditLogs);
         this.startDate = startDate;
@@ -338,6 +340,7 @@ public class SubscriptionJson extends JsonBase {
         this.externalKey = externalKey;
         this.events = events;
         this.priceOverrides = priceOverrides;
+        this.prices = prices;
     }
 
     public SubscriptionJson(final Subscription subscription, @Nullable final Currency currency, @Nullable final AccountAuditLogs accountAuditLogs) throws CatalogApiException {
@@ -392,7 +395,7 @@ public class SubscriptionJson extends JsonBase {
         this.externalKey = subscription.getExternalKey();
         this.events = new LinkedList<EventSubscriptionJson>();
         // We fill the catalog info every time we get the currency from the account (even if this is not overridden Plan)
-        this.priceOverrides = new ArrayList<PhasePriceOverrideJson>();
+        this.prices = new ArrayList<PhasePriceJson>();
 
         String currentPhaseName = null;
         String currentPlanName = null;
@@ -413,10 +416,11 @@ public class SubscriptionJson extends JsonBase {
 
                 final BigDecimal fixedPrice = curPlanPhase.getFixed() != null ? curPlanPhase.getFixed().getPrice().getPrice(currency) : null;
                 final BigDecimal recurringPrice = curPlanPhase.getRecurring() != null ? curPlanPhase.getRecurring().getRecurringPrice().getPrice(currency) : null;
-                final PhasePriceOverrideJson phase = new PhasePriceOverrideJson(currentPlanName, curPlanPhase.getName(), curPlanPhase.getPhaseType().toString(), fixedPrice, recurringPrice, curPlanPhase.getUsages(), currency);
-                priceOverrides.add(phase);
+                final PhasePriceJson phase = new PhasePriceJson(currentPlanName, curPlanPhase.getName(), curPlanPhase.getPhaseType().toString(), fixedPrice, recurringPrice, curPlanPhase.getUsages(), currency);
+                prices.add(phase);
             }
         }
+        this.priceOverrides = null;
     }
 
     public UUID getAccountId() {
@@ -495,8 +499,12 @@ public class SubscriptionJson extends JsonBase {
         return events;
     }
 
-    public List<PhasePriceOverrideJson> getPriceOverrides() {
+    public List<PhasePriceJson> getPriceOverrides() {
         return priceOverrides;
+    }
+
+    public List<PhasePriceJson> getPrices() {
+        return prices;
     }
 
     @Override
@@ -521,6 +529,7 @@ public class SubscriptionJson extends JsonBase {
         sb.append(", billingEndDate=").append(billingEndDate);
         sb.append(", billCycleDayLocal=").append(billCycleDayLocal);
         sb.append(", events=").append(events);
+        sb.append(", prices=").append(prices);
         sb.append(", priceOverrides=").append(priceOverrides);
         sb.append('}');
         return sb.toString();

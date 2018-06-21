@@ -25,8 +25,8 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.annotations.ApiModel;
 
-@ApiModel(value="BlockPriceOverride")
-public class BlockPriceOverrideJson {
+@ApiModel(value="BlockPrice")
+public class BlockPriceJson {
 
     private String unitName;
 
@@ -53,10 +53,10 @@ public class BlockPriceOverrideJson {
     }
 
     @JsonCreator
-    public BlockPriceOverrideJson(@Nullable @JsonProperty("unitName") final String unitName,
-                                  @Nullable @JsonProperty("size") final Double size,
-                                  @Nullable @JsonProperty("price") final BigDecimal price,
-                                  @Nullable @JsonProperty("max") final Double max) {
+    public BlockPriceJson(@Nullable @JsonProperty("unitName") final String unitName,
+                          @Nullable @JsonProperty("size") final Double size,
+                          @Nullable @JsonProperty("price") final BigDecimal price,
+                          @Nullable @JsonProperty("max") final Double max) {
         this.unitName = unitName;
         this.size = size;
         this.price = price;
@@ -65,7 +65,7 @@ public class BlockPriceOverrideJson {
 
     @Override
     public String toString() {
-        return "BlockPriceOverrideJson{" +
+        return "BlockPriceJson{" +
               "unitName='" + unitName + '\'' +
                 ",size=" + size +
                 ",price=" + price +
@@ -78,11 +78,11 @@ public class BlockPriceOverrideJson {
         if (this == o) {
             return true;
         }
-        if (!(o instanceof BlockPriceOverrideJson)) {
+        if (!(o instanceof BlockPriceJson)) {
             return false;
         }
 
-        final BlockPriceOverrideJson that = (BlockPriceOverrideJson) o;
+        final BlockPriceJson that = (BlockPriceJson) o;
 
 
         if (unitName != null ? !unitName.equals(that.unitName) : that.unitName != null) {

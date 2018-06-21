@@ -23,25 +23,25 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.annotations.ApiModel;
 
-@ApiModel(value="TierPriceOverride")
-public class TierPriceOverrideJson {
+@ApiModel(value="TierPrice")
+public class TierPriceJson {
 
-    private final List<BlockPriceOverrideJson> blockPriceOverrides;
+    private final List<BlockPriceJson> blockPrices;
 
     @JsonCreator
-    public TierPriceOverrideJson(@JsonProperty("blockPriceOverrides") final List<BlockPriceOverrideJson> blockPriceOverrides) {
-        this.blockPriceOverrides = blockPriceOverrides;
+    public TierPriceJson(@JsonProperty("blockPrices") final List<BlockPriceJson> blockPrices) {
+        this.blockPrices = blockPrices;
     }
 
-    public List<BlockPriceOverrideJson> getBlockPriceOverrides() {
-        return blockPriceOverrides;
+    public List<BlockPriceJson> getBlockPrices() {
+        return blockPrices;
     }
 
     @Override
     public String toString() {
-        return "TierPriceOverrideJson{" +
-                "blockPriceOverrides='" + blockPriceOverrides + '\'' +
-                '}';
+        return "TierPriceJson{" +
+               "blockPrices='" + blockPrices + '\'' +
+               '}';
     }
 
     @Override
@@ -49,13 +49,13 @@ public class TierPriceOverrideJson {
         if (this == o) {
             return true;
         }
-        if (!(o instanceof TierPriceOverrideJson)) {
+        if (!(o instanceof TierPriceJson)) {
             return false;
         }
 
-        final TierPriceOverrideJson that = (TierPriceOverrideJson) o;
+        final TierPriceJson that = (TierPriceJson) o;
 
-        if (blockPriceOverrides != null ? !blockPriceOverrides.equals(that.blockPriceOverrides) : that.blockPriceOverrides != null) {
+        if (blockPrices != null ? !blockPrices.equals(that.blockPrices) : that.blockPrices != null) {
             return false;
         }
 
@@ -64,8 +64,8 @@ public class TierPriceOverrideJson {
 
     @Override
     public int hashCode() {
-        int result = blockPriceOverrides != null ? blockPriceOverrides.hashCode() : 0;
-        result = 31 * result + (blockPriceOverrides != null ? blockPriceOverrides.hashCode() : 0);
+        int result = blockPrices != null ? blockPrices.hashCode() : 0;
+        result = 31 * result + (blockPrices != null ? blockPrices.hashCode() : 0);
         return result;
     }
 }

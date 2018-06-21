@@ -79,7 +79,7 @@ public class TestAccountTimeline extends TestJaxrsBase {
         final DateTime endTime = clock.getUTCNow();
 
         // Add credit
-        final Invoice invoice = accountApi.getInvoicesForAccount(accountJson.getAccountId(), requestOptions).get(1);
+        final Invoice invoice = accountApi.getInvoicesForAccount(accountJson.getAccountId(), null, requestOptions).get(1);
         final BigDecimal creditAmount = BigDecimal.ONE;
         final Credit credit = new Credit();
         credit.setAccountId(accountJson.getAccountId());

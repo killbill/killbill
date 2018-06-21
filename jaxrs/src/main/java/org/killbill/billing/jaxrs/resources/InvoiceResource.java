@@ -77,7 +77,7 @@ import org.killbill.billing.jaxrs.json.InvoiceDryRunJson;
 import org.killbill.billing.jaxrs.json.InvoiceItemJson;
 import org.killbill.billing.jaxrs.json.InvoiceJson;
 import org.killbill.billing.jaxrs.json.InvoicePaymentJson;
-import org.killbill.billing.jaxrs.json.PhasePriceOverrideJson;
+import org.killbill.billing.jaxrs.json.PhasePriceJson;
 import org.killbill.billing.jaxrs.json.TagJson;
 import org.killbill.billing.jaxrs.util.Context;
 import org.killbill.billing.jaxrs.util.JaxrsUriBuilder;
@@ -176,15 +176,15 @@ public class InvoiceResource extends JaxRsResourceBase {
                                @javax.ws.rs.core.Context final HttpServletRequest request) throws InvoiceApiException {
         final TenantContext tenantContext = context.createTenantContextNoAccountId(request);
         final Invoice invoice = invoiceApi.getInvoice(invoiceId, tenantContext);
+        if (invoice == null) {
+            throw new InvoiceApiException(ErrorCode.INVOICE_NOT_FOUND, invoiceId);
+        }
+
         final List<InvoiceItem> childInvoiceItems = withChildrenItems ? invoiceApi.getInvoiceItemsByParentInvoice(invoice.getId(), tenantContext) : null;
         final AccountAuditLogs accountAuditLogs = auditUserApi.getAccountAuditLogs(invoice.getAccountId(), auditMode.getLevel(), tenantContext);
 
-        if (invoice == null) {
-            throw new InvoiceApiException(ErrorCode.INVOICE_NOT_FOUND, invoiceId);
-        } else {
-            final InvoiceJson json = new InvoiceJson(invoice, withItems, childInvoiceItems, accountAuditLogs);
-            return Response.status(Status.OK).entity(json).build();
-        }
+        final InvoiceJson json = new InvoiceJson(invoice, withItems, childInvoiceItems, accountAuditLogs);
+        return Response.status(Status.OK).entity(json).build();
     }
 
 
@@ -201,16 +201,42 @@ public class InvoiceResource extends JaxRsResourceBase {
                                        @javax.ws.rs.core.Context final HttpServletRequest request) throws InvoiceApiException {
         final TenantContext tenantContext = context.createTenantContextNoAccountId(request);
         final Invoice invoice = invoiceApi.getInvoiceByNumber(invoiceNumber, tenantContext);
+        if (invoice == null) {
+            throw new InvoiceApiException(ErrorCode.INVOICE_NOT_FOUND, invoiceNumber);
+        }
         final List<InvoiceItem> childInvoiceItems = withChildrenItems ? invoiceApi.getInvoiceItemsByParentInvoice(invoice.getId(), tenantContext) : null;
         final AccountAuditLogs accountAuditLogs = auditUserApi.getAccountAuditLogs(invoice.getAccountId(), auditMode.getLevel(), tenantContext);
 
-        if (invoice == null) {
-            throw new InvoiceApiException(ErrorCode.INVOICE_NOT_FOUND, invoiceNumber);
-        } else {
-            final InvoiceJson json = new InvoiceJson(invoice, withItems, childInvoiceItems, accountAuditLogs);
-            return Response.status(Status.OK).entity(json).build();
-        }
+        final InvoiceJson json = new InvoiceJson(invoice, withItems, childInvoiceItems, accountAuditLogs);
+        return Response.status(Status.OK).entity(json).build();
     }
+
+
+
+    @TimedResource
+    @GET
+    @Path("/byItemId/{itemId:" + UUID_PATTERN + "}/")
+    @Produces(APPLICATION_JSON)
+    @ApiOperation(value = "Retrieve an invoice by invoice item id", response = InvoiceJson.class)
+    @ApiResponses(value = {@ApiResponse(code = 404, message = "Invoice not found")})
+    public Response getInvoiceByItemId(@PathParam("itemId") final UUID invoiceItemId,
+                                       @QueryParam(QUERY_INVOICE_WITH_ITEMS) @DefaultValue("false") final boolean withItems,
+                                       @QueryParam(QUERY_INVOICE_WITH_CHILDREN_ITEMS) @DefaultValue("false") final boolean withChildrenItems,
+                                       @QueryParam(QUERY_AUDIT) @DefaultValue("NONE") final AuditMode auditMode,
+                                       @javax.ws.rs.core.Context final HttpServletRequest request) throws InvoiceApiException {
+        final TenantContext tenantContext = context.createTenantContextNoAccountId(request);
+        final Invoice invoice = invoiceApi.getInvoiceByInvoiceItem(invoiceItemId, tenantContext);
+        if (invoice == null) {
+            throw new InvoiceApiException(ErrorCode.INVOICE_ITEM_NOT_FOUND, invoiceItemId);
+        }
+
+        final List<InvoiceItem> childInvoiceItems = withChildrenItems ? invoiceApi.getInvoiceItemsByParentInvoice(invoice.getId(), tenantContext) : null;
+        final AccountAuditLogs accountAuditLogs = auditUserApi.getAccountAuditLogs(invoice.getAccountId(), auditMode.getLevel(), tenantContext);
+
+        final InvoiceJson json = new InvoiceJson(invoice, withItems, childInvoiceItems, accountAuditLogs);
+        return Response.status(Status.OK).entity(json).build();
+    }
+
 
     @TimedResource
     @GET
@@ -1103,10 +1129,10 @@ public class InvoiceResource extends JaxRsResourceBase {
                                                                                      input.getPhaseType() != null ? input.getPhaseType() : null) :
                                                               null;
                 final List<PlanPhasePriceOverride> overrides = input.getPriceOverrides() != null ?
-                                 ImmutableList.copyOf(Iterables.transform(input.getPriceOverrides(), new Function<PhasePriceOverrideJson, PlanPhasePriceOverride>() {
+                                 ImmutableList.copyOf(Iterables.transform(input.getPriceOverrides(), new Function<PhasePriceJson, PlanPhasePriceOverride>() {
                                      @Nullable
                                      @Override
-                                     public PlanPhasePriceOverride apply(@Nullable final PhasePriceOverrideJson input) {
+                                     public PlanPhasePriceOverride apply(@Nullable final PhasePriceJson input) {
                                          if (input.getPhaseName() != null) {
 
                                              return new DefaultPlanPhasePriceOverride(input.getPhaseName(), account.getCurrency(), input.getFixedPrice(), input.getRecurringPrice(), null);

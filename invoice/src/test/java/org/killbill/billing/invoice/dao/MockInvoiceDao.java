@@ -127,6 +127,12 @@ public class MockInvoiceDao extends MockEntityDaoBase<InvoiceModelDao, Invoice, 
     }
 
     @Override
+    public InvoiceModelDao getByInvoiceItem(final UUID invoiceItemId, final InternalTenantContext context) throws InvoiceApiException {
+        final InvoiceItemModelDao item = items.get(invoiceItemId);
+        return (item != null) ? invoices.get(item.getInvoiceId()) : null;
+    }
+
+    @Override
     public Pagination<InvoiceModelDao> getAll(final InternalTenantContext context) {
         synchronized (monitor) {
             return new DefaultPagination<InvoiceModelDao>((long) invoices.values().size(), invoices.values().iterator());

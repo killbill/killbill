@@ -48,8 +48,8 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import io.swagger.annotations.ApiModel;
 
-@ApiModel(value="PhasePriceOverride")
-public class PhasePriceOverrideJson {
+@ApiModel(value="PhasePrice")
+public class PhasePriceJson {
 
 
     private final String planName;
@@ -57,53 +57,53 @@ public class PhasePriceOverrideJson {
     private final String phaseType;
     private final BigDecimal fixedPrice;
     private final BigDecimal recurringPrice;
-    private final List<UsagePriceOverrideJson> usagePriceOverrides;
+    private final List<UsagePriceJson> usagePrices;
 
     @JsonCreator
-    public PhasePriceOverrideJson(@JsonProperty("planName") final String planName,
-                                  @JsonProperty("phaseName") final String phaseName,
-                                  @JsonProperty("phaseType") final String phaseType,
-                                  @Nullable @JsonProperty("fixedPrice") final BigDecimal fixedPrice,
-                                  @Nullable @JsonProperty("recurringPrice") final BigDecimal recurringPrice,
-                                  @Nullable @JsonProperty("usageOverrides") final List<UsagePriceOverrideJson> usagePriceOverrides) {
+    public PhasePriceJson(@JsonProperty("planName") final String planName,
+                          @JsonProperty("phaseName") final String phaseName,
+                          @JsonProperty("phaseType") final String phaseType,
+                          @Nullable @JsonProperty("fixedPrice") final BigDecimal fixedPrice,
+                          @Nullable @JsonProperty("recurringPrice") final BigDecimal recurringPrice,
+                          @Nullable @JsonProperty("usagePrices") final List<UsagePriceJson> usagePrices) {
         this.planName = planName;
         this.phaseName = phaseName;
         this.phaseType = phaseType;
         this.fixedPrice = fixedPrice;
         this.recurringPrice = recurringPrice;
-        this.usagePriceOverrides = usagePriceOverrides;
+        this.usagePrices = usagePrices;
     }
 
-    public PhasePriceOverrideJson(final String planName,
-                                  final String phaseName,
-                                  final String phaseType,
-                                  final BigDecimal fixedPrice,
-                                  final BigDecimal recurringPrice,
-                                  final Usage[] usagePriceOverrides,
-                                  final Currency currency) throws CatalogApiException {
+    public PhasePriceJson(final String planName,
+                          final String phaseName,
+                          final String phaseType,
+                          final BigDecimal fixedPrice,
+                          final BigDecimal recurringPrice,
+                          final Usage[] usagePrices,
+                          final Currency currency) throws CatalogApiException {
         this.planName = planName;
         this.phaseName = phaseName;
         this.phaseType = phaseType;
         this.fixedPrice = fixedPrice;
         this.recurringPrice = recurringPrice;
-        this.usagePriceOverrides = new LinkedList<UsagePriceOverrideJson>();
+        this.usagePrices = new LinkedList<UsagePriceJson>();
 
-        for (final Usage usage : usagePriceOverrides) {
-            List <TierPriceOverrideJson> tierPriceOverridesJson = new LinkedList<TierPriceOverrideJson>();
+        for (final Usage usage : usagePrices) {
+            List <TierPriceJson> usageTierPrices = new LinkedList<TierPriceJson>();
              for(final Tier tier :usage.getTiers())
              {
-                 List <BlockPriceOverrideJson> blockPriceOverridesJson = new LinkedList<BlockPriceOverrideJson>();
+                 List <BlockPriceJson> blockPrices = new LinkedList<BlockPriceJson>();
 
                  for(final TieredBlock block : tier.getTieredBlocks())
                  {
-                     BlockPriceOverrideJson blockPriceOverrideJson = new BlockPriceOverrideJson(block.getUnit().getName(), block.getSize(), block.getPrice().getPrice(currency), block.getMax());
-                     blockPriceOverridesJson.add(blockPriceOverrideJson);
+                     BlockPriceJson blockPriceJson = new BlockPriceJson(block.getUnit().getName(), block.getSize(), block.getPrice().getPrice(currency), block.getMax());
+                     blockPrices.add(blockPriceJson);
                  }
-                     TierPriceOverrideJson tierPriceOverrideJson  = new TierPriceOverrideJson(blockPriceOverridesJson);
-                     tierPriceOverridesJson.add(tierPriceOverrideJson);
+                     TierPriceJson tierPriceJson = new TierPriceJson(blockPrices);
+                     usageTierPrices.add(tierPriceJson);
              }
-            final UsagePriceOverrideJson usagePriceOverrideJson = new UsagePriceOverrideJson(usage.getName(), usage.getUsageType(), usage.getBillingMode(), usage.getTierBlockPolicy(), tierPriceOverridesJson);
-            this.usagePriceOverrides.add(usagePriceOverrideJson);
+            final UsagePriceJson usagePriceJson = new UsagePriceJson(usage.getName(), usage.getUsageType(), usage.getBillingMode(), usage.getTierBlockPolicy(), usageTierPrices);
+            this.usagePrices.add(usagePriceJson);
         }
 
     }
@@ -128,20 +128,20 @@ public class PhasePriceOverrideJson {
         return phaseType;
     }
 
-    public List<UsagePriceOverrideJson> getUsagePriceOverrides() {
-        return usagePriceOverrides;
+    public List<UsagePriceJson> getUsagePrices() {
+        return usagePrices;
     }
 
 
     @Override
     public String toString() {
-        return "PhasePriceOverrideJson{" +
+        return "PhasePriceJson{" +
                "planName='" + planName + '\'' +
                "phaseName='" + phaseName + '\'' +
                "phaseType='" + phaseType + '\'' +
                ", fixedPrice=" + fixedPrice +
                ", recurringPrice=" + recurringPrice +
-                ", usageOverrides=" + usagePriceOverrides +
+               ", usageOverrides=" + usagePrices +
                '}';
     }
 
@@ -150,11 +150,11 @@ public class PhasePriceOverrideJson {
         if (this == o) {
             return true;
         }
-        if (!(o instanceof PhasePriceOverrideJson)) {
+        if (!(o instanceof PhasePriceJson)) {
             return false;
         }
 
-        final PhasePriceOverrideJson that = (PhasePriceOverrideJson) o;
+        final PhasePriceJson that = (PhasePriceJson) o;
 
 
         if (fixedPrice != null ? fixedPrice.compareTo(that.fixedPrice) != 0 : that.fixedPrice != null) {
@@ -172,7 +172,7 @@ public class PhasePriceOverrideJson {
         if (recurringPrice != null ? recurringPrice.compareTo(that.recurringPrice) != 0 : that.recurringPrice != null) {
             return false;
         }
-        if (usagePriceOverrides != null ? !usagePriceOverrides.equals(that.usagePriceOverrides)  : that.usagePriceOverrides != null) {
+        if (usagePrices != null ? !usagePrices.equals(that.usagePrices) : that.usagePrices != null) {
             return false;
         }
         return true;
@@ -185,27 +185,27 @@ public class PhasePriceOverrideJson {
         result = 31 * result + (recurringPrice != null ? recurringPrice.hashCode() : 0);
         result = 31 * result + (phaseType != null ? phaseType.hashCode() : 0);
         result = 31 * result + (recurringPrice != null ? recurringPrice.hashCode() : 0);
-        result = 31 * result + (usagePriceOverrides != null ? usagePriceOverrides.hashCode() : 0);
+        result = 31 * result + (usagePrices != null ? usagePrices.hashCode() : 0);
         return result;
     }
 
-    public static List<PlanPhasePriceOverride> toPlanPhasePriceOverrides(final List<PhasePriceOverrideJson> priceOverrides, final PlanSpecifier spec, final Currency currency) {
+    public static List<PlanPhasePriceOverride> toPlanPhasePriceOverrides(final List<PhasePriceJson> priceOverrides, final PlanSpecifier spec, final Currency currency) {
         if (priceOverrides == null || priceOverrides.isEmpty()) {
             return ImmutableList.<PlanPhasePriceOverride>of();
         }
-        return ImmutableList.copyOf(Iterables.transform(priceOverrides, new Function<PhasePriceOverrideJson, PlanPhasePriceOverride>() {
+        return ImmutableList.copyOf(Iterables.transform(priceOverrides, new Function<PhasePriceJson, PlanPhasePriceOverride>() {
             @Nullable
             @Override
-            public PlanPhasePriceOverride apply(@Nullable final PhasePriceOverrideJson input) {
+            public PlanPhasePriceOverride apply(@Nullable final PhasePriceJson input) {
 
-                List <UsagePriceOverride> usagePriceOverrides = new LinkedList<UsagePriceOverride>();
+                List <UsagePriceOverride> usagePrices = new LinkedList<UsagePriceOverride>();
                 Preconditions.checkNotNull(input);
-                if(input.getUsagePriceOverrides()!= null) {
-                    for (final UsagePriceOverrideJson usageOverrideJson : input.getUsagePriceOverrides()) {
+                if(input.getUsagePrices() != null) {
+                    for (final UsagePriceJson usageOverrideJson : input.getUsagePrices()) {
                         List<TierPriceOverride> tierPriceOverrides = new LinkedList<TierPriceOverride>();
-                        for (final TierPriceOverrideJson tierPriceOverrideJson : usageOverrideJson.getTierPriceOverrides()) {
+                        for (final TierPriceJson tierPriceJson : usageOverrideJson.getTierPrices()) {
                             List<TieredBlockPriceOverride> blockPriceOverrides = new LinkedList<TieredBlockPriceOverride>();
-                            for (final BlockPriceOverrideJson block : tierPriceOverrideJson.getBlockPriceOverrides()) {
+                            for (final BlockPriceJson block : tierPriceJson.getBlockPrices()) {
                                 DefaultTieredBlockPriceOverride tieredBlockPriceOverride = new DefaultTieredBlockPriceOverride( block.getUnitName(), block.getSize(), block.getPrice(),currency, block.getMax());
                                 blockPriceOverrides.add(tieredBlockPriceOverride);
                             }
@@ -213,12 +213,12 @@ public class PhasePriceOverrideJson {
                             tierPriceOverrides.add(tierPriceOverride);
                         }
                         final DefaultUsagePriceOverride usageOverride = new DefaultUsagePriceOverride(usageOverrideJson.getUsageName(), usageOverrideJson.getUsageType(), tierPriceOverrides);
-                        usagePriceOverrides.add(usageOverride);
+                        usagePrices.add(usageOverride);
                     }
                 }
 
                 if (input.getPhaseName() != null) {
-                    return new DefaultPlanPhasePriceOverride(input.getPhaseName(), currency, input.getFixedPrice(), input.getRecurringPrice(), usagePriceOverrides);
+                    return new DefaultPlanPhasePriceOverride(input.getPhaseName(), currency, input.getFixedPrice(), input.getRecurringPrice(), usagePrices);
                 } else {
                     final PhaseType phaseType = input.getPhaseType() != null ? PhaseType.valueOf(input.getPhaseType()) : null;
 
@@ -226,7 +226,7 @@ public class PhasePriceOverrideJson {
                                                                   new PlanPhaseSpecifier(spec.getPlanName(), phaseType) :
                                                                   new PlanPhaseSpecifier(spec.getProductName(), spec.getBillingPeriod(), spec.getPriceListName(), phaseType);
                     final Currency resolvedCurrency = input.getFixedPrice() != null || input.getRecurringPrice() != null ? currency : null;
-                    return new DefaultPlanPhasePriceOverride(planPhaseSpecifier, resolvedCurrency, input.getFixedPrice(), input.getRecurringPrice(), usagePriceOverrides);
+                    return new DefaultPlanPhasePriceOverride(planPhaseSpecifier, resolvedCurrency, input.getFixedPrice(), input.getRecurringPrice(), usagePrices);
                 }
             }
         }));
