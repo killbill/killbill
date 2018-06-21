@@ -89,6 +89,7 @@ public interface SubscriptionBaseApiService {
     public List<SubscriptionBaseEvent> getEventsOnCreation(UUID subscriptionId, DateTime alignStartDate, DateTime bundleStartDate,
                                                            Plan plan, PhaseType initialPhase,
                                                            String realPriceList, DateTime effectiveDate,
+                                                           Integer bcd,
                                                            Catalog fullCatalog,
                                                            InternalTenantContext context)
             throws CatalogApiException, SubscriptionBaseApiException;
@@ -96,7 +97,8 @@ public interface SubscriptionBaseApiService {
     public List<SubscriptionBaseEvent> getEventsOnChangePlan(DefaultSubscriptionBase subscription, Plan newPlan,
                                                              String newPriceList, DateTime effectiveDate,
                                                              boolean addCancellationAddOnForEventsIfRequired,
-                                                             final Catalog fullCatalog,
+                                                             Integer bcd,
+                                                             Catalog fullCatalog,
                                                              InternalTenantContext context)
             throws CatalogApiException, SubscriptionBaseApiException;
 

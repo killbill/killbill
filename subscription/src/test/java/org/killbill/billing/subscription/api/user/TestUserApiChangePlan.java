@@ -28,7 +28,11 @@ import org.joda.time.DateTime;
 import org.joda.time.Interval;
 import org.joda.time.LocalDate;
 import org.killbill.billing.ErrorCode;
+import org.killbill.billing.ObjectType;
 import org.killbill.billing.api.TestApiListener.NextEvent;
+import org.killbill.billing.callcontext.CallContextBase;
+import org.killbill.billing.callcontext.InternalCallContext;
+import org.killbill.billing.callcontext.MutableCallContext;
 import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.catalog.api.Duration;
 import org.killbill.billing.catalog.api.PhaseType;
@@ -39,6 +43,7 @@ import org.killbill.billing.catalog.api.PriceListSet;
 import org.killbill.billing.catalog.api.ProductCategory;
 import org.killbill.billing.entitlement.api.DefaultEntitlementSpecifier;
 import org.killbill.billing.entitlement.api.Entitlement;
+import org.killbill.billing.entitlement.api.Entitlement.EntitlementState;
 import org.killbill.billing.entitlement.api.EntitlementSpecifier;
 import org.killbill.billing.entitlement.api.SubscriptionEventType;
 import org.killbill.billing.invoice.api.DryRunArguments;
@@ -51,6 +56,7 @@ import org.killbill.billing.subscription.engine.dao.model.SubscriptionEventModel
 import org.killbill.billing.subscription.events.SubscriptionBaseEvent;
 import org.killbill.billing.subscription.events.user.ApiEvent;
 import org.killbill.billing.subscription.events.user.ApiEventType;
+import org.killbill.billing.util.callcontext.CallContext;
 import org.skife.jdbi.v2.Handle;
 import org.skife.jdbi.v2.IDBI;
 import org.skife.jdbi.v2.tweak.HandleCallback;
@@ -679,6 +685,53 @@ public class TestUserApiChangePlan extends SubscriptionTestSuiteWithEmbeddedDB {
         assertEquals(refreshedSubscription.getAllTransitions().get(0).getTransitionType(), SubscriptionBaseTransitionType.CREATE);
         assertEquals(refreshedSubscription.getAllTransitions().get(1).getTransitionType(), SubscriptionBaseTransitionType.PHASE);
         assertEquals(refreshedSubscription.getAllTransitions().get(1).getNextPlan().getName(), "shotgun-monthly");
+
+    }
+
+
+
+    @Test(groups = "slow")
+    public void testChangePlanWithBCD() throws SubscriptionBillingApiException, SubscriptionBaseApiException {
+
+        final DateTime init = clock.getUTCNow();
+        final InternalCallContext internalCallContext = internalCallContextFactory.createInternalCallContext(bundle.getAccountId(),
+                                                                                                             ObjectType.ACCOUNT,
+                                                                                                             this.internalCallContext.getUpdatedBy(),
+                                                                                                             this.internalCallContext.getCallOrigin(),
+                                                                                                             this.internalCallContext.getContextUserType(),
+                                                                                                             this.internalCallContext.getUserToken(),
+                                                                                                             this.internalCallContext.getTenantRecordId());
+
+        DefaultSubscriptionBase subscription = testUtil.createSubscription(bundle, "Assault-Rifle", BillingPeriod.MONTHLY, "gunclubDiscount");
+        final PlanPhase trialPhase = subscription.getCurrentPhase();
+        assertEquals(trialPhase.getPhaseType(), PhaseType.TRIAL);
+
+        // MOVE TO NEXT PHASE
+        testListener.pushExpectedEvent(NextEvent.PHASE);
+        final Interval it = new Interval(clock.getUTCNow(), clock.getUTCNow().plusDays(31));
+        clock.addDeltaFromReality(it.toDurationMillis());
+
+        assertListenerStatus();
+
+        // SET CTD
+        final List<Duration> durationList = new ArrayList<Duration>();
+        durationList.add(trialPhase.getDuration());
+        //durationList.add(subscription.getCurrentPhase().getDuration());
+        final DateTime startDiscountPhase = TestSubscriptionHelper.addDuration(subscription.getStartDate(), durationList);
+        final Duration ctd = testUtil.getDurationMonth(1);
+        final DateTime newChargedThroughDate = TestSubscriptionHelper.addDuration(startDiscountPhase, ctd);
+        subscriptionInternalApi.setChargedThroughDate(subscription.getId(), newChargedThroughDate, internalCallContext);
+        subscription = (DefaultSubscriptionBase) subscriptionInternalApi.getSubscriptionFromId(subscription.getId(), internalCallContext);
+
+        final PlanPhaseSpecifier planPhaseSpecifier = new PlanPhaseSpecifier("Pistol", BillingPeriod.MONTHLY, "gunclubDiscount");
+
+        testListener.pushExpectedEvents(NextEvent.CHANGE, NextEvent.BCD_CHANGE);
+        subscription.changePlanWithDate(new DefaultEntitlementSpecifier(planPhaseSpecifier, 18, null), clock.getUTCNow(), callContext);
+        assertListenerStatus();
+
+        subscription = (DefaultSubscriptionBase) subscriptionInternalApi.getSubscriptionFromId(subscription.getId(), internalCallContext);
+        assertNotNull(subscription.getBillCycleDayLocal());
+        assertEquals(subscription.getBillCycleDayLocal().intValue(), 18);
 
     }
 

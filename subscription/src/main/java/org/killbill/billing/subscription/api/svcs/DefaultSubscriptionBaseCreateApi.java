@@ -262,8 +262,8 @@ public class DefaultSubscriptionBaseCreateApi extends SubscriptionApiBase {
                                             .setCategory(plan.getProduct().getCategory())
                                             .setBundleStartDate(bundleStartDate)
                                             .setAlignStartDate(effectiveDate)
-                                            .setMigrated(isMigrated));
-
+                                            .setMigrated(isMigrated)
+                                            .setSubscriptionBCD(entitlement.getBillCycleDay()));
             subscriptions.add(subscription);
         }
 

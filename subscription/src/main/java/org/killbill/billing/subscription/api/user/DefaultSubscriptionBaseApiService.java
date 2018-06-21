@@ -38,12 +38,10 @@ import org.killbill.billing.catalog.api.BillingActionPolicy;
 import org.killbill.billing.catalog.api.BillingAlignment;
 import org.killbill.billing.catalog.api.Catalog;
 import org.killbill.billing.catalog.api.CatalogApiException;
-import org.killbill.billing.catalog.api.CatalogEntity;
 import org.killbill.billing.catalog.api.CatalogInternalApi;
 import org.killbill.billing.catalog.api.PhaseType;
 import org.killbill.billing.catalog.api.Plan;
 import org.killbill.billing.catalog.api.PlanChangeResult;
-import org.killbill.billing.catalog.api.PlanPhasePriceOverride;
 import org.killbill.billing.catalog.api.PlanPhasePriceOverridesWithCallContext;
 import org.killbill.billing.catalog.api.PlanPhaseSpecifier;
 import org.killbill.billing.catalog.api.PlanSpecifier;
@@ -60,6 +58,8 @@ import org.killbill.billing.subscription.api.svcs.DefaultPlanPhasePriceOverrides
 import org.killbill.billing.subscription.engine.addon.AddonUtils;
 import org.killbill.billing.subscription.engine.dao.SubscriptionDao;
 import org.killbill.billing.subscription.events.SubscriptionBaseEvent;
+import org.killbill.billing.subscription.events.bcd.BCDEventBuilder;
+import org.killbill.billing.subscription.events.bcd.BCDEventData;
 import org.killbill.billing.subscription.events.phase.PhaseEvent;
 import org.killbill.billing.subscription.events.phase.PhaseEventData;
 import org.killbill.billing.subscription.events.user.ApiEvent;
@@ -152,6 +152,7 @@ public class DefaultSubscriptionBaseApiService implements SubscriptionBaseApiSer
                                                                                subscription.getInitialPhase(),
                                                                                subscription.getRealPriceList(),
                                                                                subscription.getEffectiveDate(),
+                                                                               subscription.getBuilder().getSubscriptionBCD(),
                                                                                fullCatalog,
                                                                                internalCallContext);
                 eventsMap.put(subscriptionBase.getId(), events);
@@ -429,7 +430,7 @@ public class DefaultSubscriptionBaseApiService implements SubscriptionBaseApiSer
 
         final List<DefaultSubscriptionBase> addOnSubscriptionsToBeCancelled = new ArrayList<DefaultSubscriptionBase>();
         final List<SubscriptionBaseEvent> addOnCancelEvents = new ArrayList<SubscriptionBaseEvent>();
-        final List<SubscriptionBaseEvent> changeEvents = getEventsOnChangePlan(subscription, newPlan, newPlan.getPriceListName(), effectiveDate, true, addOnSubscriptionsToBeCancelled, addOnCancelEvents, initialPhaseType, fullCatalog, internalCallContext);
+        final List<SubscriptionBaseEvent> changeEvents = getEventsOnChangePlan(subscription, newPlan, newPlan.getPriceListName(), effectiveDate, true, addOnSubscriptionsToBeCancelled, addOnCancelEvents, initialPhaseType, spec.getBillCycleDay(), fullCatalog, internalCallContext);
 
         dao.changePlan(subscription, changeEvents, addOnSubscriptionsToBeCancelled, addOnCancelEvents, fullCatalog, internalCallContext);
 
@@ -444,6 +445,7 @@ public class DefaultSubscriptionBaseApiService implements SubscriptionBaseApiSer
                                                            final PhaseType initialPhase,
                                                            final String realPriceList,
                                                            final DateTime effectiveDate,
+                                                           final Integer bcd,
                                                            final Catalog fullCatalog,
                                                            final InternalTenantContext internalTenantContext) throws CatalogApiException, SubscriptionBaseApiException {
         final TimedPhase[] curAndNextPhases = planAligner.getCurrentAndNextTimedPhaseOnCreate(alignStartDate,
@@ -464,12 +466,23 @@ public class DefaultSubscriptionBaseApiService implements SubscriptionBaseApiSer
                 .setFromDisk(true);
         final SubscriptionBaseEvent creationEvent = new ApiEventCreate(createBuilder);
 
+
         final TimedPhase nextTimedPhase = curAndNextPhases[1];
         final PhaseEvent nextPhaseEvent = (nextTimedPhase != null) ?
                                           PhaseEventData.createNextPhaseEvent(subscriptionId, nextTimedPhase.getPhase().getName(), nextTimedPhase.getStartPhase()) :
                                           null;
         final List<SubscriptionBaseEvent> events = new ArrayList<SubscriptionBaseEvent>();
         events.add(creationEvent);
+
+        if (bcd != null) {
+            final SubscriptionBaseEvent bcdEvent = new BCDEventData(new BCDEventBuilder()
+                                            .setSubscriptionId(subscriptionId)
+                                            .setEffectiveDate(effectiveDate)
+                                            .setActive(true)
+                                            .setBillCycleDayLocal(bcd));
+            events.add(bcdEvent);
+        }
+
         if (nextPhaseEvent != null) {
             events.add(nextPhaseEvent);
         }
@@ -480,12 +493,13 @@ public class DefaultSubscriptionBaseApiService implements SubscriptionBaseApiSer
     public List<SubscriptionBaseEvent> getEventsOnChangePlan(final DefaultSubscriptionBase subscription, final Plan newPlan,
                                                              final String newPriceList, final DateTime effectiveDate,
                                                              final boolean addCancellationAddOnForEventsIfRequired,
+                                                             final Integer bcd,
                                                              final Catalog fullCatalog,
                                                              final InternalTenantContext internalTenantContext) throws CatalogApiException, SubscriptionBaseApiException {
         final Collection<DefaultSubscriptionBase> addOnSubscriptionsToBeCancelled = new ArrayList<DefaultSubscriptionBase>();
         final Collection<SubscriptionBaseEvent> addOnCancelEvents = new ArrayList<SubscriptionBaseEvent>();
 
-        final List<SubscriptionBaseEvent> changeEvents = getEventsOnChangePlan(subscription, newPlan, newPriceList, effectiveDate, addCancellationAddOnForEventsIfRequired, addOnSubscriptionsToBeCancelled, addOnCancelEvents, null, fullCatalog, internalTenantContext);
+        final List<SubscriptionBaseEvent> changeEvents = getEventsOnChangePlan(subscription, newPlan, newPriceList, effectiveDate, addCancellationAddOnForEventsIfRequired, addOnSubscriptionsToBeCancelled, addOnCancelEvents, null, bcd, fullCatalog, internalTenantContext);
         changeEvents.addAll(addOnCancelEvents);
         return changeEvents;
     }
@@ -496,6 +510,7 @@ public class DefaultSubscriptionBaseApiService implements SubscriptionBaseApiSer
                                                               final Collection<DefaultSubscriptionBase> addOnSubscriptionsToBeCancelled,
                                                               final Collection<SubscriptionBaseEvent> addOnCancelEvents,
                                                               final PhaseType initialPhaseType,
+                                                              final Integer bcd,
                                                               final Catalog fullCatalog,
                                                               final InternalTenantContext internalTenantContext) throws CatalogApiException, SubscriptionBaseApiException {
 
@@ -520,6 +535,16 @@ public class DefaultSubscriptionBaseApiService implements SubscriptionBaseApiSer
         final List<SubscriptionBaseEvent> changeEvents = new ArrayList<SubscriptionBaseEvent>();
         // Only add the PHASE if it does not coincide with the CHANGE, if not this is 'just' a CHANGE.
         changeEvents.add(changeEvent);
+
+        if (bcd != null) {
+            final SubscriptionBaseEvent bcdEvent = new BCDEventData(new BCDEventBuilder()
+                                                                            .setSubscriptionId(subscription.getId())
+                                                                            .setEffectiveDate(effectiveDate)
+                                                                            .setActive(true)
+                                                                            .setBillCycleDayLocal(bcd));
+            changeEvents.add(bcdEvent);
+        }
+
         if (nextPhaseEvent != null && !nextPhaseEvent.getEffectiveDate().equals(changeEvent.getEffectiveDate())) {
             changeEvents.add(nextPhaseEvent);
         }
