@@ -236,6 +236,7 @@ public class InvoicePaymentResource extends JaxRsResourceBase {
                            @ApiResponse(code = 404, message = "Account or payment not found")})
     public Response createChargeback(@PathParam("paymentId") final UUID paymentId,
                                      final InvoicePaymentTransactionJson json,
+                                     @QueryParam(QUERY_PLUGIN_PROPERTY) final List<String> pluginPropertiesString,
                                      @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                      @HeaderParam(HDR_REASON) final String reason,
                                      @HeaderParam(HDR_COMMENT) final String comment,
@@ -244,14 +245,22 @@ public class InvoicePaymentResource extends JaxRsResourceBase {
         verifyNonNullOrEmpty(json, "InvoicePaymentTransactionJson body should be specified");
         verifyNonNullOrEmpty(json.getAmount(), "InvoicePaymentTransactionJson amount needs to be set");
 
-        final CallContext callContext = context.createCallContextNoAccountId(createdBy, reason, comment, request);
-        final Payment payment = paymentApi.getPayment(paymentId, false, false, ImmutableList.<PluginProperty>of(), callContext);
-        final Account account = accountUserApi.getAccountById(payment.getAccountId(), callContext);
+        final CallContext callContextNoAccountId = context.createCallContextNoAccountId(createdBy, reason, comment, request);
+        final Payment payment = paymentApi.getPayment(paymentId, false, false, ImmutableList.<PluginProperty>of(), callContextNoAccountId);
+        final Account account = accountUserApi.getAccountById(payment.getAccountId(), callContextNoAccountId);
+        final CallContext callContext = context.createCallContextWithAccountId(account.getId(), createdBy, reason, comment, request);
         final String transactionExternalKey = json.getTransactionExternalKey() != null ? json.getTransactionExternalKey() : UUIDs.randomUUID().toString();
 
-        final Payment result = paymentApi.createChargebackWithPaymentControl(account, payment.getId(), json.getAmount(), account.getCurrency(), json.getEffectiveDate(),
-                                                                             transactionExternalKey, createInvoicePaymentControlPluginApiPaymentOptions(false), callContext);
-        return uriBuilder.buildResponse(uriInfo, InvoicePaymentResource.class, "getInvoicePayment", result.getId(), request);
+        invoicePaymentApi.createChargebackForInvoicePayment(account,
+                                                            payment.getId(),
+                                                            json.getAmount(),
+                                                            account.getCurrency(),
+                                                            json.getEffectiveDate(),
+                                                            transactionExternalKey,
+                                                            extractPluginProperties(pluginPropertiesString),
+                                                            createInvoicePaymentControlPluginApiPaymentOptions(false),
+                                                            callContext);
+        return uriBuilder.buildResponse(uriInfo, InvoicePaymentResource.class, "getInvoicePayment", payment.getId(), request);
     }
 
     @TimedResource
@@ -265,6 +274,7 @@ public class InvoicePaymentResource extends JaxRsResourceBase {
                            @ApiResponse(code = 404, message = "Account or payment not found")})
     public Response createChargebackReversal(@PathParam("paymentId") final UUID paymentId,
                                              final InvoicePaymentTransactionJson json,
+                                             @QueryParam(QUERY_PLUGIN_PROPERTY) final List<String> pluginPropertiesString,
                                              @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                              @HeaderParam(HDR_REASON) final String reason,
                                              @HeaderParam(HDR_COMMENT) final String comment,
@@ -273,12 +283,19 @@ public class InvoicePaymentResource extends JaxRsResourceBase {
         verifyNonNullOrEmpty(json, "InvoicePaymentTransactionJson body should be specified");
         verifyNonNullOrEmpty(json.getTransactionExternalKey(), "InvoicePaymentTransactionJson transactionExternalKey needs to be set");
 
-        final CallContext callContext = context.createCallContextNoAccountId(createdBy, reason, comment, request);
-        final Payment payment = paymentApi.getPayment(paymentId, false, false, ImmutableList.<PluginProperty>of(), callContext);
-        final Account account = accountUserApi.getAccountById(payment.getAccountId(), callContext);
+        final CallContext callContextNoAccountId = context.createCallContextNoAccountId(createdBy, reason, comment, request);
+        final Payment payment = paymentApi.getPayment(paymentId, false, false, ImmutableList.<PluginProperty>of(), callContextNoAccountId);
+        final Account account = accountUserApi.getAccountById(payment.getAccountId(), callContextNoAccountId);
+        final CallContext callContext = context.createCallContextWithAccountId(account.getId(), createdBy, reason, comment, request);
 
-        final Payment result = paymentApi.createChargebackReversalWithPaymentControl(account, payment.getId(), json.getEffectiveDate(), json.getTransactionExternalKey(), createInvoicePaymentControlPluginApiPaymentOptions(false), callContext);
-        return uriBuilder.buildResponse(uriInfo, InvoicePaymentResource.class, "getInvoicePayment", result.getId(), request);
+        invoicePaymentApi.createChargebackReversalForInvoicePayment(account,
+                                                                    payment.getId(),
+                                                                    json.getEffectiveDate(),
+                                                                    json.getTransactionExternalKey(),
+                                                                    extractPluginProperties(pluginPropertiesString),
+                                                                    createInvoicePaymentControlPluginApiPaymentOptions(false),
+                                                                    callContext);
+        return uriBuilder.buildResponse(uriInfo, InvoicePaymentResource.class, "getInvoicePayment", paymentId, request);
     }
 
     @TimedResource(name = "completeInvoicePaymentTransaction")
