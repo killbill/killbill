@@ -29,8 +29,4 @@ public interface CatalogService extends KillbillService {
     public DefaultVersionedCatalog getFullCatalog(boolean useDefaultCatalog, final boolean filterTemplateCatalog, InternalTenantContext context) throws CatalogApiException;
 
     public DefaultVersionedCatalog getFullCatalogForInternalUse(boolean useDefaultCatalog, final boolean filterTemplateCatalog, InternalTenantContext context) throws CatalogApiException;
-
-    public DefaultVersionedCatalog getCurrentCatalog(boolean useDefaultCatalog, final boolean filterTemplateCatalog, InternalTenantContext context) throws CatalogApiException;
-
-    public DefaultVersionedCatalog getCurrentCatalogForInternalUse(boolean useDefaultCatalog, final boolean filterTemplateCatalog, InternalTenantContext context) throws CatalogApiException;
 }

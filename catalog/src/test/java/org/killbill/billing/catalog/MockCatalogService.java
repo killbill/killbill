@@ -45,17 +45,7 @@ public class MockCatalogService extends DefaultCatalogService {
     }
 
     @Override
-    public DefaultVersionedCatalog getCurrentCatalogForInternalUse(final boolean useDefaultCatalog, final boolean filterTemplateCatalog, InternalTenantContext context) {
-        return catalog;
-    }
-
-    @Override
     public DefaultVersionedCatalog getFullCatalog(final boolean useDefaultCatalog, final boolean filterTemplateCatalog, InternalTenantContext context) {
-        return catalog;
-    }
-
-    @Override
-    public DefaultVersionedCatalog getCurrentCatalog(final boolean useDefaultCatalog, final boolean filterTemplateCatalog, InternalTenantContext context) {
         return catalog;
     }
 }

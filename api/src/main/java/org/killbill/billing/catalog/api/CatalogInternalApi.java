@@ -23,6 +23,4 @@ public interface CatalogInternalApi {
 
     public Catalog getFullCatalog(boolean useDefaultCatalog, final boolean filterTemplateCatalog, InternalTenantContext context) throws CatalogApiException;
 
-    public StaticCatalog getCurrentCatalog(boolean useDefaultCatalog, final boolean filterTemplateCatalog, InternalTenantContext context) throws CatalogApiException;
-
 }

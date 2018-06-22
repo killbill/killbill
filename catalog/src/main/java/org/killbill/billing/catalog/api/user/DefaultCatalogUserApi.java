@@ -110,7 +110,7 @@ public class DefaultCatalogUserApi implements CatalogUserApi {
         } else {
             internalTenantContext = createInternalTenantContext(tenantContext);
         }
-        return catalogService.getCurrentCatalog(true, true, internalTenantContext);
+        return catalogService.getFullCatalog(true, true, internalTenantContext);
     }
 
     @Override
@@ -232,7 +232,7 @@ public class DefaultCatalogUserApi implements CatalogUserApi {
     }
 
     private StandaloneCatalog getCurrentStandaloneCatalogForTenant(final InternalTenantContext internalTenantContext) throws CatalogApiException {
-        final DefaultVersionedCatalog versionedCatalog = catalogService.getCurrentCatalog(false, false, internalTenantContext);
+        final DefaultVersionedCatalog versionedCatalog = catalogService.getFullCatalog(false, false, internalTenantContext);
         if (versionedCatalog != null && !versionedCatalog.getVersions().isEmpty()) {
             final StandaloneCatalog standaloneCatalogWithPriceOverride = versionedCatalog.getVersions().get(versionedCatalog.getVersions().size() - 1);
             return standaloneCatalogWithPriceOverride;

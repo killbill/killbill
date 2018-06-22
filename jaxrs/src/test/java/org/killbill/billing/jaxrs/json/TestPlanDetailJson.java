@@ -18,17 +18,16 @@ package org.killbill.billing.jaxrs.json;
 
 import java.util.UUID;
 
-import org.killbill.billing.catalog.DefaultPrice;
 import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.catalog.api.InternationalPrice;
 import org.killbill.billing.catalog.api.Listing;
 import org.killbill.billing.catalog.api.Plan;
 import org.killbill.billing.catalog.api.PlanPhase;
+import org.killbill.billing.catalog.api.Price;
 import org.killbill.billing.catalog.api.PriceList;
 import org.killbill.billing.catalog.api.Product;
 import org.killbill.billing.catalog.api.Recurring;
 import org.killbill.billing.jaxrs.JaxrsTestSuiteNoDB;
-import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.testng.Assert;
 import org.testng.annotations.Test;
@@ -65,7 +64,8 @@ public class TestPlanDetailJson extends JaxrsTestSuiteNoDB {
         Mockito.when(product.getName()).thenReturn(UUID.randomUUID().toString());
 
         final InternationalPrice price = Mockito.mock(InternationalPrice.class);
-        Mockito.when(price.getPrices()).thenReturn(new DefaultPrice[0]);
+        final Price[] mock = {};
+        Mockito.when(price.getPrices()).thenReturn(mock);
         final PlanPhase planPhase = Mockito.mock(PlanPhase.class);
         final Recurring recurring = Mockito.mock(Recurring.class);
         Mockito.when(recurring.getRecurringPrice()).thenReturn(price);

@@ -45,7 +45,6 @@ import org.killbill.billing.subscription.events.SubscriptionBaseEvent;
 import org.killbill.billing.subscription.events.SubscriptionBaseEvent.EventType;
 import org.killbill.billing.subscription.events.user.ApiEventTransfer;
 import org.killbill.billing.subscription.events.user.ApiEventType;
-import org.killbill.billing.util.dao.NonEntityDao;
 import org.mockito.Mockito;
 import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
@@ -67,7 +66,7 @@ public class TestDefaultSubscriptionTransferApi extends SubscriptionTestSuiteNoD
         final MockCatalog mockCatalog = new MockCatalog();
         versionedCatalog.add(mockCatalog);
         final CatalogService catalogService = new MockCatalogService(versionedCatalog, cacheControllerDispatcher);
-        final CatalogInternalApi catalogInternalApiWithMockCatalogService = new DefaultCatalogInternalApi(catalogService, internalCallContextFactory);
+        final CatalogInternalApi catalogInternalApiWithMockCatalogService = new DefaultCatalogInternalApi(catalogService);
         final SubscriptionBaseApiService apiService = Mockito.mock(SubscriptionBaseApiService.class);
         final SubscriptionBaseTimelineApi timelineApi = Mockito.mock(SubscriptionBaseTimelineApi.class);
         transferApi = new DefaultSubscriptionBaseTransferApi(clock, dao, timelineApi, catalogInternalApiWithMockCatalogService, subscriptionInternalApi, apiService, internalCallContextFactory);

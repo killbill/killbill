@@ -59,6 +59,8 @@ import org.killbill.xmlloader.ValidatingConfig;
 import org.killbill.xmlloader.ValidationError;
 import org.killbill.xmlloader.ValidationErrors;
 
+import com.google.common.annotations.VisibleForTesting;
+
 @XmlAccessorType(XmlAccessType.NONE)
 public class DefaultPlan extends ValidatingConfig<StandaloneCatalog> implements Plan, Externalizable {
 
@@ -99,7 +101,8 @@ public class DefaultPlan extends ValidatingConfig<StandaloneCatalog> implements 
     private String priceListName;
 
     // Not exposed in XML
-    private StandaloneCatalog staticCatalog;
+    @VisibleForTesting
+    StandaloneCatalog staticCatalog;
 
     // For deserialization
     public DefaultPlan() {
