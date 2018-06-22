@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014-2017 Groupon, Inc
- * Copyright 2014-2017 The Billing Project, LLC
+ * Copyright 2014-2018 Groupon, Inc
+ * Copyright 2014-2018 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -50,6 +50,7 @@ import org.killbill.billing.catalog.api.PlanPhasePriceOverride;
 import org.killbill.billing.catalog.api.PriceList;
 import org.killbill.billing.catalog.api.Product;
 import org.killbill.billing.catalog.api.Recurring;
+import org.killbill.billing.catalog.api.StaticCatalog;
 import org.killbill.billing.catalog.api.TimeUnit;
 import org.killbill.billing.util.cache.ExternalizableInput;
 import org.killbill.billing.util.cache.ExternalizableOutput;
@@ -97,14 +98,21 @@ public class DefaultPlan extends ValidatingConfig<StandaloneCatalog> implements 
 
     private String priceListName;
 
-    private DateTime catalogEffectiveDate;
+    // Not exposed in XML
+    private StandaloneCatalog staticCatalog;
 
     // For deserialization
     public DefaultPlan() {
         initialPhases = new DefaultPlanPhase[0];
     }
 
-    public DefaultPlan(final String planName, final DefaultPlan in, final PlanPhasePriceOverride[] overrides) {
+    public DefaultPlan(final StandaloneCatalog staticCatalog) {
+        this.staticCatalog = staticCatalog;
+        initialPhases = new DefaultPlanPhase[0];
+    }
+
+    public DefaultPlan(final StandaloneCatalog staticCatalog, final String planName, final DefaultPlan in, final PlanPhasePriceOverride[] overrides) {
+        this.staticCatalog = staticCatalog;
         this.name = planName;
         this.effectiveDateForExistingSubscriptions = in.getEffectiveDateForExistingSubscriptions();
         this.product = (DefaultProduct) in.getProduct();
@@ -121,6 +129,11 @@ public class DefaultPlan extends ValidatingConfig<StandaloneCatalog> implements 
     @Override
     public Date getEffectiveDateForExistingSubscriptions() {
         return effectiveDateForExistingSubscriptions;
+    }
+
+    @Override
+    public StaticCatalog getCatalog() {
+        return staticCatalog;
     }
 
     @Override
@@ -221,7 +234,7 @@ public class DefaultPlan extends ValidatingConfig<StandaloneCatalog> implements 
         }
 
         this.priceListName = this.priceListName != null ? this.priceListName : findPriceListForPlan(catalog);
-        this.catalogEffectiveDate = new DateTime(catalog.getEffectiveDate());
+        this.staticCatalog = catalog;
     }
 
     @Override
@@ -404,9 +417,5 @@ public class DefaultPlan extends ValidatingConfig<StandaloneCatalog> implements 
     @Override
     public void writeExternal(final ObjectOutput oo) throws IOException {
         MapperHolder.mapper().writeValue(new ExternalizableOutput(oo), this);
-    }
-
-    public DateTime getCatalogEffectiveDate() {
-        return catalogEffectiveDate;
     }
 }
