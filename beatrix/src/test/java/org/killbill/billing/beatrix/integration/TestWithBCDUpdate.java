@@ -740,4 +740,57 @@ public class TestWithBCDUpdate extends TestIntegrationBase {
         invoiceChecker.checkInvoice(account.getId(), 5, callContext,
                                     new ExpectedInvoiceItemCheck(new LocalDate(2016, 6, 15), new LocalDate(2016, 7, 15), InvoiceItemType.RECURRING, new BigDecimal("29.95")));
     }
+
+
+
+    @Test(groups = "slow")
+    public void testWithBCDOnOperations() throws Exception {
+
+        final DateTime initialDate = new DateTime(2018, 6, 21, 0, 13, 42, 0, testTimeZone);
+        clock.setDeltaFromReality(initialDate.getMillis() - clock.getUTCNow().getMillis());
+
+        final Account account = createAccountWithNonOsgiPaymentMethod(getAccountData(21));
+        assertNotNull(account);
+
+
+        final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("pistol-monthly-notrial");
+
+
+        busHandler.pushExpectedEvents( NextEvent.CREATE, NextEvent.BLOCK, NextEvent.BCD_CHANGE, NextEvent.NULL_INVOICE, NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT);
+
+        // We will realign the BCD on the 15 as we create the subscription - ignoring the account setting on 21.
+        final UUID entitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec, 15, null), null, null, null, false, false, ImmutableList.<PluginProperty>of(), callContext);
+        assertListenerStatus();
+
+        invoiceChecker.checkInvoice(account.getId(), 1, callContext,
+                                    new ExpectedInvoiceItemCheck(new LocalDate(2018, 6, 21), new LocalDate(2018, 7, 15), InvoiceItemType.RECURRING, new BigDecimal("15.96")));
+
+
+        // Verify next month
+        busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT);
+        clock.addDays(24);  // 2018-7-15
+        assertListenerStatus();
+
+        invoiceChecker.checkInvoice(account.getId(), 2, callContext,
+                                    new ExpectedInvoiceItemCheck(new LocalDate(2018, 7, 15), new LocalDate(2018, 8, 15), InvoiceItemType.RECURRING, new BigDecimal("19.95")));
+
+
+        final Entitlement entitlement = entitlementApi.getEntitlementForId(entitlementId, callContext);
+
+        final PlanPhaseSpecifier spec2 = new PlanPhaseSpecifier("blowdart-monthly-notrial");
+
+        // Change plan EOT
+        // We will now realign the BCD on the 21 as we change the plan for the subscription.
+        entitlement.changePlan(new DefaultEntitlementSpecifier(spec2, 21, null), ImmutableList.<PluginProperty>of(), callContext);
+
+        busHandler.pushExpectedEvents(NextEvent.CHANGE, NextEvent.BCD_CHANGE, NextEvent.NULL_INVOICE, NextEvent.NULL_INVOICE, NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT);
+        clock.addMonths(1);
+        assertListenerStatus();
+
+
+        invoiceChecker.checkInvoice(account.getId(), 3, callContext,
+                                    new ExpectedInvoiceItemCheck(new LocalDate(2018, 8, 15), new LocalDate(2018, 8, 21), InvoiceItemType.RECURRING, new BigDecimal("5.80")));
+
+
+    }
 }
