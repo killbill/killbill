@@ -194,7 +194,7 @@ public class TestWithCatalogPlugin extends TestIntegrationBase {
         final InternalTenantContext internalTenantContext;
         final InternalCallContextFactory internalCallContextFactory;
 
-        private VersionedCatalog versionedCatalog;
+        private DefaultVersionedCatalog versionedCatalog;
         private DateTime latestCatalogUpdate;
         private int nbLatestCatalogVersionApiCalls;
         private int nbVersionedPluginCatalogApiCalls;

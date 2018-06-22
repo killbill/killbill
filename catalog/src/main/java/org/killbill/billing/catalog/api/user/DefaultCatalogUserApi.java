@@ -91,7 +91,7 @@ public class DefaultCatalogUserApi implements CatalogUserApi {
         if (catalogDateVersion == null) {
             return fullCatalog;
         } else {
-            final VersionedCatalog<StandaloneCatalog> filteredCatalog = new DefaultVersionedCatalog(clock);
+            final DefaultVersionedCatalogTestWithCatalogPlugi filteredCatalog = new DefaultVersionedCatalog(clock);
             for (final StandaloneCatalog v : fullCatalog.getVersions()) {
                 if (v.getEffectiveDate().compareTo(catalogDateVersion.toDate()) >= 0) {
                     filteredCatalog.add(v);

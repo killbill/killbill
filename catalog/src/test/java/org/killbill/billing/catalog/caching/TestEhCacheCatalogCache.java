@@ -89,7 +89,7 @@ public class TestEhCacheCatalogCache extends CatalogTestSuiteNoDB {
         Assert.assertEquals(products.size(), 3);
 
         // Verify the lookup with other contexts
-        final VersionedCatalog resultForMultiTenantContext = new DefaultVersionedCatalog(result.getClock());
+        final DefaultVersionedCatalog resultForMultiTenantContext = new DefaultVersionedCatalog(result.getClock());
         for (final StandaloneCatalog cur : result.getVersions()) {
             resultForMultiTenantContext.add(new StandaloneCatalogWithPriceOverride(cur, priceOverride, multiTenantContext.getTenantRecordId(), internalCallContextFactory));
         }

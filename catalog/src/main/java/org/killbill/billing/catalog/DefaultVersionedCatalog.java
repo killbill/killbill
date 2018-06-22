@@ -192,7 +192,6 @@ public class DefaultVersionedCatalog extends ValidatingConfig<DefaultVersionedCa
         return versions;
     }
 
-    @Override
     public void add(final StandaloneCatalog e) {
         if (catalogName == null && e.getCatalogName() != null) {
             catalogName = e.getCatalogName();
