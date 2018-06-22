@@ -719,7 +719,7 @@ public class DefaultSubscriptionDao extends EntityDaoBase<SubscriptionBundleMode
                 for (final SubscriptionBaseEvent cur : inputChangeEvents) {
                     createAndRefresh(transactional, new SubscriptionEventModelDao(cur), context);
 
-                    final boolean isBusEvent = cur.getEffectiveDate().compareTo(context.getCreatedDate()) <= 0 && (cur.getType() == EventType.API_USER);
+                    final boolean isBusEvent = cur.getEffectiveDate().compareTo(context.getCreatedDate()) <= 0 && (cur.getType() == EventType.API_USER || cur.getType() == EventType.BCD_UPDATE);
                     recordBusOrFutureNotificationFromTransaction(subscription, cur, entitySqlDaoWrapperFactory, isBusEvent, 0, catalog, context);
                 }
 

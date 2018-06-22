@@ -201,9 +201,6 @@ public class InvoiceResource extends JaxRsResourceBase {
                                        @javax.ws.rs.core.Context final HttpServletRequest request) throws InvoiceApiException {
         final TenantContext tenantContext = context.createTenantContextNoAccountId(request);
         final Invoice invoice = invoiceApi.getInvoiceByNumber(invoiceNumber, tenantContext);
-        if (invoice == null) {
-            throw new InvoiceApiException(ErrorCode.INVOICE_NOT_FOUND, invoiceNumber);
-        }
         final List<InvoiceItem> childInvoiceItems = withChildrenItems ? invoiceApi.getInvoiceItemsByParentInvoice(invoice.getId(), tenantContext) : null;
         final AccountAuditLogs accountAuditLogs = auditUserApi.getAccountAuditLogs(invoice.getAccountId(), auditMode.getLevel(), tenantContext);
 
@@ -226,10 +223,6 @@ public class InvoiceResource extends JaxRsResourceBase {
                                        @javax.ws.rs.core.Context final HttpServletRequest request) throws InvoiceApiException {
         final TenantContext tenantContext = context.createTenantContextNoAccountId(request);
         final Invoice invoice = invoiceApi.getInvoiceByInvoiceItem(invoiceItemId, tenantContext);
-        if (invoice == null) {
-            throw new InvoiceApiException(ErrorCode.INVOICE_ITEM_NOT_FOUND, invoiceItemId);
-        }
-
         final List<InvoiceItem> childInvoiceItems = withChildrenItems ? invoiceApi.getInvoiceItemsByParentInvoice(invoice.getId(), tenantContext) : null;
         final AccountAuditLogs accountAuditLogs = auditUserApi.getAccountAuditLogs(invoice.getAccountId(), auditMode.getLevel(), tenantContext);
 

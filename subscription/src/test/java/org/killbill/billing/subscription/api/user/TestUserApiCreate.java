@@ -26,20 +26,29 @@ import org.joda.time.DateTime;
 import org.joda.time.Interval;
 import org.joda.time.LocalDate;
 import org.killbill.billing.ErrorCode;
+import org.killbill.billing.ObjectType;
 import org.killbill.billing.api.TestApiListener.NextEvent;
+import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.catalog.api.PhaseType;
 import org.killbill.billing.catalog.api.Plan;
 import org.killbill.billing.catalog.api.PlanPhase;
+import org.killbill.billing.catalog.api.PlanPhaseSpecifier;
 import org.killbill.billing.catalog.api.PriceListSet;
 import org.killbill.billing.catalog.api.ProductCategory;
+import org.killbill.billing.entitlement.api.DefaultEntitlementSpecifier;
 import org.killbill.billing.entitlement.api.Entitlement.EntitlementState;
+import org.killbill.billing.entitlement.api.EntitlementSpecifier;
 import org.killbill.billing.subscription.DefaultSubscriptionTestInitializer;
 import org.killbill.billing.subscription.SubscriptionTestSuiteWithEmbeddedDB;
+import org.killbill.billing.subscription.api.SubscriptionBaseWithAddOns;
+import org.killbill.billing.subscription.api.SubscriptionBaseWithAddOnsSpecifier;
 import org.killbill.billing.subscription.events.SubscriptionBaseEvent;
 import org.killbill.billing.subscription.events.phase.PhaseEvent;
 import org.testng.Assert;
 import org.testng.annotations.Test;
+
+import com.google.common.collect.ImmutableList;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotEquals;
@@ -279,5 +288,42 @@ public class TestUserApiCreate extends SubscriptionTestSuiteWithEmbeddedDB {
 
         subscription = (DefaultSubscriptionBase) subscriptionInternalApi.getSubscriptionFromId(subscription.getId(), internalCallContext);
         assertEquals(subscription.getState(), EntitlementState.ACTIVE);
+    }
+
+
+
+    @Test(groups = "slow")
+    public void testCreateSubscriptionWithBCD() throws SubscriptionBaseApiException {
+        final DateTime init = clock.getUTCNow();
+
+        final InternalCallContext internalCallContext = internalCallContextFactory.createInternalCallContext(bundle.getAccountId(),
+                                                                                                             ObjectType.ACCOUNT,
+                                                                                                             this.internalCallContext.getUpdatedBy(),
+                                                                                                             this.internalCallContext.getCallOrigin(),
+                                                                                                             this.internalCallContext.getContextUserType(),
+                                                                                                             this.internalCallContext.getUserToken(),
+                                                                                                             this.internalCallContext.getTenantRecordId());
+
+        final Iterable<EntitlementSpecifier> specifiers = ImmutableList.<EntitlementSpecifier>of(new DefaultEntitlementSpecifier(new PlanPhaseSpecifier("shotgun-monthly"), 18, null));
+        final SubscriptionBaseWithAddOnsSpecifier subscriptionBaseWithAddOnsSpecifier = new SubscriptionBaseWithAddOnsSpecifier(bundle.getId(),
+                                                                                                                                bundle.getExternalKey(),
+                                                                                                                                specifiers,
+                                                                                                                                init.toLocalDate(),
+                                                                                                                                false);
+
+        testListener.pushExpectedEvents(NextEvent.CREATE, NextEvent.BCD_CHANGE);
+        final List<SubscriptionBaseWithAddOns> subscriptionBaseWithAddOns = subscriptionInternalApi.createBaseSubscriptionsWithAddOns(ImmutableList.<SubscriptionBaseWithAddOnsSpecifier>of(subscriptionBaseWithAddOnsSpecifier),
+                                                                                                                                false,
+                                                                                                                                internalCallContext);
+        testListener.assertListenerStatus();
+
+        assertEquals(subscriptionBaseWithAddOns.size(), 1);
+        assertEquals(subscriptionBaseWithAddOns.get(0).getSubscriptionBaseList().size(), 1);
+
+        final DefaultSubscriptionBase subscription = (DefaultSubscriptionBase) subscriptionBaseWithAddOns.get(0).getSubscriptionBaseList().get(0);
+        assertNotNull(subscription);
+        assertNotNull(subscription.getBillCycleDayLocal());
+        assertEquals(subscription.getBillCycleDayLocal().intValue(), 18);
+
     }
 }
