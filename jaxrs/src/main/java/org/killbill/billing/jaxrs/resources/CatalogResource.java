@@ -40,8 +40,6 @@ import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDate;
 import org.killbill.billing.account.api.AccountUserApi;
-import org.killbill.billing.catalog.StandaloneCatalog;
-import org.killbill.billing.catalog.VersionedCatalog;
 import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.catalog.api.CatalogUserApi;
 import org.killbill.billing.catalog.api.CurrencyValueNull;
@@ -52,6 +50,7 @@ import org.killbill.billing.catalog.api.PriceList;
 import org.killbill.billing.catalog.api.Product;
 import org.killbill.billing.catalog.api.SimplePlanDescriptor;
 import org.killbill.billing.catalog.api.StaticCatalog;
+import org.killbill.billing.catalog.api.VersionedCatalog;
 import org.killbill.billing.catalog.api.user.DefaultSimplePlanDescriptor;
 import org.killbill.billing.entitlement.api.Subscription;
 import org.killbill.billing.entitlement.api.SubscriptionApi;
@@ -134,20 +133,11 @@ public class CatalogResource extends JaxRsResourceBase {
                                             DATE_TIME_FORMATTER.parseDateTime(requestedDate).toDateTime(DateTimeZone.UTC) :
                                             null;
 
-        final VersionedCatalog catalog = (VersionedCatalog) catalogUserApi.getCatalog(catalogName, tenantContext);
-        final String result;
-        if (catalogDateVersion != null) {
-            final VersionedCatalog oneVersionCatalog = new VersionedCatalog();
-            for (final StandaloneCatalog v : catalog.getVersions()) {
-                if (v.getEffectiveDate().compareTo(catalogDateVersion.toDate()) >= 0) {
-                    oneVersionCatalog.add(v);
-                    break;
-                }
-            }
-            result = XMLWriter.writeXML(oneVersionCatalog, VersionedCatalog.class);
-        } else {
-            result = XMLWriter.writeXML(catalog, VersionedCatalog.class);
-        }
+        final VersionedCatalog<? extends StaticCatalog> catalog = catalogUserApi.getCatalog(catalogName, catalogDateVersion, tenantContext);
+
+        // This assumes serializableClass has the right JAXB annotations
+        final Class serializableClass = catalog.getClass();
+        final String result = XMLWriter.writeXML(catalog, serializableClass);
 
         return Response.status(Status.OK).entity(result).build();
     }
@@ -214,14 +204,13 @@ public class CatalogResource extends JaxRsResourceBase {
                                             DATE_TIME_FORMATTER.parseDateTime(requestedDate).toDateTime(DateTimeZone.UTC) :
                                             null;
 
-        // Yack...
-        final VersionedCatalog catalog = (VersionedCatalog) catalogUserApi.getCatalog(catalogName, tenantContext);
+        final VersionedCatalog<? extends StaticCatalog> catalog = catalogUserApi.getCatalog(catalogName, null, tenantContext);
 
         final List<CatalogJson> result = new ArrayList<CatalogJson>();
         if (catalogDateVersion != null) {
             result.add(new CatalogJson(catalog, catalogDateVersion));
         } else {
-            for (final StandaloneCatalog v : catalog.getVersions()) {
+            for (final StaticCatalog v : catalog.getVersions()) {
                 result.add(new CatalogJson(catalog, new DateTime(v.getEffectiveDate())));
             }
         }
@@ -239,10 +228,10 @@ public class CatalogResource extends JaxRsResourceBase {
         final TenantContext tenantContext = accountId != null ?
                                             context.createTenantContextWithAccountId(accountId, request) :
                                             context.createTenantContextNoAccountId(request);
-        final VersionedCatalog catalog = (VersionedCatalog) catalogUserApi.getCatalog(catalogName, tenantContext);
+        final VersionedCatalog<? extends StaticCatalog> catalog = catalogUserApi.getCatalog(catalogName, null, tenantContext);
 
         final List<DateTime> result = new ArrayList<DateTime>();
-        for (final StandaloneCatalog v : catalog.getVersions()) {
+        for (final StaticCatalog v : catalog.getVersions()) {
             result.add(new DateTime(v.getEffectiveDate()));
         }
 

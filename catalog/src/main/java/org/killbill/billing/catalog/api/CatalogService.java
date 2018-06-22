@@ -1,6 +1,6 @@
 /*
- * Copyright 2014-2017 Groupon, Inc
- * Copyright 2014-2017 The Billing Project, LLC
+ * Copyright 2014-2018 Groupon, Inc
+ * Copyright 2014-2018 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -18,6 +18,7 @@
 package org.killbill.billing.catalog.api;
 
 import org.killbill.billing.callcontext.InternalTenantContext;
+import org.killbill.billing.catalog.DefaultVersionedCatalog;
 import org.killbill.billing.platform.api.KillbillService;
 
 /**
@@ -25,11 +26,11 @@ import org.killbill.billing.platform.api.KillbillService;
  */
 public interface CatalogService extends KillbillService {
 
-    public Catalog getFullCatalog(boolean useDefaultCatalog, final boolean filterTemplateCatalog, InternalTenantContext context) throws CatalogApiException;
+    public DefaultVersionedCatalog getFullCatalog(boolean useDefaultCatalog, final boolean filterTemplateCatalog, InternalTenantContext context) throws CatalogApiException;
 
-    public Catalog getFullCatalogForInternalUse(boolean useDefaultCatalog, final boolean filterTemplateCatalog, InternalTenantContext context) throws CatalogApiException;
+    public DefaultVersionedCatalog getFullCatalogForInternalUse(boolean useDefaultCatalog, final boolean filterTemplateCatalog, InternalTenantContext context) throws CatalogApiException;
 
-    public StaticCatalog getCurrentCatalog(boolean useDefaultCatalog, final boolean filterTemplateCatalog, InternalTenantContext context) throws CatalogApiException;
+    public DefaultVersionedCatalog getCurrentCatalog(boolean useDefaultCatalog, final boolean filterTemplateCatalog, InternalTenantContext context) throws CatalogApiException;
 
-    public StaticCatalog getCurrentCatalogForInternalUse(boolean useDefaultCatalog, final boolean filterTemplateCatalog, InternalTenantContext context) throws CatalogApiException;
+    public DefaultVersionedCatalog getCurrentCatalogForInternalUse(boolean useDefaultCatalog, final boolean filterTemplateCatalog, InternalTenantContext context) throws CatalogApiException;
 }
