@@ -707,6 +707,8 @@ public class PaymentProcessor extends ProcessorBase {
                     newPaymentModelDao = paymentDao.getPayment(newPaymentModelDao.getId(), internalTenantContext);
                     newPaymentTransactionModelDao = paymentDao.getPaymentTransaction(newPaymentTransactionModelDao.getId(), internalTenantContext);
                 }
+            } else {
+                log.warn("Unable to find transaction={} from pluginTransactions={}", curPaymentTransactionModelDao, pluginTransactions);
             }
 
             transactionsModelDao.add(newPaymentTransactionModelDao);
