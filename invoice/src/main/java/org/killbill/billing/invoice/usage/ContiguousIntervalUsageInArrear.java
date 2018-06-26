@@ -264,7 +264,7 @@ public class ContiguousIntervalUsageInArrear {
         }
 
         // Optimize path where all raw usage items are outside or our transitionTimes range
-        if (prevRawUsage.getDate().compareTo(transitionTimes.get(transitionTimes.size() - 1)) >= 0) {
+        if (prevRawUsage == null || prevRawUsage.getDate().compareTo(transitionTimes.get(transitionTimes.size() - 1)) >= 0) {
             return ImmutableList.of();
         }
 
