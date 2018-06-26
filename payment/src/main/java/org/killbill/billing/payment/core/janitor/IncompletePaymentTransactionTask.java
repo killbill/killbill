@@ -212,19 +212,17 @@ public class IncompletePaymentTransactionTask extends CompletionTaskBase<Payment
                 break;
             case UNKNOWN:
             default:
-                if (transactionStatus != paymentTransaction.getTransactionStatus()) {
-                    log.info("Unable to repair paymentId='{}', paymentTransactionId='{}', currentTransactionStatus='{}', newTransactionStatus='{}'",
-                             payment.getId(), paymentTransaction.getId(), paymentTransaction.getTransactionStatus(), transactionStatus);
-                }
                 // We can't get anything interesting from the plugin...
+                log.info("Unable to repair paymentId='{}', paymentTransactionId='{}', currentTransactionStatus='{}', newTransactionStatus='{}'",
+                         payment.getId(), paymentTransaction.getId(), paymentTransaction.getTransactionStatus(), transactionStatus);
                 insertNewNotificationForUnresolvedTransactionIfNeeded(paymentTransaction.getId(), transactionStatus, attemptNumber, userToken, internalTenantContext.getAccountRecordId(), internalTenantContext.getTenantRecordId());
                 return false;
         }
 
         // Our status did not change, so we just insert a new notification (attemptNumber will be incremented)
         if (transactionStatus == paymentTransaction.getTransactionStatus()) {
-            log.debug("Janitor IncompletePaymentTransactionTask repairing payment {}, transaction {}, transitioning transactionStatus from {} -> {}",
-                      payment.getId(), paymentTransaction.getId(), paymentTransaction.getTransactionStatus(), transactionStatus);
+            log.info("Unable to repair paymentId='{}', paymentTransactionId='{}', currentTransactionStatus='{}', newTransactionStatus='{}'",
+                     payment.getId(), paymentTransaction.getId(), paymentTransaction.getTransactionStatus(), transactionStatus);
             insertNewNotificationForUnresolvedTransactionIfNeeded(paymentTransaction.getId(), transactionStatus, attemptNumber, userToken, internalTenantContext.getAccountRecordId(), internalTenantContext.getTenantRecordId());
             return false;
         }
