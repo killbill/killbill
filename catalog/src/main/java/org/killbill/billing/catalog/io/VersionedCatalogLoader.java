@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014-2016 Groupon, Inc
- * Copyright 2014-2016 The Billing Project, LLC
+ * Copyright 2014-2018 Groupon, Inc
+ * Copyright 2014-2018 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -32,16 +32,15 @@ import javax.xml.bind.JAXBException;
 import javax.xml.transform.TransformerException;
 
 import org.killbill.billing.ErrorCode;
+import org.killbill.billing.catalog.DefaultVersionedCatalog;
 import org.killbill.billing.catalog.StandaloneCatalog;
 import org.killbill.billing.catalog.StandaloneCatalogWithPriceOverride;
-import org.killbill.billing.catalog.VersionedCatalog;
 import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.catalog.api.InvalidConfigException;
 import org.killbill.billing.catalog.override.PriceOverride;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.clock.Clock;
 import org.killbill.xmlloader.UriAccessor;
-import org.killbill.xmlloader.ValidationErrors;
 import org.killbill.xmlloader.ValidationException;
 import org.killbill.xmlloader.XMLLoader;
 import org.slf4j.Logger;
@@ -70,7 +69,7 @@ public class VersionedCatalogLoader implements CatalogLoader {
     }
 
     @Override
-    public VersionedCatalog loadDefaultCatalog(final String uriString) throws CatalogApiException {
+    public DefaultVersionedCatalog loadDefaultCatalog(final String uriString) throws CatalogApiException {
         try {
             final List<URI> xmlURIs;
             if (uriString.endsWith(XML_EXTENSION)) { // Assume its an xml file
@@ -82,7 +81,7 @@ public class VersionedCatalogLoader implements CatalogLoader {
                 xmlURIs = findXmlReferences(directoryContents, url);
             }
 
-            final VersionedCatalog result = new VersionedCatalog(clock);
+            final DefaultVersionedCatalog result = new DefaultVersionedCatalog(clock);
             for (final URI u : xmlURIs) {
                 final StandaloneCatalog catalog = XMLLoader.getObjectFromUri(u, StandaloneCatalog.class);
                 result.add(new StandaloneCatalogWithPriceOverride(catalog, priceOverride, InternalCallContextFactory.INTERNAL_TENANT_RECORD_ID, internalCallContextFactory));
@@ -96,7 +95,7 @@ public class VersionedCatalogLoader implements CatalogLoader {
         } catch (final JAXBException e) {
             logger.warn("Failed to load default catalog", e);
             throw new CatalogApiException(e, ErrorCode.CAT_INVALID_DEFAULT, uriString);
-        } catch(IllegalArgumentException e) {
+        } catch (IllegalArgumentException e) {
             logger.warn("Failed to load default catalog", e);
             throw new CatalogApiException(e, ErrorCode.CAT_INVALID_DEFAULT, uriString);
         } catch (Exception e) {
@@ -115,8 +114,8 @@ public class VersionedCatalogLoader implements CatalogLoader {
         return Resources.getResource(urlString);
     }
 
-    public VersionedCatalog load(final Iterable<String> catalogXMLs, final boolean filterTemplateCatalog, final Long tenantRecordId) throws CatalogApiException {
-        final VersionedCatalog result = new VersionedCatalog(clock);
+    public DefaultVersionedCatalog load(final Iterable<String> catalogXMLs, final boolean filterTemplateCatalog, final Long tenantRecordId) throws CatalogApiException {
+        final DefaultVersionedCatalog result = new DefaultVersionedCatalog(clock);
         final URI uri;
         try {
             uri = new URI("/tenantCatalog");
@@ -131,25 +130,25 @@ public class VersionedCatalogLoader implements CatalogLoader {
             XMLLoader.initializeAndValidate(uri, result);
             return result;
         } catch (final ValidationException e) {
-            logger.warn("Failed to load catalog for tenantRecordId='{}'",  tenantRecordId, e);
+            logger.warn("Failed to load catalog for tenantRecordId='{}'", tenantRecordId, e);
             throw new CatalogApiException(e, ErrorCode.CAT_INVALID_FOR_TENANT, tenantRecordId);
         } catch (final JAXBException e) {
-            logger.warn("Failed to load catalog for tenantRecordId='{}'",  tenantRecordId, e);
+            logger.warn("Failed to load catalog for tenantRecordId='{}'", tenantRecordId, e);
             throw new CatalogApiException(e, ErrorCode.CAT_INVALID_FOR_TENANT, tenantRecordId);
         } catch (final IOException e) {
-            logger.warn("Failed to load catalog for tenantRecordId='{}'",  tenantRecordId, e);
+            logger.warn("Failed to load catalog for tenantRecordId='{}'", tenantRecordId, e);
             throw new IllegalStateException(e);
         } catch (final TransformerException e) {
-            logger.warn("Failed to load catalog for tenantRecordId='{}'",  tenantRecordId, e);
+            logger.warn("Failed to load catalog for tenantRecordId='{}'", tenantRecordId, e);
             throw new IllegalStateException(e);
         } catch (final URISyntaxException e) {
-            logger.warn("Failed to load catalog for tenantRecordId='{}'",  tenantRecordId, e);
+            logger.warn("Failed to load catalog for tenantRecordId='{}'", tenantRecordId, e);
             throw new IllegalStateException(e);
         } catch (final SAXException e) {
-            logger.warn("Failed to load catalog for tenantRecordId='{}'",  tenantRecordId, e);
+            logger.warn("Failed to load catalog for tenantRecordId='{}'", tenantRecordId, e);
             throw new IllegalStateException(e);
         } catch (final InvalidConfigException e) {
-            logger.warn("Failed to load catalog for tenantRecordId='{}'",  tenantRecordId, e);
+            logger.warn("Failed to load catalog for tenantRecordId='{}'", tenantRecordId, e);
             throw new IllegalStateException(e);
         }
     }

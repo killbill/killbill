@@ -18,6 +18,7 @@
 
 package org.killbill.billing.jaxrs.resources;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -40,19 +41,21 @@ import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDate;
 import org.killbill.billing.account.api.AccountUserApi;
-import org.killbill.billing.catalog.StandaloneCatalog;
-import org.killbill.billing.catalog.VersionedCatalog;
+import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.catalog.api.CatalogUserApi;
+import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.catalog.api.CurrencyValueNull;
 import org.killbill.billing.catalog.api.Listing;
 import org.killbill.billing.catalog.api.Plan;
 import org.killbill.billing.catalog.api.PlanPhase;
 import org.killbill.billing.catalog.api.PriceList;
 import org.killbill.billing.catalog.api.Product;
+import org.killbill.billing.catalog.api.ProductCategory;
 import org.killbill.billing.catalog.api.SimplePlanDescriptor;
 import org.killbill.billing.catalog.api.StaticCatalog;
-import org.killbill.billing.catalog.api.user.DefaultSimplePlanDescriptor;
+import org.killbill.billing.catalog.api.TimeUnit;
+import org.killbill.billing.catalog.api.VersionedCatalog;
 import org.killbill.billing.entitlement.api.Subscription;
 import org.killbill.billing.entitlement.api.SubscriptionApi;
 import org.killbill.billing.entitlement.api.SubscriptionApiException;
@@ -134,20 +137,11 @@ public class CatalogResource extends JaxRsResourceBase {
                                             DATE_TIME_FORMATTER.parseDateTime(requestedDate).toDateTime(DateTimeZone.UTC) :
                                             null;
 
-        final VersionedCatalog catalog = (VersionedCatalog) catalogUserApi.getCatalog(catalogName, tenantContext);
-        final String result;
-        if (catalogDateVersion != null) {
-            final VersionedCatalog oneVersionCatalog = new VersionedCatalog();
-            for (final StandaloneCatalog v : catalog.getVersions()) {
-                if (v.getEffectiveDate().compareTo(catalogDateVersion.toDate()) >= 0) {
-                    oneVersionCatalog.add(v);
-                    break;
-                }
-            }
-            result = XMLWriter.writeXML(oneVersionCatalog, VersionedCatalog.class);
-        } else {
-            result = XMLWriter.writeXML(catalog, VersionedCatalog.class);
-        }
+        final VersionedCatalog<? extends StaticCatalog> catalog = catalogUserApi.getCatalog(catalogName, catalogDateVersion, tenantContext);
+
+        // This assumes serializableClass has the right JAXB annotations
+        final Class serializableClass = catalog.getClass();
+        final String result = XMLWriter.writeXML(catalog, serializableClass);
 
         return Response.status(Status.OK).entity(result).build();
     }
@@ -214,14 +208,13 @@ public class CatalogResource extends JaxRsResourceBase {
                                             DATE_TIME_FORMATTER.parseDateTime(requestedDate).toDateTime(DateTimeZone.UTC) :
                                             null;
 
-        // Yack...
-        final VersionedCatalog catalog = (VersionedCatalog) catalogUserApi.getCatalog(catalogName, tenantContext);
+        final VersionedCatalog<? extends StaticCatalog> catalog = catalogUserApi.getCatalog(catalogName, null, tenantContext);
 
         final List<CatalogJson> result = new ArrayList<CatalogJson>();
         if (catalogDateVersion != null) {
             result.add(new CatalogJson(catalog, catalogDateVersion));
         } else {
-            for (final StandaloneCatalog v : catalog.getVersions()) {
+            for (final StaticCatalog v : catalog.getVersions()) {
                 result.add(new CatalogJson(catalog, new DateTime(v.getEffectiveDate())));
             }
         }
@@ -239,10 +232,10 @@ public class CatalogResource extends JaxRsResourceBase {
         final TenantContext tenantContext = accountId != null ?
                                             context.createTenantContextWithAccountId(accountId, request) :
                                             context.createTenantContextNoAccountId(request);
-        final VersionedCatalog catalog = (VersionedCatalog) catalogUserApi.getCatalog(catalogName, tenantContext);
+        final VersionedCatalog<? extends StaticCatalog> catalog = catalogUserApi.getCatalog(catalogName, null, tenantContext);
 
         final List<DateTime> result = new ArrayList<DateTime>();
-        for (final StandaloneCatalog v : catalog.getVersions()) {
+        for (final StaticCatalog v : catalog.getVersions()) {
             result.add(new DateTime(v.getEffectiveDate()));
         }
 
@@ -454,15 +447,53 @@ public class CatalogResource extends JaxRsResourceBase {
                                   @javax.ws.rs.core.Context final UriInfo uriInfo) throws Exception {
         final CallContext callContext = context.createCallContextNoAccountId(createdBy, reason, comment, request);
 
-        final SimplePlanDescriptor desc = new DefaultSimplePlanDescriptor(simplePlan.getPlanId(),
-                                                                          simplePlan.getProductName(),
-                                                                          simplePlan.getProductCategory(),
-                                                                          simplePlan.getCurrency(),
-                                                                          simplePlan.getAmount(),
-                                                                          simplePlan.getBillingPeriod(),
-                                                                          simplePlan.getTrialLength(),
-                                                                          simplePlan.getTrialTimeUnit(),
-                                                                          simplePlan.getAvailableBaseProducts());
+        final SimplePlanDescriptor desc = new SimplePlanDescriptor() {
+            @Override
+            public String getPlanId() {
+                return simplePlan.getPlanId();
+            }
+
+            @Override
+            public String getProductName() {
+                return simplePlan.getProductName();
+            }
+
+            @Override
+            public ProductCategory getProductCategory() {
+                return simplePlan.getProductCategory();
+            }
+
+            @Override
+            public List<String> getAvailableBaseProducts() {
+                return simplePlan.getAvailableBaseProducts();
+            }
+
+            @Override
+            public Currency getCurrency() {
+                return simplePlan.getCurrency();
+            }
+
+            @Override
+            public BigDecimal getAmount() {
+                return simplePlan.getAmount();
+            }
+
+            @Override
+            public BillingPeriod getBillingPeriod() {
+                return simplePlan.getBillingPeriod();
+            }
+
+            @Override
+            public Integer getTrialLength() {
+                return simplePlan.getTrialLength();
+            }
+
+            @Override
+            public TimeUnit getTrialTimeUnit() {
+                return simplePlan.getTrialTimeUnit();
+            }
+        };
+
         catalogUserApi.addSimplePlan(desc, null, callContext);
         return uriBuilder.buildResponse(uriInfo, CatalogResource.class, null, null, request);
     }

@@ -28,7 +28,6 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.TimeoutException;
 
-import javax.annotation.Nullable;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
@@ -52,7 +51,6 @@ import org.killbill.billing.account.api.AccountApiException;
 import org.killbill.billing.account.api.AccountUserApi;
 import org.killbill.billing.catalog.api.BillingActionPolicy;
 import org.killbill.billing.catalog.api.CatalogApiException;
-import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.catalog.api.PhaseType;
 import org.killbill.billing.catalog.api.PlanPhasePriceOverride;
 import org.killbill.billing.catalog.api.PlanPhaseSpecifier;
@@ -81,7 +79,6 @@ import org.killbill.billing.jaxrs.json.BlockingStateJson;
 import org.killbill.billing.jaxrs.json.BulkSubscriptionsBundleJson;
 import org.killbill.billing.jaxrs.json.BundleJson;
 import org.killbill.billing.jaxrs.json.CustomFieldJson;
-import org.killbill.billing.jaxrs.json.PhasePriceJson;
 import org.killbill.billing.jaxrs.json.SubscriptionJson;
 import org.killbill.billing.jaxrs.json.TagJson;
 import org.killbill.billing.jaxrs.util.Context;
@@ -116,6 +113,9 @@ import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
+import static org.killbill.billing.jaxrs.resources.SubscriptionResourceHelpers.buildBaseEntitlementWithAddOnsSpecifier;
+import static org.killbill.billing.jaxrs.resources.SubscriptionResourceHelpers.buildEntitlementSpecifier;
+import static org.killbill.billing.jaxrs.resources.SubscriptionResourceHelpers.buildPlanPhasePriceOverrides;
 
 @Path(JaxrsResource.SUBSCRIPTIONS_PATH)
 @Api(value = JaxrsResource.SUBSCRIPTIONS_PATH, description = "Operations on subscriptions", tags = "Subscription")
@@ -353,85 +353,6 @@ public class SubscriptionResource extends JaxRsResourceBase {
         return callCompletionCreation.withSynchronization(callback, timeoutSec, callCompletion, callContext);
     }
 
-    private void buildEntitlementSpecifier(final SubscriptionJson subscriptionJson,
-                                           final Currency currency,
-                                           final Collection<EntitlementSpecifier> entitlementSpecifierList) {
-        if (subscriptionJson.getPlanName() == null &&
-            (subscriptionJson.getProductName() == null ||
-             subscriptionJson.getProductCategory() == null ||
-             subscriptionJson.getBillingPeriod() == null ||
-             subscriptionJson.getPriceList() == null)) {
-            return;
-        }
-
-        final PlanPhaseSpecifier planPhaseSpecifier = subscriptionJson.getPlanName() != null ?
-                                                      new PlanPhaseSpecifier(subscriptionJson.getPlanName(), null) :
-                                                      new PlanPhaseSpecifier(subscriptionJson.getProductName(),
-                                                                             subscriptionJson.getBillingPeriod(),
-                                                                             subscriptionJson.getPriceList(),
-                                                                             subscriptionJson.getPhaseType());
-        final List<PlanPhasePriceOverride> overrides = PhasePriceJson.toPlanPhasePriceOverrides(subscriptionJson.getPriceOverrides(),
-                                                                                                planPhaseSpecifier,
-                                                                                                currency);
-
-        final EntitlementSpecifier specifier = new EntitlementSpecifier() {
-            @Override
-            public PlanPhaseSpecifier getPlanPhaseSpecifier() {
-                return planPhaseSpecifier;
-            }
-
-            @Override
-            public Integer getBillCycleDay() {
-                return null;
-            }
-
-            @Override
-            public List<PlanPhasePriceOverride> getOverrides() {
-                return overrides;
-            }
-        };
-        entitlementSpecifierList.add(specifier);
-    }
-
-    private BaseEntitlementWithAddOnsSpecifier buildBaseEntitlementWithAddOnsSpecifier(final Iterable<EntitlementSpecifier> entitlementSpecifierList,
-                                                                                       final LocalDate resolvedEntitlementDate,
-                                                                                       final LocalDate resolvedBillingDate,
-                                                                                       @Nullable final UUID bundleId,
-                                                                                       @Nullable final String bundleExternalKey,
-                                                                                       final Boolean isMigrated) {
-        return new BaseEntitlementWithAddOnsSpecifier() {
-            @Override
-            public UUID getBundleId() {
-                return bundleId;
-            }
-
-            @Override
-            public String getExternalKey() {
-                return bundleExternalKey;
-            }
-
-            @Override
-            public Iterable<EntitlementSpecifier> getEntitlementSpecifier() {
-                return entitlementSpecifierList;
-            }
-
-            @Override
-            public LocalDate getEntitlementEffectiveDate() {
-                return resolvedEntitlementDate;
-            }
-
-            @Override
-            public LocalDate getBillingEffectiveDate() {
-                return resolvedBillingDate;
-            }
-
-            @Override
-            public boolean isMigrated() {
-                return isMigrated;
-            }
-        };
-    }
-
     private Map<String, String> buildQueryParams(final Iterable<String> bundleIdList) {
         Map<String, String> queryParams = new HashMap<String, String>();
         String value = "";
@@ -534,7 +455,7 @@ public class SubscriptionResource extends JaxRsResourceBase {
                                                     new PlanPhaseSpecifier(entitlement.getPlanName(), phaseType) :
                                                     new PlanPhaseSpecifier(entitlement.getProductName(),
                                                                            entitlement.getBillingPeriod(), entitlement.getPriceList(), phaseType);
-                final List<PlanPhasePriceOverride> overrides = PhasePriceJson.toPlanPhasePriceOverrides(entitlement.getPriceOverrides(), planSpec, account.getCurrency());
+                final List<PlanPhasePriceOverride> overrides = buildPlanPhasePriceOverrides(entitlement.getPriceOverrides(), account.getCurrency(), planSpec);
 
                 if (requestedDate == null && billingPolicy == null) {
                     newEntitlement = current.changePlan(new DefaultEntitlementSpecifier(planSpec, null, overrides), pluginProperties, ctx);

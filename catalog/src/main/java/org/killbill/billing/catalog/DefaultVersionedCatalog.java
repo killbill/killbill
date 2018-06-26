@@ -28,7 +28,6 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
@@ -49,7 +48,6 @@ import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.catalog.api.Listing;
 import org.killbill.billing.catalog.api.Plan;
-import org.killbill.billing.catalog.api.PlanAlignmentChange;
 import org.killbill.billing.catalog.api.PlanAlignmentCreate;
 import org.killbill.billing.catalog.api.PlanChangeResult;
 import org.killbill.billing.catalog.api.PlanPhase;
@@ -61,6 +59,7 @@ import org.killbill.billing.catalog.api.PriceListSet;
 import org.killbill.billing.catalog.api.Product;
 import org.killbill.billing.catalog.api.StaticCatalog;
 import org.killbill.billing.catalog.api.Unit;
+import org.killbill.billing.catalog.api.VersionedCatalog;
 import org.killbill.billing.util.cache.ExternalizableInput;
 import org.killbill.billing.util.cache.ExternalizableOutput;
 import org.killbill.billing.util.cache.MapperHolder;
@@ -71,7 +70,7 @@ import org.killbill.xmlloader.ValidationErrors;
 
 @XmlRootElement(name = "catalogs")
 @XmlAccessorType(XmlAccessType.NONE)
-public class VersionedCatalog extends ValidatingConfig<VersionedCatalog> implements Catalog, StaticCatalog, Externalizable {
+public class DefaultVersionedCatalog extends ValidatingConfig<DefaultVersionedCatalog> implements VersionedCatalog<StandaloneCatalog>, Externalizable {
 
     private static final long serialVersionUID = 3181874902672322725L;
 
@@ -85,12 +84,12 @@ public class VersionedCatalog extends ValidatingConfig<VersionedCatalog> impleme
     private String catalogName;
 
     // Required for JAXB deserialization
-    public VersionedCatalog() {
+    public DefaultVersionedCatalog() {
         this.clock = null;
         this.versions = new ArrayList<StandaloneCatalog>();
     }
 
-    public VersionedCatalog(final Clock clock) {
+    public DefaultVersionedCatalog(final Clock clock) {
         this.clock = clock;
         this.versions = new ArrayList<StandaloneCatalog>();
     }
@@ -188,17 +187,9 @@ public class VersionedCatalog extends ValidatingConfig<VersionedCatalog> impleme
         return clock;
     }
 
+    @Override
     public List<StandaloneCatalog> getVersions() {
         return versions;
-    }
-
-    //
-    // Public methods not exposed in interface
-    //
-    public void addAll(final Iterable<StandaloneCatalog> inputVersions) {
-        for (final StandaloneCatalog cur : inputVersions) {
-            add(cur);
-        }
     }
 
     public void add(final StandaloneCatalog e) {
@@ -212,14 +203,6 @@ public class VersionedCatalog extends ValidatingConfig<VersionedCatalog> impleme
                 return c1.getEffectiveDate().compareTo(c2.getEffectiveDate());
             }
         });
-    }
-
-    public Iterator<StandaloneCatalog> iterator() {
-        return versions.iterator();
-    }
-
-    public int size() {
-        return versions.size();
     }
 
     @Override
@@ -352,7 +335,7 @@ public class VersionedCatalog extends ValidatingConfig<VersionedCatalog> impleme
     }
 
     @Override
-    public void initialize(final VersionedCatalog catalog, final URI sourceURI) {
+    public void initialize(final DefaultVersionedCatalog catalog, final URI sourceURI) {
         //
         // Initialization is performed first on each StandaloneCatalog (XMLLoader#initializeAndValidate)
         // and then later on the VersionedCatalog, so we only initialize and validate VersionedCatalog
@@ -363,7 +346,7 @@ public class VersionedCatalog extends ValidatingConfig<VersionedCatalog> impleme
     }
 
     @Override
-    public ValidationErrors validate(final VersionedCatalog catalog, final ValidationErrors errors) {
+    public ValidationErrors validate(final DefaultVersionedCatalog catalog, final ValidationErrors errors) {
         final Set<Date> effectiveDates = new TreeSet<Date>();
 
         for (final StandaloneCatalog c : versions) {

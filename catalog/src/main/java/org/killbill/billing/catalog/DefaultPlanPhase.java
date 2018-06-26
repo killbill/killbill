@@ -68,7 +68,7 @@ public class DefaultPlanPhase extends ValidatingConfig<StandaloneCatalog> implem
     @XmlElement(name = "usage", required = false)
     private DefaultUsage[] usages;
 
-    //Not exposed in XML
+    // Not exposed in XML
     private Plan plan;
 
     public DefaultPlanPhase() {
