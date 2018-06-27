@@ -79,7 +79,6 @@ public class MockAccountUserApi implements AccountUserApi {
                 .postalCode(postalCode)
                 .phone(phone)
                 .notes(notes)
-                .isNotifiedForInvoices(false)
                 .build();
         accounts.add(result);
         return result;

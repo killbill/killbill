@@ -51,7 +51,6 @@ public class AccountChecker {
             Assert.assertEquals(account.getFirstNameLength(), accountData.getFirstNameLength());
             Assert.assertEquals(account.getEmail(), accountData.getEmail());
             Assert.assertEquals(account.getPhone(), accountData.getPhone());
-            Assert.assertEquals(account.isNotifiedForInvoices(), accountData.isNotifiedForInvoices());
             Assert.assertEquals(account.getExternalKey(), accountData.getExternalKey());
             Assert.assertEquals(account.getBillCycleDayLocal(), accountData.getBillCycleDayLocal());
             Assert.assertEquals(account.getCurrency(), accountData.getCurrency());

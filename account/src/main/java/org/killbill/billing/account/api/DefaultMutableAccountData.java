@@ -51,7 +51,6 @@ public class DefaultMutableAccountData implements MutableAccountData {
     private String phone;
     private String notes;
     private Boolean isMigrated;
-    private Boolean isNotifiedForInvoices;
 
     public DefaultMutableAccountData(final String externalKey, final String email, final String name,
                                      final int firstNameLength, final Currency currency,
@@ -60,7 +59,7 @@ public class DefaultMutableAccountData implements MutableAccountData {
                                      final DateTimeZone timeZone, final String locale, final String address1, final String address2,
                                      final String companyName, final String city, final String stateOrProvince,
                                      final String country, final String postalCode, final String phone,
-                                     final String notes, final boolean isMigrated, final boolean isNotifiedForInvoices) {
+                                     final String notes, final boolean isMigrated) {
         this.externalKey = externalKey;
         this.email = email;
         this.name = name;
@@ -83,7 +82,6 @@ public class DefaultMutableAccountData implements MutableAccountData {
         this.phone = phone;
         this.notes = notes;
         this.isMigrated = isMigrated;
-        this.isNotifiedForInvoices = isNotifiedForInvoices;
     }
 
     public DefaultMutableAccountData(final AccountData accountData) {
@@ -109,7 +107,6 @@ public class DefaultMutableAccountData implements MutableAccountData {
         this.phone = accountData.getPhone();
         this.notes = accountData.getNotes();
         this.isMigrated = accountData.isMigrated();
-        this.isNotifiedForInvoices = accountData.isNotifiedForInvoices();
     }
 
     @Override
@@ -309,18 +306,8 @@ public class DefaultMutableAccountData implements MutableAccountData {
     }
 
     @Override
-    public Boolean isNotifiedForInvoices() {
-        return isNotifiedForInvoices;
-    }
-
-    @Override
     public void setIsMigrated(final boolean isMigrated) {
         this.isMigrated = isMigrated;
-    }
-
-    @Override
-    public void setIsNotifiedForInvoices(final boolean isNotifiedForInvoices) {
-        this.isNotifiedForInvoices = isNotifiedForInvoices;
     }
 
     @Override

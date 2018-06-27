@@ -66,7 +66,7 @@ public class TestAccountDao extends AccountTestSuiteWithEmbeddedDB {
         final AccountData accountData = new DefaultMutableAccountData(null, email, name, 0, null, null, false,
                                                                       0, null, clock.getUTCNow(), null, null, null,
                                                                       null, null, null, null, null,
-                                                                      null, null, null, false, true);
+                                                                      null, null, null, false);
         final AccountModelDao account = new AccountModelDao(UUID.randomUUID(), accountData);
         accountDao.create(account, internalCallContext);
 
@@ -222,12 +222,10 @@ public class TestAccountDao extends AccountTestSuiteWithEmbeddedDB {
         Assert.assertEquals(history1.getTenantRecordId(), createdAccount.getTenantRecordId());
         Assert.assertEquals(history1.getExternalKey(), createdAccount.getExternalKey());
         Assert.assertEquals(history1.getMigrated(), createdAccount.getMigrated());
-        Assert.assertEquals(history1.getIsNotifiedForInvoices(), createdAccount.getIsNotifiedForInvoices());
         Assert.assertEquals(history1.getTimeZone(), createdAccount.getTimeZone());
         Assert.assertEquals(history1.getLocale(), createdAccount.getLocale());
 
         final AccountData accountData = new MockAccountBuilder(new DefaultAccount(account)).migrated(false)
-                                                                                           .isNotifiedForInvoices(false)
                                                                                            .timeZone(DateTimeZone.forID("Australia/Darwin"))
                                                                                            .locale("FR-CA")
                                                                                            .build();
@@ -246,12 +244,10 @@ public class TestAccountDao extends AccountTestSuiteWithEmbeddedDB {
         Assert.assertEquals(history2.getTenantRecordId(), retrievedAccount.getTenantRecordId());
         Assert.assertEquals(history2.getExternalKey(), retrievedAccount.getExternalKey());
         Assert.assertEquals(history2.getMigrated(), retrievedAccount.getMigrated());
-        Assert.assertEquals(history2.getIsNotifiedForInvoices(), retrievedAccount.getIsNotifiedForInvoices());
         Assert.assertEquals(history2.getTimeZone(), retrievedAccount.getTimeZone());
         Assert.assertEquals(history2.getLocale(), retrievedAccount.getLocale());
 
-        final AccountData accountData2 = new MockAccountBuilder(new DefaultAccount(updatedAccount)).isNotifiedForInvoices(true)
-                                                                                                   .locale("en_US")
+        final AccountData accountData2 = new MockAccountBuilder(new DefaultAccount(updatedAccount)).locale("en_US")
                                                                                                    .build();
         final AccountModelDao updatedAccount2 = new AccountModelDao(account.getId(), accountData2);
         accountDao.update(updatedAccount2, internalCallContext);
@@ -269,7 +265,6 @@ public class TestAccountDao extends AccountTestSuiteWithEmbeddedDB {
         Assert.assertEquals(history3.getTenantRecordId(), retrievedAccount2.getTenantRecordId());
         Assert.assertEquals(history3.getExternalKey(), retrievedAccount2.getExternalKey());
         Assert.assertEquals(history3.getMigrated(), retrievedAccount2.getMigrated());
-        Assert.assertEquals(history3.getIsNotifiedForInvoices(), retrievedAccount2.getIsNotifiedForInvoices());
         Assert.assertEquals(history3.getTimeZone(), retrievedAccount2.getTimeZone());
         Assert.assertEquals(history3.getLocale(), retrievedAccount2.getLocale());
     }

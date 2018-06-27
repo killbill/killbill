@@ -61,8 +61,6 @@ public class AccountModelDao extends EntityModelDaoBase implements TimeZoneAware
     private String phone;
     private String notes;
     private Boolean migrated;
-    private Boolean isNotifiedForInvoices;
-
 
     public AccountModelDao() { /* For the DAO mapper */ }
 
@@ -72,7 +70,7 @@ public class AccountModelDao extends EntityModelDaoBase implements TimeZoneAware
                            final int billingCycleDayLocal, final UUID paymentMethodId, final DateTime referenceTime, final DateTimeZone timeZone,
                            final String locale, final String address1, final String address2, final String companyName,
                            final String city, final String stateOrProvince, final String country, final String postalCode,
-                           final String phone, final String notes, final Boolean migrated, final Boolean notifiedForInvoices) {
+                           final String phone, final String notes, final Boolean migrated) {
         super(id, createdDate, updatedDate);
         this.externalKey = MoreObjects.firstNonNull(externalKey, id.toString());
         this.email = email;
@@ -96,7 +94,6 @@ public class AccountModelDao extends EntityModelDaoBase implements TimeZoneAware
         this.phone = phone;
         this.notes = notes;
         this.migrated = migrated;
-        this.isNotifiedForInvoices = notifiedForInvoices;
     }
 
     private AccountModelDao(final UUID id, @Nullable final DateTime createdDate, @Nullable final DateTime updatedDate, final AccountData account) {
@@ -124,9 +121,7 @@ public class AccountModelDao extends EntityModelDaoBase implements TimeZoneAware
              account.getPostalCode(),
              account.getPhone(),
              account.getNotes(),
-             account.isMigrated(),
-             // There is a NOT NULL constraint on the is_notified_for_invoices column
-             MoreObjects.firstNonNull(account.isNotifiedForInvoices(), false));
+             account.isMigrated());
     }
 
 
@@ -327,16 +322,6 @@ public class AccountModelDao extends EntityModelDaoBase implements TimeZoneAware
         this.migrated = migrated;
     }
 
-    // TODO Required for making the BindBeanFactory with Introspector work
-    // see Introspector line 571; they look at public method.
-    public Boolean getIsNotifiedForInvoices() {
-        return isNotifiedForInvoices;
-    }
-
-    public void setIsNotifiedForInvoices(final Boolean isNotifiedForInvoices) {
-        this.isNotifiedForInvoices = isNotifiedForInvoices;
-    }
-
     @Override
     public String toString() {
         final StringBuilder sb = new StringBuilder();
@@ -363,7 +348,6 @@ public class AccountModelDao extends EntityModelDaoBase implements TimeZoneAware
         sb.append(", phone='").append(phone).append('\'');
         sb.append(", notes='").append(notes).append('\'');
         sb.append(", migrated=").append(migrated);
-        sb.append(", isNotifiedForInvoices=").append(isNotifiedForInvoices);
         sb.append('}');
         return sb.toString();
     }
@@ -421,9 +405,6 @@ public class AccountModelDao extends EntityModelDaoBase implements TimeZoneAware
         if (migrated != null ? !migrated.equals(that.migrated) : that.migrated != null) {
             return false;
         }
-        if (isNotifiedForInvoices != null ? !isNotifiedForInvoices.equals(that.isNotifiedForInvoices) : that.isNotifiedForInvoices != null) {
-            return false;
-        }
         if (locale != null ? !locale.equals(that.locale) : that.locale != null) {
             return false;
         }
@@ -479,7 +460,6 @@ public class AccountModelDao extends EntityModelDaoBase implements TimeZoneAware
         result = 31 * result + (phone != null ? phone.hashCode() : 0);
         result = 31 * result + (notes != null ? notes.hashCode() : 0);
         result = 31 * result + (migrated != null ? migrated.hashCode() : 0);
-        result = 31 * result + (isNotifiedForInvoices != null ? isNotifiedForInvoices.hashCode() : 0);
         return result;
     }
 

@@ -60,7 +60,6 @@ import org.killbill.billing.account.api.AccountApiException;
 import org.killbill.billing.account.api.AccountData;
 import org.killbill.billing.account.api.AccountEmail;
 import org.killbill.billing.account.api.AccountUserApi;
-import org.killbill.billing.account.api.MutableAccountData;
 import org.killbill.billing.catalog.api.BillingActionPolicy;
 import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.catalog.api.Currency;
@@ -87,7 +86,6 @@ import org.killbill.billing.jaxrs.json.AuditLogJson;
 import org.killbill.billing.jaxrs.json.BlockingStateJson;
 import org.killbill.billing.jaxrs.json.BundleJson;
 import org.killbill.billing.jaxrs.json.CustomFieldJson;
-import org.killbill.billing.jaxrs.json.InvoiceEmailJson;
 import org.killbill.billing.jaxrs.json.InvoiceJson;
 import org.killbill.billing.jaxrs.json.InvoicePaymentJson;
 import org.killbill.billing.jaxrs.json.OverdueStateJson;
@@ -628,53 +626,6 @@ public class AccountResource extends JaxRsResourceBase {
             }
             throw new RuntimeException(causeOrException.getMessage(), causeOrException);
         }
-    }
-
-    /*
-    * ************************** EMAIL NOTIFICATIONS FOR INVOICES ********************************
-    */
-
-    @TimedResource
-    @GET
-    @Path("/{accountId:" + UUID_PATTERN + "}/" + EMAIL_NOTIFICATIONS)
-    @Produces(APPLICATION_JSON)
-    @ApiOperation(value = "Retrieve account email notification", response = InvoiceEmailJson.class)
-    @ApiResponses(value = {@ApiResponse(code = 204, message = "Successful operation"),
-                           @ApiResponse(code = 400, message = "Invalid account id supplied"),
-                           @ApiResponse(code = 404, message = "Account not found")})
-    public Response getEmailNotificationsForAccount(@PathParam("accountId") final UUID accountId,
-                                                    @javax.ws.rs.core.Context final HttpServletRequest request) throws AccountApiException {
-        final Account account = accountUserApi.getAccountById(accountId, context.createTenantContextWithAccountId(accountId, request));
-        final InvoiceEmailJson invoiceEmailJson = new InvoiceEmailJson(accountId, account.isNotifiedForInvoices());
-
-        return Response.status(Status.OK).entity(invoiceEmailJson).build();
-    }
-
-    @TimedResource
-    @PUT
-    @Path("/{accountId:" + UUID_PATTERN + "}/" + EMAIL_NOTIFICATIONS)
-    @Consumes(APPLICATION_JSON)
-    @Produces(APPLICATION_JSON)
-    @ApiOperation(value = "Set account email notification")
-    @ApiResponses(value = {@ApiResponse(code = 204, message = "Successful operation"),
-                           @ApiResponse(code = 400, message = "Invalid account id supplied"),
-                           @ApiResponse(code = 404, message = "Account not found")})
-    public Response setEmailNotificationsForAccount(@PathParam("accountId") final UUID accountId,
-                                                    final InvoiceEmailJson json,
-                                                    @HeaderParam(HDR_CREATED_BY) final String createdBy,
-                                                    @HeaderParam(HDR_REASON) final String reason,
-                                                    @HeaderParam(HDR_COMMENT) final String comment,
-                                                    @javax.ws.rs.core.Context final HttpServletRequest request) throws AccountApiException {
-        verifyNonNullOrEmpty(json, "InvoiceEmailJson body should be specified");
-        final CallContext callContext = context.createCallContextWithAccountId(accountId, createdBy, reason, comment, request);
-
-        final Account account = accountUserApi.getAccountById(accountId, callContext);
-
-        final MutableAccountData mutableAccountData = account.toMutableAccountData();
-        mutableAccountData.setIsNotifiedForInvoices(json.isNotifiedForInvoices());
-        accountUserApi.updateAccount(accountId, mutableAccountData, callContext);
-
-        return Response.status(Status.NO_CONTENT).build();
     }
 
     /*

@@ -32,13 +32,11 @@ import org.killbill.billing.api.TestApiListener.NextEvent;
 import org.killbill.billing.beatrix.util.InvoiceChecker.ExpectedInvoiceItemCheck;
 import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.catalog.api.Currency;
-import org.killbill.billing.catalog.api.PlanPhasePriceOverride;
 import org.killbill.billing.catalog.api.PlanPhaseSpecifier;
 import org.killbill.billing.catalog.api.ProductCategory;
 import org.killbill.billing.entitlement.api.DefaultEntitlement;
 import org.killbill.billing.entitlement.api.DefaultEntitlementSpecifier;
 import org.killbill.billing.entitlement.api.Entitlement;
-import org.killbill.billing.entitlement.api.EntitlementSpecifier;
 import org.killbill.billing.entitlement.api.SubscriptionEventType;
 import org.killbill.billing.invoice.api.DryRunType;
 import org.killbill.billing.invoice.api.Invoice;
@@ -67,7 +65,6 @@ public class TestWithTimeZones extends TestIntegrationBase {
                                                                 .email(UUID.randomUUID().toString().substring(1, 8))
                                                                 .phone(UUID.randomUUID().toString().substring(1, 8))
                                                                 .migrated(false)
-                                                                .isNotifiedForInvoices(false)
                                                                 .externalKey(UUID.randomUUID().toString().substring(1, 8))
                                                                 .billingCycleDayLocal(1)
                                                                 .currency(Currency.USD)
@@ -127,7 +124,6 @@ public class TestWithTimeZones extends TestIntegrationBase {
                                                                 .email(UUID.randomUUID().toString().substring(1, 8))
                                                                 .phone(UUID.randomUUID().toString().substring(1, 8))
                                                                 .migrated(false)
-                                                                .isNotifiedForInvoices(false)
                                                                 .externalKey(UUID.randomUUID().toString().substring(1, 8))
                                                                 .billingCycleDayLocal(1)
                                                                 .currency(Currency.USD)
@@ -174,7 +170,6 @@ public class TestWithTimeZones extends TestIntegrationBase {
                                                                 .email(UUID.randomUUID().toString().substring(1, 8))
                                                                 .phone(UUID.randomUUID().toString().substring(1, 8))
                                                                 .migrated(false)
-                                                                .isNotifiedForInvoices(false)
                                                                 .externalKey(UUID.randomUUID().toString().substring(1, 8))
                                                                 .billingCycleDayLocal(1)
                                                                 .currency(Currency.USD)

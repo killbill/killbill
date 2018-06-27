@@ -48,8 +48,6 @@ import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.catalog.api.Plan;
 import org.killbill.billing.catalog.api.PlanPhase;
-import org.killbill.billing.catalog.api.PlanPhasePriceOverride;
-import org.killbill.billing.catalog.api.PlanPhaseSpecifier;
 import org.killbill.billing.catalog.api.Usage;
 import org.killbill.billing.entitlement.api.EntitlementSpecifier;
 import org.killbill.billing.entitlement.api.SubscriptionEventType;
@@ -259,7 +257,6 @@ public class TestInvoiceHelper {
                                                             .email(UUID.randomUUID().toString().substring(1, 8))
                                                             .phone(UUID.randomUUID().toString().substring(1, 8))
                                                             .migrated(false)
-                                                            .isNotifiedForInvoices(true)
                                                             .externalKey(UUID.randomUUID().toString().substring(1, 8))
                                                             .billingCycleDayLocal(31)
                                                             .currency(accountCurrency)
