@@ -307,4 +307,36 @@ public class TestContiguousIntervalConsumableInArrear extends TestUsageInArrearB
         assertEquals(res.getTransitionTimes().size(), 0);
     }
 
+    @Test(groups = "fast")
+    public void testGetRolledUpUsageOnlyUsageBeforeTransitionTime() {
+
+        final DefaultTieredBlock tieredBlock1 = createDefaultTieredBlock("unit", 100, 1000, BigDecimal.ONE);
+        final DefaultTieredBlock tieredBlock2 = createDefaultTieredBlock("unit2", 10, 1000, BigDecimal.ONE);
+        final DefaultTier tier = createDefaultTierWithBlocks(tieredBlock1, tieredBlock2);
+
+
+        final DefaultUsage usage = createConsumableInArrearUsage(usageName, BillingPeriod.MONTHLY, tier);
+
+
+        final LocalDate t0 = new LocalDate(2015, 03, BCD);
+        final BillingEvent eventT0 = createMockBillingEvent(t0.toDateTimeAtStartOfDay(DateTimeZone.UTC), BillingPeriod.MONTHLY, Collections.<Usage>emptyList());
+
+        final LocalDate t1 = new LocalDate(2015, 04, BCD);
+        final BillingEvent eventT1 = createMockBillingEvent(t1.toDateTimeAtStartOfDay(DateTimeZone.UTC), BillingPeriod.MONTHLY, Collections.<Usage>emptyList());
+
+        final LocalDate targetDate = t1;
+
+
+        // Prev t0
+        final RawUsage raw1 = new DefaultRawUsage(subscriptionId, new LocalDate(2015, 03, 01), "unit", 12L);
+
+        final List<RawUsage> rawUsage = ImmutableList.of(raw1);
+
+        final ContiguousIntervalUsageInArrear intervalConsumableInArrear = createContiguousIntervalConsumableInArrear(usage, rawUsage, targetDate, true, eventT0, eventT1);
+
+
+        final List<RolledUpUsage> unsortedRolledUpUsage =  intervalConsumableInArrear.getRolledUpUsage();
+        Assert.assertEquals(unsortedRolledUpUsage.size(), 0);
+    }
+
 }
