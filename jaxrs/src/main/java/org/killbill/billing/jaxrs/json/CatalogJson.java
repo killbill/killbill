@@ -28,8 +28,8 @@ import java.util.List;
 import java.util.Map;
 
 import org.joda.time.DateTime;
-import org.killbill.billing.catalog.VersionedCatalog;
 import org.killbill.billing.catalog.api.BillingPeriod;
+import org.killbill.billing.catalog.api.Catalog;
 import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.catalog.api.CurrencyValueNull;
@@ -54,7 +54,6 @@ import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import io.swagger.annotations.ApiModel;
-import io.swagger.annotations.ApiModelProperty;
 
 @ApiModel(value="Catalog")
 public class CatalogJson {
@@ -81,8 +80,7 @@ public class CatalogJson {
         this.priceLists = priceLists;
     }
 
-
-    public CatalogJson(final VersionedCatalog catalog, final DateTime requestedDate) throws CatalogApiException {
+    public CatalogJson(final Catalog catalog, final DateTime requestedDate) throws CatalogApiException {
         name = catalog.getCatalogName();
         effectiveDate = catalog.getStandaloneCatalogEffectiveDate(requestedDate);
         currencies = Arrays.asList(catalog.getSupportedCurrencies(requestedDate));

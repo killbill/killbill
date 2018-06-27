@@ -130,7 +130,7 @@ public class CatalogUpdater {
 
         if (plan == null) {
 
-            plan = new DefaultPlan();
+            plan = new DefaultPlan(catalog);
             plan.setName(desc.getPlanId());
             plan.setPriceListName(PriceListSet.DEFAULT_PRICELIST_NAME);
             plan.setProduct(product);

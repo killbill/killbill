@@ -56,7 +56,6 @@ import org.killbill.billing.ObjectType;
 import org.killbill.billing.account.api.Account;
 import org.killbill.billing.account.api.AccountApiException;
 import org.killbill.billing.account.api.AccountUserApi;
-import org.killbill.billing.catalog.DefaultPlanPhasePriceOverride;
 import org.killbill.billing.catalog.api.BillingActionPolicy;
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.catalog.api.PlanPhasePriceOverride;
@@ -77,7 +76,6 @@ import org.killbill.billing.jaxrs.json.InvoiceDryRunJson;
 import org.killbill.billing.jaxrs.json.InvoiceItemJson;
 import org.killbill.billing.jaxrs.json.InvoiceJson;
 import org.killbill.billing.jaxrs.json.InvoicePaymentJson;
-import org.killbill.billing.jaxrs.json.PhasePriceJson;
 import org.killbill.billing.jaxrs.json.TagJson;
 import org.killbill.billing.jaxrs.util.Context;
 import org.killbill.billing.jaxrs.util.JaxrsUriBuilder;
@@ -124,6 +122,7 @@ import io.swagger.annotations.ApiResponses;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static javax.ws.rs.core.MediaType.TEXT_HTML;
 import static javax.ws.rs.core.MediaType.TEXT_PLAIN;
+import static org.killbill.billing.jaxrs.resources.SubscriptionResourceHelpers.buildPlanPhasePriceOverrides;
 
 @Path(JaxrsResource.INVOICES_PATH)
 @Api(value = JaxrsResource.INVOICES_PATH, description = "Operations on invoices", tags="Invoice")
@@ -1121,19 +1120,10 @@ public class InvoiceResource extends JaxRsResourceBase {
                                                                                      input.getPriceListName(),
                                                                                      input.getPhaseType() != null ? input.getPhaseType() : null) :
                                                               null;
-                final List<PlanPhasePriceOverride> overrides = input.getPriceOverrides() != null ?
-                                 ImmutableList.copyOf(Iterables.transform(input.getPriceOverrides(), new Function<PhasePriceJson, PlanPhasePriceOverride>() {
-                                     @Nullable
-                                     @Override
-                                     public PlanPhasePriceOverride apply(@Nullable final PhasePriceJson input) {
-                                         if (input.getPhaseName() != null) {
+                final List<PlanPhasePriceOverride> overrides = buildPlanPhasePriceOverrides(input.getPriceOverrides(),
+                                                                                            account.getCurrency(),
+                                                                                            planPhaseSpecifier);
 
-                                             return new DefaultPlanPhasePriceOverride(input.getPhaseName(), account.getCurrency(), input.getFixedPrice(), input.getRecurringPrice(), null);
-                                         } else {
-                                             return new DefaultPlanPhasePriceOverride(planPhaseSpecifier, account.getCurrency(), input.getFixedPrice(), input.getRecurringPrice(), null);
-                                         }
-                                     }
-                                 })) : ImmutableList.<PlanPhasePriceOverride>of();
                 this.specifier = new EntitlementSpecifier() {
                     @Override
                     public PlanPhaseSpecifier getPlanPhaseSpecifier() {

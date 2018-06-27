@@ -29,12 +29,12 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.catalog.CatalogTestSuiteNoDB;
-import org.killbill.billing.catalog.DefaultProduct;
+import org.killbill.billing.catalog.DefaultVersionedCatalog;
 import org.killbill.billing.catalog.StandaloneCatalog;
 import org.killbill.billing.catalog.StandaloneCatalogWithPriceOverride;
-import org.killbill.billing.catalog.VersionedCatalog;
 import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.catalog.api.Product;
+import org.killbill.billing.catalog.api.VersionedCatalog;
 import org.killbill.xmlloader.UriAccessor;
 import org.mockito.Mockito;
 import org.mockito.invocation.InvocationOnMock;
@@ -83,13 +83,13 @@ public class TestEhCacheCatalogCache extends CatalogTestSuiteNoDB {
     public void testDefaultCatalog() throws CatalogApiException {
         catalogCache.loadDefaultCatalog(Resources.getResource("SpyCarBasic.xml").toExternalForm());
 
-        final VersionedCatalog result = catalogCache.getCatalog(true, true, false, internalCallContext);
+        final DefaultVersionedCatalog result = catalogCache.getCatalog(true, true, false, internalCallContext);
         Assert.assertNotNull(result);
         final Collection<Product> products = result.getProducts(clock.getUTCNow());
         Assert.assertEquals(products.size(), 3);
 
         // Verify the lookup with other contexts
-        final VersionedCatalog resultForMultiTenantContext = new VersionedCatalog(result.getClock());
+        final DefaultVersionedCatalog resultForMultiTenantContext = new DefaultVersionedCatalog(result.getClock());
         for (final StandaloneCatalog cur : result.getVersions()) {
             resultForMultiTenantContext.add(new StandaloneCatalogWithPriceOverride(cur, priceOverride, multiTenantContext.getTenantRecordId(), internalCallContextFactory));
         }
@@ -155,13 +155,13 @@ public class TestEhCacheCatalogCache extends CatalogTestSuiteNoDB {
         catalogCache.loadDefaultCatalog(Resources.getResource("SpyCarBasic.xml").toExternalForm());
 
         // Verify the lookup for this tenant
-        final VersionedCatalog result = catalogCache.getCatalog(true, true, false, multiTenantContext);
+        final DefaultVersionedCatalog result = catalogCache.getCatalog(true, true, false, multiTenantContext);
         Assert.assertNotNull(result);
         final Collection<Product> products = result.getProducts(clock.getUTCNow());
         Assert.assertEquals(products.size(), 6);
 
         // Verify the lookup for another tenant
-        final VersionedCatalog otherResult = catalogCache.getCatalog(true, true, false, otherMultiTenantContext);
+        final DefaultVersionedCatalog otherResult = catalogCache.getCatalog(true, true, false, otherMultiTenantContext);
         Assert.assertNotNull(otherResult);
         final Collection<Product> otherProducts = otherResult.getProducts(clock.getUTCNow());
         Assert.assertEquals(otherProducts.size(), 3);

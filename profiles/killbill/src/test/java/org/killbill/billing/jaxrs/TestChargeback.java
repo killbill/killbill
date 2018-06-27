@@ -140,6 +140,11 @@ public class TestChargeback extends TestJaxrsBase {
     }
 
     private void createAndVerifyChargeback(final InvoicePayment payment) throws KillBillClientException {
+        List<Invoice> invoices = accountApi.getInvoicesForAccount(payment.getAccountId(), null, requestOptions);
+        // We should have two invoices, one for the trial (zero dollar amount) and one for the first month
+        Assert.assertEquals(invoices.size(), 2);
+        Assert.assertEquals(invoices.get(1).getBalance().compareTo(BigDecimal.ZERO), 0);
+
         // Create the chargeback
         final InvoicePaymentTransaction chargeback = new InvoicePaymentTransaction();
         chargeback.setPaymentId(payment.getPaymentId());
@@ -158,6 +163,11 @@ public class TestChargeback extends TestJaxrsBase {
         Assert.assertEquals(transactions.size(), 1);
         assertEquals(transactions.get(0).getAmount().compareTo(chargeback.getAmount()), 0);
         assertEquals(transactions.get(0).getPaymentId(), chargeback.getPaymentId());
+
+        // Verify invoice balance
+        invoices = accountApi.getInvoicesForAccount(payment.getAccountId(), null, requestOptions);
+        Assert.assertEquals(invoices.size(), 2);
+        Assert.assertEquals(invoices.get(1).getBalance().compareTo(BigDecimal.ZERO), 1);
     }
 
     private InvoicePayment createAccountWithInvoiceAndPayment() throws Exception {
