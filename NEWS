@@ -1,3 +1,6 @@
+0.18.21
+    Fix for NPE if the only available usage is before the first transition date
+
 0.18.20
     Fix issue when changing a Plan defined in a subsequent catalog version
 
