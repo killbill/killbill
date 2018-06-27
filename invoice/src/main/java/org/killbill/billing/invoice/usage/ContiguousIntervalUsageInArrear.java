@@ -232,6 +232,7 @@ public abstract class ContiguousIntervalUsageInArrear {
         return result;
     }
 
+
     @VisibleForTesting
     List<RolledUpUsage> getRolledUpUsage() {
 
@@ -239,15 +240,7 @@ public abstract class ContiguousIntervalUsageInArrear {
 
         final Iterator<RawUsage> rawUsageIterator = rawSubscriptionUsage.iterator();
         if (!rawUsageIterator.hasNext()) {
-            final LocalDate startDate = transitionTimes.get(transitionTimes.size() - 2);
-            final LocalDate endDate = transitionTimes.get(transitionTimes.size() - 1);
-            for (String unitType : unitTypes) {
-                final List<RolledUpUnit> emptyRolledUptUnits = new ArrayList<RolledUpUnit>();
-                emptyRolledUptUnits.add(new DefaultRolledUpUnit(unitType, 0L));
-                final DefaultRolledUpUsage defaultForUnit = new DefaultRolledUpUsage(getSubscriptionId(), startDate, endDate, emptyRolledUptUnits);
-                result.add(defaultForUnit);
-            }
-            return result;
+            return getEmptyRolledUpUsage();
         }
 
 
@@ -265,8 +258,8 @@ public abstract class ContiguousIntervalUsageInArrear {
         }
 
         // Optimize path where all raw usage items are outside or our transitionTimes range
-        if (prevRawUsage.getDate().compareTo(transitionTimes.get(transitionTimes.size() - 1)) >= 0) {
-            return ImmutableList.of();
+        if (prevRawUsage == null || prevRawUsage.getDate().compareTo(transitionTimes.get(transitionTimes.size() - 1)) >= 0) {
+            return getEmptyRolledUpUsage();
         }
 
         //
@@ -325,6 +318,19 @@ public abstract class ContiguousIntervalUsageInArrear {
                 }
             }
             prevDate = curDate;
+        }
+        return result;
+    }
+
+    private List<RolledUpUsage> getEmptyRolledUpUsage() {
+        final List<RolledUpUsage> result = new ArrayList<RolledUpUsage>();
+        final LocalDate startDate = transitionTimes.get(transitionTimes.size() - 2);
+        final LocalDate endDate = transitionTimes.get(transitionTimes.size() - 1);
+        for (String unitType : unitTypes) {
+            final List<RolledUpUnit> emptyRolledUptUnits = new ArrayList<RolledUpUnit>();
+            emptyRolledUptUnits.add(new DefaultRolledUpUnit(unitType, 0L));
+            final DefaultRolledUpUsage defaultForUnit = new DefaultRolledUpUsage(getSubscriptionId(), startDate, endDate, emptyRolledUptUnits);
+            result.add(defaultForUnit);
         }
         return result;
     }

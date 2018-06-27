@@ -56,6 +56,12 @@
     Fix missing Invoice Notification when we have future billing events (#846)
     Reduce log level of InvoiceItemGeneratorLogger (#851)
 
+0.18.21
+    Fix for NPE if the only available usage is before the first transition date
+
+0.18.20
+    Fix issue when changing a Plan defined in a subsequent catalog version
+
 0.18.18
     See https://github.com/killbill/killbill/releases/tag/killbill-0.18.18
 
