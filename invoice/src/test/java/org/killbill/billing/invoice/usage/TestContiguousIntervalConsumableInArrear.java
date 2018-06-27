@@ -1002,6 +1002,42 @@ public class TestContiguousIntervalConsumableInArrear extends TestUsageInArrearB
         // TODO + code
     }
 
+    @Test(groups = "fast")
+    public void testGetRolledUpUsageOnlyUsageBeforeTransitionTime() {
+
+        final DefaultTieredBlock tieredBlock1 = createDefaultTieredBlock("unit", 100, 1000, BigDecimal.ONE);
+        final DefaultTieredBlock tieredBlock2 = createDefaultTieredBlock("unit2", 10, 1000, BigDecimal.ONE);
+        final DefaultTier tier = createDefaultTierWithBlocks(tieredBlock1, tieredBlock2);
+
+        final DefaultUsage usage = createConsumableInArrearUsage(usageName, BillingPeriod.MONTHLY, TierBlockPolicy.ALL_TIERS, tier);
+
+
+        final LocalDate t0 = new LocalDate(2015, 03, BCD);
+        final BillingEvent eventT0 = createMockBillingEvent(t0.toDateTimeAtStartOfDay(DateTimeZone.UTC), BillingPeriod.MONTHLY, Collections.<Usage>emptyList());
+
+        final LocalDate t1 = new LocalDate(2015, 04, BCD);
+        final BillingEvent eventT1 = createMockBillingEvent(t1.toDateTimeAtStartOfDay(DateTimeZone.UTC), BillingPeriod.MONTHLY, Collections.<Usage>emptyList());
+
+        final LocalDate targetDate = t1;
+
+
+        // Prev t0
+        final RawUsage raw1 = new DefaultRawUsage(subscriptionId, new LocalDate(2015, 03, 01), "unit", 12L);
+
+        final List<RawUsage> rawUsage = ImmutableList.of(raw1);
+
+        final ContiguousIntervalUsageInArrear intervalConsumableInArrear = createContiguousIntervalConsumableInArrear(usage, rawUsage, targetDate, true, eventT0, eventT1);
+
+
+        final List<RolledUpUsage> unsortedRolledUpUsage =  intervalConsumableInArrear.getRolledUpUsage();
+        assertEquals(unsortedRolledUpUsage.size(), 2);
+        assertEquals(unsortedRolledUpUsage.get(0).getRolledUpUnits().size(), 1);
+        assertEquals(unsortedRolledUpUsage.get(0).getRolledUpUnits().get(0).getAmount().longValue(), 0L);
+        assertEquals(unsortedRolledUpUsage.get(1).getRolledUpUnits().size(), 1);
+        assertEquals(unsortedRolledUpUsage.get(1).getRolledUpUnits().get(0).getAmount().longValue(), 0L);
+
+    }
+
     private List<InvoiceItem> produceInvoiceItems(List<RawUsage> rawUsages, TierBlockPolicy tierBlockPolicy, UsageDetailMode usageDetailMode, final List<InvoiceItem> existingItems) throws CatalogApiException, InvoiceApiException {
 
         final LocalDate startDate = new LocalDate(2014, 03, 20);
@@ -1051,4 +1087,5 @@ public class TestContiguousIntervalConsumableInArrear extends TestUsageInArrearB
 
         return result;
     }
+
 }

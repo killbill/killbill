@@ -668,7 +668,7 @@ public class TestBlockingCalculator extends JunctionTestSuiteNoDB {
 
     private class MockBillingEvent extends DefaultBillingEvent {
 
-        public MockBillingEvent() {
+        public MockBillingEvent() throws CatalogApiException {
             super(subscription1, clock.getUTCNow(), true, null, null, BigDecimal.ZERO, Currency.USD, BillingPeriod.ANNUAL,
                   4, "", 3L, SubscriptionBaseTransitionType.CREATE, null, false);
         }

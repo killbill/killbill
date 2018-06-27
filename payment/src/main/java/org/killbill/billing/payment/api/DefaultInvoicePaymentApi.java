@@ -150,6 +150,50 @@ public class DefaultInvoicePaymentApi implements InvoicePaymentApi {
     }
 
     @Override
+    public InvoicePayment createChargebackForInvoicePayment(final Account account,
+                                                            final UUID paymentId,
+                                                            final BigDecimal amount,
+                                                            final Currency currency,
+                                                            final DateTime effectiveDate,
+                                                            final String originalPaymentTransactionExternalKey,
+                                                            final Iterable<PluginProperty> properties,
+                                                            final PaymentOptions paymentOptions,
+                                                            final CallContext context) throws PaymentApiException {
+        final String paymentTransactionExternalKey = MoreObjects.firstNonNull(originalPaymentTransactionExternalKey, UUIDs.randomUUID().toString());
+        paymentApi.createChargebackWithPaymentControl(account,
+                                                      paymentId,
+                                                      amount,
+                                                      currency,
+                                                      effectiveDate,
+                                                      paymentTransactionExternalKey,
+                                                      // properties, // TODO API change?
+                                                      InvoicePaymentPaymentOptions.create(paymentOptions),
+                                                      context);
+
+        return invoiceInternalApi.getInvoicePaymentByCookieId(paymentTransactionExternalKey, context);
+    }
+
+    @Override
+    public InvoicePayment createChargebackReversalForInvoicePayment(final Account account,
+                                                                    final UUID paymentId,
+                                                                    final DateTime effectiveDate,
+                                                                    final String originalPaymentTransactionExternalKey,
+                                                                    final Iterable<PluginProperty> properties,
+                                                                    final PaymentOptions paymentOptions,
+                                                                    final CallContext context) throws PaymentApiException {
+        final String paymentTransactionExternalKey = MoreObjects.firstNonNull(originalPaymentTransactionExternalKey, UUIDs.randomUUID().toString());
+        paymentApi.createChargebackReversalWithPaymentControl(account,
+                                                              paymentId,
+                                                              effectiveDate,
+                                                              paymentTransactionExternalKey,
+                                                              // properties, // TODO API change?
+                                                              InvoicePaymentPaymentOptions.create(paymentOptions),
+                                                              context);
+
+        return invoiceInternalApi.getInvoicePaymentByCookieId(paymentTransactionExternalKey, context);
+    }
+
+    @Override
     public List<InvoicePayment> getInvoicePayments(final UUID paymentId, final TenantContext context) {
         return invoiceInternalApi.getInvoicePayments(paymentId, context);
     }

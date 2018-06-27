@@ -24,7 +24,6 @@ import java.util.List;
 import javax.annotation.Nullable;
 
 import org.joda.time.DateTime;
-import org.killbill.billing.catalog.DefaultPlan;
 import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.catalog.api.Catalog;
 import org.killbill.billing.catalog.api.CatalogApiException;
@@ -91,8 +90,7 @@ public class DefaultBillingEvent implements BillingEvent {
             final PlanPhase prevPlanPhase = (prevPhaseName != null && prevPlan != null) ? prevPlan.findPhase(prevPhaseName) : null;
             this.billingPeriod = getRecurringBillingPeriod(prevPlanPhase);
         }
-        // TODO It would be nice to have an Plan api to get that date; actually the following would be nice
-        this.catalogEffectiveDate = ((DefaultPlan) plan).getCatalogEffectiveDate();
+        this.catalogEffectiveDate = plan == null ? null : new DateTime(plan.getCatalog().getEffectiveDate());
 
         this.billCycleDayLocal = billCycleDayLocal;
         this.catalog = catalog;
@@ -113,7 +111,7 @@ public class DefaultBillingEvent implements BillingEvent {
                                final BillingPeriod billingPeriod, final int billCycleDayLocal,
                                final String description, final long totalOrdering, final SubscriptionBaseTransitionType type,
                                final Catalog catalog,
-                               final boolean isDisableEvent) {
+                               final boolean isDisableEvent) throws CatalogApiException {
         this.catalog = catalog;
         this.subscription = subscription;
         this.effectiveDate = effectiveDate;
@@ -129,8 +127,7 @@ public class DefaultBillingEvent implements BillingEvent {
         this.usages = initializeUsage(isActive);
         this.isDisableEvent = isDisableEvent;
         this.nextPlanPhase = isDisableEvent ? null : planPhase;
-        this.catalogEffectiveDate = plan != null ? ((DefaultPlan) plan).getCatalogEffectiveDate() : null;
-
+        this.catalogEffectiveDate = plan != null ? new DateTime(plan.getCatalog().getEffectiveDate()) : null;
     }
 
     @Override

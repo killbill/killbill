@@ -1,6 +1,6 @@
 /*
- * Copyright 2014-2015 Groupon, Inc
- * Copyright 2014-2015 The Billing Project, LLC
+ * Copyright 2014-2018 Groupon, Inc
+ * Copyright 2014-2018 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -23,34 +23,18 @@ import java.util.List;
 
 import javax.annotation.Nullable;
 
-import com.google.common.base.Preconditions;
-import org.killbill.billing.catalog.DefaultPlanPhasePriceOverride;
-import org.killbill.billing.catalog.DefaultTierPriceOverride;
-import org.killbill.billing.catalog.DefaultTieredBlockPriceOverride;
-import org.killbill.billing.catalog.DefaultUsagePriceOverride;
 import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.catalog.api.Currency;
-import org.killbill.billing.catalog.api.PhaseType;
-import org.killbill.billing.catalog.api.PlanPhasePriceOverride;
-import org.killbill.billing.catalog.api.PlanPhaseSpecifier;
-import org.killbill.billing.catalog.api.PlanSpecifier;
 import org.killbill.billing.catalog.api.Tier;
-import org.killbill.billing.catalog.api.TierPriceOverride;
 import org.killbill.billing.catalog.api.TieredBlock;
-import org.killbill.billing.catalog.api.TieredBlockPriceOverride;
 import org.killbill.billing.catalog.api.Usage;
-import org.killbill.billing.catalog.api.UsagePriceOverride;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.common.base.Function;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Iterables;
 import io.swagger.annotations.ApiModel;
 
-@ApiModel(value="PhasePrice")
+@ApiModel(value = "PhasePrice")
 public class PhasePriceJson {
-
 
     private final String planName;
     private final String phaseName;
@@ -89,19 +73,17 @@ public class PhasePriceJson {
         this.usagePrices = new LinkedList<UsagePriceJson>();
 
         for (final Usage usage : usagePrices) {
-            List <TierPriceJson> usageTierPrices = new LinkedList<TierPriceJson>();
-             for(final Tier tier :usage.getTiers())
-             {
-                 List <BlockPriceJson> blockPrices = new LinkedList<BlockPriceJson>();
+            List<TierPriceJson> usageTierPrices = new LinkedList<TierPriceJson>();
+            for (final Tier tier : usage.getTiers()) {
+                List<BlockPriceJson> blockPrices = new LinkedList<BlockPriceJson>();
 
-                 for(final TieredBlock block : tier.getTieredBlocks())
-                 {
-                     BlockPriceJson blockPriceJson = new BlockPriceJson(block.getUnit().getName(), block.getSize(), block.getPrice().getPrice(currency), block.getMax());
-                     blockPrices.add(blockPriceJson);
-                 }
-                     TierPriceJson tierPriceJson = new TierPriceJson(blockPrices);
-                     usageTierPrices.add(tierPriceJson);
-             }
+                for (final TieredBlock block : tier.getTieredBlocks()) {
+                    BlockPriceJson blockPriceJson = new BlockPriceJson(block.getUnit().getName(), block.getSize(), block.getPrice().getPrice(currency), block.getMax());
+                    blockPrices.add(blockPriceJson);
+                }
+                TierPriceJson tierPriceJson = new TierPriceJson(blockPrices);
+                usageTierPrices.add(tierPriceJson);
+            }
             final UsagePriceJson usagePriceJson = new UsagePriceJson(usage.getName(), usage.getUsageType(), usage.getBillingMode(), usage.getTierBlockPolicy(), usageTierPrices);
             this.usagePrices.add(usagePriceJson);
         }
@@ -132,7 +114,6 @@ public class PhasePriceJson {
         return usagePrices;
     }
 
-
     @Override
     public String toString() {
         return "PhasePriceJson{" +
@@ -155,7 +136,6 @@ public class PhasePriceJson {
         }
 
         final PhasePriceJson that = (PhasePriceJson) o;
-
 
         if (fixedPrice != null ? fixedPrice.compareTo(that.fixedPrice) != 0 : that.fixedPrice != null) {
             return false;
@@ -187,49 +167,5 @@ public class PhasePriceJson {
         result = 31 * result + (recurringPrice != null ? recurringPrice.hashCode() : 0);
         result = 31 * result + (usagePrices != null ? usagePrices.hashCode() : 0);
         return result;
-    }
-
-    public static List<PlanPhasePriceOverride> toPlanPhasePriceOverrides(final List<PhasePriceJson> priceOverrides, final PlanSpecifier spec, final Currency currency) {
-        if (priceOverrides == null || priceOverrides.isEmpty()) {
-            return ImmutableList.<PlanPhasePriceOverride>of();
-        }
-        return ImmutableList.copyOf(Iterables.transform(priceOverrides, new Function<PhasePriceJson, PlanPhasePriceOverride>() {
-            @Nullable
-            @Override
-            public PlanPhasePriceOverride apply(@Nullable final PhasePriceJson input) {
-
-                List <UsagePriceOverride> usagePrices = new LinkedList<UsagePriceOverride>();
-                Preconditions.checkNotNull(input);
-                if(input.getUsagePrices() != null) {
-                    for (final UsagePriceJson usageOverrideJson : input.getUsagePrices()) {
-                        List<TierPriceOverride> tierPriceOverrides = new LinkedList<TierPriceOverride>();
-                        for (final TierPriceJson tierPriceJson : usageOverrideJson.getTierPrices()) {
-                            List<TieredBlockPriceOverride> blockPriceOverrides = new LinkedList<TieredBlockPriceOverride>();
-                            for (final BlockPriceJson block : tierPriceJson.getBlockPrices()) {
-                                DefaultTieredBlockPriceOverride tieredBlockPriceOverride = new DefaultTieredBlockPriceOverride( block.getUnitName(), block.getSize(), block.getPrice(),currency, block.getMax());
-                                blockPriceOverrides.add(tieredBlockPriceOverride);
-                            }
-                            DefaultTierPriceOverride tierPriceOverride = new DefaultTierPriceOverride(blockPriceOverrides);
-                            tierPriceOverrides.add(tierPriceOverride);
-                        }
-                        final DefaultUsagePriceOverride usageOverride = new DefaultUsagePriceOverride(usageOverrideJson.getUsageName(), usageOverrideJson.getUsageType(), tierPriceOverrides);
-                        usagePrices.add(usageOverride);
-                    }
-                }
-
-                if (input.getPhaseName() != null) {
-                    return new DefaultPlanPhasePriceOverride(input.getPhaseName(), currency, input.getFixedPrice(), input.getRecurringPrice(), usagePrices);
-                } else {
-                    final PhaseType phaseType = input.getPhaseType() != null ? PhaseType.valueOf(input.getPhaseType()) : null;
-
-                    final PlanPhaseSpecifier planPhaseSpecifier = spec.getPlanName() != null ?
-                                                                  new PlanPhaseSpecifier(spec.getPlanName(), phaseType) :
-                                                                  new PlanPhaseSpecifier(spec.getProductName(), spec.getBillingPeriod(), spec.getPriceListName(), phaseType);
-                    final Currency resolvedCurrency = input.getFixedPrice() != null || input.getRecurringPrice() != null ? currency : null;
-                    return new DefaultPlanPhasePriceOverride(planPhaseSpecifier, resolvedCurrency, input.getFixedPrice(), input.getRecurringPrice(), usagePrices);
-                }
-            }
-        }));
-
     }
 }

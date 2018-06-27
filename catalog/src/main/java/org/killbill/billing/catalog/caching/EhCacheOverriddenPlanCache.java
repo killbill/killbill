@@ -72,7 +72,7 @@ public class EhCacheOverriddenPlanCache implements OverriddenPlanCache {
         this.loaderCallback = new LoaderCallback() {
             @Override
             public Plan loadPlan(final String planName, final StaticCatalog catalog, final InternalTenantContext context) throws CatalogApiException {
-                return loadOverriddenPlan(planName, catalog, context);
+                return loadOverriddenPlan(planName, (StandaloneCatalog) catalog, context);
             }
         };
     }
@@ -94,8 +94,7 @@ public class EhCacheOverriddenPlanCache implements OverriddenPlanCache {
         cacheController.putIfAbsent(planName, plan);
     }
 
-    private DefaultPlan loadOverriddenPlan(final String planName, final StaticCatalog catalog, final InternalTenantContext context) throws CatalogApiException {
-
+    private DefaultPlan loadOverriddenPlan(final String planName, final StandaloneCatalog catalog, final InternalTenantContext context) throws CatalogApiException {
         final Matcher m = DefaultPriceOverride.CUSTOM_PLAN_NAME_PATTERN.matcher(planName);
         if (!m.matches()) {
             throw new CatalogApiException(ErrorCode.CAT_NO_SUCH_PLAN, planName);
@@ -104,10 +103,10 @@ public class EhCacheOverriddenPlanCache implements OverriddenPlanCache {
         final Long planDefRecordId = Long.parseLong(m.group(2));
 
         final List<CatalogOverridePhaseDefinitionModelDao> phaseDefs = overrideDao.getOverriddenPlanPhases(planDefRecordId, context);
-        final DefaultPlan defaultPlan = (DefaultPlan) catalog.findCurrentPlan(parentPlanName);
+        final DefaultPlan defaultPlan = catalog.findCurrentPlan(parentPlanName);
         final PlanPhasePriceOverride[] overrides = createOverrides(defaultPlan, phaseDefs, context);
-        final DefaultPlan result = new DefaultPlan(planName, defaultPlan, overrides);
-        result.initialize((StandaloneCatalog) catalog, ((StandaloneCatalog) catalog).getCatalogURI());
+        final DefaultPlan result = new DefaultPlan(catalog, planName, defaultPlan, overrides);
+        result.initialize(catalog, catalog.getCatalogURI());
         return result;
     }
 

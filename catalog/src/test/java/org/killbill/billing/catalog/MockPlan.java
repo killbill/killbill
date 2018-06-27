@@ -17,7 +17,9 @@
 package org.killbill.billing.catalog;
 
 import java.util.Collection;
+import java.util.Date;
 
+import org.joda.time.DateTime;
 import org.killbill.billing.catalog.api.BillingMode;
 import org.killbill.billing.catalog.api.Plan;
 
@@ -90,6 +92,7 @@ public class MockPlan extends DefaultPlan {
     }
 
     public MockPlan(final String name, final DefaultProduct product, final DefaultPlanPhase[] planPhases, final DefaultPlanPhase finalPhase, final int plansAllowedInBundle) {
+        this.staticCatalog = new StandaloneCatalog(new Date());
         setName(name);
         setProduct(product);
         setFinalPhase(finalPhase);
