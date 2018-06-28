@@ -55,6 +55,7 @@ import org.killbill.billing.payment.api.PaymentApiException;
 import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.payment.api.TransactionStatus;
 import org.killbill.billing.payment.api.TransactionType;
+import org.killbill.billing.payment.core.janitor.IncompletePaymentTransactionTask;
 import org.killbill.billing.payment.dao.PaymentDao;
 import org.killbill.billing.payment.dao.PaymentModelDao;
 import org.killbill.billing.payment.dao.PaymentTransactionModelDao;
@@ -321,7 +322,6 @@ public final class InvoicePaymentControlPluginApi implements PaymentControlPlugi
                 return new DefaultPriorPaymentControlResult(true);
             }
 
-
             // Get account and check if it is child and payment is delegated to parent => abort
 
             final AccountData accountData = accountApi.getAccountById(invoice.getAccountId(), internalContext);
@@ -340,7 +340,7 @@ public final class InvoicePaymentControlPluginApi implements PaymentControlPlugi
 
             // Do we have a  paymentMethod ?
             if (paymentControlPluginContext.getPaymentMethodId() == null) {
-                log.warn("Payment for invoiceId='{}' was not triggered, accountId='{}' doesn't have a default payment method", getInvoiceId(pluginProperties), paymentControlPluginContext.getAccountId());
+                log.warn("Payment for invoiceId='{}' was not triggered, accountId='{}' doesn't have a default payment method", invoiceId, paymentControlPluginContext.getAccountId());
                 invoiceApi.recordPaymentAttemptCompletion(invoiceId,
                                                           paymentControlPluginContext.getAmount(),
                                                           paymentControlPluginContext.getCurrency(),
@@ -359,6 +359,16 @@ public final class InvoicePaymentControlPluginApi implements PaymentControlPlugi
                 return new DefaultPriorPaymentControlResult(true);
             }
 
+            final List<InvoicePayment> existingInvoicePayments = invoiceApi.getInvoicePaymentsByInvoice(invoiceId, internalContext);
+            for (final InvoicePayment existingInvoicePayment : existingInvoicePayments) {
+                final List<PaymentTransactionModelDao> existingTransactions = paymentDao.getPaymentTransactionsByExternalKey(existingInvoicePayment.getPaymentCookieId(), internalContext);
+                for (final PaymentTransactionModelDao existingTransaction : existingTransactions) {
+                    if (existingTransaction.getTransactionStatus() == TransactionStatus.UNKNOWN) {
+                        log.warn("Existing paymentTransactionId='{}' for invoiceId='{}' in UNKNOWN state", existingTransaction.getId(), invoiceId);
+                        return new DefaultPriorPaymentControlResult(true);
+                    }
+                }
+            }
 
             //
             // Insert attempt row with a success = false status to implement a two-phase commit strategy and guard against scenario where payment would go through

@@ -218,6 +218,18 @@ public class DefaultInvoiceInternalApi implements InvoiceInternalApi {
     }
 
     @Override
+    public List<InvoicePayment> getInvoicePaymentsByInvoice(final UUID invoiceId, final InternalTenantContext context) {
+        return ImmutableList.<InvoicePayment>copyOf(Collections2.transform(dao.getInvoicePaymentsByInvoice(invoiceId, context),
+                                                                           new Function<InvoicePaymentModelDao, InvoicePayment>() {
+                                                                               @Override
+                                                                               public InvoicePayment apply(final InvoicePaymentModelDao input) {
+                                                                                   return new DefaultInvoicePayment(input);
+                                                                               }
+                                                                           }
+                                                                          ));
+    }
+
+    @Override
     public InvoicePayment getInvoicePaymentByCookieId(final String cookieId, final TenantContext context) {
         final InvoicePaymentModelDao invoicePaymentModelDao = dao.getInvoicePaymentByCookieId(cookieId, internalCallContextFactory.createInternalTenantContext(context.getAccountId(), ObjectType.ACCOUNT, context));
         return invoicePaymentModelDao == null ? null : new DefaultInvoicePayment(invoicePaymentModelDao);

@@ -234,6 +234,19 @@ public class MockInvoiceDao extends MockEntityDaoBase<InvoiceModelDao, Invoice, 
     }
 
     @Override
+    public List<InvoicePaymentModelDao> getInvoicePaymentsByInvoice(final UUID invoiceId, final InternalTenantContext context) {
+        final List<InvoicePaymentModelDao> result = new LinkedList<InvoicePaymentModelDao>();
+        synchronized (monitor) {
+            for (final InvoicePaymentModelDao payment : payments.values()) {
+                if (invoiceId.equals(payment.getInvoiceId())) {
+                    result.add(payment);
+                }
+            }
+        }
+        return result;
+    }
+
+    @Override
     public List<InvoicePaymentModelDao> getInvoicePaymentsByAccount(final InternalTenantContext context) {
 
         throw new UnsupportedOperationException();

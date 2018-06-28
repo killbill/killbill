@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014-2016 Groupon, Inc
- * Copyright 2014-2016 The Billing Project, LLC
+ * Copyright 2014-2018 Groupon, Inc
+ * Copyright 2014-2018 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -76,6 +76,7 @@ public class MockPaymentProviderPlugin implements PaymentPluginApi {
     private final AtomicBoolean makeNextPaymentFailWithException = new AtomicBoolean(false);
     private final AtomicBoolean makeAllPaymentsFailWithError = new AtomicBoolean(false);
     private final AtomicBoolean makeNextPaymentPending = new AtomicBoolean(false);
+    private final AtomicBoolean makeNextPaymentUnknown = new AtomicBoolean(false);
     private final AtomicInteger makePluginWaitSomeMilliseconds = new AtomicInteger(0);
     private final AtomicReference<BigDecimal> overrideNextProcessedAmount = new AtomicReference<BigDecimal>();
     private final AtomicReference<Currency> overrideNextProcessedCurrency = new AtomicReference<Currency>();
@@ -206,6 +207,7 @@ public class MockPaymentProviderPlugin implements PaymentPluginApi {
         makeNextPaymentFailWithError.set(false);
         makeNextPaymentFailWithCancellation.set(false);
         makeNextPaymentPending.set(false);
+        makeNextPaymentUnknown.set(false);
         makePluginWaitSomeMilliseconds.set(0);
         overrideNextProcessedAmount.set(null);
         paymentMethods.clear();
@@ -220,6 +222,10 @@ public class MockPaymentProviderPlugin implements PaymentPluginApi {
 
     public void makeNextPaymentPending() {
         makeNextPaymentPending.set(true);
+    }
+
+    public void makeNextPaymentUnknown() {
+        makeNextPaymentUnknown.set(true);
     }
 
     public void makeNextPaymentFailWithCancellation() {
@@ -465,6 +471,8 @@ public class MockPaymentProviderPlugin implements PaymentPluginApi {
             status = PaymentPluginStatus.CANCELED;
         } else if (makeNextPaymentPending.getAndSet(false)) {
             status = PaymentPluginStatus.PENDING;
+        } else if (makeNextPaymentUnknown.getAndSet(false)) {
+            status = PaymentPluginStatus.UNDEFINED;
         } else {
             status = PaymentPluginStatus.PROCESSED;
         }
