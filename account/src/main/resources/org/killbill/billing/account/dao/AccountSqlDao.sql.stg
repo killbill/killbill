@@ -27,7 +27,6 @@ tableFields(prefix) ::= <<
 , <prefix>phone
 , <prefix>notes
 , <prefix>migrated
-, <prefix>is_notified_for_invoices
 , <prefix>created_by
 , <prefix>created_date
 , <prefix>updated_by
@@ -57,7 +56,6 @@ tableValues() ::= <<
 , :phone
 , :notes
 , :migrated
-, :isNotifiedForInvoices
 , :createdBy
 , :createdDate
 , :updatedBy
@@ -89,7 +87,6 @@ update accounts set
 , postal_code = :postalCode
 , phone = :phone
 , notes = :notes
-, is_notified_for_invoices = :isNotifiedForInvoices
 , updated_date = :updatedDate
 , updated_by = :updatedBy
 where id = :id

@@ -67,7 +67,6 @@ public class DefaultSubscriptionTestInitializer implements SubscriptionTestIniti
                                                                 .email(UUIDs.randomUUID().toString().substring(1, 8))
                                                                 .phone(UUIDs.randomUUID().toString().substring(1, 8))
                                                                 .migrated(false)
-                                                                .isNotifiedForInvoices(false)
                                                                 .externalKey(UUIDs.randomUUID().toString())
                                                                 .billingCycleDayLocal(1)
                                                                 .currency(Currency.USD)

@@ -27,7 +27,6 @@ import javax.annotation.Nullable;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.killbill.billing.account.api.Account;
-import org.killbill.billing.account.api.AccountData;
 import org.killbill.billing.account.api.MutableAccountData;
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.util.audit.AccountAuditLogs;
@@ -36,7 +35,6 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Strings;
 import io.swagger.annotations.ApiModel;
-import io.swagger.annotations.ApiModelProperty;
 
 @ApiModel(value="Account", parent = JsonBase.class)
 public class AccountJson extends JsonBase {
@@ -66,7 +64,6 @@ public class AccountJson extends JsonBase {
     private final String phone;
     private final String notes;
     private final Boolean isMigrated;
-    private final Boolean isNotifiedForInvoices;
 
     public AccountJson(final Account account, final BigDecimal accountBalance, final BigDecimal accountCBA, @Nullable final AccountAuditLogs accountAuditLogs) {
         super(toAuditLogJson(accountAuditLogs == null ? null : accountAuditLogs.getAuditLogsForAccount()));
@@ -95,7 +92,6 @@ public class AccountJson extends JsonBase {
         this.phone = account.getPhone();
         this.notes = account.getNotes();
         this.isMigrated = account.isMigrated();
-        this.isNotifiedForInvoices = account.isNotifiedForInvoices();
     }
 
     @JsonCreator
@@ -122,7 +118,6 @@ public class AccountJson extends JsonBase {
                        @JsonProperty("phone") final String phone,
                        @JsonProperty("notes") final String notes,
                        @JsonProperty("isMigrated") final Boolean isMigrated,
-                       @JsonProperty("isNotifiedForInvoices") final Boolean isNotifiedForInvoices,
                        @JsonProperty("accountBalance") final BigDecimal accountBalance,
                        @JsonProperty("accountCBA") final BigDecimal accountCBA,
                        @JsonProperty("auditLogs") @Nullable final List<AuditLogJson> auditLogs) {
@@ -151,7 +146,6 @@ public class AccountJson extends JsonBase {
         this.phone = phone;
         this.notes = notes;
         this.isMigrated = isMigrated;
-        this.isNotifiedForInvoices = isNotifiedForInvoices;
         this.accountCBA = accountCBA;
     }
 
@@ -195,11 +189,6 @@ public class AccountJson extends JsonBase {
             @Override
             public Boolean isMigrated() {
                 return isMigrated;
-            }
-
-            @Override
-            public Boolean isNotifiedForInvoices() {
-                return isNotifiedForInvoices;
             }
 
             @Override
@@ -415,11 +404,6 @@ public class AccountJson extends JsonBase {
         return isMigrated;
     }
 
-    @JsonProperty("isNotifiedForInvoices")
-    public Boolean isNotifiedForInvoices() {
-        return isNotifiedForInvoices;
-    }
-
     @Override
     public String toString() {
         return "AccountJson{" +
@@ -448,7 +432,6 @@ public class AccountJson extends JsonBase {
                ", phone='" + phone + '\'' +
                ", notes='" + notes + '\'' +
                ", isMigrated=" + isMigrated +
-               ", isNotifiedForInvoices=" + isNotifiedForInvoices +
                '}';
     }
 
@@ -511,9 +494,6 @@ public class AccountJson extends JsonBase {
         if (isMigrated != null ? !isMigrated.equals(that.isMigrated) : that.isMigrated != null) {
             return false;
         }
-        if (isNotifiedForInvoices != null ? !isNotifiedForInvoices.equals(that.isNotifiedForInvoices) : that.isNotifiedForInvoices != null) {
-            return false;
-        }
         if (locale != null ? !locale.equals(that.locale) : that.locale != null) {
             return false;
         }
@@ -571,7 +551,6 @@ public class AccountJson extends JsonBase {
         result = 31 * result + (phone != null ? phone.hashCode() : 0);
         result = 31 * result + (notes != null ? notes.hashCode() : 0);
         result = 31 * result + (isMigrated != null ? isMigrated.hashCode() : 0);
-        result = 31 * result + (isNotifiedForInvoices != null ? isNotifiedForInvoices.hashCode() : 0);
         return result;
     }
 }

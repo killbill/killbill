@@ -55,7 +55,6 @@ public class DefaultAccount extends EntityBase implements Account {
     private final String phone;
     private final String notes;
     private final Boolean isMigrated;
-    private final Boolean isNotifiedForInvoices;
 
     /**
      * This call is used to update an existing account
@@ -86,8 +85,7 @@ public class DefaultAccount extends EntityBase implements Account {
              data.getPostalCode(),
              data.getPhone(),
              data.getNotes(),
-             data.isMigrated(),
-             data.isNotifiedForInvoices());
+             data.isMigrated());
     }
 
     // This call is used for testing and update from an existing account
@@ -99,7 +97,7 @@ public class DefaultAccount extends EntityBase implements Account {
                           final String address1, final String address2, final String companyName,
                           final String city, final String stateOrProvince, final String country,
                           final String postalCode, final String phone, final String notes,
-                          final Boolean isMigrated, final Boolean isNotifiedForInvoices) {
+                          final Boolean isMigrated) {
         this(id,
              null,
              null,
@@ -124,8 +122,7 @@ public class DefaultAccount extends EntityBase implements Account {
              postalCode,
              phone,
              notes,
-             isMigrated,
-             isNotifiedForInvoices);
+             isMigrated);
     }
 
     public DefaultAccount(final UUID id, @Nullable final DateTime createdDate, @Nullable final DateTime updatedDate,
@@ -137,7 +134,7 @@ public class DefaultAccount extends EntityBase implements Account {
                           final String address1, final String address2, final String companyName,
                           final String city, final String stateOrProvince, final String country,
                           final String postalCode, final String phone, final String notes,
-                          final Boolean isMigrated, final Boolean isNotifiedForInvoices) {
+                          final Boolean isMigrated) {
         super(id, createdDate, updatedDate);
         this.externalKey = externalKey;
         this.email = email;
@@ -161,7 +158,6 @@ public class DefaultAccount extends EntityBase implements Account {
         this.phone = phone;
         this.notes = notes;
         this.isMigrated = isMigrated;
-        this.isNotifiedForInvoices = isNotifiedForInvoices;
     }
 
     public DefaultAccount(final AccountModelDao accountModelDao) {
@@ -189,8 +185,7 @@ public class DefaultAccount extends EntityBase implements Account {
              accountModelDao.getPostalCode(),
              accountModelDao.getPhone(),
              accountModelDao.getNotes(),
-             accountModelDao.getMigrated(),
-             accountModelDao.getIsNotifiedForInvoices());
+             accountModelDao.getMigrated());
     }
 
     @Override
@@ -290,11 +285,6 @@ public class DefaultAccount extends EntityBase implements Account {
     }
 
     @Override
-    public Boolean isNotifiedForInvoices() {
-        return isNotifiedForInvoices;
-    }
-
-    @Override
     public String getPhone() {
         return phone;
     }
@@ -355,10 +345,6 @@ public class DefaultAccount extends EntityBase implements Account {
         final Boolean isMigrated = this.isMigrated != null ? this.isMigrated : currentAccount.isMigrated();
         if (isMigrated != null) {
             accountData.setIsMigrated(isMigrated);
-        }
-        final Boolean isNotifiedForInvoices = this.isNotifiedForInvoices != null ? this.isNotifiedForInvoices : currentAccount.isNotifiedForInvoices();
-        if (isNotifiedForInvoices != null) {
-            accountData.setIsNotifiedForInvoices(isNotifiedForInvoices);
         }
 
         return new DefaultAccount(currentAccount.getId(), accountData);
@@ -453,9 +439,6 @@ public class DefaultAccount extends EntityBase implements Account {
         if (isMigrated != null ? !isMigrated.equals(that.isMigrated) : that.isMigrated != null) {
             return false;
         }
-        if (isNotifiedForInvoices != null ? !isNotifiedForInvoices.equals(that.isNotifiedForInvoices) : that.isNotifiedForInvoices != null) {
-            return false;
-        }
         if (locale != null ? !locale.equals(that.locale) : that.locale != null) {
             return false;
         }
@@ -512,7 +495,6 @@ public class DefaultAccount extends EntityBase implements Account {
         result = 31 * result + (phone != null ? phone.hashCode() : 0);
         result = 31 * result + (notes != null ? notes.hashCode() : 0);
         result = 31 * result + (isMigrated != null ? isMigrated.hashCode() : 0);
-        result = 31 * result + (isNotifiedForInvoices != null ? isNotifiedForInvoices.hashCode() : 0);
         return result;
     }
 

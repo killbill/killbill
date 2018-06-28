@@ -139,7 +139,7 @@ public class TestDefaultAccountUserApi extends AccountTestSuiteWithEmbeddedDB {
         // Update the address and leave other fields null
         final MutableAccountData mutableAccountData = new DefaultMutableAccountData(null, null, null, 0, null, null, false, 0, null,
                                                                                     clock.getUTCNow(), null, null, null, null, null, null,
-                                                                                    null, null, null, null, null, false, false);
+                                                                                    null, null, null, null, null, false);
         final String newAddress1 = UUID.randomUUID().toString();
         mutableAccountData.setAddress1(newAddress1);
 
@@ -214,7 +214,6 @@ public class TestDefaultAccountUserApi extends AccountTestSuiteWithEmbeddedDB {
         Assert.assertEquals(retrievedAccount.getCountry(), account.getCountry());
         Assert.assertEquals(retrievedAccount.getPhone(), account.getPhone());
         Assert.assertEquals(retrievedAccount.isMigrated(), account.isMigrated());
-        Assert.assertEquals(retrievedAccount.isNotifiedForInvoices(), account.isNotifiedForInvoices());
         Assert.assertEquals(retrievedAccount.getParentAccountId(), account.getParentAccountId());
         Assert.assertEquals(retrievedAccount.isPaymentDelegatedToParent(), account.isPaymentDelegatedToParent());
         // Finally check account notes did get reset

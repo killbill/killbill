@@ -54,7 +54,6 @@ public class TestDefaultAccount extends AccountTestSuiteNoDB {
         Assert.assertNull(account.getPostalCode());
         Assert.assertNull(account.getPhone());
         Assert.assertNull(account.isMigrated());
-        Assert.assertNull(account.isNotifiedForInvoices());
     }
 
     @Test(groups = "fast", description = "Test mergeWithDelegate Account api")
@@ -74,14 +73,12 @@ public class TestDefaultAccount extends AccountTestSuiteNoDB {
         Mockito.when(accountDataUpdates2.getEmail()).thenReturn(UUID.randomUUID().toString());
         Mockito.when(accountDataUpdates2.getName()).thenReturn(UUID.randomUUID().toString());
         Mockito.when(accountDataUpdates2.getFirstNameLength()).thenReturn(12);
-        Mockito.when(accountDataUpdates2.isNotifiedForInvoices()).thenReturn(true);
         final Account accountUpdates2 = new DefaultAccount(UUID.randomUUID(), accountDataUpdates2);
 
         final Account updatedAccount2 = accountUpdates2.mergeWithDelegate(updatedAccount1);
         Assert.assertEquals(updatedAccount2.getEmail(), accountUpdates2.getEmail());
         Assert.assertEquals(updatedAccount2.getName(), accountUpdates2.getName());
         Assert.assertEquals(updatedAccount2.getFirstNameLength(), updatedAccount2.getFirstNameLength());
-        Assert.assertEquals(updatedAccount2.isNotifiedForInvoices(), updatedAccount2.isNotifiedForInvoices());
         Assert.assertEquals(updatedAccount2.getExternalKey(), updatedAccount1.getExternalKey());
         Assert.assertEquals(updatedAccount2.getCurrency(), updatedAccount1.getCurrency());
         Assert.assertEquals(updatedAccount2.getBillCycleDayLocal(), updatedAccount1.getBillCycleDayLocal());
@@ -156,7 +153,6 @@ public class TestDefaultAccount extends AccountTestSuiteNoDB {
         Assert.assertEquals(finalAccount.getPhone(), delegateAccount.getPhone());
         Assert.assertEquals(finalAccount.getNotes(), delegateAccount.getNotes());
         Assert.assertEquals(finalAccount.isMigrated(), delegateAccount.isMigrated());
-        Assert.assertEquals(finalAccount.isNotifiedForInvoices(), delegateAccount.isNotifiedForInvoices());
     }
 
     private AccountData getAccountData(final Integer bcd, final Currency currency, final String externalKey) {
@@ -179,7 +175,6 @@ public class TestDefaultAccount extends AccountTestSuiteNoDB {
         Mockito.when(secondAccountData.getPostalCode()).thenReturn(UUID.randomUUID().toString());
         Mockito.when(secondAccountData.getPhone()).thenReturn(UUID.randomUUID().toString());
         Mockito.when(secondAccountData.isMigrated()).thenReturn(false);
-        Mockito.when(secondAccountData.isNotifiedForInvoices()).thenReturn(true);
         return secondAccountData;
     }
 

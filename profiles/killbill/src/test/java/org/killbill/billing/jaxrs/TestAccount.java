@@ -130,7 +130,7 @@ public class TestAccount extends TestJaxrsBase {
                                              "zozo", 4, input.getExternalKey(), "rr@google.com", 18,
                                              Currency.USD, null, false, null, null, "UTC",
                                              "bl1", "bh2", "", "", "ca", "San Francisco", "usa", "en", "415-255-2991",
-                                             "notes", false, false, null, null, EMPTY_AUDIT_LOGS);
+                                             "notes", false, null, null, EMPTY_AUDIT_LOGS);
 
         accountApi.updateAccount(input.getAccountId(), newInput, requestOptions);
         final Account updatedAccount = accountApi.getAccount(input.getAccountId(), requestOptions);
@@ -180,7 +180,6 @@ public class TestAccount extends TestJaxrsBase {
                                              null,
                                              null,
                                              "notes2",
-                                             null,
                                              null,
                                              null,
                                              null,

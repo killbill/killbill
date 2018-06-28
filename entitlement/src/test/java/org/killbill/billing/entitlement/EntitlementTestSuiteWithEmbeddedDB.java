@@ -278,7 +278,6 @@ public class EntitlementTestSuiteWithEmbeddedDB extends GuicyKillbillTestSuiteWi
                                        .email(UUID.randomUUID().toString().substring(1, 8))
                                        .phone(UUID.randomUUID().toString().substring(1, 8))
                                        .migrated(false)
-                                       .isNotifiedForInvoices(false)
                                        .externalKey(UUID.randomUUID().toString().substring(1, 8))
                                        .billingCycleDayLocal(billingDay)
                                        .currency(Currency.USD)

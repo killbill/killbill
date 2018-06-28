@@ -144,7 +144,6 @@ public class TestPaymentHelper {
         Mockito.when(accountData.getCurrency()).thenReturn(Currency.USD);
         Mockito.when(accountData.getBillCycleDayLocal()).thenReturn(1);
         Mockito.when(accountData.isMigrated()).thenReturn(false);
-        Mockito.when(accountData.isNotifiedForInvoices()).thenReturn(false);
         Mockito.when(accountData.getTimeZone()).thenReturn(DateTimeZone.UTC);
         Mockito.when(accountData.getCreatedDate()).thenReturn(clock.getUTCNow());
         Mockito.when(accountData.getReferenceTime()).thenReturn(clock.getUTCNow());
