@@ -36,6 +36,7 @@ import org.killbill.billing.payment.core.PaymentExecutors;
 import org.killbill.billing.payment.core.PaymentMethodProcessor;
 import org.killbill.billing.payment.core.PaymentPluginServiceRegistration;
 import org.killbill.billing.payment.core.PaymentProcessor;
+import org.killbill.billing.payment.core.PaymentRefresher;
 import org.killbill.billing.payment.core.PluginControlPaymentProcessor;
 import org.killbill.billing.payment.core.sm.PaymentStateMachineHelper;
 import org.killbill.billing.payment.core.sm.PluginControlPaymentAutomatonRunner;
@@ -95,6 +96,8 @@ public abstract class PaymentTestSuiteNoDB extends GuicyKillbillTestSuiteNoDB {
     protected PaymentDao paymentDao;
     @Inject
     protected PaymentStateMachineHelper paymentSMHelper;
+    @Inject
+    protected PaymentRefresher paymentRefresher;
     @Inject
     protected PaymentProcessor paymentProcessor;
     @Inject

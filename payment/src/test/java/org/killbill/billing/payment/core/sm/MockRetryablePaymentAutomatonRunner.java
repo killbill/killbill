@@ -39,6 +39,7 @@ import org.killbill.billing.payment.api.TransactionType;
 import org.killbill.billing.payment.core.PaymentExecutors;
 import org.killbill.billing.payment.core.PaymentPluginServiceRegistration;
 import org.killbill.billing.payment.core.PaymentProcessor;
+import org.killbill.billing.payment.core.PaymentRefresher;
 import org.killbill.billing.payment.core.sm.control.ControlPluginRunner;
 import org.killbill.billing.payment.core.sm.control.PaymentStateControlContext;
 import org.killbill.billing.payment.dao.PaymentDao;
@@ -61,8 +62,8 @@ public class MockRetryablePaymentAutomatonRunner extends PluginControlPaymentAut
     @Inject
     public MockRetryablePaymentAutomatonRunner(final PaymentDao paymentDao, final GlobalLocker locker, final PaymentPluginServiceRegistration paymentPluginServiceRegistration, final OSGIServiceRegistration<PaymentControlPluginApi> retryPluginRegistry, final Clock clock, final TagInternalApi tagApi, final PaymentProcessor paymentProcessor,
                                                @Named(RETRYABLE_NAMED) final RetryServiceScheduler retryServiceScheduler, final PaymentConfig paymentConfig, final PaymentExecutors executors,
-                                               final PaymentStateMachineHelper paymentSMHelper, final PaymentControlStateMachineHelper retrySMHelper, final ControlPluginRunner controlPluginRunner, final PersistentBus eventBus) {
-        super(paymentDao, locker, paymentPluginServiceRegistration, retryPluginRegistry, clock, paymentProcessor, retryServiceScheduler, paymentConfig, executors, paymentSMHelper, retrySMHelper, controlPluginRunner, eventBus);
+                                               final PaymentStateMachineHelper paymentSMHelper, final PaymentControlStateMachineHelper retrySMHelper, final ControlPluginRunner controlPluginRunner, final PersistentBus eventBus, final PaymentRefresher paymentRefresher) {
+        super(paymentDao, locker, paymentPluginServiceRegistration, retryPluginRegistry, clock, paymentProcessor, retryServiceScheduler, paymentConfig, executors, paymentSMHelper, retrySMHelper, controlPluginRunner, eventBus, paymentRefresher);
     }
 
     @Override

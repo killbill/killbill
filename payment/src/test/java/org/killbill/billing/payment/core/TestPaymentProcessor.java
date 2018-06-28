@@ -92,7 +92,7 @@ public class TestPaymentProcessor extends PaymentTestSuiteWithEmbeddedDB {
 
         mockPaymentProviderPlugin.overridePaymentPluginStatus(paymentId, authorization.getTransactions().get(0).getId(), PaymentPluginStatus.PROCESSED);
 
-        final List<Payment> payments = paymentProcessor.getAccountPayments(account.getId(), true, false, callContext, internalCallContext);
+        final List<Payment> payments = paymentControlAwareRefresher.getAccountPayments(account.getId(), true, false, callContext, internalCallContext);
         Assert.assertEquals(payments.size(), 1);
         verifyPayment(payments.get(0), paymentExternalKey, TEN, ZERO, ZERO, 1);
         verifyPaymentTransaction(payments.get(0).getTransactions().get(0), authorizationKey, TransactionType.AUTHORIZE, TEN, paymentId);
@@ -227,7 +227,7 @@ public class TestPaymentProcessor extends PaymentTestSuiteWithEmbeddedDB {
         } catch (final PaymentApiException e) {
             Assert.assertEquals(e.getCode(), ErrorCode.PAYMENT_INVALID_OPERATION.getCode());
         }
-        final Payment refreshedPayment = paymentProcessor.getPayment(authorization.getId(), false, false, PLUGIN_PROPERTIES, callContext, internalCallContext);
+        final Payment refreshedPayment = paymentRefresher.getPayment(authorization.getId(), false, false, PLUGIN_PROPERTIES, callContext, internalCallContext);
         // Make sure no state has been created (no UNKNOWN transaction for the refund)
         verifyPayment(refreshedPayment, paymentExternalKey, ZERO, ZERO, ZERO, 1);
         paymentBusListener.verify(0, 1, 0, account.getId(), paymentId, ZERO, TransactionStatus.PAYMENT_FAILURE);

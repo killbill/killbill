@@ -86,7 +86,7 @@ public class TestRetryService extends PaymentTestSuiteNoDB {
     }
 
     private Payment getPaymentForExternalKey(final String externalKey) throws PaymentApiException {
-        final Payment payment = paymentProcessor.getPaymentByExternalKey(externalKey, false, false, ImmutableList.<PluginProperty>of(), callContext, internalCallContext);
+        final Payment payment = paymentRefresher.getPaymentByExternalKey(externalKey, false, false, ImmutableList.<PluginProperty>of(), callContext, internalCallContext);
         return payment;
     }
 

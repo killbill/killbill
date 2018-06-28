@@ -178,7 +178,8 @@ public class TestRetryablePayment extends PaymentTestSuiteNoDB {
                 paymentSMHelper,
                 retrySMHelper,
                 controlPluginRunner,
-                eventBus);
+                eventBus,
+                paymentRefresher);
 
         paymentStateContext =
                 new PaymentStateControlContext(ImmutableList.<String>of(MockPaymentControlProviderPlugin.PLUGIN_NAME),
