@@ -84,5 +84,7 @@ public interface InvoiceInternalApi {
 
     public List<InvoicePayment> getInvoicePaymentsByAccount(UUID accountId, TenantContext context);
 
+    public List<InvoicePayment> getInvoicePaymentsByInvoice(UUID invoiceId, InternalTenantContext context);
+
     public InvoicePayment getInvoicePaymentByCookieId(String cookieId, TenantContext context);
 }
