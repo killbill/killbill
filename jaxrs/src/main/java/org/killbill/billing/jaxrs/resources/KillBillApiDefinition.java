@@ -31,7 +31,9 @@ import io.swagger.models.Operation;
 import io.swagger.models.Path;
 import io.swagger.models.Response;
 import io.swagger.models.Swagger;
+import io.swagger.models.auth.ApiKeyAuthDefinition;
 import io.swagger.models.auth.BasicAuthDefinition;
+import io.swagger.models.auth.In;
 import io.swagger.models.parameters.BodyParameter;
 import io.swagger.models.parameters.HeaderParameter;
 import io.swagger.models.parameters.Parameter;
@@ -46,33 +48,31 @@ import static org.killbill.billing.jaxrs.resources.JaxrsResource.QUERY_AUDIT;
 public class KillBillApiDefinition implements ReaderListener {
 
     public static final String BASIC_AUTH_SCHEME = "basicAuth";
+    public static final String API_KEY_SCHEME = "Killbill Api Key";
+    public static final String API_SECRET_SCHEME = "Killbill Api Secret";
 
     @Override
     public void beforeScan(final io.swagger.jaxrs.Reader reader, final Swagger swagger) {
         BasicAuthDefinition basicAuthDefinition = new BasicAuthDefinition();
         swagger.addSecurityDefinition(BASIC_AUTH_SCHEME, basicAuthDefinition);
+
+        ApiKeyAuthDefinition xKillbillApiKey = new ApiKeyAuthDefinition("X-Killbill-ApiKey", In.HEADER);
+        swagger.addSecurityDefinition(API_KEY_SCHEME, xKillbillApiKey);
+
+        ApiKeyAuthDefinition xKillbillApiSecret = new ApiKeyAuthDefinition("X-Killbill-ApiSecret", In.HEADER);
+        swagger.addSecurityDefinition(API_SECRET_SCHEME, xKillbillApiSecret);
     }
 
     @Override
     public void afterScan(final io.swagger.jaxrs.Reader reader, final Swagger swagger) {
 
-        final HeaderParameter apiKeyParam = new HeaderParameter();
-        apiKeyParam.setName("X-Killbill-ApiKey");
-        apiKeyParam.setType("string");
-        apiKeyParam.setRequired(true);
-
-        final HeaderParameter apiSecretParam = new HeaderParameter();
-        apiSecretParam.setName("X-Killbill-ApiSecret");
-        apiSecretParam.setType("string");
-        apiSecretParam.setRequired(true);
-
         for (final String pathName : swagger.getPaths().keySet()) {
             final Path path = swagger.getPaths().get(pathName);
-            decorateOperation(path.getGet(), pathName, "GET", apiKeyParam, apiSecretParam);
-            decorateOperation(path.getPost(), pathName, "POST", apiKeyParam, apiSecretParam);
-            decorateOperation(path.getPut(), pathName, "PUT", apiKeyParam, apiSecretParam);
-            decorateOperation(path.getDelete(), pathName, "DELETE", apiKeyParam, apiSecretParam);
-            decorateOperation(path.getOptions(), pathName, "OPTIONS", apiKeyParam, apiSecretParam);
+            decorateOperation(path.getGet(), pathName, "GET");
+            decorateOperation(path.getPost(), pathName, "POST");
+            decorateOperation(path.getPut(), pathName, "PUT");
+            decorateOperation(path.getDelete(), pathName, "DELETE");
+            decorateOperation(path.getOptions(), pathName, "OPTIONS");
 
         }
 
@@ -85,7 +85,7 @@ public class KillBillApiDefinition implements ReaderListener {
         }
     }
 
-    private void decorateOperation(final Operation op, final String pathName, final String httpMethod, final HeaderParameter apiKeyParam, final HeaderParameter apiSecretParam) {
+    private void decorateOperation(final Operation op, final String pathName, final String httpMethod) {
         if (op != null) {
 
             // Bug in swagger ? somehow when we only specify a 201, swagger adds a 200 response with the schema response
@@ -101,8 +101,8 @@ public class KillBillApiDefinition implements ReaderListener {
 
             op.addSecurity(BASIC_AUTH_SCHEME, null);
             if (requiresTenantInformation(pathName, httpMethod)) {
-                op.addParameter(apiKeyParam);
-                op.addParameter(apiSecretParam);
+                op.addSecurity(API_KEY_SCHEME, null);
+                op.addSecurity(API_SECRET_SCHEME, null);
             }
 
             for (Parameter p : op.getParameters()) {

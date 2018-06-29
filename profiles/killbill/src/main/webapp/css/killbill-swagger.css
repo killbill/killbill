@@ -1,50 +1,47 @@
-#api_info {
-  display: none;
-}
-
 /*
-#header {
-  display: none;
+ * Copyright 2014-2018 Groupon, Inc
+ * Copyright 2014-2018 The Billing Project, LLC
+ *
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
+ * (the "License"); you may not use this file except in compliance with the
+ * License.  You may obtain a copy of the License at:
+ *
+ *    http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the
+ * License for the specific language governing permissions and limitations
+ * under the License.
+ */
+
+.swagger-ui .topbar {
+    background-color: transparent;
 }
 
-.footer {
-  display: none;
-}
-*/
-
-#kb-logo-container {
-  max-width: 175px;
-  margin-left: -220px;
-  margin-top: -10px;
-  float: left;
+.swagger-ui .topbar a span {
+    display: none;
 }
 
-img#kb-logo {
-  max-width: 100%;
-  height: auto;
-  width: auto\9; /* ie8 */
+.swagger-ui .topbar .download-url-wrapper input[type="text"] {
+    border: 2px solid #e44c3a;
 }
 
-.swagger-section .swagger-ui-wrap {
-  height: 24px;
+.swagger-ui .topbar .download-url-wrapper .download-url-button {
+    background: #e44c3a;
 }
 
-.swagger-section .swagger-ui-wrap {
-  font-family: "Roboto Light";
+.swagger-ui .btn.authorize {
+    color: #e44c3a;
+    border-color: #e44c3a;
 }
 
-.swagger-section .swagger-ui-wrap ul#resources li.resource div.heading h2 {
-  font-family: "Roboto Light";
+.swagger-ui .btn.authorize svg {
+    fill: #e44c3a;
 }
 
-.swagger-section #header {
-  background-color: transparent;
+.information-container .info {
+    display: none;
 }
 
-.swagger-section #header form#api_selector {
-  float: left;
-}
-
-.swagger-section #header form#api_selector .input a#explore {
-  background-color: #e44c3a;
-}
+tr.parameters:nth-child(5) > td:nth-child(2) > input:nth-child(1)
