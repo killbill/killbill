@@ -28,6 +28,7 @@ import org.killbill.billing.payment.api.PaymentApiException;
 import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.payment.api.TransactionStatus;
 import org.killbill.billing.payment.core.PaymentProcessor;
+import org.killbill.billing.payment.core.PaymentRefresher;
 import org.killbill.billing.payment.core.ProcessorBase.DispatcherCallback;
 import org.killbill.billing.payment.core.sm.control.ControlPluginRunner.DefaultPaymentControlContext;
 import org.killbill.billing.payment.dao.PaymentTransactionModelDao;
@@ -50,13 +51,17 @@ public class CompletionControlOperation extends OperationControlCallback {
 
     private static final Joiner JOINER = Joiner.on(", ");
 
+    private final PaymentRefresher paymentRefresher;
+
     public CompletionControlOperation(final GlobalLocker locker,
                                       final PluginDispatcher<OperationResult> paymentPluginDispatcher,
                                       final PaymentConfig paymentConfig,
                                       final PaymentStateControlContext paymentStateContext,
+                                      final PaymentRefresher paymentRefresher,
                                       final PaymentProcessor paymentProcessor,
                                       final ControlPluginRunner controlPluginRunner) {
         super(locker, paymentPluginDispatcher, paymentStateContext, paymentProcessor, paymentConfig, controlPluginRunner);
+        this.paymentRefresher = paymentRefresher;
     }
 
     @Override
@@ -115,6 +120,6 @@ public class CompletionControlOperation extends OperationControlCallback {
 
     @Override
     protected Payment doCallSpecificOperationCallback() throws PaymentApiException {
-        return paymentProcessor.getPayment(paymentStateContext.getPaymentId(), false, false, ImmutableList.<PluginProperty>of(), paymentStateContext.getCallContext(), paymentStateContext.getInternalCallContext());
+        return paymentRefresher.getPayment(paymentStateContext.getPaymentId(), false, false, ImmutableList.<PluginProperty>of(), paymentStateContext.getCallContext(), paymentStateContext.getInternalCallContext());
     }
 }
