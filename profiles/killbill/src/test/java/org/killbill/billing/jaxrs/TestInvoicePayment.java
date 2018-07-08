@@ -294,6 +294,9 @@ public class TestInvoicePayment extends TestJaxrsBase {
         // Verify targetInvoiceId is not Null. See #593
         assertNotNull(invoicePayment.getTargetInvoiceId());
 
+        // Verify targetInvoiceId is not null. See #1014
+        assertEquals(invoicePaymentApi.getInvoicePayment(invoicePayment.getPaymentId(), NULL_PLUGIN_PROPERTIES, requestOptions).getTargetInvoiceId(), invoicePayment.getTargetInvoiceId());
+
         final Invoices invoices = accountApi.getInvoicesForAccount(accountJson.getAccountId(), null, requestOptions);
         assertEquals(invoices.size(), 2);
         final Invoice invoice = invoices.get(1);
