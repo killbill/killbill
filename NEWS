@@ -1,11 +1,22 @@
+0.19.19
+    https://github.com/killbill/killbill/releases/tag/killbill-0.19.19
+
+0.19.18
+    https://github.com/killbill/killbill/releases/tag/killbill-0.19.18
+
+0.19.17
+    https://github.com/killbill/killbill/releases/tag/killbill-0.19.17
+
 0.19.16
     Catalog api cleanup and enhancements for mutli-versions
     Fix missing fields in invoice items and remove constraint for generating stricly positive external charges
+    https://github.com/killbill/killbill/releases/tag/killbill-0.19.16
 
 0.19.15
     Fix issue in usage billing (DETAIL mode)
     Catalog endpoints enhancements
     Merge fix from 0.18.x to allow to change to a plan defined in a subsequent catalog version
+    https://github.com/killbill/killbill/releases/tag/killbill-0.19.15
 
 0.19.14
     Expose and persist invoice item product name
@@ -13,10 +24,12 @@
     Test hardening
     Fix swallowed TAG_DEFINITION_DOES_NOT_EXIST when doing a TagDefinitionDao#getById
     Make sure invoice item adjustment correctly reflect the catalog info from the item being adjusted
+    https://github.com/killbill/killbill/releases/tag/killbill-0.19.14
 
 0.19.13
     Entitlement/subscription refactoring and incremental perf improvements
     New implementation pass to allow a mix of RO and RW calls
+    https://github.com/killbill/killbill/releases/tag/killbill-0.19.13
 
 0.19.12
     New API to retrieve history info from any objects
@@ -29,16 +42,28 @@
 0.19.10
     Entitlement and Subscription performance
     Fix issue in invoice plugin ordering
+    https://github.com/killbill/killbill/releases/tag/killbill-0.19.10
 
 0.19.9
     Introduce thread-local dirty DB flag
     Fix NPE in bus and notifications threads
 
+0.19.8
+    https://github.com/killbill/killbill/releases/tag/killbill-0.19.8
+
+0.19.7
+    https://github.com/killbill/killbill/releases/tag/killbill-0.19.7
+
+0.19.6
+    https://github.com/killbill/killbill/releases/tag/killbill-0.19.6
+
 0.19.5
-    
     Database perf improvements
     Payment fix for lastPaymentSuccessStateName
     Invoice Usage fix for multiple usage sections
+
+0.19.4
+    Dev iteration
 
 0.19.3
     Fix issue with tag idempotency. Fixes #857
@@ -55,12 +80,24 @@
     Fix limitation where catalog plan name cannot end with an number (#842)
     Fix missing Invoice Notification when we have future billing events (#846)
     Reduce log level of InvoiceItemGeneratorLogger (#851)
+    https://github.com/killbill/killbill/releases/tag/killbill-0.19.2
+
+0.19.1
+    https://github.com/killbill/killbill/releases/tag/killbill-0.19.1
+
+0.19.0
+    Initial dev release
 
 0.18.21
     Fix for NPE if the only available usage is before the first transition date
+    https://github.com/killbill/killbill/releases/tag/killbill-0.18.21
 
 0.18.20
     Fix issue when changing a Plan defined in a subsequent catalog version
+    https://github.com/killbill/killbill/releases/tag/killbill-0.18.20
+
+0.18.19
+    See https://github.com/killbill/killbill/releases/tag/killbill-0.18.19
 
 0.18.18
     See https://github.com/killbill/killbill/releases/tag/killbill-0.18.18
