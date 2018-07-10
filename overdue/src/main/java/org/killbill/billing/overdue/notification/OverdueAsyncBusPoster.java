@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014-2017 Groupon, Inc
- * Copyright 2014-2017 The Billing Project, LLC
+ * Copyright 2014-2018 Groupon, Inc
+ * Copyright 2014-2018 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -18,6 +18,8 @@
 
 package org.killbill.billing.overdue.notification;
 
+import javax.inject.Named;
+
 import org.joda.time.DateTime;
 import org.killbill.billing.util.cache.CacheControllerDispatcher;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
@@ -32,13 +34,15 @@ import org.skife.jdbi.v2.IDBI;
 import com.google.common.collect.Iterables;
 import com.google.inject.Inject;
 
+import static org.killbill.billing.util.glue.IDBISetup.MAIN_RO_IDBI_NAMED;
+
 public class OverdueAsyncBusPoster extends DefaultOverduePosterBase {
 
     @Inject
     public OverdueAsyncBusPoster(final NotificationQueueService notificationQueueService,
-                                 final IDBI dbi, final Clock clock, final CacheControllerDispatcher cacheControllerDispatcher,
+                                 final IDBI dbi, @Named(MAIN_RO_IDBI_NAMED) final IDBI roDbi, final Clock clock, final CacheControllerDispatcher cacheControllerDispatcher,
                                  final NonEntityDao nonEntityDao, final InternalCallContextFactory internalCallContextFactory) {
-        super(notificationQueueService, dbi, clock, cacheControllerDispatcher, nonEntityDao, internalCallContextFactory);
+        super(notificationQueueService, dbi, roDbi, clock, cacheControllerDispatcher, nonEntityDao, internalCallContextFactory);
     }
 
     @Override
@@ -50,6 +54,6 @@ public class OverdueAsyncBusPoster extends DefaultOverduePosterBase {
         // Note that this is slightly incorrect because we could for instance already have a REFRESH and insert a CLEAR, but if that were the case,
         // if means overdue state would change very rapidly and the behavior would anyway be non deterministic
         // Note: don't use isEmpty() to go through all results to close the connection
-        return Iterables.<NotificationEventWithMetadata<T>>size(futureNotifications) == 0;
+        return Iterables.size(futureNotifications) == 0;
     }
 }

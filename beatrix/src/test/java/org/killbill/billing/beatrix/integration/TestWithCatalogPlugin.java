@@ -31,14 +31,17 @@ import org.killbill.billing.account.api.AccountData;
 import org.killbill.billing.api.TestApiListener.NextEvent;
 import org.killbill.billing.beatrix.util.InvoiceChecker.ExpectedInvoiceItemCheck;
 import org.killbill.billing.callcontext.InternalTenantContext;
+import org.killbill.billing.catalog.DefaultVersionedCatalog;
 import org.killbill.billing.catalog.StandaloneCatalog;
 import org.killbill.billing.catalog.StandaloneCatalogWithPriceOverride;
-import org.killbill.billing.catalog.VersionedCatalog;
 import org.killbill.billing.catalog.api.BillingPeriod;
+import org.killbill.billing.catalog.api.Catalog;
+import org.killbill.billing.catalog.api.CatalogUserApi;
 import org.killbill.billing.catalog.api.Plan;
 import org.killbill.billing.catalog.api.PriceList;
 import org.killbill.billing.catalog.api.Product;
 import org.killbill.billing.catalog.api.ProductCategory;
+import org.killbill.billing.catalog.api.VersionedCatalog;
 import org.killbill.billing.catalog.override.PriceOverride;
 import org.killbill.billing.catalog.plugin.TestModelStandalonePluginCatalog;
 import org.killbill.billing.catalog.plugin.TestModelVersionedPluginCatalog;
@@ -53,7 +56,9 @@ import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.billing.util.callcontext.TenantContext;
 import org.killbill.xmlloader.XMLLoader;
+import org.testng.Assert;
 import org.testng.annotations.BeforeClass;
+import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import com.google.common.base.Function;
@@ -72,10 +77,17 @@ public class TestWithCatalogPlugin extends TestIntegrationBase {
     @Inject
     private InternalCallContextFactory internalCallContextFactory;
 
+    @Inject
+    private CatalogUserApi catalogUserApi;
+
     private TestCatalogPluginApi testCatalogPluginApi;
 
     @BeforeClass(groups = "slow")
     public void beforeClass() throws Exception {
+        if (hasFailed()) {
+            return;
+        }
+
         super.beforeClass();
 
         this.testCatalogPluginApi = new TestCatalogPluginApi(priceOverride, internalCallContext, internalCallContextFactory);
@@ -97,8 +109,21 @@ public class TestWithCatalogPlugin extends TestIntegrationBase {
         }, testCatalogPluginApi);
     }
 
+    @BeforeMethod(groups = "slow")
+    public void beforeMethod() throws Exception {
+        if (hasFailed()) {
+            return;
+        }
+
+        super.beforeMethod();
+        testCatalogPluginApi.reset();
+    }
+
     @Test(groups = "slow")
     public void testCreateSubscriptionWithCatalogPlugin() throws Exception {
+
+        testCatalogPluginApi.addCatalogVersion("WeaponsHire.xml");
+
         // We take april as it has 30 days (easier to play with BCD)
         // Set clock to the initial start date - we implicitly assume here that the account timezone is UTC
         clock.setDay(new LocalDate(2012, 4, 1));
@@ -111,24 +136,118 @@ public class TestWithCatalogPlugin extends TestIntegrationBase {
         final DefaultEntitlement bpSubscription = createBaseEntitlementAndCheckForCompletion(account.getId(), "bundleKey", "Pistol", ProductCategory.BASE, BillingPeriod.MONTHLY, NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE);
         invoiceChecker.checkInvoice(account.getId(), 1, callContext, new ExpectedInvoiceItemCheck(new LocalDate(2012, 4, 1), null, InvoiceItemType.FIXED, new BigDecimal("0")));
         subscriptionChecker.checkSubscriptionCreated(bpSubscription.getId(), internalCallContext);
+
+        // Code went to retrieve catalog more than one time
+        Assert.assertTrue(testCatalogPluginApi.getNbLatestCatalogVersionApiCalls() > 1);
+
+        // Code only retrieved catalog from plugin once (caching works!)
+        Assert.assertEquals(testCatalogPluginApi.getNbVersionedPluginCatalogApiCalls(), 1);
     }
+
+
+    @Test(groups = "slow")
+    public void testWithMultipleVersions() throws Exception {
+
+        testCatalogPluginApi.addCatalogVersion("versionedCatalog/WeaponsHireSmall-1.xml");
+
+        final VersionedCatalog catalog1 = catalogUserApi.getCatalog("whatever", null, callContext);
+        Assert.assertEquals(testCatalogPluginApi.getNbLatestCatalogVersionApiCalls(), 1);
+        Assert.assertEquals(testCatalogPluginApi.getNbVersionedPluginCatalogApiCalls(), 1);
+        Assert.assertEquals(catalog1.getEffectiveDate().compareTo(testCatalogPluginApi.getLatestCatalogUpdate().toDate()), 0);
+
+        // Retrieve 3 more times
+        catalogUserApi.getCatalog("whatever", null, callContext);
+        catalogUserApi.getCatalog("whatever", null, callContext);
+        catalogUserApi.getCatalog("whatever", null, callContext);
+        Assert.assertEquals(testCatalogPluginApi.getNbLatestCatalogVersionApiCalls(), 4);
+        Assert.assertEquals(testCatalogPluginApi.getNbVersionedPluginCatalogApiCalls(), 1);
+
+        testCatalogPluginApi.addCatalogVersion("versionedCatalog/WeaponsHireSmall-2.xml");
+
+        final VersionedCatalog catalog2 = catalogUserApi.getCatalog("whatever", null, callContext);
+        Assert.assertEquals(testCatalogPluginApi.getNbLatestCatalogVersionApiCalls(), 5);
+        Assert.assertEquals(testCatalogPluginApi.getNbVersionedPluginCatalogApiCalls(), 2);
+        Assert.assertEquals(catalog2.getEffectiveDate().compareTo(testCatalogPluginApi.getLatestCatalogUpdate().toDate()), 0);
+
+        testCatalogPluginApi.addCatalogVersion("versionedCatalog/WeaponsHireSmall-3.xml");
+
+        final VersionedCatalog catalog3 = catalogUserApi.getCatalog("whatever", null, callContext);
+        Assert.assertEquals(testCatalogPluginApi.getNbLatestCatalogVersionApiCalls(), 6);
+        Assert.assertEquals(testCatalogPluginApi.getNbVersionedPluginCatalogApiCalls(), 3);
+        Assert.assertEquals(catalog3.getEffectiveDate().compareTo(testCatalogPluginApi.getLatestCatalogUpdate().toDate()), 0);
+
+
+        // Retrieve 4 more times
+        catalogUserApi.getCatalog("whatever", null, callContext);
+        catalogUserApi.getCatalog("whatever", null, callContext);
+        catalogUserApi.getCatalog("whatever", null, callContext);
+        catalogUserApi.getCatalog("whatever", null, callContext);
+        Assert.assertEquals(testCatalogPluginApi.getNbLatestCatalogVersionApiCalls(), 10);
+        Assert.assertEquals(testCatalogPluginApi.getNbVersionedPluginCatalogApiCalls(), 3);
+
+    }
+
 
     public static class TestCatalogPluginApi implements CatalogPluginApi {
 
-        private final VersionedCatalog versionedCatalog;
+        final PriceOverride priceOverride;
+        final InternalTenantContext internalTenantContext;
+        final InternalCallContextFactory internalCallContextFactory;
+
+        private DefaultVersionedCatalog versionedCatalog;
+        private DateTime latestCatalogUpdate;
+        private int nbLatestCatalogVersionApiCalls;
+        private int nbVersionedPluginCatalogApiCalls;
 
         public TestCatalogPluginApi(final PriceOverride priceOverride, final InternalTenantContext internalTenantContext, final InternalCallContextFactory internalCallContextFactory) throws Exception {
-            final StandaloneCatalog inputCatalog = XMLLoader.getObjectFromString(Resources.getResource("WeaponsHire.xml").toExternalForm(), StandaloneCatalog.class);
-            final List<StandaloneCatalog> versions = new ArrayList<StandaloneCatalog>();
-            final StandaloneCatalogWithPriceOverride standaloneCatalogWithPriceOverride = new StandaloneCatalogWithPriceOverride(inputCatalog, priceOverride, internalTenantContext.getTenantRecordId(), internalCallContextFactory);
-            versions.add(standaloneCatalogWithPriceOverride);
-            versionedCatalog = new VersionedCatalog(getClock());
-            versionedCatalog.addAll(versions);
+            this.priceOverride = priceOverride;
+            this.internalTenantContext = internalTenantContext;
+            this.internalCallContextFactory = internalCallContextFactory;
+            reset();
+        }
+
+        @Override
+        public DateTime getLatestCatalogVersion(final Iterable<PluginProperty> iterable, final TenantContext tenantContext) {
+            nbLatestCatalogVersionApiCalls++;
+            return latestCatalogUpdate;
         }
 
         @Override
         public VersionedPluginCatalog getVersionedPluginCatalog(final Iterable<PluginProperty> properties, final TenantContext tenantContext) {
-            return new TestModelVersionedPluginCatalog(versionedCatalog.getCatalogName(), versionedCatalog.getRecurringBillingMode(), toStandalonePluginCatalogs(versionedCatalog.getVersions()));
+            nbVersionedPluginCatalogApiCalls++;
+            Assert.assertNotNull(versionedCatalog, "test did not initialize plugin catalog");
+            return new TestModelVersionedPluginCatalog(versionedCatalog.getCatalogName(), toStandalonePluginCatalogs(versionedCatalog.getVersions()));
+        }
+
+        public void addCatalogVersion(final String catalogResource) throws Exception {
+
+            final StandaloneCatalog inputCatalogVersion = XMLLoader.getObjectFromString(Resources.getResource(catalogResource).toExternalForm(), StandaloneCatalog.class);
+            final StandaloneCatalogWithPriceOverride inputCatalogVersionWithOverride = new StandaloneCatalogWithPriceOverride(inputCatalogVersion, priceOverride, internalTenantContext.getTenantRecordId(), internalCallContextFactory);
+
+            this.latestCatalogUpdate = new DateTime(inputCatalogVersion.getEffectiveDate());
+            if (versionedCatalog == null) {
+                versionedCatalog = new DefaultVersionedCatalog(getClock());
+            }
+            versionedCatalog.add(inputCatalogVersionWithOverride);
+        }
+
+        public void reset() {
+            this.versionedCatalog = null;
+            this.latestCatalogUpdate = null;
+            this.nbLatestCatalogVersionApiCalls = 0;
+            this.nbVersionedPluginCatalogApiCalls = 0;
+        }
+
+        public int getNbLatestCatalogVersionApiCalls() {
+            return nbLatestCatalogVersionApiCalls;
+        }
+
+        public int getNbVersionedPluginCatalogApiCalls() {
+            return nbVersionedPluginCatalogApiCalls;
+        }
+
+        public DateTime getLatestCatalogUpdate() {
+            return latestCatalogUpdate;
         }
 
         private Iterable<StandalonePluginCatalog> toStandalonePluginCatalogs(final List<StandaloneCatalog> input) {

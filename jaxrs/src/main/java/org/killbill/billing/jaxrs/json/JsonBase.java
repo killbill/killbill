@@ -41,12 +41,12 @@ public abstract class JsonBase {
     }
 
     public JsonBase(@Nullable final List<AuditLogJson> auditLogs) {
-        this.auditLogs = auditLogs;
+        this.auditLogs = auditLogs == null ? ImmutableList.<AuditLogJson>of() : auditLogs;
     }
 
     protected static ImmutableList<AuditLogJson> toAuditLogJson(@Nullable final List<AuditLog> auditLogs) {
         if (auditLogs == null) {
-            return null;
+            return ImmutableList.of();
         }
 
         return ImmutableList.<AuditLogJson>copyOf(Collections2.transform(auditLogs, new Function<AuditLog, AuditLogJson>() {

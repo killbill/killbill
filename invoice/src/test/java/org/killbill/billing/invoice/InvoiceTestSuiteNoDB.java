@@ -22,7 +22,6 @@ import org.killbill.billing.GuicyKillbillTestSuiteNoDB;
 import org.killbill.billing.account.api.AccountInternalApi;
 import org.killbill.billing.currency.api.CurrencyConversionApi;
 import org.killbill.billing.invoice.api.InvoiceInternalApi;
-import org.killbill.billing.invoice.api.InvoicePaymentApi;
 import org.killbill.billing.invoice.api.InvoiceUserApi;
 import org.killbill.billing.invoice.api.formatters.ResourceBundleFactory;
 import org.killbill.billing.invoice.dao.InvoiceDao;
@@ -33,12 +32,15 @@ import org.killbill.billing.invoice.glue.TestInvoiceModuleNoDB;
 import org.killbill.billing.invoice.usage.RawUsageOptimizer;
 import org.killbill.billing.junction.BillingInternalApi;
 import org.killbill.billing.lifecycle.api.BusService;
+import org.killbill.billing.payment.api.InvoicePaymentApi;
 import org.killbill.billing.platform.api.KillbillConfigSource;
 import org.killbill.billing.subscription.api.SubscriptionBaseInternalApi;
 import org.killbill.billing.usage.api.UsageUserApi;
 import org.killbill.billing.util.api.TagUserApi;
 import org.killbill.billing.util.cache.CacheControllerDispatcher;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
+import org.killbill.billing.util.config.definition.InvoiceConfig;
+import org.killbill.billing.util.config.definition.InvoiceConfig.UsageDetailMode;
 import org.killbill.bus.api.PersistentBus;
 import org.killbill.clock.Clock;
 import org.killbill.commons.locker.GlobalLocker;
@@ -63,9 +65,9 @@ public abstract class InvoiceTestSuiteNoDB extends GuicyKillbillTestSuiteNoDB {
     @Inject
     protected InvoiceUserApi invoiceUserApi;
     @Inject
-    protected InvoicePaymentApi invoicePaymentApi;
-    @Inject
     protected InvoiceGenerator generator;
+    @Inject
+    protected InvoiceConfig invoiceConfig;
     @Inject
     protected BillingInternalApi billingApi;
     @Inject
@@ -104,20 +106,33 @@ public abstract class InvoiceTestSuiteNoDB extends GuicyKillbillTestSuiteNoDB {
     protected KillbillConfigSource getConfigSource() {
         return getConfigSource("/resource.properties");
     }
+    protected UsageDetailMode usageDetailMode;
 
     @BeforeClass(groups = "fast")
     protected void beforeClass() throws Exception {
+        if (hasFailed()) {
+            return;
+        }
+
         final Injector injector = Guice.createInjector(new TestInvoiceModuleNoDB(configSource));
         injector.injectMembers(this);
     }
 
     @BeforeMethod(groups = "fast")
     public void beforeMethod() {
+        if (hasFailed()) {
+            return;
+        }
+
         bus.start();
     }
 
     @AfterMethod(groups = "fast")
     public void afterMethod() {
+        if (hasFailed()) {
+            return;
+        }
+
         bus.stop();
     }
 }

@@ -1,6 +1,6 @@
 /*
- * Copyright 2014-2016 Groupon, Inc
- * Copyright 2014-2016 The Billing Project, LLC
+ * Copyright 2014-2018 Groupon, Inc
+ * Copyright 2014-2018 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -40,13 +40,13 @@ import org.killbill.billing.catalog.api.CatalogUserApi;
 import org.killbill.billing.catalog.api.Plan;
 import org.killbill.billing.catalog.api.PlanPhasePriceOverride;
 import org.killbill.billing.catalog.api.PlanPhaseSpecifier;
-import org.killbill.billing.catalog.api.PlanSpecifier;
 import org.killbill.billing.catalog.api.PriceListSet;
 import org.killbill.billing.catalog.api.ProductCategory;
 import org.killbill.billing.catalog.api.SimplePlanDescriptor;
 import org.killbill.billing.catalog.api.StaticCatalog;
 import org.killbill.billing.catalog.api.TimeUnit;
 import org.killbill.billing.catalog.api.user.DefaultSimplePlanDescriptor;
+import org.killbill.billing.entitlement.api.DefaultEntitlementSpecifier;
 import org.killbill.billing.entitlement.api.Entitlement;
 import org.killbill.billing.entitlement.api.EntitlementApiException;
 import org.killbill.billing.entitlement.api.Subscription;
@@ -82,6 +82,10 @@ public class TestIntegrationWithCatalogUpdate extends TestIntegrationBase {
 
     @BeforeMethod(groups = "slow")
     public void beforeMethod() throws Exception {
+        if (hasFailed()) {
+            return;
+        }
+
         super.beforeMethod();
 
         // Set original time
@@ -116,7 +120,8 @@ public class TestIntegrationWithCatalogUpdate extends TestIntegrationBase {
 
         // Change Plan to the newly added Plan and verify correct default rules behavior (IMMEDIATE change)
         busHandler.pushExpectedEvents(NextEvent.CHANGE, NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT);
-        baseEntitlement.changePlan(new PlanSpecifier("SuperFoo", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME), null, ImmutableList.<PluginProperty>of(), testCallContext);
+        final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("SuperFoo", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME);
+        baseEntitlement.changePlan(new DefaultEntitlementSpecifier(spec), ImmutableList.<PluginProperty>of(), testCallContext);
         assertListenerStatus();
 
         invoiceChecker.checkInvoice(account.getId(), 2, testCallContext,
@@ -182,7 +187,7 @@ public class TestIntegrationWithCatalogUpdate extends TestIntegrationBase {
 
         try {
             final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("Zoe", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, null);
-            entitlementApi.createBaseEntitlement(account.getId(), spec, UUID.randomUUID().toString(), null, null, null, false, ImmutableList.<PluginProperty>of(), testCallContext);
+            entitlementApi.createBaseEntitlement(account.getId(),  new DefaultEntitlementSpecifier(spec), UUID.randomUUID().toString(), null, null, false, true, ImmutableList.<PluginProperty>of(), testCallContext);
             fail("Creating entitlement should fail");
         } catch (final EntitlementApiException e) {
             assertEquals(e.getCode(), ErrorCode.CAT_MULTIPLE_MATCHING_PLANS_FOR_PRICELIST.getCode());
@@ -202,10 +207,10 @@ public class TestIntegrationWithCatalogUpdate extends TestIntegrationBase {
         final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("bar-monthly", null);
 
         final List<PlanPhasePriceOverride> overrides = new ArrayList<PlanPhasePriceOverride>();
-        overrides.add(new DefaultPlanPhasePriceOverride(plan.getFinalPhase().getName(), account.getCurrency(), null, BigDecimal.ONE));
+        overrides.add(new DefaultPlanPhasePriceOverride(plan.getFinalPhase().getName(), account.getCurrency(), null, BigDecimal.ONE, null));
         final Entitlement baseEntitlement = createEntitlement(spec, overrides, true);
 
-        List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), false, testCallContext);
+        List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, testCallContext);
         assertEquals(invoices.size(), 1);
         assertEquals(invoices.get(0).getChargedAmount().compareTo(BigDecimal.ONE), 0);
 
@@ -213,16 +218,16 @@ public class TestIntegrationWithCatalogUpdate extends TestIntegrationBase {
         clock.addMonths(1);
         assertListenerStatus();
 
-        invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), false, testCallContext);
+        invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, testCallContext);
         assertEquals(invoices.size(), 2);
         assertEquals(invoices.get(1).getChargedAmount().compareTo(BigDecimal.ONE), 0);
 
         // Change plan to original (non overridden plan)
         busHandler.pushExpectedEvents(NextEvent.CHANGE, NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT);
-        baseEntitlement.changePlan(spec, null, ImmutableList.<PluginProperty>of(), testCallContext);
+        baseEntitlement.changePlan( new DefaultEntitlementSpecifier(spec), ImmutableList.<PluginProperty>of(), testCallContext);
         assertListenerStatus();
 
-        invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), false, testCallContext);
+        invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, testCallContext);
         assertEquals(invoices.size(), 3);
         assertEquals(invoices.get(2).getChargedAmount().compareTo(new BigDecimal("9.00")), 0); // 10 (recurring) - 1 (repair)
     }
@@ -241,14 +246,14 @@ public class TestIntegrationWithCatalogUpdate extends TestIntegrationBase {
 
         createEntitlement(spec, null, true);
 
-        List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), false, testCallContext);
+        List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, testCallContext);
         assertEquals(invoices.size(), 1);
         assertEquals(invoices.get(0).getChargedAmount().compareTo(BigDecimal.TEN), 0);
         assertEquals(invoices.get(0).getInvoiceItems().size(), 1);
 
         final List<ExpectedInvoiceItemCheck> expectedInvoices = new ArrayList<ExpectedInvoiceItemCheck>();
         expectedInvoices.add(new ExpectedInvoiceItemCheck(new LocalDate(2016, 6, 1), new LocalDate(2016, 7, 1), InvoiceItemType.RECURRING, BigDecimal.TEN));
-        invoiceChecker.checkInvoiceNoAudits(invoices.get(0), callContext, expectedInvoices);
+        invoiceChecker.checkInvoiceNoAudits(invoices.get(0), expectedInvoices);
 
         int invoiceSize = 2;
         LocalDate startDate = new LocalDate(2016, 7, 1);
@@ -261,11 +266,11 @@ public class TestIntegrationWithCatalogUpdate extends TestIntegrationBase {
             assertListenerStatus();
 
             LocalDate endDate = startDate.plusDays(30);
-            invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), false, testCallContext);
+            invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, testCallContext);
             assertEquals(invoices.size(), invoiceSize);
 
             expectedInvoices.add(new ExpectedInvoiceItemCheck(startDate, endDate, InvoiceItemType.RECURRING, BigDecimal.TEN));
-            invoiceChecker.checkInvoiceNoAudits(invoices.get(invoices.size() - 1), callContext, expectedInvoices);
+            invoiceChecker.checkInvoiceNoAudits(invoices.get(invoices.size() - 1), expectedInvoices);
 
             startDate = endDate;
             invoiceSize++;
@@ -284,8 +289,9 @@ public class TestIntegrationWithCatalogUpdate extends TestIntegrationBase {
         final PlanPhaseSpecifier specZero = new PlanPhaseSpecifier("zeroDesc-monthly", null);
 
         busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE);
-        final Entitlement baseEntitlement = entitlementApi.createBaseEntitlement(account.getId(), specZero, UUID.randomUUID().toString(), ImmutableList.<PlanPhasePriceOverride>of(), null, null, false, ImmutableList.<PluginProperty>of(), testCallContext);
+        final UUID baseEntitlementId = entitlementApi.createBaseEntitlement(account.getId(),  new DefaultEntitlementSpecifier(specZero), UUID.randomUUID().toString(), null, null, false, true, ImmutableList.<PluginProperty>of(), testCallContext);
         assertListenerStatus();
+        final Entitlement baseEntitlement = entitlementApi.getEntitlementForId(baseEntitlementId, testCallContext);
 
         Subscription refreshedBaseEntitlement = subscriptionApi.getSubscriptionForEntitlementId(baseEntitlement.getId(), testCallContext);
         assertEquals(refreshedBaseEntitlement.getChargedThroughDate(), new LocalDate(2016, 7, 1));
@@ -313,8 +319,9 @@ public class TestIntegrationWithCatalogUpdate extends TestIntegrationBase {
         final PlanPhaseSpecifier specNonZero = new PlanPhaseSpecifier("superfoo-monthly", null);
 
         busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT);
-        final Entitlement baseEntitlement2 = entitlementApi.createBaseEntitlement(account.getId(), specNonZero, UUID.randomUUID().toString(), ImmutableList.<PlanPhasePriceOverride>of(), null, null, false, ImmutableList.<PluginProperty>of(), testCallContext);
+        final UUID baseEntitlement2Id = entitlementApi.createBaseEntitlement(account.getId(),  new DefaultEntitlementSpecifier(specNonZero), UUID.randomUUID().toString(), null, null, false, true, ImmutableList.<PluginProperty>of(), testCallContext);
         assertListenerStatus();
+        final Entitlement baseEntitlement2 = entitlementApi.getEntitlementForId(baseEntitlement2Id, testCallContext);
 
         busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT);
         clock.addMonths(1);
@@ -374,8 +381,9 @@ public class TestIntegrationWithCatalogUpdate extends TestIntegrationBase {
         final PlanPhaseSpecifier planPhaseSpec = new PlanPhaseSpecifier("hello-monthly", null);
 
         busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE);
-        final Entitlement baseEntitlement = entitlementApi.createBaseEntitlement(account.getId(), planPhaseSpec, UUID.randomUUID().toString(), ImmutableList.<PlanPhasePriceOverride>of(), null, null, false, ImmutableList.<PluginProperty>of(), testCallContext);
+        final UUID baseEntitlementId = entitlementApi.createBaseEntitlement(account.getId(),  new DefaultEntitlementSpecifier(planPhaseSpec), UUID.randomUUID().toString(), null, null, false, true, ImmutableList.<PluginProperty>of(), testCallContext);
         assertListenerStatus();
+        final Entitlement baseEntitlement = entitlementApi.getEntitlementForId(baseEntitlementId, testCallContext);
 
         Subscription refreshedBaseEntitlement = subscriptionApi.getSubscriptionForEntitlementId(baseEntitlement.getId(), testCallContext);
         assertEquals(refreshedBaseEntitlement.getChargedThroughDate(), new LocalDate(2016, 6, 1));
@@ -408,9 +416,9 @@ public class TestIntegrationWithCatalogUpdate extends TestIntegrationBase {
         } else {
             busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE);
         }
-        final Entitlement entitlement = entitlementApi.createBaseEntitlement(account.getId(), spec, UUID.randomUUID().toString(), overrides, null, null, false, ImmutableList.<PluginProperty>of(), testCallContext);
+        final UUID entitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec, null, overrides), UUID.randomUUID().toString(), null, null, false, true, ImmutableList.<PluginProperty>of(), testCallContext);
         assertListenerStatus();
-        return entitlement;
+        return entitlementApi.getEntitlementForId(entitlementId, testCallContext);
     }
 
     private void setupTenant() throws TenantApiException {
@@ -421,7 +429,7 @@ public class TestIntegrationWithCatalogUpdate extends TestIntegrationBase {
         // Only place where we use callContext
         tenant = tenantUserApi.createTenant(new DefaultTenant(uuid, init, init, externalKey, apiKey, apiSecret), callContext);
 
-        testCallContext = new DefaultCallContext(tenant.getId(), "tester", CallOrigin.EXTERNAL, UserType.TEST,
+        testCallContext = new DefaultCallContext(null, tenant.getId(), "tester", CallOrigin.EXTERNAL, UserType.TEST,
                                                  "good reason", "trust me", uuid, clock);
     }
 

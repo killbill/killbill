@@ -18,6 +18,7 @@ package org.killbill.billing.junction;
 
 import org.killbill.billing.GuicyKillbillTestSuiteNoDB;
 import org.killbill.billing.account.api.AccountInternalApi;
+import org.killbill.billing.catalog.api.CatalogInternalApi;
 import org.killbill.billing.catalog.api.CatalogService;
 import org.killbill.billing.entitlement.dao.BlockingStateDao;
 import org.killbill.billing.junction.glue.TestJunctionModuleNoDB;
@@ -45,6 +46,8 @@ public abstract class JunctionTestSuiteNoDB extends GuicyKillbillTestSuiteNoDB {
     @Inject
     protected CatalogService catalogService;
     @Inject
+    protected CatalogInternalApi catalogInternalApi;
+    @Inject
     protected SubscriptionBaseInternalApi subscriptionInternalApi;
     @Inject
     protected PersistentBus bus;
@@ -57,17 +60,29 @@ public abstract class JunctionTestSuiteNoDB extends GuicyKillbillTestSuiteNoDB {
 
     @BeforeClass(groups = "fast")
     protected void beforeClass() throws Exception {
+        if (hasFailed()) {
+            return;
+        }
+
         final Injector injector = Guice.createInjector(new TestJunctionModuleNoDB(configSource));
         injector.injectMembers(this);
     }
 
     @BeforeMethod(groups = "fast")
     public void beforeMethod() throws Exception {
+        if (hasFailed()) {
+            return;
+        }
+
         bus.start();
     }
 
     @AfterMethod(groups = "fast")
     public void afterMethod() {
+        if (hasFailed()) {
+            return;
+        }
+
         bus.stop();
     }
 }

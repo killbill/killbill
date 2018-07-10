@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014-2017 Groupon, Inc
- * Copyright 2014-2017 The Billing Project, LLC
+ * Copyright 2014-2018 Groupon, Inc
+ * Copyright 2014-2018 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -39,6 +39,8 @@ import org.killbill.billing.payment.api.Payment;
 import org.killbill.billing.payment.api.PaymentApiException;
 import org.killbill.billing.payment.api.TransactionStatus;
 import org.killbill.billing.payment.api.TransactionType;
+import org.killbill.billing.util.api.AuditLevel;
+import org.killbill.billing.util.audit.AuditLogWithHistory;
 import org.killbill.billing.util.entity.DefaultPagination;
 import org.killbill.billing.util.entity.Pagination;
 import org.killbill.billing.util.entity.dao.MockEntityDaoBase;
@@ -234,6 +236,17 @@ public class MockPaymentDao extends MockEntityDaoBase<PaymentModelDao, Payment, 
 
     @Override
     public PaymentAndTransactionModelDao updatePaymentAndTransactionOnCompletion(final UUID accountId, final UUID attemptId, final UUID paymentId, final TransactionType transactionType,
+                                                                                 final String currentPaymentStateName, final UUID transactionId,
+                                                                                 final TransactionStatus paymentStatus, final BigDecimal processedAmount, final Currency processedCurrency,
+                                                                                 final String gatewayErrorCode, final String gatewayErrorMsg, final InternalCallContext context) {
+        return updatePaymentAndTransactionOnCompletion(accountId, attemptId, paymentId, transactionType,
+                                                       currentPaymentStateName, null, transactionId,
+                                                       paymentStatus, processedAmount, processedCurrency,
+                                                       gatewayErrorCode, gatewayErrorMsg, context);
+    }
+
+    @Override
+    public PaymentAndTransactionModelDao updatePaymentAndTransactionOnCompletion(final UUID accountId, final UUID attemptId, final UUID paymentId, final TransactionType transactionType,
                                                                                  final String currentPaymentStateName, final String lastSuccessPaymentStateName, final UUID transactionId,
                                                                                  final TransactionStatus paymentStatus, final BigDecimal processedAmount, final Currency processedCurrency,
                                                                                  final String gatewayErrorCode, final String gatewayErrorMsg, final InternalCallContext context) {
@@ -381,6 +394,11 @@ public class MockPaymentDao extends MockEntityDaoBase<PaymentModelDao, Payment, 
     }
 
     @Override
+    public List<PaymentMethodModelDao> getPaymentMethodsIncludedDeleted(final InternalTenantContext context) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
     public Pagination<PaymentMethodModelDao> getPaymentMethods(final String pluginName, final Long offset, final Long limit, final InternalTenantContext context) {
         throw new UnsupportedOperationException();
     }
@@ -407,6 +425,26 @@ public class MockPaymentDao extends MockEntityDaoBase<PaymentModelDao, Payment, 
     @Override
     public List<PaymentMethodModelDao> refreshPaymentMethods(final String pluginName, final List<PaymentMethodModelDao> paymentMethods, final InternalCallContext context) {
         return ImmutableList.<PaymentMethodModelDao>of();
+    }
+
+    @Override
+    public List<AuditLogWithHistory> getPaymentAuditLogsWithHistoryForId(final UUID paymentId, final AuditLevel auditLevel, final InternalTenantContext context) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public List<AuditLogWithHistory> getPaymentMethodAuditLogsWithHistoryForId(final UUID paymentMethodId, final AuditLevel auditLevel, final InternalTenantContext context) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public List<AuditLogWithHistory> getPaymentAttemptAuditLogsWithHistoryForId(final UUID paymentAttemptId, final AuditLevel auditLevel, final InternalTenantContext context) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public List<AuditLogWithHistory> getPaymentTransactionAuditLogsWithHistoryForId(final UUID paymentTransactionId, final AuditLevel auditLevel, final InternalTenantContext context) {
+        throw new UnsupportedOperationException();
     }
 
     @Override

@@ -1,6 +1,6 @@
 /*
- * Copyright 2016 Groupon, Inc
- * Copyright 2016 The Billing Project, LLC
+ * Copyright 2014-2018 Groupon, Inc
+ * Copyright 2014-2018 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -18,6 +18,7 @@
 package org.killbill.billing.payment.api;
 
 import java.math.BigDecimal;
+import java.util.List;
 import java.util.UUID;
 
 import org.killbill.billing.ErrorCode;
@@ -48,12 +49,20 @@ public class TestDefaultAdminPaymentApi extends PaymentTestSuiteWithEmbeddedDB {
 
     @BeforeClass(groups = "slow")
     protected void beforeClass() throws Exception {
+        if (hasFailed()) {
+            return;
+        }
+
         super.beforeClass();
         mockPaymentProviderPlugin = (MockPaymentProviderPlugin) registry.getServiceForName(MockPaymentProviderPlugin.PLUGIN_NAME);
     }
 
     @BeforeMethod(groups = "slow")
     public void beforeMethod() throws Exception {
+        if (hasFailed()) {
+            return;
+        }
+
         super.beforeMethod();
 
         mockPaymentProviderPlugin.clear();
@@ -81,15 +90,29 @@ public class TestDefaultAdminPaymentApi extends PaymentTestSuiteWithEmbeddedDB {
 
     @Test(groups = "slow")
     public void testFixPaymentTransactionState() throws PaymentApiException {
-        final Payment payment = paymentApi.createAuthorization(account,
-                                                               account.getPaymentMethodId(),
-                                                               null,
-                                                               BigDecimal.TEN,
-                                                               Currency.EUR,
-                                                               UUID.randomUUID().toString(),
-                                                               UUID.randomUUID().toString(),
-                                                               ImmutableList.<PluginProperty>of(),
-                                                               callContext);
+        final PaymentOptions paymentOptions = new PaymentOptions() {
+            @Override
+            public boolean isExternalPayment() {
+                return false;
+            }
+
+            @Override
+            public List<String> getPaymentControlPluginNames() {
+                return ImmutableList.<String>of(MockPaymentControlProviderPlugin.PLUGIN_NAME);
+            }
+        };
+        final Payment payment = paymentApi.createAuthorizationWithPaymentControl(account,
+                                                                                 account.getPaymentMethodId(),
+                                                                                 null,
+                                                                                 BigDecimal.TEN,
+                                                                                 Currency.EUR,
+                                                                                 null,
+                                                                                 UUID.randomUUID().toString(),
+                                                                                 UUID.randomUUID().toString(),
+                                                                                 ImmutableList.<PluginProperty>of(),
+                                                                                 paymentOptions,
+                                                                                 callContext);
+        Assert.assertEquals(payment.getTransactions().size(), 1);
 
         final PaymentModelDao paymentModelDao = paymentDao.getPayment(payment.getId(), internalCallContext);
         final PaymentTransactionModelDao paymentTransactionModelDao = paymentDao.getPaymentTransaction(payment.getTransactions().get(0).getId(), internalCallContext);
@@ -103,16 +126,35 @@ public class TestDefaultAdminPaymentApi extends PaymentTestSuiteWithEmbeddedDB {
 
         adminPaymentApi.fixPaymentTransactionState(payment, payment.getTransactions().get(0), TransactionStatus.PAYMENT_FAILURE, null, "AUTH_ERRORED", ImmutableList.<PluginProperty>of(), callContext);
 
+        Assert.assertEquals(paymentApi.getPayment(payment.getId(), false, false, ImmutableList.<PluginProperty>of(), callContext).getTransactions().size(), 1);
         final PaymentModelDao refreshedPaymentModelDao = paymentDao.getPayment(payment.getId(), internalCallContext);
         final PaymentTransactionModelDao refreshedPaymentTransactionModelDao = paymentDao.getPaymentTransaction(payment.getTransactions().get(0).getId(), internalCallContext);
         Assert.assertEquals(refreshedPaymentModelDao.getStateName(), "AUTH_ERRORED");
-        // TODO Shouldn't we allow the user to override this too?
-        Assert.assertEquals(refreshedPaymentModelDao.getLastSuccessStateName(), "AUTH_SUCCESS");
+        Assert.assertNull(refreshedPaymentModelDao.getLastSuccessStateName());
         Assert.assertEquals(refreshedPaymentTransactionModelDao.getTransactionStatus(), TransactionStatus.PAYMENT_FAILURE);
         Assert.assertEquals(refreshedPaymentTransactionModelDao.getProcessedAmount().compareTo(BigDecimal.TEN), 0);
         Assert.assertEquals(refreshedPaymentTransactionModelDao.getProcessedCurrency(), Currency.EUR);
         Assert.assertEquals(refreshedPaymentTransactionModelDao.getGatewayErrorCode(), "");
         Assert.assertEquals(refreshedPaymentTransactionModelDao.getGatewayErrorMsg(), "");
+
+        // Advance the clock to make sure the effective date of the new transaction is after the first one
+        clock.addDays(1);
+        assertListenerStatus();
+
+        // Verify subsequent payment retries work
+        retryService.retryPaymentTransaction(refreshedPaymentTransactionModelDao.getAttemptId(), ImmutableList.<String>of(MockPaymentControlProviderPlugin.PLUGIN_NAME), internalCallContext);
+
+        final Payment retriedPayment = paymentApi.getPayment(payment.getId(), false, false, ImmutableList.<PluginProperty>of(), callContext);
+        Assert.assertEquals(retriedPayment.getTransactions().size(), 2);
+        final PaymentModelDao retriedPaymentModelDao = paymentDao.getPayment(payment.getId(), internalCallContext);
+        final PaymentTransactionModelDao retriedPaymentTransactionModelDao = paymentDao.getPaymentTransaction(retriedPayment.getTransactions().get(1).getId(), internalCallContext);
+        Assert.assertEquals(retriedPaymentModelDao.getStateName(), "AUTH_SUCCESS");
+        Assert.assertEquals(retriedPaymentModelDao.getLastSuccessStateName(), "AUTH_SUCCESS");
+        Assert.assertEquals(retriedPaymentTransactionModelDao.getTransactionStatus(), TransactionStatus.SUCCESS);
+        Assert.assertEquals(retriedPaymentTransactionModelDao.getProcessedAmount().compareTo(BigDecimal.TEN), 0);
+        Assert.assertEquals(retriedPaymentTransactionModelDao.getProcessedCurrency(), Currency.EUR);
+        Assert.assertEquals(retriedPaymentTransactionModelDao.getGatewayErrorCode(), "");
+        Assert.assertEquals(retriedPaymentTransactionModelDao.getGatewayErrorMsg(), "");
     }
 
     @Test(groups = "slow", description = "https://github.com/killbill/killbill/issues/551")
@@ -122,6 +164,7 @@ public class TestDefaultAdminPaymentApi extends PaymentTestSuiteWithEmbeddedDB {
                                                                null,
                                                                BigDecimal.TEN,
                                                                Currency.EUR,
+                                                               null,
                                                                UUID.randomUUID().toString(),
                                                                UUID.randomUUID().toString(),
                                                                ImmutableList.<PluginProperty>of(),
@@ -152,6 +195,7 @@ public class TestDefaultAdminPaymentApi extends PaymentTestSuiteWithEmbeddedDB {
                                                                null,
                                                                BigDecimal.TEN,
                                                                Currency.EUR,
+                                                               null,
                                                                UUID.randomUUID().toString(),
                                                                UUID.randomUUID().toString(),
                                                                ImmutableList.<PluginProperty>of(),
@@ -198,8 +242,7 @@ public class TestDefaultAdminPaymentApi extends PaymentTestSuiteWithEmbeddedDB {
         final PaymentModelDao refreshedPaymentModelDao = paymentDao.getPayment(payment.getId(), internalCallContext);
         final PaymentTransactionModelDao refreshedPaymentTransactionModelDao = paymentDao.getPaymentTransaction(payment.getTransactions().get(0).getId(), internalCallContext);
         Assert.assertEquals(refreshedPaymentModelDao.getStateName(), "AUTH_ERRORED");
-        // TODO Shouldn't we allow the user to override this too?
-        Assert.assertEquals(refreshedPaymentModelDao.getLastSuccessStateName(), "AUTH_SUCCESS");
+        Assert.assertNull(refreshedPaymentModelDao.getLastSuccessStateName());
         Assert.assertEquals(refreshedPaymentTransactionModelDao.getTransactionStatus(), TransactionStatus.PAYMENT_FAILURE);
         Assert.assertEquals(refreshedPaymentTransactionModelDao.getProcessedAmount().compareTo(BigDecimal.TEN), 0);
         Assert.assertEquals(refreshedPaymentTransactionModelDao.getProcessedCurrency(), Currency.EUR);
@@ -214,6 +257,7 @@ public class TestDefaultAdminPaymentApi extends PaymentTestSuiteWithEmbeddedDB {
                                                           null,
                                                           BigDecimal.TEN,
                                                           Currency.EUR,
+                                                          null,
                                                           UUID.randomUUID().toString(),
                                                           UUID.randomUUID().toString(),
                                                           ImmutableList.<PluginProperty>of(),
@@ -229,6 +273,7 @@ public class TestDefaultAdminPaymentApi extends PaymentTestSuiteWithEmbeddedDB {
                                                        payment.getId(),
                                                        payment.getPurchasedAmount(),
                                                        payment.getCurrency(),
+                                                       null,
                                                        UUID.randomUUID().toString(),
                                                        ImmutableList.<PluginProperty>of(),
                                                        callContext);
@@ -261,6 +306,7 @@ public class TestDefaultAdminPaymentApi extends PaymentTestSuiteWithEmbeddedDB {
                                                           null,
                                                           BigDecimal.TEN,
                                                           Currency.EUR,
+                                                          null,
                                                           UUID.randomUUID().toString(),
                                                           UUID.randomUUID().toString(),
                                                           ImmutableList.<PluginProperty>of(),
@@ -276,6 +322,7 @@ public class TestDefaultAdminPaymentApi extends PaymentTestSuiteWithEmbeddedDB {
                                                        payment.getId(),
                                                        payment.getPurchasedAmount(),
                                                        payment.getCurrency(),
+                                                       null,
                                                        UUID.randomUUID().toString(),
                                                        ImmutableList.<PluginProperty>of(new PluginProperty(MockPaymentProviderPlugin.PLUGIN_PROPERTY_PAYMENT_PLUGIN_STATUS_OVERRIDE, PaymentPluginStatus.ERROR.toString(), false)),
                                                        callContext);

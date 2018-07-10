@@ -1,6 +1,6 @@
 /*
- * Copyright 2014-2017 Groupon, Inc
- * Copyright 2014-2017 The Billing Project, LLC
+ * Copyright 2014-2018 Groupon, Inc
+ * Copyright 2014-2018 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -44,7 +44,12 @@ import org.skife.jdbi.v2.tweak.ResultSetMapper;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableList.Builder;
 
+import static org.killbill.billing.platform.glue.KillBillPlatformModuleBase.MAIN_RO_DATA_SOURCE_ID;
+
 public class IDBISetup {
+
+    // See binding in KillbillPlatformModule
+    public static final String MAIN_RO_IDBI_NAMED = MAIN_RO_DATA_SOURCE_ID;
 
     public static List<? extends ResultSetMapperFactory> mapperFactoriesToRegister() {
         final Builder<ResultSetMapperFactory> builder = ImmutableList.<ResultSetMapperFactory>builder();

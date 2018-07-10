@@ -37,6 +37,8 @@ import org.killbill.billing.account.api.user.DefaultAccountCreationEvent.Default
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.events.AccountChangeInternalEvent;
+import org.killbill.billing.util.api.AuditLevel;
+import org.killbill.billing.util.audit.AuditLogWithHistory;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.billing.util.entity.DefaultPagination;
 import org.killbill.billing.util.entity.Pagination;
@@ -185,5 +187,15 @@ public class MockAccountDao extends MockEntityDaoBase<AccountModelDao, Account, 
                 return parentAccountId.equals(input.getParentAccountId());
             }
         }));
+    }
+
+    @Override
+    public List<AuditLogWithHistory> getAuditLogsWithHistoryForId(final UUID accountId, final AuditLevel auditLevel, final InternalTenantContext context) throws AccountApiException {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public List<AuditLogWithHistory> getEmailAuditLogsWithHistoryForId(final UUID accountEmailId, final AuditLevel auditLevel, final InternalTenantContext context) throws AccountApiException {
+        throw new UnsupportedOperationException();
     }
 }

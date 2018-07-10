@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014 Groupon, Inc
- * Copyright 2014 The Billing Project, LLC
+ * Copyright 2014-2018 Groupon, Inc
+ * Copyright 2014-2018 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -32,10 +32,19 @@ public abstract class AdjInvoiceItem extends InvoiceItemBase {
 
     AdjInvoiceItem(final UUID id, @Nullable final DateTime createdDate, final UUID invoiceId, final UUID accountId,
                    final LocalDate startDate, final LocalDate endDate, @Nullable final String description,
-                   final BigDecimal amount, final Currency currency, @Nullable final UUID reversingId) {
-        super(id, createdDate, invoiceId, accountId, null, null, description, null, null, null, startDate, endDate, amount, currency, reversingId);
+                   final BigDecimal amount, final Currency currency, @Nullable final UUID reversingId, final InvoiceItemType invoiceItemType) {
+        this(id, createdDate, invoiceId, accountId, startDate, endDate, description, amount, currency, reversingId, null, invoiceItemType);
     }
 
-    @Override
-    public abstract InvoiceItemType getInvoiceItemType();
+    AdjInvoiceItem(final UUID id, @Nullable final DateTime createdDate, final UUID invoiceId, final UUID accountId,
+                   final LocalDate startDate, final LocalDate endDate, @Nullable final String description,
+                   final BigDecimal amount, final Currency currency, @Nullable final UUID reversingId, @Nullable final String itemDetails, final InvoiceItemType invoiceItemType) {
+        super(id, createdDate, invoiceId, accountId, null, null, description, startDate, endDate, amount, null, currency, reversingId, null, itemDetails, invoiceItemType);
+    }
+
+    AdjInvoiceItem(final UUID id, @Nullable final DateTime createdDate, final UUID invoiceId, final UUID accountId,
+                   final LocalDate startDate, final LocalDate endDate, @Nullable final String description,
+                   final BigDecimal amount, @Nullable final BigDecimal rate, final Currency currency, @Nullable final UUID reversingId, @Nullable final Integer quantity, @Nullable final String itemDetails, final InvoiceItemType invoiceItemType) {
+        super(id, createdDate, invoiceId, accountId, null, null, description, startDate, endDate, amount, rate, currency, reversingId, quantity, itemDetails, invoiceItemType);
+    }
 }

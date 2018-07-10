@@ -43,6 +43,9 @@ public class DefaultPriceList extends ValidatingConfig<StandaloneCatalog> implem
     @XmlID
     private String name;
 
+    @XmlAttribute(required = false)
+    private String prettyName;
+
     @XmlElementWrapper(name = "plans", required = true)
     @XmlIDREF
     @XmlElement(type=DefaultPlan.class, name = "plan", required = false)
@@ -74,6 +77,11 @@ public class DefaultPriceList extends ValidatingConfig<StandaloneCatalog> implem
         return name;
     }
 
+    @Override
+    public String getPrettyName() {
+        return prettyName;
+    }
+
     /* (non-Javadoc)
       * @see org.killbill.billing.catalog.IPriceList#findPlan(org.killbill.billing.catalog.api.IProduct, org.killbill.billing.catalog.api.BillingPeriod)
       */
@@ -103,6 +111,10 @@ public class DefaultPriceList extends ValidatingConfig<StandaloneCatalog> implem
     public void initialize(final StandaloneCatalog catalog, final URI sourceURI) {
         super.initialize(catalog, sourceURI);
         CatalogSafetyInitializer.initializeNonRequiredNullFieldsWithDefaultValue(this);
+
+        if (prettyName == null) {
+            this.prettyName = name;
+        }
     }
 
     public DefaultPriceList setName(final String name) {

@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014-2015 Groupon, Inc
- * Copyright 2014-2015 The Billing Project, LLC
+ * Copyright 2014-2018 Groupon, Inc
+ * Copyright 2014-2018 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -19,7 +19,6 @@
 package org.killbill.billing.payment.api;
 
 import java.math.BigDecimal;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -29,16 +28,14 @@ import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.invoice.api.Invoice;
 import org.killbill.billing.payment.MockRecurringInvoiceItem;
 import org.killbill.billing.payment.PaymentTestSuiteNoDB;
-import org.killbill.billing.payment.invoice.InvoicePaymentControlPluginApi;
 import org.killbill.billing.payment.provider.DefaultNoOpPaymentMethodPlugin;
-import org.killbill.billing.payment.provider.MockPaymentProviderPlugin;
-import org.mockito.Mockito;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
+import com.google.common.base.MoreObjects;
 import com.google.common.collect.ImmutableList;
 
 import static org.testng.Assert.assertEquals;
@@ -49,29 +46,25 @@ import static org.testng.Assert.fail;
 public class TestPaymentApiNoDB extends PaymentTestSuiteNoDB {
 
     private static final Logger log = LoggerFactory.getLogger(TestPaymentApiNoDB.class);
-    private static final PaymentOptions PAYMENT_OPTIONS = new PaymentOptions() {
-        @Override
-        public boolean isExternalPayment() {
-            return false;
-        }
-
-        @Override
-        public List<String> getPaymentControlPluginNames() {
-            return ImmutableList.<String>of(InvoicePaymentControlPluginApi.PLUGIN_NAME);
-        }
-    };
 
     private final Iterable<PluginProperty> PLUGIN_PROPERTIES = ImmutableList.<PluginProperty>of();
     private Account account;
 
     @BeforeClass(groups = "fast")
     public void beforeClass() throws Exception {
+        if (hasFailed()) {
+            return;
+        }
+
         super.beforeClass();
         account = testHelper.createTestAccount("yoyo.yahoo.com", false);
     }
 
     @BeforeMethod(groups = "fast")
     public void beforeMethod() throws Exception {
+        if (hasFailed()) {
+            return;
+        }
         super.beforeMethod();
         final PaymentMethodPlugin paymentMethodInfo = new DefaultNoOpPaymentMethodPlugin(UUID.randomUUID().toString(), true, null);
         account = testHelper.addTestPaymentMethod(account, paymentMethodInfo);
@@ -79,7 +72,7 @@ public class TestPaymentApiNoDB extends PaymentTestSuiteNoDB {
 
     @Test(groups = "fast")
     public void testSimpleInvoicePaymentWithNoAmount() throws Exception {
-        final BigDecimal invoiceAmount = new BigDecimal("10.0011");
+        final BigDecimal invoiceAmount = new BigDecimal("10");
         final BigDecimal requestedAmount = null;
         final BigDecimal expectedAmount = null;
 
@@ -131,22 +124,28 @@ public class TestPaymentApiNoDB extends PaymentTestSuiteNoDB {
                                                             Currency.USD));
 
         try {
-
-            final List<PluginProperty> properties = new ArrayList<PluginProperty>();
-            final PluginProperty prop1 = new PluginProperty(InvoicePaymentControlPluginApi.PROP_IPCD_INVOICE_ID, invoice.getId().toString(), false);
-            properties.add(prop1);
-
-            final Payment paymentInfo = paymentApi.createPurchaseWithPaymentControl(account, account.getPaymentMethodId(), null, requestedAmount, account.getCurrency(),
-                                                                                    invoice.getId().toString(), UUID.randomUUID().toString(), properties, PAYMENT_OPTIONS, callContext);
-            if (expectedAmount == null) {
+            invoicePaymentApi.createPurchaseForInvoicePayment(account,
+                                                              invoice.getId(),
+                                                              account.getPaymentMethodId(),
+                                                              null,
+                                                              requestedAmount,
+                                                              account.getCurrency(),
+                                                              null,
+                                                              invoice.getId().toString(),
+                                                              UUID.randomUUID().toString(),
+                                                              ImmutableList.<PluginProperty>of(),
+                                                              PAYMENT_OPTIONS,
+                                                              callContext);
+            final Payment paymentInfo = paymentApi.getPaymentByExternalKey(invoice.getId().toString(), false, false, ImmutableList.<PluginProperty>of(), callContext);
+            if (requestedAmount != null && expectedAmount == null) {
                 fail("Expected to fail because requested amount > invoice amount");
             }
             assertNotNull(paymentInfo.getId());
-            assertTrue(paymentInfo.getPurchasedAmount().compareTo(expectedAmount) == 0);
+            assertTrue(paymentInfo.getPurchasedAmount().compareTo(MoreObjects.firstNonNull(expectedAmount, invoiceAmount)) == 0);
             assertNotNull(paymentInfo.getPaymentNumber());
             assertEquals(paymentInfo.getExternalKey(), invoice.getId().toString());
             assertEquals(paymentInfo.getCurrency(), Currency.USD);
-            assertTrue(paymentInfo.getTransactions().get(0).getAmount().compareTo(expectedAmount) == 0);
+            assertTrue(paymentInfo.getTransactions().get(0).getAmount().compareTo(MoreObjects.firstNonNull(expectedAmount, invoiceAmount)) == 0);
             assertEquals(paymentInfo.getTransactions().get(0).getCurrency(), Currency.USD);
             assertEquals(paymentInfo.getTransactions().get(0).getPaymentId(), paymentInfo.getId());
             assertEquals(paymentInfo.getTransactions().get(0).getTransactionType(), TransactionType.PURCHASE);
@@ -163,7 +162,7 @@ public class TestPaymentApiNoDB extends PaymentTestSuiteNoDB {
 
     @Test(groups = "fast")
     public void testPaymentMethods() throws Exception {
-        List<PaymentMethod> methods = paymentApi.getAccountPaymentMethods(account.getId(), false, PLUGIN_PROPERTIES, callContext);
+        List<PaymentMethod> methods = paymentApi.getAccountPaymentMethods(account.getId(), false, false, PLUGIN_PROPERTIES, callContext);
         assertEquals(methods.size(), 1);
 
         final PaymentMethod initDefaultMethod = methods.get(0);
@@ -172,7 +171,7 @@ public class TestPaymentApiNoDB extends PaymentTestSuiteNoDB {
         final PaymentMethodPlugin newPaymentMethod = new DefaultNoOpPaymentMethodPlugin(UUID.randomUUID().toString(), true, null);
         account = testHelper.addTestPaymentMethod(account, newPaymentMethod, PLUGIN_PROPERTIES);
 
-        methods = paymentApi.getAccountPaymentMethods(account.getId(), false, PLUGIN_PROPERTIES, callContext);
+        methods = paymentApi.getAccountPaymentMethods(account.getId(), false, false, PLUGIN_PROPERTIES, callContext);
         assertEquals(methods.size(), 2);
 
         boolean failed = false;
@@ -184,13 +183,14 @@ public class TestPaymentApiNoDB extends PaymentTestSuiteNoDB {
         assertTrue(failed);
 
         paymentApi.deletePaymentMethod(account, initDefaultMethod.getId(), true, false, PLUGIN_PROPERTIES, callContext);
-        methods = paymentApi.getAccountPaymentMethods(account.getId(), false, PLUGIN_PROPERTIES, callContext);
+        methods = paymentApi.getAccountPaymentMethods(account.getId(), false, false, PLUGIN_PROPERTIES, callContext);
         assertEquals(methods.size(), 1);
 
         // NOW retry with default payment method with special flag
         paymentApi.deletePaymentMethod(account, account.getPaymentMethodId(), true, false, PLUGIN_PROPERTIES, callContext);
 
-        methods = paymentApi.getAccountPaymentMethods(account.getId(), false, PLUGIN_PROPERTIES, callContext);
+        methods = paymentApi.getAccountPaymentMethods(account.getId(), false, false, PLUGIN_PROPERTIES, callContext);
         assertEquals(methods.size(), 0);
+
     }
 }

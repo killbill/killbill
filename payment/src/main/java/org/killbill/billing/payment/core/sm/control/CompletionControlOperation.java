@@ -28,6 +28,7 @@ import org.killbill.billing.payment.api.PaymentApiException;
 import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.payment.api.TransactionStatus;
 import org.killbill.billing.payment.core.PaymentProcessor;
+import org.killbill.billing.payment.core.PaymentRefresher;
 import org.killbill.billing.payment.core.ProcessorBase.DispatcherCallback;
 import org.killbill.billing.payment.core.sm.control.ControlPluginRunner.DefaultPaymentControlContext;
 import org.killbill.billing.payment.dao.PaymentTransactionModelDao;
@@ -35,6 +36,8 @@ import org.killbill.billing.payment.dispatcher.PluginDispatcher;
 import org.killbill.billing.payment.dispatcher.PluginDispatcher.PluginDispatcherReturnType;
 import org.killbill.billing.util.config.definition.PaymentConfig;
 import org.killbill.commons.locker.GlobalLocker;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
@@ -44,15 +47,21 @@ import com.google.common.collect.ImmutableList;
 //
 public class CompletionControlOperation extends OperationControlCallback {
 
+    private static final Logger logger = LoggerFactory.getLogger(CompletionControlOperation.class);
+
     private static final Joiner JOINER = Joiner.on(", ");
+
+    private final PaymentRefresher paymentRefresher;
 
     public CompletionControlOperation(final GlobalLocker locker,
                                       final PluginDispatcher<OperationResult> paymentPluginDispatcher,
                                       final PaymentConfig paymentConfig,
                                       final PaymentStateControlContext paymentStateContext,
+                                      final PaymentRefresher paymentRefresher,
                                       final PaymentProcessor paymentProcessor,
                                       final ControlPluginRunner controlPluginRunner) {
         super(locker, paymentPluginDispatcher, paymentStateContext, paymentProcessor, paymentConfig, controlPluginRunner);
+        this.paymentRefresher = paymentRefresher;
     }
 
     @Override
@@ -67,6 +76,7 @@ public class CompletionControlOperation extends OperationControlCallback {
                 final PaymentTransactionModelDao transaction = paymentStateContext.getPaymentTransactionModelDao();
                 final PaymentControlContext updatedPaymentControlContext = new DefaultPaymentControlContext(paymentStateContext.getAccount(),
                                                                                                             paymentStateContext.getPaymentMethodId(),
+                                                                                                            null,
                                                                                                             paymentStateControlContext.getAttemptId(),
                                                                                                             transaction.getPaymentId(),
                                                                                                             paymentStateContext.getPaymentExternalKey(),
@@ -83,6 +93,7 @@ public class CompletionControlOperation extends OperationControlCallback {
                                                                                                             paymentStateContext.getCallContext());
                 try {
                     final Payment result = doCallSpecificOperationCallback();
+                    logger.debug("doOperationCallback payment='{}', transaction='{}'", result, transaction);
                     ((PaymentStateControlContext) paymentStateContext).setResult(result);
 
                     final boolean success = transaction.getTransactionStatus() == TransactionStatus.SUCCESS || transaction.getTransactionStatus() == TransactionStatus.PENDING;
@@ -109,6 +120,6 @@ public class CompletionControlOperation extends OperationControlCallback {
 
     @Override
     protected Payment doCallSpecificOperationCallback() throws PaymentApiException {
-        return paymentProcessor.getPayment(paymentStateContext.getPaymentId(), false, false, ImmutableList.<PluginProperty>of(), paymentStateContext.getCallContext(), paymentStateContext.getInternalCallContext());
+        return paymentRefresher.getPayment(paymentStateContext.getPaymentId(), false, false, ImmutableList.<PluginProperty>of(), paymentStateContext.getCallContext(), paymentStateContext.getInternalCallContext());
     }
 }

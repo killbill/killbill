@@ -17,6 +17,8 @@
 
 package org.killbill.billing.server.log.obfuscators;
 
+import java.util.regex.Pattern;
+
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import com.google.common.annotations.VisibleForTesting;
 
@@ -34,6 +36,8 @@ public class LuhnMaskingObfuscator extends Obfuscator {
      */
     private static final int MIN_CC_DIGITS = 13;
 
+    private static final Pattern UUID_PATTERN = Pattern.compile("^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$");
+
     public LuhnMaskingObfuscator() {
         super();
     }
@@ -44,7 +48,8 @@ public class LuhnMaskingObfuscator extends Obfuscator {
     }
 
     private String mask(final String formattedMessage) {
-        if (!hasEnoughDigits(formattedMessage)) {
+        if (UUID_PATTERN.matcher(formattedMessage).matches() ||
+            !hasEnoughDigits(formattedMessage)) {
             return formattedMessage;
         }
 

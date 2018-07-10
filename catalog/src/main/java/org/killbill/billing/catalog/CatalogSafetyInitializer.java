@@ -28,6 +28,7 @@ import javax.xml.bind.annotation.XmlElementWrapper;
 
 import org.killbill.billing.catalog.api.BlockType;
 import org.killbill.billing.catalog.api.FixedType;
+import org.killbill.billing.catalog.api.TierBlockPolicy;
 
 public class CatalogSafetyInitializer {
 
@@ -58,6 +59,8 @@ public class CatalogSafetyInitializer {
                             initializeFieldWithValue(obj, f, FixedType.ONE_TIME);
                         } else if (BlockType.class.equals(f.getType())) {
                             initializeFieldWithValue(obj, f, BlockType.VANILLA);
+                        } else if (TierBlockPolicy.class.equals(f.getType())) {
+                            initializeFieldWithValue(obj, f, TierBlockPolicy.ALL_TIERS);
                         }
                     } else if (Integer.class.equals(f.getType())) {
                         initializeFieldWithValue(obj, f, DEFAULT_NON_REQUIRED_INTEGER_FIELD_VALUE);
@@ -96,6 +99,8 @@ public class CatalogSafetyInitializer {
                     if (FixedType.class.equals(f.getType())) {
                         result.add(f);
                     } else if (BlockType.class.equals(f.getType())) {
+                        result.add(f);
+                    } else if (TierBlockPolicy.class.equals(f.getType())) {
                         result.add(f);
                     }
                 } else if (Integer.class.equals(f.getType())) {

@@ -54,6 +54,9 @@ public class TestIncompletePaymentTransactionTaskWithDB extends PaymentTestSuite
 
     @BeforeClass(groups = "slow")
     protected void beforeClass() throws Exception {
+        if (hasFailed()) {
+            return;
+        }
         super.beforeClass();
 
         mockPaymentProviderPlugin = (MockPaymentProviderPlugin) registry.getServiceForName(MockPaymentProviderPlugin.PLUGIN_NAME);
@@ -61,6 +64,10 @@ public class TestIncompletePaymentTransactionTaskWithDB extends PaymentTestSuite
 
     @BeforeMethod(groups = "slow")
     public void beforeMethod() throws Exception {
+        if (hasFailed()) {
+            return;
+        }
+
         super.beforeMethod();
 
         mockPaymentProviderPlugin.clear();
@@ -74,6 +81,7 @@ public class TestIncompletePaymentTransactionTaskWithDB extends PaymentTestSuite
                                                           null,
                                                           BigDecimal.TEN,
                                                           Currency.EUR,
+                                                          null,
                                                           UUID.randomUUID().toString(),
                                                           UUID.randomUUID().toString(),
                                                           ImmutableList.<PluginProperty>of(new PluginProperty(MockPaymentProviderPlugin.PLUGIN_PROPERTY_PAYMENT_PLUGIN_STATUS_OVERRIDE, PaymentPluginStatus.PENDING.toString(), false)),
@@ -83,7 +91,7 @@ public class TestIncompletePaymentTransactionTaskWithDB extends PaymentTestSuite
         final JanitorNotificationKey notificationKey = new JanitorNotificationKey(transactionId, incompletePaymentTransactionTask.getClass().toString(), 1);
         final UUID userToken = UUID.randomUUID();
 
-        Assert.assertTrue(Iterables.<NotificationEventWithMetadata<NotificationEvent>>isEmpty(incompletePaymentTransactionTask.janitorQueue.getFutureNotificationForSearchKeys(internalCallContext.getAccountRecordId(), internalCallContext.getTenantRecordId())));
+        Assert.assertTrue(Iterables.isEmpty(incompletePaymentTransactionTask.janitorQueue.getFutureNotificationForSearchKeys(internalCallContext.getAccountRecordId(), internalCallContext.getTenantRecordId())));
 
         GlobalLock lock = null;
         try {
@@ -92,7 +100,7 @@ public class TestIncompletePaymentTransactionTaskWithDB extends PaymentTestSuite
             incompletePaymentTransactionTask.processNotification(notificationKey, userToken, internalCallContext.getAccountRecordId(), internalCallContext.getTenantRecordId());
 
             final Iterable<NotificationEventWithMetadata<NotificationEvent>> futureNotifications = incompletePaymentTransactionTask.janitorQueue.getFutureNotificationForSearchKeys(internalCallContext.getAccountRecordId(), internalCallContext.getTenantRecordId());
-            Assert.assertFalse(Iterables.<NotificationEventWithMetadata<NotificationEvent>>isEmpty(futureNotifications));
+            Assert.assertFalse(Iterables.isEmpty(futureNotifications));
             final NotificationEventWithMetadata<NotificationEvent> notificationEventWithMetadata = ImmutableList.<NotificationEventWithMetadata<NotificationEvent>>copyOf(futureNotifications).get(0);
             Assert.assertEquals(notificationEventWithMetadata.getUserToken(), userToken);
             Assert.assertEquals(notificationEventWithMetadata.getEvent().getClass(), JanitorNotificationKey.class);
@@ -118,6 +126,7 @@ public class TestIncompletePaymentTransactionTaskWithDB extends PaymentTestSuite
                                                           null,
                                                           BigDecimal.TEN,
                                                           Currency.EUR,
+                                                          null,
                                                           UUID.randomUUID().toString(),
                                                           UUID.randomUUID().toString(),
                                                           ImmutableList.<PluginProperty>of(new PluginProperty(MockPaymentProviderPlugin.PLUGIN_PROPERTY_PAYMENT_PLUGIN_STATUS_OVERRIDE, PaymentPluginStatus.UNDEFINED.toString(), false)),
@@ -148,6 +157,7 @@ public class TestIncompletePaymentTransactionTaskWithDB extends PaymentTestSuite
                                  payment.getId(),
                                  BigDecimal.TEN,
                                  Currency.EUR,
+                                 null,
                                  UUID.randomUUID().toString(),
                                  ImmutableList.<PluginProperty>of(new PluginProperty(MockPaymentProviderPlugin.PLUGIN_PROPERTY_PAYMENT_PLUGIN_STATUS_OVERRIDE, PaymentPluginStatus.PROCESSED.toString(), false)),
                                  callContext);

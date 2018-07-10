@@ -19,11 +19,6 @@ package org.killbill.billing.util.customfield.dao;
 import java.util.List;
 import java.util.UUID;
 
-import org.skife.jdbi.v2.sqlobject.Bind;
-import org.killbill.commons.jdbi.binder.SmartBindBean;
-import org.skife.jdbi.v2.sqlobject.SqlQuery;
-import org.skife.jdbi.v2.sqlobject.SqlUpdate;
-
 import org.killbill.billing.ObjectType;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
@@ -31,10 +26,21 @@ import org.killbill.billing.util.audit.ChangeType;
 import org.killbill.billing.util.customfield.CustomField;
 import org.killbill.billing.util.entity.dao.Audited;
 import org.killbill.billing.util.entity.dao.EntitySqlDao;
+import org.killbill.commons.jdbi.binder.SmartBindBean;
 import org.killbill.commons.jdbi.template.KillBillSqlDaoStringTemplate;
+import org.skife.jdbi.v2.sqlobject.Bind;
+import org.skife.jdbi.v2.sqlobject.SqlQuery;
+import org.skife.jdbi.v2.sqlobject.SqlUpdate;
 
 @KillBillSqlDaoStringTemplate
 public interface CustomFieldSqlDao extends EntitySqlDao<CustomFieldModelDao, CustomField> {
+
+    @SqlUpdate
+    @Audited(ChangeType.UPDATE)
+    void updateValue(@Bind("id") String customFieldId,
+                     @Bind("fieldValue") String fieldValue,
+                     @SmartBindBean InternalCallContext context);
+
 
     @SqlUpdate
     @Audited(ChangeType.DELETE)

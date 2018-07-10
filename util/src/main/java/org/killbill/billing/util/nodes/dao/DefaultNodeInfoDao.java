@@ -1,6 +1,6 @@
 /*
- * Copyright 2014-2015 Groupon, Inc
- * Copyright 2014-2015 The Billing Project, LLC
+ * Copyright 2014-2018 Groupon, Inc
+ * Copyright 2014-2018 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -20,9 +20,10 @@ package org.killbill.billing.util.nodes.dao;
 import java.util.Date;
 import java.util.List;
 
+import javax.inject.Named;
+
+import org.killbill.billing.util.entity.dao.DBRouter;
 import org.killbill.clock.Clock;
-import org.killbill.commons.jdbi.mapper.LowerToCamelBeanMapperFactory;
-import org.skife.jdbi.v2.DBI;
 import org.skife.jdbi.v2.Handle;
 import org.skife.jdbi.v2.IDBI;
 import org.skife.jdbi.v2.TransactionCallback;
@@ -30,21 +31,22 @@ import org.skife.jdbi.v2.TransactionStatus;
 
 import com.google.inject.Inject;
 
+import static org.killbill.billing.util.glue.IDBISetup.MAIN_RO_IDBI_NAMED;
+
 public class DefaultNodeInfoDao implements NodeInfoDao {
 
-    private final IDBI dbi;
+    private final DBRouter<NodeInfoSqlDao> dbRouter;
     private final Clock clock;
 
     @Inject
-    public DefaultNodeInfoDao(final IDBI dbi, final Clock clock) {
-        this.dbi = dbi;
+    public DefaultNodeInfoDao(final IDBI dbi, @Named(MAIN_RO_IDBI_NAMED) final IDBI roDbi, final Clock clock) {
+        this.dbRouter = new DBRouter<NodeInfoSqlDao>(dbi, roDbi, NodeInfoSqlDao.class);
         this.clock = clock;
     }
 
     @Override
     public void create(final NodeInfoModelDao nodeInfoModelDao) {
-
-        dbi.inTransaction(new TransactionCallback<Void>() {
+        dbRouter.inTransaction(false, new TransactionCallback<Void>() {
             @Override
             public Void inTransaction(final Handle handle, final TransactionStatus status) throws Exception {
                 final NodeInfoSqlDao sqlDao = handle.attach(NodeInfoSqlDao.class);
@@ -59,7 +61,7 @@ public class DefaultNodeInfoDao implements NodeInfoDao {
 
     @Override
     public void updateNodeInfo(final String nodeName, final String nodeInfo) {
-        dbi.inTransaction(new TransactionCallback<Void>() {
+        dbRouter.inTransaction(false, new TransactionCallback<Void>() {
             @Override
             public Void inTransaction(final Handle handle, final TransactionStatus status) throws Exception {
                 final NodeInfoSqlDao sqlDao = handle.attach(NodeInfoSqlDao.class);
@@ -70,10 +72,9 @@ public class DefaultNodeInfoDao implements NodeInfoDao {
         });
     }
 
-
     @Override
     public void delete(final String nodeName) {
-        dbi.inTransaction(new TransactionCallback<Void>() {
+        dbRouter.inTransaction(false, new TransactionCallback<Void>() {
             @Override
             public Void inTransaction(final Handle handle, final TransactionStatus status) throws Exception {
                 final NodeInfoSqlDao sqlDao = handle.attach(NodeInfoSqlDao.class);
@@ -85,7 +86,7 @@ public class DefaultNodeInfoDao implements NodeInfoDao {
 
     @Override
     public List<NodeInfoModelDao> getAll() {
-        return dbi.inTransaction(new TransactionCallback<List<NodeInfoModelDao>>() {
+        return dbRouter.inTransaction(true, new TransactionCallback<List<NodeInfoModelDao>>() {
             @Override
             public List<NodeInfoModelDao> inTransaction(final Handle handle, final TransactionStatus status) throws Exception {
                 final NodeInfoSqlDao sqlDao = handle.attach(NodeInfoSqlDao.class);
@@ -96,7 +97,7 @@ public class DefaultNodeInfoDao implements NodeInfoDao {
 
     @Override
     public NodeInfoModelDao getByNodeName(final String nodeName) {
-        return dbi.inTransaction(new TransactionCallback<NodeInfoModelDao>() {
+        return dbRouter.inTransaction(true, new TransactionCallback<NodeInfoModelDao>() {
             @Override
             public NodeInfoModelDao inTransaction(final Handle handle, final TransactionStatus status) throws Exception {
                 final NodeInfoSqlDao sqlDao = handle.attach(NodeInfoSqlDao.class);
@@ -104,5 +105,4 @@ public class DefaultNodeInfoDao implements NodeInfoDao {
             }
         });
     }
-
 }

@@ -1,6 +1,6 @@
 /*
- * Copyright 2014-2016 Groupon, Inc
- * Copyright 2014-2016 The Billing Project, LLC
+ * Copyright 2014-2018 Groupon, Inc
+ * Copyright 2014-2018 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -17,39 +17,23 @@
 
 package org.killbill.billing.entitlement.api;
 
-import java.util.Iterator;
 import java.util.List;
 import java.util.UUID;
 
-import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
-import org.killbill.billing.ErrorCode;
-import org.killbill.billing.OrderingType;
 import org.killbill.billing.account.api.Account;
-import org.killbill.billing.account.api.AccountApiException;
 import org.killbill.billing.api.TestApiListener.NextEvent;
-import org.killbill.billing.catalog.api.BillingActionPolicy;
 import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.catalog.api.PlanPhaseSpecifier;
 import org.killbill.billing.catalog.api.PriceListSet;
-import org.killbill.billing.catalog.api.ProductCategory;
-import org.killbill.billing.entitlement.EntitlementService;
 import org.killbill.billing.entitlement.EntitlementTestSuiteWithEmbeddedDB;
-import org.killbill.billing.entitlement.api.Entitlement.EntitlementActionPolicy;
-import org.killbill.billing.entitlement.api.Entitlement.EntitlementState;
-import org.killbill.billing.junction.DefaultBlockingState;
 import org.killbill.billing.payment.api.PluginProperty;
-import org.killbill.billing.util.api.AuditLevel;
-import org.killbill.billing.util.audit.AuditLog;
-import org.killbill.billing.util.audit.ChangeType;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import com.google.common.collect.ImmutableList;
 
 import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertNull;
-import static org.testng.Assert.assertTrue;
 
 public class TestRegessionSubscriptionApi extends EntitlementTestSuiteWithEmbeddedDB {
 
@@ -63,9 +47,11 @@ public class TestRegessionSubscriptionApi extends EntitlementTestSuiteWithEmbedd
         final LocalDate entitlementEffectiveDate = initialDate.minusDays(1);
 
         final Account account = createAccount(getAccountData(7));
-        final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("Shotgun",  BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, null);
+        final PlanPhaseSpecifier planPhaseSpecifier = new PlanPhaseSpecifier("Shotgun",  BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, null);
+        final EntitlementSpecifier spec = new DefaultEntitlementSpecifier(planPhaseSpecifier);
         testListener.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK);
-        final Entitlement entitlement = entitlementApi.createBaseEntitlement(account.getId(), spec, UUID.randomUUID().toString(), null, entitlementEffectiveDate, null, false, ImmutableList.<PluginProperty>of(), callContext);
+        final UUID entitlementId = entitlementApi.createBaseEntitlement(account.getId(), spec, UUID.randomUUID().toString(), entitlementEffectiveDate, null, false, true, ImmutableList.<PluginProperty>of(), callContext);
+        final Entitlement entitlement = entitlementApi.getEntitlementForId(entitlementId, callContext);
         // Because of the BlockingState event ENT_STARTED, the entitlement date should be correctly set
         Assert.assertEquals(entitlement.getEffectiveStartDate(), entitlementEffectiveDate);
 

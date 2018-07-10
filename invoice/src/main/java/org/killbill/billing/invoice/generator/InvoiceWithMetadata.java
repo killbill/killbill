@@ -20,7 +20,6 @@ package org.killbill.billing.invoice.generator;
 import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -28,7 +27,6 @@ import javax.annotation.Nullable;
 
 import org.joda.time.LocalDate;
 import org.killbill.billing.catalog.api.BillingMode;
-import org.killbill.billing.invoice.api.Invoice;
 import org.killbill.billing.invoice.api.InvoiceItem;
 import org.killbill.billing.invoice.api.InvoiceItemType;
 import org.killbill.billing.invoice.model.DefaultInvoice;
@@ -46,7 +44,6 @@ public class InvoiceWithMetadata {
         this.invoice = originalInvoice;
         this.perSubscriptionFutureNotificationDates = perSubscriptionFutureNotificationDates;
         build();
-        remove$0UsageItems();
     }
 
     public DefaultInvoice getInvoice() {
@@ -68,6 +65,9 @@ public class InvoiceWithMetadata {
                 tmp.resetNextRecurringDate();
             }
         }
+        if (invoice != null && invoice.getInvoiceItems().isEmpty()) {
+            invoice = null;
+        }
     }
 
     private boolean hasItemsForSubscription(final UUID subscriptionId, final InvoiceItemType invoiceItemType) {
@@ -79,23 +79,6 @@ public class InvoiceWithMetadata {
             }
         });
     }
-
-    protected void remove$0UsageItems() {
-        if (invoice != null) {
-            final Iterator<InvoiceItem> it = invoice.getInvoiceItems().iterator();
-            while (it.hasNext()) {
-                final InvoiceItem item = it.next();
-                if ((item.getInvoiceItemType() == InvoiceItemType.USAGE) &&
-                    item.getAmount().compareTo(BigDecimal.ZERO) == 0) {
-                    it.remove();
-                }
-            }
-            if (invoice.getInvoiceItems().isEmpty()) {
-                invoice = null;
-            }
-        }
-    }
-
 
     public static class SubscriptionFutureNotificationDates {
 

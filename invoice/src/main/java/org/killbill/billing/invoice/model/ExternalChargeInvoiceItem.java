@@ -1,7 +1,9 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
+ * Copyright 2014-2018 Groupon, Inc
+ * Copyright 2014-2018 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -27,21 +29,33 @@ import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.invoice.api.InvoiceItemType;
 import org.killbill.billing.util.UUIDs;
 
-public class ExternalChargeInvoiceItem extends InvoiceItemBase {
+public class ExternalChargeInvoiceItem extends InvoiceItemCatalogBase {
 
     public ExternalChargeInvoiceItem(final UUID invoiceId, final UUID accountId, @Nullable final UUID bundleId, @Nullable final String description,
-                                     final LocalDate date, final BigDecimal amount, final Currency currency) {
-        this(UUIDs.randomUUID(), invoiceId, accountId, bundleId, description, date, amount, currency);
+                                     final LocalDate startDate, final LocalDate endDate, final BigDecimal amount, final Currency currency, @Nullable final String itemDetails) {
+        this(UUIDs.randomUUID(), invoiceId, accountId, bundleId, description, startDate, endDate, amount, currency, itemDetails);
     }
 
     public ExternalChargeInvoiceItem(final UUID id, final UUID invoiceId, final UUID accountId, @Nullable final UUID bundleId,
-                                     @Nullable final String description, final LocalDate date, final BigDecimal amount, final Currency currency) {
-        this(id, null, invoiceId, accountId, bundleId, description, date, amount, currency);
+                                     @Nullable final String description, final LocalDate startDate, final LocalDate endDate, final BigDecimal amount, final Currency currency, @Nullable final String itemDetails) {
+        this(id, null, invoiceId, accountId, bundleId, description, startDate, endDate, amount, currency, itemDetails);
     }
 
     public ExternalChargeInvoiceItem(final UUID id, @Nullable final DateTime createdDate, final UUID invoiceId, final UUID accountId, @Nullable final UUID bundleId,
-                                     @Nullable final String description, final LocalDate date, final BigDecimal amount, final Currency currency) {
-        super(id, createdDate, invoiceId, accountId, bundleId, null, description, null, null, null, date, null, amount, currency);
+                                     @Nullable final String description, final LocalDate startDate, final LocalDate endDate, final BigDecimal amount, final Currency currency, @Nullable final String itemDetails) {
+        super(id, createdDate, invoiceId, accountId, bundleId, null, description, null, null, null, null, startDate, endDate, amount, null, currency, null, null, itemDetails, InvoiceItemType.EXTERNAL_CHARGE);
+    }
+
+    public ExternalChargeInvoiceItem(final UUID id, @Nullable final DateTime createdDate, final UUID invoiceId, final UUID accountId, final UUID bundleId, final UUID subscriptionId,
+                                     final String productName, final String planName, final String phaseName, final String prettyProductName, final String prettyPlanName, final String prettyPhaseName, @Nullable final String description, final LocalDate startDate, final LocalDate endDate,
+                                     final BigDecimal amount, final BigDecimal rate, final Currency currency, @Nullable final UUID linkedItemId, @Nullable String itemDetails) {
+        super(id, createdDate, invoiceId, accountId, bundleId, subscriptionId, description, productName, planName, phaseName, null, prettyProductName, prettyPlanName, prettyPhaseName, null, startDate, endDate, amount, rate, currency, linkedItemId, null, itemDetails, InvoiceItemType.EXTERNAL_CHARGE);
+    }
+
+    public ExternalChargeInvoiceItem(final UUID id, @Nullable final DateTime createdDate, final UUID invoiceId, final UUID accountId, final UUID bundleId, final UUID subscriptionId,
+                                     final String productName, final String planName, final String phaseName, final String prettyProductName, final String prettyPlanName, final String prettyPhaseName, @Nullable final String description, final LocalDate startDate, final LocalDate endDate,
+                                     final BigDecimal amount, final BigDecimal rate, final Currency currency, @Nullable final UUID linkedItemId, @Nullable final Integer quantity, @Nullable final String itemDetails) {
+        super(id, createdDate, invoiceId, accountId, bundleId, subscriptionId, description, productName, planName, phaseName, null, prettyProductName, prettyPlanName, prettyPhaseName, null, startDate, endDate, amount, rate, currency, linkedItemId, quantity, itemDetails, InvoiceItemType.EXTERNAL_CHARGE);
     }
 
     @Override
@@ -55,10 +69,5 @@ public class ExternalChargeInvoiceItem extends InvoiceItemBase {
         } else {
             return String.format("%s (external charge)", getPlanName());
         }
-    }
-
-    @Override
-    public InvoiceItemType getInvoiceItemType() {
-        return InvoiceItemType.EXTERNAL_CHARGE;
     }
 }

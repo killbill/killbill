@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014-2015 Groupon, Inc
- * Copyright 2014-2015 The Billing Project, LLC
+ * Copyright 2014-2018 Groupon, Inc
+ * Copyright 2014-2018 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -34,9 +34,11 @@ import org.killbill.billing.lifecycle.api.BusService;
 import org.killbill.billing.mock.MockAccountBuilder;
 import org.killbill.billing.subscription.api.SubscriptionBaseInternalApi;
 import org.killbill.billing.subscription.api.SubscriptionBaseService;
+import org.killbill.billing.subscription.api.user.DefaultSubscriptionBaseBundle;
 import org.killbill.billing.subscription.api.user.SubscriptionBaseBundle;
 import org.killbill.billing.subscription.engine.core.DefaultSubscriptionBaseService;
 import org.killbill.billing.util.UUIDs;
+import org.killbill.clock.Clock;
 import org.killbill.clock.ClockMock;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -53,24 +55,23 @@ public class DefaultSubscriptionTestInitializer implements SubscriptionTestIniti
     }
 
     public Catalog initCatalog(final CatalogService catalogService, final InternalTenantContext context) throws Exception {
-
         ((DefaultCatalogService) catalogService).loadCatalog();
         final Catalog catalog = catalogService.getFullCatalog(true, true, context);
         assertNotNull(catalog);
         return catalog;
     }
 
-    public AccountData initAccountData() {
+    public AccountData initAccountData(final Clock clock) {
         final AccountData accountData = new MockAccountBuilder().name(UUIDs.randomUUID().toString().substring(1, 8))
                                                                 .firstNameLength(6)
                                                                 .email(UUIDs.randomUUID().toString().substring(1, 8))
                                                                 .phone(UUIDs.randomUUID().toString().substring(1, 8))
                                                                 .migrated(false)
-                                                                .isNotifiedForInvoices(false)
                                                                 .externalKey(UUIDs.randomUUID().toString())
                                                                 .billingCycleDayLocal(1)
                                                                 .currency(Currency.USD)
                                                                 .paymentMethodId(UUIDs.randomUUID())
+                                                                .referenceTime(clock.getUTCNow())
                                                                 .timeZone(DateTimeZone.forID("Europe/Paris"))
                                                                 .build();
 
@@ -78,10 +79,9 @@ public class DefaultSubscriptionTestInitializer implements SubscriptionTestIniti
         return accountData;
     }
 
-    public SubscriptionBaseBundle initBundle(final UUID accountId, final SubscriptionBaseInternalApi subscriptionApi, final InternalCallContext callContext) throws Exception {
-        final SubscriptionBaseBundle bundle = subscriptionApi.createBundleForAccount(accountId, DEFAULT_BUNDLE_KEY, callContext);
-        assertNotNull(bundle);
-        return bundle;
+    public SubscriptionBaseBundle initBundle(final UUID accountId, final SubscriptionBaseInternalApi subscriptionApi, final Clock clock, final InternalCallContext callContext) throws Exception {
+        final DateTime utcNow = clock.getUTCNow();
+        return new DefaultSubscriptionBaseBundle(DEFAULT_BUNDLE_KEY, accountId, utcNow, utcNow, utcNow, utcNow);
     }
 
     public void startTestFramework(final TestApiListener testListener,

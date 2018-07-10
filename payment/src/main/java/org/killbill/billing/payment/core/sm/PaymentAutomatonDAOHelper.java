@@ -1,8 +1,8 @@
 /*
- * Copyright 2014-2017 Groupon, Inc
- * Copyright 2014-2017 The Billing Project, LLC
+ * Copyright 2014-2018 Groupon, Inc
+ * Copyright 2014-2018 The Billing Project, LLC
  *
- * Groupon licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -131,20 +131,37 @@ public class PaymentAutomatonDAOHelper {
         final String gatewayErrorCode = paymentInfoPlugin == null ? null : paymentInfoPlugin.getGatewayErrorCode();
         final String gatewayErrorMsg = paymentInfoPlugin == null ? null : paymentInfoPlugin.getGatewayError();
 
-        final String lastSuccessPaymentState = paymentSMHelper.isSuccessState(currentPaymentStateName) ? currentPaymentStateName : null;
-        final PaymentAndTransactionModelDao paymentAndTransactionModelDao = paymentDao.updatePaymentAndTransactionOnCompletion(paymentStateContext.getAccount().getId(),
-                                                                                                                               paymentStateContext.getAttemptId(),
-                                                                                                                               paymentStateContext.getPaymentId(),
-                                                                                                                               paymentStateContext.getTransactionType(),
-                                                                                                                               currentPaymentStateName,
-                                                                                                                               lastSuccessPaymentState,
-                                                                                                                               paymentStateContext.getPaymentTransactionModelDao().getId(),
-                                                                                                                               transactionStatus,
-                                                                                                                               processedAmount,
-                                                                                                                               processedCurrency,
-                                                                                                                               gatewayErrorCode,
-                                                                                                                               gatewayErrorMsg,
-                                                                                                                               internalCallContext);
+        final PaymentAndTransactionModelDao paymentAndTransactionModelDao;
+        if (paymentSMHelper.isSuccessState(currentPaymentStateName)) {
+            final String lastSuccessPaymentState = currentPaymentStateName;
+            paymentAndTransactionModelDao = paymentDao.updatePaymentAndTransactionOnCompletion(paymentStateContext.getAccount().getId(),
+                                                                                               paymentStateContext.getAttemptId(),
+                                                                                               paymentStateContext.getPaymentId(),
+                                                                                               paymentStateContext.getTransactionType(),
+                                                                                               currentPaymentStateName,
+                                                                                               lastSuccessPaymentState,
+                                                                                               paymentStateContext.getPaymentTransactionModelDao().getId(),
+                                                                                               transactionStatus,
+                                                                                               processedAmount,
+                                                                                               processedCurrency,
+                                                                                               gatewayErrorCode,
+                                                                                               gatewayErrorMsg,
+                                                                                               internalCallContext);
+        } else {
+            paymentAndTransactionModelDao = paymentDao.updatePaymentAndTransactionOnCompletion(paymentStateContext.getAccount().getId(),
+                                                                                               paymentStateContext.getAttemptId(),
+                                                                                               paymentStateContext.getPaymentId(),
+                                                                                               paymentStateContext.getTransactionType(),
+                                                                                               currentPaymentStateName,
+                                                                                               paymentStateContext.getPaymentTransactionModelDao().getId(),
+                                                                                               transactionStatus,
+                                                                                               processedAmount,
+                                                                                               processedCurrency,
+                                                                                               gatewayErrorCode,
+                                                                                               gatewayErrorMsg,
+                                                                                               internalCallContext);
+        }
+
         // Update the context
         paymentStateContext.setPaymentModelDao(paymentAndTransactionModelDao.getPaymentModelDao());
         paymentStateContext.setPaymentTransactionModelDao(paymentAndTransactionModelDao.getPaymentTransactionModelDao());
@@ -215,7 +232,7 @@ public class PaymentAutomatonDAOHelper {
     private PaymentTransactionModelDao buildNewPaymentTransactionModelDao(final UUID paymentId) {
         final DateTime createdDate = utcNow;
         final DateTime updatedDate = utcNow;
-        final DateTime effectiveDate = utcNow;
+        final DateTime effectiveDate = paymentStateContext.getEffectiveDate() != null ? paymentStateContext.getEffectiveDate() : utcNow;
         final String gatewayErrorCode = null;
         final String gatewayErrorMsg = null;
 

@@ -27,7 +27,6 @@ import javax.annotation.Nullable;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.killbill.billing.account.api.Account;
-import org.killbill.billing.account.api.AccountData;
 import org.killbill.billing.account.api.MutableAccountData;
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.util.audit.AccountAuditLogs;
@@ -35,12 +34,12 @@ import org.killbill.billing.util.audit.AccountAuditLogs;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Strings;
-import io.swagger.annotations.ApiModelProperty;
+import io.swagger.annotations.ApiModel;
 
+@ApiModel(value="Account", parent = JsonBase.class)
 public class AccountJson extends JsonBase {
 
-    @ApiModelProperty(dataType = "java.util.UUID")
-    private final String accountId;
+    private final UUID accountId;
     private final String externalKey;
     private final BigDecimal accountCBA;
     private final BigDecimal accountBalance;
@@ -48,12 +47,11 @@ public class AccountJson extends JsonBase {
     private final Integer firstNameLength;
     private final String email;
     private final Integer billCycleDayLocal;
-    private final String currency;
-    @ApiModelProperty(dataType = "java.util.UUID")
-    private final String parentAccountId;
+    private final Currency currency;
+    private final UUID parentAccountId;
     private final Boolean isPaymentDelegatedToParent;
-    @ApiModelProperty(dataType = "java.util.UUID")
-    private final String paymentMethodId;
+    private final UUID paymentMethodId;
+    private final DateTime referenceTime;
     private final String timeZone;
     private final String address1;
     private final String address2;
@@ -66,22 +64,22 @@ public class AccountJson extends JsonBase {
     private final String phone;
     private final String notes;
     private final Boolean isMigrated;
-    private final Boolean isNotifiedForInvoices;
 
     public AccountJson(final Account account, final BigDecimal accountBalance, final BigDecimal accountCBA, @Nullable final AccountAuditLogs accountAuditLogs) {
         super(toAuditLogJson(accountAuditLogs == null ? null : accountAuditLogs.getAuditLogsForAccount()));
         this.accountCBA = accountCBA;
         this.accountBalance = accountBalance;
-        this.accountId = account.getId().toString();
+        this.accountId = account.getId();
         this.externalKey = account.getExternalKey();
         this.name = account.getName();
         this.firstNameLength = account.getFirstNameLength();
         this.email = account.getEmail();
         this.billCycleDayLocal = account.getBillCycleDayLocal();
-        this.currency = account.getCurrency() != null ? account.getCurrency().toString() : null;
-        this.parentAccountId = account.getParentAccountId() != null ? account.getParentAccountId().toString() : null;
+        this.currency = account.getCurrency();
+        this.parentAccountId = account.getParentAccountId();
         this.isPaymentDelegatedToParent = account.isPaymentDelegatedToParent();
-        this.paymentMethodId = account.getPaymentMethodId() != null ? account.getPaymentMethodId().toString() : null;
+        this.paymentMethodId = account.getPaymentMethodId();
+        this.referenceTime = account.getReferenceTime();
         this.timeZone = account.getTimeZone() != null ? account.getTimeZone().toString() : null;
         this.address1 = account.getAddress1();
         this.address2 = account.getAddress2();
@@ -94,20 +92,20 @@ public class AccountJson extends JsonBase {
         this.phone = account.getPhone();
         this.notes = account.getNotes();
         this.isMigrated = account.isMigrated();
-        this.isNotifiedForInvoices = account.isNotifiedForInvoices();
     }
 
     @JsonCreator
-    public AccountJson(@JsonProperty("accountId") final String accountId,
+    public AccountJson(@JsonProperty("accountId") final UUID accountId,
                        @JsonProperty("name") final String name,
                        @JsonProperty("firstNameLength") final Integer firstNameLength,
                        @JsonProperty("externalKey") final String externalKey,
                        @JsonProperty("email") final String email,
                        @JsonProperty("billCycleDayLocal") final Integer billCycleDayLocal,
-                       @JsonProperty("currency") final String currency,
-                       @JsonProperty("parentAccountId") final String parentAccountId,
+                       @JsonProperty("currency") final Currency currency,
+                       @JsonProperty("parentAccountId") final UUID parentAccountId,
                        @JsonProperty("isPaymentDelegatedToParent") final Boolean isPaymentDelegatedToParent,
-                       @JsonProperty("paymentMethodId") final String paymentMethodId,
+                       @JsonProperty("paymentMethodId") final UUID paymentMethodId,
+                       @JsonProperty("referenceTime") final DateTime referenceTime,
                        @JsonProperty("timeZone") final String timeZone,
                        @JsonProperty("address1") final String address1,
                        @JsonProperty("address2") final String address2,
@@ -120,7 +118,6 @@ public class AccountJson extends JsonBase {
                        @JsonProperty("phone") final String phone,
                        @JsonProperty("notes") final String notes,
                        @JsonProperty("isMigrated") final Boolean isMigrated,
-                       @JsonProperty("isNotifiedForInvoices") final Boolean isNotifiedForInvoices,
                        @JsonProperty("accountBalance") final BigDecimal accountBalance,
                        @JsonProperty("accountCBA") final BigDecimal accountCBA,
                        @JsonProperty("auditLogs") @Nullable final List<AuditLogJson> auditLogs) {
@@ -136,6 +133,7 @@ public class AccountJson extends JsonBase {
         this.parentAccountId = parentAccountId;
         this.isPaymentDelegatedToParent = isPaymentDelegatedToParent;
         this.paymentMethodId = paymentMethodId;
+        this.referenceTime = referenceTime;
         this.timeZone = timeZone;
         this.address1 = address1;
         this.address2 = address2;
@@ -148,7 +146,6 @@ public class AccountJson extends JsonBase {
         this.phone = phone;
         this.notes = notes;
         this.isMigrated = isMigrated;
-        this.isNotifiedForInvoices = isNotifiedForInvoices;
         this.accountCBA = accountCBA;
     }
 
@@ -195,17 +192,8 @@ public class AccountJson extends JsonBase {
             }
 
             @Override
-            public Boolean isNotifiedForInvoices() {
-                return isNotifiedForInvoices;
-            }
-
-            @Override
             public UUID getPaymentMethodId() {
-                if (Strings.emptyToNull(paymentMethodId) == null) {
-                    return null;
-                } else {
-                    return UUID.fromString(paymentMethodId);
-                }
+                return paymentMethodId;
             }
 
             @Override
@@ -236,11 +224,7 @@ public class AccountJson extends JsonBase {
 
             @Override
             public Currency getCurrency() {
-                if (Strings.emptyToNull(currency) == null) {
-                    return null;
-                } else {
-                    return Currency.valueOf(currency);
-                }
+                return currency;
             }
 
             @Override
@@ -275,11 +259,7 @@ public class AccountJson extends JsonBase {
 
             @Override
             public UUID getParentAccountId() {
-                if (Strings.emptyToNull(parentAccountId) == null) {
-                    return null;
-                } else {
-                    return UUID.fromString(parentAccountId);
-                }
+                return parentAccountId;
             }
 
             @Override
@@ -297,7 +277,7 @@ public class AccountJson extends JsonBase {
 
             @Override
             public DateTime getReferenceTime() {
-                return null;
+                return referenceTime;
             }
 
             @Override
@@ -326,7 +306,7 @@ public class AccountJson extends JsonBase {
         return accountBalance;
     }
 
-    public String getAccountId() {
+    public UUID getAccountId() {
         return accountId;
     }
 
@@ -354,11 +334,11 @@ public class AccountJson extends JsonBase {
         return billCycleDayLocal;
     }
 
-    public String getCurrency() {
+    public Currency getCurrency() {
         return currency;
     }
 
-    public String getParentAccountId() {
+    public UUID getParentAccountId() {
         return parentAccountId;
     }
 
@@ -367,8 +347,12 @@ public class AccountJson extends JsonBase {
         return isPaymentDelegatedToParent;
     }
 
-    public String getPaymentMethodId() {
+    public UUID getPaymentMethodId() {
         return paymentMethodId;
+    }
+
+    public DateTime getReferenceTime() {
+        return referenceTime;
     }
 
     public String getTimeZone() {
@@ -420,11 +404,6 @@ public class AccountJson extends JsonBase {
         return isMigrated;
     }
 
-    @JsonProperty("isNotifiedForInvoices")
-    public Boolean isNotifiedForInvoices() {
-        return isNotifiedForInvoices;
-    }
-
     @Override
     public String toString() {
         return "AccountJson{" +
@@ -440,6 +419,7 @@ public class AccountJson extends JsonBase {
                ", parentAccountId=" + parentAccountId + '\'' +
                ", isPaymentDelegatedToParent=" + isPaymentDelegatedToParent + '\'' +
                ", paymentMethodId='" + paymentMethodId + '\'' +
+               ", referenceTime='" + referenceTime + '\'' +
                ", timeZone='" + timeZone + '\'' +
                ", address1='" + address1 + '\'' +
                ", address2='" + address2 + '\'' +
@@ -452,7 +432,6 @@ public class AccountJson extends JsonBase {
                ", phone='" + phone + '\'' +
                ", notes='" + notes + '\'' +
                ", isMigrated=" + isMigrated +
-               ", isNotifiedForInvoices=" + isNotifiedForInvoices +
                '}';
     }
 
@@ -515,9 +494,6 @@ public class AccountJson extends JsonBase {
         if (isMigrated != null ? !isMigrated.equals(that.isMigrated) : that.isMigrated != null) {
             return false;
         }
-        if (isNotifiedForInvoices != null ? !isNotifiedForInvoices.equals(that.isNotifiedForInvoices) : that.isNotifiedForInvoices != null) {
-            return false;
-        }
         if (locale != null ? !locale.equals(that.locale) : that.locale != null) {
             return false;
         }
@@ -539,10 +515,12 @@ public class AccountJson extends JsonBase {
         if (state != null ? !state.equals(that.state) : that.state != null) {
             return false;
         }
+        if (referenceTime != null ? referenceTime.compareTo(that.referenceTime) != 0 : that.referenceTime != null) {
+            return false;
+        }
         if (timeZone != null ? !timeZone.equals(that.timeZone) : that.timeZone != null) {
             return false;
         }
-
         return true;
     }
 
@@ -560,6 +538,7 @@ public class AccountJson extends JsonBase {
         result = 31 * result + (parentAccountId != null ? parentAccountId.hashCode() : 0);
         result = 31 * result + (isPaymentDelegatedToParent != null ? isPaymentDelegatedToParent.hashCode() : 0);
         result = 31 * result + (paymentMethodId != null ? paymentMethodId.hashCode() : 0);
+        result = 31 * result + (referenceTime != null ? referenceTime.hashCode() : 0);
         result = 31 * result + (timeZone != null ? timeZone.hashCode() : 0);
         result = 31 * result + (address1 != null ? address1.hashCode() : 0);
         result = 31 * result + (address2 != null ? address2.hashCode() : 0);
@@ -572,7 +551,6 @@ public class AccountJson extends JsonBase {
         result = 31 * result + (phone != null ? phone.hashCode() : 0);
         result = 31 * result + (notes != null ? notes.hashCode() : 0);
         result = 31 * result + (isMigrated != null ? isMigrated.hashCode() : 0);
-        result = 31 * result + (isNotifiedForInvoices != null ? isNotifiedForInvoices.hashCode() : 0);
         return result;
     }
 }

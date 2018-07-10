@@ -99,12 +99,20 @@ public abstract class JunctionTestSuiteWithEmbeddedDB extends GuicyKillbillTestS
 
     @BeforeClass(groups = "slow")
     protected void beforeClass() throws Exception {
+        if (hasFailed()) {
+            return;
+        }
+
         final Injector injector = Guice.createInjector(Stage.PRODUCTION, new TestJunctionModuleWithEmbeddedDB(configSource));
         injector.injectMembers(this);
     }
 
     @BeforeMethod(groups = "slow")
     public void beforeMethod() throws Exception {
+        if (hasFailed()) {
+            return;
+        }
+
         super.beforeMethod();
         startTestFamework();
         this.catalog = initCatalog(catalogService);
@@ -112,6 +120,10 @@ public abstract class JunctionTestSuiteWithEmbeddedDB extends GuicyKillbillTestS
 
     @AfterMethod(groups = "slow")
     public void afterMethod() throws Exception {
+        if (hasFailed()) {
+            return;
+        }
+
         stopTestFramework();
     }
 
@@ -196,7 +208,6 @@ public abstract class JunctionTestSuiteWithEmbeddedDB extends GuicyKillbillTestS
                                        .email(UUID.randomUUID().toString().substring(1, 8))
                                        .phone(UUID.randomUUID().toString().substring(1, 8))
                                        .migrated(false)
-                                       .isNotifiedForInvoices(false)
                                        .externalKey(UUID.randomUUID().toString().substring(1, 8))
                                        .billingCycleDayLocal(billingDay)
                                        .currency(Currency.USD)

@@ -29,10 +29,13 @@ import org.killbill.xmlloader.ValidationErrors;
 
 @XmlAccessorType(XmlAccessType.NONE)
 public class DefaultUnit extends ValidatingConfig<StandaloneCatalog> implements Unit {
-    
+
     @XmlAttribute(required = true)
     @XmlID
     private String name;
+
+    @XmlAttribute(required = false)
+    private String prettyName;
 
     /* (non-Javadoc)
      * @see org.killbill.billing.catalog.Unit#getName()
@@ -40,6 +43,11 @@ public class DefaultUnit extends ValidatingConfig<StandaloneCatalog> implements 
     @Override
     public String getName() {
         return name;
+    }
+
+    @Override
+    public String getPrettyName() {
+        return prettyName;
     }
 
     @Override
@@ -52,11 +60,18 @@ public class DefaultUnit extends ValidatingConfig<StandaloneCatalog> implements 
     public void initialize(final StandaloneCatalog catalog, final URI sourceURI) {
         super.initialize(catalog, sourceURI);
         CatalogSafetyInitializer.initializeNonRequiredNullFieldsWithDefaultValue(this);
+        if (prettyName == null) {
+            this.prettyName = name;
+        }
     }
-
 
     public DefaultUnit setName(final String name) {
         this.name = name;
+        return this;
+    }
+
+    public DefaultUnit setPrettyName(final String prettyName) {
+        this.prettyName = prettyName;
         return this;
     }
 

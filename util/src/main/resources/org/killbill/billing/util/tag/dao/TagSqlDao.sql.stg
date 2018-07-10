@@ -44,6 +44,7 @@ where t.is_active
 and t.object_id = :objectId
 and t.object_type = :objectType
 <AND_CHECK_TENANT("t.")>
+<defaultOrderBy("t.")>
 ;
 >>
 
@@ -55,6 +56,7 @@ where 1 = 1
 and t.object_id = :objectId
 and t.object_type = :objectType
 <AND_CHECK_TENANT("t.")>
+<defaultOrderBy("t.")>
 ;
 >>
 
@@ -100,6 +102,16 @@ userAndSystemTagDefinitions() ::= <<
     \'00000000-0000-0000-0000-000000000007\' id
   , \'PARTNER\' as name
   , \'Indicates that this is a partner account\' description
+  union
+  select
+    \'00000000-0000-0000-0000-000000000008\' id
+  , \'AUTO_INVOICING_DRAFT\' as name
+  , \'Generate account invoices in DRAFT mode.\' description
+  union
+  select
+    \'00000000-0000-0000-0000-000000000009\' id
+  , \'AUTO_INVOICING_REUSE_DRAFT\' as name
+  , \'Use existing draft invoice if exists.\' description
   union
   select
     \'00000000-0000-0001-0000-000000000001\' id

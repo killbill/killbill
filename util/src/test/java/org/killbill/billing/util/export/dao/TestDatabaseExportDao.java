@@ -22,19 +22,17 @@ import java.io.ByteArrayOutputStream;
 import java.util.Date;
 import java.util.UUID;
 
+import org.killbill.billing.util.UtilTestSuiteWithEmbeddedDB;
+import org.killbill.billing.util.api.DatabaseExportOutputStream;
 import org.skife.jdbi.v2.Handle;
 import org.skife.jdbi.v2.tweak.HandleCallback;
 import org.testng.Assert;
-import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
-
-import org.killbill.billing.util.UtilTestSuiteWithEmbeddedDB;
-import org.killbill.billing.util.api.DatabaseExportOutputStream;
-import org.killbill.billing.util.validation.dao.DatabaseSchemaDao;
 
 import com.ning.compress.lzf.LZFEncoder;
 
 public class TestDatabaseExportDao extends UtilTestSuiteWithEmbeddedDB {
+
 
     @Test(groups = "slow")
     public void testExportSimpleData() throws Exception {
@@ -47,7 +45,6 @@ public class TestDatabaseExportDao extends UtilTestSuiteWithEmbeddedDB {
         final String accountName = UUID.randomUUID().toString().substring(0, 4);
         final int firstNameLength = 4;
         final String timeZone = "UTC";
-        final boolean isNotifiedForInvoices = false;
         final Date createdDate = new Date(12421982000L);
         final String createdBy = UUID.randomUUID().toString().substring(0, 4);
         final Date updatedDate = new Date(382910622000L);
@@ -78,18 +75,19 @@ public class TestDatabaseExportDao extends UtilTestSuiteWithEmbeddedDB {
                                internalCallContext.getAccountRecordId(), internalCallContext.getTenantRecordId());
 
                 // Add row in accounts table
-                handle.execute("insert into accounts (record_id, id, email, name, first_name_length, time_zone, is_notified_for_invoices, created_date, created_by, updated_date, updated_by, tenant_record_id) " +
-                               "values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-                               internalCallContext.getAccountRecordId(), accountId, accountEmail, accountName, firstNameLength, timeZone, isNotifiedForInvoices, createdDate, createdBy, updatedDate, updatedBy, internalCallContext.getTenantRecordId());
+                handle.execute("insert into accounts (record_id, id, external_key, email, name, first_name_length, reference_time, time_zone, created_date, created_by, updated_date, updated_by, tenant_record_id) " +
+                               "values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                               internalCallContext.getAccountRecordId(), accountId, accountId, accountEmail, accountName, firstNameLength, createdDate, timeZone, createdDate, createdBy, updatedDate, updatedBy, internalCallContext.getTenantRecordId());
                 return null;
             }
         });
 
         // Verify new dump
         final String newDump = getDump();
-        Assert.assertEquals(newDump, "-- accounts record_id|id|external_key|email|name|first_name_length|currency|billing_cycle_day_local|parent_account_id|is_payment_delegated_to_parent|payment_method_id|time_zone|locale|address1|address2|company_name|city|state_or_province|country|postal_code|phone|notes|migrated|is_notified_for_invoices|created_date|created_by|updated_date|updated_by|tenant_record_id\n" +
-                                     String.format("%s|%s||%s|%s|%s||||false||%s|||||||||||false|%s|%s|%s|%s|%s|%s", internalCallContext.getAccountRecordId(), accountId, accountEmail, accountName, firstNameLength, timeZone,
-                                                   isNotifiedForInvoices, "1970-05-24T18:33:02.000+0000", createdBy, "1982-02-18T20:03:42.000+0000", updatedBy, internalCallContext.getTenantRecordId()) + "\n" +
+
+        Assert.assertEquals(newDump, "-- accounts record_id|id|external_key|email|name|first_name_length|currency|billing_cycle_day_local|parent_account_id|is_payment_delegated_to_parent|payment_method_id|reference_time|time_zone|locale|address1|address2|company_name|city|state_or_province|country|postal_code|phone|notes|migrated|created_date|created_by|updated_date|updated_by|tenant_record_id\n" +
+                                     String.format("%s|%s|%s|%s|%s|%s||||false||%s|%s|||||||||||false|%s|%s|%s|%s|%s", internalCallContext.getAccountRecordId(), accountId, accountId, accountEmail, accountName, firstNameLength, "1970-05-24T18:33:02.000+0000", timeZone,
+                                                   "1970-05-24T18:33:02.000+0000", createdBy, "1982-02-18T20:03:42.000+0000", updatedBy, internalCallContext.getTenantRecordId()) + "\n" +
                                      "-- " + tableNameA + " record_id|a_column|blob_column|account_record_id|tenant_record_id\n" +
                                      "1|a|WlYAAARjYWZl|" + internalCallContext.getAccountRecordId() + "|" + internalCallContext.getTenantRecordId() + "\n" +
                                      "-- " + tableNameB + " record_id|b_column|account_record_id|tenant_record_id\n" +

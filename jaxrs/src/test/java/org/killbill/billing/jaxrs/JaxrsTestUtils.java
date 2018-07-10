@@ -21,6 +21,7 @@ import java.util.List;
 
 import org.joda.time.DateTime;
 
+import org.killbill.billing.ObjectType;
 import org.killbill.billing.jaxrs.json.AuditLogJson;
 import org.killbill.billing.util.UUIDs;
 
@@ -29,8 +30,8 @@ public abstract class JaxrsTestUtils {
     public static List<AuditLogJson> createAuditLogsJson(final DateTime changeDate) {
         final List<AuditLogJson> auditLogs = new ArrayList<AuditLogJson>();
         for (int i = 0; i < 20; i++) {
-            auditLogs.add(new AuditLogJson(UUIDs.randomUUID().toString(), changeDate, UUIDs.randomUUID().toString(),
-                                           UUIDs.randomUUID().toString(), UUIDs.randomUUID().toString(), UUIDs.randomUUID().toString()));
+            auditLogs.add(new AuditLogJson(UUIDs.randomUUID().toString(), changeDate, ObjectType.BUNDLE, UUIDs.randomUUID(), UUIDs.randomUUID().toString(),
+                                           UUIDs.randomUUID().toString(), UUIDs.randomUUID().toString(), UUIDs.randomUUID().toString(), null));
         }
 
         return auditLogs;

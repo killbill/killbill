@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014-2016 Groupon, Inc
- * Copyright 2014-2016 The Billing Project, LLC
+ * Copyright 2014-2018 Groupon, Inc
+ * Copyright 2014-2018 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -146,7 +146,7 @@ public class DefaultInvoiceFormatter implements InvoiceFormatter {
                 invoiceItems.add(item);
             } else {
                 mergedInvoiceAdjustment = new CreditAdjInvoiceItem(invoice.getId(), invoice.getAccountId(), invoice.getInvoiceDate(), mergedInvoiceAdjustment.getDescription(),
-                                                                   mergedInvoiceAdjustment.getAmount().add(item.getAmount()), mergedInvoiceAdjustment.getCurrency());
+                                                                   mergedInvoiceAdjustment.getAmount().add(item.getAmount()), mergedInvoiceAdjustment.getCurrency(), mergedInvoiceAdjustment.getItemDetails());
             }
         }
         return mergedInvoiceAdjustment;
@@ -345,6 +345,16 @@ public class DefaultInvoiceFormatter implements InvoiceFormatter {
     @Override
     public boolean isParentInvoice() {
         return invoice.isParentInvoice();
+    }
+
+    @Override
+    public UUID getParentAccountId() {
+        return invoice.getParentAccountId();
+    }
+
+    @Override
+    public UUID getParentInvoiceId() {
+        return invoice.getParentInvoiceId();
     }
 
     // Expose the fields for children classes. This is useful for further customization of the invoices

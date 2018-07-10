@@ -18,7 +18,6 @@
 
 package org.killbill.billing.overdue.applicator;
 
-import java.io.IOException;
 import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
@@ -30,12 +29,10 @@ import org.joda.time.DateTime;
 import org.joda.time.Period;
 import org.killbill.billing.ErrorCode;
 import org.killbill.billing.ObjectType;
-import org.killbill.billing.account.api.Account;
 import org.killbill.billing.account.api.AccountApiException;
 import org.killbill.billing.account.api.AccountInternalApi;
 import org.killbill.billing.account.api.ImmutableAccountData;
 import org.killbill.billing.callcontext.InternalCallContext;
-import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.catalog.api.BillingActionPolicy;
 import org.killbill.billing.catalog.api.ProductCategory;
 import org.killbill.billing.entitlement.EntitlementInternalApi;
@@ -63,23 +60,16 @@ import org.killbill.billing.tag.TagInternalApi;
 import org.killbill.billing.util.api.TagApiException;
 import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
-import org.killbill.billing.util.email.DefaultEmailSender;
-import org.killbill.billing.util.email.EmailApiException;
-import org.killbill.billing.util.email.EmailConfig;
-import org.killbill.billing.util.email.EmailSender;
 import org.killbill.billing.util.tag.ControlTagType;
 import org.killbill.billing.util.tag.Tag;
 import org.killbill.bus.api.PersistentBus;
-import org.killbill.clock.Clock;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Predicate;
-import com.google.common.base.Strings;
 import com.google.common.collect.Collections2;
 import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
-import com.samskivert.mustache.MustacheException;
 
 public class OverdueStateApplicator {
 
@@ -91,9 +81,7 @@ public class OverdueStateApplicator {
     private final AccountInternalApi accountApi;
     private final EntitlementApi entitlementApi;
     private final EntitlementInternalApi entitlementInternalApi;
-    private final OverdueEmailGenerator overdueEmailGenerator;
     private final TagInternalApi tagApi;
-    private final EmailSender emailSender;
     private final InternalCallContextFactory internalCallContextFactory;
 
     @Inject
@@ -102,8 +90,6 @@ public class OverdueStateApplicator {
                                   final EntitlementApi entitlementApi,
                                   final EntitlementInternalApi entitlementInternalApi,
                                   @Named(DefaultOverdueModule.OVERDUE_NOTIFIER_CHECK_NAMED) final OverduePoster checkPoster,
-                                  final OverdueEmailGenerator overdueEmailGenerator,
-                                  final EmailConfig config,
                                   final PersistentBus bus,
                                   final TagInternalApi tagApi,
                                   final InternalCallContextFactory internalCallContextFactory) {
@@ -113,60 +99,54 @@ public class OverdueStateApplicator {
         this.entitlementApi = entitlementApi;
         this.entitlementInternalApi = entitlementInternalApi;
         this.checkPoster = checkPoster;
-        this.overdueEmailGenerator = overdueEmailGenerator;
         this.tagApi = tagApi;
         this.internalCallContextFactory = internalCallContextFactory;
-        this.emailSender = new DefaultEmailSender(config);
         this.bus = bus;
     }
 
     public void apply(final DateTime effectiveDate, final OverdueStateSet overdueStateSet, final BillingState billingState,
                       final ImmutableAccountData account, final OverdueState previousOverdueState,
                       final OverdueState nextOverdueState, final InternalCallContext context) throws OverdueException, OverdueApiException {
-        try {
-            if (isAccountTaggedWith_OVERDUE_ENFORCEMENT_OFF(context)) {
-                log.debug("OverdueStateApplicator: apply returns because account (recordId={}) is set with OVERDUE_ENFORCEMENT_OFF", context.getAccountRecordId());
-                return;
-            }
-
-            log.debug("OverdueStateApplicator: time={}, previousState={}, nextState={}, billingState={}", effectiveDate, previousOverdueState, nextOverdueState, billingState);
-
-            final OverdueState firstOverdueState = overdueStateSet.getFirstState();
-            final boolean conditionForNextNotfication = !nextOverdueState.isClearState() ||
-                                                        // We did not reach the first state yet but we have an unpaid invoice
-                                                        (firstOverdueState != null && billingState != null && billingState.getDateOfEarliestUnpaidInvoice() != null);
-
-            if (conditionForNextNotfication) {
-                final Period reevaluationInterval = getReevaluationInterval(overdueStateSet, nextOverdueState);
-                // If there is no configuration in the config, we assume this is because the overdue conditions are not time based and so there is nothing to retry
-                if (reevaluationInterval == null) {
-                    log.debug("OverdueStateApplicator <notificationQ>: missing InitialReevaluationInterval from config, NOT inserting notification for account {}", account.getId());
-                } else {
-                    log.debug("OverdueStateApplicator <notificationQ>: inserting notification for account={}, time={}", account.getId(), effectiveDate.plus(reevaluationInterval));
-                    createFutureNotification(account, effectiveDate.plus(reevaluationInterval), context);
-                }
-            } else if (nextOverdueState.isClearState()) {
-                clearFutureNotification(account, context);
-            }
-
-            if (previousOverdueState.getName().equals(nextOverdueState.getName())) {
-                log.debug("OverdueStateApplicator is no-op: previousState={}, nextState={}", previousOverdueState, nextOverdueState);
-                return;
-            }
-
-            cancelSubscriptionsIfRequired(effectiveDate, account, nextOverdueState, context);
-
-            sendEmailIfRequired(account.getId(), billingState, nextOverdueState, context);
-
-            avoid_extra_credit_by_toggling_AUTO_INVOICE_OFF(account, previousOverdueState, nextOverdueState, context);
-
-            // Make sure to store the new state last here: the entitlement DAO will send a BlockingTransitionInternalEvent
-            // on the bus to which invoice will react. We need the latest state (including AUTO_INVOICE_OFF tag for example)
-            // to be present in the database first.
-            storeNewState(effectiveDate, account, nextOverdueState, context);
-        } catch (final AccountApiException e) {
-            throw new OverdueException(e);
+        if (isAccountTaggedWith_OVERDUE_ENFORCEMENT_OFF(context)) {
+            log.debug("OverdueStateApplicator: apply returns because account (recordId={}) is set with OVERDUE_ENFORCEMENT_OFF", context.getAccountRecordId());
+            return;
         }
+
+        log.debug("OverdueStateApplicator: time={}, previousState={}, nextState={}, billingState={}", effectiveDate, previousOverdueState, nextOverdueState, billingState);
+
+        final OverdueState firstOverdueState = overdueStateSet.getFirstState();
+        final boolean conditionForNextNotfication = !nextOverdueState.isClearState() ||
+                                                    // We did not reach the first state yet but we have an unpaid invoice
+                                                    (firstOverdueState != null && billingState != null && billingState.getDateOfEarliestUnpaidInvoice() != null);
+
+        if (conditionForNextNotfication) {
+            final Period reevaluationInterval = getReevaluationInterval(overdueStateSet, nextOverdueState);
+            // If there is no configuration in the config, we assume this is because the overdue conditions are not time based and so there is nothing to retry
+            if (reevaluationInterval == null) {
+                log.debug("OverdueStateApplicator <notificationQ>: missing InitialReevaluationInterval from config, NOT inserting notification for account {}", account.getId());
+            } else {
+                log.debug("OverdueStateApplicator <notificationQ>: inserting notification for account={}, time={}", account.getId(), effectiveDate.plus(reevaluationInterval));
+                createFutureNotification(account, effectiveDate.plus(reevaluationInterval), context);
+            }
+        } else if (nextOverdueState.isClearState()) {
+            clearFutureNotification(account, context);
+        }
+
+        if (previousOverdueState.getName().equals(nextOverdueState.getName())) {
+            log.debug("OverdueStateApplicator is no-op: previousState={}, nextState={}", previousOverdueState, nextOverdueState);
+            return;
+        } else {
+            log.debug("OverdueStateApplicator has new state: previousState={}, nextState={}", previousOverdueState, nextOverdueState);
+        }
+
+        cancelSubscriptionsIfRequired(effectiveDate, account, nextOverdueState, context);
+
+        avoid_extra_credit_by_toggling_AUTO_INVOICE_OFF(account, previousOverdueState, nextOverdueState, context);
+
+        // Make sure to store the new state last here: the entitlement DAO will send a BlockingTransitionInternalEvent
+        // on the bus to which invoice will react. We need the latest state (including AUTO_INVOICE_OFF tag for example)
+        // to be present in the database first.
+        storeNewState(effectiveDate, account, nextOverdueState, context);
 
         final OverdueChangeInternalEvent event;
         try {
@@ -189,7 +169,7 @@ public class OverdueStateApplicator {
             if (nextOverdueState.isClearState()) {
                 return overdueStateSet.getInitialReevaluationInterval();
             } else {
-                return nextOverdueState.getAutoReevaluationInterval();
+                return nextOverdueState.getAutoReevaluationInterval().toJodaPeriod();
             }
         } catch (final OverdueApiException e) {
             if (e.getCode() == ErrorCode.OVERDUE_NO_REEVALUATION_INTERVAL.getCode()) {
@@ -352,45 +332,6 @@ public class OverdueStateApplicator {
                                                                                                                   }
                                                                                                               });
         result.addAll(allEntitlementsButAddonsForAccountId);
-    }
-
-    private void sendEmailIfRequired(final UUID accountId, final BillingState billingState,
-                                     final OverdueState nextOverdueState, final InternalTenantContext context) throws AccountApiException {
-        // Note: we don't want to fail the full refresh call because sending the email failed.
-        // That's the reason why we catch all exceptions here.
-        // The alternative would be to: throw new OverdueApiException(e, ErrorCode.EMAIL_SENDING_FAILED);
-
-        // If sending is not configured, skip
-        if (nextOverdueState.getEmailNotification() == null) {
-            return;
-        }
-
-        final Account account = accountApi.getAccountById(accountId, context);
-        if (Strings.emptyToNull(account.getEmail()) == null) {
-            log.warn("Unable to send overdue notification email for account {} and overdueable {}: no email specified", account.getId(), account.getId());
-            return;
-        }
-
-        final List<String> to = ImmutableList.<String>of(account.getEmail());
-        // TODO - should we look at the account CC: list?
-        final List<String> cc = ImmutableList.<String>of();
-        final String subject = nextOverdueState.getEmailNotification().getSubject();
-
-        try {
-            // Generate and send the email
-            final String emailBody = overdueEmailGenerator.generateEmail(account, billingState, account, nextOverdueState);
-            if (nextOverdueState.getEmailNotification().isHTML()) {
-                emailSender.sendHTMLEmail(to, cc, subject, emailBody);
-            } else {
-                emailSender.sendPlainTextEmail(to, cc, subject, emailBody);
-            }
-        } catch (final IOException e) {
-            log.warn("Unable to generate or send overdue notification email for accountId='{}'", account.getId(), e);
-        } catch (final EmailApiException e) {
-            log.warn("Unable to send overdue notification email for accountId='{}'", account.getId(), e);
-        } catch (final MustacheException e) {
-            log.warn("Unable to generate overdue notification email for accountId='{}'", account.getId(), e);
-        }
     }
 
     //

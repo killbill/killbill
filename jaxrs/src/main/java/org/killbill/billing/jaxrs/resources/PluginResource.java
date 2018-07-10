@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014-2015 Groupon, Inc
- * Copyright 2014-2015 The Billing Project, LLC
+ * Copyright 2014-2018 Groupon, Inc
+ * Copyright 2014-2018 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -35,6 +35,9 @@ import javax.servlet.ServletConfig;
 import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
 import javax.servlet.ServletInputStream;
+import javax.servlet.ServletOutputStream;
+import javax.servlet.ServletRequest;
+import javax.servlet.WriteListener;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletRequestWrapper;
@@ -55,6 +58,7 @@ import javax.ws.rs.core.UriInfo;
 import org.killbill.billing.account.api.AccountUserApi;
 import org.killbill.billing.jaxrs.util.Context;
 import org.killbill.billing.jaxrs.util.JaxrsUriBuilder;
+import org.killbill.billing.payment.api.InvoicePaymentApi;
 import org.killbill.billing.payment.api.PaymentApi;
 import org.killbill.billing.util.api.AuditUserApi;
 import org.killbill.billing.util.api.CustomFieldUserApi;
@@ -91,9 +95,10 @@ public class PluginResource extends JaxRsResourceBase {
                           final AuditUserApi auditUserApi,
                           final AccountUserApi accountUserApi,
                           final PaymentApi paymentApi,
+                          final InvoicePaymentApi invoicePaymentApi,
                           final Clock clock,
                           final Context context) {
-        super(uriBuilder, tagUserApi, customFieldUserApi, auditUserApi, accountUserApi, paymentApi, null, clock, context);
+        super(uriBuilder, tagUserApi, customFieldUserApi, auditUserApi, accountUserApi, paymentApi, invoicePaymentApi, null, clock, context);
         this.osgiServlet = osgiServlet;
     }
 
@@ -184,17 +189,40 @@ public class PluginResource extends JaxRsResourceBase {
                                           final HttpServletResponse response, final ServletContext servletContext,
                                           final ServletConfig servletConfig, final UriInfo uriInfo) throws ServletException, IOException {
         prepareOSGIRequest(request, servletContext, servletConfig);
-        osgiServlet.service(new OSGIServletRequestWrapper(request, inputStream, formData, uriInfo.getQueryParameters()), new OSGIServletResponseWrapper(response));
 
-        if (response.isCommitted()) {
-            if (response.getStatus() >= 400) {
-                log.warn("{} responded {}", request.getPathInfo(), response.getStatus());
-            }
-            // Jersey will want to return 204, but the servlet should have done the right thing already
-            return null;
-        } else {
-            return Response.status(response.getStatus()).build();
+        final ServletRequest req = new OSGIServletRequestWrapper(request, inputStream, formData, uriInfo.getQueryParameters());
+
+        // The real ServletOutputStream is a HttpOutput, which we don't want to give to plugins.
+        // Jooby for instance would commit the underlying HTTP channel (via ServletServletResponse#send),
+        // meaning that any further headers (e.g. Profiling) that we would add would not be returned.
+        final ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+        final OSGIServletResponseWrapper res = new OSGIServletResponseWrapper(response,
+                                                                              new ServletOutputStream() {
+                                                                                  @Override
+                                                                                  public boolean isReady() {
+                                                                                      return true;
+                                                                                  }
+
+                                                                                  @Override
+                                                                                  public void setWriteListener(final WriteListener writeListener) {
+                                                                                      throw new UnsupportedOperationException();
+                                                                                  }
+
+                                                                                  @Override
+                                                                                  public void write(final int b) throws IOException {
+                                                                                      byteArrayOutputStream.write(b);
+                                                                                  }
+                                                                              });
+
+        osgiServlet.service(req, res);
+
+        if (response.getStatus() >= 400) {
+            log.warn("{} responded {}", request.getPathInfo(), response.getStatus());
         }
+
+        return Response.status(response.getStatus())
+                       .entity(new String(byteArrayOutputStream.toByteArray()))
+                       .build();
     }
 
     private InputStream createInputStream(final HttpServletRequest request, final MultivaluedMap<String, String> form) throws IOException {
@@ -346,8 +374,16 @@ public class PluginResource extends JaxRsResourceBase {
 
     private static final class OSGIServletResponseWrapper extends HttpServletResponseWrapper {
 
-        public OSGIServletResponseWrapper(final HttpServletResponse response) {
+        private final ServletOutputStream servletOutputStream;
+
+        public OSGIServletResponseWrapper(final HttpServletResponse response, final ServletOutputStream servletOutputStream) {
             super(response);
+            this.servletOutputStream = servletOutputStream;
+        }
+
+        @Override
+        public ServletOutputStream getOutputStream() throws IOException {
+            return servletOutputStream;
         }
     }
 }

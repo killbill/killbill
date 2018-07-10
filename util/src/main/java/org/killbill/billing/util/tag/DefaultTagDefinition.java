@@ -19,6 +19,8 @@ package org.killbill.billing.util.tag;
 import java.util.List;
 import java.util.UUID;
 
+import javax.annotation.Nullable;
+
 import org.killbill.billing.ObjectType;
 import org.killbill.billing.entity.EntityBase;
 import org.killbill.billing.util.UUIDs;
@@ -26,31 +28,40 @@ import org.killbill.billing.util.tag.dao.TagDefinitionModelDao;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.common.base.Function;
+import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Iterables;
 
 public class DefaultTagDefinition extends EntityBase implements TagDefinition {
+
+    private static final Splitter SPLITTER = Splitter.on(',').omitEmptyStrings().trimResults();
 
     private final String name;
     private final String description;
     private final Boolean controlTag;
     private final List<ObjectType> applicableObjectTypes;
 
+
     public DefaultTagDefinition(final TagDefinitionModelDao tagDefinitionModelDao, final boolean isControlTag) {
-        this(tagDefinitionModelDao.getId(), tagDefinitionModelDao.getName(), tagDefinitionModelDao.getDescription(), isControlTag);
+        this(tagDefinitionModelDao.getId(), tagDefinitionModelDao.getName(), tagDefinitionModelDao.getDescription(), isControlTag, toObjectTypes(tagDefinitionModelDao.getApplicableObjectTypes()));
     }
 
-    public DefaultTagDefinition(final String name, final String description, final Boolean isControlTag) {
-        this(UUIDs.randomUUID(), name, description, isControlTag);
-    }
-
-    public DefaultTagDefinition(final UUID id, final String name, final String description, final Boolean isControlTag) {
-        this(id, name, description, isControlTag, getApplicableObjectTypes(id, isControlTag));
-    }
 
     public DefaultTagDefinition(final ControlTagType controlTag) {
         this(controlTag.getId(), controlTag.toString(), controlTag.getDescription(), true, controlTag.getApplicableObjectTypes());
     }
 
+    // Test only
+    public DefaultTagDefinition(final String name, final String description, final Boolean isControlTag) {
+        this(UUIDs.randomUUID(), name, description, isControlTag);
+    }
+
+    // Test only
+    public DefaultTagDefinition(final UUID id, final String name, final String description, final Boolean isControlTag) {
+        this(id, name, description, isControlTag, getApplicableObjectTypes(id, isControlTag));
+    }
 
     @JsonCreator
     public DefaultTagDefinition(@JsonProperty("id") final UUID id,
@@ -144,4 +155,18 @@ public class DefaultTagDefinition extends EntityBase implements TagDefinition {
         }
         throw new IllegalStateException(String.format("ControlTag id %s does not seem to exist", id));
     }
+
+    private static List<ObjectType> toObjectTypes(@Nullable final String input) {
+        if (input == null) {
+            return ImmutableList.copyOf(ObjectType.values());
+        }
+
+        return ImmutableList.copyOf(Iterables.transform(SPLITTER.splitToList(input), new Function<String, ObjectType>() {
+            @Override
+            public ObjectType apply(final String input) {
+                return ObjectType.valueOf(input);
+            }
+        }));
+    }
+
 }

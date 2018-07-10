@@ -38,6 +38,7 @@ import org.killbill.billing.account.api.AccountUserApi;
 import org.killbill.billing.account.api.ImmutableAccountInternalApi;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
+import org.killbill.billing.callcontext.MutableCallContext;
 import org.killbill.billing.callcontext.MutableInternalCallContext;
 import org.killbill.billing.catalog.MockPlan;
 import org.killbill.billing.catalog.MockPlanPhase;
@@ -47,9 +48,8 @@ import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.catalog.api.Plan;
 import org.killbill.billing.catalog.api.PlanPhase;
-import org.killbill.billing.catalog.api.PlanPhasePriceOverride;
-import org.killbill.billing.catalog.api.PlanPhaseSpecifier;
 import org.killbill.billing.catalog.api.Usage;
+import org.killbill.billing.entitlement.api.EntitlementSpecifier;
 import org.killbill.billing.entitlement.api.SubscriptionEventType;
 import org.killbill.billing.entity.EntityPersistenceException;
 import org.killbill.billing.invoice.api.DryRunArguments;
@@ -57,7 +57,6 @@ import org.killbill.billing.invoice.api.DryRunType;
 import org.killbill.billing.invoice.api.Invoice;
 import org.killbill.billing.invoice.api.InvoiceApiException;
 import org.killbill.billing.invoice.api.InvoiceItem;
-import org.killbill.billing.invoice.api.InvoiceNotifier;
 import org.killbill.billing.invoice.api.InvoicePayment;
 import org.killbill.billing.invoice.dao.InvoiceDao;
 import org.killbill.billing.invoice.dao.InvoiceItemModelDao;
@@ -68,7 +67,6 @@ import org.killbill.billing.invoice.dao.InvoicePaymentModelDao;
 import org.killbill.billing.invoice.dao.InvoicePaymentSqlDao;
 import org.killbill.billing.invoice.dao.InvoiceSqlDao;
 import org.killbill.billing.invoice.generator.InvoiceGenerator;
-import org.killbill.billing.invoice.notification.NullInvoiceNotifier;
 import org.killbill.billing.junction.BillingEvent;
 import org.killbill.billing.junction.BillingEventSet;
 import org.killbill.billing.junction.BillingInternalApi;
@@ -223,25 +221,24 @@ public class TestInvoiceHelper {
         Invoice invoice = generateInvoice(account.getId(), targetDate, new DryRunFutureDateArguments(), context);
         Assert.assertNotNull(invoice);
 
-        List<InvoiceModelDao> invoices = invoiceDao.getInvoicesByAccount(context);
+        List<InvoiceModelDao> invoices = invoiceDao.getInvoicesByAccount(false, context);
         Assert.assertEquals(invoices.size(), 0);
 
         invoice = generateInvoice(account.getId(), targetDate, null, context);
         Assert.assertNotNull(invoice);
 
-        invoices = invoiceDao.getInvoicesByAccount(context);
+        invoices = invoiceDao.getInvoicesByAccount(false, context);
         Assert.assertEquals(invoices.size(), 1);
 
         return invoice.getId();
     }
 
     public Invoice generateInvoice(final UUID accountId, @Nullable final LocalDate targetDate, @Nullable final DryRunArguments dryRunArguments, final InternalCallContext internalCallContext) throws InvoiceApiException {
-        final InvoiceNotifier invoiceNotifier = new NullInvoiceNotifier();
         final InvoiceDispatcher dispatcher = new InvoiceDispatcher(generator, accountApi, billingApi, subscriptionApi,
-                                                                   invoiceDao, internalCallContextFactory, invoiceNotifier, invoicePluginDispatcher, locker, busService.getBus(),
+                                                                   invoiceDao, internalCallContextFactory, invoicePluginDispatcher, locker, busService.getBus(),
                                                                    notificationQueueService, invoiceConfig, clock, parkedAccountsManager);
 
-        return dispatcher.processAccountFromNotificationOrBusEvent(accountId, targetDate, dryRunArguments, internalCallContext);
+        return dispatcher.processAccountFromNotificationOrBusEvent(accountId, targetDate, dryRunArguments, false, internalCallContext);
     }
 
     public SubscriptionBase createSubscription() throws SubscriptionBaseApiException {
@@ -260,23 +257,24 @@ public class TestInvoiceHelper {
                                                             .email(UUID.randomUUID().toString().substring(1, 8))
                                                             .phone(UUID.randomUUID().toString().substring(1, 8))
                                                             .migrated(false)
-                                                            .isNotifiedForInvoices(true)
                                                             .externalKey(UUID.randomUUID().toString().substring(1, 8))
                                                             .billingCycleDayLocal(31)
                                                             .currency(accountCurrency)
                                                             .paymentMethodId(UUID.randomUUID())
                                                             .timeZone(DateTimeZone.UTC)
                                                             .createdDate(clock.getUTCNow())
+
                                                             .build();
+        final MutableCallContext mutableCallContext = new MutableCallContext(internalCallContext);
 
         final Account account;
         if (isFastTest()) {
-            account = GuicyKillbillTestSuiteNoDB.createMockAccount(accountData, accountUserApi, accountApi, immutableAccountApi, nonEntityDao, clock, internalCallContextFactory, callContext, internalCallContext);
+            account = GuicyKillbillTestSuiteNoDB.createMockAccount(accountData, accountUserApi, accountApi, immutableAccountApi, nonEntityDao, clock, internalCallContextFactory, mutableCallContext, internalCallContext);
         } else {
             account = accountUserApi.createAccount(accountData, callContext);
         }
 
-        GuicyKillbillTestSuite.refreshCallContext(account.getId(), clock, internalCallContextFactory, callContext, internalCallContext);
+        GuicyKillbillTestSuite.refreshCallContext(account.getId(), clock, internalCallContextFactory, mutableCallContext, internalCallContext);
 
         return account;
     }
@@ -424,6 +422,11 @@ public class TestInvoiceHelper {
             }
 
             @Override
+            public DateTime getCatalogEffectiveDate() {
+                return null;
+            }
+
+            @Override
             public int compareTo(final BillingEvent e1) {
                 if (!getSubscription().getId().equals(e1.getSubscription().getId())) { // First order by subscription
                     return getSubscription().getId().compareTo(e1.getSubscription().getId());
@@ -449,7 +452,7 @@ public class TestInvoiceHelper {
         }
 
         @Override
-        public PlanPhaseSpecifier getPlanPhaseSpecifier() {
+        public EntitlementSpecifier getEntitlementSpecifier() {
             return null;
         }
 
@@ -475,11 +478,6 @@ public class TestInvoiceHelper {
 
         @Override
         public BillingActionPolicy getBillingActionPolicy() {
-            return null;
-        }
-
-        @Override
-        public List<PlanPhasePriceOverride> getPlanPhasePriceOverrides() {
             return null;
         }
     }

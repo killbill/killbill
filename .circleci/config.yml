@@ -8,7 +8,7 @@ jobs:
   build:
     <<: *defaults
     docker:
-      - image: killbill/kbbuild:0.1.0
+      - image: killbill/kbbuild:0.4.0
     steps:
       - checkout
       - restore_cache:
@@ -17,7 +17,7 @@ jobs:
           name: Setup dependencies
           command: |
             if [ "${CIRCLE_BRANCH}" != "master" ]; then
-              for i in killbill-oss-parent killbill-api killbill-plugin-api killbill-commons killbill-platform; do
+              for i in killbill-oss-parent killbill-api killbill-plugin-api killbill-commons killbill-platform killbill-client-java; do
                 if [ -n "$(git ls-remote --heads https://github.com/killbill/$i.git ${CIRCLE_BRANCH})" ]; then
                   echo "*** Setting up $i"
                   mkdir -p /home/killbill/$i
@@ -38,7 +38,7 @@ jobs:
   test-h2:
     <<: *defaults
     docker:
-      - image: killbill/kbbuild:0.1.0
+      - image: killbill/kbbuild:0.4.0
     steps:
       - checkout
       - restore_cache:
@@ -48,7 +48,7 @@ jobs:
           name: Save test results
           command: |
             mkdir -p ~/junit/
-            find . -type f -regex ".*/target/surefire-reports/.*xml" -exec cp {} ~/junit/ \;
+            find . -type f -regex ".*/target/surefire-reports/junitreports/.*xml" -exec cp {} ~/junit/ \;
           when: always
       - store_test_results:
           path: ~/junit
@@ -57,8 +57,8 @@ jobs:
   test-mysql:
     <<: *defaults
     docker:
-      - image: killbill/kbbuild:0.1.0
-      - image: killbill/mariadb:0.18
+      - image: killbill/kbbuild:0.4.0
+      - image: killbill/mariadb:0.19
         environment:
         - MYSQL_ROOT_PASSWORD=root
     steps:
@@ -87,7 +87,7 @@ jobs:
           name: Save test results
           command: |
             mkdir -p ~/junit/
-            find . -type f -regex ".*/target/surefire-reports/.*xml" -exec cp {} ~/junit/ \;
+            find . -type f -regex ".*/target/surefire-reports/junitreports/.*xml" -exec cp {} ~/junit/ \;
           when: always
       - store_test_results:
           path: ~/junit
@@ -96,8 +96,8 @@ jobs:
   test-postgresql:
     <<: *defaults
     docker:
-      - image: killbill/kbbuild:0.1.0
-      - image: killbill/postgresql:0.18
+      - image: killbill/kbbuild:0.4.0
+      - image: killbill/postgresql:0.19
         environment:
         - POSTGRES_PASSWORD=postgres
     steps:
@@ -112,7 +112,7 @@ jobs:
           name: Save test results
           command: |
             mkdir -p ~/junit/
-            find . -type f -regex ".*/target/surefire-reports/.*xml" -exec cp {} ~/junit/ \;
+            find . -type f -regex ".*/target/surefire-reports/junitreports/.*xml" -exec cp {} ~/junit/ \;
           when: always
       - store_test_results:
           path: ~/junit
@@ -122,8 +122,8 @@ jobs:
   integration-tests:
     <<: *defaults
     docker:
-      - image: killbill/kbbuild:0.1.0
-      - image: killbill/mariadb:0.18
+      - image: killbill/kbbuild:0.4.0
+      - image: killbill/mariadb:0.19
         environment:
         - MYSQL_ROOT_PASSWORD=root
     steps:
@@ -139,17 +139,29 @@ jobs:
             set +e
 
             mvn clean install -DskipTests=true
-            nohup ./bin/start-server -s &
+            mkdir -p /tmp/test-results
+            nohup ./bin/start-server -s > /tmp/test-results/killbill.log 2>&1 &
+
+            # Get rid of message "Warning: Permanently added the RSA host key for IP address..." further down
+            ssh git@github.com || true
 
             mkdir -p /home/killbill/killbill-integration-tests
             git clone https://github.com/killbill/killbill-integration-tests.git /home/killbill/killbill-integration-tests
             pushd /home/killbill/killbill-integration-tests
-            if [ "${CIRCLE_BRANCH}" != "master" ]; then
-              if [ -n "$(git ls-remote --heads https://github.com/killbill/killbill-integration-tests.git ${CIRCLE_BRANCH})" ]; then
-                git checkout -b ${CIRCLE_BRANCH} origin/${CIRCLE_BRANCH}
-              fi
-            fi
-            bundle install
+            #if [ "${CIRCLE_BRANCH}" != "master" ]; then
+            #  if [ -n "$(git ls-remote --heads https://github.com/killbill/killbill-integration-tests.git ${CIRCLE_BRANCH})" ]; then
+            #    echo "Switching to branch ${CIRCLE_BRANCH}"
+            #    git checkout -b ${CIRCLE_BRANCH} origin/${CIRCLE_BRANCH}
+            #  else
+            #    echo "killbill-integration-tests doesn't have a branch ${CIRCLE_BRANCH}, staying on master"
+            #  fi
+            #fi
+            # For now, always expect work-for-release-0.19.x
+            git checkout -b work-for-release-0.19.x origin/work-for-release-0.19.x
+
+            source /usr/share/rvm/scripts/rvm
+            rvm use ruby-2.4.2
+            bundle install --jobs=4 --retry=3 --path=vendor/bundle
 
             count=0
             until $(curl --output /dev/null --silent --fail http://127.0.0.1:8080/1.0/healthcheck); do
@@ -163,12 +175,17 @@ jobs:
             done
 
             set -e
-            mkdir -p /tmp/test-results
-            bundle exec rake test:core | tee /tmp/test-results/test.txt 2>&1
+            bundle exec rake ci:core | tee /tmp/test-results/test.txt 2>&1
+      - run:
+          name: Save test results
+          command: |
+            mkdir -p ~/junit/
+            find ~/killbill-integration-tests -type f -regex ".*/test/reports/.*xml" -exec cp {} ~/junit/ \;
+          when: always
       - store_test_results:
-          path: /tmp/test-results
+          path: ~/junit
       - store_artifacts:
-          path: /tmp/test-results
+          path: ~/junit
 
 workflows:
   version: 2
@@ -186,6 +203,4 @@ workflows:
             - build
       - integration-tests:
           requires:
-            - test-h2
             - test-mysql
-            - test-postgresql

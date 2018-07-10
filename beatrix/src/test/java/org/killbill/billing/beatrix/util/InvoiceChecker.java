@@ -66,7 +66,7 @@ public class InvoiceChecker {
     }
 
     public Invoice checkInvoice(final UUID accountId, final int invoiceOrderingNumber, final CallContext context, final List<ExpectedInvoiceItemCheck> expected) throws InvoiceApiException {
-        final List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(accountId, false, context);
+        final List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(accountId, false, false, context);
         //Assert.assertEquals(invoices.size(), invoiceOrderingNumber);
         final Invoice invoice = invoices.get(invoiceOrderingNumber - 1);
         checkInvoice(invoice.getId(), context, expected);
@@ -79,7 +79,7 @@ public class InvoiceChecker {
         checkInvoice(invoice, context, expected);
     }
 
-    public void checkInvoiceNoAudits(final Invoice invoice, final CallContext context, final List<ExpectedInvoiceItemCheck> expected) throws InvoiceApiException {
+    public void checkInvoiceNoAudits(final Invoice invoice, final List<ExpectedInvoiceItemCheck> expected) throws InvoiceApiException {
         final List<InvoiceItem> actual = invoice.getInvoiceItems();
         Assert.assertEquals(actual.size(), expected.size(), String.format("Expected items: %s, actual items: %s", expected, actual));
         for (final ExpectedInvoiceItemCheck cur : expected) {
@@ -146,7 +146,7 @@ public class InvoiceChecker {
     }
 
     public void checkInvoice(final Invoice invoice, final CallContext context, final List<ExpectedInvoiceItemCheck> expected) throws InvoiceApiException {
-        checkInvoiceNoAudits(invoice, context, expected);
+        checkInvoiceNoAudits(invoice, expected);
         auditChecker.checkInvoiceCreated(invoice, context);
     }
 

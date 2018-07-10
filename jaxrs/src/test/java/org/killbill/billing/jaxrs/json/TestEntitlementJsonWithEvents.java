@@ -27,9 +27,12 @@ import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDate;
 import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.catalog.api.PhaseType;
+import org.killbill.billing.catalog.api.ProductCategory;
+import org.killbill.billing.entitlement.api.Entitlement.EntitlementSourceType;
+import org.killbill.billing.entitlement.api.Entitlement.EntitlementState;
+import org.killbill.billing.entitlement.api.SubscriptionEventType;
 import org.killbill.billing.jaxrs.JaxrsTestSuiteNoDB;
 import org.killbill.billing.jaxrs.json.SubscriptionJson.EventSubscriptionJson;
-import org.killbill.billing.subscription.api.SubscriptionBaseTransitionType;
 import org.killbill.clock.DefaultClock;
 import org.testng.Assert;
 import org.testng.annotations.Test;
@@ -42,51 +45,51 @@ public class TestEntitlementJsonWithEvents extends JaxrsTestSuiteNoDB {
 
     @Test(groups = "fast")
     public void testJson() throws Exception {
-        final String accountId = UUID.randomUUID().toString();
-        final String bundleId = UUID.randomUUID().toString();
-        final String subscriptionId = UUID.randomUUID().toString();
         final String externalKey = UUID.randomUUID().toString();
         final DateTime effectiveDate = DefaultClock.toUTCDateTime(new DateTime(DateTimeZone.UTC));
         final UUID eventId = UUID.randomUUID();
         final List<AuditLogJson> auditLogs = createAuditLogsJson(clock.getUTCNow());
-        final EventSubscriptionJson newEvent = new EventSubscriptionJson(eventId.toString(),
-                                                                         BillingPeriod.NO_BILLING_PERIOD.toString(),
+
+
+
+        final EventSubscriptionJson newEvent = new EventSubscriptionJson(eventId,
+                                                                         BillingPeriod.NO_BILLING_PERIOD,
                                                                          effectiveDate.toLocalDate(),
                                                                          UUID.randomUUID().toString(),
                                                                          UUID.randomUUID().toString(),
                                                                          UUID.randomUUID().toString(),
-                                                                         SubscriptionBaseTransitionType.CREATE.toString(),
+                                                                         SubscriptionEventType.PHASE,
                                                                          false,
                                                                          true,
                                                                          UUID.randomUUID().toString(),
                                                                          UUID.randomUUID().toString(),
-                                                                         PhaseType.DISCOUNT.toString(),
+                                                                         UUID.randomUUID().toString(),
                                                                          auditLogs);
 
-        final PhasePriceOverrideJson priceOverride = new PhasePriceOverrideJson("foo", "bar", null, BigDecimal.TEN, BigDecimal.ONE);
+        final PhasePriceJson priceOverride = new PhasePriceJson("foo", "bar", null, BigDecimal.TEN, BigDecimal.ONE, null);
 
-        final SubscriptionJson entitlementJsonWithEvents = new SubscriptionJson(accountId,
-                                                                                bundleId,
-                                                                                subscriptionId,
-                                                                                externalKey,
-                                                                                new LocalDate(),
-                                                                                UUID.randomUUID().toString(),
-                                                                                UUID.randomUUID().toString(),
-                                                                                UUID.randomUUID().toString(),
-                                                                                UUID.randomUUID().toString(),
-                                                                                UUID.randomUUID().toString(),
-                                                                                UUID.randomUUID().toString(),
-                                                                                UUID.randomUUID().toString(),
-                                                                                UUID.randomUUID().toString(),
-                                                                                new LocalDate(),
-                                                                                new LocalDate(),
-                                                                                new LocalDate(),
-                                                                                new LocalDate(),
-                                                                                null,
-                                                                                ImmutableList.<EventSubscriptionJson>of(newEvent),
-                                                                                ImmutableList.of(priceOverride),
-                                                                                null);
-
+        final SubscriptionJson entitlementJsonWithEvents = new SubscriptionJson(UUID.randomUUID(),
+                                                                   UUID.randomUUID(),
+                                                                   UUID.randomUUID(),
+                                                                   externalKey,
+                                                                   new LocalDate(),
+                                                                   UUID.randomUUID().toString(),
+                                                                   ProductCategory.BASE,
+                                                                   BillingPeriod.MONTHLY,
+                                                                   PhaseType.EVERGREEN,
+                                                                   UUID.randomUUID().toString(),
+                                                                   UUID.randomUUID().toString(),
+                                                                   EntitlementState.ACTIVE,
+                                                                   EntitlementSourceType.NATIVE,
+                                                                   new LocalDate(),
+                                                                   new LocalDate(),
+                                                                   new LocalDate(),
+                                                                   new LocalDate(),
+                                                                   null,
+                                                                   ImmutableList.<EventSubscriptionJson>of(newEvent),
+                                                                   ImmutableList.of(priceOverride),
+                                                                   null,
+                                                                   auditLogs);
         final String asJson = mapper.writeValueAsString(entitlementJsonWithEvents);
 
         final SubscriptionJson fromJson = mapper.readValue(asJson, SubscriptionJson.class);

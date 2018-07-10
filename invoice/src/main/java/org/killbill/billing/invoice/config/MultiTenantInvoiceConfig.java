@@ -17,6 +17,8 @@
 
 package org.killbill.billing.invoice.config;
 
+import java.util.List;
+
 import javax.inject.Inject;
 import javax.inject.Named;
 
@@ -29,6 +31,7 @@ import org.killbill.billing.util.config.tenant.MultiTenantConfigBase;
 import org.skife.config.TimeSpan;
 
 public class MultiTenantInvoiceConfig extends MultiTenantConfigBase implements InvoiceConfig {
+
 
     private final InvoiceConfig staticConfig;
 
@@ -119,8 +122,36 @@ public class MultiTenantInvoiceConfig extends MultiTenantConfigBase implements I
     }
 
     @Override
+    public List<String> getInvoicePluginNames() {
+        return staticConfig.getInvoicePluginNames();
+    }
+
+    @Override
+    public List<String> getInvoicePluginNames(final InternalTenantContext tenantContext) {
+        final String result = getStringTenantConfig("getInvoicePluginNames", tenantContext);
+        if (result != null) {
+            return convertToListString(result, "getInvoicePluginNames");
+        }
+        return getInvoicePluginNames();
+    }
+
+    @Override
     public boolean isInvoicingSystemEnabled() {
         return staticConfig.isInvoicingSystemEnabled();
+    }
+
+    @Override
+    public String getParentAutoCommitUtcTime() {
+        return staticConfig.getParentAutoCommitUtcTime();
+    }
+
+    @Override
+    public String getParentAutoCommitUtcTime(final InternalTenantContext tenantContext) {
+        final String result = getStringTenantConfig("getParentAutoCommitUtcTime", tenantContext);
+        if (result != null) {
+            return result;
+        }
+        return getParentAutoCommitUtcTime();
     }
 
     @Override
@@ -130,6 +161,31 @@ public class MultiTenantInvoiceConfig extends MultiTenantConfigBase implements I
             return Boolean.parseBoolean(result);
         }
         return isInvoicingSystemEnabled();
+    }
+
+    @Override
+    public UsageDetailMode getItemResultBehaviorMode() {
+        final UsageDetailMode mode = staticConfig.getItemResultBehaviorMode();
+        if (mode == UsageDetailMode.AGGREGATE || mode == UsageDetailMode.DETAIL) {
+            return mode;
+        }
+
+        return UsageDetailMode.AGGREGATE;
+    }
+
+    @Override
+    public UsageDetailMode getItemResultBehaviorMode(final InternalTenantContext tenantContext) {
+        final UsageDetailMode mode = staticConfig.getItemResultBehaviorMode();
+        final String result = getStringTenantConfig("getItemResultBehaviorMode", tenantContext);
+        if (result != null){
+            return UsageDetailMode.valueOf(result);
+        }
+
+        if (mode == UsageDetailMode.AGGREGATE || mode == UsageDetailMode.DETAIL) {
+            return mode;
+        }
+
+        return UsageDetailMode.AGGREGATE;
     }
 
     @Override

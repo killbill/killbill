@@ -45,10 +45,14 @@ public class TestVersionedCatalog extends CatalogTestSuiteNoDB {
     // WeaponsHireSmall-3.xml
     final DateTime dt3 = new DateTime("2011-03-03T00:01:00+00:00");
 
-    private VersionedCatalog vc;
+    private DefaultVersionedCatalog vc;
 
     @BeforeClass(groups = "fast")
     public void beforeClass() throws Exception {
+        if (hasFailed()) {
+            return;
+        }
+
         super.beforeClass();
         vc = loader.loadDefaultCatalog("versionedCatalog");
     }

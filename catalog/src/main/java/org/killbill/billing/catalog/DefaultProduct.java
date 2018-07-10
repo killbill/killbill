@@ -42,6 +42,9 @@ public class DefaultProduct extends ValidatingConfig<StandaloneCatalog> implemen
     @XmlID
     private String name;
 
+    @XmlAttribute(required = false)
+    private String prettyName;
+
     @XmlElement(required = true)
     private ProductCategory category;
 
@@ -105,6 +108,11 @@ public class DefaultProduct extends ValidatingConfig<StandaloneCatalog> implemen
         return name;
     }
 
+    @Override
+    public String getPrettyName() {
+        return prettyName;
+    }
+
     public boolean isIncluded(final DefaultProduct addon) {
         for (final Product p : included.getEntries()) {
             if (addon == p) {
@@ -127,8 +135,8 @@ public class DefaultProduct extends ValidatingConfig<StandaloneCatalog> implemen
     public DefaultLimit[] getLimits() {
         return limits;
     }
-    
-    
+
+
     protected Limit findLimit(String unit) {
         for (Limit limit: limits) {
             if(limit.getUnit().getName().equals(unit) ) {
@@ -137,7 +145,7 @@ public class DefaultProduct extends ValidatingConfig<StandaloneCatalog> implemen
         }
         return null;
     }
-    
+
     @Override
     public boolean compliesWithLimits(String unit, double value) {
         Limit l = findLimit(unit);
@@ -156,6 +164,9 @@ public class DefaultProduct extends ValidatingConfig<StandaloneCatalog> implemen
         for (DefaultLimit cur : limits) {
             cur.initialize(catalog, sourceURI);
         }
+        if (prettyName == null) {
+            this.prettyName = name;
+        }
         catalogName = catalog.getCatalogName();
     }
 
@@ -172,6 +183,11 @@ public class DefaultProduct extends ValidatingConfig<StandaloneCatalog> implemen
 
     public DefaultProduct setName(final String name) {
         this.name = name;
+        return this;
+    }
+
+    public DefaultProduct setPrettyName(final String prettyName){
+        this.prettyName = prettyName;
         return this;
     }
 

@@ -16,12 +16,13 @@
 
 package org.killbill.billing.catalog;
 
-import javax.xml.bind.annotation.XmlAccessType;
-import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlElement;
 import java.math.BigDecimal;
 import java.net.URI;
 import java.util.Arrays;
+
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlElement;
 
 import org.killbill.billing.ErrorCode;
 import org.killbill.billing.catalog.api.CatalogApiException;
@@ -66,6 +67,18 @@ public class DefaultInternationalPrice extends ValidatingConfig<StandaloneCatalo
                 } else {
                     prices[i] = curPrice;
                 }
+            }
+        }
+    }
+
+    public DefaultInternationalPrice(final DefaultInternationalPrice in, final BigDecimal overriddenPrice, final Currency currency) {
+        this.prices = in.getPrices() != null ? new DefaultPrice[in.getPrices().length] : null;
+        for (int i = 0; i < in.getPrices().length; i++) {
+            final DefaultPrice curPrice = (DefaultPrice)  in.getPrices()[i];
+            if (curPrice.getCurrency().equals(currency)){
+                prices[i] = new DefaultPrice(overriddenPrice, currency);
+            } else {
+                prices[i] = curPrice;
             }
         }
     }

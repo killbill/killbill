@@ -25,14 +25,16 @@ import org.killbill.billing.util.config.definition.PaymentConfig;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import io.swagger.annotations.ApiModel;
 
+@ApiModel(value="OverdueState")
 public class OverdueStateJson {
 
     private final String name;
     private final String externalMessage;
     private final List<Integer> daysBetweenPaymentRetries;
-    private final Boolean disableEntitlementAndChangesBlocked;
-    private final Boolean blockChanges;
+    private final Boolean isDisableEntitlementAndChangesBlocked;
+    private final Boolean isBlockChanges;
     private final Boolean isClearState;
     private final Integer reevaluationIntervalDays;
 
@@ -40,15 +42,15 @@ public class OverdueStateJson {
     public OverdueStateJson(@JsonProperty("name") final String name,
                             @JsonProperty("externalMessage") final String externalMessage,
                             @JsonProperty("daysBetweenPaymentRetries") final List<Integer> daysBetweenPaymentRetries,
-                            @JsonProperty("disableEntitlementAndChangesBlocked") final Boolean disableEntitlementAndChangesBlocked,
-                            @JsonProperty("blockChanges") final Boolean blockChanges,
-                            @JsonProperty("clearState") final Boolean isClearState,
+                            @JsonProperty("isDisableEntitlementAndChangesBlocked") final Boolean isDisableEntitlementAndChangesBlocked,
+                            @JsonProperty("isBlockChanges") final Boolean isBlockChanges,
+                            @JsonProperty("isClearState") final Boolean isClearState,
                             @JsonProperty("reevaluationIntervalDays") final Integer reevaluationIntervalDays) {
         this.name = name;
         this.externalMessage = externalMessage;
         this.daysBetweenPaymentRetries = daysBetweenPaymentRetries;
-        this.disableEntitlementAndChangesBlocked = disableEntitlementAndChangesBlocked;
-        this.blockChanges = blockChanges;
+        this.isDisableEntitlementAndChangesBlocked = isDisableEntitlementAndChangesBlocked;
+        this.isBlockChanges = isBlockChanges;
         this.isClearState = isClearState;
         this.reevaluationIntervalDays = reevaluationIntervalDays;
     }
@@ -58,13 +60,13 @@ public class OverdueStateJson {
         this.externalMessage = overdueState.getExternalMessage();
         // TODO this is broken if the per tenant system property was updated, but should we really return that in the OverdueState ?
         this.daysBetweenPaymentRetries = paymentConfig.getPaymentFailureRetryDays(null);
-        this.disableEntitlementAndChangesBlocked = overdueState.isDisableEntitlementAndChangesBlocked();
-        this.blockChanges = overdueState.isBlockChanges();
+        this.isDisableEntitlementAndChangesBlocked = overdueState.isDisableEntitlementAndChangesBlocked();
+        this.isBlockChanges = overdueState.isBlockChanges();
         this.isClearState = overdueState.isClearState();
 
         Period reevaluationIntervalPeriod = null;
         try {
-            reevaluationIntervalPeriod = overdueState.getAutoReevaluationInterval();
+            reevaluationIntervalPeriod = overdueState.getAutoReevaluationInterval().toJodaPeriod();
         } catch (final OverdueApiException ignored) {
         }
 
@@ -87,14 +89,17 @@ public class OverdueStateJson {
         return daysBetweenPaymentRetries;
     }
 
+    @JsonProperty("isDisableEntitlementAndChangesBlocked")
     public Boolean isDisableEntitlementAndChangesBlocked() {
-        return disableEntitlementAndChangesBlocked;
+        return isDisableEntitlementAndChangesBlocked;
     }
 
+    @JsonProperty("isBlockChanges")
     public Boolean isBlockChanges() {
-        return blockChanges;
+        return isBlockChanges;
     }
 
+    @JsonProperty("isClearState")
     public Boolean isClearState() {
         return isClearState;
     }
@@ -110,8 +115,8 @@ public class OverdueStateJson {
         sb.append("{name='").append(name).append('\'');
         sb.append(", externalMessage='").append(externalMessage).append('\'');
         sb.append(", daysBetweenPaymentRetries=").append(daysBetweenPaymentRetries);
-        sb.append(", disableEntitlementAndChangesBlocked=").append(disableEntitlementAndChangesBlocked);
-        sb.append(", blockChanges=").append(blockChanges);
+        sb.append(", isDisableEntitlementAndChangesBlocked=").append(isDisableEntitlementAndChangesBlocked);
+        sb.append(", isBlockChanges=").append(isBlockChanges);
         sb.append(", isClearState=").append(isClearState);
         sb.append(", reevaluationIntervalDays=").append(reevaluationIntervalDays);
         sb.append('}');
@@ -129,13 +134,13 @@ public class OverdueStateJson {
 
         final OverdueStateJson that = (OverdueStateJson) o;
 
-        if (blockChanges != null ? !blockChanges.equals(that.blockChanges) : that.blockChanges != null) {
+        if (isBlockChanges != null ? !isBlockChanges.equals(that.isBlockChanges) : that.isBlockChanges != null) {
             return false;
         }
         if (daysBetweenPaymentRetries != null ? !daysBetweenPaymentRetries.equals(that.daysBetweenPaymentRetries) : that.daysBetweenPaymentRetries != null) {
             return false;
         }
-        if (disableEntitlementAndChangesBlocked != null ? !disableEntitlementAndChangesBlocked.equals(that.disableEntitlementAndChangesBlocked) : that.disableEntitlementAndChangesBlocked != null) {
+        if (isDisableEntitlementAndChangesBlocked != null ? !isDisableEntitlementAndChangesBlocked.equals(that.isDisableEntitlementAndChangesBlocked) : that.isDisableEntitlementAndChangesBlocked != null) {
             return false;
         }
         if (externalMessage != null ? !externalMessage.equals(that.externalMessage) : that.externalMessage != null) {
@@ -159,8 +164,8 @@ public class OverdueStateJson {
         int result = name != null ? name.hashCode() : 0;
         result = 31 * result + (externalMessage != null ? externalMessage.hashCode() : 0);
         result = 31 * result + (daysBetweenPaymentRetries != null ? daysBetweenPaymentRetries.hashCode() : 0);
-        result = 31 * result + (disableEntitlementAndChangesBlocked != null ? disableEntitlementAndChangesBlocked.hashCode() : 0);
-        result = 31 * result + (blockChanges != null ? blockChanges.hashCode() : 0);
+        result = 31 * result + (isDisableEntitlementAndChangesBlocked != null ? isDisableEntitlementAndChangesBlocked.hashCode() : 0);
+        result = 31 * result + (isBlockChanges != null ? isBlockChanges.hashCode() : 0);
         result = 31 * result + (isClearState != null ? isClearState.hashCode() : 0);
         result = 31 * result + (reevaluationIntervalDays != null ? reevaluationIntervalDays.hashCode() : 0);
         return result;

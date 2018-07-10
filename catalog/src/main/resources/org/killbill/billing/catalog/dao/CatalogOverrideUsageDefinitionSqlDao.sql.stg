@@ -1,0 +1,83 @@
+group CatalogOverrideUsageDefinitionSqlDao;
+
+tableName() ::= "catalog_override_usage_definition"
+
+tableFields(prefix) ::= <<
+  <prefix>parent_usage_name
+, <prefix>type
+, <prefix>fixed_price
+, <prefix>recurring_price
+, <prefix>effective_date
+, <prefix>currency
+, <prefix>created_by
+, <prefix>created_date
+, <prefix>tenant_record_id
+>>
+
+allTableFields(prefix) ::= <<
+  <prefix>record_id
+, <tableFields(prefix)>
+>>
+
+
+tableValues() ::= <<
+  :parentUsageName
+, :type
+, :fixedPrice
+, :recurringPrice
+, :effectiveDate
+, :currency
+, :createdBy
+, :createdDate
+, :tenantRecordId
+>>
+
+
+allTableValues() ::= <<
+  :recordId
+, <tableValues()>
+>>
+
+create() ::= <<
+insert into <tableName()>(
+<tableFields()>
+)
+values(
+<tableValues()>
+)
+;
+>>
+
+getByRecordId() ::= <<
+select <allTableFields()>
+from <tableName()>
+where record_id = :recordId
+and tenant_record_id = :tenantRecordId
+;
+>>
+
+getByAttributes() ::= <<
+select <allTableFields()>
+from <tableName()>
+where parent_usage_name = :parentUsageName
+and tenant_record_id = :tenantRecordId
+;
+>>
+
+getOverriddenPhaseUsages() ::= <<
+select <allTableFields("udef.")>
+from <tableName()> udef
+join catalog_override_phase_usage pu
+on udef.record_id = pu.usage_def_record_id
+where
+pu.target_phase_def_record_id = :targetPhaseDefRecordId
+and pu.tenant_record_id = :tenantRecordId
+order by pu.usage_number asc
+;
+>>
+
+
+getLastInsertId() ::= <<
+    select LAST_INSERT_ID();
+>>
+

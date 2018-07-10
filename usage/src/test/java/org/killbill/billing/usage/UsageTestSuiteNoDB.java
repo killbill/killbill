@@ -30,15 +30,11 @@ public class UsageTestSuiteNoDB extends GuicyKillbillTestSuiteNoDB {
 
     @BeforeClass(groups = "fast")
     protected void beforeClass() throws Exception {
+        if (hasFailed()) {
+            return;
+        }
+
         final Injector injector = Guice.createInjector(new TestUsageModuleNoDB(configSource));
         injector.injectMembers(this);
-    }
-
-    @BeforeMethod(groups = "fast")
-    public void beforeMethod() {
-    }
-
-    @AfterMethod(groups = "fast")
-    public void afterMethod() {
     }
 }

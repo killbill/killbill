@@ -42,12 +42,12 @@ public class DefaultMutableStaticCatalog extends StandaloneCatalog implements Mu
 
     public DefaultMutableStaticCatalog(final StandaloneCatalog input) {
         this.setCatalogName(input.getCatalogName())
+            .setRecurringBillingMode(input.getRecurringBillingMode())
             .setEffectiveDate(input.getEffectiveDate())
             .setSupportedCurrencies(input.getCurrentSupportedCurrencies())
             .setUnits(input.getCurrentUnits())
             .setProducts(input.getCurrentProducts())
             .setPlans(input.getCurrentPlans())
-            .setRecurringBillingMode(input.getRecurringBillingMode())
             .setPlanRules(input.getPlanRules())
             .setPriceLists(input.getPriceLists());
         initialize(this, null);

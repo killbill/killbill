@@ -130,12 +130,20 @@ public class EntitlementTestSuiteWithEmbeddedDB extends GuicyKillbillTestSuiteWi
 
     @BeforeClass(groups = "slow")
     protected void beforeClass() throws Exception {
+        if (hasFailed()) {
+            return;
+        }
+
         final Injector injector = Guice.createInjector(Stage.PRODUCTION, new TestEntitlementModuleWithEmbeddedDB(configSource));
         injector.injectMembers(this);
     }
 
     @BeforeMethod(groups = "slow")
     public void beforeMethod() throws Exception {
+        if (hasFailed()) {
+            return;
+        }
+
         super.beforeMethod();
         startTestFamework(testListener, clock, busService, subscriptionBaseService, entitlementService);
         this.catalog = initCatalog(catalogService);
@@ -171,6 +179,10 @@ public class EntitlementTestSuiteWithEmbeddedDB extends GuicyKillbillTestSuiteWi
 
     @AfterMethod(groups = "slow")
     public void afterMethod() throws Exception {
+        if (hasFailed()) {
+            return;
+        }
+
         securityApi.logout();
 
         stopTestFramework(testListener, busService, subscriptionBaseService, entitlementService);
@@ -260,16 +272,17 @@ public class EntitlementTestSuiteWithEmbeddedDB extends GuicyKillbillTestSuiteWi
     }
 
     protected AccountData getAccountData(final int billingDay) {
+
         return new MockAccountBuilder().name(UUID.randomUUID().toString().substring(1, 8))
                                        .firstNameLength(6)
                                        .email(UUID.randomUUID().toString().substring(1, 8))
                                        .phone(UUID.randomUUID().toString().substring(1, 8))
                                        .migrated(false)
-                                       .isNotifiedForInvoices(false)
                                        .externalKey(UUID.randomUUID().toString().substring(1, 8))
                                        .billingCycleDayLocal(billingDay)
                                        .currency(Currency.USD)
                                        .paymentMethodId(UUID.randomUUID())
+                                       .referenceTime(clock.getUTCNow())
                                        .timeZone(DateTimeZone.UTC)
                                        .build();
     }

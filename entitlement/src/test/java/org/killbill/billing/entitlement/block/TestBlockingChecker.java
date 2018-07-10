@@ -47,6 +47,10 @@ public class TestBlockingChecker extends EntitlementTestSuiteNoDB {
 
     @BeforeMethod(groups = "fast")
     public void beforeMethod() throws Exception {
+        if (hasFailed()) {
+            return;
+        }
+
         super.beforeMethod();
         final UUID accountId = UUID.randomUUID();
         account = Mockito.mock(Account.class);
@@ -64,6 +68,8 @@ public class TestBlockingChecker extends EntitlementTestSuiteNoDB {
 
         try {
             Mockito.when(subscriptionInternalApi.getBundleFromId(Mockito.<UUID>any(), Mockito.<InternalTenantContext>any())).thenReturn(bundle);
+            Mockito.when(subscriptionInternalApi.getAccountIdFromBundleId(Mockito.<UUID>any(), Mockito.<InternalTenantContext>any())).thenReturn(accountId);
+            Mockito.when(subscriptionInternalApi.getBundleIdFromSubscriptionId(Mockito.<UUID>any(), Mockito.<InternalTenantContext>any())).thenReturn(bundleId);
         } catch (SubscriptionBaseApiException e) {
             Assert.fail(e.toString());
         }

@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014-2017 Groupon, Inc
- * Copyright 2014-2017 The Billing Project, LLC
+ * Copyright 2014-2018 Groupon, Inc
+ * Copyright 2014-2018 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -34,9 +34,11 @@ import org.killbill.billing.jaxrs.resources.CatalogResource;
 import org.killbill.billing.jaxrs.resources.CreditResource;
 import org.killbill.billing.jaxrs.resources.CustomFieldResource;
 import org.killbill.billing.jaxrs.resources.ExportResource;
+import org.killbill.billing.jaxrs.resources.InvoiceItemResource;
 import org.killbill.billing.jaxrs.resources.InvoicePaymentResource;
 import org.killbill.billing.jaxrs.resources.InvoiceResource;
 import org.killbill.billing.jaxrs.resources.NodesInfoResource;
+import org.killbill.billing.jaxrs.resources.OverdueResource;
 import org.killbill.billing.jaxrs.resources.PaymentGatewayResource;
 import org.killbill.billing.jaxrs.resources.PaymentMethodResource;
 import org.killbill.billing.jaxrs.resources.PaymentResource;
@@ -52,6 +54,8 @@ import org.killbill.billing.jaxrs.resources.TransactionResource;
 import org.killbill.billing.jaxrs.resources.UsageResource;
 import org.killbill.billing.jaxrs.util.KillbillEventHandler;
 import org.killbill.billing.junction.glue.DefaultJunctionModule;
+import org.killbill.billing.osgi.api.Healthcheck;
+import org.killbill.billing.osgi.api.OSGIServiceRegistration;
 import org.killbill.billing.overdue.glue.DefaultOverdueModule;
 import org.killbill.billing.payment.glue.PaymentModule;
 import org.killbill.billing.platform.api.KillbillConfigSource;
@@ -66,7 +70,6 @@ import org.killbill.billing.subscription.glue.DefaultSubscriptionModule;
 import org.killbill.billing.tenant.glue.DefaultTenantModule;
 import org.killbill.billing.usage.glue.UsageModule;
 import org.killbill.billing.util.config.definition.NotificationConfig;
-import org.killbill.billing.util.email.EmailModule;
 import org.killbill.billing.util.email.templates.TemplateModule;
 import org.killbill.billing.util.glue.AuditModule;
 import org.killbill.billing.util.glue.BroadcastModule;
@@ -93,12 +96,12 @@ import org.skife.jdbi.v2.ResultSetMapperFactory;
 import org.skife.jdbi.v2.tweak.ResultSetMapper;
 
 import ch.qos.logback.classic.helpers.MDCInsertingServletFilter;
+import com.google.inject.TypeLiteral;
 import com.google.inject.multibindings.Multibinder;
 import com.google.inject.name.Names;
 
 public class KillbillServerModule extends KillbillPlatformModule {
 
-    public static final String SHIRO_DATA_SOURCE_ID = "shiro";
     public static final String STATIC_CONFIG = "StaticConfig";
 
     public KillbillServerModule(final ServletContext servletContext, final KillbillServerConfig serverConfig, final KillbillConfigSource configSource) {
@@ -114,6 +117,8 @@ public class KillbillServerModule extends KillbillPlatformModule {
         configureResources();
         configureFilters();
         configurePushNotification();
+
+        bind(new TypeLiteral<OSGIServiceRegistration<Healthcheck>>() {}).to(DefaultHealthcheckPluginRegistry.class).asEagerSingleton();
     }
 
     @Override
@@ -138,7 +143,14 @@ public class KillbillServerModule extends KillbillPlatformModule {
 
         // Same database, but different pool: clone the object so the shutdown sequence cleans the pool properly
         shiroEmbeddedDB = new KillBillEmbeddedDBProvider(daoConfig).get();
-        bind(EmbeddedDB.class).annotatedWith(Names.named(SHIRO_DATA_SOURCE_ID_NAMED)).toInstance(shiroEmbeddedDB);
+        bind(EmbeddedDB.class).annotatedWith(Names.named(SHIRO_DATA_SOURCE_ID)).toInstance(shiroEmbeddedDB);
+
+        if (mainRoDataSourceConfig.isEnabled()) {
+            mainRoEmbeddedDB = new KillBillEmbeddedDBProvider(mainRoDataSourceConfig).get();
+        } else {
+            mainRoEmbeddedDB = mainEmbeddedDB;
+        }
+        bind(EmbeddedDB.class).annotatedWith(Names.named(MAIN_RO_DATA_SOURCE_ID)).toInstance(mainRoEmbeddedDB);
     }
 
     @Override
@@ -168,11 +180,11 @@ public class KillbillServerModule extends KillbillPlatformModule {
         install(new DefaultJunctionModule(configSource));
         install(new DefaultOverdueModule(configSource));
         install(new DefaultSubscriptionModule(configSource));
-        install(new EmailModule(configSource));
         install(new ExportModule(configSource));
         install(new GlobalLockerModule(configSource));
         install(new KillBillShiroAopModule());
         install(new KillbillApiAopModule());
+        install(new JaxRSAopModule());
         install(new KillBillShiroWebModule(servletContext, skifeConfigSource));
         install(new NonEntityDaoModule(configSource));
         install(new PaymentModule(configSource));
@@ -187,6 +199,7 @@ public class KillbillServerModule extends KillbillPlatformModule {
 
     protected void configureResources() {
         bind(AccountResource.class).asEagerSingleton();
+        bind(AdminResource.class).asEagerSingleton();
         bind(BundleResource.class).asEagerSingleton();
         bind(CatalogResource.class).asEagerSingleton();
         bind(CreditResource.class).asEagerSingleton();
@@ -194,22 +207,23 @@ public class KillbillServerModule extends KillbillPlatformModule {
         bind(ExportResource.class).asEagerSingleton();
         bind(InvoicePaymentResource.class).asEagerSingleton();
         bind(InvoiceResource.class).asEagerSingleton();
-        bind(KillbillEventHandler.class).asEagerSingleton();
+        bind(NodesInfoResource.class).asEagerSingleton();
+        bind(OverdueResource.class).asEagerSingleton();
         bind(PaymentGatewayResource.class).asEagerSingleton();
         bind(PaymentMethodResource.class).asEagerSingleton();
         bind(PaymentResource.class).asEagerSingleton();
+        bind(PluginInfoResource.class).asEagerSingleton();
         bind(PluginResource.class).asEagerSingleton();
         bind(SecurityResource.class).asEagerSingleton();
         bind(SubscriptionResource.class).asEagerSingleton();
         bind(TagDefinitionResource.class).asEagerSingleton();
         bind(TagResource.class).asEagerSingleton();
         bind(TenantResource.class).asEagerSingleton();
-        bind(TestResource.class).asEagerSingleton();
         bind(TransactionResource.class).asEagerSingleton();
         bind(UsageResource.class).asEagerSingleton();
-        bind(AdminResource.class).asEagerSingleton();
-        bind(PluginInfoResource.class).asEagerSingleton();
-        bind(NodesInfoResource.class).asEagerSingleton();
+        bind(InvoiceItemResource.class).asEagerSingleton();
+
+        bind(KillbillEventHandler.class).asEagerSingleton();
     }
 
     protected void configureFilters() {

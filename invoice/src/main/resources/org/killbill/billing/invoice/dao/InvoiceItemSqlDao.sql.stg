@@ -10,6 +10,7 @@ tableFields(prefix) ::= <<
 , <prefix>bundle_id
 , <prefix>subscription_id
 , <prefix>description
+, <prefix>product_name
 , <prefix>plan_name
 , <prefix>phase_name
 , <prefix>usage_name
@@ -19,6 +20,8 @@ tableFields(prefix) ::= <<
 , <prefix>rate
 , <prefix>currency
 , <prefix>linked_item_id
+, <prefix>quantity
+, <prefix>item_details
 , <prefix>created_by
 , <prefix>created_date
 >>
@@ -31,6 +34,7 @@ tableValues() ::= <<
 , :bundleId
 , :subscriptionId
 , :description
+, :productName
 , :planName
 , :phaseName
 , :usageName
@@ -40,6 +44,8 @@ tableValues() ::= <<
 , :rate
 , :currency
 , :linkedItemId
+, :quantity
+, :itemDetails
 , :createdBy
 , :createdDate
 >>
@@ -70,12 +76,15 @@ getAdjustedOrRepairedInvoiceItemsByLinkedId() ::= <<
   ;
 >>
 
-updateAmount() ::= <<
+updateItemFields() ::= <<
     UPDATE <tableName()>
-    SET amount = :amount
+    SET amount = coalesce(:amount, amount),
+        description = coalesce(:description, description),
+        item_details = coalesce(:itemDetails, item_details)
     WHERE id = :id
     <AND_CHECK_TENANT("")>;
 >>
+
 
 getInvoiceItemsByParentInvoice() ::= <<
   SELECT <allTableFields(("items."))>

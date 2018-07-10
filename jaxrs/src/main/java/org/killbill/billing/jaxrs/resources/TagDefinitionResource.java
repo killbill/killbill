@@ -1,7 +1,9 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
+ * Copyright 2014-2018 Groupon, Inc
+ * Copyright 2014-2018 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -37,21 +39,27 @@ import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.UriInfo;
 
 import org.killbill.billing.ObjectType;
+import org.killbill.billing.account.api.AccountApiException;
 import org.killbill.billing.account.api.AccountUserApi;
+import org.killbill.billing.jaxrs.json.AuditLogJson;
 import org.killbill.billing.jaxrs.json.TagDefinitionJson;
 import org.killbill.billing.jaxrs.util.Context;
 import org.killbill.billing.jaxrs.util.JaxrsUriBuilder;
+import org.killbill.billing.payment.api.InvoicePaymentApi;
 import org.killbill.billing.payment.api.PaymentApi;
+import org.killbill.billing.util.api.AuditLevel;
 import org.killbill.billing.util.api.AuditUserApi;
 import org.killbill.billing.util.api.CustomFieldUserApi;
 import org.killbill.billing.util.api.TagDefinitionApiException;
 import org.killbill.billing.util.api.TagUserApi;
 import org.killbill.billing.util.audit.AuditLog;
+import org.killbill.billing.util.audit.AuditLogWithHistory;
 import org.killbill.billing.util.callcontext.TenantContext;
 import org.killbill.billing.util.tag.TagDefinition;
 import org.killbill.clock.Clock;
 import org.killbill.commons.metrics.TimedResource;
 
+import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import io.swagger.annotations.Api;
@@ -63,7 +71,7 @@ import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 
 @Singleton
 @Path(JaxrsResource.TAG_DEFINITIONS_PATH)
-@Api(value = JaxrsResource.TAG_DEFINITIONS_PATH, description = "Operations on tag definitions")
+@Api(value = JaxrsResource.TAG_DEFINITIONS_PATH, description = "Operations on tag definitions", tags="TagDefinition")
 public class TagDefinitionResource extends JaxRsResourceBase {
 
     @Inject
@@ -73,9 +81,10 @@ public class TagDefinitionResource extends JaxRsResourceBase {
                                  final AuditUserApi auditUserApi,
                                  final AccountUserApi accountUserApi,
                                  final PaymentApi paymentApi,
+                                 final InvoicePaymentApi invoicePaymentApi,
                                  final Clock clock,
                                  final Context context) {
-        super(uriBuilder, tagUserApi, customFieldUserApi, auditUserApi, accountUserApi, paymentApi, null, clock, context);
+        super(uriBuilder, tagUserApi, customFieldUserApi, auditUserApi, accountUserApi, paymentApi, invoicePaymentApi, null, clock, context);
     }
 
     @TimedResource
@@ -85,7 +94,7 @@ public class TagDefinitionResource extends JaxRsResourceBase {
     @ApiResponses(value = {})
     public Response getTagDefinitions(@javax.ws.rs.core.Context final HttpServletRequest request,
                                       @QueryParam(QUERY_AUDIT) @DefaultValue("NONE") final AuditMode auditMode) {
-        final TenantContext tenantContext = context.createContext(request);
+        final TenantContext tenantContext = context.createTenantContextNoAccountId(request);
         final List<TagDefinition> tagDefinitions = tagUserApi.getTagDefinitions(tenantContext);
 
         final Collection<TagDefinitionJson> result = new LinkedList<TagDefinitionJson>();
@@ -103,11 +112,11 @@ public class TagDefinitionResource extends JaxRsResourceBase {
     @Produces(APPLICATION_JSON)
     @ApiOperation(value = "Retrieve a tag definition", response = TagDefinitionJson.class)
     @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid tagDefinitionId supplied")})
-    public Response getTagDefinition(@PathParam("tagDefinitionId") final String tagDefId,
+    public Response getTagDefinition(@PathParam("tagDefinitionId") final UUID tagDefId,
                                      @QueryParam(QUERY_AUDIT) @DefaultValue("NONE") final AuditMode auditMode,
                                      @javax.ws.rs.core.Context final HttpServletRequest request) throws TagDefinitionApiException {
-        final TenantContext tenantContext = context.createContext(request);
-        final TagDefinition tagDefinition = tagUserApi.getTagDefinition(UUID.fromString(tagDefId), tenantContext);
+        final TenantContext tenantContext = context.createTenantContextNoAccountId(request);
+        final TagDefinition tagDefinition = tagUserApi.getTagDefinition(tagDefId, tenantContext);
         final List<AuditLog> auditLogs = auditUserApi.getAuditLogs(tagDefinition.getId(), ObjectType.TAG_DEFINITION, auditMode.getLevel(), tenantContext);
         final TagDefinitionJson json = new TagDefinitionJson(tagDefinition, auditLogs);
         return Response.status(Status.OK).entity(json).build();
@@ -117,8 +126,9 @@ public class TagDefinitionResource extends JaxRsResourceBase {
     @POST
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
-    @ApiOperation(value = "Create a tag definition")
-    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid name or description supplied")})
+    @ApiOperation(value = "Create a tag definition", response = TagDefinitionJson.class)
+    @ApiResponses(value = {@ApiResponse(code = 201, message = "Tag definition created successfully"),
+                           @ApiResponse(code = 400, message = "Invalid name or description supplied")})
     public Response createTagDefinition(final TagDefinitionJson json,
                                         @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                         @HeaderParam(HDR_REASON) final String reason,
@@ -129,8 +139,11 @@ public class TagDefinitionResource extends JaxRsResourceBase {
         verifyNonNullOrEmpty(json, "TagDefinitionJson body should be specified");
         verifyNonNullOrEmpty(json.getName(), "TagDefinition name needs to be set",
                              json.getDescription(), "TagDefinition description needs to be set");
+        Preconditions.checkArgument(json.getApplicableObjectTypes() != null &&
+                                    !json.getApplicableObjectTypes().isEmpty(), "Applicable object types must be set");
 
-        final TagDefinition createdTagDef = tagUserApi.createTagDefinition(json.getName(), json.getDescription(), context.createContext(createdBy, reason, comment, request));
+
+        final TagDefinition createdTagDef = tagUserApi.createTagDefinition(json.getName(), json.getDescription(), json.getApplicableObjectTypes(), context.createCallContextNoAccountId(createdBy, reason, comment, request));
         return uriBuilder.buildResponse(uriInfo, TagDefinitionResource.class, "getTagDefinition", createdTagDef.getId(), request);
     }
 
@@ -139,14 +152,28 @@ public class TagDefinitionResource extends JaxRsResourceBase {
     @Path("/{tagDefinitionId:" + UUID_PATTERN + "}")
     @Produces(APPLICATION_JSON)
     @ApiOperation(value = "Delete a tag definition")
-    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid tagDefinitionId supplied")})
-    public Response deleteTagDefinition(@PathParam("tagDefinitionId") final String tagDefId,
+    @ApiResponses(value = {@ApiResponse(code = 204, message = "Successful operation"),
+                           @ApiResponse(code = 400, message = "Invalid tagDefinitionId supplied")})
+    public Response deleteTagDefinition(@PathParam("tagDefinitionId") final UUID tagDefId,
                                         @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                         @HeaderParam(HDR_REASON) final String reason,
                                         @HeaderParam(HDR_COMMENT) final String comment,
                                         @javax.ws.rs.core.Context final HttpServletRequest request) throws TagDefinitionApiException {
-        tagUserApi.deleteTagDefinition(UUID.fromString(tagDefId), context.createContext(createdBy, reason, comment, request));
+        tagUserApi.deleteTagDefinition(tagDefId, context.createCallContextNoAccountId(createdBy, reason, comment, request));
         return Response.status(Status.NO_CONTENT).build();
+    }
+
+    @TimedResource
+    @GET
+    @Path("/{tagDefinitionId:" + UUID_PATTERN + "}/" + AUDIT_LOG_WITH_HISTORY)
+    @Produces(APPLICATION_JSON)
+    @ApiOperation(value = "Retrieve tag definition audit logs with history by id", response = AuditLogJson.class, responseContainer = "List")
+    @ApiResponses(value = {@ApiResponse(code = 404, message = "Account not found")})
+    public Response getTagDefinitionAuditLogsWithHistory(@PathParam("tagDefinitionId") final UUID tagDefinitionId,
+                                                   @javax.ws.rs.core.Context final HttpServletRequest request) throws AccountApiException {
+        final TenantContext tenantContext = context.createTenantContextNoAccountId(request);
+        final List<AuditLogWithHistory> auditLogWithHistory = tagUserApi.getTagDefinitionAuditLogsWithHistoryForId(tagDefinitionId, AuditLevel.FULL, tenantContext);
+        return Response.status(Status.OK).entity(getAuditLogsWithHistory(auditLogWithHistory)).build();
     }
 
     @Override

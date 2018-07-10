@@ -1,0 +1,73 @@
+group CatalogOverrideTierBlockSqlDao;
+
+tableName() ::= "catalog_override_tier_block"
+
+tableFields(prefix) ::= <<
+  <prefix>block_number
+, <prefix>block_def_record_id
+, <prefix>target_tier_def_record_id
+, <prefix>created_date
+, <prefix>created_by
+, <prefix>tenant_record_id
+>>
+
+allTableFields(prefix) ::= <<
+  <prefix>record_id
+, <tableFields(prefix)>
+>>
+
+tableValues() ::= <<
+  :blockNumber
+, :blockDefRecordId
+, :targetTierDefRecordId
+, :createdDate
+, :createdBy
+, :tenantRecordId
+>>
+
+allTableValues() ::= <<
+  :recordId
+, <tableValues()>
+>>
+
+create() ::= <<
+insert into <tableName()> (
+<tableFields()>
+)
+values (
+<tableValues()>
+)
+;
+>>
+
+getByRecordId() ::= <<
+select <allTableFields()>
+from
+<tableName()>
+where record_id = :recordId
+and tenant_record_id = :tenantRecordId
+;
+>>
+
+getTargetTierDefinition(keys) ::= <<
+select
+target_tier_def_record_id
+from (select
+      target_tier_def_record_id
+      , count(*) count
+      from
+      <tableName()>
+      where
+      concat_ws(',', block_number, block_def_record_id) in (<keys: {key | :key_<i0>}; separator="," >)
+      and tenant_record_id = :tenantRecordId
+      group by target_tier_def_record_id) tmp
+where
+1=1
+and tmp.count = :targetCount
+;
+>>
+
+getLastInsertId() ::= <<
+select LAST_INSERT_ID();
+>>
+

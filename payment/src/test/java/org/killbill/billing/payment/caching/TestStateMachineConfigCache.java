@@ -46,6 +46,9 @@ public class TestStateMachineConfigCache extends PaymentTestSuiteNoDB {
 
     @BeforeMethod(groups = "fast")
     public void beforeMethod() throws Exception {
+        if (hasFailed()) {
+            return;
+        }
         super.beforeMethod();
 
         cacheControllerDispatcher.clearAll();

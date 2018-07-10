@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014-2017 Groupon, Inc
- * Copyright 2014-2017 The Billing Project, LLC
+ * Copyright 2014-2018 Groupon, Inc
+ * Copyright 2014-2018 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -27,12 +27,13 @@ import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.catalog.api.Plan;
 import org.killbill.billing.catalog.api.PlanPhase;
 import org.killbill.billing.catalog.api.PlanPhasePriceOverride;
-import org.killbill.billing.catalog.api.PlanSpecifier;
+import org.killbill.billing.catalog.api.PlanPhaseSpecifier;
 import org.killbill.billing.catalog.api.PriceList;
 import org.killbill.billing.catalog.api.Product;
 import org.killbill.billing.catalog.api.ProductCategory;
 import org.killbill.billing.entitlement.api.Entitlement.EntitlementSourceType;
 import org.killbill.billing.entitlement.api.Entitlement.EntitlementState;
+import org.killbill.billing.entitlement.api.EntitlementSpecifier;
 import org.killbill.billing.subscription.api.SubscriptionBase;
 import org.killbill.billing.subscription.api.user.SubscriptionBaseApiException;
 import org.killbill.billing.subscription.api.user.SubscriptionBaseTransition;
@@ -83,20 +84,24 @@ public class MockSubscription implements SubscriptionBase {
     }
 
     @Override
-    public DateTime changePlan(final PlanSpecifier spec, final List<PlanPhasePriceOverride> overrides, final CallContext context) throws SubscriptionBaseApiException {
-        return sub.changePlan(spec, overrides, context);
+    public DateTime changePlan(final EntitlementSpecifier spec, final CallContext context) throws SubscriptionBaseApiException {
+        return sub.changePlan(spec, context);
     }
 
     @Override
-    public DateTime changePlanWithDate(final PlanSpecifier spec, final List<PlanPhasePriceOverride> overrides, final DateTime requestedDate,
+    public boolean undoChangePlan(final CallContext context) throws SubscriptionBaseApiException {
+        return sub.undoChangePlan(context);
+    }
+
+    @Override
+    public DateTime changePlanWithDate(final EntitlementSpecifier spec,final DateTime requestedDate,
                                        final CallContext context) throws SubscriptionBaseApiException {
-        return sub.changePlanWithDate(spec, overrides, requestedDate, context);
+        return sub.changePlanWithDate(spec, requestedDate, context);
     }
 
     @Override
-    public DateTime changePlanWithPolicy(final PlanSpecifier spec,
-                                         final List<PlanPhasePriceOverride> overrides, final BillingActionPolicy policy, final CallContext context) throws SubscriptionBaseApiException {
-        return sub.changePlanWithPolicy(spec, overrides, policy, context);
+    public DateTime changePlanWithPolicy(final EntitlementSpecifier spec, final BillingActionPolicy policy, final CallContext context) throws SubscriptionBaseApiException {
+        return sub.changePlanWithPolicy(spec, policy, context);
     }
 
     @Override
@@ -187,6 +192,11 @@ public class MockSubscription implements SubscriptionBase {
     @Override
     public Product getLastActiveProduct() {
         return sub.getLastActiveProduct();
+    }
+
+    @Override
+    public Plan getCurrentOrPendingPlan() {
+        return sub.getCurrentOrPendingPlan();
     }
 
     @Override

@@ -65,37 +65,37 @@ public class TestInvoiceSystemDisabling extends TestIntegrationBase {
                                                                                              NextEvent.TAG);
 
         Assert.assertTrue(parkedAccountsManager.isParked(internalCallContext));
-        Collection<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), false, callContext);
+        Collection<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, callContext);
         assertEquals(invoices.size(), 0);
 
         // Move to end of trial =>  2012, 5, 1
         addDaysAndCheckForCompletion(30, NextEvent.PHASE);
 
         Assert.assertTrue(parkedAccountsManager.isParked(internalCallContext));
-        invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), false, callContext);
+        invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, callContext);
         assertEquals(invoices.size(), 0);
 
         // Dry-run generation
-        Invoice invoice = invoiceUserApi.triggerInvoiceGeneration(account.getId(), clock.getUTCToday(), new TestDryRunArguments(DryRunType.TARGET_DATE), callContext);
+        Invoice invoice = invoiceUserApi.triggerDryRunInvoiceGeneration(account.getId(), clock.getUTCToday(), new TestDryRunArguments(DryRunType.TARGET_DATE), callContext);
         assertListenerStatus();
         final ImmutableList<ExpectedInvoiceItemCheck> expected = ImmutableList.<ExpectedInvoiceItemCheck>of(new ExpectedInvoiceItemCheck(new LocalDate(2012, 4, 1), null, InvoiceItemType.FIXED, BigDecimal.ZERO),
                                                                                                             new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 1), new LocalDate(2012, 6, 1), InvoiceItemType.RECURRING, new BigDecimal("249.95")));
-        invoiceChecker.checkInvoiceNoAudits(invoice, callContext, expected);
+        invoiceChecker.checkInvoiceNoAudits(invoice, expected);
 
         // Still parked
         Assert.assertTrue(parkedAccountsManager.isParked(internalCallContext));
-        invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), false, callContext);
+        invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, callContext);
         assertEquals(invoices.size(), 0);
 
         // Non dry-run generation
         busHandler.pushExpectedEvents(NextEvent.TAG, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
-        invoice = invoiceUserApi.triggerInvoiceGeneration(account.getId(), clock.getUTCToday(), null, callContext);
+        invoice = invoiceUserApi.triggerInvoiceGeneration(account.getId(), clock.getUTCToday(), callContext);
         assertListenerStatus();
 
         // Now unparked
         Assert.assertFalse(parkedAccountsManager.isParked(internalCallContext));
         invoiceChecker.checkInvoice(invoice, callContext, expected);
-        invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), false, callContext);
+        invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, callContext);
         assertEquals(invoices.size(), 1);
         invoiceChecker.checkInvoice(account.getId(), 1, callContext, expected);
 
@@ -103,7 +103,7 @@ public class TestInvoiceSystemDisabling extends TestIntegrationBase {
         invoiceConfig.setInvoicingSystemEnabled(true);
         addDaysAndCheckForCompletion(31, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
 
-        invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), false, callContext);
+        invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, callContext);
         assertEquals(invoices.size(), 2);
         invoiceChecker.checkInvoice(account.getId(),
                                     2,

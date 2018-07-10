@@ -30,6 +30,8 @@ import org.killbill.billing.account.api.AccountEmail;
 import org.killbill.billing.account.api.AccountUserApi;
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.mock.MockAccountBuilder;
+import org.killbill.billing.util.api.AuditLevel;
+import org.killbill.billing.util.audit.AuditLogWithHistory;
 import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.TenantContext;
 import org.killbill.billing.util.entity.DefaultPagination;
@@ -77,7 +79,6 @@ public class MockAccountUserApi implements AccountUserApi {
                 .postalCode(postalCode)
                 .phone(phone)
                 .notes(notes)
-                .isNotifiedForInvoices(false)
                 .build();
         accounts.add(result);
         return result;
@@ -185,6 +186,16 @@ public class MockAccountUserApi implements AccountUserApi {
 
     @Override
     public List<Account> getChildrenAccounts(final UUID uuid, final TenantContext tenantContext) throws AccountApiException {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public List<AuditLogWithHistory> getAuditLogsWithHistoryForId(final UUID accountId, final AuditLevel auditLevel, final TenantContext tenantContext) throws AccountApiException {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public List<AuditLogWithHistory> getEmailAuditLogsWithHistoryForId(final UUID accountEmailId, final AuditLevel auditLevel, final TenantContext tenantContext) throws AccountApiException {
         throw new UnsupportedOperationException();
     }
 }

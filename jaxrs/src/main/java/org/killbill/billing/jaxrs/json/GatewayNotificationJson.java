@@ -19,6 +19,7 @@ package org.killbill.billing.jaxrs.json;
 
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.ResponseBuilder;
@@ -28,19 +29,20 @@ import org.killbill.billing.payment.plugin.api.GatewayNotification;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 
+@ApiModel(value="GatewayNotification", parent = JsonBase.class)
 public class GatewayNotificationJson extends JsonBase {
 
-    @ApiModelProperty(dataType = "java.util.UUID")
-    private final String kbPaymentId;
+    private final UUID kbPaymentId;
     private final Integer status;
     private final String entity;
     private final Map<String, List<String>> headers;
     private final Map<String, Object> properties;
 
     @JsonCreator
-    public GatewayNotificationJson(@JsonProperty("kbPaymentId") final String kbPaymentId,
+    public GatewayNotificationJson(@JsonProperty("kbPaymentId") final UUID kbPaymentId,
                                    @JsonProperty("status") final Integer status,
                                    @JsonProperty("entity") final String entity,
                                    @JsonProperty("headers") final Map<String, List<String>> headers,
@@ -53,7 +55,7 @@ public class GatewayNotificationJson extends JsonBase {
     }
 
     public GatewayNotificationJson(final GatewayNotification notification) {
-        this.kbPaymentId = notification.getKbPaymentId() == null ? null : notification.getKbPaymentId().toString();
+        this.kbPaymentId = notification.getKbPaymentId();
         this.status = notification.getStatus();
         this.entity = notification.getEntity();
         this.headers = notification.getHeaders();
@@ -78,7 +80,7 @@ public class GatewayNotificationJson extends JsonBase {
         return responseBuilder.build();
     }
 
-    public String getKbPaymentId() {
+    public UUID getKbPaymentId() {
         return kbPaymentId;
     }
 

@@ -159,6 +159,6 @@ abstract class CompletionTaskBase<T> implements Runnable {
 
     protected CallContext createCallContext(final String taskName, final InternalTenantContext internalTenantContext) {
         final TenantContext tenantContext = internalCallContextFactory.createTenantContext(internalTenantContext);
-        return new DefaultCallContext(tenantContext.getTenantId(), taskName, CallOrigin.INTERNAL, UserType.SYSTEM, UUIDs.randomUUID(), clock);
+        return new DefaultCallContext(null, tenantContext.getTenantId(), taskName, CallOrigin.INTERNAL, UserType.SYSTEM, UUIDs.randomUUID(), clock);
     }
 }

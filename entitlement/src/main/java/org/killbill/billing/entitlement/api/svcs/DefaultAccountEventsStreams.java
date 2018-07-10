@@ -1,7 +1,8 @@
 /*
- * Copyright 2010-2013 Ning, Inc.
+ * Copyright 2014-2018 Groupon, Inc
+ * Copyright 2014-2018 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -24,6 +25,7 @@ import java.util.UUID;
 import org.killbill.billing.account.api.ImmutableAccountData;
 import org.killbill.billing.entitlement.AccountEventsStreams;
 import org.killbill.billing.entitlement.EventsStream;
+import org.killbill.billing.subscription.api.SubscriptionBase;
 import org.killbill.billing.subscription.api.user.SubscriptionBaseBundle;
 
 import com.google.common.collect.ImmutableList;
@@ -33,12 +35,15 @@ public class DefaultAccountEventsStreams implements AccountEventsStreams {
 
     private final ImmutableAccountData account;
     private final Map<UUID, Collection<EventsStream>> eventsStreams;
+    private final Map<UUID, Collection<SubscriptionBase>> subscriptionsPerBundle;
     private final Map<UUID, SubscriptionBaseBundle> bundles = new HashMap<UUID, SubscriptionBaseBundle>();
 
     public DefaultAccountEventsStreams(final ImmutableAccountData account,
                                        final Iterable<SubscriptionBaseBundle> bundles,
+                                       final Map<UUID, Collection<SubscriptionBase>> subscriptionsPerBundle,
                                        final Map<UUID, Collection<EventsStream>> eventsStreams) {
         this.account = account;
+        this.subscriptionsPerBundle = subscriptionsPerBundle;
         this.eventsStreams = eventsStreams;
         for (final SubscriptionBaseBundle baseBundle : bundles) {
             this.bundles.put(baseBundle.getId(), baseBundle);
@@ -46,7 +51,7 @@ public class DefaultAccountEventsStreams implements AccountEventsStreams {
     }
 
     public DefaultAccountEventsStreams(final ImmutableAccountData account) {
-        this(account, ImmutableList.<SubscriptionBaseBundle>of(), ImmutableMap.<UUID, Collection<EventsStream>>of());
+        this(account, ImmutableList.<SubscriptionBaseBundle>of(), ImmutableMap.<UUID, Collection<SubscriptionBase>>of(), ImmutableMap.<UUID, Collection<EventsStream>>of());
     }
 
     @Override
@@ -60,6 +65,11 @@ public class DefaultAccountEventsStreams implements AccountEventsStreams {
     }
 
     @Override
+    public Map<UUID, Collection<SubscriptionBase>> getSubscriptions() {
+        return subscriptionsPerBundle;
+    }
+
+    @Override
     public Map<UUID, Collection<EventsStream>> getEventsStreams() {
         return eventsStreams;
     }
@@ -69,6 +79,7 @@ public class DefaultAccountEventsStreams implements AccountEventsStreams {
         final StringBuilder sb = new StringBuilder("DefaultAccountEventsStreams{");
         sb.append("account=").append(account);
         sb.append(", eventsStreams=").append(eventsStreams);
+        sb.append(", subscriptionsPerBundle=").append(subscriptionsPerBundle);
         sb.append(", bundles=").append(bundles);
         sb.append('}');
         return sb.toString();
@@ -91,6 +102,9 @@ public class DefaultAccountEventsStreams implements AccountEventsStreams {
         if (bundles != null ? !bundles.equals(that.bundles) : that.bundles != null) {
             return false;
         }
+        if (subscriptionsPerBundle != null ? !subscriptionsPerBundle.equals(that.subscriptionsPerBundle) : that.subscriptionsPerBundle != null) {
+            return false;
+        }
         if (eventsStreams != null ? !eventsStreams.equals(that.eventsStreams) : that.eventsStreams != null) {
             return false;
         }
@@ -102,6 +116,7 @@ public class DefaultAccountEventsStreams implements AccountEventsStreams {
     public int hashCode() {
         int result = account != null ? account.hashCode() : 0;
         result = 31 * result + (eventsStreams != null ? eventsStreams.hashCode() : 0);
+        result = 31 * result + (subscriptionsPerBundle != null ? subscriptionsPerBundle.hashCode() : 0);
         result = 31 * result + (bundles != null ? bundles.hashCode() : 0);
         return result;
     }

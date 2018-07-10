@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014 Groupon, Inc
- * Copyright 2014 The Billing Project, LLC
+ * Copyright 2014-2018 Groupon, Inc
+ * Copyright 2014-2018 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -21,10 +21,13 @@ package org.killbill.billing.util.glue;
 import org.apache.shiro.cache.CacheManager;
 import org.apache.shiro.guice.ShiroModule;
 import org.apache.shiro.mgt.SecurityManager;
+import org.apache.shiro.realm.Realm;
+import org.apache.shiro.realm.text.IniRealm;
 import org.apache.shiro.session.mgt.DefaultSessionManager;
 import org.apache.shiro.session.mgt.SessionManager;
 import org.killbill.billing.platform.api.KillbillConfigSource;
 import org.killbill.billing.util.config.definition.RbacConfig;
+import org.killbill.billing.util.config.definition.SecurityConfig;
 import org.killbill.billing.util.security.shiro.dao.JDBCSessionDao;
 import org.killbill.billing.util.security.shiro.realm.KillBillJdbcRealm;
 import org.killbill.billing.util.security.shiro.realm.KillBillJndiLdapRealm;
@@ -32,6 +35,7 @@ import org.killbill.billing.util.security.shiro.realm.KillBillOktaRealm;
 import org.skife.config.ConfigSource;
 import org.skife.config.ConfigurationObjectFactory;
 
+import com.google.inject.Provider;
 import com.google.inject.binder.AnnotatedBindingBuilder;
 
 // For Kill Bill library only.
@@ -41,7 +45,6 @@ public class KillBillShiroModule extends ShiroModule {
     public static final String KILLBILL_LDAP_PROPERTY = "killbill.server.ldap";
     public static final String KILLBILL_OKTA_PROPERTY = "killbill.server.okta";
     public static final String KILLBILL_RBAC_PROPERTY = "killbill.server.rbac";
-
 
     public static boolean isLDAPEnabled() {
         return Boolean.parseBoolean(System.getProperty(KILLBILL_LDAP_PROPERTY, "false"));
@@ -70,11 +73,25 @@ public class KillBillShiroModule extends ShiroModule {
         }).build(RbacConfig.class);
         bind(RbacConfig.class).toInstance(config);
 
-        bindRealm().toProvider(IniRealmProvider.class).asEagerSingleton();
+        final ConfigSource skifeConfigSource = new ConfigSource() {
+            @Override
+            public String getString(final String propertyName) {
+                return configSource.getString(propertyName);
+            }
+        };
+
+        bind(RbacConfig.class).toInstance(config);
+
+        final Provider<IniRealm> iniRealmProvider = RealmsFromShiroIniProvider.getIniRealmProvider(skifeConfigSource);
+        // Hack for Kill Bill library to work around weird Guice ClassCastException when using
+        // bindRealm().toInstance(...) -- this means we don't support custom realms when embedding Kill Bill
+        bindRealm().toProvider(iniRealmProvider).asEagerSingleton();
 
         configureJDBCRealm();
 
         configureLDAPRealm();
+
+        configureOktaRealm();
     }
 
     protected void configureJDBCRealm() {

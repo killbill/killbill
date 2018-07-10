@@ -92,7 +92,7 @@ public class TestOverdueCheckNotifier extends OverdueTestSuiteWithEmbeddedDB {
         final UUID accountId = new UUID(0L, 1L);
         final Account account = Mockito.mock(Account.class);
         Mockito.when(account.getId()).thenReturn(accountId);
-        Mockito.when(accountApi.getImmutableAccountDataByRecordId(Mockito.<UUID>eq(internalCallContext.getAccountRecordId()), Mockito.<InternalTenantContext>any())).thenReturn(account);
+        Mockito.when(accountApi.getImmutableAccountDataByRecordId(Mockito.eq(internalCallContext.getAccountRecordId()), Mockito.<InternalTenantContext>any())).thenReturn(account);
         final DateTime now = clock.getUTCNow();
         final DateTime readyTime = now.plusMillis(2000);
 

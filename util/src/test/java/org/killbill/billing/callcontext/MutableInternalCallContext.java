@@ -59,7 +59,7 @@ public class MutableInternalCallContext extends InternalCallContext {
         this.initialAccountRecordId = accountRecordId;
         this.initialTenantRecordId = tenantRecordId;
         this.initialReferenceDateTimeZone = fixedOffsetTimeZone;
-        this.initialReferenceTime = super.getReferenceTime();
+        this.initialReferenceTime = super.getReferenceLocalTime();
         this.initialCreatedDate = createdDate;
         this.initialUpdatedDate = updatedDate;
 
@@ -94,7 +94,7 @@ public class MutableInternalCallContext extends InternalCallContext {
     }
 
     @Override
-    public LocalTime getReferenceTime() {
+    public LocalTime getReferenceLocalTime() {
         return referenceTime;
     }
 

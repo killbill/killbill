@@ -38,7 +38,6 @@ import org.killbill.billing.subscription.api.SubscriptionBillingApiException;
 import org.killbill.billing.subscription.api.timeline.SubscriptionBaseRepairException;
 import org.killbill.billing.util.api.TagApiException;
 import org.killbill.billing.util.api.TagDefinitionApiException;
-import org.killbill.billing.util.email.EmailApiException;
 import org.killbill.billing.util.jackson.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -75,9 +74,6 @@ public abstract class ExceptionMapperBase {
         } else if (cause instanceof CatalogApiException) {
             final CatalogApiExceptionMapper mapper = new CatalogApiExceptionMapper(uriInfo);
             return mapper.toResponse((CatalogApiException) cause);
-        } else if (cause instanceof EmailApiException) {
-            final EmailApiExceptionMapper mapper = new EmailApiExceptionMapper(uriInfo);
-            return mapper.toResponse((EmailApiException) cause);
         } else if (cause instanceof EntitlementApiException) {
             final EntitlementApiExceptionMapper mapper = new EntitlementApiExceptionMapper(uriInfo);
             return mapper.toResponse((EntitlementApiException) cause);

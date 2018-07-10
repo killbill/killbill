@@ -1,7 +1,9 @@
 /*
- * Copyright 2010-2012 Ning, Inc.
+ * Copyright 2010-2014 Ning, Inc.
+ * Copyright 2014-2018 Groupon, Inc
+ * Copyright 2014-2018 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -19,22 +21,25 @@ package org.killbill.billing.util.validation.dao;
 import java.util.List;
 
 import javax.annotation.Nullable;
+import javax.inject.Named;
 import javax.inject.Singleton;
 
+import org.killbill.billing.util.entity.dao.DBRouter;
+import org.killbill.billing.util.validation.DefaultColumnInfo;
 import org.skife.jdbi.v2.IDBI;
 
-import org.killbill.billing.util.validation.DefaultColumnInfo;
-
 import com.google.inject.Inject;
+
+import static org.killbill.billing.util.glue.IDBISetup.MAIN_RO_IDBI_NAMED;
 
 @Singleton
 public class DatabaseSchemaDao {
 
-    private final DatabaseSchemaSqlDao dao;
+    private final DBRouter<DatabaseSchemaSqlDao> dbRouter;
 
     @Inject
-    public DatabaseSchemaDao(final IDBI dbi) {
-        this.dao = dbi.onDemand(DatabaseSchemaSqlDao.class);
+    public DatabaseSchemaDao(final IDBI dbi, @Named(MAIN_RO_IDBI_NAMED) final IDBI roDbi) {
+        this.dbRouter = new DBRouter<DatabaseSchemaSqlDao>(dbi, roDbi, DatabaseSchemaSqlDao.class);
     }
 
     public List<DefaultColumnInfo> getColumnInfoList() {
@@ -42,6 +47,6 @@ public class DatabaseSchemaDao {
     }
 
     public List<DefaultColumnInfo> getColumnInfoList(@Nullable final String schemaName) {
-        return dao.getSchemaInfo(schemaName);
+        return dbRouter.onDemand(true).getSchemaInfo(schemaName);
     }
 }

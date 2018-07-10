@@ -19,6 +19,7 @@ package org.killbill.billing.catalog;
 
 import java.net.URI;
 import java.util.Arrays;
+import java.util.List;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
@@ -30,15 +31,26 @@ import javax.xml.bind.annotation.XmlID;
 import org.killbill.billing.catalog.api.BillingMode;
 import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.catalog.api.Block;
+import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.catalog.api.InternationalPrice;
 import org.killbill.billing.catalog.api.Limit;
 import org.killbill.billing.catalog.api.PlanPhase;
 import org.killbill.billing.catalog.api.Tier;
+import org.killbill.billing.catalog.api.TierPriceOverride;
+import org.killbill.billing.catalog.api.TieredBlock;
+import org.killbill.billing.catalog.api.TieredBlockPriceOverride;
 import org.killbill.billing.catalog.api.Usage;
+import org.killbill.billing.catalog.api.UsagePriceOverride;
 import org.killbill.billing.catalog.api.UsageType;
+import org.killbill.billing.catalog.api.TierBlockPolicy;
+
 import org.killbill.xmlloader.ValidatingConfig;
 import org.killbill.xmlloader.ValidationError;
 import org.killbill.xmlloader.ValidationErrors;
+
+import com.google.common.base.Predicate;
+import com.google.common.collect.Iterables;
+
 
 @XmlAccessorType(XmlAccessType.NONE)
 public class DefaultUsage extends ValidatingConfig<StandaloneCatalog> implements Usage {
@@ -47,11 +59,17 @@ public class DefaultUsage extends ValidatingConfig<StandaloneCatalog> implements
     @XmlID
     private String name;
 
+    @XmlAttribute(required = false)
+    private String prettyName;
+
     @XmlAttribute(required = true)
     private BillingMode billingMode;
 
     @XmlAttribute(required = true)
     private UsageType usageType;
+
+    @XmlAttribute(required = false)
+    private TierBlockPolicy tierBlockPolicy;
 
     @XmlElement(required = true)
     private BillingPeriod billingPeriod;
@@ -85,9 +103,58 @@ public class DefaultUsage extends ValidatingConfig<StandaloneCatalog> implements
         tiers = new DefaultTier[0];
     }
 
+    public DefaultUsage(final Usage in, UsagePriceOverride override, Currency currency) {
+              this.name = in.getName();
+              this.usageType = in.getUsageType();
+              this.tierBlockPolicy = in.getTierBlockPolicy();
+              this.billingPeriod = in.getBillingPeriod();
+              this.billingMode = in.getBillingMode();
+              this.limits = (DefaultLimit[]) in.getLimits();
+              this.blocks = (DefaultBlock[]) in.getBlocks();
+              this.tiers = new DefaultTier[in.getTiers().length];
+
+              for (int i = 0; i < in.getTiers().length; i++) {
+                  if(override != null && override.getTierPriceOverrides()!=null) {
+                      final TieredBlock[] curTieredBlocks = in.getTiers()[i].getTieredBlocks();
+
+                      final TierPriceOverride overriddenTier = Iterables.tryFind(override.getTierPriceOverrides(), new Predicate<TierPriceOverride>() {
+                          @Override
+                          public boolean apply(final TierPriceOverride input) {
+
+                            if(input !=null) {
+                              final List<TieredBlockPriceOverride> blockPriceOverrides = input.getTieredBlockPriceOverrides();
+                              for (TieredBlockPriceOverride blockDef : blockPriceOverrides) {
+                                 String unitName = blockDef.getUnitName();
+                                 Double max = blockDef.getMax();
+                                 Double size = blockDef.getSize();
+                                 for (TieredBlock curTieredBlock : curTieredBlocks) {
+                                     if (unitName.equals(curTieredBlock.getUnit().getName()) &&
+                                             Double.compare(size, curTieredBlock.getSize()) == 0 &&
+                                             Double.compare(max, curTieredBlock.getMax()) == 0) {
+                                         return true;
+                                     }
+                                 }
+                               }
+                            }
+                            return false;
+                          }
+                      }).orNull();
+                      tiers[i] = (overriddenTier != null) ? new DefaultTier(in.getTiers()[i], overriddenTier, currency) : (DefaultTier)in.getTiers()[i] ;
+                  }
+                  else {
+                      tiers[i] = (DefaultTier) in.getTiers()[i];
+                  }
+              }
+    }
+
     @Override
     public String getName() {
         return name;
+    }
+
+    @Override
+    public String getPrettyName() {
+        return prettyName;
     }
 
     @Override
@@ -98,6 +165,11 @@ public class DefaultUsage extends ValidatingConfig<StandaloneCatalog> implements
     @Override
     public UsageType getUsageType() {
         return usageType;
+    }
+
+    @Override
+    public TierBlockPolicy getTierBlockPolicy() {
+        return tierBlockPolicy;
     }
 
     @Override
@@ -164,6 +236,10 @@ public class DefaultUsage extends ValidatingConfig<StandaloneCatalog> implements
         super.initialize(root, uri);
         CatalogSafetyInitializer.initializeNonRequiredNullFieldsWithDefaultValue(this);
 
+        if (prettyName == null) {
+            this.prettyName = name;
+        }
+
         for (DefaultLimit limit : limits) {
             limit.initialize(root, uri);
         }
@@ -195,6 +271,11 @@ public class DefaultUsage extends ValidatingConfig<StandaloneCatalog> implements
 
     public DefaultUsage setUsageType(final UsageType usageType) {
         this.usageType = usageType;
+        return this;
+    }
+
+    public DefaultUsage setTierBlockPolicy(final TierBlockPolicy tierBlockPolicy) {
+        this.tierBlockPolicy = tierBlockPolicy;
         return this;
     }
 
@@ -278,6 +359,9 @@ public class DefaultUsage extends ValidatingConfig<StandaloneCatalog> implements
         if (usageType != that.usageType) {
             return false;
         }
+        if (tierBlockPolicy != that.tierBlockPolicy) {
+            return false;
+        }
 
         return true;
     }
@@ -287,6 +371,7 @@ public class DefaultUsage extends ValidatingConfig<StandaloneCatalog> implements
         int result = name != null ? name.hashCode() : 0;
         result = 31 * result + (billingMode != null ? billingMode.hashCode() : 0);
         result = 31 * result + (usageType != null ? usageType.hashCode() : 0);
+        result = 31 * result + (tierBlockPolicy != null ? tierBlockPolicy.hashCode() : 0);
         result = 31 * result + (billingPeriod != null ? billingPeriod.hashCode() : 0);
         result = 31 * result + (limits != null ? Arrays.hashCode(limits) : 0);
         result = 31 * result + (blocks != null ? Arrays.hashCode(blocks) : 0);

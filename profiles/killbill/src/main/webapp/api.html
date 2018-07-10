@@ -1,150 +1,85 @@
-<!--
-  ~ Copyright 2010-2013 Ning, Inc.
-  ~ Copyright 2014-2016 Groupon, Inc
-  ~ Copyright 2014-2016 The Billing Project, LLC
-  ~
-  ~ The Billing Project licenses this file to you under the Apache License, version 2.0
-  ~ (the "License"); you may not use this file except in compliance with the
-  ~ License.  You may obtain a copy of the License at:
-  ~
-  ~    http://www.apache.org/licenses/LICENSE-2.0
-  ~
-  ~ Unless required by applicable law or agreed to in writing, software
-  ~ distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
-  ~ WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the
-  ~ License for the specific language governing permissions and limitations
-  ~ under the License.
-  -->
-
+<!-- HTML for static distribution bundle build -->
 <!DOCTYPE html>
-<html>
-<head>
-  <meta charset="UTF-8">
-  <title>Kill Bill APIs</title>
-  <link rel="icon" href="images/favicon.ico" />
-  <link href='css/typography.css' media='screen' rel='stylesheet' type='text/css'/>
-  <link href='css/reset.css' media='screen' rel='stylesheet' type='text/css'/>
-  <link href='css/screen.css' media='screen' rel='stylesheet' type='text/css'/>
-  <link href='css/reset.css' media='print' rel='stylesheet' type='text/css'/>
-  <link href='css/print.css' media='print' rel='stylesheet' type='text/css'/>
-  <link href='css/killbill-swagger.css' media='screen' rel='stylesheet' type='text/css'/>
-  <link href='css/killbill-swagger.css' media='print' rel='stylesheet' type='text/css'/>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <title>Kill Bill APIs</title>
+    <link href="https://fonts.googleapis.com/css?family=Open+Sans:400,700|Source+Code+Pro:300,600|Titillium+Web:400,600,700" rel="stylesheet">
+    <link rel="stylesheet" type="text/css" href="./css/swagger-ui.css" />
+    <link rel="stylesheet" type="text/css" href="./css/killbill-swagger.css" />
+    <link rel="icon" type="image/png" href="images/favicon.ico" />
+    <style>
+      html
+      {
+        box-sizing: border-box;
+        overflow: -moz-scrollbars-vertical;
+        overflow-y: scroll;
+      }
 
-  <script src='lib/object-assign-pollyfill.js' type='text/javascript'></script>
-  <script src='lib/jquery-1.8.0.min.js' type='text/javascript'></script>
-  <script src='lib/jquery.slideto.min.js' type='text/javascript'></script>
-  <script src='lib/jquery.wiggle.min.js' type='text/javascript'></script>
-  <script src='lib/jquery.ba-bbq.min.js' type='text/javascript'></script>
-  <script src='lib/handlebars-2.0.0.js' type='text/javascript'></script>
-  <script src='lib/js-yaml.min.js' type='text/javascript'></script>
-  <script src='lib/lodash.min.js' type='text/javascript'></script>
-  <script src='lib/backbone-min.js' type='text/javascript'></script>
-  <script src='lib/swagger-ui.min.js' type='text/javascript'></script>
-  <script src='lib/highlight.9.1.0.pack.js' type='text/javascript'></script>
-  <script src='lib/highlight.9.1.0.pack_extended.js' type='text/javascript'></script>
-  <script src='lib/jsoneditor.min.js' type='text/javascript'></script>
-  <script src='lib/marked.js' type='text/javascript'></script>
-  <script src='lib/swagger-oauth.js' type='text/javascript'></script>
+      *,
+      *:before,
+      *:after
+      {
+        box-sizing: inherit;
+      }
 
-  <script type="text/javascript">
-    $(function () {
+      body
+      {
+        margin:0;
+        background: #fafafa;
+      }
+    </style>
+  </head>
+
+  <body>
+    <div id="swagger-ui"></div>
+
+    <script src="./lib/swagger-ui-bundle.js"> </script>
+    <script src="./lib/swagger-ui-standalone-preset.js"> </script>
+    <script>
+    window.onload = function() {
       var url = window.location.protocol + "//" + window.location.hostname + ":" + window.location.port + window.location.pathname.replace(/(.*)(\/[^\/]*?)$/, '$1/swagger.json')
 
-      hljs.configure({
-        highlightSizeThreshold: 5000
-      });
-
-      // Pre load translate...
-      if(window.SwaggerTranslator) {
-        window.SwaggerTranslator.translate();
-      }
-      window.swaggerUi = new SwaggerUi({
+      // Build a system
+      const ui = SwaggerUIBundle({
         url: url,
-        dom_id: "swagger-ui-container",
-        supportedSubmitMethods: ['get', 'post', 'put', 'delete', 'patch'],
-        onComplete: function(swaggerApi, swaggerUi){
-          if(typeof initOAuth == "function") {
-            initOAuth({
-              clientId: "your-client-id",
-              clientSecret: "your-client-secret-if-required",
-              realm: "your-realms",
-              appName: "your-app-name",
-              scopeSeparator: ",",
-              additionalQueryStringParams: {}
-            });
-          }
+        dom_id: '#swagger-ui',
+        deepLinking: true,
+        presets: [
+          SwaggerUIBundle.presets.apis,
+          SwaggerUIStandalonePreset
+        ],
+        docExpansion: 'none',
+        tagsSorter: function(a, b) {
+            var tagA = a.toUpperCase(); // ignore upper and lowercase
+            var tagB = b.toUpperCase(); // ignore upper and lowercase
+            if (tagA < tagB) {
+                return -1;
+            }
+            if (tagA > tagB) {
+                return 1;
+            }
 
-          if(window.SwaggerTranslator) {
-            window.SwaggerTranslator.translate();
-          }
-
-          $("input.parameter[name|='X-Killbill-CreatedBy']").val('Swagger');
+            // names must be equal
+            return 0;
         },
-        onFailure: function(data) {
-          log("Unable to Load SwaggerUI: " + data);
-        },
-        docExpansion: "none",
-        apisSorter: "alpha",
-        operationsSorter: "alpha",
-        jsonEditor: false,
-        defaultModelRendering: 'schema',
-        showRequestHeaders: true
+        plugins: [
+          SwaggerUIBundle.plugins.DownloadUrl,
+        ],
+        layout: "StandaloneLayout"
       });
 
-      function setHeader(header, value) {
-        if (value && value.trim() != "") {
-          log("Setting header " + header + " to " + value);
-          window.swaggerUi.api.clientAuthorizations.remove(header);
-          window.swaggerUi.api.clientAuthorizations.add(header, new SwaggerClient.ApiKeyAuthorization(header, value, "header"));
-        }
-      }
+      window.ui = ui
 
-      function setHeaders() {
-        setHeader("X-Killbill-ApiKey", $("#input_kb_apiKey")[0].value || "bob");
-        setHeader("X-Killbill-ApiSecret", $("#input_kb_apiSecret")[0].value || "lazar");
-        setHeader("Authorization", "Basic " + btoa(($("#input_kb_username")[0].value || "admin") + ":" + ($("#input_kb_password")[0].value || "password")));
-      }
+      setKillbillLog();
+    }
 
-      $.each(["#input_kb_apiKey", "#input_kb_apiSecret", "#input_kb_username", "#input_kb_password"], function(idx, selector_id) {
-        $(selector_id).change(function() {
-          setHeaders();
-        });
-      });
-
-
-      window.swaggerUi.load();
-
-      setHeaders();
-
-      function log() {
-        if ('console' in window) {
-          console.log.apply(console, arguments);
-        }
-      }
-  });
+    function setKillbillLog() {
+        var logoImageContainer = document.querySelector(".swagger-ui .topbar a img");
+        logoImageContainer.width = 170;
+        logoImageContainer.height = 40;
+        logoImageContainer.src = "./images/killbill_logo.png";
+    }
   </script>
-</head>
-
-<body class="swagger-section">
-<div id='header'>
-  <div class="swagger-ui-wrap">
-    <div id="kb-logo-container">
-      <a href="http://kill-bill.org">
-        <img id="kb-logo" title="Kill Bill" border="0" alt="Kill Bill" src="../images/killbill_logo.png">
-      </a>
-    </div>
-    <form id='api_selector'>
-      <div class='input'><input placeholder="http://127.0.0.1:8080/swagger.json" id="input_baseUrl" name="baseUrl" type="text" size="38"/></div>
-      <div class='input'><input placeholder="api_key" id="input_kb_apiKey" name="apiKey" type="text" size="8"/></div>
-      <div class='input'><input placeholder="api_secret" id="input_kb_apiSecret" name="apiSecret" type="text" size="8"/></div>
-      <div class='input'><input placeholder="username" id="input_kb_username" name="username" type="text" size="8"/></div>
-      <div class='input'><input placeholder="password" id="input_kb_password" name="password" type="text" size="8"/></div>
-      <div class='input'><a id="explore" class="header__btn" href="#" data-sw-translate>Explore</a></div>
-    </form>
-  </div>
-</div>
-
-<div id="message-bar" class="swagger-ui-wrap" data-sw-translate>&nbsp;</div>
-<div id="swagger-ui-container" class="swagger-ui-wrap"></div>
-</body>
+  </body>
 </html>

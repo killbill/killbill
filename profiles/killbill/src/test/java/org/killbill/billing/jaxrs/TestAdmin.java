@@ -1,6 +1,6 @@
 /*
- * Copyright 2014-2015 Groupon, Inc
- * Copyright 2014-2015 The Billing Project, LLC
+ * Copyright 2014-2018 Groupon, Inc
+ * Copyright 2014-2018 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -29,14 +29,15 @@ import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.catalog.api.ProductCategory;
 import org.killbill.billing.client.JaxrsResource;
 import org.killbill.billing.client.KillBillClientException;
-import org.killbill.billing.client.KillBillHttpClient;
 import org.killbill.billing.client.RequestOptions;
-import org.killbill.billing.client.model.Account;
-import org.killbill.billing.client.model.Invoice;
-import org.killbill.billing.client.model.Payment;
-import org.killbill.billing.client.model.PaymentTransaction;
-import org.killbill.billing.jaxrs.json.AdminPaymentJson;
+import org.killbill.billing.client.model.gen.Account;
+import org.killbill.billing.client.model.gen.AdminPayment;
+import org.killbill.billing.client.model.gen.Invoice;
+import org.killbill.billing.client.model.gen.Payment;
+import org.killbill.billing.client.model.gen.PaymentTransaction;
+import org.killbill.billing.notification.plugin.api.ExtBusEventType;
 import org.killbill.billing.payment.api.TransactionStatus;
+import org.killbill.billing.payment.api.TransactionType;
 import org.killbill.billing.util.api.AuditLevel;
 import org.killbill.billing.util.jackson.ObjectMapper;
 import org.testng.Assert;
@@ -45,9 +46,7 @@ import org.testng.annotations.Test;
 import com.ning.http.client.Response;
 
 import com.fasterxml.jackson.core.type.TypeReference;
-import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableMultimap;
-import com.google.common.collect.Multimap;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
@@ -67,33 +66,20 @@ public class TestAdmin extends TestJaxrsBase {
         authTransaction.setCurrency(account.getCurrency());
         authTransaction.setPaymentExternalKey(paymentExternalKey);
         authTransaction.setTransactionExternalKey(authTransactionExternalKey);
-        authTransaction.setTransactionType("AUTHORIZE");
-        final Payment authPayment = killBillClient.createPayment(account.getAccountId(), account.getPaymentMethodId(), authTransaction, requestOptions);
-
-        // First fix transactionStatus and paymentSstate (but not lastSuccessPaymentState
-        // Note that state is not consistent between TransactionStatus and lastSuccessPaymentState but we don't care.
-        fixPaymentState(authPayment, null, "AUTH_FAILED", TransactionStatus.PAYMENT_FAILURE);
-
-        final Payment updatedPayment1 = killBillClient.getPayment(authPayment.getPaymentId());
-        Assert.assertEquals(updatedPayment1.getTransactions().size(), 1);
-        final PaymentTransaction authTransaction1 = updatedPayment1.getTransactions().get(0);
-        Assert.assertEquals(authTransaction1.getStatus(), TransactionStatus.PAYMENT_FAILURE.toString());
-
-        // Capture should succeed because lastSuccessPaymentState was left untouched
-        doCapture(updatedPayment1, false);
+        authTransaction.setTransactionType(TransactionType.AUTHORIZE);
+        callbackServlet.pushExpectedEvent(ExtBusEventType.PAYMENT_SUCCESS);
+        final Payment authPayment = accountApi.processPayment(account.getAccountId(), authTransaction, account.getPaymentMethodId(), NULL_PLUGIN_NAMES, NULL_PLUGIN_PROPERTIES, requestOptions);
+        callbackServlet.assertListenerStatus();
 
         fixPaymentState(authPayment, "AUTH_FAILED", "AUTH_FAILED", TransactionStatus.PAYMENT_FAILURE);
 
-        final Payment updatedPayment2 = killBillClient.getPayment(authPayment.getPaymentId());
-        Assert.assertEquals(updatedPayment2.getTransactions().size(), 2);
-        final PaymentTransaction authTransaction2 = updatedPayment2.getTransactions().get(0);
-        Assert.assertEquals(authTransaction2.getStatus(), TransactionStatus.PAYMENT_FAILURE.toString());
+        final Payment updatedPayment = paymentApi.getPayment(authPayment.getPaymentId(), NULL_PLUGIN_PROPERTIES, requestOptions);
+        Assert.assertEquals(updatedPayment.getTransactions().size(), 1);
+        final PaymentTransaction authTransaction2 = updatedPayment.getTransactions().get(0);
+        Assert.assertEquals(authTransaction2.getStatus(), TransactionStatus.PAYMENT_FAILURE);
 
-        final PaymentTransaction captureTransaction2 = updatedPayment2.getTransactions().get(1);
-        Assert.assertEquals(captureTransaction2.getStatus(), TransactionStatus.SUCCESS.toString());
-
-        // Capture should now failed because lastSuccessPaymentState was moved to AUTH_FAILED
-        doCapture(updatedPayment2, true);
+        // Capture should fail because lastSuccessPaymentState was moved to AUTH_FAILED
+        doCapture(updatedPayment, true);
     }
 
     @Test(groups = "slow")
@@ -107,27 +93,29 @@ public class TestAdmin extends TestJaxrsBase {
             assertNotNull(accountJson);
             accounts.add(accountJson.getAccountId());
 
-            createEntitlement(accountJson.getAccountId(),
-                              UUID.randomUUID().toString(),
-                              "Shotgun",
-                              ProductCategory.BASE,
-                              BillingPeriod.MONTHLY,
-                              true);
+            createSubscription(accountJson.getAccountId(),
+                               UUID.randomUUID().toString(),
+                               "Shotgun",
+                               ProductCategory.BASE,
+                               BillingPeriod.MONTHLY,
+                               true);
             clock.addDays(2);
-            crappyWaitForLackOfProperSynchonization();
 
-            Assert.assertEquals(killBillClient.getInvoices(requestOptions).getPaginationMaxNbRecords(), i + 1);
-            final List<Invoice> invoices = killBillClient.getInvoicesForAccount(accountJson.getAccountId(), false, false, false, AuditLevel.NONE, requestOptions);
+            Assert.assertEquals(invoiceApi.getInvoices(requestOptions).getPaginationMaxNbRecords(), i + 1);
+            final List<Invoice> invoices = accountApi.getInvoicesForAccount(accountJson.getAccountId(), null, false, false, false, false, AuditLevel.NONE, requestOptions);
             assertEquals(invoices.size(), 1);
         }
 
         // Trigger first non-trial invoice
+        for (int i = 0; i < 5; i++) {
+            callbackServlet.pushExpectedEvents(ExtBusEventType.SUBSCRIPTION_PHASE, ExtBusEventType.INVOICE_CREATION, ExtBusEventType.INVOICE_PAYMENT_SUCCESS, ExtBusEventType.PAYMENT_SUCCESS);
+        }
         clock.addDays(32);
-        crappyWaitForLackOfProperSynchonization();
+        callbackServlet.assertListenerStatus();
 
-        Assert.assertEquals(killBillClient.getInvoices(requestOptions).getPaginationMaxNbRecords(), 10);
+        Assert.assertEquals(invoiceApi.getInvoices(requestOptions).getPaginationMaxNbRecords(), 10);
         for (final UUID accountId : accounts) {
-            final List<Invoice> invoices = killBillClient.getInvoicesForAccount(accountId, false, false, false, AuditLevel.NONE, requestOptions);
+            final List<Invoice> invoices = accountApi.getInvoicesForAccount(accountId, null, false, false, false, false, AuditLevel.NONE, requestOptions);
             assertEquals(invoices.size(), 2);
         }
 
@@ -136,33 +124,37 @@ public class TestAdmin extends TestJaxrsBase {
         final Map<String, String> perTenantProperties = new HashMap<String, String>();
         perTenantProperties.put("org.killbill.invoice.enabled", "false");
         final String perTenantConfig = mapper.writeValueAsString(perTenantProperties);
-        killBillClient.postConfigurationPropertiesForTenant(perTenantConfig, requestOptions);
-        crappyWaitForLackOfProperSynchonization();
+        callbackServlet.pushExpectedEvent(ExtBusEventType.TENANT_CONFIG_CHANGE);
+        tenantApi.uploadPerTenantConfiguration(perTenantConfig, requestOptions);
+        callbackServlet.assertListenerStatus();
 
         // Verify the second invoice isn't generated
+        for (int i = 0; i < 5; i++) {
+            callbackServlet.pushExpectedEvents(ExtBusEventType.TAG_CREATION);
+        }
         clock.addDays(32);
-        crappyWaitForLackOfProperSynchonization();
+        callbackServlet.assertListenerStatus();
 
-        Assert.assertEquals(killBillClient.getInvoices(requestOptions).getPaginationMaxNbRecords(), 10);
+        Assert.assertEquals(invoiceApi.getInvoices(requestOptions).getPaginationMaxNbRecords(), 10);
         for (final UUID accountId : accounts) {
-            final List<Invoice> invoices = killBillClient.getInvoicesForAccount(accountId, false, false, false, AuditLevel.NONE, requestOptions);
+            final List<Invoice> invoices = accountApi.getInvoicesForAccount(accountId, null, false, false, false, false, AuditLevel.NONE, requestOptions);
             assertEquals(invoices.size(), 2);
         }
 
         // Fix one account
         final Response response = triggerInvoiceGenerationForParkedAccounts(1);
         Assert.assertEquals(response.getResponseBody(), "{\"" + accounts.get(0) + "\":\"OK\"}");
-        Assert.assertEquals(killBillClient.getInvoices(requestOptions).getPaginationMaxNbRecords(), 11);
+        Assert.assertEquals(invoiceApi.getInvoices(requestOptions).getPaginationMaxNbRecords(), 11);
 
         // Fix all accounts
-        final Response response2 = triggerInvoiceGenerationForParkedAccounts(5);
-        final Map<String,String> fixedAccounts = mapper.readValue(response2.getResponseBody(), new TypeReference<Map<String,String>>() {});
+        final Response response2 = triggerInvoiceGenerationForParkedAccounts(4);
+        final Map<String, String> fixedAccounts = mapper.readValue(response2.getResponseBody(), new TypeReference<Map<String, String>>() {});
         Assert.assertEquals(fixedAccounts.size(), 4);
         Assert.assertEquals(fixedAccounts.get(accounts.get(1).toString()), "OK");
         Assert.assertEquals(fixedAccounts.get(accounts.get(2).toString()), "OK");
         Assert.assertEquals(fixedAccounts.get(accounts.get(3).toString()), "OK");
         Assert.assertEquals(fixedAccounts.get(accounts.get(4).toString()), "OK");
-        Assert.assertEquals(killBillClient.getInvoices(requestOptions).getPaginationMaxNbRecords(), 15);
+        Assert.assertEquals(invoiceApi.getInvoices(requestOptions).getPaginationMaxNbRecords(), 15);
     }
 
     private void doCapture(final Payment payment, final boolean expectException) throws KillBillClientException {
@@ -176,7 +168,7 @@ public class TestAdmin extends TestJaxrsBase {
         captureTransaction.setPaymentExternalKey(payment.getPaymentExternalKey());
         captureTransaction.setTransactionExternalKey(capture1TransactionExternalKey);
         try {
-            killBillClient.captureAuthorization(captureTransaction, requestOptions);
+            paymentApi.captureAuthorization(payment.getPaymentId(), captureTransaction, NULL_PLUGIN_NAMES, NULL_PLUGIN_PROPERTIES, requestOptions);
             if (expectException) {
                 Assert.fail("Capture should not succeed, after auth was moved to a PAYMENT_FAILURE");
             }
@@ -189,18 +181,10 @@ public class TestAdmin extends TestJaxrsBase {
     }
 
     private void fixPaymentState(final Payment payment, final String lastSuccessPaymentState, final String currentPaymentStateName, final TransactionStatus transactionStatus) throws KillBillClientException {
-        //
-        // We do not expose the endpoint in the client API on purpose since this should only be accessed using special permission ADMIN_CAN_FIX_DATA
-        // for when there is a need to fix payment state.
-        //
-        final String uri = "/1.0/kb/admin/payments/" + payment.getPaymentId().toString() + "/transactions/" + payment.getTransactions().get(0).getTransactionId().toString();
-
-        final AdminPaymentJson body = new AdminPaymentJson(lastSuccessPaymentState, currentPaymentStateName, transactionStatus.toString());
-        final Multimap result = HashMultimap.create();
-        result.put(KillBillHttpClient.AUDIT_OPTION_CREATED_BY, createdBy);
-        result.put(KillBillHttpClient.AUDIT_OPTION_REASON, reason);
-        result.put(KillBillHttpClient.AUDIT_OPTION_COMMENT, comment);
-        killBillHttpClient.doPut(uri, body, result);
+        callbackServlet.pushExpectedEvent(ExtBusEventType.PAYMENT_FAILED);
+        final AdminPayment body = new AdminPayment(lastSuccessPaymentState, currentPaymentStateName, transactionStatus.toString());
+        adminApi.updatePaymentTransactionState(payment.getPaymentId(), payment.getTransactions().get(0).getTransactionId(), body, requestOptions);
+        callbackServlet.assertListenerStatus();
     }
 
     private Response triggerInvoiceGenerationForParkedAccounts(final int limit) throws KillBillClientException {
@@ -211,6 +195,11 @@ public class TestAdmin extends TestJaxrsBase {
                                                             .withCreatedBy(createdBy)
                                                             .withReason(reason)
                                                             .withComment(comment).build();
-        return killBillHttpClient.doPost(uri, null, requestOptions);
+        for (int i = 0; i < limit; i++) {
+            callbackServlet.pushExpectedEvents(ExtBusEventType.TAG_DELETION, ExtBusEventType.INVOICE_CREATION, ExtBusEventType.INVOICE_PAYMENT_SUCCESS, ExtBusEventType.PAYMENT_SUCCESS);
+        }
+        final Response response = killBillHttpClient.doPost(uri, null, requestOptions);
+        callbackServlet.assertListenerStatus();
+        return response;
     }
 }

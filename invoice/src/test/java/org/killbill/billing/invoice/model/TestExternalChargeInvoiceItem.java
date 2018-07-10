@@ -41,32 +41,34 @@ public class TestExternalChargeInvoiceItem extends InvoiceTestSuiteNoDB {
         final BigDecimal amount = BigDecimal.TEN;
         final Currency currency = Currency.GBP;
         final ExternalChargeInvoiceItem item = new ExternalChargeInvoiceItem(id, invoiceId, accountId, bundleId, description,
-                                                                             effectiveDate, amount, currency);
+                                                                             effectiveDate, effectiveDate, amount, currency, null);
         Assert.assertEquals(item.getAccountId(), accountId);
         Assert.assertEquals(item.getAmount().compareTo(amount), 0);
         Assert.assertEquals(item.getBundleId(), bundleId);
         Assert.assertEquals(item.getCurrency(), currency);
         Assert.assertEquals(item.getInvoiceItemType(), InvoiceItemType.EXTERNAL_CHARGE);
         Assert.assertEquals(item.getDescription(), description);
+        Assert.assertEquals(item.getStartDate().compareTo(effectiveDate), 0);
+        Assert.assertEquals(item.getEndDate().compareTo(effectiveDate), 0);
         Assert.assertNull(item.getPlanName());
-        Assert.assertNull(item.getEndDate());
         Assert.assertNull(item.getLinkedItemId());
         Assert.assertNull(item.getPhaseName());
         Assert.assertNull(item.getRate());
         Assert.assertNull(item.getSubscriptionId());
+        Assert.assertNull(item.getItemDetails());
 
         Assert.assertEquals(item, item);
 
         final ExternalChargeInvoiceItem otherItem = new ExternalChargeInvoiceItem(id, invoiceId, UUID.randomUUID(), bundleId,
-                                                                                  description, effectiveDate, amount, currency);
+                                                                                  description, effectiveDate, effectiveDate, amount, currency, null);
         Assert.assertNotEquals(otherItem, item);
 
         // Check comparison (done by start date)
         final ExternalChargeInvoiceItem itemBefore = new ExternalChargeInvoiceItem(id, invoiceId, accountId, bundleId, description,
-                                                                                   effectiveDate.minusDays(1), amount, currency);
+                                                                                   effectiveDate.minusDays(1), effectiveDate.minusDays(1), amount, currency, null);
         Assert.assertFalse(itemBefore.matches(item));
         final ExternalChargeInvoiceItem itemAfter = new ExternalChargeInvoiceItem(id, invoiceId, accountId, bundleId, description,
-                                                                                  effectiveDate.plusDays(1), amount, currency);
+                                                                                  effectiveDate.plusDays(1), effectiveDate.minusDays(1), amount, currency, null);
         Assert.assertFalse(itemAfter.matches(item));
     }
 }

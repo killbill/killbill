@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014-2015 Groupon, Inc
- * Copyright 2014-2015 The Billing Project, LLC
+ * Copyright 2014-2018 Groupon, Inc
+ * Copyright 2014-2018 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -26,13 +26,11 @@ import org.killbill.billing.invoice.ParkedAccountsManager;
 import org.killbill.billing.invoice.api.DefaultInvoiceService;
 import org.killbill.billing.invoice.api.InvoiceApiHelper;
 import org.killbill.billing.invoice.api.InvoiceInternalApi;
-import org.killbill.billing.invoice.api.InvoiceNotifier;
-import org.killbill.billing.invoice.api.InvoicePaymentApi;
+import org.killbill.billing.invoice.api.InvoiceListenerService;
 import org.killbill.billing.invoice.api.InvoiceService;
 import org.killbill.billing.invoice.api.InvoiceUserApi;
 import org.killbill.billing.invoice.api.formatters.InvoiceFormatterFactory;
 import org.killbill.billing.invoice.api.formatters.ResourceBundleFactory;
-import org.killbill.billing.invoice.api.invoice.DefaultInvoicePaymentApi;
 import org.killbill.billing.invoice.api.svcs.DefaultInvoiceInternalApi;
 import org.killbill.billing.invoice.api.user.DefaultInvoiceUserApi;
 import org.killbill.billing.invoice.config.MultiTenantInvoiceConfig;
@@ -46,10 +44,8 @@ import org.killbill.billing.invoice.generator.InvoiceGenerator;
 import org.killbill.billing.invoice.generator.UsageInvoiceItemGenerator;
 import org.killbill.billing.invoice.notification.DefaultNextBillingDateNotifier;
 import org.killbill.billing.invoice.notification.DefaultNextBillingDatePoster;
-import org.killbill.billing.invoice.notification.EmailInvoiceNotifier;
 import org.killbill.billing.invoice.notification.NextBillingDateNotifier;
 import org.killbill.billing.invoice.notification.NextBillingDatePoster;
-import org.killbill.billing.invoice.notification.NullInvoiceNotifier;
 import org.killbill.billing.invoice.plugin.api.InvoicePluginApi;
 import org.killbill.billing.invoice.template.bundles.DefaultResourceBundleFactory;
 import org.killbill.billing.invoice.usage.RawUsageOptimizer;
@@ -87,11 +83,6 @@ public class DefaultInvoiceModule extends KillBillModule implements InvoiceModul
         bind(InvoiceInternalApi.class).to(DefaultInvoiceInternalApi.class).asEagerSingleton();
     }
 
-    @Override
-    public void installInvoicePaymentApi() {
-        bind(InvoicePaymentApi.class).to(DefaultInvoicePaymentApi.class).asEagerSingleton();
-    }
-
     protected void installConfig() {
         installConfig(new ConfigurationObjectFactory(skifeConfigSource).build(InvoiceConfig.class));
     }
@@ -102,8 +93,9 @@ public class DefaultInvoiceModule extends KillBillModule implements InvoiceModul
         bind(InvoiceConfig.class).to(MultiTenantInvoiceConfig.class).asEagerSingleton();
     }
 
-    protected void installInvoiceService() {
+    protected void installInvoiceServices() {
         bind(InvoiceService.class).to(DefaultInvoiceService.class).asEagerSingleton();
+        bind(InvoiceListenerService.class).to(InvoiceListener.class).asEagerSingleton();
     }
 
     protected void installResourceBundleFactory() {
@@ -117,14 +109,6 @@ public class DefaultInvoiceModule extends KillBillModule implements InvoiceModul
         final TranslatorConfig config = new ConfigurationObjectFactory(skifeConfigSource).build(TranslatorConfig.class);
         bind(TranslatorConfig.class).toInstance(config);
         bind(InvoiceFormatterFactory.class).to(config.getInvoiceFormatterFactoryClass()).asEagerSingleton();
-    }
-
-    protected void installInvoiceNotifier() {
-        if (staticInvoiceConfig.isEmailNotificationsEnabled()) {
-            bind(InvoiceNotifier.class).to(EmailInvoiceNotifier.class).asEagerSingleton();
-        } else {
-            bind(InvoiceNotifier.class).to(NullInvoiceNotifier.class).asEagerSingleton();
-        }
     }
 
     protected void installInvoiceDispatcher() {
@@ -154,8 +138,7 @@ public class DefaultInvoiceModule extends KillBillModule implements InvoiceModul
         installConfig();
 
         installInvoicePluginApi();
-        installInvoiceService();
-        installInvoiceNotifier();
+        installInvoiceServices();
         installNotifiers();
         installInvoiceDispatcher();
         installInvoiceListener();
@@ -164,7 +147,6 @@ public class DefaultInvoiceModule extends KillBillModule implements InvoiceModul
         installInvoiceDao();
         installInvoiceUserApi();
         installInvoiceInternalApi();
-        installInvoicePaymentApi();
         installResourceBundleFactory();
         bind(RawUsageOptimizer.class).asEagerSingleton();
         bind(InvoiceApiHelper.class).asEagerSingleton();

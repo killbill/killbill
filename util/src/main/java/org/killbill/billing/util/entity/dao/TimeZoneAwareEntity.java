@@ -17,10 +17,13 @@
 
 package org.killbill.billing.util.entity.dao;
 
+import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.killbill.billing.util.entity.Entity;
 
 public interface TimeZoneAwareEntity extends Entity {
+
+    public DateTime getReferenceTime();
 
     public DateTimeZone getTimeZone();
 }

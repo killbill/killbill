@@ -96,8 +96,8 @@ public class TestNonEntityDao extends UtilTestSuiteWithEmbeddedDB {
             @Override
             public Void withHandle(final Handle handle) throws Exception {
                 // Note: we always create an accounts table, see MysqlTestingHelper
-                handle.execute("insert into accounts (record_id, id, email, name, first_name_length, time_zone, is_notified_for_invoices, created_date, created_by, updated_date, updated_by, tenant_record_id) values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-                               accountRecordId, accountId.toString(), "zozo@tt.com", "zozo", 4, "UTC", false, new Date(), "i", new Date(), "j", tenantRecordId);
+                handle.execute("insert into accounts (record_id, id, external_key, email, name, first_name_length, reference_time, time_zone, created_date, created_by, updated_date, updated_by, tenant_record_id) values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                               accountRecordId, accountId.toString(), accountId.toString(), "zozo@tt.com", "zozo", 4, new Date(), "UTC", new Date(), "i", new Date(), "j", tenantRecordId);
                 return null;
             }
         });
@@ -108,8 +108,8 @@ public class TestNonEntityDao extends UtilTestSuiteWithEmbeddedDB {
             @Override
             public Void withHandle(final Handle handle) throws Exception {
                 // Note: we always create an accounts table, see MysqlTestingHelper
-                handle.execute("insert into account_history (record_id, id, email, name, first_name_length, time_zone, is_notified_for_invoices, created_date, created_by, updated_date, updated_by, tenant_record_id) values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-                               accountRecordId, accountId.toString(), "zozo@tt.com", "zozo", 4, "UTC", false, new Date(), "i", new Date(), "j", tenantRecordId);
+                handle.execute("insert into account_history (record_id, id, external_key, email, name, first_name_length, reference_time, time_zone, created_date, created_by, updated_date, updated_by, tenant_record_id) values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                               accountRecordId, accountId.toString(), accountId.toString(), "zozo@tt.com", "zozo", 4, new Date(), "UTC", new Date(), "i", new Date(), "j", tenantRecordId);
                 return null;
             }
         });

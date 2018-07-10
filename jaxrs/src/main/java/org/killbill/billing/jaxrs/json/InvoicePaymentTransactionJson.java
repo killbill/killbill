@@ -19,30 +19,35 @@ package org.killbill.billing.jaxrs.json;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.UUID;
 
 import javax.annotation.Nullable;
 
 import org.joda.time.DateTime;
+import org.killbill.billing.catalog.api.Currency;
+import org.killbill.billing.payment.api.TransactionType;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import io.swagger.annotations.ApiModel;
 
+@ApiModel(value="InvoicePaymentTransaction")
 public class InvoicePaymentTransactionJson extends PaymentTransactionJson {
 
     private final Boolean isAdjusted;
     private final List<InvoiceItemJson> adjustments;
 
     @JsonCreator
-    public InvoicePaymentTransactionJson(@JsonProperty("transactionId") final String transactionId,
+    public InvoicePaymentTransactionJson(@JsonProperty("transactionId") final UUID transactionId,
                                          @JsonProperty("transactionExternalKey") final String transactionExternalKey,
-                                         @JsonProperty("paymentId") final String paymentId,
+                                         @JsonProperty("paymentId") final UUID paymentId,
                                          @JsonProperty("paymentExternalKey") final String paymentExternalKey,
-                                         @JsonProperty("transactionType") final String transactionType,
+                                         @JsonProperty("transactionType") final TransactionType transactionType,
                                          @JsonProperty("amount") final BigDecimal amount,
-                                         @JsonProperty("currency") final String currency,
+                                         @JsonProperty("currency") final Currency currency,
                                          @JsonProperty("effectiveDate") final DateTime effectiveDate,
                                          @JsonProperty("processedAmount") final BigDecimal processedAmount,
-                                         @JsonProperty("processedCurrency") final String processedCurrency,
+                                         @JsonProperty("processedCurrency") final Currency processedCurrency,
                                          @JsonProperty("status") final String status,
                                          @JsonProperty("gatewayErrorCode") final String gatewayErrorCode,
                                          @JsonProperty("gatewayErrorMsg") final String gatewayErrorMsg,

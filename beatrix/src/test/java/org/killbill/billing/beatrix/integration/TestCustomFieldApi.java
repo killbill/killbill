@@ -53,6 +53,10 @@ public class TestCustomFieldApi extends TestIntegrationBase {
     @Override
     @BeforeMethod(groups = "slow")
     public void beforeMethod() throws Exception {
+        if (hasFailed()) {
+            return;
+        }
+
         super.beforeMethod();
         account = createAccountWithNonOsgiPaymentMethod(getAccountData(25));
         assertNotNull(account);
@@ -86,7 +90,7 @@ public class TestCustomFieldApi extends TestIntegrationBase {
         final DefaultEntitlement bpEntitlement = createBaseEntitlementAndCheckForCompletion(account.getId(), "externalKey", productName, ProductCategory.BASE, term, NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE);
         assertNotNull(bpEntitlement);
 
-        final List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), false, callContext);
+        final List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, callContext);
         Assert.assertEquals(invoices.size(), 1);
 
         final Invoice invoice = invoices.get(0);

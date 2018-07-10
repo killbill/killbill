@@ -25,9 +25,13 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
+import org.killbill.billing.util.api.AuditLevel;
 import org.killbill.billing.util.api.TagDefinitionApiException;
+import org.killbill.billing.util.audit.AuditLogWithHistory;
 import org.killbill.billing.util.entity.dao.MockEntityDaoBase;
 import org.killbill.billing.util.tag.TagDefinition;
+
+import com.google.common.collect.ImmutableList;
 
 public class MockTagDefinitionDao extends MockEntityDaoBase<TagDefinitionModelDao, TagDefinition, TagDefinitionApiException> implements TagDefinitionDao {
 
@@ -44,9 +48,9 @@ public class MockTagDefinitionDao extends MockEntityDaoBase<TagDefinitionModelDa
     }
 
     @Override
-    public TagDefinitionModelDao create(final String definitionName, final String description,
+    public TagDefinitionModelDao create(final String definitionName, final String description, final String tagDefinitionObjectTypes,
                                         final InternalCallContext context) throws TagDefinitionApiException {
-        final TagDefinitionModelDao tag = new TagDefinitionModelDao(null, definitionName, description);
+        final TagDefinitionModelDao tag = new TagDefinitionModelDao(null, definitionName, description, tagDefinitionObjectTypes);
 
         tags.put(tag.getId().toString(), tag);
         return tag;
@@ -55,6 +59,11 @@ public class MockTagDefinitionDao extends MockEntityDaoBase<TagDefinitionModelDa
     @Override
     public void deleteById(final UUID definitionId, final InternalCallContext context) throws TagDefinitionApiException {
         tags.remove(definitionId.toString());
+    }
+
+    @Override
+    public List<AuditLogWithHistory> getTagDefinitionAuditLogsWithHistoryForId(final UUID tagDefinitionId, final AuditLevel auditLevel, final InternalTenantContext context) {
+        throw new UnsupportedOperationException();
     }
 
     @Override

@@ -35,7 +35,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Joiner;
-import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
 
 public class DefaultNextBillingDatePoster implements NextBillingDatePoster {
@@ -56,8 +55,9 @@ public class DefaultNextBillingDatePoster implements NextBillingDatePoster {
                                                              final UUID accountId,
                                                              final Iterable<UUID> subscriptionIds,
                                                              final DateTime futureNotificationTime,
+                                                             final boolean isRescheduled,
                                                              final InternalCallContext internalCallContext) {
-        insertNextBillingFromTransactionInternal(entitySqlDaoWrapperFactory, subscriptionIds, Boolean.FALSE, futureNotificationTime, futureNotificationTime, internalCallContext);
+        insertNextBillingFromTransactionInternal(entitySqlDaoWrapperFactory, subscriptionIds, Boolean.FALSE, isRescheduled, futureNotificationTime, futureNotificationTime, internalCallContext);
     }
 
     @Override
@@ -67,12 +67,13 @@ public class DefaultNextBillingDatePoster implements NextBillingDatePoster {
                                                                    final DateTime futureNotificationTime,
                                                                    final DateTime targetDate,
                                                                    final InternalCallContext internalCallContext) {
-        insertNextBillingFromTransactionInternal(entitySqlDaoWrapperFactory, subscriptionIds, Boolean.TRUE, futureNotificationTime, targetDate, internalCallContext);
+        insertNextBillingFromTransactionInternal(entitySqlDaoWrapperFactory, subscriptionIds, Boolean.TRUE, null, futureNotificationTime, targetDate, internalCallContext);
     }
 
     private void insertNextBillingFromTransactionInternal(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory,
                                                           final Iterable<UUID> subscriptionIds,
                                                           final Boolean isDryRunForInvoiceNotification,
+                                                          final Boolean isRescheduled,
                                                           final DateTime futureNotificationTime,
                                                           final DateTime targetDate,
                                                           final InternalCallContext internalCallContext) {
@@ -111,7 +112,7 @@ public class DefaultNextBillingDatePoster implements NextBillingDatePoster {
             if (existingNotificationForEffectiveDate == null) {
                 log.info("Queuing next billing date notification at {} for subscriptionId {}", futureNotificationTime.toString(), JOINER.join(subscriptionIds));
 
-                final NextBillingDateNotificationKey newNotificationEvent = new NextBillingDateNotificationKey(null, subscriptionIds, targetDate, isDryRunForInvoiceNotification);
+                final NextBillingDateNotificationKey newNotificationEvent = new NextBillingDateNotificationKey(null, subscriptionIds, targetDate, isDryRunForInvoiceNotification, isRescheduled);
                 nextBillingQueue.recordFutureNotificationFromTransaction(entitySqlDaoWrapperFactory.getHandle().getConnection(), futureNotificationTime,
                                                                          newNotificationEvent, internalCallContext.getUserToken(),
                                                                          internalCallContext.getAccountRecordId(), internalCallContext.getTenantRecordId());

@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014-2016 Groupon, Inc
- * Copyright 2014-2016 The Billing Project, LLC
+ * Copyright 2014-2018 Groupon, Inc
+ * Copyright 2014-2018 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -39,6 +39,9 @@ import org.killbill.billing.account.api.AccountInternalApi;
 import org.killbill.billing.account.api.ImmutableAccountData;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
+import org.killbill.billing.catalog.api.Catalog;
+import org.killbill.billing.catalog.api.CatalogApiException;
+import org.killbill.billing.catalog.api.CatalogInternalApi;
 import org.killbill.billing.entitlement.AccountEntitlements;
 import org.killbill.billing.entitlement.EntitlementInternalApi;
 import org.killbill.billing.entitlement.EntitlementService;
@@ -100,6 +103,7 @@ public class DefaultSubscriptionApi implements SubscriptionApi {
     private final AccountInternalApi accountApi;
     private final EntitlementInternalApi entitlementInternalApi;
     private final SubscriptionBaseInternalApi subscriptionBaseInternalApi;
+    private final CatalogInternalApi catalogInternalApi;
     private final InternalCallContextFactory internalCallContextFactory;
     private final EntitlementUtils entitlementUtils;
     private final Clock clock;
@@ -110,6 +114,7 @@ public class DefaultSubscriptionApi implements SubscriptionApi {
     public DefaultSubscriptionApi(final AccountInternalApi accountApi,
                                   final EntitlementInternalApi entitlementInternalApi,
                                   final SubscriptionBaseInternalApi subscriptionInternalApi,
+                                  final CatalogInternalApi catalogInternalApi,
                                   final InternalCallContextFactory internalCallContextFactory,
                                   final Clock clock,
                                   final EntitlementPluginExecution pluginExecution,
@@ -118,6 +123,7 @@ public class DefaultSubscriptionApi implements SubscriptionApi {
         this.accountApi = accountApi;
         this.entitlementInternalApi = entitlementInternalApi;
         this.subscriptionBaseInternalApi = subscriptionInternalApi;
+        this.catalogInternalApi = catalogInternalApi;
         this.internalCallContextFactory = internalCallContextFactory;
         this.clock = clock;
         this.pluginExecution = pluginExecution;
@@ -187,8 +193,10 @@ public class DefaultSubscriptionApi implements SubscriptionApi {
             if (activeSubscriptionIdForKey == null) {
                 throw new SubscriptionApiException(new SubscriptionBaseApiException(ErrorCode.SUB_GET_INVALID_BUNDLE_KEY, externalKey));
             }
-            final SubscriptionBase subscriptionBase = subscriptionBaseInternalApi.getSubscriptionFromId(activeSubscriptionIdForKey, internalContext);
-            return getSubscriptionBundle(subscriptionBase.getBundleId(), context);
+
+            final InternalTenantContext internalContextWithAccountRecordId =  internalCallContextFactory.createInternalTenantContext(activeSubscriptionIdForKey, ObjectType.SUBSCRIPTION, context);
+            final UUID bundleId = subscriptionBaseInternalApi.getBundleIdFromSubscriptionId(activeSubscriptionIdForKey, internalContextWithAccountRecordId);
+            return getSubscriptionBundle(bundleId, context);
         } catch (final SubscriptionBaseApiException e) {
             throw new SubscriptionApiException(e);
         }
@@ -266,13 +274,12 @@ public class DefaultSubscriptionApi implements SubscriptionApi {
 
         logUpdateExternalKey(log, bundleId, newExternalKey);
 
-        final InternalCallContext internalCallContext = internalCallContextFactory.createInternalCallContextWithoutAccountRecordId(callContext);
+        final InternalCallContext internalCallContext = internalCallContextFactory.createInternalCallContext(bundleId, ObjectType.BUNDLE, callContext);
 
-        final SubscriptionBaseBundle bundle;
         final ImmutableAccountData account;
         try {
-            bundle = subscriptionBaseInternalApi.getBundleFromId(bundleId, internalCallContext);
-            account = accountApi.getImmutableAccountDataById(bundle.getAccountId(), internalCallContext);
+            final UUID accountId = subscriptionBaseInternalApi.getAccountIdFromBundleId(bundleId, internalCallContext);
+            account = accountApi.getImmutableAccountDataById(accountId, internalCallContext);
         } catch (final SubscriptionBaseApiException e) {
             throw new EntitlementApiException(e);
         } catch (AccountApiException e) {
@@ -280,7 +287,7 @@ public class DefaultSubscriptionApi implements SubscriptionApi {
         }
 
 
-        final LocalDate effectiveDate = internalCallContext.toLocalDate(clock.getUTCNow());
+        final LocalDate effectiveDate = internalCallContext.toLocalDate(callContext.getCreatedDate());
         final BaseEntitlementWithAddOnsSpecifier baseEntitlementWithAddOnsSpecifier = new DefaultBaseEntitlementWithAddOnsSpecifier(
                 bundleId,
                 newExternalKey,
@@ -291,7 +298,7 @@ public class DefaultSubscriptionApi implements SubscriptionApi {
         final List<BaseEntitlementWithAddOnsSpecifier> baseEntitlementWithAddOnsSpecifierList = new ArrayList<BaseEntitlementWithAddOnsSpecifier>();
         baseEntitlementWithAddOnsSpecifierList.add(baseEntitlementWithAddOnsSpecifier);
         final EntitlementContext pluginContext = new DefaultEntitlementContext(OperationType.UPDATE_BUNDLE_EXTERNAL_KEY,
-                                                                               bundle.getAccountId(),
+                                                                               account.getId(),
                                                                                null,
                                                                                baseEntitlementWithAddOnsSpecifierList,
                                                                                null,
@@ -368,7 +375,7 @@ public class DefaultSubscriptionApi implements SubscriptionApi {
             throw new EntitlementApiException(e);
         }
 
-        final DateTime effectiveDate = inputEffectiveDate == null ? clock.getUTCNow() : internalCallContextWithValidAccountId.toUTCDateTime(inputEffectiveDate);
+        final DateTime effectiveDate = inputEffectiveDate == null ? callContext.getCreatedDate() : internalCallContextWithValidAccountId.toUTCDateTime(inputEffectiveDate);
         final DefaultBlockingState blockingState = new DefaultBlockingState(inputBlockingState, effectiveDate);
 
         final BaseEntitlementWithAddOnsSpecifier baseEntitlementWithAddOnsSpecifier = new DefaultBaseEntitlementWithAddOnsSpecifier(
@@ -401,11 +408,10 @@ public class DefaultSubscriptionApi implements SubscriptionApi {
 
     @Override
     public Iterable<BlockingState> getBlockingStates(final UUID accountId, @Nullable final List<BlockingStateType> typeFilter, @Nullable final List<String> svcsFilter, final OrderingType orderingType, final int timeFilter, final TenantContext tenantContext) throws EntitlementApiException {
-
         try {
-
             final InternalTenantContext internalTenantContextWithValidAccountRecordId = internalCallContextFactory.createInternalTenantContext(accountId, tenantContext);
-            final List<BlockingState> allBlockingStates = blockingStateDao.getBlockingAllForAccountRecordId(internalTenantContextWithValidAccountRecordId);
+            final Catalog catalog = catalogInternalApi.getFullCatalog(true, true, internalTenantContextWithValidAccountRecordId);
+            final List<BlockingState> allBlockingStates = blockingStateDao.getBlockingAllForAccountRecordId(catalog, internalTenantContextWithValidAccountRecordId);
 
             final ImmutableAccountData account = accountApi.getImmutableAccountDataById(accountId, internalTenantContextWithValidAccountRecordId);
 
@@ -440,7 +446,9 @@ public class DefaultSubscriptionApi implements SubscriptionApi {
 
             return orderingType == OrderingType.ASCENDING ? result : Lists.reverse(result);
 
-        } catch (AccountApiException e) {
+        } catch (final AccountApiException e) {
+            throw new EntitlementApiException(e);
+        } catch (final CatalogApiException e) {
             throw new EntitlementApiException(e);
         }
     }

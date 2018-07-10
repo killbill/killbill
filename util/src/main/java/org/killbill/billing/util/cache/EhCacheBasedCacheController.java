@@ -115,7 +115,7 @@ public class EhCacheBasedCacheController<K, V> implements CacheController<K, V> 
 
     @Override
     public int size() {
-        return Iterables.<Cache.Entry<K, V>>size(cache);
+        return Iterables.size(cache);
     }
 
     @Override

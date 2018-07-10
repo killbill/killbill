@@ -4,7 +4,7 @@ DROP TABLE IF EXISTS bus_ext_events;
 CREATE TABLE bus_ext_events (
     record_id serial unique,
     class_name varchar(128) NOT NULL,
-    event_json varchar(2048) NOT NULL,
+    event_json text NOT NULL,
     user_token varchar(36),
     created_date datetime NOT NULL,
     creating_owner varchar(50) NOT NULL,
@@ -24,7 +24,7 @@ DROP TABLE IF EXISTS bus_ext_events_history;
 CREATE TABLE bus_ext_events_history (
     record_id serial unique,
     class_name varchar(128) NOT NULL,
-    event_json varchar(2048) NOT NULL,
+    event_json text NOT NULL,
     user_token varchar(36),
     created_date datetime NOT NULL,
     creating_owner varchar(50) NOT NULL,

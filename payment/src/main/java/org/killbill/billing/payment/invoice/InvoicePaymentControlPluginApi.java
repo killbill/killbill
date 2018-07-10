@@ -1,6 +1,6 @@
 /*
- * Copyright 2014-2017 Groupon, Inc
- * Copyright 2014-2017 The Billing Project, LLC
+ * Copyright 2014-2018 Groupon, Inc
+ * Copyright 2014-2018 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -55,6 +55,7 @@ import org.killbill.billing.payment.api.PaymentApiException;
 import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.payment.api.TransactionStatus;
 import org.killbill.billing.payment.api.TransactionType;
+import org.killbill.billing.payment.core.janitor.IncompletePaymentTransactionTask;
 import org.killbill.billing.payment.dao.PaymentDao;
 import org.killbill.billing.payment.dao.PaymentModelDao;
 import org.killbill.billing.payment.dao.PaymentTransactionModelDao;
@@ -88,12 +89,12 @@ public final class InvoicePaymentControlPluginApi implements PaymentControlPlugi
 
     public static final String CREATED_BY = "InvoicePaymentControlPluginApi";
 
-    /* Don't change value String for properties as they are referenced from jaxrs without the constants which are not accessible */
     public static final String PLUGIN_NAME = "__INVOICE_PAYMENT_CONTROL_PLUGIN__";
-    public static final String PROP_IPCD_INVOICE_ID = "IPCD_INVOICE_ID";
-    public static final String PROP_IPCD_REFUND_IDS_WITH_AMOUNT_KEY = "IPCD_REFUND_IDS_AMOUNTS";
-    public static final String PROP_IPCD_REFUND_WITH_ADJUSTMENTS = "IPCD_REFUND_WITH_ADJUSTMENTS";
-    public static final String PROP_IPCD_PAYMENT_ID = "IPCD_PAYMENT_ID";
+
+    private static final String PROP_IPCD_INVOICE_ID = "IPCD_INVOICE_ID";
+    private static final String PROP_IPCD_REFUND_IDS_WITH_AMOUNT_KEY = "IPCD_REFUND_IDS_AMOUNTS";
+    private static final String PROP_IPCD_REFUND_WITH_ADJUSTMENTS = "IPCD_REFUND_WITH_ADJUSTMENTS";
+    private static final String PROP_IPCD_PAYMENT_ID = "IPCD_PAYMENT_ID";
 
     private final PaymentConfig paymentConfig;
     private final InvoiceInternalApi invoiceApi;
@@ -198,7 +199,7 @@ public final class InvoicePaymentControlPluginApi implements PaymentControlPlugi
                 case REFUND:
                     final Map<UUID, BigDecimal> idWithAmount = extractIdsWithAmountFromProperties(pluginProperties);
                     final PluginProperty prop = getPluginProperty(pluginProperties, PROP_IPCD_REFUND_WITH_ADJUSTMENTS);
-                    final boolean isAdjusted = prop != null ? Boolean.valueOf((String) prop.getValue()) : false;
+                    final boolean isAdjusted = prop != null && prop.getValue() != null ? Boolean.valueOf(prop.getValue().toString()) : false;
                     invoiceApi.recordRefund(paymentControlContext.getPaymentId(), paymentControlContext.getAmount(), isAdjusted, idWithAmount, paymentControlContext.getTransactionExternalKey(), internalContext);
                     break;
 
@@ -230,7 +231,7 @@ public final class InvoicePaymentControlPluginApi implements PaymentControlPlugi
                 case CREDIT:
                     final Map<UUID, BigDecimal> idWithAmountMap = extractIdsWithAmountFromProperties(pluginProperties);
                     final PluginProperty properties = getPluginProperty(pluginProperties, PROP_IPCD_REFUND_WITH_ADJUSTMENTS);
-                    final boolean isInvoiceAdjusted = properties != null ? Boolean.valueOf((String) properties.getValue()) : false;
+                    final boolean isInvoiceAdjusted = properties != null && properties.getValue() != null ? Boolean.valueOf(properties.getValue().toString()) : false;
 
                     final PluginProperty legacyPayment = getPluginProperty(pluginProperties, PROP_IPCD_PAYMENT_ID);
                     final UUID paymentId = legacyPayment != null ? (UUID) legacyPayment.getValue() : paymentControlContext.getPaymentId();
@@ -297,7 +298,7 @@ public final class InvoicePaymentControlPluginApi implements PaymentControlPlugi
         final List<PluginAutoPayOffModelDao> entries = controlDao.getAutoPayOffEntry(accountId);
         for (final PluginAutoPayOffModelDao cur : entries) {
             // TODO In theory we should pass not only PLUGIN_NAME, but also all the plugin list associated which the original call
-            retryServiceScheduler.scheduleRetry(ObjectType.ACCOUNT, accountId, cur.getAttemptId(), internalCallContext.getTenantRecordId(), ImmutableList.<String>of(PLUGIN_NAME), clock.getUTCNow());
+            retryServiceScheduler.scheduleRetry(ObjectType.ACCOUNT, accountId, cur.getAttemptId(), internalCallContext.getTenantRecordId(), ImmutableList.<String>of(PLUGIN_NAME), internalCallContext.getCreatedDate());
         }
         controlDao.removeAutoPayOffEntry(accountId);
     }
@@ -322,16 +323,24 @@ public final class InvoicePaymentControlPluginApi implements PaymentControlPlugi
             }
 
             // Get account and check if it is child and payment is delegated to parent => abort
+
             final AccountData accountData = accountApi.getAccountById(invoice.getAccountId(), internalContext);
-            if ((accountData != null) && (accountData.getParentAccountId() != null) && accountData.isPaymentDelegatedToParent()) {
+            if (((accountData != null) && (accountData.getParentAccountId() != null) && accountData.isPaymentDelegatedToParent()) || // Valid when we initially create the child invoice (even if parent invoice does not exist yet)
+                (invoice.getParentAccountId() != null))  { // Valid after we have unparented the child
                 return new DefaultPriorPaymentControlResult(true);
             }
+
+
+            // Is remaining amount > 0 ?
             final BigDecimal requestedAmount = validateAndComputePaymentAmount(invoice, paymentControlPluginContext.getAmount(), paymentControlPluginContext.isApiPayment());
+            if (requestedAmount.compareTo(BigDecimal.ZERO) <= 0) {
+                return new DefaultPriorPaymentControlResult(true);
+            }
 
-            final boolean isAborted = requestedAmount.compareTo(BigDecimal.ZERO) == 0;
 
-            if (!isAborted && paymentControlPluginContext.getPaymentMethodId() == null) {
-                log.warn("Payment for invoiceId='{}' was not triggered, accountId='{}' doesn't have a default payment method", getInvoiceId(pluginProperties), paymentControlPluginContext.getAccountId());
+            // Do we have a  paymentMethod ?
+            if (paymentControlPluginContext.getPaymentMethodId() == null) {
+                log.warn("Payment for invoiceId='{}' was not triggered, accountId='{}' doesn't have a default payment method", invoiceId, paymentControlPluginContext.getAccountId());
                 invoiceApi.recordPaymentAttemptCompletion(invoiceId,
                                                           paymentControlPluginContext.getAmount(),
                                                           paymentControlPluginContext.getCurrency(),
@@ -344,35 +353,41 @@ public final class InvoicePaymentControlPluginApi implements PaymentControlPlugi
                 return new DefaultPriorPaymentControlResult(true);
             }
 
-            if (!isAborted && insert_AUTO_PAY_OFF_ifRequired(paymentControlPluginContext, requestedAmount)) {
+
+            // Are we in auto-payoff ?
+            if (insert_AUTO_PAY_OFF_ifRequired(paymentControlPluginContext, requestedAmount)) {
                 return new DefaultPriorPaymentControlResult(true);
             }
 
-            if (paymentControlPluginContext.isApiPayment() && isAborted) {
-                throw new PaymentControlApiException("Abort purchase call: ", new PaymentApiException(ErrorCode.PAYMENT_PLUGIN_EXCEPTION,
-                                                                                                      String.format("Aborted Payment for invoice %s : invoice balance is = %s, requested payment amount is = %s",
-                                                                                                                    invoice.getId(),
-                                                                                                                    invoice.getBalance(),
-                                                                                                                    paymentControlPluginContext.getAmount())));
-            } else {
-
-                //
-                // Insert attempt row with a success = false status to implement a two-phase commit strategy and guard against scenario where payment would go through
-                // but onSuccessCall callback never gets called (leaving the place for a double payment if user retries the operation)
-                //
-                invoiceApi.recordPaymentAttemptInit(invoice.getId(),
-                                                    MoreObjects.firstNonNull(paymentControlPluginContext.getAmount(), BigDecimal.ZERO),
-                                                    paymentControlPluginContext.getCurrency(),
-                                                    paymentControlPluginContext.getCurrency(),
-                                                    // Likely to be null, but we don't care as we use the transactionExternalKey
-                                                    // to match the operation in the checkForIncompleteInvoicePaymentAndRepair logic below
-                                                    paymentControlPluginContext.getPaymentId(),
-                                                    paymentControlPluginContext.getTransactionExternalKey(),
-                                                    paymentControlPluginContext.getCreatedDate(),
-                                                    internalContext);
-
-                return new DefaultPriorPaymentControlResult(isAborted, requestedAmount);
+            final List<InvoicePayment> existingInvoicePayments = invoiceApi.getInvoicePaymentsByInvoice(invoiceId, internalContext);
+            for (final InvoicePayment existingInvoicePayment : existingInvoicePayments) {
+                final List<PaymentTransactionModelDao> existingTransactions = paymentDao.getPaymentTransactionsByExternalKey(existingInvoicePayment.getPaymentCookieId(), internalContext);
+                for (final PaymentTransactionModelDao existingTransaction : existingTransactions) {
+                    if (existingTransaction.getTransactionStatus() == TransactionStatus.UNKNOWN) {
+                        log.warn("Existing paymentTransactionId='{}' for invoiceId='{}' in UNKNOWN state", existingTransaction.getId(), invoiceId);
+                        return new DefaultPriorPaymentControlResult(true);
+                    }
+                }
             }
+
+            //
+            // Insert attempt row with a success = false status to implement a two-phase commit strategy and guard against scenario where payment would go through
+            // but onSuccessCall callback never gets called (leaving the place for a double payment if user retries the operation)
+            //
+            invoiceApi.recordPaymentAttemptInit(invoice.getId(),
+                                                MoreObjects.firstNonNull(paymentControlPluginContext.getAmount(), BigDecimal.ZERO),
+                                                paymentControlPluginContext.getCurrency(),
+                                                paymentControlPluginContext.getCurrency(),
+                                                // Likely to be null, but we don't care as we use the transactionExternalKey
+                                                // to match the operation in the checkForIncompleteInvoicePaymentAndRepair logic below
+                                                paymentControlPluginContext.getPaymentId(),
+                                                paymentControlPluginContext.getTransactionExternalKey(),
+                                                paymentControlPluginContext.getCreatedDate(),
+                                                internalContext);
+
+            return new DefaultPriorPaymentControlResult(false, requestedAmount);
+
+
         } catch (final InvoiceApiException e) {
             throw new PaymentControlApiException(e);
         } catch (final IllegalArgumentException e) {
@@ -411,7 +426,7 @@ public final class InvoicePaymentControlPluginApi implements PaymentControlPlugi
         }
 
         final PluginProperty prop = getPluginProperty(pluginProperties, PROP_IPCD_REFUND_WITH_ADJUSTMENTS);
-        final boolean isAdjusted = prop != null ? Boolean.valueOf((String) prop.getValue()) : false;
+        final boolean isAdjusted = prop != null && prop.getValue() != null ? Boolean.valueOf(prop.getValue().toString()) : false;
         if (isAdjusted) {
             try {
                 invoiceApi.validateInvoiceItemAdjustments(paymentControlPluginContext.getPaymentId(), idWithAmount, internalContext);
@@ -517,11 +532,11 @@ public final class InvoicePaymentControlPluginApi implements PaymentControlPlugi
         final int retryCount = (attemptsInState - 1) >= 0 ? (attemptsInState - 1) : 0;
         if (retryCount < retryDays.size()) {
             final int retryInDays;
-            final DateTime nextRetryDate = clock.getUTCNow();
+            final DateTime nextRetryDate = internalContext.getCreatedDate();
             try {
                 retryInDays = retryDays.get(retryCount);
                 result = nextRetryDate.plusDays(retryInDays);
-                log.debug("Next retryDate={}, retryInDays={}, retryCount={}, now={}", result, retryInDays, retryCount, clock.getUTCNow());
+                log.debug("Next retryDate={}, retryInDays={}, retryCount={}, now={}", result, retryInDays, retryCount, internalContext.getCreatedDate());
             } catch (final NumberFormatException ex) {
                 log.error("Could not get retry day for retry count {}", retryCount);
             }
@@ -541,8 +556,8 @@ public final class InvoicePaymentControlPluginApi implements PaymentControlPlugi
             while (--remainingAttempts > 0) {
                 nbSec = nbSec * paymentConfig.getPluginFailureRetryMultiplier(internalContext);
             }
-            result = clock.getUTCNow().plusSeconds(nbSec);
-            log.debug("Next retryDate={}, retryAttempt={}, now={}", result, retryAttempt, clock.getUTCNow());
+            result = internalContext.getCreatedDate().plusSeconds(nbSec);
+            log.debug("Next retryDate={}, retryAttempt={}, now={}", result, retryAttempt, internalContext.getCreatedDate());
         }
         return result;
     }
@@ -641,23 +656,25 @@ public final class InvoicePaymentControlPluginApi implements PaymentControlPlugi
         return false;
     }
 
-    private BigDecimal validateAndComputePaymentAmount(final Invoice invoice, @Nullable final BigDecimal inputAmount, final boolean isApiPayment) {
+    private BigDecimal validateAndComputePaymentAmount(final Invoice invoice, @Nullable final BigDecimal inputAmount, final boolean isApiPayment) throws PaymentControlApiException {
 
         if (invoice.getBalance().compareTo(BigDecimal.ZERO) <= 0) {
             log.info("invoiceId='{}' has already been paid", invoice.getId());
             return BigDecimal.ZERO;
         }
+
         if (isApiPayment &&
             inputAmount != null &&
             invoice.getBalance().compareTo(inputAmount) < 0) {
-            log.info("invoiceId='{}' has a balance='{}' < retry paymentAmount='{}'", invoice.getId(), invoice.getBalance().floatValue(), inputAmount.floatValue());
-            return BigDecimal.ZERO;
+            log.info("invoiceId='{}' has a balance='{}' < paymentAmount='{}'", invoice.getId(), invoice.getBalance().floatValue(), inputAmount.floatValue());
+            throw new PaymentControlApiException("Abort purchase call: ", new PaymentApiException(ErrorCode.PAYMENT_PLUGIN_EXCEPTION,
+                                                                                                  String.format("Invalid amount '%s' for invoice '%s': invoice balance is = '%s'",
+                                                                                                                inputAmount,
+                                                                                                                invoice.getId(),
+                                                                                                                invoice.getBalance())));
         }
-        if (inputAmount == null) {
-            return invoice.getBalance();
-        } else {
-            return invoice.getBalance().compareTo(inputAmount) < 0 ? invoice.getBalance() : inputAmount;
-        }
+
+        return (inputAmount == null || invoice.getBalance().compareTo(inputAmount) < 0) ? invoice.getBalance() : inputAmount;
     }
 
     private boolean insert_AUTO_PAY_OFF_ifRequired(final PaymentControlContext paymentControlContext, final BigDecimal computedAmount) {
@@ -667,7 +684,7 @@ public final class InvoicePaymentControlPluginApi implements PaymentControlPlugi
         final PluginAutoPayOffModelDao data = new PluginAutoPayOffModelDao(paymentControlContext.getAttemptPaymentId(), paymentControlContext.getPaymentExternalKey(), paymentControlContext.getTransactionExternalKey(),
                                                                            paymentControlContext.getAccountId(), PLUGIN_NAME,
                                                                            paymentControlContext.getPaymentId(), paymentControlContext.getPaymentMethodId(),
-                                                                           computedAmount, paymentControlContext.getCurrency(), CREATED_BY, clock.getUTCNow());
+                                                                           computedAmount, paymentControlContext.getCurrency(), CREATED_BY, paymentControlContext.getCreatedDate());
         controlDao.insertAutoPayOff(data);
         return true;
     }

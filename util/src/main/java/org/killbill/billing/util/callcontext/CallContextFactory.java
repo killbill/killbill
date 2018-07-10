@@ -24,8 +24,8 @@ import javax.annotation.Nullable;
 
 public interface CallContextFactory {
 
-    TenantContext createTenantContext(@Nullable UUID tenantId);
+    TenantContext createTenantContext(@Nullable UUID accountId, @Nullable UUID tenantId);
 
-    CallContext createCallContext(@Nullable UUID tenantId, String userName, CallOrigin callOrigin, UserType userType,
+    CallContext createCallContext(@Nullable UUID accountId, @Nullable UUID tenantId, String userName, CallOrigin callOrigin, UserType userType,
                                   String reasonCode, String comment, UUID userToken);
 }

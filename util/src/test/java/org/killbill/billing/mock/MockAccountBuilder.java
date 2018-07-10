@@ -38,6 +38,7 @@ public class MockAccountBuilder {
     private boolean isPaymentDelegatedToParent = false;
     private int billingCycleDayLocal;
     private UUID paymentMethodId;
+    private DateTime referenceTime = new DateTime(DateTimeZone.UTC);
     private DateTimeZone timeZone = DateTimeZone.UTC;
     private String locale = "";
     private String address1 = "";
@@ -50,7 +51,6 @@ public class MockAccountBuilder {
     private String phone = "";
     private String notes = "";
     private boolean migrated;
-    private boolean isNotifiedForInvoices;
     private DateTime createdDate = new DateTime(DateTimeZone.UTC);
     private DateTime updatedDate = new DateTime(DateTimeZone.UTC);
 
@@ -75,7 +75,6 @@ public class MockAccountBuilder {
         this.email(data.getEmail());
         this.externalKey(data.getExternalKey());
         this.firstNameLength(data.getFirstNameLength());
-        this.isNotifiedForInvoices(data.isNotifiedForInvoices());
         this.locale(data.getLocale());
         this.migrated(data.isMigrated());
         this.name(data.getName());
@@ -84,6 +83,7 @@ public class MockAccountBuilder {
         this.notes(data.getNotes());
         this.postalCode(data.getPostalCode());
         this.stateOrProvince(data.getStateOrProvince());
+        this.referenceTime(data.getReferenceTime());
         this.timeZone(data.getTimeZone());
         if (data instanceof Account) {
             this.id = ((Account) data).getId();
@@ -136,6 +136,11 @@ public class MockAccountBuilder {
 
     public MockAccountBuilder paymentMethodId(final UUID paymentMethodId) {
         this.paymentMethodId = paymentMethodId;
+        return this;
+    }
+
+    public MockAccountBuilder referenceTime(final DateTime referenceTime) {
+        this.referenceTime = referenceTime;
         return this;
     }
 
@@ -196,11 +201,6 @@ public class MockAccountBuilder {
 
     public MockAccountBuilder migrated(final boolean migrated) {
         this.migrated = migrated;
-        return this;
-    }
-
-    public MockAccountBuilder isNotifiedForInvoices(final boolean isNotifiedForInvoices) {
-        this.isNotifiedForInvoices = isNotifiedForInvoices;
         return this;
     }
 
@@ -273,7 +273,7 @@ public class MockAccountBuilder {
 
             @Override
             public DateTime getReferenceTime() {
-                return AccountDateTimeUtils.getReferenceDateTime(this);
+                return referenceTime;
             }
 
             @Override
@@ -329,11 +329,6 @@ public class MockAccountBuilder {
             @Override
             public Boolean isMigrated() {
                 return migrated;
-            }
-
-            @Override
-            public Boolean isNotifiedForInvoices() {
-                return isNotifiedForInvoices;
             }
 
             @Override

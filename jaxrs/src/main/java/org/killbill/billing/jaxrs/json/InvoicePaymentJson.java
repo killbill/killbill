@@ -24,24 +24,26 @@ import java.util.UUID;
 
 import javax.annotation.Nullable;
 
+import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.payment.api.Payment;
 import org.killbill.billing.payment.api.PaymentAttempt;
 import org.killbill.billing.util.audit.AccountAuditLogs;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 
+@ApiModel(value="InvoicePayment")
 public class InvoicePaymentJson extends PaymentJson {
 
-    @ApiModelProperty(dataType = "java.util.UUID")
-    private final String targetInvoiceId;
+    private final UUID targetInvoiceId;
 
 
     @JsonCreator
-    public InvoicePaymentJson(@JsonProperty("targetInvoiceId") final String targetInvoiceId,
-                              @JsonProperty("accountId") final String accountId,
-                              @JsonProperty("paymentId") final String paymentId,
+    public InvoicePaymentJson(@JsonProperty("targetInvoiceId") final UUID targetInvoiceId,
+                              @JsonProperty("accountId") final UUID accountId,
+                              @JsonProperty("paymentId") final UUID paymentId,
                               @JsonProperty("paymentNumber") final String paymentNumber,
                               @JsonProperty("paymentExternalKey") final String paymentExternalKey,
                               @JsonProperty("authAmount") final BigDecimal authAmount,
@@ -49,8 +51,8 @@ public class InvoicePaymentJson extends PaymentJson {
                               @JsonProperty("purchasedAmount") final BigDecimal purchasedAmount,
                               @JsonProperty("refundedAmount") final BigDecimal refundedAmount,
                               @JsonProperty("creditedAmount") final BigDecimal creditedAmount,
-                              @JsonProperty("currency") final String currency,
-                              @JsonProperty("paymentMethodId") final String paymentMethodId,
+                              @JsonProperty("currency") final Currency currency,
+                              @JsonProperty("paymentMethodId") final UUID paymentMethodId,
                               @JsonProperty("transactions") final List<? extends PaymentTransactionJson> transactions,
                               @JsonProperty("paymentAttempts") final List<PaymentAttemptJson> paymentAttempts,
                               @JsonProperty("auditLogs") @Nullable final List<AuditLogJson> auditLogs) {
@@ -61,11 +63,11 @@ public class InvoicePaymentJson extends PaymentJson {
     public InvoicePaymentJson(final Payment payment, @Nullable final UUID invoiceId, @Nullable final AccountAuditLogs accountAuditLogs) {
         super(payment, accountAuditLogs);
         //  TODO should build InvoicePaymentTransactionJson instead of PaymentTransactionJson here.
-        this.targetInvoiceId = invoiceId != null ? invoiceId.toString() : null;
+        this.targetInvoiceId = invoiceId;
     }
 
 
-        public String getTargetInvoiceId() {
+        public UUID getTargetInvoiceId() {
         return targetInvoiceId;
     }
 

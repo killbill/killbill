@@ -50,7 +50,6 @@ public class StandaloneCatalogWithPriceOverride extends StandaloneCatalog implem
         // Initialize from input catalog
         setCatalogName(catalog.getCatalogName());
         setEffectiveDate(catalog.getEffectiveDate());
-        setRecurringBillingMode(catalog.getRecurringBillingMode());
         setProducts(catalog.getCurrentProducts());
         setPlans(catalog.getCurrentPlans());
         setPriceLists(catalog.getPriceLists());
@@ -75,28 +74,12 @@ public class StandaloneCatalogWithPriceOverride extends StandaloneCatalog implem
         final Plan defaultPlan = super.createOrFindCurrentPlan(spec, null);
         if (overrides == null ||
             overrides.getOverrides() == null ||
-            overrides.getOverrides().isEmpty() ||
-            isOverrideUsedForPlanAlignmentTargetPhaseType(overrides)) {
+            overrides.getOverrides().isEmpty()) {
             return defaultPlan;
         }
 
         final InternalCallContext internalCallContext = overrides.getCallContext() != null ? internalCallContextFactory.createInternalCallContextWithoutAccountRecordId(overrides.getCallContext()) : null;
         return priceOverride.getOrCreateOverriddenPlan(this, defaultPlan, CatalogDateHelper.toUTCDateTime(getEffectiveDate()), overrides.getOverrides(), internalCallContext);
-    }
-
-    // This is a hack used to specify a target PhaseType when making a changePlan operation. Undocumented feature
-    private boolean isOverrideUsedForPlanAlignmentTargetPhaseType(final PlanPhasePriceOverridesWithCallContext overrides) {
-        if (overrides.getOverrides().size() != 1) {
-            return false;
-        }
-
-        final PlanPhasePriceOverride override = overrides.getOverrides().get(0);
-        return override.getCurrency() == null &&
-               override.getFixedPrice() == null &&
-               override.getRecurringPrice() == null &&
-               override.getPhaseName() == null &&
-               override.getPlanPhaseSpecifier() != null &&
-               override.getPlanPhaseSpecifier().getPhaseType() != null;
     }
 
     @Override

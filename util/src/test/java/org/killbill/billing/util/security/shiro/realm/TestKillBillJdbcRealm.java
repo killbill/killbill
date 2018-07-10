@@ -40,6 +40,7 @@ import org.testng.annotations.Test;
 
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 
 public class TestKillBillJdbcRealm extends UtilTestSuiteWithEmbeddedDB {
@@ -49,6 +50,10 @@ public class TestKillBillJdbcRealm extends UtilTestSuiteWithEmbeddedDB {
     @Override
     @BeforeMethod(groups = "slow")
     public void beforeMethod() throws Exception {
+        if (hasFailed()) {
+            return;
+        }
+
         super.beforeMethod();
         final KillBillJdbcRealm realm = new KillBillJdbcRealm(helper.getDataSource(), securityConfig);
         securityManager = new DefaultSecurityManager(realm);
@@ -57,14 +62,16 @@ public class TestKillBillJdbcRealm extends UtilTestSuiteWithEmbeddedDB {
 
     @AfterMethod(groups = "slow")
     public void afterMethod() throws Exception {
+        if (hasFailed()) {
+            return;
+        }
+
         super.afterMethod();
         ThreadContext.unbindSecurityManager();
-
     }
 
     @Test(groups = "slow")
     public void testAuthentication() throws SecurityApiException {
-
         final String username = "toto";
         final String password = "supperCompli43cated";
 
@@ -178,7 +185,36 @@ public class TestKillBillJdbcRealm extends UtilTestSuiteWithEmbeddedDB {
             Assert.fail("Subject should not have rights to create tag definitions");
         } catch (AuthorizationException e) {
         }
+    }
 
+    @Test(groups = "slow")
+    public void testUpdateRoleDefinition() throws SecurityApiException {
+
+        final String username = "siskiyou";
+        final String password = "siskiyou33";
+
+        securityApi.addRoleDefinition("original", ImmutableList.of("account:*", "invoice", "tag:create_tag_definition"), callContext);
+        securityApi.addUserRoles(username, password, ImmutableList.of("restricted"), callContext);
+
+        final AuthenticationToken goodToken = new UsernamePasswordToken(username, password);
+
+        final List<String> roleDefinition = securityApi.getRoleDefinition("original", callContext);
+        Assert.assertEquals(roleDefinition.size(), 3);
+        Assert.assertTrue(roleDefinition.contains("account:*"));
+        Assert.assertTrue(roleDefinition.contains("invoice:*"));
+        Assert.assertTrue(roleDefinition.contains("tag:create_tag_definition"));
+
+        securityApi.updateRoleDefinition("original", ImmutableList.of("account:*", "payment", "tag:create_tag_definition", "entitlement:create"), callContext);
+
+        final List<String> updatedRoleDefinition = securityApi.getRoleDefinition("original", callContext);
+        Assert.assertEquals(updatedRoleDefinition.size(), 4);
+        Assert.assertTrue(updatedRoleDefinition.contains("account:*"));
+        Assert.assertTrue(updatedRoleDefinition.contains("payment:*"));
+        Assert.assertTrue(updatedRoleDefinition.contains("tag:create_tag_definition"));
+        Assert.assertTrue(updatedRoleDefinition.contains("entitlement:create"));
+
+        securityApi.updateRoleDefinition("original", ImmutableList.<String>of(), callContext);
+        Assert.assertEquals(securityApi.getRoleDefinition("original", callContext).size(), 0);
     }
 
     private void testInvalidPermissionScenario(final List<String> permissions) {

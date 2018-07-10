@@ -14,6 +14,7 @@ tableFields(prefix) ::= <<
 , <prefix>parent_account_id
 , <prefix>is_payment_delegated_to_parent
 , <prefix>payment_method_id
+, <prefix>reference_time
 , <prefix>time_zone
 , <prefix>locale
 , <prefix>address1
@@ -26,7 +27,6 @@ tableFields(prefix) ::= <<
 , <prefix>phone
 , <prefix>notes
 , <prefix>migrated
-, <prefix>is_notified_for_invoices
 , <prefix>created_by
 , <prefix>created_date
 , <prefix>updated_by
@@ -43,6 +43,7 @@ tableValues() ::= <<
 , :parentAccountId
 , :isPaymentDelegatedToParent
 , :paymentMethodId
+, :referenceTime
 , :timeZone
 , :locale
 , :address1
@@ -55,7 +56,6 @@ tableValues() ::= <<
 , :phone
 , :notes
 , :migrated
-, :isNotifiedForInvoices
 , :createdBy
 , :createdDate
 , :updatedBy
@@ -87,7 +87,6 @@ update accounts set
 , postal_code = :postalCode
 , phone = :phone
 , notes = :notes
-, is_notified_for_invoices = :isNotifiedForInvoices
 , updated_date = :updatedDate
 , updated_by = :updatedBy
 where id = :id

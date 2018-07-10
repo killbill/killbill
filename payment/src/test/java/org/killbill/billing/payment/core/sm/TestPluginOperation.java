@@ -76,6 +76,9 @@ public class TestPluginOperation extends PaymentTestSuiteNoDB {
 
     @BeforeMethod(groups = "fast")
     public void beforeMethod() throws Exception {
+        if (hasFailed()) {
+            return;
+        }
         super.beforeMethod();
         Mockito.when(account.getId()).thenReturn(UUID.randomUUID());
     }
@@ -217,6 +220,7 @@ public class TestPluginOperation extends PaymentTestSuiteNoDB {
                                                                                 UUID.randomUUID(),
                                                                                 new BigDecimal("192.3920111"),
                                                                                 Currency.BRL,
+                                                                                null,
                                                                                 null,
                                                                                 null,
                                                                                 shouldLockAccount,

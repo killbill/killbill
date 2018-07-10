@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014 Groupon, Inc
- * Copyright 2014 The Billing Project, LLC
+ * Copyright 2014-2018 Groupon, Inc
+ * Copyright 2014-2018 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -19,9 +19,10 @@
 package org.killbill.billing.catalog;
 
 import org.killbill.billing.callcontext.InternalCallContext;
-import org.killbill.billing.catalog.api.Catalog;
 import org.killbill.billing.catalog.api.CatalogApiException;
+import org.killbill.billing.catalog.api.CatalogInternalApi;
 import org.killbill.billing.catalog.api.CatalogService;
+import org.killbill.billing.catalog.api.VersionedCatalog;
 import org.killbill.billing.platform.api.KillbillConfigSource;
 import org.killbill.billing.util.glue.KillBillModule;
 import org.mockito.Mockito;
@@ -34,14 +35,17 @@ public class MockCatalogModule extends KillBillModule {
 
     @Override
     protected void configure() {
-        final Catalog catalog = Mockito.mock(Catalog.class);
-
         final CatalogService catalogService = Mockito.mock(CatalogService.class);
+        final CatalogInternalApi catalogInternalApi = Mockito.mock(CatalogInternalApi.class);
         try {
-            Mockito.when(catalogService.getCurrentCatalog(Mockito.any(Boolean.class), Mockito.any(Boolean.class), Mockito.any(InternalCallContext.class))).thenReturn(new MockCatalog());
-            Mockito.when(catalogService.getFullCatalog(Mockito.any(Boolean.class), Mockito.any(Boolean.class), Mockito.any(InternalCallContext.class))).thenReturn(catalog);
+            final DefaultVersionedCatalog mockVersionedCatalog = new DefaultVersionedCatalog();
+            final MockCatalog mockCatalog = new MockCatalog();
+            mockVersionedCatalog.add(mockCatalog);
+            Mockito.when(catalogService.getFullCatalogForInternalUse(Mockito.any(Boolean.class), Mockito.any(Boolean.class), Mockito.any(InternalCallContext.class))).thenReturn(mockVersionedCatalog);
+            Mockito.when(catalogService.getFullCatalog(Mockito.any(Boolean.class), Mockito.any(Boolean.class), Mockito.any(InternalCallContext.class))).thenReturn(mockVersionedCatalog);
             bind(CatalogService.class).toInstance(catalogService);
-        } catch (CatalogApiException e) {
+            bind(CatalogInternalApi.class).toInstance(catalogInternalApi);
+        } catch (final CatalogApiException e) {
             throw new RuntimeException(e);
         }
     }

@@ -1,6 +1,6 @@
 /*
- * Copyright 2014-2017 Groupon, Inc
- * Copyright 2014-2017 The Billing Project, LLC
+ * Copyright 2014-2018 Groupon, Inc
+ * Copyright 2014-2018 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -21,12 +21,13 @@ import java.util.List;
 
 import javax.inject.Inject;
 
+import org.joda.time.DateTime;
 import org.killbill.billing.ErrorCode;
 import org.killbill.billing.ObjectType;
 import org.killbill.billing.callcontext.InternalTenantContext;
+import org.killbill.billing.catalog.DefaultVersionedCatalog;
 import org.killbill.billing.catalog.StandaloneCatalog;
 import org.killbill.billing.catalog.StandaloneCatalogWithPriceOverride;
-import org.killbill.billing.catalog.VersionedCatalog;
 import org.killbill.billing.catalog.api.Catalog;
 import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.catalog.io.VersionedCatalogLoader;
@@ -47,13 +48,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 
 public class EhCacheCatalogCache implements CatalogCache {
 
     private final Logger logger = LoggerFactory.getLogger(EhCacheCatalogCache.class);
 
-    private final CacheController<Long, Catalog> cacheController;
+    private final CacheController<Long, DefaultVersionedCatalog> cacheController;
     private final VersionedCatalogLoader loader;
     private final CacheLoaderArgument cacheLoaderArgumentWithTemplateFiltering;
     private final CacheLoaderArgument cacheLoaderArgument;
@@ -62,7 +64,7 @@ public class EhCacheCatalogCache implements CatalogCache {
     private final PriceOverride priceOverride;
     private final InternalCallContextFactory internalCallContextFactory;
 
-    private VersionedCatalog defaultCatalog;
+    private DefaultVersionedCatalog defaultCatalog;
 
     @Inject
     public EhCacheCatalogCache(final OSGIServiceRegistration<CatalogPluginApi> pluginRegistry,
@@ -90,10 +92,19 @@ public class EhCacheCatalogCache implements CatalogCache {
     }
 
     @Override
-    public VersionedCatalog getCatalog(final boolean useDefaultCatalog, final boolean filterTemplateCatalog, final InternalTenantContext tenantContext) throws CatalogApiException {
+    public DefaultVersionedCatalog getCatalog(final boolean useDefaultCatalog, final boolean filterTemplateCatalog, final boolean internalUse, final InternalTenantContext tenantContext) throws CatalogApiException {
 
-        // STEPH TODO what are the possibilities for caching here ?
-        final VersionedCatalog pluginVersionedCatalog = getCatalogFromPlugins(tenantContext);
+        //
+        // This is used by Kill Bill services (subscription/invoice/... creation/change)
+        //
+        // The goal is to ensure that on such operations any catalog plugin would also receive a TenantContext that contains both tenantId AND accountID (and could therefore run some optimization to return
+        // specific pieces of catalog for certain account). In such a scenario plugin would have to make sure that Kill Bill does not cache the catalog (since this is only cached at the tenant level)
+        //
+        if (internalUse) {
+            Preconditions.checkState(tenantContext.getAccountRecordId() != null, "Unexpected null accountRecordId in context issued from internal Kill Bill service");
+        }
+
+        final DefaultVersionedCatalog pluginVersionedCatalog = getCatalogFromPlugins(tenantContext);
         if (pluginVersionedCatalog != null) {
             return pluginVersionedCatalog;
         }
@@ -104,12 +115,12 @@ public class EhCacheCatalogCache implements CatalogCache {
         // The cache loader might choke on some bad xml -- unlikely since we check its validity prior storing it,
         // but to be on the safe side;;
         try {
-            VersionedCatalog tenantCatalog = (VersionedCatalog) cacheController.get(tenantContext.getTenantRecordId(),
-                                                                                    filterTemplateCatalog ? cacheLoaderArgumentWithTemplateFiltering : cacheLoaderArgument);
+            DefaultVersionedCatalog tenantCatalog = cacheController.get(tenantContext.getTenantRecordId(),
+                                                                        filterTemplateCatalog ? cacheLoaderArgumentWithTemplateFiltering : cacheLoaderArgument);
             // It means we are using a default catalog in a multi-tenant deployment, that does not really match a real use case, but we want to support it
             // for test purpose.
             if (useDefaultCatalog && tenantCatalog == null) {
-                tenantCatalog = new VersionedCatalog(defaultCatalog.getClock());
+                tenantCatalog = new DefaultVersionedCatalog(defaultCatalog.getClock());
                 for (final StandaloneCatalog cur : defaultCatalog.getVersions()) {
                     final StandaloneCatalogWithPriceOverride curWithOverride = new StandaloneCatalogWithPriceOverride(cur, priceOverride, tenantContext.getTenantRecordId(), internalCallContextFactory);
                     tenantCatalog.add(curWithOverride);
@@ -129,15 +140,39 @@ public class EhCacheCatalogCache implements CatalogCache {
         }
     }
 
-    private VersionedCatalog getCatalogFromPlugins(final InternalTenantContext internalTenantContext) throws CatalogApiException {
+    private DefaultVersionedCatalog getCatalogFromPlugins(final InternalTenantContext internalTenantContext) throws CatalogApiException {
         final TenantContext tenantContext = internalCallContextFactory.createTenantContext(internalTenantContext);
         for (final String service : pluginRegistry.getAllServices()) {
             final CatalogPluginApi plugin = pluginRegistry.getServiceForName(service);
+
+            //
+            // Beware plugin implementors:  latestCatalogUpdatedDate returned by the plugin should also match the effectiveDate of the VersionedCatalog.
+            //
+            // However, this is the plugin choice to return one, or many catalog versions (StandaloneCatalog), Kill Bill catalog module does not care.
+            // As a guideline, if plugin keeps seeing new Plans/Products, this can all fit into the same version; however if there is a true versioning
+            // (e.g deleted Plans...), then multiple versions must be returned.
+            //
+            final DateTime latestCatalogUpdatedDate = plugin.getLatestCatalogVersion(ImmutableList.<PluginProperty>of(), tenantContext);
+            // A null latestCatalogUpdatedDate by passing caching, by fetching full catalog from plugin below (compatibility mode with 0.18.x or non optimized plugin api mode)
+            //
+            if (latestCatalogUpdatedDate != null) {
+                final DefaultVersionedCatalog tenantCatalog = cacheController.get(internalTenantContext.getTenantRecordId(), cacheLoaderArgument);
+                if (tenantCatalog != null) {
+                    if (tenantCatalog.getEffectiveDate().compareTo(latestCatalogUpdatedDate.toDate()) == 0) {
+                        // Current cached version matches the one from the plugin
+                        return tenantCatalog;
+                    }
+                }
+            }
+
             final VersionedPluginCatalog pluginCatalog = plugin.getVersionedPluginCatalog(ImmutableList.<PluginProperty>of(), tenantContext);
             // First plugin that gets something (for that tenant) returns it
             if (pluginCatalog != null) {
                 logger.info("Returning catalog from plugin {} on tenant {} ", service, internalTenantContext.getTenantRecordId());
-                return versionedCatalogMapper.toVersionedCatalog(pluginCatalog, internalTenantContext);
+                final DefaultVersionedCatalog resolvedPluginCatalog = versionedCatalogMapper.toVersionedCatalog(pluginCatalog, internalTenantContext);
+                cacheController.remove(internalTenantContext.getTenantRecordId());
+                cacheController.putIfAbsent(internalTenantContext.getTenantRecordId(), resolvedPluginCatalog);
+                return resolvedPluginCatalog;
             }
         }
         return null;
@@ -168,7 +203,7 @@ public class EhCacheCatalogCache implements CatalogCache {
             // Provided in the classpath
             this.defaultCatalog = loader.loadDefaultCatalog("EmptyCatalog.xml");
         } catch (final CatalogApiException e) {
-            this.defaultCatalog = new VersionedCatalog();
+            this.defaultCatalog = new DefaultVersionedCatalog();
             logger.error("Exception loading EmptyCatalog - should never happen!", e);
         }
     }

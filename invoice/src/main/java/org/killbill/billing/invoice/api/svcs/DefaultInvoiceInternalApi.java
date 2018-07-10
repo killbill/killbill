@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014-2016 Groupon, Inc
- * Copyright 2014-2016 The Billing Project, LLC
+ * Copyright 2014-2018 Groupon, Inc
+ * Copyright 2014-2018 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -29,6 +29,7 @@ import javax.inject.Inject;
 import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
 import org.killbill.billing.ErrorCode;
+import org.killbill.billing.ObjectType;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.catalog.api.Currency;
@@ -36,7 +37,6 @@ import org.killbill.billing.invoice.api.Invoice;
 import org.killbill.billing.invoice.api.InvoiceApiException;
 import org.killbill.billing.invoice.api.InvoiceApiHelper;
 import org.killbill.billing.invoice.api.InvoiceInternalApi;
-import org.killbill.billing.invoice.api.InvoiceItem;
 import org.killbill.billing.invoice.api.InvoicePayment;
 import org.killbill.billing.invoice.api.InvoicePaymentType;
 import org.killbill.billing.invoice.api.InvoiceStatus;
@@ -46,8 +46,10 @@ import org.killbill.billing.invoice.dao.InvoiceModelDao;
 import org.killbill.billing.invoice.dao.InvoicePaymentModelDao;
 import org.killbill.billing.invoice.model.DefaultInvoice;
 import org.killbill.billing.invoice.model.DefaultInvoicePayment;
+import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
+import org.killbill.billing.util.callcontext.TenantContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -76,6 +78,10 @@ public class DefaultInvoiceInternalApi implements InvoiceInternalApi {
 
     @Override
     public Invoice getInvoiceById(final UUID invoiceId, final InternalTenantContext context) throws InvoiceApiException {
+        return getInvoiceByIdInternal(invoiceId, context);
+    }
+
+    private DefaultInvoice getInvoiceByIdInternal(final UUID invoiceId, final InternalTenantContext context) throws InvoiceApiException {
         return new DefaultInvoice(dao.getById(invoiceId, context));
     }
 
@@ -132,16 +138,15 @@ public class DefaultInvoiceInternalApi implements InvoiceInternalApi {
 
         // See https://github.com/killbill/killbill/issues/265
         final CallContext callContext = internalCallContextFactory.createCallContext(context);
-        final Invoice invoice = getInvoiceById(refund.getInvoiceId(), context);
+        final DefaultInvoice invoice = getInvoiceByIdInternal(refund.getInvoiceId(), context);
         final UUID accountId = invoice.getAccountId();
         final WithAccountLock withAccountLock = new WithAccountLock() {
             @Override
-            public Iterable<Invoice> prepareInvoices() throws InvoiceApiException {
-                return ImmutableList.<Invoice>of(invoice);
+            public Iterable<DefaultInvoice> prepareInvoices() throws InvoiceApiException {
+                return ImmutableList.<DefaultInvoice>of(invoice);
             }
         };
-        final List<InvoiceItem> createdInvoiceItems = invoiceApiHelper.dispatchToInvoicePluginsAndInsertItems(accountId, false, withAccountLock, callContext);
-
+        invoiceApiHelper.dispatchToInvoicePluginsAndInsertItems(accountId, false, withAccountLock, ImmutableList.<PluginProperty>of(), callContext);
         return new DefaultInvoicePayment(refund);
     }
 
@@ -177,7 +182,7 @@ public class DefaultInvoiceInternalApi implements InvoiceInternalApi {
             @Override
             public boolean apply(final InvoicePaymentModelDao input) {
                 return input.getType() == type &&
-                        input.getSuccess();
+                       input.getSuccess();
             }
         }).orNull();
         return resultOrNull != null ? new DefaultInvoicePayment(resultOrNull) : null;
@@ -186,5 +191,47 @@ public class DefaultInvoiceInternalApi implements InvoiceInternalApi {
     @Override
     public void commitInvoice(final UUID invoiceId, final InternalCallContext context) throws InvoiceApiException {
         dao.changeInvoiceStatus(invoiceId, InvoiceStatus.COMMITTED, context);
+    }
+
+    @Override
+    public List<InvoicePayment> getInvoicePayments(final UUID paymentId, final TenantContext context) {
+        return ImmutableList.<InvoicePayment>copyOf(Collections2.transform(dao.getInvoicePaymentsByPaymentId(paymentId, internalCallContextFactory.createInternalTenantContext(paymentId, ObjectType.PAYMENT, context)),
+                                                                           new Function<InvoicePaymentModelDao, InvoicePayment>() {
+                                                                               @Override
+                                                                               public InvoicePayment apply(final InvoicePaymentModelDao input) {
+                                                                                   return new DefaultInvoicePayment(input);
+                                                                               }
+                                                                           }
+                                                                          ));
+    }
+
+    @Override
+    public List<InvoicePayment> getInvoicePaymentsByAccount(final UUID accountId, final TenantContext context) {
+        return ImmutableList.<InvoicePayment>copyOf(Collections2.transform(dao.getInvoicePaymentsByAccount(internalCallContextFactory.createInternalTenantContext(accountId, ObjectType.ACCOUNT, context)),
+                                                                           new Function<InvoicePaymentModelDao, InvoicePayment>() {
+                                                                               @Override
+                                                                               public InvoicePayment apply(final InvoicePaymentModelDao input) {
+                                                                                   return new DefaultInvoicePayment(input);
+                                                                               }
+                                                                           }
+                                                                          ));
+    }
+
+    @Override
+    public List<InvoicePayment> getInvoicePaymentsByInvoice(final UUID invoiceId, final InternalTenantContext context) {
+        return ImmutableList.<InvoicePayment>copyOf(Collections2.transform(dao.getInvoicePaymentsByInvoice(invoiceId, context),
+                                                                           new Function<InvoicePaymentModelDao, InvoicePayment>() {
+                                                                               @Override
+                                                                               public InvoicePayment apply(final InvoicePaymentModelDao input) {
+                                                                                   return new DefaultInvoicePayment(input);
+                                                                               }
+                                                                           }
+                                                                          ));
+    }
+
+    @Override
+    public InvoicePayment getInvoicePaymentByCookieId(final String cookieId, final TenantContext context) {
+        final InvoicePaymentModelDao invoicePaymentModelDao = dao.getInvoicePaymentByCookieId(cookieId, internalCallContextFactory.createInternalTenantContext(context.getAccountId(), ObjectType.ACCOUNT, context));
+        return invoicePaymentModelDao == null ? null : new DefaultInvoicePayment(invoicePaymentModelDao);
     }
 }

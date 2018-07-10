@@ -45,6 +45,7 @@ public class ChargebackReversalControlOperation extends OperationControlCallback
                                                          paymentStateControlContext.getPaymentTransactionExternalKey(),
                                                          paymentStateControlContext.getAmount(),
                                                          paymentStateControlContext.getCurrency(),
+                                                         paymentStateControlContext.getEffectiveDate(),
                                                          paymentStateControlContext.getPaymentTransactionIdForNewPaymentTransaction(),
                                                          false,
                                                          paymentStateControlContext.getCallContext(),

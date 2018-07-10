@@ -1,7 +1,9 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
+ * Copyright 2014-2018 Groupon, Inc
+ * Copyright 2014-2018 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -17,15 +19,13 @@
 package org.killbill.billing.catalog;
 
 import org.killbill.billing.callcontext.InternalTenantContext;
-import org.killbill.billing.catalog.api.Catalog;
-import org.killbill.billing.catalog.api.StaticCatalog;
 import org.killbill.billing.util.cache.CacheControllerDispatcher;
 
 public class MockCatalogService extends DefaultCatalogService {
 
-    private final MockCatalog catalog;
+    private final DefaultVersionedCatalog catalog;
 
-    public MockCatalogService(final MockCatalog catalog, final CacheControllerDispatcher cacheControllerDispatcher) {
+    public MockCatalogService(final DefaultVersionedCatalog catalog, final CacheControllerDispatcher cacheControllerDispatcher) {
         super(null, null, null, null);
         this.catalog = catalog;
     }
@@ -40,13 +40,12 @@ public class MockCatalogService extends DefaultCatalogService {
     }
 
     @Override
-    public Catalog getFullCatalog(final boolean useDefaultCatalog, final boolean filterTemplateCatalog, InternalTenantContext context) {
+    public DefaultVersionedCatalog getFullCatalogForInternalUse(final boolean useDefaultCatalog, final boolean filterTemplateCatalog, InternalTenantContext context) {
         return catalog;
     }
 
     @Override
-    public StaticCatalog getCurrentCatalog(final boolean useDefaultCatalog, final boolean filterTemplateCatalog, InternalTenantContext context) {
+    public DefaultVersionedCatalog getFullCatalog(final boolean useDefaultCatalog, final boolean filterTemplateCatalog, InternalTenantContext context) {
         return catalog;
     }
-
 }

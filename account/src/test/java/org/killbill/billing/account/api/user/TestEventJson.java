@@ -20,6 +20,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
+import org.joda.time.DateTime;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
@@ -51,7 +52,7 @@ public class TestEventJson extends AccountTestSuiteNoDB {
     @Test(groups = "fast", description="Test Account event serialization")
     public void testAccountCreationEvent() throws Exception {
         final DefaultAccountData data = new DefaultAccountData("dsfdsf", "bobo", 3, "bobo@yahoo.com", 12, "USD", null, false, UUID.randomUUID(),
-                                                               "UTC", "US", "21 avenue", "", "Gling", "San Franciso", "CA", "94110", "USA", "4126789887", "notes", false, false);
+                                                               new DateTime().toString(), "UTC", "US", "21 avenue", "", "Gling", "San Franciso", "CA", "94110", "USA", "4126789887", "notes", false);
         final DefaultAccountCreationEvent e = new DefaultAccountCreationEvent(data, UUID.randomUUID(), 1L, 2L, null);
         final String json = mapper.writeValueAsString(e);
 

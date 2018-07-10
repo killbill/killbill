@@ -20,7 +20,6 @@ package org.killbill.billing.beatrix.integration;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -55,16 +54,17 @@ import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.catalog.api.PhaseType;
 import org.killbill.billing.catalog.api.PlanPhasePriceOverride;
 import org.killbill.billing.catalog.api.PlanPhaseSpecifier;
-import org.killbill.billing.catalog.api.PlanSpecifier;
 import org.killbill.billing.catalog.api.PriceListSet;
 import org.killbill.billing.catalog.api.ProductCategory;
 import org.killbill.billing.entitlement.api.BlockingState;
 import org.killbill.billing.entitlement.api.BlockingStateType;
 import org.killbill.billing.entitlement.api.DefaultEntitlement;
+import org.killbill.billing.entitlement.api.DefaultEntitlementSpecifier;
 import org.killbill.billing.entitlement.api.Entitlement;
 import org.killbill.billing.entitlement.api.Entitlement.EntitlementActionPolicy;
 import org.killbill.billing.entitlement.api.EntitlementApi;
 import org.killbill.billing.entitlement.api.EntitlementApiException;
+import org.killbill.billing.entitlement.api.EntitlementSpecifier;
 import org.killbill.billing.entitlement.api.SubscriptionApi;
 import org.killbill.billing.entitlement.api.SubscriptionEventType;
 import org.killbill.billing.invoice.ParkedAccountsManager;
@@ -73,7 +73,7 @@ import org.killbill.billing.invoice.api.DryRunType;
 import org.killbill.billing.invoice.api.Invoice;
 import org.killbill.billing.invoice.api.InvoiceApiException;
 import org.killbill.billing.invoice.api.InvoiceItem;
-import org.killbill.billing.invoice.api.InvoicePaymentApi;
+import org.killbill.billing.invoice.api.InvoicePayment;
 import org.killbill.billing.invoice.api.InvoiceService;
 import org.killbill.billing.invoice.api.InvoiceUserApi;
 import org.killbill.billing.junction.BlockingInternalApi;
@@ -90,6 +90,7 @@ import org.killbill.billing.overdue.listener.OverdueListener;
 import org.killbill.billing.overdue.wrapper.OverdueWrapper;
 import org.killbill.billing.overdue.wrapper.OverdueWrapperFactory;
 import org.killbill.billing.payment.api.AdminPaymentApi;
+import org.killbill.billing.payment.api.InvoicePaymentApi;
 import org.killbill.billing.payment.api.Payment;
 import org.killbill.billing.payment.api.PaymentApi;
 import org.killbill.billing.payment.api.PaymentApiException;
@@ -103,26 +104,34 @@ import org.killbill.billing.payment.api.TransactionType;
 import org.killbill.billing.payment.invoice.InvoicePaymentControlPluginApi;
 import org.killbill.billing.payment.provider.MockPaymentProviderPlugin;
 import org.killbill.billing.subscription.api.SubscriptionBase;
+import org.killbill.billing.subscription.api.SubscriptionBaseInternalApi;
 import org.killbill.billing.subscription.api.SubscriptionBaseService;
 import org.killbill.billing.subscription.api.timeline.SubscriptionBaseTimelineApi;
 import org.killbill.billing.subscription.api.transfer.SubscriptionBaseTransferApi;
 import org.killbill.billing.subscription.api.user.DefaultSubscriptionBase;
 import org.killbill.billing.tenant.api.TenantUserApi;
+import org.killbill.billing.usage.api.SubscriptionUsageRecord;
+import org.killbill.billing.usage.api.UnitUsageRecord;
+import org.killbill.billing.usage.api.UsageApiException;
+import org.killbill.billing.usage.api.UsageRecord;
 import org.killbill.billing.usage.api.UsageUserApi;
 import org.killbill.billing.util.api.RecordIdApi;
 import org.killbill.billing.util.api.TagApiException;
 import org.killbill.billing.util.api.TagDefinitionApiException;
 import org.killbill.billing.util.api.TagUserApi;
 import org.killbill.billing.util.cache.CacheControllerDispatcher;
+import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.config.definition.InvoiceConfig;
 import org.killbill.billing.util.config.definition.PaymentConfig;
 import org.killbill.billing.util.dao.NonEntityDao;
 import org.killbill.billing.util.nodes.KillbillNodesApi;
 import org.killbill.billing.util.tag.ControlTagType;
-import org.killbill.billing.util.tag.Tag;
 import org.killbill.bus.api.PersistentBus;
+import org.killbill.bus.api.PersistentBus.EventBusException;
 import org.skife.config.ConfigurationObjectFactory;
 import org.skife.config.TimeSpan;
+import org.skife.jdbi.v2.Handle;
+import org.skife.jdbi.v2.tweak.HandleCallback;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
@@ -224,6 +233,8 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
     @Inject
     protected SubscriptionApi subscriptionApi;
 
+    @Inject
+    protected SubscriptionBaseInternalApi subscriptionBaseInternalApiApi;
 
     @Named(BeatrixIntegrationModule.NON_OSGI_PLUGIN_NAME)
     @Inject
@@ -305,6 +316,11 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
 
     @BeforeClass(groups = "slow")
     public void beforeClass() throws Exception {
+        if (hasFailed()) {
+            return;
+        }
+
+
         final InvoiceConfig defaultInvoiceConfig = new ConfigurationObjectFactory(skifeConfigSource).build(InvoiceConfig.class);
         invoiceConfig = new ConfigurableInvoiceConfig(defaultInvoiceConfig);
         final Injector g = Guice.createInjector(Stage.PRODUCTION, new BeatrixIntegrationModule(configSource, invoiceConfig));
@@ -313,6 +329,10 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
 
     @BeforeMethod(groups = "slow")
     public void beforeMethod() throws Exception {
+        if (hasFailed()) {
+            return;
+        }
+
         super.beforeMethod();
 
         log.debug("beforeMethod callcontext classLoader = " + (Thread.currentThread().getContextClassLoader() != null ? Thread.currentThread().getContextClassLoader().toString() : "null"));
@@ -329,14 +349,22 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
 
         // Start services
         lifecycle.fireStartupSequencePriorEventRegistration();
-        busService.getBus().register(busHandler);
+        registerHandlers();
         lifecycle.fireStartupSequencePostEventRegistration();
 
         paymentPlugin.clear();
     }
 
+    protected void registerHandlers() throws EventBusException {
+        busService.getBus().register(busHandler);
+    }
+
     @AfterMethod(groups = "slow")
     public void afterMethod() throws Exception {
+        if (hasFailed()) {
+            return;
+        }
+
         lifecycle.fireShutdownSequencePriorEventUnRegistration();
         busService.getBus().unregister(busHandler);
         lifecycle.fireShutdownSequencePostEventUnRegistration();
@@ -349,7 +377,7 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
     protected void checkNoMoreInvoiceToGenerate(final Account account) {
         busHandler.pushExpectedEvent(NextEvent.NULL_INVOICE);
         try {
-            invoiceUserApi.triggerInvoiceGeneration(account.getId(), clock.getUTCToday(), null, callContext);
+            invoiceUserApi.triggerInvoiceGeneration(account.getId(), clock.getUTCToday(), callContext);
             fail("Should not have generated an extra invoice");
         } catch (final InvoiceApiException e) {
             assertListenerStatus();
@@ -430,9 +458,9 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
                 .email(UUID.randomUUID().toString().substring(1, 8))
                 .phone(UUID.randomUUID().toString().substring(1, 8))
                 .migrated(false)
-                .isNotifiedForInvoices(false)
                 .externalKey(UUID.randomUUID().toString().substring(1, 8))
                 .currency(Currency.USD)
+                .referenceTime(clock.getUTCNow())
                 .timeZone(DateTimeZone.UTC);
         if (billingDay != null) {
             builder.billingCycleDayLocal(billingDay);
@@ -446,11 +474,11 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
                                        .email(UUID.randomUUID().toString().substring(1, 8))
                                        .phone(UUID.randomUUID().toString().substring(1, 8))
                                        .migrated(false)
-                                       .isNotifiedForInvoices(false)
                                        .externalKey(UUID.randomUUID().toString().substring(1, 8))
                                        .billingCycleDayLocal(billingDay)
                                        .currency(Currency.USD)
                                        .paymentMethodId(UUID.randomUUID())
+                                       .referenceTime(clock.getUTCNow())
                                        .timeZone(DateTimeZone.UTC)
                                        .parentAccountId(parentAccountId)
                                        .isPaymentDelegatedToParent(isPaymentDelegatedToParent)
@@ -498,11 +526,19 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
             @Override
             public Payment apply(@Nullable final Void input) {
                 try {
-                    final List<PluginProperty> properties = new ArrayList<PluginProperty>();
-                    final PluginProperty prop1 = new PluginProperty(InvoicePaymentControlPluginApi.PROP_IPCD_INVOICE_ID, invoice.getId().toString(), false);
-                    properties.add(prop1);
-                    return paymentApi.createPurchaseWithPaymentControl(account, account.getPaymentMethodId(), null, amount, currency, UUID.randomUUID().toString(),
-                                                                       UUID.randomUUID().toString(), properties, PAYMENT_OPTIONS, callContext);
+                    final InvoicePayment invoicePayment = invoicePaymentApi.createPurchaseForInvoicePayment(account,
+                                                                                                            invoice.getId(),
+                                                                                                            account.getPaymentMethodId(),
+                                                                                                            null,
+                                                                                                            amount,
+                                                                                                            currency,
+                                                                                                            null,
+                                                                                                            UUID.randomUUID().toString(),
+                                                                                                            UUID.randomUUID().toString(),
+                                                                                                            ImmutableList.<PluginProperty>of(),
+                                                                                                            PAYMENT_OPTIONS,
+                                                                                                            callContext);
+                    return paymentApi.getPayment(invoicePayment.getPaymentId(), false, false, ImmutableList.<PluginProperty>of(), callContext);
                 } catch (final PaymentApiException e) {
                     fail(e.toString());
                     return null;
@@ -512,22 +548,7 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
     }
 
     protected Payment createPaymentAndCheckForCompletion(final Account account, final Invoice invoice, final NextEvent... events) {
-        return doCallAndCheckForCompletion(new Function<Void, Payment>() {
-            @Override
-            public Payment apply(@Nullable final Void input) {
-                try {
-                    final List<PluginProperty> properties = new ArrayList<PluginProperty>();
-                    final PluginProperty prop1 = new PluginProperty(InvoicePaymentControlPluginApi.PROP_IPCD_INVOICE_ID, invoice.getId().toString(), false);
-                    properties.add(prop1);
-
-                    return paymentApi.createPurchaseWithPaymentControl(account, account.getPaymentMethodId(), null, invoice.getBalance(), invoice.getCurrency(), UUID.randomUUID().toString(),
-                                                                       UUID.randomUUID().toString(), properties, PAYMENT_OPTIONS, callContext);
-                } catch (final PaymentApiException e) {
-                    fail(e.toString());
-                    return null;
-                }
-            }
-        }, events);
+        return createPaymentAndCheckForCompletion(account, invoice, invoice.getBalance(), invoice.getCurrency(), events);
     }
 
     protected Payment createExternalPaymentAndCheckForCompletion(final Account account, final Invoice invoice, final NextEvent... events) {
@@ -535,13 +556,19 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
             @Override
             public Payment apply(@Nullable final Void input) {
                 try {
-
-                    final List<PluginProperty> properties = new ArrayList<PluginProperty>();
-                    final PluginProperty prop1 = new PluginProperty(InvoicePaymentControlPluginApi.PROP_IPCD_INVOICE_ID, invoice.getId().toString(), false);
-                    properties.add(prop1);
-
-                    return paymentApi.createPurchaseWithPaymentControl(account, account.getPaymentMethodId(), null, invoice.getBalance(), invoice.getCurrency(), UUID.randomUUID().toString(),
-                                                                       UUID.randomUUID().toString(), properties, EXTERNAL_PAYMENT_OPTIONS, callContext);
+                    final InvoicePayment invoicePayment = invoicePaymentApi.createPurchaseForInvoicePayment(account,
+                                                                                                            invoice.getId(),
+                                                                                                            account.getPaymentMethodId(),
+                                                                                                            null,
+                                                                                                            invoice.getBalance(),
+                                                                                                            invoice.getCurrency(),
+                                                                                                            null,
+                                                                                                            UUID.randomUUID().toString(),
+                                                                                                            UUID.randomUUID().toString(),
+                                                                                                            ImmutableList.<PluginProperty>of(),
+                                                                                                            EXTERNAL_PAYMENT_OPTIONS,
+                                                                                                            callContext);
+                    return paymentApi.getPayment(invoicePayment.getPaymentId(), false, false, ImmutableList.<PluginProperty>of(), callContext);
                 } catch (final PaymentApiException e) {
                     fail(e.toString());
                     return null;
@@ -559,7 +586,7 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
             @Override
             public Payment apply(@Nullable final Void input) {
                 try {
-                    return paymentApi.createRefundWithPaymentControl(account, payment.getId(), amount, currency, UUID.randomUUID().toString(),
+                    return paymentApi.createRefundWithPaymentControl(account, payment.getId(), amount, currency, null, UUID.randomUUID().toString(),
                                                                      PLUGIN_PROPERTIES, PAYMENT_OPTIONS, callContext);
                 } catch (final PaymentApiException e) {
                     fail(e.toString());
@@ -578,15 +605,10 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
         return doCallAndCheckForCompletion(new Function<Void, Payment>() {
             @Override
             public Payment apply(@Nullable final Void input) {
-                final Collection<PluginProperty> properties = new ArrayList<PluginProperty>();
-                final PluginProperty prop1 = new PluginProperty(InvoicePaymentControlPluginApi.PROP_IPCD_REFUND_WITH_ADJUSTMENTS, "true", false);
-                properties.add(prop1);
-                final PluginProperty prop2 = new PluginProperty(InvoicePaymentControlPluginApi.PROP_IPCD_REFUND_IDS_WITH_AMOUNT_KEY, iias, false);
-                properties.add(prop2);
-
                 try {
-                    return paymentApi.createRefundWithPaymentControl(account, payment.getId(), amount, currency, UUID.randomUUID().toString(),
-                                                                     properties, PAYMENT_OPTIONS, callContext);
+                    final InvoicePayment invoicePayment = invoicePaymentApi.createRefundForInvoicePayment(true, iias, account, payment.getId(), amount, currency, null, UUID.randomUUID().toString(),
+                                                                                                          ImmutableList.<PluginProperty>of(), PAYMENT_OPTIONS, callContext);
+                    return paymentApi.getPayment(invoicePayment.getPaymentId(), false, false, ImmutableList.<PluginProperty>of(), callContext);
                 } catch (final PaymentApiException e) {
                     fail(e.toString());
                     return null;
@@ -604,7 +626,7 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
             @Override
             public Payment apply(@Nullable final Void input) {
                 try {
-                    return paymentApi.createChargebackWithPaymentControl(account, payment.getId(), amount, currency, UUID.randomUUID().toString(),
+                    return paymentApi.createChargebackWithPaymentControl(account, payment.getId(), amount, currency, null, UUID.randomUUID().toString(),
                                                                          PAYMENT_OPTIONS, callContext);
                 } catch (final PaymentApiException e) {
                     fail(e.toString());
@@ -631,7 +653,7 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
             @Override
             public Payment apply(@Nullable final Void input) {
                 try {
-                    return paymentApi.createChargebackReversalWithPaymentControl(account, payment.getId(), chargebackTransactionExternalKey, PAYMENT_OPTIONS, callContext);
+                    return paymentApi.createChargebackReversalWithPaymentControl(account, payment.getId(), null, chargebackTransactionExternalKey, PAYMENT_OPTIONS, callContext);
                 } catch (final PaymentApiException e) {
                     fail(e.toString());
                     return null;
@@ -647,6 +669,26 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
                                                                                              final BillingPeriod billingPeriod,
                                                                                              final List<PlanPhasePriceOverride> overrides,
                                                                                              final NextEvent... events) {
+        return createBaseEntitlementWithPriceOverrideAndCheckForCompletion(accountId,
+                                                                           bundleExternalKey,
+                                                                           productName,
+                                                                           productCategory,
+                                                                           billingPeriod,
+                                                                           overrides,
+                                                                           null,
+                                                                           PriceListSet.DEFAULT_PRICELIST_NAME,
+                                                                           events);
+    }
+
+    protected DefaultEntitlement createBaseEntitlementWithPriceOverrideAndCheckForCompletion(final UUID accountId,
+                                                                                             final String bundleExternalKey,
+                                                                                             final String productName,
+                                                                                             final ProductCategory productCategory,
+                                                                                             final BillingPeriod billingPeriod,
+                                                                                             final List<PlanPhasePriceOverride> overrides,
+                                                                                             final LocalDate billingEffectiveDate,
+                                                                                             final String priceList,
+                                                                                             final NextEvent... events) {
         if (productCategory == ProductCategory.ADD_ON) {
             throw new RuntimeException("Unxepected Call for creating ADD_ON");
         }
@@ -655,10 +697,10 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
             @Override
             public Entitlement apply(@Nullable final Void dontcare) {
                 try {
-                    final PlanPhaseSpecifier spec = new PlanPhaseSpecifier(productName, billingPeriod, PriceListSet.DEFAULT_PRICELIST_NAME, null);
-                    final Entitlement entitlement = entitlementApi.createBaseEntitlement(accountId, spec, bundleExternalKey, overrides, null, null, false, ImmutableList.<PluginProperty>of(), callContext);
-                    assertNotNull(entitlement);
-                    return entitlement;
+                    final PlanPhaseSpecifier spec = new PlanPhaseSpecifier(productName, billingPeriod, priceList, null);
+                    final UUID entitlementId = entitlementApi.createBaseEntitlement(accountId, new DefaultEntitlementSpecifier(spec, null, overrides), bundleExternalKey, null, billingEffectiveDate, false, true, ImmutableList.<PluginProperty>of(), callContext);
+                    assertNotNull(entitlementId);
+                    return entitlementApi.getEntitlementForId(entitlementId, callContext);
                 } catch (final EntitlementApiException e) {
                     fail("Unable to create entitlement", e);
                     return null;
@@ -690,9 +732,9 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
             public Entitlement apply(@Nullable final Void dontcare) {
                 try {
                     final PlanPhaseSpecifier spec = new PlanPhaseSpecifier(productName, billingPeriod, PriceListSet.DEFAULT_PRICELIST_NAME, null);
-                    final Entitlement entitlement = entitlementApi.addEntitlement(bundleId, spec, null, null, null, false, ImmutableList.<PluginProperty>of(), callContext);
-                    assertNotNull(entitlement);
-                    return entitlement;
+                    final UUID entitlementId = entitlementApi.addEntitlement(bundleId, new DefaultEntitlementSpecifier(spec), null, null, false, ImmutableList.<PluginProperty>of(), callContext);
+                    assertNotNull(entitlementId);
+                    return entitlementApi.getEntitlementForId(entitlementId, callContext);
                 } catch (final EntitlementApiException e) {
                     fail(e.getMessage());
                     return null;
@@ -713,10 +755,11 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
                 try {
                     // Need to fetch again to get latest CTD updated from the system
                     Entitlement refreshedEntitlement = entitlementApi.getEntitlementForId(entitlement.getId(), callContext);
+                    final PlanPhaseSpecifier spec = new PlanPhaseSpecifier(productName, billingPeriod, priceList);
                     if (billingPolicy == null) {
-                        refreshedEntitlement = refreshedEntitlement.changePlan(new PlanSpecifier(productName, billingPeriod, priceList), null, ImmutableList.<PluginProperty>of(), callContext);
+                        refreshedEntitlement = refreshedEntitlement.changePlan(new DefaultEntitlementSpecifier(spec), ImmutableList.<PluginProperty>of(), callContext);
                     } else {
-                        refreshedEntitlement = refreshedEntitlement.changePlanOverrideBillingPolicy(new PlanSpecifier(productName, billingPeriod, priceList), null, null, billingPolicy, ImmutableList.<PluginProperty>of(), callContext);
+                        refreshedEntitlement = refreshedEntitlement.changePlanOverrideBillingPolicy(new DefaultEntitlementSpecifier(spec), null, billingPolicy, ImmutableList.<PluginProperty>of(), callContext);
                     }
                     return refreshedEntitlement;
                 } catch (final EntitlementApiException e) {
@@ -790,6 +833,8 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
                                                                    invoiceItem.getId(),
                                                                    invoice.getInvoiceDate(),
                                                                    null,
+                                                                   null,
+                                                                   null,
                                                                    callContext);
                     }
 
@@ -807,7 +852,7 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
             public Void apply(@Nullable final Void input) {
                 try {
                     invoiceUserApi.insertInvoiceItemAdjustment(account.getId(), invoice.getId(), invoice.getInvoiceItems().get(itemNb - 1).getId(),
-                                                               invoice.getInvoiceDate(), null, callContext);
+                                                               invoice.getInvoiceDate(), null, null, null, callContext);
                 } catch (final InvoiceApiException e) {
                     fail(e.toString());
                 }
@@ -817,18 +862,46 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
     }
 
     protected void add_AUTO_PAY_OFF_Tag(final UUID id, final ObjectType type) throws TagDefinitionApiException, TagApiException {
-        busHandler.pushExpectedEvent(NextEvent.TAG);
-        tagUserApi.addTag(id, type, ControlTagType.AUTO_PAY_OFF.getId(), callContext);
-        assertListenerStatus();
+        add_account_Tag(id, ControlTagType.AUTO_PAY_OFF, type);
+    }
 
-        final List<Tag> tags = tagUserApi.getTagsForObject(id, type, false, callContext);
-        assertEquals(tags.size(), 1);
+    protected void add_AUTO_INVOICING_OFF_Tag(final UUID id, final ObjectType type) throws TagDefinitionApiException, TagApiException {
+        add_account_Tag(id, ControlTagType.AUTO_INVOICING_OFF, type);
+    }
+
+    protected void add_AUTO_INVOICING_DRAFT_Tag(final UUID id, final ObjectType type) throws TagDefinitionApiException, TagApiException {
+        add_account_Tag(id, ControlTagType.AUTO_INVOICING_DRAFT, type);
+    }
+
+    protected void add_AUTO_INVOICING_REUSE_DRAFT_Tag(final UUID id, final ObjectType type) throws TagDefinitionApiException, TagApiException {
+        add_account_Tag(id, ControlTagType.AUTO_INVOICING_REUSE_DRAFT, type);
+    }
+
+    private void add_account_Tag(final UUID id, final ControlTagType controlTagType, final ObjectType type) throws TagDefinitionApiException, TagApiException {
+        busHandler.pushExpectedEvent(NextEvent.TAG);
+        tagUserApi.addTag(id, type, controlTagType.getId(), callContext);
+        assertListenerStatus();
+        tagUserApi.getTagsForObject(id, type, false, callContext);
     }
 
     protected void remove_AUTO_PAY_OFF_Tag(final UUID id, final ObjectType type, final NextEvent... additionalEvents) throws TagDefinitionApiException, TagApiException {
+        remove_account_Tag(id, ControlTagType.AUTO_PAY_OFF, type, additionalEvents);
+    }
+
+
+    protected void remove_AUTO_INVOICING_OFF_Tag(final UUID id, final ObjectType type, final NextEvent... additionalEvents) throws TagDefinitionApiException, TagApiException {
+        remove_account_Tag(id, ControlTagType.AUTO_INVOICING_OFF, type, additionalEvents);
+    }
+
+    protected void remove_AUTO_INVOICING_DRAFT_Tag(final UUID id, final ObjectType type, final NextEvent... additionalEvents) throws TagDefinitionApiException, TagApiException {
+        remove_account_Tag(id, ControlTagType.AUTO_INVOICING_DRAFT, type, additionalEvents);
+    }
+
+
+    private  void remove_account_Tag(final UUID id, final ControlTagType controlTagType, final ObjectType type, final NextEvent... additionalEvents) throws TagDefinitionApiException, TagApiException {
         busHandler.pushExpectedEvent(NextEvent.TAG);
         busHandler.pushExpectedEvents(additionalEvents);
-        tagUserApi.removeTag(id, type, ControlTagType.AUTO_PAY_OFF.getId(), callContext);
+        tagUserApi.removeTag(id, type, controlTagType.getId(), callContext);
         assertListenerStatus();
     }
 
@@ -845,10 +918,32 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
         return result;
     }
 
+    protected void recordUsageData(final UUID subscriptionId, final String unitType, final LocalDate startDate, final Long amount, final CallContext context) throws UsageApiException {
+        final List<UsageRecord> usageRecords = new ArrayList<UsageRecord>();
+        usageRecords.add(new UsageRecord(startDate, amount));
+        final List<UnitUsageRecord> unitUsageRecords = new ArrayList<UnitUsageRecord>();
+        unitUsageRecords.add(new UnitUsageRecord(unitType, usageRecords));
+        final SubscriptionUsageRecord record = new SubscriptionUsageRecord(subscriptionId, UUID.randomUUID().toString(), unitUsageRecords);
+        usageUserApi.recordRolledUpUsage(record, context);
+    }
+
+
+    protected void removeUsageData(final UUID subscriptionId, final String unitType, final LocalDate recordedDate) {
+        dbi.withHandle(new HandleCallback<Void>() {
+            @Override
+            public Void withHandle(final Handle handle) throws Exception {
+                handle.execute("delete from rolled_up_usage where subscription_id = ? and unit_type = ? and record_date = ?",
+                               subscriptionId, unitType, recordedDate);
+                return null;
+            }
+        });
+    }
+
+
     protected static class TestDryRunArguments implements DryRunArguments {
 
         private final DryRunType dryRunType;
-        private final PlanPhaseSpecifier spec;
+        private final EntitlementSpecifier spec;
         private final SubscriptionEventType action;
         private final UUID subscriptionId;
         private final UUID bundleId;
@@ -877,7 +972,7 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
                                    final LocalDate effectiveDate,
                                    final BillingActionPolicy billingPolicy) {
             this.dryRunType = dryRunType;
-            this.spec = new PlanPhaseSpecifier(productName, billingPeriod, priceList, phaseType);
+            this.spec = new DefaultEntitlementSpecifier(new PlanPhaseSpecifier(productName, billingPeriod, priceList, phaseType));
             this.action = action;
             this.subscriptionId = subscriptionId;
             this.bundleId = bundleId;
@@ -891,7 +986,7 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
         }
 
         @Override
-        public PlanPhaseSpecifier getPlanPhaseSpecifier() {
+        public EntitlementSpecifier getEntitlementSpecifier() {
             return spec;
         }
 
@@ -919,11 +1014,6 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
         public BillingActionPolicy getBillingActionPolicy() {
             return billingPolicy;
         }
-
-        @Override
-        public List<PlanPhasePriceOverride> getPlanPhasePriceOverrides() {
-            return null;
-        }
     }
 
     private class TestPaymentMethodPlugin extends TestPaymentMethodPluginBase {
@@ -940,7 +1030,6 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
     static class ConfigurableInvoiceConfig implements InvoiceConfig {
 
         private final InvoiceConfig defaultInvoiceConfig;
-
         private boolean isInvoicingSystemEnabled;
 
         public ConfigurableInvoiceConfig(final InvoiceConfig defaultInvoiceConfig) {
@@ -1004,6 +1093,16 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
         }
 
         @Override
+        public List<String> getInvoicePluginNames() {
+            return defaultInvoiceConfig.getInvoicePluginNames();
+        }
+
+        @Override
+        public List<String> getInvoicePluginNames(final InternalTenantContext tenantContext) {
+            return defaultInvoiceConfig.getInvoicePluginNames();
+        }
+
+        @Override
         public boolean isEmailNotificationsEnabled() {
             return defaultInvoiceConfig.isEmailNotificationsEnabled();
         }
@@ -1014,8 +1113,28 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
         }
 
         @Override
+        public String getParentAutoCommitUtcTime() {
+            return defaultInvoiceConfig.getParentAutoCommitUtcTime();
+        }
+
+        @Override
+        public String getParentAutoCommitUtcTime(final InternalTenantContext tenantContext) {
+            return defaultInvoiceConfig.getParentAutoCommitUtcTime();
+        }
+
+        @Override
         public boolean isInvoicingSystemEnabled(final InternalTenantContext tenantContext) {
             return isInvoicingSystemEnabled();
+        }
+
+        @Override
+        public UsageDetailMode getItemResultBehaviorMode() {
+            return defaultInvoiceConfig.getItemResultBehaviorMode();
+        }
+
+        @Override
+        public UsageDetailMode getItemResultBehaviorMode(final InternalTenantContext tenantContext) {
+            return getItemResultBehaviorMode();
         }
 
         public void setInvoicingSystemEnabled(final boolean invoicingSystemEnabled) {

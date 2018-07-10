@@ -55,6 +55,17 @@ getInvoiceIdByPaymentId() ::= <<
    <AND_CHECK_TENANT("ip.")>
 >>
 
+
+getInvoiceByInvoiceItemId() ::= <<
+  SELECT <allTableFields(("i."))>
+  FROM <tableName()> i
+  INNER JOIN invoice_items items ON items.invoice_id = i.id
+  WHERE items.id = :invoiceItemId
+  <AND_CHECK_TENANT("i.")>
+  <AND_CHECK_TENANT("items.")>
+  ;
+>>
+
 updateStatus() ::= <<
     UPDATE <tableName()>
     SET status = :status
@@ -70,6 +81,7 @@ getParentDraftInvoice() ::= <<
    <AND_CHECK_TENANT("")>
    <defaultOrderBy("")>
 >>
+
 
 getByIds(ids) ::= <<
 select

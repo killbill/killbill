@@ -17,16 +17,15 @@
 package org.killbill.billing.util.customfield.api;
 
 import java.util.Collection;
-import java.util.HashMap;
-import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 
-import org.killbill.billing.ErrorCode;
 import org.killbill.billing.ObjectType;
+import org.killbill.billing.callcontext.InternalCallContext;
+import org.killbill.billing.util.api.AuditLevel;
 import org.killbill.billing.util.api.CustomFieldApiException;
 import org.killbill.billing.util.api.CustomFieldUserApi;
+import org.killbill.billing.util.audit.AuditLogWithHistory;
 import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.billing.util.callcontext.TenantContext;
@@ -34,6 +33,7 @@ import org.killbill.billing.util.customfield.CustomField;
 import org.killbill.billing.util.customfield.StringCustomField;
 import org.killbill.billing.util.customfield.dao.CustomFieldDao;
 import org.killbill.billing.util.customfield.dao.CustomFieldModelDao;
+import org.killbill.billing.util.customfield.dao.DefaultCustomFieldDao;
 import org.killbill.billing.util.entity.Pagination;
 import org.killbill.billing.util.entity.dao.DefaultPaginationHelper.SourcePaginationBuilder;
 
@@ -89,45 +89,50 @@ public class DefaultCustomFieldUserApi implements CustomFieldUserApi {
 
     @Override
     public void addCustomFields(final List<CustomField> customFields, final CallContext context) throws CustomFieldApiException {
-        // TODO make it transactional
-
-        final Map<UUID, ObjectType> mapping = new HashMap<UUID, ObjectType>();
-        for (final CustomField cur : customFields) {
-            mapping.put(cur.getObjectId(), cur.getObjectType());
-        }
-
-        final List<CustomFieldModelDao> all = new LinkedList<CustomFieldModelDao>();
-        for (UUID cur : mapping.keySet()) {
-            final ObjectType type = mapping.get(cur);
-            all.addAll(customFieldDao.getCustomFieldsForObject(cur, type, internalCallContextFactory.createInternalCallContext(cur, type, context)));
-        }
-        final List<CustomField> toBeInserted = new LinkedList<CustomField>();
-        for (final CustomField cur : customFields) {
-            final CustomFieldModelDao match = Iterables.tryFind(all, new com.google.common.base.Predicate<CustomFieldModelDao>() {
+        if (!customFields.isEmpty()) {
+            final InternalCallContext internalCallContext = internalCallContextFactory.createInternalCallContext(customFields.get(0).getObjectId(), customFields.get(0).getObjectType(), context);
+            final Iterable<CustomFieldModelDao> transformed = Iterables.transform(customFields, new Function<CustomField, CustomFieldModelDao>() {
                 @Override
-                public boolean apply(final CustomFieldModelDao input) {
-                    return input.getObjectId().equals(cur.getObjectId()) &&
-                           input.getObjectType() == cur.getObjectType() &&
-                           input.getFieldName().equals(cur.getFieldName());
-
+                public CustomFieldModelDao apply(final CustomField input) {
+                    // Respect user-specified ID
+                    // TODO See https://github.com/killbill/killbill/issues/35
+                    if (input.getId() != null) {
+                        return new CustomFieldModelDao(input.getId(), context.getCreatedDate(), context.getCreatedDate(), input.getFieldName(), input.getFieldValue(), input.getObjectId(), input.getObjectType());
+                    } else {
+                        return new CustomFieldModelDao(context.getCreatedDate(), input.getFieldName(), input.getFieldValue(), input.getObjectId(), input.getObjectType());
+                    }
                 }
-            }).orNull();
-            if (match != null) {
-                throw new CustomFieldApiException(ErrorCode.CUSTOM_FIELD_ALREADY_EXISTS, match.getId());
-            }
-            toBeInserted.add(cur);
+            });
+            ((DefaultCustomFieldDao) customFieldDao).create(transformed, internalCallContext);
         }
+    }
 
-        for (CustomField cur : toBeInserted) {
-            customFieldDao.create(new CustomFieldModelDao(context.getCreatedDate(), cur.getFieldName(), cur.getFieldValue(), cur.getObjectId(), cur.getObjectType()), internalCallContextFactory.createInternalCallContext(cur.getObjectId(), cur.getObjectType(), context));
+    @Override
+    public void updateCustomFields(final List<CustomField> customFields, final CallContext context) throws CustomFieldApiException {
+        if (!customFields.isEmpty()) {
+            final InternalCallContext internalCallContext = internalCallContextFactory.createInternalCallContext(customFields.get(0).getObjectId(), customFields.get(0).getObjectType(), context);
+            final Iterable<CustomFieldModelDao> customFieldIds = Iterables.transform(customFields, new Function<CustomField, CustomFieldModelDao>() {
+                @Override
+                public CustomFieldModelDao apply(final CustomField input) {
+                    return new CustomFieldModelDao(input.getId(), internalCallContext.getCreatedDate(), internalCallContext.getUpdatedDate(), input.getFieldName(), input.getFieldValue(), input.getObjectId(), input.getObjectType());
+                }
+            });
+            customFieldDao.updateCustomFields(customFieldIds, internalCallContext);
+
         }
     }
 
     @Override
     public void removeCustomFields(final List<CustomField> customFields, final CallContext context) throws CustomFieldApiException {
-        // TODO make it transactional
-        for (final CustomField cur : customFields) {
-            customFieldDao.deleteCustomField(cur.getId(), internalCallContextFactory.createInternalCallContext(cur.getObjectId(), cur.getObjectType(), context));
+        if (!customFields.isEmpty()) {
+            final InternalCallContext internalCallContext = internalCallContextFactory.createInternalCallContext(customFields.get(0).getObjectId(), customFields.get(0).getObjectType(), context);
+            final Iterable<UUID> curstomFieldIds = Iterables.transform(customFields, new Function<CustomField, UUID>() {
+                @Override
+                public UUID apply(final CustomField input) {
+                    return input.getId();
+                }
+            });
+            customFieldDao.deleteCustomFields(curstomFieldIds, internalCallContext);
         }
     }
 
@@ -144,6 +149,11 @@ public class DefaultCustomFieldUserApi implements CustomFieldUserApi {
     @Override
     public List<CustomField> getCustomFieldsForAccount(final UUID accountId, final TenantContext context) {
         return withCustomFieldsTransform(customFieldDao.getCustomFieldsForAccount(internalCallContextFactory.createInternalTenantContext(accountId, context)));
+    }
+
+    @Override
+    public List<AuditLogWithHistory> getCustomFieldAuditLogsWithHistoryForId(final UUID customFieldId, final AuditLevel auditLevel, final TenantContext tenantContext) {
+        return customFieldDao.getCustomFieldAuditLogsWithHistoryForId(customFieldId, auditLevel, internalCallContextFactory.createInternalTenantContext(customFieldId, ObjectType.CUSTOM_FIELD, tenantContext));
     }
 
     private List<CustomField> withCustomFieldsTransform(final Collection<CustomFieldModelDao> input) {

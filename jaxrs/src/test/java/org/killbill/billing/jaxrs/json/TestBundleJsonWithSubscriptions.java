@@ -24,6 +24,11 @@ import java.util.UUID;
 
 import org.joda.time.LocalDate;
 import org.killbill.billing.catalog.api.BillingPeriod;
+import org.killbill.billing.catalog.api.PhaseType;
+import org.killbill.billing.catalog.api.ProductCategory;
+import org.killbill.billing.entitlement.api.Entitlement.EntitlementSourceType;
+import org.killbill.billing.entitlement.api.Entitlement.EntitlementState;
+import org.killbill.billing.entitlement.api.SubscriptionEventType;
 import org.killbill.billing.jaxrs.JaxrsTestSuiteNoDB;
 import org.killbill.billing.jaxrs.json.SubscriptionJson.EventSubscriptionJson;
 import org.testng.Assert;
@@ -37,18 +42,18 @@ public class TestBundleJsonWithSubscriptions extends JaxrsTestSuiteNoDB {
 
     @Test(groups = "fast")
     public void testJson() throws Exception {
-        final String someUUID = UUID.randomUUID().toString();
+        final UUID someUUID = UUID.randomUUID();
         final UUID bundleId = UUID.randomUUID();
         final String externalKey = UUID.randomUUID().toString();
         final List<AuditLogJson> auditLogs = createAuditLogsJson(clock.getUTCNow());
 
-        final EventSubscriptionJson event = new EventSubscriptionJson(UUID.randomUUID().toString(),
-                                                                      BillingPeriod.NO_BILLING_PERIOD.toString(),
+        final EventSubscriptionJson event = new EventSubscriptionJson(UUID.randomUUID(),
+                                                                      BillingPeriod.NO_BILLING_PERIOD,
                                                                       new LocalDate(),
                                                                       UUID.randomUUID().toString(),
                                                                       UUID.randomUUID().toString(),
                                                                       UUID.randomUUID().toString(),
-                                                                      UUID.randomUUID().toString(),
+                                                                      SubscriptionEventType.START_BILLING,
                                                                       true,
                                                                       false,
                                                                       UUID.randomUUID().toString(),
@@ -56,21 +61,21 @@ public class TestBundleJsonWithSubscriptions extends JaxrsTestSuiteNoDB {
                                                                       UUID.randomUUID().toString(),
                                                                       null);
 
-        final PhasePriceOverrideJson priceOverride = new PhasePriceOverrideJson(null, null, "somePhaseType", BigDecimal.ONE, null);
+        final PhasePriceJson priceOverride = new PhasePriceJson(null, null, "somePhaseType", BigDecimal.ONE, null, null);
 
-        final SubscriptionJson subscription = new SubscriptionJson(UUID.randomUUID().toString(),
-                                                                   UUID.randomUUID().toString(),
-                                                                   UUID.randomUUID().toString(),
+        final SubscriptionJson subscription = new SubscriptionJson(UUID.randomUUID(),
+                                                                   UUID.randomUUID(),
+                                                                   UUID.randomUUID(),
                                                                    externalKey,
                                                                    new LocalDate(),
                                                                    UUID.randomUUID().toString(),
+                                                                   ProductCategory.BASE,
+                                                                   BillingPeriod.MONTHLY,
+                                                                   PhaseType.EVERGREEN,
                                                                    UUID.randomUUID().toString(),
                                                                    UUID.randomUUID().toString(),
-                                                                   UUID.randomUUID().toString(),
-                                                                   UUID.randomUUID().toString(),
-                                                                   UUID.randomUUID().toString(),
-                                                                   UUID.randomUUID().toString(),
-                                                                   UUID.randomUUID().toString(),
+                                                                   EntitlementState.ACTIVE,
+                                                                   EntitlementSourceType.NATIVE,
                                                                    new LocalDate(),
                                                                    new LocalDate(),
                                                                    new LocalDate(),
@@ -78,10 +83,11 @@ public class TestBundleJsonWithSubscriptions extends JaxrsTestSuiteNoDB {
                                                                    null,
                                                                    ImmutableList.<EventSubscriptionJson>of(event),
                                                                    ImmutableList.of(priceOverride),
+                                                                   null,
                                                                    auditLogs);
 
-        final BundleJson bundleJson = new BundleJson(someUUID, bundleId.toString(), externalKey, ImmutableList.<SubscriptionJson>of(subscription), null, auditLogs);
-        Assert.assertEquals(bundleJson.getBundleId(), bundleId.toString());
+        final BundleJson bundleJson = new BundleJson(someUUID, bundleId, externalKey, ImmutableList.<SubscriptionJson>of(subscription), null, auditLogs);
+        Assert.assertEquals(bundleJson.getBundleId(), bundleId);
         Assert.assertEquals(bundleJson.getExternalKey(), externalKey);
         Assert.assertEquals(bundleJson.getSubscriptions().size(), 1);
         Assert.assertEquals(bundleJson.getAuditLogs(), auditLogs);
@@ -89,5 +95,6 @@ public class TestBundleJsonWithSubscriptions extends JaxrsTestSuiteNoDB {
         final String asJson = mapper.writeValueAsString(bundleJson);
         final BundleJson fromJson = mapper.readValue(asJson, BundleJson.class);
         Assert.assertEquals(fromJson, bundleJson);
-    }
+
+      }
 }

@@ -19,6 +19,7 @@ package org.killbill.billing.util.tag;
 import java.util.List;
 import java.util.UUID;
 
+import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import org.killbill.billing.ObjectType;
@@ -41,11 +42,11 @@ public class TestTagStore extends UtilTestSuiteWithEmbeddedDB {
         final UUID accountId = UUID.randomUUID();
 
         eventsListener.pushExpectedEvent(NextEvent.TAG_DEFINITION);
-        tagDefinitionDao.create("tag1", "First tag", internalCallContext);
+        tagDefinitionDao.create("tag1", "First tag", ObjectType.ACCOUNT.name(), internalCallContext);
         assertListenerStatus();
 
         eventsListener.pushExpectedEvent(NextEvent.TAG_DEFINITION);
-        final TagDefinitionModelDao testTagDefinition = tagDefinitionDao.create("testTagDefinition", "Second tag", internalCallContext);
+        final TagDefinitionModelDao testTagDefinition = tagDefinitionDao.create("testTagDefinition", "Second tag", ObjectType.ACCOUNT.name(), internalCallContext);
         assertListenerStatus();
 
         final Tag tag = new DescriptiveTag(testTagDefinition.getId(), ObjectType.ACCOUNT, accountId, clock.getUTCNow());
@@ -76,14 +77,14 @@ public class TestTagStore extends UtilTestSuiteWithEmbeddedDB {
     @Test(groups = "slow", expectedExceptions = TagDefinitionApiException.class)
     public void testTagDefinitionCreationWithControlTagName() throws TagDefinitionApiException {
         final String definitionName = ControlTagType.AUTO_PAY_OFF.toString();
-        tagDefinitionDao.create(definitionName, "This should break", internalCallContext);
+        tagDefinitionDao.create(definitionName, "This should break", ObjectType.ACCOUNT.name(), internalCallContext);
     }
 
     @Test(groups = "slow")
     public void testTagDefinitionDeletionForUnusedDefinition() throws TagDefinitionApiException {
         final String definitionName = "TestTag1234";
         eventsListener.pushExpectedEvent(NextEvent.TAG_DEFINITION);
-        tagDefinitionDao.create(definitionName, "Some test tag", internalCallContext);
+        tagDefinitionDao.create(definitionName, "Some test tag", ObjectType.ACCOUNT.name(), internalCallContext);
         assertListenerStatus();
 
         TagDefinitionModelDao tagDefinition = tagDefinitionDao.getByName(definitionName, internalCallContext);
@@ -93,15 +94,18 @@ public class TestTagStore extends UtilTestSuiteWithEmbeddedDB {
         tagDefinitionDao.deleteById(tagDefinition.getId(), internalCallContext);
         assertListenerStatus();
 
-        tagDefinition = tagDefinitionDao.getByName(definitionName, internalCallContext);
-        assertNull(tagDefinition);
+        try {
+            tagDefinitionDao.getByName(definitionName, internalCallContext);
+            Assert.fail("Call should fail");
+        } catch (TagDefinitionApiException expected) {
+        }
     }
 
     @Test(groups = "slow", expectedExceptions = TagDefinitionApiException.class)
     public void testTagDefinitionDeletionForDefinitionInUse() throws TagDefinitionApiException, TagApiException {
         final String definitionName = "TestTag12345";
         eventsListener.pushExpectedEvent(NextEvent.TAG_DEFINITION);
-        tagDefinitionDao.create(definitionName, "Some test tag", internalCallContext);
+        tagDefinitionDao.create(definitionName, "Some test tag", ObjectType.ACCOUNT.name(), internalCallContext);
         assertListenerStatus();
 
         final TagDefinitionModelDao tagDefinition = tagDefinitionDao.getByName(definitionName, internalCallContext);
@@ -120,7 +124,7 @@ public class TestTagStore extends UtilTestSuiteWithEmbeddedDB {
     public void testDeleteTagBeforeDeleteTagDefinition() throws TagDefinitionApiException, TagApiException {
         final String definitionName = "TestTag1234567";
         eventsListener.pushExpectedEvent(NextEvent.TAG_DEFINITION);
-        tagDefinitionDao.create(definitionName, "Some test tag", internalCallContext);
+        tagDefinitionDao.create(definitionName, "Some test tag", ObjectType.ACCOUNT.name(), internalCallContext);
         assertListenerStatus();
 
         final TagDefinitionModelDao tagDefinition = tagDefinitionDao.getByName(definitionName, internalCallContext);

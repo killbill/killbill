@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014-2016 Groupon, Inc
- * Copyright 2014-2016 The Billing Project, LLC
+ * Copyright 2014-2018 Groupon, Inc
+ * Copyright 2014-2018 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -18,13 +18,14 @@
 
 package org.killbill.billing.entitlement.dao;
 
+import java.util.Collection;
 import java.util.LinkedList;
-import java.util.List;
 
 import javax.annotation.Nullable;
 
 import org.killbill.billing.account.api.ImmutableAccountData;
 import org.killbill.billing.callcontext.InternalTenantContext;
+import org.killbill.billing.catalog.api.Catalog;
 import org.killbill.billing.catalog.api.ProductCategory;
 import org.killbill.billing.entitlement.EventsStream;
 import org.killbill.billing.entitlement.api.BlockingState;
@@ -47,9 +48,9 @@ import com.google.common.collect.ImmutableList;
 public class OptimizedProxyBlockingStateDao extends ProxyBlockingStateDao {
 
     public OptimizedProxyBlockingStateDao(final EventsStreamBuilder eventsStreamBuilder, final SubscriptionBaseInternalApi subscriptionBaseInternalApi,
-                                          final IDBI dbi, final Clock clock, final NotificationQueueService notificationQueueService, final PersistentBus eventBus,
+                                          final IDBI dbi, final IDBI roDbi, final Clock clock, final NotificationQueueService notificationQueueService, final PersistentBus eventBus,
                                           final CacheControllerDispatcher cacheControllerDispatcher, final NonEntityDao nonEntityDao, final InternalCallContextFactory internalCallContextFactory) {
-        super(eventsStreamBuilder, subscriptionBaseInternalApi, dbi, clock, notificationQueueService, eventBus, cacheControllerDispatcher, nonEntityDao, internalCallContextFactory);
+        super(eventsStreamBuilder, subscriptionBaseInternalApi, dbi, roDbi, clock, notificationQueueService, eventBus, cacheControllerDispatcher, nonEntityDao, internalCallContextFactory);
     }
 
     /**
@@ -68,18 +69,22 @@ public class OptimizedProxyBlockingStateDao extends ProxyBlockingStateDao {
      * @param baseSubscription                  base subscription (ProductCategory.BASE) associated with that bundle
      * @param subscription                      subscription for which to build blocking states
      * @param allSubscriptionsForBundle         all subscriptions associated with that bundle
+     * @param accountBCD                        account BCD
+     * @param catalog                           full Catalog
      * @param context                           call context
      * @return blocking states for that subscription
      * @throws EntitlementApiException
      */
-    public List<BlockingState> getBlockingHistory(final List<BlockingState> subscriptionBlockingStatesOnDisk,
-                                                  final List<BlockingState> allBlockingStatesOnDiskForAccount,
-                                                  final ImmutableAccountData account,
-                                                  final SubscriptionBaseBundle bundle,
-                                                  @Nullable final SubscriptionBase baseSubscription,
-                                                  final SubscriptionBase subscription,
-                                                  final List<SubscriptionBase> allSubscriptionsForBundle,
-                                                  final InternalTenantContext context) throws EntitlementApiException {
+    public Collection<BlockingState> getBlockingHistory(final Collection<BlockingState> subscriptionBlockingStatesOnDisk,
+                                                        final Collection<BlockingState> allBlockingStatesOnDiskForAccount,
+                                                        final ImmutableAccountData account,
+                                                        final SubscriptionBaseBundle bundle,
+                                                        @Nullable final SubscriptionBase baseSubscription,
+                                                        final SubscriptionBase subscription,
+                                                        final Collection<SubscriptionBase> allSubscriptionsForBundle,
+                                                        final int accountBCD,
+                                                        final Catalog catalog,
+                                                        final InternalTenantContext context) throws EntitlementApiException {
         // blockable id points to a subscription, but make sure it's an add-on
         if (!ProductCategory.ADD_ON.equals(subscription.getCategory())) {
             // blockable id points to a base or standalone subscription, there is nothing to do
@@ -92,6 +97,8 @@ public class OptimizedProxyBlockingStateDao extends ProxyBlockingStateDao {
                                                                                                                             bundle,
                                                                                                                             baseSubscription,
                                                                                                                             allSubscriptionsForBundle,
+                                                                                                                            accountBCD,
+                                                                                                                            catalog,
                                                                                                                             context));
 
         return addBlockingStatesNotOnDisk(subscription.getId(),

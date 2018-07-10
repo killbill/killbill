@@ -122,6 +122,7 @@ public class PaymentAutomatonRunner {
                                                         final String paymentTransactionExternalKey,
                                                         @Nullable final BigDecimal amount,
                                                         @Nullable final Currency currency,
+                                                        final DateTime effectiveDate,
                                                         @Nullable final UUID paymentIdForNewPayment,
                                                         @Nullable final UUID paymentTransactionIdForNewPaymentTransaction,
                                                         final boolean shouldLockAccount,
@@ -144,6 +145,7 @@ public class PaymentAutomatonRunner {
                                        paymentMethodId,
                                        amount,
                                        currency,
+                                       effectiveDate,
                                        paymentIdForNewPayment,
                                        paymentTransactionIdForNewPaymentTransaction,
                                        shouldLockAccount,
@@ -155,7 +157,7 @@ public class PaymentAutomatonRunner {
 
     public PaymentAutomatonDAOHelper buildDaoHelper(final PaymentStateContext paymentStateContext,
                                                     final InternalCallContext internalCallContext) throws PaymentApiException {
-        final DateTime utcNow = clock.getUTCNow();
+        final DateTime utcNow = internalCallContext.getCreatedDate();
 
         return new PaymentAutomatonDAOHelper(paymentStateContext, utcNow, paymentDao, paymentPluginServiceRegistration, internalCallContext, eventBus, paymentSMHelper);
     }

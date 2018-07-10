@@ -17,7 +17,10 @@
 package org.killbill.billing.catalog;
 
 import java.util.Collection;
+import java.util.Date;
 
+import org.joda.time.DateTime;
+import org.killbill.billing.catalog.api.BillingMode;
 import org.killbill.billing.catalog.api.Plan;
 
 import com.google.common.collect.ImmutableList;
@@ -89,11 +92,14 @@ public class MockPlan extends DefaultPlan {
     }
 
     public MockPlan(final String name, final DefaultProduct product, final DefaultPlanPhase[] planPhases, final DefaultPlanPhase finalPhase, final int plansAllowedInBundle) {
+        this.staticCatalog = new StandaloneCatalog(new Date());
         setName(name);
         setProduct(product);
         setFinalPhase(finalPhase);
         setInitialPhases(planPhases);
         setPlansAllowedInBundle(plansAllowedInBundle);
+        setRecurringBillingMode(BillingMode.IN_ADVANCE);
+        setPriceListName(DefaultPriceListSet.DEFAULT_PRICELIST_NAME);
 
         finalPhase.setPlan(this);
         for (final DefaultPlanPhase pp : planPhases) {
@@ -113,7 +119,7 @@ public class MockPlan extends DefaultPlan {
         setName("Test");
         setProduct(MockProduct.createBicycle());
         setFinalPhase(mockPlanPhase);
-
+        setRecurringBillingMode(BillingMode.IN_ADVANCE);
         mockPlanPhase.setPlan(this);
     }
 
@@ -122,6 +128,7 @@ public class MockPlan extends DefaultPlan {
         setProduct(new MockProduct());
         setFinalPhase(new MockPlanPhase(this));
         setInitialPhases(null);
+        setRecurringBillingMode(BillingMode.IN_ADVANCE);
         setPlansAllowedInBundle(1);
     }
 

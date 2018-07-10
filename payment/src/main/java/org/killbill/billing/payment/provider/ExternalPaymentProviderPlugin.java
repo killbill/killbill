@@ -65,27 +65,27 @@ public class ExternalPaymentProviderPlugin implements PaymentPluginApi {
 
     @Override
     public PaymentTransactionInfoPlugin authorizePayment(final UUID kbAccountId, final UUID kbPaymentId, final UUID kbTransactionId, final UUID kbPaymentMethodId, final BigDecimal amount, final Currency currency, final Iterable<PluginProperty> properties, final CallContext callContext) throws PaymentPluginApiException {
-        return new DefaultNoOpPaymentInfoPlugin(kbPaymentId, kbTransactionId, TransactionType.AUTHORIZE, amount, currency, clock.getUTCNow(), clock.getUTCNow(), getPaymentPluginStatus(properties), null, null);
+        return new DefaultNoOpPaymentInfoPlugin(kbPaymentId, kbTransactionId, TransactionType.AUTHORIZE, amount, currency, callContext.getCreatedDate(), callContext.getCreatedDate(), getPaymentPluginStatus(properties), null, null);
     }
 
     @Override
     public PaymentTransactionInfoPlugin capturePayment(final UUID kbAccountId, final UUID kbPaymentId, final UUID kbTransactionId, final UUID kbPaymentMethodId, final BigDecimal amount, final Currency currency, final Iterable<PluginProperty> properties, final CallContext callContext) throws PaymentPluginApiException {
-        return new DefaultNoOpPaymentInfoPlugin(kbPaymentId, kbTransactionId, TransactionType.CAPTURE, amount, currency, clock.getUTCNow(), clock.getUTCNow(), getPaymentPluginStatus(properties), null, null);
+        return new DefaultNoOpPaymentInfoPlugin(kbPaymentId, kbTransactionId, TransactionType.CAPTURE, amount, currency, callContext.getCreatedDate(), callContext.getCreatedDate(), getPaymentPluginStatus(properties), null, null);
     }
 
     @Override
     public PaymentTransactionInfoPlugin purchasePayment(final UUID kbAccountId, final UUID kbPaymentId, final UUID kbTransactionId, final UUID kbPaymentMethodId, final BigDecimal amount, final Currency currency, final Iterable<PluginProperty> properties, final CallContext context) throws PaymentPluginApiException {
-        return new DefaultNoOpPaymentInfoPlugin(kbPaymentId, kbTransactionId, TransactionType.PURCHASE, amount, currency, clock.getUTCNow(), clock.getUTCNow(), getPaymentPluginStatus(properties), null, null);
+        return new DefaultNoOpPaymentInfoPlugin(kbPaymentId, kbTransactionId, TransactionType.PURCHASE, amount, currency, context.getCreatedDate(), context.getCreatedDate(), getPaymentPluginStatus(properties), null, null);
     }
 
     @Override
     public PaymentTransactionInfoPlugin voidPayment(final UUID kbAccountId, final UUID kbPaymentId, final UUID kbTransactionId, final UUID kbPaymentMethodId, final Iterable<PluginProperty> properties, final CallContext callContext) throws PaymentPluginApiException {
-        return new DefaultNoOpPaymentInfoPlugin(kbPaymentId, kbTransactionId, TransactionType.VOID, BigDecimal.ZERO, null, clock.getUTCNow(), clock.getUTCNow(), getPaymentPluginStatus(properties), null, null);
+        return new DefaultNoOpPaymentInfoPlugin(kbPaymentId, kbTransactionId, TransactionType.VOID, BigDecimal.ZERO, null, callContext.getCreatedDate(), callContext.getCreatedDate(), getPaymentPluginStatus(properties), null, null);
     }
 
     @Override
     public PaymentTransactionInfoPlugin creditPayment(final UUID kbAccountId, final UUID kbPaymentId, final UUID kbTransactionId, final UUID kbPaymentMethodId, final BigDecimal amount, final Currency currency, final Iterable<PluginProperty> properties, final CallContext callContext) throws PaymentPluginApiException {
-        return new DefaultNoOpPaymentInfoPlugin(kbPaymentId, kbTransactionId, TransactionType.CREDIT, amount, currency, clock.getUTCNow(), clock.getUTCNow(), getPaymentPluginStatus(properties), null, null);
+        return new DefaultNoOpPaymentInfoPlugin(kbPaymentId, kbTransactionId, TransactionType.CREDIT, amount, currency, callContext.getCreatedDate(), callContext.getCreatedDate(), getPaymentPluginStatus(properties), null, null);
     }
 
     @Override
@@ -100,7 +100,7 @@ public class ExternalPaymentProviderPlugin implements PaymentPluginApi {
 
     @Override
     public PaymentTransactionInfoPlugin refundPayment(final UUID kbAccountId, final UUID kbPaymentId, final UUID kbTransactionId, final UUID kbPaymentMethodId, final BigDecimal refundAmount, final Currency currency, final Iterable<PluginProperty> properties, final CallContext context) throws PaymentPluginApiException {
-        return new DefaultNoOpPaymentInfoPlugin(kbPaymentId, kbTransactionId, TransactionType.REFUND, refundAmount, currency, clock.getUTCNow(), clock.getUTCNow(), getPaymentPluginStatus(properties), null, null);
+        return new DefaultNoOpPaymentInfoPlugin(kbPaymentId, kbTransactionId, TransactionType.REFUND, refundAmount, currency, context.getCreatedDate(), context.getCreatedDate(), getPaymentPluginStatus(properties), null, null);
     }
 
     @Override

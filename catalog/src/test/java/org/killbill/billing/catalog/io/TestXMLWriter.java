@@ -33,9 +33,9 @@ import org.killbill.billing.catalog.DefaultPrice;
 import org.killbill.billing.catalog.DefaultPriceListSet;
 import org.killbill.billing.catalog.DefaultProduct;
 import org.killbill.billing.catalog.DefaultRecurring;
+import org.killbill.billing.catalog.DefaultVersionedCatalog;
 import org.killbill.billing.catalog.StandaloneCatalog;
-import org.killbill.billing.catalog.StandaloneCatalogWithPriceOverride;
-import org.killbill.billing.catalog.VersionedCatalog;
+import org.killbill.billing.catalog.api.BillingMode;
 import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.catalog.api.MutableStaticCatalog;
@@ -43,29 +43,26 @@ import org.killbill.billing.catalog.api.PhaseType;
 import org.killbill.billing.catalog.api.Plan;
 import org.killbill.billing.catalog.api.ProductCategory;
 import org.killbill.billing.catalog.api.TimeUnit;
-import org.killbill.billing.util.callcontext.InternalCallContextFactory;
+import org.killbill.billing.catalog.api.VersionedCatalog;
 import org.killbill.xmlloader.XMLLoader;
 import org.killbill.xmlloader.XMLWriter;
 import org.testng.annotations.Test;
 
-import com.google.common.collect.ImmutableList;
 import com.google.common.io.Resources;
 
 import static org.testng.Assert.assertEquals;
 
 public class TestXMLWriter extends CatalogTestSuiteNoDB {
 
-
     // Verifies we can generate the XML associated with a VersionedCatalog
     @Test(groups = "fast")
     public void testVersionedCatalog() throws Exception {
         final StandaloneCatalog catalog = XMLLoader.getObjectFromString(Resources.getResource("SpyCarAdvanced.xml").toExternalForm(), StandaloneCatalog.class);
-        final VersionedCatalog versionedCatalog = new VersionedCatalog(clock);
+        final DefaultVersionedCatalog versionedCatalog = new DefaultVersionedCatalog(clock);
         versionedCatalog.add(catalog);
-        final String newCatalogStr = XMLWriter.writeXML(versionedCatalog, VersionedCatalog.class);
+        final String newCatalogStr = XMLWriter.writeXML(versionedCatalog, DefaultVersionedCatalog.class);
         //System.err.println(newCatalogStr);
     }
-
 
     // Verify we can marshall/unmarshall a (fairly complex catalog) catalog and get back the same result (Required to support catalog update)
     @Test(groups = "fast")
@@ -78,9 +75,6 @@ public class TestXMLWriter extends CatalogTestSuiteNoDB {
         final String oldCatalogStr2 = XMLWriter.writeXML(oldCatalog, StandaloneCatalog.class);
         assertEquals(oldCatalogStr2, oldCatalogStr);
     }
-
-
-
 
     @Test(groups = "fast")
     public void testAddPlan() throws Exception {
@@ -111,6 +105,7 @@ public class TestXMLWriter extends CatalogTestSuiteNoDB {
         newPlan.setProduct(newProduct);
         newPlan.setInitialPhases(new DefaultPlanPhase[]{trialPhase});
         newPlan.setFinalPhase(evergreenPhase);
+        newPlan.setRecurringBillingMode(BillingMode.IN_ADVANCE);
         // TODO Ordering breaks
         mutableCatalog.addPlan(newPlan);
         newPlan.initialize((StandaloneCatalog) mutableCatalog, new URI("dummy"));

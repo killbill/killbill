@@ -22,16 +22,13 @@ import java.util.List;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
-import org.killbill.billing.account.api.AccountInternalApi;
-import org.mockito.Mockito;
-import org.testng.Assert;
-import org.testng.annotations.BeforeMethod;
-import org.testng.annotations.Test;
-
+import org.killbill.billing.catalog.DefaultVersionedCatalog;
 import org.killbill.billing.catalog.MockCatalog;
 import org.killbill.billing.catalog.MockCatalogService;
 import org.killbill.billing.catalog.api.BillingPeriod;
+import org.killbill.billing.catalog.api.CatalogInternalApi;
 import org.killbill.billing.catalog.api.CatalogService;
+import org.killbill.billing.catalog.api.DefaultCatalogInternalApi;
 import org.killbill.billing.catalog.api.PhaseType;
 import org.killbill.billing.catalog.api.PlanPhaseSpecifier;
 import org.killbill.billing.catalog.api.PriceListSet;
@@ -48,9 +45,10 @@ import org.killbill.billing.subscription.events.SubscriptionBaseEvent;
 import org.killbill.billing.subscription.events.SubscriptionBaseEvent.EventType;
 import org.killbill.billing.subscription.events.user.ApiEventTransfer;
 import org.killbill.billing.subscription.events.user.ApiEventType;
-import org.killbill.billing.util.cache.CacheControllerDispatcher;
-import org.killbill.billing.util.callcontext.InternalCallContextFactory;
-import org.killbill.billing.util.dao.NonEntityDao;
+import org.mockito.Mockito;
+import org.testng.Assert;
+import org.testng.annotations.BeforeMethod;
+import org.testng.annotations.Test;
 
 import com.google.common.collect.ImmutableList;
 
@@ -63,12 +61,17 @@ public class TestDefaultSubscriptionTransferApi extends SubscriptionTestSuiteNoD
     @BeforeMethod(groups = "fast")
     public void beforeMethod() throws Exception {
         super.beforeMethod();
-        final NonEntityDao nonEntityDao = Mockito.mock(NonEntityDao.class);
         final SubscriptionDao dao = Mockito.mock(SubscriptionDao.class);
-        final CatalogService catalogService = new MockCatalogService(new MockCatalog(), cacheControllerDispatcher);
+        final DefaultVersionedCatalog versionedCatalog = new DefaultVersionedCatalog();
+        final MockCatalog mockCatalog = new MockCatalog();
+        versionedCatalog.add(mockCatalog);
+        final CatalogService catalogService = new MockCatalogService(versionedCatalog, cacheControllerDispatcher);
+        final CatalogInternalApi catalogInternalApiWithMockCatalogService = new DefaultCatalogInternalApi(catalogService);
         final SubscriptionBaseApiService apiService = Mockito.mock(SubscriptionBaseApiService.class);
         final SubscriptionBaseTimelineApi timelineApi = Mockito.mock(SubscriptionBaseTimelineApi.class);
-        transferApi = new DefaultSubscriptionBaseTransferApi(clock, dao, timelineApi, catalogService, apiService, internalCallContextFactory);
+        transferApi = new DefaultSubscriptionBaseTransferApi(clock, dao, timelineApi, catalogInternalApiWithMockCatalogService, subscriptionInternalApi, apiService, internalCallContextFactory);
+        // Overrride catalog with our MockCatalog
+        this.catalog = mockCatalog;
     }
 
     @Test(groups = "fast")
@@ -81,13 +84,14 @@ public class TestDefaultSubscriptionTransferApi extends SubscriptionTestSuiteNoD
         final DefaultSubscriptionBase subscription = new DefaultSubscriptionBase(subscriptionBuilder);
 
         final DateTime transferDate = subscriptionStartTime.plusDays(10);
-        final List<SubscriptionBaseEvent> events = transferApi.toEvents(existingEvents, subscription, transferDate, internalCallContext);
+        final List<SubscriptionBaseEvent> events = transferApi.toEvents(existingEvents, subscription, transferDate, catalog, internalCallContext);
 
         Assert.assertEquals(events.size(), 0);
     }
 
     @Test(groups = "fast")
     public void testEventsForCancelledSubscriptionAfterTransfer() throws Exception {
+
         final DateTime subscriptionStartTime = clock.getUTCNow();
         final DateTime subscriptionCancelTime = subscriptionStartTime.plusDays(1);
         final ImmutableList<ExistingEvent> existingEvents = ImmutableList.<ExistingEvent>of(createEvent(subscriptionStartTime, SubscriptionBaseTransitionType.CREATE),
@@ -96,7 +100,7 @@ public class TestDefaultSubscriptionTransferApi extends SubscriptionTestSuiteNoD
         final DefaultSubscriptionBase subscription = new DefaultSubscriptionBase(subscriptionBuilder);
 
         final DateTime transferDate = subscriptionStartTime.plusHours(1);
-        final List<SubscriptionBaseEvent> events = transferApi.toEvents(existingEvents, subscription, transferDate, internalCallContext);
+        final List<SubscriptionBaseEvent> events = transferApi.toEvents(existingEvents, subscription, transferDate, catalog, internalCallContext);
 
         Assert.assertEquals(events.size(), 1);
         Assert.assertEquals(events.get(0).getType(), EventType.API_USER);

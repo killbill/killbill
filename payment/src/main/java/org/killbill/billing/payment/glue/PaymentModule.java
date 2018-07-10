@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2014 Ning, Inc.
- * Copyright 2014-2017 Groupon, Inc
- * Copyright 2014-2017 The Billing Project, LLC
+ * Copyright 2014-2018 Groupon, Inc
+ * Copyright 2014-2018 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -23,14 +23,19 @@ import javax.inject.Provider;
 import org.killbill.automaton.DefaultStateMachineConfig;
 import org.killbill.automaton.StateMachineConfig;
 import org.killbill.billing.control.plugin.api.PaymentControlPluginApi;
+import org.killbill.billing.invoice.api.InvoiceInternalApi;
 import org.killbill.billing.osgi.api.OSGIServiceRegistration;
 import org.killbill.billing.payment.api.AdminPaymentApi;
 import org.killbill.billing.payment.api.DefaultAdminPaymentApi;
+import org.killbill.billing.payment.api.DefaultInvoicePaymentApi;
 import org.killbill.billing.payment.api.DefaultPaymentApi;
 import org.killbill.billing.payment.api.DefaultPaymentGatewayApi;
+import org.killbill.billing.payment.api.InvoicePaymentApi;
+import org.killbill.billing.payment.api.InvoicePaymentInternalApi;
 import org.killbill.billing.payment.api.PaymentApi;
 import org.killbill.billing.payment.api.PaymentGatewayApi;
 import org.killbill.billing.payment.api.PaymentService;
+import org.killbill.billing.payment.api.svcs.DefaultInvoicePaymentInternalApi;
 import org.killbill.billing.payment.bus.PaymentBusEventHandler;
 import org.killbill.billing.payment.config.MultiTenantPaymentConfig;
 import org.killbill.billing.payment.caching.EhCacheStateMachineConfigCache;
@@ -151,6 +156,8 @@ public class PaymentModule extends KillBillModule {
         bind(PaymentPluginServiceRegistration.class).asEagerSingleton();
 
         bind(PaymentApi.class).to(DefaultPaymentApi.class).asEagerSingleton();
+        bind(InvoicePaymentApi.class).to(DefaultInvoicePaymentApi.class).asEagerSingleton();
+        bind(InvoicePaymentInternalApi.class).to(DefaultInvoicePaymentInternalApi.class).asEagerSingleton();
         bind(PaymentGatewayApi.class).to(DefaultPaymentGatewayApi.class).asEagerSingleton();
         bind(AdminPaymentApi.class).to(DefaultAdminPaymentApi.class).asEagerSingleton();
         bind(PaymentBusEventHandler.class).asEagerSingleton();

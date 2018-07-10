@@ -25,6 +25,7 @@ import javax.annotation.Nullable;
 import javax.inject.Inject;
 import javax.inject.Named;
 
+import org.joda.time.DateTime;
 import org.killbill.automaton.Operation.OperationCallback;
 import org.killbill.automaton.OperationResult;
 import org.killbill.billing.account.api.Account;
@@ -38,6 +39,7 @@ import org.killbill.billing.payment.api.TransactionType;
 import org.killbill.billing.payment.core.PaymentExecutors;
 import org.killbill.billing.payment.core.PaymentPluginServiceRegistration;
 import org.killbill.billing.payment.core.PaymentProcessor;
+import org.killbill.billing.payment.core.PaymentRefresher;
 import org.killbill.billing.payment.core.sm.control.ControlPluginRunner;
 import org.killbill.billing.payment.core.sm.control.PaymentStateControlContext;
 import org.killbill.billing.payment.dao.PaymentDao;
@@ -60,8 +62,8 @@ public class MockRetryablePaymentAutomatonRunner extends PluginControlPaymentAut
     @Inject
     public MockRetryablePaymentAutomatonRunner(final PaymentDao paymentDao, final GlobalLocker locker, final PaymentPluginServiceRegistration paymentPluginServiceRegistration, final OSGIServiceRegistration<PaymentControlPluginApi> retryPluginRegistry, final Clock clock, final TagInternalApi tagApi, final PaymentProcessor paymentProcessor,
                                                @Named(RETRYABLE_NAMED) final RetryServiceScheduler retryServiceScheduler, final PaymentConfig paymentConfig, final PaymentExecutors executors,
-                                               final PaymentStateMachineHelper paymentSMHelper, final PaymentControlStateMachineHelper retrySMHelper, final ControlPluginRunner controlPluginRunner, final PersistentBus eventBus) {
-        super(paymentDao, locker, paymentPluginServiceRegistration, retryPluginRegistry, clock, paymentProcessor, retryServiceScheduler, paymentConfig, executors, paymentSMHelper, retrySMHelper, controlPluginRunner, eventBus);
+                                               final PaymentStateMachineHelper paymentSMHelper, final PaymentControlStateMachineHelper retrySMHelper, final ControlPluginRunner controlPluginRunner, final PersistentBus eventBus, final PaymentRefresher paymentRefresher) {
+        super(paymentDao, locker, paymentPluginServiceRegistration, retryPluginRegistry, clock, paymentProcessor, retryServiceScheduler, paymentConfig, executors, paymentSMHelper, retrySMHelper, controlPluginRunner, eventBus, paymentRefresher);
     }
 
     @Override
@@ -76,12 +78,12 @@ public class MockRetryablePaymentAutomatonRunner extends PluginControlPaymentAut
     @Override
     PaymentStateControlContext createContext(final boolean isApiPayment, final Boolean isSuccess, final TransactionType transactionType, final Account account, @Nullable final UUID paymentMethodId,
                                              @Nullable final UUID paymentId, @Nullable final String paymentExternalKey, @Nullable final UUID transactionId, final String paymentTransactionExternalKey,
-                                             @Nullable final BigDecimal amount, @Nullable final Currency currency,
+                                             @Nullable final BigDecimal amount, @Nullable final Currency currency, @Nullable DateTime effectiveDate,
                                              final Iterable<PluginProperty> properties,
                                              final List<String> pluginNames, final CallContext callContext, final InternalCallContext internalCallContext) throws PaymentApiException {
         if (context == null) {
             return super.createContext(isApiPayment, isSuccess, transactionType, account, paymentMethodId, paymentId, paymentExternalKey, transactionId, paymentTransactionExternalKey,
-                                       amount, currency, properties, pluginNames, callContext, internalCallContext);
+                                       amount, currency, effectiveDate, properties, pluginNames, callContext, internalCallContext);
         } else {
             return context;
         }

@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2014 Ning, Inc.
- * Copyright 2014-2016 Groupon, Inc
- * Copyright 2014-2016 The Billing Project, LLC
+ * Copyright 2014-2018 Groupon, Inc
+ * Copyright 2014-2018 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -51,12 +51,18 @@ public class Context {
         this.internalCallContextFactory = internalCallContextFactory;
     }
 
-    public CallContext createContext(final String createdBy, final String reason, final String comment, final ServletRequest request)
+    public CallContext createCallContextNoAccountId(final String createdBy, final String reason, final String comment, final ServletRequest request)
+            throws IllegalArgumentException {
+        return createCallContextWithAccountId(null, createdBy, reason, comment, request);
+    }
+
+    public CallContext createCallContextWithAccountId(final UUID accountId, final String createdBy, final String reason, final String comment, final ServletRequest request)
             throws IllegalArgumentException {
         try {
             Preconditions.checkNotNull(createdBy, String.format("Header %s needs to be set", JaxrsResource.HDR_CREATED_BY));
             final Tenant tenant = getTenantFromRequest(request);
-            final CallContext callContext = contextFactory.createCallContext(tenant == null ? null : tenant.getId(), createdBy, origin, userType, reason,
+            final UUID tenantId = tenant == null ? null : tenant.getId();
+            final CallContext callContext = contextFactory.createCallContext(accountId, tenantId, createdBy, origin, userType, reason,
                                                                              comment, getOrCreateUserToken());
 
             populateMDCContext(callContext);
@@ -67,15 +73,19 @@ public class Context {
         }
     }
 
-    public TenantContext createContext(final ServletRequest request) {
+    public TenantContext createTenantContextNoAccountId(final ServletRequest request) {
+        return createTenantContextWithAccountId(null, request);
+    }
+
+    public TenantContext createTenantContextWithAccountId(final UUID accountId, final ServletRequest request) {
         final TenantContext tenantContext;
 
         final Tenant tenant = getTenantFromRequest(request);
         if (tenant == null) {
             // Multi-tenancy may not have been configured - default to "default" tenant (see InternalCallContextFactory)
-            tenantContext = contextFactory.createTenantContext(null);
+            tenantContext = contextFactory.createTenantContext(accountId, null);
         } else {
-            tenantContext = contextFactory.createTenantContext(tenant.getId());
+            tenantContext = contextFactory.createTenantContext(accountId, tenant.getId());
         }
 
         populateMDCContext(tenantContext);
@@ -83,7 +93,7 @@ public class Context {
         return tenantContext;
     }
 
-    // Use REQUEST_ID_HEADER if this is provided and lloks like a UUID, if not allocate a random one.
+    // Use REQUEST_ID_HEADER if this is provided and looks like a UUID, if not allocate a random one.
     public static  UUID getOrCreateUserToken() {
         UUID userToken;
         if (Request.getPerThreadRequestData().getRequestId() != null) {
@@ -106,6 +116,11 @@ public class Context {
         } else {
             return (Tenant) tenantObject;
         }
+    }
+
+    private void populateMDCContext(final CallContext callContext) {
+        // InternalCallContextFactory will do it for us
+        internalCallContextFactory.createInternalCallContextWithoutAccountRecordId(callContext);
     }
 
     private void populateMDCContext(final TenantContext tenantContext) {

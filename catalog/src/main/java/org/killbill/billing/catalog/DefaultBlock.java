@@ -17,6 +17,7 @@
 
 package org.killbill.billing.catalog;
 
+import java.math.BigDecimal;
 import java.net.URI;
 
 import javax.xml.bind.annotation.XmlAccessType;
@@ -29,6 +30,7 @@ import org.killbill.billing.ErrorCode;
 import org.killbill.billing.catalog.api.Block;
 import org.killbill.billing.catalog.api.BlockType;
 import org.killbill.billing.catalog.api.CatalogApiException;
+import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.catalog.api.InternationalPrice;
 import org.killbill.billing.catalog.api.PlanPhase;
 import org.killbill.billing.catalog.api.Unit;
@@ -100,12 +102,20 @@ public class DefaultBlock extends ValidatingConfig<StandaloneCatalog> implements
         return errors;
     }
 
+    public DefaultBlock() {
+    }
+
+    public DefaultBlock(final DefaultUnit unit, final Double size, final DefaultInternationalPrice prices, final BigDecimal overriddenPrice, Currency currency) {
+        this.unit = unit;
+        this.size = size;
+        this.prices = prices != null ? new DefaultInternationalPrice(prices, overriddenPrice, currency) : null;
+    }
+
     @Override
     public void initialize(final StandaloneCatalog catalog, final URI sourceURI) {
         super.initialize(catalog, sourceURI);
         CatalogSafetyInitializer.initializeNonRequiredNullFieldsWithDefaultValue(this);
     }
-
 
     public DefaultBlock setType(final BlockType type) {
         this.type = type;

@@ -38,6 +38,7 @@
         <unit name="fastrack-tokens"/>
         <unit name="bandwith-meg-sec"/>
         <unit name="Mbytes"/>
+        <unit name="chocolate-videos" />
     </units>
 
     <products>
@@ -57,6 +58,9 @@
             <category>BASE</category>
         </product>
         <product name="ConsumableInArrear">
+            <category>BASE</category>
+        </product>
+        <product name="Chocolate">
             <category>BASE</category>
         </product>
     </products>
@@ -238,7 +242,7 @@
                     <unit>UNLIMITED</unit>
                 </duration>
                 <usages>
-                    <usage name="consumable-in-arrear-usage1" billingMode="IN_ARREAR" usageType="CONSUMABLE">
+                    <usage name="consumable-in-arrear-usage1" billingMode="IN_ARREAR" usageType="CONSUMABLE" tierBlockPolicy="ALL_TIERS">
                         <billingPeriod>MONTHLY</billingPeriod>
                         <tiers>
                             <tier>
@@ -273,6 +277,60 @@
             </finalPhase>
         </plan>
 
+        <plan name="chocolate-monthly">
+            <product>Chocolate</product>
+            <finalPhase type="EVERGREEN">
+                <duration>
+                    <unit>UNLIMITED</unit>
+                </duration>
+                <recurring>
+                    <billingPeriod>MONTHLY</billingPeriod>
+                    <recurringPrice>
+                        <price>
+                            <currency>USD</currency>
+                            <value>30.00</value>
+                        </price>
+                    </recurringPrice>
+                </recurring>
+                <usages>
+                    <usage name="chocolate-monthly-videos" billingMode="IN_ARREAR" usageType="CONSUMABLE">
+                        <billingPeriod>MONTHLY</billingPeriod>
+                        <tiers>
+                            <tier>
+                                <blocks>
+                                    <tieredBlock>
+                                        <unit>chocolate-videos</unit>
+                                        <size>1</size>
+                                        <prices>
+                                            <price>
+                                                <currency>USD</currency>
+                                                <value>2</value>
+                                            </price>
+                                        </prices>
+                                        <max>5</max>
+                                    </tieredBlock>
+                                </blocks>
+                            </tier>
+                            <tier>
+                                <blocks>
+                                    <tieredBlock>
+                                        <unit>chocolate-videos</unit>
+                                        <size>1</size>
+                                        <prices>
+                                            <price>
+                                                <currency>USD</currency>
+                                                <value>1</value>
+                                            </price>
+                                        </prices>
+                                        <max>10000</max>
+                                    </tieredBlock>
+                                </blocks>
+                            </tier>
+                        </tiers>
+                    </usage>
+                </usages>
+            </finalPhase>
+        </plan>
 
     </plans>
     <priceLists>
@@ -283,6 +341,7 @@
                 <plan>consumable-in-advance-topup</plan>
                 <plan>capacity-in-arrear</plan>
                 <plan>consumable-in-arrear</plan>
+                <plan>chocolate-monthly</plan>
             </plans>
         </defaultPriceList>
     </priceLists>

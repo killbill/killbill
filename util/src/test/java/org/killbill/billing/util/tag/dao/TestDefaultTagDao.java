@@ -46,17 +46,17 @@ public class TestDefaultTagDao extends UtilTestSuiteWithEmbeddedDB {
         assertEquals(result.size(), 0);
 
         eventsListener.pushExpectedEvent(NextEvent.TAG_DEFINITION);
-        final TagDefinitionModelDao defYo = tagDefinitionDao.create(UUID.randomUUID().toString().substring(0, 5), "defintion yo", internalCallContext);
+        final TagDefinitionModelDao defYo = tagDefinitionDao.create(UUID.randomUUID().toString().substring(0, 5), "defintion yo", ObjectType.ACCOUNT.name(), internalCallContext);
         assertListenerStatus();
         uuids.add(defYo.getId());
 
         eventsListener.pushExpectedEvent(NextEvent.TAG_DEFINITION);
-        final TagDefinitionModelDao defBah = tagDefinitionDao.create(UUID.randomUUID().toString().substring(0, 5), "defintion bah", internalCallContext);
+        final TagDefinitionModelDao defBah = tagDefinitionDao.create(UUID.randomUUID().toString().substring(0, 5), "defintion bah", ObjectType.ACCOUNT.name(), internalCallContext);
         assertListenerStatus();
         uuids.add(defBah.getId());
 
         eventsListener.pushExpectedEvent(NextEvent.TAG_DEFINITION);
-        final TagDefinitionModelDao defZoo = tagDefinitionDao.create(UUID.randomUUID().toString().substring(0, 5), "defintion zoo", internalCallContext);
+        final TagDefinitionModelDao defZoo = tagDefinitionDao.create(UUID.randomUUID().toString().substring(0, 5), "defintion zoo", ObjectType.ACCOUNT.name(), internalCallContext);
         assertListenerStatus();
         uuids.add(defZoo.getId());
 
@@ -76,7 +76,7 @@ public class TestDefaultTagDao extends UtilTestSuiteWithEmbeddedDB {
     public void testGetById() throws TagDefinitionApiException {
         // User Tag
         eventsListener.pushExpectedEvent(NextEvent.TAG_DEFINITION);
-        final TagDefinitionModelDao defYo = tagDefinitionDao.create(UUID.randomUUID().toString().substring(0, 5), "defintion yo", internalCallContext);
+        final TagDefinitionModelDao defYo = tagDefinitionDao.create(UUID.randomUUID().toString().substring(0, 5), "defintion yo", ObjectType.ACCOUNT.name(),internalCallContext);
         assertListenerStatus();
 
         final TagDefinitionModelDao resDefYo = tagDefinitionDao.getById(defYo.getId(), internalCallContext);
@@ -84,7 +84,7 @@ public class TestDefaultTagDao extends UtilTestSuiteWithEmbeddedDB {
 
         // Control Tag
         try {
-            tagDefinitionDao.create(ControlTagType.AUTO_INVOICING_OFF.name(), ControlTagType.AUTO_INVOICING_OFF.name(), internalCallContext);
+            tagDefinitionDao.create(ControlTagType.AUTO_INVOICING_OFF.name(), ControlTagType.AUTO_INVOICING_OFF.name(), ObjectType.ACCOUNT.name(),internalCallContext);
             Assert.fail("Should not be able to create a invoice tag");
         } catch (TagDefinitionApiException ignore) {
         }
@@ -98,7 +98,7 @@ public class TestDefaultTagDao extends UtilTestSuiteWithEmbeddedDB {
     public void testGetByName() throws TagDefinitionApiException {
         // User Tag
         eventsListener.pushExpectedEvent(NextEvent.TAG_DEFINITION);
-        final TagDefinitionModelDao defYo = tagDefinitionDao.create(UUID.randomUUID().toString().substring(0, 5), "defintion yo", internalCallContext);
+        final TagDefinitionModelDao defYo = tagDefinitionDao.create(UUID.randomUUID().toString().substring(0, 5), "defintion yo", ObjectType.ACCOUNT.name(),internalCallContext);
         assertListenerStatus();
 
         final TagDefinitionModelDao resDefYo = tagDefinitionDao.getByName(defYo.getName(), internalCallContext);
@@ -106,7 +106,7 @@ public class TestDefaultTagDao extends UtilTestSuiteWithEmbeddedDB {
 
         // Control Tag
         try {
-            tagDefinitionDao.create(ControlTagType.AUTO_PAY_OFF.name(), ControlTagType.AUTO_INVOICING_OFF.name(), internalCallContext);
+            tagDefinitionDao.create(ControlTagType.AUTO_PAY_OFF.name(), ControlTagType.AUTO_INVOICING_OFF.name(), ObjectType.ACCOUNT.name(), internalCallContext);
             Assert.fail("Should not be able to create a invoice tag");
         } catch (TagDefinitionApiException ignore) {
         }
@@ -125,7 +125,7 @@ public class TestDefaultTagDao extends UtilTestSuiteWithEmbeddedDB {
 
         // Create a tag definition
         eventsListener.pushExpectedEvent(NextEvent.TAG_DEFINITION);
-        final TagDefinitionModelDao createdTagDefinition = tagDefinitionDao.create(definitionName, description, internalCallContext);
+        final TagDefinitionModelDao createdTagDefinition = tagDefinitionDao.create(definitionName, description, ObjectType.ACCOUNT.name(), internalCallContext);
         Assert.assertEquals(createdTagDefinition.getName(), definitionName);
         Assert.assertEquals(createdTagDefinition.getDescription(), description);
         assertListenerStatus();
@@ -154,6 +154,15 @@ public class TestDefaultTagDao extends UtilTestSuiteWithEmbeddedDB {
         Assert.assertEquals(tagDao.getTagsForAccount(false, internalCallContext).size(), 0);
         Assert.assertEquals(tagDao.getTagsForObject(objectId, objectType, true, internalCallContext).size(), 1);
         Assert.assertEquals(tagDao.getTagsForAccount(true, internalCallContext).size(), 1);
+
+        // Delete tag again, check correct error
+        try {
+            tagDao.deleteTag(objectId, objectType, createdTagDefinition.getId(), internalCallContext);
+            Assert.fail("Deleting same tag again should fail");
+        } catch (final TagApiException e) {
+            Assert.assertEquals(e.getCode(), ErrorCode.TAG_DOES_NOT_EXIST.getCode());
+        }
+
     }
 
     @Test(groups = "slow")

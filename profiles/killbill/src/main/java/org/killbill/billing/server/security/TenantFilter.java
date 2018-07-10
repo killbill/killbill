@@ -37,6 +37,7 @@ import org.apache.shiro.authc.UsernamePasswordToken;
 import org.apache.shiro.authc.pam.ModularRealmAuthenticator;
 import org.apache.shiro.realm.Realm;
 import org.killbill.billing.jaxrs.resources.JaxrsResource;
+import org.killbill.billing.jaxrs.resources.KillBillApiDefinition;
 import org.killbill.billing.jaxrs.util.Context;
 import org.killbill.billing.server.listeners.KillbillGuiceListener;
 import org.killbill.billing.tenant.api.Tenant;
@@ -105,7 +106,7 @@ public class TenantFilter implements Filter {
             request.setAttribute(TENANT, tenant);
 
             // Create a dummy context, to set the MDC very early for LoggingFilter
-            context.createContext(request);
+            context.createTenantContextNoAccountId(request);
 
             chain.doFilter(request, response);
         } catch (final TenantApiException e) {
@@ -128,66 +129,23 @@ public class TenantFilter implements Filter {
 
     private boolean shouldContinueIfTenantInformationIsWrongOrMissing(final ServletRequest request) {
         boolean shouldContinue = false;
-
         if (request instanceof HttpServletRequest) {
             final HttpServletRequest httpServletRequest = (HttpServletRequest) request;
             final String path = httpServletRequest.getPathInfo();
             final String httpMethod = httpServletRequest.getMethod();
-            if (    // Chicken - egg problem
-                    isTenantCreationRequest(path, httpMethod) ||
-                    // Retrieve user permissions should not require tenant info since this is cross tenants
-                    isPermissionRequest(path) ||
-                    // Node request are cross tenant
-                    isNodeInfoRequest(path) ||
-                    // Metrics servlets
-                    isMetricsRequest(path, httpMethod) ||
-                    // See KillBillShiroWebModule#CorsBasicHttpAuthenticationFilter
-                    isOptionsRequest(httpMethod) ||
-                    // Shift the responsibility to the plugin
-                    isPluginRequest(path) ||
-                    // Static resources (welcome screen, Swagger, etc.)
-                    isNotKbNorPluginResourceRequest(path, httpMethod)
-                    ) {
-                shouldContinue = true;
-            }
+            shouldContinue = shouldContinueIfTenantInformationIsWrongOrMissing(path, httpMethod);
         }
-
         return shouldContinue;
     }
 
-
-
-    private boolean isPermissionRequest(final String path) {
-        return path != null && path.startsWith(JaxrsResource.SECURITY_PATH);
-    }
-
-    private boolean isTenantCreationRequest(final String path, final String httpMethod) {
-        return JaxrsResource.TENANTS_PATH.equals(path) && "POST".equals(httpMethod);
-    }
-
-    private boolean isNodeInfoRequest(final String path) {
-        return JaxrsResource.NODES_INFO_PATH.equals(path);
-    }
-
-    private boolean isMetricsRequest(final String path, final String httpMethod) {
-        return KillbillGuiceListener.METRICS_SERVLETS_PATHS.contains(path) && "GET".equals(httpMethod);
-    }
-
-    private boolean isOptionsRequest(final String httpMethod) {
-        return "OPTIONS".equals(httpMethod);
+    private static boolean isMetricsRequest(final String path, final String httpMethod) {
+        return KillbillGuiceListener.METRICS_SERVLETS_PATHS.contains(path) && "GET".equalsIgnoreCase(httpMethod);
     }
 
 
-    private boolean isNotKbNorPluginResourceRequest(final String path, final String httpMethod) {
-        return !isPluginRequest(path) && !isKbApiRequest(path) && "GET".equals(httpMethod);
-    }
-
-    private boolean isKbApiRequest(final String path) {
-        return path != null && path.startsWith(JaxrsResource.PREFIX);
-    }
-
-    private boolean isPluginRequest(final String path) {
-        return path != null && path.startsWith(JaxrsResource.PLUGINS_PATH);
+    public static boolean shouldContinueIfTenantInformationIsWrongOrMissing(final String path, final String httpMethod) {
+        final boolean requiresTenantInfo = KillBillApiDefinition.requiresTenantInformation(path, httpMethod);
+        return isMetricsRequest(path, httpMethod) || !requiresTenantInfo;
     }
 
     private void sendAuthError(final ServletResponse response, final String errorMessage) throws IOException {

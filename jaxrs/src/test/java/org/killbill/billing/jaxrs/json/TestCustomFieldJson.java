@@ -28,8 +28,8 @@ public class TestCustomFieldJson extends JaxrsTestSuiteNoDB {
 
     @Test(groups = "fast")
     public void testJson() throws Exception {
-        final String customFieldId = UUID.randomUUID().toString();
-        final String objectId = UUID.randomUUID().toString();
+        final UUID customFieldId = UUID.randomUUID();
+        final UUID objectId = UUID.randomUUID();
         final ObjectType objectType = ObjectType.INVOICE;
         final String name = UUID.randomUUID().toString();
         final String value = UUID.randomUUID().toString();
@@ -39,7 +39,7 @@ public class TestCustomFieldJson extends JaxrsTestSuiteNoDB {
         Assert.assertEquals(customFieldJson.getObjectType(), objectType);
         Assert.assertEquals(customFieldJson.getName(), name);
         Assert.assertEquals(customFieldJson.getValue(), value);
-        Assert.assertNull(customFieldJson.getAuditLogs());
+        Assert.assertEquals(customFieldJson.getAuditLogs().size(), 0);
 
         final String asJson = mapper.writeValueAsString(customFieldJson);
         final CustomFieldJson fromJson = mapper.readValue(asJson, CustomFieldJson.class);

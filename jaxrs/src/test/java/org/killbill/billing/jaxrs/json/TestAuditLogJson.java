@@ -41,22 +41,30 @@ public class TestAuditLogJson extends JaxrsTestSuiteNoDB {
         final String reasonCode = UUID.randomUUID().toString();
         final String comments = UUID.randomUUID().toString();
         final String userToken = UUID.randomUUID().toString();
+        final UUID objectId = UUID.randomUUID();
+        final ObjectType objectType = ObjectType.BUNDLE;
 
-        final AuditLogJson auditLogJson = new AuditLogJson(changeType, changeDate, changedBy, reasonCode, comments, userToken);
+        final AuditLogJson auditLogJson = new AuditLogJson(changeType, changeDate, objectType, objectId, changedBy, reasonCode, comments, userToken, null);
         Assert.assertEquals(auditLogJson.getChangeType(), changeType);
         Assert.assertEquals(auditLogJson.getChangeDate(), changeDate);
         Assert.assertEquals(auditLogJson.getChangedBy(), changedBy);
         Assert.assertEquals(auditLogJson.getReasonCode(), reasonCode);
         Assert.assertEquals(auditLogJson.getComments(), comments);
         Assert.assertEquals(auditLogJson.getUserToken(), userToken);
+        Assert.assertEquals(auditLogJson.getObjectType(), objectType);
+        Assert.assertEquals(auditLogJson.getObjectId(), objectId);
+
 
         final String asJson = mapper.writeValueAsString(auditLogJson);
         Assert.assertEquals(asJson, "{\"changeType\":\"" + auditLogJson.getChangeType() + "\"," +
                                     "\"changeDate\":\"" + auditLogJson.getChangeDate().toDateTimeISO().toString() + "\"," +
+                                    "\"objectType\":\"" + auditLogJson.getObjectType().toString() + "\"," +
+                                    "\"objectId\":\"" + auditLogJson.getObjectId().toString() + "\"," +
                                     "\"changedBy\":\"" + auditLogJson.getChangedBy() + "\"," +
                                     "\"reasonCode\":\"" + auditLogJson.getReasonCode() + "\"," +
                                     "\"comments\":\"" + auditLogJson.getComments() + "\"," +
-                                    "\"userToken\":\"" + auditLogJson.getUserToken() + "\"}");
+                                    "\"userToken\":\"" + auditLogJson.getUserToken() + "\"," +
+                                    "\"history\":" + auditLogJson.getHistory() + "}");
 
         final AuditLogJson fromJson = mapper.readValue(asJson, AuditLogJson.class);
         Assert.assertEquals(fromJson, auditLogJson);
@@ -78,5 +86,6 @@ public class TestAuditLogJson extends JaxrsTestSuiteNoDB {
         Assert.assertEquals(auditLogJson.getReasonCode(), callContext.getReasonCode());
         Assert.assertEquals(auditLogJson.getComments(), callContext.getComments());
         Assert.assertEquals(auditLogJson.getUserToken(), callContext.getUserToken().toString());
+        Assert.assertEquals(auditLogJson.getObjectType(), ObjectType.ACCOUNT_EMAIL);
     }
 }

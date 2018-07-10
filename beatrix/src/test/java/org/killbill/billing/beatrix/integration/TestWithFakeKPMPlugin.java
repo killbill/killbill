@@ -95,10 +95,10 @@ public class TestWithFakeKPMPlugin extends TestIntegrationBase {
 
     @Override
     protected KillbillConfigSource getConfigSource() {
-        ImmutableMap additionalProperties = new ImmutableMap.Builder()
+        return getConfigSource(null, new ImmutableMap.Builder()
+                .putAll(DEFAULT_BEATRIX_PROPERTIES)
                 .put("org.killbill.billing.util.broadcast.rate", "100ms")
-                .build();
-        return getConfigSource("/beatrix.properties", additionalProperties);
+                .build());
     }
 
     public class FakeKPMPlugin {
@@ -312,12 +312,20 @@ public class TestWithFakeKPMPlugin extends TestIntegrationBase {
 
     @BeforeClass(groups = "slow")
     public void beforeClass() throws Exception {
+        if (hasFailed()) {
+            return;
+        }
+
         final Injector g = Guice.createInjector(Stage.PRODUCTION, Modules.override(new BeatrixIntegrationModule(configSource)).with(new OverrideModuleForOSGI()));
         g.injectMembers(this);
     }
 
     @BeforeMethod(groups = "slow")
     public void beforeMethod() throws Exception {
+        if (hasFailed()) {
+            return;
+        }
+
         log.debug("RESET TEST FRAMEWORK");
 
         cleanupAllTables();

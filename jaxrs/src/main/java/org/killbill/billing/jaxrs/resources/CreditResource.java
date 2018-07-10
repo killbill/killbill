@@ -1,7 +1,9 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
+ * Copyright 2014-2018 Groupon, Inc
+ * Copyright 2014-2018 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -16,6 +18,7 @@
 
 package org.killbill.billing.jaxrs.resources;
 
+import java.util.List;
 import java.util.UUID;
 
 import javax.servlet.http.HttpServletRequest;
@@ -43,7 +46,9 @@ import org.killbill.billing.invoice.api.InvoiceUserApi;
 import org.killbill.billing.jaxrs.json.CreditJson;
 import org.killbill.billing.jaxrs.util.Context;
 import org.killbill.billing.jaxrs.util.JaxrsUriBuilder;
+import org.killbill.billing.payment.api.InvoicePaymentApi;
 import org.killbill.billing.payment.api.PaymentApi;
+import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.util.api.AuditUserApi;
 import org.killbill.billing.util.api.CustomFieldUserApi;
 import org.killbill.billing.util.api.TagUserApi;
@@ -62,7 +67,7 @@ import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 
 @Singleton
 @Path(JaxrsResource.CREDITS_PATH)
-@Api(value = JaxrsResource.CREDITS_PATH, description = "Operations on credits")
+@Api(value = JaxrsResource.CREDITS_PATH, description = "Operations on credits", tags="Credit")
 public class CreditResource extends JaxRsResourceBase {
 
     private final InvoiceUserApi invoiceUserApi;
@@ -76,9 +81,10 @@ public class CreditResource extends JaxRsResourceBase {
                           final CustomFieldUserApi customFieldUserApi,
                           final AuditUserApi auditUserApi,
                           final PaymentApi paymentApi,
+                          final InvoicePaymentApi invoicePaymentApi,
                           final Clock clock,
                           final Context context) {
-        super(uriBuilder, tagUserApi, customFieldUserApi, auditUserApi, accountUserApi, paymentApi, null, clock, context);
+        super(uriBuilder, tagUserApi, customFieldUserApi, auditUserApi, accountUserApi, paymentApi, invoicePaymentApi, null, clock, context);
         this.invoiceUserApi = invoiceUserApi;
         this.accountUserApi = accountUserApi;
     }
@@ -89,10 +95,10 @@ public class CreditResource extends JaxRsResourceBase {
     @ApiOperation(value = "Retrieve a credit by id", response = CreditJson.class)
     @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid credit id supplied"),
                            @ApiResponse(code = 404, message = "Credit not found")})
-    public Response getCredit(@PathParam("creditId") final String creditId,
+    public Response getCredit(@PathParam("creditId") final UUID creditId,
                               @javax.ws.rs.core.Context final HttpServletRequest request) throws InvoiceApiException, AccountApiException {
-        final TenantContext tenantContext = context.createContext(request);
-        final InvoiceItem credit = invoiceUserApi.getCreditById(UUID.fromString(creditId), tenantContext);
+        final TenantContext tenantContext = context.createTenantContextNoAccountId(request);
+        final InvoiceItem credit = invoiceUserApi.getCreditById(creditId, tenantContext);
         final Invoice invoice = invoiceUserApi.getInvoice(credit.getInvoiceId(), tenantContext);
         final CreditJson creditJson = new CreditJson(invoice, credit);
         return Response.status(Response.Status.OK).entity(creditJson).build();
@@ -101,11 +107,13 @@ public class CreditResource extends JaxRsResourceBase {
     @POST
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
-    @ApiOperation(value = "Create a credit")
-    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid account id supplied"),
+    @ApiOperation(value = "Create a credit", response = CreditJson.class)
+    @ApiResponses(value = {@ApiResponse(code = 201, message = "Created credit successfully"),
+                           @ApiResponse(code = 400, message = "Invalid account id supplied"),
                            @ApiResponse(code = 404, message = "Account not found")})
     public Response createCredit(final CreditJson json,
                                  @QueryParam(QUERY_AUTO_COMMIT) @DefaultValue("false") final Boolean autoCommit,
+                                 @QueryParam(QUERY_PLUGIN_PROPERTY) final List<String> pluginPropertiesString,
                                  @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                  @HeaderParam(HDR_REASON) final String reason,
                                  @HeaderParam(HDR_COMMENT) final String comment,
@@ -115,20 +123,21 @@ public class CreditResource extends JaxRsResourceBase {
         verifyNonNullOrEmpty(json.getAccountId(), "CreditJson accountId needs to be set",
                              json.getCreditAmount(), "CreditJson creditAmount needs to be set");
 
-        final CallContext callContext = context.createContext(createdBy, reason, comment, request);
+        final Iterable<PluginProperty> pluginProperties = extractPluginProperties(pluginPropertiesString);
+        final CallContext callContext = context.createCallContextWithAccountId(json.getAccountId(), createdBy, reason, comment, request);
 
-        final Account account = accountUserApi.getAccountById(UUID.fromString(json.getAccountId()), callContext);
-        final LocalDate effectiveDate = new LocalDate(clock.getUTCNow(), account.getTimeZone());
+        final Account account = accountUserApi.getAccountById(json.getAccountId(), callContext);
+        final LocalDate effectiveDate = new LocalDate(callContext.getCreatedDate(), account.getTimeZone());
 
         final InvoiceItem credit;
         if (json.getInvoiceId() != null) {
             // Apply an invoice level credit
-            credit = invoiceUserApi.insertCreditForInvoice(account.getId(), UUID.fromString(json.getInvoiceId()), json.getCreditAmount(),
-                                                           effectiveDate, account.getCurrency(), json.getDescription(), callContext);
+            credit = invoiceUserApi.insertCreditForInvoice(account.getId(), json.getInvoiceId(), json.getCreditAmount(),
+                                                           effectiveDate, account.getCurrency(), json.getDescription(), json.getItemDetails(), pluginProperties, callContext);
         } else {
             // Apply a account level credit
             credit = invoiceUserApi.insertCredit(account.getId(), json.getCreditAmount(), effectiveDate,
-                                                 account.getCurrency(), autoCommit, json.getDescription(), callContext);
+                                                 account.getCurrency(), autoCommit, json.getDescription(), json.getItemDetails(), pluginProperties, callContext);
         }
 
         return uriBuilder.buildResponse(uriInfo, CreditResource.class, "getCredit", credit.getId(), request);

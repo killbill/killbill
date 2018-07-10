@@ -37,7 +37,6 @@ import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.catalog.api.Catalog;
 import org.killbill.billing.catalog.api.CatalogApiException;
-import org.killbill.billing.catalog.api.CatalogService;
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.catalog.api.Plan;
 import org.killbill.billing.catalog.api.PlanPhase;
@@ -49,6 +48,7 @@ import org.killbill.billing.subscription.api.SubscriptionBase;
 import org.killbill.billing.subscription.api.SubscriptionBaseTransitionType;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Preconditions;
 import com.google.common.base.Function;
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
@@ -63,12 +63,10 @@ public class BlockingCalculator {
     private static final AtomicLong globaltotalOrder = new AtomicLong();
 
     private final BlockingInternalApi blockingApi;
-    private final CatalogService catalogService;
 
     @Inject
-    public BlockingCalculator(final BlockingInternalApi blockingApi, final CatalogService catalogService) {
+    public BlockingCalculator(final BlockingInternalApi blockingApi) {
         this.blockingApi = blockingApi;
-        this.catalogService = catalogService;
     }
 
     /**
@@ -76,7 +74,7 @@ public class BlockingCalculator {
      *
      * @param billingEvents the original list of billing events to update (without overdue events)
      */
-    public boolean insertBlockingEvents(final SortedSet<BillingEvent> billingEvents, final Set<UUID> skippedSubscriptions, final InternalTenantContext context) throws CatalogApiException {
+    public boolean insertBlockingEvents(final SortedSet<BillingEvent> billingEvents, final Set<UUID> skippedSubscriptions, final Catalog catalog, final InternalTenantContext context) throws CatalogApiException {
         if (billingEvents.size() <= 0) {
             return false;
         }
@@ -86,7 +84,7 @@ public class BlockingCalculator {
         final SortedSet<BillingEvent> billingEventsToAdd = new TreeSet<BillingEvent>();
         final SortedSet<BillingEvent> billingEventsToRemove = new TreeSet<BillingEvent>();
 
-        final List<BlockingState> blockingEvents = blockingApi.getBlockingAllForAccount(context);
+        final List<BlockingState> blockingEvents = blockingApi.getBlockingAllForAccount(catalog, context);
 
         final Iterable<BlockingState> accountBlockingEvents = Iterables.filter(blockingEvents, new Predicate<BlockingState>() {
             @Override
@@ -114,7 +112,7 @@ public class BlockingCalculator {
 
                 final SortedSet<BillingEvent> subscriptionBillingEvents = filter(billingEvents, subscription);
 
-                final SortedSet<BillingEvent> newEvents = createNewEvents(accountBlockingDurations, subscriptionBillingEvents, context);
+                final SortedSet<BillingEvent> newEvents = createNewEvents(accountBlockingDurations, subscriptionBillingEvents, catalog, context);
                 billingEventsToAdd.addAll(newEvents);
 
                 final SortedSet<BillingEvent> removedEvents = eventsToRemove(accountBlockingDurations, subscriptionBillingEvents);
@@ -183,10 +181,11 @@ public class BlockingCalculator {
         return result;
     }
 
-    protected SortedSet<BillingEvent> createNewEvents(final List<DisabledDuration> disabledDuration, final SortedSet<BillingEvent> subscriptionBillingEvents, final InternalTenantContext context) throws CatalogApiException {
+    protected SortedSet<BillingEvent> createNewEvents(final List<DisabledDuration> disabledDuration, final SortedSet<BillingEvent> subscriptionBillingEvents, final Catalog catalog, final InternalTenantContext context) throws CatalogApiException {
+
+        Preconditions.checkState(context.getAccountRecordId() != null);
 
         final SortedSet<BillingEvent> result = new TreeSet<BillingEvent>();
-        final Catalog catalog = catalogService.getFullCatalog(true, true, context);
 
         for (final DisabledDuration duration : disabledDuration) {
             // The first one before the blocked duration

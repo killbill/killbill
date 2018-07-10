@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014-2017 Groupon, Inc
- * Copyright 2014-2017 The Billing Project, LLC
+ * Copyright 2014-2018 Groupon, Inc
+ * Copyright 2014-2018 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -40,12 +40,12 @@ import org.killbill.billing.catalog.api.PhaseType;
 import org.killbill.billing.catalog.api.Plan;
 import org.killbill.billing.catalog.api.PlanPhase;
 import org.killbill.billing.catalog.api.PlanPhasePriceOverride;
-import org.killbill.billing.catalog.api.PlanSpecifier;
 import org.killbill.billing.catalog.api.PriceList;
 import org.killbill.billing.catalog.api.Product;
 import org.killbill.billing.catalog.api.ProductCategory;
 import org.killbill.billing.entitlement.api.Entitlement.EntitlementSourceType;
 import org.killbill.billing.entitlement.api.Entitlement.EntitlementState;
+import org.killbill.billing.entitlement.api.EntitlementSpecifier;
 import org.killbill.billing.entity.EntityBase;
 import org.killbill.billing.subscription.api.SubscriptionBase;
 import org.killbill.billing.subscription.api.SubscriptionBaseApiService;
@@ -202,13 +202,13 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
         }
     }
 
-
     @Override
     public Plan getCurrentPlan() {
         return (getPreviousTransition() == null) ? null
                                                  : getPreviousTransition().getNextPlan();
     }
 
+    @Override
     public Plan getCurrentOrPendingPlan() {
         if (getState() == EntitlementState.PENDING) {
             return getPendingTransition().getNextPlan();
@@ -262,7 +262,7 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
     }
 
     @Override
-    public boolean cancelWithPolicy(final BillingActionPolicy policy, int accountBillCycleDayLocal, final CallContext context) throws SubscriptionBaseApiException {
+    public boolean cancelWithPolicy(final BillingActionPolicy policy, final int accountBillCycleDayLocal, final CallContext context) throws SubscriptionBaseApiException {
         return apiService.cancelWithPolicy(this, policy, accountBillCycleDayLocal, context);
     }
 
@@ -273,21 +273,26 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
     }
 
     @Override
-    public DateTime changePlan(final PlanSpecifier spec,
-                               final List<PlanPhasePriceOverride> overrides, final CallContext context) throws SubscriptionBaseApiException {
-        return apiService.changePlan(this, spec, overrides, context);
+    public DateTime changePlan(final EntitlementSpecifier spec,
+                                final CallContext context) throws SubscriptionBaseApiException {
+        return apiService.changePlan(this, spec, context);
     }
 
     @Override
-    public DateTime changePlanWithDate(final PlanSpecifier spec, final List<PlanPhasePriceOverride> overrides,
+    public boolean undoChangePlan(final CallContext context) throws SubscriptionBaseApiException {
+        return apiService.undoChangePlan(this, context);
+    }
+
+    @Override
+    public DateTime changePlanWithDate(final EntitlementSpecifier spec,
                                        final DateTime requestedDate, final CallContext context) throws SubscriptionBaseApiException {
-        return apiService.changePlanWithRequestedDate(this, spec, overrides, requestedDate, context);
+        return apiService.changePlanWithRequestedDate(this, spec, requestedDate, context);
     }
 
     @Override
-    public DateTime changePlanWithPolicy(final PlanSpecifier spec,
-                                         final List<PlanPhasePriceOverride> overrides, final BillingActionPolicy policy, final CallContext context) throws SubscriptionBaseApiException {
-        return apiService.changePlanWithPolicy(this, spec, overrides, policy, context);
+    public DateTime changePlanWithPolicy(final EntitlementSpecifier spec,
+                                         final BillingActionPolicy policy, final CallContext context) throws SubscriptionBaseApiException {
+        return apiService.changePlanWithPolicy(this, spec, policy, context);
     }
 
     @Override
@@ -500,10 +505,10 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
                 prev = curData;
             }
         }
-        // Since UNCANCEL are not part of the transitions, we compute a new 'UNCANCEL' transition based on the event right before that UNCANCEL
-        // This is used to be able to send a bus event for uncancellation
-        if (prev != null && event.getType() == EventType.API_USER && ((ApiEvent) event).getApiEventType() == ApiEventType.UNCANCEL) {
-            final SubscriptionBaseTransitionData withSeq = new SubscriptionBaseTransitionData((SubscriptionBaseTransitionData) prev, EventType.API_USER, ApiEventType.UNCANCEL, seqId);
+        // Since UNCANCEL/UNDO_CHANGE are not part of the transitions, we compute a new transition based on the event right before
+        // This is used to be able to send a bus event for uncancellation/undo_change
+        if (prev != null && event.getType() == EventType.API_USER && (((ApiEvent) event).getApiEventType() == ApiEventType.UNCANCEL || ((ApiEvent) event).getApiEventType() == ApiEventType.UNDO_CHANGE)) {
+            final SubscriptionBaseTransitionData withSeq = new SubscriptionBaseTransitionData(prev, EventType.API_USER, ((ApiEvent) event).getApiEventType(), seqId);
             return withSeq;
         }
         return null;
@@ -568,8 +573,23 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
         throw new SubscriptionBaseError(String.format("Failed to find InitialTransitionForCurrentPlan id = %s", getId()));
     }
 
-    public boolean isSubscriptionFutureCancelled() {
+    public boolean isFutureCancelled() {
         return getFutureEndDate() != null;
+    }
+
+    public boolean isPendingChangePlan() {
+
+        final SubscriptionBaseTransitionDataIterator it = new SubscriptionBaseTransitionDataIterator(
+                clock, transitions, Order.ASC_FROM_PAST,
+                Visibility.ALL, TimeLimit.FUTURE_ONLY);
+
+        while (it.hasNext()) {
+            final SubscriptionBaseTransition next = it.next();
+            if (next.getTransitionType() == SubscriptionBaseTransitionType.CHANGE) {
+                return true;
+            }
+        }
+        return false;
     }
 
     public DateTime getPlanChangeEffectiveDate(final BillingActionPolicy policy, @Nullable final BillingAlignment alignment, @Nullable final Integer accountBillCycleDayLocal, final InternalTenantContext context) {
@@ -582,7 +602,7 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
             case START_OF_TERM:
                 if (chargedThroughDate == null) {
                     candidateResult = getStartDate();
-                // Will take care of billing IN_ARREAR or subscriptions that are not invoiced up to date
+                    // Will take care of billing IN_ARREAR or subscriptions that are not invoiced up to date
                 } else if (!chargedThroughDate.isAfter(clock.getUTCNow())) {
                     candidateResult = chargedThroughDate;
                 } else {
@@ -590,7 +610,7 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
                     // In certain path (dryRun, or default catalog START_OF_TERM policy), the info is not easily available and as a result, such policy is not implemented
                     Preconditions.checkState(alignment != null && context != null && accountBillCycleDayLocal != null, "START_OF_TERM not implemented in dryRun use case");
 
-                    Preconditions.checkState(alignment != BillingAlignment.BUNDLE || category != ProductCategory.ADD_ON,  "START_OF_TERM not implemented for AO configured with a BUNDLE billing alignment");
+                    Preconditions.checkState(alignment != BillingAlignment.BUNDLE || category != ProductCategory.ADD_ON, "START_OF_TERM not implemented for AO configured with a BUNDLE billing alignment");
 
                     // If BCD was overriden at the subscription level, we take its latest value (it should also be reflected in the chargedThroughDate) but still required for
                     // alignment purpose
@@ -605,7 +625,7 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
                         proposedDate = proposedDate.minus(billingPeriod.getPeriod());
                     }
 
-                    final LocalDate resultingLocalDate  = BillCycleDayCalculator.alignProposedBillCycleDate(proposedDate, bcd, billingPeriod, context);
+                    final LocalDate resultingLocalDate = BillCycleDayCalculator.alignProposedBillCycleDate(proposedDate, bcd, billingPeriod, context);
                     candidateResult = context.toUTCDateTime(resultingLocalDate);
                 }
 
@@ -658,12 +678,33 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
 
         this.events = inputEvents;
 
-        filterOutDuplicateCancelEvents(events);
+        Collections.sort(inputEvents, new Comparator<SubscriptionBaseEvent>() {
+            @Override
+            public int compare(final SubscriptionBaseEvent o1, final SubscriptionBaseEvent o2) {
+                final int res = o1.getEffectiveDate().compareTo(o2.getEffectiveDate());
+                if (res != 0) {
+                    return res;
+                }
 
-        UUID nextUserToken = null;
+                // In-memory events have a total order of 0, make sure they are after on disk event
+                if (o1.getTotalOrdering() == 0 && o2.getTotalOrdering() > 0) {
+                    return 1;
+                } else if (o1.getTotalOrdering() > 0 && o2.getTotalOrdering() == 0) {
+                    return -1;
+                } else if (o1.getTotalOrdering() == o2.getTotalOrdering()) {
+                    return 0;
+                } else {
+                    return o1.getTotalOrdering() < (o2.getTotalOrdering()) ? -1 : 1;
+                }
+            }
+        });
 
-        UUID nextEventId = null;
-        DateTime nextCreatedDate = null;
+        removeEverythingPastCancelEvent(events);
+
+        final UUID nextUserToken = null;
+
+        UUID nextEventId;
+        DateTime nextCreatedDate;
         EntitlementState nextState = null;
         String nextPlanName = null;
         String nextPhaseName = null;
@@ -679,28 +720,9 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
 
         transitions = new LinkedList<SubscriptionBaseTransition>();
 
-        // DefaultSubscriptionDao#buildBundleSubscriptions may have added an out-of-order cancellation event (https://github.com/killbill/killbill/issues/897)
-        final SubscriptionBaseEvent cancellationEvent = Iterables.tryFind(inputEvents,
-                                                                          new Predicate<SubscriptionBaseEvent>() {
-                                                                              @Override
-                                                                              public boolean apply(final SubscriptionBaseEvent input) {
-                                                                                  return input.getType() == EventType.API_USER && ((ApiEvent) input).getApiEventType() == ApiEventType.CANCEL;
-                                                                              }
-                                                                          }).orNull();
         for (final SubscriptionBaseEvent cur : inputEvents) {
             if (!cur.isActive()) {
                 continue;
-            }
-
-            if (cancellationEvent != null) {
-                if (cur.getId().compareTo(cancellationEvent.getId()) == 0) {
-                    // Keep the cancellation event
-                } else if (cur.getType() == EventType.API_USER && (((ApiEvent) cur).getApiEventType() == ApiEventType.TRANSFER || ((ApiEvent) cur).getApiEventType() == ApiEventType.CREATE)) {
-                    // Keep the initial event (SOT use-case)
-                } else if (cur.getEffectiveDate().compareTo(cancellationEvent.getEffectiveDate()) >= 0) {
-                    // Event to ignore past cancellation date
-                    continue;
-                }
             }
 
             ApiEventType apiEventType = null;
@@ -749,6 +771,7 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
                             nextPhaseName = null;
                             break;
                         case UNCANCEL:
+                        case UNDO_CHANGE:
                         default:
                             throw new SubscriptionBaseError(String.format(
                                     "Unexpected UserEvent type = %s", userEV
@@ -760,13 +783,9 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
                             "Unexpected Event type = %s", cur.getType()));
             }
 
-            Plan nextPlan = null;
-            PlanPhase nextPhase = null;
-            PriceList nextPriceList = null;
-
-            nextPlan = (nextPlanName != null) ? catalog.findPlan(nextPlanName, cur.getEffectiveDate(), getAlignStartDate()) : null;
-            nextPhase = (nextPhaseName != null) ? catalog.findPhase(nextPhaseName, cur.getEffectiveDate(), getAlignStartDate()) : null;
-            nextPriceList = (nextPlan != null) ? catalog.findPriceListForPlan(nextPlanName, cur.getEffectiveDate(), getAlignStartDate()) : null;
+            final Plan nextPlan = (nextPlanName != null) ? catalog.findPlan(nextPlanName, cur.getEffectiveDate(), getAlignStartDate()) : null;
+            final PlanPhase nextPhase = (nextPlan != null && nextPhaseName != null) ? nextPlan.findPhase(nextPhaseName) : null;
+            final PriceList nextPriceList = (nextPlan != null) ? catalog.findPriceListForPlan(nextPlanName, cur.getEffectiveDate(), getAlignStartDate()) : null;
 
             final SubscriptionBaseTransitionData transition = new SubscriptionBaseTransitionData(
                     cur.getId(), id, bundleId, bundleExternalKey, cur.getType(), apiEventType,
@@ -797,73 +816,37 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
         }
     }
 
+    // Skip any event after a CANCEL event:
     //
-    // Hardening against data integrity issues where we have multiple active CANCEL (See #619):
-    // We skip any cancel events after the first one (subscription cannot be cancelled multiple times).
-    // The code should prevent such cases from happening but because of #619, some invalid data could be there so to be safe we added this code
+    //  * DefaultSubscriptionDao#buildBundleSubscriptions may have added an out-of-order cancellation event (https://github.com/killbill/killbill/issues/897)
+    //  * Hardening against data integrity issues where we have multiple active CANCEL (https://github.com/killbill/killbill/issues/619)
     //
-    // Also we remove !onDisk cancel events when there is an onDisk cancel event (can happen during the path where we process the base plan cancel notification, and are
-    // in the process of adding the new cancel events for the AO)
-    //
-    private void filterOutDuplicateCancelEvents(final List<SubscriptionBaseEvent> inputEvents) {
-
-        Collections.sort(inputEvents, new Comparator<SubscriptionBaseEvent>() {
-            @Override
-            public int compare(final SubscriptionBaseEvent o1, final SubscriptionBaseEvent o2) {
-                int res = o1.getEffectiveDate().compareTo(o2.getEffectiveDate());
-                if (res == 0) {
-                    // In-memory events have a total order of 0, make sure they are after on disk event
-                    if (o1.getTotalOrdering() == 0 && o2.getTotalOrdering() > 0) {
-                        return 1;
-                    } else if (o1.getTotalOrdering() > 0 && o2.getTotalOrdering() == 0) {
-                        return -1;
-                    } else {
-                        res = o1.getTotalOrdering() < (o2.getTotalOrdering()) ? -1 : 1;
-                    }
-                }
-                return res;
-            }
-        });
-
-        final boolean isCancelled = Iterables.any(inputEvents, new Predicate<SubscriptionBaseEvent>() {
-            @Override
-            public boolean apply(final SubscriptionBaseEvent input) {
-                if (input.isActive() && input.getType() == EventType.API_USER) {
-                    final ApiEvent userEV = (ApiEvent) input;
-                    if (userEV.getApiEventType() == ApiEventType.CANCEL && userEV.isFromDisk()) {
-                        return true;
-                    }
-                }
-                return false;
-            }
-        });
-
-        if (!isCancelled) {
+    private void removeEverythingPastCancelEvent(final List<SubscriptionBaseEvent> inputEvents) {
+        final SubscriptionBaseEvent cancellationEvent = Iterables.tryFind(inputEvents,
+                                                                          new Predicate<SubscriptionBaseEvent>() {
+                                                                              @Override
+                                                                              public boolean apply(final SubscriptionBaseEvent input) {
+                                                                                  return input.getType() == EventType.API_USER && ((ApiEvent) input).getApiEventType() == ApiEventType.CANCEL;
+                                                                              }
+                                                                          }).orNull();
+        if (cancellationEvent == null) {
             return;
         }
 
-
-        boolean foundFirstOnDiskCancel = false;
-        final Iterator<SubscriptionBaseEvent> it =  inputEvents.iterator();
-        while(it.hasNext()) {
+        final Iterator<SubscriptionBaseEvent> it = inputEvents.iterator();
+        while (it.hasNext()) {
             final SubscriptionBaseEvent input = it.next();
             if (!input.isActive()) {
                 continue;
             }
 
-            if (input.getType() == EventType.API_USER) {
-                final ApiEvent userEV = (ApiEvent) input;
-                if (userEV.getApiEventType() == ApiEventType.CANCEL) {
-                    if (userEV.isFromDisk()) {
-                        if (!foundFirstOnDiskCancel) {
-                            foundFirstOnDiskCancel = true;
-                        } else {
-                            it.remove();
-                        }
-                    } else {
-                        it.remove();
-                    }
-                }
+            if (input.getId().compareTo(cancellationEvent.getId()) == 0) {
+                // Keep the cancellation event
+            } else if (input.getType() == EventType.API_USER && (((ApiEvent) input).getApiEventType() == ApiEventType.TRANSFER || ((ApiEvent) input).getApiEventType() == ApiEventType.CREATE)) {
+                // Keep the initial event (SOT use-case)
+            } else if (input.getEffectiveDate().compareTo(cancellationEvent.getEffectiveDate()) >= 0) {
+                // Event to ignore past cancellation date
+                it.remove();
             }
         }
     }

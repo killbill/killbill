@@ -29,18 +29,26 @@ import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.invoice.api.InvoiceItemType;
 import org.killbill.billing.util.UUIDs;
 
-public class FixedPriceInvoiceItem extends InvoiceItemBase {
+public class FixedPriceInvoiceItem extends InvoiceItemCatalogBase {
 
     public FixedPriceInvoiceItem(final UUID invoiceId, final UUID accountId, @Nullable final UUID bundleId, @Nullable final UUID subscriptionId,
-                                 final String planName, final String phaseName,
+                                 final String productName, final String planName, final String phaseName,
                                  final LocalDate date, final BigDecimal amount, final Currency currency) {
-        this(UUIDs.randomUUID(), null, invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, null, date, amount, currency);
+        this(UUIDs.randomUUID(), null, invoiceId, accountId, bundleId, subscriptionId, productName, planName, phaseName, null, date, amount, currency);
     }
 
     public FixedPriceInvoiceItem(final UUID id, @Nullable final DateTime createdDate, final UUID invoiceId, final UUID accountId, final UUID bundleId,
-                                 final UUID subscriptionId, final String planName, final String phaseName,
+                                 final UUID subscriptionId, final String productName, final String planName, final String phaseName,
                                  @Nullable final String description, final LocalDate date, final BigDecimal amount, final Currency currency) {
-        super(id, createdDate, invoiceId, accountId, bundleId, subscriptionId, description, planName, phaseName, null, date, null, amount, currency);
+        super(id, createdDate, invoiceId, accountId, bundleId, subscriptionId, description, productName, planName, phaseName, null, date, null, amount, null, currency, null, InvoiceItemType.FIXED);
+    }
+
+    public FixedPriceInvoiceItem(final UUID id, @Nullable final DateTime createdDate, final UUID invoiceId, final UUID accountId, final UUID bundleId,
+                                 final UUID subscriptionId, final String productName, final String planName, final String phaseName,
+                                 final String prettyProductName, final String prettyPlanName, final String prettyPhaseName,
+                                 @Nullable final String description, final LocalDate date, final BigDecimal amount, final Currency currency) {
+        super(id, createdDate, invoiceId, accountId, bundleId, subscriptionId, description, productName, planName, phaseName, null, prettyProductName, prettyPlanName, prettyPhaseName,
+              null, date, null, amount, null, currency, null, InvoiceItemType.FIXED);
     }
 
     @Override
@@ -58,10 +66,5 @@ public class FixedPriceInvoiceItem extends InvoiceItemBase {
                 return String.format("%s (fixed price)", getPhaseName());
             }
         }
-    }
-
-    @Override
-    public InvoiceItemType getInvoiceItemType() {
-        return InvoiceItemType.FIXED;
     }
 }

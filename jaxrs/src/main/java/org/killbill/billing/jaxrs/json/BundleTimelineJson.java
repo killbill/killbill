@@ -18,6 +18,7 @@ package org.killbill.billing.jaxrs.json;
 
 import java.util.LinkedList;
 import java.util.List;
+import java.util.UUID;
 
 import javax.annotation.Nullable;
 
@@ -28,20 +29,20 @@ import org.killbill.billing.util.audit.AccountAuditLogs;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 
+@ApiModel(value="BundleTimeline", parent = JsonBase.class)
 public class BundleTimelineJson extends JsonBase {
 
-    @ApiModelProperty(dataType = "java.util.UUID")
-    private final String accountId;
-    @ApiModelProperty(dataType = "java.util.UUID")
-    private final String bundleId;
+    private final UUID accountId;
+    private final UUID bundleId;
     private final String externalKey;
     private final List<EventSubscriptionJson> events;
 
     @JsonCreator
-    public BundleTimelineJson(@JsonProperty("accountId") @Nullable final String accountId,
-                              @JsonProperty("bundleId") @Nullable final String bundleId,
+    public BundleTimelineJson(@JsonProperty("accountId") @Nullable final UUID accountId,
+                              @JsonProperty("bundleId") @Nullable final UUID bundleId,
                               @JsonProperty("externalKey") @Nullable final String externalKey,
                               @JsonProperty("events") @Nullable final List<EventSubscriptionJson> events,
                               @JsonProperty("auditLogs") @Nullable final List<AuditLogJson> auditLogs) {
@@ -54,8 +55,8 @@ public class BundleTimelineJson extends JsonBase {
 
     public BundleTimelineJson(final SubscriptionBundleTimeline bundleTimeline, @Nullable final AccountAuditLogs accountAuditLogs) {
         super(toAuditLogJson(accountAuditLogs == null ? null : accountAuditLogs.getAuditLogsForBundle(bundleTimeline.getBundleId())));
-        this.accountId = bundleTimeline.getAccountId().toString();
-        this.bundleId = bundleTimeline.getBundleId().toString();
+        this.accountId = bundleTimeline.getAccountId();
+        this.bundleId = bundleTimeline.getBundleId();
         this.externalKey = bundleTimeline.getExternalKey();
 
         this.events = new LinkedList<EventSubscriptionJson>();
@@ -64,11 +65,11 @@ public class BundleTimelineJson extends JsonBase {
         }
     }
 
-    public String getAccountId() {
+    public UUID getAccountId() {
         return accountId;
     }
 
-    public String getBundleId() {
+    public UUID getBundleId() {
         return bundleId;
     }
 

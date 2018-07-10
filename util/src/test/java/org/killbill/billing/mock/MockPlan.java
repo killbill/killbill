@@ -1,7 +1,9 @@
 /*
- * Copyright 2010-2011 Ning, Inc.
+ * Copyright 2010-2013 Ning, Inc.
+ * Copyright 2014-2018 Groupon, Inc
+ * Copyright 2014-2018 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -21,15 +23,17 @@ import java.util.Iterator;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
+import org.killbill.billing.catalog.api.BillingMode;
 import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.catalog.api.PhaseType;
 import org.killbill.billing.catalog.api.Plan;
 import org.killbill.billing.catalog.api.PlanPhase;
-import org.killbill.billing.catalog.api.PriceList;
 import org.killbill.billing.catalog.api.Product;
+import org.killbill.billing.catalog.api.StaticCatalog;
 
 public class MockPlan implements Plan {
+
     private final String name;
     private final Product product;
 
@@ -40,6 +44,16 @@ public class MockPlan implements Plan {
     public MockPlan(final String name, final Product product) {
         this.name = name;
         this.product = product;
+    }
+
+    @Override
+    public StaticCatalog getCatalog() {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public BillingMode getRecurringBillingMode() {
+        return BillingMode.IN_ADVANCE;
     }
 
     @Override
@@ -59,6 +73,11 @@ public class MockPlan implements Plan {
 
     @Override
     public String getName() {
+        return name;
+    }
+
+    @Override
+    public String getPrettyName() {
         return name;
     }
 

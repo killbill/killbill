@@ -43,6 +43,8 @@ public interface TagInternalApi {
 
     public List<Tag> getTagsForAccountType(ObjectType objectType, boolean includedDeleted, InternalTenantContext internalTenantContext);
 
+    public List<Tag> getTagsForAccount(boolean includedDeleted, InternalTenantContext context);
+
     public void addTag(final UUID objectId, final ObjectType objectType, UUID tagDefinitionId, InternalCallContext context) throws TagApiException;
 
     public void removeTag(final UUID objectId, final ObjectType objectType, final UUID tagDefinitionId, InternalCallContext context) throws TagApiException;

@@ -59,23 +59,50 @@ limit 1
 >>
 
 getBlockingState() ::= <<
- select
- <allTableFields("t.")>
- from
- <tableName()> t
- join (
-   select max(record_id) record_id
-         , service
-         from blocking_states
-         where blockable_id = :blockableId
-         and effective_date \<= :effectiveDate
-         and is_active
-         <AND_CHECK_TENANT("")>
-         group by service
- ) tmp
- on t.record_id = tmp.record_id
- <defaultOrderBy("t.")>
-  ;
+select
+<allTableFields("t.")>
+from
+<tableName()> t
+join (
+  select max(record_id) record_id
+        , service
+        from blocking_states
+        where blockable_id = :blockableId
+        and type = :type
+        and effective_date \<= :effectiveDate
+        <andCheckSoftDeletionWithComma("")>
+        and <accountRecordIdField("")> = :accountRecordId
+        <AND_CHECK_TENANT("")>
+        group by service
+) tmp
+on t.record_id = tmp.record_id
+where t.type = :type
+and <accountRecordIdField("t.")> = :accountRecordId
+<AND_CHECK_TENANT("t.")>
+<defaultOrderBy("t.")>
+;
+ >>
+
+getBlockingAllUpToForAccount() ::= <<
+select
+<allTableFields("t.")>
+from
+<tableName()> t
+join (
+  select max(record_id) record_id
+        , service
+        from blocking_states
+        where effective_date \<= :effectiveDate
+        <andCheckSoftDeletionWithComma("")>
+        and <accountRecordIdField("")> = :accountRecordId
+        <AND_CHECK_TENANT("")>
+        group by service
+) tmp
+on t.record_id = tmp.record_id
+where <accountRecordIdField("t.")> = :accountRecordId
+<AND_CHECK_TENANT("t.")>
+<defaultOrderBy("t.")>
+;
  >>
 
 getBlockingHistoryForService() ::= <<

@@ -1,6 +1,6 @@
 /*
- * Copyright 2014-2015 Groupon, Inc
- * Copyright 2014-2015 The Billing Project, LLC
+ * Copyright 2014-2018 Groupon, Inc
+ * Copyright 2014-2018 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -47,6 +47,7 @@ import org.killbill.billing.jaxrs.util.Context;
 import org.killbill.billing.jaxrs.util.JaxrsUriBuilder;
 import org.killbill.billing.osgi.api.PluginInfo;
 import org.killbill.billing.osgi.api.PluginServiceInfo;
+import org.killbill.billing.payment.api.InvoicePaymentApi;
 import org.killbill.billing.payment.api.PaymentApi;
 import org.killbill.billing.util.api.AuditUserApi;
 import org.killbill.billing.util.api.CustomFieldUserApi;
@@ -72,7 +73,7 @@ import io.swagger.annotations.ApiResponses;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 
 @Path(JaxrsResource.NODES_INFO_PATH)
-@Api(value = JaxrsResource.NODES_INFO_PATH, description = "Operations to retrieve nodes info")
+@Api(value = JaxrsResource.NODES_INFO_PATH, description = "Operations to retrieve nodes info", tags="NodesInfo")
 public class NodesInfoResource extends JaxRsResourceBase {
 
     private final KillbillNodesApi killbillInfoApi;
@@ -84,10 +85,11 @@ public class NodesInfoResource extends JaxRsResourceBase {
                              final AuditUserApi auditUserApi,
                              final AccountUserApi accountUserApi,
                              final PaymentApi paymentApi,
+                             final InvoicePaymentApi invoicePaymentApi,
                              final KillbillNodesApi killbillInfoApi,
                              final Clock clock,
                              final Context context) {
-        super(uriBuilder, tagUserApi, customFieldUserApi, auditUserApi, accountUserApi, paymentApi, null, clock, context);
+        super(uriBuilder, tagUserApi, customFieldUserApi, auditUserApi, accountUserApi, paymentApi, invoicePaymentApi, null, clock, context);
         this.killbillInfoApi = killbillInfoApi;
     }
 
@@ -146,7 +148,8 @@ public class NodesInfoResource extends JaxRsResourceBase {
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
     @ApiOperation(value = "Trigger a node command")
-    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid node command supplied")})
+    @ApiResponses(value = {@ApiResponse(code = 202, message = "Successful operation"),
+                           @ApiResponse(code = 400, message = "Invalid node command supplied")})
     public Response triggerNodeCommand(final NodeCommandJson json,
                                        @QueryParam(QUERY_LOCAL_NODE_ONLY) @DefaultValue("false") final Boolean localNodeOnly,
                                        @HeaderParam(HDR_CREATED_BY) final String createdBy,
@@ -173,7 +176,7 @@ public class NodesInfoResource extends JaxRsResourceBase {
         };
 
         killbillInfoApi.triggerNodeCommand(nodeCommand, localNodeOnly);
-        return Response.status(Status.CREATED).build();
+        return Response.status(Status.ACCEPTED).build();
     }
 
 

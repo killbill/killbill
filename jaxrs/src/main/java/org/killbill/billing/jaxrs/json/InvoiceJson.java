@@ -19,14 +19,17 @@ package org.killbill.billing.jaxrs.json;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 import javax.annotation.Nullable;
 
 import org.apache.shiro.util.CollectionUtils;
 import org.joda.time.LocalDate;
+import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.invoice.api.Invoice;
 import org.killbill.billing.invoice.api.InvoiceItem;
 import org.killbill.billing.invoice.api.InvoiceItemType;
+import org.killbill.billing.invoice.api.InvoiceStatus;
 import org.killbill.billing.util.audit.AccountAuditLogs;
 import org.killbill.billing.util.audit.AuditLog;
 
@@ -35,44 +38,48 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
+import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 
+@ApiModel(value="Invoice", parent = JsonBase.class)
 public class InvoiceJson extends JsonBase {
 
     private final BigDecimal amount;
-    private final String currency;
-    @ApiModelProperty(dataType = "java.util.UUID")
-    private final String invoiceId;
+    private final Currency currency;
+    private final UUID invoiceId;
     private final LocalDate invoiceDate;
     private final LocalDate targetDate;
     private final String invoiceNumber;
     private final BigDecimal balance;
     private final BigDecimal creditAdj;
     private final BigDecimal refundAdj;
-    @ApiModelProperty(dataType = "java.util.UUID")
-    private final String accountId;
+    private final UUID accountId;
     private final List<InvoiceItemJson> items;
     private final String bundleKeys;
     private final List<CreditJson> credits;
-    private final String status;
+    private final InvoiceStatus status;
     private final Boolean isParentInvoice;
+    private final UUID parentInvoiceId;
+    private final UUID parentAccountId;
 
     @JsonCreator
     public InvoiceJson(@JsonProperty("amount") final BigDecimal amount,
-                       @JsonProperty("currency") final String currency,
-                       @JsonProperty("status") final String status,
+                       @JsonProperty("currency") final Currency currency,
+                       @JsonProperty("status") final InvoiceStatus status,
                        @JsonProperty("creditAdj") final BigDecimal creditAdj,
                        @JsonProperty("refundAdj") final BigDecimal refundAdj,
-                       @JsonProperty("invoiceId") final String invoiceId,
+                       @JsonProperty("invoiceId") final UUID invoiceId,
                        @JsonProperty("invoiceDate") final LocalDate invoiceDate,
                        @JsonProperty("targetDate") final LocalDate targetDate,
                        @JsonProperty("invoiceNumber") final String invoiceNumber,
                        @JsonProperty("balance") final BigDecimal balance,
-                       @JsonProperty("accountId") final String accountId,
+                       @JsonProperty("accountId") final UUID accountId,
                        @JsonProperty("bundleKeys") final String bundleKeys,
                        @JsonProperty("credits") final List<CreditJson> credits,
                        @JsonProperty("items") final List<InvoiceItemJson> items,
                        @JsonProperty("isParentInvoice") final Boolean isParentInvoice,
+                       @JsonProperty("parentInvoiceId") final UUID parentInvoiceId,
+                       @JsonProperty("parentAccountId") final UUID parentAccountId,
                        @JsonProperty("auditLogs") @Nullable final List<AuditLogJson> auditLogs) {
         super(auditLogs);
         this.amount = amount;
@@ -90,6 +97,8 @@ public class InvoiceJson extends JsonBase {
         this.credits = credits;
         this.items = items;
         this.isParentInvoice = isParentInvoice;
+        this.parentInvoiceId = parentInvoiceId;
+        this.parentAccountId = parentAccountId;
     }
 
     public InvoiceJson(final Invoice input) {
@@ -97,9 +106,12 @@ public class InvoiceJson extends JsonBase {
     }
 
     public InvoiceJson(final Invoice input, final String bundleKeys, final List<CreditJson> credits, final List<AuditLog> auditLogs) {
-        this(input.getChargedAmount(), input.getCurrency().toString(), input.getStatus().toString(), input.getCreditedAmount(), input.getRefundedAmount(),
-             input.getId().toString(), input.getInvoiceDate(), input.getTargetDate(), String.valueOf(input.getInvoiceNumber()),
-             input.getBalance(), input.getAccountId().toString(), bundleKeys, credits, null, input.isParentInvoice(), toAuditLogJson(auditLogs));
+        this(input.getChargedAmount(), input.getCurrency(), input.getStatus(), input.getCreditedAmount(), input.getRefundedAmount(),
+             input.getId(), input.getInvoiceDate(), input.getTargetDate(), String.valueOf(input.getInvoiceNumber()),
+             input.getBalance(), input.getAccountId(), bundleKeys, credits, null, input.isParentInvoice(),
+             input.getParentInvoiceId(),
+             input.getParentAccountId(),
+             toAuditLogJson(auditLogs));
     }
 
     public InvoiceJson(final Invoice input, final boolean withItems, final List<InvoiceItem> childItems, @Nullable final AccountAuditLogs accountAuditLogs) {
@@ -120,30 +132,33 @@ public class InvoiceJson extends JsonBase {
             }
         }
         this.amount = input.getChargedAmount();
-        this.currency = input.getCurrency().toString();
-        this.status = input.getStatus().toString();
+        this.currency = input.getCurrency();
+        this.status = input.getStatus();
         this.creditAdj = input.getCreditedAmount();
         this.refundAdj = input.getRefundedAmount();
-        this.invoiceId = input.getId().toString();
+        this.invoiceId = input.getId();
         this.invoiceDate = input.getInvoiceDate();
         this.targetDate = input.getTargetDate();
         this.invoiceNumber = input.getInvoiceNumber() == null ? null : String.valueOf(input.getInvoiceNumber());
         this.balance = input.getBalance();
-        this.accountId = input.getAccountId().toString();
+        this.accountId = input.getAccountId();
         this.bundleKeys = null;
         this.credits = null;
         this.isParentInvoice = input.isParentInvoice();
+        this.parentInvoiceId = input.getParentInvoiceId();
+        this.parentAccountId = input.getParentAccountId();
+
     }
 
     public BigDecimal getAmount() {
         return amount;
     }
 
-    public String getCurrency() {
+    public Currency getCurrency() {
         return currency;
     }
 
-    public String getInvoiceId() {
+    public UUID getInvoiceId() {
         return invoiceId;
     }
 
@@ -171,7 +186,7 @@ public class InvoiceJson extends JsonBase {
         return refundAdj;
     }
 
-    public String getAccountId() {
+    public UUID getAccountId() {
         return accountId;
     }
 
@@ -187,12 +202,20 @@ public class InvoiceJson extends JsonBase {
         return credits;
     }
 
-    public String getStatus() {
+    public InvoiceStatus getStatus() {
         return status;
     }
 
     public Boolean getIsParentInvoice() {
         return isParentInvoice;
+    }
+
+    public UUID getParentInvoiceId() {
+        return parentInvoiceId;
+    }
+
+    public UUID getParentAccountId() {
+        return parentAccountId;
     }
 
     @Override
@@ -213,6 +236,8 @@ public class InvoiceJson extends JsonBase {
                ", bundleKeys='" + bundleKeys + '\'' +
                ", credits=" + credits +
                ", isParentInvoice=" + isParentInvoice +
+               ", parentInvoiceId=" + parentInvoiceId +
+               ", parentAccountId=" + parentAccountId +
                '}';
     }
 
@@ -272,7 +297,12 @@ public class InvoiceJson extends JsonBase {
         if (isParentInvoice != null ? !isParentInvoice.equals(that.isParentInvoice) : that.isParentInvoice != null) {
             return false;
         }
-
+        if (parentInvoiceId != null ? !parentInvoiceId.equals(that.parentInvoiceId) : that.parentInvoiceId != null) {
+            return false;
+        }
+        if (parentAccountId != null ? !parentAccountId.equals(that.parentAccountId) : that.parentAccountId != null) {
+            return false;
+        }
         return true;
     }
 
@@ -293,6 +323,8 @@ public class InvoiceJson extends JsonBase {
         result = 31 * result + (bundleKeys != null ? bundleKeys.hashCode() : 0);
         result = 31 * result + (credits != null ? credits.hashCode() : 0);
         result = 31 * result + (isParentInvoice != null ? isParentInvoice.hashCode() : 0);
+        result = 31 * result + (parentInvoiceId != null ? parentInvoiceId.hashCode() : 0);
+        result = 31 * result + (parentAccountId != null ? parentAccountId.hashCode() : 0);
         return result;
     }
 }

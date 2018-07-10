@@ -26,6 +26,7 @@ import org.killbill.billing.util.callcontext.UserType;
 
 public abstract class CallContextBase implements CallContext {
 
+    protected final UUID accountId;
     protected final UUID tenantId;
     protected final UUID userToken;
     protected final String userName;
@@ -34,16 +35,17 @@ public abstract class CallContextBase implements CallContext {
     protected final String reasonCode;
     protected final String comments;
 
-    public CallContextBase(@Nullable final UUID tenantId, final String userName, final CallOrigin callOrigin, final UserType userType) {
-        this(tenantId, userName, callOrigin, userType, null);
+    public CallContextBase(@Nullable final UUID accountId, @Nullable final UUID tenantId, final String userName, final CallOrigin callOrigin, final UserType userType) {
+        this(accountId, tenantId, userName, callOrigin, userType, null);
     }
 
-    public CallContextBase(@Nullable final UUID tenantId, final String userName, final CallOrigin callOrigin, final UserType userType, final UUID userToken) {
-        this(tenantId, userName, callOrigin, userType, null, null, userToken);
+    public CallContextBase(@Nullable final UUID accountId, @Nullable final UUID tenantId, final String userName, final CallOrigin callOrigin, final UserType userType, final UUID userToken) {
+        this(accountId, tenantId, userName, callOrigin, userType, null, null, userToken);
     }
 
-    public CallContextBase(@Nullable final UUID tenantId, final String userName, final CallOrigin callOrigin, final UserType userType,
+    public CallContextBase(@Nullable final UUID accountId, @Nullable final UUID tenantId, final String userName, final CallOrigin callOrigin, final UserType userType,
                            final String reasonCode, final String comment, final UUID userToken) {
+        this.accountId = accountId;
         this.tenantId = tenantId;
         this.userName = userName;
         this.callOrigin = callOrigin;
@@ -51,6 +53,11 @@ public abstract class CallContextBase implements CallContext {
         this.reasonCode = reasonCode;
         this.comments = comment;
         this.userToken = userToken;
+    }
+
+    @Override
+    public UUID getAccountId() {
+        return accountId;
     }
 
     @Override

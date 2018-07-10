@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014-2016 Groupon, Inc
- * Copyright 2014-2016 The Billing Project, LLC
+ * Copyright 2014-2018 Groupon, Inc
+ * Copyright 2014-2018 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -18,25 +18,27 @@
 
 package org.killbill.billing.subscription.engine.dao;
 
-import org.killbill.billing.util.callcontext.InternalCallContextFactory;
-import org.skife.jdbi.v2.IDBI;
+import javax.inject.Named;
 
-import org.killbill.bus.api.PersistentBus;
-import org.killbill.billing.catalog.api.CatalogService;
-import org.killbill.clock.Clock;
-import org.killbill.notificationq.api.NotificationQueueService;
 import org.killbill.billing.subscription.engine.addon.AddonUtils;
 import org.killbill.billing.util.cache.CacheControllerDispatcher;
+import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.billing.util.dao.NonEntityDao;
+import org.killbill.bus.api.PersistentBus;
+import org.killbill.clock.Clock;
+import org.killbill.notificationq.api.NotificationQueueService;
+import org.skife.jdbi.v2.IDBI;
 
 import com.google.inject.Inject;
+
+import static org.killbill.billing.util.glue.IDBISetup.MAIN_RO_IDBI_NAMED;
 
 public class MockSubscriptionDaoSql extends DefaultSubscriptionDao {
 
     @Inject
-    public MockSubscriptionDaoSql(final IDBI dbi, final Clock clock, final AddonUtils addonUtils, final NotificationQueueService notificationQueueService,
-                                  final PersistentBus eventBus, final CatalogService catalogService, final CacheControllerDispatcher cacheControllerDispatcher,
+    public MockSubscriptionDaoSql(final IDBI dbi, @Named(MAIN_RO_IDBI_NAMED) final IDBI roDbi, final Clock clock, final AddonUtils addonUtils, final NotificationQueueService notificationQueueService,
+                                  final PersistentBus eventBus, final CacheControllerDispatcher cacheControllerDispatcher,
                                   final NonEntityDao nonEntityDao, final InternalCallContextFactory internalCallContextFactory) {
-        super(dbi, clock, addonUtils, notificationQueueService, eventBus, catalogService, cacheControllerDispatcher, nonEntityDao, internalCallContextFactory);
+        super(dbi, roDbi, clock, addonUtils, notificationQueueService, eventBus, cacheControllerDispatcher, nonEntityDao, internalCallContextFactory);
     }
 }

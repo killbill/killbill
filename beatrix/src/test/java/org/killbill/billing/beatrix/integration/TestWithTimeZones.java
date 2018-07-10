@@ -1,6 +1,6 @@
 /*
- * Copyright 2014-2016 Groupon, Inc
- * Copyright 2014-2016 The Billing Project, LLC
+ * Copyright 2014-2018 Groupon, Inc
+ * Copyright 2014-2018 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -32,10 +32,10 @@ import org.killbill.billing.api.TestApiListener.NextEvent;
 import org.killbill.billing.beatrix.util.InvoiceChecker.ExpectedInvoiceItemCheck;
 import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.catalog.api.Currency;
-import org.killbill.billing.catalog.api.PlanPhasePriceOverride;
 import org.killbill.billing.catalog.api.PlanPhaseSpecifier;
 import org.killbill.billing.catalog.api.ProductCategory;
 import org.killbill.billing.entitlement.api.DefaultEntitlement;
+import org.killbill.billing.entitlement.api.DefaultEntitlementSpecifier;
 import org.killbill.billing.entitlement.api.Entitlement;
 import org.killbill.billing.entitlement.api.SubscriptionEventType;
 import org.killbill.billing.invoice.api.DryRunType;
@@ -65,11 +65,11 @@ public class TestWithTimeZones extends TestIntegrationBase {
                                                                 .email(UUID.randomUUID().toString().substring(1, 8))
                                                                 .phone(UUID.randomUUID().toString().substring(1, 8))
                                                                 .migrated(false)
-                                                                .isNotifiedForInvoices(false)
                                                                 .externalKey(UUID.randomUUID().toString().substring(1, 8))
                                                                 .billingCycleDayLocal(1)
                                                                 .currency(Currency.USD)
                                                                 .paymentMethodId(UUID.randomUUID())
+                                                                .referenceTime(clock.getUTCNow())
                                                                 .timeZone(tz)
                                                                 .build();
         final Account account = createAccountWithNonOsgiPaymentMethod(accountData);
@@ -79,9 +79,9 @@ public class TestWithTimeZones extends TestIntegrationBase {
 
         final TestDryRunArguments dryRun = new TestDryRunArguments(DryRunType.SUBSCRIPTION_ACTION, "Shotgun", ProductCategory.BASE, BillingPeriod.MONTHLY, null, null,
                                                                    SubscriptionEventType.START_BILLING, null, null, null, null);
-        final Invoice dryRunInvoice = invoiceUserApi.triggerInvoiceGeneration(account.getId(), clock.getUTCToday(), dryRun, callContext);
+        final Invoice dryRunInvoice = invoiceUserApi.triggerDryRunInvoiceGeneration(account.getId(), clock.getUTCToday(), dryRun, callContext);
         expectedInvoices.add(new ExpectedInvoiceItemCheck(new LocalDate(2015, 9, 1), null, InvoiceItemType.FIXED, new BigDecimal("0")));
-        invoiceChecker.checkInvoiceNoAudits(dryRunInvoice, callContext, expectedInvoices);
+        invoiceChecker.checkInvoiceNoAudits(dryRunInvoice, expectedInvoices);
 
         final DefaultEntitlement bpSubscription = createBaseEntitlementAndCheckForCompletion(account.getId(), "bundleKey", "Shotgun", ProductCategory.BASE, BillingPeriod.MONTHLY, NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE);
         // Check bundle after BP got created otherwise we get an error from auditApi.
@@ -124,11 +124,11 @@ public class TestWithTimeZones extends TestIntegrationBase {
                                                                 .email(UUID.randomUUID().toString().substring(1, 8))
                                                                 .phone(UUID.randomUUID().toString().substring(1, 8))
                                                                 .migrated(false)
-                                                                .isNotifiedForInvoices(false)
                                                                 .externalKey(UUID.randomUUID().toString().substring(1, 8))
                                                                 .billingCycleDayLocal(1)
                                                                 .currency(Currency.USD)
                                                                 .paymentMethodId(UUID.randomUUID())
+                                                                .referenceTime(clock.getUTCNow())
                                                                 .timeZone(tz)
                                                                 .build();
         final Account account = createAccountWithNonOsgiPaymentMethod(accountData);
@@ -136,8 +136,9 @@ public class TestWithTimeZones extends TestIntegrationBase {
 
         busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
         final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("Blowdart", BillingPeriod.MONTHLY, "notrial", null);
-        Entitlement entitlement = entitlementApi.createBaseEntitlement(account.getId(), spec, "Something", ImmutableList.<PlanPhasePriceOverride>of(), null, null, false, ImmutableList.<PluginProperty>of(), callContext);
+        UUID entitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec), "Something", null, null, false, true, ImmutableList.<PluginProperty>of(), callContext);
         assertListenerStatus();
+        Entitlement entitlement = entitlementApi.getEntitlementForId(entitlementId, callContext);
 
         // Cancel the next month specifying just a LocalDate
         final LocalDate cancellationDate = new LocalDate("2015-12-01", tz);
@@ -153,7 +154,7 @@ public class TestWithTimeZones extends TestIntegrationBase {
         assertListenerStatus();
 
         // Verify second that there was no repair (so the cancellation did correctly happen on the "2015-12-01")
-        final List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), false, callContext);
+        final List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, callContext);
         Assert.assertEquals(invoices.size(), 1);
     }
 
@@ -169,11 +170,11 @@ public class TestWithTimeZones extends TestIntegrationBase {
                                                                 .email(UUID.randomUUID().toString().substring(1, 8))
                                                                 .phone(UUID.randomUUID().toString().substring(1, 8))
                                                                 .migrated(false)
-                                                                .isNotifiedForInvoices(false)
                                                                 .externalKey(UUID.randomUUID().toString().substring(1, 8))
                                                                 .billingCycleDayLocal(1)
                                                                 .currency(Currency.USD)
                                                                 .paymentMethodId(UUID.randomUUID())
+                                                                .referenceTime(clock.getUTCNow())
                                                                 .timeZone(tz)
                                                                 .build();
         final Account account = createAccountWithNonOsgiPaymentMethod(accountData);
@@ -181,8 +182,9 @@ public class TestWithTimeZones extends TestIntegrationBase {
 
         busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
         final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("Blowdart", BillingPeriod.MONTHLY, "notrial", null);
-        Entitlement entitlement = entitlementApi.createBaseEntitlement(account.getId(), spec, "Something", ImmutableList.<PlanPhasePriceOverride>of(), null, null, false, ImmutableList.<PluginProperty>of(), callContext);
+        UUID entitlementId = entitlementApi.createBaseEntitlement(account.getId(),  new DefaultEntitlementSpecifier(spec), "Something", null, null, false, true, ImmutableList.<PluginProperty>of(), callContext);
         assertListenerStatus();
+        Entitlement entitlement = entitlementApi.getEntitlementForId(entitlementId, callContext);
 
         // Cancel the next month specifying just a LocalDate
         final LocalDate cancellationDate = new LocalDate("2015-03-01", tz);
@@ -197,7 +199,7 @@ public class TestWithTimeZones extends TestIntegrationBase {
         assertListenerStatus();
 
         // Verify second that there was no repair (so the cancellation did correctly happen on the "2015-12-01"
-        final List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), false, callContext);
+        final List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, callContext);
         Assert.assertEquals(invoices.size(), 1);
     }
 
@@ -207,6 +209,7 @@ public class TestWithTimeZones extends TestIntegrationBase {
         clock.setTime(new DateTime(2015, 3, 7, 2, 0, 0, tz));
 
         final AccountData accountData = new MockAccountBuilder().currency(Currency.USD)
+                                                                .referenceTime(clock.getUTCNow())
                                                                 .timeZone(tz)
                                                                 .build();
         final Account account = createAccountWithNonOsgiPaymentMethod(accountData);
@@ -234,8 +237,9 @@ public class TestWithTimeZones extends TestIntegrationBase {
         busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
         final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("Blowdart", BillingPeriod.MONTHLY, "notrial", null);
         // Pass a date of today, to trigger TimeAwareContext#toUTCDateTime
-        final Entitlement entitlement = entitlementApi.createBaseEntitlement(account.getId(), spec, "Something", ImmutableList.<PlanPhasePriceOverride>of(), clock.getUTCToday(), clock.getUTCToday(), false, ImmutableList.<PluginProperty>of(), callContext);
+        final UUID entitlementId = entitlementApi.createBaseEntitlement(account.getId(),  new DefaultEntitlementSpecifier(spec), "Something", clock.getUTCToday(), clock.getUTCToday(), false, true, ImmutableList.<PluginProperty>of(), callContext);
         assertListenerStatus();
+        final Entitlement entitlement = entitlementApi.getEntitlementForId(entitlementId, callContext);
 
         Assert.assertEquals(entitlement.getEffectiveStartDate().compareTo(new LocalDate("2015-03-08")), 0);
         Assert.assertEquals(((DefaultEntitlement) entitlement).getBasePlanSubscriptionBase().getStartDate().compareTo(new DateTime("2015-03-08T02:00:00.000-08:00")), 0);
@@ -269,6 +273,7 @@ public class TestWithTimeZones extends TestIntegrationBase {
         clock.setTime(new DateTime(2017, 3, 1, 23, 30, 0, tz));
 
         final AccountData accountData = new MockAccountBuilder().currency(Currency.USD)
+                                                                .referenceTime(clock.getUTCNow())
                                                                 .timeZone(tz)
                                                                 .build();
 
@@ -306,6 +311,7 @@ public class TestWithTimeZones extends TestIntegrationBase {
         clock.setTime(new DateTime(2016, 11, 5, 23, 30, 0, tz));
 
         final AccountData accountData = new MockAccountBuilder().currency(Currency.USD)
+                                                                .referenceTime(clock.getUTCNow())
                                                                 .timeZone(tz)
                                                                 .build();
 
@@ -350,6 +356,7 @@ public class TestWithTimeZones extends TestIntegrationBase {
 
         final AccountData accountData = new MockAccountBuilder().currency(Currency.USD)
                                                                 .timeZone(tz)
+                                                                .referenceTime(clock.getUTCNow())
                                                                 .build();
 
         // Create account with non BCD to force junction BCD logic to activate
@@ -357,7 +364,7 @@ public class TestWithTimeZones extends TestIntegrationBase {
 
         final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("pistol-monthly-notrial",null);
         busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT);
-        entitlementApi.createBaseEntitlement(account.getId(), spec, "bundleExternalKey", ImmutableList.<PlanPhasePriceOverride>of(), null, null, false, ImmutableList.<PluginProperty>of(), callContext);
+        entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec), "bundleExternalKey", null, null, false, true, ImmutableList.<PluginProperty>of(), callContext);
         assertListenerStatus();
 
 
@@ -386,6 +393,7 @@ public class TestWithTimeZones extends TestIntegrationBase {
 
         final AccountData accountData = new MockAccountBuilder().currency(Currency.USD)
                                                                 .timeZone(tz)
+                                                                .referenceTime(clock.getUTCNow())
                                                                 .build();
 
         // Create account with non BCD to force junction BCD logic to activate

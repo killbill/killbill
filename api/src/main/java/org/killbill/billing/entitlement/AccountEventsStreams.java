@@ -1,7 +1,8 @@
 /*
- * Copyright 2010-2013 Ning, Inc.
+ * Copyright 2014-2018 Groupon, Inc
+ * Copyright 2014-2018 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -21,6 +22,7 @@ import java.util.Map;
 import java.util.UUID;
 
 import org.killbill.billing.account.api.ImmutableAccountData;
+import org.killbill.billing.subscription.api.SubscriptionBase;
 import org.killbill.billing.subscription.api.user.SubscriptionBaseBundle;
 
 // Wrapper object to save on DAO calls
@@ -30,6 +32,9 @@ public interface AccountEventsStreams {
 
     // Map bundle id -> bundle
     public Map<UUID, SubscriptionBaseBundle> getBundles();
+
+    // Map bundle id -> subscriptions
+    public Map<UUID, Collection<SubscriptionBase>> getSubscriptions();
 
     // Map bundle id -> events streams
     public Map<UUID, Collection<EventsStream>> getEventsStreams();

@@ -1,6 +1,6 @@
 /*
- * Copyright 2014-2015 Groupon, Inc
- * Copyright 2014-2015 The Billing Project, LLC
+ * Copyright 2014-2018 Groupon, Inc
+ * Copyright 2014-2018 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -41,6 +41,7 @@ import org.killbill.billing.jaxrs.json.HostedPaymentPageFieldsJson;
 import org.killbill.billing.jaxrs.json.HostedPaymentPageFormDescriptorJson;
 import org.killbill.billing.jaxrs.util.Context;
 import org.killbill.billing.jaxrs.util.JaxrsUriBuilder;
+import org.killbill.billing.payment.api.InvoicePaymentApi;
 import org.killbill.billing.payment.api.PaymentApi;
 import org.killbill.billing.payment.api.PaymentApiException;
 import org.killbill.billing.payment.api.PaymentGatewayApi;
@@ -67,7 +68,7 @@ import static javax.ws.rs.core.MediaType.WILDCARD;
 
 @Singleton
 @Path(JaxrsResource.PAYMENT_GATEWAYS_PATH)
-@Api(value = JaxrsResource.PAYMENT_GATEWAYS_PATH, description = "HPP endpoints")
+@Api(value = JaxrsResource.PAYMENT_GATEWAYS_PATH, description = "HPP endpoints", tags="PaymentGateway")
 public class PaymentGatewayResource extends ComboPaymentResource {
 
     private final PaymentGatewayApi paymentGatewayApi;
@@ -80,9 +81,10 @@ public class PaymentGatewayResource extends ComboPaymentResource {
                                   final AccountUserApi accountUserApi,
                                   final PaymentGatewayApi paymentGatewayApi,
                                   final PaymentApi paymentApi,
+                                  final InvoicePaymentApi invoicePaymentApi,
                                   final Clock clock,
                                   final Context context) {
-        super(uriBuilder, tagUserApi, customFieldUserApi, auditUserApi, accountUserApi, paymentApi, clock, context);
+        super(uriBuilder, tagUserApi, customFieldUserApi, auditUserApi, accountUserApi, paymentApi, invoicePaymentApi, clock, context);
         this.paymentGatewayApi = paymentGatewayApi;
     }
 
@@ -92,7 +94,8 @@ public class PaymentGatewayResource extends ComboPaymentResource {
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
     @ApiOperation(value = "Combo API to generate form data to redirect the customer to the gateway", response = HostedPaymentPageFormDescriptorJson.class)
-    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid data for Account or PaymentMethod")})
+    @ApiResponses(value = {/*@ApiResponse(code = 200, message = "Successful"),*/
+                           @ApiResponse(code = 400, message = "Invalid data for Account or PaymentMethod")})
     public Response buildComboFormDescriptor(final ComboHostedPaymentPageJson json,
                                              @QueryParam(QUERY_PAYMENT_CONTROL_PLUGIN_NAME) final List<String> paymentControlPluginNames,
                                              @QueryParam(QUERY_PLUGIN_PROPERTY) final List<String> pluginPropertiesString,
@@ -106,14 +109,14 @@ public class PaymentGatewayResource extends ComboPaymentResource {
         final Iterable<PluginProperty> pluginProperties = extractPluginProperties(pluginPropertiesString);
         final PaymentOptions paymentOptions = createControlPluginApiPaymentOptions(paymentControlPluginNames);
 
-        final CallContext callContext = context.createContext(createdBy, reason, comment, request);
+        final CallContext callContext = context.createCallContextNoAccountId(createdBy, reason, comment, request);
         final Account account = getOrCreateAccount(json.getAccount(), callContext);
 
         final Iterable<PluginProperty> paymentMethodPluginProperties = extractPluginProperties(json.getPaymentMethodPluginProperties());
         final UUID paymentMethodId = getOrCreatePaymentMethod(account, json.getPaymentMethod(), paymentMethodPluginProperties, callContext);
 
-        final HostedPaymentPageFieldsJson hostedPaymentPageFields = json.getHostedPaymentPageFieldsJson();
-        final Iterable<PluginProperty> customFields = extractPluginProperties(hostedPaymentPageFields != null ? hostedPaymentPageFields.getCustomFields() : null);
+        final HostedPaymentPageFieldsJson hostedPaymentPageFields = json.getHostedPaymentPageFields();
+        final Iterable<PluginProperty> customFields = extractPluginProperties(hostedPaymentPageFields != null ? hostedPaymentPageFields.getFormFields() : null);
 
         final HostedPaymentPageFormDescriptor descriptor = paymentGatewayApi.buildFormDescriptorWithPaymentControl(account, paymentMethodId, customFields, pluginProperties, paymentOptions, callContext);
         final HostedPaymentPageFormDescriptorJson result = new HostedPaymentPageFormDescriptorJson(descriptor);
@@ -127,11 +130,11 @@ public class PaymentGatewayResource extends ComboPaymentResource {
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
     @ApiOperation(value = "Generate form data to redirect the customer to the gateway", response = HostedPaymentPageFormDescriptorJson.class)
-    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid accountId supplied"),
+    @ApiResponses(value = {/* @ApiResponse(code = 200, message = "Successful"),*/
                            @ApiResponse(code = 404, message = "Account not found")})
-    public Response buildFormDescriptor(final HostedPaymentPageFieldsJson json,
-                                        @PathParam("accountId") final String accountIdString,
-                                        @QueryParam(QUERY_PAYMENT_METHOD_ID) final String paymentMethodIdStr,
+    public Response buildFormDescriptor(@PathParam("accountId") final UUID accountId,
+                                        final HostedPaymentPageFieldsJson json,
+                                        @QueryParam(QUERY_PAYMENT_METHOD_ID) final UUID inputPaymentMethodId,
                                         @QueryParam(QUERY_PAYMENT_CONTROL_PLUGIN_NAME) final List<String> paymentControlPluginNames,
                                         @QueryParam(QUERY_PLUGIN_PROPERTY) final List<String> pluginPropertiesString,
                                         @HeaderParam(HDR_CREATED_BY) final String createdBy,
@@ -141,14 +144,13 @@ public class PaymentGatewayResource extends ComboPaymentResource {
                                         @javax.ws.rs.core.Context final HttpServletRequest request) throws PaymentApiException, AccountApiException {
         final Iterable<PluginProperty> pluginProperties = extractPluginProperties(pluginPropertiesString);
         final PaymentOptions paymentOptions = createControlPluginApiPaymentOptions(paymentControlPluginNames);
-        final CallContext callContext = context.createContext(createdBy, reason, comment, request);
-        final UUID accountId = UUID.fromString(accountIdString);
+        final CallContext callContext = context.createCallContextWithAccountId(accountId, createdBy, reason, comment, request);
         final Account account = accountUserApi.getAccountById(accountId, callContext);
-        final UUID paymentMethodId = paymentMethodIdStr == null ? account.getPaymentMethodId() : UUID.fromString(paymentMethodIdStr);
+        final UUID paymentMethodId = inputPaymentMethodId == null ? account.getPaymentMethodId() : inputPaymentMethodId;
 
         validatePaymentMethodForAccount(accountId, paymentMethodId, callContext);
 
-        final Iterable<PluginProperty> customFields = extractPluginProperties(json.getCustomFields());
+        final Iterable<PluginProperty> customFields = extractPluginProperties(json.getFormFields());
 
         final HostedPaymentPageFormDescriptor descriptor = paymentGatewayApi.buildFormDescriptorWithPaymentControl(account, paymentMethodId, customFields, pluginProperties, paymentOptions, callContext);
         final HostedPaymentPageFormDescriptorJson result = new HostedPaymentPageFormDescriptorJson(descriptor);
@@ -162,9 +164,9 @@ public class PaymentGatewayResource extends ComboPaymentResource {
     @Consumes(WILDCARD)
     @Produces(APPLICATION_JSON)
     @ApiOperation(value = "Process a gateway notification", notes = "The response is built by the appropriate plugin")
-    @ApiResponses(value = {})
-    public Response processNotification(final String body,
-                                        @PathParam(QUERY_PAYMENT_PLUGIN_NAME) final String pluginName,
+    @ApiResponses(value = {@ApiResponse(code = 200, message = "Successful")})
+    public Response processNotification(@PathParam(PATH_PAYMENT_PLUGIN_NAME) final String pluginName,
+                                        final String body,
                                         @QueryParam(QUERY_PAYMENT_CONTROL_PLUGIN_NAME) final List<String> paymentControlPluginNames,
                                         @QueryParam(QUERY_PLUGIN_PROPERTY) final List<String> pluginPropertiesString,
                                         @HeaderParam(HDR_CREATED_BY) final String createdBy,
@@ -174,7 +176,7 @@ public class PaymentGatewayResource extends ComboPaymentResource {
                                         @javax.ws.rs.core.Context final HttpServletRequest request) throws PaymentApiException {
         final Iterable<PluginProperty> pluginProperties = extractPluginProperties(pluginPropertiesString);
         final PaymentOptions paymentOptions = createControlPluginApiPaymentOptions(paymentControlPluginNames);
-        final CallContext callContext = context.createContext(createdBy, reason, comment, request);
+        final CallContext callContext = context.createCallContextNoAccountId(createdBy, reason, comment, request);
 
         final String notificationPayload;
         if (Strings.emptyToNull(body) == null && uriInfo.getRequestUri() != null) {

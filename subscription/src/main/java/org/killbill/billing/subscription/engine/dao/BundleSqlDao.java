@@ -19,11 +19,6 @@ package org.killbill.billing.subscription.engine.dao;
 import java.util.Date;
 import java.util.List;
 
-import org.skife.jdbi.v2.sqlobject.Bind;
-import org.killbill.commons.jdbi.binder.SmartBindBean;
-import org.skife.jdbi.v2.sqlobject.SqlQuery;
-import org.skife.jdbi.v2.sqlobject.SqlUpdate;
-
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.subscription.api.user.SubscriptionBaseBundle;
@@ -31,7 +26,12 @@ import org.killbill.billing.subscription.engine.dao.model.SubscriptionBundleMode
 import org.killbill.billing.util.audit.ChangeType;
 import org.killbill.billing.util.entity.dao.Audited;
 import org.killbill.billing.util.entity.dao.EntitySqlDao;
+import org.killbill.commons.jdbi.binder.SmartBindBean;
 import org.killbill.commons.jdbi.template.KillBillSqlDaoStringTemplate;
+import org.skife.jdbi.v2.sqlobject.Bind;
+import org.skife.jdbi.v2.sqlobject.SqlQuery;
+import org.skife.jdbi.v2.sqlobject.SqlUpdate;
+import org.skife.jdbi.v2.sqlobject.customizers.Define;
 
 @KillBillSqlDaoStringTemplate
 public interface BundleSqlDao extends EntitySqlDao<SubscriptionBundleModelDao, SubscriptionBaseBundle> {
@@ -44,20 +44,26 @@ public interface BundleSqlDao extends EntitySqlDao<SubscriptionBundleModelDao, S
 
     @SqlUpdate
     @Audited(ChangeType.UPDATE)
+    public void renameBundleExternalKey(@Bind("externalKey") String externalKey,
+                                        @Define("prefix") final String prefix,
+                                        @SmartBindBean final InternalCallContext context);
+
+    @SqlUpdate
+    @Audited(ChangeType.UPDATE)
     public void updateBundleLastSysTime(@Bind("id") String id,
                                         @Bind("lastSysUpdateDate") Date lastSysUpdate,
                                         @SmartBindBean final InternalCallContext context);
 
     @SqlQuery
-    public List<SubscriptionBundleModelDao> getBundlesFromAccountAndKey(@Bind("accountId") String accountId,
-                                                                        @Bind("externalKey") String externalKey,
-                                                                        @SmartBindBean final InternalTenantContext context);
+    public SubscriptionBundleModelDao getBundlesFromAccountAndKey(@Bind("accountId") String accountId,
+                                                                  @Bind("externalKey") String externalKey,
+                                                                  @SmartBindBean final InternalTenantContext context);
 
     @SqlQuery
     public List<SubscriptionBundleModelDao> getBundleFromAccount(@Bind("accountId") String accountId,
                                                                  @SmartBindBean final InternalTenantContext context);
 
     @SqlQuery
-    public List<SubscriptionBundleModelDao> getBundlesForKey(@Bind("externalKey") String externalKey,
-                                                             @SmartBindBean final InternalTenantContext context);
+    public List<SubscriptionBundleModelDao> getBundlesForLikeKey(@Bind("externalKey") String externalKey,
+                                                                 @SmartBindBean final InternalTenantContext context);
 }

@@ -23,9 +23,9 @@ import java.util.List;
 
 import org.killbill.billing.ErrorCode;
 import org.killbill.billing.client.KillBillClientException;
-import org.killbill.billing.client.model.Account;
-import org.killbill.billing.client.model.InvoicePayment;
-import org.killbill.billing.client.model.InvoicePaymentTransaction;
+import org.killbill.billing.client.model.gen.Account;
+import org.killbill.billing.client.model.gen.InvoicePayment;
+import org.killbill.billing.client.model.gen.InvoicePaymentTransaction;
 import org.killbill.billing.invoice.api.InvoiceApiException;
 import org.testng.Assert;
 import org.testng.annotations.Test;
@@ -34,16 +34,16 @@ import static org.testng.Assert.fail;
 
 public class TestExceptions extends TestJaxrsBase {
 
-    @Test(groups = "slow", enabled = false)
+    @Test(groups = "slow", enabled=false)
     public void testExceptionMapping() throws Exception {
         final Account account = createAccountWithPMBundleAndSubscriptionAndWaitForFirstInvoice();
-        final List<InvoicePayment> payments = killBillClient.getInvoicePaymentsForAccount(account.getAccountId());
+        final List<InvoicePayment> payments = accountApi.getInvoicePayments(account.getAccountId(), NULL_PLUGIN_PROPERTIES, requestOptions);
 
         final InvoicePaymentTransaction input = new InvoicePaymentTransaction();
         input.setPaymentId(payments.get(0).getPaymentId());
         input.setAmount(BigDecimal.TEN.negate());
         try {
-            killBillClient.createInvoicePaymentChargeback(input, createdBy, reason, comment);
+            invoicePaymentApi.createChargeback(payments.get(0).getPaymentId(), input, requestOptions);
             fail();
         } catch (final KillBillClientException e) {
             Assert.assertEquals(e.getBillingException().getClassName(), InvoiceApiException.class.getName());

@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2012 Ning, Inc.
- * Copyright 2014-2017 Groupon, Inc
- * Copyright 2014-2017 The Billing Project, LLC
+ * Copyright 2014-2018 Groupon, Inc
+ * Copyright 2014-2018 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -20,11 +20,13 @@ package org.killbill.billing.util.entity.dao;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.InvocationHandler;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.sql.SQLWarning;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -49,7 +51,6 @@ import org.killbill.billing.util.cache.CacheLoaderArgument;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.billing.util.dao.EntityAudit;
 import org.killbill.billing.util.dao.EntityHistoryModelDao;
-import org.killbill.billing.util.dao.NonEntityDao;
 import org.killbill.billing.util.dao.TableName;
 import org.killbill.billing.util.entity.Entity;
 import org.killbill.clock.Clock;
@@ -93,7 +94,6 @@ public class EntitySqlDaoWrapperInvocationHandler<S extends EntitySqlDao<M, E>, 
 
     private final CacheControllerDispatcher cacheControllerDispatcher;
     private final Clock clock;
-    private final NonEntityDao nonEntityDao;
     private final InternalCallContextFactory internalCallContextFactory;
     private final Profiling<Object, Throwable> prof;
 
@@ -103,14 +103,12 @@ public class EntitySqlDaoWrapperInvocationHandler<S extends EntitySqlDao<M, E>, 
                                                 final Clock clock,
                                                 // Special DAO that don't require caching can invoke EntitySqlDaoWrapperInvocationHandler with no caching (e.g NoCachingTenantDao)
                                                 @Nullable final CacheControllerDispatcher cacheControllerDispatcher,
-                                                @Nullable final NonEntityDao nonEntityDao,
                                                 final InternalCallContextFactory internalCallContextFactory) {
         this.sqlDaoClass = sqlDaoClass;
         this.sqlDao = sqlDao;
         this.handle = handle;
         this.clock = clock;
         this.cacheControllerDispatcher = cacheControllerDispatcher;
-        this.nonEntityDao = nonEntityDao;
         this.internalCallContextFactory = internalCallContextFactory;
         this.prof = new Profiling<Object, Throwable>();
     }
@@ -124,7 +122,7 @@ public class EntitySqlDaoWrapperInvocationHandler<S extends EntitySqlDao<M, E>, 
                     return invokeSafely(proxy, method, args);
                 }
             });
-        } catch (Throwable t) {
+        } catch (final Throwable t) {
             if (t.getCause() != null && t.getCause().getCause() != null && DBIException.class.isAssignableFrom(t.getCause().getClass())) {
                 // Likely a JDBC error, try to extract the SQL statement and JDBI bindings
                 if (t.getCause() instanceof StatementException) {
@@ -208,7 +206,8 @@ public class EntitySqlDaoWrapperInvocationHandler<S extends EntitySqlDao<M, E>, 
         return prof.executeWithProfiling(ProfilingFeatureType.DAO_DETAILS, getProfilingId("raw", method), new WithProfilingCallback<Object, Throwable>() {
             @Override
             public Object execute() throws Throwable {
-                Object result = method.invoke(sqlDao, args);
+                // Real jdbc call
+                final Object result = executeJDBCCall(method, args);
                 // This is *almost* the default invocation except that we want to intercept getById calls to populate the caches; the pattern is to always fetch
                 // the object after it was created, which means this method is (by pattern) first called right after object creation and contains all the goodies we care
                 // about (record_id, account_record_id, object_id, tenant_record_id)
@@ -324,6 +323,7 @@ public class EntitySqlDaoWrapperInvocationHandler<S extends EntitySqlDao<M, E>, 
         if (changeType == ChangeType.UPDATE || changeType == ChangeType.DELETE) {
             for (final String entityId : entityIds) {
                 deletedEntities.put(entityId, sqlDao.getById(entityId, context));
+                printSQLWarnings();
             }
         }
 
@@ -331,7 +331,7 @@ public class EntitySqlDaoWrapperInvocationHandler<S extends EntitySqlDao<M, E>, 
         final Object obj = prof.executeWithProfiling(ProfilingFeatureType.DAO_DETAILS, getProfilingId("raw", method), new WithProfilingCallback<Object, Throwable>() {
             @Override
             public Object execute() throws Throwable {
-                return method.invoke(sqlDao, args);
+                return executeJDBCCall(method, args);
             }
         });
 
@@ -347,6 +347,27 @@ public class EntitySqlDaoWrapperInvocationHandler<S extends EntitySqlDao<M, E>, 
         } else {
             // jDBI will return the number of rows modified otherwise
             return obj;
+        }
+    }
+
+    private Object executeJDBCCall(final Method method, final Object[] args) throws IllegalAccessException, InvocationTargetException {
+        final Object invoke = method.invoke(sqlDao, args);
+        printSQLWarnings();
+        return invoke;
+    }
+
+    private void printSQLWarnings() {
+        if (logger.isDebugEnabled()) {
+            try {
+                SQLWarning warning = handle.getConnection().getWarnings();
+                while (warning != null) {
+                    logger.debug("[SQL WARNING] {}", warning);
+                    warning = warning.getNextWarning();
+                }
+                handle.getConnection().clearWarnings();
+            } catch (final SQLException e) {
+                logger.debug("Error whilst retrieving SQL warnings", e);
+            }
         }
     }
 
@@ -388,6 +409,7 @@ public class EntitySqlDaoWrapperInvocationHandler<S extends EntitySqlDao<M, E>, 
                 } else {
                     // See note above regarding "markAsInactive" operations
                     reHydratedEntity = MoreObjects.firstNonNull(sqlDao.getById(entityId, context), deletedEntity);
+                    printSQLWarnings();
                 }
                 Preconditions.checkNotNull(reHydratedEntity, "reHydratedEntity cannot be null");
                 final Long entityRecordId = reHydratedEntity.getRecordId();
@@ -482,13 +504,15 @@ public class EntitySqlDaoWrapperInvocationHandler<S extends EntitySqlDao<M, E>, 
     }
 
     private Long insertHistory(final Long entityRecordId, final M entityModelDao, final ChangeType changeType, final InternalCallContext context) {
-        final EntityHistoryModelDao<M, E> history = new EntityHistoryModelDao<M, E>(entityModelDao, entityRecordId, changeType, clock.getUTCNow());
-        return sqlDao.addHistoryFromTransaction(history, context);
+        final EntityHistoryModelDao<M, E> history = new EntityHistoryModelDao<M, E>(entityModelDao, entityRecordId, changeType, null, context.getCreatedDate());
+        final Long recordId = sqlDao.addHistoryFromTransaction(history, context);
+        printSQLWarnings();
+        return recordId;
     }
 
     private void insertAudits(final TableName tableName, final M entityModelDao, final Long entityRecordId, final Long historyRecordId, final ChangeType changeType, final InternalCallContext contextMaybeWithoutAccountRecordId) {
         final TableName destinationTableName = MoreObjects.firstNonNull(tableName.getHistoryTableName(), tableName);
-        final EntityAudit audit = new EntityAudit(destinationTableName, historyRecordId, changeType, clock.getUTCNow());
+        final EntityAudit audit = new EntityAudit(destinationTableName, historyRecordId, changeType, contextMaybeWithoutAccountRecordId.getCreatedDate());
 
         final InternalCallContext context;
         // Populate the account record id when creating the account record
@@ -500,6 +524,7 @@ public class EntitySqlDaoWrapperInvocationHandler<S extends EntitySqlDao<M, E>, 
             context = contextMaybeWithoutAccountRecordId;
         }
         sqlDao.insertAuditFromTransaction(audit, context);
+        printSQLWarnings();
 
         // We need to invalidate the caches. There is a small window of doom here where caches will be stale.
         // TODO Knowledge on how the key is constructed is also in AuditSqlDao

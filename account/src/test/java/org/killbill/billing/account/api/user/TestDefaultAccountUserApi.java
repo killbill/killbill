@@ -138,8 +138,8 @@ public class TestDefaultAccountUserApi extends AccountTestSuiteWithEmbeddedDB {
 
         // Update the address and leave other fields null
         final MutableAccountData mutableAccountData = new DefaultMutableAccountData(null, null, null, 0, null, null, false, 0, null,
-                                                                                    null, null, null, null, null, null,
-                                                                                    null, null, null, null, null, false, false);
+                                                                                    clock.getUTCNow(), null, null, null, null, null, null,
+                                                                                    null, null, null, null, null, false);
         final String newAddress1 = UUID.randomUUID().toString();
         mutableAccountData.setAddress1(newAddress1);
 
@@ -214,7 +214,6 @@ public class TestDefaultAccountUserApi extends AccountTestSuiteWithEmbeddedDB {
         Assert.assertEquals(retrievedAccount.getCountry(), account.getCountry());
         Assert.assertEquals(retrievedAccount.getPhone(), account.getPhone());
         Assert.assertEquals(retrievedAccount.isMigrated(), account.isMigrated());
-        Assert.assertEquals(retrievedAccount.isNotifiedForInvoices(), account.isNotifiedForInvoices());
         Assert.assertEquals(retrievedAccount.getParentAccountId(), account.getParentAccountId());
         Assert.assertEquals(retrievedAccount.isPaymentDelegatedToParent(), account.isPaymentDelegatedToParent());
         // Finally check account notes did get reset
@@ -451,7 +450,7 @@ public class TestDefaultAccountUserApi extends AccountTestSuiteWithEmbeddedDB {
         final TenantSqlDao tenantSqlDao = dbi.onDemand(TenantSqlDao.class);
         final TenantModelDao tenant2 = new TenantModelDao();
         tenantSqlDao.create(tenant2, internalCallContext);
-        final CallContext callContext2 = new DefaultCallContext(tenant2.getId(), callContext.getUserName(), callContext.getCallOrigin(), callContext.getUserType(), callContext.getUserToken(), clock);
+        final CallContext callContext2 = new DefaultCallContext(account1.getId(), tenant2.getId(), callContext.getUserName(), callContext.getCallOrigin(), callContext.getUserType(), callContext.getUserToken(), clock);
         final Account account2 = accountUserApi.createAccount(accountData, callContext2);
 
         Assert.assertEquals(account1.getExternalKey(), account2.getExternalKey());

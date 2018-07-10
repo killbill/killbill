@@ -21,9 +21,11 @@ package org.killbill.billing.beatrix.integration;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
 import org.joda.time.Interval;
 import org.joda.time.LocalDate;
 import org.killbill.billing.account.api.Account;
@@ -47,9 +49,12 @@ import org.killbill.billing.invoice.api.DryRunType;
 import org.killbill.billing.invoice.api.Invoice;
 import org.killbill.billing.invoice.api.InvoiceApiException;
 import org.killbill.billing.invoice.api.InvoiceItemType;
+import org.killbill.billing.mock.MockAccountBuilder;
 import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.payment.api.TransactionStatus;
 import org.killbill.billing.subscription.api.user.DefaultSubscriptionBase;
+import org.skife.jdbi.v2.Handle;
+import org.skife.jdbi.v2.tweak.HandleCallback;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
@@ -110,7 +115,7 @@ public class TestIntegration extends TestIntegrationBase {
         final DryRunArguments dryRun = new TestDryRunArguments(DryRunType.SUBSCRIPTION_ACTION, null, null, null, null, null, SubscriptionEventType.STOP_BILLING, bpSubscription.getId(),
                                                                bpSubscription.getBundleId(), null, null);
         try {
-            invoiceUserApi.triggerInvoiceGeneration(account.getId(), new LocalDate(2012, 6, 1), dryRun, callContext);
+            invoiceUserApi.triggerDryRunInvoiceGeneration(account.getId(), new LocalDate(2012, 6, 1), dryRun, callContext);
             fail();
         } catch (final InvoiceApiException e) {
             assertEquals(e.getCode(), INVOICE_NOTHING_TO_DO.getCode());
@@ -170,7 +175,7 @@ public class TestIntegration extends TestIntegrationBase {
         final DryRunArguments dryRun = new TestDryRunArguments(DryRunType.SUBSCRIPTION_ACTION, null, null, null, null, null, SubscriptionEventType.STOP_BILLING, bpSubscription.getId(),
                                                                bpSubscription.getBundleId(), null, null);
         try {
-            invoiceUserApi.triggerInvoiceGeneration(account.getId(), new LocalDate(2012, 6, 1), dryRun, callContext);
+            invoiceUserApi.triggerDryRunInvoiceGeneration(account.getId(), new LocalDate(2012, 6, 1), dryRun, callContext);
             fail();
         } catch (final InvoiceApiException e) {
             assertEquals(e.getCode(), INVOICE_NOTHING_TO_DO.getCode());
@@ -199,9 +204,9 @@ public class TestIntegration extends TestIntegrationBase {
 
         TestDryRunArguments dryRun = new TestDryRunArguments(DryRunType.SUBSCRIPTION_ACTION, "Shotgun", ProductCategory.BASE, BillingPeriod.MONTHLY, null, null,
                                                              SubscriptionEventType.START_BILLING, null, null, null, null);
-        Invoice dryRunInvoice = invoiceUserApi.triggerInvoiceGeneration(account.getId(), clock.getUTCToday(), dryRun, callContext);
+        Invoice dryRunInvoice = invoiceUserApi.triggerDryRunInvoiceGeneration(account.getId(), clock.getUTCToday(), dryRun, callContext);
         expectedInvoices.add(new ExpectedInvoiceItemCheck(new LocalDate(2012, 4, 1), null, InvoiceItemType.FIXED, new BigDecimal("0")));
-        invoiceChecker.checkInvoiceNoAudits(dryRunInvoice, callContext, expectedInvoices);
+        invoiceChecker.checkInvoiceNoAudits(dryRunInvoice, expectedInvoices);
 
         final DefaultEntitlement bpSubscription = createBaseEntitlementAndCheckForCompletion(account.getId(), "bundleKey", "Shotgun", ProductCategory.BASE, BillingPeriod.MONTHLY, NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE);
         // Check bundle after BP got created otherwise we get an error from auditApi.
@@ -214,9 +219,9 @@ public class TestIntegration extends TestIntegrationBase {
         //
         dryRun = new TestDryRunArguments(DryRunType.SUBSCRIPTION_ACTION, "Telescopic-Scope", ProductCategory.ADD_ON, BillingPeriod.MONTHLY, null, null,
                                          SubscriptionEventType.START_BILLING, null, bpSubscription.getBundleId(), null, null);
-        dryRunInvoice = invoiceUserApi.triggerInvoiceGeneration(account.getId(), clock.getUTCToday(), dryRun, callContext);
+        dryRunInvoice = invoiceUserApi.triggerDryRunInvoiceGeneration(account.getId(), clock.getUTCToday(), dryRun, callContext);
         expectedInvoices.add(new ExpectedInvoiceItemCheck(new LocalDate(2012, 4, 1), new LocalDate(2012, 5, 1), InvoiceItemType.RECURRING, new BigDecimal("399.95")));
-        invoiceChecker.checkInvoiceNoAudits(dryRunInvoice, callContext, expectedInvoices);
+        invoiceChecker.checkInvoiceNoAudits(dryRunInvoice, expectedInvoices);
 
         addAOEntitlementAndCheckForCompletion(bpSubscription.getBundleId(), "Telescopic-Scope", ProductCategory.ADD_ON, BillingPeriod.MONTHLY, NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
 
@@ -230,12 +235,12 @@ public class TestIntegration extends TestIntegrationBase {
         //
         dryRun = new TestDryRunArguments(DryRunType.SUBSCRIPTION_ACTION, null, null, null, null, null, SubscriptionEventType.STOP_BILLING, bpSubscription.getId(),
                                          bpSubscription.getBundleId(), null, null);
-        dryRunInvoice = invoiceUserApi.triggerInvoiceGeneration(account.getId(), clock.getUTCToday(), dryRun, callContext);
+        dryRunInvoice = invoiceUserApi.triggerDryRunInvoiceGeneration(account.getId(), clock.getUTCToday(), dryRun, callContext);
         expectedInvoices.add(new ExpectedInvoiceItemCheck(new LocalDate(2012, 4, 1), new LocalDate(2012, 5, 1), InvoiceItemType.REPAIR_ADJ, new BigDecimal("-399.95")));
         // The second invoice should be adjusted for the AO (we paid for the full period) and since we paid we should also see a CBA
         expectedInvoices.add(new ExpectedInvoiceItemCheck(new LocalDate(2012, 4, 1), new LocalDate(2012, 4, 1), InvoiceItemType.CBA_ADJ, new BigDecimal("399.95"),
                                                           false /* Avoid checking dates for CBA because code is using context and context createdDate is wrong  in the test as we reset the clock too late, bummer... */ ));
-        invoiceChecker.checkInvoiceNoAudits(dryRunInvoice, callContext, expectedInvoices);
+        invoiceChecker.checkInvoiceNoAudits(dryRunInvoice, expectedInvoices);
 
 
         cancelEntitlementAndCheckForCompletion(bpSubscription, NextEvent.BLOCK, NextEvent.BLOCK, NextEvent.CANCEL, NextEvent.CANCEL, NextEvent.INVOICE);
@@ -274,9 +279,9 @@ public class TestIntegration extends TestIntegrationBase {
         //
         TestDryRunArguments dryRun = new TestDryRunArguments(DryRunType.SUBSCRIPTION_ACTION, "Assault-Rifle", ProductCategory.BASE, BillingPeriod.MONTHLY, null, null, SubscriptionEventType.CHANGE,
                                                              subscription.getId(), subscription.getBundleId(), null, null);
-        Invoice dryRunInvoice = invoiceUserApi.triggerInvoiceGeneration(account.getId(), clock.getUTCToday(), dryRun, callContext);
+        Invoice dryRunInvoice = invoiceUserApi.triggerDryRunInvoiceGeneration(account.getId(), clock.getUTCToday(), dryRun, callContext);
         expectedInvoices.add(new ExpectedInvoiceItemCheck(initialCreationDate.toLocalDate(), null, InvoiceItemType.FIXED, new BigDecimal("0")));
-        invoiceChecker.checkInvoiceNoAudits(dryRunInvoice, callContext, expectedInvoices);
+        invoiceChecker.checkInvoiceNoAudits(dryRunInvoice, expectedInvoices);
 
 
         clock.addDeltaFromReality(1000); // Make sure CHANGE does not collide with CREATE
@@ -299,8 +304,8 @@ public class TestIntegration extends TestIntegrationBase {
         expectedInvoices.add(new ExpectedInvoiceItemCheck(new LocalDate(2012, 3, 2), new LocalDate(2012, 3, 31), InvoiceItemType.RECURRING, new BigDecimal("561.24")));
 
         // Verify first next targetDate
-        dryRunInvoice = invoiceUserApi.triggerInvoiceGeneration(account.getId(), new LocalDate(nextDate, testTimeZone), dryRun, callContext);
-        invoiceChecker.checkInvoiceNoAudits(dryRunInvoice, callContext, expectedInvoices);
+        dryRunInvoice = invoiceUserApi.triggerDryRunInvoiceGeneration(account.getId(), new LocalDate(nextDate, testTimeZone), dryRun, callContext);
+        invoiceChecker.checkInvoiceNoAudits(dryRunInvoice, expectedInvoices);
 
 
         setDateAndCheckForCompletion(nextDate, NextEvent.PHASE, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
@@ -323,10 +328,10 @@ public class TestIntegration extends TestIntegrationBase {
 
         nextDate = clock.getUTCNow().plusDays(31);
         dryRun = new TestDryRunArguments(DryRunType.TARGET_DATE);
-        dryRunInvoice = invoiceUserApi.triggerInvoiceGeneration(account.getId(), new LocalDate(nextDate, testTimeZone), dryRun, callContext);
+        dryRunInvoice = invoiceUserApi.triggerDryRunInvoiceGeneration(account.getId(), new LocalDate(nextDate, testTimeZone), dryRun, callContext);
         expectedInvoices.add(new ExpectedInvoiceItemCheck(new LocalDate(2012, 3, 31), new LocalDate(2012, 4, 30), InvoiceItemType.RECURRING, new BigDecimal("29.95")));
 
-        invoiceChecker.checkInvoiceNoAudits(dryRunInvoice, callContext, expectedInvoices);
+        invoiceChecker.checkInvoiceNoAudits(dryRunInvoice, expectedInvoices);
 
         addDaysAndCheckForCompletion(31, NextEvent.CHANGE, NextEvent.NULL_INVOICE, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
         invoiceChecker.checkInvoice(account.getId(), invoiceItemCount++, callContext, expectedInvoices);
@@ -407,7 +412,7 @@ public class TestIntegration extends TestIntegrationBase {
         final TestDryRunArguments dryRun = new TestDryRunArguments(DryRunType.SUBSCRIPTION_ACTION, "Pistol", ProductCategory.BASE, BillingPeriod.MONTHLY, null, null, SubscriptionEventType.CHANGE,
                                                                    subscription.getId(), subscription.getBundleId(), null, null);
         try {
-           invoiceUserApi.triggerInvoiceGeneration(account.getId(), clock.getUTCToday(), dryRun, callContext);
+           invoiceUserApi.triggerDryRunInvoiceGeneration(account.getId(), clock.getUTCToday(), dryRun, callContext);
             Assert.fail("Call should return no invoices");
         } catch (final InvoiceApiException e) {
             assertEquals(e.getCode(), INVOICE_NOTHING_TO_DO.getCode());
@@ -586,6 +591,8 @@ public class TestIntegration extends TestIntegrationBase {
         checkNoMoreInvoiceToGenerate(account);
     }
 
+
+
     @Test(groups = "slow")
     public void testCreateMultipleBPWithSameExternalKey() throws Exception {
         final DateTime initialDate = new DateTime(2012, 4, 25, 0, 13, 42, 0, testTimeZone);
@@ -607,16 +614,36 @@ public class TestIntegration extends TestIntegrationBase {
         final String newProductName = "Pistol";
         final DefaultEntitlement newBaseEntitlement = createBaseEntitlementAndCheckForCompletion(account.getId(), "bundleKey", newProductName, ProductCategory.BASE, term, NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE);
 
-        final SubscriptionBundle newBundle = subscriptionApi.getActiveSubscriptionBundleForExternalKey("bundleKey", callContext);
+        final List<SubscriptionBundle> bundles = subscriptionApi.getSubscriptionBundlesForExternalKey("bundleKey", callContext);
+        Assert.assertEquals(bundles.size(), 2);
 
+
+        final SubscriptionBundle newBundle = subscriptionApi.getActiveSubscriptionBundleForExternalKey("bundleKey", callContext);
         assertNotEquals(initialBundle.getId(), newBundle.getId());
         assertEquals(initialBundle.getAccountId(), newBundle.getAccountId());
         assertEquals(initialBundle.getExternalKey(), newBundle.getExternalKey());
 
-        final Entitlement refreshedBseEntitlement = entitlementApi.getEntitlementForId(baseEntitlement.getId(), callContext);
-
-        assertEquals(refreshedBseEntitlement.getState(), EntitlementState.CANCELLED);
+        final Entitlement refreshedBaseEntitlement = entitlementApi.getEntitlementForId(baseEntitlement.getId(), callContext);
+        assertEquals(refreshedBaseEntitlement.getState(), EntitlementState.CANCELLED);
         assertEquals(newBaseEntitlement.getState(), EntitlementState.ACTIVE);
+
+
+        // One more time
+        busHandler.pushExpectedEvents(NextEvent.BLOCK, NextEvent.CANCEL, NextEvent.NULL_INVOICE);
+        newBaseEntitlement.cancelEntitlementWithPolicy(EntitlementActionPolicy.IMMEDIATE, ImmutableList.<PluginProperty>of(), callContext);
+        assertListenerStatus();
+
+        final String newerProductName = "Shotgun";
+        final DefaultEntitlement newerBaseEntitlement = createBaseEntitlementAndCheckForCompletion(account.getId(), "bundleKey", newerProductName, ProductCategory.BASE, term, NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE);
+        assertEquals(newerBaseEntitlement.getState(), EntitlementState.ACTIVE);
+
+        final List<SubscriptionBundle> bundlesAgain = subscriptionApi.getSubscriptionBundlesForExternalKey("bundleKey", callContext);
+        Assert.assertEquals(bundlesAgain.size(), 3);
+
+        final SubscriptionBundle newerBundle = subscriptionApi.getActiveSubscriptionBundleForExternalKey("bundleKey", callContext);
+        assertNotEquals(initialBundle.getId(), newerBundle.getId());
+        assertEquals(initialBundle.getAccountId(), newerBundle.getAccountId());
+        assertEquals(initialBundle.getExternalKey(), newerBundle.getExternalKey());
 
         checkNoMoreInvoiceToGenerate(account);
     }
@@ -767,7 +794,7 @@ public class TestIntegration extends TestIntegrationBase {
         entitlement = (DefaultEntitlement) entitlementApi.getEntitlementForId(baseEntitlement.getId(), callContext);
         Assert.assertEquals(entitlement.getState(), EntitlementState.BLOCKED);
 
-        List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(accountId, false, callContext);
+        List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(accountId, false, false, callContext);
         assertEquals(invoices.size(), 3);
 
         // Cancel entitlement start of term but with billing policy immediate (ENT_BLOCKED must be after ENT_CANCELLED to trigger the bug)
@@ -785,7 +812,7 @@ public class TestIntegration extends TestIntegrationBase {
         assertListenerStatus();
 
         // No new invoices
-        invoices = invoiceUserApi.getInvoicesByAccount(accountId, false, callContext);
+        invoices = invoiceUserApi.getInvoicesByAccount(accountId, false, false, callContext);
         assertEquals(invoices.size(), 3);
     }
 
@@ -802,14 +829,14 @@ public class TestIntegration extends TestIntegrationBase {
 
         final DefaultEntitlement baseEntitlement = createBaseEntitlementAndCheckForCompletion(account.getId(), "bundleKey", productName, ProductCategory.BASE, BillingPeriod.MONTHLY, NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE);
 
-        List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(accountId, false, callContext);
+        List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(accountId, false, false, callContext);
         assertNotNull(invoices);
         assertTrue(invoices.size() == 1);
 
         busHandler.pushExpectedEvents(NextEvent.PHASE, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
         clock.addDeltaFromReality(AT_LEAST_ONE_MONTH_MS);
         assertListenerStatus();
-        invoices = invoiceUserApi.getInvoicesByAccount(accountId, false, callContext);
+        invoices = invoiceUserApi.getInvoicesByAccount(accountId, false, false, callContext);
         assertNotNull(invoices);
         assertEquals(invoices.size(), 2);
 
@@ -824,7 +851,7 @@ public class TestIntegration extends TestIntegrationBase {
         clock.addDeltaFromReality(AT_LEAST_ONE_MONTH_MS);
         assertListenerStatus();
 
-        invoices = invoiceUserApi.getInvoicesByAccount(accountId, false, callContext);
+        invoices = invoiceUserApi.getInvoicesByAccount(accountId, false, false, callContext);
         assertNotNull(invoices);
         assertEquals(invoices.size(), 8);
 
@@ -835,7 +862,7 @@ public class TestIntegration extends TestIntegrationBase {
             assertListenerStatus();
         }
 
-        invoices = invoiceUserApi.getInvoicesByAccount(accountId, false, callContext);
+        invoices = invoiceUserApi.getInvoicesByAccount(accountId, false, false, callContext);
         assertNotNull(invoices);
         assertEquals(invoices.size(), 14);
 
@@ -1025,4 +1052,74 @@ public class TestIntegration extends TestIntegrationBase {
             startDateBase = endDateBase;
         }
     }
+
+
+    @Test(groups = "slow")
+    public void testWithDayLightSaving() throws Exception {
+        clock.setTime(new DateTime("2015-09-01T08:01:01.000Z"));
+
+        final DateTimeZone tz = DateTimeZone.forID("America/Juneau");
+        final AccountData accountData = new MockAccountBuilder().name(UUID.randomUUID().toString().substring(1, 8))
+                                                                .firstNameLength(6)
+                                                                .email(UUID.randomUUID().toString().substring(1, 8))
+                                                                .phone(UUID.randomUUID().toString().substring(1, 8))
+                                                                .migrated(false)
+                                                                .externalKey(UUID.randomUUID().toString().substring(1, 8))
+                                                                .billingCycleDayLocal(1)
+                                                                .currency(Currency.USD)
+                                                                .paymentMethodId(UUID.randomUUID())
+                                                                .referenceTime(clock.getUTCNow())
+                                                                .timeZone(tz)
+                                                                .build();
+        final Account account = createAccountWithNonOsgiPaymentMethod(accountData);
+        accountChecker.checkAccount(account.getId(), accountData, callContext);
+
+        //
+        // CREATE SUBSCRIPTION AND EXPECT BOTH EVENTS: NextEvent.CREATE, NextEvent.BLOCK NextEvent.INVOICE
+        //
+        final DefaultEntitlement bpSubscription = createBaseEntitlementAndCheckForCompletion(account.getId(), "bundleKey", "Shotgun", ProductCategory.BASE, BillingPeriod.ANNUAL, NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE);
+        // Check bundle after BP got created otherwise we get an error from auditApi.
+        subscriptionChecker.checkSubscriptionCreated(bpSubscription.getId(), internalCallContext);
+        invoiceChecker.checkInvoice(account.getId(), 1, callContext, new ExpectedInvoiceItemCheck(new LocalDate(2015, 9, 1), null, InvoiceItemType.FIXED, new BigDecimal("0")));
+        assertListenerStatus();
+
+        //
+        // ADD ADD_ON ON THE SAME DAY
+        //
+        final DefaultEntitlement aoSubscription = addAOEntitlementAndCheckForCompletion(bpSubscription.getBundleId(), "Bullets", ProductCategory.ADD_ON, BillingPeriod.NO_BILLING_PERIOD, NextEvent.CREATE, NextEvent.BLOCK, NextEvent.NULL_INVOICE);
+        assertListenerStatus();
+
+        busHandler.pushExpectedEvents(NextEvent.PHASE, NextEvent.NULL_INVOICE, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
+        clock.addDays(30);
+        assertListenerStatus();
+        invoiceChecker.checkInvoice(account.getId(), 2, callContext,
+                                    new ExpectedInvoiceItemCheck(new LocalDate(2015, 10, 1), new LocalDate(2016, 10, 1), InvoiceItemType.RECURRING, new BigDecimal("2399.95")),
+                                    new ExpectedInvoiceItemCheck(new LocalDate(2015, 9, 1), new LocalDate(2015, 10, 1), InvoiceItemType.USAGE, BigDecimal.ZERO));
+
+        // 2015-11-1
+        busHandler.pushExpectedEvent(NextEvent.INVOICE);
+        clock.addMonths(1);
+        assertListenerStatus();
+
+        // 2015-12-1
+        busHandler.pushExpectedEvent(NextEvent.INVOICE);
+        clock.addMonths(1);
+        assertListenerStatus();
+
+        // We sleep to let system creates lots of notification if an infinite loop was indeed happening
+        Thread.sleep(3000);
+        // And then we check that we only have the expected number of notifications in the history table.
+        final Integer countNotifications = dbi.withHandle(new HandleCallback<Integer>() {
+                                                              @Override
+                                                              public Integer withHandle(final Handle handle) throws Exception {
+
+                                                                  List<Map<String, Object>> res = handle.select("select count(*) as count from notifications_history;");
+                                                                  final Integer count = Integer.valueOf(res.get(0).get("count").toString());
+                                                                  return count;
+                                                              }
+                                                          }
+                                                         );
+        Assert.assertEquals(countNotifications.intValue(), 4);
+    }
+
 }

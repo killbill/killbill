@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014-2017 Groupon, Inc
- * Copyright 2014-2017 The Billing Project, LLC
+ * Copyright 2014-2018 Groupon, Inc
+ * Copyright 2014-2018 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -26,14 +26,13 @@ import org.killbill.billing.catalog.api.BillingActionPolicy;
 import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.catalog.api.Plan;
 import org.killbill.billing.catalog.api.PlanPhase;
-import org.killbill.billing.catalog.api.PlanPhasePriceOverride;
-import org.killbill.billing.catalog.api.PlanSpecifier;
 import org.killbill.billing.catalog.api.PriceList;
 import org.killbill.billing.catalog.api.Product;
 import org.killbill.billing.catalog.api.ProductCategory;
 import org.killbill.billing.entitlement.api.Blockable;
 import org.killbill.billing.entitlement.api.Entitlement.EntitlementSourceType;
 import org.killbill.billing.entitlement.api.Entitlement.EntitlementState;
+import org.killbill.billing.entitlement.api.EntitlementSpecifier;
 import org.killbill.billing.subscription.api.user.SubscriptionBaseApiException;
 import org.killbill.billing.subscription.api.user.SubscriptionBaseTransition;
 import org.killbill.billing.util.callcontext.CallContext;
@@ -54,16 +53,18 @@ public interface SubscriptionBase extends Entity, Blockable {
             throws SubscriptionBaseApiException;
 
     // Return the effective date of the change
-    public DateTime changePlan(final PlanSpecifier spec, final List<PlanPhasePriceOverride> overrides, final CallContext context)
+    public DateTime changePlan(final EntitlementSpecifier spec, final CallContext context)
+            throws SubscriptionBaseApiException;
+
+    public boolean undoChangePlan(final CallContext context)
             throws SubscriptionBaseApiException;
 
     // Return the effective date of the change
-    public DateTime changePlanWithDate(final PlanSpecifier spec, final List<PlanPhasePriceOverride> overrides, final DateTime requestedDate, final CallContext context)
+    public DateTime changePlanWithDate(final EntitlementSpecifier spec, final DateTime requestedDate, final CallContext context)
             throws SubscriptionBaseApiException;
 
     // Return the effective date of the change
-    public DateTime changePlanWithPolicy(final PlanSpecifier spec, final List<PlanPhasePriceOverride> overrides,
-                                         final BillingActionPolicy policy, final CallContext context)
+    public DateTime changePlanWithPolicy(final EntitlementSpecifier spec, final BillingActionPolicy policy, final CallContext context)
             throws SubscriptionBaseApiException;
 
     public UUID getBundleId();
@@ -89,6 +90,8 @@ public interface SubscriptionBase extends Entity, Blockable {
     public PlanPhase getCurrentPhase();
 
     public Product getLastActiveProduct();
+
+    public Plan getCurrentOrPendingPlan();
 
     public PriceList getLastActivePriceList();
 

@@ -61,7 +61,7 @@ public class DefaultImmutableAccountData implements ImmutableAccountData, Extern
              account.getCurrency(),
              account.getTimeZone(),
              AccountDateTimeUtils.getFixedOffsetTimeZone(account),
-             AccountDateTimeUtils.getReferenceDateTime(account));
+             account.getReferenceTime());
     }
 
     public DefaultImmutableAccountData(final AccountModelDao account) {
@@ -70,7 +70,7 @@ public class DefaultImmutableAccountData implements ImmutableAccountData, Extern
              account.getCurrency(),
              account.getTimeZone(),
              AccountDateTimeUtils.getFixedOffsetTimeZone(account),
-             AccountDateTimeUtils.getReferenceDateTime(account));
+             account.getReferenceTime());
     }
 
     @Override
@@ -91,20 +91,6 @@ public class DefaultImmutableAccountData implements ImmutableAccountData, Extern
     @Override
     public DateTimeZone getTimeZone() {
         return timeZone;
-    }
-
-    @Override
-    @Deprecated
-    public UUID getParentAccountId() {
-        // Should only be used internally by ImmutableAccountInternalApi
-        throw new UnsupportedOperationException("WILL BE REMOVED IN 0.20.0");
-    }
-
-    @Override
-    @Deprecated
-    public Boolean isPaymentDelegatedToParent() {
-        // Should only be used internally by ImmutableAccountInternalApi
-        throw new UnsupportedOperationException("WILL BE REMOVED IN 0.20.0");
     }
 
     public DateTimeZone getFixedOffsetTimeZone() {

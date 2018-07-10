@@ -60,14 +60,14 @@ public class DefaultEventsStream implements EventsStream {
     private final ImmutableAccountData account;
     private final SubscriptionBaseBundle bundle;
     // All blocking states for the account, associated bundle or subscription
-    private final List<BlockingState> blockingStates;
+    private final Collection<BlockingState> blockingStates;
     private final BlockingChecker blockingChecker;
     // Base subscription for the bundle if it exists, null otherwise
     private final SubscriptionBase baseSubscription;
     // Subscription associated with this entitlement (equals to baseSubscription for base subscriptions)
     private final SubscriptionBase subscription;
     // All subscriptions for that bundle
-    private final List<SubscriptionBase> allSubscriptionsForBundle;
+    private final Collection<SubscriptionBase> allSubscriptionsForBundle;
     private final InternalTenantContext internalTenantContext;
     private final DateTime utcNow;
     private final LocalDate utcToday;
@@ -85,10 +85,13 @@ public class DefaultEventsStream implements EventsStream {
     private BlockingState entitlementCancelEvent;
     private EntitlementState entitlementState;
 
-    public DefaultEventsStream(final ImmutableAccountData account, final SubscriptionBaseBundle bundle,
-                               final List<BlockingState> blockingStates, final BlockingChecker blockingChecker,
-                               @Nullable final SubscriptionBase baseSubscription, final SubscriptionBase subscription,
-                               final List<SubscriptionBase> allSubscriptionsForBundle,
+    public DefaultEventsStream(final ImmutableAccountData account,
+                               final SubscriptionBaseBundle bundle,
+                               final Collection<BlockingState> blockingStates,
+                               final BlockingChecker blockingChecker,
+                               @Nullable final SubscriptionBase baseSubscription,
+                               final SubscriptionBase subscription,
+                               final Collection<SubscriptionBase> allSubscriptionsForBundle,
                                final int defaultBillCycleDayLocal,
                                final InternalTenantContext contextWithValidAccountRecordId, final DateTime utcNow) {
         sanityChecks(account, bundle, baseSubscription, subscription);
@@ -220,6 +223,13 @@ public class DefaultEventsStream implements EventsStream {
         Preconditions.checkState(effectiveDate != null);
         final BlockingAggregator aggregator = getBlockingAggregator(effectiveDate);
         return aggregator.isBlockChange();
+    }
+
+    @Override
+    public boolean isBlockEntitlement(final DateTime effectiveDate) {
+        Preconditions.checkState(effectiveDate != null);
+        final BlockingAggregator aggregator = getBlockingAggregator(effectiveDate);
+        return aggregator.isBlockEntitlement();
     }
 
     @Override

@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014-2016 Groupon, Inc
- * Copyright 2014-2016 The Billing Project, LLC
+ * Copyright 2014-2018 Groupon, Inc
+ * Copyright 2014-2018 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -27,11 +27,13 @@ import java.util.UUID;
 
 import javax.annotation.Nullable;
 import javax.inject.Inject;
+import javax.inject.Named;
 import javax.inject.Singleton;
 
 import org.joda.time.DateTime;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
+import org.killbill.billing.catalog.api.Catalog;
 import org.killbill.billing.catalog.api.ProductCategory;
 import org.killbill.billing.entitlement.EntitlementService;
 import org.killbill.billing.entitlement.EventsStream;
@@ -59,6 +61,8 @@ import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Ordering;
+
+import static org.killbill.billing.util.glue.IDBISetup.MAIN_RO_IDBI_NAMED;
 
 @Singleton
 public class ProxyBlockingStateDao implements BlockingStateDao {
@@ -171,12 +175,12 @@ public class ProxyBlockingStateDao implements BlockingStateDao {
 
     @Inject
     public ProxyBlockingStateDao(final EventsStreamBuilder eventsStreamBuilder, final SubscriptionBaseInternalApi subscriptionBaseInternalApi,
-                                 final IDBI dbi, final Clock clock, final NotificationQueueService notificationQueueService, final PersistentBus eventBus,
+                                 final IDBI dbi, @Named(MAIN_RO_IDBI_NAMED) final IDBI roDbi, final Clock clock, final NotificationQueueService notificationQueueService, final PersistentBus eventBus,
                                  final CacheControllerDispatcher cacheControllerDispatcher, final NonEntityDao nonEntityDao, final InternalCallContextFactory internalCallContextFactory) {
         this.eventsStreamBuilder = eventsStreamBuilder;
         this.subscriptionInternalApi = subscriptionBaseInternalApi;
         this.clock = clock;
-        this.delegate = new DefaultBlockingStateDao(dbi, clock, notificationQueueService, eventBus, cacheControllerDispatcher, nonEntityDao, internalCallContextFactory);
+        this.delegate = new DefaultBlockingStateDao(dbi, roDbi, clock, notificationQueueService, eventBus, cacheControllerDispatcher, nonEntityDao, internalCallContextFactory);
     }
 
     @Override
@@ -195,7 +199,7 @@ public class ProxyBlockingStateDao implements BlockingStateDao {
     }
 
     @Override
-    public BlockingStateModelDao getById(final UUID id, final InternalTenantContext context) {
+    public BlockingStateModelDao getById(final UUID id, final InternalTenantContext context) throws EntitlementApiException {
         return delegate.getById(id, context);
     }
 
@@ -230,9 +234,9 @@ public class ProxyBlockingStateDao implements BlockingStateDao {
     }
 
     @Override
-    public List<BlockingState> getBlockingAllForAccountRecordId(final InternalTenantContext context) {
-        final List<BlockingState> statesOnDisk = delegate.getBlockingAllForAccountRecordId(context);
-        return addBlockingStatesNotOnDisk(statesOnDisk, context);
+    public List<BlockingState> getBlockingAllForAccountRecordId(final Catalog catalog, final InternalTenantContext context) {
+        final List<BlockingState> statesOnDisk = delegate.getBlockingAllForAccountRecordId(catalog, context);
+        return addBlockingStatesNotOnDisk(statesOnDisk, catalog, context);
     }
 
     @Override
@@ -248,6 +252,7 @@ public class ProxyBlockingStateDao implements BlockingStateDao {
     // Add blocking states for add-ons, which would be impacted by a future cancellation or change of their base plan
     // See DefaultEntitlement#computeAddOnBlockingStates
     private List<BlockingState> addBlockingStatesNotOnDisk(final List<BlockingState> blockingStatesOnDisk,
+                                                           final Catalog catalog,
                                                            final InternalTenantContext context) {
         final Collection<BlockingState> blockingStatesOnDiskCopy = new LinkedList<BlockingState>(blockingStatesOnDisk);
 
@@ -255,7 +260,7 @@ public class ProxyBlockingStateDao implements BlockingStateDao {
         final Iterable<SubscriptionBase> baseSubscriptionsToConsider;
         final Iterable<EventsStream> eventsStreams;
         try {
-            final Map<UUID, List<SubscriptionBase>> subscriptions = subscriptionInternalApi.getSubscriptionsForAccount(context);
+            final Map<UUID, List<SubscriptionBase>> subscriptions = subscriptionInternalApi.getSubscriptionsForAccount(catalog, context);
             baseSubscriptionsToConsider = Iterables.<SubscriptionBase>filter(Iterables.<SubscriptionBase>concat(subscriptions.values()),
                                                                              new Predicate<SubscriptionBase>() {
                                                                                  @Override
@@ -263,11 +268,11 @@ public class ProxyBlockingStateDao implements BlockingStateDao {
                                                                                      return ProductCategory.BASE.equals(input.getCategory());
                                                                                  }
                                                                              });
-            eventsStreams = Iterables.<EventsStream>concat(eventsStreamBuilder.buildForAccount(subscriptions, context).getEventsStreams().values());
-        } catch (EntitlementApiException e) {
+            eventsStreams = Iterables.<EventsStream>concat(eventsStreamBuilder.buildForAccount(subscriptions, catalog, context).getEventsStreams().values());
+        } catch (final EntitlementApiException e) {
             log.error("Error computing blocking states for addons for account record id " + context.getAccountRecordId(), e);
             throw new RuntimeException(e);
-        } catch (SubscriptionBaseApiException e) {
+        } catch (final SubscriptionBaseApiException e) {
             log.error("Error computing blocking states for addons for account record id " + context.getAccountRecordId(), e);
             throw new RuntimeException(e);
         }

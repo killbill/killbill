@@ -19,8 +19,10 @@
 package org.killbill.billing.catalog.glue;
 
 import org.killbill.billing.catalog.DefaultCatalogService;
+import org.killbill.billing.catalog.api.CatalogInternalApi;
 import org.killbill.billing.catalog.api.CatalogService;
 import org.killbill.billing.catalog.api.CatalogUserApi;
+import org.killbill.billing.catalog.api.DefaultCatalogInternalApi;
 import org.killbill.billing.catalog.api.user.DefaultCatalogUserApi;
 import org.killbill.billing.catalog.caching.CatalogCache;
 import org.killbill.billing.catalog.caching.CatalogCacheInvalidationCallback;
@@ -72,6 +74,10 @@ public class CatalogModule extends KillBillModule {
         bind(CatalogUserApi.class).to(DefaultCatalogUserApi.class).asEagerSingleton();
     }
 
+    protected void installCatalogInternalApi() {
+        bind(CatalogInternalApi.class).to(DefaultCatalogInternalApi.class).asEagerSingleton();
+    }
+
     public void installCatalogConfigCache() {
         bind(CatalogCache.class).to(EhCacheCatalogCache.class).asEagerSingleton();
         bind(CacheInvalidationCallback.class).annotatedWith(Names.named(CATALOG_INVALIDATION_CALLBACK)).to(CatalogCacheInvalidationCallback.class).asEagerSingleton();
@@ -91,6 +97,7 @@ public class CatalogModule extends KillBillModule {
         installCatalogDao();
         installCatalog();
         installCatalogUserApi();
+        installCatalogInternalApi();
         installCatalogConfigCache();
         installCatalogPluginApi();
     }

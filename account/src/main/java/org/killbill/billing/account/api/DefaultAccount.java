@@ -42,6 +42,7 @@ public class DefaultAccount extends EntityBase implements Account {
     private final Boolean isPaymentDelegatedToParent;
     private final Integer billCycleDayLocal;
     private final UUID paymentMethodId;
+    private final DateTime referenceTime;
     private final DateTimeZone timeZone;
     private final String locale;
     private final String address1;
@@ -54,7 +55,6 @@ public class DefaultAccount extends EntityBase implements Account {
     private final String phone;
     private final String notes;
     private final Boolean isMigrated;
-    private final Boolean isNotifiedForInvoices;
 
     /**
      * This call is used to update an existing account
@@ -73,6 +73,7 @@ public class DefaultAccount extends EntityBase implements Account {
              data.isPaymentDelegatedToParent(),
              data.getBillCycleDayLocal(),
              data.getPaymentMethodId(),
+             data.getReferenceTime(),
              data.getTimeZone(),
              data.getLocale(),
              data.getAddress1(),
@@ -84,8 +85,7 @@ public class DefaultAccount extends EntityBase implements Account {
              data.getPostalCode(),
              data.getPhone(),
              data.getNotes(),
-             data.isMigrated(),
-             data.isNotifiedForInvoices());
+             data.isMigrated());
     }
 
     // This call is used for testing and update from an existing account
@@ -93,11 +93,11 @@ public class DefaultAccount extends EntityBase implements Account {
                           final String name, final Integer firstNameLength, final Currency currency,
                           final UUID parentAccountId, final Boolean isPaymentDelegatedToParent,
                           final Integer billCycleDayLocal, final UUID paymentMethodId,
-                          final DateTimeZone timeZone, final String locale,
+                          final DateTime referenceTime, final DateTimeZone timeZone, final String locale,
                           final String address1, final String address2, final String companyName,
                           final String city, final String stateOrProvince, final String country,
                           final String postalCode, final String phone, final String notes,
-                          final Boolean isMigrated, final Boolean isNotifiedForInvoices) {
+                          final Boolean isMigrated) {
         this(id,
              null,
              null,
@@ -110,6 +110,7 @@ public class DefaultAccount extends EntityBase implements Account {
              isPaymentDelegatedToParent,
              billCycleDayLocal,
              paymentMethodId,
+             referenceTime,
              timeZone,
              locale,
              address1,
@@ -121,8 +122,7 @@ public class DefaultAccount extends EntityBase implements Account {
              postalCode,
              phone,
              notes,
-             isMigrated,
-             isNotifiedForInvoices);
+             isMigrated);
     }
 
     public DefaultAccount(final UUID id, @Nullable final DateTime createdDate, @Nullable final DateTime updatedDate,
@@ -130,11 +130,11 @@ public class DefaultAccount extends EntityBase implements Account {
                           final String name, final Integer firstNameLength, final Currency currency,
                           final UUID parentAccountId, final Boolean isPaymentDelegatedToParent,
                           final Integer billCycleDayLocal, final UUID paymentMethodId,
-                          final DateTimeZone timeZone, final String locale,
+                          final DateTime referenceTime, final DateTimeZone timeZone, final String locale,
                           final String address1, final String address2, final String companyName,
                           final String city, final String stateOrProvince, final String country,
                           final String postalCode, final String phone, final String notes,
-                          final Boolean isMigrated, final Boolean isNotifiedForInvoices) {
+                          final Boolean isMigrated) {
         super(id, createdDate, updatedDate);
         this.externalKey = externalKey;
         this.email = email;
@@ -145,6 +145,7 @@ public class DefaultAccount extends EntityBase implements Account {
         this.isPaymentDelegatedToParent = isPaymentDelegatedToParent != null ? isPaymentDelegatedToParent : false;
         this.billCycleDayLocal = billCycleDayLocal == null ? DEFAULT_BILLING_CYCLE_DAY_LOCAL : billCycleDayLocal;
         this.paymentMethodId = paymentMethodId;
+        this.referenceTime = referenceTime;
         this.timeZone = timeZone;
         this.locale = locale;
         this.address1 = address1;
@@ -157,7 +158,6 @@ public class DefaultAccount extends EntityBase implements Account {
         this.phone = phone;
         this.notes = notes;
         this.isMigrated = isMigrated;
-        this.isNotifiedForInvoices = isNotifiedForInvoices;
     }
 
     public DefaultAccount(final AccountModelDao accountModelDao) {
@@ -173,6 +173,7 @@ public class DefaultAccount extends EntityBase implements Account {
              accountModelDao.getIsPaymentDelegatedToParent(),
              accountModelDao.getBillingCycleDayLocal(),
              accountModelDao.getPaymentMethodId(),
+             accountModelDao.getReferenceTime(),
              accountModelDao.getTimeZone(),
              accountModelDao.getLocale(),
              accountModelDao.getAddress1(),
@@ -184,8 +185,7 @@ public class DefaultAccount extends EntityBase implements Account {
              accountModelDao.getPostalCode(),
              accountModelDao.getPhone(),
              accountModelDao.getNotes(),
-             accountModelDao.getMigrated(),
-             accountModelDao.getIsNotifiedForInvoices());
+             accountModelDao.getMigrated());
     }
 
     @Override
@@ -285,11 +285,6 @@ public class DefaultAccount extends EntityBase implements Account {
     }
 
     @Override
-    public Boolean isNotifiedForInvoices() {
-        return isNotifiedForInvoices;
-    }
-
-    @Override
     public String getPhone() {
         return phone;
     }
@@ -351,10 +346,6 @@ public class DefaultAccount extends EntityBase implements Account {
         if (isMigrated != null) {
             accountData.setIsMigrated(isMigrated);
         }
-        final Boolean isNotifiedForInvoices = this.isNotifiedForInvoices != null ? this.isNotifiedForInvoices : currentAccount.isNotifiedForInvoices();
-        if (isNotifiedForInvoices != null) {
-            accountData.setIsNotifiedForInvoices(isNotifiedForInvoices);
-        }
 
         return new DefaultAccount(currentAccount.getId(), accountData);
     }
@@ -366,7 +357,7 @@ public class DefaultAccount extends EntityBase implements Account {
 
     @Override
     public DateTime getReferenceTime() {
-        return AccountDateTimeUtils.getReferenceDateTime(this);
+        return referenceTime;
     }
 
     @Override
@@ -381,6 +372,7 @@ public class DefaultAccount extends EntityBase implements Account {
                ", isPaymentDelegatedToParent=" + isPaymentDelegatedToParent +
                ", billCycleDayLocal=" + billCycleDayLocal +
                ", paymentMethodId=" + paymentMethodId +
+               ", referenceTime=" + referenceTime +
                ", timezone=" + timeZone +
                ", locale=" + locale +
                ", address1=" + address1 +
@@ -447,9 +439,6 @@ public class DefaultAccount extends EntityBase implements Account {
         if (isMigrated != null ? !isMigrated.equals(that.isMigrated) : that.isMigrated != null) {
             return false;
         }
-        if (isNotifiedForInvoices != null ? !isNotifiedForInvoices.equals(that.isNotifiedForInvoices) : that.isNotifiedForInvoices != null) {
-            return false;
-        }
         if (locale != null ? !locale.equals(that.locale) : that.locale != null) {
             return false;
         }
@@ -466,6 +455,9 @@ public class DefaultAccount extends EntityBase implements Account {
             return false;
         }
         if (stateOrProvince != null ? !stateOrProvince.equals(that.stateOrProvince) : that.stateOrProvince != null) {
+            return false;
+        }
+        if (referenceTime != null ? referenceTime.compareTo(that.referenceTime) != 0 : that.referenceTime != null) {
             return false;
         }
         if (timeZone != null ? !timeZone.equals(that.timeZone) : that.timeZone != null) {
@@ -490,6 +482,7 @@ public class DefaultAccount extends EntityBase implements Account {
         result = 31 * result + (isPaymentDelegatedToParent != null ? isPaymentDelegatedToParent.hashCode() : 0);
         result = 31 * result + billCycleDayLocal;
         result = 31 * result + (paymentMethodId != null ? paymentMethodId.hashCode() : 0);
+        result = 31 * result + (referenceTime != null ? referenceTime.hashCode() : 0);
         result = 31 * result + (timeZone != null ? timeZone.hashCode() : 0);
         result = 31 * result + (locale != null ? locale.hashCode() : 0);
         result = 31 * result + (address1 != null ? address1.hashCode() : 0);
@@ -502,7 +495,6 @@ public class DefaultAccount extends EntityBase implements Account {
         result = 31 * result + (phone != null ? phone.hashCode() : 0);
         result = 31 * result + (notes != null ? notes.hashCode() : 0);
         result = 31 * result + (isMigrated != null ? isMigrated.hashCode() : 0);
-        result = 31 * result + (isNotifiedForInvoices != null ? isNotifiedForInvoices.hashCode() : 0);
         return result;
     }
 
@@ -514,8 +506,8 @@ public class DefaultAccount extends EntityBase implements Account {
         // All these conditions are written in the exact same way:
         //
         // There is already a defined value BUT those don't match (either input is null or different) => Not Allowed
-        // * ignoreNullInput=true (case where we allow to reset values)
-        // * ignoreNullInput=true (case where we DON'T allow to reset values and so is such value is null we ignore the check)
+        // * ignoreNullInput = false (case where we allow to reset values)
+        // * ignoreNullInput = true (case where we DON'T allow to reset values and so if such value is null we ignore the check)
         //
         //
         if ((ignoreNullInput || externalKey != null) &&
@@ -543,6 +535,11 @@ public class DefaultAccount extends EntityBase implements Account {
             !currentAccount.getTimeZone().equals(timeZone)) {
             throw new IllegalArgumentException(String.format("Killbill doesn't support updating the account timeZone yet: new=%s, current=%s",
                                                              timeZone, currentAccount.getTimeZone()));
+        }
+
+        if (referenceTime != null && currentAccount.getReferenceTime().withMillisOfDay(0).compareTo(referenceTime.withMillisOfDay(0)) != 0) {
+            throw new IllegalArgumentException(String.format("Killbill doesn't support updating the account referenceTime yet: new=%s, current=%s",
+                                                             referenceTime, currentAccount.getReferenceTime()));
         }
 
     }

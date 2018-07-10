@@ -20,17 +20,21 @@ import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import io.swagger.annotations.ApiModel;
 
-public class HostedPaymentPageFieldsJson extends JsonBase {
+
+@ApiModel(value="HostedPaymentPageFields")
+public class HostedPaymentPageFieldsJson  {
 
     private final List<PluginPropertyJson> formFields;
+
 
     @JsonCreator
     public HostedPaymentPageFieldsJson(@JsonProperty("formFields") final List<PluginPropertyJson> formFields) {
         this.formFields = formFields;
     }
 
-    public List<PluginPropertyJson> getCustomFields() {
+    public List<PluginPropertyJson> getFormFields() {
         return formFields;
     }
 

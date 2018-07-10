@@ -18,22 +18,24 @@ package org.killbill.billing.jaxrs.json;
 
 import java.util.UUID;
 
+import org.killbill.billing.ObjectType;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import org.killbill.billing.jaxrs.JaxrsTestSuiteNoDB;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 
 public class TestTagDefinitionJson extends JaxrsTestSuiteNoDB {
 
     @Test(groups = "fast")
     public void testJson() throws Exception {
-        final String id = UUID.randomUUID().toString();
+        final UUID id = UUID.randomUUID();
         final Boolean isControlTag = true;
         final String name = UUID.randomUUID().toString();
         final String description = UUID.randomUUID().toString();
-        final ImmutableList<String> applicableObjectTypes = ImmutableList.<String>of(UUID.randomUUID().toString());
+        final ImmutableList<ObjectType> applicableObjectTypes = ImmutableList.of(ObjectType.TRANSACTION);
         final TagDefinitionJson tagDefinitionJson = new TagDefinitionJson(id, isControlTag, name, description, applicableObjectTypes, null);
         Assert.assertEquals(tagDefinitionJson.getId(), id);
         Assert.assertEquals(tagDefinitionJson.isControlTag(), isControlTag);

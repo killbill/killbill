@@ -29,6 +29,7 @@ import org.killbill.billing.catalog.api.PlanPhasePriceOverride;
 import org.killbill.billing.catalog.api.PlanPhasePriceOverridesWithCallContext;
 import org.killbill.billing.catalog.api.PlanSpecifier;
 import org.killbill.billing.catalog.api.StaticCatalog;
+import org.killbill.billing.catalog.api.UsagePriceOverride;
 import org.killbill.billing.catalog.override.DefaultPriceOverride;
 import org.killbill.xmlloader.XMLLoader;
 import org.mockito.Mockito;
@@ -52,7 +53,7 @@ public class TestStandaloneCatalogWithPriceOverride extends CatalogTestSuiteWith
         final PlanSpecifier spec = new PlanSpecifier("standard-monthly-67890");
         final PlanPhasePriceOverridesWithCallContext overrides = Mockito.mock(PlanPhasePriceOverridesWithCallContext.class);
         Mockito.when(overrides.getCallContext()).thenReturn(callContext);
-        final PlanPhasePriceOverride override = new DefaultPlanPhasePriceOverride("standard-monthly-evergreen", Currency.USD, null, BigDecimal.ONE);
+        final PlanPhasePriceOverride override = new DefaultPlanPhasePriceOverride("standard-monthly-evergreen", Currency.USD, null, BigDecimal.ONE, ImmutableList.<UsagePriceOverride>of());
         Mockito.when(overrides.getOverrides()).thenReturn(ImmutableList.of(override));
         final Plan plan = standaloneCatalogWithPriceOverride.createOrFindCurrentPlan(spec, overrides);
         Assert.assertTrue(plan.getName().startsWith("standard-monthly-67890-"));
