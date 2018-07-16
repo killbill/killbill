@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="https://github.com/killbill/killbill-docs/raw/v3-0.19/userguide/assets/img/logo.png" alt="Kill Bill logo" style="max-width:100%;">
+  <img src="https://github.com/killbill/killbill-docs/raw/v3/userguide/assets/img/logo.png" alt="Kill Bill logo" style="max-width:100%;">
 </p>
 
 # Kill Bill
