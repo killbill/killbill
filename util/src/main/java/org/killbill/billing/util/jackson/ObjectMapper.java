@@ -18,6 +18,7 @@
 
 package org.killbill.billing.util.jackson;
 
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.dataformat.smile.SmileFactory;
 import com.fasterxml.jackson.datatype.joda.JodaModule;
@@ -28,6 +29,7 @@ public class ObjectMapper extends com.fasterxml.jackson.databind.ObjectMapper {
         super(f);
         this.registerModule(new JodaModule());
         this.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
+        this.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
     }
 
     public ObjectMapper() {
