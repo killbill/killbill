@@ -511,12 +511,13 @@ public class TestEntitlement extends TestJaxrsBase {
         clock.addDays(1);
         callbackServlet.assertListenerStatus();
 
-        callbackServlet.pushExpectedEvents(ExtBusEventType.ENTITLEMENT_CANCEL,
+        callbackServlet.pushExpectedEvents(ExtBusEventType.TAG_CREATION,
                                            ExtBusEventType.ENTITLEMENT_CANCEL,
                                            ExtBusEventType.ENTITLEMENT_CANCEL,
                                            ExtBusEventType.ENTITLEMENT_CANCEL,
                                            ExtBusEventType.ENTITLEMENT_CANCEL,
                                            ExtBusEventType.ENTITLEMENT_CANCEL,
+                                           ExtBusEventType.ENTITLEMENT_CANCEL,
                                            ExtBusEventType.SUBSCRIPTION_CANCEL,
                                            ExtBusEventType.SUBSCRIPTION_CANCEL,
                                            ExtBusEventType.SUBSCRIPTION_CANCEL,
@@ -529,8 +530,6 @@ public class TestEntitlement extends TestJaxrsBase {
                                            ExtBusEventType.SUBSCRIPTION_CANCEL,
                                            ExtBusEventType.SUBSCRIPTION_CANCEL,
                                            ExtBusEventType.SUBSCRIPTION_CANCEL,
-                                           ExtBusEventType.INVOICE_CREATION,
-                                           ExtBusEventType.INVOICE_PAYMENT_FAILED,
                                            ExtBusEventType.INVOICE_ADJUSTMENT,
                                            ExtBusEventType.INVOICE_ADJUSTMENT,
                                            ExtBusEventType.INVOICE_ADJUSTMENT,
@@ -548,7 +547,7 @@ public class TestEntitlement extends TestJaxrsBase {
         }
 
         final List<Invoice> invoicesAfterClose = accountApi.getInvoicesForAccount(accountJson.getAccountId(), null, true, false, false, false, AuditLevel.NONE, requestOptions);
-        assertEquals(invoicesAfterClose.size(), 2);
+        assertEquals(invoicesAfterClose.size(), 1);
         assertEquals(invoicesAfterClose.get(0).getBalance().compareTo(BigDecimal.ZERO), 0);
         assertEquals(invoiceApi.getInvoiceTags(invoicesAfterClose.get(0).getInvoiceId(), requestOptions).size(), 0);
     }
