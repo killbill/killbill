@@ -76,15 +76,15 @@ public class TestEntitlement extends TestJaxrsBase {
                                                                 ProductCategory.BASE, term, true);
 
         // Retrieves with GET
-        Subscription objFromJson = subscriptionApi.getSubscription(entitlementJson.getSubscriptionId(), requestOptions);
-        Assert.assertEquals(objFromJson.getPrices().size(), 2);
-        Assert.assertEquals(objFromJson.getPrices().get(0).getFixedPrice(), BigDecimal.ZERO);
-        Assert.assertNull(objFromJson.getPrices().get(0).getRecurringPrice());
+        Subscription subscription = subscriptionApi.getSubscription(entitlementJson.getSubscriptionId(), requestOptions);
+        Assert.assertEquals(subscription.getPrices().size(), 2);
+        Assert.assertEquals(subscription.getPrices().get(0).getFixedPrice(), BigDecimal.ZERO);
+        Assert.assertNull(subscription.getPrices().get(0).getRecurringPrice());
 
-        Assert.assertNull(objFromJson.getPrices().get(1).getFixedPrice());
-        Assert.assertEquals(objFromJson.getPrices().get(1).getRecurringPrice(), new BigDecimal("249.95"));
+        Assert.assertNull(subscription.getPrices().get(1).getFixedPrice());
+        Assert.assertEquals(subscription.getPrices().get(1).getRecurringPrice(), new BigDecimal("249.95"));
 
-        Assert.assertTrue(objFromJson.equals(entitlementJson));
+        Assert.assertTrue(subscription.equals(entitlementJson));
 
         // Change the clock otherwise the CREATE event might be replaced (instead of having a CHANGE event)
         clock.addDays(1);
@@ -103,7 +103,7 @@ public class TestEntitlement extends TestJaxrsBase {
         callbackServlet.pushExpectedEvents(ExtBusEventType.SUBSCRIPTION_CHANGE, ExtBusEventType.SUBSCRIPTION_CHANGE, ExtBusEventType.INVOICE_CREATION);
         subscriptionApi.changeSubscriptionPlan(entitlementJson.getSubscriptionId(), newInput, null, null, NULL_PLUGIN_PROPERTIES, requestOptions);
         callbackServlet.assertListenerStatus();
-        Assert.assertNotNull(objFromJson);
+        Assert.assertNotNull(subscription);
 
         // MOVE AFTER TRIAL
         callbackServlet.pushExpectedEvents(ExtBusEventType.SUBSCRIPTION_PHASE,
@@ -117,9 +117,25 @@ public class TestEntitlement extends TestJaxrsBase {
         subscriptionApi.cancelSubscriptionPlan(newInput.getSubscriptionId(), null, null, null, NULL_PLUGIN_PROPERTIES, requestOptions);
 
         // Retrieves to check EndDate
-        objFromJson = subscriptionApi.getSubscription(entitlementJson.getSubscriptionId(), requestOptions);
-        assertNotNull(objFromJson.getCancelledDate());
-        assertTrue(objFromJson.getCancelledDate().compareTo(new LocalDate(clock.getUTCNow())) == 0);
+        subscription = subscriptionApi.getSubscription(entitlementJson.getSubscriptionId(), requestOptions);
+        assertNotNull(subscription.getCancelledDate());
+        assertTrue(subscription.getCancelledDate().compareTo(new LocalDate(clock.getUTCNow())) == 0);
+
+
+        final Bundles accountBundles = accountApi.getAccountBundles(accountJson.getAccountId(), null, null, requestOptions);
+        assertEquals(accountBundles.size(), 1);
+        assertEquals(accountBundles.get(0).getSubscriptions().size(), 1);
+        assertEquals(accountBundles.get(0).getSubscriptions().get(0).getState(), EntitlementState.CANCELLED);
+
+        final Bundles bundlesByKey1 = bundleApi.getBundleByKey(entitlementJson.getExternalKey(), true, AuditLevel.NONE, requestOptions);
+        assertEquals(bundlesByKey1.size(), 1);
+        assertEquals(bundlesByKey1.get(0).getSubscriptions().size(), 1);
+        assertEquals(bundlesByKey1.get(0).getSubscriptions().get(0).getState(), EntitlementState.CANCELLED);
+
+        final Bundles bundlesByKey2 = bundleApi.getBundleByKey(entitlementJson.getExternalKey(), requestOptions);
+        assertNotNull(bundlesByKey2);
+        assertEquals(bundlesByKey2.size(), 0);
+
     }
 
     @Test(groups = "slow", description = "Can cancel and uncancel a subscription")
