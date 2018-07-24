@@ -420,7 +420,9 @@ public class AccountResource extends JaxRsResourceBase {
                                  @HeaderParam(HDR_REASON) final String reason,
                                  @HeaderParam(HDR_COMMENT) final String comment,
                                  @javax.ws.rs.core.Context final HttpServletRequest request) throws SubscriptionApiException, AccountApiException, EntitlementApiException, InvoiceApiException, TagApiException {
+
         final CallContext callContext = context.createCallContextWithAccountId(accountId, createdBy, reason, comment, request);
+        tagUserApi.addTag(accountId, ObjectType.ACCOUNT, ControlTagType.AUTO_INVOICING_OFF.getId(), callContext);
 
         if (cancelAllSubscriptions) {
             final List<SubscriptionBundle> bundles = subscriptionApi.getSubscriptionBundlesForAccountId(accountId, callContext);
