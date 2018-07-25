@@ -321,7 +321,7 @@ public class DefaultAccountCreationEvent extends BusEventBase implements Account
 
         @Override
         public DateTime getReferenceTime() {
-            return DATE_TIME_FORMATTER.parseDateTime(referenceTime);
+            return referenceTime != null ?  DATE_TIME_FORMATTER.parseDateTime(referenceTime) : null;
         }
 
         @Override
