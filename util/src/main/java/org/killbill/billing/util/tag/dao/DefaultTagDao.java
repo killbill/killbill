@@ -201,7 +201,25 @@ public class DefaultTagDao extends EntityDaoBase<TagModelDao, Tag, TagApiExcepti
 
     @Override
     public void create(final TagModelDao entity, final InternalCallContext context) throws TagApiException {
+
+        validateApplicableObjectTypes(entity.getTagDefinitionId(), entity.getObjectType());
         transactionalSqlDao.execute(false, TagApiException.class, getCreateEntitySqlDaoTransactionWrapper(entity, context));
+    }
+
+    private void validateApplicableObjectTypes(final UUID tagDefinitionId, final ObjectType objectType) throws TagApiException {
+
+        final ControlTagType controlTagType = Iterables.tryFind(ImmutableList.<ControlTagType>copyOf(ControlTagType.values()), new Predicate<ControlTagType>() {
+            @Override
+            public boolean apply(final ControlTagType input) {
+                return input.getId().equals(tagDefinitionId);
+            }
+        }).orNull();
+
+        if (controlTagType != null && !controlTagType.getApplicableObjectTypes().contains(objectType)) {
+            // TODO Add missing ErrorCode.TAG_NOT_APPLICABLE
+            // throw new TagApiException(ErrorCode.TAG_NOT_APPLICABLE);
+            throw new IllegalStateException(String.format("Invalid control tag '%s' for object type '%s'", controlTagType.name(), objectType));
+        }
     }
 
     @Override

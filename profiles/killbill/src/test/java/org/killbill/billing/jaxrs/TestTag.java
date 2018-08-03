@@ -168,6 +168,20 @@ public class TestTag extends TestJaxrsBase {
         }
     }
 
+    @Test(groups = "slow", description = "Cannot create a control tag against wrong object type")
+    public void testNotApplicableType() throws Exception {
+
+        final Account account = createAccount();
+        try {
+            accountApi.createAccountTags(account.getAccountId(), ImmutableList.<UUID>of(ControlTagType.WRITTEN_OFF.getId()), requestOptions);
+            Assert.fail("Creating a (control) tag against a wrong object type should fail");
+        } catch (final Exception e) {
+            Assert.assertTrue(true);
+        }
+    }
+
+
+
     @Test(groups = "slow", description = "retrieve account logs")
     public void testGetTagAuditLogsWithHistory() throws Exception {
         final Account accountJson = createAccount();
