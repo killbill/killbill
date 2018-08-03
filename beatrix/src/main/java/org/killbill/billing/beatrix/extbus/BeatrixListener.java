@@ -63,6 +63,7 @@ import org.killbill.billing.notification.plugin.api.InvoicePaymentMetadata;
 import org.killbill.billing.notification.plugin.api.PaymentMetadata;
 import org.killbill.billing.notification.plugin.api.SubscriptionMetadata;
 import org.killbill.billing.notification.plugin.api.SubscriptionMetadata.ActionType;
+import org.killbill.billing.platform.api.KillbillService.KILLBILL_SERVICES;
 import org.killbill.billing.subscription.api.SubscriptionBaseTransitionType;
 import org.killbill.billing.util.callcontext.CallOrigin;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
@@ -180,7 +181,7 @@ public class BeatrixListener {
                 }
                 objectId = realEventBS.getBlockableId();
 
-                if (EntitlementService.ENTITLEMENT_SERVICE_NAME.equals(realEventBS.getService())) {
+                if (KILLBILL_SERVICES.ENTITLEMENT_SERVICE.getServiceName().equals(realEventBS.getService())) {
                     if (DefaultEntitlementApi.ENT_STATE_START.equals(realEventBS.getStateName())) {
                         eventBusType = ExtBusEventType.ENTITLEMENT_CREATION;
                     } else if (DefaultEntitlementApi.ENT_STATE_BLOCKED.equals(realEventBS.getStateName())) {

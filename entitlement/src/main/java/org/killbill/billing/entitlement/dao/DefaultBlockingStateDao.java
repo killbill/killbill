@@ -46,6 +46,7 @@ import org.killbill.billing.entitlement.api.EntitlementApiException;
 import org.killbill.billing.entitlement.block.BlockingChecker.BlockingAggregator;
 import org.killbill.billing.entitlement.block.StatelessBlockingChecker;
 import org.killbill.billing.entitlement.engine.core.BlockingTransitionNotificationKey;
+import org.killbill.billing.platform.api.KillbillService.KILLBILL_SERVICES;
 import org.killbill.billing.util.cache.Cachable.CacheType;
 import org.killbill.billing.util.cache.CacheController;
 import org.killbill.billing.util.cache.CacheControllerDispatcher;
@@ -351,7 +352,7 @@ public class DefaultBlockingStateDao extends EntityDaoBase<BlockingStateModelDao
                                                          final NotificationEvent notificationEvent,
                                                          final InternalCallContext context) {
         try {
-            final NotificationQueue subscriptionEventQueue = notificationQueueService.getNotificationQueue(DefaultEntitlementService.ENTITLEMENT_SERVICE_NAME,
+            final NotificationQueue subscriptionEventQueue = notificationQueueService.getNotificationQueue(KILLBILL_SERVICES.ENTITLEMENT_SERVICE.getServiceName(),
                                                                                                            DefaultEntitlementService.NOTIFICATION_QUEUE_NAME);
             subscriptionEventQueue.recordFutureNotificationFromTransaction(entitySqlDaoWrapperFactory.getHandle().getConnection(),
                                                                            effectiveDate,

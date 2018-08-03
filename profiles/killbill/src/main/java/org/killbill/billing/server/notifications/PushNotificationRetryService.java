@@ -20,6 +20,7 @@ package org.killbill.billing.server.notifications;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
+import org.killbill.billing.platform.api.KillbillService.KILLBILL_SERVICES;
 import org.killbill.billing.server.DefaultServerService;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.notificationq.api.NotificationEvent;
@@ -38,7 +39,7 @@ public class PushNotificationRetryService {
 
     private static final Logger log = LoggerFactory.getLogger(PushNotificationRetryService.class);
     public static final String QUEUE_NAME = "push-notification-queue";
-    private static final String retryService = DefaultServerService.SERVER_SERVICE + "-" + QUEUE_NAME;
+    private static final String retryService = KILLBILL_SERVICES.SERVER_SERVICE.getServiceName() + "-" + QUEUE_NAME;
 
     private final NotificationQueueService notificationQueueService;
     private final InternalCallContextFactory internalCallContextFactory;
@@ -56,7 +57,7 @@ public class PushNotificationRetryService {
     }
 
     public void initialize() throws NotificationQueueAlreadyExists {
-        retryQueue = notificationQueueService.createNotificationQueue(DefaultServerService.SERVER_SERVICE,
+        retryQueue = notificationQueueService.createNotificationQueue(KILLBILL_SERVICES.SERVER_SERVICE.getServiceName(),
                                                                       QUEUE_NAME,
                                                                       new NotificationQueueHandler() {
                                                                           @Override

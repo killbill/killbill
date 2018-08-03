@@ -26,6 +26,7 @@ import org.joda.time.DateTime;
 import org.killbill.billing.ObjectType;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.payment.glue.DefaultPaymentService;
+import org.killbill.billing.platform.api.KillbillService.KILLBILL_SERVICES;
 import org.killbill.billing.util.callcontext.CallOrigin;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.billing.util.callcontext.UserType;
@@ -55,12 +56,12 @@ public abstract class BaseRetryService implements RetryService {
                             final InternalCallContextFactory internalCallContextFactory) {
         this.notificationQueueService = notificationQueueService;
         this.internalCallContextFactory = internalCallContextFactory;
-        this.paymentRetryService = DefaultPaymentService.SERVICE_NAME + "-" + getQueueName();
+        this.paymentRetryService = KILLBILL_SERVICES.PAYMENT_SERVICE.getServiceName() + "-" + getQueueName();
     }
 
     @Override
     public void initialize() throws NotificationQueueAlreadyExists {
-        retryQueue = notificationQueueService.createNotificationQueue(DefaultPaymentService.SERVICE_NAME,
+        retryQueue = notificationQueueService.createNotificationQueue(KILLBILL_SERVICES.PAYMENT_SERVICE.getServiceName(),
                                                                       getQueueName(),
                                                                       new NotificationQueueHandler() {
                                                                           @Override
@@ -113,7 +114,7 @@ public abstract class BaseRetryService implements RetryService {
             final InternalCallContext context = createCallContextFromPaymentId(objectType, objectId, tenantRecordId);
 
             try {
-                final NotificationQueue retryQueue = notificationQueueService.getNotificationQueue(DefaultPaymentService.SERVICE_NAME, getQueueName());
+                final NotificationQueue retryQueue = notificationQueueService.getNotificationQueue(KILLBILL_SERVICES.PAYMENT_SERVICE.getServiceName(), getQueueName());
                 final NotificationEvent key = new PaymentRetryNotificationKey(attemptId, paymentControlPluginNames);
                 if (retryQueue != null) {
                     log.debug("Scheduling retry timeOfRetry={}, key={}", timeOfRetry, key);
@@ -124,7 +125,7 @@ public abstract class BaseRetryService implements RetryService {
                     }
                 }
             } catch (final NoSuchNotificationQueue e) {
-                log.error("Failed to retrieve notification queue='{}', service='{}'", getQueueName(), DefaultPaymentService.SERVICE_NAME);
+                log.error("Failed to retrieve notification queue='{}', service='{}'", getQueueName(), KILLBILL_SERVICES.PAYMENT_SERVICE.getServiceName());
                 return false;
             } catch (final IOException e) {
                 log.error("Failed to serialize notificationQueue event for objectId='{}'", objectId);
@@ -134,7 +135,7 @@ public abstract class BaseRetryService implements RetryService {
         }
 
         protected InternalCallContext createCallContextFromPaymentId(final ObjectType objectType, final UUID objectId, final Long tenantRecordId) {
-            final String paymentRetryService = DefaultPaymentService.SERVICE_NAME + "-" + getQueueName();
+            final String paymentRetryService = KILLBILL_SERVICES.PAYMENT_SERVICE.getServiceName() + "-" + getQueueName();
             return internalCallContextFactory.createInternalCallContext(objectId, objectType, paymentRetryService, CallOrigin.INTERNAL, UserType.SYSTEM, null, tenantRecordId);
         }
 

@@ -57,6 +57,7 @@ import org.killbill.billing.entitlement.plugin.api.EntitlementContext;
 import org.killbill.billing.entitlement.plugin.api.OperationType;
 import org.killbill.billing.junction.DefaultBlockingState;
 import org.killbill.billing.payment.api.PluginProperty;
+import org.killbill.billing.platform.api.KillbillService.KILLBILL_SERVICES;
 import org.killbill.billing.security.api.SecurityApi;
 import org.killbill.billing.subscription.api.SubscriptionBase;
 import org.killbill.billing.subscription.api.SubscriptionBaseInternalApi;
@@ -164,7 +165,7 @@ public class DefaultEntitlementApiBase {
             public Void doCall(final EntitlementApi entitlementApi, final EntitlementContext updatedPluginContext) throws EntitlementApiException {
                 try {
                     final SubscriptionBase baseSubscription = subscriptionInternalApi.getBaseSubscription(bundleId, internalCallContext);
-                    blockUnblockBundle(bundleId, DefaultEntitlementApi.ENT_STATE_BLOCKED, EntitlementService.ENTITLEMENT_SERVICE_NAME, localEffectiveDate, true, true, true, baseSubscription, internalCallContext);
+                    blockUnblockBundle(bundleId, DefaultEntitlementApi.ENT_STATE_BLOCKED, KILLBILL_SERVICES.ENTITLEMENT_SERVICE.getServiceName(), localEffectiveDate, true, true, true, baseSubscription, internalCallContext);
                 } catch (SubscriptionBaseApiException e) {
                     throw new EntitlementApiException(e);
                 }
@@ -197,7 +198,7 @@ public class DefaultEntitlementApiBase {
             public Void doCall(final EntitlementApi entitlementApi, final EntitlementContext updatedPluginContext) throws EntitlementApiException {
                 try {
                     final SubscriptionBase baseSubscription = subscriptionInternalApi.getBaseSubscription(bundleId, internalCallContext);
-                    blockUnblockBundle(bundleId, DefaultEntitlementApi.ENT_STATE_CLEAR, EntitlementService.ENTITLEMENT_SERVICE_NAME, localEffectiveDate, false, false, false, baseSubscription, internalCallContext);
+                    blockUnblockBundle(bundleId, DefaultEntitlementApi.ENT_STATE_CLEAR, KILLBILL_SERVICES.ENTITLEMENT_SERVICE.getServiceName(), localEffectiveDate, false, false, false, baseSubscription, internalCallContext);
                 } catch (SubscriptionBaseApiException e) {
                     throw new EntitlementApiException(e);
                 }

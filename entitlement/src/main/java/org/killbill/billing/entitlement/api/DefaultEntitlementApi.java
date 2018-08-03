@@ -58,6 +58,7 @@ import org.killbill.billing.entitlement.plugin.api.EntitlementContext;
 import org.killbill.billing.entitlement.plugin.api.OperationType;
 import org.killbill.billing.junction.DefaultBlockingState;
 import org.killbill.billing.payment.api.PluginProperty;
+import org.killbill.billing.platform.api.KillbillService.KILLBILL_SERVICES;
 import org.killbill.billing.security.api.SecurityApi;
 import org.killbill.billing.subscription.api.SubscriptionBase;
 import org.killbill.billing.subscription.api.SubscriptionBaseInternalApi;
@@ -342,7 +343,7 @@ public class DefaultEntitlementApi extends DefaultEntitlementApiBase implements 
                     // Block all associated subscriptions - TODO Do we want to block the bundle as well (this will add an extra STOP_ENTITLEMENT event in the bundle timeline stream)?
                     // Note that there is no un-transfer at the moment, so we effectively add a blocking state on disk for all subscriptions
                     for (final SubscriptionBase subscriptionBase : subscriptionBaseInternalApi.getSubscriptionsForBundle(bundleId, null, contextWithSourceAccountRecordId)) {
-                        final BlockingState blockingState = new DefaultBlockingState(subscriptionBase.getId(), BlockingStateType.SUBSCRIPTION, DefaultEntitlementApi.ENT_STATE_CANCELLED, EntitlementService.ENTITLEMENT_SERVICE_NAME, true, true, false, requestedDate);
+                        final BlockingState blockingState = new DefaultBlockingState(subscriptionBase.getId(), BlockingStateType.SUBSCRIPTION, DefaultEntitlementApi.ENT_STATE_CANCELLED, KILLBILL_SERVICES.ENTITLEMENT_SERVICE.getServiceName(), true, true, false, requestedDate);
                         blockingStates.put(blockingState, subscriptionBase.getBundleId());
                     }
                     entitlementUtils.setBlockingStateAndPostBlockingTransitionEvent(blockingStates, contextWithSourceAccountRecordId);
@@ -353,7 +354,7 @@ public class DefaultEntitlementApi extends DefaultEntitlementApiBase implements 
                     blockingStates.clear();
                     final DateTime entitlementRequestedDate = dateHelper.fromLocalDateAndReferenceTime(baseEntitlementWithAddOnsSpecifier.getEntitlementEffectiveDate(), updatedPluginContext.getCreatedDate(), contextWithDestAccountRecordId);
                     for (final SubscriptionBase subscriptionBase : subscriptionBaseInternalApi.getSubscriptionsForBundle(newBundle.getId(), null, contextWithDestAccountRecordId)) {
-                        final BlockingState newBlockingState = new DefaultBlockingState(subscriptionBase.getId(), BlockingStateType.SUBSCRIPTION, DefaultEntitlementApi.ENT_STATE_START, EntitlementService.ENTITLEMENT_SERVICE_NAME, false, false, false, entitlementRequestedDate);
+                        final BlockingState newBlockingState = new DefaultBlockingState(subscriptionBase.getId(), BlockingStateType.SUBSCRIPTION, DefaultEntitlementApi.ENT_STATE_START, KILLBILL_SERVICES.ENTITLEMENT_SERVICE.getServiceName(), false, false, false, entitlementRequestedDate);
                         blockingStates.put(newBlockingState, subscriptionBase.getBundleId());
                     }
                     entitlementUtils.setBlockingStateAndPostBlockingTransitionEvent(blockingStates, contextWithDestAccountRecordId);
@@ -572,7 +573,7 @@ public class DefaultEntitlementApi extends DefaultEntitlementApiBase implements 
                 final BlockingState blockingState = new DefaultBlockingState(subscriptionBase.getId(),
                                                                              BlockingStateType.SUBSCRIPTION,
                                                                              DefaultEntitlementApi.ENT_STATE_START,
-                                                                             EntitlementService.ENTITLEMENT_SERVICE_NAME,
+                                                                             KILLBILL_SERVICES.ENTITLEMENT_SERVICE.getServiceName(),
                                                                              false,
                                                                              false,
                                                                              false,

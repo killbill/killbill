@@ -42,6 +42,7 @@ import org.killbill.billing.entitlement.api.BlockingStateType;
 import org.killbill.billing.entitlement.api.DefaultEntitlementApi;
 import org.killbill.billing.entitlement.api.EntitlementApiException;
 import org.killbill.billing.entitlement.engine.core.EventsStreamBuilder;
+import org.killbill.billing.platform.api.KillbillService.KILLBILL_SERVICES;
 import org.killbill.billing.subscription.api.SubscriptionBase;
 import org.killbill.billing.subscription.api.SubscriptionBaseInternalApi;
 import org.killbill.billing.subscription.api.user.SubscriptionBaseApiException;
@@ -351,7 +352,7 @@ public class ProxyBlockingStateDao implements BlockingStateDao {
 
     private static boolean isEntitlementCancellationBlockingState(final BlockingState blockingState) {
         return BlockingStateType.SUBSCRIPTION.equals(blockingState.getType()) &&
-               EntitlementService.ENTITLEMENT_SERVICE_NAME.equals(blockingState.getService()) &&
+               KILLBILL_SERVICES.ENTITLEMENT_SERVICE.getServiceName().equals(blockingState.getService()) &&
                DefaultEntitlementApi.ENT_STATE_CANCELLED.equals(blockingState.getStateName());
     }
 }

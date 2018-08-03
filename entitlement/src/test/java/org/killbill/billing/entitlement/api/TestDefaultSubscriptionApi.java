@@ -39,6 +39,7 @@ import org.killbill.billing.entitlement.api.Entitlement.EntitlementActionPolicy;
 import org.killbill.billing.entitlement.api.Entitlement.EntitlementState;
 import org.killbill.billing.junction.DefaultBlockingState;
 import org.killbill.billing.payment.api.PluginProperty;
+import org.killbill.billing.platform.api.KillbillService.KILLBILL_SERVICES;
 import org.killbill.billing.util.api.AuditLevel;
 import org.killbill.billing.util.audit.AuditLog;
 import org.killbill.billing.util.audit.ChangeType;
@@ -351,7 +352,7 @@ public class TestDefaultSubscriptionApi extends EntitlementTestSuiteWithEmbedded
         final Iterable<BlockingState> iterableForCreateState = subscriptionApi.getBlockingStates(account.getId(), ImmutableList.of(BlockingStateType.SUBSCRIPTION), null, OrderingType.ASCENDING, SubscriptionApi.ALL_EVENTS, callContext);
         assertTrue(iterableForCreateState.iterator().hasNext());
         final BlockingState createState = iterableForCreateState.iterator().next();
-        assertEquals(createState.getService(), EntitlementService.ENTITLEMENT_SERVICE_NAME);
+        assertEquals(createState.getService(), KILLBILL_SERVICES.ENTITLEMENT_SERVICE.getServiceName());
         assertListenerStatus();
 
         testListener.pushExpectedEvent(NextEvent.BLOCK);

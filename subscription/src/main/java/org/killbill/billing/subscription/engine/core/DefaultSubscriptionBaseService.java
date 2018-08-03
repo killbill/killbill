@@ -63,7 +63,6 @@ import com.google.inject.Inject;
 public class DefaultSubscriptionBaseService implements EventListener, SubscriptionBaseService {
 
     public static final String NOTIFICATION_QUEUE_NAME = "subscription-events";
-    public static final String SUBSCRIPTION_SERVICE_NAME = "subscription-service";
 
     private static final Logger log = LoggerFactory.getLogger(DefaultSubscriptionBaseService.class);
 
@@ -99,7 +98,12 @@ public class DefaultSubscriptionBaseService implements EventListener, Subscripti
 
     @Override
     public String getName() {
-        return SUBSCRIPTION_SERVICE_NAME;
+        return KILLBILL_SERVICES.SUBSCRIPTION_BASE_SERVICE.getServiceName();
+    }
+
+    @Override
+    public int getRegistrationOrdering() {
+        return KILLBILL_SERVICES.SUBSCRIPTION_BASE_SERVICE.getRegistrationOrdering();
     }
 
     @LifecycleHandlerType(LifecycleLevel.INIT_SERVICE)
@@ -126,7 +130,7 @@ public class DefaultSubscriptionBaseService implements EventListener, Subscripti
                 }
             };
 
-            subscriptionEventQueue = notificationQueueService.createNotificationQueue(SUBSCRIPTION_SERVICE_NAME,
+            subscriptionEventQueue = notificationQueueService.createNotificationQueue(KILLBILL_SERVICES.SUBSCRIPTION_BASE_SERVICE.getServiceName(),
                                                                                       NOTIFICATION_QUEUE_NAME,
                                                                                       queueHandler);
         } catch (final NotificationQueueAlreadyExists e) {

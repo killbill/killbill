@@ -31,6 +31,7 @@ import org.killbill.billing.entitlement.api.BlockingState;
 import org.killbill.billing.entitlement.api.BlockingStateType;
 import org.killbill.billing.entitlement.api.DefaultEntitlementApi;
 import org.killbill.billing.entitlement.dao.BlockingStateDao;
+import org.killbill.billing.platform.api.KillbillService.KILLBILL_SERVICES;
 import org.killbill.billing.subscription.api.SubscriptionBaseInternalApi;
 import org.killbill.billing.subscription.api.user.SubscriptionBaseApiException;
 import org.killbill.notificationq.api.NotificationQueueService;
@@ -97,7 +98,7 @@ public class EntitlementUtils {
         return Iterables.tryFind(nonAddonUUIDs, new Predicate<UUID>() {
             @Override
             public boolean apply(final UUID input) {
-                final BlockingState state = dao.getBlockingStateForService(input, BlockingStateType.SUBSCRIPTION, DefaultEntitlementService.ENTITLEMENT_SERVICE_NAME, tenantContext);
+                final BlockingState state = dao.getBlockingStateForService(input, BlockingStateType.SUBSCRIPTION, KILLBILL_SERVICES.ENTITLEMENT_SERVICE.getServiceName(), tenantContext);
                 return (state == null || !state.getStateName().equals(DefaultEntitlementApi.ENT_STATE_CANCELLED));
             }
         }).orNull();

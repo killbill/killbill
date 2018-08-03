@@ -26,6 +26,7 @@ import org.killbill.billing.ObjectType;
 import org.killbill.billing.account.api.Account;
 import org.killbill.billing.invoice.InvoiceTestSuiteWithEmbeddedDB;
 import org.killbill.billing.invoice.api.DefaultInvoiceService;
+import org.killbill.billing.platform.api.KillbillService.KILLBILL_SERVICES;
 import org.killbill.billing.subscription.api.SubscriptionBase;
 import org.killbill.notificationq.api.NotificationQueue;
 import org.testng.Assert;
@@ -47,7 +48,7 @@ public class TestNextBillingDateNotifier extends InvoiceTestSuiteWithEmbeddedDB 
         final UUID subscriptionId = subscription.getId();
         final DateTime now = clock.getUTCNow();
 
-        final NotificationQueue nextBillingQueue = notificationQueueService.getNotificationQueue(DefaultInvoiceService.INVOICE_SERVICE_NAME, DefaultNextBillingDateNotifier.NEXT_BILLING_DATE_NOTIFIER_QUEUE);
+        final NotificationQueue nextBillingQueue = notificationQueueService.getNotificationQueue(KILLBILL_SERVICES.INVOICE_SERVICE.getServiceName(), DefaultNextBillingDateNotifier.NEXT_BILLING_DATE_NOTIFIER_QUEUE);
 
         nextBillingQueue.recordFutureNotification(now, new NextBillingDateNotificationKey(null, ImmutableList.<UUID>of(subscriptionId), now, Boolean.FALSE, Boolean.FALSE), internalCallContext.getUserToken(), accountRecordId, internalCallContext.getTenantRecordId());
 

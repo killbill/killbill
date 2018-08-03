@@ -34,8 +34,6 @@ public class DefaultConfigKillbillService implements ConfigKillbillService {
 
     private static final Logger logger = LoggerFactory.getLogger(DefaultConfigKillbillService.class);
 
-    public static final String CONFIG_SERVICE_NAME = "config-service";
-
     private final TenantInternalApi tenantInternalApi;
     private final CacheInvalidationCallback cacheInvalidationCallback;
 
@@ -47,7 +45,12 @@ public class DefaultConfigKillbillService implements ConfigKillbillService {
 
     @Override
     public String getName() {
-        return CONFIG_SERVICE_NAME;
+        return KILLBILL_SERVICES.CONFIG_SERVICE.getServiceName();
+    }
+
+    @Override
+    public int getRegistrationOrdering() {
+        return KILLBILL_SERVICES.CONFIG_SERVICE.getRegistrationOrdering();
     }
 
     @LifecycleHandlerType(LifecycleLevel.INIT_SERVICE)

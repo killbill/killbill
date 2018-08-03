@@ -45,8 +45,6 @@ public class DefaultOverdueService implements OverdueService {
 
     private static final Logger log = LoggerFactory.getLogger(DefaultOverdueService.class);
 
-    public static final String OVERDUE_SERVICE_NAME = "overdue-service";
-
     private final OverdueProperties properties;
     private final OverdueNotifier asyncNotifier;
     private final OverdueNotifier checkNotifier;
@@ -81,7 +79,12 @@ public class DefaultOverdueService implements OverdueService {
 
     @Override
     public String getName() {
-        return OVERDUE_SERVICE_NAME;
+        return KILLBILL_SERVICES.OVERDUE_SERVICE.getServiceName();
+    }
+
+    @Override
+    public int getRegistrationOrdering() {
+        return KILLBILL_SERVICES.OVERDUE_SERVICE.getRegistrationOrdering();
     }
 
     @LifecycleHandlerType(LifecycleLevel.LOAD_CATALOG)

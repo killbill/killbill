@@ -27,6 +27,7 @@ import org.awaitility.Awaitility;
 import org.joda.time.DateTime;
 import org.killbill.CreatorName;
 import org.killbill.billing.notification.plugin.api.ExtBusEventType;
+import org.killbill.billing.platform.api.KillbillService.KILLBILL_SERVICES;
 import org.killbill.billing.server.DefaultServerService;
 import org.killbill.billing.server.notifications.PushNotificationKey;
 import org.killbill.notificationq.NotificationQueueDispatcher;
@@ -64,11 +65,11 @@ public class TestPushNotification extends TestJaxrsBase {
                                                                                                   internalCallContext.getTenantRecordId(),
                                                                                                   UUID.randomUUID(),
                                                                                                   clock.getUTCNow(),
-                                                                                                  DefaultServerService.SERVER_SERVICE + ":testVerify726Backport");
+                                                                                                  KILLBILL_SERVICES.SERVER_SERVICE.getServiceName() + ":testVerify726Backport");
 
         final AtomicReference<PushNotificationKey> notification = new AtomicReference<PushNotificationKey>();
         // Need to create a custom queue to extract the deserialized event
-        final NotificationQueue notificationQueue = notificationQueueService.createNotificationQueue(DefaultServerService.SERVER_SERVICE,
+        final NotificationQueue notificationQueue = notificationQueueService.createNotificationQueue(KILLBILL_SERVICES.SERVER_SERVICE.getServiceName(),
                                                                                                      "testVerify726Backport",
                                                                                                      new NotificationQueueHandler() {
                                                                                                          @Override
