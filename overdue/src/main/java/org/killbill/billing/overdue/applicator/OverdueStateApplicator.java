@@ -141,6 +141,7 @@ public class OverdueStateApplicator {
 
         cancelSubscriptionsIfRequired(effectiveDate, account, nextOverdueState, context);
 
+
         avoid_extra_credit_by_toggling_AUTO_INVOICE_OFF(account, previousOverdueState, nextOverdueState, context);
 
         // Make sure to store the new state last here: the entitlement DAO will send a BlockingTransitionInternalEvent

@@ -23,6 +23,7 @@ import java.util.UUID;
 import org.joda.time.DateTime;
 import org.killbill.billing.invoice.InvoiceListener;
 import org.killbill.billing.invoice.api.DefaultInvoiceService;
+import org.killbill.billing.platform.api.KillbillService.KILLBILL_SERVICES;
 import org.killbill.billing.subscription.api.SubscriptionBaseInternalApi;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.clock.Clock;
@@ -93,7 +94,7 @@ public class DefaultNextBillingDateNotifier extends RetryableService implements 
         };
 
         final NotificationQueueHandler retryableHandler = new RetryableHandler(clock, this, notificationQueueHandler);
-        nextBillingQueue = notificationQueueService.createNotificationQueue(DefaultInvoiceService.INVOICE_SERVICE_NAME,
+        nextBillingQueue = notificationQueueService.createNotificationQueue(KILLBILL_SERVICES.INVOICE_SERVICE.getServiceName(),
                                                                             NEXT_BILLING_DATE_NOTIFIER_QUEUE,
                                                                             retryableHandler);
 

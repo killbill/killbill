@@ -40,7 +40,6 @@ import com.google.inject.Inject;
 public class DefaultCatalogService implements KillbillService, CatalogService {
 
     private static final Logger log = LoggerFactory.getLogger(DefaultCatalogService.class);
-    private static final String CATALOG_SERVICE_NAME = "catalog-service";
 
     private final CatalogConfig config;
     private final TenantInternalApi tenantInternalApi;
@@ -83,7 +82,12 @@ public class DefaultCatalogService implements KillbillService, CatalogService {
 
     @Override
     public String getName() {
-        return CATALOG_SERVICE_NAME;
+        return KILLBILL_SERVICES.CATALOG_SERVICE.getServiceName();
+    }
+
+    @Override
+    public int getRegistrationOrdering() {
+        return KILLBILL_SERVICES.CATALOG_SERVICE.getRegistrationOrdering();
     }
 
     @Override

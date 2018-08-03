@@ -42,6 +42,7 @@ import org.killbill.billing.entitlement.api.Entitlement.EntitlementState;
 import org.killbill.billing.entitlement.block.BlockingChecker;
 import org.killbill.billing.entitlement.block.BlockingChecker.BlockingAggregator;
 import org.killbill.billing.junction.DefaultBlockingState;
+import org.killbill.billing.platform.api.KillbillService.KILLBILL_SERVICES;
 import org.killbill.billing.subscription.api.SubscriptionBase;
 import org.killbill.billing.subscription.api.SubscriptionBaseTransitionType;
 import org.killbill.billing.subscription.api.user.SubscriptionBaseBundle;
@@ -408,7 +409,7 @@ public class DefaultEventsStream implements EventsStream {
                                                                                return new DefaultBlockingState(input.getId(),
                                                                                                                BlockingStateType.SUBSCRIPTION,
                                                                                                                DefaultEntitlementApi.ENT_STATE_CANCELLED,
-                                                                                                               EntitlementService.ENTITLEMENT_SERVICE_NAME,
+                                                                                                               KILLBILL_SERVICES.ENTITLEMENT_SERVICE.getServiceName(),
                                                                                                                true,
                                                                                                                true,
                                                                                                                false,
@@ -519,7 +520,7 @@ public class DefaultEventsStream implements EventsStream {
                                                                                        @Override
                                                                                        public boolean apply(final BlockingState input) {
                                                                                            return blockingStateType.equals(input.getType()) &&
-                                                                                                  EntitlementService.ENTITLEMENT_SERVICE_NAME.equals(input.getService()) &&
+                                                                                                  KILLBILL_SERVICES.ENTITLEMENT_SERVICE.getServiceName().equals(input.getService()) &&
                                                                                                   input.getBlockedId().equals(blockableId);
                                                                                        }
                                                                                    }));

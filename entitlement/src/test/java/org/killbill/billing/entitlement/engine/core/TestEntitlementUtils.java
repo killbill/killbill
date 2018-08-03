@@ -45,6 +45,7 @@ import org.killbill.billing.entitlement.api.Entitlement;
 import org.killbill.billing.entitlement.api.Entitlement.EntitlementActionPolicy;
 import org.killbill.billing.entitlement.api.EntitlementApiException;
 import org.killbill.billing.payment.api.PluginProperty;
+import org.killbill.billing.platform.api.KillbillService.KILLBILL_SERVICES;
 import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
@@ -396,7 +397,7 @@ public class TestEntitlementUtils extends EntitlementTestSuiteWithEmbeddedDB {
             Assert.assertEquals(blockingState.getBlockedId(), addOnEntitlement.getId());
             Assert.assertEquals(blockingState.getEffectiveDate(), effectiveCancellationDateTime);
             Assert.assertEquals(blockingState.getType(), BlockingStateType.SUBSCRIPTION);
-            Assert.assertEquals(blockingState.getService(), EntitlementService.ENTITLEMENT_SERVICE_NAME);
+            Assert.assertEquals(blockingState.getService(), KILLBILL_SERVICES.ENTITLEMENT_SERVICE.getServiceName());
             Assert.assertEquals(blockingState.getStateName(), DefaultEntitlementApi.ENT_STATE_CANCELLED);
         }
     }
@@ -424,7 +425,7 @@ public class TestEntitlementUtils extends EntitlementTestSuiteWithEmbeddedDB {
                 Assert.assertEquals(blockingState.getEffectiveDate(), effectiveCancellationDateTime);
             }
             Assert.assertEquals(blockingState.getType(), BlockingStateType.SUBSCRIPTION);
-            Assert.assertEquals(blockingState.getService(), EntitlementService.ENTITLEMENT_SERVICE_NAME);
+            Assert.assertEquals(blockingState.getService(), KILLBILL_SERVICES.ENTITLEMENT_SERVICE.getServiceName());
             Assert.assertEquals(blockingState.getStateName(), DefaultEntitlementApi.ENT_STATE_CANCELLED);
         }
     }
@@ -442,7 +443,7 @@ public class TestEntitlementUtils extends EntitlementTestSuiteWithEmbeddedDB {
             Assert.assertEquals(blockingStatesForBaseEntitlement.get(1).getBlockedId(), baseEntitlement.getId());
             Assert.assertEquals(blockingStatesForBaseEntitlement.get(1).getEffectiveDate().toLocalDate(), effectiveBaseCancellationDate);
             Assert.assertEquals(blockingStatesForBaseEntitlement.get(1).getType(), BlockingStateType.SUBSCRIPTION);
-            Assert.assertEquals(blockingStatesForBaseEntitlement.get(1).getService(), EntitlementService.ENTITLEMENT_SERVICE_NAME);
+            Assert.assertEquals(blockingStatesForBaseEntitlement.get(1).getService(), KILLBILL_SERVICES.ENTITLEMENT_SERVICE.getServiceName());
             Assert.assertEquals(blockingStatesForBaseEntitlement.get(1).getStateName(), DefaultEntitlementApi.ENT_STATE_CANCELLED);
         }
 
@@ -451,7 +452,7 @@ public class TestEntitlementUtils extends EntitlementTestSuiteWithEmbeddedDB {
         Assert.assertEquals(blockingStatesForAddOn.get(1).getBlockedId(), addOnEntitlement.getId());
         Assert.assertEquals(blockingStatesForAddOn.get(1).getEffectiveDate().toLocalDate(), effectiveAddOnCancellationDate);
         Assert.assertEquals(blockingStatesForAddOn.get(1).getType(), BlockingStateType.SUBSCRIPTION);
-        Assert.assertEquals(blockingStatesForAddOn.get(1).getService(), EntitlementService.ENTITLEMENT_SERVICE_NAME);
+        Assert.assertEquals(blockingStatesForAddOn.get(1).getService(), KILLBILL_SERVICES.ENTITLEMENT_SERVICE.getServiceName());
         Assert.assertEquals(blockingStatesForAddOn.get(1).getStateName(), DefaultEntitlementApi.ENT_STATE_CANCELLED);
     }
 

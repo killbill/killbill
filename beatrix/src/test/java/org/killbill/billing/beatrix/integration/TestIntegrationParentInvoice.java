@@ -50,6 +50,7 @@ import org.killbill.billing.invoice.notification.ParentInvoiceCommitmentNotifier
 import org.killbill.billing.payment.api.Payment;
 import org.killbill.billing.payment.api.PaymentApiException;
 import org.killbill.billing.payment.api.PluginProperty;
+import org.killbill.billing.platform.api.KillbillService.KILLBILL_SERVICES;
 import org.killbill.notificationq.api.NotificationEvent;
 import org.killbill.notificationq.api.NotificationEventWithMetadata;
 import org.killbill.notificationq.api.NotificationQueue;
@@ -97,7 +98,7 @@ public class TestIntegrationParentInvoice extends TestIntegrationBase {
         assertEquals(parentInvoice.getBalance().compareTo(BigDecimal.ZERO), 0);
 
         // Verify the notification exists and the efective time matches the default configuration '23:59:59'
-        final NotificationQueue notificationQueue = notificationQueueService.getNotificationQueue(DefaultInvoiceService.INVOICE_SERVICE_NAME, ParentInvoiceCommitmentNotifier.PARENT_INVOICE_COMMITMENT_NOTIFIER_QUEUE);
+        final NotificationQueue notificationQueue = notificationQueueService.getNotificationQueue(KILLBILL_SERVICES.INVOICE_SERVICE.getServiceName(), ParentInvoiceCommitmentNotifier.PARENT_INVOICE_COMMITMENT_NOTIFIER_QUEUE);
         final Iterable<NotificationEventWithMetadata<NotificationEvent>> events = notificationQueue.getFutureNotificationForSearchKey2(new DateTime(2050, 5, 15, 0, 0, 0, 0, testTimeZone), internalCallContext.getTenantRecordId());
         //
         final Iterator<NotificationEventWithMetadata<NotificationEvent>> metadataEventIterator = events.iterator();

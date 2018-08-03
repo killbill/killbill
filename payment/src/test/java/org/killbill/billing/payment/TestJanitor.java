@@ -54,6 +54,7 @@ import org.killbill.billing.payment.plugin.api.PaymentTransactionInfoPlugin;
 import org.killbill.billing.payment.provider.DefaultNoOpPaymentInfoPlugin;
 import org.killbill.billing.payment.provider.MockPaymentProviderPlugin;
 import org.killbill.billing.platform.api.KillbillConfigSource;
+import org.killbill.billing.platform.api.KillbillService.KILLBILL_SERVICES;
 import org.killbill.billing.util.api.AuditLevel;
 import org.killbill.billing.util.audit.AuditLogWithHistory;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
@@ -554,7 +555,7 @@ public class TestJanitor extends PaymentTestSuiteWithEmbeddedDB {
                 @Override
                 public Boolean call() throws Exception {
                     boolean completed = true;
-                    final Iterator<NotificationEventWithMetadata<NotificationEvent>> iterator = notificationQueueService.getNotificationQueue(DefaultPaymentService.SERVICE_NAME, Janitor.QUEUE_NAME).getFutureOrInProcessingNotificationForSearchKeys(internalCallContext.getAccountRecordId(), internalCallContext.getTenantRecordId()).iterator();
+                    final Iterator<NotificationEventWithMetadata<NotificationEvent>> iterator = notificationQueueService.getNotificationQueue(KILLBILL_SERVICES.PAYMENT_SERVICE.getServiceName(), Janitor.QUEUE_NAME).getFutureOrInProcessingNotificationForSearchKeys(internalCallContext.getAccountRecordId(), internalCallContext.getTenantRecordId()).iterator();
                     try {
                         while (iterator.hasNext()) {
                             final NotificationEventWithMetadata<NotificationEvent> notificationEvent = iterator.next();
@@ -578,7 +579,7 @@ public class TestJanitor extends PaymentTestSuiteWithEmbeddedDB {
 
     private int getPendingNotificationCnt(final InternalCallContext internalCallContext) {
         try {
-            return Iterables.size(notificationQueueService.getNotificationQueue(DefaultPaymentService.SERVICE_NAME, Janitor.QUEUE_NAME).getFutureOrInProcessingNotificationForSearchKeys(internalCallContext.getAccountRecordId(), internalCallContext.getTenantRecordId()));
+            return Iterables.size(notificationQueueService.getNotificationQueue(KILLBILL_SERVICES.PAYMENT_SERVICE.getServiceName(), Janitor.QUEUE_NAME).getFutureOrInProcessingNotificationForSearchKeys(internalCallContext.getAccountRecordId(), internalCallContext.getTenantRecordId()));
         } catch (final Exception e) {
             fail("Test failed ", e);
         }

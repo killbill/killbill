@@ -55,6 +55,7 @@ import org.killbill.billing.payment.plugin.api.PaymentPluginApiException;
 import org.killbill.billing.payment.plugin.api.PaymentTransactionInfoPlugin;
 import org.killbill.billing.payment.retry.DefaultRetryService;
 import org.killbill.billing.payment.retry.PaymentRetryNotificationKey;
+import org.killbill.billing.platform.api.KillbillService.KILLBILL_SERVICES;
 import org.killbill.billing.tag.TagInternalApi;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.billing.util.callcontext.TenantContext;
@@ -489,7 +490,7 @@ public class PaymentRefresher extends ProcessorBase {
 
         // Get Future Payment Attempts from Notification Queue and add them to the list
         try {
-            final NotificationQueue retryQueue = notificationQueueService.getNotificationQueue(DefaultPaymentService.SERVICE_NAME, DefaultRetryService.QUEUE_NAME);
+            final NotificationQueue retryQueue = notificationQueueService.getNotificationQueue(KILLBILL_SERVICES.PAYMENT_SERVICE.getServiceName(), DefaultRetryService.QUEUE_NAME);
             final Iterable<NotificationEventWithMetadata<NotificationEvent>> notificationEventWithMetadatas =
                     retryQueue.getFutureNotificationForSearchKeys(internalTenantContext.getAccountRecordId(), internalTenantContext.getTenantRecordId());
 

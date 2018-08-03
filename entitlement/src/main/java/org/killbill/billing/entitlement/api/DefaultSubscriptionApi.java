@@ -52,6 +52,7 @@ import org.killbill.billing.entitlement.plugin.api.EntitlementContext;
 import org.killbill.billing.entitlement.plugin.api.OperationType;
 import org.killbill.billing.junction.DefaultBlockingState;
 import org.killbill.billing.payment.api.PluginProperty;
+import org.killbill.billing.platform.api.KillbillService.KILLBILL_SERVICES;
 import org.killbill.billing.subscription.api.SubscriptionBase;
 import org.killbill.billing.subscription.api.SubscriptionBaseInternalApi;
 import org.killbill.billing.subscription.api.user.SubscriptionBaseApiException;
@@ -324,7 +325,7 @@ public class DefaultSubscriptionApi implements SubscriptionApi {
         logAddBlockingState(log, inputBlockingState, inputEffectiveDate);
 
         // This is in no way an exhaustive arg validation, but to to ensure plugin would not hijack private entitlement state or service name
-        if (inputBlockingState.getService() == null || inputBlockingState.getService().equals(EntitlementService.ENTITLEMENT_SERVICE_NAME)) {
+        if (inputBlockingState.getService() == null || inputBlockingState.getService().equals(KILLBILL_SERVICES.ENTITLEMENT_SERVICE.getServiceName())) {
             throw new EntitlementApiException(ErrorCode.SUB_BLOCKING_STATE_INVALID_ARG, "Need to specify a valid serviceName");
         }
 

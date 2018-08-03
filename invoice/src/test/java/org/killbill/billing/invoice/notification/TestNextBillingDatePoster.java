@@ -31,6 +31,7 @@ import org.killbill.billing.invoice.InvoiceDispatcher.FutureAccountNotifications
 import org.killbill.billing.invoice.InvoiceTestSuiteWithEmbeddedDB;
 import org.killbill.billing.invoice.api.DefaultInvoiceService;
 import org.killbill.billing.platform.api.KillbillConfigSource;
+import org.killbill.billing.platform.api.KillbillService.KILLBILL_SERVICES;
 import org.killbill.billing.subscription.api.SubscriptionBase;
 import org.killbill.notificationq.api.NotificationEventWithMetadata;
 import org.killbill.notificationq.api.NotificationQueue;
@@ -66,7 +67,7 @@ public class TestNextBillingDatePoster extends InvoiceTestSuiteWithEmbeddedDB {
         invoiceDao.setFutureAccountNotificationsForEmptyInvoice(account.getId(), futureAccountNotifications, internalCallContext);
         invoiceDao.setFutureAccountNotificationsForEmptyInvoice(account.getId(), futureAccountNotifications, internalCallContext);
 
-        final NotificationQueue nextBillingQueue = notificationQueueService.getNotificationQueue(DefaultInvoiceService.INVOICE_SERVICE_NAME,
+        final NotificationQueue nextBillingQueue = notificationQueueService.getNotificationQueue(KILLBILL_SERVICES.INVOICE_SERVICE.getServiceName(),
                                                                                                  DefaultNextBillingDateNotifier.NEXT_BILLING_DATE_NOTIFIER_QUEUE);
         final Iterable<NotificationEventWithMetadata<NextBillingDateNotificationKey>> futureNotifications = nextBillingQueue.getFutureNotificationForSearchKeys(accountRecordId, internalCallContext.getTenantRecordId());
         final ImmutableList<NotificationEventWithMetadata<NextBillingDateNotificationKey>> futureNotificationsList = ImmutableList.copyOf(futureNotifications);
@@ -103,7 +104,7 @@ public class TestNextBillingDatePoster extends InvoiceTestSuiteWithEmbeddedDB {
         invoiceDao.setFutureAccountNotificationsForEmptyInvoice(account.getId(), futureAccountNotifications2, internalCallContext);
 
 
-        final NotificationQueue nextBillingQueue = notificationQueueService.getNotificationQueue(DefaultInvoiceService.INVOICE_SERVICE_NAME,
+        final NotificationQueue nextBillingQueue = notificationQueueService.getNotificationQueue(KILLBILL_SERVICES.INVOICE_SERVICE.getServiceName(),
                                                                                                  DefaultNextBillingDateNotifier.NEXT_BILLING_DATE_NOTIFIER_QUEUE);
 
         final Iterable<NotificationEventWithMetadata<NextBillingDateNotificationKey>> futureNotifications = nextBillingQueue.getFutureNotificationForSearchKeys(accountRecordId, internalCallContext.getTenantRecordId());
@@ -148,7 +149,7 @@ public class TestNextBillingDatePoster extends InvoiceTestSuiteWithEmbeddedDB {
 
         invoiceDao.setFutureAccountNotificationsForEmptyInvoice(account.getId(), futureAccountNotifications2, internalCallContext);
 
-        final NotificationQueue nextBillingQueue = notificationQueueService.getNotificationQueue(DefaultInvoiceService.INVOICE_SERVICE_NAME,
+        final NotificationQueue nextBillingQueue = notificationQueueService.getNotificationQueue(KILLBILL_SERVICES.INVOICE_SERVICE.getServiceName(),
                                                                                                  DefaultNextBillingDateNotifier.NEXT_BILLING_DATE_NOTIFIER_QUEUE);
         final Iterable<NotificationEventWithMetadata<NextBillingDateNotificationKey>> futureNotifications = nextBillingQueue.getFutureNotificationForSearchKeys(accountRecordId, internalCallContext.getTenantRecordId());
         final ImmutableList<NotificationEventWithMetadata<NextBillingDateNotificationKey>> futureNotificationsList = ImmutableList.copyOf(futureNotifications);

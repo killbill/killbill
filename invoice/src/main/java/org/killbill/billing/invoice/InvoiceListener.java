@@ -173,6 +173,12 @@ public class InvoiceListener extends RetryableService implements InvoiceListener
         return INVOICE_LISTENER_SERVICE_NAME;
     }
 
+
+    @Override
+    public int getRegistrationOrdering() {
+        return KILLBILL_SERVICES.INVOICE_SERVICE.getRegistrationOrdering() + 1;
+    }
+
     @LifecycleHandlerType(LifecycleLevel.INIT_SERVICE)
     public void initialize() {
         super.initialize("invoice-listener", subscriberQueueHandler);

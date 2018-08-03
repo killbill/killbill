@@ -41,8 +41,6 @@ public class DefaultPaymentService implements PaymentService {
 
     private static final Logger log = LoggerFactory.getLogger(DefaultPaymentService.class);
 
-    public static final String SERVICE_NAME = "payment-service";
-
     private final PaymentBusEventHandler paymentBusEventHandler;
     private final PaymentTagHandler tagHandler;
     private final PersistentBus eventBus;
@@ -73,7 +71,12 @@ public class DefaultPaymentService implements PaymentService {
 
     @Override
     public String getName() {
-        return SERVICE_NAME;
+        return KILLBILL_SERVICES.PAYMENT_SERVICE.getServiceName();
+    }
+
+    @Override
+    public int getRegistrationOrdering() {
+        return KILLBILL_SERVICES.PAYMENT_SERVICE.getRegistrationOrdering();
     }
 
     @LifecycleHandlerType(LifecycleLevel.INIT_SERVICE)

@@ -84,6 +84,11 @@ public class InvoiceTagHandler extends RetryableService implements KillbillServi
         return INVOICE_TAG_HANDLER_SERVICE_NAME;
     }
 
+    @Override
+    public int getRegistrationOrdering() {
+        return KILLBILL_SERVICES.INVOICE_SERVICE.getRegistrationOrdering() + 2;
+    }
+
     @LifecycleHandlerType(LifecycleLevel.INIT_SERVICE)
     public void initialize() {
         super.initialize("invoice-tag-handler", subscriberQueueHandler);
