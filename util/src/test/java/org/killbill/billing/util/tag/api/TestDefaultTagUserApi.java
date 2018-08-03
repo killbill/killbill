@@ -62,7 +62,7 @@ public class TestDefaultTagUserApi extends UtilTestSuiteWithEmbeddedDB {
         checkPagination(0);
 
         eventsListener.pushExpectedEvent(NextEvent.TAG);
-        tagUserApi.addTags(accountId, ObjectType.ACCOUNT, ImmutableList.<UUID>of(ControlTagType.WRITTEN_OFF.getId()), callContext);
+        tagUserApi.addTags(accountId, ObjectType.ACCOUNT, ImmutableList.<UUID>of(ControlTagType.AUTO_INVOICING_OFF.getId()), callContext);
         assertListenerStatus();
 
         checkPagination(1);
@@ -70,7 +70,7 @@ public class TestDefaultTagUserApi extends UtilTestSuiteWithEmbeddedDB {
         // Verify the tag was saved
         final List<Tag> tags = tagUserApi.getTagsForObject(accountId, ObjectType.ACCOUNT, true, callContext);
         Assert.assertEquals(tags.size(), 1);
-        Assert.assertEquals(tags.get(0).getTagDefinitionId(), ControlTagType.WRITTEN_OFF.getId());
+        Assert.assertEquals(tags.get(0).getTagDefinitionId(), ControlTagType.AUTO_INVOICING_OFF.getId());
         Assert.assertEquals(tags.get(0).getObjectId(), accountId);
         Assert.assertEquals(tags.get(0).getObjectType(), ObjectType.ACCOUNT);
         // Verify the account_record_id was populated
@@ -86,7 +86,7 @@ public class TestDefaultTagUserApi extends UtilTestSuiteWithEmbeddedDB {
         });
 
         eventsListener.pushExpectedEvent(NextEvent.TAG);
-        tagUserApi.removeTags(accountId, ObjectType.ACCOUNT, ImmutableList.<UUID>of(ControlTagType.WRITTEN_OFF.getId()), callContext);
+        tagUserApi.removeTags(accountId, ObjectType.ACCOUNT, ImmutableList.<UUID>of(ControlTagType.AUTO_INVOICING_OFF.getId()), callContext);
         assertListenerStatus();
 
         List<Tag> remainingTags = tagUserApi.getTagsForObject(accountId, ObjectType.ACCOUNT, false, callContext);
@@ -96,7 +96,7 @@ public class TestDefaultTagUserApi extends UtilTestSuiteWithEmbeddedDB {
 
         // Add again the tag
         eventsListener.pushExpectedEvent(NextEvent.TAG);
-        tagUserApi.addTags(accountId, ObjectType.ACCOUNT, ImmutableList.<UUID>of(ControlTagType.WRITTEN_OFF.getId()), callContext);
+        tagUserApi.addTags(accountId, ObjectType.ACCOUNT, ImmutableList.<UUID>of(ControlTagType.AUTO_INVOICING_OFF.getId()), callContext);
         assertListenerStatus();
 
         remainingTags = tagUserApi.getTagsForObject(accountId, ObjectType.ACCOUNT, false, callContext);
@@ -106,7 +106,7 @@ public class TestDefaultTagUserApi extends UtilTestSuiteWithEmbeddedDB {
 
         // Delete again
         eventsListener.pushExpectedEvent(NextEvent.TAG);
-        tagUserApi.removeTags(accountId, ObjectType.ACCOUNT, ImmutableList.<UUID>of(ControlTagType.WRITTEN_OFF.getId()), callContext);
+        tagUserApi.removeTags(accountId, ObjectType.ACCOUNT, ImmutableList.<UUID>of(ControlTagType.AUTO_INVOICING_OFF.getId()), callContext);
         assertListenerStatus();
 
         remainingTags = tagUserApi.getTagsForObject(accountId, ObjectType.ACCOUNT, false, callContext);

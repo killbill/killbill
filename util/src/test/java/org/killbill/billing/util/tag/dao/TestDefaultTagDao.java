@@ -168,7 +168,7 @@ public class TestDefaultTagDao extends UtilTestSuiteWithEmbeddedDB {
     @Test(groups = "slow")
     public void testInsertMultipleTags() throws TagApiException {
         final UUID objectId = UUID.randomUUID();
-        final ObjectType objectType = ObjectType.INVOICE_ITEM;
+        final ObjectType objectType = ObjectType.ACCOUNT;
 
         eventsListener.pushExpectedEvent(NextEvent.TAG);
         final Tag tag = new DescriptiveTag(ControlTagType.AUTO_INVOICING_OFF.getId(), objectType, objectId, internalCallContext.getCreatedDate());

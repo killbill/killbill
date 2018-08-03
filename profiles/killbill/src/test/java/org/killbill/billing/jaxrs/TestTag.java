@@ -118,8 +118,12 @@ public class TestTag extends TestJaxrsBase {
         final Subscription subscriptionJson = createSubscription(account.getAccountId(), "87544332", "Shotgun",
                                                                 ProductCategory.BASE, BillingPeriod.MONTHLY, true);
 
+        int nbAllowedControlTagType = 0;
         for (final ControlTagType controlTagType : ControlTagType.values()) {
-            accountApi.createAccountTags(account.getAccountId(), ImmutableList.<UUID>of(controlTagType.getId()), requestOptions);
+            if (controlTagType.getApplicableObjectTypes().contains(ObjectType.ACCOUNT)) {
+                accountApi.createAccountTags(account.getAccountId(), ImmutableList.<UUID>of(controlTagType.getId()), requestOptions);
+                nbAllowedControlTagType++;
+            }
         }
 
         final TagDefinition bundleTagDefInput = new TagDefinition(null, false, "bundletagdef", "nothing special", ImmutableList.<ObjectType>of(ObjectType.TRANSACTION), null);
@@ -131,7 +135,7 @@ public class TestTag extends TestJaxrsBase {
         Assert.assertEquals(allBundleTags.size(), 1);
 
         final Tags allAccountTags = accountApi.getAllTags(account.getAccountId(), null, requestOptions);
-        Assert.assertEquals(allAccountTags.size(), ControlTagType.values().length + 1);
+        Assert.assertEquals(allAccountTags.size(), nbAllowedControlTagType + 1);
 
         final Tags allBundleTagsForAccount = accountApi.getAllTags(account.getAccountId(), ObjectType.BUNDLE, requestOptions);
         Assert.assertEquals(allBundleTagsForAccount.size(), 1);
@@ -140,18 +144,25 @@ public class TestTag extends TestJaxrsBase {
     @Test(groups = "slow", description = "Can search system tags")
     public void testSystemTagsPagination() throws Exception {
         final Account account = createAccount();
+
+        int nbAllowedControlTagType = 0;
         for (final ControlTagType controlTagType : ControlTagType.values()) {
-            accountApi.createAccountTags(account.getAccountId(), ImmutableList.<UUID>of(controlTagType.getId()), requestOptions);
+            if (controlTagType.getApplicableObjectTypes().contains(ObjectType.ACCOUNT)) {
+                accountApi.createAccountTags(account.getAccountId(), ImmutableList.<UUID>of(controlTagType.getId()), requestOptions);
+                nbAllowedControlTagType++;
+            }
         }
 
         final Tags allTags = accountApi.getAccountTags(account.getAccountId(), requestOptions);
-        Assert.assertEquals(allTags.size(), ControlTagType.values().length);
+        Assert.assertEquals(allTags.size(), nbAllowedControlTagType);
 
         for (final ControlTagType controlTagType : ControlTagType.values()) {
-            Assert.assertEquals(tagApi.searchTags(controlTagType.toString(), requestOptions).size(), 1);
-            // TODO Hack until we fix client api
+            if (controlTagType.getApplicableObjectTypes().contains(ObjectType.ACCOUNT)) {
+                Assert.assertEquals(tagApi.searchTags(controlTagType.toString(), requestOptions).size(), 1);
+                // TODO Hack until we fix client api
 
-            Assert.assertEquals(tagApi.searchTags(UTF8UrlEncoder.encodePath(controlTagType.getDescription()), requestOptions).size(), 1);
+                Assert.assertEquals(tagApi.searchTags(UTF8UrlEncoder.encodePath(controlTagType.getDescription()), requestOptions).size(), 1);
+            }
         }
     }
 

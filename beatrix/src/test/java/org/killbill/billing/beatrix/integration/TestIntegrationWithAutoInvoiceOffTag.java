@@ -102,49 +102,4 @@ public class TestIntegrationWithAutoInvoiceOffTag extends TestIntegrationBase {
         assertEquals(invoices.size(), 1);
     }
 
-    @Test(groups = "slow")
-    public void testAutoInvoiceOffSingleSubscription() throws Exception {
-        clock.setTime(new DateTime(2012, 5, 1, 0, 3, 42, 0));
-
-        // set next invoice to fail and create network
-        final DefaultEntitlement bpEntitlement = createBaseEntitlementAndCheckForCompletion(account.getId(), "externalKey", productName, ProductCategory.BASE, term, NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE);
-        assertNotNull(bpEntitlement);
-
-        Collection<Invoice> invoices = invoiceApi.getInvoicesByAccount(account.getId(), false, false, callContext);
-        assertEquals(invoices.size(), 1); // first invoice is generated immediately after creation can't reliably stop it
-
-        add_AUTO_INVOICING_OFF_Tag(bpEntitlement.getSubscriptionBase().getBundleId(), ObjectType.BUNDLE);
-
-        busHandler.pushExpectedEvents(NextEvent.PHASE);
-        clock.addDays(40); // DAY 40 out of trial
-        assertListenerStatus();
-
-        invoices = invoiceApi.getInvoicesByAccount(account.getId(), false, false, callContext);
-        assertEquals(invoices.size(), 1); //No additional invoices generated
-    }
-
-    @Test(groups = "slow")
-    public void testAutoInvoiceOffMultipleSubscriptions() throws Exception {
-        clock.setTime(new DateTime(2012, 5, 1, 0, 3, 42, 0));
-
-        // set next invoice to fail and create network
-        final DefaultEntitlement bpEntitlement = createBaseEntitlementAndCheckForCompletion(account.getId(), "externalKey", productName, ProductCategory.BASE, term, NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE);
-        assertNotNull(bpEntitlement);
-
-        final DefaultEntitlement bpEntitlement2 = createBaseEntitlementAndCheckForCompletion(account.getId(), "whatever", productName, ProductCategory.BASE, term, NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE);
-        assertNotNull(bpEntitlement2);
-
-        Collection<Invoice> invoices = invoiceApi.getInvoicesByAccount(account.getId(), false, false, callContext);
-        assertEquals(invoices.size(), 2); // first invoice is generated immediately after creation can't reliably stop it
-
-        add_AUTO_INVOICING_OFF_Tag(bpEntitlement.getSubscriptionBase().getBundleId(), ObjectType.BUNDLE);
-
-        busHandler.pushExpectedEvents(NextEvent.PHASE, NextEvent.PHASE, NextEvent.NULL_INVOICE, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
-        clock.addDays(40); // DAY 40 out of trial
-        assertListenerStatus();
-
-        invoices = invoiceApi.getInvoicesByAccount(account.getId(), false, false, callContext);
-        assertEquals(invoices.size(), 3); // Only one additional invoice generated
-    }
-
 }
