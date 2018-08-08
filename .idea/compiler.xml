@@ -59,5 +59,26 @@
   </component>
   <component name="JavacSettings">
     <option name="ADDITIONAL_OPTIONS_STRING" value="-Xlint:unchecked " />
+    <option name="ADDITIONAL_OPTIONS_OVERRIDE">
+      <module name="killbill" options="" />
+      <module name="killbill-account" options="" />
+      <module name="killbill-beatrix" options="" />
+      <module name="killbill-catalog" options="" />
+      <module name="killbill-currency" options="" />
+      <module name="killbill-entitlement" options="" />
+      <module name="killbill-internal-api" options="" />
+      <module name="killbill-invoice" options="" />
+      <module name="killbill-jaxrs" options="" />
+      <module name="killbill-junction" options="" />
+      <module name="killbill-overdue" options="" />
+      <module name="killbill-payment" options="" />
+      <module name="killbill-profiles" options="" />
+      <module name="killbill-profiles-killbill" options="" />
+      <module name="killbill-profiles-killpay" options="" />
+      <module name="killbill-subscription" options="" />
+      <module name="killbill-tenant" options="" />
+      <module name="killbill-usage" options="" />
+      <module name="killbill-util" options="" />
+    </option>
   </component>
 </project>
