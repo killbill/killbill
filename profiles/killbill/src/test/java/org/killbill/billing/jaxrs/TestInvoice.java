@@ -473,6 +473,8 @@ public class TestInvoice extends TestJaxrsBase {
         externalCharge.setAccountId(accountJson.getAccountId());
         externalCharge.setAmount(chargeAmount);
         externalCharge.setCurrency(accountJson.getCurrency());
+        externalCharge.setPlanName("SomePlan");
+        externalCharge.setProductName("SomeProduct");
         externalCharge.setDescription(UUID.randomUUID().toString());
         externalCharge.setItemDetails("Item Details");
         externalCharge.setLinkedInvoiceItemId(firstInvoiceItemId);
@@ -496,6 +498,8 @@ public class TestInvoice extends TestJaxrsBase {
         assertEquals(invoiceWithItems.getItems().get(0).getEndDate().compareTo(endDate), 0);
         assertEquals(invoiceWithItems.getItems().get(0).getItemDetails(), "Item Details");
         assertEquals(invoiceWithItems.getItems().get(0).getLinkedInvoiceItemId(), firstInvoiceItemId);
+        assertEquals(invoiceWithItems.getItems().get(0).getPlanName().compareTo("SomePlan"), 0);
+        assertEquals(invoiceWithItems.getItems().get(0).getProductName().compareTo("SomeProduct"), 0);
 
         // Verify the total number of invoices
         assertEquals(accountApi.getInvoicesForAccount(accountJson.getAccountId(), null, requestOptions).size(), 3);

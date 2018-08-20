@@ -205,12 +205,12 @@ public class InvoiceItemJson extends JsonBase {
 
             @Override
             public String getProductName() {
-                return null;
+                return productName;
             }
 
             @Override
             public String getPrettyProductName() {
-                return null;
+                return prettyProductName;
             }
 
             @Override
