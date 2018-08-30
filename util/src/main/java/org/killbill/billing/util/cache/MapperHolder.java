@@ -26,6 +26,7 @@ import com.fasterxml.jackson.dataformat.smile.SmileFactory;
 import static com.fasterxml.jackson.core.JsonGenerator.Feature.AUTO_CLOSE_TARGET;
 
 // See http://www.cowtowncoder.com/blog/archives/2012/08/entry_477.html
+@Deprecated // Can confuse some serialization codecs
 public class MapperHolder {
 
     private static final MapperHolder instance = new MapperHolder();
