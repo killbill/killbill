@@ -36,7 +36,7 @@ import org.slf4j.LoggerFactory;
 
 import com.codahale.metrics.MetricRegistry;
 
-public class EhcacheShiroManagerProvider extends CacheProviderBase implements Provider<EhcacheShiroManager> {
+public class EhcacheShiroManagerProvider extends EhCacheProviderBase implements Provider<EhcacheShiroManager> {
 
     private final SecurityManager securityManager;
     private final CacheManager eh107CacheManager;

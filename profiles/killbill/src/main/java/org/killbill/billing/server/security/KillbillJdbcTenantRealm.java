@@ -33,9 +33,6 @@ import org.apache.shiro.codec.Base64;
 import org.apache.shiro.codec.Hex;
 import org.apache.shiro.realm.jdbc.JdbcRealm;
 import org.apache.shiro.util.ByteSource;
-import org.killbill.billing.util.cache.ExternalizableInput;
-import org.killbill.billing.util.cache.ExternalizableOutput;
-import org.killbill.billing.util.cache.MapperHolder;
 import org.killbill.billing.util.config.definition.SecurityConfig;
 import org.killbill.billing.util.security.shiro.KillbillCredentialsMatcher;
 
@@ -133,12 +130,14 @@ public class KillbillJdbcTenantRealm extends JdbcRealm {
 
         @Override
         public void readExternal(final ObjectInput in) throws IOException {
-            MapperHolder.mapper().readerForUpdating(this).readValue(new ExternalizableInput(in));
+            this.bytes = new byte[in.readInt()];
+            in.read(this.bytes);
         }
 
         @Override
         public void writeExternal(final ObjectOutput oo) throws IOException {
-            MapperHolder.mapper().writeValue(new ExternalizableOutput(oo), this);
+            oo.writeInt(bytes.length);
+            oo.write(bytes);
         }
     }
 }

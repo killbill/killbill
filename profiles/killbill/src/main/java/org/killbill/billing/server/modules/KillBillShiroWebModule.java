@@ -42,10 +42,12 @@ import org.killbill.billing.server.security.FirstSuccessfulStrategyWith540;
 import org.killbill.billing.server.security.KillBillWebSessionManager;
 import org.killbill.billing.server.security.KillbillJdbcTenantRealm;
 import org.killbill.billing.util.config.definition.RbacConfig;
+import org.killbill.billing.util.config.definition.RedisCacheConfig;
 import org.killbill.billing.util.glue.EhcacheShiroManagerProvider;
 import org.killbill.billing.util.glue.JDBCSessionDaoProvider;
 import org.killbill.billing.util.glue.KillBillShiroModule;
 import org.killbill.billing.util.glue.RealmsFromShiroIniProvider;
+import org.killbill.billing.util.glue.RedisShiroManagerProvider;
 import org.killbill.billing.util.security.shiro.dao.JDBCSessionDao;
 import org.killbill.billing.util.security.shiro.realm.KillBillJdbcRealm;
 import org.killbill.billing.util.security.shiro.realm.KillBillJndiLdapRealm;
@@ -75,8 +77,19 @@ public class KillBillShiroWebModule extends ShiroWebModuleWith435 {
 
     @Override
     protected void configureShiroWeb() {
+        final RedisCacheConfig redisCacheConfig = new ConfigurationObjectFactory(new ConfigSource() {
+            @Override
+            public String getString(final String propertyName) {
+                return configSource.getString(propertyName);
+            }
+        }).build(RedisCacheConfig.class);
+
         // Magic provider to configure the cache manager
-        bind(CacheManager.class).toProvider(EhcacheShiroManagerProvider.class).asEagerSingleton();
+        if (redisCacheConfig.isRedisCachingEnabled()) {
+            bind(CacheManager.class).toProvider(RedisShiroManagerProvider.class).asEagerSingleton();
+        } else {
+            bind(CacheManager.class).toProvider(EhcacheShiroManagerProvider.class).asEagerSingleton();
+        }
 
         configureShiroForRBAC();
 
