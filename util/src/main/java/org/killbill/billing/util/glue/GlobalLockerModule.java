@@ -18,16 +18,18 @@
 
 package org.killbill.billing.util.glue;
 
-import java.io.IOException;
-
 import javax.sql.DataSource;
 
 import org.killbill.billing.platform.api.KillbillConfigSource;
+import org.killbill.billing.util.config.definition.RedisLockerConfig;
 import org.killbill.commons.embeddeddb.EmbeddedDB;
 import org.killbill.commons.locker.GlobalLocker;
 import org.killbill.commons.locker.memory.MemoryGlobalLocker;
 import org.killbill.commons.locker.mysql.MySqlGlobalLocker;
 import org.killbill.commons.locker.postgresql.PostgreSQLGlobalLocker;
+import org.killbill.commons.locker.redis.RedisGlobalLocker;
+import org.skife.config.ConfigSource;
+import org.skife.config.ConfigurationObjectFactory;
 
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
@@ -41,13 +43,24 @@ public class GlobalLockerModule extends KillBillModule {
     @Provides
     @Singleton
     // Note: we need to inject the pooled DataSource here, not the (direct) one from EmbeddedDB
-    protected GlobalLocker provideGlobalLocker(final DataSource dataSource, final EmbeddedDB embeddedDB) throws IOException {
-        if (EmbeddedDB.DBEngine.MYSQL.equals(embeddedDB.getDBEngine())) {
-            return new MySqlGlobalLocker(dataSource);
-        } else if (EmbeddedDB.DBEngine.POSTGRESQL.equals(embeddedDB.getDBEngine())) {
-            return new PostgreSQLGlobalLocker(dataSource);
+    protected GlobalLocker provideGlobalLocker(final DataSource dataSource, final EmbeddedDB embeddedDB) {
+        final RedisLockerConfig redisLockerConfig = new ConfigurationObjectFactory(new ConfigSource() {
+            @Override
+            public String getString(final String propertyName) {
+                return configSource.getString(propertyName);
+            }
+        }).build(RedisLockerConfig.class);
+
+        if (redisLockerConfig.isRedisLockerEnabled()) {
+            return new RedisGlobalLocker(redisLockerConfig.getUrl());
         } else {
-            return new MemoryGlobalLocker();
+            if (EmbeddedDB.DBEngine.MYSQL.equals(embeddedDB.getDBEngine())) {
+                return new MySqlGlobalLocker(dataSource);
+            } else if (EmbeddedDB.DBEngine.POSTGRESQL.equals(embeddedDB.getDBEngine())) {
+                return new PostgreSQLGlobalLocker(dataSource);
+            } else {
+                return new MemoryGlobalLocker();
+            }
         }
     }
 
