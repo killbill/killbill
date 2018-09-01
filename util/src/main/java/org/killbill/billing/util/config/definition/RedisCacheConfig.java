@@ -35,6 +35,6 @@ public interface RedisCacheConfig extends KillbillConfig {
 
     @Config("org.killbill.cache.config.redis.connectionMinimumIdleSize")
     @Default("1")
-    @Description("Minimum number of connections (per cache)")
+    @Description("Minimum number of connections")
     public int getConnectionMinimumIdleSize();
 }

@@ -39,7 +39,7 @@ public class UsageTestSuiteWithEmbeddedDB extends GuicyKillbillTestSuiteWithEmbe
             return;
         }
 
-        final Injector injector = Guice.createInjector(new TestUsageModuleWithEmbeddedDB(configSource));
+        final Injector injector = Guice.createInjector(new TestUsageModuleWithEmbeddedDB(configSource, clock));
         injector.injectMembers(this);
     }
 }

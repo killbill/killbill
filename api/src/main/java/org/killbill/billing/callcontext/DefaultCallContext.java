@@ -68,7 +68,7 @@ public class DefaultCallContext extends CallContextBase implements Externalizabl
 
     // For testing
     public DefaultCallContext(final CallContext callContext) {
-        super(callContext.getAccountId(), callContext.getTenantId(), callContext.getUserName(), callContext.getCallOrigin(), callContext.getUserType(), callContext.getUserToken());
+        super(callContext.getAccountId(), callContext.getTenantId(), callContext.getUserName(), callContext.getCallOrigin(), callContext.getUserType(), callContext.getReasonCode(), callContext.getComments(),  callContext.getUserToken());
         this.createdDate = callContext.getCreatedDate();
         this.updateDate = callContext.getUpdatedDate();
     }

@@ -112,7 +112,7 @@ public abstract class OverdueTestSuiteNoDB extends GuicyKillbillTestSuiteNoDB {
             return;
         }
 
-        final Injector injector = Guice.createInjector(new TestOverdueModuleNoDB(configSource));
+        final Injector injector = Guice.createInjector(new TestOverdueModuleNoDB(configSource, clock));
         injector.injectMembers(this);
     }
 

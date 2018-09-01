@@ -21,32 +21,24 @@ import javax.cache.CacheManager;
 import javax.cache.configuration.Configuration;
 import javax.cache.configuration.MutableConfiguration;
 
-import org.killbill.billing.util.config.definition.RedisCacheConfig;
-import org.redisson.codec.SnappyCodecV2;
-import org.redisson.config.Config;
+import org.redisson.api.RedissonClient;
 import org.redisson.jcache.configuration.RedissonConfiguration;
 
 import com.codahale.metrics.MetricRegistry;
 
 abstract class RedisCacheProviderBase extends CacheProviderBase {
 
-    private final RedisCacheConfig cacheConfig;
+    private final RedissonClient redissonClient;
 
-    RedisCacheProviderBase(final MetricRegistry metricRegistry, final RedisCacheConfig cacheConfig) {
+    RedisCacheProviderBase(final MetricRegistry metricRegistry, final RedissonClient redissonClient) {
         super(metricRegistry);
-        this.cacheConfig = cacheConfig;
+        this.redissonClient = redissonClient;
     }
 
     <K, V> void createCache(final CacheManager cacheManager, final String cacheName, final Class<K> keyType, final Class<V> valueType) {
-        final Configuration configuration = new MutableConfiguration().setTypes(keyType, valueType);
+        final Configuration jcacheConfig = new MutableConfiguration().setTypes(keyType, valueType);
 
-        final Config redissonCfg = new Config();
-        redissonCfg.setCodec(new SnappyCodecV2())
-                   .useSingleServer()
-                   .setAddress(cacheConfig.getUrl())
-                   .setConnectionMinimumIdleSize(cacheConfig.getConnectionMinimumIdleSize());
-
-        final Configuration redissonConfiguration = RedissonConfiguration.fromConfig(redissonCfg, configuration);
+        final Configuration redissonConfiguration = RedissonConfiguration.fromInstance(redissonClient, jcacheConfig);
 
         createCache(cacheManager, cacheName, redissonConfiguration);
     }

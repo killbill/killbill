@@ -19,6 +19,7 @@
 package org.killbill.billing;
 
 import java.lang.reflect.Method;
+import java.util.Map;
 import java.util.UUID;
 
 import javax.inject.Inject;
@@ -34,12 +35,16 @@ import org.killbill.billing.callcontext.MutableInternalCallContext;
 import org.killbill.billing.platform.api.KillbillConfigSource;
 import org.killbill.billing.platform.test.config.TestKillbillConfigSource;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
-import org.killbill.billing.util.callcontext.TenantContext;
 import org.killbill.clock.Clock;
 import org.killbill.clock.ClockMock;
+import org.killbill.clock.DistributedClockMock;
 import org.mockito.Mockito;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
+import org.redisson.Redisson;
+import org.redisson.api.RedissonClient;
+import org.redisson.codec.FstCodec;
+import org.redisson.config.Config;
 import org.skife.config.ConfigSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -48,10 +53,12 @@ import org.testng.IHookable;
 import org.testng.ITestNGMethod;
 import org.testng.ITestResult;
 import org.testng.annotations.AfterMethod;
+import org.testng.annotations.AfterSuite;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Listeners;
 
 import com.google.common.collect.ImmutableMap;
+import redis.embedded.RedisServer;
 
 import static org.testng.ITestResult.CREATED;
 import static org.testng.ITestResult.FAILURE;
@@ -66,8 +73,6 @@ public class GuicyKillbillTestSuite implements IHookable {
     // Use the simple name here to save screen real estate
     protected static final Logger log = LoggerFactory.getLogger(KillbillTestSuite.class.getSimpleName());
 
-    private static final ClockMock theStaticClock = new ClockMock();
-
     protected final KillbillConfigSource configSource;
     protected final ConfigSource skifeConfigSource;
 
@@ -80,26 +85,77 @@ public class GuicyKillbillTestSuite implements IHookable {
     @Inject
     protected MutableCallContext callContext;
 
-    @Inject
-    private ClockMock theRealClock;
+    private RedisServer redisServer;
 
-    // Initialized to avoid NPE when skipping tests, but see below
-    protected ClockMock clock = new ClockMock();
+    protected final ClockMock clock;
 
     private boolean hasFailed = false;
 
     public GuicyKillbillTestSuite() {
-        this.configSource = getConfigSource();
+        final ImmutableMap<String, String> extraProperties;
+        final ClockMock theRealClock;
+        if (Boolean.valueOf(System.getProperty("killbill.test.redis", "false"))) {
+            extraProperties = ImmutableMap.<String, String>of("org.killbill.cache.config.redis", "true",
+                                                              "org.killbill.cache.config.redis.url", "redis://127.0.0.1:56379",
+                                                              "org.killbill.locker.config.redis", "true",
+                                                              "org.killbill.locker.config.redis.url", "redis://127.0.0.1:56379");
+            redisServer = new RedisServer(56379);
+            redisServer.start();
+
+            final Config redissonCfg = new Config();
+            redissonCfg.setCodec(new FstCodec())
+                       .useSingleServer()
+                       .setAddress("redis://127.0.0.1:56379")
+                       .setConnectionMinimumIdleSize(1);
+            final RedissonClient redissonClient = Redisson.create(redissonCfg);
+
+            theRealClock = new DistributedClockMock();
+            ((DistributedClockMock) theRealClock).setRedissonClient(redissonClient);
+        } else {
+            extraProperties = ImmutableMap.<String, String>of();
+            theRealClock = new ClockMock();
+        }
+
+        clock = Mockito.spy(theRealClock);
+        final Answer answer = new Answer() {
+            @Override
+            public Object answer(final InvocationOnMock invocation) throws Throwable {
+                // Sync clock and theRealClock
+                final Object realAnswer = invocation.callRealMethod();
+                invocation.getMethod().invoke(theRealClock, invocation.getArguments());
+
+                // Update the contexts createdDate each time we move the clock
+                final DateTime utcNow = theRealClock.getUTCNow();
+                if (callContext != null) {
+                    callContext.setCreatedDate(utcNow);
+                }
+                if (internalCallContext != null) {
+                    internalCallContext.setCreatedDate(utcNow);
+                    internalCallContext.setUpdatedDate(utcNow);
+                }
+
+                return realAnswer;
+            }
+        };
+        Mockito.doAnswer(answer).when(clock).getUTCNow();
+        Mockito.doAnswer(answer).when(clock).getNow(Mockito.any(DateTimeZone.class));
+        Mockito.doAnswer(answer).when(clock).getUTCToday();
+        Mockito.doAnswer(answer).when(clock).getToday(Mockito.any(DateTimeZone.class));
+        Mockito.doAnswer(answer).when(clock).addDays(Mockito.anyInt());
+        Mockito.doAnswer(answer).when(clock).addWeeks(Mockito.anyInt());
+        Mockito.doAnswer(answer).when(clock).addMonths(Mockito.anyInt());
+        Mockito.doAnswer(answer).when(clock).addYears(Mockito.anyInt());
+        Mockito.doAnswer(answer).when(clock).addDeltaFromReality(Mockito.anyLong());
+        Mockito.doAnswer(answer).when(clock).setTime(Mockito.any(DateTime.class));
+        Mockito.doAnswer(answer).when(clock).resetDeltaFromReality();
+
+        this.configSource = getConfigSource(extraProperties);
         this.skifeConfigSource = new ConfigSource() {
             @Override
             public String getString(final String propertyName) {
                 return configSource.getString(propertyName);
             }
         };
-    }
-
-    public static ClockMock getClock() {
-        return theStaticClock;
     }
 
     public static void refreshCallContext(final UUID accountId,
@@ -117,21 +173,11 @@ public class GuicyKillbillTestSuite implements IHookable {
         callContext.setDelegate(accountId, internalCallContext);
     }
 
-    protected KillbillConfigSource getConfigSource() {
-        try {
-            return new TestKillbillConfigSource(DBTestingHelper.class);
-        } catch (final Exception e) {
-            final AssertionError assertionError = new AssertionError("Initialization error");
-            assertionError.initCause(e);
-            throw assertionError;
-        }
+    protected KillbillConfigSource getConfigSource(final Map<String, String> extraProperties) {
+        return getConfigSource(null, extraProperties);
     }
 
-    protected KillbillConfigSource getConfigSource(final String file) {
-        return getConfigSource(file, ImmutableMap.<String, String>of());
-    }
-
-    protected KillbillConfigSource getConfigSource(final String file, final ImmutableMap<String, String> extraProperties) {
+    protected KillbillConfigSource getConfigSource(final String file, final Map<String, String> extraProperties) {
         try {
             return new TestKillbillConfigSource(file, DBTestingHelper.class, extraProperties);
         } catch (final Exception e) {
@@ -162,40 +208,6 @@ public class GuicyKillbillTestSuite implements IHookable {
 
         if (internalCallContext != null) {
             internalCallContext.reset();
-        }
-
-        if (theRealClock != null) {
-            clock = Mockito.spy(theRealClock);
-            final Answer answer = new Answer() {
-                @Override
-                public Object answer(final InvocationOnMock invocation) throws Throwable {
-                    // Sync clock and theRealClock
-                    final Object realAnswer = invocation.callRealMethod();
-                    invocation.getMethod().invoke(theRealClock, invocation.getArguments());
-
-                    // Update the contexts createdDate each time we move the clock
-                    final DateTime utcNow = theRealClock.getUTCNow();
-                    if (callContext != null) {
-                        callContext.setCreatedDate(utcNow);
-                    }
-                    if (internalCallContext != null) {
-                        internalCallContext.setCreatedDate(utcNow);
-                    }
-
-                    return realAnswer;
-                }
-            };
-            Mockito.doAnswer(answer).when(clock).getUTCNow();
-            Mockito.doAnswer(answer).when(clock).getNow(Mockito.any(DateTimeZone.class));
-            Mockito.doAnswer(answer).when(clock).getUTCToday();
-            Mockito.doAnswer(answer).when(clock).getToday(Mockito.any(DateTimeZone.class));
-            Mockito.doAnswer(answer).when(clock).addDays(Mockito.anyInt());
-            Mockito.doAnswer(answer).when(clock).addWeeks(Mockito.anyInt());
-            Mockito.doAnswer(answer).when(clock).addMonths(Mockito.anyInt());
-            Mockito.doAnswer(answer).when(clock).addYears(Mockito.anyInt());
-            Mockito.doAnswer(answer).when(clock).addDeltaFromReality(Mockito.anyLong());
-            Mockito.doAnswer(answer).when(clock).setTime(Mockito.any(DateTime.class));
-            Mockito.doAnswer(answer).when(clock).resetDeltaFromReality();
         }
     }
 
@@ -263,6 +275,13 @@ public class GuicyKillbillTestSuite implements IHookable {
 
     protected void assertListenerStatus() {
         // No-op
+    }
+
+    @AfterSuite(alwaysRun = true)
+    public void globalAfterSuite() {
+        if (redisServer != null) {
+            redisServer.stop();
+        }
     }
 
     public boolean hasFailed() {

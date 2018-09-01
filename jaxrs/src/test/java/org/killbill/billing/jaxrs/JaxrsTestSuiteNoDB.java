@@ -38,7 +38,7 @@ public abstract class JaxrsTestSuiteNoDB extends GuicyKillbillTestSuiteNoDB {
             return;
         }
 
-        final Injector injector = Guice.createInjector(new TestJaxrsModuleNoDB(configSource));
+        final Injector injector = Guice.createInjector(new TestJaxrsModuleNoDB(configSource, clock));
         injector.injectMembers(this);
     }
 }

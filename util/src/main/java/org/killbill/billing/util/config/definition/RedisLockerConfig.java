@@ -34,7 +34,7 @@ public interface RedisLockerConfig extends KillbillConfig {
     public String getUrl();
 
     @Config("org.killbill.locker.config.redis.connectionMinimumIdleSize")
-    @Default("10")
+    @Default("1")
     @Description("Minimum number of connections")
     public int getConnectionMinimumIdleSize();
 }

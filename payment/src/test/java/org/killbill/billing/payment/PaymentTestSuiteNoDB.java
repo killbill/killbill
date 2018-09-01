@@ -18,7 +18,9 @@
 
 package org.killbill.billing.payment;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import javax.inject.Named;
 
@@ -59,7 +61,6 @@ import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
 
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import com.google.inject.Guice;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
@@ -131,11 +132,11 @@ public abstract class PaymentTestSuiteNoDB extends GuicyKillbillTestSuiteNoDB {
     };
 
     @Override
-    protected KillbillConfigSource getConfigSource() {
-        return getConfigSource("/payment.properties",
-                               ImmutableMap.<String, String>of("org.killbill.payment.provider.default", MockPaymentProviderPlugin.PLUGIN_NAME,
-                                                               "killbill.payment.engine.events.off", "false"));
-
+    protected KillbillConfigSource getConfigSource(final Map<String, String> extraProperties) {
+        final Map<String, String> allExtraProperties = new HashMap<String, String>(extraProperties);
+        allExtraProperties.put("org.killbill.payment.provider.default", MockPaymentProviderPlugin.PLUGIN_NAME);
+        allExtraProperties.put("killbill.payment.engine.events.off", "false");
+        return getConfigSource("/payment.properties", allExtraProperties);
     }
 
     @BeforeClass(groups = "fast")
@@ -144,7 +145,7 @@ public abstract class PaymentTestSuiteNoDB extends GuicyKillbillTestSuiteNoDB {
             return;
         }
 
-        final Injector injector = Guice.createInjector(new TestPaymentModuleNoDB(configSource, getClock()));
+        final Injector injector = Guice.createInjector(new TestPaymentModuleNoDB(configSource, clock));
         injector.injectMembers(this);
     }
 

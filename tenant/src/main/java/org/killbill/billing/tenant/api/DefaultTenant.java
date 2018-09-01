@@ -136,10 +136,10 @@ public class DefaultTenant implements Tenant, Externalizable {
         if (id != null ? !id.equals(that.id) : that.id != null) {
             return false;
         }
-        if (createdDate != null ? !createdDate.equals(that.createdDate) : that.createdDate != null) {
+        if (createdDate != null ? createdDate.compareTo(that.createdDate) != 0 : that.createdDate != null) {
             return false;
         }
-        if (updatedDate != null ? !updatedDate.equals(that.updatedDate) : that.updatedDate != null) {
+        if (updatedDate != null ? updatedDate.compareTo(that.updatedDate) != 0 : that.updatedDate != null) {
             return false;
         }
         if (externalKey != null ? !externalKey.equals(that.externalKey) : that.externalKey != null) {

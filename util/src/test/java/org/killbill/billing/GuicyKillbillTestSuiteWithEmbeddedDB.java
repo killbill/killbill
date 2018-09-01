@@ -18,20 +18,27 @@
 
 package org.killbill.billing;
 
-import javax.inject.Inject;
+import javax.annotation.Nullable;
+import javax.cache.CacheManager;
 import javax.inject.Named;
 import javax.sql.DataSource;
 
 import org.killbill.billing.util.cache.CacheControllerDispatcher;
 import org.killbill.commons.embeddeddb.EmbeddedDB;
+import org.redisson.api.RedissonClient;
 import org.skife.jdbi.v2.IDBI;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
+import org.testng.annotations.AfterClass;
 import org.testng.annotations.AfterSuite;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.BeforeSuite;
 
+import com.google.inject.Inject;
+
+import static org.killbill.billing.util.glue.CacheModule.REDIS_CACHE_CLIENT;
+import static org.killbill.billing.util.glue.GlobalLockerModule.REDIS_LOCKER_CLIENT;
 import static org.killbill.billing.util.glue.IDBISetup.MAIN_RO_IDBI_NAMED;
 
 public class GuicyKillbillTestSuiteWithEmbeddedDB extends GuicyKillbillTestSuite {
@@ -54,6 +61,20 @@ public class GuicyKillbillTestSuiteWithEmbeddedDB extends GuicyKillbillTestSuite
     @Inject
     protected CacheControllerDispatcher controlCacheDispatcher;
 
+    @Nullable
+    @Inject(optional = true)
+    protected CacheManager cacheManager;
+
+    @Nullable
+    @Inject(optional = true)
+    @Named(REDIS_CACHE_CLIENT)
+    protected RedissonClient redissonCachingClient;
+
+    @Nullable
+    @Inject(optional = true)
+    @Named(REDIS_LOCKER_CLIENT)
+    protected RedissonClient redissonLockerClient;
+
     @BeforeSuite(groups = "slow")
     public void beforeSuite() throws Exception {
         DBTestingHelper.get().start();
@@ -75,6 +96,19 @@ public class GuicyKillbillTestSuiteWithEmbeddedDB extends GuicyKillbillTestSuite
             DBTestingHelper.get().getInstance().cleanupAllTables();
         } catch (final Exception e) {
             Assert.fail("Unable to clean database", e);
+        }
+    }
+
+    @AfterClass(alwaysRun = true)
+    public void afterClassCleanup() {
+        if (cacheManager != null) {
+            cacheManager.close();
+        }
+        if (redissonCachingClient != null) {
+            redissonCachingClient.shutdown();
+        }
+        if (redissonLockerClient != null) {
+            redissonLockerClient.shutdown();
         }
     }
 

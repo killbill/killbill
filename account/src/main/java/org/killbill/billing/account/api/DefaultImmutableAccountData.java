@@ -156,7 +156,7 @@ public class DefaultImmutableAccountData implements ImmutableAccountData, Extern
     public void readExternal(final ObjectInput in) throws IOException {
         this.id = new UUID(in.readLong(), in.readLong());
         this.externalKey = in.readUTF();
-        this.currency = Currency.valueOf(in.readUTF());
+        this.currency = in.readBoolean() ? Currency.valueOf(in.readUTF()) : null;
         this.timeZone = DateTimeZone.forID(in.readUTF());
         this.fixedOffsetTimeZone = DateTimeZone.forID(in.readUTF());
         this.referenceTime = new DateTime(in.readUTF());
@@ -167,7 +167,10 @@ public class DefaultImmutableAccountData implements ImmutableAccountData, Extern
         oo.writeLong(id.getMostSignificantBits());
         oo.writeLong(id.getLeastSignificantBits());
         oo.writeUTF(externalKey);
-        oo.writeUTF(currency.name());
+        oo.writeBoolean(currency != null);
+        if (currency != null) {
+            oo.writeUTF(currency.name());
+        }
         oo.writeUTF(timeZone.getID());
         oo.writeUTF(fixedOffsetTimeZone.getID());
         oo.writeUTF(referenceTime.toString());

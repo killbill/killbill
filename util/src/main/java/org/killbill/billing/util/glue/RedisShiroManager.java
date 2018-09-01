@@ -27,7 +27,7 @@ import javax.cache.Cache.Entry;
 import org.apache.shiro.cache.Cache;
 import org.apache.shiro.cache.CacheException;
 import org.apache.shiro.cache.CacheManager;
-import org.killbill.billing.util.config.definition.RedisCacheConfig;
+import org.redisson.api.RedissonClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -41,8 +41,8 @@ public class RedisShiroManager extends RedisCacheProviderBase implements CacheMa
 
     public RedisShiroManager(final javax.cache.CacheManager eh107CacheManager,
                              final MetricRegistry metricRegistry,
-                             final RedisCacheConfig cacheConfig) {
-        super(metricRegistry, cacheConfig);
+                             final RedissonClient redissonClient) {
+        super(metricRegistry, redissonClient);
         this.eh107CacheManager = eh107CacheManager;
     }
 

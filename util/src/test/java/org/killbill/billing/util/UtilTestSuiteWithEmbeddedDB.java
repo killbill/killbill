@@ -98,7 +98,7 @@ public abstract class UtilTestSuiteWithEmbeddedDB extends GuicyKillbillTestSuite
             return;
         }
 
-        final Injector g = Guice.createInjector(Stage.PRODUCTION, new TestUtilModuleWithEmbeddedDB(configSource));
+        final Injector g = Guice.createInjector(Stage.PRODUCTION, new TestUtilModuleWithEmbeddedDB(configSource, clock));
         g.injectMembers(this);
 
         Assert.assertTrue(locker.isFree("a", "b"));

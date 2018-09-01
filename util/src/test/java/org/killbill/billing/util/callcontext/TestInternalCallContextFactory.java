@@ -21,20 +21,18 @@ package org.killbill.billing.util.callcontext;
 import java.util.Date;
 import java.util.UUID;
 
+import org.killbill.billing.ObjectType;
 import org.killbill.billing.account.api.ImmutableAccountData;
+import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
+import org.killbill.billing.util.UtilTestSuiteWithEmbeddedDB;
 import org.mockito.Mockito;
 import org.skife.jdbi.v2.Handle;
 import org.skife.jdbi.v2.tweak.HandleCallback;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
-import org.killbill.billing.ObjectType;
-import org.killbill.billing.callcontext.InternalCallContext;
-import org.killbill.billing.util.UtilTestSuiteWithEmbeddedDB;
-
 public class TestInternalCallContextFactory extends UtilTestSuiteWithEmbeddedDB {
-
 
     @Test(groups = "slow")
     public void testCreateInternalCallContextWithAccountRecordIdFromSimpleObjectType() throws Exception {

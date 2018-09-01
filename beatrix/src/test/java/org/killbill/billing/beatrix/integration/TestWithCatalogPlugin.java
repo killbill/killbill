@@ -1,6 +1,6 @@
 /*
- * Copyright 2014-2016 Groupon, Inc
- * Copyright 2014-2016 The Billing Project, LLC
+ * Copyright 2014-2018 Groupon, Inc
+ * Copyright 2014-2018 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -55,6 +55,7 @@ import org.killbill.billing.osgi.api.OSGIServiceRegistration;
 import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.billing.util.callcontext.TenantContext;
+import org.killbill.clock.Clock;
 import org.killbill.xmlloader.XMLLoader;
 import org.testng.Assert;
 import org.testng.annotations.BeforeClass;
@@ -90,7 +91,7 @@ public class TestWithCatalogPlugin extends TestIntegrationBase {
 
         super.beforeClass();
 
-        this.testCatalogPluginApi = new TestCatalogPluginApi(priceOverride, internalCallContext, internalCallContextFactory);
+        this.testCatalogPluginApi = new TestCatalogPluginApi(priceOverride, clock, internalCallContext, internalCallContextFactory);
         pluginRegistry.registerService(new OSGIServiceDescriptor() {
             @Override
             public String getPluginSymbolicName() {
@@ -190,17 +191,19 @@ public class TestWithCatalogPlugin extends TestIntegrationBase {
 
     public static class TestCatalogPluginApi implements CatalogPluginApi {
 
-        final PriceOverride priceOverride;
-        final InternalTenantContext internalTenantContext;
-        final InternalCallContextFactory internalCallContextFactory;
+        private final PriceOverride priceOverride;
+        private final Clock clock;
+        private final InternalTenantContext internalTenantContext;
+        private final InternalCallContextFactory internalCallContextFactory;
 
         private DefaultVersionedCatalog versionedCatalog;
         private DateTime latestCatalogUpdate;
         private int nbLatestCatalogVersionApiCalls;
         private int nbVersionedPluginCatalogApiCalls;
 
-        public TestCatalogPluginApi(final PriceOverride priceOverride, final InternalTenantContext internalTenantContext, final InternalCallContextFactory internalCallContextFactory) throws Exception {
+        public TestCatalogPluginApi(final PriceOverride priceOverride, final Clock clock, final InternalTenantContext internalTenantContext, final InternalCallContextFactory internalCallContextFactory) throws Exception {
             this.priceOverride = priceOverride;
+            this.clock = clock;
             this.internalTenantContext = internalTenantContext;
             this.internalCallContextFactory = internalCallContextFactory;
             reset();
@@ -226,7 +229,7 @@ public class TestWithCatalogPlugin extends TestIntegrationBase {
 
             this.latestCatalogUpdate = new DateTime(inputCatalogVersion.getEffectiveDate());
             if (versionedCatalog == null) {
-                versionedCatalog = new DefaultVersionedCatalog(getClock());
+                versionedCatalog = new DefaultVersionedCatalog(clock);
             }
             versionedCatalog.add(inputCatalogVersionWithOverride);
         }

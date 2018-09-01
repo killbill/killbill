@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014 Groupon, Inc
- * Copyright 2014 The Billing Project, LLC
+ * Copyright 2014-2018 Groupon, Inc
+ * Copyright 2014-2018 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -27,17 +27,21 @@ import org.killbill.billing.mock.glue.MockNonEntityDaoModule;
 import org.killbill.billing.mock.glue.MockSubscriptionModule;
 import org.killbill.billing.mock.glue.MockTagModule;
 import org.killbill.billing.platform.api.KillbillConfigSource;
+import org.killbill.clock.ClockMock;
 
 public class TestEntitlementModuleNoDB extends TestEntitlementModule {
 
-    public TestEntitlementModuleNoDB(final KillbillConfigSource configSource) {
+    private final ClockMock clock;
+
+    public TestEntitlementModuleNoDB(final KillbillConfigSource configSource, final ClockMock clock) {
         super(configSource);
+        this.clock = clock;
     }
 
     @Override
     protected void configure() {
         super.configure();
-        install(new GuicyKillbillTestNoDBModule(configSource));
+        install(new GuicyKillbillTestNoDBModule(configSource, clock));
         install(new MockNonEntityDaoModule(configSource));
         install(new MockTagModule(configSource));
         install(new MockSubscriptionModule(configSource));

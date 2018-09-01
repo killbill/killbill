@@ -47,7 +47,6 @@ public class TestDefaultAuditLog extends UtilTestSuiteNoDB {
         final CallOrigin callOrigin = CallOrigin.EXTERNAL;
         final UserType userType = UserType.CUSTOMER;
         final UUID userToken = UUID.randomUUID();
-        final ClockMock clock = new ClockMock();
         final DefaultCallContext callContext = new DefaultCallContext(accountId, tenantId, userName, callOrigin, userType, userToken, clock);
 
         final AuditLog auditLog = new DefaultAuditLog(new AuditLogModelDao(entityAudit, callContext), ObjectType.ACCOUNT_EMAIL, UUID.randomUUID());
@@ -72,7 +71,6 @@ public class TestDefaultAuditLog extends UtilTestSuiteNoDB {
         final CallOrigin callOrigin = CallOrigin.EXTERNAL;
         final UserType userType = UserType.CUSTOMER;
         final UUID userToken = UUID.randomUUID();
-        final ClockMock clock = new ClockMock();
         final DefaultCallContext callContext = new DefaultCallContext(accountId, tenantId, userName, callOrigin, userType, userToken, clock);
 
         final AuditLogModelDao auditLog = new AuditLogModelDao(entityAudit, callContext);

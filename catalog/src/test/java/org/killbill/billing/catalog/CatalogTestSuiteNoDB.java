@@ -56,7 +56,7 @@ public abstract class CatalogTestSuiteNoDB extends GuicyKillbillTestSuiteNoDB {
             return;
         }
 
-        final Injector injector = Guice.createInjector(new TestCatalogModuleNoDB(configSource));
+        final Injector injector = Guice.createInjector(new TestCatalogModuleNoDB(configSource, clock));
         injector.injectMembers(this);
     }
 }

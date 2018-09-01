@@ -22,7 +22,9 @@ import org.killbill.billing.platform.api.KillbillConfigSource;
 import org.killbill.billing.platform.test.PlatformDBTestingHelper;
 import org.killbill.billing.platform.test.config.TestKillbillConfigSource;
 import org.killbill.billing.platform.test.glue.TestPlatformModuleWithEmbeddedDB;
+import org.killbill.billing.util.glue.GlobalLockerModule;
 import org.killbill.billing.util.glue.IDBISetup;
+import org.killbill.clock.ClockMock;
 import org.skife.jdbi.v2.IDBI;
 
 import com.google.inject.Provides;
@@ -33,12 +35,12 @@ public class GuicyKillbillTestWithEmbeddedDBModule extends GuicyKillbillTestModu
 
     private final boolean withOSGI;
 
-    public GuicyKillbillTestWithEmbeddedDBModule(final KillbillConfigSource configSource) {
-        this(false, configSource);
+    public GuicyKillbillTestWithEmbeddedDBModule(final KillbillConfigSource configSource, final ClockMock clock) {
+        this(false, configSource, clock);
     }
 
-    public GuicyKillbillTestWithEmbeddedDBModule(final boolean withOSGI, final KillbillConfigSource configSource) {
-        super(configSource);
+    public GuicyKillbillTestWithEmbeddedDBModule(final boolean withOSGI, final KillbillConfigSource configSource, final ClockMock clock) {
+        super(configSource, clock);
         this.withOSGI = withOSGI;
     }
 
@@ -47,6 +49,7 @@ public class GuicyKillbillTestWithEmbeddedDBModule extends GuicyKillbillTestModu
         super.configure();
 
         install(new KillbillTestPlatformModuleWithEmbeddedDB(configSource));
+        install(new GlobalLockerModule(configSource));
     }
 
     private final class KillbillTestPlatformModuleWithEmbeddedDB extends TestPlatformModuleWithEmbeddedDB {

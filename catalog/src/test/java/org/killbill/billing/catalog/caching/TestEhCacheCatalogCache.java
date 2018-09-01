@@ -34,6 +34,7 @@ import org.killbill.billing.catalog.StandaloneCatalog;
 import org.killbill.billing.catalog.StandaloneCatalogWithPriceOverride;
 import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.catalog.api.Product;
+import org.killbill.billing.catalog.api.StaticCatalog;
 import org.killbill.billing.catalog.api.VersionedCatalog;
 import org.killbill.xmlloader.UriAccessor;
 import org.mockito.Mockito;
@@ -54,6 +55,10 @@ public class TestEhCacheCatalogCache extends CatalogTestSuiteNoDB {
 
     @BeforeMethod(groups = "fast")
     protected void beforeMethod() throws Exception {
+        if (hasFailed()) {
+            return;
+        }
+
         cacheControllerDispatcher.clearAll();
 
         multiTenantContext = Mockito.mock(InternalTenantContext.class);

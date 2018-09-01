@@ -18,8 +18,10 @@
 
 package org.killbill.billing.catalog;
 
+import java.io.ByteArrayInputStream;
 import java.io.Externalizable;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
 import java.net.URI;
@@ -33,11 +35,13 @@ import java.util.Set;
 import java.util.TreeSet;
 
 import javax.annotation.Nullable;
+import javax.xml.bind.JAXBException;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElementWrapper;
 import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.transform.TransformerException;
 
 import org.joda.time.DateTime;
 import org.killbill.billing.ErrorCode;
@@ -46,6 +50,7 @@ import org.killbill.billing.catalog.api.BillingAlignment;
 import org.killbill.billing.catalog.api.Catalog;
 import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.catalog.api.Currency;
+import org.killbill.billing.catalog.api.InvalidConfigException;
 import org.killbill.billing.catalog.api.Listing;
 import org.killbill.billing.catalog.api.Plan;
 import org.killbill.billing.catalog.api.PlanAlignmentCreate;
@@ -67,6 +72,9 @@ import org.killbill.clock.Clock;
 import org.killbill.xmlloader.ValidatingConfig;
 import org.killbill.xmlloader.ValidationError;
 import org.killbill.xmlloader.ValidationErrors;
+import org.killbill.xmlloader.XMLLoader;
+import org.killbill.xmlloader.XMLWriter;
+import org.xml.sax.SAXException;
 
 @XmlRootElement(name = "catalogs")
 @XmlAccessorType(XmlAccessType.NONE)
@@ -460,12 +468,30 @@ public class DefaultVersionedCatalog extends ValidatingConfig<DefaultVersionedCa
 
     @Override
     public void readExternal(final ObjectInput in) throws IOException {
-        MapperHolder.mapper().readerForUpdating(this).readValue(new ExternalizableInput(in));
+        final InputStream is = new ByteArrayInputStream(in.readUTF().getBytes());
+        try {
+            final DefaultVersionedCatalog catalogs = XMLLoader.getObjectFromStreamNoValidation(is, DefaultVersionedCatalog.class);
+            this.catalogName = catalogs.getCatalogName();
+            this.versions.addAll(catalogs.getVersions());
+        } catch (final SAXException e) {
+            throw new IOException(e);
+        } catch (final InvalidConfigException e) {
+            throw new IOException(e);
+        } catch (final JAXBException e) {
+            throw new IOException(e);
+        } catch (final TransformerException e) {
+            throw new IOException(e);
+        }
     }
 
     @Override
     public void writeExternal(final ObjectOutput oo) throws IOException {
-        MapperHolder.mapper().writeValue(new ExternalizableOutput(oo), this);
+        try {
+            final String result = XMLWriter.writeXML(this, DefaultVersionedCatalog.class);
+            oo.writeUTF(result);
+        } catch (final Exception e) {
+            throw new IOException(e);
+        }
     }
 
     private static class CatalogPlanEntry {

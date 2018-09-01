@@ -21,6 +21,8 @@ package org.killbill.billing;
 import org.killbill.billing.platform.api.KillbillConfigSource;
 import org.killbill.billing.platform.test.glue.TestPlatformModuleNoDB;
 import org.killbill.billing.util.glue.IDBISetup;
+import org.killbill.billing.util.glue.MemoryGlobalLockerModule;
+import org.killbill.clock.ClockMock;
 import org.skife.jdbi.v2.IDBI;
 
 import com.google.inject.Provides;
@@ -29,8 +31,8 @@ import com.google.inject.name.Named;
 
 public class GuicyKillbillTestNoDBModule extends GuicyKillbillTestModule {
 
-    public GuicyKillbillTestNoDBModule(final KillbillConfigSource configSource) {
-        super(configSource);
+    public GuicyKillbillTestNoDBModule(final KillbillConfigSource configSource, final ClockMock clock) {
+        super(configSource, clock);
     }
 
     @Override
@@ -38,6 +40,7 @@ public class GuicyKillbillTestNoDBModule extends GuicyKillbillTestModule {
         super.configure();
 
         install(new TestPlatformModuleNoDB(configSource));
+        install(new MemoryGlobalLockerModule(configSource));
     }
 
     @Provides

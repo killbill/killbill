@@ -162,8 +162,8 @@ public class TestJaxrsBase extends KillbillClient {
     private CallbackServer callbackServer;
 
     @Override
-    protected KillbillConfigSource getConfigSource() {
-        return getConfigSource("/killbill.properties");
+    protected KillbillConfigSource getConfigSource(final Map<String, String> extraProperties) {
+        return getConfigSource("/killbill.properties", extraProperties);
     }
 
     public class TestKillbillGuiceListener extends KillbillGuiceListener {
@@ -179,7 +179,7 @@ public class TestJaxrsBase extends KillbillClient {
 
         @Override
         protected Module getModule(final ServletContext servletContext) {
-            return Modules.override(new KillbillServerModule(servletContext, serverConfig, configSource)).with(new GuicyKillbillTestWithEmbeddedDBModule(configSource),
+            return Modules.override(new KillbillServerModule(servletContext, serverConfig, configSource)).with(new GuicyKillbillTestWithEmbeddedDBModule(configSource, clock),
                                                                                                                new InvoiceModuleWithMockSender(configSource),
                                                                                                                new PaymentMockModule(configSource),
                                                                                                                new Module() {
@@ -209,7 +209,7 @@ public class TestJaxrsBase extends KillbillClient {
 
         @Override
         protected void installPaymentProviderPlugins(final PaymentConfig config) {
-            install(new MockPaymentProviderPluginModule(PLUGIN_NAME, getClock(), configSource));
+            install(new MockPaymentProviderPluginModule(PLUGIN_NAME, clock, configSource));
         }
     }
 

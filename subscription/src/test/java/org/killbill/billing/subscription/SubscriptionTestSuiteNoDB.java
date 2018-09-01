@@ -18,6 +18,7 @@
 
 package org.killbill.billing.subscription;
 
+import java.util.Map;
 import java.util.UUID;
 
 import javax.inject.Inject;
@@ -49,7 +50,6 @@ import org.killbill.billing.subscription.glue.TestDefaultSubscriptionModuleNoDB;
 import org.killbill.billing.util.cache.CacheControllerDispatcher;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.billing.util.config.definition.SubscriptionConfig;
-import org.killbill.clock.ClockMock;
 import org.mockito.Mockito;
 import org.skife.jdbi.v2.IDBI;
 import org.skife.jdbi.v2.tweak.HandleCallback;
@@ -120,8 +120,8 @@ public class SubscriptionTestSuiteNoDB extends GuicyKillbillTestSuiteNoDB {
     protected SubscriptionBaseBundle bundle;
 
     @Override
-    protected KillbillConfigSource getConfigSource() {
-        return getConfigSource("/subscription.properties");
+    protected KillbillConfigSource getConfigSource(final Map<String, String> extraProperties) {
+        return getConfigSource("/subscription.properties", extraProperties);
     }
 
     @BeforeClass(groups = "fast")
@@ -130,7 +130,7 @@ public class SubscriptionTestSuiteNoDB extends GuicyKillbillTestSuiteNoDB {
             return;
         }
 
-        final Injector g = Guice.createInjector(Stage.PRODUCTION, new TestDefaultSubscriptionModuleNoDB(configSource));
+        final Injector g = Guice.createInjector(Stage.PRODUCTION, new TestDefaultSubscriptionModuleNoDB(configSource, clock));
         g.injectMembers(this);
 
         // For TestApiListener#isCompleted
