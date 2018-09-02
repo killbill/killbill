@@ -55,6 +55,7 @@ import org.testng.ITestResult;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.AfterSuite;
 import org.testng.annotations.BeforeMethod;
+import org.testng.annotations.BeforeSuite;
 import org.testng.annotations.Listeners;
 
 import com.google.common.collect.ImmutableMap;
@@ -87,30 +88,21 @@ public class GuicyKillbillTestSuite implements IHookable {
 
     private RedisServer redisServer;
 
+    protected final ClockMock theRealClock;
     protected final ClockMock clock;
 
     private boolean hasFailed = false;
 
     public GuicyKillbillTestSuite() {
         final ImmutableMap<String, String> extraProperties;
-        final ClockMock theRealClock;
         if (Boolean.valueOf(System.getProperty("killbill.test.redis", "false"))) {
             extraProperties = ImmutableMap.<String, String>of("org.killbill.cache.config.redis", "true",
                                                               "org.killbill.cache.config.redis.url", "redis://127.0.0.1:56379",
                                                               "org.killbill.locker.config.redis", "true",
                                                               "org.killbill.locker.config.redis.url", "redis://127.0.0.1:56379");
             redisServer = new RedisServer(56379);
-            redisServer.start();
-
-            final Config redissonCfg = new Config();
-            redissonCfg.setCodec(new FstCodec())
-                       .useSingleServer()
-                       .setAddress("redis://127.0.0.1:56379")
-                       .setConnectionMinimumIdleSize(1);
-            final RedissonClient redissonClient = Redisson.create(redissonCfg);
 
             theRealClock = new DistributedClockMock();
-            ((DistributedClockMock) theRealClock).setRedissonClient(redissonClient);
         } else {
             extraProperties = ImmutableMap.<String, String>of();
             theRealClock = new ClockMock();
@@ -275,6 +267,21 @@ public class GuicyKillbillTestSuite implements IHookable {
 
     protected void assertListenerStatus() {
         // No-op
+    }
+
+    @BeforeSuite(alwaysRun = true)
+    public void globalBeforeSuite() {
+        if (redisServer != null) {
+            redisServer.start();
+
+            final Config redissonCfg = new Config();
+            redissonCfg.setCodec(new FstCodec())
+                       .useSingleServer()
+                       .setAddress("redis://127.0.0.1:56379")
+                       .setConnectionMinimumIdleSize(1);
+            final RedissonClient redissonClient = Redisson.create(redissonCfg);
+            ((DistributedClockMock) theRealClock).setRedissonClient(redissonClient);
+        }
     }
 
     @AfterSuite(alwaysRun = true)

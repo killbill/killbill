@@ -17,6 +17,10 @@
 
 package org.killbill.billing.catalog;
 
+import java.io.Externalizable;
+import java.io.IOException;
+import java.io.ObjectInput;
+import java.io.ObjectOutput;
 import java.math.BigDecimal;
 import java.net.URI;
 
@@ -39,7 +43,7 @@ import org.killbill.xmlloader.ValidationError;
 import org.killbill.xmlloader.ValidationErrors;
 
 @XmlAccessorType(XmlAccessType.NONE)
-public class DefaultBlock extends ValidatingConfig<StandaloneCatalog> implements Block {
+public class DefaultBlock extends ValidatingConfig<StandaloneCatalog> implements Block, Externalizable {
 
     @XmlAttribute(required = false)
     private BlockType type = BlockType.VANILLA;
@@ -188,5 +192,32 @@ public class DefaultBlock extends ValidatingConfig<StandaloneCatalog> implements
         result = 31 * result + (prices != null ? prices.hashCode() : 0);
         result = 31 * result + (minTopUpCredit != null ? minTopUpCredit.hashCode() : 0);
         return result;
+    }
+
+    @Override
+    public void writeExternal(final ObjectOutput out) throws IOException {
+        out.writeBoolean(type != null);
+        if (type != null) {
+            out.writeUTF(type.name());
+        }
+        out.writeObject(unit);
+        out.writeBoolean(size != null);
+        if (size != null) {
+            out.writeDouble(size);
+        }
+        out.writeObject(prices);
+        out.writeBoolean(minTopUpCredit != null);
+        if (minTopUpCredit != null) {
+            out.writeDouble(minTopUpCredit);
+        }
+    }
+
+    @Override
+    public void readExternal(final ObjectInput in) throws IOException, ClassNotFoundException {
+        this.type = in.readBoolean() ? BlockType.valueOf(in.readUTF()) : null;
+        this.unit = (DefaultUnit) in.readObject();
+        this.size = in.readBoolean() ? in.readDouble() : null;
+        this.prices = (DefaultInternationalPrice) in.readObject();
+        this.minTopUpCredit = in.readBoolean() ? in.readDouble() : null;
     }
 }

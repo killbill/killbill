@@ -18,7 +18,9 @@
 
 package org.killbill.billing.catalog;
 
+import java.io.IOException;
 import java.math.BigDecimal;
+import java.util.Collection;
 
 import org.joda.time.DateTime;
 import org.killbill.billing.ErrorCode;
@@ -27,9 +29,15 @@ import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.catalog.api.Plan;
 import org.killbill.billing.catalog.api.PlanSpecifier;
+import org.killbill.billing.catalog.api.Product;
+import org.killbill.billing.catalog.rules.DefaultPlanRules;
+import org.redisson.client.codec.Codec;
+import org.redisson.codec.FstCodec;
 import org.testng.Assert;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
+
+import io.netty.buffer.ByteBuf;
 
 public class TestVersionedCatalog extends CatalogTestSuiteNoDB {
 
@@ -165,5 +173,39 @@ public class TestVersionedCatalog extends CatalogTestSuiteNoDB {
         // Similar test but for existing subscription: we want to find the plan in the original catalog in this case.
         // This would be called for instance when computing billing events (dt3 could be a future PHASE event for instance)
         vc.findPlan("shotgun-quarterly", dt3, dt1);
+    }
+
+    @Test(groups = "fast")
+    public void testDefaultPlanRulesExternalizable() throws IOException {
+        final Codec code = new FstCodec();
+        final ByteBuf byteBuf = code.getValueEncoder().encode(vc.getVersions().get(0).getPlanRules());
+        final DefaultPlanRules planRules = (DefaultPlanRules) code.getValueDecoder().decode(byteBuf, null);
+        Assert.assertEquals(planRules, vc.getVersions().get(0).getPlanRules());
+    }
+
+    @Test(groups = "fast")
+    public void testProductExternalizable() throws IOException {
+        final Codec code = new FstCodec();
+        for (final Product product : vc.getVersions().get(0).getCatalogEntityCollectionProduct().getEntries()) {
+            final ByteBuf byteBuf = code.getValueEncoder().encode(product);
+            final Product product2 = (Product) code.getValueDecoder().decode(byteBuf, null);
+            Assert.assertEquals(product2, product);
+        }
+    }
+
+    @Test(groups = "fast")
+    public void testCatalogEntityCollectionProductExternalizable() throws IOException {
+        final Codec code = new FstCodec();
+        final ByteBuf byteBuf = code.getValueEncoder().encode(vc.getVersions().get(0).getCatalogEntityCollectionProduct());
+        final Collection products = (CatalogEntityCollection) code.getValueDecoder().decode(byteBuf, null);
+        Assert.assertEquals(products, vc.getVersions().get(0).getCatalogEntityCollectionProduct());
+    }
+
+    @Test(groups = "fast")
+    public void testStandaloneCatalogExternalizable() throws IOException {
+        final Codec code = new FstCodec();
+        final ByteBuf byteBuf = code.getValueEncoder().encode(vc.getVersions().get(0));
+        final StandaloneCatalog standaloneCatalog = (StandaloneCatalog) code.getValueDecoder().decode(byteBuf, null);
+        Assert.assertEquals(standaloneCatalog, vc.getVersions().get(0));
     }
 }

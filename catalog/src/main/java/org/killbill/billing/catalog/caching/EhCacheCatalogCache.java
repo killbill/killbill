@@ -127,6 +127,14 @@ public class EhCacheCatalogCache implements CatalogCache {
                 }
                 cacheController.putIfAbsent(tenantContext.getTenantRecordId(), tenantCatalog);
             }
+
+            for (final StandaloneCatalog cur : defaultCatalog.getVersions()) {
+                if (cur instanceof StandaloneCatalogWithPriceOverride) {
+                    // Non-serialized objects
+                    ((StandaloneCatalogWithPriceOverride) cur).refreshPostDeserialization(priceOverride, internalCallContextFactory);
+                }
+            }
+
             return tenantCatalog;
         } catch (final IllegalStateException e) {
             throw new CatalogApiException(ErrorCode.CAT_INVALID_FOR_TENANT, tenantContext.getTenantRecordId());

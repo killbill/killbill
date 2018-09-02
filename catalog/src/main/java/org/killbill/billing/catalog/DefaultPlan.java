@@ -18,10 +18,8 @@
 
 package org.killbill.billing.catalog;
 
-import java.io.ByteArrayInputStream;
 import java.io.Externalizable;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
 import java.net.URI;
@@ -32,7 +30,6 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.Iterator;
 
-import javax.xml.bind.JAXBException;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
@@ -41,14 +38,12 @@ import javax.xml.bind.annotation.XmlElementWrapper;
 import javax.xml.bind.annotation.XmlID;
 import javax.xml.bind.annotation.XmlIDREF;
 import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.transform.TransformerException;
 
 import org.joda.time.DateTime;
 import org.killbill.billing.ErrorCode;
 import org.killbill.billing.catalog.api.BillingMode;
 import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.catalog.api.CatalogApiException;
-import org.killbill.billing.catalog.api.InvalidConfigException;
 import org.killbill.billing.catalog.api.PhaseType;
 import org.killbill.billing.catalog.api.Plan;
 import org.killbill.billing.catalog.api.PlanPhase;
@@ -61,9 +56,6 @@ import org.killbill.billing.catalog.api.TimeUnit;
 import org.killbill.xmlloader.ValidatingConfig;
 import org.killbill.xmlloader.ValidationError;
 import org.killbill.xmlloader.ValidationErrors;
-import org.killbill.xmlloader.XMLLoader;
-import org.killbill.xmlloader.XMLWriter;
-import org.xml.sax.SAXException;
 
 import com.google.common.annotations.VisibleForTesting;
 
@@ -113,7 +105,6 @@ public class DefaultPlan extends ValidatingConfig<StandaloneCatalog> implements 
 
     // For deserialization
     public DefaultPlan() {
-        initialPhases = new DefaultPlanPhase[0];
     }
 
     public DefaultPlan(final StandaloneCatalog staticCatalog) {
@@ -420,35 +411,31 @@ public class DefaultPlan extends ValidatingConfig<StandaloneCatalog> implements 
     }
 
     @Override
-    public void readExternal(final ObjectInput in) throws IOException {
-        final InputStream is = new ByteArrayInputStream(in.readUTF().getBytes());
-        try {
-            final DefaultPlan plan = XMLLoader.getObjectFromStreamNoValidation(is, DefaultPlan.class);
-            this.name = plan.getName();
-            this.effectiveDateForExistingSubscriptions = plan.getEffectiveDateForExistingSubscriptions();
-            this.product = (DefaultProduct) plan.getProduct();
-            this.initialPhases = plan.getInitialPhases();
-            this.finalPhase = plan.getFinalPhase();
-            this.priceListName = plan.getPriceListName();
-            this.recurringBillingMode = plan.getRecurringBillingMode();
-        } catch (final SAXException e) {
-            throw new IOException(e);
-        } catch (final InvalidConfigException e) {
-            throw new IOException(e);
-        } catch (final JAXBException e) {
-            throw new IOException(e);
-        } catch (final TransformerException e) {
-            throw new IOException(e);
-        }
+    public void readExternal(final ObjectInput in) throws IOException, ClassNotFoundException {
+        this.name = in.readUTF();
+        this.prettyName = in.readUTF();
+        this.effectiveDateForExistingSubscriptions = (Date) in.readObject();
+        this.product = (DefaultProduct) in.readObject();
+        this.recurringBillingMode = in.readBoolean() ? BillingMode.valueOf(in.readUTF()) : null;
+        this.initialPhases = (DefaultPlanPhase[]) in.readObject();
+        this.finalPhase = (DefaultPlanPhase) in.readObject();
+        this.plansAllowedInBundle = in.readInt();
+        this.priceListName = in.readUTF();
     }
 
     @Override
     public void writeExternal(final ObjectOutput oo) throws IOException {
-        try {
-            final String result = XMLWriter.writeXML(this, DefaultPlan.class);
-            oo.writeUTF(result);
-        } catch (final Exception e) {
-            throw new IOException(e);
+        oo.writeUTF(name);
+        oo.writeUTF(prettyName);
+        oo.writeObject(effectiveDateForExistingSubscriptions);
+        oo.writeObject(product);
+        oo.writeBoolean(recurringBillingMode != null);
+        if (recurringBillingMode != null) {
+            oo.writeUTF(recurringBillingMode.name());
         }
+        oo.writeObject(initialPhases);
+        oo.writeObject(finalPhase);
+        oo.writeInt(plansAllowedInBundle);
+        oo.writeUTF(priceListName);
     }
 }

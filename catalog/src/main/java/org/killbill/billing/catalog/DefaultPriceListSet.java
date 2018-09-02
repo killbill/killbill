@@ -1,7 +1,9 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
+ * Copyright 2014-2018 Groupon, Inc
+ * Copyright 2014-2018 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -16,15 +18,19 @@
 
 package org.killbill.billing.catalog;
 
-import javax.xml.bind.annotation.XmlAccessType;
-import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlElement;
-
+import java.io.Externalizable;
+import java.io.IOException;
+import java.io.ObjectInput;
+import java.io.ObjectOutput;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
+
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlElement;
 
 import org.killbill.billing.ErrorCode;
 import org.killbill.billing.catalog.api.BillingPeriod;
@@ -38,17 +44,16 @@ import org.killbill.xmlloader.ValidationError;
 import org.killbill.xmlloader.ValidationErrors;
 
 @XmlAccessorType(XmlAccessType.NONE)
-public class DefaultPriceListSet extends ValidatingConfig<StandaloneCatalog> implements PriceListSet {
+public class DefaultPriceListSet extends ValidatingConfig<StandaloneCatalog> implements PriceListSet, Externalizable {
+
     @XmlElement(required = true, name = "defaultPriceList")
     private DefaultPriceList defaultPricelist;
 
     @XmlElement(required = false, name = "childPriceList")
     private DefaultPriceList[] childPriceLists;
 
+    // Required for deserialization
     public DefaultPriceListSet() {
-        if (childPriceLists == null) {
-            childPriceLists = new DefaultPriceList[0];
-        }
     }
 
     public DefaultPriceListSet(final DefaultPriceList defaultPricelist, final DefaultPriceList[] childPriceLists) {
@@ -66,7 +71,7 @@ public class DefaultPriceListSet extends ValidatingConfig<StandaloneCatalog> imp
         if (plans.size() == 0) {
             plans = defaultPricelist.findPlans(product, period);
         }
-        switch(plans.size()) {
+        switch (plans.size()) {
             case 0:
                 return null;
             case 1:
@@ -111,7 +116,6 @@ public class DefaultPriceListSet extends ValidatingConfig<StandaloneCatalog> imp
         super.initialize(catalog, sourceURI);
         CatalogSafetyInitializer.initializeNonRequiredNullFieldsWithDefaultValue(this);
     }
-
 
     public DefaultPriceList getDefaultPricelist() {
         return defaultPricelist;
@@ -159,4 +163,15 @@ public class DefaultPriceListSet extends ValidatingConfig<StandaloneCatalog> imp
         return result;
     }
 
+    @Override
+    public void writeExternal(final ObjectOutput out) throws IOException {
+        out.writeObject(defaultPricelist);
+        out.writeObject(childPriceLists);
+    }
+
+    @Override
+    public void readExternal(final ObjectInput in) throws IOException, ClassNotFoundException {
+        this.defaultPricelist = (DefaultPriceList) in.readObject();
+        this.childPriceLists = (DefaultPriceList[]) in.readObject();
+    }
 }

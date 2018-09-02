@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014-2015 Groupon, Inc
- * Copyright 2014-2015 The Billing Project, LLC
+ * Copyright 2014-2018 Groupon, Inc
+ * Copyright 2014-2018 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -18,6 +18,10 @@
 
 package org.killbill.billing.catalog;
 
+import java.io.Externalizable;
+import java.io.IOException;
+import java.io.ObjectInput;
+import java.io.ObjectOutput;
 import java.net.URI;
 import java.util.Arrays;
 
@@ -47,7 +51,7 @@ import com.google.common.base.Predicate;
 import com.google.common.collect.Iterables;
 
 @XmlAccessorType(XmlAccessType.NONE)
-public class DefaultPlanPhase extends ValidatingConfig<StandaloneCatalog> implements PlanPhase {
+public class DefaultPlanPhase extends ValidatingConfig<StandaloneCatalog> implements PlanPhase, Externalizable {
 
     @XmlAttribute(required = false)
     private String prettyName;
@@ -71,8 +75,8 @@ public class DefaultPlanPhase extends ValidatingConfig<StandaloneCatalog> implem
     // Not exposed in XML
     private Plan plan;
 
+    // Required for deserialization
     public DefaultPlanPhase() {
-        usages = new DefaultUsage[0];
     }
 
     public DefaultPlanPhase(final DefaultPlan parentPlan, final DefaultPlanPhase in, @Nullable final PlanPhasePriceOverride override) {
@@ -83,17 +87,16 @@ public class DefaultPlanPhase extends ValidatingConfig<StandaloneCatalog> implem
         this.usages = new DefaultUsage[in.getUsages().length];
         for (int i = 0; i < in.getUsages().length; i++) {
             final Usage curUsage = in.getUsages()[i];
-            if(override != null && override.getUsagePriceOverrides()!= null) {
+            if (override != null && override.getUsagePriceOverrides() != null) {
                 final UsagePriceOverride usagePriceOverride = Iterables.tryFind(override.getUsagePriceOverrides(), new Predicate<UsagePriceOverride>() {
-                 @Override
-                 public boolean apply(final UsagePriceOverride input) {
-                     return input !=null && input.getName().equals(curUsage.getName());
-                 }
-                 }).orNull();
-                usages[i] = (usagePriceOverride !=null) ? new DefaultUsage(in.getUsages()[i], usagePriceOverride, override.getCurrency()) : (DefaultUsage)curUsage;
-            }
-            else {
-                usages[i] = (DefaultUsage)curUsage;
+                    @Override
+                    public boolean apply(final UsagePriceOverride input) {
+                        return input != null && input.getName().equals(curUsage.getName());
+                    }
+                }).orNull();
+                usages[i] = (usagePriceOverride != null) ? new DefaultUsage(in.getUsages()[i], usagePriceOverride, override.getCurrency()) : (DefaultUsage) curUsage;
+            } else {
+                usages[i] = (DefaultUsage) curUsage;
             }
         }
         this.plan = parentPlan;
@@ -292,5 +295,31 @@ public class DefaultPlanPhase extends ValidatingConfig<StandaloneCatalog> implem
         sb.append(", plan=").append(plan.getName());
         sb.append('}');
         return sb.toString();
+    }
+
+    @Override
+    public void writeExternal(final ObjectOutput out) throws IOException {
+        out.writeBoolean(prettyName != null);
+        if (prettyName != null) {
+            out.writeUTF(prettyName);
+        }
+        out.writeBoolean(type != null);
+        if (type != null) {
+            out.writeUTF(type.name());
+        }
+        out.writeObject(duration);
+        out.writeObject(fixed);
+        out.writeObject(recurring);
+        out.writeObject(usages);
+    }
+
+    @Override
+    public void readExternal(final ObjectInput in) throws IOException, ClassNotFoundException {
+        this.prettyName = in.readBoolean() ? in.readUTF() : null;
+        this.type = in.readBoolean() ? PhaseType.valueOf(in.readUTF()) : null;
+        this.duration = (DefaultDuration) in.readObject();
+        this.fixed = (DefaultFixed) in.readObject();
+        this.recurring = (DefaultRecurring) in.readObject();
+        this.usages = (DefaultUsage[]) in.readObject();
     }
 }

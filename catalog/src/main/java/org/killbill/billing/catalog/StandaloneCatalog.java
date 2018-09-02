@@ -18,6 +18,10 @@
 
 package org.killbill.billing.catalog;
 
+import java.io.Externalizable;
+import java.io.IOException;
+import java.io.ObjectInput;
+import java.io.ObjectOutput;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -58,7 +62,7 @@ import org.killbill.xmlloader.ValidationErrors;
 
 @XmlRootElement(name = "catalog")
 @XmlAccessorType(XmlAccessType.NONE)
-public class StandaloneCatalog extends ValidatingConfig<StandaloneCatalog> implements StaticCatalog {
+public class StandaloneCatalog extends ValidatingConfig<StandaloneCatalog> implements StaticCatalog, Externalizable {
 
     @XmlElement(required = true)
     private Date effectiveDate;
@@ -444,5 +448,34 @@ public class StandaloneCatalog extends ValidatingConfig<StandaloneCatalog> imple
         result = 31 * result + (priceLists != null ? priceLists.hashCode() : 0);
         result = 31 * result + (catalogURI != null ? catalogURI.hashCode() : 0);
         return result;
+    }
+
+    @Override
+    public void writeExternal(final ObjectOutput out) throws IOException {
+        out.writeObject(effectiveDate);
+        out.writeUTF(catalogName);
+        out.writeBoolean(recurringBillingMode != null);
+        if (recurringBillingMode != null) {
+            out.writeUTF(recurringBillingMode.name());
+        }
+        out.writeObject(supportedCurrencies);
+        out.writeObject(units);
+        out.writeObject(products);
+        out.writeObject(planRules);
+        out.writeObject(plans);
+        out.writeObject(priceLists);
+    }
+
+    @Override
+    public void readExternal(final ObjectInput in) throws IOException, ClassNotFoundException {
+        this.effectiveDate = (Date) in.readObject();
+        this.catalogName = in.readUTF();
+        this.recurringBillingMode = in.readBoolean() ? BillingMode.valueOf(in.readUTF()) : null;
+        this.supportedCurrencies = (Currency[]) in.readObject();
+        this.units = (DefaultUnit[]) in.readObject();
+        this.products = (CatalogEntityCollection<Product>) in.readObject();
+        this.planRules = (DefaultPlanRules) in.readObject();
+        this.plans = (CatalogEntityCollection<Plan>) in.readObject();
+        this.priceLists = (DefaultPriceListSet) in.readObject();
     }
 }

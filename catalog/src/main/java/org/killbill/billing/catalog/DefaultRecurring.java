@@ -1,6 +1,6 @@
 /*
- * Copyright 2014-2015 Groupon, Inc
- * Copyright 2014-2015 The Billing Project, LLC
+ * Copyright 2014-2018 Groupon, Inc
+ * Copyright 2014-2018 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -17,6 +17,10 @@
 
 package org.killbill.billing.catalog;
 
+import java.io.Externalizable;
+import java.io.IOException;
+import java.io.ObjectInput;
+import java.io.ObjectOutput;
 import java.net.URI;
 
 import javax.xml.bind.annotation.XmlAccessType;
@@ -33,7 +37,7 @@ import org.killbill.xmlloader.ValidationError;
 import org.killbill.xmlloader.ValidationErrors;
 
 @XmlAccessorType(XmlAccessType.NONE)
-public class DefaultRecurring extends ValidatingConfig<StandaloneCatalog> implements Recurring {
+public class DefaultRecurring extends ValidatingConfig<StandaloneCatalog> implements Recurring, Externalizable {
 
     @XmlElement(required = true)
     private BillingPeriod billingPeriod;
@@ -45,7 +49,8 @@ public class DefaultRecurring extends ValidatingConfig<StandaloneCatalog> implem
     private Plan plan;
     private PlanPhase phase;
 
-    public DefaultRecurring() {};
+    // Required for deserialization
+    public DefaultRecurring() {}
 
     public DefaultRecurring(final DefaultRecurring in, final PlanPhasePriceOverride override) {
         this.billingPeriod = in.getBillingPeriod();
@@ -82,7 +87,6 @@ public class DefaultRecurring extends ValidatingConfig<StandaloneCatalog> implem
         if (phase == null) {
             errors.add(new ValidationError(String.format("Invalid phase for recurring section"), catalog.getCatalogURI(), DefaultPlan.class, plan.getName().toString()));
         }
-
 
         if (billingPeriod == null) {
             errors.add(new ValidationError(String.format("Recurring section of Phase %s of plan %s has a recurring price but no billing period", phase.getPhaseType().toString(), plan.getName()),
@@ -150,5 +154,20 @@ public class DefaultRecurring extends ValidatingConfig<StandaloneCatalog> implem
         int result = billingPeriod != null ? billingPeriod.hashCode() : 0;
         result = 31 * result + (recurringPrice != null ? recurringPrice.hashCode() : 0);
         return result;
+    }
+
+    @Override
+    public void writeExternal(final ObjectOutput out) throws IOException {
+        out.writeBoolean(billingPeriod != null);
+        if (billingPeriod != null) {
+            out.writeUTF(billingPeriod.name());
+        }
+        out.writeObject(recurringPrice);
+    }
+
+    @Override
+    public void readExternal(final ObjectInput in) throws IOException, ClassNotFoundException {
+        this.billingPeriod = in.readBoolean() ? BillingPeriod.valueOf(in.readUTF()) : null;
+        this.recurringPrice = (DefaultInternationalPrice) in.readObject();
     }
 }

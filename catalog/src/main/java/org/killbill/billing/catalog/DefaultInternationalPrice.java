@@ -1,7 +1,9 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
+ * Copyright 2014-2018 Groupon, Inc
+ * Copyright 2014-2018 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -16,6 +18,10 @@
 
 package org.killbill.billing.catalog;
 
+import java.io.Externalizable;
+import java.io.IOException;
+import java.io.ObjectInput;
+import java.io.ObjectOutput;
 import java.math.BigDecimal;
 import java.net.URI;
 import java.util.Arrays;
@@ -35,21 +41,18 @@ import org.killbill.xmlloader.ValidatingConfig;
 import org.killbill.xmlloader.ValidationErrors;
 
 @XmlAccessorType(XmlAccessType.NONE)
-public class DefaultInternationalPrice extends ValidatingConfig<StandaloneCatalog> implements InternationalPrice {
+public class DefaultInternationalPrice extends ValidatingConfig<StandaloneCatalog> implements InternationalPrice, Externalizable {
 
     // No prices is a zero cost plan in all currencies
     @XmlElement(name = "price", required = false)
     private DefaultPrice[] prices;
 
-
-    /* (non-Javadoc)
-      * @see org.killbill.billing.catalog.InternationalPrice#getPrices()
-      */
     @Override
     public Price[] getPrices() {
         return prices;
     }
 
+    // Required for deserialization
     public DefaultInternationalPrice() {}
 
     public DefaultInternationalPrice(final DefaultInternationalPrice in, final PlanPhasePriceOverride override, final boolean fixed) {
@@ -61,7 +64,7 @@ public class DefaultInternationalPrice extends ValidatingConfig<StandaloneCatalo
             this.prices = new DefaultPrice[in.getPrices().length];
             // There is a question on whether we keep the other prices that were not overridden or only have one entry for the overridden price on that currency.
             for (int i = 0; i < in.getPrices().length; i++) {
-                final DefaultPrice curPrice = (DefaultPrice)  in.getPrices()[i];
+                final DefaultPrice curPrice = (DefaultPrice) in.getPrices()[i];
                 if (curPrice.getCurrency().equals(override.getCurrency())) {
                     prices[i] = new DefaultPrice(fixed ? override.getFixedPrice() : override.getRecurringPrice(), override.getCurrency());
                 } else {
@@ -74,8 +77,8 @@ public class DefaultInternationalPrice extends ValidatingConfig<StandaloneCatalo
     public DefaultInternationalPrice(final DefaultInternationalPrice in, final BigDecimal overriddenPrice, final Currency currency) {
         this.prices = in.getPrices() != null ? new DefaultPrice[in.getPrices().length] : null;
         for (int i = 0; i < in.getPrices().length; i++) {
-            final DefaultPrice curPrice = (DefaultPrice)  in.getPrices()[i];
-            if (curPrice.getCurrency().equals(currency)){
+            final DefaultPrice curPrice = (DefaultPrice) in.getPrices()[i];
+            if (curPrice.getCurrency().equals(currency)) {
                 prices[i] = new DefaultPrice(overriddenPrice, currency);
             } else {
                 prices[i] = curPrice;
@@ -83,9 +86,6 @@ public class DefaultInternationalPrice extends ValidatingConfig<StandaloneCatalo
         }
     }
 
-    /* (non-Javadoc)
-      * @see org.killbill.billing.catalog.IInternationalPrice#getPrice(org.killbill.billing.catalog.api.Currency)
-      */
     @Override
     public BigDecimal getPrice(final Currency currency) throws CatalogApiException {
         if (prices.length == 0) {
@@ -104,7 +104,6 @@ public class DefaultInternationalPrice extends ValidatingConfig<StandaloneCatalo
         this.prices = prices;
         return this;
     }
-
 
     @Override
     public ValidationErrors validate(final StandaloneCatalog catalog, final ValidationErrors errors) {
@@ -134,13 +133,11 @@ public class DefaultInternationalPrice extends ValidatingConfig<StandaloneCatalo
         return false;
     }
 
-
     @Override
     public void initialize(final StandaloneCatalog root, final URI uri) {
         super.initialize(root, uri);
         CatalogSafetyInitializer.initializeNonRequiredNullFieldsWithDefaultValue(this);
     }
-
 
     @Override
     public boolean isZero() {
@@ -177,5 +174,15 @@ public class DefaultInternationalPrice extends ValidatingConfig<StandaloneCatalo
     @Override
     public int hashCode() {
         return prices != null ? Arrays.hashCode(prices) : 0;
+    }
+
+    @Override
+    public void writeExternal(final ObjectOutput out) throws IOException {
+        out.writeObject(prices);
+    }
+
+    @Override
+    public void readExternal(final ObjectInput in) throws IOException, ClassNotFoundException {
+        this.prices = (DefaultPrice[]) in.readObject();
     }
 }

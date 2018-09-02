@@ -18,6 +18,10 @@
 
 package org.killbill.billing.catalog.rules;
 
+import java.io.Externalizable;
+import java.io.IOException;
+import java.io.ObjectInput;
+import java.io.ObjectOutput;
 import java.net.URI;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -54,7 +58,7 @@ import org.killbill.xmlloader.ValidationErrors;
 import com.google.common.collect.ImmutableList;
 
 @XmlAccessorType(XmlAccessType.NONE)
-public class DefaultPlanRules extends ValidatingConfig<StandaloneCatalog> implements PlanRules {
+public class DefaultPlanRules extends ValidatingConfig<StandaloneCatalog> implements PlanRules, Externalizable {
 
     @XmlElementWrapper(name = "changePolicy")
     @XmlElement(name = "changePolicyCase", required = false)
@@ -79,6 +83,10 @@ public class DefaultPlanRules extends ValidatingConfig<StandaloneCatalog> implem
     @XmlElementWrapper(name = "priceList")
     @XmlElement(name = "priceListCase", required = false)
     private DefaultCasePriceList[] priceListCase;
+
+    // Required for deserialization
+    public DefaultPlanRules() {
+    }
 
     @Override
     public Iterable<CaseChangePlanPolicy> getCaseChangePlanPolicy() {
@@ -136,7 +144,6 @@ public class DefaultPlanRules extends ValidatingConfig<StandaloneCatalog> implem
         final PlanSpecifier toWithPriceList = to.getPlanName() == null ?
                                               new PlanSpecifier(to.getProductName(), to.getBillingPeriod(), toPriceList.getName()) :
                                               to;
-
 
         final BillingActionPolicy policy = getPlanChangePolicy(from, toWithPriceList, catalog);
         if (policy == BillingActionPolicy.ILLEGAL) {
@@ -220,7 +227,6 @@ public class DefaultPlanRules extends ValidatingConfig<StandaloneCatalog> implem
             errors.add(new ValidationError("Missing default rule case for plan cancellation", catalog.getCatalogURI(), DefaultPlanRules.class, ""));
         }
 
-
         final HashSet<DefaultCaseChangePlanAlignment> caseChangePlanAlignmentsSet = new HashSet<DefaultCaseChangePlanAlignment>();
         for (final DefaultCaseChangePlanAlignment cur : changeAlignmentCase) {
             if (caseChangePlanAlignmentsSet.contains(cur)) {
@@ -263,7 +269,6 @@ public class DefaultPlanRules extends ValidatingConfig<StandaloneCatalog> implem
         return errors;
     }
 
-
     @Override
     public void initialize(final StandaloneCatalog catalog, final URI sourceURI) {
         super.initialize(catalog, sourceURI);
@@ -288,7 +293,6 @@ public class DefaultPlanRules extends ValidatingConfig<StandaloneCatalog> implem
             cur.initialize(catalog, sourceURI);
         }
     }
-
 
     /////////////////////////////////////////////////////////////////////////////////////
     // Setters for testing
@@ -368,5 +372,25 @@ public class DefaultPlanRules extends ValidatingConfig<StandaloneCatalog> implem
         result = 31 * result + (billingAlignmentCase != null ? Arrays.hashCode(billingAlignmentCase) : 0);
         result = 31 * result + (priceListCase != null ? Arrays.hashCode(priceListCase) : 0);
         return result;
+    }
+
+    @Override
+    public void writeExternal(final ObjectOutput out) throws IOException {
+        out.writeObject(changeCase);
+        out.writeObject(changeAlignmentCase);
+        out.writeObject(cancelCase);
+        out.writeObject(createAlignmentCase);
+        out.writeObject(billingAlignmentCase);
+        out.writeObject(priceListCase);
+    }
+
+    @Override
+    public void readExternal(final ObjectInput in) throws IOException, ClassNotFoundException {
+        this.changeCase = (DefaultCaseChangePlanPolicy[]) in.readObject();
+        this.changeAlignmentCase = (DefaultCaseChangePlanAlignment[]) in.readObject();
+        this.cancelCase = (DefaultCaseCancelPolicy[]) in.readObject();
+        this.createAlignmentCase = (DefaultCaseCreateAlignment[]) in.readObject();
+        this.billingAlignmentCase = (DefaultCaseBillingAlignment[]) in.readObject();
+        this.priceListCase = (DefaultCasePriceList[]) in.readObject();
     }
 }

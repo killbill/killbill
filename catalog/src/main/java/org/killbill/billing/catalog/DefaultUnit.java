@@ -1,7 +1,9 @@
 /*
- * Copyright 2010-2011 Ning, Inc.
+ * Copyright 2010-2013 Ning, Inc.
+ * Copyright 2014-2018 Groupon, Inc
+ * Copyright 2014-2018 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -16,6 +18,10 @@
 
 package org.killbill.billing.catalog;
 
+import java.io.Externalizable;
+import java.io.IOException;
+import java.io.ObjectInput;
+import java.io.ObjectOutput;
 import java.net.URI;
 
 import javax.xml.bind.annotation.XmlAccessType;
@@ -28,7 +34,7 @@ import org.killbill.xmlloader.ValidatingConfig;
 import org.killbill.xmlloader.ValidationErrors;
 
 @XmlAccessorType(XmlAccessType.NONE)
-public class DefaultUnit extends ValidatingConfig<StandaloneCatalog> implements Unit {
+public class DefaultUnit extends ValidatingConfig<StandaloneCatalog> implements Unit, Externalizable {
 
     @XmlAttribute(required = true)
     @XmlID
@@ -37,9 +43,6 @@ public class DefaultUnit extends ValidatingConfig<StandaloneCatalog> implements 
     @XmlAttribute(required = false)
     private String prettyName;
 
-    /* (non-Javadoc)
-     * @see org.killbill.billing.catalog.Unit#getName()
-     */
     @Override
     public String getName() {
         return name;
@@ -55,6 +58,9 @@ public class DefaultUnit extends ValidatingConfig<StandaloneCatalog> implements 
         return errors;
     }
 
+    // Required for deserialization
+    public DefaultUnit() {
+    }
 
     @Override
     public void initialize(final StandaloneCatalog catalog, final URI sourceURI) {
@@ -96,5 +102,17 @@ public class DefaultUnit extends ValidatingConfig<StandaloneCatalog> implements 
     @Override
     public int hashCode() {
         return name != null ? name.hashCode() : 0;
+    }
+
+    @Override
+    public void writeExternal(final ObjectOutput out) throws IOException {
+        out.writeUTF(name);
+        out.writeUTF(prettyName);
+    }
+
+    @Override
+    public void readExternal(final ObjectInput in) throws IOException, ClassNotFoundException {
+        this.name = in.readUTF();
+        this.prettyName = in.readUTF();
     }
 }
