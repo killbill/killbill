@@ -118,19 +118,6 @@ public class DefaultOverdueCondition extends ValidatingConfig<DefaultOverdueConf
     }
 
     @Override
-    public void initialize(final DefaultOverdueConfig root, final URI uri) {
-    }
-
-    public Duration getTimeOffset() {
-        if (timeSinceEarliestUnpaidInvoiceEqualsOrExceeds != null) {
-            return timeSinceEarliestUnpaidInvoiceEqualsOrExceeds;
-        } else {
-            return new DefaultDuration().setUnit(TimeUnit.DAYS).setNumber(0); // zero time
-        }
-
-    }
-
-    @Override
     public Integer getNumberOfUnpaidInvoicesEqualsOrExceeds() {
         return numberOfUnpaidInvoicesEqualsOrExceeds;
     }

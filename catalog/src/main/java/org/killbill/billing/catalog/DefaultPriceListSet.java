@@ -22,7 +22,6 @@ import java.io.Externalizable;
 import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
-import java.net.URI;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -104,7 +103,7 @@ public class DefaultPriceListSet extends ValidatingConfig<StandaloneCatalog> imp
         for (final DefaultPriceList pl : childPriceLists) {
             if (pl.getName().equals(PriceListSet.DEFAULT_PRICELIST_NAME)) {
                 errors.add(new ValidationError("Pricelists cannot use the reserved name '" + PriceListSet.DEFAULT_PRICELIST_NAME + "'",
-                                               catalog.getCatalogURI(), DefaultPriceListSet.class, pl.getName()));
+                                               DefaultPriceListSet.class, pl.getName()));
             }
             pl.validate(catalog, errors); // and validate the individual pricelists
         }
@@ -112,8 +111,8 @@ public class DefaultPriceListSet extends ValidatingConfig<StandaloneCatalog> imp
     }
 
     @Override
-    public void initialize(final StandaloneCatalog catalog, final URI sourceURI) {
-        super.initialize(catalog, sourceURI);
+    public void initialize(final StandaloneCatalog catalog) {
+        super.initialize(catalog);
         CatalogSafetyInitializer.initializeNonRequiredNullFieldsWithDefaultValue(this);
     }
 

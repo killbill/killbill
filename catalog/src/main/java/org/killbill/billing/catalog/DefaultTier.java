@@ -21,7 +21,6 @@ import java.io.Externalizable;
 import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
-import java.net.URI;
 import java.util.Arrays;
 
 import javax.xml.bind.annotation.XmlAccessType;
@@ -154,25 +153,25 @@ public class DefaultTier extends ValidatingConfig<StandaloneCatalog> implements 
     public ValidationErrors validate(final StandaloneCatalog catalog, final ValidationErrors errors) {
         if (billingMode == BillingMode.IN_ARREAR && usageType == UsageType.CAPACITY && limits.length == 0) {
             errors.add(new ValidationError(String.format("Usage [IN_ARREAR CAPACITY] section of phase %s needs to define some limits",
-                                                         phase.getName()), catalog.getCatalogURI(), DefaultUsage.class, ""));
+                                                         phase.getName()), DefaultUsage.class, ""));
         }
         if (billingMode == BillingMode.IN_ARREAR && usageType == UsageType.CONSUMABLE && blocks.length == 0) {
             errors.add(new ValidationError(String.format("Usage [IN_ARREAR CONSUMABLE] section of phase %s needs to define some blocks",
-                                                         phase.getName()), catalog.getCatalogURI(), DefaultUsage.class, ""));
+                                                         phase.getName()), DefaultUsage.class, ""));
         }
         validateCollection(catalog, errors, limits);
         return errors;
     }
 
     @Override
-    public void initialize(final StandaloneCatalog catalog, final URI sourceURI) {
-        super.initialize(catalog, sourceURI);
+    public void initialize(final StandaloneCatalog catalog) {
+        super.initialize(catalog);
         CatalogSafetyInitializer.initializeNonRequiredNullFieldsWithDefaultValue(this);
         for (DefaultLimit cur : limits) {
-            cur.initialize(catalog, sourceURI);
+            cur.initialize(catalog);
         }
         for (DefaultBlock cur : blocks) {
-            cur.initialize(catalog, sourceURI);
+            cur.initialize(catalog);
         }
     }
 

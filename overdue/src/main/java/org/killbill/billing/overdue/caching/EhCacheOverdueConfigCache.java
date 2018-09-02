@@ -116,11 +116,8 @@ public class EhCacheOverdueConfigCache implements OverdueConfigCache {
             @Override
             public OverdueConfig loadOverdueConfig(final String overdueConfigXML) throws OverdueApiException {
                 final InputStream overdueConfigStream = new ByteArrayInputStream(overdueConfigXML.getBytes());
-                final URI uri;
                 try {
-                    uri = new URI("/overdueConfig");
-                    final DefaultOverdueConfig overdueConfig = XMLLoader.getObjectFromStream(uri, overdueConfigStream, DefaultOverdueConfig.class);
-                    return overdueConfig;
+                    return XMLLoader.getObjectFromStream(overdueConfigStream, DefaultOverdueConfig.class);
                 } catch (final Exception e) {
                     throw new OverdueApiException(ErrorCode.OVERDUE_INVALID_FOR_TENANT, "Problem encountered loading overdue config ", e);
                 }

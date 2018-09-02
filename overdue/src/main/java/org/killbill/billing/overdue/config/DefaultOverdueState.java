@@ -172,7 +172,7 @@ public class DefaultOverdueState extends ValidatingConfig<DefaultOverdueConfig> 
     public ValidationErrors validate(final DefaultOverdueConfig root,
                                      final ValidationErrors errors) {
         if (name.length() > MAX_NAME_LENGTH) {
-            errors.add(new ValidationError(String.format("Name of state '%s' exceeds the maximum length of %d", name, MAX_NAME_LENGTH), root.getURI(), DefaultOverdueState.class, name));
+            errors.add(new ValidationError(String.format("Name of state '%s' exceeds the maximum length of %d", name, MAX_NAME_LENGTH), DefaultOverdueState.class, name));
         }
         return errors;
     }

@@ -22,7 +22,6 @@ import java.io.Externalizable;
 import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
-import java.net.URI;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
@@ -58,10 +57,6 @@ public class DefaultOverdueConfig extends ValidatingConfig<DefaultOverdueConfig>
     public DefaultOverdueConfig setOverdueStates(final DefaultOverdueStatesAccount accountOverdueStates) {
         this.accountOverdueStates = accountOverdueStates;
         return this;
-    }
-
-    public URI getURI() {
-        return null;
     }
 
     @Override

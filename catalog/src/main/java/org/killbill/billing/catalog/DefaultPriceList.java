@@ -107,8 +107,8 @@ public class DefaultPriceList extends ValidatingConfig<StandaloneCatalog> implem
     }
 
     @Override
-    public void initialize(final StandaloneCatalog catalog, final URI sourceURI) {
-        super.initialize(catalog, sourceURI);
+    public void initialize(final StandaloneCatalog catalog) {
+        super.initialize(catalog);
         CatalogSafetyInitializer.initializeNonRequiredNullFieldsWithDefaultValue(this);
 
         if (prettyName == null) {

@@ -22,7 +22,6 @@ import java.io.Externalizable;
 import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
-import java.net.URI;
 import java.util.Arrays;
 import java.util.Collection;
 
@@ -161,11 +160,11 @@ public class DefaultProduct extends ValidatingConfig<StandaloneCatalog> implemen
     }
 
     @Override
-    public void initialize(final StandaloneCatalog catalog, final URI sourceURI) {
-        super.initialize(catalog, sourceURI);
+    public void initialize(final StandaloneCatalog catalog) {
+        super.initialize(catalog);
         CatalogSafetyInitializer.initializeNonRequiredNullFieldsWithDefaultValue(this);
         for (final DefaultLimit cur : limits) {
-            cur.initialize(catalog, sourceURI);
+            cur.initialize(catalog);
         }
         if (prettyName == null) {
             this.prettyName = name;
@@ -176,7 +175,7 @@ public class DefaultProduct extends ValidatingConfig<StandaloneCatalog> implemen
     @Override
     public ValidationErrors validate(final StandaloneCatalog catalog, final ValidationErrors errors) {
         if (catalogName == null || !catalogName.equals(catalog.getCatalogName())) {
-            errors.add(new ValidationError(String.format("Invalid catalogName for product '%s'", name), catalog.getCatalogURI(), DefaultProduct.class, ""));
+            errors.add(new ValidationError(String.format("Invalid catalogName for product '%s'", name), DefaultProduct.class, ""));
 
         }
         //TODO: MDW validation: inclusion and exclusion lists can only contain addon products

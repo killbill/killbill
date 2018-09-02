@@ -21,7 +21,6 @@ import java.io.Externalizable;
 import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
-import java.net.URI;
 import java.util.Arrays;
 import java.util.List;
 
@@ -214,16 +213,16 @@ public class DefaultUsage extends ValidatingConfig<StandaloneCatalog> implements
     public ValidationErrors validate(final StandaloneCatalog catalog, final ValidationErrors errors) {
         if (billingMode == BillingMode.IN_ADVANCE && usageType == UsageType.CAPACITY && limits.length == 0) {
             errors.add(new ValidationError(String.format("Usage [IN_ADVANCE CAPACITY] section of phase %s needs to define some limits",
-                                                         phase.toString()), catalog.getCatalogURI(), DefaultUsage.class, ""));
+                                                         phase.toString()), DefaultUsage.class, ""));
         }
         if (billingMode == BillingMode.IN_ADVANCE && usageType == UsageType.CONSUMABLE && blocks.length == 0) {
             errors.add(new ValidationError(String.format("Usage [IN_ADVANCE CONSUMABLE] section of phase %s needs to define some blocks",
-                                                         phase.toString()), catalog.getCatalogURI(), DefaultUsage.class, ""));
+                                                         phase.toString()), DefaultUsage.class, ""));
         }
 
         if (billingMode == BillingMode.IN_ARREAR && tiers.length == 0) {
             errors.add(new ValidationError(String.format("Usage [IN_ARREAR] section of phase %s needs to define some tiers",
-                                                         phase.toString()), catalog.getCatalogURI(), DefaultUsage.class, ""));
+                                                         phase.toString()), DefaultUsage.class, ""));
         }
         validateCollection(catalog, errors, limits);
         validateCollection(catalog, errors, tiers);
@@ -231,8 +230,8 @@ public class DefaultUsage extends ValidatingConfig<StandaloneCatalog> implements
     }
 
     @Override
-    public void initialize(final StandaloneCatalog root, final URI uri) {
-        super.initialize(root, uri);
+    public void initialize(final StandaloneCatalog root) {
+        super.initialize(root);
         CatalogSafetyInitializer.initializeNonRequiredNullFieldsWithDefaultValue(this);
 
         if (prettyName == null) {
@@ -240,15 +239,15 @@ public class DefaultUsage extends ValidatingConfig<StandaloneCatalog> implements
         }
 
         for (DefaultLimit limit : limits) {
-            limit.initialize(root, uri);
+            limit.initialize(root);
         }
         for (DefaultBlock block : blocks) {
-            block.initialize(root, uri);
+            block.initialize(root);
             block.setPhase(phase);
         }
 
         for (DefaultTier tier : tiers) {
-            tier.initialize(root, uri);
+            tier.initialize(root);
             tier.setPhase(phase);
         }
     }

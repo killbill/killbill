@@ -77,7 +77,7 @@ public abstract class DefaultOverdueStateSet extends ValidatingConfig<DefaultOve
         } catch (OverdueApiException e) {
             if (e.getCode() == ErrorCode.CAT_MISSING_CLEAR_STATE.getCode()) {
                 errors.add("Overdue state set is missing a clear state.",
-                           root.getURI(), this.getClass(), "");
+                           this.getClass(), "");
             }
         }
 

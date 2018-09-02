@@ -64,11 +64,11 @@ public class DefaultFixed extends ValidatingConfig<StandaloneCatalog> implements
     }
 
     @Override
-    public void initialize(final StandaloneCatalog root, final URI uri) {
-        super.initialize(root, uri);
+    public void initialize(final StandaloneCatalog root) {
+        super.initialize(root);
         CatalogSafetyInitializer.initializeNonRequiredNullFieldsWithDefaultValue(this);
         if (fixedPrice != null) {
-            fixedPrice.initialize(root, uri);
+            fixedPrice.initialize(root);
         }
     }
 

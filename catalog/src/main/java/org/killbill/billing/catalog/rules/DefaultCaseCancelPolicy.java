@@ -51,7 +51,7 @@ public class DefaultCaseCancelPolicy extends DefaultCasePhase<BillingActionPolic
     public ValidationErrors validate(final StandaloneCatalog catalog, final ValidationErrors errors) {
         if (policy == BillingActionPolicy.START_OF_TERM) {
             errors.add(new ValidationError("Default catalog START_OF_TERM has not been implemented, such policy can be used during cancellation by overriding policy",
-                                           catalog.getCatalogURI(), DefaultCaseCancelPolicy.class, ""));
+                                           DefaultCaseCancelPolicy.class, ""));
         }
         return errors;
     }

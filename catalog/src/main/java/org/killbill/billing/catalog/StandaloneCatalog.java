@@ -22,7 +22,6 @@ import java.io.Externalizable;
 import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
-import java.net.URI;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -95,8 +94,6 @@ public class StandaloneCatalog extends ValidatingConfig<StandaloneCatalog> imple
     @XmlElement(name = "priceLists", required = true)
     private DefaultPriceListSet priceLists;
 
-    private URI catalogURI;
-
     public StandaloneCatalog() {
         this.plans = new CatalogEntityCollection<Plan>();
         this.products = new CatalogEntityCollection<Product>();
@@ -158,10 +155,6 @@ public class StandaloneCatalog extends ValidatingConfig<StandaloneCatalog> imple
         return (products == null || products.isEmpty()) &&
                (plans == null || plans.isEmpty()) &&
                (supportedCurrencies == null || supportedCurrencies.length == 0);
-    }
-
-    public URI getCatalogURI() {
-        return catalogURI;
     }
 
     public DefaultPlanRules getPlanRules() {
@@ -298,22 +291,20 @@ public class StandaloneCatalog extends ValidatingConfig<StandaloneCatalog> imple
     }
 
     @Override
-    public void initialize(final StandaloneCatalog catalog, final URI sourceURI) {
-
-        super.initialize(catalog, sourceURI);
+    public void initialize(final StandaloneCatalog catalog) {
+        super.initialize(catalog);
         CatalogSafetyInitializer.initializeNonRequiredNullFieldsWithDefaultValue(this);
 
-        catalogURI = sourceURI;
-        planRules.initialize(catalog, sourceURI);
-        priceLists.initialize(catalog, sourceURI);
+        planRules.initialize(catalog);
+        priceLists.initialize(catalog);
         for (final DefaultUnit cur : units) {
-            cur.initialize(catalog, sourceURI);
+            cur.initialize(catalog);
         }
         for (final Product p : products.getEntries()) {
-            ((DefaultProduct) p).initialize(catalog, sourceURI);
+            ((DefaultProduct) p).initialize(catalog);
         }
         for (final Plan p : plans.getEntries()) {
-            ((DefaultPlan) p).initialize(catalog, sourceURI);
+            ((DefaultPlan) p).initialize(catalog);
         }
     }
 
@@ -405,9 +396,6 @@ public class StandaloneCatalog extends ValidatingConfig<StandaloneCatalog> imple
         if (catalogName != null ? !catalogName.equals(that.catalogName) : that.catalogName != null) {
             return false;
         }
-        if (catalogURI != null ? !catalogURI.equals(that.catalogURI) : that.catalogURI != null) {
-            return false;
-        }
         if (effectiveDate != null ? !effectiveDate.equals(that.effectiveDate) : that.effectiveDate != null) {
             return false;
         }
@@ -446,7 +434,6 @@ public class StandaloneCatalog extends ValidatingConfig<StandaloneCatalog> imple
         result = 31 * result + (planRules != null ? planRules.hashCode() : 0);
         result = 31 * result + (plans != null ? plans.hashCode() : 0);
         result = 31 * result + (priceLists != null ? priceLists.hashCode() : 0);
-        result = 31 * result + (catalogURI != null ? catalogURI.hashCode() : 0);
         return result;
     }
 

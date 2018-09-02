@@ -23,7 +23,6 @@ import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
 import java.math.BigDecimal;
-import java.net.URI;
 import java.util.Arrays;
 
 import javax.xml.bind.annotation.XmlAccessType;
@@ -111,11 +110,11 @@ public class DefaultInternationalPrice extends ValidatingConfig<StandaloneCatalo
         for (final Price p : prices) {
             final Currency currency = p.getCurrency();
             if (!currencyIsSupported(currency, supportedCurrencies)) {
-                errors.add("Unsupported currency: " + currency, catalog.getCatalogURI(), this.getClass(), "");
+                errors.add("Unsupported currency: " + currency, this.getClass(), "");
             }
             try {
                 if (p.getValue().doubleValue() < 0.0) {
-                    errors.add("Negative value for price in currency: " + currency, catalog.getCatalogURI(), this.getClass(), "");
+                    errors.add("Negative value for price in currency: " + currency, this.getClass(), "");
                 }
             } catch (CurrencyValueNull e) {
                 // No currency => nothing to check, ignore exception
@@ -134,8 +133,8 @@ public class DefaultInternationalPrice extends ValidatingConfig<StandaloneCatalo
     }
 
     @Override
-    public void initialize(final StandaloneCatalog root, final URI uri) {
-        super.initialize(root, uri);
+    public void initialize(final StandaloneCatalog root) {
+        super.initialize(root);
         CatalogSafetyInitializer.initializeNonRequiredNullFieldsWithDefaultValue(this);
     }
 

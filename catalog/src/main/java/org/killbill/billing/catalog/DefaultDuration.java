@@ -22,7 +22,6 @@ import java.io.Externalizable;
 import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
-import java.net.URI;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
@@ -115,17 +114,17 @@ public class DefaultDuration extends ValidatingConfig<StandaloneCatalog> impleme
         //Validation: TimeUnit UNLIMITED if number == -1
         if ((unit == TimeUnit.UNLIMITED && !CatalogSafetyInitializer.DEFAULT_NON_REQUIRED_INTEGER_FIELD_VALUE.equals(number))) {
             errors.add(new ValidationError("Duration can only have 'UNLIMITED' unit if the number is omitted",
-                                           catalog.getCatalogURI(), DefaultDuration.class, ""));
+                                           DefaultDuration.class, ""));
         } else if ((unit != TimeUnit.UNLIMITED) && CatalogSafetyInitializer.DEFAULT_NON_REQUIRED_INTEGER_FIELD_VALUE.equals(number)) {
             errors.add(new ValidationError("Finite Duration must have a well defined length",
-                                           catalog.getCatalogURI(), DefaultDuration.class, ""));
+                                           DefaultDuration.class, ""));
         }
         return errors;
     }
 
     @Override
-    public void initialize(final StandaloneCatalog root, final URI uri) {
-        super.initialize(root, uri);
+    public void initialize(final StandaloneCatalog root) {
+        super.initialize(root);
         CatalogSafetyInitializer.initializeNonRequiredNullFieldsWithDefaultValue(this);
     }
 

@@ -106,7 +106,7 @@ public class EhCacheOverriddenPlanCache implements OverriddenPlanCache {
         final DefaultPlan defaultPlan = catalog.findCurrentPlan(parentPlanName);
         final PlanPhasePriceOverride[] overrides = createOverrides(defaultPlan, phaseDefs, context);
         final DefaultPlan result = new DefaultPlan(catalog, planName, defaultPlan, overrides);
-        result.initialize(catalog, catalog.getCatalogURI());
+        result.initialize(catalog);
         return result;
     }
 

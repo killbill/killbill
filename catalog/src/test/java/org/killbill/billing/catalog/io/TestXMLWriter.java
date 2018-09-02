@@ -71,7 +71,7 @@ public class TestXMLWriter extends CatalogTestSuiteNoDB {
         final String oldCatalogStr = XMLWriter.writeXML(catalog, StandaloneCatalog.class);
         //System.err.println(oldCatalogStr);
 
-        final StandaloneCatalog oldCatalog = XMLLoader.getObjectFromStream(new URI("dummy"), new ByteArrayInputStream(oldCatalogStr.getBytes(Charset.forName("UTF-8"))), StandaloneCatalog.class);
+        final StandaloneCatalog oldCatalog = XMLLoader.getObjectFromStream(new ByteArrayInputStream(oldCatalogStr.getBytes(Charset.forName("UTF-8"))), StandaloneCatalog.class);
         final String oldCatalogStr2 = XMLWriter.writeXML(oldCatalog, StandaloneCatalog.class);
         assertEquals(oldCatalogStr2, oldCatalogStr);
     }
@@ -85,7 +85,7 @@ public class TestXMLWriter extends CatalogTestSuiteNoDB {
         final DefaultProduct newProduct = new DefaultProduct();
         newProduct.setName("Dynamic");
         newProduct.setCatagory(ProductCategory.BASE);
-        newProduct.initialize((StandaloneCatalog) mutableCatalog, new URI("dummy"));
+        newProduct.initialize((StandaloneCatalog) mutableCatalog);
 
         mutableCatalog.addProduct(newProduct);
 
@@ -108,10 +108,10 @@ public class TestXMLWriter extends CatalogTestSuiteNoDB {
         newPlan.setRecurringBillingMode(BillingMode.IN_ADVANCE);
         // TODO Ordering breaks
         mutableCatalog.addPlan(newPlan);
-        newPlan.initialize((StandaloneCatalog) mutableCatalog, new URI("dummy"));
+        newPlan.initialize((StandaloneCatalog) mutableCatalog);
 
         final String newCatalogStr = XMLWriter.writeXML((StandaloneCatalog) mutableCatalog, StandaloneCatalog.class);
-        final StandaloneCatalog newCatalog = XMLLoader.getObjectFromStream(new URI("dummy"), new ByteArrayInputStream(newCatalogStr.getBytes(Charset.forName("UTF-8"))), StandaloneCatalog.class);
+        final StandaloneCatalog newCatalog = XMLLoader.getObjectFromStream(new ByteArrayInputStream(newCatalogStr.getBytes(Charset.forName("UTF-8"))), StandaloneCatalog.class);
         assertEquals(newCatalog.getCurrentPlans().size(), catalog.getCurrentPlans().size() + 1);
 
         final Plan plan = newCatalog.findCurrentPlan("dynamic-monthly");

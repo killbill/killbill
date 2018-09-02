@@ -22,7 +22,6 @@ import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
 import java.math.BigDecimal;
-import java.net.URI;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
@@ -101,7 +100,7 @@ public class DefaultBlock extends ValidatingConfig<StandaloneCatalog> implements
 
         if (type == BlockType.TOP_UP && CatalogSafetyInitializer.DEFAULT_NON_REQUIRED_DOUBLE_FIELD_VALUE.equals(minTopUpCredit)) {
             errors.add(new ValidationError(String.format("TOP_UP block needs to define minTopUpCredit for phase %s",
-                                                         phase.getName()), catalog.getCatalogURI(), DefaultUsage.class, ""));
+                                                         phase.getName()), DefaultUsage.class, ""));
         }
         return errors;
     }
@@ -116,8 +115,8 @@ public class DefaultBlock extends ValidatingConfig<StandaloneCatalog> implements
     }
 
     @Override
-    public void initialize(final StandaloneCatalog catalog, final URI sourceURI) {
-        super.initialize(catalog, sourceURI);
+    public void initialize(final StandaloneCatalog catalog) {
+        super.initialize(catalog);
         CatalogSafetyInitializer.initializeNonRequiredNullFieldsWithDefaultValue(this);
     }
 

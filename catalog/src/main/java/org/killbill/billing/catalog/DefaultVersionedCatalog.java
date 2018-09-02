@@ -22,7 +22,6 @@ import java.io.Externalizable;
 import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
-import java.net.URI;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -70,7 +69,7 @@ public class DefaultVersionedCatalog extends ValidatingConfig<DefaultVersionedCa
 
     private static final long serialVersionUID = 3181874902672322725L;
 
-    private final Clock clock;
+    private Clock clock;
 
     @XmlElementWrapper(name = "versions", required = true)
     @XmlElement(name = "version", required = true)
@@ -331,13 +330,13 @@ public class DefaultVersionedCatalog extends ValidatingConfig<DefaultVersionedCa
     }
 
     @Override
-    public void initialize(final DefaultVersionedCatalog catalog, final URI sourceURI) {
+    public void initialize(final DefaultVersionedCatalog catalog) {
         //
         // Initialization is performed first on each StandaloneCatalog (XMLLoader#initializeAndValidate)
         // and then later on the VersionedCatalog, so we only initialize and validate VersionedCatalog
         // *without** recursively through each StandaloneCatalog
         //
-        super.initialize(catalog, sourceURI);
+        super.initialize(catalog);
         CatalogSafetyInitializer.initializeNonRequiredNullFieldsWithDefaultValue(this);
     }
 
@@ -348,13 +347,13 @@ public class DefaultVersionedCatalog extends ValidatingConfig<DefaultVersionedCa
         for (final StandaloneCatalog c : versions) {
             if (effectiveDates.contains(c.getEffectiveDate())) {
                 errors.add(new ValidationError(String.format("Catalog effective date '%s' already exists for a previous version", c.getEffectiveDate()),
-                                               c.getCatalogURI(), VersionedCatalog.class, ""));
+                                               VersionedCatalog.class, ""));
             } else {
                 effectiveDates.add(c.getEffectiveDate());
             }
             if (!c.getCatalogName().equals(catalogName)) {
                 errors.add(new ValidationError(String.format("Catalog name '%s' is not consistent across versions ", c.getCatalogName()),
-                                               c.getCatalogURI(), VersionedCatalog.class, ""));
+                                               VersionedCatalog.class, ""));
             }
             errors.addAll(c.validate(c, errors));
         }
@@ -488,6 +487,10 @@ public class DefaultVersionedCatalog extends ValidatingConfig<DefaultVersionedCa
         int result = versions != null ? versions.hashCode() : 0;
         result = 31 * result + (catalogName != null ? catalogName.hashCode() : 0);
         return result;
+    }
+
+    public void refreshPostDeserialization(final Clock clock) {
+        this.clock = clock;
     }
 
     private static class CatalogPlanEntry {

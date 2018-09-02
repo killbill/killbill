@@ -22,7 +22,6 @@ import java.io.Externalizable;
 import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
-import java.net.URI;
 import java.util.Arrays;
 
 import javax.annotation.Nullable;
@@ -40,6 +39,7 @@ import org.killbill.billing.catalog.api.PhaseType;
 import org.killbill.billing.catalog.api.Plan;
 import org.killbill.billing.catalog.api.PlanPhase;
 import org.killbill.billing.catalog.api.PlanPhasePriceOverride;
+import org.killbill.billing.catalog.api.Product;
 import org.killbill.billing.catalog.api.Recurring;
 import org.killbill.billing.catalog.api.Usage;
 import org.killbill.billing.catalog.api.UsagePriceOverride;
@@ -73,14 +73,15 @@ public class DefaultPlanPhase extends ValidatingConfig<StandaloneCatalog> implem
     private DefaultUsage[] usages;
 
     // Not exposed in XML
-    private Plan plan;
+    private String planName;
+    private Product product;
 
     // Required for deserialization
     public DefaultPlanPhase() {
         this.usages = new DefaultUsage[0];
     }
 
-    public DefaultPlanPhase(final DefaultPlan parentPlan, final DefaultPlanPhase in, @Nullable final PlanPhasePriceOverride override) {
+    public DefaultPlanPhase(final Plan parentPlan, final DefaultPlanPhase in, @Nullable final PlanPhasePriceOverride override) {
         this.type = in.getPhaseType();
         this.duration = (DefaultDuration) in.getDuration();
         this.fixed = override != null && override.getFixedPrice() != null ? new DefaultFixed((DefaultFixed) in.getFixed(), override) : (DefaultFixed) in.getFixed();
@@ -100,7 +101,8 @@ public class DefaultPlanPhase extends ValidatingConfig<StandaloneCatalog> implem
                 usages[i] = (DefaultUsage) curUsage;
             }
         }
-        this.plan = parentPlan;
+        this.planName = parentPlan.getName();
+        this.product = parentPlan.getProduct();
     }
 
     public static String phaseName(final String planName, final PhaseType phasetype) {
@@ -130,7 +132,7 @@ public class DefaultPlanPhase extends ValidatingConfig<StandaloneCatalog> implem
             }
         }
         // Second, check if there are limits defined at the product section.
-        return plan.getProduct().compliesWithLimits(unit, value);
+        return product.compliesWithLimits(unit, value);
     }
 
     @Override
@@ -150,7 +152,7 @@ public class DefaultPlanPhase extends ValidatingConfig<StandaloneCatalog> implem
 
     @Override
     public String getName() {
-        return phaseName(plan.getName(), this.getPhaseType());
+        return phaseName(planName, this.getPhaseType());
     }
 
     @Override
@@ -165,15 +167,14 @@ public class DefaultPlanPhase extends ValidatingConfig<StandaloneCatalog> implem
 
     @Override
     public ValidationErrors validate(final StandaloneCatalog catalog, final ValidationErrors errors) {
-
-        if (plan == null) {
-            errors.add(new ValidationError(String.format("Invalid plan for phase '%s'", type), catalog.getCatalogURI(), DefaultPlanPhase.class, ""));
+        if (planName == null) {
+            errors.add(new ValidationError(String.format("Invalid plan for phase '%s'", type), DefaultPlanPhase.class, ""));
         }
 
         if (fixed == null && recurring == null && usages.length == 0) {
             errors.add(new ValidationError(String.format("Phase %s of plan %s need to define at least either a fixed or recurrring or usage section.",
-                                                         type.toString(), plan.getName()),
-                                           catalog.getCatalogURI(), DefaultPlanPhase.class, type.toString()));
+                                                         type.toString(), planName),
+                                           DefaultPlanPhase.class, type.toString()));
         }
         if (fixed != null) {
             fixed.validate(catalog, errors);
@@ -188,24 +189,23 @@ public class DefaultPlanPhase extends ValidatingConfig<StandaloneCatalog> implem
     }
 
     @Override
-    public void initialize(final StandaloneCatalog root, final URI uri) {
-
-        super.initialize(root, uri);
+    public void initialize(final StandaloneCatalog root) {
+        super.initialize(root);
         CatalogSafetyInitializer.initializeNonRequiredNullFieldsWithDefaultValue(this);
 
         if (fixed != null) {
-            fixed.initialize(root, uri);
+            fixed.initialize(root);
         }
         if (recurring != null) {
-            recurring.initialize(root, uri);
-            recurring.setPlan(plan);
+            recurring.initialize(root);
+            recurring.setPlan(planName);
             recurring.setPhase(this);
         }
         for (final DefaultUsage usage : usages) {
-            usage.initialize(root, uri);
+            usage.initialize(root);
             usage.setPhase(this);
         }
-        duration.initialize(root, uri);
+        duration.initialize(root);
     }
 
     public DefaultPlanPhase setPrettyName(final String prettyName) {
@@ -239,7 +239,8 @@ public class DefaultPlanPhase extends ValidatingConfig<StandaloneCatalog> implem
     }
 
     public DefaultPlanPhase setPlan(final Plan plan) {
-        this.plan = plan;
+        this.planName = plan.getName();
+        this.product = plan.getProduct();
         return this;
     }
 
@@ -293,7 +294,7 @@ public class DefaultPlanPhase extends ValidatingConfig<StandaloneCatalog> implem
         sb.append(", fixed=").append(fixed);
         sb.append(", recurring=").append(recurring);
         sb.append(", usages=").append(Arrays.toString(usages));
-        sb.append(", plan=").append(plan.getName());
+        sb.append(", plan=").append(planName);
         sb.append('}');
         return sb.toString();
     }
@@ -312,6 +313,8 @@ public class DefaultPlanPhase extends ValidatingConfig<StandaloneCatalog> implem
         out.writeObject(fixed);
         out.writeObject(recurring);
         out.writeObject(usages);
+        out.writeUTF(planName);
+        out.writeObject(product);
     }
 
     @Override
@@ -322,5 +325,7 @@ public class DefaultPlanPhase extends ValidatingConfig<StandaloneCatalog> implem
         this.fixed = (DefaultFixed) in.readObject();
         this.recurring = (DefaultRecurring) in.readObject();
         this.usages = (DefaultUsage[]) in.readObject();
+        this.planName = in.readUTF();
+        this.product = (Product) in.readObject();
     }
 }

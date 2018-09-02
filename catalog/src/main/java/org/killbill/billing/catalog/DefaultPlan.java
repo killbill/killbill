@@ -215,8 +215,8 @@ public class DefaultPlan extends ValidatingConfig<StandaloneCatalog> implements 
     }
 
     @Override
-    public void initialize(final StandaloneCatalog catalog, final URI sourceURI) {
-        super.initialize(catalog, sourceURI);
+    public void initialize(final StandaloneCatalog catalog) {
+        super.initialize(catalog);
         CatalogSafetyInitializer.initializeNonRequiredNullFieldsWithDefaultValue(this);
 
         if (prettyName == null) {
@@ -224,11 +224,11 @@ public class DefaultPlan extends ValidatingConfig<StandaloneCatalog> implements 
         }
         if (finalPhase != null) {
             finalPhase.setPlan(this);
-            finalPhase.initialize(catalog, sourceURI);
+            finalPhase.initialize(catalog);
         }
         for (final DefaultPlanPhase p : initialPhases) {
             p.setPlan(this);
-            p.initialize(catalog, sourceURI);
+            p.initialize(catalog);
         }
         if (recurringBillingMode == null) {
             this.recurringBillingMode = catalog.getRecurringBillingMode();
@@ -245,15 +245,15 @@ public class DefaultPlan extends ValidatingConfig<StandaloneCatalog> implements 
             errors.add(new ValidationError(String.format("Price effective date %s is before catalog effective date '%s'",
                                                          effectiveDateForExistingSubscriptions,
                                                          catalog.getEffectiveDate()),
-                                           catalog.getCatalogURI(), DefaultPlan.class, ""));
+                                           DefaultPlan.class, ""));
         }
 
         if (recurringBillingMode == null) {
-            errors.add(new ValidationError(String.format("Invalid reccuring billingMode for plan '%s'", name), catalog.getCatalogURI(), DefaultPlan.class, ""));
+            errors.add(new ValidationError(String.format("Invalid recurring billingMode for plan '%s'", name), DefaultPlan.class, ""));
         }
 
         if (product == null) {
-            errors.add(new ValidationError(String.format("Invalid product for plan '%s'", name), catalog.getCatalogURI(), DefaultPlan.class, ""));
+            errors.add(new ValidationError(String.format("Invalid product for plan '%s'", name), DefaultPlan.class, ""));
         }
 
         for (final DefaultPlanPhase cur : initialPhases) {
@@ -261,7 +261,7 @@ public class DefaultPlan extends ValidatingConfig<StandaloneCatalog> implements 
             if (cur.getPhaseType() == PhaseType.EVERGREEN) {
                 errors.add(new ValidationError(String.format("Initial Phase %s of plan %s cannot be of type %s",
                                                              cur.getName(), name, cur.getPhaseType()),
-                                               catalog.getCatalogURI(), DefaultPlan.class, ""));
+                                               DefaultPlan.class, ""));
             }
         }
 
@@ -270,7 +270,7 @@ public class DefaultPlan extends ValidatingConfig<StandaloneCatalog> implements 
         if (finalPhase.getPhaseType() == PhaseType.TRIAL || finalPhase.getPhaseType() == PhaseType.DISCOUNT) {
             errors.add(new ValidationError(String.format("Final Phase %s of plan %s cannot be of type %s",
                                                          finalPhase.getName(), name, finalPhase.getPhaseType()),
-                                           catalog.getCatalogURI(), DefaultPlan.class, ""));
+                                           DefaultPlan.class, ""));
         }
         // Safety check
         if (plansAllowedInBundle == null) {
