@@ -77,6 +77,7 @@ public class DefaultPlanPhase extends ValidatingConfig<StandaloneCatalog> implem
 
     // Required for deserialization
     public DefaultPlanPhase() {
+        this.usages = new DefaultUsage[0];
     }
 
     public DefaultPlanPhase(final DefaultPlan parentPlan, final DefaultPlanPhase in, @Nullable final PlanPhasePriceOverride override) {
@@ -200,7 +201,7 @@ public class DefaultPlanPhase extends ValidatingConfig<StandaloneCatalog> implem
             recurring.setPlan(plan);
             recurring.setPhase(this);
         }
-        for (DefaultUsage usage : usages) {
+        for (final DefaultUsage usage : usages) {
             usage.initialize(root, uri);
             usage.setPhase(this);
         }

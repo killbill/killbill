@@ -99,6 +99,7 @@ public class DefaultProduct extends ValidatingConfig<StandaloneCatalog> implemen
     public DefaultProduct() {
         this.included = new CatalogEntityCollection<Product>();
         this.available = new CatalogEntityCollection<Product>();
+        this.limits = new DefaultLimit[0];
     }
 
     public DefaultProduct(final String name, final ProductCategory category) {
@@ -163,7 +164,7 @@ public class DefaultProduct extends ValidatingConfig<StandaloneCatalog> implemen
     public void initialize(final StandaloneCatalog catalog, final URI sourceURI) {
         super.initialize(catalog, sourceURI);
         CatalogSafetyInitializer.initializeNonRequiredNullFieldsWithDefaultValue(this);
-        for (DefaultLimit cur : limits) {
+        for (final DefaultLimit cur : limits) {
             cur.initialize(catalog, sourceURI);
         }
         if (prettyName == null) {
