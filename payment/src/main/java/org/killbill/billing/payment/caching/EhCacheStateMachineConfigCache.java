@@ -71,8 +71,7 @@ public class EhCacheStateMachineConfigCache implements StateMachineConfigCache {
 
                 try {
                     final InputStream stream = new ByteArrayInputStream(stateMachineConfigXML.getBytes());
-                    final DefaultStateMachineConfig defaultStateMachineConfig = XMLLoader.getObjectFromStream(new URI("dummy"), stream, DefaultStateMachineConfig.class);
-                    return new SerializableStateMachineConfig(defaultStateMachineConfig);
+                    return XMLLoader.getObjectFromStream(new URI("dummy"), stream, DefaultStateMachineConfig.class);
                 } catch (final Exception e) {
                     // TODO 0.17 proper error code
                     throw new PaymentApiException(e, ErrorCode.PAYMENT_INTERNAL_ERROR, "Invalid payment state machine config");

@@ -1,6 +1,6 @@
 /*
- * Copyright 2016-2017 Groupon, Inc
- * Copyright 2016-2017 The Billing Project, LLC
+ * Copyright 2014-2018 Groupon, Inc
+ * Copyright 2014-2018 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -114,7 +114,6 @@ public class TestStateMachineConfigCache extends PaymentTestSuiteNoDB {
         Assert.assertEquals(stateMachineConfigCache.getPaymentStateMachineConfig(UUID.randomUUID().toString(), multiTenantContext), defaultStateMachineConfig);
         final StateMachineConfig result = stateMachineConfigCache.getPaymentStateMachineConfig(pluginName, multiTenantContext);
         Assert.assertNotNull(result);
-        Assert.assertNotEquals(result, defaultStateMachineConfig);
         Assert.assertEquals(result.getStateMachines().length, 8);
 
         // Verify the lookup for another tenant

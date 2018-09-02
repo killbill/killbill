@@ -47,6 +47,10 @@ public class TestEhCacheOverdueConfigCache extends OverdueTestSuiteNoDB {
 
     @BeforeMethod(groups = "fast")
     public void beforeMethod() throws Exception {
+        if (hasFailed()) {
+            return;
+        }
+
         super.beforeMethod();
 
         cacheControllerDispatcher.clearAll();

@@ -42,7 +42,7 @@
       <module name="killbill-catalog" target="1.8" />
       <module name="killbill-currency" target="1.8" />
       <module name="killbill-entitlement" target="1.8" />
-      <module name="killbill-internal-api" target="1.6" />
+      <module name="killbill-internal-api" target="1.8" />
       <module name="killbill-invoice" target="1.8" />
       <module name="killbill-jaxrs" target="1.8" />
       <module name="killbill-junction" target="1.8" />
