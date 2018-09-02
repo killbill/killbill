@@ -141,7 +141,8 @@ public class StandaloneCatalogWithPriceOverride extends StandaloneCatalog implem
         return internalCallContextFactory.createInternalTenantContext(tenantRecordId, null);
     }
 
-    public void refreshPostDeserialization(final PriceOverride priceOverride, final InternalCallContextFactory internalCallContextFactory) {
+    public void initialize(final StandaloneCatalog catalog, final PriceOverride priceOverride, final InternalCallContextFactory internalCallContextFactory) {
+        super.initialize(catalog);
         this.priceOverride = priceOverride;
         this.internalCallContextFactory = internalCallContextFactory;
     }

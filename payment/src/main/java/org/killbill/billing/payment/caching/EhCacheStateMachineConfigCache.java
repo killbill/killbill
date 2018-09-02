@@ -50,21 +50,17 @@ public class EhCacheStateMachineConfigCache implements StateMachineConfigCache {
 
     private static final Logger logger = LoggerFactory.getLogger(EhCacheStateMachineConfigCache.class);
 
-    private final TenantInternalApi tenantInternalApi;
     private final CacheController<String, StateMachineConfig> cacheController;
-    private final CacheInvalidationCallback cacheInvalidationCallback;
     private final LoaderCallback loaderCallback;
 
-    private StateMachineConfig defaultPaymentStateMachineConfig;
+    private DefaultStateMachineConfig defaultPaymentStateMachineConfig;
 
     @Inject
     public EhCacheStateMachineConfigCache(final TenantInternalApi tenantInternalApi,
                                           final CacheControllerDispatcher cacheControllerDispatcher,
                                           @Named(PaymentModule.STATE_MACHINE_CONFIG_INVALIDATION_CALLBACK) final CacheInvalidationCallback cacheInvalidationCallback) {
-        this.tenantInternalApi = tenantInternalApi;
         // Can be null if mis-configured (e.g. missing in ehcache.xml)
         this.cacheController = cacheControllerDispatcher.getCacheController(CacheType.TENANT_PAYMENT_STATE_MACHINE_CONFIG);
-        this.cacheInvalidationCallback = cacheInvalidationCallback;
         this.loaderCallback = new LoaderCallback() {
             public Object loadStateMachineConfig(final String stateMachineConfigXML) throws PaymentApiException {
                 tenantInternalApi.initializeCacheInvalidationCallback(TenantKey.PLUGIN_PAYMENT_STATE_MACHINE_, cacheInvalidationCallback);
@@ -107,6 +103,8 @@ public class EhCacheStateMachineConfigCache implements StateMachineConfigCache {
                 pluginPaymentStateMachineConfig = defaultPaymentStateMachineConfig;
                 cacheController.putIfAbsent(pluginConfigKey, pluginPaymentStateMachineConfig);
             }
+
+            ((DefaultStateMachineConfig)pluginPaymentStateMachineConfig).initialize(defaultPaymentStateMachineConfig);
             return pluginPaymentStateMachineConfig;
         } catch (final IllegalStateException e) {
             // TODO 0.17 proper error code

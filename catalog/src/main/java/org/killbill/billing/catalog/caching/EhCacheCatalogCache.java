@@ -128,12 +128,7 @@ public class EhCacheCatalogCache implements CatalogCache {
                 cacheController.putIfAbsent(tenantContext.getTenantRecordId(), tenantCatalog);
             }
 
-            for (final StandaloneCatalog cur : defaultCatalog.getVersions()) {
-                if (cur instanceof StandaloneCatalogWithPriceOverride) {
-                    // Non-serialized objects
-                    ((StandaloneCatalogWithPriceOverride) cur).refreshPostDeserialization(priceOverride, internalCallContextFactory);
-                }
-            }
+            initializeCatalog(tenantCatalog);
 
             return tenantCatalog;
         } catch (final IllegalStateException e) {
@@ -166,6 +161,7 @@ public class EhCacheCatalogCache implements CatalogCache {
             if (latestCatalogUpdatedDate != null) {
                 final DefaultVersionedCatalog tenantCatalog = cacheController.get(internalTenantContext.getTenantRecordId(), cacheLoaderArgument);
                 if (tenantCatalog != null) {
+                    initializeCatalog(tenantCatalog);
                     if (tenantCatalog.getEffectiveDate().compareTo(latestCatalogUpdatedDate.toDate()) == 0) {
                         // Current cached version matches the one from the plugin
                         return tenantCatalog;
@@ -184,6 +180,17 @@ public class EhCacheCatalogCache implements CatalogCache {
             }
         }
         return null;
+    }
+
+    private void initializeCatalog(final DefaultVersionedCatalog tenantCatalog) {
+        tenantCatalog.initialize(defaultCatalog.getClock(), tenantCatalog);
+        for (final StandaloneCatalog cur : tenantCatalog.getVersions()) {
+            if (cur instanceof StandaloneCatalogWithPriceOverride) {
+                ((StandaloneCatalogWithPriceOverride) cur).initialize(cur, priceOverride, internalCallContextFactory);
+            } else {
+                cur.initialize(cur);
+            }
+        }
     }
 
     //

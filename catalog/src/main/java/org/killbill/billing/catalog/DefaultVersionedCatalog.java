@@ -489,8 +489,9 @@ public class DefaultVersionedCatalog extends ValidatingConfig<DefaultVersionedCa
         return result;
     }
 
-    public void refreshPostDeserialization(final Clock clock) {
+    public void initialize(final Clock clock, final DefaultVersionedCatalog tenantCatalog) {
         this.clock = clock;
+        initialize(tenantCatalog);
     }
 
     private static class CatalogPlanEntry {
