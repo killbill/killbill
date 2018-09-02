@@ -128,7 +128,9 @@ public class EhCacheCatalogCache implements CatalogCache {
                 cacheController.putIfAbsent(tenantContext.getTenantRecordId(), tenantCatalog);
             }
 
-            initializeCatalog(tenantCatalog);
+            if (tenantCatalog != null) {
+                initializeCatalog(tenantCatalog);
+            }
 
             return tenantCatalog;
         } catch (final IllegalStateException e) {

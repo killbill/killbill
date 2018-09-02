@@ -167,7 +167,7 @@ public class DefaultTenant implements Tenant, Externalizable {
         this.id = new UUID(in.readLong(), in.readLong());
         this.createdDate = new DateTime(in.readUTF());
         this.updatedDate = new DateTime(in.readUTF());
-        this.externalKey = in.readUTF();
+        this.externalKey = in.readBoolean() ? in.readUTF() : null;
         this.apiKey = in.readUTF();
     }
 
@@ -177,7 +177,10 @@ public class DefaultTenant implements Tenant, Externalizable {
         oo.writeLong(id.getLeastSignificantBits());
         oo.writeUTF(createdDate.toString());
         oo.writeUTF(updatedDate.toString());
-        oo.writeUTF(externalKey);
+        oo.writeBoolean(externalKey != null);
+        if (externalKey != null) {
+            oo.writeUTF(externalKey);
+        }
         oo.writeUTF(apiKey);
     }
 }

@@ -99,19 +99,6 @@ public class GuicyKillbillTestSuiteWithEmbeddedDB extends GuicyKillbillTestSuite
         }
     }
 
-    @AfterClass(alwaysRun = true)
-    public void afterClassCleanup() {
-        if (cacheManager != null) {
-            cacheManager.close();
-        }
-        if (redissonCachingClient != null) {
-            redissonCachingClient.shutdown();
-        }
-        if (redissonLockerClient != null) {
-            redissonLockerClient.shutdown();
-        }
-    }
-
     @AfterSuite(groups = "slow")
     public void afterSuite() throws Exception {
         if (hasFailed()) {
@@ -120,6 +107,16 @@ public class GuicyKillbillTestSuiteWithEmbeddedDB extends GuicyKillbillTestSuite
             log.error(DBTestingHelper.get().getInstance().getCmdLineConnectionString());
             log.error("**********************************************************************************************");
             return;
+        }
+
+        if (cacheManager != null) {
+            cacheManager.close();
+        }
+        if (redissonCachingClient != null) {
+            redissonCachingClient.shutdown();
+        }
+        if (redissonLockerClient != null) {
+            redissonLockerClient.shutdown();
         }
 
         try {
