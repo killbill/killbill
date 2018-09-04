@@ -57,9 +57,9 @@ import org.testng.annotations.AfterSuite;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.BeforeSuite;
-import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Listeners;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableMap;
 import redis.embedded.RedisServer;
 
@@ -79,7 +79,8 @@ public class GuicyKillbillTestSuite implements IHookable {
     // Variables set in @BeforeSuite
     protected static KillbillConfigSource configSource;
     protected static ConfigSource skifeConfigSource;
-    private static ClockMock theRealClock;
+    @VisibleForTesting
+    protected static ClockMock theRealClock;
 
     protected ClockMock clock;
 
@@ -234,7 +235,7 @@ public class GuicyKillbillTestSuite implements IHookable {
             theRealClock = new DistributedClockMock();
             ((DistributedClockMock) theRealClock).setRedissonClient(redissonClient);
 
-            extraProperties = ImmutableMap.<String, String>of("org.killbill.cache.config.redis", "false",
+            extraProperties = ImmutableMap.<String, String>of("org.killbill.cache.config.redis", "true",
                                                               "org.killbill.cache.config.redis.url", "redis://127.0.0.1:56379",
                                                               "org.killbill.locker.config.redis", "true",
                                                               "org.killbill.locker.config.redis.url", "redis://127.0.0.1:56379");
@@ -263,9 +264,11 @@ public class GuicyKillbillTestSuite implements IHookable {
         final Answer answer = new Answer() {
             @Override
             public Object answer(final InvocationOnMock invocation) throws Throwable {
-                // Sync clock and theRealClock
                 final Object realAnswer = invocation.callRealMethod();
-                invocation.getMethod().invoke(theRealClock, invocation.getArguments());
+                if (!(clock instanceof DistributedClockMock)) {
+                    // The ClockMock has its own copy of ReferenceDateTimeUTC so both objects need to be sync'ed
+                    invocation.getMethod().invoke(theRealClock, invocation.getArguments());
+                }
 
                 // Update the contexts createdDate each time we move the clock
                 final DateTime utcNow = theRealClock.getUTCNow();
