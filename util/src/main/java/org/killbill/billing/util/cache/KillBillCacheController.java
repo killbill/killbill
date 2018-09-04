@@ -33,14 +33,14 @@ import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 
-public class EhCacheBasedCacheController<K, V> implements CacheController<K, V> {
+public class KillBillCacheController<K, V> implements CacheController<K, V> {
 
-    private static final Logger logger = LoggerFactory.getLogger(EhCacheBasedCacheController.class);
+    private static final Logger logger = LoggerFactory.getLogger(KillBillCacheController.class);
 
     private final Cache<K, V> cache;
     private final BaseCacheLoader<K, V> baseCacheLoader;
 
-    public EhCacheBasedCacheController(final Cache<K, V> cache, final BaseCacheLoader<K, V> baseCacheLoader) {
+    public KillBillCacheController(final Cache<K, V> cache, final BaseCacheLoader<K, V> baseCacheLoader) {
         this.cache = cache;
         this.baseCacheLoader = baseCacheLoader;
     }
