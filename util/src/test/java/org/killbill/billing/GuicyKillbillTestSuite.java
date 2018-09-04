@@ -54,8 +54,10 @@ import org.testng.ITestNGMethod;
 import org.testng.ITestResult;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.AfterSuite;
+import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.BeforeSuite;
+import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Listeners;
 
 import com.google.common.collect.ImmutableMap;
@@ -74,8 +76,14 @@ public class GuicyKillbillTestSuite implements IHookable {
     // Use the simple name here to save screen real estate
     protected static final Logger log = LoggerFactory.getLogger(KillbillTestSuite.class.getSimpleName());
 
-    protected final KillbillConfigSource configSource;
-    protected final ConfigSource skifeConfigSource;
+    // Variables set in @BeforeSuite
+    protected static KillbillConfigSource configSource;
+    protected static ConfigSource skifeConfigSource;
+    private static ClockMock theRealClock;
+
+    protected ClockMock clock;
+
+    private RedissonClient redissonClient;
 
     @Inject
     protected InternalCallContextFactory internalCallContextFactory;
@@ -88,67 +96,7 @@ public class GuicyKillbillTestSuite implements IHookable {
 
     private RedisServer redisServer;
 
-    protected final ClockMock theRealClock;
-    protected final ClockMock clock;
-
     private boolean hasFailed = false;
-
-    public GuicyKillbillTestSuite() {
-        final ImmutableMap<String, String> extraProperties;
-        if (Boolean.valueOf(System.getProperty("killbill.test.redis", "false"))) {
-            extraProperties = ImmutableMap.<String, String>of("org.killbill.cache.config.redis", "true",
-                                                              "org.killbill.cache.config.redis.url", "redis://127.0.0.1:56379",
-                                                              "org.killbill.locker.config.redis", "true",
-                                                              "org.killbill.locker.config.redis.url", "redis://127.0.0.1:56379");
-            redisServer = new RedisServer(56379);
-
-            theRealClock = new DistributedClockMock();
-        } else {
-            extraProperties = ImmutableMap.<String, String>of();
-            theRealClock = new ClockMock();
-        }
-
-        clock = Mockito.spy(theRealClock);
-        final Answer answer = new Answer() {
-            @Override
-            public Object answer(final InvocationOnMock invocation) throws Throwable {
-                // Sync clock and theRealClock
-                final Object realAnswer = invocation.callRealMethod();
-                invocation.getMethod().invoke(theRealClock, invocation.getArguments());
-
-                // Update the contexts createdDate each time we move the clock
-                final DateTime utcNow = theRealClock.getUTCNow();
-                if (callContext != null) {
-                    callContext.setCreatedDate(utcNow);
-                }
-                if (internalCallContext != null) {
-                    internalCallContext.setCreatedDate(utcNow);
-                    internalCallContext.setUpdatedDate(utcNow);
-                }
-
-                return realAnswer;
-            }
-        };
-        Mockito.doAnswer(answer).when(clock).getUTCNow();
-        Mockito.doAnswer(answer).when(clock).getNow(Mockito.any(DateTimeZone.class));
-        Mockito.doAnswer(answer).when(clock).getUTCToday();
-        Mockito.doAnswer(answer).when(clock).getToday(Mockito.any(DateTimeZone.class));
-        Mockito.doAnswer(answer).when(clock).addDays(Mockito.anyInt());
-        Mockito.doAnswer(answer).when(clock).addWeeks(Mockito.anyInt());
-        Mockito.doAnswer(answer).when(clock).addMonths(Mockito.anyInt());
-        Mockito.doAnswer(answer).when(clock).addYears(Mockito.anyInt());
-        Mockito.doAnswer(answer).when(clock).addDeltaFromReality(Mockito.anyLong());
-        Mockito.doAnswer(answer).when(clock).setTime(Mockito.any(DateTime.class));
-        Mockito.doAnswer(answer).when(clock).resetDeltaFromReality();
-
-        this.configSource = getConfigSource(extraProperties);
-        this.skifeConfigSource = new ConfigSource() {
-            @Override
-            public String getString(final String propertyName) {
-                return configSource.getString(propertyName);
-            }
-        };
-    }
 
     public static void refreshCallContext(final UUID accountId,
                                           final Clock clock,
@@ -271,7 +219,9 @@ public class GuicyKillbillTestSuite implements IHookable {
 
     @BeforeSuite(alwaysRun = true)
     public void globalBeforeSuite() {
-        if (redisServer != null) {
+        final ImmutableMap<String, String> extraProperties;
+        if (Boolean.valueOf(System.getProperty("killbill.test.redis", "false"))) {
+            redisServer = new RedisServer(56379);
             redisServer.start();
 
             final Config redissonCfg = new Config();
@@ -279,13 +229,75 @@ public class GuicyKillbillTestSuite implements IHookable {
                        .useSingleServer()
                        .setAddress("redis://127.0.0.1:56379")
                        .setConnectionMinimumIdleSize(1);
-            final RedissonClient redissonClient = Redisson.create(redissonCfg);
+            redissonClient = Redisson.create(redissonCfg);
+
+            theRealClock = new DistributedClockMock();
             ((DistributedClockMock) theRealClock).setRedissonClient(redissonClient);
+
+            extraProperties = ImmutableMap.<String, String>of("org.killbill.cache.config.redis", "false",
+                                                              "org.killbill.cache.config.redis.url", "redis://127.0.0.1:56379",
+                                                              "org.killbill.locker.config.redis", "true",
+                                                              "org.killbill.locker.config.redis.url", "redis://127.0.0.1:56379");
+        } else {
+            theRealClock = new ClockMock();
+
+            extraProperties = ImmutableMap.<String, String>of();
         }
+
+        // The clock needs to be setup early in @BeforeSuite, as it is needed when starting the server, but see below
+        clock = theRealClock;
+
+        configSource = getConfigSource(extraProperties);
+        skifeConfigSource = new ConfigSource() {
+            @Override
+            public String getString(final String propertyName) {
+                return configSource.getString(propertyName);
+            }
+        };
+    }
+
+    @BeforeClass(alwaysRun = true)
+    public void globalBeforeTest() {
+        // We need to set the instance variable in each subsequent class instantiated in the suite
+        clock = Mockito.spy(theRealClock);
+        final Answer answer = new Answer() {
+            @Override
+            public Object answer(final InvocationOnMock invocation) throws Throwable {
+                // Sync clock and theRealClock
+                final Object realAnswer = invocation.callRealMethod();
+                invocation.getMethod().invoke(theRealClock, invocation.getArguments());
+
+                // Update the contexts createdDate each time we move the clock
+                final DateTime utcNow = theRealClock.getUTCNow();
+                if (callContext != null) {
+                    callContext.setCreatedDate(utcNow);
+                }
+                if (internalCallContext != null) {
+                    internalCallContext.setCreatedDate(utcNow);
+                    internalCallContext.setUpdatedDate(utcNow);
+                }
+
+                return realAnswer;
+            }
+        };
+        Mockito.doAnswer(answer).when(clock).getUTCNow();
+        Mockito.doAnswer(answer).when(clock).getNow(Mockito.any(DateTimeZone.class));
+        Mockito.doAnswer(answer).when(clock).getUTCToday();
+        Mockito.doAnswer(answer).when(clock).getToday(Mockito.any(DateTimeZone.class));
+        Mockito.doAnswer(answer).when(clock).addDays(Mockito.anyInt());
+        Mockito.doAnswer(answer).when(clock).addWeeks(Mockito.anyInt());
+        Mockito.doAnswer(answer).when(clock).addMonths(Mockito.anyInt());
+        Mockito.doAnswer(answer).when(clock).addYears(Mockito.anyInt());
+        Mockito.doAnswer(answer).when(clock).addDeltaFromReality(Mockito.anyLong());
+        Mockito.doAnswer(answer).when(clock).setTime(Mockito.any(DateTime.class));
+        Mockito.doAnswer(answer).when(clock).resetDeltaFromReality();
     }
 
     @AfterSuite(alwaysRun = true)
     public void globalAfterSuite() {
+        if (redissonClient != null) {
+            redissonClient.shutdown();
+        }
         if (redisServer != null) {
             redisServer.stop();
         }

@@ -455,13 +455,17 @@ public class DefaultVersionedCatalog extends ValidatingConfig<DefaultVersionedCa
 
     @Override
     public void readExternal(final ObjectInput in) throws IOException, ClassNotFoundException {
-        this.catalogName = in.readUTF();
+        this.catalogName = in.readBoolean() ? in.readUTF() : null;
         this.versions.addAll((Collection<? extends StandaloneCatalog>) in.readObject());
     }
 
     @Override
     public void writeExternal(final ObjectOutput oo) throws IOException {
-        oo.writeUTF(catalogName);
+        oo.writeBoolean(catalogName != null);
+        if (catalogName != null) {
+            // Can be null for placeholder XML
+            oo.writeUTF(catalogName);
+        }
         oo.writeObject(versions);
     }
 
