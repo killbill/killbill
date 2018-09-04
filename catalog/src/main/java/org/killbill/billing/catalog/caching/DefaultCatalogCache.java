@@ -51,9 +51,9 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 
-public class EhCacheCatalogCache implements CatalogCache {
+public class DefaultCatalogCache implements CatalogCache {
 
-    private final Logger logger = LoggerFactory.getLogger(EhCacheCatalogCache.class);
+    private final Logger logger = LoggerFactory.getLogger(DefaultCatalogCache.class);
 
     private final CacheController<Long, DefaultVersionedCatalog> cacheController;
     private final VersionedCatalogLoader loader;
@@ -67,7 +67,7 @@ public class EhCacheCatalogCache implements CatalogCache {
     private DefaultVersionedCatalog defaultCatalog;
 
     @Inject
-    public EhCacheCatalogCache(final OSGIServiceRegistration<CatalogPluginApi> pluginRegistry,
+    public DefaultCatalogCache(final OSGIServiceRegistration<CatalogPluginApi> pluginRegistry,
                                final VersionedCatalogMapper versionedCatalogMapper,
                                final CacheControllerDispatcher cacheControllerDispatcher,
                                final VersionedCatalogLoader loader,
@@ -199,7 +199,7 @@ public class EhCacheCatalogCache implements CatalogCache {
     // Build the LoaderCallback that is required to build the catalog from the xml from a module that knows
     // nothing about catalog.
     //
-    // This is a contract between the TenantCatalogCacheLoader and the EhCacheCatalogCache
+    // This is a contract between the TenantCatalogCacheLoader and the DefaultCatalogCache
     private CacheLoaderArgument initializeCacheLoaderArgument(final boolean filterTemplateCatalog) {
         final LoaderCallback loaderCallback = new LoaderCallback() {
             @Override

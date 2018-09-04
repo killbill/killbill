@@ -1,6 +1,6 @@
 /*
- * Copyright 2016-2017 Groupon, Inc
- * Copyright 2016-2017 The Billing Project, LLC
+ * Copyright 2014-2018 Groupon, Inc
+ * Copyright 2014-2018 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -19,7 +19,6 @@ package org.killbill.billing.payment.caching;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
-import java.net.URI;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -46,9 +45,9 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.io.Resources;
 
-public class EhCacheStateMachineConfigCache implements StateMachineConfigCache {
+public class DefaultStateMachineConfigCache implements StateMachineConfigCache {
 
-    private static final Logger logger = LoggerFactory.getLogger(EhCacheStateMachineConfigCache.class);
+    private static final Logger logger = LoggerFactory.getLogger(DefaultStateMachineConfigCache.class);
 
     private final CacheController<String, StateMachineConfig> cacheController;
     private final LoaderCallback loaderCallback;
@@ -56,7 +55,7 @@ public class EhCacheStateMachineConfigCache implements StateMachineConfigCache {
     private DefaultStateMachineConfig defaultPaymentStateMachineConfig;
 
     @Inject
-    public EhCacheStateMachineConfigCache(final TenantInternalApi tenantInternalApi,
+    public DefaultStateMachineConfigCache(final TenantInternalApi tenantInternalApi,
                                           final CacheControllerDispatcher cacheControllerDispatcher,
                                           @Named(PaymentModule.STATE_MACHINE_CONFIG_INVALIDATION_CALLBACK) final CacheInvalidationCallback cacheInvalidationCallback) {
         // Can be null if mis-configured (e.g. missing in ehcache.xml)

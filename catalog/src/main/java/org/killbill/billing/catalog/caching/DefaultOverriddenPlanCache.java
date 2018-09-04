@@ -59,14 +59,14 @@ import org.killbill.billing.util.cache.OverriddenPlanCacheLoader.LoaderCallback;
 import com.google.common.base.Predicate;
 import com.google.common.collect.Iterables;
 
-public class EhCacheOverriddenPlanCache implements OverriddenPlanCache {
+public class DefaultOverriddenPlanCache implements OverriddenPlanCache {
 
     private final CacheController<String, Plan> cacheController;
     private final LoaderCallback loaderCallback;
     private final CatalogOverrideDao overrideDao;
 
     @Inject
-    public EhCacheOverriddenPlanCache(final CatalogOverrideDao overrideDao, final CacheControllerDispatcher cacheControllerDispatcher) {
+    public DefaultOverriddenPlanCache(final CatalogOverrideDao overrideDao, final CacheControllerDispatcher cacheControllerDispatcher) {
         this.overrideDao = overrideDao;
         this.cacheController = cacheControllerDispatcher.getCacheController(CacheType.OVERRIDDEN_PLAN);
         this.loaderCallback = new LoaderCallback() {

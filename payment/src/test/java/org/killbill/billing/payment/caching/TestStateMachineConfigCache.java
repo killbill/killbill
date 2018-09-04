@@ -97,7 +97,7 @@ public class TestStateMachineConfigCache extends PaymentTestSuiteNoDB {
             }
         });
 
-        // Verify the lookup for a non-cached tenant. No system config is set yet but EhCacheStateMachineConfigCache returns a default empty one
+        // Verify the lookup for a non-cached tenant. No system config is set yet but DefaultStateMachineConfigCache returns a default empty one
         final StateMachineConfig defaultStateMachineConfig = stateMachineConfigCache.getPaymentStateMachineConfig(pluginName, differentMultiTenantContext);
         Assert.assertNotNull(defaultStateMachineConfig);
 
