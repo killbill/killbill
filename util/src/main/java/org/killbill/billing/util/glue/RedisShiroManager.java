@@ -105,7 +105,7 @@ public class RedisShiroManager extends RedisCacheProviderBase implements CacheMa
                 if (previousValue == null) {
                     break;
                 } else {
-                    if (cache.remove(key, previousValue)) {
+                    if (cache.remove(key)) {
                         break;
                     }
                 }
