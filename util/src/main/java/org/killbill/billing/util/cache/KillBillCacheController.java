@@ -24,6 +24,7 @@ import java.util.Set;
 
 import javax.cache.Cache;
 import javax.cache.Cache.Entry;
+import javax.cache.CacheException;
 
 import org.killbill.billing.util.cache.Cachable.CacheType;
 import org.slf4j.Logger;
@@ -68,11 +69,16 @@ public class KillBillCacheController<K, V> implements CacheController<K, V> {
             return null;
         }
 
-        final V value;
-        if (!isKeyInCache(key)) {
-            value = computeAndCacheValue(key, cacheLoaderArgument);
-        } else {
-            value = cache.get(key);
+        V value;
+        try {
+            if (!isKeyInCache(key)) {
+                value = computeAndCacheValue(key, cacheLoaderArgument);
+            } else {
+                value = cache.get(key);
+            }
+        } catch (final CacheException e) {
+            logger.warn("Unable to retrieve cached value for key='{}' and cacheLoaderArgument='{}'", key, cacheLoaderArgument, e);
+            value = computeValue(key, cacheLoaderArgument);
         }
 
         if (value == null || value.equals(BaseCacheLoader.EMPTY_VALUE_PLACEHOLDER)) {
@@ -124,6 +130,18 @@ public class KillBillCacheController<K, V> implements CacheController<K, V> {
     }
 
     private V computeAndCacheValue(final K key, final CacheLoaderArgument cacheLoaderArgument) {
+        final V value = computeValue(key, cacheLoaderArgument);
+        if (value == null) {
+            return null;
+        }
+
+        // Race condition, we may compute it for nothing
+        putIfAbsent(key, value);
+
+        return value;
+    }
+
+    private V computeValue(final K key, final CacheLoaderArgument cacheLoaderArgument) {
         final V value;
         try {
             value = baseCacheLoader.compute(key, cacheLoaderArgument);
@@ -132,14 +150,6 @@ public class KillBillCacheController<K, V> implements CacheController<K, V> {
             //logger.warn("Unable to compute cached value for key='{}' and cacheLoaderArgument='{}'", key, cacheLoaderArgument, e);
             throw new RuntimeException(e);
         }
-
-        if (value == null) {
-            return null;
-        }
-
-        // Race condition, we may compute it for nothing
-        putIfAbsent(key, value);
-
         return value;
     }
 }
