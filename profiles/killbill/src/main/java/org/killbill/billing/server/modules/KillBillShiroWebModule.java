@@ -32,23 +32,23 @@ import org.apache.shiro.authz.ModularRealmAuthorizer;
 import org.apache.shiro.cache.CacheManager;
 import org.apache.shiro.guice.web.ShiroWebModuleWith435;
 import org.apache.shiro.realm.Realm;
+import org.apache.shiro.session.mgt.DefaultSessionManager;
 import org.apache.shiro.session.mgt.SessionManager;
+import org.apache.shiro.session.mgt.eis.SessionDAO;
 import org.apache.shiro.web.filter.authc.BasicHttpAuthenticationFilter;
 import org.apache.shiro.web.mgt.DefaultWebSecurityManager;
 import org.apache.shiro.web.mgt.WebSecurityManager;
 import org.apache.shiro.web.util.WebUtils;
 import org.killbill.billing.jaxrs.resources.JaxrsResource;
 import org.killbill.billing.server.security.FirstSuccessfulStrategyWith540;
-import org.killbill.billing.server.security.KillBillWebSessionManager;
 import org.killbill.billing.server.security.KillbillJdbcTenantRealm;
 import org.killbill.billing.util.config.definition.RbacConfig;
 import org.killbill.billing.util.config.definition.RedisCacheConfig;
 import org.killbill.billing.util.glue.EhcacheShiroManagerProvider;
-import org.killbill.billing.util.glue.JDBCSessionDaoProvider;
 import org.killbill.billing.util.glue.KillBillShiroModule;
 import org.killbill.billing.util.glue.RealmsFromShiroIniProvider;
 import org.killbill.billing.util.glue.RedisShiroManagerProvider;
-import org.killbill.billing.util.security.shiro.dao.JDBCSessionDao;
+import org.killbill.billing.util.glue.SessionDAOProvider;
 import org.killbill.billing.util.security.shiro.realm.KillBillJdbcRealm;
 import org.killbill.billing.util.security.shiro.realm.KillBillJndiLdapRealm;
 import org.killbill.billing.util.security.shiro.realm.KillBillOktaRealm;
@@ -131,10 +131,10 @@ public class KillBillShiroWebModule extends ShiroWebModuleWith435 {
     protected void bindSessionManager(final AnnotatedBindingBuilder<SessionManager> bind) {
         // Bypass the servlet container completely for session management and delegate it to Shiro.
         // The default session timeout is 30 minutes.
-        bind.to(KillBillWebSessionManager.class).asEagerSingleton();
+        bind.to(DefaultSessionManager.class).asEagerSingleton();
 
         // Magic provider to configure the session DAO
-        bind(JDBCSessionDao.class).toProvider(JDBCSessionDaoProvider.class).asEagerSingleton();
+        bind(SessionDAO.class).toProvider(SessionDAOProvider.class).asEagerSingleton();
     }
 
     public static final class CorsBasicHttpAuthenticationFilter extends BasicHttpAuthenticationFilter {

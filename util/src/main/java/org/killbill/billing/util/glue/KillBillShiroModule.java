@@ -24,10 +24,10 @@ import org.apache.shiro.mgt.SecurityManager;
 import org.apache.shiro.realm.text.IniRealm;
 import org.apache.shiro.session.mgt.DefaultSessionManager;
 import org.apache.shiro.session.mgt.SessionManager;
+import org.apache.shiro.session.mgt.eis.SessionDAO;
 import org.killbill.billing.platform.api.KillbillConfigSource;
 import org.killbill.billing.util.config.definition.RbacConfig;
 import org.killbill.billing.util.config.definition.RedisCacheConfig;
-import org.killbill.billing.util.security.shiro.dao.JDBCSessionDao;
 import org.killbill.billing.util.security.shiro.realm.KillBillJdbcRealm;
 import org.killbill.billing.util.security.shiro.realm.KillBillJndiLdapRealm;
 import org.killbill.billing.util.security.shiro.realm.KillBillOktaRealm;
@@ -133,6 +133,6 @@ public class KillBillShiroModule extends ShiroModule {
         bind.to(DefaultSessionManager.class).asEagerSingleton();
 
         // Magic provider to configure the session DAO
-        bind(JDBCSessionDao.class).toProvider(JDBCSessionDaoProvider.class).asEagerSingleton();
+        bind(SessionDAO.class).toProvider(SessionDAOProvider.class).asEagerSingleton();
     }
 }
