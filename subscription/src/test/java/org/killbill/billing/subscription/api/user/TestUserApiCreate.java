@@ -131,7 +131,7 @@ public class TestUserApiCreate extends SubscriptionTestSuiteWithEmbeddedDB {
         final SubscriptionBaseEvent phaseEvent = events.get(1);
 
         assertEquals(subscription.getBundleExternalKey(), bundle.getExternalKey());
-        assertEquals(subscription.getStartDate(), requestedDate.toDateTime(accountData.getReferenceTime()));
+        assertEquals(subscription.getStartDate().compareTo(requestedDate.toDateTime(accountData.getReferenceTime())), 0);
 
         assertListenerStatus();
 

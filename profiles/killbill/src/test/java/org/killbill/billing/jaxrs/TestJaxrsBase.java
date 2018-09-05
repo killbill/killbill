@@ -91,6 +91,7 @@ import org.killbill.billing.util.config.definition.PaymentConfig;
 import org.killbill.billing.util.config.definition.SecurityConfig;
 import org.killbill.bus.api.PersistentBus;
 import org.killbill.notificationq.api.NotificationQueueService;
+import org.skife.config.ConfigSource;
 import org.skife.config.ConfigurationObjectFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -356,6 +357,14 @@ public class TestJaxrsBase extends KillbillClient {
 
         super.beforeSuite();
 
+        // We need to setup these earlier than other tests because the server is started once in @BeforeSuite
+        final KillbillConfigSource configSource = getConfigSource(extraPropertiesForTestSuite);
+        final ConfigSource skifeConfigSource = new ConfigSource() {
+            @Override
+            public String getString(final String propertyName) {
+                return configSource.getString(propertyName);
+            }
+        };
         final KillbillServerConfig serverConfig = new ConfigurationObjectFactory(skifeConfigSource).build(KillbillServerConfig.class);
         listener = new TestKillbillGuiceListener(serverConfig, configSource);
 

@@ -235,8 +235,6 @@ public class EntitlementTestSuiteWithEmbeddedDB extends GuicyKillbillTestSuiteWi
     }
 
     private void resetClockToStartOfTest(final ClockMock clock) {
-        clock.resetDeltaFromReality();
-
         // Date at which all tests start-- we create the date object here after the system properties which set the JVM in UTC have been set.
         final DateTime testStartDate = new DateTime(2012, 5, 7, 0, 3, 42, 0);
         clock.setDeltaFromReality(testStartDate.getMillis() - clock.getUTCNow().getMillis());

@@ -25,7 +25,6 @@ import java.util.UUID;
 import javax.inject.Inject;
 
 import org.joda.time.DateTime;
-import org.joda.time.DateTimeZone;
 import org.killbill.billing.api.AbortAfterFirstFailureListener;
 import org.killbill.billing.api.FlakyInvokedMethodListener;
 import org.killbill.billing.api.FlakyRetryAnalyzer;
@@ -77,12 +76,13 @@ public class GuicyKillbillTestSuite implements IHookable {
     protected static final Logger log = LoggerFactory.getLogger(KillbillTestSuite.class.getSimpleName());
 
     // Variables set in @BeforeSuite
-    protected static KillbillConfigSource configSource;
-    protected static ConfigSource skifeConfigSource;
+    protected static ImmutableMap<String, String> extraPropertiesForTestSuite;
     @VisibleForTesting
     protected static ClockMock theRealClock;
 
     protected ClockMock clock;
+    protected KillbillConfigSource configSource;
+    protected ConfigSource skifeConfigSource;
 
     private RedissonClient redissonClient;
 
@@ -220,7 +220,6 @@ public class GuicyKillbillTestSuite implements IHookable {
 
     @BeforeSuite(alwaysRun = true)
     public void globalBeforeSuite() {
-        final ImmutableMap<String, String> extraProperties;
         if (Boolean.valueOf(System.getProperty("killbill.test.redis", "false"))) {
             redisServer = new RedisServer(56379);
             redisServer.start();
@@ -235,65 +234,49 @@ public class GuicyKillbillTestSuite implements IHookable {
             theRealClock = new DistributedClockMock();
             ((DistributedClockMock) theRealClock).setRedissonClient(redissonClient);
 
-            extraProperties = ImmutableMap.<String, String>of("org.killbill.cache.config.redis", "true",
+            extraPropertiesForTestSuite = ImmutableMap.<String, String>of("org.killbill.cache.config.redis", "true",
                                                               "org.killbill.cache.config.redis.url", "redis://127.0.0.1:56379",
                                                               "org.killbill.locker.config.redis", "true",
                                                               "org.killbill.locker.config.redis.url", "redis://127.0.0.1:56379");
         } else {
             theRealClock = new ClockMock();
 
-            extraProperties = ImmutableMap.<String, String>of();
+            extraPropertiesForTestSuite = ImmutableMap.<String, String>of();
         }
 
         // The clock needs to be setup early in @BeforeSuite, as it is needed when starting the server, but see below
         clock = theRealClock;
+    }
 
-        configSource = getConfigSource(extraProperties);
+    @BeforeClass(alwaysRun = true)
+    public void globalBeforeTest() {
+        configSource = getConfigSource(extraPropertiesForTestSuite);
         skifeConfigSource = new ConfigSource() {
             @Override
             public String getString(final String propertyName) {
                 return configSource.getString(propertyName);
             }
         };
-    }
 
-    @BeforeClass(alwaysRun = true)
-    public void globalBeforeTest() {
         // We need to set the instance variable in each subsequent class instantiated in the suite
-        clock = Mockito.spy(theRealClock);
-        final Answer answer = new Answer() {
-            @Override
-            public Object answer(final InvocationOnMock invocation) throws Throwable {
-                final Object realAnswer = invocation.callRealMethod();
-                if (!(clock instanceof DistributedClockMock)) {
-                    // The ClockMock has its own copy of ReferenceDateTimeUTC so both objects need to be sync'ed
-                    invocation.getMethod().invoke(theRealClock, invocation.getArguments());
-                }
+        clock = Mockito.mock(ClockMock.class,
+                             new Answer() {
+                                 @Override
+                                 public Object answer(final InvocationOnMock invocation) throws Throwable {
+                                     final Object answer = invocation.getMethod().invoke(theRealClock, invocation.getArguments());
+                                     final DateTime utcNow = theRealClock.getUTCNow();
 
-                // Update the contexts createdDate each time we move the clock
-                final DateTime utcNow = theRealClock.getUTCNow();
-                if (callContext != null) {
-                    callContext.setCreatedDate(utcNow);
-                }
-                if (internalCallContext != null) {
-                    internalCallContext.setCreatedDate(utcNow);
-                    internalCallContext.setUpdatedDate(utcNow);
-                }
+                                     if (callContext != null) {
+                                         callContext.setCreatedDate(utcNow);
+                                     }
+                                     if (internalCallContext != null) {
+                                         internalCallContext.setCreatedDate(utcNow);
+                                         internalCallContext.setUpdatedDate(utcNow);
+                                     }
 
-                return realAnswer;
-            }
-        };
-        Mockito.doAnswer(answer).when(clock).getUTCNow();
-        Mockito.doAnswer(answer).when(clock).getNow(Mockito.any(DateTimeZone.class));
-        Mockito.doAnswer(answer).when(clock).getUTCToday();
-        Mockito.doAnswer(answer).when(clock).getToday(Mockito.any(DateTimeZone.class));
-        Mockito.doAnswer(answer).when(clock).addDays(Mockito.anyInt());
-        Mockito.doAnswer(answer).when(clock).addWeeks(Mockito.anyInt());
-        Mockito.doAnswer(answer).when(clock).addMonths(Mockito.anyInt());
-        Mockito.doAnswer(answer).when(clock).addYears(Mockito.anyInt());
-        Mockito.doAnswer(answer).when(clock).addDeltaFromReality(Mockito.anyLong());
-        Mockito.doAnswer(answer).when(clock).setTime(Mockito.any(DateTime.class));
-        Mockito.doAnswer(answer).when(clock).resetDeltaFromReality();
+                                     return answer;
+                                 }
+                             });
     }
 
     @AfterSuite(alwaysRun = true)

@@ -63,6 +63,10 @@ public class TestInvoicePluginDispatcher extends InvoiceTestSuiteNoDB {
     @Override
     @BeforeMethod(groups = "fast")
     public void beforeMethod() {
+        if (hasFailed()) {
+            return;
+        }
+
         super.beforeMethod();
         for (final String name : pluginRegistry.getAllServices()) {
             pluginRegistry.unregisterService(name);

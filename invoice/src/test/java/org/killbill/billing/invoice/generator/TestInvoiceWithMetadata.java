@@ -56,6 +56,10 @@ public class TestInvoiceWithMetadata extends InvoiceTestSuiteNoDB {
     @Override
     @BeforeMethod(groups = "fast")
     public void beforeMethod() {
+        if (hasFailed()) {
+            return;
+        }
+
         super.beforeMethod();
 
         try {
