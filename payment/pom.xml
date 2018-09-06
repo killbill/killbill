@@ -22,7 +22,8 @@
         <version>0.20.2-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
-    <artifactId>killbill-payment</artifactId>
+    <artifactId>killbill-payment-squaretrade</artifactId>
+    <version>0.20.1-SNAPSHOT</version>
     <packaging>jar</packaging>
     <name>killbill-payment</name>
     <dependencies>
@@ -103,11 +104,13 @@
         <dependency>
             <groupId>org.kill-bill.billing</groupId>
             <artifactId>killbill-account</artifactId>
+            <version>0.20.1</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.kill-bill.billing</groupId>
             <artifactId>killbill-account</artifactId>
+            <version>0.20.1</version>
             <type>test-jar</type>
             <scope>test</scope>
         </dependency>
@@ -118,16 +121,19 @@
         <dependency>
             <groupId>org.kill-bill.billing</groupId>
             <artifactId>killbill-internal-api</artifactId>
+            <version>0.20.1</version>
         </dependency>
         <dependency>
             <groupId>org.kill-bill.billing</groupId>
             <artifactId>killbill-invoice</artifactId>
+            <version>0.20.1</version>
             <type>test-jar</type>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.kill-bill.billing</groupId>
             <artifactId>killbill-junction</artifactId>
+            <version>0.20.1</version>
             <type>test-jar</type>
             <scope>test</scope>
         </dependency>
@@ -147,10 +153,12 @@
         <dependency>
             <groupId>org.kill-bill.billing</groupId>
             <artifactId>killbill-util</artifactId>
+            <version>0.20.1</version>
         </dependency>
         <dependency>
             <groupId>org.kill-bill.billing</groupId>
             <artifactId>killbill-util</artifactId>
+            <version>0.20.1</version>
             <type>test-jar</type>
             <scope>test</scope>
         </dependency>

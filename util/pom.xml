@@ -24,7 +24,8 @@
         <version>0.20.2-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
-    <artifactId>killbill-util</artifactId>
+    <artifactId>killbill-util-squaretrade</artifactId>
+    <version>0.20.1-SNAPSHOT</version>
     <packaging>jar</packaging>
     <name>killbill-util</name>
     <dependencies>
@@ -185,6 +186,7 @@
         <dependency>
             <groupId>org.kill-bill.billing</groupId>
             <artifactId>killbill-internal-api</artifactId>
+            <version>0.20.1</version>
         </dependency>
         <dependency>
             <groupId>org.kill-bill.billing</groupId>

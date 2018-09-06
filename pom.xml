@@ -29,6 +29,18 @@
     <name>killbill</name>
     <description>Library for managing recurring subscriptions and the associated billing</description>
     <url>http://github.com/killbill/killbill</url>
+    <distributionManagement>
+        <repository>
+            <id>releases</id>
+            <name>ST Releases</name>
+            <url>http://nexus.squaretrade.com/content/repositories/releases</url>
+        </repository>
+        <snapshotRepository>
+            <id>snapshots</id>
+            <name>ST Snapshots</name>
+            <url>http://nexus.squaretrade.com/content/repositories/snapshots</url>
+        </snapshotRepository>
+    </distributionManagement>
     <modules>
         <module>account</module>
         <module>api</module>
