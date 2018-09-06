@@ -332,7 +332,7 @@ public class ControlPluginRunner {
                                             @Nullable final Currency processedCurrency,
                                             final boolean isApiPayment,
                                             final CallContext callContext) {
-            super(account.getId(), callContext.getTenantId(), callContext.getUserName(), callContext.getCallOrigin(), callContext.getUserType(), callContext.getReasonCode(), callContext.getComments(), callContext.getUserToken(), callContext.getCreatedDate(), callContext.getUpdatedDate());
+            super((account != null ? account.getId() : null), callContext.getTenantId(), callContext.getUserName(), callContext.getCallOrigin(), callContext.getUserType(), callContext.getReasonCode(), callContext.getComments(), callContext.getUserToken(), callContext.getCreatedDate(), callContext.getUpdatedDate());
             this.account = account;
             this.paymentMethodId = paymentMethodId;
             this.pluginName = pluginName;
