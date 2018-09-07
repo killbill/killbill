@@ -90,7 +90,7 @@ public class TestPerTenantConfig extends TestJaxrsBase {
         //
 
         //
-        // Now unregister special per tenant config and we the first retry occurs one day after (and still fails), it now sets a retry date of 8 days
+        // Now unregister special per tenant config and when the first retry occurs one day after (and still fails), it now sets a retry date of 8 days
         //
         callbackServlet.pushExpectedEvents(ExtBusEventType.TENANT_CONFIG_DELETION);
         tenantApi.deletePerTenantConfiguration(requestOptions);
