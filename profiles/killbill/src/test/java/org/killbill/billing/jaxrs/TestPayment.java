@@ -19,7 +19,6 @@ package org.killbill.billing.jaxrs;
 
 import java.math.BigDecimal;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -27,6 +26,7 @@ import java.util.Map;
 import java.util.UUID;
 
 import javax.annotation.Nullable;
+import javax.ws.rs.HEAD;
 
 import org.joda.time.DateTime;
 import org.killbill.billing.ObjectType;
@@ -963,7 +963,7 @@ public class TestPayment extends TestJaxrsBase {
         assertEquals(Payments.size(), paymentNb);
         assertEquals(Payments.get(paymentNb - 1), payment);
 
-        final Payment retrievedPayment = paymentApi.getPayment(payment.getPaymentId(), NULL_PLUGIN_PROPERTIES, requestOptions);
+        final Payment retrievedPayment = paymentApi.getPayment(payment.getPaymentId(), false, false, NULL_PLUGIN_PROPERTIES, AuditLevel.NONE, requestOptions);
         assertEquals(retrievedPayment, payment);
 
         final Payments paymentsForAccount = accountApi.getPaymentsForAccount(account.getAccountId(), NULL_PLUGIN_PROPERTIES, requestOptions);

@@ -54,6 +54,8 @@ public class TestPaymentModule extends PaymentModule {
     @Override
     protected void installPaymentProviderPlugins(final PaymentConfig config) {
         install(new MockPaymentProviderPluginModule(MockPaymentProviderPlugin.PLUGIN_NAME, clock, configSource));
+        // Install a second instance, to test codepaths with multiple plugins (e.g. search)
+        install(new MockPaymentProviderPluginModule(MockPaymentProviderPlugin.PLUGIN_NAME + "2", clock, configSource));
     }
 
     private void installExternalApis() {
