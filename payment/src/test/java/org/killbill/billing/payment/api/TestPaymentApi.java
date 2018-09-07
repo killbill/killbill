@@ -26,10 +26,8 @@ import java.util.List;
 import java.util.UUID;
 
 import javax.annotation.Nullable;
-import javax.annotation.concurrent.Immutable;
 
 import org.joda.time.LocalDate;
-import org.joda.time.LocalDate.Property;
 import org.killbill.billing.ErrorCode;
 import org.killbill.billing.account.api.Account;
 import org.killbill.billing.catalog.api.Currency;
@@ -45,6 +43,7 @@ import org.killbill.billing.payment.dao.PaymentSqlDao;
 import org.killbill.billing.payment.invoice.InvoicePaymentControlPluginApi;
 import org.killbill.billing.payment.plugin.api.PaymentPluginApiException;
 import org.killbill.billing.payment.plugin.api.PaymentPluginStatus;
+import org.killbill.billing.payment.provider.DefaultNoOpPaymentMethodPlugin;
 import org.killbill.billing.payment.provider.ExternalPaymentProviderPlugin;
 import org.killbill.billing.payment.provider.MockPaymentControlProviderPlugin;
 import org.killbill.billing.payment.provider.MockPaymentProviderPlugin;
@@ -66,10 +65,6 @@ import static org.testng.Assert.fail;
 
 public class TestPaymentApi extends PaymentTestSuiteWithEmbeddedDB {
 
-    private MockPaymentProviderPlugin mockPaymentProviderPlugin;
-
-    private MockPaymentControlProviderPlugin mockPaymentControlProviderPlugin;
-
     final PaymentOptions INVOICE_PAYMENT = new PaymentOptions() {
         @Override
         public boolean isExternalPayment() {
@@ -81,7 +76,6 @@ public class TestPaymentApi extends PaymentTestSuiteWithEmbeddedDB {
             return ImmutableList.<String>of(InvoicePaymentControlPluginApi.PLUGIN_NAME);
         }
     };
-
     final PaymentOptions CONTROL_PLUGIN_OPTIONS = new PaymentOptions() {
         @Override
         public boolean isExternalPayment() {
@@ -93,7 +87,8 @@ public class TestPaymentApi extends PaymentTestSuiteWithEmbeddedDB {
             return Arrays.asList(MockPaymentControlProviderPlugin.PLUGIN_NAME);
         }
     };
-
+    private MockPaymentProviderPlugin mockPaymentProviderPlugin;
+    private MockPaymentControlProviderPlugin mockPaymentControlProviderPlugin;
     private Account account;
 
     @BeforeClass(groups = "slow")
@@ -185,7 +180,7 @@ public class TestPaymentApi extends PaymentTestSuiteWithEmbeddedDB {
         checkPaymentMethodPagination(paymentMethodId, baseNbRecords + 1, false);
     }
 
-    @Test(groups = "slow", description="Verify we can make a refund on  payment whose original payment method was deleted. See 694")
+    @Test(groups = "slow", description = "Verify we can make a refund on  payment whose original payment method was deleted. See 694")
     public void testRefundAfterDeletedPaymentMethod() throws PaymentApiException {
 
         final BigDecimal requestedAmount = BigDecimal.TEN;
@@ -194,13 +189,12 @@ public class TestPaymentApi extends PaymentTestSuiteWithEmbeddedDB {
 
         paymentApi.deletePaymentMethod(account, account.getPaymentMethodId(), false, true, ImmutableList.<PluginProperty>of(), callContext);
 
-        final Payment newPayment = paymentApi.createRefund(account, payment.getId(),requestedAmount,  Currency.EUR, UUID.randomUUID().toString(), ImmutableList.<PluginProperty>of(), callContext);
+        final Payment newPayment = paymentApi.createRefund(account, payment.getId(), requestedAmount, Currency.EUR, UUID.randomUUID().toString(), ImmutableList.<PluginProperty>of(), callContext);
         Assert.assertEquals(newPayment.getTransactions().size(), 2);
     }
 
     @Test(groups = "slow")
     public void testCreateSuccessPurchase() throws PaymentApiException {
-
         final BigDecimal requestedAmount = BigDecimal.TEN;
 
         final String paymentExternalKey = "bwwrr";
@@ -281,7 +275,6 @@ public class TestPaymentApi extends PaymentTestSuiteWithEmbeddedDB {
 
     }
 
-
     @Test(groups = "slow")
     public void testCreateCancelledPurchase() throws PaymentApiException {
 
@@ -352,7 +345,8 @@ public class TestPaymentApi extends PaymentTestSuiteWithEmbeddedDB {
         mockPaymentProviderPlugin.makeNextPaymentFailWithException();
 
         final BigDecimal requestedAmount = BigDecimal.TEN;
-        final String paymentExternalKey = "pay controle external key";;
+        final String paymentExternalKey = "pay controle external key";
+
         final String transactionExternalKey = "txn control external key";
         try {
             paymentApi.createPurchaseWithPaymentControl(
@@ -369,7 +363,8 @@ public class TestPaymentApi extends PaymentTestSuiteWithEmbeddedDB {
         mockPaymentControlProviderPlugin.throwsException(new PaymentControlApiException());
 
         final BigDecimal requestedAmount = BigDecimal.TEN;
-        final String paymentExternalKey = "pay controle external key";;
+        final String paymentExternalKey = "pay controle external key";
+
         final String transactionExternalKey = "txn control external key";
         try {
             paymentApi.createPurchaseWithPaymentControl(
@@ -386,7 +381,8 @@ public class TestPaymentApi extends PaymentTestSuiteWithEmbeddedDB {
         mockPaymentControlProviderPlugin.throwsException(new IllegalStateException());
 
         final BigDecimal requestedAmount = BigDecimal.TEN;
-        final String paymentExternalKey = "pay controle external key";;
+        final String paymentExternalKey = "pay controle external key";
+
         final String transactionExternalKey = "txn control external key";
         try {
             paymentApi.createPurchaseWithPaymentControl(
@@ -934,7 +930,6 @@ public class TestPaymentApi extends PaymentTestSuiteWithEmbeddedDB {
             assertTrue(true);
         }
 
-
         final List<Payment> accountPayments = paymentApi.getAccountPayments(account.getId(), false, false, ImmutableList.<PluginProperty>of(), callContext);
         assertEquals(accountPayments.size(), 1);
         final Payment payment = accountPayments.get(0);
@@ -958,7 +953,6 @@ public class TestPaymentApi extends PaymentTestSuiteWithEmbeddedDB {
         assertEquals(payment.getTransactions().get(0).getTransactionStatus(), TransactionStatus.PAYMENT_FAILURE);
         assertEquals(payment.getTransactions().get(0).getTransactionType(), TransactionType.PURCHASE);
     }
-
 
     @Test(groups = "slow")
     public void testCreateCancelledPurchaseWithPaymentControl() throws PaymentApiException, InvoiceApiException, EventBusException {
@@ -991,7 +985,6 @@ public class TestPaymentApi extends PaymentTestSuiteWithEmbeddedDB {
             assertTrue(true);
         }
 
-
         final List<Payment> accountPayments = paymentApi.getAccountPayments(account.getId(), false, false, ImmutableList.<PluginProperty>of(), callContext);
         assertEquals(accountPayments.size(), 1);
         final Payment payment = accountPayments.get(0);
@@ -1019,7 +1012,6 @@ public class TestPaymentApi extends PaymentTestSuiteWithEmbeddedDB {
         paymentApi.createPurchaseWithPaymentControl(account, account.getPaymentMethodId(), null, requestedAmount, Currency.USD, paymentExternalKey, transactionExternalKey,
                                                     createPropertiesForInvoice(invoice), INVOICE_PAYMENT, callContext);
 
-
         final List<Payment> accountPayments2 = paymentApi.getAccountPayments(account.getId(), false, false, ImmutableList.<PluginProperty>of(), callContext);
         assertEquals(accountPayments2.size(), 1);
         final Payment payment2 = accountPayments2.get(0);
@@ -1034,7 +1026,6 @@ public class TestPaymentApi extends PaymentTestSuiteWithEmbeddedDB {
         assertEquals(payment2.getTransactions().get(1).getTransactionType(), TransactionType.PURCHASE);
 
     }
-
 
     @Test(groups = "slow")
     public void testCreateAbortedPurchaseWithPaymentControl() throws InvoiceApiException, EventBusException {
@@ -2384,6 +2375,81 @@ public class TestPaymentApi extends PaymentTestSuiteWithEmbeddedDB {
         Assert.assertEquals(failedAuthorization4.getTransactions().get(2).getExternalKey(), authKey);
         Assert.assertEquals(failedAuthorization4.getTransactions().get(3).getTransactionStatus(), TransactionStatus.PAYMENT_FAILURE);
         Assert.assertNotEquals(failedAuthorization4.getTransactions().get(3).getExternalKey(), authKey);
+    }
+
+    @Test(groups = "slow")
+    public void testSearchPayments() throws Exception {
+        // Add a second, non-default, payment method
+        final PaymentMethodPlugin pm = new DefaultNoOpPaymentMethodPlugin(UUID.randomUUID().toString(), false, null);
+        final UUID secondPmId = testHelper.addTestPaymentMethod(MockPaymentProviderPlugin.PLUGIN_NAME + "2", account, pm, ImmutableList.<PluginProperty>of());
+
+        Pagination<Payment> foundPayments = paymentApi.searchPayments("all", 0L, 10L, true, false, ImmutableList.<PluginProperty>of(), callContext);
+        Assert.assertFalse(foundPayments.iterator().hasNext());
+        Assert.assertEquals(foundPayments.getMaxNbRecords(), (Long) 0L);
+        Assert.assertEquals(foundPayments.getTotalNbRecords(), (Long) 0L);
+
+        foundPayments = paymentApi.searchPayments("A", 0L, 10L, true, false, ImmutableList.<PluginProperty>of(), callContext);
+        Assert.assertFalse(foundPayments.iterator().hasNext());
+        Assert.assertEquals(foundPayments.getMaxNbRecords(), (Long) 0L);
+        Assert.assertEquals(foundPayments.getTotalNbRecords(), (Long) 0L);
+
+        foundPayments = paymentApi.searchPayments("B", 0L, 10L, true, false, ImmutableList.<PluginProperty>of(), callContext);
+        Assert.assertFalse(foundPayments.iterator().hasNext());
+        Assert.assertEquals(foundPayments.getMaxNbRecords(), (Long) 0L);
+        Assert.assertEquals(foundPayments.getTotalNbRecords(), (Long) 0L);
+
+        final Payment payment1 = paymentApi.createPurchase(account,
+                                                           account.getPaymentMethodId(),
+                                                           null,
+                                                           BigDecimal.TEN,
+                                                           Currency.USD,
+                                                           UUID.randomUUID().toString(),
+                                                           UUID.randomUUID().toString(),
+                                                           ImmutableList.<PluginProperty>of(new PluginProperty("group", "all", false), new PluginProperty("marker", "A", false)),
+                                                           callContext);
+
+        foundPayments = paymentApi.searchPayments("all", 0L, 10L, true, false, ImmutableList.<PluginProperty>of(), callContext);
+        Assert.assertTrue(foundPayments.iterator().hasNext());
+        Assert.assertEquals(foundPayments.getMaxNbRecords(), (Long) 1L);
+        Assert.assertEquals(foundPayments.getTotalNbRecords(), (Long) 1L);
+
+        foundPayments = paymentApi.searchPayments("A", 0L, 10L, true, false, ImmutableList.<PluginProperty>of(), callContext);
+        Assert.assertTrue(foundPayments.iterator().hasNext());
+        Assert.assertEquals(foundPayments.getMaxNbRecords(), (Long) 1L);
+        Assert.assertEquals(foundPayments.getTotalNbRecords(), (Long) 1L);
+        Assert.assertEquals(foundPayments.iterator().next().getId(), payment1.getId());
+
+        foundPayments = paymentApi.searchPayments("B", 0L, 10L, true, false, ImmutableList.<PluginProperty>of(), callContext);
+        Assert.assertFalse(foundPayments.iterator().hasNext());
+        Assert.assertEquals(foundPayments.getMaxNbRecords(), (Long) 1L);
+        Assert.assertEquals(foundPayments.getTotalNbRecords(), (Long) 0L);
+
+        final Payment payment2 = paymentApi.createPurchase(account,
+                                                           secondPmId,
+                                                           null,
+                                                           BigDecimal.TEN,
+                                                           Currency.USD,
+                                                           UUID.randomUUID().toString(),
+                                                           UUID.randomUUID().toString(),
+                                                           ImmutableList.<PluginProperty>of(new PluginProperty("group", "all", false), new PluginProperty("marker", "B", false)),
+                                                           callContext);
+
+        foundPayments = paymentApi.searchPayments("all", 0L, 10L, true, false, ImmutableList.<PluginProperty>of(), callContext);
+        Assert.assertTrue(foundPayments.iterator().hasNext());
+        Assert.assertEquals(foundPayments.getMaxNbRecords(), (Long) 2L);
+        Assert.assertEquals(foundPayments.getTotalNbRecords(), (Long) 2L);
+
+        foundPayments = paymentApi.searchPayments("A", 0L, 10L, true, false, ImmutableList.<PluginProperty>of(), callContext);
+        Assert.assertTrue(foundPayments.iterator().hasNext());
+        Assert.assertEquals(foundPayments.getMaxNbRecords(), (Long) 2L);
+        Assert.assertEquals(foundPayments.getTotalNbRecords(), (Long) 1L);
+        Assert.assertEquals(foundPayments.iterator().next().getId(), payment1.getId());
+
+        foundPayments = paymentApi.searchPayments("B", 0L, 10L, true, false, ImmutableList.<PluginProperty>of(), callContext);
+        Assert.assertTrue(foundPayments.iterator().hasNext());
+        Assert.assertEquals(foundPayments.getMaxNbRecords(), (Long) 2L);
+        Assert.assertEquals(foundPayments.getTotalNbRecords(), (Long) 1L);
+        Assert.assertEquals(foundPayments.iterator().next().getId(), payment2.getId());
     }
 
     private void verifyRefund(final Payment refund, final String paymentExternalKey, final String paymentTransactionExternalKey, final String refundTransactionExternalKey, final BigDecimal requestedAmount, final BigDecimal refundAmount, final TransactionStatus transactionStatus) {
