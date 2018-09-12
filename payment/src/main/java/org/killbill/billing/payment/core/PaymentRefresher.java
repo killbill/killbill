@@ -349,7 +349,12 @@ public class PaymentRefresher extends ProcessorBase {
         // Cannot easily stream here unfortunately, since we need to merge PaymentTransactionInfoPlugin into Payment (no order assumed)
         final Multimap<UUID, PaymentTransactionInfoPlugin> payments = HashMultimap.<UUID, PaymentTransactionInfoPlugin>create();
         for (final PaymentTransactionInfoPlugin paymentTransactionInfoPlugin : paymentTransactionInfoPlugins) {
-            payments.put(paymentTransactionInfoPlugin.getKbPaymentId(), paymentTransactionInfoPlugin);
+            if (paymentTransactionInfoPlugin.getKbPaymentId() == null) {
+                // Garbage from the plugin?
+                log.debug("Plugin {} returned a payment without a kbPaymentId for searchKey {}", pluginName, searchKey);
+            } else {
+                payments.put(paymentTransactionInfoPlugin.getKbPaymentId(), paymentTransactionInfoPlugin);
+            }
         }
 
         final Collection<Payment> results = new LinkedList<Payment>();
