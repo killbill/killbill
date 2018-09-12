@@ -169,15 +169,19 @@ public class TestPaymentHelper {
     }
 
     public Account addTestPaymentMethod(final Account account, final PaymentMethodPlugin paymentMethodInfo, final Iterable<PluginProperty> pluginProperties) throws Exception {
-        final UUID paymentMethodId = paymentApi.addPaymentMethod(account, paymentMethodInfo.getExternalPaymentMethodId(), MockPaymentProviderPlugin.PLUGIN_NAME, true, paymentMethodInfo, pluginProperties, context);
-        if (isFastTest()) {
+        final UUID pmId = addTestPaymentMethod(MockPaymentProviderPlugin.PLUGIN_NAME, account, paymentMethodInfo, pluginProperties);
+        // To reflect the payment method id change
+        return accountApi.getAccountById(account.getId(), context);
+    }
+
+    public UUID addTestPaymentMethod(final String pluginName, final Account account, final PaymentMethodPlugin paymentMethodInfo, final Iterable<PluginProperty> pluginProperties) throws Exception {
+        final boolean setDefault = paymentMethodInfo.isDefaultPaymentMethod();
+        final UUID paymentMethodId = paymentApi.addPaymentMethod(account, paymentMethodInfo.getExternalPaymentMethodId(), pluginName, setDefault, paymentMethodInfo, pluginProperties, context);
+        if (isFastTest() && setDefault) {
             final Account account1 = new MockAccountBuilder(account).paymentMethodId(paymentMethodId).build();
-            accountApi.updateAccount(account, context);
-            return account1;
-        } else {
-            // To reflect the payment method id change
-            return accountApi.getAccountById(account.getId(), context);
+            accountApi.updateAccount(account1, context);
         }
+        return paymentMethodId;
     }
 
     // Unfortunately, this helper is shared across fast and slow tests

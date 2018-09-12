@@ -19,7 +19,6 @@ package org.killbill.billing.jaxrs;
 
 import java.math.BigDecimal;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -869,7 +868,7 @@ public class TestPayment extends TestJaxrsBase {
         assertEquals(Payments.size(), paymentNb);
         assertEquals(Payments.get(paymentNb - 1), payment);
 
-        final Payment retrievedPayment = killBillClient.getPayment(payment.getPaymentId());
+        final Payment retrievedPayment = killBillClient.getPayment(payment.getPaymentId(), false, requestOptions);
         assertEquals(retrievedPayment, payment);
 
         final Payments paymentsForAccount = killBillClient.getPaymentsForAccount(account.getAccountId());
