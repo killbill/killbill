@@ -1,3 +1,6 @@
+0.18.22
+    See https://github.com/killbill/killbill/releases/tag/killbill-0.18.22
+
 0.18.21
     Fix for NPE if the only available usage is before the first transition date
 
