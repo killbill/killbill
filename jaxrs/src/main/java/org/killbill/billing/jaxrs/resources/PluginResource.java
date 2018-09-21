@@ -221,7 +221,7 @@ public class PluginResource extends JaxRsResourceBase {
         }
 
         return Response.status(response.getStatus())
-                       .entity(new String(byteArrayOutputStream.toByteArray()))
+                       .entity(new String(byteArrayOutputStream.toByteArray(), "UTF-8"))
                        .build();
     }
 
