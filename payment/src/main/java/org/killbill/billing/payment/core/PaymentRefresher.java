@@ -49,7 +49,6 @@ import org.killbill.billing.payment.dao.PaymentModelDao;
 import org.killbill.billing.payment.dao.PaymentTransactionModelDao;
 import org.killbill.billing.payment.dao.PluginPropertySerializer;
 import org.killbill.billing.payment.dao.PluginPropertySerializer.PluginPropertySerializerException;
-import org.killbill.billing.payment.glue.DefaultPaymentService;
 import org.killbill.billing.payment.plugin.api.PaymentPluginApi;
 import org.killbill.billing.payment.plugin.api.PaymentPluginApiException;
 import org.killbill.billing.payment.plugin.api.PaymentTransactionInfoPlugin;
@@ -77,10 +76,12 @@ import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
 import com.google.common.collect.Collections2;
+import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Multimap;
 import com.google.common.collect.Ordering;
 
 import static org.killbill.billing.util.entity.dao.DefaultPaginationHelper.getEntityPagination;
@@ -338,42 +339,35 @@ public class PaymentRefresher extends ProcessorBase {
                                               final boolean withAttempts, final Iterable<PluginProperty> properties, final TenantContext tenantContext, final InternalTenantContext internalTenantContext) throws PaymentApiException {
         final PaymentPluginApi pluginApi = getPaymentPluginApi(pluginName);
 
-        return getEntityPagination(limit,
-                                   new SourcePaginationBuilder<PaymentTransactionInfoPlugin, PaymentApiException>() {
-                                       @Override
-                                       public Pagination<PaymentTransactionInfoPlugin> build() throws PaymentApiException {
-                                           try {
-                                               return pluginApi.searchPayments(searchKey, offset, limit, properties, tenantContext);
-                                           } catch (final PaymentPluginApiException e) {
-                                               throw new PaymentApiException(e, ErrorCode.PAYMENT_PLUGIN_SEARCH_PAYMENTS, pluginName, searchKey);
-                                           }
-                                       }
+        final Pagination<PaymentTransactionInfoPlugin> paymentTransactionInfoPlugins;
+        try {
+            paymentTransactionInfoPlugins = pluginApi.searchPayments(searchKey, offset, limit, properties, tenantContext);
+        } catch (final PaymentPluginApiException e) {
+            throw new PaymentApiException(e, ErrorCode.PAYMENT_PLUGIN_SEARCH_PAYMENTS, pluginName, searchKey);
+        }
 
-                                   },
-                                   new Function<PaymentTransactionInfoPlugin, Payment>() {
-                                       final List<PaymentTransactionInfoPlugin> cachedPaymentTransactions = new LinkedList<PaymentTransactionInfoPlugin>();
+        // Cannot easily stream here unfortunately, since we need to merge PaymentTransactionInfoPlugin into Payment (no order assumed)
+        final Multimap<UUID, PaymentTransactionInfoPlugin> payments = HashMultimap.<UUID, PaymentTransactionInfoPlugin>create();
+        for (final PaymentTransactionInfoPlugin paymentTransactionInfoPlugin : paymentTransactionInfoPlugins) {
+            if (paymentTransactionInfoPlugin.getKbPaymentId() == null) {
+                // Garbage from the plugin?
+                log.debug("Plugin {} returned a payment without a kbPaymentId for searchKey {}", pluginName, searchKey);
+            } else {
+                payments.put(paymentTransactionInfoPlugin.getKbPaymentId(), paymentTransactionInfoPlugin);
+            }
+        }
 
-                                       @Override
-                                       public Payment apply(final PaymentTransactionInfoPlugin pluginTransaction) {
-                                           if (pluginTransaction.getKbPaymentId() == null) {
-                                               // Garbage from the plugin?
-                                               log.debug("Plugin {} returned a payment without a kbPaymentId for searchKey {}", pluginName, searchKey);
-                                               return null;
-                                           }
+        final Collection<Payment> results = new LinkedList<Payment>();
+        for (final UUID paymentId : payments.keys()) {
+            final Payment result = toPayment(paymentId, withPluginInfo ? payments.get(paymentId) : ImmutableList.<PaymentTransactionInfoPlugin>of(), withAttempts, internalTenantContext);
+            if (result != null) {
+                results.add(result);
+            }
+        }
 
-                                           if (cachedPaymentTransactions.isEmpty() ||
-                                               (cachedPaymentTransactions.get(0).getKbPaymentId().equals(pluginTransaction.getKbPaymentId()))) {
-                                               cachedPaymentTransactions.add(pluginTransaction);
-                                               return null;
-                                           } else {
-                                               final Payment result = toPayment(pluginTransaction.getKbPaymentId(), withPluginInfo ? ImmutableList.<PaymentTransactionInfoPlugin>copyOf(cachedPaymentTransactions) : ImmutableList.<PaymentTransactionInfoPlugin>of(), withAttempts, internalTenantContext);
-                                               cachedPaymentTransactions.clear();
-                                               cachedPaymentTransactions.add(pluginTransaction);
-                                               return result;
-                                           }
-                                       }
-                                   }
-                                  );
+        return new DefaultPagination<Payment>(paymentTransactionInfoPlugins,
+                                              limit,
+                                              results.iterator());
     }
 
     // Used in bulk get APIs (getPayments / searchPayments)

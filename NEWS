@@ -76,7 +76,7 @@
     Fix JDBC connection leak in pagination API. Fixes #853
     Fix limitation where catalog plan name cannot end with an number. Fixes #842
     Reduce log level of InvoiceItemGeneratorLogger. Fixes #851
-    Usage detail/aggregate mode. Fixes #839 
+    Usage detail/aggregate mode. Fixes #839
     Add metadata detail field to external charges. Fixes #843
     Add ability to void invoices. Fixes #833
 
@@ -93,6 +93,9 @@
 
 0.19.0
     Initial dev release
+
+0.18.22
+    See https://github.com/killbill/killbill/releases/tag/killbill-0.18.22
 
 0.18.21
     Fix for NPE if the only available usage is before the first transition date
