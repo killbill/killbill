@@ -363,6 +363,72 @@ public class TestIntegrationDryRunInvoice extends TestIntegrationBase {
         invoiceChecker.checkInvoice(invoices.get(1).getId(), callContext, expectedInvoices);
     }
 
+    @Test(groups = "slow")
+    public void testDryRunTargetDatesInTheFuture() throws Exception {
+        final DateTime initialCreationDate = new DateTime(2014, 1, 2, 0, 0, 0, 0, testTimeZone);
+        clock.setTime(initialCreationDate);
+
+        final Account account = createAccountWithNonOsgiPaymentMethod(getAccountData(0));
+
+        // Create the monthly
+        createBaseEntitlementAndCheckForCompletion(account.getId(), "bundleKey", "Shotgun", ProductCategory.BASE, BillingPeriod.MONTHLY, NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE);
+
+        final List<ExpectedInvoiceItemCheck> expectedInvoices = new ArrayList<ExpectedInvoiceItemCheck>();
+
+        expectedInvoices.add(new ExpectedInvoiceItemCheck(new LocalDate(2014, 2, 1), new LocalDate(2014, 3, 1), InvoiceItemType.RECURRING, new BigDecimal("249.95")));
+        Invoice dryRunInvoice = invoiceUserApi.triggerDryRunInvoiceGeneration(account.getId(), new LocalDate(2014, 2, 28), DRY_RUN_TARGET_DATE_ARG, callContext);
+        assertEquals(dryRunInvoice.getTargetDate(), new LocalDate(2014, 2, 1));
+        invoiceChecker.checkInvoiceNoAudits(dryRunInvoice, expectedInvoices);
+        expectedInvoices.clear();
+
+        expectedInvoices.add(new ExpectedInvoiceItemCheck(new LocalDate(2014, 3, 1), new LocalDate(2014, 4, 1), InvoiceItemType.RECURRING, new BigDecimal("249.95")));
+        dryRunInvoice = invoiceUserApi.triggerDryRunInvoiceGeneration(account.getId(), new LocalDate(2014, 3, 1), DRY_RUN_TARGET_DATE_ARG, callContext);
+        assertEquals(dryRunInvoice.getTargetDate(), new LocalDate(2014, 3, 1));
+        invoiceChecker.checkInvoiceNoAudits(dryRunInvoice, expectedInvoices);
+        expectedInvoices.clear();
+
+
+        expectedInvoices.add(new ExpectedInvoiceItemCheck(new LocalDate(2014, 4, 1), new LocalDate(2014, 5, 1), InvoiceItemType.RECURRING, new BigDecimal("249.95")));
+        dryRunInvoice = invoiceUserApi.triggerDryRunInvoiceGeneration(account.getId(), new LocalDate(2014, 4, 1), DRY_RUN_TARGET_DATE_ARG, callContext);
+        assertEquals(dryRunInvoice.getTargetDate(), new LocalDate(2014, 4, 1));
+        invoiceChecker.checkInvoiceNoAudits(dryRunInvoice, expectedInvoices);
+        expectedInvoices.clear();
+
+        expectedInvoices.add(new ExpectedInvoiceItemCheck(new LocalDate(2014, 5, 1), new LocalDate(2014, 6, 1), InvoiceItemType.RECURRING, new BigDecimal("249.95")));
+        dryRunInvoice = invoiceUserApi.triggerDryRunInvoiceGeneration(account.getId(), new LocalDate(2014, 5, 3), DRY_RUN_TARGET_DATE_ARG, callContext);
+        assertEquals(dryRunInvoice.getTargetDate(), new LocalDate(2014, 5, 1));
+        invoiceChecker.checkInvoiceNoAudits(dryRunInvoice, expectedInvoices);
+        expectedInvoices.clear();
+
+    }
+
+    @Test(groups = "slow")
+    public void testDryRunTargetDateWithLeadingProration() throws Exception {
+        final DateTime initialCreationDate = new DateTime(2014, 1, 2, 0, 0, 0, 0, testTimeZone);
+        clock.setTime(initialCreationDate);
+
+        // billing date for the monthly
+        final int billingDay = 14;
+
+        final Account account = createAccountWithNonOsgiPaymentMethod(getAccountData(billingDay));
+
+        // Create the monthly
+        createBaseEntitlementAndCheckForCompletion(account.getId(), "bundleKey", "Shotgun", ProductCategory.BASE, BillingPeriod.MONTHLY, NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE);
+
+        final List<ExpectedInvoiceItemCheck> expectedInvoices = new ArrayList<ExpectedInvoiceItemCheck>();
+
+        expectedInvoices.add(new ExpectedInvoiceItemCheck(new LocalDate(2014, 2, 1), new LocalDate(2014, 2, 14), InvoiceItemType.RECURRING, new BigDecimal("104.82")));
+        Invoice dryRunInvoice = invoiceUserApi.triggerDryRunInvoiceGeneration(account.getId(), new LocalDate(2014, 2, 13), DRY_RUN_TARGET_DATE_ARG, callContext);
+        assertEquals(dryRunInvoice.getTargetDate(), new LocalDate(2014, 2, 1));
+        invoiceChecker.checkInvoiceNoAudits(dryRunInvoice, expectedInvoices);
+        expectedInvoices.clear();
+
+        expectedInvoices.add(new ExpectedInvoiceItemCheck(new LocalDate(2014, 2, 14), new LocalDate(2014, 3, 14), InvoiceItemType.RECURRING, new BigDecimal("249.95")));
+        dryRunInvoice = invoiceUserApi.triggerDryRunInvoiceGeneration(account.getId(), new LocalDate(2014, 2, 14), DRY_RUN_TARGET_DATE_ARG, callContext);
+        assertEquals(dryRunInvoice.getTargetDate(), new LocalDate(2014, 2, 14));
+        invoiceChecker.checkInvoiceNoAudits(dryRunInvoice, expectedInvoices);
+        expectedInvoices.clear();
+    }
 
     @Test(groups = "slow", description = "See https://github.com/killbill/killbill/issues/774")
     public void testDryRunTargetDateWithIntermediateInvoice() throws Exception {
@@ -434,7 +500,6 @@ public class TestIntegrationDryRunInvoice extends TestIntegrationBase {
         assertEquals(dryRunInvoice.getTargetDate(), new LocalDate(2015, 2, 1));
         invoiceChecker.checkInvoiceNoAudits(dryRunInvoice, expectedInvoices);
         expectedInvoices.clear();
-
     }
 
     @Test(groups = "slow")
@@ -553,5 +618,4 @@ public class TestIntegrationDryRunInvoice extends TestIntegrationBase {
                                     new ExpectedInvoiceItemCheck(new LocalDate(2017, 12, 25), new LocalDate(2017, 12, 25), InvoiceItemType.CBA_ADJ, new BigDecimal("-56.44")));
 
     }
-
 }
