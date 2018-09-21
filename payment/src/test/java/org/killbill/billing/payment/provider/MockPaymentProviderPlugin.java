@@ -330,7 +330,21 @@ public class MockPaymentProviderPlugin implements PaymentPluginApi {
     @Override
     public Pagination<PaymentTransactionInfoPlugin> searchPayments(final String searchKey, final Long offset, final Long limit, final Iterable<PluginProperty> properties, final TenantContext tenantContext) throws PaymentPluginApiException {
         updateLastThreadState();
-        throw new IllegalStateException("Not implemented");
+
+        final ImmutableList<PaymentTransactionInfoPlugin> results = ImmutableList.<PaymentTransactionInfoPlugin>copyOf(Iterables.<PaymentTransactionInfoPlugin>filter(Iterables.<PaymentTransactionInfoPlugin>concat(paymentTransactions.values()), new Predicate<PaymentTransactionInfoPlugin>() {
+            @Override
+            public boolean apply(final PaymentTransactionInfoPlugin input) {
+                if (input.getProperties() !=  null) {
+                    for (final PluginProperty cur : input.getProperties()) {
+                        if (cur.getValue().equals(searchKey)) {
+                            return true;
+                        }
+                    }
+                }
+                return (input.getKbPaymentId().toString().equals(searchKey));
+            }
+        }));
+        return DefaultPagination.<PaymentTransactionInfoPlugin>build(offset, limit, paymentTransactions.size(), results);
     }
 
     @Override
@@ -492,7 +506,7 @@ public class MockPaymentProviderPlugin implements PaymentPluginApi {
             processedCurrency = currency;
         }
 
-        final PaymentTransactionInfoPlugin result = new DefaultNoOpPaymentInfoPlugin(kbPaymentId, kbTransactionId, type, processedAmount, processedCurrency, clock.getUTCNow(), clock.getUTCNow(), status, errorCode, error);
+        final PaymentTransactionInfoPlugin result = new DefaultNoOpPaymentInfoPlugin(kbPaymentId, kbTransactionId, type, processedAmount, processedCurrency, clock.getUTCNow(), clock.getUTCNow(), status, errorCode, error, null, null, ImmutableList.<PluginProperty>copyOf(pluginProperties));
         List<PaymentTransactionInfoPlugin> existingTransactions = paymentTransactions.get(kbPaymentId.toString());
         if (existingTransactions == null) {
             existingTransactions = new ArrayList<PaymentTransactionInfoPlugin>();
