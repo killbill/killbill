@@ -364,7 +364,7 @@ public class TestIntegrationDryRunInvoice extends TestIntegrationBase {
     }
 
     @Test(groups = "slow")
-    public void testDryRunTargetDateSimple() throws Exception {
+    public void testDryRunTargetDatesInTheFuture() throws Exception {
         final DateTime initialCreationDate = new DateTime(2014, 1, 2, 0, 0, 0, 0, testTimeZone);
         clock.setTime(initialCreationDate);
 
@@ -377,16 +377,29 @@ public class TestIntegrationDryRunInvoice extends TestIntegrationBase {
 
         expectedInvoices.add(new ExpectedInvoiceItemCheck(new LocalDate(2014, 2, 1), new LocalDate(2014, 3, 1), InvoiceItemType.RECURRING, new BigDecimal("249.95")));
         Invoice dryRunInvoice = invoiceUserApi.triggerDryRunInvoiceGeneration(account.getId(), new LocalDate(2014, 2, 28), DRY_RUN_TARGET_DATE_ARG, callContext);
-        assertEquals(dryRunInvoice.getTargetDate(), new LocalDate(2014, 2, 28));
+        assertEquals(dryRunInvoice.getTargetDate(), new LocalDate(2014, 2, 1));
         invoiceChecker.checkInvoiceNoAudits(dryRunInvoice, expectedInvoices);
         expectedInvoices.clear();
 
-        expectedInvoices.add(new ExpectedInvoiceItemCheck(new LocalDate(2014, 2, 1), new LocalDate(2014, 3, 1), InvoiceItemType.RECURRING, new BigDecimal("249.95")));
         expectedInvoices.add(new ExpectedInvoiceItemCheck(new LocalDate(2014, 3, 1), new LocalDate(2014, 4, 1), InvoiceItemType.RECURRING, new BigDecimal("249.95")));
         dryRunInvoice = invoiceUserApi.triggerDryRunInvoiceGeneration(account.getId(), new LocalDate(2014, 3, 1), DRY_RUN_TARGET_DATE_ARG, callContext);
         assertEquals(dryRunInvoice.getTargetDate(), new LocalDate(2014, 3, 1));
         invoiceChecker.checkInvoiceNoAudits(dryRunInvoice, expectedInvoices);
         expectedInvoices.clear();
+
+
+        expectedInvoices.add(new ExpectedInvoiceItemCheck(new LocalDate(2014, 4, 1), new LocalDate(2014, 5, 1), InvoiceItemType.RECURRING, new BigDecimal("249.95")));
+        dryRunInvoice = invoiceUserApi.triggerDryRunInvoiceGeneration(account.getId(), new LocalDate(2014, 4, 1), DRY_RUN_TARGET_DATE_ARG, callContext);
+        assertEquals(dryRunInvoice.getTargetDate(), new LocalDate(2014, 4, 1));
+        invoiceChecker.checkInvoiceNoAudits(dryRunInvoice, expectedInvoices);
+        expectedInvoices.clear();
+
+        expectedInvoices.add(new ExpectedInvoiceItemCheck(new LocalDate(2014, 5, 1), new LocalDate(2014, 6, 1), InvoiceItemType.RECURRING, new BigDecimal("249.95")));
+        dryRunInvoice = invoiceUserApi.triggerDryRunInvoiceGeneration(account.getId(), new LocalDate(2014, 5, 3), DRY_RUN_TARGET_DATE_ARG, callContext);
+        assertEquals(dryRunInvoice.getTargetDate(), new LocalDate(2014, 5, 1));
+        invoiceChecker.checkInvoiceNoAudits(dryRunInvoice, expectedInvoices);
+        expectedInvoices.clear();
+
     }
 
     @Test(groups = "slow")
@@ -406,11 +419,10 @@ public class TestIntegrationDryRunInvoice extends TestIntegrationBase {
 
         expectedInvoices.add(new ExpectedInvoiceItemCheck(new LocalDate(2014, 2, 1), new LocalDate(2014, 2, 14), InvoiceItemType.RECURRING, new BigDecimal("104.82")));
         Invoice dryRunInvoice = invoiceUserApi.triggerDryRunInvoiceGeneration(account.getId(), new LocalDate(2014, 2, 13), DRY_RUN_TARGET_DATE_ARG, callContext);
-        assertEquals(dryRunInvoice.getTargetDate(), new LocalDate(2014, 2, 13));
+        assertEquals(dryRunInvoice.getTargetDate(), new LocalDate(2014, 2, 1));
         invoiceChecker.checkInvoiceNoAudits(dryRunInvoice, expectedInvoices);
         expectedInvoices.clear();
 
-        expectedInvoices.add(new ExpectedInvoiceItemCheck(new LocalDate(2014, 2, 1), new LocalDate(2014, 2, 14), InvoiceItemType.RECURRING, new BigDecimal("104.82")));
         expectedInvoices.add(new ExpectedInvoiceItemCheck(new LocalDate(2014, 2, 14), new LocalDate(2014, 3, 14), InvoiceItemType.RECURRING, new BigDecimal("249.95")));
         dryRunInvoice = invoiceUserApi.triggerDryRunInvoiceGeneration(account.getId(), new LocalDate(2014, 2, 14), DRY_RUN_TARGET_DATE_ARG, callContext);
         assertEquals(dryRunInvoice.getTargetDate(), new LocalDate(2014, 2, 14));
