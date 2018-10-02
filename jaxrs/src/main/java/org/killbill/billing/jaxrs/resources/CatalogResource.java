@@ -492,6 +492,11 @@ public class CatalogResource extends JaxRsResourceBase {
             public TimeUnit getTrialTimeUnit() {
                 return simplePlan.getTrialTimeUnit();
             }
+
+            @Override
+            public String toString() {
+                return simplePlan.toString();
+            }
         };
 
         catalogUserApi.addSimplePlan(desc, null, callContext);
