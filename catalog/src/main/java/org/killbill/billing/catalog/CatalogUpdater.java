@@ -282,10 +282,10 @@ public class CatalogUpdater {
     }
 
     private void validateNewPlanDescriptor(final SimplePlanDescriptor desc) throws CatalogApiException {
-        if (desc.getProductCategory() == null ||
-            desc.getBillingPeriod() == null ||
-            (desc.getAmount() == null || desc.getAmount().compareTo(BigDecimal.ZERO) < 0) ||
-            desc.getCurrency() == null) {
+        final boolean invalidPlan = desc.getPlanId() == null && (desc.getProductCategory() == null || desc.getBillingPeriod() == null);
+        final boolean invalidPrice = (desc.getAmount() == null || desc.getAmount().compareTo(BigDecimal.ZERO) < 0) ||
+                                     desc.getCurrency() == null;
+        if (invalidPlan || invalidPrice) {
             throw new CatalogApiException(ErrorCode.CAT_INVALID_SIMPLE_PLAN_DESCRIPTOR, desc);
         }
 
