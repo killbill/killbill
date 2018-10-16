@@ -90,8 +90,8 @@ import org.killbill.billing.util.cache.CacheControllerDispatcher;
 import org.killbill.billing.util.config.definition.PaymentConfig;
 import org.killbill.billing.util.config.definition.SecurityConfig;
 import org.killbill.bus.api.PersistentBus;
-import org.killbill.commons.jdbi.guice.DaoConfig;
 import org.killbill.notificationq.api.NotificationQueueService;
+import org.skife.config.ConfigSource;
 import org.skife.config.ConfigurationObjectFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -152,18 +152,17 @@ public class TestJaxrsBase extends KillbillClient {
     @Inject
     protected TenantCacheInvalidation tenantCacheInvalidation;
 
-    protected DaoConfig daoConfig;
-    protected KillbillServerConfig serverConfig;
+    private static TestKillbillGuiceListener listener;
 
-    protected static TestKillbillGuiceListener listener;
+    // static because needed in @BeforeSuite and in each instance class
+    private static HttpServerConfig config;
 
-    protected HttpServerConfig config;
     private HttpServer server;
     private CallbackServer callbackServer;
 
     @Override
-    protected KillbillConfigSource getConfigSource() {
-        return getConfigSource("/killbill.properties");
+    protected KillbillConfigSource getConfigSource(final Map<String, String> extraProperties) {
+        return getConfigSource("/killbill.properties", extraProperties);
     }
 
     public class TestKillbillGuiceListener extends KillbillGuiceListener {
@@ -179,7 +178,7 @@ public class TestJaxrsBase extends KillbillClient {
 
         @Override
         protected Module getModule(final ServletContext servletContext) {
-            return Modules.override(new KillbillServerModule(servletContext, serverConfig, configSource)).with(new GuicyKillbillTestWithEmbeddedDBModule(configSource),
+            return Modules.override(new KillbillServerModule(servletContext, serverConfig, configSource)).with(new GuicyKillbillTestWithEmbeddedDBModule(configSource, clock),
                                                                                                                new InvoiceModuleWithMockSender(configSource),
                                                                                                                new PaymentMockModule(configSource),
                                                                                                                new Module() {
@@ -209,7 +208,7 @@ public class TestJaxrsBase extends KillbillClient {
 
         @Override
         protected void installPaymentProviderPlugins(final PaymentConfig config) {
-            install(new MockPaymentProviderPluginModule(PLUGIN_NAME, getClock(), configSource));
+            install(new MockPaymentProviderPluginModule(PLUGIN_NAME, clock, configSource));
         }
     }
 
@@ -347,13 +346,6 @@ public class TestJaxrsBase extends KillbillClient {
             return;
         }
 
-        // TODO PIERRE Unclear why both are needed in beforeClass and beforeSuite
-        if (config == null) {
-            config = new ConfigurationObjectFactory(System.getProperties()).build(HttpServerConfig.class);
-        }
-        if (daoConfig == null) {
-            daoConfig = new ConfigurationObjectFactory(skifeConfigSource).build(DaoConfig.class);
-        }
         listener.getInstantiatedInjector().injectMembers(this);
     }
 
@@ -365,16 +357,18 @@ public class TestJaxrsBase extends KillbillClient {
 
         super.beforeSuite();
 
-        if (config == null) {
-            config = new ConfigurationObjectFactory(System.getProperties()).build(HttpServerConfig.class);
-        }
-        if (daoConfig == null) {
-            daoConfig = new ConfigurationObjectFactory(skifeConfigSource).build(DaoConfig.class);
-        }
-
-        serverConfig = new ConfigurationObjectFactory(skifeConfigSource).build(KillbillServerConfig.class);
+        // We need to setup these earlier than other tests because the server is started once in @BeforeSuite
+        final KillbillConfigSource configSource = getConfigSource(extraPropertiesForTestSuite);
+        final ConfigSource skifeConfigSource = new ConfigSource() {
+            @Override
+            public String getString(final String propertyName) {
+                return configSource.getString(propertyName);
+            }
+        };
+        final KillbillServerConfig serverConfig = new ConfigurationObjectFactory(skifeConfigSource).build(KillbillServerConfig.class);
         listener = new TestKillbillGuiceListener(serverConfig, configSource);
 
+        config = new ConfigurationObjectFactory(System.getProperties()).build(HttpServerConfig.class);
         server = new HttpServer();
         server.configure(config, getListeners(), getFilters());
         server.start();

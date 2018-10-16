@@ -89,7 +89,7 @@ public class TestDefaultOverdueCheckPoster extends OverdueTestSuiteWithEmbeddedD
         Assert.assertEquals(notificationsForKey.size(), 1);
         final NotificationEventWithMetadata nm = notificationsForKey.get(0);
         Assert.assertEquals(nm.getEvent(), notificationKey);
-        Assert.assertEquals(nm.getEffectiveDate(), testReferenceTime.plusDays(expectedNbDaysInFuture));
+        Assert.assertEquals(nm.getEffectiveDate().compareTo(testReferenceTime.plusDays(expectedNbDaysInFuture)), 0);
     }
 
     private List<NotificationEventWithMetadata<OverdueCheckNotificationKey>> getNotificationsForOverdueable(final Account account) {

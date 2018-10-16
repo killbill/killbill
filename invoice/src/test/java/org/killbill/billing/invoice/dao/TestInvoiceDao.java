@@ -97,6 +97,9 @@ public class TestInvoiceDao extends InvoiceTestSuiteWithEmbeddedDB {
 
     @BeforeMethod(groups = "slow")
     public void setUp() throws Exception {
+        if (hasFailed()) {
+            return;
+        }
         account = invoiceUtil.createAccount(callContext);
         context = internalCallContextFactory.createInternalCallContext(account.getId(), callContext);
     }

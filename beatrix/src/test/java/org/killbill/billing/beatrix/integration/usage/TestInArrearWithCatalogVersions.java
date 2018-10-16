@@ -18,6 +18,8 @@
 package org.killbill.billing.beatrix.integration.usage;
 
 import java.math.BigDecimal;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.UUID;
 
 import org.joda.time.LocalDate;
@@ -35,14 +37,16 @@ import org.killbill.billing.platform.api.KillbillConfigSource;
 import org.testng.annotations.Test;
 
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 
 public class TestInArrearWithCatalogVersions extends TestIntegrationBase {
 
     @Override
-    protected KillbillConfigSource getConfigSource() {
-        return super.getConfigSource(null, ImmutableMap.of("org.killbill.catalog.uri", "catalogs/testInArrearWithCatalogVersions",
-                                                           "org.killbill.invoice.readMaxRawUsagePreviousPeriod", "0"));
+    protected KillbillConfigSource getConfigSource(final Map<String, String> extraProperties) {
+        final Map<String, String> allExtraProperties = new HashMap<String, String>(extraProperties);
+        allExtraProperties.putAll(DEFAULT_BEATRIX_PROPERTIES);
+        allExtraProperties.put("org.killbill.catalog.uri", "catalogs/testInArrearWithCatalogVersions");
+        allExtraProperties.put("org.killbill.invoice.readMaxRawUsagePreviousPeriod", "0");
+        return getConfigSource(null, allExtraProperties);
     }
 
     @Test(groups = "slow")

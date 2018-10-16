@@ -64,7 +64,7 @@ public abstract class JunctionTestSuiteNoDB extends GuicyKillbillTestSuiteNoDB {
             return;
         }
 
-        final Injector injector = Guice.createInjector(new TestJunctionModuleNoDB(configSource));
+        final Injector injector = Guice.createInjector(new TestJunctionModuleNoDB(configSource, clock));
         injector.injectMembers(this);
     }
 

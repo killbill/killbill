@@ -19,6 +19,7 @@ package org.killbill.billing.jaxrs.json;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
+import org.killbill.billing.callcontext.DefaultCallContext;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
@@ -77,15 +78,16 @@ public class TestAuditLogJson extends JaxrsTestSuiteNoDB {
         final ChangeType changeType = ChangeType.DELETE;
         final EntityAudit entityAudit = new EntityAudit(tableName, recordId, changeType, null);
 
-        final AuditLog auditLog = new DefaultAuditLog(new AuditLogModelDao(entityAudit, callContext), ObjectType.ACCOUNT_EMAIL, UUID.randomUUID());
+        final DefaultCallContext defaultCallContext = new DefaultCallContext(callContext);
+        final AuditLog auditLog = new DefaultAuditLog(new AuditLogModelDao(entityAudit, defaultCallContext), ObjectType.ACCOUNT_EMAIL, UUID.randomUUID());
 
         final AuditLogJson auditLogJson = new AuditLogJson(auditLog);
         Assert.assertEquals(auditLogJson.getChangeType(), changeType.toString());
         Assert.assertNotNull(auditLogJson.getChangeDate());
-        Assert.assertEquals(auditLogJson.getChangedBy(), callContext.getUserName());
-        Assert.assertEquals(auditLogJson.getReasonCode(), callContext.getReasonCode());
-        Assert.assertEquals(auditLogJson.getComments(), callContext.getComments());
-        Assert.assertEquals(auditLogJson.getUserToken(), callContext.getUserToken().toString());
+        Assert.assertEquals(auditLogJson.getChangedBy(), this.callContext.getUserName());
+        Assert.assertEquals(auditLogJson.getReasonCode(), this.callContext.getReasonCode());
+        Assert.assertEquals(auditLogJson.getComments(), this.callContext.getComments());
+        Assert.assertEquals(auditLogJson.getUserToken(), this.callContext.getUserToken().toString());
         Assert.assertEquals(auditLogJson.getObjectType(), ObjectType.ACCOUNT_EMAIL);
     }
 }

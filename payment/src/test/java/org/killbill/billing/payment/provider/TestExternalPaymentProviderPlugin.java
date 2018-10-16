@@ -38,7 +38,6 @@ import com.google.common.collect.ImmutableList;
 
 public class TestExternalPaymentProviderPlugin extends PaymentTestSuiteNoDB {
 
-    private final Clock clock = new ClockMock();
     private ExternalPaymentProviderPlugin plugin;
 
     @Override

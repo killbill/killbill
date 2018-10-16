@@ -20,6 +20,7 @@ package org.killbill.billing.payment;
 
 import java.util.UUID;
 
+import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDate;
 import org.killbill.billing.GuicyKillbillTestSuite;
@@ -145,8 +146,9 @@ public class TestPaymentHelper {
         Mockito.when(accountData.getBillCycleDayLocal()).thenReturn(1);
         Mockito.when(accountData.isMigrated()).thenReturn(false);
         Mockito.when(accountData.getTimeZone()).thenReturn(DateTimeZone.UTC);
-        Mockito.when(accountData.getCreatedDate()).thenReturn(clock.getUTCNow());
-        Mockito.when(accountData.getReferenceTime()).thenReturn(clock.getUTCNow());
+        final DateTime utcNow = clock.getUTCNow();
+        Mockito.when(accountData.getCreatedDate()).thenReturn(utcNow);
+        Mockito.when(accountData.getReferenceTime()).thenReturn(utcNow);
 
         final MutableCallContext mutableCallContext = new MutableCallContext(internalCallContext);
 

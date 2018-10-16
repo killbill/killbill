@@ -18,7 +18,9 @@
 
 package org.killbill.billing.catalog;
 
+import java.io.IOException;
 import java.math.BigDecimal;
+import java.util.Collection;
 
 import org.joda.time.DateTime;
 import org.killbill.billing.ErrorCode;

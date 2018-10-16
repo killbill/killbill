@@ -32,7 +32,7 @@ public class TenantTestSuiteNoDB extends GuicyKillbillTestSuiteNoDB {
             return;
         }
 
-        final Injector injector = Guice.createInjector(new TestTenantModuleNoDB(configSource));
+        final Injector injector = Guice.createInjector(new TestTenantModuleNoDB(configSource, clock));
         injector.injectMembers(this);
     }
 }

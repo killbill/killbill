@@ -185,9 +185,9 @@ public class TestDefaultInternalBillingApi extends JunctionTestSuiteWithEmbedded
         Assert.assertEquals(events.get(0).getTransitionType(), SubscriptionBaseTransitionType.CREATE);
         Assert.assertEquals(events.get(0).getEffectiveDate(), subscription.getStartDate());
         Assert.assertEquals(events.get(1).getTransitionType(), SubscriptionBaseTransitionType.START_BILLING_DISABLED);
-        Assert.assertEquals(events.get(1).getEffectiveDate(), block3Date);
+        Assert.assertEquals(events.get(1).getEffectiveDate().compareTo(block3Date), 0);
         Assert.assertEquals(events.get(2).getTransitionType(), SubscriptionBaseTransitionType.END_BILLING_DISABLED);
-        Assert.assertEquals(events.get(2).getEffectiveDate(), block5Date);
+        Assert.assertEquals(events.get(2).getEffectiveDate().compareTo(block5Date), 0);
     }
 
     // See https://github.com/killbill/killbill/commit/92042843e38a67f75495b207385e4c1f9ca60990#commitcomment-4749967

@@ -17,6 +17,8 @@
 
 package org.killbill.billing.beatrix.integration;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.UUID;
 
 import org.joda.time.LocalDate;
@@ -34,17 +36,15 @@ import org.killbill.billing.platform.api.KillbillConfigSource;
 import org.testng.annotations.Test;
 
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 
 public class TestInvoiceNotifications extends TestIntegrationBase {
 
     @Override
-    protected KillbillConfigSource getConfigSource() {
-
-        return getConfigSource(null, new ImmutableMap.Builder()
-                .putAll(DEFAULT_BEATRIX_PROPERTIES)
-                .put("org.killbill.invoice.dryRunNotificationSchedule", "7d")
-                .build());
+    protected KillbillConfigSource getConfigSource(final Map<String, String> extraProperties) {
+        final Map<String, String> allExtraProperties = new HashMap<String, String>(extraProperties);
+        allExtraProperties.putAll(DEFAULT_BEATRIX_PROPERTIES);
+        allExtraProperties.put("org.killbill.invoice.dryRunNotificationSchedule", "7d");
+        return getConfigSource(null, allExtraProperties);
     }
 
     @Test(groups = "slow")
