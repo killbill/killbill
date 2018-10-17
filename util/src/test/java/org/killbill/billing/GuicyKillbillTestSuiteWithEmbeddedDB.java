@@ -18,6 +18,12 @@
 
 package org.killbill.billing;
 
+import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.ResultSetMetaData;
+import java.sql.Statement;
+import java.util.List;
+
 import javax.annotation.Nullable;
 import javax.cache.CacheManager;
 import javax.inject.Named;
@@ -91,6 +97,7 @@ public class GuicyKillbillTestSuiteWithEmbeddedDB extends GuicyKillbillTestSuite
     @AfterSuite(groups = "slow")
     public void afterSuite() throws Exception {
         if (hasFailed()) {
+            dumpDB();
             log.error("**********************************************************************************************");
             log.error("*** TESTS HAVE FAILED - LEAVING DB RUNNING FOR DEBUGGING - MAKE SURE TO KILL IT ONCE DONE ****");
             log.error(DBTestingHelper.get().getInstance().getCmdLineConnectionString());
@@ -105,6 +112,59 @@ public class GuicyKillbillTestSuiteWithEmbeddedDB extends GuicyKillbillTestSuite
         try {
             DBTestingHelper.get().getInstance().stop();
         } catch (final Exception ignored) {
+        }
+    }
+
+    private void dumpDB() {
+        log.error("*********************************************");
+        log.error("*** TESTS HAVE FAILED - DUMPING DATABASE ****");
+        log.error("*********************************************\n");
+
+        try {
+            final EmbeddedDB embeddedDB = DBTestingHelper.get().getInstance();
+            final List<String> tables = embeddedDB.getAllTables();
+
+            final Connection connection = embeddedDB.getDataSource().getConnection();
+            try {
+                for (final String table : tables) {
+                    final StringBuilder tableDump = new StringBuilder("Table ").append(table).append("\n");
+                    boolean hasData = false;
+
+                    Statement statement = null;
+                    try {
+                        statement = connection.createStatement();
+                        final ResultSet rs = statement.executeQuery("select * from " + table);
+
+                        final ResultSetMetaData metadata = rs.getMetaData();
+                        final int columnCount = metadata.getColumnCount();
+                        for (int i = 1; i <= columnCount; i++) {
+                            tableDump.append(metadata.getColumnName(i)).append(",");
+                        }
+                        tableDump.append("\n");
+
+                        while (rs.next()) {
+                            hasData = true;
+                            for (int i = 1; i <= columnCount; i++) {
+                                tableDump.append(rs.getString(i)).append(",");
+                            }
+                            tableDump.append("\n");
+                        }
+                    } finally {
+                        if (statement != null) {
+                            statement.close();
+                        }
+                    }
+
+                    if (hasData) {
+                        log.error(tableDump.toString());
+                    }
+                }
+            } finally {
+                connection.close();
+            }
+            log.error("*********************************************");
+        } catch (final Exception e) {
+            log.error("Unable to dump DB");
         }
     }
 }
