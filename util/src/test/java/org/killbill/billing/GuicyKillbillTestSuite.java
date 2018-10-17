@@ -71,10 +71,11 @@ public class GuicyKillbillTestSuite implements IHookable {
 
     // Variables set in @BeforeSuite
     protected static ImmutableMap<String, String> extraPropertiesForTestSuite;
+    // The clock needs to be setup early, as it is needed when starting the server, but see below
     @VisibleForTesting
-    protected static ClockMock theRealClock;
+    protected static ClockMock theRealClock = new ClockMock();
 
-    protected ClockMock clock;
+    protected ClockMock clock = theRealClock;
     protected KillbillConfigSource configSource;
     protected ConfigSource skifeConfigSource;
 
@@ -211,12 +212,9 @@ public class GuicyKillbillTestSuite implements IHookable {
 
     @BeforeSuite(alwaysRun = true)
     public void globalBeforeSuite() {
-        theRealClock = new ClockMock();
+        theRealClock.resetDeltaFromReality();
 
         extraPropertiesForTestSuite = ImmutableMap.<String, String>of();
-
-        // The clock needs to be setup early in @BeforeSuite, as it is needed when starting the server, but see below
-        clock = theRealClock;
     }
 
     @BeforeClass(alwaysRun = true)
