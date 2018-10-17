@@ -36,7 +36,7 @@ public abstract class BeatrixTestSuiteWithEmbeddedDB extends GuicyKillbillTestSu
                                                                                                                   // in the listener status: after moving the clock, if there are two notifications triggering an invoice run, we typically expect
                                                                                                                   // both an INVOICE and a NULL_INVOICE event. If the invoice generation takes too long, the NULL_INVOICE event is never generated
                                                                                                                   // (LockFailedException): the test itself doesn't fail (the correct invoice is generated), but assertListenerStatus() would.
-                                                                                                                  .put("org.killbill.invoice.globalLock.retries", "150")
+                                                                                                                  .put("org.killbill.invoice.globalLock.retries", "300")
                                                                                                                   .build();
 
     @Override
