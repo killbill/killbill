@@ -27,6 +27,7 @@ import java.util.UUID;
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 
+import org.awaitility.Awaitility;
 import org.joda.time.LocalDate;
 import org.killbill.billing.account.api.Account;
 import org.killbill.billing.api.FlakyRetryAnalyzer;
@@ -221,13 +222,15 @@ public class TestJanitor extends PaymentTestSuiteWithEmbeddedDB {
         assertEquals(attempt2.getStateName(), "INIT");
 
         clock.addDays(1);
-        try {
-            Thread.sleep(1500);
-        } catch (InterruptedException e) {
-        }
-
-        final PaymentAttemptModelDao attempt3 = paymentDao.getPaymentAttempt(attempt.getId(), internalCallContext);
-        assertEquals(attempt3.getStateName(), "SUCCESS");
+        Awaitility.await()
+                  .atMost(5, TimeUnit.SECONDS)
+                  .until(new Callable<Boolean>() {
+                      @Override
+                      public Boolean call() throws Exception {
+                          final PaymentAttemptModelDao attempt3 = paymentDao.getPaymentAttempt(attempt.getId(), internalCallContext);
+                          return "SUCCESS".equals(attempt3.getStateName());
+                      }
+                  });
     }
 
     @Test(groups = "slow")
