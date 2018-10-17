@@ -28,7 +28,7 @@ public class TestStringTemplateInheritanceWithJdbi extends UtilTestSuiteWithEmbe
         final KombuchaSqlDao dao = dbi.onDemand(KombuchaSqlDao.class);
 
         // Verify non inherited template
-        Assert.assertEquals(dao.isIsTimeForKombucha(), clock.getUTCNow().getHourOfDay() == 17);
+        Assert.assertTrue(dao.isItTimeForKombucha());
 
         // Verify inherited templates
         Assert.assertFalse(dao.getAll(internalCallContext).hasNext());
