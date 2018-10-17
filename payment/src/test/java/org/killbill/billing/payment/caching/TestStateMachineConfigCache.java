@@ -97,7 +97,7 @@ public class TestStateMachineConfigCache extends PaymentTestSuiteNoDB {
             }
         });
 
-        // Verify the lookup for a non-cached tenant. No system config is set yet but EhCacheStateMachineConfigCache returns a default empty one
+        // Verify the lookup for a non-cached tenant. No system config is set yet but DefaultStateMachineConfigCache returns a default empty one
         final StateMachineConfig defaultStateMachineConfig = stateMachineConfigCache.getPaymentStateMachineConfig(pluginName, differentMultiTenantContext);
         Assert.assertNotNull(defaultStateMachineConfig);
 
@@ -114,7 +114,6 @@ public class TestStateMachineConfigCache extends PaymentTestSuiteNoDB {
         Assert.assertEquals(stateMachineConfigCache.getPaymentStateMachineConfig(UUID.randomUUID().toString(), multiTenantContext), defaultStateMachineConfig);
         final StateMachineConfig result = stateMachineConfigCache.getPaymentStateMachineConfig(pluginName, multiTenantContext);
         Assert.assertNotNull(result);
-        Assert.assertNotEquals(result, defaultStateMachineConfig);
         Assert.assertEquals(result.getStateMachines().length, 8);
 
         // Verify the lookup for another tenant

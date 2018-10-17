@@ -26,8 +26,8 @@ import org.killbill.billing.catalog.api.DefaultCatalogInternalApi;
 import org.killbill.billing.catalog.api.user.DefaultCatalogUserApi;
 import org.killbill.billing.catalog.caching.CatalogCache;
 import org.killbill.billing.catalog.caching.CatalogCacheInvalidationCallback;
-import org.killbill.billing.catalog.caching.EhCacheCatalogCache;
-import org.killbill.billing.catalog.caching.EhCacheOverriddenPlanCache;
+import org.killbill.billing.catalog.caching.DefaultCatalogCache;
+import org.killbill.billing.catalog.caching.DefaultOverriddenPlanCache;
 import org.killbill.billing.catalog.caching.OverriddenPlanCache;
 import org.killbill.billing.catalog.dao.CatalogOverrideDao;
 import org.killbill.billing.catalog.dao.DefaultCatalogOverrideDao;
@@ -79,10 +79,10 @@ public class CatalogModule extends KillBillModule {
     }
 
     public void installCatalogConfigCache() {
-        bind(CatalogCache.class).to(EhCacheCatalogCache.class).asEagerSingleton();
+        bind(CatalogCache.class).to(DefaultCatalogCache.class).asEagerSingleton();
         bind(CacheInvalidationCallback.class).annotatedWith(Names.named(CATALOG_INVALIDATION_CALLBACK)).to(CatalogCacheInvalidationCallback.class).asEagerSingleton();
 
-        bind(OverriddenPlanCache.class).to(EhCacheOverriddenPlanCache.class).asEagerSingleton();
+        bind(OverriddenPlanCache.class).to(DefaultOverriddenPlanCache.class).asEagerSingleton();
     }
 
     protected void installCatalogPluginApi() {

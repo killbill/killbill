@@ -1,6 +1,6 @@
 /*
- * Copyright 2014-2015 Groupon, Inc
- * Copyright 2014-2015 The Billing Project, LLC
+ * Copyright 2014-2018 Groupon, Inc
+ * Copyright 2014-2018 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -17,14 +17,17 @@
 
 package org.killbill.billing.catalog;
 
-import java.net.URI;
+import java.io.Externalizable;
+import java.io.IOException;
+import java.io.ObjectInput;
+import java.io.ObjectOutput;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 
 import org.killbill.billing.catalog.api.BillingPeriod;
-import org.killbill.billing.catalog.api.Plan;
+import org.killbill.billing.catalog.api.PhaseType;
 import org.killbill.billing.catalog.api.PlanPhase;
 import org.killbill.billing.catalog.api.PlanPhasePriceOverride;
 import org.killbill.billing.catalog.api.Recurring;
@@ -33,7 +36,7 @@ import org.killbill.xmlloader.ValidationError;
 import org.killbill.xmlloader.ValidationErrors;
 
 @XmlAccessorType(XmlAccessType.NONE)
-public class DefaultRecurring extends ValidatingConfig<StandaloneCatalog> implements Recurring {
+public class DefaultRecurring extends ValidatingConfig<StandaloneCatalog> implements Recurring, Externalizable {
 
     @XmlElement(required = true)
     private BillingPeriod billingPeriod;
@@ -42,10 +45,11 @@ public class DefaultRecurring extends ValidatingConfig<StandaloneCatalog> implem
     private DefaultInternationalPrice recurringPrice;
 
     // Not exposed in xml.
-    private Plan plan;
-    private PlanPhase phase;
+    private String planName;
+    private PhaseType phaseType;
 
-    public DefaultRecurring() {};
+    // Required for deserialization
+    public DefaultRecurring() {}
 
     public DefaultRecurring(final DefaultRecurring in, final PlanPhasePriceOverride override) {
         this.billingPeriod = in.getBillingPeriod();
@@ -63,11 +67,11 @@ public class DefaultRecurring extends ValidatingConfig<StandaloneCatalog> implem
     }
 
     @Override
-    public void initialize(final StandaloneCatalog root, final URI uri) {
-        super.initialize(root, uri);
+    public void initialize(final StandaloneCatalog root) {
+        super.initialize(root);
         CatalogSafetyInitializer.initializeNonRequiredNullFieldsWithDefaultValue(this);
         if (recurringPrice != null) {
-            recurringPrice.initialize(root, uri);
+            recurringPrice.initialize(root);
         }
     }
 
@@ -75,31 +79,30 @@ public class DefaultRecurring extends ValidatingConfig<StandaloneCatalog> implem
     public ValidationErrors validate(final StandaloneCatalog catalog, final ValidationErrors errors) {
         // Validation: check for nulls
 
-        if (plan == null) {
-            errors.add(new ValidationError(String.format("Invalid plan for recurring section"), catalog.getCatalogURI(), DefaultRecurring.class, ""));
+        if (planName == null) {
+            errors.add(new ValidationError("Invalid plan for recurring section", DefaultRecurring.class, ""));
         }
 
-        if (phase == null) {
-            errors.add(new ValidationError(String.format("Invalid phase for recurring section"), catalog.getCatalogURI(), DefaultPlan.class, plan.getName().toString()));
+        if (phaseType == null) {
+            errors.add(new ValidationError("Invalid phase for recurring section", DefaultPlan.class, planName));
         }
-
 
         if (billingPeriod == null) {
-            errors.add(new ValidationError(String.format("Recurring section of Phase %s of plan %s has a recurring price but no billing period", phase.getPhaseType().toString(), plan.getName()),
-                                           catalog.getCatalogURI(), DefaultPlanPhase.class, phase.getPhaseType().toString()));
+            errors.add(new ValidationError(String.format("Recurring section of Phase %s of plan %s has a recurring price but no billing period", phaseType.toString(), planName),
+                                           DefaultPlanPhase.class, phaseType.toString()));
         }
 
         // Validation: if there is a recurring price there must be a billing period
         if ((recurringPrice != null) && (billingPeriod == null || billingPeriod == BillingPeriod.NO_BILLING_PERIOD)) {
-            errors.add(new ValidationError(String.format("Recurring section of Phase %s of plan %s has a recurring price but no billing period", phase.getPhaseType().toString(), plan.getName()),
-                                           catalog.getCatalogURI(), DefaultPlanPhase.class, phase.getPhaseType().toString()));
+            errors.add(new ValidationError(String.format("Recurring section of Phase %s of plan %s has a recurring price but no billing period", phaseType.toString(), planName),
+                                           DefaultPlanPhase.class, phaseType.toString()));
         }
 
         // Validation: if there is no recurring price there should be no billing period
         if ((recurringPrice == null) && billingPeriod != BillingPeriod.NO_BILLING_PERIOD) {
             errors.add(new ValidationError(String.format("Recurring section of Phase %s of plan %s has no recurring price but does have a billing period. The billing period should be set to '%s'",
-                                                         phase.getPhaseType().toString(), plan.getName(), BillingPeriod.NO_BILLING_PERIOD),
-                                           catalog.getCatalogURI(), DefaultPlanPhase.class, phase.getPhaseType().toString()));
+                                                         phaseType.toString(), planName, BillingPeriod.NO_BILLING_PERIOD),
+                                           DefaultPlanPhase.class, phaseType.toString()));
         }
         return errors;
     }
@@ -114,13 +117,13 @@ public class DefaultRecurring extends ValidatingConfig<StandaloneCatalog> implem
         return this;
     }
 
-    public DefaultRecurring setPlan(final Plan plan) {
-        this.plan = plan;
+    public DefaultRecurring setPlan(final String planName) {
+        this.planName = planName;
         return this;
     }
 
     public DefaultRecurring setPhase(final PlanPhase phase) {
-        this.phase = phase;
+        this.phaseType = phase.getPhaseType();
         return this;
     }
 
@@ -150,5 +153,27 @@ public class DefaultRecurring extends ValidatingConfig<StandaloneCatalog> implem
         int result = billingPeriod != null ? billingPeriod.hashCode() : 0;
         result = 31 * result + (recurringPrice != null ? recurringPrice.hashCode() : 0);
         return result;
+    }
+
+    @Override
+    public void writeExternal(final ObjectOutput out) throws IOException {
+        out.writeBoolean(billingPeriod != null);
+        if (billingPeriod != null) {
+            out.writeUTF(billingPeriod.name());
+        }
+        out.writeObject(recurringPrice);
+        out.writeUTF(planName);
+        out.writeBoolean(phaseType != null);
+        if (phaseType != null) {
+            out.writeUTF(phaseType.name());
+        }
+    }
+
+    @Override
+    public void readExternal(final ObjectInput in) throws IOException, ClassNotFoundException {
+        this.billingPeriod = in.readBoolean() ? BillingPeriod.valueOf(in.readUTF()) : null;
+        this.recurringPrice = (DefaultInternationalPrice) in.readObject();
+        this.planName = in.readUTF();
+        this.phaseType = in.readBoolean() ? PhaseType.valueOf(in.readUTF()) : null;
     }
 }

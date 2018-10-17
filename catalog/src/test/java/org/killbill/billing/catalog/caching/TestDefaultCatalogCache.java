@@ -47,7 +47,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.io.CharStreams;
 import com.google.common.io.Resources;
 
-public class TestEhCacheCatalogCache extends CatalogTestSuiteNoDB {
+public class TestDefaultCatalogCache extends CatalogTestSuiteNoDB {
 
     private InternalTenantContext multiTenantContext;
     private InternalTenantContext otherMultiTenantContext;
@@ -64,7 +64,7 @@ public class TestEhCacheCatalogCache extends CatalogTestSuiteNoDB {
         Mockito.when(otherMultiTenantContext.getAccountRecordId()).thenReturn(123L);
         Mockito.when(otherMultiTenantContext.getTenantRecordId()).thenReturn(112233L);
 
-        ((EhCacheCatalogCache) catalogCache).setDefaultCatalog();
+        ((DefaultCatalogCache) catalogCache).setDefaultCatalog();
     }
 
     //
@@ -137,7 +137,7 @@ public class TestEhCacheCatalogCache extends CatalogTestSuiteNoDB {
             }
         });
 
-        // Verify the lookup for a non-cached tenant. No system config is set yet but EhCacheCatalogCache returns a default empty one
+        // Verify the lookup for a non-cached tenant. No system config is set yet but DefaultCatalogCache returns a default empty one
         VersionedCatalog differentResult = catalogCache.getCatalog(true, true, false, differentMultiTenantContext);
         Assert.assertNotNull(differentResult);
         Assert.assertEquals(differentResult.getCatalogName(), "EmptyCatalog");

@@ -1,7 +1,9 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
+ * Copyright 2014-2018 Groupon, Inc
+ * Copyright 2014-2018 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -16,6 +18,11 @@
 
 package org.killbill.billing.catalog.rules;
 
+import java.io.Externalizable;
+import java.io.IOException;
+import java.io.ObjectInput;
+import java.io.ObjectOutput;
+
 import javax.xml.bind.annotation.XmlElement;
 
 import org.killbill.billing.catalog.StandaloneCatalog;
@@ -25,7 +32,7 @@ import org.killbill.billing.catalog.api.rules.CaseCancelPolicy;
 import org.killbill.xmlloader.ValidationError;
 import org.killbill.xmlloader.ValidationErrors;
 
-public class DefaultCaseCancelPolicy extends DefaultCasePhase<BillingActionPolicy> implements CaseCancelPolicy {
+public class DefaultCaseCancelPolicy extends DefaultCasePhase<BillingActionPolicy> implements CaseCancelPolicy, Externalizable {
 
     @XmlElement(required = true)
     private BillingActionPolicy policy;
@@ -42,13 +49,12 @@ public class DefaultCaseCancelPolicy extends DefaultCasePhase<BillingActionPolic
 
     @Override
     public ValidationErrors validate(final StandaloneCatalog catalog, final ValidationErrors errors) {
-        if (policy ==  BillingActionPolicy.START_OF_TERM) {
+        if (policy == BillingActionPolicy.START_OF_TERM) {
             errors.add(new ValidationError("Default catalog START_OF_TERM has not been implemented, such policy can be used during cancellation by overriding policy",
-                                           catalog.getCatalogURI(), DefaultCaseCancelPolicy.class, ""));
+                                           DefaultCaseCancelPolicy.class, ""));
         }
         return errors;
     }
-
 
     @Override
     public BillingActionPolicy getBillingActionPolicy() {
@@ -100,4 +106,18 @@ public class DefaultCaseCancelPolicy extends DefaultCasePhase<BillingActionPolic
                '}';
     }
 
+    @Override
+    public void writeExternal(final ObjectOutput out) throws IOException {
+        super.writeExternal(out);
+        out.writeBoolean(policy != null);
+        if (policy != null) {
+            out.writeUTF(policy.name());
+        }
+    }
+
+    @Override
+    public void readExternal(final ObjectInput in) throws IOException, ClassNotFoundException {
+        super.readExternal(in);
+        this.policy = in.readBoolean() ? BillingActionPolicy.valueOf(in.readUTF()) : null;
+    }
 }

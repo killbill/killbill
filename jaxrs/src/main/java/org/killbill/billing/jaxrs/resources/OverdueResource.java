@@ -142,7 +142,7 @@ public class OverdueResource extends JaxRsResourceBase {
                                                    @javax.ws.rs.core.Context final UriInfo uriInfo) throws Exception {
         // Validation purpose:  Will throw if bad XML or catalog validation fails
         final InputStream stream = new ByteArrayInputStream(overdueXML.getBytes());
-        XMLLoader.getObjectFromStream(new URI(JaxrsResource.OVERDUE_PATH), stream, DefaultOverdueConfig.class);
+        XMLLoader.getObjectFromStream(stream, DefaultOverdueConfig.class);
 
         final CallContext callContext = context.createCallContextNoAccountId(createdBy, reason, comment, request);
         overdueApi.uploadOverdueConfig(overdueXML, callContext);

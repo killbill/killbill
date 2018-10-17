@@ -61,7 +61,7 @@ public class CacheControllerDispatcherProvider implements Provider<CacheControll
             }
             Preconditions.checkState(!cache.isClosed(), "Cache '%s' should not be closed", cacheType.getCacheName());
 
-            final CacheController<Object, Object> ehCacheBasedCacheController = new EhCacheBasedCacheController<Object, Object>(cache, cacheLoader);
+            final CacheController<Object, Object> ehCacheBasedCacheController = new KillBillCacheController<Object, Object>(cache, cacheLoader);
             cacheControllers.put(cacheType, ehCacheBasedCacheController);
         }
 

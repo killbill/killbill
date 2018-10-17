@@ -1,6 +1,6 @@
 /*
- * Copyright 2014-2015 Groupon, Inc
- * Copyright 2014-2015 The Billing Project, LLC
+ * Copyright 2014-2018 Groupon, Inc
+ * Copyright 2014-2018 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -17,7 +17,10 @@
 
 package org.killbill.billing.catalog;
 
-import java.net.URI;
+import java.io.Externalizable;
+import java.io.IOException;
+import java.io.ObjectInput;
+import java.io.ObjectOutput;
 import java.util.Arrays;
 import java.util.List;
 
@@ -36,14 +39,13 @@ import org.killbill.billing.catalog.api.InternationalPrice;
 import org.killbill.billing.catalog.api.Limit;
 import org.killbill.billing.catalog.api.PlanPhase;
 import org.killbill.billing.catalog.api.Tier;
+import org.killbill.billing.catalog.api.TierBlockPolicy;
 import org.killbill.billing.catalog.api.TierPriceOverride;
 import org.killbill.billing.catalog.api.TieredBlock;
 import org.killbill.billing.catalog.api.TieredBlockPriceOverride;
 import org.killbill.billing.catalog.api.Usage;
 import org.killbill.billing.catalog.api.UsagePriceOverride;
 import org.killbill.billing.catalog.api.UsageType;
-import org.killbill.billing.catalog.api.TierBlockPolicy;
-
 import org.killbill.xmlloader.ValidatingConfig;
 import org.killbill.xmlloader.ValidationError;
 import org.killbill.xmlloader.ValidationErrors;
@@ -51,9 +53,8 @@ import org.killbill.xmlloader.ValidationErrors;
 import com.google.common.base.Predicate;
 import com.google.common.collect.Iterables;
 
-
 @XmlAccessorType(XmlAccessType.NONE)
-public class DefaultUsage extends ValidatingConfig<StandaloneCatalog> implements Usage {
+public class DefaultUsage extends ValidatingConfig<StandaloneCatalog> implements Usage, Externalizable {
 
     @XmlAttribute(required = true)
     @XmlID
@@ -97,54 +98,51 @@ public class DefaultUsage extends ValidatingConfig<StandaloneCatalog> implements
     // Not exposed in xml.
     private PlanPhase phase;
 
+    // Required for deserialization
     public DefaultUsage() {
-        limits = new DefaultLimit[0];
-        blocks = new DefaultBlock[0];
-        tiers = new DefaultTier[0];
     }
 
     public DefaultUsage(final Usage in, UsagePriceOverride override, Currency currency) {
-              this.name = in.getName();
-              this.usageType = in.getUsageType();
-              this.tierBlockPolicy = in.getTierBlockPolicy();
-              this.billingPeriod = in.getBillingPeriod();
-              this.billingMode = in.getBillingMode();
-              this.limits = (DefaultLimit[]) in.getLimits();
-              this.blocks = (DefaultBlock[]) in.getBlocks();
-              this.tiers = new DefaultTier[in.getTiers().length];
+        this.name = in.getName();
+        this.usageType = in.getUsageType();
+        this.tierBlockPolicy = in.getTierBlockPolicy();
+        this.billingPeriod = in.getBillingPeriod();
+        this.billingMode = in.getBillingMode();
+        this.limits = (DefaultLimit[]) in.getLimits();
+        this.blocks = (DefaultBlock[]) in.getBlocks();
+        this.tiers = new DefaultTier[in.getTiers().length];
 
-              for (int i = 0; i < in.getTiers().length; i++) {
-                  if(override != null && override.getTierPriceOverrides()!=null) {
-                      final TieredBlock[] curTieredBlocks = in.getTiers()[i].getTieredBlocks();
+        for (int i = 0; i < in.getTiers().length; i++) {
+            if (override != null && override.getTierPriceOverrides() != null) {
+                final TieredBlock[] curTieredBlocks = in.getTiers()[i].getTieredBlocks();
 
-                      final TierPriceOverride overriddenTier = Iterables.tryFind(override.getTierPriceOverrides(), new Predicate<TierPriceOverride>() {
-                          @Override
-                          public boolean apply(final TierPriceOverride input) {
+                final TierPriceOverride overriddenTier = Iterables.tryFind(override.getTierPriceOverrides(), new Predicate<TierPriceOverride>() {
+                    @Override
+                    public boolean apply(final TierPriceOverride input) {
 
-                            if(input !=null) {
-                              final List<TieredBlockPriceOverride> blockPriceOverrides = input.getTieredBlockPriceOverrides();
-                              for (TieredBlockPriceOverride blockDef : blockPriceOverrides) {
-                                 String unitName = blockDef.getUnitName();
-                                 Double max = blockDef.getMax();
-                                 Double size = blockDef.getSize();
-                                 for (TieredBlock curTieredBlock : curTieredBlocks) {
-                                     if (unitName.equals(curTieredBlock.getUnit().getName()) &&
-                                             Double.compare(size, curTieredBlock.getSize()) == 0 &&
-                                             Double.compare(max, curTieredBlock.getMax()) == 0) {
-                                         return true;
-                                     }
-                                 }
-                               }
+                        if (input != null) {
+                            final List<TieredBlockPriceOverride> blockPriceOverrides = input.getTieredBlockPriceOverrides();
+                            for (TieredBlockPriceOverride blockDef : blockPriceOverrides) {
+                                String unitName = blockDef.getUnitName();
+                                Double max = blockDef.getMax();
+                                Double size = blockDef.getSize();
+                                for (TieredBlock curTieredBlock : curTieredBlocks) {
+                                    if (unitName.equals(curTieredBlock.getUnit().getName()) &&
+                                        Double.compare(size, curTieredBlock.getSize()) == 0 &&
+                                        Double.compare(max, curTieredBlock.getMax()) == 0) {
+                                        return true;
+                                    }
+                                }
                             }
-                            return false;
-                          }
-                      }).orNull();
-                      tiers[i] = (overriddenTier != null) ? new DefaultTier(in.getTiers()[i], overriddenTier, currency) : (DefaultTier)in.getTiers()[i] ;
-                  }
-                  else {
-                      tiers[i] = (DefaultTier) in.getTiers()[i];
-                  }
-              }
+                        }
+                        return false;
+                    }
+                }).orNull();
+                tiers[i] = (overriddenTier != null) ? new DefaultTier(in.getTiers()[i], overriddenTier, currency) : (DefaultTier) in.getTiers()[i];
+            } else {
+                tiers[i] = (DefaultTier) in.getTiers()[i];
+            }
+        }
     }
 
     @Override
@@ -215,16 +213,16 @@ public class DefaultUsage extends ValidatingConfig<StandaloneCatalog> implements
     public ValidationErrors validate(final StandaloneCatalog catalog, final ValidationErrors errors) {
         if (billingMode == BillingMode.IN_ADVANCE && usageType == UsageType.CAPACITY && limits.length == 0) {
             errors.add(new ValidationError(String.format("Usage [IN_ADVANCE CAPACITY] section of phase %s needs to define some limits",
-                                                         phase.toString()), catalog.getCatalogURI(), DefaultUsage.class, ""));
+                                                         phase.toString()), DefaultUsage.class, ""));
         }
         if (billingMode == BillingMode.IN_ADVANCE && usageType == UsageType.CONSUMABLE && blocks.length == 0) {
             errors.add(new ValidationError(String.format("Usage [IN_ADVANCE CONSUMABLE] section of phase %s needs to define some blocks",
-                                                         phase.toString()), catalog.getCatalogURI(), DefaultUsage.class, ""));
+                                                         phase.toString()), DefaultUsage.class, ""));
         }
 
         if (billingMode == BillingMode.IN_ARREAR && tiers.length == 0) {
             errors.add(new ValidationError(String.format("Usage [IN_ARREAR] section of phase %s needs to define some tiers",
-                                                         phase.toString()), catalog.getCatalogURI(), DefaultUsage.class, ""));
+                                                         phase.toString()), DefaultUsage.class, ""));
         }
         validateCollection(catalog, errors, limits);
         validateCollection(catalog, errors, tiers);
@@ -232,8 +230,8 @@ public class DefaultUsage extends ValidatingConfig<StandaloneCatalog> implements
     }
 
     @Override
-    public void initialize(final StandaloneCatalog root, final URI uri) {
-        super.initialize(root, uri);
+    public void initialize(final StandaloneCatalog root) {
+        super.initialize(root);
         CatalogSafetyInitializer.initializeNonRequiredNullFieldsWithDefaultValue(this);
 
         if (prettyName == null) {
@@ -241,15 +239,15 @@ public class DefaultUsage extends ValidatingConfig<StandaloneCatalog> implements
         }
 
         for (DefaultLimit limit : limits) {
-            limit.initialize(root, uri);
+            limit.initialize(root);
         }
         for (DefaultBlock block : blocks) {
-            block.initialize(root, uri);
+            block.initialize(root);
             block.setPhase(phase);
         }
 
         for (DefaultTier tier : tiers) {
-            tier.initialize(root, uri);
+            tier.initialize(root);
             tier.setPhase(phase);
         }
     }
@@ -379,5 +377,47 @@ public class DefaultUsage extends ValidatingConfig<StandaloneCatalog> implements
         result = 31 * result + (fixedPrice != null ? fixedPrice.hashCode() : 0);
         result = 31 * result + (recurringPrice != null ? recurringPrice.hashCode() : 0);
         return result;
+    }
+
+    @Override
+    public void writeExternal(final ObjectOutput out) throws IOException {
+        out.writeUTF(name);
+        out.writeUTF(prettyName);
+        out.writeBoolean(billingMode != null);
+        if (billingMode != null) {
+            out.writeUTF(billingMode.name());
+        }
+        out.writeBoolean(usageType != null);
+        if (usageType != null) {
+            out.writeUTF(usageType.name());
+        }
+        out.writeBoolean(tierBlockPolicy != null);
+        if (tierBlockPolicy != null) {
+            out.writeUTF(tierBlockPolicy.name());
+        }
+        out.writeBoolean(billingPeriod != null);
+        if (billingPeriod != null) {
+            out.writeUTF(billingPeriod.name());
+        }
+        out.writeObject(limits);
+        out.writeObject(blocks);
+        out.writeObject(tiers);
+        out.writeObject(fixedPrice);
+        out.writeObject(recurringPrice);
+    }
+
+    @Override
+    public void readExternal(final ObjectInput in) throws IOException, ClassNotFoundException {
+        this.name = in.readUTF();
+        this.prettyName = in.readUTF();
+        this.billingMode = in.readBoolean() ? BillingMode.valueOf(in.readUTF()) : null;
+        this.usageType = in.readBoolean() ? UsageType.valueOf(in.readUTF()) : null;
+        this.tierBlockPolicy = in.readBoolean() ? TierBlockPolicy.valueOf(in.readUTF()) : null;
+        this.billingPeriod = in.readBoolean() ? BillingPeriod.valueOf(in.readUTF()) : null;
+        this.limits = (DefaultLimit[]) in.readObject();
+        this.blocks = (DefaultBlock[]) in.readObject();
+        this.tiers = (DefaultTier[]) in.readObject();
+        this.fixedPrice = (DefaultInternationalPrice) in.readObject();
+        this.recurringPrice = (DefaultInternationalPrice) in.readObject();
     }
 }

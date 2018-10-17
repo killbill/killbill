@@ -1,7 +1,9 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
+ * Copyright 2014-2018 Groupon, Inc
+ * Copyright 2014-2018 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -16,6 +18,11 @@
 
 package org.killbill.billing.catalog.rules;
 
+import java.io.Externalizable;
+import java.io.IOException;
+import java.io.ObjectInput;
+import java.io.ObjectOutput;
+
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlIDREF;
 
@@ -26,7 +33,8 @@ import org.killbill.billing.catalog.api.Product;
 import org.killbill.billing.catalog.api.ProductCategory;
 import org.killbill.billing.catalog.api.rules.Case;
 
-public abstract class DefaultCaseStandardNaming<T> extends DefaultCase<T> implements Case {
+public abstract class DefaultCaseStandardNaming<T> extends DefaultCase<T> implements Case, Externalizable {
+
     @XmlElement(required = false, name = "product")
     @XmlIDREF
     private DefaultProduct product;
@@ -116,4 +124,25 @@ public abstract class DefaultCaseStandardNaming<T> extends DefaultCase<T> implem
         return result;
     }
 
+    @Override
+    public void writeExternal(final ObjectOutput out) throws IOException {
+        out.writeObject(product);
+        out.writeBoolean(productCategory != null);
+        if (productCategory != null) {
+            out.writeUTF(productCategory.name());
+        }
+        out.writeBoolean(billingPeriod != null);
+        if (billingPeriod != null) {
+            out.writeUTF(billingPeriod.name());
+        }
+        out.writeObject(priceList);
+    }
+
+    @Override
+    public void readExternal(final ObjectInput in) throws IOException, ClassNotFoundException {
+        this.product = (DefaultProduct) in.readObject();
+        this.productCategory = in.readBoolean() ? ProductCategory.valueOf(in.readUTF()) : null;
+        this.billingPeriod = in.readBoolean() ? BillingPeriod.valueOf(in.readUTF()) : null;
+        this.priceList = (DefaultPriceList) in.readObject();
+    }
 }

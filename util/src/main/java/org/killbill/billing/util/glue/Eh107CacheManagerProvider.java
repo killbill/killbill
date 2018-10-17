@@ -36,7 +36,7 @@ import org.slf4j.LoggerFactory;
 import com.codahale.metrics.MetricRegistry;
 
 // EhCache specific provider
-public class Eh107CacheManagerProvider extends CacheProviderBase implements Provider<CacheManager> {
+public class Eh107CacheManagerProvider extends EhCacheProviderBase implements Provider<CacheManager> {
 
     private static final Logger logger = LoggerFactory.getLogger(Eh107CacheManagerProvider.class);
     private static final EhcacheLoggingListener ehcacheLoggingListener = new EhcacheLoggingListener();
@@ -54,7 +54,7 @@ public class Eh107CacheManagerProvider extends CacheProviderBase implements Prov
     @Override
     public CacheManager get() {
         // JSR-107 registration, required for JMX integration
-        final CachingProvider cachingProvider = Caching.getCachingProvider();
+        final CachingProvider cachingProvider = Caching.getCachingProvider("org.ehcache.jsr107.EhcacheCachingProvider");
 
         CacheManager cacheManager;
         try {
