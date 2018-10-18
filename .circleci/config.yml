@@ -43,7 +43,7 @@ jobs:
       - checkout
       - restore_cache:
           key: v1-dependencies-{{ .Branch }}-{{ checksum "pom.xml" }}
-      - run: mvn clean install -Ptravis
+      - run: mvn -Djava.security.egd=file:/dev/./urandom clean install -Ptravis
       - run:
           name: Save test results
           command: |
@@ -82,7 +82,7 @@ jobs:
 
             set -e
             ./bin/db-helper -a create --driver mysql -u root -p root -t yes -h 127.0.0.1
-      - run: mvn clean install -Plocaltest-mysql
+      - run: mvn -Djava.security.egd=file:/dev/./urandom clean install -Plocaltest-mysql
       - run:
           name: Save test results
           command: |
@@ -107,7 +107,7 @@ jobs:
       - run:
           name: Setup latest DDL
           command: ./bin/db-helper -a create --driver postgres -u postgres -p postgres -t yes
-      - run: mvn clean install -Plocaltest-postgresql
+      - run: mvn -Djava.security.egd=file:/dev/./urandom clean install -Plocaltest-postgresql
       - run:
           name: Save test results
           command: |
