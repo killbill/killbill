@@ -456,7 +456,7 @@ public class TestUserApiAddOn extends SubscriptionTestSuiteWithEmbeddedDB {
         assertEquals(aoCurrentPhase.getPhaseType(), PhaseType.DISCOUNT);
 
         testUtil.assertDateWithin(aoSubscription.getStartDate(), beforeAOCreation, afterAOCreation);
-        assertEquals(aoSubscription.getBundleStartDate(), baseSubscription.getBundleStartDate());
+        assertEquals(aoSubscription.getBundleStartDate().compareTo(baseSubscription.getBundleStartDate()), 0);
 
         // CHECK next AO PHASE EVENT IS INDEED A MONTH AFTER BP STARTED => BUNDLE ALIGNMENT
         SubscriptionBaseTransition aoPendingTranstion = aoSubscription.getPendingTransition();

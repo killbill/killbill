@@ -65,11 +65,8 @@ public class TestDefaultSubscriptionApi extends EntitlementTestSuiteWithEmbedded
         testListener.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK);
         final UUID entitlement1Id = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec), UUID.randomUUID().toString(), null, null, false, true, ImmutableList.<PluginProperty>of(), callContext);
         final Entitlement entitlement1 = entitlementApi.getEntitlementForId(entitlement1Id, callContext);
-        // Sleep 1 sec so created date are apart from each other and ordering in the bundle does not default on the UUID which is random.
-        try {
-            Thread.sleep(1000);
-        } catch (InterruptedException ignore) {
-        }
+        // Move the clock 1.5 sec so the (truncated) created date are apart from each other and ordering in the bundle does not default on the UUID which is random.
+        clock.addDeltaFromReality(1500);
         testListener.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK);
         final UUID entitlement2Id = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec), UUID.randomUUID().toString(), null, null, false, true, ImmutableList.<PluginProperty>of(), callContext);
         assertListenerStatus();

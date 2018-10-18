@@ -22,10 +22,12 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 
+import org.awaitility.Awaitility;
 import org.joda.time.LocalDate;
 import org.killbill.billing.account.api.Account;
 import org.killbill.billing.api.FlakyRetryAnalyzer;
@@ -47,7 +49,6 @@ import org.killbill.billing.payment.bus.PaymentBusEventHandler;
 import org.killbill.billing.payment.core.janitor.Janitor;
 import org.killbill.billing.payment.dao.PaymentAttemptModelDao;
 import org.killbill.billing.payment.dao.PaymentTransactionModelDao;
-import org.killbill.billing.payment.glue.DefaultPaymentService;
 import org.killbill.billing.payment.invoice.InvoicePaymentControlPluginApi;
 import org.killbill.billing.payment.plugin.api.PaymentPluginStatus;
 import org.killbill.billing.payment.plugin.api.PaymentTransactionInfoPlugin;
@@ -74,7 +75,6 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 import com.google.inject.Inject;
 
@@ -112,12 +112,12 @@ public class TestJanitor extends PaymentTestSuiteWithEmbeddedDB {
     private Account account;
 
     @Override
-    protected KillbillConfigSource getConfigSource() {
-        return getConfigSource("/payment.properties",
-                               ImmutableMap.<String, String>of("org.killbill.payment.provider.default", MockPaymentProviderPlugin.PLUGIN_NAME,
-                                                               "killbill.payment.engine.events.off", "false",
-                                                               "org.killbill.payment.janitor.rate", "500ms")
-                              );
+    protected KillbillConfigSource getConfigSource(final Map<String, String> extraProperties) {
+        final Map<String, String> allExtraProperties = new HashMap<String, String>(extraProperties);
+        allExtraProperties.put("org.killbill.payment.provider.default", MockPaymentProviderPlugin.PLUGIN_NAME);
+        allExtraProperties.put("killbill.payment.engine.events.off", "false");
+        allExtraProperties.put("org.killbill.payment.janitor.rate", "500ms");
+        return getConfigSource("/payment.properties", allExtraProperties);
     }
 
     @Override
@@ -222,13 +222,15 @@ public class TestJanitor extends PaymentTestSuiteWithEmbeddedDB {
         assertEquals(attempt2.getStateName(), "INIT");
 
         clock.addDays(1);
-        try {
-            Thread.sleep(1500);
-        } catch (InterruptedException e) {
-        }
-
-        final PaymentAttemptModelDao attempt3 = paymentDao.getPaymentAttempt(attempt.getId(), internalCallContext);
-        assertEquals(attempt3.getStateName(), "SUCCESS");
+        Awaitility.await()
+                  .atMost(5, TimeUnit.SECONDS)
+                  .until(new Callable<Boolean>() {
+                      @Override
+                      public Boolean call() throws Exception {
+                          final PaymentAttemptModelDao attempt3 = paymentDao.getPaymentAttempt(attempt.getId(), internalCallContext);
+                          return "SUCCESS".equals(attempt3.getStateName());
+                      }
+                  });
     }
 
     @Test(groups = "slow")
@@ -475,7 +477,6 @@ public class TestJanitor extends PaymentTestSuiteWithEmbeddedDB {
         mockPaymentProviderPlugin.updatePaymentTransactions(payment.getId(), paymentTransactions);
 
         final String paymentStateName = paymentSMHelper.getPendingStateForTransaction(TransactionType.AUTHORIZE).toString();
-
 
         testListener.pushExpectedEvent(NextEvent.PAYMENT);
         paymentDao.updatePaymentAndTransactionOnCompletion(account.getId(), null, payment.getId(), TransactionType.AUTHORIZE, paymentStateName, paymentStateName,

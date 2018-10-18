@@ -18,6 +18,9 @@
 
 package org.killbill.billing.payment;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import org.killbill.billing.GuicyKillbillTestSuiteWithEmbeddedDB;
 import org.killbill.billing.account.api.AccountInternalApi;
 import org.killbill.billing.control.plugin.api.PaymentControlPluginApi;
@@ -55,7 +58,6 @@ import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
 
-import com.google.common.collect.ImmutableMap;
 import com.google.inject.Guice;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
@@ -120,10 +122,11 @@ public abstract class PaymentTestSuiteWithEmbeddedDB extends GuicyKillbillTestSu
     protected PaymentControlStateMachineHelper paymentControlStateMachineHelper;
 
     @Override
-    protected KillbillConfigSource getConfigSource() {
-        return getConfigSource("/payment.properties",
-                               ImmutableMap.<String, String>of("org.killbill.payment.provider.default", MockPaymentProviderPlugin.PLUGIN_NAME,
-                                                               "killbill.payment.engine.events.off", "false"));
+    protected KillbillConfigSource getConfigSource(final Map<String, String> extraProperties) {
+        final Map<String, String> allExtraProperties = new HashMap<String, String>(extraProperties);
+        allExtraProperties.put("org.killbill.payment.provider.default", MockPaymentProviderPlugin.PLUGIN_NAME);
+        allExtraProperties.put("killbill.payment.engine.events.off", "false");
+        return getConfigSource("/payment.properties", allExtraProperties);
     }
 
     @BeforeClass(groups = "slow")
@@ -132,7 +135,7 @@ public abstract class PaymentTestSuiteWithEmbeddedDB extends GuicyKillbillTestSu
             return;
         }
 
-        final Injector injector = Guice.createInjector(new TestPaymentModuleWithEmbeddedDB(configSource, getClock()));
+        final Injector injector = Guice.createInjector(new TestPaymentModuleWithEmbeddedDB(configSource, clock));
         injector.injectMembers(this);
     }
 

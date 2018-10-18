@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014-2016 Groupon, Inc
- * Copyright 2014-2016 The Billing Project, LLC
+ * Copyright 2014-2018 Groupon, Inc
+ * Copyright 2014-2018 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -18,6 +18,7 @@
 
 package org.killbill.billing.entitlement;
 
+import java.util.Map;
 import java.util.UUID;
 
 import org.apache.shiro.SecurityUtils;
@@ -124,8 +125,8 @@ public class EntitlementTestSuiteWithEmbeddedDB extends GuicyKillbillTestSuiteWi
     protected Catalog catalog;
 
     @Override
-    protected KillbillConfigSource getConfigSource() {
-        return getConfigSource("/entitlement.properties");
+    protected KillbillConfigSource getConfigSource(final Map<String, String> extraProperties) {
+        return getConfigSource("/entitlement.properties", extraProperties);
     }
 
     @BeforeClass(groups = "slow")
@@ -134,7 +135,7 @@ public class EntitlementTestSuiteWithEmbeddedDB extends GuicyKillbillTestSuiteWi
             return;
         }
 
-        final Injector injector = Guice.createInjector(Stage.PRODUCTION, new TestEntitlementModuleWithEmbeddedDB(configSource));
+        final Injector injector = Guice.createInjector(Stage.PRODUCTION, new TestEntitlementModuleWithEmbeddedDB(configSource, clock));
         injector.injectMembers(this);
     }
 
@@ -234,8 +235,6 @@ public class EntitlementTestSuiteWithEmbeddedDB extends GuicyKillbillTestSuiteWi
     }
 
     private void resetClockToStartOfTest(final ClockMock clock) {
-        clock.resetDeltaFromReality();
-
         // Date at which all tests start-- we create the date object here after the system properties which set the JVM in UTC have been set.
         final DateTime testStartDate = new DateTime(2012, 5, 7, 0, 3, 42, 0);
         clock.setDeltaFromReality(testStartDate.getMillis() - clock.getUTCNow().getMillis());

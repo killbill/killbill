@@ -25,6 +25,7 @@ import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.core.Response;
 
+import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.killbill.billing.GuicyKillbillTestSuite;
 import org.killbill.billing.beatrix.integration.db.TestDBRouterAPI;
@@ -40,15 +41,15 @@ public class TestDBRouterResource implements JaxrsResource {
     private final MutableInternalCallContext internalCallContext = new MutableInternalCallContext(InternalCallContextFactory.INTERNAL_TENANT_RECORD_ID,
                                                                                                   1687L,
                                                                                                   DateTimeZone.UTC,
-                                                                                                  GuicyKillbillTestSuite.getClock().getUTCNow(),
+                                                                                                  new DateTime(DateTimeZone.UTC),
                                                                                                   UUID.randomUUID(),
                                                                                                   UUID.randomUUID().toString(),
                                                                                                   CallOrigin.TEST,
                                                                                                   UserType.TEST,
                                                                                                   "Testing",
                                                                                                   "This is a test",
-                                                                                                  GuicyKillbillTestSuite.getClock().getUTCNow(),
-                                                                                                  GuicyKillbillTestSuite.getClock().getUTCNow());
+                                                                                                  new DateTime(DateTimeZone.UTC),
+                                                                                                  new DateTime(DateTimeZone.UTC));
 
     private final MutableCallContext callContext = new MutableCallContext(internalCallContext);
 

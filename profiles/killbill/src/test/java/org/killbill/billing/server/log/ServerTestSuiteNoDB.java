@@ -17,7 +17,6 @@
 
 package org.killbill.billing.server.log;
 
-import org.killbill.billing.GuicyKillbillTestModule;
 import org.killbill.billing.GuicyKillbillTestSuiteNoDB;
 import org.testng.annotations.BeforeClass;
 
@@ -32,7 +31,7 @@ public abstract class ServerTestSuiteNoDB extends GuicyKillbillTestSuiteNoDB {
             return;
         }
 
-        final Injector injector = Guice.createInjector(new TestServerModuleNoDB(configSource));
+        final Injector injector = Guice.createInjector(new TestServerModuleNoDB(configSource, clock));
         injector.injectMembers(this);
     }
 }

@@ -18,7 +18,9 @@
 package org.killbill.billing.invoice;
 
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.Iterator;
+import java.util.Map;
 
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.invoice.plugin.api.InvoicePluginApi;
@@ -32,7 +34,6 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import com.google.common.base.Joiner;
-import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 
 import static org.testng.Assert.assertEquals;
@@ -53,15 +54,19 @@ public class TestInvoicePluginDispatcher extends InvoiceTestSuiteNoDB {
     TenantInternalApi tenantInternalApi;
 
     @Override
-    protected KillbillConfigSource getConfigSource() {
-        return getConfigSource("/resource.properties", ImmutableMap.<String, String>builder()
-                .put("org.killbill.invoice.plugin", Joiner.on(",").join(PLUGIN_1, PLUGIN_2))
-                .build());
+    protected KillbillConfigSource getConfigSource(final Map<String, String> extraProperties) {
+        final Map<String, String> allExtraProperties = new HashMap<String, String>(extraProperties);
+        allExtraProperties.put("org.killbill.invoice.plugin", Joiner.on(",").join(PLUGIN_1, PLUGIN_2));
+        return getConfigSource("/resource.properties", allExtraProperties);
     }
 
     @Override
     @BeforeMethod(groups = "fast")
     public void beforeMethod() {
+        if (hasFailed()) {
+            return;
+        }
+
         super.beforeMethod();
         for (final String name : pluginRegistry.getAllServices()) {
             pluginRegistry.unregisterService(name);

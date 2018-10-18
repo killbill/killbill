@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014-2015 Groupon, Inc
- * Copyright 2014-2015 The Billing Project, LLC
+ * Copyright 2014-2018 Groupon, Inc
+ * Copyright 2014-2018 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -19,18 +19,20 @@
 package org.killbill.billing.subscription.glue;
 
 import org.killbill.billing.GuicyKillbillTestNoDBModule;
-import org.killbill.billing.account.api.AccountUserApi;
 import org.killbill.billing.mock.glue.MockAccountModule;
 import org.killbill.billing.mock.glue.MockNonEntityDaoModule;
 import org.killbill.billing.platform.api.KillbillConfigSource;
 import org.killbill.billing.subscription.engine.dao.MockSubscriptionDaoMemory;
 import org.killbill.billing.subscription.engine.dao.SubscriptionDao;
-import org.mockito.Mockito;
+import org.killbill.clock.ClockMock;
 
 public class TestDefaultSubscriptionModuleNoDB extends TestDefaultSubscriptionModule {
 
-    public TestDefaultSubscriptionModuleNoDB(final KillbillConfigSource configSource) {
+    private final ClockMock clock;
+
+    public TestDefaultSubscriptionModuleNoDB(final KillbillConfigSource configSource, final ClockMock clock) {
         super(configSource);
+        this.clock = clock;
     }
 
     @Override
@@ -40,7 +42,7 @@ public class TestDefaultSubscriptionModuleNoDB extends TestDefaultSubscriptionMo
 
     @Override
     protected void configure() {
-        install(new GuicyKillbillTestNoDBModule(configSource));
+        install(new GuicyKillbillTestNoDBModule(configSource, clock));
         install(new MockAccountModule(configSource));
 
         super.configure();

@@ -30,7 +30,6 @@ import org.killbill.billing.util.glue.CacheModule;
 import org.killbill.billing.util.glue.CallContextModule;
 import org.killbill.billing.util.glue.ConfigModule;
 import org.killbill.billing.util.glue.CustomFieldModule;
-import org.killbill.billing.util.glue.MemoryGlobalLockerModule;
 import org.mockito.Mockito;
 
 public class TestInvoiceModule extends DefaultInvoiceModule {
@@ -48,14 +47,12 @@ public class TestInvoiceModule extends DefaultInvoiceModule {
     protected void configure() {
         super.configure();
         install(new CallContextModule(configSource));
-        install(new MemoryGlobalLockerModule(configSource));
 
         install(new CatalogModule(configSource));
         install(new CacheModule(configSource));
         install(new ConfigModule(configSource));
         install(new TemplateModule(configSource));
         install(new MockTenantModule(configSource));
-
 
         install(new CustomFieldModule(configSource));
         install(new UsageModule(configSource));

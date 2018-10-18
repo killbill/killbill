@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014-2017 Groupon, Inc
- * Copyright 2014-2017 The Billing Project, LLC
+ * Copyright 2014-2018 Groupon, Inc
+ * Copyright 2014-2018 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -31,7 +31,6 @@ import org.killbill.billing.util.tag.api.user.TagEventBuilder;
 import org.killbill.billing.util.tag.dao.TagDao;
 import org.killbill.billing.util.tag.dao.TagDefinitionDao;
 import org.killbill.bus.api.PersistentBus;
-import org.killbill.clock.Clock;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
@@ -53,8 +52,6 @@ public abstract class AccountTestSuiteNoDB extends GuicyKillbillTestSuiteNoDB {
     @Inject
     protected CacheControllerDispatcher controllerDispatcher;
     @Inject
-    protected Clock clock;
-    @Inject
     protected CustomFieldDao customFieldDao;
     @Inject
     protected PersistentBus bus;
@@ -73,7 +70,7 @@ public abstract class AccountTestSuiteNoDB extends GuicyKillbillTestSuiteNoDB {
             return;
         }
 
-        final Injector injector = Guice.createInjector(new TestAccountModuleNoDB(configSource));
+        final Injector injector = Guice.createInjector(new TestAccountModuleNoDB(configSource, clock));
         injector.injectMembers(this);
     }
 

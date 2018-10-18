@@ -16,6 +16,6 @@ tableValues() ::= <<
 , :sugar
 >>
 
-isIsTimeForKombucha() ::= <<
-select hour(current_timestamp(0)) = 17 as is_time;
+isItTimeForKombucha() ::= <<
+select hour(current_timestamp(0)) \< 24 as is_time;
 >>

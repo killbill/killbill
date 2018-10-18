@@ -79,9 +79,7 @@ public abstract class KillbillClient extends GuicyKillbillTestSuiteWithEmbeddedD
     protected static final ImmutableMap<String, String> NULL_PLUGIN_PROPERTIES = null;
     protected static final ImmutableList<AuditLog> EMPTY_AUDIT_LOGS = ImmutableList.<AuditLog>of();
 
-
-
-    protected final long DEFAULT_WAIT_COMPLETION_TIMEOUT_SEC = 10;
+    protected final long DEFAULT_WAIT_COMPLETION_TIMEOUT_SEC = 60;
 
     protected static final String PLUGIN_NAME = "noop";
 

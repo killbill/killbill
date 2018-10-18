@@ -74,6 +74,9 @@ public class TestFixedAndRecurringInvoiceItemGenerator extends InvoiceTestSuiteN
     @Override
     @BeforeMethod(groups = "fast")
     public void beforeMethod() {
+        if (hasFailed()) {
+            return;
+        }
         super.beforeMethod();
 
         try {

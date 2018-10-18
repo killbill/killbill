@@ -71,6 +71,10 @@ public class TestRetryableService extends UtilTestSuiteWithEmbeddedDB {
 
     @BeforeMethod(groups = "slow")
     public void setUp() throws Exception {
+        if (hasFailed()) {
+            return;
+        }
+
         event = new DefaultControlTagCreationEvent(UUID.randomUUID(),
                                                    UUID.randomUUID(),
                                                    ObjectType.ACCOUNT,
@@ -86,6 +90,10 @@ public class TestRetryableService extends UtilTestSuiteWithEmbeddedDB {
 
     @AfterMethod(groups = "slow")
     public void tearDown() throws Exception {
+        if (hasFailed()) {
+            return;
+        }
+
         testListener.stop();
     }
 

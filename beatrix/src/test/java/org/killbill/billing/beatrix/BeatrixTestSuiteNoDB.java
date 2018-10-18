@@ -31,7 +31,7 @@ public abstract class BeatrixTestSuiteNoDB extends GuicyKillbillTestSuiteNoDB {
             return;
         }
 
-        final Injector injector = Guice.createInjector(new BeatrixIntegrationModuleNoDB(configSource));
+        final Injector injector = Guice.createInjector(new BeatrixIntegrationModuleNoDB(configSource, clock));
         injector.injectMembers(this);
     }
 }

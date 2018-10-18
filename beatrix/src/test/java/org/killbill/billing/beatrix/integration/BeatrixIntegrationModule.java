@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014 Groupon, Inc
- * Copyright 2014 The Billing Project, LLC
+ * Copyright 2014-2018 Groupon, Inc
+ * Copyright 2014-2018 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -55,7 +55,6 @@ import org.killbill.billing.util.glue.CallContextModule;
 import org.killbill.billing.util.glue.ConfigModule;
 import org.killbill.billing.util.glue.CustomFieldModule;
 import org.killbill.billing.util.glue.ExportModule;
-import org.killbill.billing.util.glue.GlobalLockerModule;
 import org.killbill.billing.util.glue.KillBillModule;
 import org.killbill.billing.util.glue.KillBillShiroModule;
 import org.killbill.billing.util.glue.KillbillApiAopModule;
@@ -64,6 +63,8 @@ import org.killbill.billing.util.glue.NonEntityDaoModule;
 import org.killbill.billing.util.glue.RecordIdModule;
 import org.killbill.billing.util.glue.SecurityModule;
 import org.killbill.billing.util.glue.TagStoreModule;
+import org.killbill.clock.Clock;
+import org.killbill.clock.ClockMock;
 
 public class BeatrixIntegrationModule extends KillBillModule {
 
@@ -72,21 +73,22 @@ public class BeatrixIntegrationModule extends KillBillModule {
     // Same name the osgi-payment-test plugin uses to register its service
     public static final String OSGI_PLUGIN_NAME = "osgi-payment-plugin";
 
+    private final ClockMock clock;
     private final InvoiceConfig invoiceConfig;
 
-    public BeatrixIntegrationModule(final KillbillConfigSource configSource) {
-        this(configSource, null);
+    public BeatrixIntegrationModule(final KillbillConfigSource configSource, final ClockMock clock) {
+        this(configSource, clock, null);
     }
 
-    public BeatrixIntegrationModule(final KillbillConfigSource configSource, @Nullable final InvoiceConfig invoiceConfig) {
+    public BeatrixIntegrationModule(final KillbillConfigSource configSource, final ClockMock clock, @Nullable final InvoiceConfig invoiceConfig) {
         super(configSource);
+        this.clock = clock;
         this.invoiceConfig = invoiceConfig;
     }
 
     @Override
     protected void configure() {
-        install(new GuicyKillbillTestWithEmbeddedDBModule(true, configSource));
-        install(new GlobalLockerModule(configSource));
+        install(new GuicyKillbillTestWithEmbeddedDBModule(true, configSource, clock));
         install(new CacheModule(configSource));
         install(new ConfigModule(configSource));
         install(new CallContextModule(configSource));
@@ -98,7 +100,7 @@ public class BeatrixIntegrationModule extends KillBillModule {
         install(new DefaultEntitlementModule(configSource));
         install(new DefaultInvoiceModuleWithSwitchRepairLogic(configSource));
         install(new TemplateModule(configSource));
-        install(new PaymentPluginMockModule(configSource));
+        install(new PaymentPluginMockModule(configSource, clock));
         install(new DefaultJunctionModule(configSource));
         install(new IntegrationTestOverdueModule(configSource));
         install(new AuditModule(configSource));
@@ -147,13 +149,16 @@ public class BeatrixIntegrationModule extends KillBillModule {
 
     private static final class PaymentPluginMockModule extends PaymentModule {
 
-        private PaymentPluginMockModule(final KillbillConfigSource configSource) {
+        private final Clock clock;
+
+        private PaymentPluginMockModule(final KillbillConfigSource configSource, final Clock clock) {
             super(configSource);
+            this.clock = clock;
         }
 
         @Override
         protected void installPaymentProviderPlugins(final PaymentConfig config) {
-            install(new MockPaymentProviderPluginModule(NON_OSGI_PLUGIN_NAME, TestIntegrationBase.getClock(), configSource));
+            install(new MockPaymentProviderPluginModule(NON_OSGI_PLUGIN_NAME, clock, configSource));
         }
     }
 
@@ -162,10 +167,11 @@ public class BeatrixIntegrationModule extends KillBillModule {
         public KillBillShiroModuleOnlyIniRealm(final KillbillConfigSource configSource) {
             super(configSource);
         }
+
         protected void configureJDBCRealm() {
         }
+
         protected void configureLDAPRealm() {
         }
-
     }
 }

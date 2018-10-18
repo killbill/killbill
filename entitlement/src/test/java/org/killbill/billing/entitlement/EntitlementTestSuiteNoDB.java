@@ -73,7 +73,7 @@ public abstract class EntitlementTestSuiteNoDB extends GuicyKillbillTestSuiteNoD
             return;
         }
 
-        final Injector injector = Guice.createInjector(new TestEntitlementModuleNoDB(configSource));
+        final Injector injector = Guice.createInjector(new TestEntitlementModuleNoDB(configSource, clock));
         injector.injectMembers(this);
     }
 

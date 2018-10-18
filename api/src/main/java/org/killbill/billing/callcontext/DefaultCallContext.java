@@ -20,6 +20,7 @@ import java.util.UUID;
 
 import org.joda.time.DateTime;
 
+import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.CallOrigin;
 import org.killbill.billing.util.callcontext.UserType;
 import org.killbill.clock.Clock;
@@ -56,6 +57,13 @@ public class DefaultCallContext extends CallContextBase {
         super(accountId, tenantId, userName, callOrigin, userType, reasonCode, comment, userToken);
         this.createdDate = createdDate;
         this.updateDate = updatedDate;
+    }
+
+    // For testing
+    public DefaultCallContext(final CallContext callContext) {
+        super(callContext.getAccountId(), callContext.getTenantId(), callContext.getUserName(), callContext.getCallOrigin(), callContext.getUserType(), callContext.getReasonCode(), callContext.getComments(),  callContext.getUserToken());
+        this.createdDate = callContext.getCreatedDate();
+        this.updateDate = callContext.getUpdatedDate();
     }
 
     @Override

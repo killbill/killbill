@@ -52,16 +52,6 @@ import static org.testng.Assert.fail;
 
 public class TestBlockingApi extends EntitlementTestSuiteWithEmbeddedDB {
 
-    @BeforeMethod(groups = "slow")
-    public void beforeMethod() throws Exception {
-        if (hasFailed()) {
-            return;
-        }
-
-        super.beforeMethod();
-        clock.resetDeltaFromReality();
-    }
-
     @Test(groups = "slow")
     public void testApi() {
         final UUID uuid = UUID.randomUUID();
