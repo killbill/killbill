@@ -112,7 +112,7 @@ public class CallbackServlet extends HttpServlet {
         }
 
         // Ignore missed events
-        reset();
+        nextExpectedEvent.clear();
 
         if (isListenerFailed) {
             log.error(listenerFailedMsg);
