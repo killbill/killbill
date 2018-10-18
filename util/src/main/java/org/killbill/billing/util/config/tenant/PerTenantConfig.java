@@ -31,9 +31,12 @@ public class PerTenantConfig extends HashMap<String, String> implements External
     }
 
     @Override
-    public void readExternal(final ObjectInput in) throws IOException {
-        for (int i = 0; i < in.readInt(); i++) {
-            put(in.readUTF(), in.readUTF());
+    public void readExternal(final ObjectInput in) throws IOException, ClassNotFoundException {
+        final int size = in.readInt();
+        for (int i = 0; i < size; i++) {
+            final Object key = in.readObject();
+            final Object value = in.readObject();
+            put(String.valueOf(key), value == null ? null : String.valueOf(value));
         }
     }
 
@@ -41,8 +44,8 @@ public class PerTenantConfig extends HashMap<String, String> implements External
     public void writeExternal(final ObjectOutput oo) throws IOException {
         oo.writeInt(size());
         for (final String key : keySet()) {
-            oo.writeUTF(key);
-            oo.writeUTF(get(key));
+            oo.writeObject(key);
+            oo.writeObject(get(key));
         }
     }
 }

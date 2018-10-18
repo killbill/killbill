@@ -54,6 +54,10 @@ public class TestDefaultCatalogCache extends CatalogTestSuiteNoDB {
 
     @BeforeMethod(groups = "fast")
     protected void beforeMethod() throws Exception {
+        if (hasFailed()) {
+            return;
+        }
+
         cacheControllerDispatcher.clearAll();
 
         multiTenantContext = Mockito.mock(InternalTenantContext.class);

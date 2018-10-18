@@ -43,10 +43,6 @@ public abstract class CallContextBase implements CallContext, Externalizable {
     public CallContextBase() {
     }
 
-    public CallContextBase(@Nullable final UUID accountId, @Nullable final UUID tenantId, final String userName, final CallOrigin callOrigin, final UserType userType) {
-        this(accountId, tenantId, userName, callOrigin, userType, null);
-    }
-
     public CallContextBase(@Nullable final UUID accountId, @Nullable final UUID tenantId, final String userName, final CallOrigin callOrigin, final UserType userType, final UUID userToken) {
         this(accountId, tenantId, userName, callOrigin, userType, null, null, userToken);
     }
