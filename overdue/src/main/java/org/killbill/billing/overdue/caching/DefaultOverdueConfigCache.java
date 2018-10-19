@@ -1,6 +1,6 @@
 /*
- * Copyright 2014-2017 Groupon, Inc
- * Copyright 2014-2017 The Billing Project, LLC
+ * Copyright 2014-2018 Groupon, Inc
+ * Copyright 2014-2018 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -40,9 +40,9 @@ import org.killbill.xmlloader.XMLLoader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class EhCacheOverdueConfigCache implements OverdueConfigCache {
+public class DefaultOverdueConfigCache implements OverdueConfigCache {
 
-    private static final Logger log = LoggerFactory.getLogger(EhCacheOverdueConfigCache.class);
+    private static final Logger log = LoggerFactory.getLogger(DefaultOverdueConfigCache.class);
 
     private final CacheController<Long, OverdueConfig> cacheController;
     private final CacheLoaderArgument cacheLoaderArgument;
@@ -50,7 +50,7 @@ public class EhCacheOverdueConfigCache implements OverdueConfigCache {
     private OverdueConfig defaultOverdueConfig;
 
     @Inject
-    public EhCacheOverdueConfigCache(final CacheControllerDispatcher cacheControllerDispatcher) {
+    public DefaultOverdueConfigCache(final CacheControllerDispatcher cacheControllerDispatcher) {
         this.cacheController = cacheControllerDispatcher.getCacheController(CacheType.TENANT_OVERDUE_CONFIG);
         this.cacheLoaderArgument = initializeCacheLoaderArgument();
 
@@ -116,11 +116,8 @@ public class EhCacheOverdueConfigCache implements OverdueConfigCache {
             @Override
             public OverdueConfig loadOverdueConfig(final String overdueConfigXML) throws OverdueApiException {
                 final InputStream overdueConfigStream = new ByteArrayInputStream(overdueConfigXML.getBytes());
-                final URI uri;
                 try {
-                    uri = new URI("/overdueConfig");
-                    final DefaultOverdueConfig overdueConfig = XMLLoader.getObjectFromStream(uri, overdueConfigStream, DefaultOverdueConfig.class);
-                    return overdueConfig;
+                    return XMLLoader.getObjectFromStream(overdueConfigStream, DefaultOverdueConfig.class);
                 } catch (final Exception e) {
                     throw new OverdueApiException(ErrorCode.OVERDUE_INVALID_FOR_TENANT, "Problem encountered loading overdue config ", e);
                 }

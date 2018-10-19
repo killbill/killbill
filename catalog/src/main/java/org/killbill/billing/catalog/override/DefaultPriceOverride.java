@@ -17,8 +17,8 @@
 
 package org.killbill.billing.catalog.override;
 
-import java.util.List;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.regex.Pattern;
 
@@ -40,7 +40,6 @@ import org.killbill.billing.catalog.api.Plan;
 import org.killbill.billing.catalog.api.PlanPhase;
 import org.killbill.billing.catalog.api.PlanPhasePriceOverride;
 import org.killbill.billing.catalog.api.PlanPhaseSpecifier;
-import org.killbill.billing.catalog.api.StaticCatalog;
 import org.killbill.billing.catalog.api.Tier;
 import org.killbill.billing.catalog.api.TierPriceOverride;
 import org.killbill.billing.catalog.api.TieredBlock;
@@ -72,7 +71,6 @@ public class DefaultPriceOverride implements PriceOverride {
 
     @Override
     public DefaultPlan getOrCreateOverriddenPlan(final StandaloneCatalog standaloneCatalog, final Plan parentPlan, final DateTime catalogEffectiveDate, final List<PlanPhasePriceOverride> overrides, @Nullable final InternalCallContext context) throws CatalogApiException {
-
         final PlanPhasePriceOverride[] resolvedOverride = new PlanPhasePriceOverride[parentPlan.getAllPhases().length];
         int index = 0;
         for (final PlanPhase curPhase : parentPlan.getAllPhases()) {
@@ -92,12 +90,11 @@ public class DefaultPriceOverride implements PriceOverride {
                 }
             }).orNull();
 
-            if(curOverride != null) {
+            if (curOverride != null) {
                 List<UsagePriceOverride> resolvedUsageOverrides = getResolvedUsageOverrides(curPhase.getUsages(), curOverride.getUsagePriceOverrides());
                 resolvedOverride[index++] = new DefaultPlanPhasePriceOverride(curPhase.getName(), curOverride.getCurrency(), curOverride.getFixedPrice(),
-                        curOverride.getRecurringPrice(), resolvedUsageOverrides);
-            }
-            else {
+                                                                              curOverride.getRecurringPrice(), resolvedUsageOverrides);
+            } else {
                 resolvedOverride[index++] = null;
             }
         }
@@ -128,14 +125,14 @@ public class DefaultPriceOverride implements PriceOverride {
         }
 
         final DefaultPlan result = new DefaultPlan(standaloneCatalog, planName, (DefaultPlan) parentPlan, resolvedOverride);
-        result.initialize(standaloneCatalog, standaloneCatalog.getCatalogURI());
+        result.initialize(standaloneCatalog);
         if (context == null) {
             overriddenPlanCache.addDryRunPlan(planName, result);
         }
         return result;
     }
 
-    public List<UsagePriceOverride> getResolvedUsageOverrides(Usage[] usages, List<UsagePriceOverride> usagePriceOverrides) throws CatalogApiException{
+    public List<UsagePriceOverride> getResolvedUsageOverrides(Usage[] usages, List<UsagePriceOverride> usagePriceOverrides) throws CatalogApiException {
         List<UsagePriceOverride> resolvedUsageOverrides = new ArrayList<UsagePriceOverride>();
 
         for (final Usage curUsage : usages) {
@@ -145,18 +142,18 @@ public class DefaultPriceOverride implements PriceOverride {
                     return input.getName() != null && input.getName().equals(curUsage.getName());
                 }
             }).orNull();
-              if(curOverride != null) {
-                  List<TierPriceOverride>  tierPriceOverrides = getResolvedTierOverrides(curUsage.getTiers(), curOverride.getTierPriceOverrides());
-                  resolvedUsageOverrides.add(new DefaultUsagePriceOverride(curUsage.getName(), curUsage.getUsageType(),tierPriceOverrides));
-              } else {
-                  resolvedUsageOverrides.add(null);
-              }
+            if (curOverride != null) {
+                List<TierPriceOverride> tierPriceOverrides = getResolvedTierOverrides(curUsage.getTiers(), curOverride.getTierPriceOverrides());
+                resolvedUsageOverrides.add(new DefaultUsagePriceOverride(curUsage.getName(), curUsage.getUsageType(), tierPriceOverrides));
+            } else {
+                resolvedUsageOverrides.add(null);
+            }
         }
 
         return resolvedUsageOverrides;
     }
 
-    public List<TierPriceOverride> getResolvedTierOverrides(Tier[] tiers, List<TierPriceOverride> tierPriceOverrides) throws CatalogApiException{
+    public List<TierPriceOverride> getResolvedTierOverrides(Tier[] tiers, List<TierPriceOverride> tierPriceOverrides) throws CatalogApiException {
         List<TierPriceOverride> resolvedTierOverrides = new ArrayList<TierPriceOverride>();
 
         for (final Tier curTier : tiers) {
@@ -173,8 +170,8 @@ public class DefaultPriceOverride implements PriceOverride {
                             for (int i = 0; i < curTier.getTieredBlocks().length; i++) {
                                 TieredBlock curTieredBlock = curTier.getTieredBlocks()[i];
                                 if (unitName.equals(curTieredBlock.getUnit().getName()) &&
-                                        Double.compare(size, curTieredBlock.getSize()) == 0 &&
-                                        Double.compare(max, curTieredBlock.getMax()) == 0) {
+                                    Double.compare(size, curTieredBlock.getSize()) == 0 &&
+                                    Double.compare(max, curTieredBlock.getMax()) == 0) {
                                     return true;
                                 }
                             }
@@ -184,12 +181,11 @@ public class DefaultPriceOverride implements PriceOverride {
                 }
             }).orNull();
 
-            if(curOverride != null) {
+            if (curOverride != null) {
                 List<TieredBlockPriceOverride> tieredBlockPriceOverrides = getResolvedTieredBlockPriceOverrides(curTier.getTieredBlocks(),
-                        curOverride.getTieredBlockPriceOverrides());
+                                                                                                                curOverride.getTieredBlockPriceOverrides());
                 resolvedTierOverrides.add(new DefaultTierPriceOverride(tieredBlockPriceOverrides));
-            }
-            else {
+            } else {
                 resolvedTierOverrides.add(null);
             }
         }
@@ -206,25 +202,23 @@ public class DefaultPriceOverride implements PriceOverride {
                 @Override
                 public boolean apply(final TieredBlockPriceOverride input) {
                     return input.getUnitName() != null && input.getSize() != null && input.getMax() != null &&
-                            (input.getUnitName().equals(curTieredBlock.getUnit().getName()) &&
-                             Double.compare(input.getSize(), curTieredBlock.getSize()) == 0 &&
-                             Double.compare(input.getMax(), curTieredBlock.getMax()) == 0);
+                           (input.getUnitName().equals(curTieredBlock.getUnit().getName()) &&
+                            Double.compare(input.getSize(), curTieredBlock.getSize()) == 0 &&
+                            Double.compare(input.getMax(), curTieredBlock.getMax()) == 0);
                 }
             }).orNull();
 
-            if(curOverride != null) {
-                resolvedTieredBlockPriceOverrides.add(new DefaultTieredBlockPriceOverride(curTieredBlock.getUnit().getName(), curOverride.getSize(), curOverride.getPrice(), curOverride.getCurrency(), curOverride.getMax())) ;
-            }
-            else {
+            if (curOverride != null) {
+                resolvedTieredBlockPriceOverrides.add(new DefaultTieredBlockPriceOverride(curTieredBlock.getUnit().getName(), curOverride.getSize(), curOverride.getPrice(), curOverride.getCurrency(), curOverride.getMax()));
+            } else {
                 resolvedTieredBlockPriceOverrides.add(null);
             }
         }
         return resolvedTieredBlockPriceOverrides;
     }
 
-
     @Override
-    public DefaultPlan getOverriddenPlan(final String planName, final StaticCatalog catalog, final InternalTenantContext context) throws CatalogApiException {
+    public DefaultPlan getOverriddenPlan(final String planName, final StandaloneCatalog catalog, final InternalTenantContext context) throws CatalogApiException {
         return overriddenPlanCache.getOverriddenPlan(planName, catalog, context);
     }
 }

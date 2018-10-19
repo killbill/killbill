@@ -57,4 +57,41 @@ public class DefaultTenantConfigChangeInternalEvent extends BusEventBase impleme
     public BusInternalEventType getBusEventType() {
         return BusInternalEventType.TENANT_CONFIG_CHANGE;
     }
+
+    @Override
+    public String toString() {
+        final StringBuffer sb = new StringBuffer("DefaultTenantConfigChangeInternalEvent{");
+        sb.append("id=").append(id);
+        sb.append(", key='").append(key).append('\'');
+        sb.append('}');
+        return sb.toString();
+    }
+
+    @Override
+    public boolean equals(final Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+        if (!super.equals(o)) {
+            return false;
+        }
+
+        final DefaultTenantConfigChangeInternalEvent that = (DefaultTenantConfigChangeInternalEvent) o;
+
+        if (id != null ? !id.equals(that.id) : that.id != null) {
+            return false;
+        }
+        return key != null ? key.equals(that.key) : that.key == null;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = super.hashCode();
+        result = 31 * result + (id != null ? id.hashCode() : 0);
+        result = 31 * result + (key != null ? key.hashCode() : 0);
+        return result;
+    }
 }

@@ -60,7 +60,7 @@ public class TestCatalogUpdater extends CatalogTestSuiteNoDB {
 
         final CatalogUpdater catalogUpdater = new CatalogUpdater(now, null);
         final String catalogXML = catalogUpdater.getCatalogXML();
-        final StandaloneCatalog catalog = XMLLoader.getObjectFromStream(new URI("dummy"), new ByteArrayInputStream(catalogXML.getBytes(Charset.forName("UTF-8"))), StandaloneCatalog.class);
+        final StandaloneCatalog catalog = XMLLoader.getObjectFromStream(new ByteArrayInputStream(catalogXML.getBytes(Charset.forName("UTF-8"))), StandaloneCatalog.class);
         assertEquals(catalog.getCurrentPlans().size(), 0);
     }
 
@@ -294,7 +294,7 @@ public class TestCatalogUpdater extends CatalogTestSuiteNoDB {
         final DefaultProduct newProduct = new DefaultProduct();
         newProduct.setName("Something");
         newProduct.setCatagory(ProductCategory.BASE);
-        newProduct.initialize((StandaloneCatalog) mutableCatalog, null);
+        newProduct.initialize((StandaloneCatalog) mutableCatalog);
         mutableCatalog.addProduct(newProduct);
 
         final DefaultPlanPhase trialPhase = new DefaultPlanPhase();
@@ -320,10 +320,10 @@ public class TestCatalogUpdater extends CatalogTestSuiteNoDB {
         newPlan.setInitialPhases(new DefaultPlanPhase[]{trialPhase, fixedTermPhase});
         newPlan.setFinalPhase(fixedTermPhase);
         mutableCatalog.addPlan(newPlan);
-        newPlan.initialize((StandaloneCatalog) mutableCatalog, new URI("dummy"));
+        newPlan.initialize((StandaloneCatalog) mutableCatalog);
 
         final String newCatalogStr = XMLWriter.writeXML((StandaloneCatalog) mutableCatalog, StandaloneCatalog.class);
-        final StandaloneCatalog newCatalog = XMLLoader.getObjectFromStream(new URI("dummy"), new ByteArrayInputStream(newCatalogStr.getBytes(Charset.forName("UTF-8"))), StandaloneCatalog.class);
+        final StandaloneCatalog newCatalog = XMLLoader.getObjectFromStream(new ByteArrayInputStream(newCatalogStr.getBytes(Charset.forName("UTF-8"))), StandaloneCatalog.class);
 
         final DefaultPlan targetPlan = newCatalog.findCurrentPlan("something-with-fixed-term");
         Assert.assertEquals(targetPlan.getInitialPhases().length, 2);
@@ -588,7 +588,7 @@ public class TestCatalogUpdater extends CatalogTestSuiteNoDB {
         final DefaultProduct newProduct1 = new DefaultProduct();
         newProduct1.setName("Dynamic");
         newProduct1.setCatagory(ProductCategory.BASE);
-        newProduct1.initialize((StandaloneCatalog) mutableCatalog, null);
+        newProduct1.initialize((StandaloneCatalog) mutableCatalog);
         mutableCatalog.addProduct(newProduct1);
 
         final DefaultPlanPhase discountPhase1 = new DefaultPlanPhase();
@@ -609,12 +609,12 @@ public class TestCatalogUpdater extends CatalogTestSuiteNoDB {
         newPlan1.setInitialPhases(new DefaultPlanPhase[]{discountPhase1});
         newPlan1.setFinalPhase(evergreenPhase1);
         mutableCatalog.addPlan(newPlan1);
-        newPlan1.initialize((StandaloneCatalog) mutableCatalog, new URI("dummy"));
+        newPlan1.initialize((StandaloneCatalog) mutableCatalog);
 
         final DefaultProduct newProduct2 = new DefaultProduct();
         newProduct2.setName("SuperDynamic");
         newProduct2.setCatagory(ProductCategory.BASE);
-        newProduct2.initialize((StandaloneCatalog) mutableCatalog, null);
+        newProduct2.initialize((StandaloneCatalog) mutableCatalog);
         mutableCatalog.addProduct(newProduct2);
 
         // Add a Plan with a FIXEDTERM phase
@@ -629,10 +629,10 @@ public class TestCatalogUpdater extends CatalogTestSuiteNoDB {
         newPlan2.setProduct(newProduct2);
         newPlan2.setFinalPhase(fixedterm2);
         mutableCatalog.addPlan(newPlan2);
-        newPlan2.initialize((StandaloneCatalog) mutableCatalog, new URI("dummy"));
+        newPlan2.initialize((StandaloneCatalog) mutableCatalog);
 
         final String newCatalogStr = XMLWriter.writeXML((StandaloneCatalog) mutableCatalog, StandaloneCatalog.class);
-        return XMLLoader.getObjectFromStream(new URI("dummy"), new ByteArrayInputStream(newCatalogStr.getBytes(Charset.forName("UTF-8"))), StandaloneCatalog.class);
+        return XMLLoader.getObjectFromStream(new ByteArrayInputStream(newCatalogStr.getBytes(Charset.forName("UTF-8"))), StandaloneCatalog.class);
     }
 
     private void addBadSimplePlanDescriptor(final CatalogUpdater catalogUpdater, final SimplePlanDescriptor desc) {

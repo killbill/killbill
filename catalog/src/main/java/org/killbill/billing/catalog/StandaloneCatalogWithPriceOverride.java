@@ -1,6 +1,6 @@
 /*
- * Copyright 2014-2016 Groupon, Inc
- * Copyright 2014-2016 The Billing Project, LLC
+ * Copyright 2014-2018 Groupon, Inc
+ * Copyright 2014-2018 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -17,6 +17,10 @@
 
 package org.killbill.billing.catalog;
 
+import java.io.Externalizable;
+import java.io.IOException;
+import java.io.ObjectInput;
+import java.io.ObjectOutput;
 import java.util.regex.Matcher;
 
 import org.killbill.billing.ErrorCode;
@@ -25,7 +29,6 @@ import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.catalog.api.Plan;
 import org.killbill.billing.catalog.api.PlanPhase;
-import org.killbill.billing.catalog.api.PlanPhasePriceOverride;
 import org.killbill.billing.catalog.api.PlanPhasePriceOverridesWithCallContext;
 import org.killbill.billing.catalog.api.PlanSpecifier;
 import org.killbill.billing.catalog.api.Product;
@@ -36,15 +39,19 @@ import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
-public class StandaloneCatalogWithPriceOverride extends StandaloneCatalog implements StaticCatalog {
+public class StandaloneCatalogWithPriceOverride extends StandaloneCatalog implements StaticCatalog, Externalizable {
 
-    private final Long tenantRecordId;
+    private Long tenantRecordId;
 
     /* Since we offer endpoints that attempt to serialize catalog objects, we need to explicitly tell Jackson to ignore those fields */
     @JsonIgnore
-    private final InternalCallContextFactory internalCallContextFactory;
+    private InternalCallContextFactory internalCallContextFactory;
     @JsonIgnore
-    private final PriceOverride priceOverride;
+    private PriceOverride priceOverride;
+
+    // Required for deserialization
+    public StandaloneCatalogWithPriceOverride() {
+    }
 
     public StandaloneCatalogWithPriceOverride(final StandaloneCatalog catalog, final PriceOverride priceOverride, final Long tenantRecordId, final InternalCallContextFactory internalCallContextFactory) {
         // Initialize from input catalog
@@ -132,5 +139,23 @@ public class StandaloneCatalogWithPriceOverride extends StandaloneCatalog implem
 
     private InternalTenantContext createInternalTenantContext() {
         return internalCallContextFactory.createInternalTenantContext(tenantRecordId, null);
+    }
+
+    public void initialize(final StandaloneCatalog catalog, final PriceOverride priceOverride, final InternalCallContextFactory internalCallContextFactory) {
+        super.initialize(catalog);
+        this.priceOverride = priceOverride;
+        this.internalCallContextFactory = internalCallContextFactory;
+    }
+
+    @Override
+    public void writeExternal(final ObjectOutput out) throws IOException {
+        super.writeExternal(out);
+        out.writeLong(tenantRecordId);
+    }
+
+    @Override
+    public void readExternal(final ObjectInput in) throws IOException, ClassNotFoundException {
+        super.readExternal(in);
+        this.tenantRecordId = in.readLong();
     }
 }

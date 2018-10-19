@@ -40,13 +40,17 @@ import org.testng.annotations.Test;
 import com.google.common.io.CharStreams;
 import com.google.common.io.Resources;
 
-public class TestEhCacheOverdueConfigCache extends OverdueTestSuiteNoDB {
+public class TestDefaultOverdueConfigCache extends OverdueTestSuiteNoDB {
 
     private InternalTenantContext multiTenantContext;
     private InternalTenantContext otherMultiTenantContext;
 
     @BeforeMethod(groups = "fast")
     public void beforeMethod() throws Exception {
+        if (hasFailed()) {
+            return;
+        }
+
         super.beforeMethod();
 
         cacheControllerDispatcher.clearAll();
@@ -127,7 +131,7 @@ public class TestEhCacheOverdueConfigCache extends OverdueTestSuiteNoDB {
             }
         });
 
-        // Verify the lookup for a non-cached tenant. No system config is set yet but EhCacheOverdueConfigCache returns a default no-op one
+        // Verify the lookup for a non-cached tenant. No system config is set yet but DefaultOverdueConfigCache returns a default no-op one
         OverdueConfig differentResult = overdueConfigCache.getOverdueConfig(differentMultiTenantContext);
         Assert.assertNotNull(differentResult);
         Assert.assertEquals(differentResult.getOverdueStatesAccount().getStates().length, 1);

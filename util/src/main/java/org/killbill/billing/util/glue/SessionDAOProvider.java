@@ -24,13 +24,15 @@ import javax.inject.Provider;
 
 import org.apache.shiro.session.mgt.DefaultSessionManager;
 import org.apache.shiro.session.mgt.SessionManager;
+import org.apache.shiro.session.mgt.eis.CachingSessionDAO;
+import org.apache.shiro.session.mgt.eis.SessionDAO;
 import org.killbill.billing.util.config.definition.RbacConfig;
 import org.killbill.billing.util.security.shiro.dao.JDBCSessionDao;
 import org.skife.jdbi.v2.IDBI;
 
 import static org.killbill.billing.util.glue.IDBISetup.MAIN_RO_IDBI_NAMED;
 
-public class JDBCSessionDaoProvider implements Provider<JDBCSessionDao> {
+public class SessionDAOProvider implements Provider<SessionDAO> {
 
     private final SessionManager sessionManager;
     private final IDBI dbi;
@@ -38,7 +40,7 @@ public class JDBCSessionDaoProvider implements Provider<JDBCSessionDao> {
     private final RbacConfig rbacConfig;
 
     @Inject
-    public JDBCSessionDaoProvider(final IDBI dbi, @Named(MAIN_RO_IDBI_NAMED) final IDBI roDbi, final SessionManager sessionManager, final RbacConfig rbacConfig) {
+    public SessionDAOProvider(final IDBI dbi, @Named(MAIN_RO_IDBI_NAMED) final IDBI roDbi, final SessionManager sessionManager, final RbacConfig rbacConfig) {
         this.sessionManager = sessionManager;
         this.dbi = dbi;
         this.roDbi = roDbi;
@@ -46,15 +48,15 @@ public class JDBCSessionDaoProvider implements Provider<JDBCSessionDao> {
     }
 
     @Override
-    public JDBCSessionDao get() {
-        final JDBCSessionDao jdbcSessionDao = new JDBCSessionDao(dbi, roDbi);
+    public SessionDAO get() {
+        final CachingSessionDAO sessionDao = new JDBCSessionDao(dbi, roDbi);
 
         if (sessionManager instanceof DefaultSessionManager) {
             final DefaultSessionManager defaultSessionManager = (DefaultSessionManager) sessionManager;
-            defaultSessionManager.setSessionDAO(jdbcSessionDao);
+            defaultSessionManager.setSessionDAO(sessionDao);
             defaultSessionManager.setGlobalSessionTimeout(rbacConfig.getGlobalSessionTimeout().getMillis());
         }
 
-        return jdbcSessionDao;
+        return sessionDao;
     }
 }

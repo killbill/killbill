@@ -1,7 +1,9 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
+ * Copyright 2014-2018 Groupon, Inc
+ * Copyright 2014-2018 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -16,7 +18,10 @@
 
 package org.killbill.billing.catalog;
 
-import java.net.URI;
+import java.io.Externalizable;
+import java.io.IOException;
+import java.io.ObjectInput;
+import java.io.ObjectOutput;
 import java.util.Arrays;
 import java.util.Collection;
 
@@ -36,7 +41,7 @@ import org.killbill.xmlloader.ValidationError;
 import org.killbill.xmlloader.ValidationErrors;
 
 @XmlAccessorType(XmlAccessType.NONE)
-public class DefaultProduct extends ValidatingConfig<StandaloneCatalog> implements Product {
+public class DefaultProduct extends ValidatingConfig<StandaloneCatalog> implements Product, Externalizable {
 
     @XmlAttribute(required = true)
     @XmlID
@@ -50,19 +55,19 @@ public class DefaultProduct extends ValidatingConfig<StandaloneCatalog> implemen
 
     @XmlElementWrapper(name = "included", required = false)
     @XmlIDREF
-    @XmlElement(type=DefaultProduct.class, name = "addonProduct", required = false)
+    @XmlElement(type = DefaultProduct.class, name = "addonProduct", required = false)
     private CatalogEntityCollection<Product> included;
 
     @XmlElementWrapper(name = "available", required = false)
     @XmlIDREF
-    @XmlElement(type=DefaultProduct.class, name = "addonProduct", required = false)
+    @XmlElement(type = DefaultProduct.class, name = "addonProduct", required = false)
     private CatalogEntityCollection<Product> available;
 
     @XmlElementWrapper(name = "limits", required = false)
     @XmlElement(name = "limit", required = false)
     private DefaultLimit[] limits;
 
-    //Not included in XML
+    // Not included in XML
     private String catalogName;
 
     @Override
@@ -85,11 +90,11 @@ public class DefaultProduct extends ValidatingConfig<StandaloneCatalog> implemen
         return available.getEntries();
     }
 
-
     public CatalogEntityCollection<Product> getCatalogEntityCollectionAvailable() {
         return available;
-    };
+    }
 
+    // Required for deserialization
     public DefaultProduct() {
         this.included = new CatalogEntityCollection<Product>();
         this.available = new CatalogEntityCollection<Product>();
@@ -136,11 +141,10 @@ public class DefaultProduct extends ValidatingConfig<StandaloneCatalog> implemen
         return limits;
     }
 
-
     protected Limit findLimit(String unit) {
-        for (Limit limit: limits) {
-            if(limit.getUnit().getName().equals(unit) ) {
-                    return limit;
+        for (Limit limit : limits) {
+            if (limit.getUnit().getName().equals(unit)) {
+                return limit;
             }
         }
         return null;
@@ -155,14 +159,12 @@ public class DefaultProduct extends ValidatingConfig<StandaloneCatalog> implemen
         return l.compliesWith(value);
     }
 
-
-
     @Override
-    public void initialize(final StandaloneCatalog catalog, final URI sourceURI) {
-        super.initialize(catalog, sourceURI);
+    public void initialize(final StandaloneCatalog catalog) {
+        super.initialize(catalog);
         CatalogSafetyInitializer.initializeNonRequiredNullFieldsWithDefaultValue(this);
-        for (DefaultLimit cur : limits) {
-            cur.initialize(catalog, sourceURI);
+        for (final DefaultLimit cur : limits) {
+            cur.initialize(catalog);
         }
         if (prettyName == null) {
             this.prettyName = name;
@@ -173,7 +175,7 @@ public class DefaultProduct extends ValidatingConfig<StandaloneCatalog> implemen
     @Override
     public ValidationErrors validate(final StandaloneCatalog catalog, final ValidationErrors errors) {
         if (catalogName == null || !catalogName.equals(catalog.getCatalogName())) {
-            errors.add(new ValidationError(String.format("Invalid catalogName for product '%s'", name), catalog.getCatalogURI(), DefaultProduct.class, ""));
+            errors.add(new ValidationError(String.format("Invalid catalogName for product '%s'", name), DefaultProduct.class, ""));
 
         }
         //TODO: MDW validation: inclusion and exclusion lists can only contain addon products
@@ -186,7 +188,7 @@ public class DefaultProduct extends ValidatingConfig<StandaloneCatalog> implemen
         return this;
     }
 
-    public DefaultProduct setPrettyName(final String prettyName){
+    public DefaultProduct setPrettyName(final String prettyName) {
         this.prettyName = prettyName;
         return this;
     }
@@ -268,5 +270,39 @@ public class DefaultProduct extends ValidatingConfig<StandaloneCatalog> implemen
         result = 31 * result + Arrays.hashCode(limits);
         result = 31 * result + (catalogName != null ? catalogName.hashCode() : 0);
         return result;
+    }
+
+    @Override
+    public void writeExternal(final ObjectOutput out) throws IOException {
+        out.writeBoolean(catalogName != null);
+        if (catalogName != null) {
+            out.writeUTF(catalogName);
+        }
+        out.writeBoolean(name != null);
+        if (name != null) {
+            out.writeUTF(name);
+        }
+        out.writeBoolean(prettyName != null);
+        if (prettyName != null) {
+            out.writeUTF(prettyName);
+        }
+        out.writeBoolean(category != null);
+        if (category != null) {
+            out.writeUTF(category.name());
+        }
+        out.writeObject(included);
+        out.writeObject(available);
+        out.writeObject(limits);
+    }
+
+    @Override
+    public void readExternal(final ObjectInput in) throws IOException, ClassNotFoundException {
+        this.catalogName = in.readBoolean() ? in.readUTF() : null;
+        this.name = in.readBoolean() ? in.readUTF() : null;
+        this.prettyName = in.readBoolean() ? in.readUTF() : null;
+        this.category = in.readBoolean() ? ProductCategory.valueOf(in.readUTF()) : null;
+        this.included = (CatalogEntityCollection<Product>) in.readObject();
+        this.available = (CatalogEntityCollection<Product>) in.readObject();
+        this.limits = (DefaultLimit[]) in.readObject();
     }
 }

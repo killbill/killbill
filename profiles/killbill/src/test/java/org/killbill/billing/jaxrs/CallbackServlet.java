@@ -98,6 +98,28 @@ public class CallbackServlet extends HttpServlet {
         }
     }
 
+    public void flakyAssertListenerStatus() {
+        // Bail early
+        if (isListenerFailed) {
+            log.error(listenerFailedMsg);
+            Assert.fail(listenerFailedMsg);
+        }
+
+        try {
+            isCompleted(DELAY);
+        } catch (final Exception e) {
+            log.warn("flakyAssertListenerStatus didn't complete", e);
+        }
+
+        // Ignore missed events
+        nextExpectedEvent.clear();
+
+        if (isListenerFailed) {
+            log.error(listenerFailedMsg);
+            Assert.fail(listenerFailedMsg);
+        }
+    }
+
     public synchronized void reset() {
         receivedCalls.set(0);
         forceToFail.set(false);

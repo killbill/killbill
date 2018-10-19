@@ -1,7 +1,9 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
+ * Copyright 2014-2018 Groupon, Inc
+ * Copyright 2014-2018 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -16,11 +18,16 @@
 
 package org.killbill.billing.catalog;
 
+import java.io.Externalizable;
+import java.io.IOException;
+import java.io.ObjectInput;
+import java.io.ObjectOutput;
+import java.math.BigDecimal;
+import java.net.URI;
+
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
-import java.math.BigDecimal;
-import java.net.URI;
 
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.catalog.api.CurrencyValueNull;
@@ -29,7 +36,8 @@ import org.killbill.xmlloader.ValidatingConfig;
 import org.killbill.xmlloader.ValidationErrors;
 
 @XmlAccessorType(XmlAccessType.NONE)
-public class DefaultPrice extends ValidatingConfig<StandaloneCatalog> implements Price {
+public class DefaultPrice extends ValidatingConfig<StandaloneCatalog> implements Price, Externalizable {
+
     @XmlElement(required = true)
     private Currency currency;
 
@@ -46,17 +54,11 @@ public class DefaultPrice extends ValidatingConfig<StandaloneCatalog> implements
         this.currency = currency;
     }
 
-    /* (non-Javadoc)
-      * @see org.killbill.billing.catalog.IPrice#getCurrency()
-      */
     @Override
     public Currency getCurrency() {
         return currency;
     }
 
-    /* (non-Javadoc)
-      * @see org.killbill.billing.catalog.IPrice#getValue()
-      */
     @Override
     public BigDecimal getValue() throws CurrencyValueNull {
         if (value == null) {
@@ -81,11 +83,10 @@ public class DefaultPrice extends ValidatingConfig<StandaloneCatalog> implements
     }
 
     @Override
-    public void initialize(final StandaloneCatalog catalog, final URI sourceURI) {
-        super.initialize(catalog, sourceURI);
+    public void initialize(final StandaloneCatalog catalog) {
+        super.initialize(catalog);
         CatalogSafetyInitializer.initializeNonRequiredNullFieldsWithDefaultValue(this);
     }
-
 
     @Override
     public boolean equals(final Object o) {
@@ -113,5 +114,20 @@ public class DefaultPrice extends ValidatingConfig<StandaloneCatalog> implements
         int result = currency != null ? currency.hashCode() : 0;
         result = 31 * result + (value != null ? value.hashCode() : 0);
         return result;
+    }
+
+    @Override
+    public void writeExternal(final ObjectOutput out) throws IOException {
+        out.writeBoolean(currency != null);
+        if (currency != null) {
+            out.writeUTF(currency.name());
+        }
+        out.writeObject(value);
+    }
+
+    @Override
+    public void readExternal(final ObjectInput in) throws IOException, ClassNotFoundException {
+        this.currency = in.readBoolean() ? Currency.valueOf(in.readUTF()) : null;
+        this.value = (BigDecimal) in.readObject();
     }
 }

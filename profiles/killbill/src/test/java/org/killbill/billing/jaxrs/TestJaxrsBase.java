@@ -322,7 +322,11 @@ public class TestJaxrsBase extends KillbillClient {
         // Register tenant for callback
         final String callback = callbackServer.getServletEndpoint();
         tenantApi.registerPushNotificationCallback(callback, requestOptions);
-        callbackServlet.assertListenerStatus();
+
+        // Use the flaky version... In the non-happy path, the catalog event sent during tenant creation is received
+        // before we had the chance to register our servlet. In this case, instead of 2 events, we will only see one
+        // and the flakyAssertListenerStatus will timeout but not fail the test
+        callbackServlet.flakyAssertListenerStatus();
 
         createdTenant.setApiSecret(apiSecret);
 

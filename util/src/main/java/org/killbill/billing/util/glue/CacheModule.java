@@ -45,6 +45,8 @@ import org.killbill.billing.util.config.definition.EhCacheConfig;
 import org.skife.config.ConfigurationObjectFactory;
 
 import com.google.inject.multibindings.Multibinder;
+import com.google.inject.name.Names;
+import com.google.inject.util.Providers;
 
 public class CacheModule extends KillBillModule {
 
@@ -54,8 +56,8 @@ public class CacheModule extends KillBillModule {
 
     @Override
     protected void configure() {
-        final EhCacheConfig config = new ConfigurationObjectFactory(skifeConfigSource).build(EhCacheConfig.class);
-        bind(EhCacheConfig.class).toInstance(config);
+        final EhCacheConfig ehCacheConfig = new ConfigurationObjectFactory(skifeConfigSource).build(EhCacheConfig.class);
+        bind(EhCacheConfig.class).toInstance(ehCacheConfig);
 
         // EhCache specifics
         bind(CacheManager.class).toProvider(Eh107CacheManagerProvider.class).asEagerSingleton();

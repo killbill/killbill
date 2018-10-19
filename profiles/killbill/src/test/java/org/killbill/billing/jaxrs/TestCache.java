@@ -88,6 +88,10 @@ public class TestCache extends TestJaxrsBase {
         assertTrue(accountImmutableCache.isKeyInCache(accountRecordId));
         assertTrue(accountBcdCache.isKeyInCache(input.getAccountId()));
 
+        // Make sure all events have been fully processed
+        clock.addDays(1);
+        callbackServlet.assertListenerStatus();
+
         // invalidate caches per account level by accountId
         adminApi.invalidatesCacheByAccount(input.getAccountId(), requestOptions);
 

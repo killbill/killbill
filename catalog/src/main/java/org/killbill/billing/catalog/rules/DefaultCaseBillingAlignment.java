@@ -1,7 +1,9 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
+ * Copyright 2014-2018 Groupon, Inc
+ * Copyright 2014-2018 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -16,13 +18,18 @@
 
 package org.killbill.billing.catalog.rules;
 
+import java.io.Externalizable;
+import java.io.IOException;
+import java.io.ObjectInput;
+import java.io.ObjectOutput;
+
 import javax.xml.bind.annotation.XmlElement;
 
 import org.killbill.billing.catalog.api.BillingAlignment;
 import org.killbill.billing.catalog.api.PhaseType;
 import org.killbill.billing.catalog.api.rules.CaseBillingAlignment;
 
-public class DefaultCaseBillingAlignment extends DefaultCasePhase<BillingAlignment> implements CaseBillingAlignment {
+public class DefaultCaseBillingAlignment extends DefaultCasePhase<BillingAlignment> implements CaseBillingAlignment, Externalizable {
 
     @XmlElement(required = true)
     private BillingAlignment alignment;
@@ -87,4 +94,18 @@ public class DefaultCaseBillingAlignment extends DefaultCasePhase<BillingAlignme
                '}';
     }
 
+    @Override
+    public void writeExternal(final ObjectOutput out) throws IOException {
+        super.writeExternal(out);
+        out.writeBoolean(alignment != null);
+        if (alignment != null) {
+            out.writeUTF(alignment.name());
+        }
+    }
+
+    @Override
+    public void readExternal(final ObjectInput in) throws IOException, ClassNotFoundException {
+        super.readExternal(in);
+        this.alignment = in.readBoolean() ? BillingAlignment.valueOf(in.readUTF()) : null;
+    }
 }

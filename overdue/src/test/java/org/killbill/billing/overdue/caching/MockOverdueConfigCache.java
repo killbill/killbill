@@ -24,7 +24,7 @@ import org.killbill.billing.overdue.api.OverdueApiException;
 import org.killbill.billing.overdue.api.OverdueConfig;
 import org.killbill.billing.util.cache.CacheControllerDispatcher;
 
-public class MockOverdueConfigCache extends EhCacheOverdueConfigCache implements OverdueConfigCache
+public class MockOverdueConfigCache extends DefaultOverdueConfigCache implements OverdueConfigCache
 {
 
     private OverdueConfig overwriteDefaultOverdueConfig;

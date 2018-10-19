@@ -50,7 +50,7 @@ public class DefaultMutableStaticCatalog extends StandaloneCatalog implements Mu
             .setPlans(input.getCurrentPlans())
             .setPlanRules(input.getPlanRules())
             .setPriceLists(input.getPriceLists());
-        initialize(this, null);
+        initialize(this);
     }
 
     @Override

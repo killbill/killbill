@@ -103,7 +103,7 @@ public class StandaloneCatalogMapper {
         this.tmpDefaultPriceListMap = new HashMap<String, DefaultPriceList>();
     }
 
-    public StandaloneCatalog toStandaloneCatalog(final StandalonePluginCatalog pluginCatalog, @Nullable URI catalogURI) {
+    public StandaloneCatalog toStandaloneCatalog(final StandalonePluginCatalog pluginCatalog) {
 
         final StandaloneCatalog result = new StandaloneCatalog();
         result.setCatalogName(catalogName);
@@ -121,7 +121,7 @@ public class StandaloneCatalogMapper {
                 ((DefaultProduct) target).setIncluded(toFilteredDefaultProduct(cur.getIncluded()));
             }
         }
-        result.initialize(result, catalogURI);
+        result.initialize(result);
         return result;
     }
 

@@ -1,7 +1,9 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
+ * Copyright 2014-2018 Groupon, Inc
+ * Copyright 2014-2018 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -27,9 +29,6 @@ import javax.annotation.Nullable;
 import org.joda.time.DateTime;
 import org.killbill.billing.tenant.dao.TenantModelDao;
 import org.killbill.billing.util.UUIDs;
-import org.killbill.billing.util.cache.ExternalizableInput;
-import org.killbill.billing.util.cache.ExternalizableOutput;
-import org.killbill.billing.util.cache.MapperHolder;
 
 public class DefaultTenant implements Tenant, Externalizable {
 
@@ -137,10 +136,10 @@ public class DefaultTenant implements Tenant, Externalizable {
         if (id != null ? !id.equals(that.id) : that.id != null) {
             return false;
         }
-        if (createdDate != null ? !createdDate.equals(that.createdDate) : that.createdDate != null) {
+        if (createdDate != null ? createdDate.compareTo(that.createdDate) != 0 : that.createdDate != null) {
             return false;
         }
-        if (updatedDate != null ? !updatedDate.equals(that.updatedDate) : that.updatedDate != null) {
+        if (updatedDate != null ? updatedDate.compareTo(that.updatedDate) != 0 : that.updatedDate != null) {
             return false;
         }
         if (externalKey != null ? !externalKey.equals(that.externalKey) : that.externalKey != null) {
@@ -165,11 +164,23 @@ public class DefaultTenant implements Tenant, Externalizable {
 
     @Override
     public void readExternal(final ObjectInput in) throws IOException {
-        MapperHolder.mapper().readerForUpdating(this).readValue(new ExternalizableInput(in));
+        this.id = new UUID(in.readLong(), in.readLong());
+        this.createdDate = new DateTime(in.readUTF());
+        this.updatedDate = new DateTime(in.readUTF());
+        this.externalKey = in.readBoolean() ? in.readUTF() : null;
+        this.apiKey = in.readUTF();
     }
 
     @Override
     public void writeExternal(final ObjectOutput oo) throws IOException {
-        MapperHolder.mapper().writeValue(new ExternalizableOutput(oo), this);
+        oo.writeLong(id.getMostSignificantBits());
+        oo.writeLong(id.getLeastSignificantBits());
+        oo.writeUTF(createdDate.toString());
+        oo.writeUTF(updatedDate.toString());
+        oo.writeBoolean(externalKey != null);
+        if (externalKey != null) {
+            oo.writeUTF(externalKey);
+        }
+        oo.writeUTF(apiKey);
     }
 }

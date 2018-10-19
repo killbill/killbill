@@ -22,7 +22,6 @@ import java.io.Externalizable;
 import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
-import java.net.URI;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -43,7 +42,6 @@ import org.joda.time.DateTime;
 import org.killbill.billing.ErrorCode;
 import org.killbill.billing.catalog.api.BillingActionPolicy;
 import org.killbill.billing.catalog.api.BillingAlignment;
-import org.killbill.billing.catalog.api.Catalog;
 import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.catalog.api.Listing;
@@ -60,9 +58,6 @@ import org.killbill.billing.catalog.api.Product;
 import org.killbill.billing.catalog.api.StaticCatalog;
 import org.killbill.billing.catalog.api.Unit;
 import org.killbill.billing.catalog.api.VersionedCatalog;
-import org.killbill.billing.util.cache.ExternalizableInput;
-import org.killbill.billing.util.cache.ExternalizableOutput;
-import org.killbill.billing.util.cache.MapperHolder;
 import org.killbill.clock.Clock;
 import org.killbill.xmlloader.ValidatingConfig;
 import org.killbill.xmlloader.ValidationError;
@@ -74,7 +69,7 @@ public class DefaultVersionedCatalog extends ValidatingConfig<DefaultVersionedCa
 
     private static final long serialVersionUID = 3181874902672322725L;
 
-    private final Clock clock;
+    private Clock clock;
 
     @XmlElementWrapper(name = "versions", required = true)
     @XmlElement(name = "version", required = true)
@@ -335,13 +330,13 @@ public class DefaultVersionedCatalog extends ValidatingConfig<DefaultVersionedCa
     }
 
     @Override
-    public void initialize(final DefaultVersionedCatalog catalog, final URI sourceURI) {
+    public void initialize(final DefaultVersionedCatalog catalog) {
         //
         // Initialization is performed first on each StandaloneCatalog (XMLLoader#initializeAndValidate)
         // and then later on the VersionedCatalog, so we only initialize and validate VersionedCatalog
         // *without** recursively through each StandaloneCatalog
         //
-        super.initialize(catalog, sourceURI);
+        super.initialize(catalog);
         CatalogSafetyInitializer.initializeNonRequiredNullFieldsWithDefaultValue(this);
     }
 
@@ -352,13 +347,13 @@ public class DefaultVersionedCatalog extends ValidatingConfig<DefaultVersionedCa
         for (final StandaloneCatalog c : versions) {
             if (effectiveDates.contains(c.getEffectiveDate())) {
                 errors.add(new ValidationError(String.format("Catalog effective date '%s' already exists for a previous version", c.getEffectiveDate()),
-                                               c.getCatalogURI(), VersionedCatalog.class, ""));
+                                               VersionedCatalog.class, ""));
             } else {
                 effectiveDates.add(c.getEffectiveDate());
             }
             if (!c.getCatalogName().equals(catalogName)) {
                 errors.add(new ValidationError(String.format("Catalog name '%s' is not consistent across versions ", c.getCatalogName()),
-                                               c.getCatalogURI(), VersionedCatalog.class, ""));
+                                               VersionedCatalog.class, ""));
             }
             errors.addAll(c.validate(c, errors));
         }
@@ -459,13 +454,48 @@ public class DefaultVersionedCatalog extends ValidatingConfig<DefaultVersionedCa
     }
 
     @Override
-    public void readExternal(final ObjectInput in) throws IOException {
-        MapperHolder.mapper().readerForUpdating(this).readValue(new ExternalizableInput(in));
+    public void readExternal(final ObjectInput in) throws IOException, ClassNotFoundException {
+        this.catalogName = in.readBoolean() ? in.readUTF() : null;
+        this.versions.addAll((Collection<? extends StandaloneCatalog>) in.readObject());
     }
 
     @Override
     public void writeExternal(final ObjectOutput oo) throws IOException {
-        MapperHolder.mapper().writeValue(new ExternalizableOutput(oo), this);
+        oo.writeBoolean(catalogName != null);
+        if (catalogName != null) {
+            // Can be null for placeholder XML
+            oo.writeUTF(catalogName);
+        }
+        oo.writeObject(versions);
+    }
+
+    @Override
+    public boolean equals(final Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+
+        final DefaultVersionedCatalog that = (DefaultVersionedCatalog) o;
+
+        if (versions != null ? !versions.equals(that.versions) : that.versions != null) {
+            return false;
+        }
+        return catalogName != null ? catalogName.equals(that.catalogName) : that.catalogName == null;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = versions != null ? versions.hashCode() : 0;
+        result = 31 * result + (catalogName != null ? catalogName.hashCode() : 0);
+        return result;
+    }
+
+    public void initialize(final Clock clock, final DefaultVersionedCatalog tenantCatalog) {
+        this.clock = clock;
+        initialize(tenantCatalog);
     }
 
     private static class CatalogPlanEntry {

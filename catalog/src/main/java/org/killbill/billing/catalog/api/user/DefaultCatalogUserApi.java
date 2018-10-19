@@ -19,8 +19,6 @@ package org.killbill.billing.catalog.api.user;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.URI;
-import java.net.URISyntaxException;
 
 import javax.annotation.Nullable;
 import javax.inject.Inject;
@@ -64,7 +62,6 @@ public class DefaultCatalogUserApi implements CatalogUserApi {
     private final TenantUserApi tenantApi;
     private final CatalogCache catalogCache;
     private final Clock clock;
-
 
     @Inject
     public DefaultCatalogUserApi(final CatalogService catalogService,
@@ -116,7 +113,6 @@ public class DefaultCatalogUserApi implements CatalogUserApi {
     @Override
     public void uploadCatalog(final String catalogXML, final CallContext callContext) throws CatalogApiException {
 
-
         final InternalTenantContext internalTenantContext = createInternalTenantContext(callContext);
         try {
 
@@ -124,7 +120,7 @@ public class DefaultCatalogUserApi implements CatalogUserApi {
 
             // Validation purpose:  Will throw if bad XML or catalog validation fails
             final InputStream stream = new ByteArrayInputStream(catalogXML.getBytes());
-            final StaticCatalog newCatalogVersion = XMLLoader.getObjectFromStream(new URI("dummy"), stream, StandaloneCatalog.class);
+            final StaticCatalog newCatalogVersion = XMLLoader.getObjectFromStream(stream, StandaloneCatalog.class);
 
             if (versionedCatalog != null) {
 
@@ -132,7 +128,7 @@ public class DefaultCatalogUserApi implements CatalogUserApi {
                 if (versionedCatalog.getCatalogName() != null && !newCatalogVersion.getCatalogName().equals(versionedCatalog.getCatalogName())) {
                     final ValidationErrors errors = new ValidationErrors();
                     errors.add(String.format("Catalog name '%s' should match previous catalog name '%s'", newCatalogVersion.getCatalogName(), versionedCatalog.getCatalogName()),
-                            new URI("dummy"), StandaloneCatalog.class, "");
+                               StandaloneCatalog.class, "");
                     // Bummer ValidationException CTOR is private to package...
                     //final ValidationException validationException = new ValidationException(errors);
                     //throw new CatalogApiException(errors, ErrorCode.CAT_INVALID_FOR_TENANT, internalTenantContext.getTenantRecordId());
@@ -144,7 +140,7 @@ public class DefaultCatalogUserApi implements CatalogUserApi {
                     if (c.getEffectiveDate().compareTo(newCatalogVersion.getEffectiveDate()) == 0) {
                         final ValidationErrors errors = new ValidationErrors();
                         errors.add(String.format("Catalog version for effectiveDate '%s' already exists", newCatalogVersion.getEffectiveDate()),
-                                new URI("dummy"), StandaloneCatalog.class, "");
+                                   StandaloneCatalog.class, "");
                         // Bummer ValidationException CTOR is private to package...
                         //final ValidationException validationException = new ValidationException(errors);
                         //throw new CatalogApiException(errors, ErrorCode.CAT_INVALID_FOR_TENANT, internalTenantContext.getTenantRecordId());
@@ -166,16 +162,12 @@ public class DefaultCatalogUserApi implements CatalogUserApi {
             throw new IllegalStateException(e);
         } catch (final TransformerException e) {
             throw new IllegalStateException(e);
-        } catch (final URISyntaxException e) {
-            throw new IllegalStateException(e);
         } catch (final SAXException e) {
             throw new IllegalStateException(e);
         } catch (final InvalidConfigException e) {
             throw new IllegalStateException(e);
         }
-
     }
-
 
     @Override
     public void createDefaultEmptyCatalog(@Nullable final DateTime effectiveDate, final CallContext callContext) throws CatalogApiException {
@@ -224,6 +216,7 @@ public class DefaultCatalogUserApi implements CatalogUserApi {
             throw new CatalogApiException(e);
         }
     }
+
     private DateTime getSafeFirstCatalogEffectiveDate(@Nullable final DateTime input, final CallContext callContext) {
         // The effectiveDate for the initial version does not matter too much
         // Because of #760, we want to make that client passing a approximate date (e.g today.toDateTimeAtStartOfDay()) will find the version

@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014-2016 Groupon, Inc
- * Copyright 2014-2016 The Billing Project, LLC
+ * Copyright 2014-2018 Groupon, Inc
+ * Copyright 2014-2018 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -18,6 +18,10 @@
 
 package org.killbill.billing.overdue.config;
 
+import java.io.Externalizable;
+import java.io.IOException;
+import java.io.ObjectInput;
+import java.io.ObjectOutput;
 import java.math.BigDecimal;
 import java.net.URI;
 import java.util.Arrays;
@@ -28,21 +32,20 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElementWrapper;
 
 import org.joda.time.LocalDate;
-
 import org.killbill.billing.catalog.api.Duration;
 import org.killbill.billing.catalog.api.TimeUnit;
 import org.killbill.billing.overdue.ConditionEvaluation;
 import org.killbill.billing.overdue.api.OverdueCondition;
 import org.killbill.billing.overdue.config.api.BillingState;
 import org.killbill.billing.payment.api.PaymentResponse;
-import org.killbill.xmlloader.ValidatingConfig;
-import org.killbill.xmlloader.ValidationErrors;
 import org.killbill.billing.util.tag.ControlTagType;
 import org.killbill.billing.util.tag.Tag;
+import org.killbill.xmlloader.ValidatingConfig;
+import org.killbill.xmlloader.ValidationErrors;
 
 @XmlAccessorType(XmlAccessType.NONE)
 
-public class DefaultOverdueCondition extends ValidatingConfig<DefaultOverdueConfig> implements ConditionEvaluation, OverdueCondition {
+public class DefaultOverdueCondition extends ValidatingConfig<DefaultOverdueConfig> implements ConditionEvaluation, OverdueCondition, Externalizable {
 
     @XmlElement(required = false, name = "numberOfUnpaidInvoicesEqualsOrExceeds")
     private Integer numberOfUnpaidInvoicesEqualsOrExceeds;
@@ -115,19 +118,6 @@ public class DefaultOverdueCondition extends ValidatingConfig<DefaultOverdueConf
     }
 
     @Override
-    public void initialize(final DefaultOverdueConfig root, final URI uri) {
-    }
-
-    public Duration getTimeOffset() {
-        if (timeSinceEarliestUnpaidInvoiceEqualsOrExceeds != null) {
-            return timeSinceEarliestUnpaidInvoiceEqualsOrExceeds;
-        } else {
-            return new DefaultDuration().setUnit(TimeUnit.DAYS).setNumber(0); // zero time
-        }
-
-    }
-
-    @Override
     public Integer getNumberOfUnpaidInvoicesEqualsOrExceeds() {
         return numberOfUnpaidInvoicesEqualsOrExceeds;
     }
@@ -143,7 +133,7 @@ public class DefaultOverdueCondition extends ValidatingConfig<DefaultOverdueConf
     }
 
     @Override
-    public PaymentResponse [] getResponseForLastFailedPaymentIn() {
+    public PaymentResponse[] getResponseForLastFailedPaymentIn() {
         return responseForLastFailedPayment;
     }
 
@@ -182,6 +172,47 @@ public class DefaultOverdueCondition extends ValidatingConfig<DefaultOverdueConf
     }
 
     @Override
+    public boolean equals(final Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+
+        final DefaultOverdueCondition that = (DefaultOverdueCondition) o;
+
+        if (numberOfUnpaidInvoicesEqualsOrExceeds != null ? !numberOfUnpaidInvoicesEqualsOrExceeds.equals(that.numberOfUnpaidInvoicesEqualsOrExceeds) : that.numberOfUnpaidInvoicesEqualsOrExceeds != null) {
+            return false;
+        }
+        if (totalUnpaidInvoiceBalanceEqualsOrExceeds != null ? !totalUnpaidInvoiceBalanceEqualsOrExceeds.equals(that.totalUnpaidInvoiceBalanceEqualsOrExceeds) : that.totalUnpaidInvoiceBalanceEqualsOrExceeds != null) {
+            return false;
+        }
+        if (timeSinceEarliestUnpaidInvoiceEqualsOrExceeds != null ? !timeSinceEarliestUnpaidInvoiceEqualsOrExceeds.equals(that.timeSinceEarliestUnpaidInvoiceEqualsOrExceeds) : that.timeSinceEarliestUnpaidInvoiceEqualsOrExceeds != null) {
+            return false;
+        }
+        // Probably incorrect - comparing Object[] arrays with Arrays.equals
+        if (!Arrays.equals(responseForLastFailedPayment, that.responseForLastFailedPayment)) {
+            return false;
+        }
+        if (controlTagInclusion != that.controlTagInclusion) {
+            return false;
+        }
+        return controlTagExclusion == that.controlTagExclusion;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = numberOfUnpaidInvoicesEqualsOrExceeds != null ? numberOfUnpaidInvoicesEqualsOrExceeds.hashCode() : 0;
+        result = 31 * result + (totalUnpaidInvoiceBalanceEqualsOrExceeds != null ? totalUnpaidInvoiceBalanceEqualsOrExceeds.hashCode() : 0);
+        result = 31 * result + (timeSinceEarliestUnpaidInvoiceEqualsOrExceeds != null ? timeSinceEarliestUnpaidInvoiceEqualsOrExceeds.hashCode() : 0);
+        result = 31 * result + Arrays.hashCode(responseForLastFailedPayment);
+        result = 31 * result + (controlTagInclusion != null ? controlTagInclusion.hashCode() : 0);
+        result = 31 * result + (controlTagExclusion != null ? controlTagExclusion.hashCode() : 0);
+        return result;
+    }
+
+    @Override
     public String toString() {
         final StringBuilder sb = new StringBuilder("DefaultOverdueCondition{");
         sb.append("numberOfUnpaidInvoicesEqualsOrExceeds=").append(numberOfUnpaidInvoicesEqualsOrExceeds);
@@ -192,5 +223,34 @@ public class DefaultOverdueCondition extends ValidatingConfig<DefaultOverdueConf
         sb.append(", controlTagExclusion=").append(controlTagExclusion);
         sb.append('}');
         return sb.toString();
+    }
+
+    @Override
+    public void writeExternal(final ObjectOutput out) throws IOException {
+        out.writeBoolean(numberOfUnpaidInvoicesEqualsOrExceeds != null);
+        if (numberOfUnpaidInvoicesEqualsOrExceeds != null) {
+            out.writeInt(numberOfUnpaidInvoicesEqualsOrExceeds);
+        }
+        out.writeObject(totalUnpaidInvoiceBalanceEqualsOrExceeds);
+        out.writeObject(timeSinceEarliestUnpaidInvoiceEqualsOrExceeds);
+        out.writeObject(responseForLastFailedPayment);
+        out.writeBoolean(controlTagInclusion != null);
+        if (controlTagInclusion != null) {
+            out.writeUTF(controlTagInclusion.name());
+        }
+        out.writeBoolean(controlTagExclusion != null);
+        if (controlTagExclusion != null) {
+            out.writeUTF(controlTagExclusion.name());
+        }
+    }
+
+    @Override
+    public void readExternal(final ObjectInput in) throws IOException, ClassNotFoundException {
+        this.numberOfUnpaidInvoicesEqualsOrExceeds = in.readBoolean() ? in.readInt() : null;
+        this.totalUnpaidInvoiceBalanceEqualsOrExceeds = (BigDecimal) in.readObject();
+        this.timeSinceEarliestUnpaidInvoiceEqualsOrExceeds = (DefaultDuration) in.readObject();
+        this.responseForLastFailedPayment = (PaymentResponse[]) in.readObject();
+        this.controlTagInclusion = in.readBoolean() ? ControlTagType.valueOf(in.readUTF()) : null;
+        this.controlTagExclusion = in.readBoolean() ? ControlTagType.valueOf(in.readUTF()) : null;
     }
 }

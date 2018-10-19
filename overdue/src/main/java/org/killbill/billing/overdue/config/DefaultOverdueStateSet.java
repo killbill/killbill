@@ -1,7 +1,9 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
+ * Copyright 2014-2018 Groupon, Inc
+ * Copyright 2014-2018 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -20,7 +22,6 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 
 import org.joda.time.LocalDate;
-import org.joda.time.Period;
 import org.killbill.billing.ErrorCode;
 import org.killbill.billing.overdue.api.OverdueApiException;
 import org.killbill.billing.overdue.api.OverdueState;
@@ -33,7 +34,6 @@ import org.killbill.xmlloader.ValidationErrors;
 @XmlAccessorType(XmlAccessType.NONE)
 public abstract class DefaultOverdueStateSet extends ValidatingConfig<DefaultOverdueConfig> implements OverdueStateSet {
 
-    private static final Period ZERO_PERIOD = new Period();
     private final DefaultOverdueState clearState = new DefaultOverdueState().setName(OverdueWrapper.CLEAR_STATE_NAME).setClearState(true);
 
     public abstract DefaultOverdueState[] getStates();
@@ -51,9 +51,6 @@ public abstract class DefaultOverdueStateSet extends ValidatingConfig<DefaultOve
         throw new OverdueApiException(ErrorCode.CAT_NO_SUCH_OVERDUE_STATE, stateName);
     }
 
-    /* (non-Javadoc)
-     * @see org.killbill.billing.catalog.overdue.OverdueBillingState#findClearState()
-     */
     @Override
     public DefaultOverdueState getClearState() throws OverdueApiException {
         return clearState;
@@ -80,7 +77,7 @@ public abstract class DefaultOverdueStateSet extends ValidatingConfig<DefaultOve
         } catch (OverdueApiException e) {
             if (e.getCode() == ErrorCode.CAT_MISSING_CLEAR_STATE.getCode()) {
                 errors.add("Overdue state set is missing a clear state.",
-                           root.getURI(), this.getClass(), "");
+                           this.getClass(), "");
             }
         }
 

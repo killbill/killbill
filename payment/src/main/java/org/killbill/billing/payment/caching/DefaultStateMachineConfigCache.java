@@ -1,6 +1,6 @@
 /*
- * Copyright 2016-2017 Groupon, Inc
- * Copyright 2016-2017 The Billing Project, LLC
+ * Copyright 2014-2018 Groupon, Inc
+ * Copyright 2014-2018 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -19,7 +19,6 @@ package org.killbill.billing.payment.caching;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
-import java.net.URI;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -46,33 +45,28 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.io.Resources;
 
-public class EhCacheStateMachineConfigCache implements StateMachineConfigCache {
+public class DefaultStateMachineConfigCache implements StateMachineConfigCache {
 
-    private static final Logger logger = LoggerFactory.getLogger(EhCacheStateMachineConfigCache.class);
+    private static final Logger logger = LoggerFactory.getLogger(DefaultStateMachineConfigCache.class);
 
-    private final TenantInternalApi tenantInternalApi;
     private final CacheController<String, StateMachineConfig> cacheController;
-    private final CacheInvalidationCallback cacheInvalidationCallback;
     private final LoaderCallback loaderCallback;
 
-    private StateMachineConfig defaultPaymentStateMachineConfig;
+    private DefaultStateMachineConfig defaultPaymentStateMachineConfig;
 
     @Inject
-    public EhCacheStateMachineConfigCache(final TenantInternalApi tenantInternalApi,
+    public DefaultStateMachineConfigCache(final TenantInternalApi tenantInternalApi,
                                           final CacheControllerDispatcher cacheControllerDispatcher,
                                           @Named(PaymentModule.STATE_MACHINE_CONFIG_INVALIDATION_CALLBACK) final CacheInvalidationCallback cacheInvalidationCallback) {
-        this.tenantInternalApi = tenantInternalApi;
         // Can be null if mis-configured (e.g. missing in ehcache.xml)
         this.cacheController = cacheControllerDispatcher.getCacheController(CacheType.TENANT_PAYMENT_STATE_MACHINE_CONFIG);
-        this.cacheInvalidationCallback = cacheInvalidationCallback;
         this.loaderCallback = new LoaderCallback() {
             public Object loadStateMachineConfig(final String stateMachineConfigXML) throws PaymentApiException {
                 tenantInternalApi.initializeCacheInvalidationCallback(TenantKey.PLUGIN_PAYMENT_STATE_MACHINE_, cacheInvalidationCallback);
 
                 try {
                     final InputStream stream = new ByteArrayInputStream(stateMachineConfigXML.getBytes());
-                    final DefaultStateMachineConfig defaultStateMachineConfig = XMLLoader.getObjectFromStream(new URI("dummy"), stream, DefaultStateMachineConfig.class);
-                    return new SerializableStateMachineConfig(defaultStateMachineConfig);
+                    return XMLLoader.getObjectFromStream(stream, DefaultStateMachineConfig.class);
                 } catch (final Exception e) {
                     // TODO 0.17 proper error code
                     throw new PaymentApiException(e, ErrorCode.PAYMENT_INTERNAL_ERROR, "Invalid payment state machine config");
@@ -108,6 +102,8 @@ public class EhCacheStateMachineConfigCache implements StateMachineConfigCache {
                 pluginPaymentStateMachineConfig = defaultPaymentStateMachineConfig;
                 cacheController.putIfAbsent(pluginConfigKey, pluginPaymentStateMachineConfig);
             }
+
+            ((DefaultStateMachineConfig)pluginPaymentStateMachineConfig).initialize(defaultPaymentStateMachineConfig);
             return pluginPaymentStateMachineConfig;
         } catch (final IllegalStateException e) {
             // TODO 0.17 proper error code
