@@ -25,7 +25,7 @@ import com.fasterxml.jackson.datatype.joda.JodaModule;
 
 public class ObjectMapper extends com.fasterxml.jackson.databind.ObjectMapper {
 
-    public ObjectMapper(final SmileFactory f) {
+    private ObjectMapper(final SmileFactory f) {
         super(f);
         this.registerModule(new JodaModule());
         this.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
@@ -34,5 +34,10 @@ public class ObjectMapper extends com.fasterxml.jackson.databind.ObjectMapper {
 
     public ObjectMapper() {
         this(null);
+    }
+
+    @Override
+    public com.fasterxml.jackson.databind.ObjectMapper copy() {
+        return new ObjectMapper();
     }
 }

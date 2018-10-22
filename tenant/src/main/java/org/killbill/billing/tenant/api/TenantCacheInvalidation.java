@@ -179,6 +179,7 @@ public class TenantCacheInvalidation {
                         final Collection<CacheInvalidationCallback> callbacks = parent.getCacheInvalidations(tenantKeyAndCookie.getTenantKey());
                         if (!callbacks.isEmpty()) {
                             final InternalTenantContext tenantContext = new InternalTenantContext(cur.getTenantRecordId());
+                            // TODO In case of Redis, we don't want any invalidation, but we still want the events to notify the plugins (ideally, our bus would also support a Topic model)
                             for (final CacheInvalidationCallback callback : callbacks) {
                                 callback.invalidateCache(tenantKeyAndCookie.getTenantKey(), tenantKeyAndCookie.getCookie(), tenantContext);
                             }
