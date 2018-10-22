@@ -88,6 +88,9 @@ public class EhcacheShiroManagerProvider extends EhCacheProviderBase implements 
 
         private final Logger log = LoggerFactory.getLogger(EhcacheShiroManagerWrapper.class);
 
+        // shiro-activeSessionCache is lazily created by the first request and EhcacheShiroManagerProvider isn't thread safe
+        private final Object shiroCacheLock = new Object();
+
         private final EhcacheShiroManagerProvider ehcacheShiroManagerProvider;
 
         EhcacheShiroManagerWrapper(final EhcacheShiroManagerProvider ehcacheShiroManagerProvider) {
@@ -100,10 +103,17 @@ public class EhcacheShiroManagerProvider extends EhCacheProviderBase implements 
             org.ehcache.Cache<Object, Object> cache = getCacheManager().getCache(name, Object.class, Object.class);
 
             if (cache == null) {
-                log.info("Cache with name {} does not yet exist.  Creating now.", name);
-                ehcacheShiroManagerProvider.createCache(eh107CacheManager, name, Object.class, Object.class);
-                cache = getCacheManager().getCache(name, Object.class, Object.class);
-                log.info("Added EhcacheShiro named [{}]", name);
+                synchronized (shiroCacheLock) {
+                    cache = getCacheManager().getCache(name, Object.class, Object.class);
+                    if (cache == null) {
+                        log.info("Cache with name {} does not yet exist.  Creating now.", name);
+                        ehcacheShiroManagerProvider.createCache(eh107CacheManager, name, Object.class, Object.class);
+                        cache = getCacheManager().getCache(name, Object.class, Object.class);
+                        log.info("Added EhcacheShiro named [{}]", name);
+                    } else {
+                        log.info("Using existing EhcacheShiro named [{}]", name);
+                    }
+                }
             } else {
                 log.info("Using existing EhcacheShiro named [{}]", name);
             }
