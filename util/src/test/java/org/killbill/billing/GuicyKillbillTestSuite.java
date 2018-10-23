@@ -34,11 +34,14 @@ import org.killbill.billing.callcontext.MutableInternalCallContext;
 import org.killbill.billing.platform.api.KillbillConfigSource;
 import org.killbill.billing.platform.test.config.TestKillbillConfigSource;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
+import org.killbill.billing.util.glue.RedissonCacheClientProvider;
 import org.killbill.clock.Clock;
 import org.killbill.clock.ClockMock;
+import org.killbill.clock.DistributedClockMock;
 import org.mockito.Mockito;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
+import org.redisson.api.RedissonClient;
 import org.skife.config.ConfigSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -55,6 +58,7 @@ import org.testng.annotations.Listeners;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableMap;
+import redis.embedded.RedisServer;
 
 import static org.testng.ITestResult.CREATED;
 import static org.testng.ITestResult.FAILURE;
@@ -79,6 +83,8 @@ public class GuicyKillbillTestSuite implements IHookable {
     protected KillbillConfigSource configSource;
     protected ConfigSource skifeConfigSource;
 
+    private RedissonClient redissonClient;
+
     @Inject
     protected InternalCallContextFactory internalCallContextFactory;
 
@@ -88,6 +94,7 @@ public class GuicyKillbillTestSuite implements IHookable {
     @Inject
     protected MutableCallContext callContext;
 
+    private RedisServer redisServer;
 
     private boolean hasFailed = false;
 
@@ -212,9 +219,25 @@ public class GuicyKillbillTestSuite implements IHookable {
 
     @BeforeSuite(alwaysRun = true)
     public void globalBeforeSuite() {
-        theRealClock.resetDeltaFromReality();
+        if (Boolean.valueOf(System.getProperty("killbill.test.redis", "false"))) {
+            redisServer = new RedisServer(56379);
+            redisServer.start();
 
-        extraPropertiesForTestSuite = ImmutableMap.<String, String>of();
+            redissonClient = new RedissonCacheClientProvider("redis://127.0.0.1:56379", 1).get();
+
+            theRealClock = new DistributedClockMock();
+            ((DistributedClockMock) theRealClock).setRedissonClient(redissonClient);
+
+            extraPropertiesForTestSuite = ImmutableMap.<String, String>of("org.killbill.cache.config.redis", "true",
+                                                                          "org.killbill.cache.config.redis.url", "redis://127.0.0.1:56379");
+        } else {
+            theRealClock.resetDeltaFromReality();
+
+            extraPropertiesForTestSuite = ImmutableMap.<String, String>of();
+        }
+
+        // The clock needs to be setup early in @BeforeSuite, as it is needed when starting the server, but see below
+        clock = theRealClock;
     }
 
     @BeforeClass(alwaysRun = true)
@@ -250,6 +273,12 @@ public class GuicyKillbillTestSuite implements IHookable {
 
     @AfterSuite(alwaysRun = true)
     public void globalAfterSuite() {
+        if (redissonClient != null) {
+            redissonClient.shutdown();
+        }
+        if (redisServer != null) {
+            redisServer.stop();
+        }
     }
 
     public boolean hasFailed() {

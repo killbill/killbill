@@ -27,6 +27,7 @@ import org.apache.shiro.session.mgt.SessionManager;
 import org.apache.shiro.session.mgt.eis.SessionDAO;
 import org.killbill.billing.platform.api.KillbillConfigSource;
 import org.killbill.billing.util.config.definition.RbacConfig;
+import org.killbill.billing.util.config.definition.RedisCacheConfig;
 import org.killbill.billing.util.security.shiro.realm.KillBillJdbcRealm;
 import org.killbill.billing.util.security.shiro.realm.KillBillJndiLdapRealm;
 import org.killbill.billing.util.security.shiro.realm.KillBillOktaRealm;
@@ -112,8 +113,19 @@ public class KillBillShiroModule extends ShiroModule {
     protected void bindSecurityManager(final AnnotatedBindingBuilder<? super SecurityManager> bind) {
         super.bindSecurityManager(bind);
 
+        final RedisCacheConfig redisCacheConfig = new ConfigurationObjectFactory(new ConfigSource() {
+            @Override
+            public String getString(final String propertyName) {
+                return configSource.getString(propertyName);
+            }
+        }).build(RedisCacheConfig.class);
+
         // Magic provider to configure the cache manager
-        bind(CacheManager.class).toProvider(EhcacheShiroManagerProvider.class).asEagerSingleton();
+        if (redisCacheConfig.isRedisCachingEnabled()) {
+            bind(CacheManager.class).toProvider(RedisShiroManagerProvider.class).asEagerSingleton();
+        } else {
+            bind(CacheManager.class).toProvider(EhcacheShiroManagerProvider.class).asEagerSingleton();
+        }
     }
 
     @Override
