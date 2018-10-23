@@ -28,6 +28,7 @@ import org.apache.shiro.cache.Cache;
 import org.apache.shiro.cache.CacheException;
 import org.apache.shiro.mgt.DefaultSecurityManager;
 import org.apache.shiro.mgt.SecurityManager;
+import org.apache.shiro.mgt.SubjectDAO;
 import org.ehcache.integrations.shiro.EhcacheShiro;
 import org.ehcache.integrations.shiro.EhcacheShiroManager;
 import org.killbill.billing.util.config.definition.EhCacheConfig;
@@ -39,16 +40,19 @@ import com.codahale.metrics.MetricRegistry;
 public class EhcacheShiroManagerProvider extends EhCacheProviderBase implements Provider<EhcacheShiroManager> {
 
     private final SecurityManager securityManager;
+    private final SubjectDAO subjectDAO;
     private final CacheManager eh107CacheManager;
     private final org.ehcache.CacheManager ehcacheCacheManager;
 
     @Inject
     public EhcacheShiroManagerProvider(final SecurityManager securityManager,
+                                       final SubjectDAO subjectDAO,
                                        final CacheManager eh107CacheManager,
                                        final MetricRegistry metricRegistry,
                                        final EhCacheConfig cacheConfig) {
         super(metricRegistry, cacheConfig);
         this.securityManager = securityManager;
+        this.subjectDAO = subjectDAO;
         this.eh107CacheManager = eh107CacheManager;
         this.ehcacheCacheManager = getEhcacheManager();
     }
@@ -63,7 +67,7 @@ public class EhcacheShiroManagerProvider extends EhCacheProviderBase implements 
             // For RBAC only (see also KillbillJdbcTenantRealmProvider)
             final DefaultSecurityManager securityManager = (DefaultSecurityManager) this.securityManager;
             securityManager.setCacheManager(shiroEhCacheManager);
-            securityManager.setSubjectDAO(new KillBillSubjectDAO());
+            securityManager.setSubjectDAO(subjectDAO);
         }
 
         return shiroEhCacheManager;

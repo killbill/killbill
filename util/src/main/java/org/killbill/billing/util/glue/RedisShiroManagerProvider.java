@@ -23,6 +23,7 @@ import javax.inject.Provider;
 
 import org.apache.shiro.mgt.DefaultSecurityManager;
 import org.apache.shiro.mgt.SecurityManager;
+import org.apache.shiro.mgt.SubjectDAO;
 import org.redisson.api.RedissonClient;
 
 import com.codahale.metrics.MetricRegistry;
@@ -32,17 +33,20 @@ import static org.killbill.billing.util.glue.CacheModule.REDIS_CACHE_CLIENT;
 
 public class RedisShiroManagerProvider implements Provider<RedisShiroManager> {
 
-    private final CacheManager eh107CacheManager;
     private final SecurityManager securityManager;
+    private final SubjectDAO subjectDAO;
+    private final CacheManager eh107CacheManager;
     private final MetricRegistry metricRegistry;
     private final RedissonClient redissonClient;
 
     @Inject
     public RedisShiroManagerProvider(final SecurityManager securityManager,
+                                     final SubjectDAO subjectDAO,
                                      final CacheManager eh107CacheManager,
                                      final MetricRegistry metricRegistry,
                                      @Named(REDIS_CACHE_CLIENT) final RedissonClient redissonClient) {
         this.securityManager = securityManager;
+        this.subjectDAO = subjectDAO;
         this.eh107CacheManager = eh107CacheManager;
         this.metricRegistry = metricRegistry;
         this.redissonClient = redissonClient;
@@ -57,7 +61,7 @@ public class RedisShiroManagerProvider implements Provider<RedisShiroManager> {
             // For RBAC only (see also KillbillJdbcTenantRealmProvider)
             final DefaultSecurityManager securityManager = (DefaultSecurityManager) this.securityManager;
             securityManager.setCacheManager(shiroRedisManager);
-            securityManager.setSubjectDAO(new KillBillSubjectDAO());
+            securityManager.setSubjectDAO(subjectDAO);
         }
 
         return shiroRedisManager;
