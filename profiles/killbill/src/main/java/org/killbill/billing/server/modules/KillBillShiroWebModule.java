@@ -119,6 +119,7 @@ public class KillBillShiroWebModule extends ShiroWebModuleWith435 {
 
         if (KillBillShiroModule.isRBACEnabled()) {
             addFilterChain(JaxrsResource.PREFIX + "/**", Key.get(CorsBasicHttpAuthenticationFilter.class));
+            addFilterChain(JaxrsResource.PLUGINS_PATH + "/**", Key.get(CorsBasicHttpAuthenticationOptionalFilter.class));
         }
     }
 
@@ -140,7 +141,7 @@ public class KillBillShiroWebModule extends ShiroWebModuleWith435 {
         bind(SessionDAO.class).toProvider(SessionDAOProvider.class).asEagerSingleton();
     }
 
-    public static final class CorsBasicHttpAuthenticationFilter extends BasicHttpAuthenticationFilter {
+    public static class CorsBasicHttpAuthenticationFilter extends BasicHttpAuthenticationFilter {
 
         @Override
         protected boolean isAccessAllowed(final ServletRequest request, final ServletResponse response, final Object mappedValue) {
@@ -149,6 +150,19 @@ public class KillBillShiroWebModule extends ShiroWebModuleWith435 {
             // Don't require any authorization or authentication header for OPTIONS requests
             // See https://bugzilla.mozilla.org/show_bug.cgi?id=778548 and http://www.kinvey.com/blog/60/kinvey-adds-cross-origin-resource-sharing-cors
             return "OPTIONS".equalsIgnoreCase(httpMethod) || super.isAccessAllowed(request, response, mappedValue);
+        }
+    }
+
+    public static final class CorsBasicHttpAuthenticationOptionalFilter extends CorsBasicHttpAuthenticationFilter {
+
+        protected boolean onAccessDenied(final ServletRequest request, final ServletResponse response) throws Exception {
+            if (isLoginAttempt(request, response)) {
+                // Attempt to log-in
+                executeLogin(request, response);
+            }
+
+            // Unlike the original method, we don't send a challenge on failure but simply allow the request to continue
+            return true;
         }
     }
 
