@@ -17,8 +17,10 @@ CREATE PROCEDURE trimTenant(p_api_key varchar(36))
 BEGIN
 
     DECLARE v_tenant_record_id bigint /*! unsigned */;
+    DECLARE v_tenant_id varchar(36);
 
     select record_id from tenants WHERE api_key = p_api_key into v_tenant_record_id;
+    select id from tenants WHERE api_key = p_api_key into v_tenant_id;
 
     DELETE FROM analytics_account_fields WHERE tenant_record_id = v_tenant_record_id;
     DELETE FROM analytics_account_tags WHERE tenant_record_id = v_tenant_record_id;
@@ -80,8 +82,16 @@ BEGIN
     DELETE FROM rolled_up_usage WHERE tenant_record_id = v_tenant_record_id;
     DELETE FROM subscription_events WHERE tenant_record_id = v_tenant_record_id;
     DELETE FROM subscriptions WHERE tenant_record_id = v_tenant_record_id;
+    DELETE FROM tag_definition_history WHERE tenant_record_id = v_tenant_record_id;
+    DELETE FROM tag_definitions WHERE tenant_record_id = v_tenant_record_id;
     DELETE FROM tag_history WHERE tenant_record_id = v_tenant_record_id;
     DELETE FROM tags WHERE tenant_record_id = v_tenant_record_id;
+    DELETE FROM tenant_broadcasts WHERE tenant_record_id = v_tenant_record_id;
+
+    -- Uses tenant ID (instead of record id)
+    DELETE FROM stripe_payment_methods WHERE kb_tenant_id = v_tenant_id;
+    DELETE FROM stripe_responses WHERE kb_tenant_id = v_tenant_id;
+    DELETE FROM stripe_transactions WHERE kb_tenant_id = v_tenant_id;
 
     END;
 //
@@ -113,10 +123,6 @@ BEGIN
     -- Trim the tenant first
     CALL trimTenant(p_api_key);
 
-    DELETE FROM account_email_history WHERE tenant_record_id = v_tenant_record_id;
-    DELETE FROM account_emails WHERE tenant_record_id = v_tenant_record_id;
-    DELETE FROM account_history WHERE tenant_record_id = v_tenant_record_id;
-    DELETE FROM accounts WHERE tenant_record_id = v_tenant_record_id;
     DELETE FROM catalog_override_block_definition WHERE tenant_record_id = v_tenant_record_id;
     DELETE FROM catalog_override_phase_definition WHERE tenant_record_id = v_tenant_record_id;
     DELETE FROM catalog_override_phase_usage WHERE tenant_record_id = v_tenant_record_id;
@@ -127,20 +133,15 @@ BEGIN
     DELETE FROM catalog_override_usage_definition WHERE tenant_record_id = v_tenant_record_id;
     DELETE FROM catalog_override_usage_tier WHERE tenant_record_id = v_tenant_record_id;
 
-    -- Uses tenant ID (instead of record id)
-    DELETE FROM stripe_payment_methods WHERE kb_tenant_id = v_tenant_id;
-    DELETE FROM stripe_responses WHERE kb_tenant_id = v_tenant_id;
-    DELETE FROM stripe_transactions WHERE kb_tenant_id = v_tenant_id;
-
-    DELETE FROM tag_definition_history WHERE tenant_record_id = v_tenant_record_id;
-    DELETE FROM tag_definitions WHERE tenant_record_id = v_tenant_record_id;
-    DELETE FROM tenant_broadcasts WHERE tenant_record_id = v_tenant_record_id;
     DELETE FROM tenant_kvs WHERE tenant_record_id = v_tenant_record_id;
 
     DELETE FROM tenants WHERE id = v_tenant_id;
 
+    DELETE FROM _invoice_payment_control_plugin_auto_pay_off
+        WHERE account_id in (
+            SELECT id from accounts where tenant_record_id = v_tenant_record_id);
+
     -- NOT DELETED TABLES
-    -- _invoice_payment_control_plugin_auto_pay_off
     -- analytics_currency_conversion
     -- analytics_reports WHERE
     -- node_infos
