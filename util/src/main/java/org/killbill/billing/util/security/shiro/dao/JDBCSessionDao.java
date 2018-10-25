@@ -20,6 +20,9 @@ package org.killbill.billing.util.security.shiro.dao;
 
 import java.io.IOException;
 import java.io.Serializable;
+import java.util.Collection;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
@@ -90,12 +93,20 @@ public class JDBCSessionDao extends CachingSessionDAO {
             return null;
         }
 
-        try {
-            return sessionModelDao.toSimpleSession();
-        } catch (final IOException e) {
-            log.warn("Corrupted cookie", e);
-            return null;
+        return toSession(sessionModelDao);
+    }
+
+    @Override
+    public Collection<Session> getActiveSessions() {
+        final Collection<Session> cachedActiveSessions = super.getActiveSessions();
+        // To make sure the ValidatingSessionManager purges old sessions on disk
+        final List<SessionModelDao> oldActiveSessionsOnDisk = dbRouter.onDemand(true).findOldActiveSessions();
+
+        final Collection<Session> activeSessions = new LinkedList<Session>(cachedActiveSessions);
+        for (final SessionModelDao sessionModelDao : oldActiveSessionsOnDisk) {
+            activeSessions.add(toSession(sessionModelDao));
         }
+        return activeSessions;
     }
 
     public void disableUpdatesForSession(final Session session) {
@@ -109,5 +120,14 @@ public class JDBCSessionDao extends CachingSessionDAO {
 
     private boolean shouldUpdateSession(final Session session) {
         return noUpdateSessionsCache.getIfPresent(session.getId()) == Boolean.TRUE ? Boolean.FALSE : Boolean.TRUE;
+    }
+
+    private Session toSession(final SessionModelDao sessionModelDao) {
+        try {
+            return sessionModelDao.toSimpleSession();
+        } catch (final IOException e) {
+            log.warn("Corrupted cookie", e);
+            return null;
+        }
     }
 }

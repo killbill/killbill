@@ -21,6 +21,7 @@ package org.killbill.billing.util.glue;
 import org.apache.shiro.cache.CacheManager;
 import org.apache.shiro.guice.ShiroModule;
 import org.apache.shiro.mgt.SecurityManager;
+import org.apache.shiro.mgt.SubjectDAO;
 import org.apache.shiro.realm.text.IniRealm;
 import org.apache.shiro.session.mgt.DefaultSessionManager;
 import org.apache.shiro.session.mgt.SessionManager;
@@ -131,6 +132,8 @@ public class KillBillShiroModule extends ShiroModule {
     @Override
     protected void bindSessionManager(final AnnotatedBindingBuilder<SessionManager> bind) {
         bind.to(DefaultSessionManager.class).asEagerSingleton();
+
+        bind(SubjectDAO.class).toProvider(KillBillSubjectDAOProvider.class).asEagerSingleton();
 
         // Magic provider to configure the session DAO
         bind(SessionDAO.class).toProvider(SessionDAOProvider.class).asEagerSingleton();
