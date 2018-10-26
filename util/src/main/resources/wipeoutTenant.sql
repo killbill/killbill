@@ -21,8 +21,9 @@ BEGIN
     select record_id from tenants WHERE api_key = p_api_key into v_tenant_record_id;
     select id from tenants WHERE api_key = p_api_key into v_tenant_id;
 
-    -- Trim the tenant first
-    CALL trimTenant(p_api_key);
+    DELETE FROM _invoice_payment_control_plugin_auto_pay_off
+        WHERE account_id in (
+            SELECT id from accounts where tenant_record_id = v_tenant_record_id);
 
     DELETE FROM catalog_override_block_definition WHERE tenant_record_id = v_tenant_record_id;
     DELETE FROM catalog_override_phase_definition WHERE tenant_record_id = v_tenant_record_id;
@@ -36,11 +37,10 @@ BEGIN
 
     DELETE FROM tenant_kvs WHERE tenant_record_id = v_tenant_record_id;
 
-    DELETE FROM tenants WHERE id = v_tenant_id;
+    -- Trim the tenant
+    CALL trimTenant(p_api_key);
 
-    DELETE FROM _invoice_payment_control_plugin_auto_pay_off
-        WHERE account_id in (
-            SELECT id from accounts where tenant_record_id = v_tenant_record_id);
+    DELETE FROM tenants WHERE id = v_tenant_id;
 
     -- NOT DELETED TABLES
     -- analytics_currency_conversion
