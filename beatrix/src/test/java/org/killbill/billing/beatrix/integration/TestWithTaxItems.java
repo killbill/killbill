@@ -251,6 +251,102 @@ public class TestWithTaxItems extends TestIntegrationBase {
     }
 
     @Test(groups = "slow")
+    public void testTaxRateStartAndEndDate() throws Exception {
+        // Set clock to the initial start date - we implicitly assume here that the account timezone is UTC
+        clock.setDay(new LocalDate(2017, 11, 15));
+
+        final AccountData accountData = getAccountData(null);
+        final Account account = createAccountWithNonOsgiPaymentMethod(accountData);
+        accountChecker.checkAccount(account.getId(), accountData, callContext);
+
+        // Create original subscription (Trial PHASE) -> $0 invoice.
+        final DefaultEntitlement bpSubscription = createBaseEntitlementAndCheckForCompletion(
+                account.getId(),
+                "bundleKey",
+                "Pistol",
+                ProductCategory.BASE,
+                BillingPeriod.MONTHLY,
+                NextEvent.CREATE,
+                NextEvent.BLOCK,
+                NextEvent.INVOICE
+                                                                                            );
+        invoiceChecker.checkInvoice(account.getId(), 1, callContext, new ExpectedInvoiceItemCheck(new LocalDate(2017, 11, 15), null, InvoiceItemType.FIXED, new BigDecimal("0")));
+        subscriptionChecker.checkSubscriptionCreated(bpSubscription.getId(), internalCallContext);
+
+        busHandler.pushExpectedEvents(NextEvent.INVOICE);
+        invoiceUserApi.insertCredit(account.getId(), new BigDecimal("100"), clock.getUTCToday(), account.getCurrency(), true, "VIP", null, null, callContext);
+        assertListenerStatus();
+
+        invoiceChecker.checkInvoice(account.getId(), 2, callContext,
+                                    new ExpectedInvoiceItemCheck(new LocalDate(2017, 11, 15), new LocalDate(2017, 11, 15), InvoiceItemType.CBA_ADJ, new BigDecimal("100")),
+                                    new ExpectedInvoiceItemCheck(new LocalDate(2017, 11, 15), new LocalDate(2017, 11, 15), InvoiceItemType.CREDIT_ADJ, new BigDecimal("-100")));
+
+
+        // Make sure TestInvoicePluginApi will return an additional TAX item
+        testInvoicePluginApi.addTaxItem(
+                new TaxInvoiceItem(
+                        UUID.randomUUID(),
+                        null,
+                        null,
+                        account.getId(),
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        new LocalDate(2017, 12, 15),
+                        new LocalDate(2017, 12, 31),
+                        "Tax Item 2017",
+                        BigDecimal.ONE,
+                        account.getCurrency(),
+                        null,
+                        null
+                )
+        );
+        testInvoicePluginApi.addTaxItem(
+                new TaxInvoiceItem(
+                        UUID.randomUUID(),
+                        null,
+                        null,
+                        account.getId(),
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        new LocalDate(2018, 1, 1),
+                        new LocalDate(2018, 1, 15),
+                        "Tax Item 2018",
+                        BigDecimal.TEN,
+                        account.getCurrency(),
+                        null,
+                        null
+                )
+        );
+
+        // Move to Evergreen PHASE to verify non-dry-run scenario
+        busHandler.pushExpectedEvents(NextEvent.PHASE, NextEvent.INVOICE);
+        clock.addDays(30);
+        assertListenerStatus();
+
+        invoiceChecker.checkInvoice(account.getId(), 3, callContext,
+                                    new ExpectedInvoiceItemCheck(new LocalDate(2017, 12, 15), new LocalDate(2018, 1, 15), InvoiceItemType.RECURRING, new BigDecimal("29.95")),
+                                    new ExpectedInvoiceItemCheck(new LocalDate(2017, 12, 15), new LocalDate(2017, 12, 31), InvoiceItemType.TAX, new BigDecimal("1.0")),
+                                    new ExpectedInvoiceItemCheck(new LocalDate(2018, 1, 1), new LocalDate(2018, 1, 15), InvoiceItemType.TAX, new BigDecimal("10.0")),
+                                    new ExpectedInvoiceItemCheck(new LocalDate(2017, 12, 15), new LocalDate(2017, 12, 15), InvoiceItemType.CBA_ADJ, new BigDecimal("-40.95")));
+    }
+
+    @Test(groups = "slow")
     public void testUpdateTaxItems() throws Exception {
 
         clock.setDay(new LocalDate(2012, 4, 1));
@@ -315,7 +411,37 @@ public class TestWithTaxItems extends TestIntegrationBase {
         public List<InvoiceItem> getAdditionalInvoiceItems(final Invoice invoice, final boolean isDryRun, final Iterable<PluginProperty> pluginProperties, final CallContext callContext) {
             final List<InvoiceItem> result = new ArrayList<InvoiceItem>();
             for (final TaxInvoiceItem item : taxItems) {
-                result.add(new TaxInvoiceItem(item.getId(), invoice.getId(), invoice.getAccountId(), item.getBundleId(), "Tax Item", item.getStartDate(), item.getAmount(), invoice.getCurrency()));
+                final String description;
+                if (item.getDescription() != null) {
+                    description = item.getDescription();
+                } else {
+                    description = "Tax Item";
+                }
+
+                result.add(
+                        new TaxInvoiceItem(
+                                item.getId(),
+                                item.getCreatedDate(),
+                                invoice.getId(),
+                                invoice.getAccountId(),
+                                item.getBundleId(),
+                                item.getSubscriptionId(),
+                                item.getProductName(),
+                                item.getPlanName(),
+                                item.getPhaseName(),
+                                item.getUsageName(),
+                                item.getPrettyProductName(),
+                                item.getPrettyPlanName(),
+                                item.getPrettyPhaseName(),
+                                item.getPrettyUsageName(),
+                                item.getStartDate(),
+                                item.getEndDate(),
+                                description,
+                                item.getAmount(),
+                                invoice.getCurrency(),
+                                item.getLinkedItemId(),
+                                item.getItemDetails())
+                          );
             }
             return result;
         }
