@@ -23,6 +23,7 @@ import java.util.List;
 import java.util.UUID;
 
 import org.joda.time.LocalDate;
+import org.killbill.billing.invoice.model.TaxInvoiceItem;
 import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
@@ -196,6 +197,22 @@ public class TestInvoiceItemDao extends InvoiceTestSuiteWithEmbeddedDB {
 
         final InvoiceItemModelDao savedItem = invoiceUtil.getInvoiceItemById(externalChargeInvoiceItem.getId(), context);
         assertSameInvoiceItem(externalChargeInvoiceItem, savedItem);
+    }
+
+    @Test(groups = "slow")
+    public void testTaxInvoiceSqlDao() throws Exception {
+        final UUID invoiceId = UUID.randomUUID();
+        final UUID accountId = account.getId();
+        final UUID bundleId = UUID.randomUUID();
+        final UUID linkedItemId = UUID.randomUUID();
+        final String description = UUID.randomUUID().toString();
+        final LocalDate startDate = new LocalDate(2012, 4, 1);
+        final LocalDate endDate = new LocalDate(2012, 5, 1);
+        final InvoiceItem taxInvoiceItem = new TaxInvoiceItem(UUID.randomUUID(), null, invoiceId, accountId, bundleId, null, null, null, null, null, null, null, null, null, startDate, endDate, description, TEN, Currency.USD, linkedItemId, null);
+        invoiceUtil.createInvoiceItem(taxInvoiceItem, context);
+
+        final InvoiceItemModelDao savedItem = invoiceUtil.getInvoiceItemById(taxInvoiceItem.getId(), context);
+        assertSameInvoiceItem(taxInvoiceItem, savedItem);
     }
 
     @Test(groups = "slow")
