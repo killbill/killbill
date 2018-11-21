@@ -18,6 +18,7 @@
 package org.killbill.billing.catalog.caching;
 
 import java.util.List;
+import java.util.Set;
 
 import javax.inject.Inject;
 
@@ -147,7 +148,8 @@ public class DefaultCatalogCache implements CatalogCache {
 
     private DefaultVersionedCatalog getCatalogFromPlugins(final InternalTenantContext internalTenantContext) throws CatalogApiException {
         final TenantContext tenantContext = internalCallContextFactory.createTenantContext(internalTenantContext);
-        for (final String service : pluginRegistry.getAllServices()) {
+        final Set<String> allServices = pluginRegistry.getAllServices();
+        for (final String service : allServices) {
             final CatalogPluginApi plugin = pluginRegistry.getServiceForName(service);
 
             //
@@ -158,9 +160,9 @@ public class DefaultCatalogCache implements CatalogCache {
             // (e.g deleted Plans...), then multiple versions must be returned.
             //
             final DateTime latestCatalogUpdatedDate = plugin.getLatestCatalogVersion(ImmutableList.<PluginProperty>of(), tenantContext);
-            // A null latestCatalogUpdatedDate by passing caching, by fetching full catalog from plugin below (compatibility mode with 0.18.x or non optimized plugin api mode)
-            //
-            if (latestCatalogUpdatedDate != null) {
+            // A null latestCatalogUpdatedDate bypasses caching, by fetching full catalog from plugin below (compatibility mode with 0.18.x or non optimized plugin api mode)
+            final boolean cacheable = latestCatalogUpdatedDate != null;
+            if (cacheable) {
                 final DefaultVersionedCatalog tenantCatalog = cacheController.get(internalTenantContext.getTenantRecordId(), cacheLoaderArgument);
                 if (tenantCatalog != null) {
                     initializeCatalog(tenantCatalog);
@@ -174,10 +176,19 @@ public class DefaultCatalogCache implements CatalogCache {
             final VersionedPluginCatalog pluginCatalog = plugin.getVersionedPluginCatalog(ImmutableList.<PluginProperty>of(), tenantContext);
             // First plugin that gets something (for that tenant) returns it
             if (pluginCatalog != null) {
-                logger.info("Returning catalog from plugin {} on tenant {} ", service, internalTenantContext.getTenantRecordId());
+                // The log entry is only interesting if there are multiple plugins
+                if (allServices.size() > 1) {
+                    logger.info("Returning catalog from plugin {} on tenant {} ", service, internalTenantContext.getTenantRecordId());
+                }
+
                 final DefaultVersionedCatalog resolvedPluginCatalog = versionedCatalogMapper.toVersionedCatalog(pluginCatalog, internalTenantContext);
+
+                // Always clear the cache for safety
                 cacheController.remove(internalTenantContext.getTenantRecordId());
-                cacheController.putIfAbsent(internalTenantContext.getTenantRecordId(), resolvedPluginCatalog);
+                if (cacheable) {
+                    cacheController.putIfAbsent(internalTenantContext.getTenantRecordId(), resolvedPluginCatalog);
+                }
+
                 return resolvedPluginCatalog;
             }
         }
