@@ -28,12 +28,14 @@ public class DefaultRawUsage implements RawUsage {
     private final LocalDate recordDate;
     private final String unitType;
     private final Long amount;
+    private final String trackingId;
 
-    public DefaultRawUsage(final UUID subscriptionId, final LocalDate recordDate, final String unitType, final Long amount) {
+    public DefaultRawUsage(final UUID subscriptionId, final LocalDate recordDate, final String unitType, final Long amount, final String trackingId) {
         this.subscriptionId = subscriptionId;
         this.recordDate = recordDate;
         this.unitType = unitType;
         this.amount = amount;
+        this.trackingId = trackingId;
     }
 
     @Override
@@ -57,12 +59,18 @@ public class DefaultRawUsage implements RawUsage {
     }
 
     @Override
+    public String getTrackingId() {
+        return trackingId;
+    }
+
+    @Override
     public String toString() {
         final StringBuilder sb = new StringBuilder("DefaultRawUsage{");
         sb.append("subscriptionId=").append(subscriptionId);
         sb.append(", recordDate=").append(recordDate);
         sb.append(", unitType='").append(unitType).append('\'');
         sb.append(", amount=").append(amount);
+        sb.append(", trackingId=").append(trackingId);
         sb.append('}');
         return sb.toString();
     }

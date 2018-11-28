@@ -176,18 +176,18 @@ public class TestContiguousIntervalCapacityInArrear extends TestUsageInArrearBas
         // First period: startDate - firstBCDDate
         //
         // 2 items for unit1
-        rawUsages.add(new DefaultRawUsage(subscriptionId, new LocalDate(2014, 03, 20), "unit1", 130L));
-        rawUsages.add(new DefaultRawUsage(subscriptionId, new LocalDate(2014, 03, 21), "unit1", 271L));
+        rawUsages.add(new DefaultRawUsage(subscriptionId, new LocalDate(2014, 03, 20), "unit1", 130L, DEFAULT_TRACKING_ID));
+        rawUsages.add(new DefaultRawUsage(subscriptionId, new LocalDate(2014, 03, 21), "unit1", 271L, DEFAULT_TRACKING_ID));
         // 1 items for unit2
-        rawUsages.add(new DefaultRawUsage(subscriptionId, new LocalDate(2014, 03, 24), "unit2", 10L));
+        rawUsages.add(new DefaultRawUsage(subscriptionId, new LocalDate(2014, 03, 24), "unit2", 10L, DEFAULT_TRACKING_ID));
 
         //
         // Second period: firstBCDDate - endDate
         //
         // 1 items unit1
-        rawUsages.add(new DefaultRawUsage(subscriptionId, new LocalDate(2014, 04, 15), "unit1", 199L));
+        rawUsages.add(new DefaultRawUsage(subscriptionId, new LocalDate(2014, 04, 15), "unit1", 199L, DEFAULT_TRACKING_ID));
         // 1 items unit2
-        rawUsages.add(new DefaultRawUsage(subscriptionId, new LocalDate(2014, 04, 15), "unit2", 20L));
+        rawUsages.add(new DefaultRawUsage(subscriptionId, new LocalDate(2014, 04, 15), "unit2", 20L, DEFAULT_TRACKING_ID));
 
         final DefaultUnit unit1 = new DefaultUnit().setName("unit1");
         final DefaultLimit limit1 = new DefaultLimit().setUnit(unit1).setMax((double) -1);
@@ -254,8 +254,8 @@ public class TestContiguousIntervalCapacityInArrear extends TestUsageInArrearBas
 
         // Case 1
         List<RawUsage> rawUsages = new ArrayList<RawUsage>();
-        rawUsages.add(new DefaultRawUsage(subscriptionId, new LocalDate(2014, 03, 20), "FOO", 5L));
-        rawUsages.add(new DefaultRawUsage(subscriptionId, new LocalDate(2014, 03, 21), "BAR", 99L));
+        rawUsages.add(new DefaultRawUsage(subscriptionId, new LocalDate(2014, 03, 20), "FOO", 5L, DEFAULT_TRACKING_ID));
+        rawUsages.add(new DefaultRawUsage(subscriptionId, new LocalDate(2014, 03, 21), "BAR", 99L, DEFAULT_TRACKING_ID));
 
         List<InvoiceItem> result = produceInvoiceItems(rawUsages, usageDetailMode, ImmutableList.<InvoiceItem>of());
         assertEquals(result.size(), 1);
@@ -279,8 +279,8 @@ public class TestContiguousIntervalCapacityInArrear extends TestUsageInArrearBas
 
         // Case 2
         rawUsages = new ArrayList<RawUsage>();
-        rawUsages.add(new DefaultRawUsage(subscriptionId, new LocalDate(2014, 03, 20), "FOO", 5L));
-        rawUsages.add(new DefaultRawUsage(subscriptionId, new LocalDate(2014, 03, 21), "BAR", 101L));
+        rawUsages.add(new DefaultRawUsage(subscriptionId, new LocalDate(2014, 03, 20), "FOO", 5L, DEFAULT_TRACKING_ID));
+        rawUsages.add(new DefaultRawUsage(subscriptionId, new LocalDate(2014, 03, 21), "BAR", 101L, DEFAULT_TRACKING_ID));
         result = produceInvoiceItems(rawUsages, usageDetailMode, ImmutableList.<InvoiceItem>of());
         assertEquals(result.size(), 1);
         assertEquals(result.get(0).getAmount().compareTo(BigDecimal.TEN), 0, String.format("%s != 10.0", result.get(0).getAmount()));
@@ -304,8 +304,8 @@ public class TestContiguousIntervalCapacityInArrear extends TestUsageInArrearBas
 
         // Case 3
         rawUsages = new ArrayList<RawUsage>();
-        rawUsages.add(new DefaultRawUsage(subscriptionId, new LocalDate(2014, 03, 20), "FOO", 75L));
-        rawUsages.add(new DefaultRawUsage(subscriptionId, new LocalDate(2014, 03, 21), "BAR", 101L));
+        rawUsages.add(new DefaultRawUsage(subscriptionId, new LocalDate(2014, 03, 20), "FOO", 75L, DEFAULT_TRACKING_ID));
+        rawUsages.add(new DefaultRawUsage(subscriptionId, new LocalDate(2014, 03, 21), "BAR", 101L, DEFAULT_TRACKING_ID));
         result = produceInvoiceItems(rawUsages, usageDetailMode, ImmutableList.<InvoiceItem>of());
         assertEquals(result.size(), 1);
         assertEquals(result.get(0).getAmount().compareTo(new BigDecimal("100.0")), 0, String.format("%s != 100.0", result.get(0).getAmount()));
@@ -338,8 +338,8 @@ public class TestContiguousIntervalCapacityInArrear extends TestUsageInArrearBas
 
 
         List<RawUsage> rawUsages = new ArrayList<RawUsage>();
-        rawUsages.add(new DefaultRawUsage(subscriptionId, new LocalDate(2014, 03, 20), "FOO", 60L)); // tier 3
-        rawUsages.add(new DefaultRawUsage(subscriptionId, new LocalDate(2014, 03, 21), "BAR", 200L)); // tier 2
+        rawUsages.add(new DefaultRawUsage(subscriptionId, new LocalDate(2014, 03, 20), "FOO", 60L, DEFAULT_TRACKING_ID)); // tier 3
+        rawUsages.add(new DefaultRawUsage(subscriptionId, new LocalDate(2014, 03, 21), "BAR", 200L, DEFAULT_TRACKING_ID)); // tier 2
 
         final List<UsageInArrearTierUnitDetail> existingUsage = ImmutableList.of(existingFooUsageTier1, existingBarUsageTier2);
 

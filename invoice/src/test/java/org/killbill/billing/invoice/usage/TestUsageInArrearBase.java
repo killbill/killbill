@@ -51,6 +51,9 @@ import org.testng.annotations.BeforeClass;
 
 public abstract class TestUsageInArrearBase extends InvoiceTestSuiteNoDB {
 
+
+    protected static final String DEFAULT_TRACKING_ID = "_tracking_id_missing";
+
     protected int BCD;
     protected UUID accountId;
     protected UUID bundleId;
