@@ -823,9 +823,9 @@ public class TestWithBCDUpdate extends TestIntegrationBase {
                                     new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 1), new LocalDate(2013, 5, 1), InvoiceItemType.RECURRING, new BigDecimal("2399.95")),
                                     new ExpectedInvoiceItemCheck(new LocalDate(2012, 4, 1), new LocalDate(2012, 5, 1), InvoiceItemType.USAGE, new BigDecimal("5.90")));
 
-        final DateTime bpExpectedCTD = account.getReferenceTime().withYear(2013).withMonthOfYear(5).withDayOfMonth(1);
+        final DateTime bpExpectedCTD = new DateTime("2013-05-01T00:00:00.000Z");
         assertEquals(subscriptionBaseInternalApiApi.getSubscriptionFromId(bpSubscription.getId(), internalCallContext).getChargedThroughDate().compareTo(bpExpectedCTD), 0);
-        DateTime aoExpectedCTD = account.getReferenceTime().withMonthOfYear(5).withDayOfMonth(1);
+        DateTime aoExpectedCTD = new DateTime("2012-05-01T00:00:00.000Z");
         assertEquals(subscriptionBaseInternalApiApi.getSubscriptionFromId(aoSubscription.getId(), internalCallContext).getChargedThroughDate().compareTo(aoExpectedCTD), 0);
 
         // 2012-05-05
@@ -852,7 +852,7 @@ public class TestWithBCDUpdate extends TestIntegrationBase {
         invoiceChecker.checkInvoice(account.getId(), 4, callContext,
                                     new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 5), new LocalDate(2012, 6, 5), InvoiceItemType.USAGE, new BigDecimal("5.90")));
 
-        aoExpectedCTD = account.getReferenceTime().withMonthOfYear(6).withDayOfMonth(5);
+        aoExpectedCTD = new DateTime("2012-06-05T00:00:00.000Z");
         assertEquals(subscriptionBaseInternalApiApi.getSubscriptionFromId(aoSubscription.getId(), internalCallContext).getChargedThroughDate().compareTo(aoExpectedCTD), 0);
     }
 }
