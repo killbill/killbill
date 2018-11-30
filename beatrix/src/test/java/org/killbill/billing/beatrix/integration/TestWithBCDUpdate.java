@@ -622,7 +622,8 @@ public class TestWithBCDUpdate extends TestIntegrationBase {
         final DateTime initialDate = new DateTime(2016, 5, 1, 0, 13, 42, 0, testTimeZone);
         clock.setTime(initialDate);
 
-        final Account account = createAccountWithNonOsgiPaymentMethod(getAccountData(0));
+        // Set account BCD to the first
+        final Account account = createAccountWithNonOsgiPaymentMethod(getAccountData(1));
         assertNotNull(account);
 
         final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("Blowdart", BillingPeriod.MONTHLY, "notrial", null);
@@ -631,7 +632,6 @@ public class TestWithBCDUpdate extends TestIntegrationBase {
         final List<PlanPhasePriceOverride> overrides = new ArrayList<PlanPhasePriceOverride>();
         overrides.add(new DefaultPlanPhasePriceOverride("blowdart-monthly-notrial-evergreen", account.getCurrency(), null, BigDecimal.ZERO, ImmutableList.<UsagePriceOverride>of()));
         busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE);
-        // BP creation : Will set Account BCD to the first (DateOfFirstRecurringNonZeroCharge is the subscription start date in this case)
         final UUID baseEntitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec, null, overrides), "bundleExternalKey", null, null, false, true, ImmutableList.<PluginProperty>of(), callContext);
         assertListenerStatus();
         final Entitlement baseEntitlement = entitlementApi.getEntitlementForId(baseEntitlementId, callContext);
@@ -844,9 +844,14 @@ public class TestWithBCDUpdate extends TestIntegrationBase {
         recordUsageData(aoSubscription.getId(), "bullets", new LocalDate(2012, 5, 5), 100L, callContext);
         recordUsageData(aoSubscription.getId(), "bullets", new LocalDate(2012, 6, 4), 100L, callContext);
 
+        // 2012-06-01
+        busHandler.pushExpectedEvents(NextEvent.NULL_INVOICE);
+        clock.addDays(27);
+        assertListenerStatus();
+
         // 2012-06-05
-        busHandler.pushExpectedEvents(NextEvent.NULL_INVOICE, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
-        clock.addMonths(1);
+        busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
+        clock.addDays(4);
         assertListenerStatus();
 
         invoiceChecker.checkInvoice(account.getId(), 4, callContext,

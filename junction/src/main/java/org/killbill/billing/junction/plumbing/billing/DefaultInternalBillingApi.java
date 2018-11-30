@@ -197,7 +197,12 @@ public class DefaultInternalBillingApi implements BillingInternalApi {
                 }
             }
 
-            final int accountBCDCandidate = oldestNonZeroRecurringCharge == null ? 0 : oldestNonZeroRecurringCharge.getDayOfMonth();
+            if (oldestNonZeroRecurringCharge == null) {
+                return;
+            }
+
+            // BCD in the account timezone
+            final int accountBCDCandidate = context.toLocalDate(oldestNonZeroRecurringCharge).getDayOfMonth();
             if (accountBCDCandidate != 0) {
                 log.info("Setting account BCD='{}', accountId='{}'", accountBCDCandidate, account.getId());
                 accountApi.updateBCD(account.getExternalKey(), accountBCDCandidate, context);
