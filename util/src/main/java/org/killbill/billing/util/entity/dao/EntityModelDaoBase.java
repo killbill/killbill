@@ -23,7 +23,6 @@ import org.joda.time.DateTime;
 import org.killbill.billing.entity.EntityBase;
 
 public class EntityModelDaoBase extends EntityBase {
-
     private Long recordId;
     private Long accountRecordId;
     private Long tenantRecordId;

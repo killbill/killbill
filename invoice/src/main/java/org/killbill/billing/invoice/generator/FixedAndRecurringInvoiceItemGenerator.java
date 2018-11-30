@@ -59,6 +59,7 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.MoreObjects;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.LinkedListMultimap;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Range;
@@ -82,10 +83,10 @@ public class FixedAndRecurringInvoiceItemGenerator extends InvoiceItemGenerator 
         this.clock = clock;
     }
 
-    public List<InvoiceItem> generateItems(final ImmutableAccountData account, final UUID invoiceId, final BillingEventSet eventSet,
-                                           @Nullable final Iterable<Invoice> existingInvoices, final LocalDate targetDate,
-                                           final Currency targetCurrency, final Map<UUID, SubscriptionFutureNotificationDates> perSubscriptionFutureNotificationDate,
-                                           final InternalCallContext internalCallContext) throws InvoiceApiException {
+    public InvoiceGeneratorResult generateItems(final ImmutableAccountData account, final UUID invoiceId, final BillingEventSet eventSet,
+                                                @Nullable final Iterable<Invoice> existingInvoices, final LocalDate targetDate,
+                                                final Currency targetCurrency, final Map<UUID, SubscriptionFutureNotificationDates> perSubscriptionFutureNotificationDate,
+                                                final InternalCallContext internalCallContext) throws InvoiceApiException {
         final Multimap<UUID, LocalDate> createdItemsPerDayPerSubscription = LinkedListMultimap.<UUID, LocalDate>create();
 
         final AccountItemTree accountItemTree = new AccountItemTree(account.getId(), invoiceId);
@@ -118,7 +119,7 @@ public class FixedAndRecurringInvoiceItemGenerator extends InvoiceItemGenerator 
         final List<InvoiceItem> resultingItems = accountItemTree.getResultingItemList();
         safetyBounds(resultingItems, createdItemsPerDayPerSubscription, internalCallContext);
 
-        return resultingItems;
+        return new InvoiceGeneratorResult(resultingItems, ImmutableSet.of());
     }
 
     private void processRecurringBillingEvents(final UUID invoiceId, final UUID accountId, final BillingEventSet events,

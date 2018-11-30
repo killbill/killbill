@@ -25,6 +25,7 @@ import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
 import org.joda.time.LocalDate;
@@ -62,6 +63,7 @@ public class MockInvoiceDao extends MockEntityDaoBase<InvoiceModelDao, Invoice, 
 
     @Override
     public void createInvoice(final InvoiceModelDao invoice,
+                              final Set<InvoiceTrackingModelDao> trackingIds,
                               final FutureAccountNotifications callbackDateTimePerSubscriptions, final InternalCallContext context) {
         synchronized (monitor) {
             storeInvoice(invoice, context);
@@ -81,7 +83,7 @@ public class MockInvoiceDao extends MockEntityDaoBase<InvoiceModelDao, Invoice, 
     }
 
     @Override
-    public List<InvoiceItemModelDao> createInvoices(final List<InvoiceModelDao> invoiceModelDaos, final InternalCallContext context) {
+    public List<InvoiceItemModelDao> createInvoices(final List<InvoiceModelDao> invoiceModelDaos, final Set<InvoiceTrackingModelDao> trackingIds, final InternalCallContext context) {
         synchronized (monitor) {
             final List<InvoiceItemModelDao> createdItems = new LinkedList<InvoiceItemModelDao>();
             for (final InvoiceModelDao invoice : invoiceModelDaos) {

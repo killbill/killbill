@@ -1,0 +1,34 @@
+import "org/killbill/billing/util/entity/dao/EntitySqlDao.sql.stg"
+
+tableName() ::= "invoice_tracking_ids"
+
+tableFields(prefix) ::= <<
+  <prefix>tracking_id
+, <prefix>invoice_id
+, <prefix>subscription_id
+, <prefix>record_date
+, <prefix>created_by
+, <prefix>created_date
+>>
+
+tableValues() ::= <<
+  :trackingId
+, :invoiceId
+, :subscriptionId
+, :recordDate
+, :userName
+, :createdDate
+>>
+
+getTrackingsByDateRange() ::= <<
+select
+  <allTableFields("")>
+from <tableName()>
+where
+record_date >= :startDate
+and record_date \< :endDate
+and <accountRecordIdField("")> = :accountRecordId
+<AND_CHECK_TENANT("")>
+<defaultOrderBy("")>
+;
+>>

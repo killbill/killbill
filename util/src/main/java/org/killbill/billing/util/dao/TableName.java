@@ -35,6 +35,7 @@ public enum TableName {
     INVOICE_ITEMS("invoice_items", ObjectType.INVOICE_ITEM),
     INVOICE_PAYMENTS("invoice_payments", ObjectType.INVOICE_PAYMENT),
     INVOICES("invoices", ObjectType.INVOICE),
+    INVOICE_TRACKING_IDS("invoice_tracking_ids"),
     INVOICE_PARENT_CHILDREN("invoice_parent_children"),
     NODE_INFOS("node_infos"),
     PAYMENT_ATTEMPT_HISTORY("payment_attempt_history"),

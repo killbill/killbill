@@ -21,6 +21,7 @@ package org.killbill.billing.invoice.dao;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
 import javax.annotation.Nullable;
@@ -40,10 +41,13 @@ import org.killbill.billing.util.entity.dao.EntityDao;
 public interface InvoiceDao extends EntityDao<InvoiceModelDao, Invoice, InvoiceApiException> {
 
     void createInvoice(final InvoiceModelDao invoice,
+                       final Set<InvoiceTrackingModelDao> trackingIds,
                        final FutureAccountNotifications callbackDateTimePerSubscriptions,
                        final InternalCallContext context);
 
-    List<InvoiceItemModelDao> createInvoices(final List<InvoiceModelDao> invoices, final InternalCallContext context);
+    List<InvoiceItemModelDao> createInvoices(final List<InvoiceModelDao> invoices,
+                                             final Set<InvoiceTrackingModelDao> trackingIds,
+                                             final InternalCallContext context);
 
     public void setFutureAccountNotificationsForEmptyInvoice(final UUID accountId, final FutureAccountNotifications callbackDateTimePerSubscriptions,
                                                              final InternalCallContext context);

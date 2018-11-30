@@ -17,10 +17,9 @@
 
 package org.killbill.billing.invoice.generator;
 
-import java.math.BigDecimal;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
 import javax.annotation.Nullable;
@@ -40,9 +39,12 @@ public class InvoiceWithMetadata {
 
     private DefaultInvoice invoice;
 
-    public InvoiceWithMetadata(final DefaultInvoice originalInvoice, final Map<UUID, SubscriptionFutureNotificationDates> perSubscriptionFutureNotificationDates) {
+    private final Set<TrackingIds> trackingIds;
+
+    public InvoiceWithMetadata(final DefaultInvoice originalInvoice, final Set<TrackingIds> trackingIds, final Map<UUID, SubscriptionFutureNotificationDates> perSubscriptionFutureNotificationDates) {
         this.invoice = originalInvoice;
         this.perSubscriptionFutureNotificationDates = perSubscriptionFutureNotificationDates;
+        this.trackingIds = trackingIds;
         build();
     }
 
@@ -78,6 +80,40 @@ public class InvoiceWithMetadata {
                        input.getSubscriptionId().equals(subscriptionId);
             }
         });
+    }
+
+    public Set<TrackingIds> getTrackingIds() {
+        return trackingIds;
+    }
+
+    public static class TrackingIds {
+        private final String trackingId;
+        private final UUID invoiceId;
+        private final UUID subscriptionId;
+        private final LocalDate recordDate;
+
+        public TrackingIds(final String trackingId, final UUID invoiceId, final UUID subscriptionId, final LocalDate recordDate) {
+            this.trackingId = trackingId;
+            this.invoiceId = invoiceId;
+            this.subscriptionId = subscriptionId;
+            this.recordDate = recordDate;
+        }
+
+        public String getTrackingId() {
+            return trackingId;
+        }
+
+        public UUID getInvoiceId() {
+            return invoiceId;
+        }
+
+        public UUID getSubscriptionId() {
+            return subscriptionId;
+        }
+
+        public LocalDate getRecordDate() {
+            return recordDate;
+        }
     }
 
     public static class SubscriptionFutureNotificationDates {

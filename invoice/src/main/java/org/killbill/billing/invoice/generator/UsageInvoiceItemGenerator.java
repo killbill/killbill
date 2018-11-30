@@ -54,6 +54,7 @@ import com.google.common.base.Function;
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
@@ -71,15 +72,16 @@ public class UsageInvoiceItemGenerator extends InvoiceItemGenerator {
         this.invoiceConfig = invoiceConfig;
     }
 
+
     @Override
-    public List<InvoiceItem> generateItems(final ImmutableAccountData account,
-                                           final UUID invoiceId,
-                                           final BillingEventSet eventSet,
-                                           @Nullable final Iterable<Invoice> existingInvoices,
-                                           final LocalDate targetDate,
-                                           final Currency targetCurrency,
-                                           final Map<UUID, SubscriptionFutureNotificationDates> perSubscriptionFutureNotificationDates,
-                                           final InternalCallContext internalCallContext) throws InvoiceApiException {
+    public InvoiceGeneratorResult generateItems(final ImmutableAccountData account,
+                                                final UUID invoiceId,
+                                                final BillingEventSet eventSet,
+                                                @Nullable final Iterable<Invoice> existingInvoices,
+                                                final LocalDate targetDate,
+                                                final Currency targetCurrency,
+                                                final Map<UUID, SubscriptionFutureNotificationDates> perSubscriptionFutureNotificationDates,
+                                                final InternalCallContext internalCallContext) throws InvoiceApiException {
         final Map<UUID, List<InvoiceItem>> perSubscriptionInArrearUsageItems = extractPerSubscriptionExistingInArrearUsageItems(eventSet.getUsages(), existingInvoices);
         try {
             // Pretty-print the generated invoice items from the junction events
@@ -143,7 +145,7 @@ public class UsageInvoiceItemGenerator extends InvoiceItemGenerator {
 
             invoiceItemGeneratorLogger.logItems();
 
-            return items;
+            return new InvoiceGeneratorResult(items, ImmutableSet.of());
         } catch (final CatalogApiException e) {
             throw new InvoiceApiException(e);
         }
