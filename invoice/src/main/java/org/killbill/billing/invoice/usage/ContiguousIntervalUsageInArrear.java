@@ -135,12 +135,13 @@ public abstract class ContiguousIntervalUsageInArrear {
 
         for (int i = 0; i < billingEvents.size(); i++) {
             final BillingEvent billingEvent = billingEvents.get(i);
+            final LocalDate transitionStartDate = internalTenantContext.toLocalDate(billingEvent.getEffectiveDate());
             if (i == billingEvents.size() - 1) {
-                addTransitionTimesForBillingEvent(startDate, endDate, billingEvent.getBillCycleDayLocal());
+                addTransitionTimesForBillingEvent(transitionStartDate, endDate, billingEvent.getBillCycleDayLocal());
             } else {
                 final BillingEvent nextBillingEvent = billingEvents.get(i + 1);
                 final LocalDate nextEndDate = internalTenantContext.toLocalDate(nextBillingEvent.getEffectiveDate());
-                addTransitionTimesForBillingEvent(startDate, nextEndDate, billingEvent.getBillCycleDayLocal());
+                addTransitionTimesForBillingEvent(transitionStartDate, nextEndDate, billingEvent.getBillCycleDayLocal());
             }
         }
 
