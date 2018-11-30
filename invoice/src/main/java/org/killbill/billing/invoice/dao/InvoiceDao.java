@@ -40,6 +40,7 @@ import org.killbill.billing.util.entity.dao.EntityDao;
 
 public interface InvoiceDao extends EntityDao<InvoiceModelDao, Invoice, InvoiceApiException> {
 
+
     void createInvoice(final InvoiceModelDao invoice,
                        final Set<InvoiceTrackingModelDao> trackingIds,
                        final FutureAccountNotifications callbackDateTimePerSubscriptions,
@@ -222,4 +223,7 @@ public interface InvoiceDao extends EntityDao<InvoiceModelDao, Invoice, InvoiceA
      * @throws InvoiceApiException if any unexpected error occurs
      */
     List<InvoiceItemModelDao> getInvoiceItemsByParentInvoice(UUID parentInvoiceId, final InternalTenantContext context) throws InvoiceApiException;
+
+    List<InvoiceTrackingModelDao> getTrackingsByDateRange(LocalDate startDate, LocalDate endDate, InternalCallContext context);
+
 }

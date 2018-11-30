@@ -30,6 +30,7 @@ import org.killbill.billing.invoice.api.InvoiceItem;
 import org.killbill.billing.invoice.api.InvoiceItemType;
 import org.killbill.billing.invoice.model.DefaultInvoice;
 
+import com.google.common.base.Objects;
 import com.google.common.base.Predicate;
 import com.google.common.collect.Iterables;
 
@@ -113,6 +114,26 @@ public class InvoiceWithMetadata {
 
         public LocalDate getRecordDate() {
             return recordDate;
+        }
+
+        @Override
+        public boolean equals(final Object o) {
+            if (this == o) {
+                return true;
+            }
+            if (!(o instanceof TrackingIds)) {
+                return false;
+            }
+            final TrackingIds that = (TrackingIds) o;
+            return Objects.equal(trackingId, that.trackingId) &&
+                   Objects.equal(invoiceId, that.invoiceId) &&
+                   Objects.equal(subscriptionId, that.subscriptionId) &&
+                   Objects.equal(recordDate, that.recordDate);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hashCode(trackingId, invoiceId, subscriptionId, recordDate);
         }
     }
 

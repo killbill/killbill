@@ -1367,6 +1367,17 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
         });
     }
 
+    @Override
+    public List<InvoiceTrackingModelDao> getTrackingsByDateRange(final LocalDate startDate, final LocalDate endDate, final InternalCallContext context) {
+        return transactionalSqlDao.execute(true, new EntitySqlDaoTransactionWrapper<List<InvoiceTrackingModelDao>>() {
+            @Override
+            public List<InvoiceTrackingModelDao> inTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory) throws Exception {
+                final InvoiceTrackingSqlDao transactional = entitySqlDaoWrapperFactory.become(InvoiceTrackingSqlDao.class);
+                return transactional.getTrackingsByDateRange(startDate.toDate(), endDate.toDate(), context);
+            }
+        });
+    }
+
     // PERF: fetch tags once. See also https://github.com/killbill/killbill/issues/720.
     private List<Tag> getInvoicesTags(final InternalTenantContext context) {
         return tagInternalApi.getTagsForAccountType(ObjectType.INVOICE, false, context);
