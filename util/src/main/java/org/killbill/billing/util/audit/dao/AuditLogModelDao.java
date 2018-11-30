@@ -25,11 +25,9 @@ import java.io.ObjectOutput;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
+import org.killbill.billing.callcontext.DefaultCallContext;
 import org.killbill.billing.util.audit.AuditLog;
 import org.killbill.billing.util.audit.ChangeType;
-import org.killbill.billing.util.cache.ExternalizableInput;
-import org.killbill.billing.util.cache.ExternalizableOutput;
-import org.killbill.billing.util.cache.MapperHolder;
 import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.dao.EntityAudit;
 import org.killbill.billing.util.dao.TableName;
@@ -43,7 +41,7 @@ public class AuditLogModelDao implements EntityModelDao<AuditLog>, Externalizabl
     private TableName tableName;
     private Long targetRecordId;
     private ChangeType changeType;
-    private CallContext callContext;
+    private DefaultCallContext callContext;
 
     private Long recordId;
     private Long accountRecordId;
@@ -52,7 +50,7 @@ public class AuditLogModelDao implements EntityModelDao<AuditLog>, Externalizabl
     // For deserialization
     public AuditLogModelDao() {}
 
-    public AuditLogModelDao(final EntityAudit entityAudit, final CallContext callContext) {
+    public AuditLogModelDao(final EntityAudit entityAudit, final DefaultCallContext callContext) {
         this.id = entityAudit.getId();
         this.tableName = entityAudit.getTableName();
         this.targetRecordId = entityAudit.getTargetRecordId();
@@ -188,12 +186,33 @@ public class AuditLogModelDao implements EntityModelDao<AuditLog>, Externalizabl
     }
 
     @Override
-    public void readExternal(final ObjectInput in) throws IOException {
-        MapperHolder.mapper().readerForUpdating(this).readValue(new ExternalizableInput(in));
+    public void readExternal(final ObjectInput in) throws IOException, ClassNotFoundException {
+        this.id = new UUID(in.readLong(), in.read());
+        this.createdDate = new DateTime(in.readUTF());
+        this.updatedDate = new DateTime(in.readUTF());
+        this.tableName = TableName.valueOf(in.readUTF());
+        this.targetRecordId = in.readLong();
+        this.changeType = ChangeType.valueOf(in.readUTF());
+        this.callContext = (DefaultCallContext) in.readObject();
+        this.recordId = in.readLong();
+        this.accountRecordId = in.readLong();
+        this.tenantRecordId = in.readLong();
     }
 
     @Override
     public void writeExternal(final ObjectOutput oo) throws IOException {
-        MapperHolder.mapper().writeValue(new ExternalizableOutput(oo), this);
+        oo.writeLong(id.getMostSignificantBits());
+        oo.writeLong(id.getLeastSignificantBits());
+        oo.writeUTF(createdDate.toString());
+        oo.writeUTF(updatedDate.toString());
+        oo.writeUTF(tableName.name());
+        oo.writeLong(targetRecordId);
+        oo.writeUTF(changeType.name());
+
+        oo.writeObject(callContext);
+
+        oo.writeLong(recordId);
+        oo.writeLong(accountRecordId);
+        oo.writeLong(tenantRecordId);
     }
 }

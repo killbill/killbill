@@ -56,6 +56,7 @@ import org.killbill.billing.catalog.api.Price;
 import org.killbill.billing.catalog.api.PriceList;
 import org.killbill.billing.catalog.api.Product;
 import org.killbill.billing.catalog.api.Recurring;
+import org.killbill.billing.catalog.api.StaticCatalog;
 import org.killbill.billing.catalog.api.Tier;
 import org.killbill.billing.catalog.api.TieredBlock;
 import org.killbill.billing.catalog.api.Unit;
@@ -102,13 +103,13 @@ public class StandaloneCatalogMapper {
         this.tmpDefaultPriceListMap = new HashMap<String, DefaultPriceList>();
     }
 
-    public StandaloneCatalog toStandaloneCatalog(final StandalonePluginCatalog pluginCatalog, @Nullable URI catalogURI) {
+    public StandaloneCatalog toStandaloneCatalog(final StandalonePluginCatalog pluginCatalog) {
 
         final StandaloneCatalog result = new StandaloneCatalog();
         result.setCatalogName(catalogName);
         result.setEffectiveDate(pluginCatalog.getEffectiveDate().toDate());
         result.setProducts(toDefaultProducts(pluginCatalog.getProducts()));
-        result.setPlans(toDefaultPlans(pluginCatalog.getPlans()));
+        result.setPlans(toDefaultPlans(result, pluginCatalog.getPlans()));
         result.setPriceLists(toDefaultPriceListSet(pluginCatalog.getDefaultPriceList(), pluginCatalog.getChildrenPriceList()));
         result.setSupportedCurrencies(toArray(pluginCatalog.getCurrencies()));
         result.setUnits(toDefaultUnits(pluginCatalog.getUnits()));
@@ -120,7 +121,7 @@ public class StandaloneCatalogMapper {
                 ((DefaultProduct) target).setIncluded(toFilteredDefaultProduct(cur.getIncluded()));
             }
         }
-        result.initialize(result, catalogURI);
+        result.initialize(result);
         return result;
     }
 
@@ -283,10 +284,10 @@ public class StandaloneCatalogMapper {
         return filteredAndOrdered;
     }
 
-    private Iterable<Plan> toDefaultPlans(final Iterable<Plan> input) {
+    private Iterable<Plan> toDefaultPlans(final StaticCatalog staticCatalog, final Iterable<Plan> input) {
         if (tmpDefaultPlans == null) {
             final Map<String, Plan> map = new HashMap<String, Plan>();
-            for (final Plan plan : input) map.put(plan.getName(), toDefaultPlan(plan));
+            for (final Plan plan : input) map.put(plan.getName(), toDefaultPlan(staticCatalog, plan));
             tmpDefaultPlans = map;
         }
         return tmpDefaultPlans.values();
@@ -389,7 +390,7 @@ public class StandaloneCatalogMapper {
         return result;
     }
 
-    private Plan toDefaultPlan(final Plan input) {
+    private Plan toDefaultPlan(final StaticCatalog staticCatalog, final Plan input) {
         if (tmpDefaultPlans != null) {
             final Plan existingPlan = tmpDefaultPlans.get(input.getName());
             if (existingPlan == null) throw new IllegalStateException("Unknown plan " + input.getName());

@@ -23,6 +23,8 @@ import org.killbill.billing.account.api.Account;
 import org.killbill.billing.account.api.AccountApiException;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
+import org.killbill.billing.util.api.AuditLevel;
+import org.killbill.billing.util.audit.AuditLogWithHistory;
 import org.killbill.billing.util.entity.Pagination;
 import org.killbill.billing.util.entity.dao.EntityDao;
 
@@ -54,4 +56,9 @@ public interface AccountDao extends EntityDao<AccountModelDao, Account, AccountA
     Integer getAccountBCD(UUID accountId, InternalTenantContext context);
 
     List<AccountModelDao> getAccountsByParentId(UUID parentAccountId, InternalTenantContext context);
+
+    List<AuditLogWithHistory> getAuditLogsWithHistoryForId(UUID accountId, AuditLevel auditLevel, InternalTenantContext context) throws AccountApiException;
+
+    List<AuditLogWithHistory> getEmailAuditLogsWithHistoryForId(UUID accountEmailId, AuditLevel auditLevel, InternalTenantContext context) throws AccountApiException;
+
 }

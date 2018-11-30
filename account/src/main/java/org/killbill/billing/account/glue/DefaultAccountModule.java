@@ -30,6 +30,8 @@ import org.killbill.billing.account.dao.AccountDao;
 import org.killbill.billing.account.dao.DefaultAccountDao;
 import org.killbill.billing.glue.AccountModule;
 import org.killbill.billing.platform.api.KillbillConfigSource;
+import org.killbill.billing.util.audit.dao.AuditDao;
+import org.killbill.billing.util.audit.dao.DefaultAuditDao;
 import org.killbill.billing.util.glue.KillBillModule;
 
 public class DefaultAccountModule extends KillBillModule implements AccountModule {

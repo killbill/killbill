@@ -1,6 +1,6 @@
 /*
- * Copyright 2015 Groupon, Inc
- * Copyright 2015 The Billing Project, LLC
+ * Copyright 2014-2018 Groupon, Inc
+ * Copyright 2014-2018 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -19,7 +19,10 @@ package org.killbill.billing.jaxrs.resources;
 
 import java.util.List;
 
+import org.joda.time.LocalDate;
 import org.killbill.billing.jaxrs.JaxrsTestSuiteNoDB;
+import org.killbill.billing.jaxrs.json.SubscriptionUsageRecordJson.UnitUsageRecordJson;
+import org.killbill.billing.jaxrs.json.SubscriptionUsageRecordJson.UsageRecordJson;
 import org.killbill.billing.payment.api.PluginProperty;
 import org.testng.Assert;
 import org.testng.annotations.Test;
@@ -64,7 +67,53 @@ public class TestJaxRsResourceBase extends JaxrsTestSuiteNoDB {
         private static final class JaxRsResourceBaseTest extends JaxRsResourceBase {
 
         public JaxRsResourceBaseTest() {
-            super(null, null, null, null, null, null, null, null, null);
+            super(null, null, null, null, null, null, null, null, null, null);
+        }
+    }
+
+
+    @Test(groups = "fast")
+    public void testGetHighestRecordDate() throws Exception {
+        final UsageResourceTest usageResource = new UsageResourceTest();
+
+        final List<UsageRecordJson> fooRecords = ImmutableList.<UsageRecordJson>builder()
+                .add(new UsageRecordJson(new LocalDate(2018, 03, 04), 28L))
+                .add(new UsageRecordJson(new LocalDate(2018, 03, 05), 2L))
+                .add(new UsageRecordJson(new LocalDate(2018, 03, 01), 1L))
+                .add(new UsageRecordJson(new LocalDate(2018, 04, 06), 24L))
+                .build();
+        final UnitUsageRecordJson unitRecordFoo = new UnitUsageRecordJson("foo", fooRecords);
+
+        final List<UsageRecordJson> barRecords = ImmutableList.<UsageRecordJson>builder()
+                .add(new UsageRecordJson(new LocalDate(2018, 02, 04), 28L))
+                .add(new UsageRecordJson(new LocalDate(2018, 03, 06), 2L))
+                .add(new UsageRecordJson(new LocalDate(2018, 04, 18), 1L)) // Highest date point
+                .add(new UsageRecordJson(new LocalDate(2018, 04, 13), 24L))
+                .build();
+        final UnitUsageRecordJson unitRecordBar = new UnitUsageRecordJson("bar", barRecords);
+
+        final List<UsageRecordJson> zooRecords = ImmutableList.<UsageRecordJson>builder()
+                .add(new UsageRecordJson(new LocalDate(2018, 02, 04), 28L))
+                .add(new UsageRecordJson(new LocalDate(2018, 03, 06), 2L))
+                .add(new UsageRecordJson(new LocalDate(2018, 04, 17), 1L))
+                .add(new UsageRecordJson(new LocalDate(2018, 04, 12), 24L))
+                .build();
+        final UnitUsageRecordJson unitRecordZoo = new UnitUsageRecordJson("zoo", zooRecords);
+
+        final List<UnitUsageRecordJson> input = ImmutableList.<UnitUsageRecordJson>builder()
+                .add(unitRecordFoo)
+                .add(unitRecordBar)
+                .add(unitRecordZoo)
+                .build();
+        final LocalDate result = usageResource.getHighestRecordDate(input);
+
+        Assert.assertTrue(result.compareTo(new LocalDate(2018, 04, 18)) == 0);
+    }
+
+
+    private static class UsageResourceTest extends UsageResource {
+        public UsageResourceTest() {
+            super(null, null, null, null, null, null, null, null, null, null, null);
         }
     }
 }

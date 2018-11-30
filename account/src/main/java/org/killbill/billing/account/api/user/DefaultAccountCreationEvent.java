@@ -131,7 +131,6 @@ public class DefaultAccountCreationEvent extends BusEventBase implements Account
         private final String phone;
         private final String notes;
         private final Boolean isMigrated;
-        private final Boolean isNotifiedForInvoices;
 
         public DefaultAccountData(final AccountModelDao d) {
             this(d.getExternalKey(),
@@ -155,8 +154,7 @@ public class DefaultAccountCreationEvent extends BusEventBase implements Account
                  d.getCountry(),
                  d.getPhone(),
                  d.getNotes(),
-                 d.getMigrated(),
-                 d.getIsNotifiedForInvoices());
+                 d.getMigrated());
         }
 
         @JsonCreator
@@ -181,8 +179,7 @@ public class DefaultAccountCreationEvent extends BusEventBase implements Account
                                   @JsonProperty("country") final String country,
                                   @JsonProperty("phone") final String phone,
                                   @JsonProperty("notes") final String notes,
-                                  @JsonProperty("isMigrated") final Boolean isMigrated,
-                                  @JsonProperty("isNotifiedForInvoices") final Boolean isNotifiedForInvoices) {
+                                  @JsonProperty("isMigrated") final Boolean isMigrated) {
             this.externalKey = externalKey;
             this.name = name;
             this.firstNameLength = firstNameLength;
@@ -205,7 +202,6 @@ public class DefaultAccountCreationEvent extends BusEventBase implements Account
             this.phone = phone;
             this.notes = notes;
             this.isMigrated = isMigrated;
-            this.isNotifiedForInvoices = isNotifiedForInvoices;
         }
 
         @Override
@@ -325,7 +321,7 @@ public class DefaultAccountCreationEvent extends BusEventBase implements Account
 
         @Override
         public DateTime getReferenceTime() {
-            return DATE_TIME_FORMATTER.parseDateTime(referenceTime);
+            return referenceTime != null ?  DATE_TIME_FORMATTER.parseDateTime(referenceTime) : null;
         }
 
         @Override
@@ -334,20 +330,10 @@ public class DefaultAccountCreationEvent extends BusEventBase implements Account
             return isMigrated;
         }
 
-        @Override
-        @JsonIgnore
-        public Boolean isNotifiedForInvoices() {
-            return isNotifiedForInvoices;
-        }
-
         // These getters are for Jackson serialization only
 
         public Boolean getIsMigrated() {
             return isMigrated;
-        }
-
-        public Boolean getIsNotifiedForInvoices() {
-            return isNotifiedForInvoices;
         }
 
         public Boolean getIsPaymentDelegatedToParent() {
@@ -369,9 +355,6 @@ public class DefaultAccountCreationEvent extends BusEventBase implements Account
                 return false;
             }
             if (isMigrated != null ? !isMigrated.equals(that.isMigrated) : that.isMigrated != null) {
-                return false;
-            }
-            if (isNotifiedForInvoices != null ? !isNotifiedForInvoices.equals(that.isNotifiedForInvoices) : that.isNotifiedForInvoices != null) {
                 return false;
             }
             if (address1 != null ? !address1.equals(that.address1) : that.address1 != null) {
@@ -461,7 +444,6 @@ public class DefaultAccountCreationEvent extends BusEventBase implements Account
             result = 31 * result + (phone != null ? phone.hashCode() : 0);
             result = 31 * result + (notes != null ? notes.hashCode() : 0);
             result = 31 * result + (isMigrated != null ? isMigrated.hashCode() : 0);
-            result = 31 * result + (isNotifiedForInvoices != null ? isNotifiedForInvoices.hashCode() : 0);
             return result;
         }
     }

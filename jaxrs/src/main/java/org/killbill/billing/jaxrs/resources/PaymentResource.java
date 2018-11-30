@@ -1,6 +1,6 @@
 /*
- * Copyright 2014-2016 Groupon, Inc
- * Copyright 2014-2016 The Billing Project, LLC
+ * Copyright 2014-2018 Groupon, Inc
+ * Copyright 2014-2018 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -47,6 +47,7 @@ import org.killbill.billing.account.api.Account;
 import org.killbill.billing.account.api.AccountApiException;
 import org.killbill.billing.account.api.AccountUserApi;
 import org.killbill.billing.catalog.api.Currency;
+import org.killbill.billing.jaxrs.json.AuditLogJson;
 import org.killbill.billing.jaxrs.json.ComboPaymentTransactionJson;
 import org.killbill.billing.jaxrs.json.CustomFieldJson;
 import org.killbill.billing.jaxrs.json.PaymentJson;
@@ -54,12 +55,14 @@ import org.killbill.billing.jaxrs.json.PaymentTransactionJson;
 import org.killbill.billing.jaxrs.json.TagJson;
 import org.killbill.billing.jaxrs.util.Context;
 import org.killbill.billing.jaxrs.util.JaxrsUriBuilder;
+import org.killbill.billing.payment.api.InvoicePaymentApi;
 import org.killbill.billing.payment.api.Payment;
 import org.killbill.billing.payment.api.PaymentApi;
 import org.killbill.billing.payment.api.PaymentApiException;
 import org.killbill.billing.payment.api.PaymentOptions;
 import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.payment.api.TransactionType;
+import org.killbill.billing.util.api.AuditLevel;
 import org.killbill.billing.util.api.AuditUserApi;
 import org.killbill.billing.util.api.CustomFieldApiException;
 import org.killbill.billing.util.api.CustomFieldUserApi;
@@ -67,8 +70,10 @@ import org.killbill.billing.util.api.TagApiException;
 import org.killbill.billing.util.api.TagDefinitionApiException;
 import org.killbill.billing.util.api.TagUserApi;
 import org.killbill.billing.util.audit.AccountAuditLogs;
+import org.killbill.billing.util.audit.AuditLogWithHistory;
 import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.TenantContext;
+import org.killbill.billing.util.customfield.CustomField;
 import org.killbill.billing.util.entity.Pagination;
 import org.killbill.clock.Clock;
 import org.killbill.commons.metrics.MetricTag;
@@ -81,13 +86,14 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiParam;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 
 @Path(JaxrsResource.PAYMENTS_PATH)
-@Api(value = JaxrsResource.PAYMENTS_PATH, description = "Operations on payments")
+@Api(value = JaxrsResource.PAYMENTS_PATH, description = "Operations on payments", tags="Payment")
 public class PaymentResource extends ComboPaymentResource {
 
     private static final String ID_PARAM_NAME = "paymentId";
@@ -99,9 +105,10 @@ public class PaymentResource extends ComboPaymentResource {
                            final AuditUserApi auditUserApi,
                            final AccountUserApi accountUserApi,
                            final PaymentApi paymentApi,
+                           final InvoicePaymentApi invoicePaymentApi,
                            final Clock clock,
                            final Context context) {
-        super(uriBuilder, tagUserApi, customFieldUserApi, auditUserApi, accountUserApi, paymentApi, clock, context);
+        super(uriBuilder, tagUserApi, customFieldUserApi, auditUserApi, accountUserApi, paymentApi, invoicePaymentApi, clock, context);
     }
 
     @TimedResource(name = "getPayment")
@@ -111,16 +118,15 @@ public class PaymentResource extends ComboPaymentResource {
     @ApiOperation(value = "Retrieve a payment by id", response = PaymentJson.class)
     @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid paymentId supplied"),
                            @ApiResponse(code = 404, message = "Payment not found")})
-    public Response getPayment(@PathParam("paymentId") final String paymentIdStr,
+    public Response getPayment(@PathParam("paymentId") final UUID paymentId,
                                @QueryParam(QUERY_WITH_PLUGIN_INFO) @DefaultValue("false") final Boolean withPluginInfo,
                                @QueryParam(QUERY_WITH_ATTEMPTS) @DefaultValue("false") final Boolean withAttempts,
                                @QueryParam(QUERY_PLUGIN_PROPERTY) final List<String> pluginPropertiesString,
                                @QueryParam(QUERY_AUDIT) @DefaultValue("NONE") final AuditMode auditMode,
                                @javax.ws.rs.core.Context final HttpServletRequest request) throws PaymentApiException {
         final Iterable<PluginProperty> pluginProperties = extractPluginProperties(pluginPropertiesString);
-        final UUID paymentIdId = UUID.fromString(paymentIdStr);
         final TenantContext tenantContext = context.createTenantContextNoAccountId(request);
-        final Payment payment = paymentApi.getPayment(paymentIdId, withPluginInfo, withAttempts, pluginProperties, tenantContext);
+        final Payment payment = paymentApi.getPayment(paymentId, withPluginInfo, withAttempts, pluginProperties, tenantContext);
         final AccountAuditLogs accountAuditLogs = auditUserApi.getAccountAuditLogs(payment.getAccountId(), auditMode.getLevel(), tenantContext);
         final PaymentJson result = new PaymentJson(payment, accountAuditLogs);
         return Response.status(Response.Status.OK).entity(result).build();
@@ -133,7 +139,7 @@ public class PaymentResource extends ComboPaymentResource {
     @ApiResponses(value = {@ApiResponse(code = 404, message = "Payment not found")})
     public Response getPaymentByExternalKey(@QueryParam(QUERY_WITH_PLUGIN_INFO) @DefaultValue("false") final Boolean withPluginInfo,
                                             @QueryParam(QUERY_WITH_ATTEMPTS) @DefaultValue("false") final Boolean withAttempts,
-                                            @QueryParam(QUERY_EXTERNAL_KEY) final String paymentExternalKey,
+                                            @ApiParam(required=true) @QueryParam(QUERY_EXTERNAL_KEY) final String paymentExternalKey,
                                             @QueryParam(QUERY_PLUGIN_PROPERTY) final List<String> pluginPropertiesString,
                                             @QueryParam(QUERY_AUDIT) @DefaultValue("NONE") final AuditMode auditMode,
                                             @javax.ws.rs.core.Context final HttpServletRequest request) throws PaymentApiException {
@@ -155,10 +161,10 @@ public class PaymentResource extends ComboPaymentResource {
     public Response getPayments(@QueryParam(QUERY_SEARCH_OFFSET) @DefaultValue("0") final Long offset,
                                 @QueryParam(QUERY_SEARCH_LIMIT) @DefaultValue("100") final Long limit,
                                 @QueryParam(QUERY_PAYMENT_PLUGIN_NAME) final String pluginName,
-                                @QueryParam(QUERY_PLUGIN_PROPERTY) final List<String> pluginPropertiesString,
-                                @QueryParam(QUERY_AUDIT) @DefaultValue("NONE") final AuditMode auditMode,
                                 @QueryParam(QUERY_WITH_PLUGIN_INFO) @DefaultValue("false") final Boolean withPluginInfo,
                                 @QueryParam(QUERY_WITH_ATTEMPTS) @DefaultValue("false") final Boolean withAttempts,
+                                @QueryParam(QUERY_PLUGIN_PROPERTY) final List<String> pluginPropertiesString,
+                                @QueryParam(QUERY_AUDIT) @DefaultValue("NONE") final AuditMode auditMode,
                                 @javax.ws.rs.core.Context final HttpServletRequest request) throws PaymentApiException {
         final Iterable<PluginProperty> pluginProperties = extractPluginProperties(pluginPropertiesString);
         final TenantContext tenantContext = context.createTenantContextNoAccountId(request);
@@ -199,11 +205,11 @@ public class PaymentResource extends ComboPaymentResource {
     public Response searchPayments(@PathParam("searchKey") final String searchKey,
                                    @QueryParam(QUERY_SEARCH_OFFSET) @DefaultValue("0") final Long offset,
                                    @QueryParam(QUERY_SEARCH_LIMIT) @DefaultValue("100") final Long limit,
+                                   @QueryParam(QUERY_WITH_PLUGIN_INFO) @DefaultValue("false") final Boolean withPluginInfo,
+                                   @QueryParam(QUERY_WITH_ATTEMPTS) @DefaultValue("false") final Boolean withAttempts,
                                    @QueryParam(QUERY_PAYMENT_PLUGIN_NAME) final String pluginName,
                                    @QueryParam(QUERY_PLUGIN_PROPERTY) final List<String> pluginPropertiesString,
                                    @QueryParam(QUERY_AUDIT) @DefaultValue("NONE") final AuditMode auditMode,
-                                   @QueryParam(QUERY_WITH_PLUGIN_INFO) @DefaultValue("false") final Boolean withPluginInfo,
-                                   @QueryParam(QUERY_WITH_ATTEMPTS) @DefaultValue("false") final Boolean withAttempts,
                                    @javax.ws.rs.core.Context final HttpServletRequest request) throws PaymentApiException {
         final Iterable<PluginProperty> pluginProperties = extractPluginProperties(pluginPropertiesString);
         final TenantContext tenantContext = context.createTenantContextNoAccountId(request);
@@ -243,7 +249,7 @@ public class PaymentResource extends ComboPaymentResource {
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
     @ApiOperation(value = "Complete an existing transaction")
-    @ApiResponses(value = {@ApiResponse(code = 201, message = "Payment transaction created successfully"),
+    @ApiResponses(value = {@ApiResponse(code = 204, message = "Successful operation"),
                            @ApiResponse(code = 400, message = "Invalid paymentId supplied"),
                            @ApiResponse(code = 404, message = "Account or payment not found"),
                            @ApiResponse(code = 402, message = "Transaction declined by gateway"),
@@ -251,8 +257,8 @@ public class PaymentResource extends ComboPaymentResource {
                            @ApiResponse(code = 502, message = "Failed to submit payment transaction"),
                            @ApiResponse(code = 503, message = "Payment in unknown status, failed to receive gateway response"),
                            @ApiResponse(code = 504, message = "Payment operation timeout")})
-    public Response completeTransaction(@MetricTag(tag = "type", property = "transactionType") final PaymentTransactionJson json,
-                                        @PathParam("paymentId") final String paymentIdStr,
+    public Response completeTransaction(@PathParam("paymentId") final UUID paymentId,
+                                        @MetricTag(tag = "type", property = "transactionType") final PaymentTransactionJson json,
                                         @QueryParam(QUERY_PAYMENT_CONTROL_PLUGIN_NAME) final List<String> paymentControlPluginNames,
                                         @QueryParam(QUERY_PLUGIN_PROPERTY) final List<String> pluginPropertiesString,
                                         @HeaderParam(HDR_CREATED_BY) final String createdBy,
@@ -260,7 +266,8 @@ public class PaymentResource extends ComboPaymentResource {
                                         @HeaderParam(HDR_COMMENT) final String comment,
                                         @javax.ws.rs.core.Context final UriInfo uriInfo,
                                         @javax.ws.rs.core.Context final HttpServletRequest request) throws PaymentApiException, AccountApiException {
-        return completeTransactionInternalWithoutPayment(json, paymentIdStr, paymentControlPluginNames, pluginPropertiesString, createdBy, reason, comment, uriInfo, request);
+        completeTransactionInternalWithoutPayment(json, paymentId, paymentControlPluginNames, pluginPropertiesString, createdBy, reason, comment, uriInfo, request);
+        return Response.status(Status.NO_CONTENT).build();
     }
 
 
@@ -270,7 +277,7 @@ public class PaymentResource extends ComboPaymentResource {
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
     @ApiOperation(value = "Complete an existing transaction")
-    @ApiResponses(value = {@ApiResponse(code = 201, message = "Payment transaction created successfully"),
+    @ApiResponses(value = {@ApiResponse(code = 204, message = "Successful operation"),
                            @ApiResponse(code = 404, message = "Account or payment not found"),
                            @ApiResponse(code = 402, message = "Transaction declined by gateway"),
                            @ApiResponse(code = 422, message = "Payment is aborted by a control plugin"),
@@ -285,7 +292,8 @@ public class PaymentResource extends ComboPaymentResource {
                                                      @HeaderParam(HDR_COMMENT) final String comment,
                                                      @javax.ws.rs.core.Context final UriInfo uriInfo,
                                                      @javax.ws.rs.core.Context final HttpServletRequest request) throws PaymentApiException, AccountApiException {
-        return completeTransactionInternalWithoutPayment(json, null, paymentControlPluginNames, pluginPropertiesString, createdBy, reason, comment, uriInfo, request);
+        completeTransactionInternalWithoutPayment(json, null, paymentControlPluginNames, pluginPropertiesString, createdBy, reason, comment, uriInfo, request);
+        return Response.status(Status.NO_CONTENT).build();
     }
 
 
@@ -299,7 +307,7 @@ public class PaymentResource extends ComboPaymentResource {
     @Path("/{paymentId:" + UUID_PATTERN + "}/")
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
-    @ApiOperation(value = "Capture an existing authorization")
+    @ApiOperation(value = "Capture an existing authorization", response = PaymentJson.class)
     @ApiResponses(value = {@ApiResponse(code = 201, message = "Payment transaction created successfully"),
                            @ApiResponse(code = 400, message = "Invalid paymentId supplied"),
                            @ApiResponse(code = 404, message = "Account or payment not found"),
@@ -308,8 +316,8 @@ public class PaymentResource extends ComboPaymentResource {
                            @ApiResponse(code = 502, message = "Failed to submit payment transaction"),
                            @ApiResponse(code = 503, message = "Payment in unknown status, failed to receive gateway response"),
                            @ApiResponse(code = 504, message = "Payment operation timeout")})
-    public Response captureAuthorization(final PaymentTransactionJson json,
-                                         @PathParam("paymentId") final String paymentIdStr,
+    public Response captureAuthorization(@PathParam("paymentId") final UUID paymentId,
+                                         final PaymentTransactionJson json,
                                          @QueryParam(QUERY_PAYMENT_CONTROL_PLUGIN_NAME) final List<String> paymentControlPluginNames,
                                          @QueryParam(QUERY_PLUGIN_PROPERTY) final List<String> pluginPropertiesString,
                                          @HeaderParam(HDR_CREATED_BY) final String createdBy,
@@ -317,14 +325,14 @@ public class PaymentResource extends ComboPaymentResource {
                                          @HeaderParam(HDR_COMMENT) final String comment,
                                          @javax.ws.rs.core.Context final UriInfo uriInfo,
                                          @javax.ws.rs.core.Context final HttpServletRequest request) throws PaymentApiException, AccountApiException {
-        return captureAuthorizationInternal(json, paymentIdStr, paymentControlPluginNames, pluginPropertiesString, createdBy, reason, comment, uriInfo, request);
+        return captureAuthorizationInternal(json, paymentId, paymentControlPluginNames, pluginPropertiesString, createdBy, reason, comment, uriInfo, request);
     }
 
     @TimedResource(name = "captureAuthorization")
     @POST
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
-    @ApiOperation(value = "Capture an existing authorization")
+    @ApiOperation(value = "Capture an existing authorization", response = PaymentJson.class)
     @ApiResponses(value = {@ApiResponse(code = 201, message = "Payment transaction created successfully"),
                            @ApiResponse(code = 404, message = "Account or payment not found"),
                            @ApiResponse(code = 402, message = "Transaction declined by gateway"),
@@ -344,7 +352,7 @@ public class PaymentResource extends ComboPaymentResource {
     }
 
     private Response captureAuthorizationInternal(final PaymentTransactionJson json,
-                                                  @Nullable final String paymentIdStr,
+                                                  @Nullable final UUID paymentId,
                                                   final List<String> paymentControlPluginNames,
                                                   final List<String> pluginPropertiesString,
                                                   final String createdBy,
@@ -360,10 +368,10 @@ public class PaymentResource extends ComboPaymentResource {
         final Iterable<PluginProperty> pluginPropertiesFromQuery = extractPluginProperties(pluginPropertiesString);
         final Iterable<PluginProperty> pluginProperties = Iterables.concat(pluginPropertiesFromQuery, pluginPropertiesFromBody);
         final CallContext callContext = context.createCallContextNoAccountId(createdBy, reason, comment, request);
-        final Payment initialPayment = getPaymentByIdOrKey(paymentIdStr, json.getPaymentExternalKey(), pluginProperties, callContext);
+        final Payment initialPayment = getPaymentByIdOrKey(paymentId, json.getPaymentExternalKey(), pluginProperties, callContext);
 
         final Account account = accountUserApi.getAccountById(initialPayment.getAccountId(), callContext);
-        final Currency currency = json.getCurrency() == null ? account.getCurrency() : Currency.valueOf(json.getCurrency());
+        final Currency currency = json.getCurrency() == null ? account.getCurrency() : json.getCurrency();
 
         final PaymentOptions paymentOptions = createControlPluginApiPaymentOptions(paymentControlPluginNames);
 
@@ -377,7 +385,7 @@ public class PaymentResource extends ComboPaymentResource {
     @Path("/{paymentId:" + UUID_PATTERN + "}/" + REFUNDS)
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
-    @ApiOperation(value = "Refund an existing payment")
+    @ApiOperation(value = "Refund an existing payment", response = PaymentJson.class)
     @ApiResponses(value = {@ApiResponse(code = 201, message = "Payment transaction created successfully"),
                            @ApiResponse(code = 400, message = "Invalid paymentId supplied"),
                            @ApiResponse(code = 404, message = "Account or payment not found"),
@@ -386,8 +394,8 @@ public class PaymentResource extends ComboPaymentResource {
                            @ApiResponse(code = 502, message = "Failed to submit payment transaction"),
                            @ApiResponse(code = 503, message = "Payment in unknown status, failed to receive gateway response"),
                            @ApiResponse(code = 504, message = "Payment operation timeout")})
-    public Response refundPayment(final PaymentTransactionJson json,
-                                  @PathParam("paymentId") final String paymentIdStr,
+    public Response refundPayment(@PathParam("paymentId") final UUID paymentId,
+                                  final PaymentTransactionJson json,
                                   @QueryParam(QUERY_PAYMENT_CONTROL_PLUGIN_NAME) final List<String> paymentControlPluginNames,
                                   @QueryParam(QUERY_PLUGIN_PROPERTY) final List<String> pluginPropertiesString,
                                   @HeaderParam(HDR_CREATED_BY) final String createdBy,
@@ -395,7 +403,7 @@ public class PaymentResource extends ComboPaymentResource {
                                   @HeaderParam(HDR_COMMENT) final String comment,
                                   @javax.ws.rs.core.Context final UriInfo uriInfo,
                                   @javax.ws.rs.core.Context final HttpServletRequest request) throws PaymentApiException, AccountApiException {
-        return refundPaymentInternal(json, paymentIdStr, paymentControlPluginNames, pluginPropertiesString, createdBy, reason, comment, uriInfo, request);
+        return refundPaymentInternal(json, paymentId, paymentControlPluginNames, pluginPropertiesString, createdBy, reason, comment, uriInfo, request);
     }
 
     @TimedResource(name = "refundPayment")
@@ -403,7 +411,7 @@ public class PaymentResource extends ComboPaymentResource {
     @Path("/" + REFUNDS)
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
-    @ApiOperation(value = "Refund an existing payment")
+    @ApiOperation(value = "Refund an existing payment", response = PaymentJson.class)
     @ApiResponses(value = {@ApiResponse(code = 201, message = "Payment transaction created successfully"),
                            @ApiResponse(code = 404, message = "Account or payment not found"),
                            @ApiResponse(code = 402, message = "Transaction declined by gateway"),
@@ -424,7 +432,7 @@ public class PaymentResource extends ComboPaymentResource {
     }
 
     private Response refundPaymentInternal(final PaymentTransactionJson json,
-                                           @Nullable final String paymentIdStr,
+                                           @Nullable final UUID paymentId,
                                            final List<String> paymentControlPluginNames,
                                            final List<String> pluginPropertiesString,
                                            final String createdBy,
@@ -441,10 +449,10 @@ public class PaymentResource extends ComboPaymentResource {
         final Iterable<PluginProperty> pluginProperties = Iterables.concat(pluginPropertiesFromQuery, pluginPropertiesFromBody);
         final CallContext callContext = context.createCallContextNoAccountId(createdBy, reason, comment, request);
 
-        final Payment initialPayment = getPaymentByIdOrKey(paymentIdStr, json.getPaymentExternalKey(), pluginProperties, callContext);
+        final Payment initialPayment = getPaymentByIdOrKey(paymentId, json.getPaymentExternalKey(), pluginProperties, callContext);
 
         final Account account = accountUserApi.getAccountById(initialPayment.getAccountId(), callContext);
-        final Currency currency = json.getCurrency() == null ? account.getCurrency() : Currency.valueOf(json.getCurrency());
+        final Currency currency = json.getCurrency() == null ? account.getCurrency() : json.getCurrency();
 
         final PaymentOptions paymentOptions = createControlPluginApiPaymentOptions(paymentControlPluginNames);
 
@@ -460,7 +468,7 @@ public class PaymentResource extends ComboPaymentResource {
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
     @ApiOperation(value = "Void an existing payment")
-    @ApiResponses(value = {@ApiResponse(code = 201, message = "Payment transaction created successfully"),
+    @ApiResponses(value = {@ApiResponse(code = 204, message = "Successful operation"),
                            @ApiResponse(code = 400, message = "Invalid paymentId supplied"),
                            @ApiResponse(code = 404, message = "Account or payment not found"),
                            @ApiResponse(code = 402, message = "Transaction declined by gateway"),
@@ -468,8 +476,8 @@ public class PaymentResource extends ComboPaymentResource {
                            @ApiResponse(code = 502, message = "Failed to submit payment transaction"),
                            @ApiResponse(code = 503, message = "Payment in unknown status, failed to receive gateway response"),
                            @ApiResponse(code = 504, message = "Payment operation timeout")})
-    public Response voidPayment(final PaymentTransactionJson json,
-                                @PathParam("paymentId") final String paymentIdStr,
+    public Response voidPayment(@PathParam("paymentId") final UUID paymentId,
+                                final PaymentTransactionJson json,
                                 @QueryParam(QUERY_PAYMENT_CONTROL_PLUGIN_NAME) final List<String> paymentControlPluginNames,
                                 @QueryParam(QUERY_PLUGIN_PROPERTY) final List<String> pluginPropertiesString,
                                 @HeaderParam(HDR_CREATED_BY) final String createdBy,
@@ -477,7 +485,7 @@ public class PaymentResource extends ComboPaymentResource {
                                 @HeaderParam(HDR_COMMENT) final String comment,
                                 @javax.ws.rs.core.Context final UriInfo uriInfo,
                                 @javax.ws.rs.core.Context final HttpServletRequest request) throws PaymentApiException, AccountApiException {
-        return voidPaymentInternal(json, paymentIdStr, paymentControlPluginNames, pluginPropertiesString, createdBy, reason, comment, uriInfo, request);
+        return voidPaymentInternal(json, paymentId, paymentControlPluginNames, pluginPropertiesString, createdBy, reason, comment, uriInfo, request);
     }
 
     @TimedResource(name = "voidPayment")
@@ -485,7 +493,7 @@ public class PaymentResource extends ComboPaymentResource {
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
     @ApiOperation(value = "Void an existing payment")
-    @ApiResponses(value = {@ApiResponse(code = 201, message = "Payment transaction created successfully"),
+    @ApiResponses(value = {@ApiResponse(code = 204, message = "Successful operation"),
                            @ApiResponse(code = 404, message = "Account or payment not found"),
                            @ApiResponse(code = 402, message = "Transaction declined by gateway"),
                            @ApiResponse(code = 422, message = "Payment is aborted by a control plugin"),
@@ -504,7 +512,7 @@ public class PaymentResource extends ComboPaymentResource {
     }
 
     private Response voidPaymentInternal(final PaymentTransactionJson json,
-                                         @Nullable final String paymentIdStr,
+                                         @Nullable final UUID paymentId,
                                          final List<String> paymentControlPluginNames,
                                          final List<String> pluginPropertiesString,
                                          final String createdBy,
@@ -517,16 +525,17 @@ public class PaymentResource extends ComboPaymentResource {
         final Iterable<PluginProperty> pluginProperties = Iterables.concat(pluginPropertiesFromQuery, pluginPropertiesFromBody);
         final CallContext callContext = context.createCallContextNoAccountId(createdBy, reason, comment, request);
 
-        final Payment initialPayment = getPaymentByIdOrKey(paymentIdStr, json.getPaymentExternalKey(), pluginProperties, callContext);
+        final Payment initialPayment = getPaymentByIdOrKey(paymentId, json.getPaymentExternalKey(), pluginProperties, callContext);
 
         final Account account = accountUserApi.getAccountById(initialPayment.getAccountId(), callContext);
 
         final String transactionExternalKey = json != null ? json.getTransactionExternalKey() : null;
         final PaymentOptions paymentOptions = createControlPluginApiPaymentOptions(paymentControlPluginNames);
 
-        final Payment payment = paymentApi.createVoidWithPaymentControl(account, initialPayment.getId(), json.getEffectiveDate(), transactionExternalKey,
-                                                                        pluginProperties, paymentOptions, callContext);
-        return createPaymentResponse(uriInfo, payment, TransactionType.VOID, json.getTransactionExternalKey(), request);
+        paymentApi.createVoidWithPaymentControl(account, initialPayment.getId(), json.getEffectiveDate(), transactionExternalKey,
+                                                pluginProperties, paymentOptions, callContext);
+
+        return Response.status(Status.NO_CONTENT).build();
     }
 
     @TimedResource(name = "chargebackPayment")
@@ -534,7 +543,7 @@ public class PaymentResource extends ComboPaymentResource {
     @Path("/{paymentId:" + UUID_PATTERN + "}/" + CHARGEBACKS)
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
-    @ApiOperation(value = "Record a chargeback")
+    @ApiOperation(value = "Record a chargeback", response = PaymentJson.class)
     @ApiResponses(value = {@ApiResponse(code = 201, message = "Payment transaction created successfully"),
                            @ApiResponse(code = 400, message = "Invalid paymentId supplied"),
                            @ApiResponse(code = 404, message = "Account or payment not found"),
@@ -543,8 +552,8 @@ public class PaymentResource extends ComboPaymentResource {
                            @ApiResponse(code = 502, message = "Failed to submit payment transaction"),
                            @ApiResponse(code = 503, message = "Payment in unknown status, failed to receive gateway response"),
                            @ApiResponse(code = 504, message = "Payment operation timeout")})
-    public Response chargebackPayment(final PaymentTransactionJson json,
-                                      @PathParam("paymentId") final String paymentIdStr,
+    public Response chargebackPayment(@PathParam("paymentId") final UUID paymentId,
+                                      final PaymentTransactionJson json,
                                       @QueryParam(QUERY_PAYMENT_CONTROL_PLUGIN_NAME) final List<String> paymentControlPluginNames,
                                       @QueryParam(QUERY_PLUGIN_PROPERTY) final List<String> pluginPropertiesString,
                                       @HeaderParam(HDR_CREATED_BY) final String createdBy,
@@ -552,7 +561,7 @@ public class PaymentResource extends ComboPaymentResource {
                                       @HeaderParam(HDR_COMMENT) final String comment,
                                       @javax.ws.rs.core.Context final UriInfo uriInfo,
                                       @javax.ws.rs.core.Context final HttpServletRequest request) throws PaymentApiException, AccountApiException {
-        return chargebackPaymentInternal(json, paymentIdStr, paymentControlPluginNames, pluginPropertiesString, createdBy, reason, comment, uriInfo, request);
+        return chargebackPaymentInternal(json, paymentId, paymentControlPluginNames, pluginPropertiesString, createdBy, reason, comment, uriInfo, request);
     }
 
     @TimedResource(name = "chargebackPayment")
@@ -560,7 +569,7 @@ public class PaymentResource extends ComboPaymentResource {
     @Path("/" + CHARGEBACKS)
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
-    @ApiOperation(value = "Record a chargeback")
+    @ApiOperation(value = "Record a chargeback", response = PaymentJson.class)
     @ApiResponses(value = {@ApiResponse(code = 201, message = "Payment transaction created successfully"),
                            @ApiResponse(code = 404, message = "Account or payment not found"),
                            @ApiResponse(code = 402, message = "Transaction declined by gateway"),
@@ -580,7 +589,7 @@ public class PaymentResource extends ComboPaymentResource {
     }
 
     private Response chargebackPaymentInternal(final PaymentTransactionJson json,
-                                               @Nullable final String paymentIdStr,
+                                               @Nullable final UUID paymentId,
                                                final List<String> paymentControlPluginNames,
                                                final List<String> pluginPropertiesString,
                                                final String createdBy,
@@ -596,10 +605,10 @@ public class PaymentResource extends ComboPaymentResource {
         final Iterable<PluginProperty> pluginProperties = Iterables.concat(pluginPropertiesFromQuery, pluginPropertiesFromBody);
         final CallContext callContext = context.createCallContextNoAccountId(createdBy, reason, comment, request);
 
-        final Payment initialPayment = getPaymentByIdOrKey(paymentIdStr, json.getPaymentExternalKey(), pluginProperties, callContext);
+        final Payment initialPayment = getPaymentByIdOrKey(paymentId, json.getPaymentExternalKey(), pluginProperties, callContext);
 
         final Account account = accountUserApi.getAccountById(initialPayment.getAccountId(), callContext);
-        final Currency currency = json.getCurrency() == null ? account.getCurrency() : Currency.valueOf(json.getCurrency());
+        final Currency currency = json.getCurrency() == null ? account.getCurrency() : json.getCurrency();
 
         final PaymentOptions paymentOptions = createControlPluginApiPaymentOptions(paymentControlPluginNames);
 
@@ -613,7 +622,7 @@ public class PaymentResource extends ComboPaymentResource {
     @Path("/{paymentId:" + UUID_PATTERN + "}/" + CHARGEBACK_REVERSALS)
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
-    @ApiOperation(value = "Record a chargeback reversal")
+    @ApiOperation(value = "Record a chargeback reversal", response = PaymentJson.class)
     @ApiResponses(value = {@ApiResponse(code = 201, message = "Payment transaction created successfully"),
                            @ApiResponse(code = 400, message = "Invalid paymentId supplied"),
                            @ApiResponse(code = 404, message = "Account or payment not found"),
@@ -622,8 +631,8 @@ public class PaymentResource extends ComboPaymentResource {
                            @ApiResponse(code = 502, message = "Failed to submit payment transaction"),
                            @ApiResponse(code = 503, message = "Payment in unknown status, failed to receive gateway response"),
                            @ApiResponse(code = 504, message = "Payment operation timeout")})
-    public Response chargebackReversalPayment(final PaymentTransactionJson json,
-                                              @PathParam("paymentId") final String paymentIdStr,
+    public Response chargebackReversalPayment(@PathParam("paymentId") final UUID paymentId,
+                                              final PaymentTransactionJson json,
                                               @QueryParam(QUERY_PAYMENT_CONTROL_PLUGIN_NAME) final List<String> paymentControlPluginNames,
                                               @QueryParam(QUERY_PLUGIN_PROPERTY) final List<String> pluginPropertiesString,
                                               @HeaderParam(HDR_CREATED_BY) final String createdBy,
@@ -631,7 +640,7 @@ public class PaymentResource extends ComboPaymentResource {
                                               @HeaderParam(HDR_COMMENT) final String comment,
                                               @javax.ws.rs.core.Context final UriInfo uriInfo,
                                               @javax.ws.rs.core.Context final HttpServletRequest request) throws PaymentApiException, AccountApiException {
-        return chargebackReversalPaymentInternal(json, paymentIdStr, paymentControlPluginNames, pluginPropertiesString, createdBy, reason, comment, uriInfo, request);
+        return chargebackReversalPaymentInternal(json, paymentId, paymentControlPluginNames, pluginPropertiesString, createdBy, reason, comment, uriInfo, request);
     }
 
     @TimedResource(name = "chargebackReversalPayment")
@@ -639,7 +648,7 @@ public class PaymentResource extends ComboPaymentResource {
     @Path("/" + CHARGEBACK_REVERSALS)
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
-    @ApiOperation(value = "Record a chargeback reversal")
+    @ApiOperation(value = "Record a chargeback reversal", response = PaymentJson.class)
     @ApiResponses(value = {@ApiResponse(code = 201, message = "Payment transaction created successfully"),
                            @ApiResponse(code = 404, message = "Account or payment not found"),
                            @ApiResponse(code = 402, message = "Transaction declined by gateway"),
@@ -659,7 +668,7 @@ public class PaymentResource extends ComboPaymentResource {
     }
 
     private Response chargebackReversalPaymentInternal(final PaymentTransactionJson json,
-                                                       @Nullable final String paymentIdStr,
+                                                       @Nullable final UUID paymentId,
                                                        final List<String> paymentControlPluginNames,
                                                        final List<String> pluginPropertiesString,
                                                        final String createdBy,
@@ -672,7 +681,7 @@ public class PaymentResource extends ComboPaymentResource {
 
         final Iterable<PluginProperty> pluginProperties = extractPluginProperties(pluginPropertiesString);
         final CallContext callContext = context.createCallContextNoAccountId(createdBy, reason, comment, request);
-        final Payment initialPayment = getPaymentByIdOrKey(paymentIdStr, json.getPaymentExternalKey(), pluginProperties, callContext);
+        final Payment initialPayment = getPaymentByIdOrKey(paymentId, json.getPaymentExternalKey(), pluginProperties, callContext);
 
         final Account account = accountUserApi.getAccountById(initialPayment.getAccountId(), callContext);
 
@@ -687,7 +696,7 @@ public class PaymentResource extends ComboPaymentResource {
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
     @Path("/" + COMBO)
-    @ApiOperation(value = "Combo api to create a new payment transaction on a existing (or not) account ")
+    @ApiOperation(value = "Combo api to create a new payment transaction on a existing (or not) account ", response = PaymentJson.class)
     @ApiResponses(value = {@ApiResponse(code = 201, message = "Payment transaction created successfully"),
                            @ApiResponse(code = 400, message = "Invalid data for Account or PaymentMethod"),
                            @ApiResponse(code = 402, message = "Transaction declined by gateway"),
@@ -712,13 +721,13 @@ public class PaymentResource extends ComboPaymentResource {
         final UUID paymentMethodId = getOrCreatePaymentMethod(account, json.getPaymentMethod(), paymentMethodPluginProperties, callContext);
 
         final PaymentTransactionJson paymentTransactionJson = json.getTransaction();
-        final TransactionType transactionType = TransactionType.valueOf(paymentTransactionJson.getTransactionType());
+        final TransactionType transactionType = paymentTransactionJson.getTransactionType();
         final PaymentOptions paymentOptions = createControlPluginApiPaymentOptions(paymentControlPluginNames);
         final Payment result;
 
         final Iterable<PluginProperty> transactionPluginProperties = extractPluginProperties(json.getTransactionPluginProperties());
 
-        final Currency currency = paymentTransactionJson.getCurrency() == null ? account.getCurrency() : Currency.valueOf(paymentTransactionJson.getCurrency());
+        final Currency currency = paymentTransactionJson.getCurrency() == null ? account.getCurrency() : paymentTransactionJson.getCurrency();
         final UUID paymentId = null; // If we need to specify a paymentId (e.g 3DS authorization, we can use regular API, no need for combo call)
         switch (transactionType) {
             case AUTHORIZE:
@@ -748,16 +757,17 @@ public class PaymentResource extends ComboPaymentResource {
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
     @ApiOperation(value = "Cancels a scheduled payment attempt retry")
-    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid paymentTransactionId supplied")})
-    public Response cancelScheduledPaymentTransactionById(@PathParam("paymentTransactionId") final String paymentTransactionId,
+    @ApiResponses(value = {@ApiResponse(code = 204, message = "Successful operation"),
+                           @ApiResponse(code = 400, message = "Invalid paymentTransactionId supplied")})
+    public Response cancelScheduledPaymentTransactionById(@PathParam("paymentTransactionId") final UUID paymentTransactionId,
                                                           @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                                           @HeaderParam(HDR_REASON) final String reason,
                                                           @HeaderParam(HDR_COMMENT) final String comment,
                                                           @javax.ws.rs.core.Context final UriInfo uriInfo,
                                                           @javax.ws.rs.core.Context final HttpServletRequest request) throws PaymentApiException, AccountApiException {
         final CallContext callContext = context.createCallContextNoAccountId(createdBy, reason, comment, request);
-        paymentApi.cancelScheduledPaymentTransaction(UUID.fromString(paymentTransactionId), callContext);
-        return Response.status(Status.OK).build();
+        paymentApi.cancelScheduledPaymentTransaction(paymentTransactionId, callContext);
+        return Response.status(Status.NO_CONTENT).build();
     }
 
     @TimedResource(name = "cancelScheduledPaymentTransaction")
@@ -766,8 +776,9 @@ public class PaymentResource extends ComboPaymentResource {
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
     @ApiOperation(value = "Cancels a scheduled payment attempt retry")
-    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid paymentTransactionExternalKey supplied")})
-    public Response cancelScheduledPaymentTransactionByExternalKey(@QueryParam(QUERY_TRANSACTION_EXTERNAL_KEY) final String paymentTransactionExternalKey,
+    @ApiResponses(value = {@ApiResponse(code = 204, message = "Successful operation"),
+                           @ApiResponse(code = 400, message = "Invalid paymentTransactionExternalKey supplied")})
+    public Response cancelScheduledPaymentTransactionByExternalKey(@ApiParam(required=true) @QueryParam(QUERY_TRANSACTION_EXTERNAL_KEY) final String paymentTransactionExternalKey,
                                                                    @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                                                    @HeaderParam(HDR_REASON) final String reason,
                                                                    @HeaderParam(HDR_COMMENT) final String comment,
@@ -775,9 +786,8 @@ public class PaymentResource extends ComboPaymentResource {
                                                                    @javax.ws.rs.core.Context final HttpServletRequest request) throws PaymentApiException, AccountApiException {
         final CallContext callContext = context.createCallContextNoAccountId(createdBy, reason, comment, request);
         paymentApi.cancelScheduledPaymentTransaction(paymentTransactionExternalKey, callContext);
-        return Response.status(Status.OK).build();
+        return Response.status(Status.NO_CONTENT).build();
     }
-
 
 
 
@@ -785,12 +795,12 @@ public class PaymentResource extends ComboPaymentResource {
     @GET
     @Path("/{paymentId:" + UUID_PATTERN + "}/" + CUSTOM_FIELDS)
     @Produces(APPLICATION_JSON)
-    @ApiOperation(value = "Retrieve payment custom fields", response = CustomFieldJson.class, responseContainer = "List")
+    @ApiOperation(value = "Retrieve payment custom fields", response = CustomFieldJson.class, responseContainer = "List", nickname = "getPaymentCustomFields")
     @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid payment id supplied")})
-    public Response getCustomFields(@PathParam(ID_PARAM_NAME) final String id,
+    public Response getCustomFields(@PathParam(ID_PARAM_NAME) final UUID id,
                                     @QueryParam(QUERY_AUDIT) @DefaultValue("NONE") final AuditMode auditMode,
                                     @javax.ws.rs.core.Context final HttpServletRequest request) {
-        return super.getCustomFields(UUID.fromString(id), auditMode, context.createTenantContextNoAccountId(request));
+        return super.getCustomFields(id, auditMode, context.createTenantContextNoAccountId(request));
     }
 
     @TimedResource
@@ -798,16 +808,17 @@ public class PaymentResource extends ComboPaymentResource {
     @Path("/{paymentId:" + UUID_PATTERN + "}/" + CUSTOM_FIELDS)
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
-    @ApiOperation(value = "Add custom fields to payment")
-    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid payment id supplied")})
-    public Response createCustomFields(@PathParam(ID_PARAM_NAME) final String id,
-                                       final List<CustomFieldJson> customFields,
-                                       @HeaderParam(HDR_CREATED_BY) final String createdBy,
-                                       @HeaderParam(HDR_REASON) final String reason,
-                                       @HeaderParam(HDR_COMMENT) final String comment,
-                                       @javax.ws.rs.core.Context final HttpServletRequest request,
-                                       @javax.ws.rs.core.Context final UriInfo uriInfo) throws CustomFieldApiException {
-        return super.createCustomFields(UUID.fromString(id), customFields,
+    @ApiOperation(value = "Add custom fields to payment", response = CustomField.class, responseContainer = "List")
+    @ApiResponses(value = {@ApiResponse(code = 201, message = "Custom field created successfully"),
+                           @ApiResponse(code = 400, message = "Invalid payment id supplied")})
+    public Response createPaymentCustomFields(@PathParam(ID_PARAM_NAME) final UUID id,
+                                              final List<CustomFieldJson> customFields,
+                                              @HeaderParam(HDR_CREATED_BY) final String createdBy,
+                                              @HeaderParam(HDR_REASON) final String reason,
+                                              @HeaderParam(HDR_COMMENT) final String comment,
+                                              @javax.ws.rs.core.Context final HttpServletRequest request,
+                                              @javax.ws.rs.core.Context final UriInfo uriInfo) throws CustomFieldApiException {
+        return super.createCustomFields(id, customFields,
                                         context.createCallContextNoAccountId(createdBy, reason, comment, request), uriInfo, request);
     }
 
@@ -817,14 +828,15 @@ public class PaymentResource extends ComboPaymentResource {
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
     @ApiOperation(value = "Modify custom fields to payment")
-    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid payment id supplied")})
-    public Response modifyCustomFields(@PathParam(ID_PARAM_NAME) final String id,
-                                       final List<CustomFieldJson> customFields,
-                                       @HeaderParam(HDR_CREATED_BY) final String createdBy,
-                                       @HeaderParam(HDR_REASON) final String reason,
-                                       @HeaderParam(HDR_COMMENT) final String comment,
-                                       @javax.ws.rs.core.Context final HttpServletRequest request) throws CustomFieldApiException {
-        return super.modifyCustomFields(UUID.fromString(id), customFields,
+    @ApiResponses(value = {@ApiResponse(code = 204, message = "Successful operation"),
+                           @ApiResponse(code = 400, message = "Invalid payment id supplied")})
+    public Response modifyPaymentCustomFields(@PathParam(ID_PARAM_NAME) final UUID id,
+                                              final List<CustomFieldJson> customFields,
+                                              @HeaderParam(HDR_CREATED_BY) final String createdBy,
+                                              @HeaderParam(HDR_REASON) final String reason,
+                                              @HeaderParam(HDR_COMMENT) final String comment,
+                                              @javax.ws.rs.core.Context final HttpServletRequest request) throws CustomFieldApiException {
+        return super.modifyCustomFields(id, customFields,
                                         context.createCallContextNoAccountId(createdBy, reason, comment, request));
     }
 
@@ -834,14 +846,15 @@ public class PaymentResource extends ComboPaymentResource {
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
     @ApiOperation(value = "Remove custom fields from payment payment")
-    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid payment id supplied")})
-    public Response deleteCustomFields(@PathParam(ID_PARAM_NAME) final String id,
-                                       @QueryParam(QUERY_CUSTOM_FIELDS) final String customFieldList,
-                                       @HeaderParam(HDR_CREATED_BY) final String createdBy,
-                                       @HeaderParam(HDR_REASON) final String reason,
-                                       @HeaderParam(HDR_COMMENT) final String comment,
-                                       @javax.ws.rs.core.Context final HttpServletRequest request) throws CustomFieldApiException {
-        return super.deleteCustomFields(UUID.fromString(id), customFieldList,
+    @ApiResponses(value = {@ApiResponse(code = 204, message = "Successful operation"),
+                           @ApiResponse(code = 400, message = "Invalid payment id supplied")})
+    public Response deletePaymentCustomFields(@PathParam(ID_PARAM_NAME) final UUID id,
+                                              @QueryParam(QUERY_CUSTOM_FIELD) final List<UUID> customFieldList,
+                                              @HeaderParam(HDR_CREATED_BY) final String createdBy,
+                                              @HeaderParam(HDR_REASON) final String reason,
+                                              @HeaderParam(HDR_COMMENT) final String comment,
+                                              @javax.ws.rs.core.Context final HttpServletRequest request) throws CustomFieldApiException {
+        return super.deleteCustomFields(id, customFieldList,
                                         context.createCallContextNoAccountId(createdBy, reason, comment, request));
     }
 
@@ -849,15 +862,14 @@ public class PaymentResource extends ComboPaymentResource {
     @GET
     @Path("/{paymentId:" + UUID_PATTERN + "}/" + TAGS)
     @Produces(APPLICATION_JSON)
-    @ApiOperation(value = "Retrieve payment payment tags", response = TagJson.class, responseContainer = "List")
+    @ApiOperation(value = "Retrieve payment payment tags", response = TagJson.class, responseContainer = "List", nickname = "getPaymentTags")
     @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid payment id supplied"),
                            @ApiResponse(code = 404, message = "Invoice not found")})
-    public Response getTags(@PathParam(ID_PARAM_NAME) final String id,
-                            @QueryParam(QUERY_AUDIT) @DefaultValue("NONE") final AuditMode auditMode,
+    public Response getTags(@PathParam(ID_PARAM_NAME) final UUID paymentId,
                             @QueryParam(QUERY_TAGS_INCLUDED_DELETED) @DefaultValue("false") final Boolean includedDeleted,
+                            @QueryParam(QUERY_AUDIT) @DefaultValue("NONE") final AuditMode auditMode,
                             @javax.ws.rs.core.Context final HttpServletRequest request) throws TagDefinitionApiException, PaymentApiException {
         final TenantContext tenantContext = context.createTenantContextNoAccountId(request);
-        final UUID paymentId = UUID.fromString(id);
         final Payment payment = paymentApi.getPayment(paymentId, false, false, ImmutableList.<PluginProperty>of(), tenantContext);
         return super.getTags(payment.getAccountId(), paymentId, auditMode, includedDeleted, tenantContext);
     }
@@ -867,16 +879,17 @@ public class PaymentResource extends ComboPaymentResource {
     @Path("/{paymentId:" + UUID_PATTERN + "}/" + TAGS)
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
-    @ApiOperation(value = "Add tags to payment payment")
-    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid payment id supplied")})
-    public Response createTags(@PathParam(ID_PARAM_NAME) final String id,
-                               @QueryParam(QUERY_TAGS) final String tagList,
-                               @HeaderParam(HDR_CREATED_BY) final String createdBy,
-                               @HeaderParam(HDR_REASON) final String reason,
-                               @HeaderParam(HDR_COMMENT) final String comment,
-                               @javax.ws.rs.core.Context final UriInfo uriInfo,
-                               @javax.ws.rs.core.Context final HttpServletRequest request) throws TagApiException {
-        return super.createTags(UUID.fromString(id), tagList, uriInfo,
+    @ApiOperation(value = "Add tags to payment payment", response = TagJson.class, responseContainer = "List")
+    @ApiResponses(value = {@ApiResponse(code = 201, message = "Tag created successfully"),
+                           @ApiResponse(code = 400, message = "Invalid payment id supplied")})
+    public Response createPaymentTags(@PathParam(ID_PARAM_NAME) final UUID paymentId,
+                                      final List<UUID> tagList,
+                                      @HeaderParam(HDR_CREATED_BY) final String createdBy,
+                                      @HeaderParam(HDR_REASON) final String reason,
+                                      @HeaderParam(HDR_COMMENT) final String comment,
+                                      @javax.ws.rs.core.Context final UriInfo uriInfo,
+                                      @javax.ws.rs.core.Context final HttpServletRequest request) throws TagApiException {
+        return super.createTags(paymentId, tagList, uriInfo,
                                 context.createCallContextNoAccountId(createdBy, reason, comment, request), request);
     }
 
@@ -886,15 +899,42 @@ public class PaymentResource extends ComboPaymentResource {
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
     @ApiOperation(value = "Remove tags from payment payment")
-    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid payment id supplied")})
-    public Response deleteTags(@PathParam(ID_PARAM_NAME) final String id,
-                               @QueryParam(QUERY_TAGS) final String tagList,
-                               @HeaderParam(HDR_CREATED_BY) final String createdBy,
-                               @HeaderParam(HDR_REASON) final String reason,
-                               @HeaderParam(HDR_COMMENT) final String comment,
-                               @javax.ws.rs.core.Context final HttpServletRequest request) throws TagApiException {
-        return super.deleteTags(UUID.fromString(id), tagList,
+    @ApiResponses(value = {@ApiResponse(code = 204, message = "Successful operation"),
+                           @ApiResponse(code = 400, message = "Invalid payment id supplied")})
+    public Response deletePaymentTags(@PathParam(ID_PARAM_NAME) final UUID paymentId,
+                                      @QueryParam(QUERY_TAG) final List<UUID> tagList,
+                                      @HeaderParam(HDR_CREATED_BY) final String createdBy,
+                                      @HeaderParam(HDR_REASON) final String reason,
+                                      @HeaderParam(HDR_COMMENT) final String comment,
+                                      @javax.ws.rs.core.Context final HttpServletRequest request) throws TagApiException {
+        return super.deleteTags(paymentId, tagList,
                                 context.createCallContextNoAccountId(createdBy, reason, comment, request));
+    }
+
+    @TimedResource
+    @GET
+    @Path("/{paymentId:" + UUID_PATTERN + "}/" + AUDIT_LOG_WITH_HISTORY)
+    @Produces(APPLICATION_JSON)
+    @ApiOperation(value = "Retrieve payment audit logs with history by id", response = AuditLogJson.class, responseContainer = "List")
+    @ApiResponses(value = {@ApiResponse(code = 404, message = "Account not found")})
+    public Response getPaymentAuditLogsWithHistory(@PathParam("paymentId") final UUID paymentId,
+                                                   @javax.ws.rs.core.Context final HttpServletRequest request) throws AccountApiException {
+        final TenantContext tenantContext = context.createTenantContextNoAccountId(request);
+        final List<AuditLogWithHistory> auditLogWithHistory = paymentApi.getPaymentAuditLogsWithHistoryForId(paymentId, AuditLevel.FULL, tenantContext);
+        return Response.status(Status.OK).entity(getAuditLogsWithHistory(auditLogWithHistory)).build();
+    }
+
+    @TimedResource
+    @GET
+    @Path("/" + ATTEMPTS + "/{paymentAttemptId:" + UUID_PATTERN + "}/" + AUDIT_LOG_WITH_HISTORY)
+    @Produces(APPLICATION_JSON)
+    @ApiOperation(value = "Retrieve payment attempt audit logs with history by id", response = AuditLogJson.class, responseContainer = "List")
+    @ApiResponses(value = {@ApiResponse(code = 404, message = "Account not found")})
+    public Response getPaymentAttemptAuditLogsWithHistory(@PathParam("paymentAttemptId") final UUID paymentAttemptId,
+                                                   @javax.ws.rs.core.Context final HttpServletRequest request) throws AccountApiException {
+        final TenantContext tenantContext = context.createTenantContextNoAccountId(request);
+        final List<AuditLogWithHistory> auditLogWithHistory = paymentApi.getPaymentAttemptAuditLogsWithHistoryForId(paymentAttemptId, AuditLevel.FULL, tenantContext);
+        return Response.status(Status.OK).entity(getAuditLogsWithHistory(auditLogWithHistory)).build();
     }
 
     @Override
@@ -902,8 +942,8 @@ public class PaymentResource extends ComboPaymentResource {
         return ObjectType.PAYMENT;
     }
 
-    private Response completeTransactionInternalWithoutPayment(final PaymentTransactionJson json,
-                                                               @Nullable final String paymentIdStr,
+    private void completeTransactionInternalWithoutPayment(final PaymentTransactionJson json,
+                                                               @Nullable final UUID paymentId,
                                                                final List<String> paymentControlPluginNames,
                                                                final Iterable<String> pluginPropertiesString,
                                                                final String createdBy,
@@ -919,9 +959,9 @@ public class PaymentResource extends ComboPaymentResource {
         final Iterable<PluginProperty> pluginProperties = Iterables.concat(pluginPropertiesFromQuery, pluginPropertiesFromBody);
 
         final CallContext callContextNoAccountId = context.createCallContextNoAccountId(createdBy, reason, comment, request);
-        final Payment initialPayment = getPaymentByIdOrKey(paymentIdStr, json == null ? null : json.getPaymentExternalKey(), pluginProperties, callContextNoAccountId);
+        final Payment initialPayment = getPaymentByIdOrKey(paymentId, json == null ? null : json.getPaymentExternalKey(), pluginProperties, callContextNoAccountId);
 
-        return completeTransactionInternal(json, initialPayment, paymentControlPluginNames, pluginProperties, callContextNoAccountId, createdBy, reason, comment, uriInfo, request);
+        completeTransactionInternal(json, initialPayment, paymentControlPluginNames, pluginProperties, callContextNoAccountId, createdBy, reason, comment, uriInfo, request);
     }
 
 }

@@ -27,6 +27,7 @@ import org.joda.time.DateTime;
 import org.killbill.billing.events.PaymentInternalEvent;
 import org.killbill.billing.payment.core.PaymentExecutors;
 import org.killbill.billing.payment.glue.DefaultPaymentService;
+import org.killbill.billing.platform.api.KillbillService.KILLBILL_SERVICES;
 import org.killbill.billing.util.config.definition.PaymentConfig;
 import org.killbill.commons.locker.GlobalLocker;
 import org.killbill.notificationq.api.NotificationEvent;
@@ -74,7 +75,7 @@ public class Janitor {
     }
 
     public void initialize() throws NotificationQueueAlreadyExists {
-        janitorQueue = notificationQueueService.createNotificationQueue(DefaultPaymentService.SERVICE_NAME,
+        janitorQueue = notificationQueueService.createNotificationQueue(KILLBILL_SERVICES.PAYMENT_SERVICE.getServiceName(),
                                                                         QUEUE_NAME,
                                                                         new NotificationQueueHandler() {
                                                                             @Override
@@ -140,7 +141,7 @@ public class Janitor {
 
             if (janitorQueue != null) {
                 janitorQueue.stopQueue();
-                notificationQueueService.deleteNotificationQueue(DefaultPaymentService.SERVICE_NAME, QUEUE_NAME);
+                notificationQueueService.deleteNotificationQueue(KILLBILL_SERVICES.PAYMENT_SERVICE.getServiceName(), QUEUE_NAME);
             }
         } catch (final InterruptedException e) {
             Thread.currentThread().interrupt();

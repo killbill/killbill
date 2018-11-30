@@ -21,20 +21,25 @@ import java.util.List;
 
 import javax.annotation.Nullable;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonProperty;
+import org.killbill.billing.payment.api.TransactionType;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import io.swagger.annotations.ApiModel;
+
+@ApiModel(value="ComboPaymentTransaction", parent = ComboPaymentJson.class)
 public class ComboPaymentTransactionJson extends ComboPaymentJson {
 
     private final PaymentTransactionJson transaction;
-    private final Iterable<PluginPropertyJson> transactionPluginProperties;
+    private final List<PluginPropertyJson> transactionPluginProperties;
 
     @JsonCreator
     public ComboPaymentTransactionJson(@JsonProperty("account") final AccountJson account,
                                        @JsonProperty("paymentMethod") final PaymentMethodJson paymentMethod,
                                        @JsonProperty("transaction") final PaymentTransactionJson transaction,
-                                       @JsonProperty("paymentMethodPluginProperties") final Iterable<PluginPropertyJson> paymentMethodPluginProperties,
-                                       @JsonProperty("transactionPluginProperties") final Iterable<PluginPropertyJson> transactionPluginProperties,
+                                       @JsonProperty("paymentMethodPluginProperties") final List<PluginPropertyJson> paymentMethodPluginProperties,
+                                       @JsonProperty("transactionPluginProperties") final List<PluginPropertyJson> transactionPluginProperties,
                                        @JsonProperty("auditLogs") @Nullable final List<AuditLogJson> auditLogs) {
         super(account, paymentMethod, paymentMethodPluginProperties, auditLogs);
         this.transaction = transaction;
@@ -45,15 +50,15 @@ public class ComboPaymentTransactionJson extends ComboPaymentJson {
         return transaction;
     }
 
-    public String getTransactionType() {
+    @JsonIgnore
+    public TransactionType getTransactionType() {
         if (transaction != null) {
             return transaction.getTransactionType();
         }
-
         return null;
     }
 
-    public Iterable<PluginPropertyJson> getTransactionPluginProperties() {
+    public List<PluginPropertyJson> getTransactionPluginProperties() {
         return transactionPluginProperties;
     }
 

@@ -16,18 +16,26 @@
 
 package org.killbill.billing.callcontext;
 
+import java.io.Externalizable;
+import java.io.IOException;
+import java.io.ObjectInput;
+import java.io.ObjectOutput;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
-
+import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.CallOrigin;
 import org.killbill.billing.util.callcontext.UserType;
 import org.killbill.clock.Clock;
 
-public class DefaultCallContext extends CallContextBase {
+public class DefaultCallContext extends CallContextBase implements Externalizable {
 
-    private final DateTime createdDate;
-    private final DateTime updateDate;
+    private DateTime createdDate;
+    private DateTime updateDate;
+
+    // For deserialization
+    public DefaultCallContext() {
+    }
 
     public DefaultCallContext(final UUID accountId, final UUID tenantId, final String userName, final CallOrigin callOrigin, final UserType userType,
                               final UUID userToken, final Clock clock) {
@@ -56,6 +64,13 @@ public class DefaultCallContext extends CallContextBase {
         super(accountId, tenantId, userName, callOrigin, userType, reasonCode, comment, userToken);
         this.createdDate = createdDate;
         this.updateDate = updatedDate;
+    }
+
+    // For testing
+    public DefaultCallContext(final CallContext callContext) {
+        super(callContext.getAccountId(), callContext.getTenantId(), callContext.getUserName(), callContext.getCallOrigin(), callContext.getUserType(), callContext.getReasonCode(), callContext.getComments(),  callContext.getUserToken());
+        this.createdDate = callContext.getCreatedDate();
+        this.updateDate = callContext.getUpdatedDate();
     }
 
     @Override
@@ -139,5 +154,19 @@ public class DefaultCallContext extends CallContextBase {
         result = 31 * result + (comments != null ? comments.hashCode() : 0);
         result = 31 * result + (createdDate != null ? createdDate.hashCode() : 0);
         return result;
+    }
+
+    @Override
+    public void writeExternal(final ObjectOutput out) throws IOException {
+        super.writeExternal(out);
+        out.writeUTF(createdDate.toString());
+        out.writeUTF(updateDate.toString());
+    }
+
+    @Override
+    public void readExternal(final ObjectInput in) throws IOException, ClassNotFoundException {
+        super.readExternal(in);
+        this.createdDate = new DateTime(in.readUTF());
+        this.updateDate = new DateTime(in.readUTF());
     }
 }

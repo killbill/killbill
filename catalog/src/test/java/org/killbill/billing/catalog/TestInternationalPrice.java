@@ -35,7 +35,7 @@ public class TestInternationalPrice extends CatalogTestSuiteNoDB {
         c.setSupportedCurrencies(new Currency[]{Currency.GBP, Currency.EUR, Currency.USD, Currency.BRL, Currency.MXN});
         final DefaultInternationalPrice p0 = new MockInternationalPrice();
         p0.setPrices(new DefaultPrice[0]);
-        p0.initialize(c, new URI("foo:bar"));
+        p0.initialize(c);
         final DefaultInternationalPrice p1 = new MockInternationalPrice();
         p1.setPrices(new DefaultPrice[]{
                 new DefaultPrice().setCurrency(Currency.GBP).setValue(new BigDecimal(1)),
@@ -44,7 +44,7 @@ public class TestInternationalPrice extends CatalogTestSuiteNoDB {
                 new DefaultPrice().setCurrency(Currency.BRL).setValue(new BigDecimal(1)),
                 new DefaultPrice().setCurrency(Currency.MXN).setValue(new BigDecimal(1)),
         });
-        p1.initialize(c, new URI("foo:bar"));
+        p1.initialize(c);
 
         Assert.assertEquals(p0.getPrice(Currency.GBP), new BigDecimal(0));
         Assert.assertEquals(p0.getPrice(Currency.EUR), new BigDecimal(0));
@@ -65,7 +65,7 @@ public class TestInternationalPrice extends CatalogTestSuiteNoDB {
         c.setSupportedCurrencies(new Currency[]{Currency.GBP, Currency.EUR, Currency.USD, Currency.BRL, Currency.MXN});
         ((DefaultInternationalPrice) c.getCurrentPlans().iterator().next().getFinalPhase().getRecurring().getRecurringPrice()).setPrices(new DefaultPrice[0]);
         c.setUnits(new DefaultUnit[0]);
-        c.initialize(c, new URI("foo://bar"));
+        c.initialize(c);
         Assert.assertEquals(c.getCurrentPlans().iterator().next().getFinalPhase().getRecurring().getRecurringPrice().getPrice(Currency.GBP), new BigDecimal(0));
     }
 

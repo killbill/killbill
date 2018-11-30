@@ -1,6 +1,6 @@
 /*
- * Copyright 2014-2015 Groupon, Inc
- * Copyright 2014-2015 The Billing Project, LLC
+ * Copyright 2014-2018 Groupon, Inc
+ * Copyright 2014-2018 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -17,7 +17,10 @@
 
 package org.killbill.billing.catalog;
 
-import java.net.URI;
+import java.io.Externalizable;
+import java.io.IOException;
+import java.io.ObjectInput;
+import java.io.ObjectOutput;
 import java.util.Arrays;
 
 import javax.xml.bind.annotation.XmlAccessType;
@@ -41,10 +44,8 @@ import org.killbill.xmlloader.ValidationErrors;
 import com.google.common.base.Predicate;
 import com.google.common.collect.Iterables;
 
-
-
 @XmlAccessorType(XmlAccessType.NONE)
-public class DefaultTier extends ValidatingConfig<StandaloneCatalog> implements Tier {
+public class DefaultTier extends ValidatingConfig<StandaloneCatalog> implements Tier, Externalizable {
 
     @XmlElementWrapper(name = "limits", required = false)
     @XmlElement(name = "limit", required = false)
@@ -67,17 +68,16 @@ public class DefaultTier extends ValidatingConfig<StandaloneCatalog> implements 
     private UsageType usageType;
     private PlanPhase phase;
 
+    // Required for deserialization
     public DefaultTier() {
-        limits = new DefaultLimit[0];
-        blocks = new DefaultTieredBlock[0];
     }
 
     public DefaultTier(Tier in, TierPriceOverride override, Currency currency) {
-        this.limits = (DefaultLimit[])in.getLimits();
+        this.limits = (DefaultLimit[]) in.getLimits();
         this.blocks = new DefaultTieredBlock[in.getTieredBlocks().length];
 
         for (int i = 0; i < in.getTieredBlocks().length; i++) {
-            if(override != null && override.getTieredBlockPriceOverrides() != null) {
+            if (override != null && override.getTieredBlockPriceOverrides() != null) {
                 final TieredBlock curTieredBlock = in.getTieredBlocks()[i];
                 final TieredBlockPriceOverride overriddenTierBlock = Iterables.tryFind(override.getTieredBlockPriceOverrides(), new Predicate<TieredBlockPriceOverride>() {
                     @Override
@@ -89,9 +89,8 @@ public class DefaultTier extends ValidatingConfig<StandaloneCatalog> implements 
 
                 }).orNull();
                 blocks[i] = (overriddenTierBlock != null) ? new DefaultTieredBlock(in.getTieredBlocks()[i], overriddenTierBlock, currency) :
-                        (DefaultTieredBlock) in.getTieredBlocks()[i];
-            }
-            else {
+                            (DefaultTieredBlock) in.getTieredBlocks()[i];
+            } else {
                 blocks[i] = (DefaultTieredBlock) in.getTieredBlocks()[i];
             }
         }
@@ -154,29 +153,27 @@ public class DefaultTier extends ValidatingConfig<StandaloneCatalog> implements 
     public ValidationErrors validate(final StandaloneCatalog catalog, final ValidationErrors errors) {
         if (billingMode == BillingMode.IN_ARREAR && usageType == UsageType.CAPACITY && limits.length == 0) {
             errors.add(new ValidationError(String.format("Usage [IN_ARREAR CAPACITY] section of phase %s needs to define some limits",
-                                                         phase.getName()), catalog.getCatalogURI(), DefaultUsage.class, ""));
+                                                         phase.getName()), DefaultUsage.class, ""));
         }
         if (billingMode == BillingMode.IN_ARREAR && usageType == UsageType.CONSUMABLE && blocks.length == 0) {
             errors.add(new ValidationError(String.format("Usage [IN_ARREAR CONSUMABLE] section of phase %s needs to define some blocks",
-                                                         phase.getName()), catalog.getCatalogURI(), DefaultUsage.class, ""));
+                                                         phase.getName()), DefaultUsage.class, ""));
         }
         validateCollection(catalog, errors, limits);
         return errors;
     }
 
     @Override
-    public void initialize(final StandaloneCatalog catalog, final URI sourceURI) {
-        super.initialize(catalog, sourceURI);
+    public void initialize(final StandaloneCatalog catalog) {
+        super.initialize(catalog);
         CatalogSafetyInitializer.initializeNonRequiredNullFieldsWithDefaultValue(this);
         for (DefaultLimit cur : limits) {
-            cur.initialize(catalog, sourceURI);
+            cur.initialize(catalog);
         }
         for (DefaultBlock cur : blocks) {
-            cur.initialize(catalog, sourceURI);
+            cur.initialize(catalog);
         }
     }
-
-
 
     @Override
     public boolean equals(final Object o) {
@@ -221,5 +218,21 @@ public class DefaultTier extends ValidatingConfig<StandaloneCatalog> implements 
         result = 31 * result + (fixedPrice != null ? fixedPrice.hashCode() : 0);
         result = 31 * result + (recurringPrice != null ? recurringPrice.hashCode() : 0);
         return result;
+    }
+
+    @Override
+    public void writeExternal(final ObjectOutput out) throws IOException {
+        out.writeObject(limits);
+        out.writeObject(blocks);
+        out.writeObject(fixedPrice);
+        out.writeObject(recurringPrice);
+    }
+
+    @Override
+    public void readExternal(final ObjectInput in) throws IOException, ClassNotFoundException {
+        this.limits = (DefaultLimit[]) in.readObject();
+        this.blocks = (DefaultTieredBlock[]) in.readObject();
+        this.fixedPrice = (DefaultInternationalPrice) in.readObject();
+        this.recurringPrice = (DefaultInternationalPrice) in.readObject();
     }
 }

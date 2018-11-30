@@ -33,7 +33,6 @@ import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDate;
 import org.killbill.billing.account.api.Account;
-import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.catalog.DefaultPrice;
 import org.killbill.billing.catalog.MockInternationalPrice;
 import org.killbill.billing.catalog.MockPlan;
@@ -65,12 +64,10 @@ import org.killbill.billing.junction.BillingEventSet;
 import org.killbill.billing.mock.MockAccountBuilder;
 import org.killbill.billing.subscription.api.SubscriptionBase;
 import org.killbill.billing.subscription.api.SubscriptionBaseTransitionType;
-import org.killbill.billing.util.config.definition.InvoiceConfig;
 import org.killbill.billing.util.currency.KillBillMoney;
 import org.killbill.clock.Clock;
 import org.killbill.clock.DefaultClock;
 import org.mockito.Mockito;
-import org.skife.config.TimeSpan;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.BeforeClass;
@@ -108,6 +105,10 @@ public class TestDefaultInvoiceGenerator extends InvoiceTestSuiteNoDB {
 
     @BeforeClass(groups = "fast")
     protected void beforeClass() throws Exception {
+        if (hasFailed()) {
+            return;
+        }
+
         super.beforeClass();
         final Clock clock = new DefaultClock();
         this.account = new MockAccountBuilder().name(UUID.randomUUID().toString().substring(1, 8))
@@ -115,7 +116,6 @@ public class TestDefaultInvoiceGenerator extends InvoiceTestSuiteNoDB {
                                                .email(UUID.randomUUID().toString().substring(1, 8))
                                                .phone(UUID.randomUUID().toString().substring(1, 8))
                                                .migrated(false)
-                                               .isNotifiedForInvoices(true)
                                                .externalKey(UUID.randomUUID().toString().substring(1, 8))
                                                .billingCycleDayLocal(31)
                                                .currency(Currency.USD)
@@ -917,7 +917,7 @@ public class TestDefaultInvoiceGenerator extends InvoiceTestSuiteNoDB {
         final LocalDate startDate = new LocalDate(2013, 06, 15);
         final LocalDate endDate = new LocalDate(2013, 07, 15);
         final InvoiceItem recurringInvoiceItem = new RecurringInvoiceItem(existingInvoice.getId(), accountId, subscription.getBundleId(),
-                                                                          subscription.getId(), plan.getName(), phase.getName(),
+                                                                          subscription.getId(), null, plan.getName(), phase.getName(),
                                                                           startDate, endDate, recurringPrice.getPrice(currency),
                                                                           recurringPrice.getPrice(currency), Currency.USD);
         existingInvoice.addInvoiceItem(recurringInvoiceItem);

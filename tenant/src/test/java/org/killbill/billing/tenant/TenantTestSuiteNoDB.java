@@ -28,7 +28,11 @@ public class TenantTestSuiteNoDB extends GuicyKillbillTestSuiteNoDB {
 
     @BeforeClass(groups = "fast")
     protected void beforeClass() throws Exception {
-        final Injector injector = Guice.createInjector(new TestTenantModuleNoDB(configSource));
+        if (hasFailed()) {
+            return;
+        }
+
+        final Injector injector = Guice.createInjector(new TestTenantModuleNoDB(configSource, clock));
         injector.injectMembers(this);
     }
 }

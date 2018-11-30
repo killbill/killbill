@@ -52,13 +52,13 @@ public class TestDefaultPriceOverride extends CatalogTestSuiteWithEmbeddedDB {
     public void testBasic() throws Exception {
 
         final StandaloneCatalog catalog = XMLLoader.getObjectFromString(Resources.getResource("SpyCarAdvanced.xml").toExternalForm(), StandaloneCatalog.class);
-        catalog.initialize(catalog, null);
+        catalog.initialize(catalog);
         final Plan plan = catalog.findCurrentPlan("discount-standard-monthly");
 
         final List<PlanPhasePriceOverride> overrides = new ArrayList<PlanPhasePriceOverride>();
-        final PlanPhasePriceOverride phase1 = new DefaultPlanPhasePriceOverride(plan.getAllPhases()[0].getName(), Currency.USD, BigDecimal.ONE, null,null);
+        final PlanPhasePriceOverride phase1 = new DefaultPlanPhasePriceOverride(plan.getAllPhases()[0].getName(), Currency.USD, BigDecimal.ONE, null, null);
         overrides.add(phase1);
-        final PlanPhasePriceOverride phase3 = new DefaultPlanPhasePriceOverride(plan.getAllPhases()[2].getName(), Currency.USD, null, new BigDecimal("142.41"),null);
+        final PlanPhasePriceOverride phase3 = new DefaultPlanPhasePriceOverride(plan.getAllPhases()[2].getName(), Currency.USD, null, new BigDecimal("142.41"), null);
         overrides.add(phase3);
 
         final DefaultPlan overriddenPlan = priceOverride.getOrCreateOverriddenPlan(catalog, plan, new DateTime(catalog.getEffectiveDate()), overrides, internalCallContext);
@@ -106,12 +106,12 @@ public class TestDefaultPriceOverride extends CatalogTestSuiteWithEmbeddedDB {
     public void testWithInvalidPriceOverride() throws Exception {
 
         final StandaloneCatalog catalog = XMLLoader.getObjectFromString(Resources.getResource("SpyCarAdvanced.xml").toExternalForm(), StandaloneCatalog.class);
-        catalog.initialize(catalog, null);
+        catalog.initialize(catalog);
 
         final Plan plan = catalog.findCurrentPlan("discount-standard-monthly");
 
         final List<PlanPhasePriceOverride> overrides = new ArrayList<PlanPhasePriceOverride>();
-        final PlanPhasePriceOverride phase1 = new DefaultPlanPhasePriceOverride(plan.getAllPhases()[0].getName(), Currency.USD, null, BigDecimal.ONE,null);
+        final PlanPhasePriceOverride phase1 = new DefaultPlanPhasePriceOverride(plan.getAllPhases()[0].getName(), Currency.USD, null, BigDecimal.ONE, null);
         overrides.add(phase1);
 
         priceOverride.getOrCreateOverriddenPlan(catalog, plan, new DateTime(catalog.getEffectiveDate()), overrides, internalCallContext);
@@ -122,14 +122,14 @@ public class TestDefaultPriceOverride extends CatalogTestSuiteWithEmbeddedDB {
     public void testGetOverriddenPlan() throws Exception {
 
         final StandaloneCatalog catalog = XMLLoader.getObjectFromString(Resources.getResource("SpyCarAdvanced.xml").toExternalForm(), StandaloneCatalog.class);
-        catalog.initialize(catalog, null);
+        catalog.initialize(catalog);
 
         final Plan plan = catalog.findCurrentPlan("discount-standard-monthly");
 
         final List<PlanPhasePriceOverride> overrides = new ArrayList<PlanPhasePriceOverride>();
         final PlanPhasePriceOverride phase1 = new DefaultPlanPhasePriceOverride(plan.getAllPhases()[0].getName(), Currency.USD, BigDecimal.ONE, null, null);
         overrides.add(phase1);
-        final PlanPhasePriceOverride phase3 = new DefaultPlanPhasePriceOverride(plan.getAllPhases()[2].getName(), Currency.USD, null, new BigDecimal("142.41"),null);
+        final PlanPhasePriceOverride phase3 = new DefaultPlanPhasePriceOverride(plan.getAllPhases()[2].getName(), Currency.USD, null, new BigDecimal("142.41"), null);
         overrides.add(phase3);
 
         final DefaultPlan overriddenPlanCreated = priceOverride.getOrCreateOverriddenPlan(catalog, plan, new DateTime(catalog.getEffectiveDate()), overrides, internalCallContext);
@@ -160,7 +160,7 @@ public class TestDefaultPriceOverride extends CatalogTestSuiteWithEmbeddedDB {
             }).orNull();
 
             assertNotEquals(newPhase.getName(), initialPhase.getName());
-            assertEquals(newPhase.getName(), overriddenPlan.getName() + "-" +  initialPhase.getName().split("-")[initialPhase.getName().split("-").length -1]);
+            assertEquals(newPhase.getName(), overriddenPlan.getName() + "-" + initialPhase.getName().split("-")[initialPhase.getName().split("-").length - 1]);
             assertEquals(newPhase.getDuration(), initialPhase.getDuration());
             assertEquals(newPhase.getPhaseType(), initialPhase.getPhaseType());
             assertEquals(newPhase.getUsages().length, initialPhase.getUsages().length);
@@ -215,7 +215,7 @@ public class TestDefaultPriceOverride extends CatalogTestSuiteWithEmbeddedDB {
         final List<UsagePriceOverride> usagePriceOverrides = new ArrayList<UsagePriceOverride>();
         usagePriceOverrides.add(new DefaultUsagePriceOverride("chocolate-monthly-videos", UsageType.CONSUMABLE, tierPriceOverrides));
 
-        final PlanPhasePriceOverride phase = new DefaultPlanPhasePriceOverride(plan.getFinalPhase().getName(),Currency.USD, null, null, usagePriceOverrides);
+        final PlanPhasePriceOverride phase = new DefaultPlanPhasePriceOverride(plan.getFinalPhase().getName(), Currency.USD, null, null, usagePriceOverrides);
         overrides.add(phase);
 
         //Overriding only the tieredblockprice for unit - 'chocolate-videos' with size = 1 and max = 10000 from $1 to $0.75
@@ -232,7 +232,7 @@ public class TestDefaultPriceOverride extends CatalogTestSuiteWithEmbeddedDB {
         }
         assertNotEquals(overriddenPlan.getFinalPhase().getName(), plan.getFinalPhase().getName());
 
-        for(int i = 0 ; i < overriddenPlan.getFinalPhase().getUsages().length; i++) {
+        for (int i = 0; i < overriddenPlan.getFinalPhase().getUsages().length; i++) {
             final DefaultUsage initialUsage = (DefaultUsage) plan.getFinalPhase().getUsages()[i];
             final DefaultUsage newUsage = (DefaultUsage) overriddenPlan.getFinalPhase().getUsages()[i];
 
@@ -242,12 +242,12 @@ public class TestDefaultPriceOverride extends CatalogTestSuiteWithEmbeddedDB {
             assertEquals(newUsage.getBillingPeriod(), initialUsage.getBillingPeriod());
             assertEquals(newUsage.getTiers().length, initialUsage.getTiers().length);
 
-            for(int j = 0 ; j < newUsage.getTiers().length; j++){
+            for (int j = 0; j < newUsage.getTiers().length; j++) {
                 final DefaultTier initialTier = (DefaultTier) initialUsage.getTiers()[j];
                 final DefaultTier newTier = (DefaultTier) newUsage.getTiers()[j];
                 assertEquals(newTier.getTieredBlocks().length, initialTier.getTieredBlocks().length);
 
-                for(int k = 0; k < newTier.getTieredBlocks().length; k++){
+                for (int k = 0; k < newTier.getTieredBlocks().length; k++) {
                     final DefaultTieredBlock initialTieredBlock = (DefaultTieredBlock) initialTier.getTieredBlocks()[k];
                     final DefaultTieredBlock newTieredBlock = (DefaultTieredBlock) newTier.getTieredBlocks()[k];
                     final TieredBlockPriceOverride override = Iterables.tryFind(tieredBlockPriceOverrides, new Predicate<TieredBlockPriceOverride>() {
@@ -255,13 +255,13 @@ public class TestDefaultPriceOverride extends CatalogTestSuiteWithEmbeddedDB {
                         public boolean apply(final TieredBlockPriceOverride input) {
 
                             return input.getUnitName().equals(initialTieredBlock.getUnit().getName()) &&
-                                    Double.compare(input.getSize(), initialTieredBlock.getSize()) == 0 &&
-                                    Double.compare(input.getMax(), initialTieredBlock.getMax()) == 0;
+                                   Double.compare(input.getSize(), initialTieredBlock.getSize()) == 0 &&
+                                   Double.compare(input.getMax(), initialTieredBlock.getMax()) == 0;
                         }
                     }).orNull();
 
                     assertEquals(newTieredBlock.getUnit().getName(), initialTieredBlock.getUnit().getName());
-                    assertEquals(newTieredBlock.getMax(),initialTieredBlock.getMax());
+                    assertEquals(newTieredBlock.getMax(), initialTieredBlock.getMax());
                     assertEquals(newTieredBlock.getSize(), initialTieredBlock.getSize());
                     assertTieredBlockInternationalPrice(newTieredBlock.getPrice(), initialTieredBlock.getPrice(), override);
                 }
@@ -290,7 +290,7 @@ public class TestDefaultPriceOverride extends CatalogTestSuiteWithEmbeddedDB {
         final List<UsagePriceOverride> usagePriceOverrides = new ArrayList<UsagePriceOverride>();
         usagePriceOverrides.add(new DefaultUsagePriceOverride("chocolate-monthly-videos", UsageType.CONSUMABLE, tierPriceOverrides));
 
-        final PlanPhasePriceOverride phase = new DefaultPlanPhasePriceOverride(plan.getFinalPhase().getName(),Currency.USD, null, new BigDecimal("35"), usagePriceOverrides);
+        final PlanPhasePriceOverride phase = new DefaultPlanPhasePriceOverride(plan.getFinalPhase().getName(), Currency.USD, null, new BigDecimal("35"), usagePriceOverrides);
         overrides.add(phase);
 
         /* Overriding phase recurring price from $30 to $35, tieredblockprice from $2 to $1.5 for unit- 'chocolate-videos' with size = 1 and max = 5 and
@@ -319,7 +319,7 @@ public class TestDefaultPriceOverride extends CatalogTestSuiteWithEmbeddedDB {
         }).orNull();
 
         assertNotEquals(newPhase.getName(), initialPhase.getName());
-        assertEquals(newPhase.getName(), overriddenPlan.getName() + "-" +  initialPhase.getName().split("-")[initialPhase.getName().split("-").length -1]);
+        assertEquals(newPhase.getName(), overriddenPlan.getName() + "-" + initialPhase.getName().split("-")[initialPhase.getName().split("-").length - 1]);
         assertEquals(newPhase.getDuration(), initialPhase.getDuration());
         assertEquals(newPhase.getPhaseType(), initialPhase.getPhaseType());
         assertEquals(newPhase.getUsages().length, initialPhase.getUsages().length);
@@ -331,7 +331,7 @@ public class TestDefaultPriceOverride extends CatalogTestSuiteWithEmbeddedDB {
             assertInternationalPrice(newPhase.getRecurring().getRecurringPrice(), initialPhase.getRecurring().getRecurringPrice(), override, false);
         }
 
-        for(int i = 0 ; i < overriddenPlan.getFinalPhase().getUsages().length; i++) {
+        for (int i = 0; i < overriddenPlan.getFinalPhase().getUsages().length; i++) {
             final DefaultUsage initialUsage = (DefaultUsage) plan.getFinalPhase().getUsages()[i];
             final DefaultUsage newUsage = (DefaultUsage) overriddenPlan.getFinalPhase().getUsages()[i];
 
@@ -341,12 +341,12 @@ public class TestDefaultPriceOverride extends CatalogTestSuiteWithEmbeddedDB {
             assertEquals(newUsage.getBillingPeriod(), initialUsage.getBillingPeriod());
             assertEquals(newUsage.getTiers().length, initialUsage.getTiers().length);
 
-            for(int j = 0 ; j < newUsage.getTiers().length; j++){
+            for (int j = 0; j < newUsage.getTiers().length; j++) {
                 final DefaultTier initialTier = (DefaultTier) initialUsage.getTiers()[j];
                 final DefaultTier newTier = (DefaultTier) newUsage.getTiers()[j];
                 assertEquals(newTier.getTieredBlocks().length, initialTier.getTieredBlocks().length);
 
-                for(int k = 0; k < newTier.getTieredBlocks().length; k++){
+                for (int k = 0; k < newTier.getTieredBlocks().length; k++) {
                     final DefaultTieredBlock initialTieredBlock = (DefaultTieredBlock) initialTier.getTieredBlocks()[k];
                     final DefaultTieredBlock newTieredBlock = (DefaultTieredBlock) newTier.getTieredBlocks()[k];
                     List<TieredBlockPriceOverride> tieredBlockPriceOverrides = new ArrayList<TieredBlockPriceOverride>();
@@ -357,13 +357,13 @@ public class TestDefaultPriceOverride extends CatalogTestSuiteWithEmbeddedDB {
                         public boolean apply(final TieredBlockPriceOverride input) {
 
                             return input.getUnitName().equals(initialTieredBlock.getUnit().getName()) &&
-                                    Double.compare(input.getSize(), initialTieredBlock.getSize()) == 0 &&
-                                    Double.compare(input.getMax(), initialTieredBlock.getMax()) == 0;
+                                   Double.compare(input.getSize(), initialTieredBlock.getSize()) == 0 &&
+                                   Double.compare(input.getMax(), initialTieredBlock.getMax()) == 0;
                         }
                     }).orNull();
 
                     assertEquals(newTieredBlock.getUnit().getName(), initialTieredBlock.getUnit().getName());
-                    assertEquals(newTieredBlock.getMax(),initialTieredBlock.getMax());
+                    assertEquals(newTieredBlock.getMax(), initialTieredBlock.getMax());
                     assertEquals(newTieredBlock.getSize(), initialTieredBlock.getSize());
                     assertTieredBlockInternationalPrice(newTieredBlock.getPrice(), initialTieredBlock.getPrice(), tieredBlockPriceOverride);
                 }

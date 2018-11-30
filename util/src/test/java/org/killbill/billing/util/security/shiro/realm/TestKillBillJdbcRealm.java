@@ -50,6 +50,10 @@ public class TestKillBillJdbcRealm extends UtilTestSuiteWithEmbeddedDB {
     @Override
     @BeforeMethod(groups = "slow")
     public void beforeMethod() throws Exception {
+        if (hasFailed()) {
+            return;
+        }
+
         super.beforeMethod();
         final KillBillJdbcRealm realm = new KillBillJdbcRealm(helper.getDataSource(), securityConfig);
         securityManager = new DefaultSecurityManager(realm);
@@ -58,14 +62,16 @@ public class TestKillBillJdbcRealm extends UtilTestSuiteWithEmbeddedDB {
 
     @AfterMethod(groups = "slow")
     public void afterMethod() throws Exception {
+        if (hasFailed()) {
+            return;
+        }
+
         super.afterMethod();
         ThreadContext.unbindSecurityManager();
-
     }
 
     @Test(groups = "slow")
     public void testAuthentication() throws SecurityApiException {
-
         final String username = "toto";
         final String password = "supperCompli43cated";
 

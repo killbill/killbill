@@ -58,10 +58,12 @@ import org.killbill.billing.lifecycle.glue.BusModule;
 import org.killbill.billing.notification.plugin.api.BlockingStateMetadata;
 import org.killbill.billing.notification.plugin.api.BroadcastMetadata;
 import org.killbill.billing.notification.plugin.api.ExtBusEventType;
+import org.killbill.billing.notification.plugin.api.InvoiceNotificationMetadata;
 import org.killbill.billing.notification.plugin.api.InvoicePaymentMetadata;
 import org.killbill.billing.notification.plugin.api.PaymentMetadata;
 import org.killbill.billing.notification.plugin.api.SubscriptionMetadata;
 import org.killbill.billing.notification.plugin.api.SubscriptionMetadata.ActionType;
+import org.killbill.billing.platform.api.KillbillService.KILLBILL_SERVICES;
 import org.killbill.billing.subscription.api.SubscriptionBaseTransitionType;
 import org.killbill.billing.util.callcontext.CallOrigin;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
@@ -106,6 +108,7 @@ public class BeatrixListener {
         try {
             final BusEvent externalEvent = computeExtBusEventEntryFromBusInternalEvent(event, internalContext);
             if (externalEvent != null) {
+                log.info("Sending extBusEvent='{}' from busEvent='{}'", externalEvent, event);
                 externalBus.post(externalEvent);
             }
         } catch (final EventBusException e) {
@@ -178,7 +181,7 @@ public class BeatrixListener {
                 }
                 objectId = realEventBS.getBlockableId();
 
-                if (EntitlementService.ENTITLEMENT_SERVICE_NAME.equals(realEventBS.getService())) {
+                if (KILLBILL_SERVICES.ENTITLEMENT_SERVICE.getServiceName().equals(realEventBS.getService())) {
                     if (DefaultEntitlementApi.ENT_STATE_START.equals(realEventBS.getStateName())) {
                         eventBusType = ExtBusEventType.ENTITLEMENT_CREATION;
                     } else if (DefaultEntitlementApi.ENT_STATE_BLOCKED.equals(realEventBS.getStateName())) {
@@ -191,10 +194,10 @@ public class BeatrixListener {
                 } else {
                     eventBusType = ExtBusEventType.BLOCKING_STATE;
 
-                    final BlockingStateMetadata metaDataObj = new BlockingStateMetadata(realEventBS.getBlockableId(), realEventBS.getService(), realEventBS.getStateName(), realEventBS.getBlockingType(), realEventBS.getEffectiveDate(),
+                    final BlockingStateMetadata blockingStateMetadata = new BlockingStateMetadata(realEventBS.getBlockableId(), realEventBS.getService(), realEventBS.getStateName(), realEventBS.getBlockingType(), realEventBS.getEffectiveDate(),
                                                                                         realEventBS.isTransitionedToBlockedBilling(), realEventBS.isTransitionedToUnblockedBilling(),
                                                                                         realEventBS.isTransitionedToBlockedEntitlement(), realEventBS.isTransitionedToUnblockedEntitlement());
-                    metaData = objectMapper.writeValueAsString(metaDataObj);
+                    metaData = objectMapper.writeValueAsString(blockingStateMetadata);
                 }
                 break;
 
@@ -211,6 +214,11 @@ public class BeatrixListener {
                 objectId = null;
                 accountId = realEventInvNotification.getAccountId(); // has to be set here because objectId is null with a dryRun Invoice
                 eventBusType = ExtBusEventType.INVOICE_NOTIFICATION;
+
+                final InvoiceNotificationMetadata invoiceNotificationMetadata = new InvoiceNotificationMetadata(realEventInvNotification.getTargetDate(),
+                                                                                                realEventInvNotification.getAmountOwed(),
+                                                                                                realEventInvNotification.getCurrency());
+                metaData = objectMapper.writeValueAsString(invoiceNotificationMetadata);
                 break;
 
 
@@ -337,8 +345,8 @@ public class BeatrixListener {
                 objectType = ObjectType.SERVICE_BROADCAST;
                 objectId = null;
                 eventBusType = ExtBusEventType.BROADCAST_SERVICE;
-                final BroadcastMetadata metaDataObj = new BroadcastMetadata(realBroadcastEvent.getServiceName(), realBroadcastEvent.getType(), realBroadcastEvent.getJsonEvent());
-                metaData = objectMapper.writeValueAsString(metaDataObj);
+                final BroadcastMetadata broadcastMetadata = new BroadcastMetadata(realBroadcastEvent.getServiceName(), realBroadcastEvent.getType(), realBroadcastEvent.getJsonEvent());
+                metaData = objectMapper.writeValueAsString(broadcastMetadata);
                 break;
 
             default:

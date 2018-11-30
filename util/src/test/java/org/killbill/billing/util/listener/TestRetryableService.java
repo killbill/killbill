@@ -1,6 +1,6 @@
 /*
- * Copyright 2014-2017 Groupon, Inc
- * Copyright 2014-2017 The Billing Project, LLC
+ * Copyright 2014-2018 Groupon, Inc
+ * Copyright 2014-2018 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -26,6 +26,7 @@ import org.joda.time.DateTime;
 import org.joda.time.Period;
 import org.killbill.billing.ObjectType;
 import org.killbill.billing.account.api.ImmutableAccountData;
+import org.killbill.billing.api.FlakyRetryAnalyzer;
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.events.BusInternalEvent;
 import org.killbill.billing.events.ControlTagCreationInternalEvent;
@@ -60,12 +61,20 @@ public class TestRetryableService extends UtilTestSuiteWithEmbeddedDB {
 
     @BeforeClass(groups = "slow")
     public void setUpClass() throws Exception {
+        if (hasFailed()) {
+            return;
+        }
+
         final ImmutableAccountData immutableAccountData = Mockito.mock(ImmutableAccountData.class);
         Mockito.when(immutableAccountInternalApi.getImmutableAccountDataByRecordId(Mockito.<Long>eq(internalCallContext.getAccountRecordId()), Mockito.<InternalTenantContext>any())).thenReturn(immutableAccountData);
     }
 
     @BeforeMethod(groups = "slow")
     public void setUp() throws Exception {
+        if (hasFailed()) {
+            return;
+        }
+
         event = new DefaultControlTagCreationEvent(UUID.randomUUID(),
                                                    UUID.randomUUID(),
                                                    ObjectType.ACCOUNT,
@@ -81,10 +90,15 @@ public class TestRetryableService extends UtilTestSuiteWithEmbeddedDB {
 
     @AfterMethod(groups = "slow")
     public void tearDown() throws Exception {
+        if (hasFailed()) {
+            return;
+        }
+
         testListener.stop();
     }
 
-    @Test(groups = "slow")
+    // Flaky, see https://github.com/killbill/killbill/issues/860
+    @Test(groups = "slow", retryAnalyzer = FlakyRetryAnalyzer.class)
     public void testFixUp() throws Exception {
         testListener.throwRetryableException = true;
 
@@ -114,7 +128,8 @@ public class TestRetryableService extends UtilTestSuiteWithEmbeddedDB {
         Assert.assertEquals(getFutureRetryableEvents().size(), 0);
     }
 
-    @Test(groups = "slow")
+    // Flaky, see https://github.com/killbill/killbill/issues/860
+    @Test(groups = "slow", retryAnalyzer = FlakyRetryAnalyzer.class)
     public void testGiveUp() throws Exception {
         testListener.throwRetryableException = true;
 

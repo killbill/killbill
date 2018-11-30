@@ -18,8 +18,10 @@
 
 package org.killbill.billing.util.security.shiro.dao;
 
-import org.killbill.commons.jdbi.template.KillBillSqlDaoStringTemplate;
+import java.util.List;
+
 import org.killbill.commons.jdbi.binder.SmartBindBean;
+import org.killbill.commons.jdbi.template.KillBillSqlDaoStringTemplate;
 import org.skife.jdbi.v2.sqlobject.Bind;
 import org.skife.jdbi.v2.sqlobject.SqlQuery;
 import org.skife.jdbi.v2.sqlobject.SqlUpdate;
@@ -40,4 +42,6 @@ public interface JDBCSessionSqlDao extends Transactional<JDBCSessionSqlDao> {
     @SqlUpdate
     public void delete(@SmartBindBean final SessionModelDao sessionModelDao);
 
+    @SqlQuery
+    public List<SessionModelDao> findOldActiveSessions();
 }

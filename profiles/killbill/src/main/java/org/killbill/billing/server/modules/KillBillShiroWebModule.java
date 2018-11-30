@@ -31,8 +31,10 @@ import org.apache.shiro.authc.pam.ModularRealmAuthenticatorWith540;
 import org.apache.shiro.authz.ModularRealmAuthorizer;
 import org.apache.shiro.cache.CacheManager;
 import org.apache.shiro.guice.web.ShiroWebModuleWith435;
+import org.apache.shiro.mgt.SubjectDAO;
 import org.apache.shiro.realm.Realm;
 import org.apache.shiro.session.mgt.SessionManager;
+import org.apache.shiro.session.mgt.eis.SessionDAO;
 import org.apache.shiro.web.filter.authc.BasicHttpAuthenticationFilter;
 import org.apache.shiro.web.mgt.DefaultWebSecurityManager;
 import org.apache.shiro.web.mgt.WebSecurityManager;
@@ -42,11 +44,12 @@ import org.killbill.billing.server.security.FirstSuccessfulStrategyWith540;
 import org.killbill.billing.server.security.KillBillWebSessionManager;
 import org.killbill.billing.server.security.KillbillJdbcTenantRealm;
 import org.killbill.billing.util.config.definition.RbacConfig;
+import org.killbill.billing.util.config.definition.RedisCacheConfig;
 import org.killbill.billing.util.glue.EhcacheShiroManagerProvider;
-import org.killbill.billing.util.glue.JDBCSessionDaoProvider;
 import org.killbill.billing.util.glue.KillBillShiroModule;
 import org.killbill.billing.util.glue.RealmsFromShiroIniProvider;
-import org.killbill.billing.util.security.shiro.dao.JDBCSessionDao;
+import org.killbill.billing.util.glue.RedisShiroManagerProvider;
+import org.killbill.billing.util.glue.SessionDAOProvider;
 import org.killbill.billing.util.security.shiro.realm.KillBillJdbcRealm;
 import org.killbill.billing.util.security.shiro.realm.KillBillJndiLdapRealm;
 import org.killbill.billing.util.security.shiro.realm.KillBillOktaRealm;
@@ -75,8 +78,19 @@ public class KillBillShiroWebModule extends ShiroWebModuleWith435 {
 
     @Override
     protected void configureShiroWeb() {
+        final RedisCacheConfig redisCacheConfig = new ConfigurationObjectFactory(new ConfigSource() {
+            @Override
+            public String getString(final String propertyName) {
+                return configSource.getString(propertyName);
+            }
+        }).build(RedisCacheConfig.class);
+
         // Magic provider to configure the cache manager
-        bind(CacheManager.class).toProvider(EhcacheShiroManagerProvider.class).asEagerSingleton();
+        if (redisCacheConfig.isRedisCachingEnabled()) {
+            bind(CacheManager.class).toProvider(RedisShiroManagerProvider.class).asEagerSingleton();
+        } else {
+            bind(CacheManager.class).toProvider(EhcacheShiroManagerProvider.class).asEagerSingleton();
+        }
 
         configureShiroForRBAC();
 
@@ -105,6 +119,7 @@ public class KillBillShiroWebModule extends ShiroWebModuleWith435 {
 
         if (KillBillShiroModule.isRBACEnabled()) {
             addFilterChain(JaxrsResource.PREFIX + "/**", Key.get(CorsBasicHttpAuthenticationFilter.class));
+            addFilterChain(JaxrsResource.PLUGINS_PATH + "/**", Key.get(CorsBasicHttpAuthenticationOptionalFilter.class));
         }
     }
 
@@ -120,11 +135,13 @@ public class KillBillShiroWebModule extends ShiroWebModuleWith435 {
         // The default session timeout is 30 minutes.
         bind.to(KillBillWebSessionManager.class).asEagerSingleton();
 
+        bind(SubjectDAO.class).toProvider(KillBillWebSubjectDAOProvider.class).asEagerSingleton();
+
         // Magic provider to configure the session DAO
-        bind(JDBCSessionDao.class).toProvider(JDBCSessionDaoProvider.class).asEagerSingleton();
+        bind(SessionDAO.class).toProvider(SessionDAOProvider.class).asEagerSingleton();
     }
 
-    public static final class CorsBasicHttpAuthenticationFilter extends BasicHttpAuthenticationFilter {
+    public static class CorsBasicHttpAuthenticationFilter extends BasicHttpAuthenticationFilter {
 
         @Override
         protected boolean isAccessAllowed(final ServletRequest request, final ServletResponse response, final Object mappedValue) {
@@ -133,6 +150,19 @@ public class KillBillShiroWebModule extends ShiroWebModuleWith435 {
             // Don't require any authorization or authentication header for OPTIONS requests
             // See https://bugzilla.mozilla.org/show_bug.cgi?id=778548 and http://www.kinvey.com/blog/60/kinvey-adds-cross-origin-resource-sharing-cors
             return "OPTIONS".equalsIgnoreCase(httpMethod) || super.isAccessAllowed(request, response, mappedValue);
+        }
+    }
+
+    public static final class CorsBasicHttpAuthenticationOptionalFilter extends CorsBasicHttpAuthenticationFilter {
+
+        protected boolean onAccessDenied(final ServletRequest request, final ServletResponse response) throws Exception {
+            if (isLoginAttempt(request, response)) {
+                // Attempt to log-in
+                executeLogin(request, response);
+            }
+
+            // Unlike the original method, we don't send a challenge on failure but simply allow the request to continue
+            return true;
         }
     }
 

@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014-2017 Groupon, Inc
- * Copyright 2014-2017 The Billing Project, LLC
+ * Copyright 2014-2018 Groupon, Inc
+ * Copyright 2014-2018 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -18,17 +18,11 @@
 
 package org.killbill.billing.account;
 
-import org.killbill.billing.account.api.ImmutableAccountInternalApi;
-import org.testng.annotations.AfterMethod;
-import org.testng.annotations.BeforeClass;
-import org.testng.annotations.BeforeMethod;
-
 import org.killbill.billing.GuicyKillbillTestSuiteNoDB;
 import org.killbill.billing.account.api.AccountUserApi;
+import org.killbill.billing.account.api.ImmutableAccountInternalApi;
 import org.killbill.billing.account.dao.AccountDao;
 import org.killbill.billing.account.glue.TestAccountModuleNoDB;
-import org.killbill.bus.api.PersistentBus;
-import org.killbill.clock.Clock;
 import org.killbill.billing.util.audit.dao.AuditDao;
 import org.killbill.billing.util.cache.CacheControllerDispatcher;
 import org.killbill.billing.util.customfield.dao.CustomFieldDao;
@@ -36,6 +30,10 @@ import org.killbill.billing.util.dao.NonEntityDao;
 import org.killbill.billing.util.tag.api.user.TagEventBuilder;
 import org.killbill.billing.util.tag.dao.TagDao;
 import org.killbill.billing.util.tag.dao.TagDefinitionDao;
+import org.killbill.bus.api.PersistentBus;
+import org.testng.annotations.AfterMethod;
+import org.testng.annotations.BeforeClass;
+import org.testng.annotations.BeforeMethod;
 
 import com.google.inject.Guice;
 import com.google.inject.Inject;
@@ -54,8 +52,6 @@ public abstract class AccountTestSuiteNoDB extends GuicyKillbillTestSuiteNoDB {
     @Inject
     protected CacheControllerDispatcher controllerDispatcher;
     @Inject
-    protected Clock clock;
-    @Inject
     protected CustomFieldDao customFieldDao;
     @Inject
     protected PersistentBus bus;
@@ -70,12 +66,20 @@ public abstract class AccountTestSuiteNoDB extends GuicyKillbillTestSuiteNoDB {
 
     @BeforeClass(groups = "fast")
     protected void beforeClass() throws Exception {
-        final Injector injector = Guice.createInjector(new TestAccountModuleNoDB(configSource));
+        if (hasFailed()) {
+            return;
+        }
+
+        final Injector injector = Guice.createInjector(new TestAccountModuleNoDB(configSource, clock));
         injector.injectMembers(this);
     }
 
     @BeforeMethod(groups = "fast")
     public void beforeMethod() throws Exception {
+        if (hasFailed()) {
+            return;
+        }
+
         bus.start();
     }
 

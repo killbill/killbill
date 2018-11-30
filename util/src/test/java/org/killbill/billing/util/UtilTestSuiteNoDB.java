@@ -75,17 +75,29 @@ public class UtilTestSuiteNoDB extends GuicyKillbillTestSuiteNoDB {
 
     @BeforeClass(groups = "fast")
     public void beforeClass() throws Exception {
-        final Injector g = Guice.createInjector(Stage.PRODUCTION, new TestUtilModuleNoDB(configSource));
+        if (hasFailed()) {
+            return;
+        }
+
+        final Injector g = Guice.createInjector(Stage.PRODUCTION, new TestUtilModuleNoDB(configSource, clock));
         g.injectMembers(this);
     }
 
     @BeforeMethod(groups = "fast")
     public void beforeMethod() throws Exception {
+        if (hasFailed()) {
+            return;
+        }
+
         eventBus.start();
     }
 
     @AfterMethod(groups = "fast")
     public void afterMethod() throws Exception {
+        if (hasFailed()) {
+            return;
+        }
+
         eventBus.stop();
         // Reset the security manager
         ThreadContext.unbindSecurityManager();

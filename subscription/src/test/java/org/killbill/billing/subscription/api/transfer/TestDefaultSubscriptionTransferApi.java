@@ -20,22 +20,15 @@ package org.killbill.billing.subscription.api.transfer;
 
 import java.util.List;
 import java.util.UUID;
-import java.util.regex.Matcher;
 
 import org.joda.time.DateTime;
-import org.killbill.billing.account.api.AccountInternalApi;
-import org.killbill.billing.catalog.api.CatalogInternalApi;
-import org.killbill.billing.catalog.api.DefaultCatalogInternalApi;
-import org.killbill.billing.catalog.override.DefaultPriceOverride;
-import org.mockito.Mockito;
-import org.testng.Assert;
-import org.testng.annotations.BeforeMethod;
-import org.testng.annotations.Test;
-
+import org.killbill.billing.catalog.DefaultVersionedCatalog;
 import org.killbill.billing.catalog.MockCatalog;
 import org.killbill.billing.catalog.MockCatalogService;
 import org.killbill.billing.catalog.api.BillingPeriod;
+import org.killbill.billing.catalog.api.CatalogInternalApi;
 import org.killbill.billing.catalog.api.CatalogService;
+import org.killbill.billing.catalog.api.DefaultCatalogInternalApi;
 import org.killbill.billing.catalog.api.PhaseType;
 import org.killbill.billing.catalog.api.PlanPhaseSpecifier;
 import org.killbill.billing.catalog.api.PriceListSet;
@@ -52,9 +45,10 @@ import org.killbill.billing.subscription.events.SubscriptionBaseEvent;
 import org.killbill.billing.subscription.events.SubscriptionBaseEvent.EventType;
 import org.killbill.billing.subscription.events.user.ApiEventTransfer;
 import org.killbill.billing.subscription.events.user.ApiEventType;
-import org.killbill.billing.util.cache.CacheControllerDispatcher;
-import org.killbill.billing.util.callcontext.InternalCallContextFactory;
-import org.killbill.billing.util.dao.NonEntityDao;
+import org.mockito.Mockito;
+import org.testng.Assert;
+import org.testng.annotations.BeforeMethod;
+import org.testng.annotations.Test;
 
 import com.google.common.collect.ImmutableList;
 
@@ -67,15 +61,17 @@ public class TestDefaultSubscriptionTransferApi extends SubscriptionTestSuiteNoD
     @BeforeMethod(groups = "fast")
     public void beforeMethod() throws Exception {
         super.beforeMethod();
-        final NonEntityDao nonEntityDao = Mockito.mock(NonEntityDao.class);
         final SubscriptionDao dao = Mockito.mock(SubscriptionDao.class);
-        final CatalogService catalogService = new MockCatalogService(new MockCatalog(), cacheControllerDispatcher);
-        final CatalogInternalApi catalogInternalApiWithMockCatalogService = new DefaultCatalogInternalApi(catalogService, internalCallContextFactory);
+        final DefaultVersionedCatalog versionedCatalog = new DefaultVersionedCatalog();
+        final MockCatalog mockCatalog = new MockCatalog();
+        versionedCatalog.add(mockCatalog);
+        final CatalogService catalogService = new MockCatalogService(versionedCatalog, cacheControllerDispatcher);
+        final CatalogInternalApi catalogInternalApiWithMockCatalogService = new DefaultCatalogInternalApi(catalogService);
         final SubscriptionBaseApiService apiService = Mockito.mock(SubscriptionBaseApiService.class);
         final SubscriptionBaseTimelineApi timelineApi = Mockito.mock(SubscriptionBaseTimelineApi.class);
-        transferApi = new DefaultSubscriptionBaseTransferApi(clock, dao, timelineApi, catalogInternalApiWithMockCatalogService, apiService, internalCallContextFactory);
-        // Overrride catalog with our Mock CatalogService
-        this.catalog = catalogInternalApiWithMockCatalogService.getFullCatalog(true, true, internalCallContext);
+        transferApi = new DefaultSubscriptionBaseTransferApi(clock, dao, timelineApi, catalogInternalApiWithMockCatalogService, subscriptionInternalApi, apiService, internalCallContextFactory);
+        // Overrride catalog with our MockCatalog
+        this.catalog = mockCatalog;
     }
 
     @Test(groups = "fast")

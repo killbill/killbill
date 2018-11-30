@@ -19,28 +19,29 @@ package org.killbill.billing.jaxrs.json;
 
 import java.util.List;
 
-import org.killbill.billing.util.nodes.NodeCommandProperty;
-
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import io.swagger.annotations.ApiModel;
 
+@ApiModel(value="NodeCommand")
 public class NodeCommandJson {
 
-    private final boolean systemCommandType;
+    private final boolean isSystemCommandType;
     private final String nodeCommandType;
     private final List<NodeCommandPropertyJson> nodeCommandProperties;
 
     @JsonCreator
-    public NodeCommandJson(@JsonProperty("systemCommandType") final boolean systemCommandType,
+    public NodeCommandJson(@JsonProperty("isSystemCommandType") final boolean isSystemCommandType,
                            @JsonProperty("nodeCommandType") final String nodeCommandType,
                            @JsonProperty("nodeCommandProperties") final List<NodeCommandPropertyJson> nodeCommandProperties) {
-        this.systemCommandType = systemCommandType;
+        this.isSystemCommandType = isSystemCommandType;
         this.nodeCommandType = nodeCommandType;
         this.nodeCommandProperties = nodeCommandProperties;
     }
 
+    @JsonProperty("isSystemCommandType")
     public boolean isSystemCommandType() {
-        return systemCommandType;
+        return isSystemCommandType;
     }
 
     public String getNodeCommandType() {

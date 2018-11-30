@@ -22,8 +22,10 @@ import java.util.UUID;
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.util.api.AuditLevel;
 import org.killbill.billing.util.audit.AuditLog;
+import org.killbill.billing.util.audit.AuditLogWithHistory;
 import org.killbill.billing.util.audit.DefaultAccountAuditLogs;
 import org.killbill.billing.util.audit.DefaultAccountAuditLogsForObjectType;
+import org.killbill.billing.util.dao.HistorySqlDao;
 import org.killbill.billing.util.dao.TableName;
 
 public interface AuditDao {
@@ -35,4 +37,6 @@ public interface AuditDao {
     public DefaultAccountAuditLogsForObjectType getAuditLogsForAccountRecordId(TableName tableName, AuditLevel auditLevel, InternalTenantContext context);
 
     public List<AuditLog> getAuditLogsForId(TableName tableName, UUID objectId, AuditLevel auditLevel, InternalTenantContext context);
+
+    List<AuditLogWithHistory> getAuditLogsWithHistoryForId(HistorySqlDao sqlDao, TableName tableName, UUID objectId, AuditLevel auditLevel, InternalTenantContext context);
 }

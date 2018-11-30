@@ -19,9 +19,7 @@ package org.killbill.billing.jaxrs.json;
 
 import java.util.List;
 
-import org.killbill.billing.catalog.api.CurrencyValueNull;
 import org.killbill.billing.catalog.api.TimeUnit;
-import org.killbill.billing.overdue.api.OverdueApiException;
 import org.killbill.billing.overdue.api.OverdueConfig;
 import org.killbill.billing.overdue.api.OverdueState;
 import org.killbill.billing.overdue.config.DefaultDuration;
@@ -35,7 +33,9 @@ import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
+import io.swagger.annotations.ApiModel;
 
+@ApiModel(value="Overdue")
 public class OverdueJson {
 
     private final Integer initialReevaluationIntervalDays;
@@ -124,8 +124,8 @@ public class OverdueJson {
             final DefaultOverdueState state = new DefaultOverdueState();
             state.setName(cur.getName());
             state.setExternalMessage(cur.getExternalMessage());
-            state.setBlockChanges(cur.getBlockChanges());
-            state.setDisableEntitlement(cur.getDisableEntitlement());
+            state.setBlockChanges(cur.isBlockChanges());
+            state.setDisableEntitlement(cur.isDisableEntitlement());
             state.setSubscriptionCancellationPolicy(cur.getSubscriptionCancellationPolicy());
             state.setClearState(cur.isClearState());
             state.setAutoReevaluationInterval(computeReevaluationInterval(cur.getAutoReevaluationIntervalDays(), prevTimeSinceEarliestUnpaidInvoice, cur.getCondition().getTimeSinceEarliestUnpaidInvoiceEqualsOrExceeds().getNumber()));

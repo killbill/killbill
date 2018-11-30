@@ -26,7 +26,9 @@ import java.util.UUID;
 import org.killbill.billing.ObjectType;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
+import org.killbill.billing.util.api.AuditLevel;
 import org.killbill.billing.util.api.TagApiException;
+import org.killbill.billing.util.audit.AuditLogWithHistory;
 import org.killbill.billing.util.entity.Pagination;
 import org.killbill.billing.util.entity.dao.MockEntityDaoBase;
 import org.killbill.billing.util.tag.Tag;
@@ -44,7 +46,13 @@ public class MockTagDao extends MockEntityDaoBase<TagModelDao, Tag, TagApiExcept
         if (tagStore.get(tag.getObjectId()) == null) {
             tagStore.put(tag.getObjectId(), new ArrayList<TagModelDao>());
         }
+
+        // add it to the account tags
+        if (tagStore.get(getAccountId(context.getAccountRecordId())) == null) {
+            tagStore.put(getAccountId(context.getAccountRecordId()), new ArrayList<TagModelDao>());
+        }
         tagStore.get(tag.getObjectId()).add(tag);
+        tagStore.get(getAccountId(context.getAccountRecordId())).add(tag);
     }
 
     @Override
@@ -93,10 +101,23 @@ public class MockTagDao extends MockEntityDaoBase<TagModelDao, Tag, TagApiExcept
 
     @Override
     public List<TagModelDao> getTagsForAccount(final boolean includedDeleted, final InternalTenantContext internalTenantContext) {
+        if (tagStore.get(getAccountId(internalTenantContext.getAccountRecordId())) == null) {
+            return ImmutableList.<TagModelDao>of();
+        }
+
+        return tagStore.get(getAccountId(internalTenantContext.getAccountRecordId()));
+    }
+
+    @Override
+    public List<AuditLogWithHistory> getTagAuditLogsWithHistoryForId(final UUID tagId, final AuditLevel auditLevel, final InternalTenantContext context) {
         throw new UnsupportedOperationException();
     }
 
     public void clear() {
         tagStore.clear();
+    }
+
+    private UUID getAccountId(final Long accountRecordId) {
+        return new UUID(0L, accountRecordId);
     }
 }

@@ -68,6 +68,10 @@ public class TestIntegrationWithAutoInvoiceDraft extends TestIntegrationBase {
     @Override
     @BeforeMethod(groups = "slow")
     public void beforeMethod() throws Exception {
+        if (hasFailed()) {
+            return;
+        }
+
         super.beforeMethod();
         account = createAccountWithNonOsgiPaymentMethod(getAccountData(25));
         assertNotNull(account);
@@ -84,7 +88,7 @@ public class TestIntegrationWithAutoInvoiceDraft extends TestIntegrationBase {
         final DefaultEntitlement bpEntitlement = createBaseEntitlementAndCheckForCompletion(account.getId(), "externalKey", productName, ProductCategory.BASE, term, NextEvent.CREATE, NextEvent.BLOCK);
         assertNotNull(bpEntitlement);
 
-        List<Invoice> invoices = invoiceApi.getInvoicesByAccount(account.getId(), false, callContext);
+        List<Invoice> invoices = invoiceApi.getInvoicesByAccount(account.getId(), false, false, callContext);
         assertEquals(invoices.size(), 1);
         final Invoice trialInvoice = invoices.get(0);
         assertEquals(trialInvoice.getStatus(), InvoiceStatus.DRAFT);
@@ -98,7 +102,7 @@ public class TestIntegrationWithAutoInvoiceDraft extends TestIntegrationBase {
         clock.addDays(30);
         assertListenerStatus();
 
-        invoices = invoiceApi.getInvoicesByAccount(account.getId(), false, callContext);
+        invoices = invoiceApi.getInvoicesByAccount(account.getId(), false, false, callContext);
         assertEquals(invoices.size(), 2);
 
         final Invoice firstNonTrialInvoice = invoices.get(1);
@@ -115,7 +119,7 @@ public class TestIntegrationWithAutoInvoiceDraft extends TestIntegrationBase {
         clock.addMonths(1);
         assertListenerStatus();
 
-        invoices = invoiceApi.getInvoicesByAccount(account.getId(), false, callContext);
+        invoices = invoiceApi.getInvoicesByAccount(account.getId(), false, false, callContext);
         assertEquals(invoices.size(), 3);
 
 
@@ -123,7 +127,7 @@ public class TestIntegrationWithAutoInvoiceDraft extends TestIntegrationBase {
         clock.addMonths(1);
         assertListenerStatus();
 
-        invoices = invoiceApi.getInvoicesByAccount(account.getId(), false, callContext);
+        invoices = invoiceApi.getInvoicesByAccount(account.getId(), false, false, callContext);
         assertEquals(invoices.size(), 4);
     }
 
@@ -136,7 +140,7 @@ public class TestIntegrationWithAutoInvoiceDraft extends TestIntegrationBase {
         final DefaultEntitlement bpEntitlement = createBaseEntitlementAndCheckForCompletion(account.getId(), "externalKey", productName, ProductCategory.BASE, term, NextEvent.CREATE, NextEvent.BLOCK);
         assertNotNull(bpEntitlement);
 
-        List<Invoice> invoices = invoiceApi.getInvoicesByAccount(account.getId(), false, callContext);
+        List<Invoice> invoices = invoiceApi.getInvoicesByAccount(account.getId(), false, false, callContext);
         assertEquals(invoices.size(), 1);
         final Invoice trialInvoice = invoices.get(0);
         assertEquals(trialInvoice.getStatus(), InvoiceStatus.DRAFT);
@@ -150,7 +154,7 @@ public class TestIntegrationWithAutoInvoiceDraft extends TestIntegrationBase {
         clock.addDays(30);
         assertListenerStatus();
 
-        invoices = invoiceApi.getInvoicesByAccount(account.getId(), false, callContext);
+        invoices = invoiceApi.getInvoicesByAccount(account.getId(), false, false, callContext);
         assertEquals(invoices.size(), 2);
 
         // Check firstNonTrialInvoice  is still in DRAFT
@@ -174,7 +178,7 @@ public class TestIntegrationWithAutoInvoiceDraft extends TestIntegrationBase {
         clock.addMonths(1);
         assertListenerStatus();
 
-        invoices = invoiceApi.getInvoicesByAccount(account.getId(), false, callContext);
+        invoices = invoiceApi.getInvoicesByAccount(account.getId(), false, false, callContext);
         assertEquals(invoices.size(), 3);
 
         // Check prev invoice is still in DRAFT
@@ -210,11 +214,11 @@ public class TestIntegrationWithAutoInvoiceDraft extends TestIntegrationBase {
         // Create initial DRAFt invoice that will be reused by the system
         final LocalDate startDate = clock.getUTCToday();
         final LocalDate endDate = startDate.plusDays(5);
-        final InvoiceItem externalCharge = new ExternalChargeInvoiceItem(null, account.getId(), null, "Initial external charge", startDate, endDate, BigDecimal.TEN, Currency.USD);
-        invoiceUserApi.insertExternalCharges(account.getId(), clock.getUTCToday(), ImmutableList.<InvoiceItem>of(externalCharge), false, callContext).get(0);
+        final InvoiceItem externalCharge = new ExternalChargeInvoiceItem(null, account.getId(), null, "Initial external charge", startDate, endDate, BigDecimal.TEN, Currency.USD, null);
+        invoiceUserApi.insertExternalCharges(account.getId(), clock.getUTCToday(), ImmutableList.<InvoiceItem>of(externalCharge), false, null, callContext).get(0);
 
         List<Invoice> invoices;
-        invoices = invoiceApi.getInvoicesByAccount(account.getId(), false, callContext);
+        invoices = invoiceApi.getInvoicesByAccount(account.getId(), false, false, callContext);
         assertEquals(invoices.size(), 1);
         assertEquals(invoices.get(0).getInvoiceItems().size(), 1);
         assertEquals(invoices.get(0).getStatus(), InvoiceStatus.DRAFT);
@@ -225,7 +229,7 @@ public class TestIntegrationWithAutoInvoiceDraft extends TestIntegrationBase {
         assertNotNull(bpEntitlement);
 
         // Verify we see the new item on our existing DRAFT invoice
-        invoices = invoiceApi.getInvoicesByAccount(account.getId(), false, callContext);
+        invoices = invoiceApi.getInvoicesByAccount(account.getId(), false, false, callContext);
         assertEquals(invoices.size(), 1);
         assertEquals(invoices.get(0).getId(), invoiceId);
         assertEquals(invoices.get(0).getInvoiceItems().size(), 2);
@@ -238,7 +242,7 @@ public class TestIntegrationWithAutoInvoiceDraft extends TestIntegrationBase {
         assertListenerStatus();
 
         // Verify again we see the new item on our existing DRAFT invoice
-        invoices = invoiceApi.getInvoicesByAccount(account.getId(), false, callContext);
+        invoices = invoiceApi.getInvoicesByAccount(account.getId(), false, false, callContext);
         assertEquals(invoices.size(), 1);
         assertEquals(invoices.get(0).getId(), invoiceId);
         assertEquals(invoices.get(0).getInvoiceItems().size(), 3);
@@ -252,7 +256,7 @@ public class TestIntegrationWithAutoInvoiceDraft extends TestIntegrationBase {
         assertListenerStatus();
 
         // Verify again we see the new item and this time invoice is in COMMITTED
-        invoices = invoiceApi.getInvoicesByAccount(account.getId(), false, callContext);
+        invoices = invoiceApi.getInvoicesByAccount(account.getId(), false, false, callContext);
         assertEquals(invoices.size(), 1);
         assertEquals(invoices.get(0).getId(), invoiceId);
         assertEquals(invoices.get(0).getInvoiceItems().size(), 4);
@@ -264,7 +268,7 @@ public class TestIntegrationWithAutoInvoiceDraft extends TestIntegrationBase {
         clock.addMonths(1);
         assertListenerStatus();
 
-        invoices = invoiceApi.getInvoicesByAccount(account.getId(), false, callContext);
+        invoices = invoiceApi.getInvoicesByAccount(account.getId(), false, false, callContext);
         assertEquals(invoices.size(), 2);
         assertEquals(invoices.get(1).getInvoiceItems().size(), 1);
         assertEquals(invoices.get(1).getStatus(), InvoiceStatus.COMMITTED);

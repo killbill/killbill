@@ -1,6 +1,6 @@
 /*
- * Copyright 2014-2016 Groupon, Inc
- * Copyright 2014-2016 The Billing Project, LLC
+ * Copyright 2014-2018 Groupon, Inc
+ * Copyright 2014-2018 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -32,12 +32,7 @@ public class ParentInvoiceItem extends InvoiceItemBase {
 
     public ParentInvoiceItem(@Nullable final UUID id, @Nullable final DateTime createdDate, final UUID invoiceId, final UUID accountId, final UUID childAccountId,
                              final BigDecimal amount, final Currency currency, final String description) {
-        super(id, createdDate, invoiceId, accountId, childAccountId, amount, currency, description);
-    }
-
-    @Override
-    public InvoiceItemType getInvoiceItemType() {
-        return InvoiceItemType.PARENT_SUMMARY;
+        super(id, createdDate, invoiceId, accountId, childAccountId, amount, currency, description, InvoiceItemType.PARENT_SUMMARY);
     }
 
     @Override

@@ -25,8 +25,6 @@ import org.killbill.billing.tenant.api.user.DefaultTenantUserApi;
 
 public class DefaultTenantService implements TenantService {
 
-    private static final String TENANT_SERVICE_NAME = "tenant-service";
-
     private final TenantCacheInvalidation tenantCacheInvalidation;
     private final TenantCacheInvalidationCallback tenantCacheInvalidationCallback;
 
@@ -38,7 +36,12 @@ public class DefaultTenantService implements TenantService {
 
     @Override
     public String getName() {
-        return TENANT_SERVICE_NAME;
+        return KILLBILL_SERVICES.TENANT_SERVICE.getServiceName();
+    }
+
+    @Override
+    public int getRegistrationOrdering() {
+        return KILLBILL_SERVICES.TENANT_SERVICE.getRegistrationOrdering();
     }
 
     @LifecycleHandlerType(LifecycleLevel.INIT_SERVICE)

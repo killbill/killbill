@@ -46,3 +46,18 @@ delete from sessions
 where id = :id
 ;
 >>
+
+findOldActiveSessions() ::= <<
+select
+  record_id
+, id
+, start_timestamp
+, last_access_time
+, timeout
+, host
+, session_data
+from sessions
+order by record_id asc
+limit 100
+;
+>>

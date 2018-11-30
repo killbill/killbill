@@ -34,6 +34,10 @@ public class TestCatalogOverrideBlockDefinitionSqlDao extends CatalogTestSuiteWi
 
     @BeforeClass(groups = "slow")
     public void beforeClass() throws Exception {
+        if (hasFailed()) {
+            return;
+        }
+
         super.beforeClass();
         ((DBI) dbi).registerMapper(new LowerToCamelBeanMapperFactory(CatalogOverrideBlockDefinitionModelDao.class));
     }

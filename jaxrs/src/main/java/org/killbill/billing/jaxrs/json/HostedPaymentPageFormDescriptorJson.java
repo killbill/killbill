@@ -18,24 +18,26 @@
 package org.killbill.billing.jaxrs.json;
 
 import java.util.Map;
+import java.util.UUID;
 
 import org.killbill.billing.payment.plugin.api.HostedPaymentPageFormDescriptor;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 
+@ApiModel(value="HostedPaymentPageFormDescriptor", parent = JsonBase.class)
 public class HostedPaymentPageFormDescriptorJson extends JsonBase {
 
-    @ApiModelProperty(dataType = "java.util.UUID")
-    private final String kbAccountId;
+    private final UUID kbAccountId;
     private final String formMethod;
     private final String formUrl;
     private final Map<String, Object> formFields;
     private final Map<String, Object> properties;
 
     @JsonCreator
-    public HostedPaymentPageFormDescriptorJson(@JsonProperty("kbAccountId") final String kbAccountId,
+    public HostedPaymentPageFormDescriptorJson(@JsonProperty("kbAccountId") final UUID kbAccountId,
                                                @JsonProperty("formMethod") final String formMethod,
                                                @JsonProperty("formUrl") final String formUrl,
                                                @JsonProperty("formFields") final Map<String, Object> formFields,
@@ -48,14 +50,14 @@ public class HostedPaymentPageFormDescriptorJson extends JsonBase {
     }
 
     public HostedPaymentPageFormDescriptorJson(final HostedPaymentPageFormDescriptor descriptor) {
-        this.kbAccountId = descriptor.getKbAccountId().toString();
+        this.kbAccountId = descriptor.getKbAccountId();
         this.formMethod = descriptor.getFormMethod();
         this.formUrl = descriptor.getFormUrl();
         this.formFields = propertiesToMap(descriptor.getFormFields());
         this.properties = propertiesToMap(descriptor.getProperties());
     }
 
-    public String getKbAccountId() {
+    public UUID getKbAccountId() {
         return kbAccountId;
     }
 

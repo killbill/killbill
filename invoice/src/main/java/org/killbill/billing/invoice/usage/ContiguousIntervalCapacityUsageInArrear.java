@@ -24,21 +24,21 @@ import java.util.Set;
 import java.util.UUID;
 
 import org.joda.time.LocalDate;
+import org.killbill.billing.ErrorCode;
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.catalog.api.Limit;
 import org.killbill.billing.catalog.api.Tier;
 import org.killbill.billing.catalog.api.Usage;
+import org.killbill.billing.invoice.api.InvoiceApiException;
 import org.killbill.billing.invoice.api.InvoiceItem;
 import org.killbill.billing.invoice.model.UsageInvoiceItem;
-import org.killbill.billing.invoice.usage.details.UsageCapacityInArrearDetail;
-import org.killbill.billing.invoice.usage.details.UsageConsumableInArrearTierUnitDetail;
-import org.killbill.billing.invoice.usage.details.UsageInArrearDetail;
+import org.killbill.billing.invoice.usage.details.UsageCapacityInArrearAggregate;
+import org.killbill.billing.invoice.usage.details.UsageInArrearAggregate;
 import org.killbill.billing.invoice.usage.details.UsageInArrearTierUnitDetail;
 import org.killbill.billing.usage.RawUsage;
 import org.killbill.billing.usage.api.RolledUpUnit;
 import org.killbill.billing.util.config.definition.InvoiceConfig.UsageDetailMode;
-import org.killbill.billing.util.jackson.ObjectMapper;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
@@ -51,8 +51,6 @@ public class ContiguousIntervalCapacityUsageInArrear extends ContiguousIntervalU
 
     private static final Joiner joiner = Joiner.on(", ");
 
-    private static final ObjectMapper objectMapper = new ObjectMapper();
-
     public ContiguousIntervalCapacityUsageInArrear(final Usage usage,
                                                    final UUID accountId,
                                                    final UUID invoiceId,
@@ -64,27 +62,27 @@ public class ContiguousIntervalCapacityUsageInArrear extends ContiguousIntervalU
         super(usage, accountId, invoiceId, rawSubscriptionUsage, targetDate, rawUsageStartDate, usageDetailMode, internalTenantContext);
     }
 
-
-
     @Override
-    protected void populateResults(final LocalDate startDate, final LocalDate endDate, final Iterable<InvoiceItem> billedItems, final BigDecimal billedUsage, final BigDecimal toBeBilledUsage, final UsageInArrearDetail toBeBilledUsageDetails, final boolean areAllBilledItemsWithDetails, final List<InvoiceItem> result) {
+    protected void populateResults(final LocalDate startDate, final LocalDate endDate, final BigDecimal billedUsage, final BigDecimal toBeBilledUsage, final UsageInArrearAggregate toBeBilledUsageDetails, final boolean areAllBilledItemsWithDetails, final boolean isPeriodPreviouslyBilled, final List<InvoiceItem> result) throws InvoiceApiException {
         // Compute final amount by subtracting  amount that was already billed.
-        if (!billedItems.iterator().hasNext() || billedUsage.compareTo(toBeBilledUsage) < 0) {
-            final BigDecimal amountToBill = toBeBilledUsage.subtract(billedUsage);
+        final BigDecimal amountToBill = toBeBilledUsage.subtract(billedUsage);
 
-            if (amountToBill.compareTo(BigDecimal.ZERO) > 0) {
-                    final String itemDetails = areAllBilledItemsWithDetails ? toBeBilledUsageDetails.toJson(objectMapper) : null;
-                    final InvoiceItem item = new UsageInvoiceItem(invoiceId, accountId, getBundleId(), getSubscriptionId(), getPlanName(),
-                                                                  getPhaseName(), usage.getName(), startDate, endDate, amountToBill, null, getCurrency(), null, itemDetails);
-                    result.add(item);
+        if (amountToBill.compareTo(BigDecimal.ZERO) < 0) {
+            throw new InvoiceApiException(ErrorCode.UNEXPECTED_ERROR,
+                                          String.format("ILLEGAL INVOICING STATE: Usage period start='%s', end='%s', previously billed amount='%.2f', new proposed amount='%.2f'",
+                                                        startDate, endDate, billedUsage, toBeBilledUsage));
+        } else /* amountToBill.compareTo(BigDecimal.ZERO) >= 0 */ {
+            if (!isPeriodPreviouslyBilled || amountToBill.compareTo(BigDecimal.ZERO) > 0) {
+                final String itemDetails = areAllBilledItemsWithDetails ? toJson(toBeBilledUsageDetails) : null;
+                final InvoiceItem item = new UsageInvoiceItem(invoiceId, accountId, getBundleId(), getSubscriptionId(), getProductName(), getPlanName(),
+                                                              getPhaseName(), usage.getName(), startDate, endDate, amountToBill, null, getCurrency(), null, itemDetails);
+                result.add(item);
             }
         }
-
     }
 
-
     @Override
-    protected UsageInArrearDetail getToBeBilledUsageDetails(final List<RolledUpUnit> rolledUpUnits, final Iterable<InvoiceItem> billedItems, final boolean areAllBilledItemsWithDetails) throws CatalogApiException {
+    protected UsageInArrearAggregate getToBeBilledUsageDetails(final List<RolledUpUnit> rolledUpUnits, final Iterable<InvoiceItem> billedItems, final boolean areAllBilledItemsWithDetails) throws CatalogApiException {
         return computeToBeBilledCapacityInArrear(rolledUpUnits);
     }
 
@@ -99,7 +97,7 @@ public class ContiguousIntervalCapacityUsageInArrear extends ContiguousIntervalU
     }
 
     @VisibleForTesting
-    UsageCapacityInArrearDetail computeToBeBilledCapacityInArrear(final List<RolledUpUnit> roUnits) throws CatalogApiException {
+    UsageCapacityInArrearAggregate computeToBeBilledCapacityInArrear(final List<RolledUpUnit> roUnits) throws CatalogApiException {
         Preconditions.checkState(isBuilt.get());
 
         final List<Tier> tiers = getCapacityInArrearTier(usage);
@@ -109,22 +107,29 @@ public class ContiguousIntervalCapacityUsageInArrear extends ContiguousIntervalU
         final List<UsageInArrearTierUnitDetail> toBeBilledDetails = Lists.newLinkedList();
         for (final Tier cur : tiers) {
             tierNum++;
+            final BigDecimal curTierPrice = cur.getRecurringPrice().getPrice(getCurrency());
+
             boolean complies = true;
+            boolean allUnitAmountToZero = true;  // Support for $0 Usage item
             for (final RolledUpUnit ro : roUnits) {
+
                 final Limit tierLimit = getTierLimit(cur, ro.getUnitType());
                 // We ignore the min and only look at the max Limit as the tiers should be contiguous.
                 // Specifying a -1 value for last max tier will make the validation works
                 if (tierLimit.getMax() != (double) -1 && ro.getAmount().doubleValue() > tierLimit.getMax()) {
                     complies = false;
                 } else {
+
+                    allUnitAmountToZero = ro.getAmount() > 0 ? false : allUnitAmountToZero;
+
                     if (!perUnitTypeDetailTierLevel.contains(ro.getUnitType())) {
-                        toBeBilledDetails.add(new UsageInArrearTierUnitDetail(tierNum, ro.getUnitType(), cur.getRecurringPrice().getPrice(getCurrency()), ro.getAmount().intValue()));
+                        toBeBilledDetails.add(new UsageInArrearTierUnitDetail(tierNum, ro.getUnitType(), curTierPrice, ro.getAmount().intValue()));
                         perUnitTypeDetailTierLevel.add(ro.getUnitType());
                     }
                 }
             }
             if (complies) {
-                return new UsageCapacityInArrearDetail(toBeBilledDetails, cur.getRecurringPrice().getPrice(getCurrency()));
+                return new UsageCapacityInArrearAggregate(toBeBilledDetails, allUnitAmountToZero ? BigDecimal.ZERO : curTierPrice);
             }
         }
         // Probably invalid catalog config
@@ -132,4 +137,16 @@ public class ContiguousIntervalCapacityUsageInArrear extends ContiguousIntervalU
         Preconditions.checkState(false, "Could not find tier for usage " + usage.getName() + "matching with data = " + joiner.join(roUnits));
         return null;
     }
+
+    @Override
+    public String toString() {
+        final StringBuilder sb = new StringBuilder("ContiguousIntervalCapacityUsageInArrear{");
+        sb.append("transitionTimes=").append(transitionTimes);
+        sb.append(", billingEvents=").append(billingEvents);
+        sb.append(", rawSubscriptionUsage=").append(rawSubscriptionUsage);
+        sb.append(", rawUsageStartDate=").append(rawUsageStartDate);
+        sb.append('}');
+        return sb.toString();
+    }
+
 }

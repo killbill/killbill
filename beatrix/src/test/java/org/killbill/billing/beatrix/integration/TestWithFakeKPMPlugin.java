@@ -1,6 +1,6 @@
 /*
- * Copyright 2014-2017 Groupon, Inc
- * Copyright 2014-2017 The Billing Project, LLC
+ * Copyright 2014-2018 Groupon, Inc
+ * Copyright 2014-2018 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -21,6 +21,7 @@ import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -29,7 +30,6 @@ import java.util.concurrent.Callable;
 import javax.annotation.Nullable;
 import javax.inject.Inject;
 
-import org.killbill.billing.DBTestingHelper;
 import org.killbill.billing.api.TestApiListener.NextEvent;
 import org.killbill.billing.notification.plugin.api.BroadcastMetadata;
 import org.killbill.billing.notification.plugin.api.ExtBusEvent;
@@ -67,7 +67,6 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.joda.JodaModule;
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 import com.google.common.eventbus.Subscribe;
 import com.google.inject.Binder;
@@ -94,11 +93,11 @@ public class TestWithFakeKPMPlugin extends TestIntegrationBase {
     private PluginFinder pluginFinder;
 
     @Override
-    protected KillbillConfigSource getConfigSource() {
-        ImmutableMap additionalProperties = new ImmutableMap.Builder()
-                .put("org.killbill.billing.util.broadcast.rate", "100ms")
-                .build();
-        return getConfigSource("/beatrix.properties", additionalProperties);
+    protected KillbillConfigSource getConfigSource(final Map<String, String> extraProperties) {
+        final Map<String, String> allExtraProperties = new HashMap<String, String>(extraProperties);
+        allExtraProperties.putAll(DEFAULT_BEATRIX_PROPERTIES);
+        allExtraProperties.put("org.killbill.billing.util.broadcast.rate", "100ms");
+        return getConfigSource(null, allExtraProperties);
     }
 
     public class FakeKPMPlugin {
@@ -312,12 +311,20 @@ public class TestWithFakeKPMPlugin extends TestIntegrationBase {
 
     @BeforeClass(groups = "slow")
     public void beforeClass() throws Exception {
-        final Injector g = Guice.createInjector(Stage.PRODUCTION, Modules.override(new BeatrixIntegrationModule(configSource)).with(new OverrideModuleForOSGI()));
+        if (hasFailed()) {
+            return;
+        }
+
+        final Injector g = Guice.createInjector(Stage.PRODUCTION, Modules.override(new BeatrixIntegrationModule(configSource, clock)).with(new OverrideModuleForOSGI()));
         g.injectMembers(this);
     }
 
     @BeforeMethod(groups = "slow")
     public void beforeMethod() throws Exception {
+        if (hasFailed()) {
+            return;
+        }
+
         log.debug("RESET TEST FRAMEWORK");
 
         cleanupAllTables();

@@ -22,7 +22,9 @@ import java.util.UUID;
 import org.killbill.billing.ObjectType;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
+import org.killbill.billing.util.api.AuditLevel;
 import org.killbill.billing.util.api.CustomFieldApiException;
+import org.killbill.billing.util.audit.AuditLogWithHistory;
 import org.killbill.billing.util.customfield.CustomField;
 import org.killbill.billing.util.entity.Pagination;
 import org.killbill.billing.util.entity.dao.EntityDao;
@@ -40,4 +42,6 @@ public interface CustomFieldDao extends EntityDao<CustomFieldModelDao, CustomFie
     void deleteCustomFields(Iterable<UUID> customFieldIds, InternalCallContext context) throws CustomFieldApiException;
 
     void updateCustomFields(Iterable<CustomFieldModelDao> customFieldIds, InternalCallContext context) throws CustomFieldApiException;
+
+    List<AuditLogWithHistory> getCustomFieldAuditLogsWithHistoryForId(UUID customFieldId, AuditLevel auditLevel, InternalTenantContext context);
 }

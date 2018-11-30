@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014-2017 Groupon, Inc
- * Copyright 2014-2017 The Billing Project, LLC
+ * Copyright 2014-2018 Groupon, Inc
+ * Copyright 2014-2018 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -26,6 +26,7 @@ import org.killbill.billing.ObjectType;
 import org.killbill.billing.account.api.Account;
 import org.killbill.billing.invoice.InvoiceTestSuiteWithEmbeddedDB;
 import org.killbill.billing.invoice.api.DefaultInvoiceService;
+import org.killbill.billing.platform.api.KillbillService.KILLBILL_SERVICES;
 import org.killbill.billing.subscription.api.SubscriptionBase;
 import org.killbill.notificationq.api.NotificationQueue;
 import org.testng.Assert;
@@ -47,9 +48,9 @@ public class TestNextBillingDateNotifier extends InvoiceTestSuiteWithEmbeddedDB 
         final UUID subscriptionId = subscription.getId();
         final DateTime now = clock.getUTCNow();
 
-        final NotificationQueue nextBillingQueue = notificationQueueService.getNotificationQueue(DefaultInvoiceService.INVOICE_SERVICE_NAME, DefaultNextBillingDateNotifier.NEXT_BILLING_DATE_NOTIFIER_QUEUE);
+        final NotificationQueue nextBillingQueue = notificationQueueService.getNotificationQueue(KILLBILL_SERVICES.INVOICE_SERVICE.getServiceName(), DefaultNextBillingDateNotifier.NEXT_BILLING_DATE_NOTIFIER_QUEUE);
 
-        nextBillingQueue.recordFutureNotification(now, new NextBillingDateNotificationKey(null, ImmutableList.<UUID>of(subscriptionId), now, Boolean.FALSE), internalCallContext.getUserToken(), accountRecordId, internalCallContext.getTenantRecordId());
+        nextBillingQueue.recordFutureNotification(now, new NextBillingDateNotificationKey(null, ImmutableList.<UUID>of(subscriptionId), now, Boolean.FALSE, Boolean.FALSE), internalCallContext.getUserToken(), accountRecordId, internalCallContext.getTenantRecordId());
 
         // Move time in the future after the notification effectiveDate
         clock.setDeltaFromReality(3000);

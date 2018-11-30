@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014 Groupon, Inc
- * Copyright 2014 The Billing Project, LLC
+ * Copyright 2014-2018 Groupon, Inc
+ * Copyright 2014-2018 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -25,26 +25,32 @@ import org.killbill.billing.catalog.glue.CatalogModule;
 import org.killbill.billing.entitlement.glue.DefaultEntitlementModule;
 import org.killbill.billing.platform.api.KillbillConfigSource;
 import org.killbill.billing.subscription.glue.DefaultSubscriptionModule;
+import org.killbill.billing.util.glue.AuditModule;
 import org.killbill.billing.util.glue.NonEntityDaoModule;
 import org.killbill.billing.util.glue.TagStoreModule;
+import org.killbill.clock.ClockMock;
 
 public class TestJunctionModuleWithEmbeddedDB extends TestJunctionModule {
 
-    public TestJunctionModuleWithEmbeddedDB(final KillbillConfigSource configSource) {
+    private final ClockMock clock;
+
+    public TestJunctionModuleWithEmbeddedDB(final KillbillConfigSource configSource, final ClockMock clock) {
         super(configSource);
+        this.clock = clock;
     }
 
     @Override
     protected void configure() {
         super.configure();
 
-        install(new GuicyKillbillTestWithEmbeddedDBModule(configSource));
+        install(new GuicyKillbillTestWithEmbeddedDBModule(configSource, clock));
         install(new NonEntityDaoModule(configSource));
         install(new CatalogModule(configSource));
         install(new DefaultAccountModule(configSource));
         install(new DefaultEntitlementModule(configSource));
         install(new DefaultSubscriptionModule(configSource));
         install(new TagStoreModule(configSource));
+        install(new AuditModule(configSource));
 
         bind(TestApiListener.class).asEagerSingleton();
     }

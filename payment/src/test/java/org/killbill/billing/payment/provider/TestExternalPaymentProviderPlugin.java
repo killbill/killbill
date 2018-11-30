@@ -38,12 +38,14 @@ import com.google.common.collect.ImmutableList;
 
 public class TestExternalPaymentProviderPlugin extends PaymentTestSuiteNoDB {
 
-    private final Clock clock = new ClockMock();
     private ExternalPaymentProviderPlugin plugin;
 
     @Override
     @BeforeMethod(groups = "fast")
     public void beforeMethod() throws Exception {
+        if (hasFailed()) {
+            return;
+        }
         super.beforeMethod();
         plugin = new ExternalPaymentProviderPlugin(clock, paymentConfig);
     }

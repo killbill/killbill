@@ -58,7 +58,9 @@ public class TestPaymentGatewayApiWithPaymentControl extends PaymentTestSuiteNoD
 
     @BeforeMethod(groups = "fast")
     public void beforeMethod() throws Exception {
-
+        if (hasFailed()) {
+            return;
+        }
         super.beforeMethod();
 
         account = testHelper.createTestAccount("arthur@gmail.com", true);

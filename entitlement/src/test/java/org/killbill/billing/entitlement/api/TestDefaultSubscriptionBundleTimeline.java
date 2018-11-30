@@ -35,6 +35,7 @@ import org.killbill.billing.entitlement.DefaultEntitlementService;
 import org.killbill.billing.entitlement.EntitlementTestSuiteNoDB;
 import org.killbill.billing.entitlement.EventsStream;
 import org.killbill.billing.junction.DefaultBlockingState;
+import org.killbill.billing.platform.api.KillbillService.KILLBILL_SERVICES;
 import org.killbill.billing.subscription.api.SubscriptionBase;
 import org.killbill.billing.subscription.api.user.SubscriptionBaseTransition;
 import org.killbill.billing.subscription.api.user.SubscriptionBaseTransitionData;
@@ -56,6 +57,10 @@ public class TestDefaultSubscriptionBundleTimeline extends EntitlementTestSuiteN
 
     @BeforeClass(groups = "fast")
     protected void beforeClass() throws Exception {
+        if (hasFailed()) {
+            return;
+        }
+
         super.beforeClass();
         bundleId = UUID.randomUUID();
         bundleExternalKey = bundleId.toString();
@@ -90,7 +95,7 @@ public class TestDefaultSubscriptionBundleTimeline extends EntitlementTestSuiteN
 
         if (!regressionFlagForOlderVersionThan_0_17_X) {
             final BlockingState bsCreate = new DefaultBlockingState(UUID.randomUUID(), entitlementId, BlockingStateType.SUBSCRIPTION,
-                                                                    DefaultEntitlementApi.ENT_STATE_START, DefaultEntitlementService.ENTITLEMENT_SERVICE_NAME,
+                                                                    DefaultEntitlementApi.ENT_STATE_START, KILLBILL_SERVICES.ENTITLEMENT_SERVICE.getServiceName(),
                                                                     false, false, false, effectiveDate, clock.getUTCNow(), clock.getUTCNow(), 0L);
             blockingStates.add(bsCreate);
         }
@@ -129,7 +134,7 @@ public class TestDefaultSubscriptionBundleTimeline extends EntitlementTestSuiteN
         assertEquals(events.get(2).getSubscriptionEventType(), SubscriptionEventType.PHASE);
         assertEquals(events.get(3).getSubscriptionEventType(), SubscriptionEventType.STOP_BILLING);
 
-        assertEquals(events.get(0).getServiceName(), DefaultEntitlementService.ENTITLEMENT_SERVICE_NAME);
+        assertEquals(events.get(0).getServiceName(), KILLBILL_SERVICES.ENTITLEMENT_SERVICE.getServiceName());
         assertEquals(events.get(1).getServiceName(), EntitlementOrderingBase.BILLING_SERVICE_NAME);
         assertEquals(events.get(2).getServiceName(), EntitlementOrderingBase.ENT_BILLING_SERVICE_NAME);
         assertEquals(events.get(3).getServiceName(), EntitlementOrderingBase.BILLING_SERVICE_NAME);
@@ -172,7 +177,7 @@ public class TestDefaultSubscriptionBundleTimeline extends EntitlementTestSuiteN
 
         if (!regressionFlagForOlderVersionThan_0_17_X) {
             final BlockingState bsCreate = new DefaultBlockingState(UUID.randomUUID(), entitlementId, BlockingStateType.SUBSCRIPTION,
-                                                                    DefaultEntitlementApi.ENT_STATE_START, DefaultEntitlementService.ENTITLEMENT_SERVICE_NAME,
+                                                                    DefaultEntitlementApi.ENT_STATE_START, KILLBILL_SERVICES.ENTITLEMENT_SERVICE.getServiceName(),
                                                                     false, false, false, effectiveDate, clock.getUTCNow(), clock.getUTCNow(), 0L);
             blockingStates.add(bsCreate);
         }
@@ -181,7 +186,7 @@ public class TestDefaultSubscriptionBundleTimeline extends EntitlementTestSuiteN
         allTransitions.add(tr2);
 
         final BlockingState bsCancel = new DefaultBlockingState(UUID.randomUUID(), entitlementId, BlockingStateType.SUBSCRIPTION,
-                                                                DefaultEntitlementApi.ENT_STATE_CANCELLED, DefaultEntitlementService.ENTITLEMENT_SERVICE_NAME,
+                                                                DefaultEntitlementApi.ENT_STATE_CANCELLED, KILLBILL_SERVICES.ENTITLEMENT_SERVICE.getServiceName(),
                                                                 false, false, false, effectiveDate, clock.getUTCNow(), clock.getUTCNow(), 0L);
         blockingStates.add(bsCancel);
 
@@ -247,7 +252,7 @@ public class TestDefaultSubscriptionBundleTimeline extends EntitlementTestSuiteN
 
         if (!regressionFlagForOlderVersionThan_0_17_X) {
             final BlockingState bsCreate = new DefaultBlockingState(UUID.randomUUID(), entitlementId, BlockingStateType.SUBSCRIPTION,
-                                                                    DefaultEntitlementApi.ENT_STATE_START, DefaultEntitlementService.ENTITLEMENT_SERVICE_NAME,
+                                                                    DefaultEntitlementApi.ENT_STATE_START, KILLBILL_SERVICES.ENTITLEMENT_SERVICE.getServiceName(),
                                                                     false, false, false, effectiveDate, clock.getUTCNow(), clock.getUTCNow(), 0L);
             blockingStates.add(bsCreate);
         }
@@ -256,7 +261,7 @@ public class TestDefaultSubscriptionBundleTimeline extends EntitlementTestSuiteN
         effectiveDate = effectiveDate.plusDays(15);
         clock.addDays(15);
         final BlockingState bs1 = new DefaultBlockingState(UUID.randomUUID(), bundleId, BlockingStateType.SUBSCRIPTION_BUNDLE,
-                                                           DefaultEntitlementApi.ENT_STATE_CANCELLED, DefaultEntitlementService.ENTITLEMENT_SERVICE_NAME,
+                                                           DefaultEntitlementApi.ENT_STATE_CANCELLED, KILLBILL_SERVICES.ENTITLEMENT_SERVICE.getServiceName(),
                                                            true, true, false, effectiveDate, clock.getUTCNow(), clock.getUTCNow(), 0L);
 
         blockingStates.add(bs1);
@@ -289,9 +294,9 @@ public class TestDefaultSubscriptionBundleTimeline extends EntitlementTestSuiteN
         assertEquals(events.get(2).getSubscriptionEventType(), SubscriptionEventType.STOP_ENTITLEMENT);
         assertEquals(events.get(3).getSubscriptionEventType(), SubscriptionEventType.STOP_BILLING);
 
-        assertEquals(events.get(0).getServiceName(), DefaultEntitlementService.ENTITLEMENT_SERVICE_NAME);
+        assertEquals(events.get(0).getServiceName(), KILLBILL_SERVICES.ENTITLEMENT_SERVICE.getServiceName());
         assertEquals(events.get(1).getServiceName(), EntitlementOrderingBase.BILLING_SERVICE_NAME);
-        assertEquals(events.get(2).getServiceName(), DefaultEntitlementService.ENTITLEMENT_SERVICE_NAME);
+        assertEquals(events.get(2).getServiceName(), KILLBILL_SERVICES.ENTITLEMENT_SERVICE.getServiceName());
         assertEquals(events.get(3).getServiceName(), EntitlementOrderingBase.BILLING_SERVICE_NAME);
 
         assertNull(events.get(0).getPrevPhase());
@@ -330,7 +335,7 @@ public class TestDefaultSubscriptionBundleTimeline extends EntitlementTestSuiteN
 
         if (!regressionFlagForOlderVersionThan_0_17_X) {
             final BlockingState bsCreate = new DefaultBlockingState(UUID.randomUUID(), entitlementId, BlockingStateType.SUBSCRIPTION,
-                                                                    DefaultEntitlementApi.ENT_STATE_START, DefaultEntitlementService.ENTITLEMENT_SERVICE_NAME,
+                                                                    DefaultEntitlementApi.ENT_STATE_START, KILLBILL_SERVICES.ENTITLEMENT_SERVICE.getServiceName(),
                                                                     false, false, false, effectiveDate, clock.getUTCNow(), clock.getUTCNow(), 0L);
 
             blockingStates.add(bsCreate);
@@ -345,7 +350,7 @@ public class TestDefaultSubscriptionBundleTimeline extends EntitlementTestSuiteN
         effectiveDate = effectiveDate.plusDays(12);
         clock.addDays(12);
         final BlockingState bs1 = new DefaultBlockingState(UUID.randomUUID(), entitlementId, BlockingStateType.SUBSCRIPTION,
-                                                           "NothingUseful1", DefaultEntitlementService.ENTITLEMENT_SERVICE_NAME,
+                                                           "NothingUseful1", KILLBILL_SERVICES.ENTITLEMENT_SERVICE.getServiceName(),
                                                            true, true, true, effectiveDate, clock.getUTCNow(), clock.getUTCNow(), 0L);
 
         blockingStates.add(bs1);
@@ -353,7 +358,7 @@ public class TestDefaultSubscriptionBundleTimeline extends EntitlementTestSuiteN
         effectiveDate = effectiveDate.plusDays(42);
         clock.addDays(42);
         final BlockingState bs2 = new DefaultBlockingState(UUID.randomUUID(), entitlementId, BlockingStateType.SUBSCRIPTION,
-                                                           "NothingUseful2", DefaultEntitlementService.ENTITLEMENT_SERVICE_NAME,
+                                                           "NothingUseful2", KILLBILL_SERVICES.ENTITLEMENT_SERVICE.getServiceName(),
                                                            false, false, false, effectiveDate, clock.getUTCNow(), clock.getUTCNow(), 1L);
 
         blockingStates.add(bs2);
@@ -411,14 +416,14 @@ public class TestDefaultSubscriptionBundleTimeline extends EntitlementTestSuiteN
         assertEquals(events.get(7).getSubscriptionEventType(), SubscriptionEventType.PAUSE_BILLING);
         assertEquals(events.get(8).getSubscriptionEventType(), SubscriptionEventType.RESUME_BILLING);
 
-        assertEquals(events.get(0).getServiceName(), DefaultEntitlementService.ENTITLEMENT_SERVICE_NAME);
+        assertEquals(events.get(0).getServiceName(), KILLBILL_SERVICES.ENTITLEMENT_SERVICE.getServiceName());
         assertEquals(events.get(1).getServiceName(), EntitlementOrderingBase.BILLING_SERVICE_NAME);
 
         assertEquals(events.get(2).getServiceName(), EntitlementOrderingBase.ENT_BILLING_SERVICE_NAME);
 
-        assertEquals(events.get(3).getServiceName(), DefaultEntitlementService.ENTITLEMENT_SERVICE_NAME);
+        assertEquals(events.get(3).getServiceName(), KILLBILL_SERVICES.ENTITLEMENT_SERVICE.getServiceName());
         assertEquals(events.get(4).getServiceName(), EntitlementOrderingBase.BILLING_SERVICE_NAME);
-        assertEquals(events.get(5).getServiceName(), DefaultEntitlementService.ENTITLEMENT_SERVICE_NAME);
+        assertEquals(events.get(5).getServiceName(), KILLBILL_SERVICES.ENTITLEMENT_SERVICE.getServiceName());
         assertEquals(events.get(6).getServiceName(), EntitlementOrderingBase.BILLING_SERVICE_NAME);
 
         assertEquals(events.get(7).getServiceName(), service);
@@ -474,7 +479,7 @@ public class TestDefaultSubscriptionBundleTimeline extends EntitlementTestSuiteN
 
         if (!regressionFlagForOlderVersionThan_0_17_X) {
             final BlockingState bsCreate = new DefaultBlockingState(UUID.randomUUID(), entitlementId, BlockingStateType.SUBSCRIPTION,
-                                                                    DefaultEntitlementApi.ENT_STATE_START, DefaultEntitlementService.ENTITLEMENT_SERVICE_NAME,
+                                                                    DefaultEntitlementApi.ENT_STATE_START, KILLBILL_SERVICES.ENTITLEMENT_SERVICE.getServiceName(),
                                                                     false, false, false, effectiveDate, clock.getUTCNow(), clock.getUTCNow(), 0L);
 
             blockingStates.add(bsCreate);
@@ -513,7 +518,7 @@ public class TestDefaultSubscriptionBundleTimeline extends EntitlementTestSuiteN
         effectiveDate = effectiveDate.plusDays(15);
         clock.addDays(15);
         final BlockingState bs4 = new DefaultBlockingState(UUID.randomUUID(), entitlementId, BlockingStateType.SUBSCRIPTION,
-                                                           DefaultEntitlementApi.ENT_STATE_CANCELLED, DefaultEntitlementService.ENTITLEMENT_SERVICE_NAME,
+                                                           DefaultEntitlementApi.ENT_STATE_CANCELLED, KILLBILL_SERVICES.ENTITLEMENT_SERVICE.getServiceName(),
                                                            true, true, false, effectiveDate, clock.getUTCNow(), clock.getUTCNow(), 3L);
 
         blockingStates.add(bs4);
@@ -569,7 +574,7 @@ public class TestDefaultSubscriptionBundleTimeline extends EntitlementTestSuiteN
         assertEquals(events.get(8).getSubscriptionEventType(), SubscriptionEventType.SERVICE_STATE_CHANGE);
         assertEquals(events.get(9).getSubscriptionEventType(), SubscriptionEventType.STOP_BILLING);
 
-        assertEquals(events.get(0).getServiceName(), DefaultEntitlementService.ENTITLEMENT_SERVICE_NAME);
+        assertEquals(events.get(0).getServiceName(), KILLBILL_SERVICES.ENTITLEMENT_SERVICE.getServiceName());
         assertEquals(events.get(1).getServiceName(), EntitlementOrderingBase.BILLING_SERVICE_NAME);
 
         assertEquals(events.get(2).getServiceName(), EntitlementOrderingBase.ENT_BILLING_SERVICE_NAME);
@@ -579,7 +584,7 @@ public class TestDefaultSubscriptionBundleTimeline extends EntitlementTestSuiteN
         assertEquals(events.get(5).getServiceName(), overdueService);
         assertEquals(events.get(6).getServiceName(), overdueService);
 
-        assertEquals(events.get(7).getServiceName(), DefaultEntitlementService.ENTITLEMENT_SERVICE_NAME);
+        assertEquals(events.get(7).getServiceName(), KILLBILL_SERVICES.ENTITLEMENT_SERVICE.getServiceName());
 
         assertEquals(events.get(8).getServiceName(), overdueService);
         assertEquals(events.get(9).getServiceName(), EntitlementOrderingBase.BILLING_SERVICE_NAME);
@@ -632,7 +637,7 @@ public class TestDefaultSubscriptionBundleTimeline extends EntitlementTestSuiteN
         final List<SubscriptionBaseTransition> allTransitions = new ArrayList<SubscriptionBaseTransition>();
         final List<BlockingState> blockingStates = new ArrayList<BlockingState>();
         final BlockingState bs1 = new DefaultBlockingState(UUID.randomUUID(), entitlementId, BlockingStateType.SUBSCRIPTION,
-                                                           DefaultEntitlementApi.ENT_STATE_BLOCKED, DefaultEntitlementService.ENTITLEMENT_SERVICE_NAME,
+                                                           DefaultEntitlementApi.ENT_STATE_BLOCKED, KILLBILL_SERVICES.ENTITLEMENT_SERVICE.getServiceName(),
                                                            true, true, false, clock.getUTCNow(), clock.getUTCNow(), clock.getUTCNow(), 0L);
 
         blockingStates.add(bs1);
@@ -645,7 +650,7 @@ public class TestDefaultSubscriptionBundleTimeline extends EntitlementTestSuiteN
 
         if (!regressionFlagForOlderVersionThan_0_17_X) {
             final BlockingState bsCreate = new DefaultBlockingState(UUID.randomUUID(), entitlementId, BlockingStateType.SUBSCRIPTION,
-                                                                    DefaultEntitlementApi.ENT_STATE_START, DefaultEntitlementService.ENTITLEMENT_SERVICE_NAME,
+                                                                    DefaultEntitlementApi.ENT_STATE_START, KILLBILL_SERVICES.ENTITLEMENT_SERVICE.getServiceName(),
                                                                     false, false, false, effectiveDate, clock.getUTCNow(), clock.getUTCNow(), 0L);
 
             blockingStates.add(bsCreate);
@@ -693,7 +698,7 @@ public class TestDefaultSubscriptionBundleTimeline extends EntitlementTestSuiteN
         assertEquals(events.get(3).getSubscriptionEventType(), SubscriptionEventType.SERVICE_STATE_CHANGE);
         assertEquals(events.get(4).getSubscriptionEventType(), SubscriptionEventType.STOP_BILLING);
 
-        assertEquals(events.get(0).getServiceName(), DefaultEntitlementService.ENTITLEMENT_SERVICE_NAME);
+        assertEquals(events.get(0).getServiceName(), KILLBILL_SERVICES.ENTITLEMENT_SERVICE.getServiceName());
         assertEquals(events.get(1).getServiceName(), EntitlementOrderingBase.BILLING_SERVICE_NAME);
         assertEquals(events.get(2).getServiceName(), EntitlementOrderingBase.ENT_BILLING_SERVICE_NAME);
         assertEquals(events.get(3).getServiceName(), service);
@@ -739,7 +744,7 @@ public class TestDefaultSubscriptionBundleTimeline extends EntitlementTestSuiteN
 
         if (!regressionFlagForOlderVersionThan_0_17_X) {
             final BlockingState bsCreate = new DefaultBlockingState(UUID.randomUUID(), entitlementId, BlockingStateType.SUBSCRIPTION,
-                                                                    DefaultEntitlementApi.ENT_STATE_START, DefaultEntitlementService.ENTITLEMENT_SERVICE_NAME,
+                                                                    DefaultEntitlementApi.ENT_STATE_START, KILLBILL_SERVICES.ENTITLEMENT_SERVICE.getServiceName(),
                                                                     false, false, false, effectiveDate, clock.getUTCNow(), clock.getUTCNow(), 0L);
 
             blockingStates.add(bsCreate);
@@ -753,7 +758,7 @@ public class TestDefaultSubscriptionBundleTimeline extends EntitlementTestSuiteN
         effectiveDate = effectiveDate.plusDays(5);
         clock.addDays(5);
         final BlockingState bs1 = new DefaultBlockingState(UUID.randomUUID(), entitlementId, BlockingStateType.SUBSCRIPTION,
-                                                           DefaultEntitlementApi.ENT_STATE_BLOCKED, DefaultEntitlementService.ENTITLEMENT_SERVICE_NAME,
+                                                           DefaultEntitlementApi.ENT_STATE_BLOCKED, KILLBILL_SERVICES.ENTITLEMENT_SERVICE.getServiceName(),
                                                            true, true, false, effectiveDate, clock.getUTCNow(), clock.getUTCNow(), 0L);
         blockingStates.add(bs1);
 
@@ -762,7 +767,7 @@ public class TestDefaultSubscriptionBundleTimeline extends EntitlementTestSuiteN
         final SubscriptionBaseTransition tr3 = createTransition(entitlementId, EventType.API_USER, ApiEventType.CANCEL, effectiveDate, clock.getUTCNow(), "phase", null);
         allTransitions.add(tr3);
         final BlockingState bs2 = new DefaultBlockingState(UUID.randomUUID(), entitlementId, BlockingStateType.SUBSCRIPTION,
-                                                           DefaultEntitlementApi.ENT_STATE_CANCELLED, DefaultEntitlementService.ENTITLEMENT_SERVICE_NAME,
+                                                           DefaultEntitlementApi.ENT_STATE_CANCELLED, KILLBILL_SERVICES.ENTITLEMENT_SERVICE.getServiceName(),
                                                            true, true, false, effectiveDate, clock.getUTCNow(), clock.getUTCNow(), 1L);
 
         blockingStates.add(bs2);
@@ -790,11 +795,11 @@ public class TestDefaultSubscriptionBundleTimeline extends EntitlementTestSuiteN
         assertEquals(events.get(4).getSubscriptionEventType(), SubscriptionEventType.STOP_ENTITLEMENT);
         assertEquals(events.get(5).getSubscriptionEventType(), SubscriptionEventType.STOP_BILLING);
 
-        assertEquals(events.get(0).getServiceName(), DefaultEntitlementService.ENTITLEMENT_SERVICE_NAME);
+        assertEquals(events.get(0).getServiceName(), KILLBILL_SERVICES.ENTITLEMENT_SERVICE.getServiceName());
         assertEquals(events.get(1).getServiceName(), EntitlementOrderingBase.BILLING_SERVICE_NAME);
         assertEquals(events.get(2).getServiceName(), EntitlementOrderingBase.ENT_BILLING_SERVICE_NAME);
-        assertEquals(events.get(3).getServiceName(), DefaultEntitlementService.ENTITLEMENT_SERVICE_NAME);
-        assertEquals(events.get(4).getServiceName(), DefaultEntitlementService.ENTITLEMENT_SERVICE_NAME);
+        assertEquals(events.get(3).getServiceName(), KILLBILL_SERVICES.ENTITLEMENT_SERVICE.getServiceName());
+        assertEquals(events.get(4).getServiceName(), KILLBILL_SERVICES.ENTITLEMENT_SERVICE.getServiceName());
         assertEquals(events.get(5).getServiceName(), EntitlementOrderingBase.BILLING_SERVICE_NAME);
 
         assertNull(events.get(0).getPrevPhase());
@@ -844,7 +849,7 @@ public class TestDefaultSubscriptionBundleTimeline extends EntitlementTestSuiteN
 
         if (!regressionFlagForOlderVersionThan_0_17_X) {
             final BlockingState bsCreate = new DefaultBlockingState(UUID.randomUUID(), entitlementId1, BlockingStateType.SUBSCRIPTION,
-                                                                    DefaultEntitlementApi.ENT_STATE_START, DefaultEntitlementService.ENTITLEMENT_SERVICE_NAME,
+                                                                    DefaultEntitlementApi.ENT_STATE_START, KILLBILL_SERVICES.ENTITLEMENT_SERVICE.getServiceName(),
                                                                     false, false, false, effectiveDate, clock.getUTCNow(), clock.getUTCNow(), 0L);
 
             blockingStatesEnt1.add(bsCreate);
@@ -857,7 +862,7 @@ public class TestDefaultSubscriptionBundleTimeline extends EntitlementTestSuiteN
 
         if (!regressionFlagForOlderVersionThan_0_17_X ) {
             final BlockingState bsCreate2 = new DefaultBlockingState(UUID.randomUUID(), entitlementId2, BlockingStateType.SUBSCRIPTION,
-                                                                     DefaultEntitlementApi.ENT_STATE_START, DefaultEntitlementService.ENTITLEMENT_SERVICE_NAME,
+                                                                     DefaultEntitlementApi.ENT_STATE_START, KILLBILL_SERVICES.ENTITLEMENT_SERVICE.getServiceName(),
                                                                      false, false, false, effectiveDate, clock.getUTCNow(), clock.getUTCNow(), 0L);
 
             blockingStatesEnt2.add(bsCreate2);
@@ -871,7 +876,7 @@ public class TestDefaultSubscriptionBundleTimeline extends EntitlementTestSuiteN
         effectiveDate = effectiveDate.plusDays(5);
         clock.addDays(5);
         final BlockingState bs1 = new DefaultBlockingState(UUID.randomUUID(), bundleId, BlockingStateType.SUBSCRIPTION_BUNDLE,
-                                                           DefaultEntitlementApi.ENT_STATE_BLOCKED, DefaultEntitlementService.ENTITLEMENT_SERVICE_NAME,
+                                                           DefaultEntitlementApi.ENT_STATE_BLOCKED, KILLBILL_SERVICES.ENTITLEMENT_SERVICE.getServiceName(),
                                                            true, true, false, effectiveDate, clock.getUTCNow(), clock.getUTCNow(), 0L);
         blockingStatesEnt1.add(bs1);
         blockingStatesEnt2.add(bs1);
@@ -881,7 +886,7 @@ public class TestDefaultSubscriptionBundleTimeline extends EntitlementTestSuiteN
         final SubscriptionBaseTransition ent1Tr3 = createTransition(entitlementId1, EventType.API_USER, ApiEventType.CANCEL, effectiveDate, clock.getUTCNow(), "phase1", null);
         allTransitions1.add(ent1Tr3);
         final BlockingState bs2 = new DefaultBlockingState(UUID.randomUUID(), entitlementId1, BlockingStateType.SUBSCRIPTION,
-                                                           DefaultEntitlementApi.ENT_STATE_CANCELLED, DefaultEntitlementService.ENTITLEMENT_SERVICE_NAME,
+                                                           DefaultEntitlementApi.ENT_STATE_CANCELLED, KILLBILL_SERVICES.ENTITLEMENT_SERVICE.getServiceName(),
                                                            true, true, false, effectiveDate, clock.getUTCNow(), clock.getUTCNow(), 1L);
 
         blockingStatesEnt1.add(bs2);
@@ -924,17 +929,17 @@ public class TestDefaultSubscriptionBundleTimeline extends EntitlementTestSuiteN
         assertEquals(events.get(7).getSubscriptionEventType(), SubscriptionEventType.STOP_ENTITLEMENT);
         assertEquals(events.get(8).getSubscriptionEventType(), SubscriptionEventType.STOP_BILLING);
 
-        assertEquals(events.get(0).getServiceName(), DefaultEntitlementService.ENTITLEMENT_SERVICE_NAME);
+        assertEquals(events.get(0).getServiceName(), KILLBILL_SERVICES.ENTITLEMENT_SERVICE.getServiceName());
         assertEquals(events.get(1).getServiceName(), EntitlementOrderingBase.BILLING_SERVICE_NAME);
-        assertEquals(events.get(2).getServiceName(), DefaultEntitlementService.ENTITLEMENT_SERVICE_NAME);
+        assertEquals(events.get(2).getServiceName(), KILLBILL_SERVICES.ENTITLEMENT_SERVICE.getServiceName());
         assertEquals(events.get(3).getServiceName(), EntitlementOrderingBase.BILLING_SERVICE_NAME);
 
         assertEquals(events.get(4).getServiceName(), EntitlementOrderingBase.ENT_BILLING_SERVICE_NAME);
 
-        assertEquals(events.get(5).getServiceName(), DefaultEntitlementService.ENTITLEMENT_SERVICE_NAME);
-        assertEquals(events.get(6).getServiceName(), DefaultEntitlementService.ENTITLEMENT_SERVICE_NAME);
+        assertEquals(events.get(5).getServiceName(), KILLBILL_SERVICES.ENTITLEMENT_SERVICE.getServiceName());
+        assertEquals(events.get(6).getServiceName(), KILLBILL_SERVICES.ENTITLEMENT_SERVICE.getServiceName());
 
-        assertEquals(events.get(7).getServiceName(), DefaultEntitlementService.ENTITLEMENT_SERVICE_NAME);
+        assertEquals(events.get(7).getServiceName(), KILLBILL_SERVICES.ENTITLEMENT_SERVICE.getServiceName());
         assertEquals(events.get(8).getServiceName(), EntitlementOrderingBase.BILLING_SERVICE_NAME);
 
         assertNull(events.get(0).getPrevPhase());
@@ -995,7 +1000,7 @@ public class TestDefaultSubscriptionBundleTimeline extends EntitlementTestSuiteN
 
         if (!regressionFlagForOlderVersionThan_0_17_X) {
             final BlockingState bsCreate = new DefaultBlockingState(UUID.randomUUID(), entitlementId, BlockingStateType.SUBSCRIPTION,
-                                                                    DefaultEntitlementApi.ENT_STATE_START, DefaultEntitlementService.ENTITLEMENT_SERVICE_NAME,
+                                                                    DefaultEntitlementApi.ENT_STATE_START, KILLBILL_SERVICES.ENTITLEMENT_SERVICE.getServiceName(),
                                                                     false, false, false, effectiveDate, clock.getUTCNow(), clock.getUTCNow(), 0L);
 
             blockingStates.add(bsCreate);
@@ -1038,7 +1043,7 @@ public class TestDefaultSubscriptionBundleTimeline extends EntitlementTestSuiteN
         assertEquals(eventsWithOverdueEvent.get(4).getSubscriptionEventType(), SubscriptionEventType.STOP_BILLING);
 
         final BlockingState bs2 = new DefaultBlockingState(UUID.randomUUID(), entitlementId, BlockingStateType.SUBSCRIPTION,
-                                                           DefaultEntitlementApi.ENT_STATE_CANCELLED, DefaultEntitlementService.ENTITLEMENT_SERVICE_NAME,
+                                                           DefaultEntitlementApi.ENT_STATE_CANCELLED, KILLBILL_SERVICES.ENTITLEMENT_SERVICE.getServiceName(),
                                                            true, true, false, effectiveDate, clock.getUTCNow(), clock.getUTCNow(), 1L);
 
         blockingStates.add(bs2);
@@ -1071,11 +1076,11 @@ public class TestDefaultSubscriptionBundleTimeline extends EntitlementTestSuiteN
         assertEquals(events.get(4).getSubscriptionEventType(), SubscriptionEventType.STOP_ENTITLEMENT);
         assertEquals(events.get(5).getSubscriptionEventType(), SubscriptionEventType.STOP_BILLING);
 
-        assertEquals(events.get(0).getServiceName(), DefaultEntitlementService.ENTITLEMENT_SERVICE_NAME);
+        assertEquals(events.get(0).getServiceName(), KILLBILL_SERVICES.ENTITLEMENT_SERVICE.getServiceName());
         assertEquals(events.get(1).getServiceName(), EntitlementOrderingBase.BILLING_SERVICE_NAME);
         assertEquals(events.get(2).getServiceName(), EntitlementOrderingBase.ENT_BILLING_SERVICE_NAME);
         assertEquals(events.get(3).getServiceName(), service);
-        assertEquals(events.get(4).getServiceName(), DefaultEntitlementService.ENTITLEMENT_SERVICE_NAME);
+        assertEquals(events.get(4).getServiceName(), KILLBILL_SERVICES.ENTITLEMENT_SERVICE.getServiceName());
         assertEquals(events.get(5).getServiceName(), EntitlementOrderingBase.BILLING_SERVICE_NAME);
 
         assertNull(events.get(0).getPrevPhase());
@@ -1123,7 +1128,7 @@ public class TestDefaultSubscriptionBundleTimeline extends EntitlementTestSuiteN
 
         if (!regressionFlagForOlderVersionThan_0_17_X) {
             final BlockingState bsCreate = new DefaultBlockingState(UUID.randomUUID(), entitlementId, BlockingStateType.SUBSCRIPTION,
-                                                                    DefaultEntitlementApi.ENT_STATE_START, DefaultEntitlementService.ENTITLEMENT_SERVICE_NAME,
+                                                                    DefaultEntitlementApi.ENT_STATE_START, KILLBILL_SERVICES.ENTITLEMENT_SERVICE.getServiceName(),
                                                                     false, false, false, effectiveDate, clock.getUTCNow(), clock.getUTCNow(), 0L);
 
             blockingStates.add(bsCreate);
@@ -1133,14 +1138,14 @@ public class TestDefaultSubscriptionBundleTimeline extends EntitlementTestSuiteN
         effectiveDate = effectiveDate.plusDays(5);
         clock.addDays(5);
         final BlockingState bs1 = new DefaultBlockingState(UUID.randomUUID(), entitlementId, BlockingStateType.SUBSCRIPTION,
-                                                           DefaultEntitlementApi.ENT_STATE_BLOCKED, DefaultEntitlementService.ENTITLEMENT_SERVICE_NAME,
+                                                           DefaultEntitlementApi.ENT_STATE_BLOCKED, KILLBILL_SERVICES.ENTITLEMENT_SERVICE.getServiceName(),
                                                            true, true, false, effectiveDate, clock.getUTCNow(), clock.getUTCNow(), 0L);
         blockingStates.add(bs1);
 
         effectiveDate = effectiveDate.plusDays(1);
         clock.addDays(1);
         final BlockingState bs2 = new DefaultBlockingState(UUID.randomUUID(), bundleId, BlockingStateType.SUBSCRIPTION_BUNDLE,
-                                                           DefaultEntitlementApi.ENT_STATE_BLOCKED, DefaultEntitlementService.ENTITLEMENT_SERVICE_NAME,
+                                                           DefaultEntitlementApi.ENT_STATE_BLOCKED, KILLBILL_SERVICES.ENTITLEMENT_SERVICE.getServiceName(),
                                                            true, true, false, effectiveDate, clock.getUTCNow(), clock.getUTCNow(), 1L);
 
         blockingStates.add(bs2);
@@ -1149,12 +1154,12 @@ public class TestDefaultSubscriptionBundleTimeline extends EntitlementTestSuiteN
         effectiveDate = effectiveDate.plusDays(1);
         clock.addDays(1);
         final BlockingState bs3 = new DefaultBlockingState(UUID.randomUUID(), accountId, BlockingStateType.ACCOUNT,
-                                                           DefaultEntitlementApi.ENT_STATE_CANCELLED, DefaultEntitlementService.ENTITLEMENT_SERVICE_NAME,
+                                                           DefaultEntitlementApi.ENT_STATE_CANCELLED, KILLBILL_SERVICES.ENTITLEMENT_SERVICE.getServiceName(),
                                                            true, true, false, effectiveDate, clock.getUTCNow(), clock.getUTCNow(), 2L);
 
         blockingStates.add(bs3);
         final BlockingState bs4 = new DefaultBlockingState(UUID.randomUUID(), bundleId, BlockingStateType.SUBSCRIPTION_BUNDLE,
-                                                           DefaultEntitlementApi.ENT_STATE_CANCELLED, DefaultEntitlementService.ENTITLEMENT_SERVICE_NAME,
+                                                           DefaultEntitlementApi.ENT_STATE_CANCELLED, KILLBILL_SERVICES.ENTITLEMENT_SERVICE.getServiceName(),
                                                            true, true, false, effectiveDate, clock.getUTCNow(), clock.getUTCNow(), 3L);
 
         blockingStates.add(bs4);
@@ -1178,10 +1183,10 @@ public class TestDefaultSubscriptionBundleTimeline extends EntitlementTestSuiteN
         assertEquals(events.get(2).getSubscriptionEventType(), SubscriptionEventType.PAUSE_ENTITLEMENT);
         assertEquals(events.get(3).getSubscriptionEventType(), SubscriptionEventType.STOP_ENTITLEMENT);
 
-        assertEquals(events.get(0).getServiceName(), DefaultEntitlementService.ENTITLEMENT_SERVICE_NAME);
+        assertEquals(events.get(0).getServiceName(), KILLBILL_SERVICES.ENTITLEMENT_SERVICE.getServiceName());
         assertEquals(events.get(1).getServiceName(), EntitlementOrderingBase.BILLING_SERVICE_NAME);
-        assertEquals(events.get(2).getServiceName(), DefaultEntitlementService.ENTITLEMENT_SERVICE_NAME);
-        assertEquals(events.get(3).getServiceName(), DefaultEntitlementService.ENTITLEMENT_SERVICE_NAME);
+        assertEquals(events.get(2).getServiceName(), KILLBILL_SERVICES.ENTITLEMENT_SERVICE.getServiceName());
+        assertEquals(events.get(3).getServiceName(), KILLBILL_SERVICES.ENTITLEMENT_SERVICE.getServiceName());
 
         assertNull(events.get(0).getPrevPhase());
         assertNull(events.get(1).getPrevPhase());
@@ -1223,7 +1228,7 @@ public class TestDefaultSubscriptionBundleTimeline extends EntitlementTestSuiteN
 
         if (!regressionFlagForOlderVersionThan_0_17_X) {
             final BlockingState bsCreate = new DefaultBlockingState(UUID.randomUUID(), entitlementId, BlockingStateType.SUBSCRIPTION,
-                                                                    DefaultEntitlementApi.ENT_STATE_START, DefaultEntitlementService.ENTITLEMENT_SERVICE_NAME,
+                                                                    DefaultEntitlementApi.ENT_STATE_START, KILLBILL_SERVICES.ENTITLEMENT_SERVICE.getServiceName(),
                                                                     false, false, false, effectiveDate, clock.getUTCNow(), clock.getUTCNow(), 0L);
 
             blockingStates.add(bsCreate);
@@ -1233,12 +1238,12 @@ public class TestDefaultSubscriptionBundleTimeline extends EntitlementTestSuiteN
         effectiveDate = effectiveDate.plusDays(40);
         clock.addDays(40);
         final BlockingState bs1 = new DefaultBlockingState(UUID.randomUUID(), bundleId, BlockingStateType.SUBSCRIPTION_BUNDLE,
-                                                           DefaultEntitlementApi.ENT_STATE_BLOCKED, DefaultEntitlementService.ENTITLEMENT_SERVICE_NAME,
+                                                           DefaultEntitlementApi.ENT_STATE_BLOCKED, KILLBILL_SERVICES.ENTITLEMENT_SERVICE.getServiceName(),
                                                            true, true, true, effectiveDate, clock.getUTCNow(), clock.getUTCNow(), 0L);
         blockingStates.add(bs1);
         // Same timestamp on purpose
         final BlockingState bs2 = new DefaultBlockingState(UUID.randomUUID(), bundleId, BlockingStateType.SUBSCRIPTION_BUNDLE,
-                                                           DefaultEntitlementApi.ENT_STATE_CLEAR, DefaultEntitlementService.ENTITLEMENT_SERVICE_NAME,
+                                                           DefaultEntitlementApi.ENT_STATE_CLEAR, KILLBILL_SERVICES.ENTITLEMENT_SERVICE.getServiceName(),
                                                            false, false, false, effectiveDate, clock.getUTCNow(), clock.getUTCNow(), 1L);
         blockingStates.add(bs2);
 
@@ -1246,7 +1251,7 @@ public class TestDefaultSubscriptionBundleTimeline extends EntitlementTestSuiteN
         effectiveDate = effectiveDate.plusDays(10);
         clock.addDays(10);
         final BlockingState bs3 = new DefaultBlockingState(UUID.randomUUID(), bundleId, BlockingStateType.SUBSCRIPTION_BUNDLE,
-                                                           DefaultEntitlementApi.ENT_STATE_BLOCKED, DefaultEntitlementService.ENTITLEMENT_SERVICE_NAME,
+                                                           DefaultEntitlementApi.ENT_STATE_BLOCKED, KILLBILL_SERVICES.ENTITLEMENT_SERVICE.getServiceName(),
                                                            true, true, true, effectiveDate, clock.getUTCNow(), clock.getUTCNow(), 2L);
         blockingStates.add(bs3);
 
@@ -1254,7 +1259,7 @@ public class TestDefaultSubscriptionBundleTimeline extends EntitlementTestSuiteN
         effectiveDate = effectiveDate.plusDays(10);
         clock.addDays(10);
         final BlockingState bs4 = new DefaultBlockingState(UUID.randomUUID(), bundleId, BlockingStateType.SUBSCRIPTION_BUNDLE,
-                                                           DefaultEntitlementApi.ENT_STATE_CLEAR, DefaultEntitlementService.ENTITLEMENT_SERVICE_NAME,
+                                                           DefaultEntitlementApi.ENT_STATE_CLEAR, KILLBILL_SERVICES.ENTITLEMENT_SERVICE.getServiceName(),
                                                            false, false, false, effectiveDate, clock.getUTCNow(), clock.getUTCNow(), 3L);
         blockingStates.add(bs4);
 
@@ -1305,17 +1310,17 @@ public class TestDefaultSubscriptionBundleTimeline extends EntitlementTestSuiteN
 
         assertEquals(events.get(10).getSubscriptionEventType(), SubscriptionEventType.SERVICE_STATE_CHANGE);
 
-        assertEquals(events.get(0).getServiceName(), DefaultEntitlementService.ENTITLEMENT_SERVICE_NAME);
+        assertEquals(events.get(0).getServiceName(), KILLBILL_SERVICES.ENTITLEMENT_SERVICE.getServiceName());
         assertEquals(events.get(1).getServiceName(), EntitlementOrderingBase.BILLING_SERVICE_NAME);
 
-        assertEquals(events.get(2).getServiceName(), DefaultEntitlementService.ENTITLEMENT_SERVICE_NAME);
+        assertEquals(events.get(2).getServiceName(), KILLBILL_SERVICES.ENTITLEMENT_SERVICE.getServiceName());
         assertEquals(events.get(3).getServiceName(), EntitlementOrderingBase.BILLING_SERVICE_NAME);
-        assertEquals(events.get(4).getServiceName(), DefaultEntitlementService.ENTITLEMENT_SERVICE_NAME);
+        assertEquals(events.get(4).getServiceName(), KILLBILL_SERVICES.ENTITLEMENT_SERVICE.getServiceName());
         assertEquals(events.get(5).getServiceName(), EntitlementOrderingBase.BILLING_SERVICE_NAME);
 
-        assertEquals(events.get(6).getServiceName(), DefaultEntitlementService.ENTITLEMENT_SERVICE_NAME);
+        assertEquals(events.get(6).getServiceName(), KILLBILL_SERVICES.ENTITLEMENT_SERVICE.getServiceName());
         assertEquals(events.get(7).getServiceName(), EntitlementOrderingBase.BILLING_SERVICE_NAME);
-        assertEquals(events.get(8).getServiceName(), DefaultEntitlementService.ENTITLEMENT_SERVICE_NAME);
+        assertEquals(events.get(8).getServiceName(), KILLBILL_SERVICES.ENTITLEMENT_SERVICE.getServiceName());
         assertEquals(events.get(9).getServiceName(), EntitlementOrderingBase.BILLING_SERVICE_NAME);
 
         assertEquals(events.get(10).getServiceName(), overdueService);

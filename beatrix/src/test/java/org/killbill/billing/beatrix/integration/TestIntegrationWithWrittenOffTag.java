@@ -61,6 +61,10 @@ public class TestIntegrationWithWrittenOffTag extends TestIntegrationBase {
     @Override
     @BeforeMethod(groups = "slow")
     public void beforeMethod() throws Exception {
+        if (hasFailed()) {
+            return;
+        }
+
         super.beforeMethod();
         account = createAccountWithNonOsgiPaymentMethod(getAccountData(25));
         assertNotNull(account);
@@ -80,14 +84,14 @@ public class TestIntegrationWithWrittenOffTag extends TestIntegrationBase {
         final DefaultEntitlement bpEntitlement = createBaseEntitlementAndCheckForCompletion(account.getId(), "externalKey", productName, ProductCategory.BASE, term, NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE);
         assertNotNull(bpEntitlement);
 
-        List<Invoice> invoices = invoiceApi.getInvoicesByAccount(account.getId(), false, callContext);
+        List<Invoice> invoices = invoiceApi.getInvoicesByAccount(account.getId(), false, false, callContext);
         assertEquals(invoices.size(), 1);
 
         busHandler.pushExpectedEvents(NextEvent.PHASE, NextEvent.INVOICE);
         clock.addDays(31);
         assertListenerStatus();
 
-        invoices = invoiceApi.getInvoicesByAccount(account.getId(), false, callContext);
+        invoices = invoiceApi.getInvoicesByAccount(account.getId(), false, false, callContext);
         assertEquals(invoices.size(), 2);
 
         // Tag non $0 invoice with WRITTEN_OFF and remove AUTO_PAY_OFF => System should still not pay anything

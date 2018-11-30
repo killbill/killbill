@@ -1,6 +1,6 @@
 /*
- * Copyright 2014-2015 Groupon, Inc
- * Copyright 2014-2015 The Billing Project, LLC
+ * Copyright 2014-2018 Groupon, Inc
+ * Copyright 2014-2018 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -16,6 +16,8 @@
  */
 
 package org.killbill.billing.catalog;
+
+import java.util.Map;
 
 import org.killbill.billing.GuicyKillbillTestSuiteWithEmbeddedDB;
 import org.killbill.billing.catalog.dao.CatalogOverrideDao;
@@ -41,13 +43,17 @@ public class CatalogTestSuiteWithEmbeddedDB extends GuicyKillbillTestSuiteWithEm
     protected PriceOverride priceOverride;
 
     @Override
-    protected KillbillConfigSource getConfigSource() {
-        return getConfigSource("/resource.properties");
+    protected KillbillConfigSource getConfigSource(final Map<String, String> extraProperties) {
+        return getConfigSource("/resource.properties", extraProperties);
     }
 
     @BeforeClass(groups = "slow")
     protected void beforeClass() throws Exception {
-        final Injector injector = Guice.createInjector(new TestCatalogModuleWithEmbeddedDB(configSource));
+        if (hasFailed()) {
+            return;
+        }
+
+        final Injector injector = Guice.createInjector(new TestCatalogModuleWithEmbeddedDB(configSource, clock));
         injector.injectMembers(this);
     }
 

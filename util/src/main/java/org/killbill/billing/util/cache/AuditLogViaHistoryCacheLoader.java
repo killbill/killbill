@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014-2017 Groupon, Inc
- * Copyright 2014-2017 The Billing Project, LLC
+ * Copyright 2014-2018 Groupon, Inc
+ * Copyright 2014-2018 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -21,6 +21,7 @@ package org.killbill.billing.util.cache;
 import java.util.List;
 
 import javax.inject.Inject;
+import javax.inject.Named;
 import javax.inject.Singleton;
 
 import org.killbill.billing.callcontext.InternalTenantContext;
@@ -29,15 +30,17 @@ import org.killbill.billing.util.cache.Cachable.CacheType;
 import org.killbill.billing.util.dao.AuditSqlDao;
 import org.skife.jdbi.v2.IDBI;
 
+import static org.killbill.billing.util.glue.IDBISetup.MAIN_RO_IDBI_NAMED;
+
 @Singleton
 public class AuditLogViaHistoryCacheLoader extends BaseCacheLoader<String, List<AuditLogModelDao>> {
 
-    private final AuditSqlDao auditSqlDao;
+    private final AuditSqlDao roAuditSqlDao;
 
     @Inject
-    public AuditLogViaHistoryCacheLoader(final IDBI dbi) {
+    public AuditLogViaHistoryCacheLoader(@Named(MAIN_RO_IDBI_NAMED) final IDBI roDbi) {
         super();
-        this.auditSqlDao = dbi.onDemand(AuditSqlDao.class);
+        this.roAuditSqlDao = roDbi.onDemand(AuditSqlDao.class);
     }
 
     @Override
@@ -53,6 +56,6 @@ public class AuditLogViaHistoryCacheLoader extends BaseCacheLoader<String, List<
         final Long targetRecordId = (Long) args[2];
         final InternalTenantContext internalTenantContext = (InternalTenantContext) args[3];
 
-        return auditSqlDao.getAuditLogsViaHistoryForTargetRecordId(tableName, historyTableName, targetRecordId, internalTenantContext);
+        return roAuditSqlDao.getAuditLogsViaHistoryForTargetRecordId(tableName, historyTableName, targetRecordId, internalTenantContext);
     }
 }

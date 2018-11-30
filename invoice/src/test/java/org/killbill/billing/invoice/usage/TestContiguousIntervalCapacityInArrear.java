@@ -38,7 +38,7 @@ import org.killbill.billing.invoice.api.InvoiceItem;
 import org.killbill.billing.invoice.model.FixedPriceInvoiceItem;
 import org.killbill.billing.invoice.model.UsageInvoiceItem;
 import org.killbill.billing.invoice.usage.ContiguousIntervalUsageInArrear.UsageInArrearItemsAndNextNotificationDate;
-import org.killbill.billing.invoice.usage.details.UsageCapacityInArrearDetail;
+import org.killbill.billing.invoice.usage.details.UsageCapacityInArrearAggregate;
 import org.killbill.billing.invoice.usage.details.UsageInArrearTierUnitDetail;
 import org.killbill.billing.junction.BillingEvent;
 import org.killbill.billing.usage.RawUsage;
@@ -59,16 +59,6 @@ import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertTrue;
 
 public class TestContiguousIntervalCapacityInArrear extends TestUsageInArrearBase {
-
-    @BeforeClass(groups = "fast")
-    protected void beforeClass() throws Exception {
-        super.beforeClass();
-    }
-
-    @BeforeMethod(groups = "fast")
-    public void beforeMethod() {
-        super.beforeMethod();
-    }
 
     @Test(groups = "fast")
     public void testComputeToBeBilledUsage() {
@@ -92,21 +82,21 @@ public class TestContiguousIntervalCapacityInArrear extends TestUsageInArrearBas
                                                                                                                  );
 
         final List<InvoiceItem> existingUsage = Lists.newArrayList();
-        final UsageInvoiceItem ii1 = new UsageInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, usage.getName(), startDate, endDate, BigDecimal.TEN, currency);
+        final UsageInvoiceItem ii1 = new UsageInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, productName, planName, phaseName, usage.getName(), startDate, endDate, BigDecimal.TEN, currency);
         existingUsage.add(ii1);
-        final UsageInvoiceItem ii2 = new UsageInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, usage.getName(), startDate, endDate, BigDecimal.TEN, currency);
+        final UsageInvoiceItem ii2 = new UsageInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, productName, planName, phaseName, usage.getName(), startDate, endDate, BigDecimal.TEN, currency);
         existingUsage.add(ii2);
 
         // Will be ignored as is starts one day earlier.
-        final UsageInvoiceItem ii3 = new UsageInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, usage.getName(), startDate.minusDays(1), endDate, BigDecimal.TEN, currency);
+        final UsageInvoiceItem ii3 = new UsageInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, productName, planName, phaseName, usage.getName(), startDate.minusDays(1), endDate, BigDecimal.TEN, currency);
         existingUsage.add(ii3);
 
         // Will be ignored as it is for a different udsage section
-        final UsageInvoiceItem ii4 = new UsageInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, "other", startDate, endDate, BigDecimal.TEN, currency);
+        final UsageInvoiceItem ii4 = new UsageInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, productName, planName, phaseName, "other", startDate, endDate, BigDecimal.TEN, currency);
         existingUsage.add(ii4);
 
         // Will be ignored because non usage item
-        final FixedPriceInvoiceItem ii5 = new FixedPriceInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, startDate, BigDecimal.TEN, currency);
+        final FixedPriceInvoiceItem ii5 = new FixedPriceInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, productName, planName, phaseName, startDate, BigDecimal.TEN, currency);
         existingUsage.add(ii5);
 
         final Iterable<InvoiceItem> billedItems = intervalCapacityInArrear.getBilledItems(startDate, endDate, existingUsage);
@@ -147,9 +137,9 @@ public class TestContiguousIntervalCapacityInArrear extends TestUsageInArrearBas
                                                                                                                                          Collections.<Usage>emptyList())
                                                                                                                  );
         // Tier 1 (both units from tier 1)
-        UsageCapacityInArrearDetail result = intervalCapacityInArrear.computeToBeBilledCapacityInArrear(ImmutableList.<RolledUpUnit>of(new DefaultRolledUpUnit("unit1", 100L),
-                                                                                                                                       new DefaultRolledUpUnit("unit2", 1000L),
-                                                                                                                                       new DefaultRolledUpUnit("unit3", 50L)));
+        UsageCapacityInArrearAggregate result = intervalCapacityInArrear.computeToBeBilledCapacityInArrear(ImmutableList.<RolledUpUnit>of(new DefaultRolledUpUnit("unit1", 100L),
+                                                                                                                                          new DefaultRolledUpUnit("unit2", 1000L),
+                                                                                                                                          new DefaultRolledUpUnit("unit3", 50L)));
         assertEquals(result.getTierDetails().size(), 3);
         assertTrue(result.getAmount().compareTo(BigDecimal.TEN) == 0);
 
@@ -216,22 +206,16 @@ public class TestContiguousIntervalCapacityInArrear extends TestUsageInArrearBas
         final ContiguousIntervalCapacityUsageInArrear intervalCapacityInArrear = createContiguousIntervalCapacityInArrear(usage, rawUsages, targetDate, true, event1, event2);
 
         final List<InvoiceItem> invoiceItems = new ArrayList<InvoiceItem>();
-        final InvoiceItem ii1 = new UsageInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, usage.getName(), startDate, firstBCDDate, BigDecimal.ONE, currency);
+        final InvoiceItem ii1 = new UsageInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, productName, planName, phaseName, usage.getName(), startDate, firstBCDDate, BigDecimal.ONE, currency);
         invoiceItems.add(ii1);
 
-        final InvoiceItem ii2 = new UsageInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, usage.getName(), firstBCDDate, endDate, BigDecimal.ONE, currency);
+        final InvoiceItem ii2 = new UsageInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, productName, planName, phaseName, usage.getName(), firstBCDDate, endDate, BigDecimal.ONE, currency);
         invoiceItems.add(ii2);
 
         final UsageInArrearItemsAndNextNotificationDate usageResult = intervalCapacityInArrear.computeMissingItemsAndNextNotificationDate(invoiceItems);
-        final List<InvoiceItem> rawResults = usageResult.getInvoiceItems();
-        assertEquals(rawResults.size(), 4);
+        final List<InvoiceItem> result = usageResult.getInvoiceItems();
+        assertEquals(result.size(), 2);
 
-        final List<InvoiceItem> result = ImmutableList.copyOf(Iterables.filter(rawResults, new Predicate<InvoiceItem>() {
-            @Override
-            public boolean apply(final InvoiceItem input) {
-                return input.getAmount().compareTo(BigDecimal.ZERO) > 0;
-            }
-        }));
 
         assertEquals(result.get(0).getAmount().compareTo(new BigDecimal("9.0")), 0, String.format("%s != 9.0", result.get(0).getAmount()));
         assertEquals(result.get(0).getCurrency(), Currency.BTC);
@@ -277,7 +261,7 @@ public class TestContiguousIntervalCapacityInArrear extends TestUsageInArrearBas
         assertEquals(result.size(), 1);
         assertEquals(result.get(0).getAmount().compareTo(BigDecimal.ONE), 0, String.format("%s != 1.0", result.get(0).getAmount()));
 
-        UsageCapacityInArrearDetail itemDetails = objectMapper.readValue(result.get(0).getItemDetails(), new TypeReference<UsageCapacityInArrearDetail>() {});
+        UsageCapacityInArrearAggregate itemDetails = objectMapper.readValue(result.get(0).getItemDetails(), new TypeReference<UsageCapacityInArrearAggregate>() {});
         assertEquals(itemDetails.getAmount().compareTo(BigDecimal.ONE), 0);
         assertEquals(itemDetails.getTierDetails().size(), 2);
 
@@ -301,7 +285,7 @@ public class TestContiguousIntervalCapacityInArrear extends TestUsageInArrearBas
         assertEquals(result.size(), 1);
         assertEquals(result.get(0).getAmount().compareTo(BigDecimal.TEN), 0, String.format("%s != 10.0", result.get(0).getAmount()));
 
-        itemDetails = objectMapper.readValue(result.get(0).getItemDetails(), new TypeReference<UsageCapacityInArrearDetail>() {});
+        itemDetails = objectMapper.readValue(result.get(0).getItemDetails(), new TypeReference<UsageCapacityInArrearAggregate>() {});
         assertEquals(itemDetails.getAmount().compareTo(BigDecimal.TEN), 0);
         assertEquals(itemDetails.getTierDetails().size(), 2);
         itemUnitDetails = itemDetails.getTierDetails();
@@ -326,7 +310,7 @@ public class TestContiguousIntervalCapacityInArrear extends TestUsageInArrearBas
         assertEquals(result.size(), 1);
         assertEquals(result.get(0).getAmount().compareTo(new BigDecimal("100.0")), 0, String.format("%s != 100.0", result.get(0).getAmount()));
 
-        itemDetails = objectMapper.readValue(result.get(0).getItemDetails(), new TypeReference<UsageCapacityInArrearDetail>() {});
+        itemDetails = objectMapper.readValue(result.get(0).getItemDetails(), new TypeReference<UsageCapacityInArrearAggregate>() {});
         assertEquals(itemDetails.getAmount().compareTo(new BigDecimal("100.0")), 0);
         assertEquals(itemDetails.getTierDetails().size(), 2);
         itemUnitDetails = itemDetails.getTierDetails();
@@ -359,17 +343,17 @@ public class TestContiguousIntervalCapacityInArrear extends TestUsageInArrearBas
 
         final List<UsageInArrearTierUnitDetail> existingUsage = ImmutableList.of(existingFooUsageTier1, existingBarUsageTier2);
 
-        final String existingUsageJson = new UsageCapacityInArrearDetail(existingUsage, BigDecimal.TEN).toJson(objectMapper);
+        final String existingUsageJson = objectMapper.writeValueAsString(new UsageCapacityInArrearAggregate(existingUsage, BigDecimal.TEN));
 
         final List<InvoiceItem> existingItems = new ArrayList<InvoiceItem>();
-        final InvoiceItem ii1 = new UsageInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, planName, phaseName, usageName, new LocalDate(2014, 03, 20), new LocalDate(2014, 04, 15), BigDecimal.TEN, null, currency, null, existingUsageJson);
+        final InvoiceItem ii1 = new UsageInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, productName, planName, phaseName, usageName, new LocalDate(2014, 03, 20), new LocalDate(2014, 04, 15), BigDecimal.TEN, null, currency, null, existingUsageJson);
         existingItems.add(ii1);
 
         List<InvoiceItem> result = produceInvoiceItems(rawUsages, UsageDetailMode.AGGREGATE, existingItems);
         assertEquals(result.size(), 1);
         assertEquals(result.get(0).getAmount().compareTo(new BigDecimal("90.00")), 0, String.format("%s != 90.0", result.get(0).getAmount()));
 
-        UsageCapacityInArrearDetail itemDetails = objectMapper.readValue(result.get(0).getItemDetails(), new TypeReference<UsageCapacityInArrearDetail>() {});
+        UsageCapacityInArrearAggregate itemDetails = objectMapper.readValue(result.get(0).getItemDetails(), new TypeReference<UsageCapacityInArrearAggregate>() {});
         assertEquals(itemDetails.getAmount().compareTo(new BigDecimal("100.00")), 0);
         assertEquals(itemDetails.getTierDetails().size(), 2);
 

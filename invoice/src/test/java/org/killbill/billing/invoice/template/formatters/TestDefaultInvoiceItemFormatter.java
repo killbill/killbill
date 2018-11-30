@@ -47,6 +47,10 @@ public class TestDefaultInvoiceItemFormatter extends InvoiceTestSuiteNoDB {
     @Override
     @BeforeClass(groups = "fast")
     public void beforeClass() throws Exception {
+        if (hasFailed()) {
+            return;
+        }
+
         super.beforeClass();
         config = new ConfigurationObjectFactory(skifeConfigSource).build(TranslatorConfig.class);
         templateEngine = new MustacheTemplateEngine();
@@ -55,7 +59,7 @@ public class TestDefaultInvoiceItemFormatter extends InvoiceTestSuiteNoDB {
     @Test(groups = "fast")
     public void testBasicUSD() throws Exception {
         final FixedPriceInvoiceItem fixedItemUSD = new FixedPriceInvoiceItem(UUID.randomUUID(), UUID.randomUUID(), null, null,
-                                                                             UUID.randomUUID().toString(), UUID.randomUUID().toString(),
+                                                                             UUID.randomUUID().toString(), UUID.randomUUID().toString(), UUID.randomUUID().toString(),
                                                                              new LocalDate(), new BigDecimal("-1114.751625346"), Currency.USD);
         checkOutput(fixedItemUSD, "{{#invoiceItem}}<td class=\"amount\">{{formattedAmount}}</td>{{/invoiceItem}}",
                     "<td class=\"amount\">($1,114.75)</td>", LocaleUtils.toLocale("en_US"));
@@ -64,19 +68,19 @@ public class TestDefaultInvoiceItemFormatter extends InvoiceTestSuiteNoDB {
     @Test(groups = "fast")
     public void testFormattedAmount() throws Exception {
         final FixedPriceInvoiceItem fixedItemEUR = new FixedPriceInvoiceItem(UUID.randomUUID(), UUID.randomUUID(), null, null,
-                                                                             UUID.randomUUID().toString(), UUID.randomUUID().toString(),
+                                                                             UUID.randomUUID().toString(), UUID.randomUUID().toString(), UUID.randomUUID().toString(),
                                                                              new LocalDate(), new BigDecimal("1499.95"), Currency.EUR);
         checkOutput(fixedItemEUR, "{{#invoiceItem}}<td class=\"amount\">{{formattedAmount}}</td>{{/invoiceItem}}",
                     "<td class=\"amount\">1 499,95 €</td>", Locale.FRANCE);
 
         final FixedPriceInvoiceItem fixedItemUSD = new FixedPriceInvoiceItem(UUID.randomUUID(), UUID.randomUUID(), null, null,
-                                                                             UUID.randomUUID().toString(), UUID.randomUUID().toString(),
+                                                                             UUID.randomUUID().toString(), UUID.randomUUID().toString(), UUID.randomUUID().toString(),
                                                                              new LocalDate(), new BigDecimal("-1114.751625346"), Currency.USD);
         checkOutput(fixedItemUSD, "{{#invoiceItem}}<td class=\"amount\">{{formattedAmount}}</td>{{/invoiceItem}}", "<td class=\"amount\">($1,114.75)</td>");
 
         // Check locale/currency mismatch (locale is set at the account level)
         final FixedPriceInvoiceItem fixedItemGBP = new FixedPriceInvoiceItem(UUID.randomUUID(), UUID.randomUUID(), null, null,
-                                                                             UUID.randomUUID().toString(), UUID.randomUUID().toString(),
+                                                                             UUID.randomUUID().toString(), UUID.randomUUID().toString(), UUID.randomUUID().toString(),
                                                                              new LocalDate(), new BigDecimal("8.07"), Currency.GBP);
         checkOutput(fixedItemGBP, "{{#invoiceItem}}<td class=\"amount\">{{formattedAmount}}</td>{{/invoiceItem}}",
                     "<td class=\"amount\">8,07 GBP</td>", Locale.FRANCE);
@@ -86,7 +90,7 @@ public class TestDefaultInvoiceItemFormatter extends InvoiceTestSuiteNoDB {
     public void testNullEndDate() throws Exception {
         final LocalDate startDate = new LocalDate(2012, 12, 1);
         final FixedPriceInvoiceItem fixedItem = new FixedPriceInvoiceItem(UUID.randomUUID(), UUID.randomUUID(), null, null,
-                                                                          UUID.randomUUID().toString(), UUID.randomUUID().toString(),
+                                                                          UUID.randomUUID().toString(), UUID.randomUUID().toString(), UUID.randomUUID().toString(),
                                                                           startDate, BigDecimal.TEN, Currency.USD);
         checkOutput(fixedItem,
                     "{{#invoiceItem}}<td>{{formattedStartDate}}{{#formattedEndDate}} - {{formattedEndDate}}{{/formattedEndDate}}</td>{{/invoiceItem}}",
@@ -98,7 +102,7 @@ public class TestDefaultInvoiceItemFormatter extends InvoiceTestSuiteNoDB {
         final LocalDate startDate = new LocalDate(2012, 12, 1);
         final LocalDate endDate = new LocalDate(2012, 12, 31);
         final RecurringInvoiceItem recurringItem = new RecurringInvoiceItem(UUID.randomUUID(), UUID.randomUUID(), null, null,
-                                                                            UUID.randomUUID().toString(), UUID.randomUUID().toString(),
+                                                                            UUID.randomUUID().toString(), UUID.randomUUID().toString(), UUID.randomUUID().toString(),
                                                                             startDate, endDate, BigDecimal.TEN, BigDecimal.TEN, Currency.USD);
         checkOutput(recurringItem,
                     "{{#invoiceItem}}<td>{{formattedStartDate}}{{#formattedEndDate}} - {{formattedEndDate}}{{/formattedEndDate}}</td>{{/invoiceItem}}",

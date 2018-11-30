@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014 Groupon, Inc
- * Copyright 2014 The Billing Project, LLC
+ * Copyright 2014-2018 Groupon, Inc
+ * Copyright 2014-2018 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -45,12 +45,7 @@ public class RepairAdjInvoiceItem extends AdjInvoiceItem {
 
     public RepairAdjInvoiceItem(final UUID id, @Nullable final DateTime createdDate, final UUID invoiceId, final UUID accountId, final LocalDate startDate, final LocalDate endDate,
                                 @Nullable final String description, final BigDecimal amount, final Currency currency, final UUID reversingId) {
-        super(id, createdDate, invoiceId, accountId, startDate, endDate, description, amount, currency, reversingId);
-    }
-
-    @Override
-    public InvoiceItemType getInvoiceItemType() {
-        return InvoiceItemType.REPAIR_ADJ;
+        super(id, createdDate, invoiceId, accountId, startDate, endDate, description, amount, currency, reversingId, InvoiceItemType.REPAIR_ADJ);
     }
 
     @Override

@@ -19,7 +19,6 @@ package org.killbill.billing.account;
 import java.util.Locale;
 import java.util.UUID;
 
-import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.killbill.billing.account.api.AccountData;
 import org.killbill.billing.account.api.DefaultMutableAccountData;
@@ -61,7 +60,6 @@ public abstract class AccountTestUtils {
         Assert.assertEquals(retrievedAccount.getCountry(), account.getCountry());
         Assert.assertEquals(retrievedAccount.getPostalCode(), account.getPostalCode());
         Assert.assertEquals(retrievedAccount.getPhone(), account.getPhone());
-        Assert.assertEquals(retrievedAccount.getIsNotifiedForInvoices(), account.getIsNotifiedForInvoices());
         Assert.assertEquals(retrievedAccount.getMigrated(), account.getMigrated());
     }
 
@@ -107,6 +105,6 @@ public abstract class AccountTestUtils {
         return new DefaultMutableAccountData(externalKey, email, name, firstNameLength, currency, null, false,
                                              billCycleDayLocal, paymentMethodId, null, timeZone,
                                              locale, address1, address2, companyName, city, stateOrProvince,
-                                             country, postalCode, phone, notes, false, true);
+                                             country, postalCode, phone, notes, false);
     }
 }

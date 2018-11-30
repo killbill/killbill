@@ -1,6 +1,6 @@
 /*
- * Copyright 2014-2017 Groupon, Inc
- * Copyright 2014-2017 The Billing Project, LLC
+ * Copyright 2014-2018 Groupon, Inc
+ * Copyright 2014-2018 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -36,6 +36,7 @@ import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.catalog.api.Plan;
 import org.killbill.billing.catalog.api.PlanPhase;
+import org.killbill.billing.catalog.api.Product;
 import org.killbill.billing.catalog.api.TierBlockPolicy;
 import org.killbill.billing.catalog.api.Usage;
 import org.killbill.billing.catalog.api.UsageType;
@@ -55,6 +56,7 @@ public abstract class TestUsageInArrearBase extends InvoiceTestSuiteNoDB {
     protected UUID bundleId;
     protected UUID subscriptionId;
     protected UUID invoiceId;
+    protected String productName;
     protected String planName;
     protected String phaseName;
     protected Currency currency;
@@ -64,6 +66,10 @@ public abstract class TestUsageInArrearBase extends InvoiceTestSuiteNoDB {
 
     @BeforeClass(groups = "fast")
     protected void beforeClass() throws Exception {
+        if (hasFailed()) {
+            return;
+        }
+
         super.beforeClass();
         BCD = 15;
         usageName = "foo";
@@ -71,6 +77,7 @@ public abstract class TestUsageInArrearBase extends InvoiceTestSuiteNoDB {
         bundleId = UUID.randomUUID();
         subscriptionId = UUID.randomUUID();
         invoiceId = UUID.randomUUID();
+        productName = "productName";
         planName = "planName";
         phaseName = "phaseName";
         currency = Currency.BTC;
@@ -159,9 +166,13 @@ public abstract class TestUsageInArrearBase extends InvoiceTestSuiteNoDB {
     }
 
     protected BillingEvent createMockBillingEvent(final DateTime effectiveDate, final BillingPeriod billingPeriod, final List<Usage> usages) {
+        return createMockBillingEvent(BCD, effectiveDate, billingPeriod, usages);
+    }
+
+    protected BillingEvent createMockBillingEvent(final int bcd, final DateTime effectiveDate, final BillingPeriod billingPeriod, final List<Usage> usages) {
         final BillingEvent result = Mockito.mock(BillingEvent.class);
         Mockito.when(result.getCurrency()).thenReturn(Currency.BTC);
-        Mockito.when(result.getBillCycleDayLocal()).thenReturn(BCD);
+        Mockito.when(result.getBillCycleDayLocal()).thenReturn(bcd);
         Mockito.when(result.getEffectiveDate()).thenReturn(effectiveDate);
         Mockito.when(result.getBillingPeriod()).thenReturn(billingPeriod);
 
@@ -174,8 +185,12 @@ public abstract class TestUsageInArrearBase extends InvoiceTestSuiteNoDB {
         Mockito.when(subscription.getBundleId()).thenReturn(bundleId);
         Mockito.when(result.getSubscription()).thenReturn(subscription);
 
+        final Product product = Mockito.mock(Product.class);
+        Mockito.when(product.getName()).thenReturn(productName);
+
         final Plan plan = Mockito.mock(Plan.class);
         Mockito.when(plan.getName()).thenReturn(planName);
+        Mockito.when(plan.getProduct()).thenReturn(product);
         Mockito.when(result.getPlan()).thenReturn(plan);
 
         final PlanPhase phase = Mockito.mock(PlanPhase.class);

@@ -20,6 +20,7 @@ package org.killbill.billing.payment;
 
 import java.util.UUID;
 
+import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDate;
 import org.killbill.billing.GuicyKillbillTestSuite;
@@ -30,6 +31,7 @@ import org.killbill.billing.account.api.AccountUserApi;
 import org.killbill.billing.account.api.ImmutableAccountInternalApi;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
+import org.killbill.billing.callcontext.MutableCallContext;
 import org.killbill.billing.callcontext.MutableInternalCallContext;
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.events.InvoiceCreationInternalEvent;
@@ -143,19 +145,21 @@ public class TestPaymentHelper {
         Mockito.when(accountData.getCurrency()).thenReturn(Currency.USD);
         Mockito.when(accountData.getBillCycleDayLocal()).thenReturn(1);
         Mockito.when(accountData.isMigrated()).thenReturn(false);
-        Mockito.when(accountData.isNotifiedForInvoices()).thenReturn(false);
         Mockito.when(accountData.getTimeZone()).thenReturn(DateTimeZone.UTC);
-        Mockito.when(accountData.getCreatedDate()).thenReturn(clock.getUTCNow());
-        Mockito.when(accountData.getReferenceTime()).thenReturn(clock.getUTCNow());
+        final DateTime utcNow = clock.getUTCNow();
+        Mockito.when(accountData.getCreatedDate()).thenReturn(utcNow);
+        Mockito.when(accountData.getReferenceTime()).thenReturn(utcNow);
+
+        final MutableCallContext mutableCallContext = new MutableCallContext(internalCallContext);
 
         Account account;
         if (isFastTest()) {
-            account = GuicyKillbillTestSuiteNoDB.createMockAccount(accountData, accountApi, accountInternalApi, immutableAccountInternalApi, nonEntityDao, clock, internalCallContextFactory, context, internalCallContext);
+            account = GuicyKillbillTestSuiteNoDB.createMockAccount(accountData, accountApi, accountInternalApi, immutableAccountInternalApi, nonEntityDao, clock, internalCallContextFactory, mutableCallContext, internalCallContext);
         } else {
             account = accountApi.createAccount(accountData, context);
         }
 
-        GuicyKillbillTestSuite.refreshCallContext(account.getId(), clock, internalCallContextFactory, context, internalCallContext);
+        GuicyKillbillTestSuite.refreshCallContext(account.getId(), clock, internalCallContextFactory, mutableCallContext, internalCallContext);
 
         if (addPaymentMethod) {
             final PaymentMethodPlugin pm = new DefaultNoOpPaymentMethodPlugin(UUID.randomUUID().toString(), true, null);
@@ -170,15 +174,19 @@ public class TestPaymentHelper {
     }
 
     public Account addTestPaymentMethod(final Account account, final PaymentMethodPlugin paymentMethodInfo, final Iterable<PluginProperty> pluginProperties) throws Exception {
-        final UUID paymentMethodId = paymentApi.addPaymentMethod(account, paymentMethodInfo.getExternalPaymentMethodId(), MockPaymentProviderPlugin.PLUGIN_NAME, true, paymentMethodInfo, pluginProperties, context);
-        if (isFastTest()) {
+        final UUID pmId = addTestPaymentMethod(MockPaymentProviderPlugin.PLUGIN_NAME, account, paymentMethodInfo, pluginProperties);
+        // To reflect the payment method id change
+        return accountApi.getAccountById(account.getId(), context);
+    }
+
+    public UUID addTestPaymentMethod(final String pluginName, final Account account, final PaymentMethodPlugin paymentMethodInfo, final Iterable<PluginProperty> pluginProperties) throws Exception {
+        final boolean setDefault = paymentMethodInfo.isDefaultPaymentMethod();
+        final UUID paymentMethodId = paymentApi.addPaymentMethod(account, paymentMethodInfo.getExternalPaymentMethodId(), pluginName, setDefault, paymentMethodInfo, pluginProperties, context);
+        if (isFastTest() && setDefault) {
             final Account account1 = new MockAccountBuilder(account).paymentMethodId(paymentMethodId).build();
-            accountApi.updateAccount(account, context);
-            return account1;
-        } else {
-            // To reflect the payment method id change
-            return accountApi.getAccountById(account.getId(), context);
+            accountApi.updateAccount(account1, context);
         }
+        return paymentMethodId;
     }
 
     // Unfortunately, this helper is shared across fast and slow tests

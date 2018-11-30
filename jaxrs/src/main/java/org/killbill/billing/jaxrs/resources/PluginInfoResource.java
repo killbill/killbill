@@ -1,6 +1,6 @@
 /*
- * Copyright 2014-2015 Groupon, Inc
- * Copyright 2014-2015 The Billing Project, LLC
+ * Copyright 2014-2018 Groupon, Inc
+ * Copyright 2014-2018 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -32,6 +32,7 @@ import org.killbill.billing.jaxrs.util.Context;
 import org.killbill.billing.jaxrs.util.JaxrsUriBuilder;
 import org.killbill.billing.osgi.api.PluginInfo;
 import org.killbill.billing.osgi.api.PluginsInfoApi;
+import org.killbill.billing.payment.api.InvoicePaymentApi;
 import org.killbill.billing.payment.api.PaymentApi;
 import org.killbill.billing.util.api.AuditUserApi;
 import org.killbill.billing.util.api.CustomFieldUserApi;
@@ -48,7 +49,7 @@ import io.swagger.annotations.ApiOperation;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 
 @Path(JaxrsResource.PLUGINS_INFO_PATH)
-@Api(value = JaxrsResource.PLUGINS_INFO_PATH, description = "Operations on plugins")
+@Api(value = JaxrsResource.PLUGINS_INFO_PATH, description = "Operations on plugins", tags="PluginInfo")
 public class PluginInfoResource extends JaxRsResourceBase {
 
     private final PluginsInfoApi pluginsInfoApi;
@@ -60,10 +61,11 @@ public class PluginInfoResource extends JaxRsResourceBase {
                               final AuditUserApi auditUserApi,
                               final AccountUserApi accountUserApi,
                               final PaymentApi paymentApi,
+                              final InvoicePaymentApi invoicePaymentApi,
                               final PluginsInfoApi pluginsInfoApi,
                               final Clock clock,
                               final Context context) {
-        super(uriBuilder, tagUserApi, customFieldUserApi, auditUserApi, accountUserApi, paymentApi, null, clock, context);
+        super(uriBuilder, tagUserApi, customFieldUserApi, auditUserApi, accountUserApi, paymentApi, invoicePaymentApi, null, clock, context);
         this.pluginsInfoApi = pluginsInfoApi;
     }
 

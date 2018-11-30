@@ -80,10 +80,9 @@ public class TestDefaultAccountUserApiWithMocks extends AccountTestSuiteNoDB {
         final String phone = UUID.randomUUID().toString();
         final String notes = UUID.randomUUID().toString();
         final Boolean isMigrated = true;
-        final Boolean isNotifiedForInvoices = false;
         final AccountData data = new DefaultAccount(id, externalKey, email, name, firstNameLength, currency, null, false, billCycleDay,
                                                     paymentMethodId, referenceTime, timeZone, locale, address1, address2, companyName,
-                                                    city, stateOrProvince, country, postalCode, phone, notes, isMigrated, isNotifiedForInvoices);
+                                                    city, stateOrProvince, country, postalCode, phone, notes, isMigrated);
 
         accountUserApi.createAccount(data, callContext);
 
@@ -106,7 +105,6 @@ public class TestDefaultAccountUserApiWithMocks extends AccountTestSuiteNoDB {
         Assert.assertEquals(account.getPostalCode(), postalCode);
         Assert.assertEquals(account.getPhone(), phone);
         Assert.assertEquals(account.getMigrated(), isMigrated);
-        Assert.assertEquals(account.getIsNotifiedForInvoices(), isNotifiedForInvoices);
     }
 
     @Test(groups = "fast", description = "Test ability to add email to Account")

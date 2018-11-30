@@ -35,7 +35,6 @@ import org.killbill.billing.util.config.definition.PaymentConfig;
 import org.killbill.billing.util.glue.CacheModule;
 import org.killbill.billing.util.glue.CallContextModule;
 import org.killbill.billing.util.glue.ConfigModule;
-import org.killbill.billing.util.glue.MemoryGlobalLockerModule;
 import org.killbill.billing.util.tag.Tag;
 import org.killbill.clock.Clock;
 import org.mockito.Mockito;
@@ -54,6 +53,8 @@ public class TestPaymentModule extends PaymentModule {
     @Override
     protected void installPaymentProviderPlugins(final PaymentConfig config) {
         install(new MockPaymentProviderPluginModule(MockPaymentProviderPlugin.PLUGIN_NAME, clock, configSource));
+        // Install a second instance, to test codepaths with multiple plugins (e.g. search)
+        install(new MockPaymentProviderPluginModule(MockPaymentProviderPlugin.PLUGIN_NAME + "2", clock, configSource));
     }
 
     private void installExternalApis() {
@@ -70,7 +71,6 @@ public class TestPaymentModule extends PaymentModule {
         super.configure();
         install(new MockInvoiceModule(configSource));
         install(new MockSubscriptionModule(configSource));
-        install(new MemoryGlobalLockerModule(configSource));
         install(new MockTenantModule(configSource));
         install(new CacheModule(configSource));
         install(new ConfigModule(configSource));

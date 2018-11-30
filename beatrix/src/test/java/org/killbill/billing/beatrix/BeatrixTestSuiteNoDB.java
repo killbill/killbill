@@ -27,7 +27,11 @@ public abstract class BeatrixTestSuiteNoDB extends GuicyKillbillTestSuiteNoDB {
 
     @BeforeClass(groups = "fast")
     protected void beforeClass() throws Exception {
-        final Injector injector = Guice.createInjector(new BeatrixIntegrationModuleNoDB(configSource));
+        if (hasFailed()) {
+            return;
+        }
+
+        final Injector injector = Guice.createInjector(new BeatrixIntegrationModuleNoDB(configSource, clock));
         injector.injectMembers(this);
     }
 }

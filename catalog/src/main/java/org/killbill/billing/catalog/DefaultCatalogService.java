@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014 Groupon, Inc
- * Copyright 2014 The Billing Project, LLC
+ * Copyright 2014-2018 Groupon, Inc
+ * Copyright 2014-2018 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -21,10 +21,8 @@ package org.killbill.billing.catalog;
 import javax.inject.Named;
 
 import org.killbill.billing.callcontext.InternalTenantContext;
-import org.killbill.billing.catalog.api.Catalog;
 import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.catalog.api.CatalogService;
-import org.killbill.billing.catalog.api.StaticCatalog;
 import org.killbill.billing.catalog.caching.CatalogCache;
 import org.killbill.billing.catalog.glue.CatalogModule;
 import org.killbill.billing.platform.api.KillbillService;
@@ -42,15 +40,12 @@ import com.google.inject.Inject;
 public class DefaultCatalogService implements KillbillService, CatalogService {
 
     private static final Logger log = LoggerFactory.getLogger(DefaultCatalogService.class);
-    private static final String CATALOG_SERVICE_NAME = "catalog-service";
 
     private final CatalogConfig config;
-    private boolean isInitialized;
-
     private final TenantInternalApi tenantInternalApi;
-
     private final CatalogCache catalogCache;
     private final CacheInvalidationCallback cacheInvalidationCallback;
+    private boolean isInitialized;
 
     @Inject
     public DefaultCatalogService(final CatalogConfig config,
@@ -74,7 +69,7 @@ public class DefaultCatalogService implements KillbillService, CatalogService {
                     log.info("Successfully loaded the default catalog {}", config.getCatalogURI());
                 }
                 isInitialized = true;
-            } catch (Exception e) {
+            } catch (final Exception e) {
                 throw new ServiceException(e);
             }
         }
@@ -87,30 +82,25 @@ public class DefaultCatalogService implements KillbillService, CatalogService {
 
     @Override
     public String getName() {
-        return CATALOG_SERVICE_NAME;
+        return KILLBILL_SERVICES.CATALOG_SERVICE.getServiceName();
     }
 
     @Override
-    public Catalog getFullCatalog(final boolean useDefaultCatalog, final boolean filterTemplateCatalog, final InternalTenantContext context) throws CatalogApiException {
+    public int getRegistrationOrdering() {
+        return KILLBILL_SERVICES.CATALOG_SERVICE.getRegistrationOrdering();
+    }
+
+    @Override
+    public DefaultVersionedCatalog getFullCatalog(final boolean useDefaultCatalog, final boolean filterTemplateCatalog, final InternalTenantContext context) throws CatalogApiException {
         return getCatalog(useDefaultCatalog, filterTemplateCatalog, false, context);
     }
 
     @Override
-    public Catalog getFullCatalogForInternalUse(final boolean useDefaultCatalog, final boolean filterTemplateCatalog, final InternalTenantContext context) throws CatalogApiException {
+    public DefaultVersionedCatalog getFullCatalogForInternalUse(final boolean useDefaultCatalog, final boolean filterTemplateCatalog, final InternalTenantContext context) throws CatalogApiException {
         return getCatalog(useDefaultCatalog, filterTemplateCatalog, true, context);
     }
 
-    @Override
-    public StaticCatalog getCurrentCatalog(final boolean useDefaultCatalog, final boolean filterTemplateCatalog, final InternalTenantContext context) throws CatalogApiException {
-        return getCatalog(useDefaultCatalog, filterTemplateCatalog, false, context);
-    }
-
-    @Override
-    public StaticCatalog getCurrentCatalogForInternalUse(final boolean useDefaultCatalog, final boolean filterTemplateCatalog, final InternalTenantContext context) throws CatalogApiException {
-        return getCatalog(useDefaultCatalog, filterTemplateCatalog, true, context);
-    }
-
-    private VersionedCatalog getCatalog(final boolean useDefaultCatalog, final boolean filterTemplateCatalog, final boolean internalUse, final InternalTenantContext context) throws CatalogApiException {
+    private DefaultVersionedCatalog getCatalog(final boolean useDefaultCatalog, final boolean filterTemplateCatalog, final boolean internalUse, final InternalTenantContext context) throws CatalogApiException {
         return catalogCache.getCatalog(useDefaultCatalog, filterTemplateCatalog, internalUse, context);
     }
 }

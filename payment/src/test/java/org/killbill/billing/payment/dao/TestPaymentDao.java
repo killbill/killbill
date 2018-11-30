@@ -29,13 +29,13 @@ import org.killbill.billing.account.api.Account;
 import org.killbill.billing.api.FlakyRetryAnalyzer;
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.payment.PaymentTestSuiteWithEmbeddedDB;
-import org.killbill.billing.payment.api.Payment;
 import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.payment.api.TransactionStatus;
 import org.killbill.billing.payment.api.TransactionType;
 import org.killbill.billing.payment.dao.PluginPropertySerializer.PluginPropertySerializerException;
+import org.killbill.billing.util.api.AuditLevel;
+import org.killbill.billing.util.audit.AuditLogWithHistory;
 import org.killbill.billing.util.audit.ChangeType;
-import org.killbill.billing.util.dao.EntityHistoryModelDao;
 import org.killbill.billing.util.entity.Pagination;
 import org.testng.Assert;
 import org.testng.annotations.Test;
@@ -54,8 +54,8 @@ public class TestPaymentDao extends PaymentTestSuiteWithEmbeddedDB {
     @Test(groups = "slow")
     public void testPaymentAttempt() throws PluginPropertySerializerException {
         final UUID transactionId = UUID.randomUUID();
-        final String paymentExternalKey = "vraiment?";
-        final String transactionExternalKey = "tduteuqweq";
+        final String paymentExternalKey = UUID.randomUUID().toString();
+        final String transactionExternalKey = UUID.randomUUID().toString();
         final String stateName = "INIT";
         final TransactionType transactionType = TransactionType.AUTHORIZE;
         final String pluginName = "superPlugin";
@@ -100,9 +100,9 @@ public class TestPaymentDao extends PaymentTestSuiteWithEmbeddedDB {
     public void testPaymentAndTransactions() {
         final UUID paymentMethodId = UUID.randomUUID();
         final UUID accountId = UUID.randomUUID();
-        final String externalKey = "hhhhooo";
-        final String transactionExternalKey = "grrrrrr";
-        final String transactionExternalKey2 = "hahahaha";
+        final String externalKey = UUID.randomUUID().toString();
+        final String transactionExternalKey = UUID.randomUUID().toString();
+        final String transactionExternalKey2 = UUID.randomUUID().toString();
 
         final DateTime utcNow = clock.getUTCNow();
 
@@ -119,16 +119,18 @@ public class TestPaymentDao extends PaymentTestSuiteWithEmbeddedDB {
         assertEquals(savedPayment.getPaymentMethodId(), paymentModelDao.getPaymentMethodId());
         assertNull(savedPayment.getStateName());
 
-        final List<EntityHistoryModelDao<PaymentModelDao, Payment>> history1 = getPaymentHistory(savedPayment.getRecordId());
-        Assert.assertEquals(history1.size(), 1);
-        Assert.assertEquals(history1.get(0).getChangeType(), ChangeType.INSERT);
-        Assert.assertEquals(history1.get(0).getEntity().getAccountRecordId(), savedPayment.getAccountRecordId());
-        Assert.assertEquals(history1.get(0).getEntity().getTenantRecordId(), savedPayment.getTenantRecordId());
-        Assert.assertEquals(history1.get(0).getEntity().getExternalKey(), savedPayment.getExternalKey());
-        Assert.assertEquals(history1.get(0).getEntity().getStateName(), savedPayment.getStateName());
-        Assert.assertEquals(history1.get(0).getEntity().getLastSuccessStateName(), savedPayment.getLastSuccessStateName());
-        Assert.assertNull(history1.get(0).getEntity().getStateName());
-        Assert.assertNull(history1.get(0).getEntity().getLastSuccessStateName());
+        List<AuditLogWithHistory> auditLogsWithHistory = paymentDao.getPaymentAuditLogsWithHistoryForId(savedPayment.getId(), AuditLevel.FULL, internalCallContext);
+        Assert.assertEquals(auditLogsWithHistory.size(), 1);
+
+        PaymentModelDao history1 = (PaymentModelDao) auditLogsWithHistory.get(0).getEntity();
+        Assert.assertEquals(auditLogsWithHistory.get(0).getChangeType(), ChangeType.INSERT);
+        Assert.assertEquals(history1.getAccountRecordId(), savedPayment.getAccountRecordId());
+        Assert.assertEquals(history1.getTenantRecordId(), savedPayment.getTenantRecordId());
+        Assert.assertEquals(history1.getExternalKey(), savedPayment.getExternalKey());
+        Assert.assertEquals(history1.getStateName(), savedPayment.getStateName());
+        Assert.assertEquals(history1.getLastSuccessStateName(), savedPayment.getLastSuccessStateName());
+        Assert.assertNull(history1.getStateName());
+        Assert.assertNull(history1.getLastSuccessStateName());
 
         final PaymentModelDao savedPayment2 = paymentDao.getPayment(savedPayment.getId(), internalCallContext);
         assertEquals(savedPayment2.getId(), paymentModelDao.getId());
@@ -175,19 +177,22 @@ public class TestPaymentDao extends PaymentTestSuiteWithEmbeddedDB {
         assertEquals(savedTransactionModelDao2.getAmount().compareTo(BigDecimal.TEN), 0);
         assertEquals(savedTransactionModelDao2.getCurrency(), Currency.AED);
 
-        final List<EntityHistoryModelDao<PaymentModelDao, Payment>> history2 = getPaymentHistory(savedPayment.getRecordId());
-        Assert.assertEquals(history2.size(), 2);
-        Assert.assertEquals(history2.get(0).getChangeType(), ChangeType.INSERT);
-        Assert.assertEquals(history2.get(0).getEntity().getAccountRecordId(), savedPayment.getAccountRecordId());
-        Assert.assertEquals(history2.get(0).getEntity().getTenantRecordId(), savedPayment.getTenantRecordId());
-        Assert.assertEquals(history2.get(0).getEntity().getExternalKey(), savedPayment.getExternalKey());
-        Assert.assertEquals(history2.get(1).getChangeType(), ChangeType.UPDATE);
-        Assert.assertEquals(history2.get(1).getEntity().getAccountRecordId(), savedPayment.getAccountRecordId());
-        Assert.assertEquals(history2.get(1).getEntity().getTenantRecordId(), savedPayment.getTenantRecordId());
-        Assert.assertEquals(history2.get(1).getEntity().getExternalKey(), savedPayment.getExternalKey());
-        Assert.assertTrue(history2.get(1).getEntity().getUpdatedDate().compareTo(history2.get(0).getEntity().getUpdatedDate()) >= 0);
-        Assert.assertNull(history2.get(1).getEntity().getStateName());
-        Assert.assertNull(history2.get(1).getEntity().getLastSuccessStateName());
+        auditLogsWithHistory = paymentDao.getPaymentAuditLogsWithHistoryForId(savedPayment.getId(), AuditLevel.FULL, internalCallContext);
+        Assert.assertEquals(auditLogsWithHistory.size(), 2);
+
+        history1 = (PaymentModelDao) auditLogsWithHistory.get(0).getEntity();
+        PaymentModelDao history2 = (PaymentModelDao) auditLogsWithHistory.get(1).getEntity();
+        Assert.assertEquals(auditLogsWithHistory.get(0).getChangeType(), ChangeType.INSERT);
+        Assert.assertEquals(history1.getAccountRecordId(), savedPayment.getAccountRecordId());
+        Assert.assertEquals(history1.getTenantRecordId(), savedPayment.getTenantRecordId());
+        Assert.assertEquals(history1.getExternalKey(), savedPayment.getExternalKey());
+        Assert.assertEquals(auditLogsWithHistory.get(1).getChangeType(), ChangeType.UPDATE);
+        Assert.assertEquals(history2.getAccountRecordId(), savedPayment.getAccountRecordId());
+        Assert.assertEquals(history2.getTenantRecordId(), savedPayment.getTenantRecordId());
+        Assert.assertEquals(history2.getExternalKey(), savedPayment.getExternalKey());
+        Assert.assertTrue(history2.getUpdatedDate().compareTo(history2.getUpdatedDate()) >= 0);
+        Assert.assertNull(history2.getStateName());
+        Assert.assertNull(history2.getLastSuccessStateName());
 
         final List<PaymentTransactionModelDao> transactions = paymentDao.getTransactionsForPayment(savedPayment.getId(), internalCallContext);
         assertEquals(transactions.size(), 2);
@@ -203,24 +208,28 @@ public class TestPaymentDao extends PaymentTestSuiteWithEmbeddedDB {
         assertEquals(savedPayment4.getStateName(), "AUTH_ABORTED");
         assertEquals(savedPayment4.getLastSuccessStateName(), "AUTH_SUCCESS");
 
-        final List<EntityHistoryModelDao<PaymentModelDao, Payment>> history3 = getPaymentHistory(savedPayment.getRecordId());
-        Assert.assertEquals(history3.size(), 3);
-        Assert.assertEquals(history3.get(0).getChangeType(), ChangeType.INSERT);
-        Assert.assertEquals(history3.get(0).getEntity().getAccountRecordId(), savedPayment.getAccountRecordId());
-        Assert.assertEquals(history3.get(0).getEntity().getTenantRecordId(), savedPayment.getTenantRecordId());
-        Assert.assertEquals(history3.get(0).getEntity().getExternalKey(), savedPayment.getExternalKey());
-        Assert.assertEquals(history3.get(1).getChangeType(), ChangeType.UPDATE);
-        Assert.assertEquals(history3.get(1).getEntity().getAccountRecordId(), savedPayment.getAccountRecordId());
-        Assert.assertEquals(history3.get(1).getEntity().getTenantRecordId(), savedPayment.getTenantRecordId());
-        Assert.assertEquals(history3.get(1).getEntity().getExternalKey(), savedPayment.getExternalKey());
-        Assert.assertTrue(history3.get(1).getEntity().getUpdatedDate().compareTo(history3.get(0).getEntity().getUpdatedDate()) >= 0);
-        Assert.assertEquals(history3.get(2).getChangeType(), ChangeType.UPDATE);
-        Assert.assertEquals(history3.get(2).getEntity().getAccountRecordId(), savedPayment.getAccountRecordId());
-        Assert.assertEquals(history3.get(2).getEntity().getTenantRecordId(), savedPayment.getTenantRecordId());
-        Assert.assertEquals(history3.get(2).getEntity().getExternalKey(), savedPayment.getExternalKey());
-        Assert.assertTrue(history3.get(2).getEntity().getUpdatedDate().compareTo(history3.get(2).getEntity().getUpdatedDate()) >= 0);
-        Assert.assertEquals(history3.get(2).getEntity().getStateName(), savedPayment4.getStateName());
-        Assert.assertEquals(history3.get(2).getEntity().getLastSuccessStateName(), savedPayment4.getLastSuccessStateName());
+        auditLogsWithHistory = paymentDao.getPaymentAuditLogsWithHistoryForId(savedPayment.getId(), AuditLevel.FULL, internalCallContext);
+        Assert.assertEquals(auditLogsWithHistory.size(), 3);
+
+        history1 = (PaymentModelDao) auditLogsWithHistory.get(0).getEntity();
+        history2 = (PaymentModelDao) auditLogsWithHistory.get(1).getEntity();
+        final PaymentModelDao history3 = (PaymentModelDao) auditLogsWithHistory.get(2).getEntity();
+        Assert.assertEquals(auditLogsWithHistory.get(0).getChangeType(), ChangeType.INSERT);
+        Assert.assertEquals(history1.getAccountRecordId(), savedPayment.getAccountRecordId());
+        Assert.assertEquals(history1.getTenantRecordId(), savedPayment.getTenantRecordId());
+        Assert.assertEquals(history1.getExternalKey(), savedPayment.getExternalKey());
+        Assert.assertEquals(auditLogsWithHistory.get(1).getChangeType(), ChangeType.UPDATE);
+        Assert.assertEquals(history2.getAccountRecordId(), savedPayment.getAccountRecordId());
+        Assert.assertEquals(history2.getTenantRecordId(), savedPayment.getTenantRecordId());
+        Assert.assertEquals(history2.getExternalKey(), savedPayment.getExternalKey());
+        Assert.assertTrue(auditLogsWithHistory.get(1).getEntity().getUpdatedDate().compareTo(auditLogsWithHistory.get(0).getEntity().getUpdatedDate()) >= 0);
+        Assert.assertEquals(auditLogsWithHistory.get(2).getChangeType(), ChangeType.UPDATE);
+        Assert.assertEquals(history3.getAccountRecordId(), savedPayment.getAccountRecordId());
+        Assert.assertEquals(history3.getTenantRecordId(), savedPayment.getTenantRecordId());
+        Assert.assertEquals(history3.getExternalKey(), savedPayment.getExternalKey());
+        Assert.assertTrue(history3.getUpdatedDate().compareTo(history3.getUpdatedDate()) >= 0);
+        Assert.assertEquals(history3.getStateName(), savedPayment4.getStateName());
+        Assert.assertEquals(history3.getLastSuccessStateName(), savedPayment4.getLastSuccessStateName());
 
         final PaymentTransactionModelDao savedTransactionModelDao4 = paymentDao.getPaymentTransaction(savedTransactionModelDao2.getId(), internalCallContext);
         assertEquals(savedTransactionModelDao4.getTransactionExternalKey(), transactionExternalKey2);
@@ -240,7 +249,7 @@ public class TestPaymentDao extends PaymentTestSuiteWithEmbeddedDB {
         final PaymentModelDao savedPayment4Again = paymentDao.getPayment(savedPayment.getId(), internalCallContext);
         assertEquals(savedPayment4Again.getId(), paymentModelDao.getId());
         assertEquals(savedPayment4Again.getStateName(), "AUTH_ABORTED");
-        assertEquals(savedPayment4Again.getLastSuccessStateName(), "AUTH_SUCCESS");
+        assertNull(savedPayment4Again.getLastSuccessStateName());
 
         paymentDao.updatePaymentAndTransactionOnCompletion(accountId, savedTransactionModelDao2.getAttemptId(), savedPayment.getId(), savedTransactionModelDao2.getTransactionType(), "AUTH_ABORTED", "AUTH_SUCCESS", transactionModelDao2.getId(), TransactionStatus.SUCCESS,
                                                            BigDecimal.ONE, Currency.USD, null, "nothing", internalCallContext);
@@ -301,11 +310,11 @@ public class TestPaymentDao extends PaymentTestSuiteWithEmbeddedDB {
 
         final UUID paymentMethodId = UUID.randomUUID();
         final UUID accountId = UUID.randomUUID();
-        final String externalKey = "hhhhooo";
-        final String transactionExternalKey1 = "transaction1";
-        final String transactionExternalKey2 = "transaction2";
-        final String transactionExternalKey3 = "transaction3";
-        final String transactionExternalKey4 = "transaction4";
+        final String externalKey = UUID.randomUUID().toString();
+        final String transactionExternalKey1 = UUID.randomUUID().toString();
+        final String transactionExternalKey2 = UUID.randomUUID().toString();
+        final String transactionExternalKey3 = UUID.randomUUID().toString();
+        final String transactionExternalKey4 = UUID.randomUUID().toString();
 
         final DateTime initialTime = clock.getUTCNow().minusMinutes(1);
 
@@ -376,20 +385,20 @@ public class TestPaymentDao extends PaymentTestSuiteWithEmbeddedDB {
 
     @Test(groups = "slow")
     public void testPaymentByStatesAcrossTenants() throws Exception {
-        final String externalKey1 = "XXhhhhooo1";
-        final String transactionExternalKey1 = "transactionXX1";
+        final String externalKey1 = UUID.randomUUID().toString();
+        final String transactionExternalKey1 = UUID.randomUUID().toString();
 
-        final String externalKey2 = "XXhhhhooo2";
-        final String transactionExternalKey2 = "transactionXX2";
+        final String externalKey2 = UUID.randomUUID().toString();
+        final String transactionExternalKey2 = UUID.randomUUID().toString();
 
-        final String externalKey3 = "XXhhhhooo3";
-        final String transactionExternalKey3 = "transactionXX3";
+        final String externalKey3 = UUID.randomUUID().toString();
+        final String transactionExternalKey3 = UUID.randomUUID().toString();
 
-        final String externalKey4 = "XXhhhhooo4";
-        final String transactionExternalKey4 = "transactionXX4";
+        final String externalKey4 = UUID.randomUUID().toString();
+        final String transactionExternalKey4 = UUID.randomUUID().toString();
 
-        final String externalKey5 = "XXhhhhooo5";
-        final String transactionExternalKey5 = "transactionXX5";
+        final String externalKey5 = UUID.randomUUID().toString();
+        final String transactionExternalKey5 = UUID.randomUUID().toString();
 
         final DateTime createdAfterDate = clock.getUTCNow().minusDays(10);
         final DateTime createdBeforeDate = clock.getUTCNow().minusDays(1);
@@ -542,8 +551,8 @@ public class TestPaymentDao extends PaymentTestSuiteWithEmbeddedDB {
 
         final Account account = testHelper.createTestAccount(UUID.randomUUID().toString(), true);
 
-        final String externalKey1 = "2354";
-        final String transactionExternalKey1 = "jkjkjk";
+        final String externalKey1 = UUID.randomUUID().toString();
+        final String transactionExternalKey1 = UUID.randomUUID().toString();
 
         final String stateName = "RRRRR";
         final String pluginName = "elated";
@@ -596,12 +605,6 @@ public class TestPaymentDao extends PaymentTestSuiteWithEmbeddedDB {
                 return input.getTransactionStatus() == TransactionStatus.PENDING;
             }
         }));
-    }
-
-    private List<EntityHistoryModelDao<PaymentModelDao, Payment>> getPaymentHistory(final Long paymentRecordId) {
-        // See https://github.com/killbill/killbill/issues/335
-        final PaymentSqlDao paymentSqlDao = dbi.onDemand(PaymentSqlDao.class);
-        return paymentSqlDao.getHistoryForTargetRecordId(paymentRecordId, internalCallContext);
     }
 }
 

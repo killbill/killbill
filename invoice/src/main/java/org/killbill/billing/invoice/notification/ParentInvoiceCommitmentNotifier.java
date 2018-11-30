@@ -22,6 +22,7 @@ import java.util.UUID;
 import org.joda.time.DateTime;
 import org.killbill.billing.invoice.InvoiceListener;
 import org.killbill.billing.invoice.api.DefaultInvoiceService;
+import org.killbill.billing.platform.api.KillbillService.KILLBILL_SERVICES;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.billing.util.config.definition.InvoiceConfig;
 import org.killbill.notificationq.api.NotificationEvent;
@@ -75,7 +76,7 @@ public class ParentInvoiceCommitmentNotifier implements NextBillingDateNotifier 
             }
         };
 
-        commitInvoiceQueue = notificationQueueService.createNotificationQueue(DefaultInvoiceService.INVOICE_SERVICE_NAME,
+        commitInvoiceQueue = notificationQueueService.createNotificationQueue(KILLBILL_SERVICES.INVOICE_SERVICE.getServiceName(),
                                                                               PARENT_INVOICE_COMMITMENT_NOTIFIER_QUEUE,
                                                                               notificationQueueHandler);
     }

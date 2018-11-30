@@ -90,7 +90,12 @@ public class DefaultEntitlementService implements EntitlementService {
 
     @Override
     public String getName() {
-        return EntitlementService.ENTITLEMENT_SERVICE_NAME;
+        return KILLBILL_SERVICES.ENTITLEMENT_SERVICE.getServiceName();
+    }
+
+    @Override
+    public int getRegistrationOrdering() {
+        return KILLBILL_SERVICES.ENTITLEMENT_SERVICE.getRegistrationOrdering();
     }
 
     @LifecycleHandlerType(LifecycleLevel.INIT_SERVICE)
@@ -114,7 +119,7 @@ public class DefaultEntitlementService implements EntitlementService {
                 }
             };
 
-            entitlementEventQueue = notificationQueueService.createNotificationQueue(ENTITLEMENT_SERVICE_NAME,
+            entitlementEventQueue = notificationQueueService.createNotificationQueue(KILLBILL_SERVICES.ENTITLEMENT_SERVICE.getServiceName(),
                                                                                      NOTIFICATION_QUEUE_NAME,
                                                                                      queueHandler);
         } catch (final NotificationQueueAlreadyExists e) {
@@ -165,7 +170,7 @@ public class DefaultEntitlementService implements EntitlementService {
                                           final NotificationEvent notificationEvent,
                                           final InternalCallContext context) {
         try {
-            final NotificationQueue subscriptionEventQueue = notificationQueueService.getNotificationQueue(DefaultEntitlementService.ENTITLEMENT_SERVICE_NAME,
+            final NotificationQueue subscriptionEventQueue = notificationQueueService.getNotificationQueue(KILLBILL_SERVICES.ENTITLEMENT_SERVICE.getServiceName(),
                                                                                                            DefaultEntitlementService.NOTIFICATION_QUEUE_NAME);
             subscriptionEventQueue.recordFutureNotification(effectiveDate, notificationEvent, context.getUserToken(), context.getAccountRecordId(), context.getTenantRecordId());
         } catch (final NoSuchNotificationQueue e) {
@@ -175,11 +180,15 @@ public class DefaultEntitlementService implements EntitlementService {
         }
     }
 
-    private void processBlockingNotification(final BlockingTransitionNotificationKey key, final InternalCallContext internalCallContext) {
+    private void processBlockingNotification(final BlockingTransitionNotificationKey key, final InternalCallContext internalCallContext){
         // Check if the blocking state has been deleted since
-        if (blockingStateDao.getById(key.getBlockingStateId(), internalCallContext) == null) {
-            log.debug("BlockingState {} has been deleted, not sending a bus event", key.getBlockingStateId());
-            return;
+        try {
+            if (blockingStateDao.getById(key.getBlockingStateId(), internalCallContext) == null) {
+                log.debug("BlockingState {} has been deleted, not sending a bus event", key.getBlockingStateId());
+                return;
+            }
+        } catch (final EntitlementApiException e) {
+            throw new IllegalStateException(String.format("Unexpected exception when fetching blockingState='%s'", key.getBlockingStateId()), e);
         }
 
         final BusEvent event = new DefaultBlockingTransitionInternalEvent(key.getBlockableId(),

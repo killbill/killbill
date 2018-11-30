@@ -43,7 +43,7 @@ public class TestConfig extends OverdueTestSuiteNoDB {
         final String overdueConfigStr = XMLWriter.writeXML(overdueConfig, DefaultOverdueConfig.class);
 
         //System.err.println(overdueConfigStr);
-        final DefaultOverdueConfig overdueConfig2 = XMLLoader.getObjectFromStream(new URI("dummy"), new ByteArrayInputStream(overdueConfigStr.getBytes(Charset.forName("UTF-8"))), DefaultOverdueConfig.class);
+        final DefaultOverdueConfig overdueConfig2 = XMLLoader.getObjectFromStream(new ByteArrayInputStream(overdueConfigStr.getBytes(Charset.forName("UTF-8"))), DefaultOverdueConfig.class);
         final String overdueConfigStr2 = XMLWriter.writeXML(overdueConfig2, DefaultOverdueConfig.class);
         Assert.assertEquals(overdueConfigStr, overdueConfigStr2);
     }

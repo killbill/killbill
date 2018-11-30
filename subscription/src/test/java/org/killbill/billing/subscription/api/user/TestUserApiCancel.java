@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014-2017 Groupon, Inc
- * Copyright 2014-2017 The Billing Project, LLC
+ * Copyright 2014-2018 Groupon, Inc
+ * Copyright 2014-2018 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -24,7 +24,6 @@ import org.joda.time.DateTime;
 import org.joda.time.Interval;
 import org.joda.time.LocalDate;
 import org.killbill.billing.ErrorCode;
-import org.killbill.billing.api.FlakyRetryAnalyzer;
 import org.killbill.billing.api.TestApiListener.NextEvent;
 import org.killbill.billing.catalog.api.BillingActionPolicy;
 import org.killbill.billing.catalog.api.BillingPeriod;
@@ -206,9 +205,8 @@ public class TestUserApiCancel extends SubscriptionTestSuiteWithEmbeddedDB {
 
     // Similar test to testCancelSubscriptionEOTWithChargeThroughDate except we uncancel and check things
     // are as they used to be and we can move forward without hitting cancellation
-    // Flaky, see https://github.com/killbill/killbill/issues/860
-    @Test(groups = "slow", retryAnalyzer = FlakyRetryAnalyzer.class)
-    public void testUncancel() throws SubscriptionBillingApiException, SubscriptionBaseApiException {
+    @Test(groups = "slow")
+    public void testUncancel() throws SubscriptionBaseApiException {
         final String prod = "Shotgun";
         final BillingPeriod term = BillingPeriod.MONTHLY;
         final String planSet = PriceListSet.DEFAULT_PRICELIST_NAME;
@@ -224,8 +222,7 @@ public class TestUserApiCancel extends SubscriptionTestSuiteWithEmbeddedDB {
 
         // MOVE TO NEXT PHASE
         testListener.pushExpectedEvent(NextEvent.PHASE);
-        Interval it = new Interval(clock.getUTCNow(), clock.getUTCNow().plusDays(31));
-        clock.addDeltaFromReality(it.toDurationMillis());
+        clock.addMonths(1);
         assertListenerStatus();
         PlanPhase currentPhase = subscription.getCurrentPhase();
         assertEquals(currentPhase.getPhaseType(), PhaseType.EVERGREEN);
@@ -238,21 +235,21 @@ public class TestUserApiCancel extends SubscriptionTestSuiteWithEmbeddedDB {
 
         // CANCEL EOT
         subscription.cancel(callContext);
+        assertListenerStatus();
 
+        // UNCANCEL
+        testListener.pushExpectedEvent(NextEvent.UNCANCEL);
         subscription.uncancel(callContext);
+        assertListenerStatus();
 
         // MOVE TO EOT + RECHECK
-        testListener.pushExpectedEvent(NextEvent.UNCANCEL);
-        it = new Interval(clock.getUTCNow(), clock.getUTCNow().plusMonths(1));
-        clock.addDeltaFromReality(it.toDurationMillis());
+        clock.addMonths(1);
         assertListenerStatus();
 
         final Plan currentPlan = subscription.getCurrentPlan();
         assertEquals(currentPlan.getProduct().getName(), prod);
         currentPhase = subscription.getCurrentPhase();
         assertEquals(currentPhase.getPhaseType(), PhaseType.EVERGREEN);
-
-        assertListenerStatus();
     }
 
     @Test(groups = "slow", expectedExceptions = SubscriptionBaseApiException.class)
@@ -396,17 +393,15 @@ public class TestUserApiCancel extends SubscriptionTestSuiteWithEmbeddedDB {
 
     @Test(groups = "slow")
     public void testCancelUncancelFutureSubscription() throws SubscriptionBaseApiException {
-        final DateTime init = clock.getUTCNow();
+        final LocalDate init = clock.getUTCToday();
 
         final String productName = "Shotgun";
         final BillingPeriod term = BillingPeriod.MONTHLY;
         final String planSetName = PriceListSet.DEFAULT_PRICELIST_NAME;
 
+        final LocalDate futureCreationDate = init.plusDays(10);
 
-        final DateTime futureCreationDate = init.plusDays(10);
-
-        DefaultSubscriptionBase subscription = (DefaultSubscriptionBase) subscriptionInternalApi.createSubscription(bundle.getId(),
-                                                                                                                    testUtil.getProductSpecifier(productName, planSetName, term, null), null, futureCreationDate, false, internalCallContext);
+        DefaultSubscriptionBase subscription = testUtil.createSubscription(bundle, productName, term, planSetName, futureCreationDate);
         assertListenerStatus();
         assertNotNull(subscription);
         assertEquals(subscription.getState(), EntitlementState.PENDING);
@@ -445,11 +440,11 @@ public class TestUserApiCancel extends SubscriptionTestSuiteWithEmbeddedDB {
         final BillingPeriod baseTerm = BillingPeriod.MONTHLY;
         final String basePriceList = PriceListSet.DEFAULT_PRICELIST_NAME;
 
-        final DateTime startDate = clock.getUTCNow().plusDays(5);
+        final LocalDate startDate = clock.getUTCToday().plusDays(5);
 
         final DefaultSubscriptionBase subscription = testUtil.createSubscription(bundle, baseProduct, baseTerm, basePriceList, startDate);
         assertEquals(subscription.getState(), Entitlement.EntitlementState.PENDING);
-        assertEquals(subscription.getStartDate().compareTo(startDate), 0);
+        assertEquals(subscription.getStartDate().compareTo(startDate.toDateTime(accountData.getReferenceTime())), 0);
 
         // The code will be smart to infer the cancelation date as being the future startDate
         subscription.cancel(callContext);
@@ -459,7 +454,7 @@ public class TestUserApiCancel extends SubscriptionTestSuiteWithEmbeddedDB {
         assertListenerStatus();
 
         final DefaultSubscriptionBase subscription2 = (DefaultSubscriptionBase) subscriptionInternalApi.getSubscriptionFromId(subscription.getId(), internalCallContext);
-        assertEquals(subscription2.getStartDate().compareTo(startDate), 0);
+        assertEquals(subscription2.getStartDate().compareTo(subscription.getStartDate()), 0);
         assertEquals(subscription2.getState(), Entitlement.EntitlementState.CANCELLED);
         assertNull(subscription2.getCurrentPlan());
     }
@@ -471,11 +466,11 @@ public class TestUserApiCancel extends SubscriptionTestSuiteWithEmbeddedDB {
         final BillingPeriod baseTerm = BillingPeriod.MONTHLY;
         final String basePriceList = PriceListSet.DEFAULT_PRICELIST_NAME;
 
-        final DateTime startDate = clock.getUTCNow().plusDays(5);
+        final LocalDate startDate = clock.getUTCToday().plusDays(5);
 
         final DefaultSubscriptionBase subscription = testUtil.createSubscription(bundle, baseProduct, baseTerm, basePriceList, startDate);
         assertEquals(subscription.getState(), Entitlement.EntitlementState.PENDING);
-        assertEquals(subscription.getStartDate().compareTo(startDate), 0);
+        assertEquals(subscription.getStartDate().compareTo(startDate.toDateTime(accountData.getReferenceTime())), 0);
 
         try {
             subscription.cancelWithDate(null, callContext);
@@ -485,20 +480,20 @@ public class TestUserApiCancel extends SubscriptionTestSuiteWithEmbeddedDB {
         }
 
         try {
-            subscription.cancelWithDate(startDate.minusDays(1), callContext);
+            subscription.cancelWithDate(subscription.getStartDate().minusDays(1), callContext);
             fail("Cancel plan should have failed : subscription PENDING");
         } catch (SubscriptionBaseApiException e) {
             assertEquals(e.getCode(), ErrorCode.SUB_INVALID_REQUESTED_DATE.getCode());
         }
 
-        subscription.cancelWithDate(startDate, callContext);
+        subscription.cancelWithDate(subscription.getStartDate(), callContext);
 
         testListener.pushExpectedEvents(NextEvent.CREATE, NextEvent.CANCEL);
         clock.addDays(5);
         assertListenerStatus();
 
         final DefaultSubscriptionBase subscription2 = (DefaultSubscriptionBase) subscriptionInternalApi.getSubscriptionFromId(subscription.getId(), internalCallContext);
-        assertEquals(subscription2.getStartDate().compareTo(startDate), 0);
+        assertEquals(subscription2.getStartDate().compareTo(subscription.getStartDate()), 0);
         assertEquals(subscription2.getState(), Entitlement.EntitlementState.CANCELLED);
         assertNull(subscription2.getCurrentPlan());
     }
@@ -511,11 +506,11 @@ public class TestUserApiCancel extends SubscriptionTestSuiteWithEmbeddedDB {
         final BillingPeriod baseTerm = BillingPeriod.MONTHLY;
         final String basePriceList = PriceListSet.DEFAULT_PRICELIST_NAME;
 
-        final DateTime startDate = clock.getUTCNow().plusDays(5);
+        final LocalDate startDate = clock.getUTCToday().plusDays(5);
 
         final DefaultSubscriptionBase subscription = testUtil.createSubscription(bundle, baseProduct, baseTerm, basePriceList, startDate);
         assertEquals(subscription.getState(), Entitlement.EntitlementState.PENDING);
-        assertEquals(subscription.getStartDate().compareTo(startDate), 0);
+        assertEquals(subscription.getStartDate().compareTo(startDate.toDateTime(accountData.getReferenceTime())), 0);
 
         subscription.cancelWithPolicy(BillingActionPolicy.IMMEDIATE, 1, callContext);
 
@@ -524,7 +519,7 @@ public class TestUserApiCancel extends SubscriptionTestSuiteWithEmbeddedDB {
         assertListenerStatus();
 
         final DefaultSubscriptionBase subscription2 = (DefaultSubscriptionBase) subscriptionInternalApi.getSubscriptionFromId(subscription.getId(), internalCallContext);
-        assertEquals(subscription2.getStartDate().compareTo(startDate), 0);
+        assertEquals(subscription2.getStartDate().compareTo(subscription.getStartDate()), 0);
         assertEquals(subscription2.getState(), Entitlement.EntitlementState.CANCELLED);
         assertNull(subscription2.getCurrentPlan());
     }

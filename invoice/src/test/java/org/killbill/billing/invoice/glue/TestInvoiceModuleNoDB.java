@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014 Groupon, Inc
- * Copyright 2014 The Billing Project, LLC
+ * Copyright 2014-2018 Groupon, Inc
+ * Copyright 2014-2018 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -25,8 +25,6 @@ import java.util.Set;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.killbill.billing.GuicyKillbillTestNoDBModule;
-import org.killbill.billing.account.api.AccountInternalApi;
-import org.killbill.billing.account.api.AccountUserApi;
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.currency.api.CurrencyConversion;
 import org.killbill.billing.currency.api.CurrencyConversionApi;
@@ -34,17 +32,22 @@ import org.killbill.billing.currency.api.CurrencyConversionException;
 import org.killbill.billing.currency.api.Rate;
 import org.killbill.billing.invoice.dao.InvoiceDao;
 import org.killbill.billing.invoice.dao.MockInvoiceDao;
-import org.killbill.billing.mock.api.MockAccountUserApi;
 import org.killbill.billing.mock.glue.MockAccountModule;
 import org.killbill.billing.mock.glue.MockNonEntityDaoModule;
 import org.killbill.billing.mock.glue.MockTagModule;
 import org.killbill.billing.platform.api.KillbillConfigSource;
+import org.killbill.billing.util.audit.dao.AuditDao;
+import org.killbill.billing.util.audit.dao.MockAuditDao;
+import org.killbill.clock.ClockMock;
 import org.mockito.Mockito;
 
 public class TestInvoiceModuleNoDB extends TestInvoiceModule {
 
-    public TestInvoiceModuleNoDB(final KillbillConfigSource configSource) {
+    private final ClockMock clock;
+
+    public TestInvoiceModuleNoDB(final KillbillConfigSource configSource, final ClockMock clock) {
         super(configSource);
+        this.clock = clock;
     }
 
     protected void installInvoiceDao() {
@@ -54,11 +57,11 @@ public class TestInvoiceModuleNoDB extends TestInvoiceModule {
     @Override
     public void configure() {
         super.configure();
-        install(new GuicyKillbillTestNoDBModule(configSource));
+        install(new GuicyKillbillTestNoDBModule(configSource, clock));
         install(new MockNonEntityDaoModule(configSource));
         install(new MockTagModule(configSource));
         install(new MockAccountModule(configSource));
-
+        bind(AuditDao.class).toInstance(new MockAuditDao());
         installCurrencyConversionApi();
     }
 

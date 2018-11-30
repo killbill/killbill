@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014-2017 Groupon, Inc
- * Copyright 2014-2017 The Billing Project, LLC
+ * Copyright 2014-2018 Groupon, Inc
+ * Copyright 2014-2018 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -23,9 +23,8 @@ import java.util.UUID;
 import org.joda.time.DateTime;
 import org.killbill.billing.invoice.InvoiceListener;
 import org.killbill.billing.invoice.api.DefaultInvoiceService;
-import org.killbill.billing.subscription.api.SubscriptionBase;
+import org.killbill.billing.platform.api.KillbillService.KILLBILL_SERVICES;
 import org.killbill.billing.subscription.api.SubscriptionBaseInternalApi;
-import org.killbill.billing.subscription.api.user.SubscriptionBaseApiException;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.clock.Clock;
 import org.killbill.notificationq.api.NotificationEvent;
@@ -84,26 +83,18 @@ public class DefaultNextBillingDateNotifier extends RetryableService implements 
                 // Just to ensure compatibility with json that might not have that targetDate field (old versions < 0.13.6)
                 final DateTime targetDate = key.getTargetDate() != null ? key.getTargetDate() : eventDate;
                 final UUID firstSubscriptionId = key.getUuidKeys().iterator().next();
-                try {
-                    final SubscriptionBase subscription = subscriptionApi.getSubscriptionFromId(firstSubscriptionId, internalCallContextFactory.createInternalTenantContext(tenantRecordId, accountRecordId));
-                    if (subscription == null) {
-                        log.warn("Unable to retrieve subscriptionId='{}' for event {}", firstSubscriptionId, key);
-                        return;
-                    }
-                    if (key.isDryRunForInvoiceNotification() != null && // Just to ensure compatibility with json that might not have that field (old versions < 0.13.6)
-                        key.isDryRunForInvoiceNotification()) {
-                        processEventForInvoiceNotification(firstSubscriptionId, targetDate, userToken, accountRecordId, tenantRecordId);
-                    } else {
-                        processEventForInvoiceGeneration(firstSubscriptionId, targetDate, userToken, accountRecordId, tenantRecordId);
-                    }
-                } catch (SubscriptionBaseApiException e) {
-                    log.warn("Error retrieving subscriptionId='{}'", firstSubscriptionId, e);
+                if (key.isDryRunForInvoiceNotification() != null && // Just to ensure compatibility with json that might not have that field (old versions < 0.13.6)
+                    key.isDryRunForInvoiceNotification()) {
+                    processEventForInvoiceNotification(firstSubscriptionId, targetDate, userToken, accountRecordId, tenantRecordId);
+                } else {
+                    final boolean isRescheduled = key.isRescheduled() == Boolean.TRUE; // Handle null value (old versions < 0.19.7)
+                    processEventForInvoiceGeneration(firstSubscriptionId, targetDate, isRescheduled, userToken, accountRecordId, tenantRecordId);
                 }
             }
         };
 
         final NotificationQueueHandler retryableHandler = new RetryableHandler(clock, this, notificationQueueHandler);
-        nextBillingQueue = notificationQueueService.createNotificationQueue(DefaultInvoiceService.INVOICE_SERVICE_NAME,
+        nextBillingQueue = notificationQueueService.createNotificationQueue(KILLBILL_SERVICES.INVOICE_SERVICE.getServiceName(),
                                                                             NEXT_BILLING_DATE_NOTIFIER_QUEUE,
                                                                             retryableHandler);
 
@@ -127,8 +118,8 @@ public class DefaultNextBillingDateNotifier extends RetryableService implements 
         super.stop();
     }
 
-    private void processEventForInvoiceGeneration(final UUID subscriptionId, final DateTime eventDateTime, final UUID userToken, final Long accountRecordId, final Long tenantRecordId) {
-        listener.handleNextBillingDateEvent(subscriptionId, eventDateTime, userToken, accountRecordId, tenantRecordId);
+    private void processEventForInvoiceGeneration(final UUID subscriptionId, final DateTime eventDateTime, final boolean isRescheduled, final UUID userToken, final Long accountRecordId, final Long tenantRecordId) {
+        listener.handleNextBillingDateEvent(subscriptionId, eventDateTime, isRescheduled, userToken, accountRecordId, tenantRecordId);
     }
 
     private void processEventForInvoiceNotification(final UUID subscriptionId, final DateTime eventDateTime, final UUID userToken, final Long accountRecordId, final Long tenantRecordId) {

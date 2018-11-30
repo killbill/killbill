@@ -135,9 +135,12 @@ public class OverdueStateApplicator {
         if (previousOverdueState.getName().equals(nextOverdueState.getName())) {
             log.debug("OverdueStateApplicator is no-op: previousState={}, nextState={}", previousOverdueState, nextOverdueState);
             return;
+        } else {
+            log.debug("OverdueStateApplicator has new state: previousState={}, nextState={}", previousOverdueState, nextOverdueState);
         }
 
         cancelSubscriptionsIfRequired(effectiveDate, account, nextOverdueState, context);
+
 
         avoid_extra_credit_by_toggling_AUTO_INVOICE_OFF(account, previousOverdueState, nextOverdueState, context);
 

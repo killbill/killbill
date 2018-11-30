@@ -37,13 +37,12 @@ public class TestExternalPaymentPlugin extends PaymentTestSuiteWithEmbeddedDB {
 
     private Account account;
 
-    @BeforeClass(groups = "slow")
-    protected void beforeClass() throws Exception {
-        super.beforeClass();
-    }
-
     @BeforeMethod(groups = "slow")
     public void beforeMethod() throws Exception {
+        if (hasFailed()) {
+            return;
+        }
+
         super.beforeMethod();
         account = testHelper.createTestAccount("bob@gmail.com", false);
         account = addTestExternalPaymentMethod(account, new DefaultNoOpPaymentMethodPlugin(UUID.randomUUID().toString(), true, null));

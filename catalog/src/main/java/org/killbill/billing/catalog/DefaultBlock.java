@@ -17,8 +17,11 @@
 
 package org.killbill.billing.catalog;
 
+import java.io.Externalizable;
+import java.io.IOException;
+import java.io.ObjectInput;
+import java.io.ObjectOutput;
 import java.math.BigDecimal;
-import java.net.URI;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
@@ -39,7 +42,7 @@ import org.killbill.xmlloader.ValidationError;
 import org.killbill.xmlloader.ValidationErrors;
 
 @XmlAccessorType(XmlAccessType.NONE)
-public class DefaultBlock extends ValidatingConfig<StandaloneCatalog> implements Block {
+public class DefaultBlock extends ValidatingConfig<StandaloneCatalog> implements Block, Externalizable {
 
     @XmlAttribute(required = false)
     private BlockType type = BlockType.VANILLA;
@@ -97,7 +100,7 @@ public class DefaultBlock extends ValidatingConfig<StandaloneCatalog> implements
 
         if (type == BlockType.TOP_UP && CatalogSafetyInitializer.DEFAULT_NON_REQUIRED_DOUBLE_FIELD_VALUE.equals(minTopUpCredit)) {
             errors.add(new ValidationError(String.format("TOP_UP block needs to define minTopUpCredit for phase %s",
-                                                         phase.getName()), catalog.getCatalogURI(), DefaultUsage.class, ""));
+                                                         phase.getName()), DefaultUsage.class, ""));
         }
         return errors;
     }
@@ -112,8 +115,8 @@ public class DefaultBlock extends ValidatingConfig<StandaloneCatalog> implements
     }
 
     @Override
-    public void initialize(final StandaloneCatalog catalog, final URI sourceURI) {
-        super.initialize(catalog, sourceURI);
+    public void initialize(final StandaloneCatalog catalog) {
+        super.initialize(catalog);
         CatalogSafetyInitializer.initializeNonRequiredNullFieldsWithDefaultValue(this);
     }
 
@@ -188,5 +191,32 @@ public class DefaultBlock extends ValidatingConfig<StandaloneCatalog> implements
         result = 31 * result + (prices != null ? prices.hashCode() : 0);
         result = 31 * result + (minTopUpCredit != null ? minTopUpCredit.hashCode() : 0);
         return result;
+    }
+
+    @Override
+    public void writeExternal(final ObjectOutput out) throws IOException {
+        out.writeBoolean(type != null);
+        if (type != null) {
+            out.writeUTF(type.name());
+        }
+        out.writeObject(unit);
+        out.writeBoolean(size != null);
+        if (size != null) {
+            out.writeDouble(size);
+        }
+        out.writeObject(prices);
+        out.writeBoolean(minTopUpCredit != null);
+        if (minTopUpCredit != null) {
+            out.writeDouble(minTopUpCredit);
+        }
+    }
+
+    @Override
+    public void readExternal(final ObjectInput in) throws IOException, ClassNotFoundException {
+        this.type = in.readBoolean() ? BlockType.valueOf(in.readUTF()) : null;
+        this.unit = (DefaultUnit) in.readObject();
+        this.size = in.readBoolean() ? in.readDouble() : null;
+        this.prices = (DefaultInternationalPrice) in.readObject();
+        this.minTopUpCredit = in.readBoolean() ? in.readDouble() : null;
     }
 }

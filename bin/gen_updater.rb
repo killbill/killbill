@@ -21,10 +21,10 @@ metadata.each do |entry|
   train = parsed.last.to_i
   if train % 2 == 1
     current_dev_train = train if current_dev_train.to_i < train
-    current_dev_version = version if current_dev_version.nil? || (current_dev_version < version)
+    current_dev_version = version if current_dev_version.nil? || (Gem::Version.new(current_dev_version) < Gem::Version.new(version))
   else
     current_stable_train = train if current_stable_train.to_i < train
-    current_stable_version = version if current_stable_version.nil? || (current_stable_version < version)
+    current_stable_version = version if current_stable_version.nil? || (Gem::Version.new(current_stable_version) < Gem::Version.new(version))
   end
 
   releases << {

@@ -34,62 +34,63 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Function;
 import com.google.common.collect.Collections2;
 import com.google.common.collect.ImmutableList;
+import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 
+@ApiModel(value="InvoiceItem", parent = JsonBase.class)
 public class InvoiceItemJson extends JsonBase {
 
-    @ApiModelProperty(dataType = "java.util.UUID", required = true)
-    private final String invoiceItemId;
-    @ApiModelProperty(dataType = "java.util.UUID")
-    private final String invoiceId;
-    @ApiModelProperty(dataType = "java.util.UUID")
-    private final String linkedInvoiceItemId;
-    @ApiModelProperty(dataType = "java.util.UUID", required = true)
-    private final String accountId;
-    @ApiModelProperty(dataType = "java.util.UUID", required = false)
-    private final String childAccountId;
-    @ApiModelProperty(dataType = "java.util.UUID")
-    private final String bundleId;
-    @ApiModelProperty(dataType = "java.util.UUID")
-    private final String subscriptionId;
+    @ApiModelProperty( required = true)
+    private final UUID invoiceItemId;
+    private final UUID invoiceId;
+    private final UUID linkedInvoiceItemId;
+    @ApiModelProperty(required = true)
+    private final UUID accountId;
+    private final UUID childAccountId;
+    private final UUID bundleId;
+    private final UUID subscriptionId;
+    private final String productName;
     private final String planName;
     private final String phaseName;
     private final String usageName;
+    private final String prettyProductName;
     private final String prettyPlanName;
     private final String prettyPhaseName;
     private final String prettyUsageName;
-    private final String itemType;
+    private final InvoiceItemType itemType;
     private final String description;
     private final LocalDate startDate;
     private final LocalDate endDate;
     private final BigDecimal amount;
     private final BigDecimal rate;
-    private final String currency;
+    private final Currency currency;
     private final Integer quantity;
     private final String itemDetails;
     private List<InvoiceItemJson> childItems;
 
     @JsonCreator
-    public InvoiceItemJson(@JsonProperty("invoiceItemId") final String invoiceItemId,
-                           @JsonProperty("invoiceId") final String invoiceId,
-                           @JsonProperty("linkedInvoiceItemId") final String linkedInvoiceItemId,
-                           @JsonProperty("accountId") final String accountId,
-                           @JsonProperty("childAccountId") final String childAccountId,
-                           @JsonProperty("bundleId") final String bundleId,
-                           @JsonProperty("subscriptionId") final String subscriptionId,
+    public InvoiceItemJson(@JsonProperty("invoiceItemId") final UUID invoiceItemId,
+                           @JsonProperty("invoiceId") final UUID invoiceId,
+                           @JsonProperty("linkedInvoiceItemId") final UUID linkedInvoiceItemId,
+                           @JsonProperty("accountId") final UUID accountId,
+                           @JsonProperty("childAccountId") final UUID childAccountId,
+                           @JsonProperty("bundleId") final UUID bundleId,
+                           @JsonProperty("subscriptionId") final UUID subscriptionId,
+                           @JsonProperty("productName") final String productName,
                            @JsonProperty("planName") final String planName,
                            @JsonProperty("phaseName") final String phaseName,
                            @JsonProperty("usageName") final String usageName,
+                           @JsonProperty("prettyProductName") final String prettyProductName,
                            @JsonProperty("prettyPlanName") final String prettyPlanName,
                            @JsonProperty("prettyPhaseName") final String prettyPhaseName,
                            @JsonProperty("prettyUsageName") final String prettyUsageName,
-                           @JsonProperty("itemType") final String itemType,
+                           @JsonProperty("itemType") final InvoiceItemType itemType,
                            @JsonProperty("description") final String description,
                            @JsonProperty("startDate") final LocalDate startDate,
                            @JsonProperty("endDate") final LocalDate endDate,
                            @JsonProperty("amount") final BigDecimal amount,
                            @JsonProperty("rate") final  BigDecimal rate,
-                           @JsonProperty("currency") final String currency,
+                           @JsonProperty("currency") final Currency currency,
                            @JsonProperty("quantity") final Integer quantity,
                            @JsonProperty("itemDetails") final String itemDetails,
                            @JsonProperty("childItems") final List<InvoiceItemJson> childItems,
@@ -102,9 +103,11 @@ public class InvoiceItemJson extends JsonBase {
         this.childAccountId = childAccountId;
         this.bundleId = bundleId;
         this.subscriptionId = subscriptionId;
+        this.productName = productName;
         this.planName = planName;
         this.phaseName = phaseName;
         this.usageName = usageName;
+        this.prettyProductName = prettyProductName;
         this.prettyPlanName = prettyPlanName;
         this.prettyPhaseName = prettyPhaseName;
         this.prettyUsageName = prettyUsageName;
@@ -121,13 +124,13 @@ public class InvoiceItemJson extends JsonBase {
     }
 
     public InvoiceItemJson(final InvoiceItem item, final List<InvoiceItem> childItems, @Nullable final List<AuditLog> auditLogs) {
-        this(toString(item.getId()), toString(item.getInvoiceId()), toString(item.getLinkedItemId()),
-             toString(item.getAccountId()), toString(item.getChildAccountId()), toString(item.getBundleId()), toString(item.getSubscriptionId()),
-             item.getPlanName(), item.getPhaseName(), item.getUsageName(),
-             item.getPrettyPlanName(), item.getPrettyPhaseName(), item.getPrettyUsageName(),
-             item.getInvoiceItemType().toString(),
+        this(item.getId(), item.getInvoiceId(), item.getLinkedItemId(),
+             item.getAccountId(), item.getChildAccountId(), item.getBundleId(), item.getSubscriptionId(),
+             item.getProductName(), item.getPlanName(), item.getPhaseName(), item.getUsageName(),
+             item.getPrettyProductName(), item.getPrettyPlanName(), item.getPrettyPhaseName(), item.getPrettyUsageName(),
+             item.getInvoiceItemType(),
              item.getDescription(), item.getStartDate(), item.getEndDate(),
-             item.getAmount(), item.getRate(), item.getCurrency().name(),
+             item.getAmount(), item.getRate(), item.getCurrency(),
              item.getQuantity(), item.getItemDetails(), toInvoiceItemJson(childItems), toAuditLogJson(auditLogs));
     }
 
@@ -147,22 +150,22 @@ public class InvoiceItemJson extends JsonBase {
         return new InvoiceItem() {
             @Override
             public InvoiceItemType getInvoiceItemType() {
-                return itemType != null ? InvoiceItemType.valueOf(itemType) : null;
+                return itemType;
             }
 
             @Override
             public UUID getInvoiceId() {
-                return invoiceId != null ? UUID.fromString(invoiceId) : null;
+                return invoiceId;
             }
 
             @Override
             public UUID getAccountId() {
-                return accountId != null ? UUID.fromString(accountId) : null;
+                return accountId;
             }
 
             @Override
             public UUID getChildAccountId() {
-                return childAccountId != null ? UUID.fromString(childAccountId) : null;
+                return childAccountId;
             }
 
             @Override
@@ -182,7 +185,7 @@ public class InvoiceItemJson extends JsonBase {
 
             @Override
             public Currency getCurrency() {
-                return Currency.valueOf(currency);
+                return currency;
             }
 
             @Override
@@ -192,12 +195,22 @@ public class InvoiceItemJson extends JsonBase {
 
             @Override
             public UUID getBundleId() {
-                return bundleId != null ? UUID.fromString(bundleId) : null;
+                return bundleId;
             }
 
             @Override
             public UUID getSubscriptionId() {
-                return subscriptionId != null ? UUID.fromString(subscriptionId) : null;
+                return subscriptionId;
+            }
+
+            @Override
+            public String getProductName() {
+                return productName;
+            }
+
+            @Override
+            public String getPrettyProductName() {
+                return prettyProductName;
             }
 
             @Override
@@ -237,7 +250,7 @@ public class InvoiceItemJson extends JsonBase {
 
             @Override
             public UUID getLinkedItemId() {
-                return linkedInvoiceItemId != null ? UUID.fromString(linkedInvoiceItemId) : null;
+                return linkedInvoiceItemId;
             }
 
             @Override
@@ -272,32 +285,36 @@ public class InvoiceItemJson extends JsonBase {
         this(input, null, null);
     }
 
-    public String getInvoiceItemId() {
+    public UUID getInvoiceItemId() {
         return invoiceItemId;
     }
 
-    public String getInvoiceId() {
+    public UUID getInvoiceId() {
         return invoiceId;
     }
 
-    public String getLinkedInvoiceItemId() {
+    public UUID getLinkedInvoiceItemId() {
         return linkedInvoiceItemId;
     }
 
-    public String getAccountId() {
+    public UUID getAccountId() {
         return accountId;
     }
 
-    public String getChildAccountId() {
+    public UUID getChildAccountId() {
         return childAccountId;
     }
 
-    public String getBundleId() {
+    public UUID getBundleId() {
         return bundleId;
     }
 
-    public String getSubscriptionId() {
+    public UUID getSubscriptionId() {
         return subscriptionId;
+    }
+
+    public String getProductName() {
+        return productName;
     }
 
     public String getPlanName() {
@@ -312,6 +329,10 @@ public class InvoiceItemJson extends JsonBase {
         return usageName;
     }
 
+    public String getPrettyProductName() {
+        return prettyProductName;
+    }
+
     public String getPrettyPlanName() {
         return prettyPlanName;
     }
@@ -324,7 +345,7 @@ public class InvoiceItemJson extends JsonBase {
         return prettyUsageName;
     }
 
-    public String getItemType() {
+    public InvoiceItemType getItemType() {
         return itemType;
     }
 
@@ -346,7 +367,7 @@ public class InvoiceItemJson extends JsonBase {
 
     public BigDecimal getRate() { return rate; }
 
-    public String getCurrency() {
+    public Currency getCurrency() {
         return currency;
     }
 
@@ -369,6 +390,7 @@ public class InvoiceItemJson extends JsonBase {
         sb.append(", childAccountId='").append(childAccountId).append('\'');
         sb.append(", bundleId='").append(bundleId).append('\'');
         sb.append(", subscriptionId='").append(subscriptionId).append('\'');
+        sb.append(", productName='").append(productName).append('\'');
         sb.append(", planName='").append(planName).append('\'');
         sb.append(", phaseName='").append(phaseName).append('\'');
         sb.append(", usageName='").append(usageName).append('\'');
@@ -436,6 +458,9 @@ public class InvoiceItemJson extends JsonBase {
         if (planName != null ? !planName.equals(that.planName) : that.planName != null) {
             return false;
         }
+        if (productName != null ? !productName.equals(that.productName) : that.productName != null) {
+            return false;
+        }
         if (!((startDate == null && that.startDate == null) ||
               (startDate != null && that.startDate != null && startDate.compareTo(that.startDate) == 0))) {
             return false;
@@ -468,6 +493,7 @@ public class InvoiceItemJson extends JsonBase {
         result = 31 * result + (childAccountId != null ? childAccountId.hashCode() : 0);
         result = 31 * result + (bundleId != null ? bundleId.hashCode() : 0);
         result = 31 * result + (subscriptionId != null ? subscriptionId.hashCode() : 0);
+        result = 31 * result + (productName != null ? productName.hashCode() : 0);
         result = 31 * result + (planName != null ? planName.hashCode() : 0);
         result = 31 * result + (phaseName != null ? phaseName.hashCode() : 0);
         result = 31 * result + (usageName != null ? usageName.hashCode() : 0);

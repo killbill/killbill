@@ -60,17 +60,29 @@ public abstract class JunctionTestSuiteNoDB extends GuicyKillbillTestSuiteNoDB {
 
     @BeforeClass(groups = "fast")
     protected void beforeClass() throws Exception {
-        final Injector injector = Guice.createInjector(new TestJunctionModuleNoDB(configSource));
+        if (hasFailed()) {
+            return;
+        }
+
+        final Injector injector = Guice.createInjector(new TestJunctionModuleNoDB(configSource, clock));
         injector.injectMembers(this);
     }
 
     @BeforeMethod(groups = "fast")
     public void beforeMethod() throws Exception {
+        if (hasFailed()) {
+            return;
+        }
+
         bus.start();
     }
 
     @AfterMethod(groups = "fast")
     public void afterMethod() {
+        if (hasFailed()) {
+            return;
+        }
+
         bus.stop();
     }
 }

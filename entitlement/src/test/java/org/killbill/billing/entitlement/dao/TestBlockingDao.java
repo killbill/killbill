@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014-2016 Groupon, Inc
- * Copyright 2014-2016 The Billing Project, LLC
+ * Copyright 2014-2018 Groupon, Inc
+ * Copyright 2014-2018 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -22,30 +22,23 @@ import java.util.List;
 import java.util.UUID;
 
 import org.joda.time.LocalDate;
+import org.killbill.billing.account.api.AccountApiException;
 import org.killbill.billing.api.TestApiListener.NextEvent;
-import org.testng.Assert;
-import org.testng.annotations.BeforeMethod;
-import org.testng.annotations.Test;
-
-import org.killbill.billing.account.api.Account;
 import org.killbill.billing.entitlement.EntitlementTestSuiteWithEmbeddedDB;
 import org.killbill.billing.entitlement.api.BlockingState;
 import org.killbill.billing.entitlement.api.BlockingStateType;
 import org.killbill.billing.junction.DefaultBlockingState;
+import org.testng.Assert;
+import org.testng.annotations.Test;
 
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
 
 public class TestBlockingDao extends EntitlementTestSuiteWithEmbeddedDB {
 
-    @BeforeMethod(groups = "slow")
-    public void setUp() throws Exception {
-        final Account account = createAccount(getAccountData(7));
-    }
-
     @Test(groups = "slow", description = "Check BlockingStateDao with a single service")
-    public void testDaoWithOneService() {
-        final UUID uuid = UUID.randomUUID();
+    public void testDaoWithOneService() throws AccountApiException {
+        final UUID uuid = createAccount(getAccountData(1)).getId();
         final String overdueStateName = "WayPassedItMan";
         final String service = "TEST";
 
@@ -70,7 +63,7 @@ public class TestBlockingDao extends EntitlementTestSuiteWithEmbeddedDB {
 
         Assert.assertEquals(blockingStateDao.getBlockingStateForService(uuid, BlockingStateType.ACCOUNT, service, internalCallContext).getStateName(), state2.getStateName());
 
-        final List<BlockingState> states = blockingStateDao.getBlockingAllForAccountRecordId(internalCallContext);
+        final List<BlockingState> states = blockingStateDao.getBlockingAllForAccountRecordId(catalog, internalCallContext);
         Assert.assertEquals(states.size(), 2);
 
         Assert.assertEquals(states.get(0).getStateName(), overdueStateName);
@@ -79,7 +72,7 @@ public class TestBlockingDao extends EntitlementTestSuiteWithEmbeddedDB {
 
     @Test(groups = "slow", description = "Check BlockingStateDao with multiple services")
     public void testDaoWithMultipleServices() throws Exception {
-        final UUID uuid = UUID.randomUUID();
+        final UUID uuid = createAccount(getAccountData(1)).getId();
         final String overdueStateName = "WayPassedItMan";
         final String service1 = "TEST";
 
@@ -102,7 +95,7 @@ public class TestBlockingDao extends EntitlementTestSuiteWithEmbeddedDB {
         blockingStateDao.setBlockingStatesAndPostBlockingTransitionEvent(ImmutableMap.<BlockingState, Optional<UUID>>of(state2, Optional.<UUID>absent()), internalCallContext);
         assertListenerStatus();
 
-        final List<BlockingState> history2 = blockingStateDao.getBlockingAllForAccountRecordId(internalCallContext);
+        final List<BlockingState> history2 = blockingStateDao.getBlockingAllForAccountRecordId(catalog, internalCallContext);
         Assert.assertEquals(history2.size(), 2);
         Assert.assertEquals(history2.get(0).getStateName(), overdueStateName);
         Assert.assertEquals(history2.get(1).getStateName(), overdueStateName2);

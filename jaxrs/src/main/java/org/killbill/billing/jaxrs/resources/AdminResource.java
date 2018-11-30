@@ -17,7 +17,6 @@
 
 package org.killbill.billing.jaxrs.resources;
 
-import java.io.Closeable;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.URI;
@@ -56,6 +55,7 @@ import org.killbill.billing.jaxrs.json.AdminPaymentJson;
 import org.killbill.billing.jaxrs.util.Context;
 import org.killbill.billing.jaxrs.util.JaxrsUriBuilder;
 import org.killbill.billing.payment.api.AdminPaymentApi;
+import org.killbill.billing.payment.api.InvoicePaymentApi;
 import org.killbill.billing.payment.api.Payment;
 import org.killbill.billing.payment.api.PaymentApi;
 import org.killbill.billing.payment.api.PaymentApiException;
@@ -102,10 +102,11 @@ import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
+import static javax.ws.rs.core.MediaType.APPLICATION_OCTET_STREAM;
 
 @Singleton
 @Path(JaxrsResource.ADMIN_PATH)
-@Api(value = JaxrsResource.ADMIN_PATH, description = "Admin operations (will require special privileges)")
+@Api(value = JaxrsResource.ADMIN_PATH, description = "Admin operations (will require special privileges)", tags="Admin")
 public class AdminResource extends JaxRsResourceBase {
 
     private static final String OK = "OK";
@@ -126,6 +127,7 @@ public class AdminResource extends JaxRsResourceBase {
                          final AuditUserApi auditUserApi,
                          final AccountUserApi accountUserApi,
                          final PaymentApi paymentApi,
+                         final InvoicePaymentApi invoicePaymentApi,
                          final AdminPaymentApi adminPaymentApi,
                          final InvoiceUserApi invoiceUserApi,
                          final CacheControllerDispatcher cacheControllerDispatcher,
@@ -136,7 +138,7 @@ public class AdminResource extends JaxRsResourceBase {
                          final KillbillHealthcheck killbillHealthcheck,
                          final Clock clock,
                          final Context context) {
-        super(uriBuilder, tagUserApi, customFieldUserApi, auditUserApi, accountUserApi, paymentApi, null, clock, context);
+        super(uriBuilder, tagUserApi, customFieldUserApi, auditUserApi, accountUserApi, paymentApi, invoicePaymentApi, null, clock, context);
         this.adminPaymentApi = adminPaymentApi;
         this.invoiceUserApi = invoiceUserApi;
         this.tenantApi = tenantApi;
@@ -149,10 +151,12 @@ public class AdminResource extends JaxRsResourceBase {
 
     @GET
     @Path("/queues")
-    @Produces(APPLICATION_JSON)
+    @Produces(APPLICATION_OCTET_STREAM)
     @ApiOperation(value = "Get queues entries", response = Response.class)
-    @ApiResponses(value = {})
-    public Response getQueueEntries(@QueryParam("accountId") final String accountIdStr,
+    @ApiResponses(value = {@ApiResponse(code = 200, message = "Success"),
+                           @ApiResponse(code = 400, message = "Invalid account id supplied"),
+                           @ApiResponse(code = 404, message = "Account not found")})
+    public Response getQueueEntries(@QueryParam("accountId") final UUID accountId,
                                     @QueryParam("queueName") final String queueName,
                                     @QueryParam("serviceName") final String serviceName,
                                     @QueryParam("withHistory") @DefaultValue("true") final Boolean withHistory,
@@ -164,7 +168,7 @@ public class AdminResource extends JaxRsResourceBase {
                                     @javax.ws.rs.core.Context final HttpServletRequest request) {
         final TenantContext tenantContext = context.createTenantContextNoAccountId(request);
         final Long tenantRecordId = recordIdApi.getRecordId(tenantContext.getTenantId(), ObjectType.TENANT, tenantContext);
-        final Long accountRecordId = Strings.isNullOrEmpty(accountIdStr) ? null : recordIdApi.getRecordId(UUID.fromString(accountIdStr), ObjectType.ACCOUNT, tenantContext);
+        final Long accountRecordId = accountId == null ? null : recordIdApi.getRecordId(accountId, ObjectType.ACCOUNT, tenantContext);
 
         // Limit search results by default
         final DateTime minDate = Strings.isNullOrEmpty(minDateOrNull) ? clock.getUTCNow().minusDays(2) : DATE_TIME_FORMATTER.parseDateTime(minDateOrNull).toDateTime(DateTimeZone.UTC);
@@ -231,10 +235,11 @@ public class AdminResource extends JaxRsResourceBase {
     @Produces(APPLICATION_JSON)
     @Path("/payments/{paymentId:" + UUID_PATTERN + "}/transactions/{paymentTransactionId:" + UUID_PATTERN + "}")
     @ApiOperation(value = "Update existing paymentTransaction and associated payment state")
-    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid account data supplied")})
-    public Response updatePaymentTransactionState(final AdminPaymentJson json,
-                                                  @PathParam("paymentId") final String paymentIdStr,
-                                                  @PathParam("paymentTransactionId") final String paymentTransactionIdStr,
+    @ApiResponses(value = {@ApiResponse(code = 204, message = "Successful operation"),
+                           @ApiResponse(code = 400, message = "Invalid account data supplied")})
+    public Response updatePaymentTransactionState(@PathParam("paymentId") final UUID paymentId,
+                                                  @PathParam("paymentTransactionId") final UUID paymentTransactionId,
+                                                  final AdminPaymentJson json,
                                                   @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                                   @HeaderParam(HDR_REASON) final String reason,
                                                   @HeaderParam(HDR_COMMENT) final String comment,
@@ -242,10 +247,7 @@ public class AdminResource extends JaxRsResourceBase {
 
         final CallContext callContext = context.createCallContextNoAccountId(createdBy, reason, comment, request);
 
-        final Payment payment = paymentApi.getPayment(UUID.fromString(paymentIdStr), false, false, ImmutableList.<PluginProperty>of(), callContext);
-
-        final UUID paymentTransactionId = UUID.fromString(paymentTransactionIdStr);
-
+        final Payment payment = paymentApi.getPayment(paymentId, false, false, ImmutableList.<PluginProperty>of(), callContext);
         final PaymentTransaction paymentTransaction = Iterables.tryFind(payment.getTransactions(), new Predicate<PaymentTransaction>() {
             @Override
             public boolean apply(final PaymentTransaction input) {
@@ -255,7 +257,7 @@ public class AdminResource extends JaxRsResourceBase {
 
         adminPaymentApi.fixPaymentTransactionState(payment, paymentTransaction, TransactionStatus.valueOf(json.getTransactionStatus()),
                                                    json.getLastSuccessPaymentState(), json.getCurrentPaymentStateName(), ImmutableList.<PluginProperty>of(), callContext);
-        return Response.status(Status.OK).build();
+        return Response.status(Status.NO_CONTENT).build();
     }
 
     @POST
@@ -263,7 +265,7 @@ public class AdminResource extends JaxRsResourceBase {
     @Produces(APPLICATION_JSON)
     @Path("/invoices")
     @ApiOperation(value = "Trigger an invoice generation for all parked accounts")
-    @ApiResponses(value = {})
+    @ApiResponses(value = {@ApiResponse(code = 200, message = "Successful operation")})
     public Response triggerInvoiceGenerationForParkedAccounts(@QueryParam(QUERY_SEARCH_OFFSET) @DefaultValue("0") final Long offset,
                                                               @QueryParam(QUERY_SEARCH_LIMIT) @DefaultValue("100") final Long limit,
                                                               @HeaderParam(HDR_CREATED_BY) final String createdBy,
@@ -288,7 +290,7 @@ public class AdminResource extends JaxRsResourceBase {
                         final Tag tag = iterator.next();
                         final UUID accountId = tag.getObjectId();
                         try {
-                            invoiceUserApi.triggerInvoiceGeneration(accountId, clock.getUTCToday(), null, callContext);
+                            invoiceUserApi.triggerInvoiceGeneration(accountId, clock.getUTCToday(), callContext);
                             generator.writeStringField(accountId.toString(), OK);
                         } catch (final InvoiceApiException e) {
                             if (e.getCode() != ErrorCode.INVOICE_NOTHING_TO_DO.getCode()) {
@@ -325,7 +327,8 @@ public class AdminResource extends JaxRsResourceBase {
     @Path("/" + CACHE)
     @Produces(APPLICATION_JSON)
     @ApiOperation(value = "Invalidates the given Cache if specified, otherwise invalidates all caches")
-    @ApiResponses(value = {@ApiResponse(code = 400, message = "Cache name does not exist or is not alive")})
+    @ApiResponses(value = {@ApiResponse(code = 204, message = "Successful operation"),
+                           @ApiResponse(code = 400, message = "Cache name does not exist or is not alive")})
     public Response invalidatesCache(@QueryParam("cacheName") final String cacheName,
                                      @javax.ws.rs.core.Context final HttpServletRequest request) {
         if (null != cacheName && !cacheName.isEmpty()) {
@@ -341,24 +344,24 @@ public class AdminResource extends JaxRsResourceBase {
             // if not given a specific cacheName, clear all
             cacheControllerDispatcher.clearAll();
         }
-        return Response.status(Status.OK).build();
+        return Response.status(Status.NO_CONTENT).build();
     }
 
     @DELETE
     @Path("/" + CACHE + "/" + ACCOUNTS + "/{accountId:" + UUID_PATTERN + "}/")
     @Produces(APPLICATION_JSON)
     @ApiOperation(value = "Invalidates Caches per account level")
-    @ApiResponses(value = {})
-    public Response invalidatesCacheByAccount(@PathParam("accountId") final String accountIdStr,
+    @ApiResponses(value = {@ApiResponse(code = 204, message = "Successful operation"),
+                           @ApiResponse(code = 400, message = "Invalid account id supplied")})
+    public Response invalidatesCacheByAccount(@PathParam("accountId") final UUID accountId,
                                               @javax.ws.rs.core.Context final HttpServletRequest request) {
 
-        final UUID accountId = UUID.fromString(accountIdStr);
         final TenantContext tenantContext = context.createTenantContextWithAccountId(accountId, request);
         final Long accountRecordId = recordIdApi.getRecordId(accountId, ObjectType.ACCOUNT, tenantContext);
 
         // clear account-record-id cache by accountId (note: String!)
         final CacheController<String, Long> accountRecordIdCacheController = cacheControllerDispatcher.getCacheController(CacheType.ACCOUNT_RECORD_ID);
-        accountRecordIdCacheController.remove(accountIdStr);
+        accountRecordIdCacheController.remove(accountId.toString());
 
         // clear account-immutable cache by account record id
         final CacheController<Long, ImmutableAccountData> accountImmutableCacheController = cacheControllerDispatcher.getCacheController(CacheType.ACCOUNT_IMMUTABLE);
@@ -368,16 +371,15 @@ public class AdminResource extends JaxRsResourceBase {
         final CacheController<UUID, Integer> accountBCDCacheController = cacheControllerDispatcher.getCacheController(CacheType.ACCOUNT_BCD);
         accountBCDCacheController.remove(accountId);
 
-        return Response.status(Status.OK).build();
+        return Response.status(Status.NO_CONTENT).build();
     }
 
     @DELETE
     @Path("/" + CACHE + "/" + TENANTS)
     @Produces(APPLICATION_JSON)
     @ApiOperation(value = "Invalidates Caches per tenant level")
-    @ApiResponses(value = {})
-    public Response invalidatesCacheByTenant(@QueryParam("tenantApiKey") final String tenantApiKey,
-                                             @javax.ws.rs.core.Context final HttpServletRequest request) throws TenantApiException {
+    @ApiResponses(value = {@ApiResponse(code = 204, message = "Successful operation")})
+    public Response invalidatesCacheByTenant(@javax.ws.rs.core.Context final HttpServletRequest request) throws TenantApiException {
 
         // creating Tenant Context from Request
         final TenantContext tenantContext = context.createTenantContextNoAccountId(request);
@@ -422,27 +424,27 @@ public class AdminResource extends JaxRsResourceBase {
         final CacheController<Long, Catalog> tenantCatalogCacheController = cacheControllerDispatcher.getCacheController(CacheType.TENANT_CATALOG);
         tenantCatalogCacheController.remove(tenantRecordId);
 
-        return Response.status(Status.OK).build();
+        return Response.status(Status.NO_CONTENT).build();
     }
 
-    @POST
+    @PUT
     @Path("/" + HEALTHCHECK)
     @Produces(APPLICATION_JSON)
-    @ApiOperation(value = "Put the host out of rotation")
-    @ApiResponses(value = {})
+    @ApiOperation(value = "Put the host back into rotation")
+    @ApiResponses(value = {@ApiResponse(code = 204, message = "Successful operation")})
     public Response putInRotation(@javax.ws.rs.core.Context final HttpServletRequest request) {
         killbillHealthcheck.putInRotation();
-        return Response.status(Status.OK).build();
+        return Response.status(Status.NO_CONTENT).build();
     }
 
     @DELETE
     @Path("/" + HEALTHCHECK)
     @Produces(APPLICATION_JSON)
     @ApiOperation(value = "Put the host out of rotation")
-    @ApiResponses(value = {})
+    @ApiResponses(value = {@ApiResponse(code = 204, message = "Successful operation")})
     public Response putOutOfRotation(@javax.ws.rs.core.Context final HttpServletRequest request) {
         killbillHealthcheck.putOutOfRotation();
-        return Response.status(Status.OK).build();
+        return Response.status(Status.NO_CONTENT).build();
     }
 
     private Iterable<NotificationEventWithMetadata<NotificationEvent>> getNotifications(@Nullable final String queueName,

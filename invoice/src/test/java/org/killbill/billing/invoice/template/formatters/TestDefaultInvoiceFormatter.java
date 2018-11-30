@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014-2016 Groupon, Inc
- * Copyright 2014-2016 The Billing Project, LLC
+ * Copyright 2014-2018 Groupon, Inc
+ * Copyright 2014-2018 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -58,6 +58,10 @@ public class TestDefaultInvoiceFormatter extends InvoiceTestSuiteNoDB {
 
     @BeforeClass(groups = "fast")
     public void beforeClass() throws Exception {
+        if (hasFailed()) {
+            return;
+        }
+
         super.beforeClass();
         config = new ConfigurationObjectFactory(skifeConfigSource).build(TranslatorConfig.class);
         templateEngine = new MustacheTemplateEngine();
@@ -70,7 +74,7 @@ public class TestDefaultInvoiceFormatter extends InvoiceTestSuiteNoDB {
         // * $-10 CBA
         // * $10 CBA
         final FixedPriceInvoiceItem fixedItem = new FixedPriceInvoiceItem(UUID.randomUUID(), UUID.randomUUID(), null, null,
-                                                                          UUID.randomUUID().toString(), UUID.randomUUID().toString(),
+                                                                          UUID.randomUUID().toString(), UUID.randomUUID().toString(), UUID.randomUUID().toString(),
                                                                           new LocalDate(), BigDecimal.TEN, Currency.USD);
         final CreditBalanceAdjInvoiceItem creditBalanceAdjInvoiceItem = new CreditBalanceAdjInvoiceItem(fixedItem.getInvoiceId(), fixedItem.getAccountId(),
                                                                                                         fixedItem.getStartDate(), fixedItem.getAmount(),
@@ -107,7 +111,7 @@ public class TestDefaultInvoiceFormatter extends InvoiceTestSuiteNoDB {
         // * $-1 credit adjustment
         // * $1 generated CBA due to the credit adjustment
         final FixedPriceInvoiceItem fixedItem = new FixedPriceInvoiceItem(UUID.randomUUID(), UUID.randomUUID(), null, null,
-                                                                          UUID.randomUUID().toString(), UUID.randomUUID().toString(),
+                                                                          UUID.randomUUID().toString(), UUID.randomUUID().toString(), UUID.randomUUID().toString(),
                                                                           new LocalDate(), BigDecimal.TEN, Currency.USD);
         final RepairAdjInvoiceItem repairAdjInvoiceItem = new RepairAdjInvoiceItem(fixedItem.getInvoiceId(), fixedItem.getAccountId(),
                                                                                    fixedItem.getStartDate(), fixedItem.getEndDate(),
@@ -117,7 +121,7 @@ public class TestDefaultInvoiceFormatter extends InvoiceTestSuiteNoDB {
                                                                                                         fixedItem.getStartDate(), fixedItem.getAmount(),
                                                                                                         fixedItem.getCurrency());
         final CreditAdjInvoiceItem creditAdjInvoiceItem = new CreditAdjInvoiceItem(fixedItem.getInvoiceId(), fixedItem.getAccountId(),
-                                                                                   fixedItem.getStartDate(), null, BigDecimal.ONE.negate(), fixedItem.getCurrency());
+                                                                                   fixedItem.getStartDate(), null, BigDecimal.ONE.negate(), fixedItem.getCurrency(), null);
         final CreditBalanceAdjInvoiceItem creditBalanceAdjInvoiceItem2 = new CreditBalanceAdjInvoiceItem(fixedItem.getInvoiceId(), fixedItem.getAccountId(),
                                                                                                          fixedItem.getStartDate(), creditAdjInvoiceItem.getAmount().negate(),
                                                                                                          fixedItem.getCurrency());
@@ -154,7 +158,7 @@ public class TestDefaultInvoiceFormatter extends InvoiceTestSuiteNoDB {
     @Test(groups = "fast")
     public void testFormattedAmountFranceAndEUR() throws Exception {
         final FixedPriceInvoiceItem fixedItemEUR = new FixedPriceInvoiceItem(UUID.randomUUID(), UUID.randomUUID(), null, null,
-                                                                             UUID.randomUUID().toString(), UUID.randomUUID().toString(),
+                                                                             UUID.randomUUID().toString(), UUID.randomUUID().toString(), UUID.randomUUID().toString(),
                                                                              new LocalDate(), new BigDecimal("1499.95"), Currency.EUR);
         final Invoice invoiceEUR = new DefaultInvoice(UUID.randomUUID(), new LocalDate(), new LocalDate(), Currency.EUR);
         invoiceEUR.addInvoiceItem(fixedItemEUR);
@@ -184,7 +188,7 @@ public class TestDefaultInvoiceFormatter extends InvoiceTestSuiteNoDB {
     @Test(groups = "fast")
     public void testFormattedAmountFranceAndOMR() throws Exception {
         final FixedPriceInvoiceItem fixedItem = new FixedPriceInvoiceItem(UUID.randomUUID(), UUID.randomUUID(), null, null,
-                                                                          UUID.randomUUID().toString(), UUID.randomUUID().toString(),
+                                                                          UUID.randomUUID().toString(), UUID.randomUUID().toString(), UUID.randomUUID().toString(),
                                                                           new LocalDate(), new BigDecimal("1499.958"), Currency.OMR);
         final Invoice invoice = new DefaultInvoice(UUID.randomUUID(), new LocalDate(), new LocalDate(), Currency.OMR);
         invoice.addInvoiceItem(fixedItem);
@@ -214,7 +218,7 @@ public class TestDefaultInvoiceFormatter extends InvoiceTestSuiteNoDB {
     @Test(groups = "fast")
     public void testFormattedAmountFranceAndJPY() throws Exception {
         final FixedPriceInvoiceItem fixedItem = new FixedPriceInvoiceItem(UUID.randomUUID(), UUID.randomUUID(), null, null,
-                                                                          UUID.randomUUID().toString(), UUID.randomUUID().toString(),
+                                                                          UUID.randomUUID().toString(), UUID.randomUUID().toString(), UUID.randomUUID().toString(),
                                                                           new LocalDate(), new BigDecimal("1500.00"), Currency.JPY);
         final Invoice invoice = new DefaultInvoice(UUID.randomUUID(), new LocalDate(), new LocalDate(), Currency.JPY);
         invoice.addInvoiceItem(fixedItem);
@@ -244,7 +248,7 @@ public class TestDefaultInvoiceFormatter extends InvoiceTestSuiteNoDB {
     @Test(groups = "fast")
     public void testFormattedAmountUSAndBTC() throws Exception {
         final FixedPriceInvoiceItem fixedItem = new FixedPriceInvoiceItem(UUID.randomUUID(), UUID.randomUUID(), null, null,
-                                                                          UUID.randomUUID().toString(), UUID.randomUUID().toString(),
+                                                                          UUID.randomUUID().toString(), UUID.randomUUID().toString(), UUID.randomUUID().toString(),
                                                                           new LocalDate(), new BigDecimal("1105.28843439"), Currency.BTC);
         final Invoice invoice = new DefaultInvoice(UUID.randomUUID(), new LocalDate(), new LocalDate(), Currency.BTC);
         invoice.addInvoiceItem(fixedItem);
@@ -274,7 +278,7 @@ public class TestDefaultInvoiceFormatter extends InvoiceTestSuiteNoDB {
     @Test(groups = "fast")
     public void testFormattedAmountUSAndEUR() throws Exception {
         final FixedPriceInvoiceItem fixedItem = new FixedPriceInvoiceItem(UUID.randomUUID(), UUID.randomUUID(), null, null,
-                                                                          UUID.randomUUID().toString(), UUID.randomUUID().toString(),
+                                                                          UUID.randomUUID().toString(), UUID.randomUUID().toString(), UUID.randomUUID().toString(),
                                                                           new LocalDate(), new BigDecimal("2635.14"), Currency.EUR);
         final Invoice invoice = new DefaultInvoice(UUID.randomUUID(), new LocalDate(), new LocalDate(), Currency.EUR);
         invoice.addInvoiceItem(fixedItem);
@@ -304,7 +308,7 @@ public class TestDefaultInvoiceFormatter extends InvoiceTestSuiteNoDB {
     @Test(groups = "fast")
     public void testFormattedAmountUSAndBRL() throws Exception {
         final FixedPriceInvoiceItem fixedItem = new FixedPriceInvoiceItem(UUID.randomUUID(), UUID.randomUUID(), null, null,
-                                                                          UUID.randomUUID().toString(), UUID.randomUUID().toString(),
+                                                                          UUID.randomUUID().toString(), UUID.randomUUID().toString(), UUID.randomUUID().toString(),
                                                                           new LocalDate(), new BigDecimal("2635.14"), Currency.BRL);
         final Invoice invoice = new DefaultInvoice(UUID.randomUUID(), new LocalDate(), new LocalDate(), Currency.BRL);
         invoice.addInvoiceItem(fixedItem);
@@ -334,7 +338,7 @@ public class TestDefaultInvoiceFormatter extends InvoiceTestSuiteNoDB {
     @Test(groups = "fast")
     public void testFormattedAmountUSAndGBP() throws Exception {
         final FixedPriceInvoiceItem fixedItem = new FixedPriceInvoiceItem(UUID.randomUUID(), UUID.randomUUID(), null, null,
-                                                                          UUID.randomUUID().toString(), UUID.randomUUID().toString(),
+                                                                          UUID.randomUUID().toString(), UUID.randomUUID().toString(), UUID.randomUUID().toString(),
                                                                           new LocalDate(), new BigDecimal("1499.95"), Currency.GBP);
         final Invoice invoice = new DefaultInvoice(UUID.randomUUID(), new LocalDate(), new LocalDate(), Currency.GBP);
         invoice.addInvoiceItem(fixedItem);
@@ -402,7 +406,7 @@ public class TestDefaultInvoiceFormatter extends InvoiceTestSuiteNoDB {
     public void testForDisplay() throws Exception {
 
         final FixedPriceInvoiceItem fixedItemBRL = new FixedPriceInvoiceItem(UUID.randomUUID(), UUID.randomUUID(), null, null,
-                                                                             UUID.randomUUID().toString(), UUID.randomUUID().toString(),
+                                                                             UUID.randomUUID().toString(), UUID.randomUUID().toString(), UUID.randomUUID().toString(),
                                                                              new LocalDate(), new BigDecimal("1499.95"), Currency.BRL);
 
         final Invoice invoice = new DefaultInvoice(UUID.randomUUID(), UUID.randomUUID(), new Integer(234), new LocalDate(), new LocalDate(), Currency.BRL,  false, InvoiceStatus.COMMITTED);

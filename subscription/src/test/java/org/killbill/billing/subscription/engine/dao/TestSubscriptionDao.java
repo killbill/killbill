@@ -1,6 +1,6 @@
 /*
- * Copyright 2014-2017 Groupon, Inc
- * Copyright 2014-2017 The Billing Project, LLC
+ * Copyright 2014-2018 Groupon, Inc
+ * Copyright 2014-2018 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -28,8 +28,11 @@ import org.killbill.billing.api.TestApiListener.NextEvent;
 import org.killbill.billing.catalog.DefaultPriceListSet;
 import org.killbill.billing.catalog.api.ProductCategory;
 import org.killbill.billing.subscription.SubscriptionTestSuiteWithEmbeddedDB;
+import org.killbill.billing.subscription.api.SubscriptionBase;
+import org.killbill.billing.subscription.api.SubscriptionBaseWithAddOns;
 import org.killbill.billing.subscription.api.user.DefaultSubscriptionBase;
 import org.killbill.billing.subscription.api.user.DefaultSubscriptionBaseBundle;
+import org.killbill.billing.subscription.api.user.DefaultSubscriptionBaseWithAddOns;
 import org.killbill.billing.subscription.api.user.SubscriptionBaseApiException;
 import org.killbill.billing.subscription.api.user.SubscriptionBaseBundle;
 import org.killbill.billing.subscription.api.user.SubscriptionBuilder;
@@ -37,12 +40,17 @@ import org.killbill.billing.subscription.events.SubscriptionBaseEvent;
 import org.killbill.billing.subscription.events.user.ApiEventBuilder;
 import org.killbill.billing.subscription.events.user.ApiEventCreate;
 import org.killbill.billing.util.UUIDs;
+import org.killbill.billing.util.entity.dao.DBRouterUntyped;
+import org.killbill.commons.profiling.Profiling.WithProfilingCallback;
+import org.mockito.Mockito;
+import org.skife.jdbi.v2.IDBI;
 import org.testng.Assert;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 
 import static org.testng.Assert.assertEquals;
 
@@ -53,6 +61,10 @@ public class TestSubscriptionDao extends SubscriptionTestSuiteWithEmbeddedDB {
     @Override
     @BeforeMethod(groups = "slow")
     public void beforeMethod() throws Exception {
+        if (hasFailed()) {
+            return;
+        }
+
         // Note: this will cleanup all tables
         super.beforeMethod();
 
@@ -65,6 +77,9 @@ public class TestSubscriptionDao extends SubscriptionTestSuiteWithEmbeddedDB {
     @Override // to ignore events
     @AfterMethod(groups = "slow")
     public void afterMethod() throws Exception {
+        if (hasFailed()) {
+            return;
+        }
         subscriptionTestInitializer.stopTestFramework(testListener, busService, subscriptionBaseService);
     }
 
@@ -108,7 +123,12 @@ public class TestSubscriptionDao extends SubscriptionTestSuiteWithEmbeddedDB {
 
         final DefaultSubscriptionBase subscription = new DefaultSubscriptionBase(builder);
         testListener.pushExpectedEvents(NextEvent.CREATE);
-        dao.createSubscription(subscription, ImmutableList.of(creationEvent), catalog, internalCallContext);
+        final SubscriptionBaseWithAddOns subscriptionBaseWithAddOns = new DefaultSubscriptionBaseWithAddOns(bundle,
+                                                                                                            ImmutableList.<SubscriptionBase>of(subscription));
+        dao.createSubscriptionsWithAddOns(ImmutableList.<SubscriptionBaseWithAddOns>of(subscriptionBaseWithAddOns),
+                                          ImmutableMap.<UUID, List<SubscriptionBaseEvent>>of(subscription.getId(), ImmutableList.<SubscriptionBaseEvent>of(creationEvent)),
+                                          catalog,
+                                          internalCallContext);
         assertListenerStatus();
 
         // Operation Should now fail
@@ -163,7 +183,67 @@ public class TestSubscriptionDao extends SubscriptionTestSuiteWithEmbeddedDB {
         assertEquals(result5.get(0).getExternalKey(), bundle2.getExternalKey());
         assertEquals(result5.get(1).getExternalKey(), bundle2.getExternalKey());
         assertEquals(result5.get(2).getExternalKey(), bundle2.getExternalKey());
+    }
 
+    @Test(groups = "slow")
+    public void testDirtyFlag() throws Throwable {
+        final IDBI dbiSpy = Mockito.spy(dbi);
+        final IDBI roDbiSpy = Mockito.spy(roDbi);
+        final SubscriptionDao subscriptionDao = new DefaultSubscriptionDao(dbiSpy,
+                                                                           roDbiSpy,
+                                                                           clock,
+                                                                           addonUtils,
+                                                                           notificationQueueService,
+                                                                           bus,
+                                                                           controlCacheDispatcher,
+                                                                           nonEntityDao,
+                                                                           internalCallContextFactory);
+        Mockito.verify(dbiSpy, Mockito.times(0)).open();
+        Mockito.verify(roDbiSpy, Mockito.times(0)).open();
 
+        // @BeforeMethod created the account
+        DBRouterUntyped.withRODBIAllowed(true,
+                                         new WithProfilingCallback<Object, Throwable>() {
+                                      @Override
+                                      public Object execute() throws Throwable {
+                                          Assert.assertEquals(subscriptionDao.getSubscriptionBundleForAccount(accountId, internalCallContext).size(), 0);
+                                          Mockito.verify(dbiSpy, Mockito.times(0)).open();
+                                          Mockito.verify(roDbiSpy, Mockito.times(1)).open();
+
+                                          Assert.assertEquals(subscriptionDao.getSubscriptionBundleForAccount(accountId, internalCallContext).size(), 0);
+                                          Mockito.verify(dbiSpy, Mockito.times(0)).open();
+                                          Mockito.verify(roDbiSpy, Mockito.times(2)).open();
+
+                                          final String externalKey = UUID.randomUUID().toString();
+                                          final DateTime startDate = clock.getUTCNow();
+                                          final DateTime createdDate = startDate.plusSeconds(10);
+                                          final DefaultSubscriptionBaseBundle bundleDef = new DefaultSubscriptionBaseBundle(externalKey, accountId, startDate, startDate, createdDate, createdDate);
+                                          final SubscriptionBaseBundle bundle = subscriptionDao.createSubscriptionBundle(bundleDef, catalog, false, internalCallContext);
+                                          Mockito.verify(dbiSpy, Mockito.times(1)).open();
+                                          Mockito.verify(roDbiSpy, Mockito.times(2)).open();
+
+                                          Assert.assertEquals(subscriptionDao.getSubscriptionBundleForAccount(accountId, internalCallContext).size(), 1);
+                                          Mockito.verify(dbiSpy, Mockito.times(2)).open();
+                                          Mockito.verify(roDbiSpy, Mockito.times(2)).open();
+
+                                          Assert.assertEquals(subscriptionDao.getSubscriptionBundleForAccount(accountId, internalCallContext).size(), 1);
+                                          Mockito.verify(dbiSpy, Mockito.times(3)).open();
+                                          Mockito.verify(roDbiSpy, Mockito.times(2)).open();
+
+                                          return null;
+                                      }
+                                  });
+
+        DBRouterUntyped.withRODBIAllowed(true,
+                                         new WithProfilingCallback<Object, Throwable>() {
+                                      @Override
+                                      public Object execute() {
+                                          Assert.assertEquals(subscriptionDao.getSubscriptionBundleForAccount(accountId, internalCallContext).size(), 1);
+                                          Mockito.verify(dbiSpy, Mockito.times(3)).open();
+                                          Mockito.verify(roDbiSpy, Mockito.times(3)).open();
+
+                                          return null;
+                                      }
+                                  });
     }
 }

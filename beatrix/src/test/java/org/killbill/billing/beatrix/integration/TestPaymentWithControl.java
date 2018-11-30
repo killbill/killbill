@@ -65,6 +65,10 @@ public class TestPaymentWithControl extends TestIntegrationBase {
 
     @BeforeClass(groups = "slow")
     public void beforeClass() throws Exception {
+        if (hasFailed()) {
+            return;
+        }
+
         super.beforeClass();
 
         this.testPaymentControlWithControl = new TestPaymentControlPluginApi();
@@ -104,6 +108,10 @@ public class TestPaymentWithControl extends TestIntegrationBase {
 
     @BeforeMethod(groups = "slow")
     public void beforeMethod() throws Exception {
+        if (hasFailed()) {
+            return;
+        }
+
         super.beforeMethod();
         testPaymentControlWithControl.reset();
     }

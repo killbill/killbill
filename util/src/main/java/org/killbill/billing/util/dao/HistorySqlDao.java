@@ -21,6 +21,7 @@ package org.killbill.billing.util.dao;
 import java.util.List;
 
 import org.killbill.billing.callcontext.InternalCallContext;
+import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.util.entity.Entity;
 import org.killbill.billing.util.entity.dao.EntityModelDao;
 import org.skife.jdbi.v2.sqlobject.Bind;
@@ -28,12 +29,16 @@ import org.killbill.commons.jdbi.binder.SmartBindBean;
 import org.skife.jdbi.v2.sqlobject.GetGeneratedKeys;
 import org.skife.jdbi.v2.sqlobject.SqlQuery;
 import org.skife.jdbi.v2.sqlobject.SqlUpdate;
+import org.skife.jdbi.v2.sqlobject.customizers.Define;
 
 public interface HistorySqlDao<M extends EntityModelDao<E>, E extends Entity> {
 
+    //  bypassMappingRegistryCache is to be used in the mapping registry to bypass cache. This is useful for generic classes since it will prevent to return previously cached class, that could result in wrong maps.
+    //  https://github.com/killbill/killbill-commons/blob/work-for-release-0.19.x/jdbi/src/main/java/org/skife/jdbi/v2/MappingRegistry.java#L67
     @SqlQuery
-    public List<EntityHistoryModelDao<M, E>> getHistoryForTargetRecordId(@Bind("targetRecordId") final long targetRecordId,
-                                                                         @SmartBindBean InternalCallContext context);
+    public List<EntityHistoryModelDao<M, E>> getHistoryForTargetRecordId(@Define("bypassMappingRegistryCache") final boolean bypassMappingRegistryCache,
+                                                                         @Bind("targetRecordId") final long targetRecordId,
+                                                                         @SmartBindBean InternalTenantContext context);
     @SqlUpdate
     @GetGeneratedKeys
     public Long addHistoryFromTransaction(@EntityHistoryBinder EntityHistoryModelDao<M, E> history,

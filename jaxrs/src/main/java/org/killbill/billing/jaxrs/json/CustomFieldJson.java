@@ -17,6 +17,7 @@
 package org.killbill.billing.jaxrs.json;
 
 import java.util.List;
+import java.util.UUID;
 
 import javax.annotation.Nullable;
 
@@ -26,14 +27,14 @@ import org.killbill.billing.util.customfield.CustomField;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 
+@ApiModel(value="CustomField", parent = JsonBase.class)
 public class CustomFieldJson extends JsonBase {
 
-    @ApiModelProperty(dataType = "java.util.UUID")
-    private final String customFieldId;
-    @ApiModelProperty(dataType = "java.util.UUID")
-    private final String objectId;
+    private final UUID customFieldId;
+    private final UUID objectId;
     private final ObjectType objectType;
     @ApiModelProperty(required = true)
     private final String name;
@@ -41,8 +42,8 @@ public class CustomFieldJson extends JsonBase {
     private final String value;
 
     @JsonCreator
-    public CustomFieldJson(@JsonProperty("customFieldId") final String customFieldId,
-                           @JsonProperty("objectId") final String objectId,
+    public CustomFieldJson(@JsonProperty("customFieldId") final UUID customFieldId,
+                           @JsonProperty("objectId") final UUID objectId,
                            @JsonProperty("objectType") final ObjectType objectType,
                            @JsonProperty("name") @Nullable final String name,
                            @JsonProperty("value") @Nullable final String value,
@@ -56,14 +57,14 @@ public class CustomFieldJson extends JsonBase {
     }
 
     public CustomFieldJson(final CustomField input, @Nullable final List<AuditLog> auditLogs) {
-        this(input.getId().toString(), input.getObjectId().toString(), input.getObjectType(), input.getFieldName(), input.getFieldValue(), toAuditLogJson(auditLogs));
+        this(input.getId(), input.getObjectId(), input.getObjectType(), input.getFieldName(), input.getFieldValue(), toAuditLogJson(auditLogs));
     }
 
-    public String getCustomFieldId() {
+    public UUID getCustomFieldId() {
         return customFieldId;
     }
 
-    public String getObjectId() {
+    public UUID getObjectId() {
         return objectId;
     }
 

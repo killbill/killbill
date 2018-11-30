@@ -23,10 +23,6 @@ import java.io.ObjectInput;
 import java.io.ObjectOutput;
 import java.util.HashMap;
 
-import org.killbill.billing.util.cache.ExternalizableInput;
-import org.killbill.billing.util.cache.ExternalizableOutput;
-import org.killbill.billing.util.cache.MapperHolder;
-
 public class PerTenantConfig extends HashMap<String, String> implements Externalizable {
 
     private static final long serialVersionUID = 3887971108446630172L;
@@ -35,12 +31,21 @@ public class PerTenantConfig extends HashMap<String, String> implements External
     }
 
     @Override
-    public void readExternal(final ObjectInput in) throws IOException {
-        MapperHolder.mapper().readerForUpdating(this).readValue(new ExternalizableInput(in));
+    public void readExternal(final ObjectInput in) throws IOException, ClassNotFoundException {
+        final int size = in.readInt();
+        for (int i = 0; i < size; i++) {
+            final Object key = in.readObject();
+            final Object value = in.readObject();
+            put(String.valueOf(key), value == null ? null : String.valueOf(value));
+        }
     }
 
     @Override
     public void writeExternal(final ObjectOutput oo) throws IOException {
-        MapperHolder.mapper().writeValue(new ExternalizableOutput(oo), this);
+        oo.writeInt(size());
+        for (final String key : keySet()) {
+            oo.writeObject(key);
+            oo.writeObject(get(key));
+        }
     }
 }

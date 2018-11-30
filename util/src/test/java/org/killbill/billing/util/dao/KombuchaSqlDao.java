@@ -25,5 +25,5 @@ import org.skife.jdbi.v2.sqlobject.SqlQuery;
 interface KombuchaSqlDao extends EntitySqlDao<KombuchaModelDao, Kombucha> {
 
     @SqlQuery
-    public boolean isIsTimeForKombucha();
+    public boolean isItTimeForKombucha();
 }

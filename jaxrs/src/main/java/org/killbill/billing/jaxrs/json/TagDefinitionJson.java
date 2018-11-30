@@ -16,8 +16,10 @@
 
 package org.killbill.billing.jaxrs.json;
 
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.UUID;
 
 import javax.annotation.Nullable;
 
@@ -31,53 +33,45 @@ import com.google.common.base.Function;
 import com.google.common.collect.Collections2;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 
+@ApiModel(value="TagDefinition", parent = JsonBase.class)
 public class TagDefinitionJson extends JsonBase {
 
-    @ApiModelProperty(dataType = "java.util.UUID")
-    private final String id;
+    private final UUID id;
     private final Boolean isControlTag;
     @ApiModelProperty(required = true)
     private final String name;
     @ApiModelProperty(required = true)
     private final String description;
-    private final Set<String> applicableObjectTypes;
+    private final Set<ObjectType> applicableObjectTypes;
 
     @JsonCreator
-    public TagDefinitionJson(@JsonProperty("id") final String id,
+    public TagDefinitionJson(@JsonProperty("id") final UUID id,
                              @JsonProperty("isControlTag") final Boolean isControlTag,
                              @JsonProperty("name") final String name,
                              @JsonProperty("description") @Nullable final String description,
-                             @JsonProperty("applicableObjectTypes") @Nullable final Set<String> applicableObjectTypes,
+                             @JsonProperty("applicableObjectTypes") @Nullable final List<ObjectType> applicableObjectTypes,
                              @JsonProperty("auditLogs") @Nullable final List<AuditLogJson> auditLogs) {
         super(auditLogs);
         this.id = id;
         this.isControlTag = isControlTag;
         this.name = name;
         this.description = description;
-        this.applicableObjectTypes = applicableObjectTypes;
+        this.applicableObjectTypes = new HashSet<ObjectType>(applicableObjectTypes);
     }
 
     public TagDefinitionJson(final TagDefinition tagDefinition, @Nullable final List<AuditLog> auditLogs) {
-        this(tagDefinition.getId().toString(),
+        this(tagDefinition.getId(),
              tagDefinition.isControlTag(),
              tagDefinition.getName(),
              tagDefinition.getDescription(),
-             ImmutableSet.<String>copyOf(Collections2.transform(tagDefinition.getApplicableObjectTypes(), new Function<ObjectType, String>() {
-                 @Override
-                 public String apply(@Nullable final ObjectType input) {
-                     if (input == null) {
-                         return "";
-                     } else {
-                         return input.toString();
-                     }
-                 }
-             })),
+             tagDefinition.getApplicableObjectTypes(),
              toAuditLogJson(auditLogs));
     }
 
-    public String getId() {
+    public UUID getId() {
         return id;
     }
 
@@ -94,7 +88,7 @@ public class TagDefinitionJson extends JsonBase {
         return description;
     }
 
-    public Set<String> getApplicableObjectTypes() {
+    public Set<ObjectType> getApplicableObjectTypes() {
         return applicableObjectTypes;
     }
 

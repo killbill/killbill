@@ -1,6 +1,6 @@
 /*
- * Copyright 2014-2017 Groupon, Inc
- * Copyright 2014-2017 The Billing Project, LLC
+ * Copyright 2014-2018 Groupon, Inc
+ * Copyright 2014-2018 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -26,52 +26,66 @@ import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.invoice.api.InvoiceItem;
+import org.killbill.billing.invoice.api.InvoiceItemType;
 
-public abstract class InvoiceItemCatalogBase extends InvoiceItemBase implements InvoiceItem {
+public class InvoiceItemCatalogBase extends InvoiceItemBase implements InvoiceItem {
 
+    protected final String productName;
     protected final String planName;
     protected final String phaseName;
     protected final String usageName;
 
+    protected final String prettyProductName;
     protected final String prettyPlanName;
     protected final String prettyPhaseName;
     protected final String prettyUsageName;
 
     public InvoiceItemCatalogBase(final UUID id, @Nullable final DateTime createdDate, final UUID invoiceId, final UUID accountId, @Nullable final UUID bundleId,
-                                  @Nullable final UUID subscriptionId, @Nullable final String description, @Nullable final String planName, @Nullable final String phaseName, @Nullable final String usageName,
-                                  final LocalDate startDate, final LocalDate endDate, final BigDecimal amount, final BigDecimal rate, final Currency currency, @Nullable final UUID linkedItemId) {
-        this(id, createdDate, invoiceId, accountId, bundleId, subscriptionId, description, planName, phaseName, usageName, null, null, null, startDate, endDate, amount, rate, currency, linkedItemId, null, null);
+                                  @Nullable final UUID subscriptionId, @Nullable final String description, @Nullable final String productName, @Nullable final String planName, @Nullable final String phaseName, @Nullable final String usageName,
+                                  final LocalDate startDate, final LocalDate endDate, final BigDecimal amount, final BigDecimal rate, final Currency currency, @Nullable final UUID linkedItemId, final InvoiceItemType invoiceItemType) {
+        this(id, createdDate, invoiceId, accountId, bundleId, subscriptionId, description, productName, planName, phaseName, usageName, null, null, null, null, startDate, endDate, amount, rate, currency, linkedItemId, null, null, invoiceItemType);
     }
 
     public InvoiceItemCatalogBase(final UUID id, @Nullable final DateTime createdDate, final UUID invoiceId, final UUID accountId, @Nullable final UUID bundleId,
-                                  @Nullable final UUID subscriptionId, @Nullable final String description, @Nullable final String planName, @Nullable final String phaseName, @Nullable final String usageName,
+                                  @Nullable final UUID subscriptionId, @Nullable final String description, @Nullable final String productName, @Nullable final String planName, @Nullable final String phaseName, @Nullable final String usageName,
                                   final LocalDate startDate, final LocalDate endDate, final BigDecimal amount, final BigDecimal rate, final Currency currency, @Nullable final UUID linkedItemId,
-                                  @Nullable final Integer quantity, @Nullable final String itemDetails) {
-        this(id, createdDate, invoiceId, accountId, bundleId, subscriptionId, description, planName, phaseName, usageName, null, null, null, startDate, endDate, amount, rate, currency, linkedItemId, quantity, itemDetails);
+                                  @Nullable final Integer quantity, @Nullable final String itemDetails, final InvoiceItemType invoiceItemType) {
+        this(id, createdDate, invoiceId, accountId, bundleId, subscriptionId, description, productName, planName, phaseName, usageName, null, null, null, null, startDate, endDate, amount, rate, currency, linkedItemId, quantity, itemDetails, invoiceItemType);
     }
 
     public InvoiceItemCatalogBase(final UUID id, @Nullable final DateTime createdDate, final UUID invoiceId, final UUID accountId, @Nullable final UUID bundleId,
-                                  @Nullable final UUID subscriptionId, @Nullable final String description, @Nullable final String planName, @Nullable final String phaseName, @Nullable final String usageName,
-                                  @Nullable final String prettyPlanName, @Nullable final String prettyPhaseName, @Nullable final String prettyUsageName,
-                                  final LocalDate startDate, final LocalDate endDate, final BigDecimal amount, final BigDecimal rate, final Currency currency, @Nullable final UUID linkedItemId) {
-        this(id, createdDate, invoiceId, accountId, bundleId, subscriptionId, description, planName, phaseName, usageName, prettyPlanName, prettyPhaseName, prettyUsageName, startDate, endDate, amount, rate, currency, linkedItemId, null, null);
+                                  @Nullable final UUID subscriptionId, @Nullable final String description, @Nullable final String productName, @Nullable final String planName, @Nullable final String phaseName,
+                                  @Nullable final String usageName, @Nullable final String prettyProductName, @Nullable final String prettyPlanName, @Nullable final String prettyPhaseName, @Nullable final String prettyUsageName,
+                                  final LocalDate startDate, final LocalDate endDate, final BigDecimal amount, final BigDecimal rate, final Currency currency, @Nullable final UUID linkedItemId, final InvoiceItemType invoiceItemType) {
+        this(id, createdDate, invoiceId, accountId, bundleId, subscriptionId, description, productName, planName, phaseName, usageName, prettyProductName, prettyPlanName, prettyPhaseName, prettyUsageName,
+             startDate, endDate, amount, rate, currency, linkedItemId, null, null, invoiceItemType);
     }
 
-
     public InvoiceItemCatalogBase(final UUID id, @Nullable final DateTime createdDate, final UUID invoiceId, final UUID accountId, @Nullable final UUID bundleId,
-                                  @Nullable final UUID subscriptionId, @Nullable final String description, @Nullable final String planName, @Nullable final String phaseName, @Nullable final String usageName,
-                                  @Nullable final String prettyPlanName, @Nullable final String prettyPhaseName, @Nullable final String prettyUsageName,
+                                  @Nullable final UUID subscriptionId, @Nullable final String description, @Nullable final String productName, @Nullable final String planName, @Nullable final String phaseName, @Nullable final String usageName,
+                                  @Nullable final String prettyProductName, @Nullable final String prettyPlanName, @Nullable final String prettyPhaseName, @Nullable final String prettyUsageName,
                                   final LocalDate startDate, final LocalDate endDate, final BigDecimal amount, final BigDecimal rate, final Currency currency, @Nullable final UUID linkedItemId,
-                                  @Nullable final Integer quantity, @Nullable final String itemDetails) {
-        super(id, createdDate, invoiceId, accountId, bundleId, subscriptionId, description, startDate, endDate, amount, rate, currency, linkedItemId, quantity, itemDetails);
+                                  @Nullable final Integer quantity, @Nullable final String itemDetails, final InvoiceItemType invoiceItemType) {
+        super(id, createdDate, invoiceId, accountId, bundleId, subscriptionId, description, startDate, endDate, amount, rate, currency, linkedItemId, quantity, itemDetails, invoiceItemType);
+        this.productName = productName;
         this.planName = planName;
         this.phaseName = phaseName;
         this.usageName = usageName;
+        this.prettyProductName = prettyProductName;
         this.prettyPlanName = prettyPlanName;
         this.prettyPhaseName = prettyPhaseName;
         this.prettyUsageName = prettyUsageName;
     }
 
+    @Override
+    public String getProductName() {
+        return productName;
+    }
+
+    @Override
+    public String getPrettyProductName() {
+        return prettyProductName;
+    }
 
     @Override
     public String getPlanName() {
@@ -88,7 +102,6 @@ public abstract class InvoiceItemCatalogBase extends InvoiceItemBase implements 
         return usageName;
     }
 
-
     @Override
     public String getPrettyPlanName() {
         return prettyPlanName;
@@ -104,12 +117,11 @@ public abstract class InvoiceItemCatalogBase extends InvoiceItemBase implements 
         return prettyUsageName;
     }
 
-
     @Override
     public boolean matches(final Object o) {
 
         if (!super.matches(o)) {
-            return  false;
+            return false;
         }
         final InvoiceItemCatalogBase that = (InvoiceItemCatalogBase) o;
         if (phaseName != null ? !phaseName.equals(that.phaseName) : that.phaseName != null) {
@@ -134,38 +146,18 @@ public abstract class InvoiceItemCatalogBase extends InvoiceItemBase implements 
     public String toString() {
         // Note: we don't use all fields here, as the output would be overwhelming
         // (we output all invoice items as they are generated).
-        final StringBuilder sb = new StringBuilder();
-        sb.append(getInvoiceItemType());
-        sb.append("{");
-        if (planName != null) {
-            sb.append("planName=").append(planName);
-        }
-        if (phaseName != null) {
-            sb.append("phaseName=").append(phaseName);
-        }
-        if (usageName != null) {
-            sb.append("usageName=").append(usageName);
-        }
-        if (startDate != null) {
-            sb.append("startDate=").append(startDate);
-        }
-        if (endDate != null) {
-            sb.append("endDate=").append(endDate);
-        }
-        if (amount != null) {
-            sb.append("amount=").append(amount);
-        }
-        if (rate != null) {
-            sb.append("rate=").append(rate);
-        }
-        if (subscriptionId != null) {
-            sb.append("subscriptionId=").append(subscriptionId);
-        }
-        if (linkedItemId != null) {
-            sb.append("linkedItemId=").append(linkedItemId);
-        }
+        final StringBuilder sb = new StringBuilder().append(invoiceItemType).append("{");
+        sb.append("productName='").append(productName).append('\'');
+        sb.append(", planName='").append(planName).append('\'');
+        sb.append(", phaseName='").append(phaseName).append('\'');
+        sb.append(", usageName='").append(usageName).append('\'');
+        sb.append(", startDate=").append(startDate);
+        sb.append(", endDate=").append(endDate);
+        sb.append(", amount=").append(amount);
+        sb.append(", subscriptionId=").append(subscriptionId);
+        sb.append(", rate=").append(rate);
+        sb.append(", linkedItemId=").append(linkedItemId);
         sb.append('}');
         return sb.toString();
     }
-
 }

@@ -110,7 +110,6 @@ public class DBTestingHelper extends PlatformDBTestingHelper {
                                "    phone varchar(25) DEFAULT NULL,\n" +
                                "    notes varchar(4096) DEFAULT NULL,\n" +
                                "    migrated boolean default false,\n" +
-                               "    is_notified_for_invoices boolean NOT NULL,\n" +
                                "    created_date datetime NOT NULL,\n" +
                                "    created_by varchar(50) NOT NULL,\n" +
                                "    updated_date datetime DEFAULT NULL,\n" +

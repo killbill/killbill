@@ -36,28 +36,49 @@
       </profile>
     </annotationProcessing>
     <bytecodeTargetLevel>
-      <module name="killbill" target="1.6" />
-      <module name="killbill-account" target="1.6" />
-      <module name="killbill-beatrix" target="1.6" />
-      <module name="killbill-catalog" target="1.6" />
-      <module name="killbill-currency" target="1.6" />
-      <module name="killbill-entitlement" target="1.6" />
-      <module name="killbill-internal-api" target="1.6" />
-      <module name="killbill-invoice" target="1.6" />
-      <module name="killbill-jaxrs" target="1.6" />
-      <module name="killbill-junction" target="1.6" />
-      <module name="killbill-overdue" target="1.6" />
-      <module name="killbill-payment" target="1.6" />
-      <module name="killbill-profiles" target="1.6" />
-      <module name="killbill-profiles-killbill" target="1.6" />
-      <module name="killbill-profiles-killpay" target="1.6" />
-      <module name="killbill-subscription" target="1.6" />
-      <module name="killbill-tenant" target="1.6" />
-      <module name="killbill-usage" target="1.6" />
-      <module name="killbill-util" target="1.6" />
+      <module name="killbill" target="1.8" />
+      <module name="killbill-account" target="1.8" />
+      <module name="killbill-beatrix" target="1.8" />
+      <module name="killbill-catalog" target="1.8" />
+      <module name="killbill-currency" target="1.8" />
+      <module name="killbill-entitlement" target="1.8" />
+      <module name="killbill-internal-api" target="1.8" />
+      <module name="killbill-invoice" target="1.8" />
+      <module name="killbill-jaxrs" target="1.8" />
+      <module name="killbill-junction" target="1.8" />
+      <module name="killbill-overdue" target="1.8" />
+      <module name="killbill-payment" target="1.8" />
+      <module name="killbill-profiles" target="1.8" />
+      <module name="killbill-profiles-killbill" target="1.8" />
+      <module name="killbill-profiles-killpay" target="1.8" />
+      <module name="killbill-subscription" target="1.8" />
+      <module name="killbill-tenant" target="1.8" />
+      <module name="killbill-usage" target="1.8" />
+      <module name="killbill-util" target="1.8" />
     </bytecodeTargetLevel>
   </component>
   <component name="JavacSettings">
     <option name="ADDITIONAL_OPTIONS_STRING" value="-Xlint:unchecked " />
+    <option name="ADDITIONAL_OPTIONS_OVERRIDE">
+      <module name="killbill" options="" />
+      <module name="killbill-account" options="" />
+      <module name="killbill-beatrix" options="" />
+      <module name="killbill-catalog" options="" />
+      <module name="killbill-currency" options="" />
+      <module name="killbill-entitlement" options="" />
+      <module name="killbill-internal-api" options="" />
+      <module name="killbill-invoice" options="" />
+      <module name="killbill-jaxrs" options="" />
+      <module name="killbill-junction" options="" />
+      <module name="killbill-overdue" options="" />
+      <module name="killbill-payment" options="" />
+      <module name="killbill-profiles" options="" />
+      <module name="killbill-profiles-killbill" options="" />
+      <module name="killbill-profiles-killpay" options="" />
+      <module name="killbill-subscription" options="" />
+      <module name="killbill-tenant" options="" />
+      <module name="killbill-usage" options="" />
+      <module name="killbill-util" options="" />
+    </option>
   </component>
 </project>

@@ -17,11 +17,8 @@
 
 package org.killbill.billing.util.security.shiro.dao;
 
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
-import javax.annotation.Nullable;
 import javax.inject.Inject;
 
 import org.apache.shiro.crypto.RandomNumberGenerator;
@@ -34,8 +31,6 @@ import org.killbill.billing.security.SecurityApiException;
 import org.killbill.billing.util.config.definition.SecurityConfig;
 import org.killbill.billing.util.security.shiro.KillbillCredentialsMatcher;
 import org.killbill.clock.Clock;
-import org.killbill.commons.jdbi.mapper.LowerToCamelBeanMapperFactory;
-import org.skife.jdbi.v2.DBI;
 import org.skife.jdbi.v2.Handle;
 import org.skife.jdbi.v2.IDBI;
 import org.skife.jdbi.v2.TransactionCallback;
@@ -85,10 +80,17 @@ public class DefaultUserDao implements UserDao {
         });
     }
 
-    public List<UserRolesModelDao> getUserRoles(final String username) {
-        return dbi.inTransaction(new TransactionCallback<List<UserRolesModelDao>>() {
+    @Override
+    public List<UserRolesModelDao> getUserRoles(final String username) throws SecurityApiException {
+        return inTransactionWithExceptionHandling(new TransactionCallback<List<UserRolesModelDao>>() {
             @Override
             public List<UserRolesModelDao> inTransaction(final Handle handle, final TransactionStatus status) throws Exception {
+                final UsersSqlDao usersSqlDao = handle.attach(UsersSqlDao.class);
+                final UserModelDao userModelDao = usersSqlDao.getByUsername(username);
+                if (userModelDao == null) {
+                    throw new SecurityApiException(ErrorCode.SECURITY_INVALID_USER, username);
+                }
+
                 final UserRolesSqlDao userRolesSqlDao = handle.attach(UserRolesSqlDao.class);
                 return userRolesSqlDao.getByUsername(username);
             }

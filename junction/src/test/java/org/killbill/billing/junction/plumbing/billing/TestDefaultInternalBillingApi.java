@@ -43,6 +43,7 @@ import org.killbill.billing.junction.BillingEvent;
 import org.killbill.billing.junction.DefaultBlockingState;
 import org.killbill.billing.junction.JunctionTestSuiteWithEmbeddedDB;
 import org.killbill.billing.payment.api.PluginProperty;
+import org.killbill.billing.platform.api.KillbillService.KILLBILL_SERVICES;
 import org.killbill.billing.subscription.api.SubscriptionBase;
 import org.killbill.billing.subscription.api.SubscriptionBaseTransitionType;
 import org.testng.Assert;
@@ -121,7 +122,8 @@ public class TestDefaultInternalBillingApi extends JunctionTestSuiteWithEmbedded
 
         testListener.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK);
         final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("Shotgun", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, null);
-        final Entitlement entitlement = entitlementApi.createBaseEntitlement(account.getId(), spec, account.getExternalKey(), null, null, null, false, true, ImmutableList.<PluginProperty>of(), callContext);
+        final UUID entitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec), account.getExternalKey(), null, null, false, true, ImmutableList.<PluginProperty>of(), callContext);
+        final Entitlement entitlement = entitlementApi.getEntitlementForId(entitlementId, callContext);
         final SubscriptionBase subscription = subscriptionInternalApi.getSubscriptionFromId(entitlement.getId(), internalCallContext);
         assertListenerStatus();
 
@@ -130,7 +132,7 @@ public class TestDefaultInternalBillingApi extends JunctionTestSuiteWithEmbedded
         final DefaultBlockingState state1 = new DefaultBlockingState(account.getId(),
                                                                      BlockingStateType.ACCOUNT,
                                                                      DefaultEntitlementApi.ENT_STATE_BLOCKED,
-                                                                     EntitlementService.ENTITLEMENT_SERVICE_NAME,
+                                                                     KILLBILL_SERVICES.ENTITLEMENT_SERVICE.getServiceName(),
                                                                      true,
                                                                      true,
                                                                      true,
@@ -140,7 +142,7 @@ public class TestDefaultInternalBillingApi extends JunctionTestSuiteWithEmbedded
         final DefaultBlockingState state2 = new DefaultBlockingState(account.getId(),
                                                                      BlockingStateType.ACCOUNT,
                                                                      DefaultEntitlementApi.ENT_STATE_CLEAR,
-                                                                     EntitlementService.ENTITLEMENT_SERVICE_NAME,
+                                                                     KILLBILL_SERVICES.ENTITLEMENT_SERVICE.getServiceName(),
                                                                      false,
                                                                      false,
                                                                      false,
@@ -155,7 +157,7 @@ public class TestDefaultInternalBillingApi extends JunctionTestSuiteWithEmbedded
         final DefaultBlockingState state3 = new DefaultBlockingState(entitlement.getBundleId(),
                                                                      BlockingStateType.SUBSCRIPTION_BUNDLE,
                                                                      DefaultEntitlementApi.ENT_STATE_BLOCKED,
-                                                                     EntitlementService.ENTITLEMENT_SERVICE_NAME,
+                                                                     KILLBILL_SERVICES.ENTITLEMENT_SERVICE.getServiceName(),
                                                                      true,
                                                                      true,
                                                                      true,
@@ -165,7 +167,7 @@ public class TestDefaultInternalBillingApi extends JunctionTestSuiteWithEmbedded
         final DefaultBlockingState state4 = new DefaultBlockingState(entitlement.getBundleId(),
                                                                      BlockingStateType.SUBSCRIPTION_BUNDLE,
                                                                      DefaultEntitlementApi.ENT_STATE_CLEAR,
-                                                                     EntitlementService.ENTITLEMENT_SERVICE_NAME,
+                                                                     KILLBILL_SERVICES.ENTITLEMENT_SERVICE.getServiceName(),
                                                                      false,
                                                                      false,
                                                                      false,
@@ -190,7 +192,7 @@ public class TestDefaultInternalBillingApi extends JunctionTestSuiteWithEmbedded
         final DefaultBlockingState state6 = new DefaultBlockingState(entitlement.getBundleId(),
                                                                      BlockingStateType.SUBSCRIPTION_BUNDLE,
                                                                      DefaultEntitlementApi.ENT_STATE_CLEAR + "-something",
-                                                                     EntitlementService.ENTITLEMENT_SERVICE_NAME,
+                                                                     KILLBILL_SERVICES.ENTITLEMENT_SERVICE.getServiceName(),
                                                                      false,
                                                                      false,
                                                                      false,
@@ -199,7 +201,7 @@ public class TestDefaultInternalBillingApi extends JunctionTestSuiteWithEmbedded
         final DefaultBlockingState state5 = new DefaultBlockingState(entitlement.getBundleId(),
                                                                      BlockingStateType.SUBSCRIPTION_BUNDLE,
                                                                      DefaultEntitlementApi.ENT_STATE_BLOCKED + "-something",
-                                                                     EntitlementService.ENTITLEMENT_SERVICE_NAME,
+                                                                     KILLBILL_SERVICES.ENTITLEMENT_SERVICE.getServiceName(),
                                                                      true,
                                                                      true,
                                                                      true,
@@ -213,7 +215,7 @@ public class TestDefaultInternalBillingApi extends JunctionTestSuiteWithEmbedded
         final DefaultBlockingState state7 = new DefaultBlockingState(account.getId(),
                                                                      BlockingStateType.ACCOUNT,
                                                                      DefaultEntitlementApi.ENT_STATE_BLOCKED + "-something2",
-                                                                     EntitlementService.ENTITLEMENT_SERVICE_NAME,
+                                                                     KILLBILL_SERVICES.ENTITLEMENT_SERVICE.getServiceName(),
                                                                      true,
                                                                      true,
                                                                      true,
@@ -222,7 +224,7 @@ public class TestDefaultInternalBillingApi extends JunctionTestSuiteWithEmbedded
         final DefaultBlockingState state8 = new DefaultBlockingState(account.getId(),
                                                                      BlockingStateType.ACCOUNT,
                                                                      DefaultEntitlementApi.ENT_STATE_CLEAR + "-something2",
-                                                                     EntitlementService.ENTITLEMENT_SERVICE_NAME,
+                                                                     KILLBILL_SERVICES.ENTITLEMENT_SERVICE.getServiceName(),
                                                                      false,
                                                                      false,
                                                                      false,
@@ -242,9 +244,9 @@ public class TestDefaultInternalBillingApi extends JunctionTestSuiteWithEmbedded
         Assert.assertEquals(events.get(0).getTransitionType(), SubscriptionBaseTransitionType.CREATE);
         Assert.assertEquals(events.get(0).getEffectiveDate(), subscription.getStartDate());
         Assert.assertEquals(events.get(1).getTransitionType(), SubscriptionBaseTransitionType.START_BILLING_DISABLED);
-        Assert.assertEquals(events.get(1).getEffectiveDate(), block3Date);
+        Assert.assertEquals(events.get(1).getEffectiveDate().compareTo(block3Date), 0);
         Assert.assertEquals(events.get(2).getTransitionType(), SubscriptionBaseTransitionType.END_BILLING_DISABLED);
-        Assert.assertEquals(events.get(2).getEffectiveDate(), block5Date);
+        Assert.assertEquals(events.get(2).getEffectiveDate().compareTo(block5Date), 0);
     }
 
     // See https://github.com/killbill/killbill/commit/92042843e38a67f75495b207385e4c1f9ca60990#commitcomment-4749967
@@ -266,7 +268,8 @@ public class TestDefaultInternalBillingApi extends JunctionTestSuiteWithEmbedded
 
         testListener.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK);
         final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("Shotgun", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, null);
-        final Entitlement entitlement = entitlementApi.createBaseEntitlement(account.getId(), spec, account.getExternalKey(), null, null, null, false, true, ImmutableList.<PluginProperty>of(), callContext);
+        final UUID entitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec), account.getExternalKey(), null, null, false, true, ImmutableList.<PluginProperty>of(), callContext);
+        final Entitlement entitlement = entitlementApi.getEntitlementForId(entitlementId, callContext);
         final SubscriptionBase subscription = subscriptionInternalApi.getSubscriptionFromId(entitlement.getId(), internalCallContext);
         assertListenerStatus();
 
@@ -278,7 +281,7 @@ public class TestDefaultInternalBillingApi extends JunctionTestSuiteWithEmbedded
         final DefaultBlockingState state1 = new DefaultBlockingState(account.getId(),
                                                                      BlockingStateType.ACCOUNT,
                                                                      DefaultEntitlementApi.ENT_STATE_BLOCKED,
-                                                                     EntitlementService.ENTITLEMENT_SERVICE_NAME,
+                                                                     KILLBILL_SERVICES.ENTITLEMENT_SERVICE.getServiceName(),
                                                                      true,
                                                                      true,
                                                                      true,
@@ -293,7 +296,7 @@ public class TestDefaultInternalBillingApi extends JunctionTestSuiteWithEmbedded
         final DefaultBlockingState state2 = new DefaultBlockingState(account.getId(),
                                                                      BlockingStateType.ACCOUNT,
                                                                      DefaultEntitlementApi.ENT_STATE_CLEAR,
-                                                                     EntitlementService.ENTITLEMENT_SERVICE_NAME,
+                                                                     KILLBILL_SERVICES.ENTITLEMENT_SERVICE.getServiceName(),
                                                                      false,
                                                                      false,
                                                                      false,
@@ -303,7 +306,7 @@ public class TestDefaultInternalBillingApi extends JunctionTestSuiteWithEmbedded
         final DefaultBlockingState state3 = new DefaultBlockingState(account.getId(),
                                                                      BlockingStateType.ACCOUNT,
                                                                      DefaultEntitlementApi.ENT_STATE_BLOCKED,
-                                                                     EntitlementService.ENTITLEMENT_SERVICE_NAME,
+                                                                     KILLBILL_SERVICES.ENTITLEMENT_SERVICE.getServiceName(),
                                                                      true,
                                                                      true,
                                                                      true,

@@ -28,6 +28,7 @@ import javax.servlet.ServletContextListener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import ch.qos.logback.classic.LoggerContext;
 import net.sf.log4jdbc.sql.jdbcapi.DriverSpy;
 
 public class CleanupListener implements ServletContextListener {
@@ -53,7 +54,8 @@ public class CleanupListener implements ServletContextListener {
         // See https://mariadb.atlassian.net/browse/CONJ-61
         try {
             Class.forName("org.mariadb.jdbc.Driver");
-            org.mariadb.jdbc.Driver.unloadDriver();
+            // Removed by https://github.com/MariaDB/mariadb-connector-j/commit/ff91ae0bb4f5c49beaba7475b76883b426a51cd4#diff-7d2a758f3b306f512cd12ad68eeb0137
+            //org.mariadb.jdbc.Driver.unloadDriver();
         } catch (final ClassNotFoundException ignored) {
             // MariaDB driver not used
         }
@@ -75,5 +77,9 @@ public class CleanupListener implements ServletContextListener {
                 logger.warn("Unable to de-register driver", e);
             }
         }
+
+//         avoid memory leaks: https://logback.qos.ch/manual/jmxConfig.html
+        LoggerContext lc = (LoggerContext) LoggerFactory.getILoggerFactory();
+        lc.stop();
     }
 }

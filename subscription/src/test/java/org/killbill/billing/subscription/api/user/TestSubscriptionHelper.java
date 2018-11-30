@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014-2015 Groupon, Inc
- * Copyright 2014-2015 The Billing Project, LLC
+ * Copyright 2014-2018 Groupon, Inc
+ * Copyright 2014-2018 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -28,7 +28,7 @@ import javax.inject.Inject;
 import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
 import org.joda.time.Period;
-import org.killbill.billing.account.api.AccountUserApi;
+import org.killbill.billing.ObjectType;
 import org.killbill.billing.api.TestApiListener;
 import org.killbill.billing.api.TestApiListener.NextEvent;
 import org.killbill.billing.callcontext.InternalCallContext;
@@ -38,21 +38,26 @@ import org.killbill.billing.catalog.api.Duration;
 import org.killbill.billing.catalog.api.PhaseType;
 import org.killbill.billing.catalog.api.PlanPhasePriceOverride;
 import org.killbill.billing.catalog.api.PlanPhaseSpecifier;
-import org.killbill.billing.catalog.api.ProductCategory;
 import org.killbill.billing.catalog.api.TimeUnit;
+import org.killbill.billing.dao.MockNonEntityDao;
+import org.killbill.billing.entitlement.api.EntitlementSpecifier;
 import org.killbill.billing.entitlement.api.SubscriptionEventType;
 import org.killbill.billing.invoice.api.DryRunArguments;
 import org.killbill.billing.invoice.api.DryRunType;
 import org.killbill.billing.subscription.api.SubscriptionBaseInternalApi;
+import org.killbill.billing.subscription.api.SubscriptionBaseWithAddOns;
+import org.killbill.billing.subscription.api.SubscriptionBaseWithAddOnsSpecifier;
 import org.killbill.billing.subscription.engine.dao.SubscriptionDao;
 import org.killbill.billing.subscription.events.SubscriptionBaseEvent;
 import org.killbill.billing.subscription.events.phase.PhaseEvent;
 import org.killbill.billing.subscription.events.user.ApiEvent;
 import org.killbill.billing.subscription.events.user.ApiEventType;
-import org.killbill.billing.util.callcontext.CallContext;
+import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.clock.Clock;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.google.common.collect.ImmutableList;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertFalse;
@@ -65,78 +70,145 @@ public class TestSubscriptionHelper {
 
     private final SubscriptionBaseInternalApi subscriptionApi;
     private final Clock clock;
+    private final MockNonEntityDao mockNonEntityDao;
     private final InternalCallContext internalCallContext;
     private final TestApiListener testListener;
     private final SubscriptionDao dao;
+    private final InternalCallContextFactory internalCallContextFactory;
 
     @Inject
-    public TestSubscriptionHelper(final SubscriptionBaseInternalApi subscriptionApi, final Clock clock, final InternalCallContext internallCallContext, final CallContext callContext, final TestApiListener testListener, final SubscriptionDao dao) {
+    public TestSubscriptionHelper(final SubscriptionBaseInternalApi subscriptionApi,
+                                  final Clock clock,
+                                  final MockNonEntityDao mockNonEntityDao,
+                                  final InternalCallContext internalCallContext,
+                                  final TestApiListener testListener,
+                                  final SubscriptionDao dao,
+                                  final InternalCallContextFactory internalCallContextFactory) {
         this.subscriptionApi = subscriptionApi;
         this.clock = clock;
-        this.internalCallContext = internallCallContext;
+        this.mockNonEntityDao = mockNonEntityDao;
+        this.internalCallContext = internalCallContext;
         this.testListener = testListener;
         this.dao = dao;
+        this.internalCallContextFactory = internalCallContextFactory;
     }
 
-    public DryRunArguments createDryRunArguments(final UUID subscriptionId, final UUID bundleId, final PlanPhaseSpecifier spec, final LocalDate requestedDate, final SubscriptionEventType type, final BillingActionPolicy billingActionPolicy) {
-        return new  DryRunArguments() {
+    public DryRunArguments createDryRunArguments(final UUID subscriptionId, final UUID bundleId, final EntitlementSpecifier spec, final LocalDate requestedDate, final SubscriptionEventType type, final BillingActionPolicy billingActionPolicy) {
+        return new DryRunArguments() {
             @Override
             public DryRunType getDryRunType() {
                 return DryRunType.SUBSCRIPTION_ACTION;
             }
+
             @Override
-            public PlanPhaseSpecifier getPlanPhaseSpecifier() {
+            public EntitlementSpecifier getEntitlementSpecifier() {
                 return spec;
             }
+
             @Override
             public SubscriptionEventType getAction() {
                 return type;
             }
+
             @Override
             public UUID getSubscriptionId() {
                 return subscriptionId;
             }
+
             @Override
             public LocalDate getEffectiveDate() {
                 return requestedDate;
             }
+
             @Override
             public UUID getBundleId() {
                 return bundleId;
             }
+
             @Override
             public BillingActionPolicy getBillingActionPolicy() {
                 return billingActionPolicy;
             }
-            @Override
-            public List<PlanPhasePriceOverride> getPlanPhasePriceOverrides() {
-                return null;
-            }
+
         };
     }
 
-    public DefaultSubscriptionBase createSubscription(final SubscriptionBaseBundle bundle, final String productName, final BillingPeriod term, final String planSet, final DateTime requestedDate)
+    public DefaultSubscriptionBase createSubscription(final SubscriptionBaseBundle bundle, final String productName, final BillingPeriod term, final String planSet, final LocalDate requestedDate)
             throws SubscriptionBaseApiException {
-        return createSubscriptionWithBundle(bundle.getId(), productName, term, planSet, requestedDate);
+        return createSubscription(bundle, productName, term, planSet, null, requestedDate);
     }
 
     public DefaultSubscriptionBase createSubscription(final SubscriptionBaseBundle bundle, final String productName, final BillingPeriod term, final String planSet)
             throws SubscriptionBaseApiException {
-        return createSubscriptionWithBundle(bundle.getId(), productName, term, planSet, null);
+        return createSubscription(bundle, productName, term, planSet, null, null);
     }
 
-    public DefaultSubscriptionBase createSubscriptionWithBundle(final UUID bundleId, final String productName, final BillingPeriod term, final String planSet, final DateTime requestedDate)
-            throws SubscriptionBaseApiException {
+    public DefaultSubscriptionBase createSubscription(final boolean noEvents, final SubscriptionBaseBundle bundle, final String productName, final BillingPeriod term, final String planSet) throws SubscriptionBaseApiException {
+        return createSubscription(noEvents, bundle, productName, term, planSet, null, null);
+    }
 
-        if (requestedDate == null || requestedDate.compareTo(clock.getUTCNow()) <= 0) {
+    public DefaultSubscriptionBase createSubscription(final SubscriptionBaseBundle bundle, final String productName, final BillingPeriod term, final String planSet, final PhaseType phaseType, final LocalDate requestedDate)
+            throws SubscriptionBaseApiException {
+        return createSubscription(false, bundle, productName, term, planSet, phaseType, requestedDate);
+    }
+
+    private DefaultSubscriptionBase createSubscription(final boolean noEvents, @Nullable final SubscriptionBaseBundle bundle, final String productName, final BillingPeriod term, final String planSet, final PhaseType phaseType, final LocalDate requestedDate)
+            throws SubscriptionBaseApiException {
+        // Make sure the right account information is used
+        final InternalCallContext internalCallContext = bundle == null ? this.internalCallContext : internalCallContextFactory.createInternalCallContext(bundle.getAccountId(),
+                                                                                                                                                         ObjectType.ACCOUNT,
+                                                                                                                                                         this.internalCallContext.getUpdatedBy(),
+                                                                                                                                                         this.internalCallContext.getCallOrigin(),
+                                                                                                                                                         this.internalCallContext.getContextUserType(),
+                                                                                                                                                         this.internalCallContext.getUserToken(),
+                                                                                                                                                         this.internalCallContext.getTenantRecordId());
+
+        boolean bundleExists = false;
+        if (bundle != null) {
+            try {
+                bundleExists = (subscriptionApi.getBundleFromId(bundle.getId(), internalCallContext) != null);
+            } catch (final SubscriptionBaseApiException ignored) {
+            }
+        }
+
+        if (!noEvents && (requestedDate == null || requestedDate.compareTo(clock.getUTCToday()) <= 0)) {
             testListener.pushExpectedEvent(NextEvent.CREATE);
         }
-        final DefaultSubscriptionBase subscription = (DefaultSubscriptionBase) subscriptionApi.createSubscription(bundleId,
-                                                                                                                  new PlanPhaseSpecifier(productName, term, planSet, null), null,
-                                                                                                                  requestedDate == null ? clock.getUTCNow() : requestedDate, false, internalCallContext);
+
+        final ImmutableList<EntitlementSpecifier> entitlementSpecifiers = ImmutableList.<EntitlementSpecifier>of(new EntitlementSpecifier() {
+            @Override
+            public PlanPhaseSpecifier getPlanPhaseSpecifier() {
+                return new PlanPhaseSpecifier(productName, term, planSet, phaseType);
+            }
+
+            @Override
+            public Integer getBillCycleDay() {
+                return null;
+            }
+
+            @Override
+            public List<PlanPhasePriceOverride> getOverrides() {
+                return null;
+            }
+        });
+        final SubscriptionBaseWithAddOnsSpecifier subscriptionBaseWithAddOnsSpecifier = new SubscriptionBaseWithAddOnsSpecifier(bundle == null ||!bundleExists ? null : bundle.getId(),
+                                                                                                                                bundle == null ? null : bundle.getExternalKey(),
+                                                                                                                                entitlementSpecifiers,
+                                                                                                                                requestedDate,
+                                                                                                                                false);
+        final SubscriptionBaseWithAddOns subscriptionBaseWithAddOns = subscriptionApi.createBaseSubscriptionsWithAddOns(ImmutableList.<SubscriptionBaseWithAddOnsSpecifier>of(subscriptionBaseWithAddOnsSpecifier),
+                                                                                                                        false,
+                                                                                                                        internalCallContext).get(0);
+        final DefaultSubscriptionBase subscription = (DefaultSubscriptionBase) subscriptionBaseWithAddOns.getSubscriptionBaseList().get(0);
         assertNotNull(subscription);
 
         testListener.assertListenerStatus();
+
+        mockNonEntityDao.addTenantRecordIdMapping(subscription.getId(), internalCallContext);
+        mockNonEntityDao.addAccountRecordIdMapping(subscription.getId(), internalCallContext);
+
+        mockNonEntityDao.addTenantRecordIdMapping(subscription.getBundleId(), internalCallContext);
+        mockNonEntityDao.addAccountRecordIdMapping(subscription.getBundleId(), internalCallContext);
 
         return subscription;
     }
@@ -168,8 +240,8 @@ public class TestSubscriptionHelper {
     }
 
     public void assertDateWithin(final DateTime in, final DateTime lower, final DateTime upper) {
-        assertTrue(in.isEqual(lower) || in.isAfter(lower));
-        assertTrue(in.isEqual(upper) || in.isBefore(upper));
+        assertTrue(in.isEqual(lower) || in.isAfter(lower), "in=" + in + ", lower=" + lower);
+        assertTrue(in.isEqual(upper) || in.isBefore(upper), "in=" + in + ", upper=" + upper);
     }
 
     public Duration getDurationMonth(final int months) {
@@ -244,5 +316,4 @@ public class TestSubscriptionHelper {
         list.add(duration);
         return addOrRemoveDuration(input, list, true);
     }
-
 }

@@ -1,7 +1,7 @@
 /*
- * Copyright 2010-2011 Ning, Inc.
- * Copyright 2014-2015 Groupon, Inc
- * Copyright 2014-2015 The Billing Project, LLC
+ * Copyright 2010-2013 Ning, Inc.
+ * Copyright 2014-2018 Groupon, Inc
+ * Copyright 2014-2018 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -18,7 +18,10 @@
 
 package org.killbill.billing.catalog;
 
-import java.net.URI;
+import java.io.Externalizable;
+import java.io.IOException;
+import java.io.ObjectInput;
+import java.io.ObjectOutput;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
@@ -31,7 +34,7 @@ import org.killbill.xmlloader.ValidationError;
 import org.killbill.xmlloader.ValidationErrors;
 
 @XmlAccessorType(XmlAccessType.NONE)
-public class DefaultLimit extends ValidatingConfig<StandaloneCatalog> implements Limit {
+public class DefaultLimit extends ValidatingConfig<StandaloneCatalog> implements Limit, Externalizable {
 
     @XmlElement(required = true)
     @XmlIDREF
@@ -43,25 +46,16 @@ public class DefaultLimit extends ValidatingConfig<StandaloneCatalog> implements
     @XmlElement(required = false)
     private Double min;
 
-    /* (non-Javadoc)
-     * @see org.killbill.billing.catalog.Limit#getUnit()
-     */
     @Override
     public DefaultUnit getUnit() {
         return unit;
     }
 
-    /* (non-Javadoc)
-     * @see org.killbill.billing.catalog.Limit#getMax()
-     */
     @Override
     public Double getMax() {
         return max;
     }
 
-    /* (non-Javadoc)
-     * @see org.killbill.billing.catalog.Limit#getMin()
-     */
     @Override
     public Double getMin() {
         return min;
@@ -71,18 +65,17 @@ public class DefaultLimit extends ValidatingConfig<StandaloneCatalog> implements
     public ValidationErrors validate(StandaloneCatalog root, ValidationErrors errors) {
         if (!CatalogSafetyInitializer.DEFAULT_NON_REQUIRED_DOUBLE_FIELD_VALUE.equals(max) &&
             !CatalogSafetyInitializer.DEFAULT_NON_REQUIRED_DOUBLE_FIELD_VALUE.equals(min) &&
-                   max.doubleValue() < min.doubleValue()) {
-            errors.add(new ValidationError("max must be greater than min", root.getCatalogURI(), Limit.class, ""));
+            max.doubleValue() < min.doubleValue()) {
+            errors.add(new ValidationError("max must be greater than min", Limit.class, ""));
         }
         return errors;
     }
 
     @Override
-    public void initialize(final StandaloneCatalog catalog, final URI sourceURI) {
-        super.initialize(catalog, sourceURI);
+    public void initialize(final StandaloneCatalog catalog) {
+        super.initialize(catalog);
         CatalogSafetyInitializer.initializeNonRequiredNullFieldsWithDefaultValue(this);
     }
-
 
     @Override
     public boolean compliesWith(double value) {
@@ -144,5 +137,19 @@ public class DefaultLimit extends ValidatingConfig<StandaloneCatalog> implements
         result = 31 * result + max.hashCode();
         result = 31 * result + min.hashCode();
         return result;
+    }
+
+    @Override
+    public void writeExternal(final ObjectOutput out) throws IOException {
+        out.writeObject(unit);
+        out.writeDouble(max);
+        out.writeDouble(min);
+    }
+
+    @Override
+    public void readExternal(final ObjectInput in) throws IOException, ClassNotFoundException {
+        this.unit = (DefaultUnit) in.readObject();
+        this.max = in.readDouble();
+        this.min = in.readDouble();
     }
 }

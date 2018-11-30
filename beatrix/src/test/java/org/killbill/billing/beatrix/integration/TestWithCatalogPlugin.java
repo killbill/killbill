@@ -1,6 +1,6 @@
 /*
- * Copyright 2014-2016 Groupon, Inc
- * Copyright 2014-2016 The Billing Project, LLC
+ * Copyright 2014-2018 Groupon, Inc
+ * Copyright 2014-2018 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -31,9 +31,9 @@ import org.killbill.billing.account.api.AccountData;
 import org.killbill.billing.api.TestApiListener.NextEvent;
 import org.killbill.billing.beatrix.util.InvoiceChecker.ExpectedInvoiceItemCheck;
 import org.killbill.billing.callcontext.InternalTenantContext;
+import org.killbill.billing.catalog.DefaultVersionedCatalog;
 import org.killbill.billing.catalog.StandaloneCatalog;
 import org.killbill.billing.catalog.StandaloneCatalogWithPriceOverride;
-import org.killbill.billing.catalog.VersionedCatalog;
 import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.catalog.api.Catalog;
 import org.killbill.billing.catalog.api.CatalogUserApi;
@@ -41,6 +41,7 @@ import org.killbill.billing.catalog.api.Plan;
 import org.killbill.billing.catalog.api.PriceList;
 import org.killbill.billing.catalog.api.Product;
 import org.killbill.billing.catalog.api.ProductCategory;
+import org.killbill.billing.catalog.api.VersionedCatalog;
 import org.killbill.billing.catalog.override.PriceOverride;
 import org.killbill.billing.catalog.plugin.TestModelStandalonePluginCatalog;
 import org.killbill.billing.catalog.plugin.TestModelVersionedPluginCatalog;
@@ -54,6 +55,7 @@ import org.killbill.billing.osgi.api.OSGIServiceRegistration;
 import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.billing.util.callcontext.TenantContext;
+import org.killbill.clock.Clock;
 import org.killbill.xmlloader.XMLLoader;
 import org.testng.Assert;
 import org.testng.annotations.BeforeClass;
@@ -83,9 +85,13 @@ public class TestWithCatalogPlugin extends TestIntegrationBase {
 
     @BeforeClass(groups = "slow")
     public void beforeClass() throws Exception {
+        if (hasFailed()) {
+            return;
+        }
+
         super.beforeClass();
 
-        this.testCatalogPluginApi = new TestCatalogPluginApi(priceOverride, internalCallContext, internalCallContextFactory);
+        this.testCatalogPluginApi = new TestCatalogPluginApi(priceOverride, clock, internalCallContext, internalCallContextFactory);
         pluginRegistry.registerService(new OSGIServiceDescriptor() {
             @Override
             public String getPluginSymbolicName() {
@@ -106,6 +112,10 @@ public class TestWithCatalogPlugin extends TestIntegrationBase {
 
     @BeforeMethod(groups = "slow")
     public void beforeMethod() throws Exception {
+        if (hasFailed()) {
+            return;
+        }
+
         super.beforeMethod();
         testCatalogPluginApi.reset();
     }
@@ -141,38 +151,38 @@ public class TestWithCatalogPlugin extends TestIntegrationBase {
 
         testCatalogPluginApi.addCatalogVersion("versionedCatalog/WeaponsHireSmall-1.xml");
 
-        final VersionedCatalog catalog1 = (VersionedCatalog) catalogUserApi.getCatalog("whatever", callContext);
+        final VersionedCatalog catalog1 = catalogUserApi.getCatalog("whatever", null, callContext);
         Assert.assertEquals(testCatalogPluginApi.getNbLatestCatalogVersionApiCalls(), 1);
         Assert.assertEquals(testCatalogPluginApi.getNbVersionedPluginCatalogApiCalls(), 1);
         Assert.assertEquals(catalog1.getEffectiveDate().compareTo(testCatalogPluginApi.getLatestCatalogUpdate().toDate()), 0);
 
         // Retrieve 3 more times
-        catalogUserApi.getCatalog("whatever", callContext);
-        catalogUserApi.getCatalog("whatever", callContext);
-        catalogUserApi.getCatalog("whatever", callContext);
+        catalogUserApi.getCatalog("whatever", null, callContext);
+        catalogUserApi.getCatalog("whatever", null, callContext);
+        catalogUserApi.getCatalog("whatever", null, callContext);
         Assert.assertEquals(testCatalogPluginApi.getNbLatestCatalogVersionApiCalls(), 4);
         Assert.assertEquals(testCatalogPluginApi.getNbVersionedPluginCatalogApiCalls(), 1);
 
         testCatalogPluginApi.addCatalogVersion("versionedCatalog/WeaponsHireSmall-2.xml");
 
-        final VersionedCatalog catalog2 = (VersionedCatalog) catalogUserApi.getCatalog("whatever", callContext);
+        final VersionedCatalog catalog2 = catalogUserApi.getCatalog("whatever", null, callContext);
         Assert.assertEquals(testCatalogPluginApi.getNbLatestCatalogVersionApiCalls(), 5);
         Assert.assertEquals(testCatalogPluginApi.getNbVersionedPluginCatalogApiCalls(), 2);
         Assert.assertEquals(catalog2.getEffectiveDate().compareTo(testCatalogPluginApi.getLatestCatalogUpdate().toDate()), 0);
 
         testCatalogPluginApi.addCatalogVersion("versionedCatalog/WeaponsHireSmall-3.xml");
 
-        final VersionedCatalog catalog3 = (VersionedCatalog) catalogUserApi.getCatalog("whatever", callContext);
+        final VersionedCatalog catalog3 = catalogUserApi.getCatalog("whatever", null, callContext);
         Assert.assertEquals(testCatalogPluginApi.getNbLatestCatalogVersionApiCalls(), 6);
         Assert.assertEquals(testCatalogPluginApi.getNbVersionedPluginCatalogApiCalls(), 3);
         Assert.assertEquals(catalog3.getEffectiveDate().compareTo(testCatalogPluginApi.getLatestCatalogUpdate().toDate()), 0);
 
 
         // Retrieve 4 more times
-        catalogUserApi.getCatalog("whatever", callContext);
-        catalogUserApi.getCatalog("whatever", callContext);
-        catalogUserApi.getCatalog("whatever", callContext);
-        catalogUserApi.getCatalog("whatever", callContext);
+        catalogUserApi.getCatalog("whatever", null, callContext);
+        catalogUserApi.getCatalog("whatever", null, callContext);
+        catalogUserApi.getCatalog("whatever", null, callContext);
+        catalogUserApi.getCatalog("whatever", null, callContext);
         Assert.assertEquals(testCatalogPluginApi.getNbLatestCatalogVersionApiCalls(), 10);
         Assert.assertEquals(testCatalogPluginApi.getNbVersionedPluginCatalogApiCalls(), 3);
 
@@ -181,17 +191,19 @@ public class TestWithCatalogPlugin extends TestIntegrationBase {
 
     public static class TestCatalogPluginApi implements CatalogPluginApi {
 
-        final PriceOverride priceOverride;
-        final InternalTenantContext internalTenantContext;
-        final InternalCallContextFactory internalCallContextFactory;
+        private final PriceOverride priceOverride;
+        private final Clock clock;
+        private final InternalTenantContext internalTenantContext;
+        private final InternalCallContextFactory internalCallContextFactory;
 
-        private VersionedCatalog versionedCatalog;
+        private DefaultVersionedCatalog versionedCatalog;
         private DateTime latestCatalogUpdate;
         private int nbLatestCatalogVersionApiCalls;
         private int nbVersionedPluginCatalogApiCalls;
 
-        public TestCatalogPluginApi(final PriceOverride priceOverride, final InternalTenantContext internalTenantContext, final InternalCallContextFactory internalCallContextFactory) throws Exception {
+        public TestCatalogPluginApi(final PriceOverride priceOverride, final Clock clock, final InternalTenantContext internalTenantContext, final InternalCallContextFactory internalCallContextFactory) throws Exception {
             this.priceOverride = priceOverride;
+            this.clock = clock;
             this.internalTenantContext = internalTenantContext;
             this.internalCallContextFactory = internalCallContextFactory;
             reset();
@@ -217,7 +229,7 @@ public class TestWithCatalogPlugin extends TestIntegrationBase {
 
             this.latestCatalogUpdate = new DateTime(inputCatalogVersion.getEffectiveDate());
             if (versionedCatalog == null) {
-                versionedCatalog = new VersionedCatalog(getClock());
+                versionedCatalog = new DefaultVersionedCatalog(clock);
             }
             versionedCatalog.add(inputCatalogVersionWithOverride);
         }

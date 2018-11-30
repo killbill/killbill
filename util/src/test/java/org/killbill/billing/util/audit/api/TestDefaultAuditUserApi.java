@@ -19,16 +19,15 @@ package org.killbill.billing.util.audit.api;
 import java.util.List;
 import java.util.UUID;
 
-import org.testng.Assert;
-import org.testng.annotations.BeforeClass;
-import org.testng.annotations.Test;
-
 import org.killbill.billing.ObjectType;
 import org.killbill.billing.util.api.AuditLevel;
 import org.killbill.billing.util.audit.AuditLog;
 import org.killbill.billing.util.audit.AuditLogsTestBase;
 import org.killbill.billing.util.audit.dao.MockAuditDao;
 import org.killbill.billing.util.dao.TableName;
+import org.testng.Assert;
+import org.testng.annotations.BeforeMethod;
+import org.testng.annotations.Test;
 
 import com.google.common.collect.ImmutableList;
 
@@ -37,10 +36,12 @@ public class TestDefaultAuditUserApi extends AuditLogsTestBase {
     private List<AuditLog> auditLogs;
     private List<UUID> objectIds;
 
-    @Override
-    @BeforeClass(groups = "fast")
-    public void beforeClass() throws Exception {
-        super.beforeClass();
+    @BeforeMethod(groups = "fast")
+    public void setup() throws Exception {
+        if (hasFailed()) {
+            return;
+        }
+
         auditLogs = ImmutableList.<AuditLog>of(createAuditLog(), createAuditLog(), createAuditLog(), createAuditLog());
         objectIds = ImmutableList.<UUID>of(UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID());
 

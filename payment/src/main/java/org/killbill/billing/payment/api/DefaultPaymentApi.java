@@ -31,10 +31,14 @@ import org.killbill.billing.ObjectType;
 import org.killbill.billing.account.api.Account;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.catalog.api.Currency;
+import org.killbill.billing.payment.core.PaymentControlAwareRefresher;
 import org.killbill.billing.payment.core.PaymentMethodProcessor;
 import org.killbill.billing.payment.core.PaymentProcessor;
 import org.killbill.billing.payment.core.PluginControlPaymentProcessor;
+import org.killbill.billing.payment.dao.PaymentDao;
 import org.killbill.billing.util.UUIDs;
+import org.killbill.billing.util.api.AuditLevel;
+import org.killbill.billing.util.audit.AuditLogWithHistory;
 import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.billing.util.callcontext.TenantContext;
@@ -58,16 +62,26 @@ public class DefaultPaymentApi extends DefaultApiBase implements PaymentApi {
 
     private static final Logger log = LoggerFactory.getLogger(DefaultPaymentApi.class);
 
+    private final PaymentControlAwareRefresher paymentControlAwareRefresher;
     private final PaymentProcessor paymentProcessor;
     private final PaymentMethodProcessor paymentMethodProcessor;
     private final PluginControlPaymentProcessor pluginControlPaymentProcessor;
+    private final PaymentDao paymentDao;
 
     @Inject
-    public DefaultPaymentApi(final PaymentConfig paymentConfig, final PaymentProcessor paymentProcessor, final PaymentMethodProcessor paymentMethodProcessor, final PluginControlPaymentProcessor pluginControlPaymentProcessor, final InternalCallContextFactory internalCallContextFactory) {
+    public DefaultPaymentApi(final PaymentConfig paymentConfig,
+                             final PaymentProcessor paymentProcessor,
+                             final PaymentMethodProcessor paymentMethodProcessor,
+                             final PluginControlPaymentProcessor pluginControlPaymentProcessor,
+                             final PaymentDao paymentDao,
+                             final InternalCallContextFactory internalCallContextFactory,
+                             final PaymentControlAwareRefresher paymentControlAwareRefresher) {
         super(paymentConfig, internalCallContextFactory);
         this.paymentProcessor = paymentProcessor;
         this.paymentMethodProcessor = paymentMethodProcessor;
         this.pluginControlPaymentProcessor = pluginControlPaymentProcessor;
+        this.paymentDao = paymentDao;
+        this.paymentControlAwareRefresher = paymentControlAwareRefresher;
     }
 
     @Override
@@ -126,10 +140,6 @@ public class DefaultPaymentApi extends DefaultApiBase implements PaymentApi {
         }
 
         checkNotNullParameter(account, "account");
-        if (paymentId == null) {
-            checkNotNullParameter(amount, "amount");
-            checkNotNullParameter(currency, "currency");
-        }
         checkNotNullParameter(properties, "plugin properties");
         checkExternalKeyLength(paymentExternalKey);
 
@@ -223,8 +233,6 @@ public class DefaultPaymentApi extends DefaultApiBase implements PaymentApi {
 
         checkNotNullParameter(account, "account");
         checkNotNullParameter(paymentId, "paymentId");
-        checkNotNullParameter(amount, "amount");
-        checkNotNullParameter(currency, "currency");
         checkNotNullParameter(properties, "plugin properties");
         checkExternalKeyLength(paymentTransactionExternalKey);
 
@@ -318,11 +326,6 @@ public class DefaultPaymentApi extends DefaultApiBase implements PaymentApi {
         }
 
         checkNotNullParameter(account, "account");
-        if (paymentId == null) {
-            checkNotNullParameter(amount, "amount");
-            checkNotNullParameter(currency, "currency");
-        }
-
         checkNotNullParameter(properties, "plugin properties");
         checkExternalKeyLength(paymentTransactionExternalKey);
 
@@ -510,9 +513,6 @@ public class DefaultPaymentApi extends DefaultApiBase implements PaymentApi {
         }
 
         checkNotNullParameter(account, "account");
-        if (paymentId == null) {
-            checkNotNullParameter(currency, "currency");
-        }
         checkNotNullParameter(paymentId, "paymentId");
         checkNotNullParameter(properties, "plugin properties");
         checkExternalKeyLength(paymentTransactionExternalKey);
@@ -612,10 +612,6 @@ public class DefaultPaymentApi extends DefaultApiBase implements PaymentApi {
         }
 
         checkNotNullParameter(account, "account");
-        if (paymentId == null) {
-            checkNotNullParameter(amount, "amount");
-            checkNotNullParameter(currency, "currency");
-        }
         checkNotNullParameter(properties, "plugin properties");
         checkExternalKeyLength(paymentTransactionExternalKey);
 
@@ -811,8 +807,6 @@ public class DefaultPaymentApi extends DefaultApiBase implements PaymentApi {
         }
 
         checkNotNullParameter(account, "account");
-        checkNotNullParameter(amount, "amount");
-        checkNotNullParameter(currency, "currency");
         checkNotNullParameter(paymentId, "paymentId");
 
         final String transactionType = TransactionType.CHARGEBACK.name();
@@ -941,22 +935,22 @@ public class DefaultPaymentApi extends DefaultApiBase implements PaymentApi {
 
     @Override
     public List<Payment> getAccountPayments(final UUID accountId, final boolean withPluginInfo, final boolean withAttempts, final Iterable<PluginProperty> properties, final TenantContext tenantContext) throws PaymentApiException {
-        return paymentProcessor.getAccountPayments(accountId, withPluginInfo, withAttempts, tenantContext, internalCallContextFactory.createInternalTenantContext(accountId, tenantContext));
+        return paymentControlAwareRefresher.getAccountPayments(accountId, withPluginInfo, withAttempts, tenantContext, internalCallContextFactory.createInternalTenantContext(accountId, tenantContext));
     }
 
     @Override
     public Pagination<Payment> getPayments(final Long offset, final Long limit, final boolean withPluginInfo, final boolean withAttempts, final Iterable<PluginProperty> properties, final TenantContext context) {
-        return paymentProcessor.getPayments(offset, limit, withPluginInfo, withAttempts, properties, context, internalCallContextFactory.createInternalTenantContextWithoutAccountRecordId(context));
+        return paymentControlAwareRefresher.getPayments(offset, limit, withPluginInfo, withAttempts, properties, context, internalCallContextFactory.createInternalTenantContextWithoutAccountRecordId(context));
     }
 
     @Override
     public Pagination<Payment> getPayments(final Long offset, final Long limit, final String pluginName, final boolean withPluginInfo, final boolean withAttempts, final Iterable<PluginProperty> properties, final TenantContext tenantContext) throws PaymentApiException {
-        return paymentProcessor.getPayments(offset, limit, pluginName, withPluginInfo, withAttempts, properties, tenantContext, internalCallContextFactory.createInternalTenantContextWithoutAccountRecordId(tenantContext));
+        return paymentControlAwareRefresher.getPayments(offset, limit, pluginName, withPluginInfo, withAttempts, properties, tenantContext, internalCallContextFactory.createInternalTenantContextWithoutAccountRecordId(tenantContext));
     }
 
     @Override
     public Payment getPayment(final UUID paymentId, final boolean withPluginInfo, final boolean withAttempts, final Iterable<PluginProperty> properties, final TenantContext context) throws PaymentApiException {
-        final Payment payment = paymentProcessor.getPayment(paymentId, withPluginInfo, withAttempts, properties, context, internalCallContextFactory.createInternalTenantContext(paymentId, ObjectType.PAYMENT, context));
+        final Payment payment = paymentControlAwareRefresher.getPayment(paymentId, withPluginInfo, withAttempts, properties, context, internalCallContextFactory.createInternalTenantContext(paymentId, ObjectType.PAYMENT, context));
         if (payment == null) {
             throw new PaymentApiException(ErrorCode.PAYMENT_NO_SUCH_PAYMENT, paymentId);
         }
@@ -966,7 +960,7 @@ public class DefaultPaymentApi extends DefaultApiBase implements PaymentApi {
     @Override
     public Payment getPaymentByExternalKey(final String paymentExternalKey, final boolean withPluginInfo, final boolean withAttempts, final Iterable<PluginProperty> properties, final TenantContext tenantContext)
             throws PaymentApiException {
-        final Payment payment = paymentProcessor.getPaymentByExternalKey(paymentExternalKey, withPluginInfo, withAttempts, properties, tenantContext, internalCallContextFactory.createInternalTenantContextWithoutAccountRecordId(tenantContext));
+        final Payment payment = paymentControlAwareRefresher.getPaymentByExternalKey(paymentExternalKey, withPluginInfo, withAttempts, properties, tenantContext, internalCallContextFactory.createInternalTenantContextWithoutAccountRecordId(tenantContext));
         if (payment == null) {
             throw new PaymentApiException(ErrorCode.PAYMENT_NO_SUCH_PAYMENT, paymentExternalKey);
         }
@@ -975,12 +969,12 @@ public class DefaultPaymentApi extends DefaultApiBase implements PaymentApi {
 
     @Override
     public Pagination<Payment> searchPayments(final String searchKey, final Long offset, final Long limit, final boolean withPluginInfo, final boolean withAttempts, final Iterable<PluginProperty> properties, final TenantContext context) {
-        return paymentProcessor.searchPayments(searchKey, offset, limit, withPluginInfo, withAttempts, properties, context, internalCallContextFactory.createInternalTenantContextWithoutAccountRecordId(context));
+        return paymentControlAwareRefresher.searchPayments(searchKey, offset, limit, withPluginInfo, withAttempts, properties, context, internalCallContextFactory.createInternalTenantContextWithoutAccountRecordId(context));
     }
 
     @Override
     public Pagination<Payment> searchPayments(final String searchKey, final Long offset, final Long limit, final String pluginName, final boolean withPluginInfo, final boolean withAttempts, final Iterable<PluginProperty> properties, final TenantContext context) throws PaymentApiException {
-        return paymentProcessor.searchPayments(searchKey, offset, limit, pluginName, withPluginInfo, withAttempts, properties, context, internalCallContextFactory.createInternalTenantContextWithoutAccountRecordId(context));
+        return paymentControlAwareRefresher.searchPayments(searchKey, offset, limit, pluginName, withPluginInfo, withAttempts, properties, context, internalCallContextFactory.createInternalTenantContextWithoutAccountRecordId(context));
     }
     @Override
     public UUID addPaymentMethod(final Account account, final String paymentMethodExternalKey, final String pluginName,
@@ -1072,10 +1066,39 @@ public class DefaultPaymentApi extends DefaultApiBase implements PaymentApi {
     }
 
     @Override
+    public List<AuditLogWithHistory> getPaymentAuditLogsWithHistoryForId(final UUID paymentId, final AuditLevel auditLevel, final TenantContext tenantContext) {
+        return paymentDao.getPaymentAuditLogsWithHistoryForId(paymentId, auditLevel, internalCallContextFactory.createInternalTenantContext(paymentId, ObjectType.PAYMENT, tenantContext));
+    }
+
+    @Override
+    public List<AuditLogWithHistory> getPaymentMethodAuditLogsWithHistoryForId(final UUID paymentMethodId, final AuditLevel auditLevel, final TenantContext tenantContext) {
+        return paymentDao.getPaymentMethodAuditLogsWithHistoryForId(paymentMethodId, auditLevel, internalCallContextFactory.createInternalTenantContext(paymentMethodId, ObjectType.PAYMENT_METHOD, tenantContext));
+    }
+
+    @Override
+    public List<AuditLogWithHistory> getPaymentAttemptAuditLogsWithHistoryForId(final UUID paymentAttemptId, final AuditLevel auditLevel, final TenantContext tenantContext) {
+        return paymentDao.getPaymentAttemptAuditLogsWithHistoryForId(paymentAttemptId, auditLevel, internalCallContextFactory.createInternalTenantContext(paymentAttemptId, ObjectType.PAYMENT_ATTEMPT, tenantContext));
+    }
+
+    @Override
+    public List<AuditLogWithHistory> getPaymentTransactionAuditLogsWithHistoryForId(final UUID paymentTransactionId, final AuditLevel auditLevel, final TenantContext tenantContext) {
+        return paymentDao.getPaymentTransactionAuditLogsWithHistoryForId(paymentTransactionId, auditLevel, internalCallContextFactory.createInternalTenantContext(paymentTransactionId, ObjectType.TRANSACTION, tenantContext));
+    }
+
+    @Override
     public Payment getPaymentByTransactionId(final UUID transactionId, final boolean withPluginInfo, final boolean withAttempts, final Iterable<PluginProperty> properties, final TenantContext context) throws PaymentApiException {
-        final Payment payment = paymentProcessor.getPaymentByTransactionId(transactionId, withPluginInfo, withAttempts, properties, context, internalCallContextFactory.createInternalTenantContext(transactionId, ObjectType.TRANSACTION, context));
+        final Payment payment = paymentControlAwareRefresher.getPaymentByTransactionId(transactionId, withPluginInfo, withAttempts, properties, context, internalCallContextFactory.createInternalTenantContext(transactionId, ObjectType.TRANSACTION, context));
         if (payment == null) {
             throw new PaymentApiException(ErrorCode.PAYMENT_NO_SUCH_PAYMENT, transactionId);
+        }
+        return payment;
+    }
+
+    @Override
+    public Payment getPaymentByTransactionExternalKey(final String transactionExternalKey, final boolean withPluginInfo, final boolean withAttempts, final Iterable<PluginProperty> properties, final TenantContext context) throws PaymentApiException {
+        final Payment payment = paymentControlAwareRefresher.getPaymentByTransactionExternalKey(transactionExternalKey, withPluginInfo, withAttempts, properties, context, internalCallContextFactory.createInternalTenantContextWithoutAccountRecordId(context));
+        if (payment == null) {
+            throw new PaymentApiException(ErrorCode.PAYMENT_NO_SUCH_PAYMENT, transactionExternalKey);
         }
         return payment;
     }

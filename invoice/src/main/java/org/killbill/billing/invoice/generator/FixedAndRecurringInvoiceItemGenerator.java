@@ -237,6 +237,7 @@ public class FixedAndRecurringInvoiceItemGenerator extends InvoiceItemGenerator 
                                                                                                 accountId,
                                                                                                 thisEvent.getSubscription().getBundleId(),
                                                                                                 thisEvent.getSubscription().getId(),
+                                                                                                thisEvent.getPlan().getProduct().getName(),
                                                                                                 thisEvent.getPlan().getName(),
                                                                                                 thisEvent.getPlanPhase().getName(),
                                                                                                 itemDatum.getStartDate(),
@@ -398,7 +399,7 @@ public class FixedAndRecurringInvoiceItemGenerator extends InvoiceItemGenerator 
             if (fixedPrice != null) {
                 final FixedPriceInvoiceItem fixedPriceInvoiceItem = new FixedPriceInvoiceItem(invoiceId, accountId, thisEvent.getSubscription().getBundleId(),
                                                                                               thisEvent.getSubscription().getId(),
-                                                                                              thisEvent.getPlan().getName(), thisEvent.getPlanPhase().getName(),
+                                                                                              thisEvent.getPlan().getProduct().getName(), thisEvent.getPlan().getName(), thisEvent.getPlanPhase().getName(),
                                                                                               roundedStartDate, fixedPrice, currency);
 
                 // For debugging purposes
@@ -412,7 +413,7 @@ public class FixedAndRecurringInvoiceItemGenerator extends InvoiceItemGenerator 
     }
 
     @VisibleForTesting
-    void safetyBounds(final Iterable<InvoiceItem> resultingItems, final Multimap<UUID, LocalDate> createdItemsPerDayPerSubscription, final InternalTenantContext internalCallContext) throws InvoiceApiException {
+    void safetyBounds(final Iterable<InvoiceItem> resultingItems, final Multimap<UUID, LocalDate> createdItemsPerDayPerSubscription, final InternalCallContext internalCallContext) throws InvoiceApiException {
         // Trigger an exception if we detect the creation of similar items for a given subscription
         // See https://github.com/killbill/killbill/issues/664
         if (config.isSanitySafetyBoundEnabled(internalCallContext)) {
@@ -472,13 +473,13 @@ public class FixedAndRecurringInvoiceItemGenerator extends InvoiceItemGenerator 
         }
     }
 
-    private LocalDate trackInvoiceItemCreatedDay(final InvoiceItem invoiceItem, final Multimap<UUID, LocalDate> createdItemsPerDayPerSubscription, final InternalTenantContext internalCallContext) {
+    private LocalDate trackInvoiceItemCreatedDay(final InvoiceItem invoiceItem, final Multimap<UUID, LocalDate> createdItemsPerDayPerSubscription, final InternalCallContext internalCallContext) {
         final UUID subscriptionId = invoiceItem.getSubscriptionId();
         if (subscriptionId == null) {
             return null;
         }
 
-        final LocalDate createdDay = internalCallContext.toLocalDate(MoreObjects.firstNonNull(invoiceItem.getCreatedDate(), clock.getUTCNow()));
+        final LocalDate createdDay = internalCallContext.toLocalDate(MoreObjects.firstNonNull(invoiceItem.getCreatedDate(), internalCallContext.getCreatedDate()));
         createdItemsPerDayPerSubscription.put(subscriptionId, createdDay);
         return createdDay;
     }

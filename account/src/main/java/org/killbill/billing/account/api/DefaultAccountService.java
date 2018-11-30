@@ -18,11 +18,14 @@ package org.killbill.billing.account.api;
 
 public class DefaultAccountService implements AccountService {
 
-    private static final String ACCOUNT_SERVICE_NAME = "account-service";
-
     @Override
     public String getName() {
-        return ACCOUNT_SERVICE_NAME;
+        return KILLBILL_SERVICES.ACCOUNT_SERVICE.getServiceName();
+    }
+
+    @Override
+    public int getRegistrationOrdering() {
+        return KILLBILL_SERVICES.ACCOUNT_SERVICE.getRegistrationOrdering();
     }
 
 }

@@ -1,7 +1,9 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
+ * Copyright 2014-2018 Groupon, Inc
+ * Copyright 2014-2018 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -33,26 +35,25 @@ import org.killbill.billing.subscription.events.SubscriptionBaseEvent;
 import org.killbill.billing.subscription.events.user.ApiEventBase;
 import org.killbill.billing.subscription.events.user.ApiEventBuilder;
 import org.killbill.billing.subscription.events.user.ApiEventType;
-import org.killbill.clock.DefaultClock;
 import org.testng.Assert;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
-
 public class TestPlanAligner extends SubscriptionTestSuiteNoDB {
 
     private static final String priceList = PriceListSet.DEFAULT_PRICELIST_NAME;
-
-    private final DefaultClock clock = new DefaultClock();
 
     private PlanAligner planAligner;
 
     @Override
     @BeforeClass(groups = "fast")
     public void beforeClass() throws Exception {
+        if (hasFailed()) {
+            return;
+        }
+
         super.beforeClass();
         planAligner = new PlanAligner();
-
     }
 
     @Test(groups = "fast")
@@ -139,7 +140,6 @@ public class TestPlanAligner extends SubscriptionTestSuiteNoDB {
         Assert.assertNull(newPhase);
     }
 
-
     //
     // Scenario : change Plan with START_OF_SUBSCRIPTION after skipping TRIAL on Create to a new Plan that only has EVERGREEN
     //
@@ -152,7 +152,7 @@ public class TestPlanAligner extends SubscriptionTestSuiteNoDB {
         final DateTime alignStartDate = bundleStartDate;
 
         final Plan plan = catalogService.getFullCatalog(true, true, internalCallContext).findPlan(productName, clock.getUTCNow());
-        final TimedPhase [] phases = planAligner.getCurrentAndNextTimedPhaseOnCreate(alignStartDate, bundleStartDate, plan, PhaseType.EVERGREEN, PriceListSet.DEFAULT_PRICELIST_NAME, now, catalog, internalCallContext);
+        final TimedPhase[] phases = planAligner.getCurrentAndNextTimedPhaseOnCreate(alignStartDate, bundleStartDate, plan, PhaseType.EVERGREEN, PriceListSet.DEFAULT_PRICELIST_NAME, now, catalog, internalCallContext);
         Assert.assertEquals(phases.length, 2);
         Assert.assertEquals(phases[0].getPhase().getPhaseType(), PhaseType.EVERGREEN);
         Assert.assertEquals(phases[0].getStartPhase(), now);
@@ -164,11 +164,10 @@ public class TestPlanAligner extends SubscriptionTestSuiteNoDB {
         final Plan newPlan = catalogService.getFullCatalog(true, true, internalCallContext).findPlan(newProductName, clock.getUTCNow());
         final DateTime effectiveChangeDate = defaultSubscriptionBase.getStartDate().plusMonths(15);
 
-        final TimedPhase currentPhase  = planAligner.getCurrentTimedPhaseOnChange(defaultSubscriptionBase, newPlan, effectiveChangeDate, null, catalog, internalCallContext);
+        final TimedPhase currentPhase = planAligner.getCurrentTimedPhaseOnChange(defaultSubscriptionBase, newPlan, effectiveChangeDate, null, catalog, internalCallContext);
         Assert.assertEquals(currentPhase.getStartPhase(), alignStartDate);
         Assert.assertEquals(currentPhase.getPhase().getPhaseType(), PhaseType.EVERGREEN);
     }
-
 
     //
     // Scenario : change Plan with START_OF_SUBSCRIPTION after skipping TRIAL on Create to a new Plan that has {TRIAL, EVERGREEN}
@@ -182,7 +181,7 @@ public class TestPlanAligner extends SubscriptionTestSuiteNoDB {
         final DateTime alignStartDate = bundleStartDate;
 
         final Plan plan = catalogService.getFullCatalog(true, true, internalCallContext).findPlan(productName, clock.getUTCNow());
-        final TimedPhase [] phases = planAligner.getCurrentAndNextTimedPhaseOnCreate(alignStartDate, bundleStartDate, plan, PhaseType.EVERGREEN, PriceListSet.DEFAULT_PRICELIST_NAME, now, catalog, internalCallContext);
+        final TimedPhase[] phases = planAligner.getCurrentAndNextTimedPhaseOnCreate(alignStartDate, bundleStartDate, plan, PhaseType.EVERGREEN, PriceListSet.DEFAULT_PRICELIST_NAME, now, catalog, internalCallContext);
         Assert.assertEquals(phases.length, 2);
         Assert.assertEquals(phases[0].getPhase().getPhaseType(), PhaseType.EVERGREEN);
         Assert.assertEquals(phases[0].getStartPhase(), now);
@@ -194,11 +193,10 @@ public class TestPlanAligner extends SubscriptionTestSuiteNoDB {
         final Plan newPlan = catalogService.getFullCatalog(true, true, internalCallContext).findPlan(newProductName, clock.getUTCNow());
         final DateTime effectiveChangeDate = defaultSubscriptionBase.getStartDate().plusMonths(15);
 
-        final TimedPhase currentPhase  = planAligner.getCurrentTimedPhaseOnChange(defaultSubscriptionBase, newPlan, effectiveChangeDate, null, catalog, internalCallContext);
+        final TimedPhase currentPhase = planAligner.getCurrentTimedPhaseOnChange(defaultSubscriptionBase, newPlan, effectiveChangeDate, null, catalog, internalCallContext);
         Assert.assertEquals(currentPhase.getStartPhase(), alignStartDate);
         Assert.assertEquals(currentPhase.getPhase().getPhaseType(), PhaseType.EVERGREEN);
     }
-
 
     //
     // Scenario : change Plan with START_OF_SUBSCRIPTION after skipping TRIAL on Create to a new Plan that has {TRIAL, DISCOUNT, EVERGREEN}
@@ -212,7 +210,7 @@ public class TestPlanAligner extends SubscriptionTestSuiteNoDB {
         final DateTime alignStartDate = bundleStartDate;
 
         final Plan plan = catalogService.getFullCatalog(true, true, internalCallContext).findPlan(productName, clock.getUTCNow());
-        final TimedPhase [] phases = planAligner.getCurrentAndNextTimedPhaseOnCreate(alignStartDate, bundleStartDate, plan, PhaseType.EVERGREEN, PriceListSet.DEFAULT_PRICELIST_NAME, now, catalog, internalCallContext);
+        final TimedPhase[] phases = planAligner.getCurrentAndNextTimedPhaseOnCreate(alignStartDate, bundleStartDate, plan, PhaseType.EVERGREEN, PriceListSet.DEFAULT_PRICELIST_NAME, now, catalog, internalCallContext);
         Assert.assertEquals(phases.length, 2);
         Assert.assertEquals(phases[0].getPhase().getPhaseType(), PhaseType.EVERGREEN);
         Assert.assertEquals(phases[0].getStartPhase(), now);
@@ -225,7 +223,7 @@ public class TestPlanAligner extends SubscriptionTestSuiteNoDB {
         final DateTime effectiveChangeDate = defaultSubscriptionBase.getStartDate().plusMonths(15);
 
         // Because new Plan has an EVERGREEN PhaseType we end up directly on that PhaseType
-        final TimedPhase currentPhase  = planAligner.getCurrentTimedPhaseOnChange(defaultSubscriptionBase, newPlan, effectiveChangeDate, null, catalog, internalCallContext);
+        final TimedPhase currentPhase = planAligner.getCurrentTimedPhaseOnChange(defaultSubscriptionBase, newPlan, effectiveChangeDate, null, catalog, internalCallContext);
         Assert.assertEquals(currentPhase.getStartPhase(), alignStartDate);
         Assert.assertEquals(currentPhase.getPhase().getPhaseType(), PhaseType.EVERGREEN);
 
@@ -243,7 +241,7 @@ public class TestPlanAligner extends SubscriptionTestSuiteNoDB {
         final DateTime alignStartDate = bundleStartDate;
 
         final Plan plan = catalogService.getFullCatalog(true, true, internalCallContext).findPlan(productName, clock.getUTCNow());
-        final TimedPhase [] phases = planAligner.getCurrentAndNextTimedPhaseOnCreate(alignStartDate, bundleStartDate, plan, PhaseType.EVERGREEN, PriceListSet.DEFAULT_PRICELIST_NAME, now, catalog, internalCallContext);
+        final TimedPhase[] phases = planAligner.getCurrentAndNextTimedPhaseOnCreate(alignStartDate, bundleStartDate, plan, PhaseType.EVERGREEN, PriceListSet.DEFAULT_PRICELIST_NAME, now, catalog, internalCallContext);
         Assert.assertEquals(phases.length, 2);
         Assert.assertEquals(phases[0].getPhase().getPhaseType(), PhaseType.EVERGREEN);
         Assert.assertEquals(phases[0].getStartPhase(), now);
@@ -256,7 +254,7 @@ public class TestPlanAligner extends SubscriptionTestSuiteNoDB {
         final DateTime effectiveChangeDate = defaultSubscriptionBase.getStartDate().plusMonths(15);
 
         // Because new Plan has an EVERGREEN PhaseType we end up directly on that PhaseType
-        final TimedPhase currentPhase  = planAligner.getCurrentTimedPhaseOnChange(defaultSubscriptionBase, newPlan, effectiveChangeDate, null, catalog, internalCallContext);
+        final TimedPhase currentPhase = planAligner.getCurrentTimedPhaseOnChange(defaultSubscriptionBase, newPlan, effectiveChangeDate, null, catalog, internalCallContext);
         Assert.assertEquals(currentPhase.getStartPhase(), alignStartDate);
         Assert.assertEquals(currentPhase.getPhase().getPhaseType(), PhaseType.EVERGREEN);
     }
@@ -273,7 +271,7 @@ public class TestPlanAligner extends SubscriptionTestSuiteNoDB {
         final DateTime alignStartDate = bundleStartDate;
 
         final Plan plan = catalogService.getFullCatalog(true, true, internalCallContext).findPlan(productName, clock.getUTCNow());
-        final TimedPhase [] phases = planAligner.getCurrentAndNextTimedPhaseOnCreate(alignStartDate, bundleStartDate, plan, PhaseType.EVERGREEN, PriceListSet.DEFAULT_PRICELIST_NAME, now, catalog, internalCallContext);
+        final TimedPhase[] phases = planAligner.getCurrentAndNextTimedPhaseOnCreate(alignStartDate, bundleStartDate, plan, PhaseType.EVERGREEN, PriceListSet.DEFAULT_PRICELIST_NAME, now, catalog, internalCallContext);
         Assert.assertEquals(phases.length, 2);
         Assert.assertEquals(phases[0].getPhase().getPhaseType(), PhaseType.EVERGREEN);
         Assert.assertEquals(phases[0].getStartPhase(), now);
@@ -291,11 +289,10 @@ public class TestPlanAligner extends SubscriptionTestSuiteNoDB {
         Assert.assertEquals(currentPhase.getStartPhase(), alignStartDate);
         Assert.assertEquals(currentPhase.getPhase().getPhaseType(), PhaseType.TRIAL);
 
-        final TimedPhase nextPhase  = planAligner.getNextTimedPhaseOnChange(defaultSubscriptionBase, newPlan, effectiveChangeDate, null, catalog, internalCallContext);
+        final TimedPhase nextPhase = planAligner.getNextTimedPhaseOnChange(defaultSubscriptionBase, newPlan, effectiveChangeDate, null, catalog, internalCallContext);
         Assert.assertEquals(nextPhase.getStartPhase(), alignStartDate.plusDays(30));
         Assert.assertEquals(nextPhase.getPhase().getPhaseType(), PhaseType.FIXEDTERM);
     }
-
 
     //
     // Scenario : change Plan with START_OF_SUBSCRIPTION to a new Plan that has {TRIAL, DISCOUNT, EVERGREEN} and specifying a target PhaseType = DISCOUNT
@@ -309,7 +306,7 @@ public class TestPlanAligner extends SubscriptionTestSuiteNoDB {
         final DateTime alignStartDate = bundleStartDate;
 
         final Plan plan = catalogService.getFullCatalog(true, true, internalCallContext).findPlan(productName, clock.getUTCNow());
-        final TimedPhase [] phases = planAligner.getCurrentAndNextTimedPhaseOnCreate(alignStartDate, bundleStartDate, plan, null, PriceListSet.DEFAULT_PRICELIST_NAME, now, catalog, internalCallContext);
+        final TimedPhase[] phases = planAligner.getCurrentAndNextTimedPhaseOnCreate(alignStartDate, bundleStartDate, plan, null, PriceListSet.DEFAULT_PRICELIST_NAME, now, catalog, internalCallContext);
         Assert.assertEquals(phases.length, 2);
         Assert.assertEquals(phases[0].getPhase().getPhaseType(), PhaseType.TRIAL);
         Assert.assertEquals(phases[0].getStartPhase(), now);
@@ -328,7 +325,7 @@ public class TestPlanAligner extends SubscriptionTestSuiteNoDB {
         Assert.assertEquals(currentPhase.getStartPhase(), alignStartDate);
         Assert.assertEquals(currentPhase.getPhase().getPhaseType(), PhaseType.DISCOUNT);
 
-        final TimedPhase nextPhase  = planAligner.getNextTimedPhaseOnChange(defaultSubscriptionBase, newPlan, effectiveChangeDate, PhaseType.DISCOUNT, catalog, internalCallContext);
+        final TimedPhase nextPhase = planAligner.getNextTimedPhaseOnChange(defaultSubscriptionBase, newPlan, effectiveChangeDate, PhaseType.DISCOUNT, catalog, internalCallContext);
         Assert.assertEquals(nextPhase.getStartPhase(), alignStartDate.plusMonths(6));
         Assert.assertEquals(nextPhase.getPhase().getPhaseType(), PhaseType.EVERGREEN);
     }
@@ -345,7 +342,7 @@ public class TestPlanAligner extends SubscriptionTestSuiteNoDB {
         final DateTime alignStartDate = bundleStartDate;
 
         final Plan plan = catalogService.getFullCatalog(true, true, internalCallContext).findPlan(productName, clock.getUTCNow());
-        final TimedPhase [] phases = planAligner.getCurrentAndNextTimedPhaseOnCreate(alignStartDate, bundleStartDate, plan, null, PriceListSet.DEFAULT_PRICELIST_NAME, now, catalog, internalCallContext);
+        final TimedPhase[] phases = planAligner.getCurrentAndNextTimedPhaseOnCreate(alignStartDate, bundleStartDate, plan, null, PriceListSet.DEFAULT_PRICELIST_NAME, now, catalog, internalCallContext);
         Assert.assertEquals(phases.length, 2);
         Assert.assertEquals(phases[0].getPhase().getPhaseType(), PhaseType.TRIAL);
         Assert.assertEquals(phases[0].getStartPhase(), now);
@@ -364,10 +361,9 @@ public class TestPlanAligner extends SubscriptionTestSuiteNoDB {
         Assert.assertEquals(currentPhase.getStartPhase(), alignStartDate.plusDays(5));
         Assert.assertEquals(currentPhase.getPhase().getPhaseType(), PhaseType.EVERGREEN);
 
-        final TimedPhase nextPhase  = planAligner.getNextTimedPhaseOnChange(defaultSubscriptionBase, newPlan, effectiveChangeDate, PhaseType.EVERGREEN, catalog, internalCallContext);
+        final TimedPhase nextPhase = planAligner.getNextTimedPhaseOnChange(defaultSubscriptionBase, newPlan, effectiveChangeDate, PhaseType.EVERGREEN, catalog, internalCallContext);
         Assert.assertNull(nextPhase);
     }
-
 
     private DefaultSubscriptionBase createSubscription(final DateTime bundleStartDate, final DateTime alignStartDate, final String productName, final PhaseType phaseType) throws CatalogApiException {
         final SubscriptionBuilder builder = new SubscriptionBuilder();

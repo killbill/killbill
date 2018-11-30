@@ -23,7 +23,7 @@ import org.killbill.billing.overdue.OverdueProperties;
 import org.killbill.billing.overdue.OverdueService;
 import org.killbill.billing.overdue.api.DefaultOverdueApi;
 import org.killbill.billing.overdue.api.OverdueApi;
-import org.killbill.billing.overdue.caching.EhCacheOverdueConfigCache;
+import org.killbill.billing.overdue.caching.DefaultOverdueConfigCache;
 import org.killbill.billing.overdue.caching.OverdueCacheInvalidationCallback;
 import org.killbill.billing.overdue.caching.OverdueConfigCache;
 import org.killbill.billing.overdue.listener.OverdueListener;
@@ -88,7 +88,7 @@ public class DefaultOverdueModule extends KillBillModule implements OverdueModul
     }
 
     public void installOverdueConfigCache() {
-        bind(OverdueConfigCache.class).to(EhCacheOverdueConfigCache.class).asEagerSingleton();
+        bind(OverdueConfigCache.class).to(DefaultOverdueConfigCache.class).asEagerSingleton();
         bind(CacheInvalidationCallback.class).annotatedWith(Names.named(OVERDUE_INVALIDATION_CALLBACK)).to(OverdueCacheInvalidationCallback.class).asEagerSingleton();
     }
 }

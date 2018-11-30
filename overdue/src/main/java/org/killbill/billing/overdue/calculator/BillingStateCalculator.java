@@ -30,6 +30,7 @@ import java.util.UUID;
 import org.joda.time.LocalDate;
 import org.killbill.billing.ObjectType;
 import org.killbill.billing.account.api.ImmutableAccountData;
+import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.invoice.api.Invoice;
 import org.killbill.billing.invoice.api.InvoiceInternalApi;
@@ -68,7 +69,7 @@ public class BillingStateCalculator {
         this.tagApi = tagApi;
     }
 
-    public BillingState calculateBillingState(final ImmutableAccountData account, final InternalTenantContext context) throws OverdueException {
+    public BillingState calculateBillingState(final ImmutableAccountData account, final InternalCallContext context) throws OverdueException {
         final SortedSet<Invoice> unpaidInvoices = unpaidInvoicesForAccount(account.getId(), context);
 
         final int numberOfUnpaidInvoices = unpaidInvoices.size();
@@ -104,8 +105,8 @@ public class BillingStateCalculator {
         return sum;
     }
 
-    SortedSet<Invoice> unpaidInvoicesForAccount(final UUID accountId, final InternalTenantContext context) {
-        final Collection<Invoice> invoices = invoiceApi.getUnpaidInvoicesByAccountId(accountId, context.toLocalDate(clock.getUTCNow()), context);
+    SortedSet<Invoice> unpaidInvoicesForAccount(final UUID accountId, final InternalCallContext context) {
+        final Collection<Invoice> invoices = invoiceApi.getUnpaidInvoicesByAccountId(accountId, context.toLocalDate(context.getCreatedDate()), context);
         final SortedSet<Invoice> sortedInvoices = new TreeSet<Invoice>(new InvoiceDateComparator());
         sortedInvoices.addAll(invoices);
         return sortedInvoices;

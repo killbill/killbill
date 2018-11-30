@@ -1,6 +1,6 @@
 /*
- * Copyright 2014-2016 Groupon, Inc
- * Copyright 2014-2016 The Billing Project, LLC
+ * Copyright 2014-2018 Groupon, Inc
+ * Copyright 2014-2018 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -23,18 +23,22 @@ import org.killbill.billing.mock.glue.MockNonEntityDaoModule;
 import org.killbill.billing.platform.api.KillbillConfigSource;
 import org.killbill.billing.util.cache.CacheControllerDispatcher;
 import org.killbill.billing.util.glue.KillBillModule;
+import org.killbill.clock.ClockMock;
 
 import com.google.inject.util.Providers;
 
 public class BeatrixIntegrationModuleNoDB extends KillBillModule {
 
-    public BeatrixIntegrationModuleNoDB(final KillbillConfigSource configSource) {
+    private final ClockMock clock;
+
+    public BeatrixIntegrationModuleNoDB(final KillbillConfigSource configSource, final ClockMock clock) {
         super(configSource);
+        this.clock = clock;
     }
 
     @Override
     protected void configure() {
-        install(new GuicyKillbillTestNoDBModule(configSource));
+        install(new GuicyKillbillTestNoDBModule(configSource, clock));
 
         install(new MockNonEntityDaoModule(configSource));
         install(new MockAccountModule(configSource));

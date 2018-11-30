@@ -25,10 +25,14 @@ public class DefaultCurrencyService implements CurrencyService {
 
     private static final Logger log = LoggerFactory.getLogger(DefaultCurrencyService.class);
 
-    public static final String SERVICE_NAME = "currency-service";
 
     @Override
     public String getName() {
-        return SERVICE_NAME;
+        return KILLBILL_SERVICES.CURRENCY_SERVICE.getServiceName();
+    }
+
+    @Override
+    public int getRegistrationOrdering() {
+        return KILLBILL_SERVICES.CURRENCY_SERVICE.getRegistrationOrdering();
     }
 }

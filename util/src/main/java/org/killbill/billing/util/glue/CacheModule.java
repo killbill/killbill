@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014-2015 Groupon, Inc
- * Copyright 2014-2015 The Billing Project, LLC
+ * Copyright 2014-2018 Groupon, Inc
+ * Copyright 2014-2018 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -22,10 +22,12 @@ import javax.cache.CacheManager;
 
 import org.killbill.billing.platform.api.KillbillConfigSource;
 import org.killbill.billing.util.cache.AccountBCDCacheLoader;
+import org.killbill.billing.util.cache.AccountIdFromBundleIdCacheLoader;
 import org.killbill.billing.util.cache.AccountRecordIdCacheLoader;
 import org.killbill.billing.util.cache.AuditLogCacheLoader;
 import org.killbill.billing.util.cache.AuditLogViaHistoryCacheLoader;
 import org.killbill.billing.util.cache.BaseCacheLoader;
+import org.killbill.billing.util.cache.BundleIdFromSubscriptionIdCacheLoader;
 import org.killbill.billing.util.cache.CacheControllerDispatcher;
 import org.killbill.billing.util.cache.CacheControllerDispatcherProvider;
 import org.killbill.billing.util.cache.ImmutableAccountCacheLoader;
@@ -40,11 +42,17 @@ import org.killbill.billing.util.cache.TenantOverdueConfigCacheLoader;
 import org.killbill.billing.util.cache.TenantRecordIdCacheLoader;
 import org.killbill.billing.util.cache.TenantStateMachineConfigCacheLoader;
 import org.killbill.billing.util.config.definition.EhCacheConfig;
+import org.killbill.billing.util.config.definition.RedisCacheConfig;
+import org.redisson.api.RedissonClient;
 import org.skife.config.ConfigurationObjectFactory;
 
 import com.google.inject.multibindings.Multibinder;
+import com.google.inject.name.Names;
+import com.google.inject.util.Providers;
 
 public class CacheModule extends KillBillModule {
+
+    public static final String REDIS_CACHE_CLIENT = "redisCacheClient";
 
     public CacheModule(final KillbillConfigSource configSource) {
         super(configSource);
@@ -52,11 +60,19 @@ public class CacheModule extends KillBillModule {
 
     @Override
     protected void configure() {
-        final EhCacheConfig config = new ConfigurationObjectFactory(skifeConfigSource).build(EhCacheConfig.class);
-        bind(EhCacheConfig.class).toInstance(config);
+        final EhCacheConfig ehCacheConfig = new ConfigurationObjectFactory(skifeConfigSource).build(EhCacheConfig.class);
+        bind(EhCacheConfig.class).toInstance(ehCacheConfig);
 
-        // EhCache specifics
-        bind(CacheManager.class).toProvider(Eh107CacheManagerProvider.class).asEagerSingleton();
+        final RedisCacheConfig redisCacheConfig = new ConfigurationObjectFactory(skifeConfigSource).build(RedisCacheConfig.class);
+        bind(RedisCacheConfig.class).toInstance(redisCacheConfig);
+
+        if (redisCacheConfig.isRedisCachingEnabled()) {
+            bind(RedissonClient.class).annotatedWith(Names.named(REDIS_CACHE_CLIENT)).toProvider(RedissonCacheClientProvider.class).asEagerSingleton();
+            bind(CacheManager.class).toProvider(Redis107CacheManagerProvider.class).asEagerSingleton();
+        } else {
+            bind(RedissonClient.class).annotatedWith(Names.named(REDIS_CACHE_CLIENT)).toProvider(Providers.<RedissonClient>of(null));
+            bind(CacheManager.class).toProvider(Eh107CacheManagerProvider.class).asEagerSingleton();
+        }
 
         // Kill Bill generic cache dispatcher
         bind(CacheControllerDispatcher.class).toProvider(CacheControllerDispatcherProvider.class).asEagerSingleton();
@@ -77,5 +93,7 @@ public class CacheModule extends KillBillModule {
         resultSetMapperSetBinder.addBinding().to(TenantCacheLoader.class).asEagerSingleton();
         resultSetMapperSetBinder.addBinding().to(OverriddenPlanCacheLoader.class).asEagerSingleton();
         resultSetMapperSetBinder.addBinding().to(TenantStateMachineConfigCacheLoader.class).asEagerSingleton();
+        resultSetMapperSetBinder.addBinding().to(AccountIdFromBundleIdCacheLoader.class).asEagerSingleton();
+        resultSetMapperSetBinder.addBinding().to(BundleIdFromSubscriptionIdCacheLoader.class).asEagerSingleton();
     }
 }

@@ -1,7 +1,9 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
+ * Copyright 2014-2018 Groupon, Inc
+ * Copyright 2014-2018 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -17,14 +19,10 @@
 package org.killbill.billing.subscription.engine.addon;
 
 import java.util.Collection;
-import java.util.List;
 
 import org.joda.time.DateTime;
 import org.killbill.billing.ErrorCode;
 import org.killbill.billing.callcontext.InternalTenantContext;
-import org.killbill.billing.catalog.api.Catalog;
-import org.killbill.billing.catalog.api.CatalogApiException;
-import org.killbill.billing.catalog.api.CatalogInternalApi;
 import org.killbill.billing.catalog.api.Plan;
 import org.killbill.billing.catalog.api.Product;
 import org.killbill.billing.catalog.api.ProductCategory;
@@ -32,27 +30,18 @@ import org.killbill.billing.entitlement.api.Entitlement.EntitlementState;
 import org.killbill.billing.subscription.api.SubscriptionBase;
 import org.killbill.billing.subscription.api.user.DefaultSubscriptionBase;
 import org.killbill.billing.subscription.api.user.SubscriptionBaseApiException;
-import org.killbill.billing.subscription.exceptions.SubscriptionBaseError;
-
-import com.google.inject.Inject;
 
 public class AddonUtils {
 
-
-    @Inject
-    public AddonUtils() {
-    }
-
-    public void checkAddonCreationRights(final DefaultSubscriptionBase baseSubscription, final Plan targetAddOnPlan, final DateTime requestedDate, final Catalog catalog, final InternalTenantContext context)
-            throws SubscriptionBaseApiException, CatalogApiException {
-
+    public void checkAddonCreationRights(final SubscriptionBase baseSubscription, final Plan targetAddOnPlan, final DateTime requestedDate, final InternalTenantContext context)
+            throws SubscriptionBaseApiException {
         if (baseSubscription.getState() == EntitlementState.CANCELLED ||
             (baseSubscription.getState() == EntitlementState.PENDING && context.toLocalDate(baseSubscription.getStartDate()).compareTo(context.toLocalDate(requestedDate)) < 0)) {
             throw new SubscriptionBaseApiException(ErrorCode.SUB_CREATE_AO_BP_NON_ACTIVE, targetAddOnPlan.getName());
         }
 
         final Plan currentOrPendingPlan = baseSubscription.getCurrentOrPendingPlan();
-        final Product baseProduct = catalog.findProduct(currentOrPendingPlan.getProduct().getName(), requestedDate);
+        final Product baseProduct = currentOrPendingPlan.getProduct();
         if (isAddonIncluded(baseProduct, targetAddOnPlan)) {
             throw new SubscriptionBaseApiException(ErrorCode.SUB_CREATE_AO_ALREADY_INCLUDED,
                                                    targetAddOnPlan.getName(), currentOrPendingPlan.getProduct().getName());
@@ -64,46 +53,7 @@ public class AddonUtils {
         }
     }
 
-    public boolean isAddonAvailableFromProdName(final String baseProductName, final Plan targetAddOnPlan, final DateTime requestedDate, final Catalog catalog, final InternalTenantContext context) {
-        try {
-            final Product product = catalog.findProduct(baseProductName, requestedDate);
-            return isAddonAvailable(product, targetAddOnPlan);
-        } catch (CatalogApiException e) {
-            throw new SubscriptionBaseError(e);
-        }
-    }
-
-    public boolean isAddonAvailableFromPlanName(final String basePlanName, final Plan targetAddOnPlan, final DateTime requestedDate, final Catalog catalog, final InternalTenantContext context) {
-        try {
-            final Plan plan = catalog.findPlan(basePlanName, requestedDate);
-            final Product product = plan.getProduct();
-            return isAddonAvailable(product, targetAddOnPlan);
-        } catch (CatalogApiException e) {
-            throw new SubscriptionBaseError(e);
-        }
-    }
-
-    public boolean isAddonIncludedFromProdName(final String baseProductName, final Plan targetAddOnPlan, final DateTime requestedDate, final Catalog catalog, final InternalTenantContext context) {
-        try {
-            final Product product = catalog.findProduct(baseProductName, requestedDate);
-            return isAddonIncluded(product, targetAddOnPlan);
-        } catch (CatalogApiException e) {
-            throw new SubscriptionBaseError(e);
-        }
-
-    }
-
-    public boolean isAddonIncludedFromPlanName(final String basePlanName, final Plan targetAddOnPlan, final DateTime requestedDate, final Catalog catalog, final InternalTenantContext context) {
-        try {
-            final Plan plan = catalog.findPlan(basePlanName, requestedDate);
-            final Product product = plan.getProduct();
-            return isAddonIncluded(product, targetAddOnPlan);
-        } catch (CatalogApiException e) {
-            throw new SubscriptionBaseError(e);
-        }
-    }
-
-    private boolean isAddonAvailable(final Product baseProduct, final Plan targetAddOnPlan) {
+    public boolean isAddonAvailable(final Product baseProduct, final Plan targetAddOnPlan) {
         final Product targetAddonProduct = targetAddOnPlan.getProduct();
         final Collection<Product> availableAddOns = baseProduct.getAvailable();
 
@@ -115,7 +65,7 @@ public class AddonUtils {
         return false;
     }
 
-    private boolean isAddonIncluded(final Product baseProduct, final Plan targetAddOnPlan) {
+    public boolean isAddonIncluded(final Product baseProduct, final Plan targetAddOnPlan) {
         final Product targetAddonProduct = targetAddOnPlan.getProduct();
         final Collection<Product> includedAddOns = baseProduct.getIncluded();
         for (final Product curAv : includedAddOns) {
@@ -126,9 +76,9 @@ public class AddonUtils {
         return false;
     }
 
-    public int countExistingAddOnsWithSamePlanName(final List<SubscriptionBase> subscriptionsForBundle, final String planName) {
+    public int countExistingAddOnsWithSamePlanName(final Iterable<DefaultSubscriptionBase> subscriptionsForBundle, final String planName) {
         int countExistingAddOns = 0;
-        for (SubscriptionBase subscription : subscriptionsForBundle) {
+        for (final SubscriptionBase subscription : subscriptionsForBundle) {
             if (subscription.getCurrentPlan().getName().equalsIgnoreCase(planName)
                 && subscription.getLastActiveProduct().getCategory() != null
                 && ProductCategory.ADD_ON.equals(subscription.getLastActiveProduct().getCategory())) {

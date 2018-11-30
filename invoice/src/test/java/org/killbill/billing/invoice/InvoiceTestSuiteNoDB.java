@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014 Groupon, Inc
- * Copyright 2014 The Billing Project, LLC
+ * Copyright 2014-2018 Groupon, Inc
+ * Copyright 2014-2018 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -18,11 +18,12 @@
 
 package org.killbill.billing.invoice;
 
+import java.util.Map;
+
 import org.killbill.billing.GuicyKillbillTestSuiteNoDB;
 import org.killbill.billing.account.api.AccountInternalApi;
 import org.killbill.billing.currency.api.CurrencyConversionApi;
 import org.killbill.billing.invoice.api.InvoiceInternalApi;
-import org.killbill.billing.invoice.api.InvoicePaymentApi;
 import org.killbill.billing.invoice.api.InvoiceUserApi;
 import org.killbill.billing.invoice.api.formatters.ResourceBundleFactory;
 import org.killbill.billing.invoice.dao.InvoiceDao;
@@ -42,7 +43,6 @@ import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.billing.util.config.definition.InvoiceConfig;
 import org.killbill.billing.util.config.definition.InvoiceConfig.UsageDetailMode;
 import org.killbill.bus.api.PersistentBus;
-import org.killbill.clock.Clock;
 import org.killbill.commons.locker.GlobalLocker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -65,8 +65,6 @@ public abstract class InvoiceTestSuiteNoDB extends GuicyKillbillTestSuiteNoDB {
     @Inject
     protected InvoiceUserApi invoiceUserApi;
     @Inject
-    protected InvoicePaymentApi invoicePaymentApi;
-    @Inject
     protected InvoiceGenerator generator;
     @Inject
     protected InvoiceConfig invoiceConfig;
@@ -82,8 +80,6 @@ public abstract class InvoiceTestSuiteNoDB extends GuicyKillbillTestSuiteNoDB {
     protected TagUserApi tagUserApi;
     @Inject
     protected GlobalLocker locker;
-    @Inject
-    protected Clock clock;
     @Inject
     protected InternalCallContextFactory internalCallContextFactory;
     @Inject
@@ -104,25 +100,39 @@ public abstract class InvoiceTestSuiteNoDB extends GuicyKillbillTestSuiteNoDB {
     protected InvoiceDaoHelper invoiceDaoHelper;
     @Inject
     protected FixedAndRecurringInvoiceItemGenerator fixedAndRecurringInvoiceItemGenerator;
+
     @Override
-    protected KillbillConfigSource getConfigSource() {
-        return getConfigSource("/resource.properties");
+    protected KillbillConfigSource getConfigSource(final Map<String, String> extraProperties) {
+        return getConfigSource("/resource.properties", extraProperties);
     }
+
     protected UsageDetailMode usageDetailMode;
 
     @BeforeClass(groups = "fast")
     protected void beforeClass() throws Exception {
-        final Injector injector = Guice.createInjector(new TestInvoiceModuleNoDB(configSource));
+        if (hasFailed()) {
+            return;
+        }
+
+        final Injector injector = Guice.createInjector(new TestInvoiceModuleNoDB(configSource, clock));
         injector.injectMembers(this);
     }
 
     @BeforeMethod(groups = "fast")
     public void beforeMethod() {
+        if (hasFailed()) {
+            return;
+        }
+
         bus.start();
     }
 
     @AfterMethod(groups = "fast")
     public void afterMethod() {
+        if (hasFailed()) {
+            return;
+        }
+
         bus.stop();
     }
 }

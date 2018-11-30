@@ -1,6 +1,6 @@
 /*
- * Copyright 2014-2016 Groupon, Inc
- * Copyright 2014-2016 The Billing Project, LLC
+ * Copyright 2014-2018 Groupon, Inc
+ * Copyright 2014-2018 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -29,10 +29,10 @@ import javax.annotation.Nullable;
 import org.killbill.billing.client.KillBillClientException;
 import org.killbill.billing.client.KillBillHttpClient;
 import org.killbill.billing.client.RequestOptions;
-import org.killbill.billing.client.model.Account;
-import org.killbill.billing.client.model.Payment;
-import org.killbill.billing.client.model.PaymentTransaction;
-import org.killbill.billing.client.model.PluginProperty;
+import org.killbill.billing.client.model.gen.Account;
+import org.killbill.billing.client.model.gen.Payment;
+import org.killbill.billing.client.model.gen.PaymentTransaction;
+import org.killbill.billing.client.model.gen.PluginProperty;
 import org.killbill.billing.control.plugin.api.OnFailurePaymentControlResult;
 import org.killbill.billing.control.plugin.api.OnSuccessPaymentControlResult;
 import org.killbill.billing.control.plugin.api.PaymentControlApiException;
@@ -101,7 +101,7 @@ public class TestPaymentPluginProperties extends TestJaxrsBase {
 
         private void assertPluginProperties(final Iterable<org.killbill.billing.payment.api.PluginProperty> properties) {
             for (org.killbill.billing.payment.api.PluginProperty input : properties) {
-                boolean found  = false;
+                boolean found = false;
                 for (org.killbill.billing.payment.api.PluginProperty expect : expectedProperties) {
                     if (expect.getKey().equals(input.getKey()) && expect.getValue().equals(input.getValue())) {
                         found = true;
@@ -112,7 +112,7 @@ public class TestPaymentPluginProperties extends TestJaxrsBase {
             }
 
             for (org.killbill.billing.payment.api.PluginProperty expect : expectedProperties) {
-                boolean found  = false;
+                boolean found = false;
                 for (org.killbill.billing.payment.api.PluginProperty input : properties) {
                     if (expect.getKey().equals(input.getKey()) && expect.getValue().equals(input.getValue())) {
                         found = true;
@@ -126,6 +126,10 @@ public class TestPaymentPluginProperties extends TestJaxrsBase {
 
     @BeforeMethod(groups = "slow")
     public void beforeMethod() throws Exception {
+        if (hasFailed()) {
+            return;
+        }
+
         super.beforeMethod();
 
         mockPaymentControlProviderPlugin = new PluginPropertiesVerificator();
@@ -149,6 +153,10 @@ public class TestPaymentPluginProperties extends TestJaxrsBase {
 
     @AfterMethod(groups = "slow")
     public void tearDown() throws Exception {
+        if (hasFailed()) {
+            return;
+        }
+
         mockPaymentControlProviderPlugin.clearExpectPluginProperties();
     }
 
@@ -229,7 +237,7 @@ public class TestPaymentPluginProperties extends TestJaxrsBase {
         final RequestOptions requestOptionsWithParams = basicRequestOptions.extend()
                                                                            .withQueryParams(params).build();
 
-        killBillClient.completePayment(completeTransactionByPaymentId, queryProperties, requestOptionsWithParams);
+        paymentApi.completeTransaction(initialPayment.getPaymentId(), completeTransactionByPaymentId, NULL_PLUGIN_NAMES, queryProperties, requestOptionsWithParams);
 
         //Capture the payment
         final PaymentTransaction captureTransaction = new PaymentTransaction();
@@ -237,7 +245,7 @@ public class TestPaymentPluginProperties extends TestJaxrsBase {
         captureTransaction.setProperties(bodyProperties);
         captureTransaction.setAmount(BigDecimal.TEN);
         captureTransaction.setCurrency(account.getCurrency());
-        killBillClient.captureAuthorization(captureTransaction, ImmutableList.<String>of(PluginPropertiesVerificator.PLUGIN_NAME), queryProperties, requestOptions);
+        paymentApi.captureAuthorization(initialPayment.getPaymentId(), captureTransaction, ImmutableList.<String>of(PluginPropertiesVerificator.PLUGIN_NAME), queryProperties, requestOptions);
 
         //Refund the payment
         final PaymentTransaction refundTransaction = new PaymentTransaction();
@@ -245,7 +253,7 @@ public class TestPaymentPluginProperties extends TestJaxrsBase {
         refundTransaction.setProperties(bodyProperties);
         refundTransaction.setAmount(BigDecimal.TEN);
         refundTransaction.setCurrency(account.getCurrency());
-        killBillClient.refundPayment(refundTransaction, ImmutableList.<String>of(PluginPropertiesVerificator.PLUGIN_NAME), queryProperties, requestOptions);
+        paymentApi.refundPayment(initialPayment.getPaymentId(), refundTransaction, ImmutableList.<String>of(PluginPropertiesVerificator.PLUGIN_NAME), queryProperties, requestOptions);
     }
 
     private Payment createVerifyTransaction(final Account account,
@@ -260,8 +268,8 @@ public class TestPaymentPluginProperties extends TestJaxrsBase {
         authTransaction.setCurrency(account.getCurrency());
         authTransaction.setPaymentExternalKey(paymentExternalKey);
         authTransaction.setTransactionExternalKey(transactionExternalKey);
-        authTransaction.setTransactionType(transactionType.toString());
-        final Payment payment = killBillClient.createPayment(account.getAccountId(), paymentMethodId, authTransaction, pluginProperties, requestOptions);
+        authTransaction.setTransactionType(transactionType);
+        final Payment payment = accountApi.processPayment(account.getAccountId(), authTransaction, paymentMethodId, NULL_PLUGIN_NAMES, pluginProperties, requestOptions);
         return payment;
     }
 

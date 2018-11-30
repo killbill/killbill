@@ -37,7 +37,6 @@ import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.catalog.api.Catalog;
 import org.killbill.billing.catalog.api.CatalogApiException;
-import org.killbill.billing.catalog.api.CatalogInternalApi;
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.catalog.api.Plan;
 import org.killbill.billing.catalog.api.PlanPhase;
@@ -85,7 +84,7 @@ public class BlockingCalculator {
         final SortedSet<BillingEvent> billingEventsToAdd = new TreeSet<BillingEvent>();
         final SortedSet<BillingEvent> billingEventsToRemove = new TreeSet<BillingEvent>();
 
-        final List<BlockingState> blockingEvents = blockingApi.getBlockingAllForAccount(context);
+        final List<BlockingState> blockingEvents = blockingApi.getBlockingAllForAccount(catalog, context);
 
         final Iterable<BlockingState> accountBlockingEvents = Iterables.filter(blockingEvents, new Predicate<BlockingState>() {
             @Override

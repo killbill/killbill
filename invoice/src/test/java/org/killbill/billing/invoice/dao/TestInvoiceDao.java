@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014-2017 Groupon, Inc
- * Copyright 2014-2017 The Billing Project, LLC
+ * Copyright 2014-2018 Groupon, Inc
+ * Copyright 2014-2018 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -44,6 +44,7 @@ import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.catalog.api.PhaseType;
 import org.killbill.billing.catalog.api.Plan;
 import org.killbill.billing.catalog.api.PlanPhase;
+import org.killbill.billing.catalog.api.Product;
 import org.killbill.billing.entity.EntityPersistenceException;
 import org.killbill.billing.invoice.InvoiceTestSuiteWithEmbeddedDB;
 import org.killbill.billing.invoice.MockBillingEventSet;
@@ -96,6 +97,9 @@ public class TestInvoiceDao extends InvoiceTestSuiteWithEmbeddedDB {
 
     @BeforeMethod(groups = "slow")
     public void setUp() throws Exception {
+        if (hasFailed()) {
+            return;
+        }
         account = invoiceUtil.createAccount(callContext);
         context = internalCallContextFactory.createInternalCallContext(account.getId(), callContext);
     }
@@ -119,7 +123,7 @@ public class TestInvoiceDao extends InvoiceTestSuiteWithEmbeddedDB {
 
         invoiceUtil.createInvoice(invoice, context);
 
-        final List<InvoiceModelDao> invoices = invoiceDao.getInvoicesByAccount(context);
+        final List<InvoiceModelDao> invoices = invoiceDao.getInvoicesByAccount(false, context);
         assertNotNull(invoices);
         assertEquals(invoices.size(), 1);
         final InvoiceModelDao thisInvoice = invoices.get(0);
@@ -139,7 +143,7 @@ public class TestInvoiceDao extends InvoiceTestSuiteWithEmbeddedDB {
         final UUID bundleId = UUID.randomUUID();
         final LocalDate startDate = new LocalDate(2010, 1, 1);
         final LocalDate endDate = new LocalDate(2010, 4, 1);
-        final InvoiceItem invoiceItem = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, "test plan", "test phase", startDate, endDate,
+        final InvoiceItem invoiceItem = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, "test product", "test plan", "test phase", startDate, endDate,
                                                                  new BigDecimal("21.00"), new BigDecimal("7.00"), Currency.USD);
 
         invoice.addInvoiceItem(invoiceItem);
@@ -167,10 +171,8 @@ public class TestInvoiceDao extends InvoiceTestSuiteWithEmbeddedDB {
         try {
             invoiceDao.getById(UUID.randomUUID(), context);
             Assert.fail();
-        } catch (TransactionFailedException e) {
-            // TODO FIXME getById defined in EntityDaoBase
-            Assert.assertTrue(e.getCause() instanceof InvoiceApiException);
-            Assert.assertEquals(((InvoiceApiException) e.getCause()).getCode(), ErrorCode.INVOICE_NOT_FOUND.getCode());
+        } catch (InvoiceApiException e) {
+            Assert.assertEquals(e.getCode(), ErrorCode.INVOICE_NOT_FOUND.getCode());
         }
 
         try {
@@ -244,19 +246,19 @@ public class TestInvoiceDao extends InvoiceTestSuiteWithEmbeddedDB {
         LocalDate startDate = new LocalDate(2011, 3, 1);
         LocalDate endDate = startDate.plusMonths(1);
 
-        final RecurringInvoiceItem item1 = new RecurringInvoiceItem(invoiceId1, accountId, bundleId, subscriptionId1, "test plan", "test A", startDate, endDate,
+        final RecurringInvoiceItem item1 = new RecurringInvoiceItem(invoiceId1, accountId, bundleId, subscriptionId1, "test product", "test plan", "test A", startDate, endDate,
                                                                     rate1, rate1, Currency.USD);
         invoiceUtil.createInvoiceItem(item1, context);
 
-        final RecurringInvoiceItem item2 = new RecurringInvoiceItem(invoiceId1, accountId, bundleId, subscriptionId2, "test plan", "test B", startDate, endDate,
+        final RecurringInvoiceItem item2 = new RecurringInvoiceItem(invoiceId1, accountId, bundleId, subscriptionId2, "test product", "test plan", "test B", startDate, endDate,
                                                                     rate2, rate2, Currency.USD);
         invoiceUtil.createInvoiceItem(item2, context);
 
-        final RecurringInvoiceItem item3 = new RecurringInvoiceItem(invoiceId1, accountId, bundleId, subscriptionId3, "test plan", "test C", startDate, endDate,
+        final RecurringInvoiceItem item3 = new RecurringInvoiceItem(invoiceId1, accountId, bundleId, subscriptionId3, "test product", "test plan", "test C", startDate, endDate,
                                                                     rate3, rate3, Currency.USD);
         invoiceUtil.createInvoiceItem(item3, context);
 
-        final RecurringInvoiceItem item4 = new RecurringInvoiceItem(invoiceId1, accountId, bundleId, subscriptionId4, "test plan", "test D", startDate, endDate,
+        final RecurringInvoiceItem item4 = new RecurringInvoiceItem(invoiceId1, accountId, bundleId, subscriptionId4, "test product", "test plan", "test D", startDate, endDate,
                                                                     rate4, rate4, Currency.USD);
         invoiceUtil.createInvoiceItem(item4, context);
 
@@ -269,15 +271,15 @@ public class TestInvoiceDao extends InvoiceTestSuiteWithEmbeddedDB {
         startDate = endDate;
         endDate = startDate.plusMonths(1);
 
-        final RecurringInvoiceItem item5 = new RecurringInvoiceItem(invoiceId2, accountId, bundleId, subscriptionId1, "test plan", "test phase A", startDate, endDate,
+        final RecurringInvoiceItem item5 = new RecurringInvoiceItem(invoiceId2, accountId, bundleId, subscriptionId1, "test product", "test plan", "test phase A", startDate, endDate,
                                                                     rate1, rate1, Currency.USD);
         invoiceUtil.createInvoiceItem(item5, context);
 
-        final RecurringInvoiceItem item6 = new RecurringInvoiceItem(invoiceId2, accountId, bundleId, subscriptionId2, "test plan", "test phase B", startDate, endDate,
+        final RecurringInvoiceItem item6 = new RecurringInvoiceItem(invoiceId2, accountId, bundleId, subscriptionId2, "test product", "test plan", "test phase B", startDate, endDate,
                                                                     rate2, rate2, Currency.USD);
         invoiceUtil.createInvoiceItem(item6, context);
 
-        final RecurringInvoiceItem item7 = new RecurringInvoiceItem(invoiceId2, accountId, bundleId, subscriptionId3, "test plan", "test phase C", startDate, endDate,
+        final RecurringInvoiceItem item7 = new RecurringInvoiceItem(invoiceId2, accountId, bundleId, subscriptionId3, "test product", "test plan", "test phase C", startDate, endDate,
                                                                     rate3, rate3, Currency.USD);
         invoiceUtil.createInvoiceItem(item7, context);
 
@@ -320,19 +322,19 @@ public class TestInvoiceDao extends InvoiceTestSuiteWithEmbeddedDB {
         LocalDate startDate = new LocalDate(2011, 3, 1);
         LocalDate endDate = startDate.plusMonths(1);
 
-        final FixedPriceInvoiceItem item1 = new FixedPriceInvoiceItem(invoiceId1, accountId, bundleId, subscriptionId1, "test plan", "test A", startDate,
+        final FixedPriceInvoiceItem item1 = new FixedPriceInvoiceItem(invoiceId1, accountId, bundleId, subscriptionId1, "test product", "test plan", "test A", startDate,
                                                                       rate1, Currency.USD);
         invoiceUtil.createInvoiceItem(item1, context);
 
-        final FixedPriceInvoiceItem item2 = new FixedPriceInvoiceItem(invoiceId1, accountId, bundleId, subscriptionId2, "test plan", "test B", startDate,
+        final FixedPriceInvoiceItem item2 = new FixedPriceInvoiceItem(invoiceId1, accountId, bundleId, subscriptionId2, "test product", "test plan", "test B", startDate,
                                                                       rate2, Currency.USD);
         invoiceUtil.createInvoiceItem(item2, context);
 
-        final FixedPriceInvoiceItem item3 = new FixedPriceInvoiceItem(invoiceId1, accountId, bundleId, subscriptionId3, "test plan", "test C", startDate,
+        final FixedPriceInvoiceItem item3 = new FixedPriceInvoiceItem(invoiceId1, accountId, bundleId, subscriptionId3, "test product", "test plan", "test C", startDate,
                                                                       rate3, Currency.USD);
         invoiceUtil.createInvoiceItem(item3, context);
 
-        final FixedPriceInvoiceItem item4 = new FixedPriceInvoiceItem(invoiceId1, accountId, bundleId, subscriptionId4, "test plan", "test D", startDate,
+        final FixedPriceInvoiceItem item4 = new FixedPriceInvoiceItem(invoiceId1, accountId, bundleId, subscriptionId4, "test product", "test plan", "test D", startDate,
                                                                       rate4, Currency.USD);
         invoiceUtil.createInvoiceItem(item4, context);
 
@@ -344,15 +346,15 @@ public class TestInvoiceDao extends InvoiceTestSuiteWithEmbeddedDB {
 
         startDate = endDate;
 
-        final FixedPriceInvoiceItem item5 = new FixedPriceInvoiceItem(invoiceId2, accountId, bundleId, subscriptionId1, "test plan", "test phase A", startDate,
+        final FixedPriceInvoiceItem item5 = new FixedPriceInvoiceItem(invoiceId2, accountId, bundleId, subscriptionId1, "test product", "test plan", "test phase A", startDate,
                                                                       rate1, Currency.USD);
         invoiceUtil.createInvoiceItem(item5, context);
 
-        final FixedPriceInvoiceItem item6 = new FixedPriceInvoiceItem(invoiceId2, accountId, bundleId, subscriptionId2, "test plan", "test phase B", startDate,
+        final FixedPriceInvoiceItem item6 = new FixedPriceInvoiceItem(invoiceId2, accountId, bundleId, subscriptionId2, "test product", "test plan", "test phase B", startDate,
                                                                       rate2, Currency.USD);
         invoiceUtil.createInvoiceItem(item6, context);
 
-        final FixedPriceInvoiceItem item7 = new FixedPriceInvoiceItem(invoiceId2, accountId, bundleId, subscriptionId3, "test plan", "test phase C", startDate,
+        final FixedPriceInvoiceItem item7 = new FixedPriceInvoiceItem(invoiceId2, accountId, bundleId, subscriptionId3, "test product", "test plan", "test phase C", startDate,
                                                                       rate3, Currency.USD);
         invoiceUtil.createInvoiceItem(item7, context);
 
@@ -395,35 +397,35 @@ public class TestInvoiceDao extends InvoiceTestSuiteWithEmbeddedDB {
         LocalDate startDate = new LocalDate(2011, 3, 1);
         LocalDate endDate = startDate.plusMonths(1);
 
-        final RecurringInvoiceItem recurringItem1 = new RecurringInvoiceItem(invoiceId1, accountId, bundleId, subscriptionId1, "test plan", "test A", startDate, endDate,
+        final RecurringInvoiceItem recurringItem1 = new RecurringInvoiceItem(invoiceId1, accountId, bundleId, subscriptionId1, "test product", "test plan", "test A", startDate, endDate,
                                                                              rate1, rate1, Currency.USD);
         invoiceUtil.createInvoiceItem(recurringItem1, context);
 
-        final RecurringInvoiceItem recurringItem2 = new RecurringInvoiceItem(invoiceId1, accountId, bundleId, subscriptionId2, "test plan", "test B", startDate, endDate,
+        final RecurringInvoiceItem recurringItem2 = new RecurringInvoiceItem(invoiceId1, accountId, bundleId, subscriptionId2, "test product", "test plan", "test B", startDate, endDate,
                                                                              rate2, rate2, Currency.USD);
         invoiceUtil.createInvoiceItem(recurringItem2, context);
 
-        final RecurringInvoiceItem recurringItem3 = new RecurringInvoiceItem(invoiceId1, accountId, bundleId, subscriptionId3, "test plan", "test C", startDate, endDate,
+        final RecurringInvoiceItem recurringItem3 = new RecurringInvoiceItem(invoiceId1, accountId, bundleId, subscriptionId3, "test product", "test plan", "test C", startDate, endDate,
                                                                              rate3, rate3, Currency.USD);
         invoiceUtil.createInvoiceItem(recurringItem3, context);
 
-        final RecurringInvoiceItem recurringItem4 = new RecurringInvoiceItem(invoiceId1, accountId, bundleId, subscriptionId4, "test plan", "test D", startDate, endDate,
+        final RecurringInvoiceItem recurringItem4 = new RecurringInvoiceItem(invoiceId1, accountId, bundleId, subscriptionId4, "test product", "test plan", "test D", startDate, endDate,
                                                                              rate4, rate4, Currency.USD);
         invoiceUtil.createInvoiceItem(recurringItem4, context);
 
-        final FixedPriceInvoiceItem fixedItem1 = new FixedPriceInvoiceItem(invoiceId1, accountId, bundleId, subscriptionId1, "test plan", "test A", startDate,
+        final FixedPriceInvoiceItem fixedItem1 = new FixedPriceInvoiceItem(invoiceId1, accountId, bundleId, subscriptionId1, "test product", "test plan", "test A", startDate,
                                                                            rate1, Currency.USD);
         invoiceUtil.createInvoiceItem(fixedItem1, context);
 
-        final FixedPriceInvoiceItem fixedItem2 = new FixedPriceInvoiceItem(invoiceId1, accountId, bundleId, subscriptionId2, "test plan", "test B", startDate,
+        final FixedPriceInvoiceItem fixedItem2 = new FixedPriceInvoiceItem(invoiceId1, accountId, bundleId, subscriptionId2, "test product", "test plan", "test B", startDate,
                                                                            rate2, Currency.USD);
         invoiceUtil.createInvoiceItem(fixedItem2, context);
 
-        final FixedPriceInvoiceItem fixedItem3 = new FixedPriceInvoiceItem(invoiceId1, accountId, bundleId, subscriptionId3, "test plan", "test C", startDate,
+        final FixedPriceInvoiceItem fixedItem3 = new FixedPriceInvoiceItem(invoiceId1, accountId, bundleId, subscriptionId3, "test product", "test plan", "test C", startDate,
                                                                            rate3, Currency.USD);
         invoiceUtil.createInvoiceItem(fixedItem3, context);
 
-        final FixedPriceInvoiceItem fixedItem4 = new FixedPriceInvoiceItem(invoiceId1, accountId, bundleId, subscriptionId4, "test plan", "test D", startDate,
+        final FixedPriceInvoiceItem fixedItem4 = new FixedPriceInvoiceItem(invoiceId1, accountId, bundleId, subscriptionId4, "test product", "test plan", "test D", startDate,
                                                                            rate4, Currency.USD);
         invoiceUtil.createInvoiceItem(fixedItem4, context);
 
@@ -436,26 +438,26 @@ public class TestInvoiceDao extends InvoiceTestSuiteWithEmbeddedDB {
         startDate = endDate;
         endDate = startDate.plusMonths(1);
 
-        final RecurringInvoiceItem recurringItem5 = new RecurringInvoiceItem(invoiceId2, accountId, bundleId, subscriptionId1, "test plan", "test phase A", startDate, endDate,
+        final RecurringInvoiceItem recurringItem5 = new RecurringInvoiceItem(invoiceId2, accountId, bundleId, subscriptionId1, "test product", "test plan", "test phase A", startDate, endDate,
                                                                              rate1, rate1, Currency.USD);
         invoiceUtil.createInvoiceItem(recurringItem5, context);
 
-        final RecurringInvoiceItem recurringItem6 = new RecurringInvoiceItem(invoiceId2, accountId, bundleId, subscriptionId2, "test plan", "test phase B", startDate, endDate,
+        final RecurringInvoiceItem recurringItem6 = new RecurringInvoiceItem(invoiceId2, accountId, bundleId, subscriptionId2, "test product", "test plan", "test phase B", startDate, endDate,
                                                                              rate2, rate2, Currency.USD);
         invoiceUtil.createInvoiceItem(recurringItem6, context);
 
-        final RecurringInvoiceItem recurringItem7 = new RecurringInvoiceItem(invoiceId2, accountId, bundleId, subscriptionId3, "test plan", "test phase C", startDate, endDate,
+        final RecurringInvoiceItem recurringItem7 = new RecurringInvoiceItem(invoiceId2, accountId, bundleId, subscriptionId3, "test product", "test plan", "test phase C", startDate, endDate,
                                                                              rate3, rate3, Currency.USD);
         invoiceUtil.createInvoiceItem(recurringItem7, context);
-        final FixedPriceInvoiceItem fixedItem5 = new FixedPriceInvoiceItem(invoiceId2, accountId, bundleId, subscriptionId1, "test plan", "test phase A", startDate,
+        final FixedPriceInvoiceItem fixedItem5 = new FixedPriceInvoiceItem(invoiceId2, accountId, bundleId, subscriptionId1, "test product", "test plan", "test phase A", startDate,
                                                                            rate1, Currency.USD);
         invoiceUtil.createInvoiceItem(fixedItem5, context);
 
-        final FixedPriceInvoiceItem fixedItem6 = new FixedPriceInvoiceItem(invoiceId2, accountId, bundleId, subscriptionId2, "test plan", "test phase B", startDate,
+        final FixedPriceInvoiceItem fixedItem6 = new FixedPriceInvoiceItem(invoiceId2, accountId, bundleId, subscriptionId2, "test product", "test plan", "test phase B", startDate,
                                                                            rate2, Currency.USD);
         invoiceUtil.createInvoiceItem(fixedItem6, context);
 
-        final FixedPriceInvoiceItem fixedItem7 = new FixedPriceInvoiceItem(invoiceId2, accountId, bundleId, subscriptionId3, "test plan", "test phase C", startDate,
+        final FixedPriceInvoiceItem fixedItem7 = new FixedPriceInvoiceItem(invoiceId2, accountId, bundleId, subscriptionId3, "test product", "test plan", "test phase C", startDate,
                                                                            rate3, Currency.USD);
         invoiceUtil.createInvoiceItem(fixedItem7, context);
 
@@ -485,19 +487,19 @@ public class TestInvoiceDao extends InvoiceTestSuiteWithEmbeddedDB {
         invoiceUtil.createInvoice(invoice2, context);
 
         List<InvoiceModelDao> invoices;
-        invoices = invoiceDao.getInvoicesByAccount(new LocalDate(2011, 1, 1), context);
+        invoices = invoiceDao.getInvoicesByAccount(false, new LocalDate(2011, 1, 1), context);
         assertEquals(invoices.size(), 2);
 
-        invoices = invoiceDao.getInvoicesByAccount(new LocalDate(2011, 10, 6), context);
+        invoices = invoiceDao.getInvoicesByAccount(false, new LocalDate(2011, 10, 6), context);
         assertEquals(invoices.size(), 2);
 
-        invoices = invoiceDao.getInvoicesByAccount(new LocalDate(2011, 10, 11), context);
+        invoices = invoiceDao.getInvoicesByAccount(false, new LocalDate(2011, 10, 11), context);
         assertEquals(invoices.size(), 1);
 
-        invoices = invoiceDao.getInvoicesByAccount(new LocalDate(2011, 12, 6), context);
+        invoices = invoiceDao.getInvoicesByAccount(false, new LocalDate(2011, 12, 6), context);
         assertEquals(invoices.size(), 1);
 
-        invoices = invoiceDao.getInvoicesByAccount(new LocalDate(2012, 1, 1), context);
+        invoices = invoiceDao.getInvoicesByAccount(false, new LocalDate(2012, 1, 1), context);
         assertEquals(invoices.size(), 0);
     }
 
@@ -516,11 +518,11 @@ public class TestInvoiceDao extends InvoiceTestSuiteWithEmbeddedDB {
         final BigDecimal rate1 = new BigDecimal("17.0");
         final BigDecimal rate2 = new BigDecimal("42.0");
 
-        final RecurringInvoiceItem item1 = new RecurringInvoiceItem(invoice1.getId(), accountId, bundleId, UUID.randomUUID(), "test plan", "test phase A", startDate,
+        final RecurringInvoiceItem item1 = new RecurringInvoiceItem(invoice1.getId(), accountId, bundleId, UUID.randomUUID(), "test product", "test plan", "test phase A", startDate,
                                                                     endDate, rate1, rate1, Currency.USD);
         invoiceUtil.createInvoiceItem(item1, context);
 
-        final RecurringInvoiceItem item2 = new RecurringInvoiceItem(invoice1.getId(), accountId, bundleId, UUID.randomUUID(), "test plan", "test phase B", startDate,
+        final RecurringInvoiceItem item2 = new RecurringInvoiceItem(invoice1.getId(), accountId, bundleId, UUID.randomUUID(), "test product", "test plan", "test phase B", startDate,
                                                                     endDate, rate2, rate2, Currency.USD);
         invoiceUtil.createInvoiceItem(item2, context);
 
@@ -545,11 +547,11 @@ public class TestInvoiceDao extends InvoiceTestSuiteWithEmbeddedDB {
 
         final BigDecimal rate1 = new BigDecimal("17.0");
 
-        final RecurringInvoiceItem item1 = new RecurringInvoiceItem(invoice1.getId(), accountId, bundleId, UUID.randomUUID(), "test plan", "test phase A", startDate,
+        final RecurringInvoiceItem item1 = new RecurringInvoiceItem(invoice1.getId(), accountId, bundleId, UUID.randomUUID(), "test product", "test plan", "test phase A", startDate,
                                                                     endDate, rate1, rate1, Currency.USD);
         invoiceUtil.createInvoiceItem(item1, context);
 
-        final CreditAdjInvoiceItem creditItem = new CreditAdjInvoiceItem(invoice1.getId(), accountId, new LocalDate(), null, rate1.negate(), Currency.USD);
+        final CreditAdjInvoiceItem creditItem = new CreditAdjInvoiceItem(invoice1.getId(), accountId, new LocalDate(), null, rate1.negate(), Currency.USD, null);
         invoiceUtil.createInvoiceItem(creditItem, context);
 
         final BigDecimal balance = invoiceDao.getAccountBalance(accountId, context);
@@ -570,11 +572,11 @@ public class TestInvoiceDao extends InvoiceTestSuiteWithEmbeddedDB {
         final BigDecimal rate1 = new BigDecimal("17.0");
         final BigDecimal rate2 = new BigDecimal("42.0");
 
-        final RecurringInvoiceItem item1 = new RecurringInvoiceItem(invoice1.getId(), accountId, bundleId, UUID.randomUUID(), "test plan", "test phase A", startDate, endDate,
+        final RecurringInvoiceItem item1 = new RecurringInvoiceItem(invoice1.getId(), accountId, bundleId, UUID.randomUUID(), "test product", "test plan", "test phase A", startDate, endDate,
                                                                     rate1, rate1, Currency.USD);
         invoiceUtil.createInvoiceItem(item1, context);
 
-        final RecurringInvoiceItem item2 = new RecurringInvoiceItem(invoice1.getId(), accountId, bundleId, UUID.randomUUID(), "test plan", "test phase B", startDate, endDate,
+        final RecurringInvoiceItem item2 = new RecurringInvoiceItem(invoice1.getId(), accountId, bundleId, UUID.randomUUID(), "test product", "test plan", "test phase B", startDate, endDate,
                                                                     rate2, rate2, Currency.USD);
         invoiceUtil.createInvoiceItem(item2, context);
 
@@ -617,7 +619,7 @@ public class TestInvoiceDao extends InvoiceTestSuiteWithEmbeddedDB {
         final BigDecimal refund1 = new BigDecimal("7.00");
 
         // Recurring item
-        final RecurringInvoiceItem item2 = new RecurringInvoiceItem(invoice1.getId(), accountId, bundleId, UUID.randomUUID(), "test plan", "test phase B", startDate,
+        final RecurringInvoiceItem item2 = new RecurringInvoiceItem(invoice1.getId(), accountId, bundleId, UUID.randomUUID(), "test product", "test plan", "test phase B", startDate,
                                                                     endDate, rate1, rate1, Currency.USD);
         invoiceUtil.createInvoiceItem(item2, context);
         BigDecimal balance = invoiceDao.getAccountBalance(accountId, context);
@@ -666,7 +668,7 @@ public class TestInvoiceDao extends InvoiceTestSuiteWithEmbeddedDB {
         final BigDecimal amount = new BigDecimal("20.0");
 
         // Recurring item
-        final RecurringInvoiceItem item2 = new RecurringInvoiceItem(invoice.getId(), accountId, bundleId, UUID.randomUUID(), "test plan", "test phase B", startDate,
+        final RecurringInvoiceItem item2 = new RecurringInvoiceItem(invoice.getId(), accountId, bundleId, UUID.randomUUID(), "test product", "test plan", "test phase B", startDate,
                                                                     endDate, amount, amount, Currency.USD);
         invoiceUtil.createInvoiceItem(item2, context);
         BigDecimal accountBalance = invoiceDao.getAccountBalance(accountId, context);
@@ -756,7 +758,7 @@ public class TestInvoiceDao extends InvoiceTestSuiteWithEmbeddedDB {
         final BigDecimal rate2 = new BigDecimal("10.0");
 
         // Fixed Item
-        final FixedPriceInvoiceItem item1 = new FixedPriceInvoiceItem(invoice1.getId(), accountId, bundleId, UUID.randomUUID(), "test plan", "test phase A", startDate,
+        final FixedPriceInvoiceItem item1 = new FixedPriceInvoiceItem(invoice1.getId(), accountId, bundleId, UUID.randomUUID(), "test product", "test plan", "test phase A", startDate,
                                                                       amount1, Currency.USD);
         invoiceUtil.createInvoiceItem(item1, context);
 
@@ -764,7 +766,7 @@ public class TestInvoiceDao extends InvoiceTestSuiteWithEmbeddedDB {
         assertEquals(balance.compareTo(new BigDecimal("5.00")), 0);
 
         // Recurring item
-        final RecurringInvoiceItem item2 = new RecurringInvoiceItem(invoice1.getId(), accountId, bundleId, UUID.randomUUID(), "test plan", "test phase B", startDate,
+        final RecurringInvoiceItem item2 = new RecurringInvoiceItem(invoice1.getId(), accountId, bundleId, UUID.randomUUID(), "test product", "test plan", "test phase B", startDate,
                                                                     endDate, rate1, rate1, Currency.USD);
         invoiceUtil.createInvoiceItem(item2, context);
         balance = invoiceDao.getAccountBalance(accountId, context);
@@ -780,7 +782,7 @@ public class TestInvoiceDao extends InvoiceTestSuiteWithEmbeddedDB {
 
         // Repair previous item with rate 2
         final RepairAdjInvoiceItem item2Repair = new RepairAdjInvoiceItem(invoice1.getId(), accountId, startDate, endDate, rate1.negate(), Currency.USD, item2.getId());
-        final RecurringInvoiceItem item2Replace = new RecurringInvoiceItem(invoice1.getId(), accountId, bundleId, UUID.randomUUID(), "test plan", "test phase B", startDate,
+        final RecurringInvoiceItem item2Replace = new RecurringInvoiceItem(invoice1.getId(), accountId, bundleId, UUID.randomUUID(), "test product", "test plan", "test phase B", startDate,
                                                                            endDate, rate2, rate2, Currency.USD);
         invoiceUtil.createInvoiceItem(item2Repair, context);
         invoiceUtil.createInvoiceItem(item2Replace, context);
@@ -818,7 +820,7 @@ public class TestInvoiceDao extends InvoiceTestSuiteWithEmbeddedDB {
 
         final String description = UUID.randomUUID().toString();
         final InvoiceModelDao invoiceForExternalCharge = new InvoiceModelDao(accountId, clock.getUTCToday(), clock.getUTCToday(), Currency.USD, false);
-        final InvoiceItemModelDao externalCharge = new InvoiceItemModelDao(new ExternalChargeInvoiceItem(invoiceForExternalCharge.getId(), accountId, bundleId, description, clock.getUTCToday(), clock.getUTCToday(), new BigDecimal("15.0"), Currency.USD));
+        final InvoiceItemModelDao externalCharge = new InvoiceItemModelDao(new ExternalChargeInvoiceItem(invoiceForExternalCharge.getId(), accountId, bundleId, description, clock.getUTCToday(), clock.getUTCToday(), new BigDecimal("15.0"), Currency.USD, null));
         invoiceForExternalCharge.addInvoiceItem(externalCharge);
         final InvoiceItemModelDao charge = invoiceDao.createInvoices(ImmutableList.<InvoiceModelDao>of(invoiceForExternalCharge), context).get(0);
 
@@ -855,7 +857,7 @@ public class TestInvoiceDao extends InvoiceTestSuiteWithEmbeddedDB {
 
         final String description = UUID.randomUUID().toString();
         final InvoiceModelDao draftInvoiceForExternalCharge = new InvoiceModelDao(accountId, clock.getUTCToday(), clock.getUTCToday(), Currency.USD, false, InvoiceStatus.DRAFT);
-        final InvoiceItemModelDao externalCharge = new InvoiceItemModelDao(new ExternalChargeInvoiceItem(draftInvoiceForExternalCharge.getId(), accountId, bundleId, description, clock.getUTCToday(), clock.getUTCToday(), new BigDecimal("15.0"), Currency.USD));
+        final InvoiceItemModelDao externalCharge = new InvoiceItemModelDao(new ExternalChargeInvoiceItem(draftInvoiceForExternalCharge.getId(), accountId, bundleId, description, clock.getUTCToday(), clock.getUTCToday(), new BigDecimal("15.0"), Currency.USD, null));
         draftInvoiceForExternalCharge.addInvoiceItem(externalCharge);
         final InvoiceItemModelDao charge = invoiceDao.createInvoices(ImmutableList.<InvoiceModelDao>of(draftInvoiceForExternalCharge), context).get(0);
 
@@ -899,7 +901,7 @@ public class TestInvoiceDao extends InvoiceTestSuiteWithEmbeddedDB {
         final BigDecimal rate2 = new BigDecimal("10.0");
 
         // Fixed Item
-        final FixedPriceInvoiceItem item1 = new FixedPriceInvoiceItem(invoice1.getId(), accountId, bundleId, UUID.randomUUID(), "test plan", "test phase A", startDate,
+        final FixedPriceInvoiceItem item1 = new FixedPriceInvoiceItem(invoice1.getId(), accountId, bundleId, UUID.randomUUID(), "test product", "test plan", "test phase A", startDate,
                                                                       amount1, Currency.USD);
         invoiceUtil.createInvoiceItem(item1, context);
 
@@ -907,7 +909,7 @@ public class TestInvoiceDao extends InvoiceTestSuiteWithEmbeddedDB {
         assertEquals(balance.compareTo(new BigDecimal("5.00")), 0);
 
         // Recurring item
-        final RecurringInvoiceItem item2 = new RecurringInvoiceItem(invoice1.getId(), accountId, bundleId, UUID.randomUUID(), "test plan", "test phase B", startDate,
+        final RecurringInvoiceItem item2 = new RecurringInvoiceItem(invoice1.getId(), accountId, bundleId, UUID.randomUUID(), "test product", "test plan", "test phase B", startDate,
                                                                     endDate, rate1, rate1, Currency.USD);
         invoiceUtil.createInvoiceItem(item2, context);
         balance = invoiceDao.getAccountBalance(accountId, context);
@@ -922,7 +924,7 @@ public class TestInvoiceDao extends InvoiceTestSuiteWithEmbeddedDB {
 
         // Repair previous item with rate 2
         final RepairAdjInvoiceItem item2Repair = new RepairAdjInvoiceItem(invoice1.getId(), accountId, startDate, endDate, rate1.negate(), Currency.USD, item2.getId());
-        final RecurringInvoiceItem item2Replace = new RecurringInvoiceItem(invoice1.getId(), accountId, bundleId, UUID.randomUUID(), "test plan", "test phase B", startDate,
+        final RecurringInvoiceItem item2Replace = new RecurringInvoiceItem(invoice1.getId(), accountId, bundleId, UUID.randomUUID(), "test product", "test plan", "test phase B", startDate,
                                                                            endDate, rate2, rate2, Currency.USD);
         invoiceUtil.createInvoiceItem(item2Repair, context);
         invoiceUtil.createInvoiceItem(item2Replace, context);
@@ -954,7 +956,7 @@ public class TestInvoiceDao extends InvoiceTestSuiteWithEmbeddedDB {
         final Invoice invoice2 = new DefaultInvoice(accountId, clock.getUTCToday(), targetDate1.plusMonths(1), Currency.USD);
         invoiceUtil.createInvoice(invoice2, context);
 
-        final RecurringInvoiceItem nextItem = new RecurringInvoiceItem(invoice2.getId(), accountId, bundleId, UUID.randomUUID(), "test plan", "test bla", startDate.plusMonths(1),
+        final RecurringInvoiceItem nextItem = new RecurringInvoiceItem(invoice2.getId(), accountId, bundleId, UUID.randomUUID(), "test product", "test plan", "test bla", startDate.plusMonths(1),
                                                                        endDate.plusMonths(1), rate2, rate2, Currency.USD);
         invoiceUtil.createInvoiceItem(nextItem, context);
         balance = invoiceDao.getAccountBalance(accountId, context);
@@ -963,7 +965,7 @@ public class TestInvoiceDao extends InvoiceTestSuiteWithEmbeddedDB {
         assertEquals(cba.compareTo(new BigDecimal("0.00")), 0);
 
         // FINALLY ISSUE A CREDIT ADJ
-        final CreditAdjInvoiceItem creditItem = new CreditAdjInvoiceItem(invoice2.getId(), accountId, new LocalDate(), null, rate2.negate(), Currency.USD);
+        final CreditAdjInvoiceItem creditItem = new CreditAdjInvoiceItem(invoice2.getId(), accountId, new LocalDate(), null, rate2.negate(), Currency.USD, null);
         invoiceUtil.createInvoiceItem(creditItem, context);
         balance = invoiceDao.getAccountBalance(accountId, context);
         assertEquals(balance.compareTo(new BigDecimal("0.00")), 0);
@@ -980,7 +982,7 @@ public class TestInvoiceDao extends InvoiceTestSuiteWithEmbeddedDB {
 
         createCredit(accountId, effectiveDate, creditAmount, true);
 
-        final List<InvoiceModelDao> invoices = invoiceDao.getAllInvoicesByAccount(context);
+        final List<InvoiceModelDao> invoices = invoiceDao.getAllInvoicesByAccount(false, context);
         assertEquals(invoices.size(), 1);
 
         final InvoiceModelDao invoice = invoices.get(0);
@@ -1009,7 +1011,7 @@ public class TestInvoiceDao extends InvoiceTestSuiteWithEmbeddedDB {
     }
 
     @Test(groups = "slow")
-    public void testInvoiceCreditWithBalancePositive() throws EntityPersistenceException {
+    public void testInvoiceCreditWithBalancePositive() throws EntityPersistenceException, InvoiceApiException {
         final BigDecimal creditAmount = new BigDecimal("2.0");
         final BigDecimal expectedBalance = new BigDecimal("3.0");
         final boolean expectCBA = false;
@@ -1017,7 +1019,7 @@ public class TestInvoiceDao extends InvoiceTestSuiteWithEmbeddedDB {
     }
 
     @Test(groups = "slow")
-    public void testInvoiceCreditWithBalanceNegative() throws EntityPersistenceException {
+    public void testInvoiceCreditWithBalanceNegative() throws EntityPersistenceException, InvoiceApiException {
         final BigDecimal creditAmount = new BigDecimal("7.0");
         final BigDecimal expectedBalance = new BigDecimal("0.0");
         final boolean expectCBA = true;
@@ -1025,14 +1027,14 @@ public class TestInvoiceDao extends InvoiceTestSuiteWithEmbeddedDB {
     }
 
     @Test(groups = "slow")
-    public void testInvoiceCreditWithBalanceZero() throws EntityPersistenceException {
+    public void testInvoiceCreditWithBalanceZero() throws EntityPersistenceException, InvoiceApiException {
         final BigDecimal creditAmount = new BigDecimal("5.0");
         final BigDecimal expectedBalance = new BigDecimal("0.0");
         final boolean expectCBA = false;
         testInvoiceCreditInternal(creditAmount, expectedBalance, expectCBA);
     }
 
-    private void testInvoiceCreditInternal(final BigDecimal creditAmount, final BigDecimal expectedBalance, final boolean expectCBA) throws EntityPersistenceException {
+    private void testInvoiceCreditInternal(final BigDecimal creditAmount, final BigDecimal expectedBalance, final boolean expectCBA) throws EntityPersistenceException, InvoiceApiException {
         final UUID accountId = account.getId();
         final UUID bundleId = UUID.randomUUID();
 
@@ -1046,7 +1048,7 @@ public class TestInvoiceDao extends InvoiceTestSuiteWithEmbeddedDB {
         final BigDecimal amount1 = new BigDecimal("5.0");
 
         // Fixed Item
-        final FixedPriceInvoiceItem item1 = new FixedPriceInvoiceItem(invoice1.getId(), accountId, bundleId, UUID.randomUUID(), "test plan", "test phase A", startDate,
+        final FixedPriceInvoiceItem item1 = new FixedPriceInvoiceItem(invoice1.getId(), accountId, bundleId, UUID.randomUUID(), "test product", "test plan", "test phase A", startDate,
                                                                       amount1, Currency.USD);
         invoiceUtil.createInvoiceItem(item1, context);
 
@@ -1055,7 +1057,7 @@ public class TestInvoiceDao extends InvoiceTestSuiteWithEmbeddedDB {
 
         createCredit(accountId, invoice1.getId(), effectiveDate, creditAmount, false);
 
-        final List<InvoiceModelDao> invoices = invoiceDao.getAllInvoicesByAccount(context);
+        final List<InvoiceModelDao> invoices = invoiceDao.getAllInvoicesByAccount(false, context);
         assertEquals(invoices.size(), 1);
 
         final InvoiceModelDao invoice = invoices.get(0);
@@ -1090,11 +1092,11 @@ public class TestInvoiceDao extends InvoiceTestSuiteWithEmbeddedDB {
         final BigDecimal rate1 = new BigDecimal("17.0");
         final BigDecimal rate2 = new BigDecimal("42.0");
 
-        final RecurringInvoiceItem item1 = new RecurringInvoiceItem(invoice1.getId(), accountId, bundleId, UUID.randomUUID(), "test plan", "test phase A", startDate, endDate,
+        final RecurringInvoiceItem item1 = new RecurringInvoiceItem(invoice1.getId(), accountId, bundleId, UUID.randomUUID(), "test product", "test plan", "test phase A", startDate, endDate,
                                                                     rate1, rate1, Currency.USD);
         invoiceUtil.createInvoiceItem(item1, context);
 
-        final RecurringInvoiceItem item2 = new RecurringInvoiceItem(invoice1.getId(), accountId, bundleId, UUID.randomUUID(), "test plan", "test phase B", startDate, endDate,
+        final RecurringInvoiceItem item2 = new RecurringInvoiceItem(invoice1.getId(), accountId, bundleId, UUID.randomUUID(), "test product", "test plan", "test phase B", startDate, endDate,
                                                                     rate2, rate2, Currency.USD);
         invoiceUtil.createInvoiceItem(item2, context);
 
@@ -1118,7 +1120,7 @@ public class TestInvoiceDao extends InvoiceTestSuiteWithEmbeddedDB {
 
         final BigDecimal rate3 = new BigDecimal("21.0");
 
-        final RecurringInvoiceItem item3 = new RecurringInvoiceItem(invoice2.getId(), accountId, bundleId, UUID.randomUUID(), "test plan", "test phase C", startDate2, endDate2,
+        final RecurringInvoiceItem item3 = new RecurringInvoiceItem(invoice2.getId(), accountId, bundleId, UUID.randomUUID(), "test product", "test plan", "test phase C", startDate2, endDate2,
                                                                     rate3, rate3, Currency.USD);
         invoiceUtil.createInvoiceItem(item3, context);
 
@@ -1132,7 +1134,7 @@ public class TestInvoiceDao extends InvoiceTestSuiteWithEmbeddedDB {
     }
 
     @Test(groups = "slow")
-    public void testGetUnpaidInvoicesByAccountIdWithDraftInvoice() throws EntityPersistenceException {
+    public void testGetUnpaidInvoicesByAccountIdWithDraftInvoice() throws EntityPersistenceException, InvoiceApiException {
         final UUID accountId = account.getId();
         final UUID bundleId = UUID.randomUUID();
         final LocalDate targetDate1 = new LocalDate(2011, 10, 6);
@@ -1145,11 +1147,11 @@ public class TestInvoiceDao extends InvoiceTestSuiteWithEmbeddedDB {
         final BigDecimal rate1 = new BigDecimal("17.0");
         final BigDecimal rate2 = new BigDecimal("42.0");
 
-        final RecurringInvoiceItem item1 = new RecurringInvoiceItem(invoice1.getId(), accountId, bundleId, UUID.randomUUID(), "test plan", "test phase A", startDate, endDate,
+        final RecurringInvoiceItem item1 = new RecurringInvoiceItem(invoice1.getId(), accountId, bundleId, UUID.randomUUID(), "test product", "test plan", "test phase A", startDate, endDate,
                                                                     rate1, rate1, Currency.USD);
         invoiceUtil.createInvoiceItem(item1, context);
 
-        final RecurringInvoiceItem item2 = new RecurringInvoiceItem(invoice1.getId(), accountId, bundleId, UUID.randomUUID(), "test plan", "test phase B", startDate, endDate,
+        final RecurringInvoiceItem item2 = new RecurringInvoiceItem(invoice1.getId(), accountId, bundleId, UUID.randomUUID(), "test product", "test plan", "test phase B", startDate, endDate,
                                                                     rate2, rate2, Currency.USD);
         invoiceUtil.createInvoiceItem(item2, context);
 
@@ -1164,13 +1166,13 @@ public class TestInvoiceDao extends InvoiceTestSuiteWithEmbeddedDB {
         invoices = invoiceDao.getUnpaidInvoicesByAccountId(accountId, upToDate, context);
         assertEquals(invoices.size(), 1);
 
-        List<InvoiceModelDao> allInvoicesByAccount = invoiceDao.getInvoicesByAccount(new LocalDate(2011, 1, 1), context);
+        List<InvoiceModelDao> allInvoicesByAccount = invoiceDao.getInvoicesByAccount(false, new LocalDate(2011, 1, 1), context);
         assertEquals(allInvoicesByAccount.size(), 1);
 
         // insert DRAFT invoice
         createCredit(accountId, new LocalDate(2011, 12, 31), BigDecimal.TEN, true);
 
-        allInvoicesByAccount = invoiceDao.getInvoicesByAccount(new LocalDate(2011, 1, 1), context);
+        allInvoicesByAccount = invoiceDao.getInvoicesByAccount(false, new LocalDate(2011, 1, 1), context);
         assertEquals(allInvoicesByAccount.size(), 2);
         assertEquals(allInvoicesByAccount.get(0).getStatus(), InvoiceStatus.COMMITTED);
         assertEquals(allInvoicesByAccount.get(1).getStatus(), InvoiceStatus.DRAFT);
@@ -1409,7 +1411,7 @@ public class TestInvoiceDao extends InvoiceTestSuiteWithEmbeddedDB {
         final Invoice invoice = new DefaultInvoice(accountId, targetDate, targetDate, Currency.USD);
         final UUID invoiceId = invoice.getId();
 
-        final InvoiceItem invoiceItem = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, "test-plan", "test-phase-rec",
+        final InvoiceItem invoiceItem = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, "test product", "test-plan", "test-phase-rec",
                                                                  recuringStartDate, recuringEndDate, new BigDecimal("239.00"), new BigDecimal("239.00"), Currency.USD);
 
         invoice.addInvoiceItem(invoiceItem);
@@ -1439,8 +1441,12 @@ public class TestInvoiceDao extends InvoiceTestSuiteWithEmbeddedDB {
         final BillingEventSet events = new MockBillingEventSet();
         final SubscriptionBase subscription = getZombieSubscription(subscriptionId);
 
+        final Product product = Mockito.mock(Product.class);
+        Mockito.when(product.getName()).thenReturn("product");
+
         final Plan plan = Mockito.mock(Plan.class);
         Mockito.when(plan.getName()).thenReturn("plan");
+        Mockito.when(plan.getProduct()).thenReturn(product);
         Mockito.when(plan.getRecurringBillingMode()).thenReturn(BillingMode.IN_ADVANCE);
 
         final PlanPhase phase1 = Mockito.mock(PlanPhase.class);
@@ -1469,8 +1475,13 @@ public class TestInvoiceDao extends InvoiceTestSuiteWithEmbeddedDB {
 
         final SubscriptionBase subscription = getZombieSubscription();
 
+        final Product product = Mockito.mock(Product.class);
+        Mockito.when(product.getName()).thenReturn("product");
+
         final Plan plan = Mockito.mock(Plan.class);
         Mockito.when(plan.getName()).thenReturn("plan");
+        Mockito.when(plan.getProduct()).thenReturn(product);
+
         Mockito.when(plan.getRecurringBillingMode()).thenReturn(BillingMode.IN_ADVANCE);
 
         final PlanPhase phase1 = Mockito.mock(PlanPhase.class);
@@ -1518,7 +1529,7 @@ public class TestInvoiceDao extends InvoiceTestSuiteWithEmbeddedDB {
         // * $-10 repair
         // * $10 generated CBA due to the repair (assume previous payment)
         final Invoice invoice1 = new DefaultInvoice(accountId, clock.getUTCToday(), clock.getUTCToday(), Currency.USD);
-        final InvoiceItem fixedItem1 = new FixedPriceInvoiceItem(invoice1.getId(), invoice1.getAccountId(), null, null, UUID.randomUUID().toString(),
+        final InvoiceItem fixedItem1 = new FixedPriceInvoiceItem(invoice1.getId(), invoice1.getAccountId(), null, null, null, UUID.randomUUID().toString(),
                                                                  UUID.randomUUID().toString(), clock.getUTCToday(), BigDecimal.TEN, Currency.USD);
         final RepairAdjInvoiceItem repairAdjInvoiceItem = new RepairAdjInvoiceItem(fixedItem1.getInvoiceId(), fixedItem1.getAccountId(),
                                                                                    fixedItem1.getStartDate(), fixedItem1.getEndDate(),
@@ -1555,7 +1566,7 @@ public class TestInvoiceDao extends InvoiceTestSuiteWithEmbeddedDB {
         // * $-10 repair
         // * $10 generated CBA due to the repair (assume previous payment)
         final Invoice invoice1 = new DefaultInvoice(accountId, clock.getUTCToday(), clock.getUTCToday(), Currency.USD);
-        final InvoiceItem fixedItem1 = new FixedPriceInvoiceItem(invoice1.getId(), invoice1.getAccountId(), null, null, UUID.randomUUID().toString(),
+        final InvoiceItem fixedItem1 = new FixedPriceInvoiceItem(invoice1.getId(), invoice1.getAccountId(), null, null, null, UUID.randomUUID().toString(),
                                                                  UUID.randomUUID().toString(), clock.getUTCToday(), BigDecimal.TEN, Currency.USD);
         final RepairAdjInvoiceItem repairAdjInvoiceItem = new RepairAdjInvoiceItem(fixedItem1.getInvoiceId(), fixedItem1.getAccountId(),
                                                                                    fixedItem1.getStartDate(), fixedItem1.getEndDate(),
@@ -1581,7 +1592,7 @@ public class TestInvoiceDao extends InvoiceTestSuiteWithEmbeddedDB {
         // * $5 item
         // * $-5 CBA used
         final DefaultInvoice invoice2 = new DefaultInvoice(accountId, clock.getUTCToday(), clock.getUTCToday(), Currency.USD);
-        final InvoiceItem fixedItem2 = new FixedPriceInvoiceItem(invoice2.getId(), invoice1.getAccountId(), null, null, UUID.randomUUID().toString(),
+        final InvoiceItem fixedItem2 = new FixedPriceInvoiceItem(invoice2.getId(), invoice1.getAccountId(), null, null,  null, UUID.randomUUID().toString(),
                                                                  UUID.randomUUID().toString(), clock.getUTCToday(), new BigDecimal("5"), Currency.USD);
         final CreditBalanceAdjInvoiceItem creditBalanceAdjInvoiceItem2 = new CreditBalanceAdjInvoiceItem(fixedItem2.getInvoiceId(), fixedItem2.getAccountId(),
                                                                                                          fixedItem2.getStartDate(), fixedItem2.getAmount().negate(),
@@ -1615,7 +1626,7 @@ public class TestInvoiceDao extends InvoiceTestSuiteWithEmbeddedDB {
         // * $-10 repair
         // * $10 generated CBA due to the repair (assume previous payment)
         final Invoice invoice1 = new DefaultInvoice(accountId, clock.getUTCToday(), clock.getUTCToday(), Currency.USD);
-        final InvoiceItem fixedItem1 = new FixedPriceInvoiceItem(invoice1.getId(), invoice1.getAccountId(), null, null, UUID.randomUUID().toString(),
+        final InvoiceItem fixedItem1 = new FixedPriceInvoiceItem(invoice1.getId(), invoice1.getAccountId(), null, null,  null, UUID.randomUUID().toString(),
                                                                  UUID.randomUUID().toString(), clock.getUTCToday(), BigDecimal.TEN, Currency.USD);
         final RepairAdjInvoiceItem repairAdjInvoiceItem = new RepairAdjInvoiceItem(fixedItem1.getInvoiceId(), fixedItem1.getAccountId(),
                                                                                    fixedItem1.getStartDate(), fixedItem1.getEndDate(),
@@ -1641,7 +1652,7 @@ public class TestInvoiceDao extends InvoiceTestSuiteWithEmbeddedDB {
         // * $5 item
         // * $-5 CBA used
         final DefaultInvoice invoice2 = new DefaultInvoice(accountId, clock.getUTCToday(), clock.getUTCToday(), Currency.USD);
-        final InvoiceItem fixedItem2 = new FixedPriceInvoiceItem(invoice2.getId(), invoice1.getAccountId(), null, null, UUID.randomUUID().toString(),
+        final InvoiceItem fixedItem2 = new FixedPriceInvoiceItem(invoice2.getId(), invoice1.getAccountId(), null, null,  null, UUID.randomUUID().toString(),
                                                                  UUID.randomUUID().toString(), clock.getUTCToday(), new BigDecimal("5"), Currency.USD);
         final CreditBalanceAdjInvoiceItem creditBalanceAdjInvoiceItem2 = new CreditBalanceAdjInvoiceItem(fixedItem2.getInvoiceId(), fixedItem2.getAccountId(),
                                                                                                          fixedItem2.getStartDate(), fixedItem2.getAmount().negate(),
@@ -1655,7 +1666,7 @@ public class TestInvoiceDao extends InvoiceTestSuiteWithEmbeddedDB {
         // * $5 item
         // * $-5 CBA used
         final DefaultInvoice invoice3 = new DefaultInvoice(accountId, clock.getUTCToday(), clock.getUTCToday(), Currency.USD);
-        final InvoiceItem fixedItem3 = new FixedPriceInvoiceItem(invoice3.getId(), invoice1.getAccountId(), null, null, UUID.randomUUID().toString(),
+        final InvoiceItem fixedItem3 = new FixedPriceInvoiceItem(invoice3.getId(), invoice1.getAccountId(), null, null,  null, UUID.randomUUID().toString(),
                                                                  UUID.randomUUID().toString(), clock.getUTCToday(), new BigDecimal("5"), Currency.USD);
         final CreditBalanceAdjInvoiceItem creditBalanceAdjInvoiceItem3 = new CreditBalanceAdjInvoiceItem(fixedItem3.getInvoiceId(), fixedItem3.getAccountId(),
                                                                                                          fixedItem3.getStartDate(), fixedItem3.getAmount().negate(),
@@ -1725,7 +1736,7 @@ public class TestInvoiceDao extends InvoiceTestSuiteWithEmbeddedDB {
 
         final UUID bundleId = UUID.randomUUID();
         final UUID subscriptionId = UUID.randomUUID();
-        final RecurringInvoiceItem item1 = new RecurringInvoiceItem(invoice.getId(), accountId,     bundleId, subscriptionId, "test plan", "test ZOO", clock.getUTCNow().plusMonths(-1).toLocalDate(), clock.getUTCNow().toLocalDate(),
+        final RecurringInvoiceItem item1 = new RecurringInvoiceItem(invoice.getId(), accountId,     bundleId, subscriptionId, "test product", "test plan", "test ZOO", clock.getUTCNow().plusMonths(-1).toLocalDate(), clock.getUTCNow().toLocalDate(),
                                                                     BigDecimal.TEN, BigDecimal.TEN, Currency.USD);
         invoiceUtil.createInvoiceItem(item1, context);
 
@@ -1750,11 +1761,11 @@ public class TestInvoiceDao extends InvoiceTestSuiteWithEmbeddedDB {
     }
 
 
-    private InvoiceItemModelDao createCredit(final UUID accountId, final LocalDate effectiveDate, final BigDecimal creditAmount, final boolean draft) {
+    private InvoiceItemModelDao createCredit(final UUID accountId, final LocalDate effectiveDate, final BigDecimal creditAmount, final boolean draft)throws InvoiceApiException {
         return createCredit(accountId, null, effectiveDate, creditAmount, draft);
     }
 
-    private InvoiceItemModelDao createCredit(final UUID accountId, @Nullable final UUID invoiceId, final LocalDate effectiveDate, final BigDecimal creditAmount, final boolean draft) {
+    private InvoiceItemModelDao createCredit(final UUID accountId, @Nullable final UUID invoiceId, final LocalDate effectiveDate, final BigDecimal creditAmount, final boolean draft) throws InvoiceApiException {
         final InvoiceModelDao invoiceModelDao;
         if (invoiceId == null) {
             invoiceModelDao = new InvoiceModelDao(accountId, effectiveDate, effectiveDate, Currency.USD, false, draft ? InvoiceStatus.DRAFT : InvoiceStatus.COMMITTED);
@@ -1769,7 +1780,8 @@ public class TestInvoiceDao extends InvoiceTestSuiteWithEmbeddedDB {
                                                                           null,
                                                                           // Note! The amount is negated here!
                                                                           creditAmount.negate(),
-                                                                          invoiceModelDao.getCurrency());
+                                                                          invoiceModelDao.getCurrency(),
+                                                                          null);
         invoiceModelDao.addInvoiceItem(new InvoiceItemModelDao(invoiceItem));
         return invoiceDao.createInvoices(ImmutableList.<InvoiceModelDao>of(invoiceModelDao), context).get(0);
     }
@@ -1822,7 +1834,7 @@ public class TestInvoiceDao extends InvoiceTestSuiteWithEmbeddedDB {
         final UUID bundleId = UUID.randomUUID();
         final LocalDate startDate = new LocalDate(2010, 1, 1);
         final LocalDate endDate = new LocalDate(2010, 4, 1);
-        final InvoiceItem invoiceItem = new RecurringInvoiceItem(invoiceId, childAccountId, bundleId, subscriptionId, "test plan", "test phase", startDate, endDate,
+        final InvoiceItem invoiceItem = new RecurringInvoiceItem(invoiceId, childAccountId, bundleId, subscriptionId, "test product", "test plan", "test phase", startDate, endDate,
                                                                  new BigDecimal("21.00"), new BigDecimal("7.00"), Currency.USD);
         final InvoiceItem invoiceAdj = new ItemAdjInvoiceItem(invoiceItem, startDate, new BigDecimal("-5.00"), Currency.USD);
 
@@ -1840,6 +1852,27 @@ public class TestInvoiceDao extends InvoiceTestSuiteWithEmbeddedDB {
         assertEquals(invoiceItems.get(0).getType(), InvoiceItemType.RECURRING);
         assertEquals(invoiceItems.get(1).getType(), InvoiceItemType.ITEM_ADJ);
 
+    }
+
+    @Test(groups = "slow")
+    public void testGetByInvoiceItemId() throws EntityPersistenceException, InvoiceApiException {
+        final Invoice invoice1 = new DefaultInvoice(account.getId(), clock.getUTCToday(), clock.getUTCToday(), Currency.USD);
+        invoiceUtil.createInvoice(invoice1, context);
+
+        final UUID invoiceId1 = invoice1.getId();
+
+        LocalDate startDate = new LocalDate(2011, 3, 1);
+        LocalDate endDate = startDate.plusMonths(1);
+
+        final RecurringInvoiceItem recurringItem1 = new RecurringInvoiceItem(invoiceId1, account.getId(), UUID.randomUUID(), UUID.randomUUID(), "test product", "test plan", "test A", startDate, endDate,
+                                                                             BigDecimal.ONE, BigDecimal.ONE, Currency.USD);
+        invoiceUtil.createInvoiceItem(recurringItem1, context);
+
+        final InvoiceModelDao targetInvoice = invoiceDao.getByInvoiceItem(recurringItem1.getId(), internalCallContext);
+        assertNotNull(targetInvoice);
+        assertEquals(targetInvoice.getId(), invoiceId1);
+        assertEquals(targetInvoice.getInvoiceItems().size(), 1);
+        assertEquals(targetInvoice.getInvoiceItems().get(0).getId(), recurringItem1.getId());
     }
 
 }

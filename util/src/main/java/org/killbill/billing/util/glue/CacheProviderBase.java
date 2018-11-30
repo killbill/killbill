@@ -1,6 +1,6 @@
 /*
- * Copyright 2014-2017 Groupon, Inc
- * Copyright 2014-2017 The Billing Project, LLC
+ * Copyright 2014-2018 Groupon, Inc
+ * Copyright 2014-2018 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -17,16 +17,9 @@
 
 package org.killbill.billing.util.glue;
 
-import java.io.IOException;
-import java.net.URISyntaxException;
-import java.net.URL;
-
 import javax.cache.Cache;
 import javax.cache.CacheManager;
-import javax.cache.configuration.MutableConfiguration;
-
-import org.killbill.billing.util.config.definition.EhCacheConfig;
-import org.killbill.xmlloader.UriAccessor;
+import javax.cache.configuration.Configuration;
 
 import com.codahale.metrics.Metric;
 import com.codahale.metrics.MetricFilter;
@@ -40,28 +33,15 @@ abstract class CacheProviderBase {
 
     private final MetricRegistry metricRegistry;
 
-    final URL xmlConfigurationURL;
-
-    CacheProviderBase(final MetricRegistry metricRegistry, final EhCacheConfig cacheConfig) {
+    CacheProviderBase(final MetricRegistry metricRegistry) {
         this.metricRegistry = metricRegistry;
-
-        try {
-            xmlConfigurationURL = UriAccessor.toURL(cacheConfig.getCacheConfigLocation());
-        } catch (final IOException e) {
-            throw new RuntimeException(e);
-        } catch (final URISyntaxException e) {
-            throw new RuntimeException(e);
-        }
     }
 
-    <K, V> Cache<K, V> createCache(final CacheManager cacheManager, final String cacheName, final Class<K> keyType, final Class<V> valueType) {
+    <C extends Configuration> void createCache(final CacheManager cacheManager, final String cacheName, final C configuration) {
         // Make sure we start from a clean state - this is mainly useful for tests
         cacheManager.destroyCache(cacheName);
 
-        // All other configuration options come from the ehcache.xml
-        final MutableConfiguration<K, V> configuration = new MutableConfiguration<K, V>().setTypes(keyType, valueType)
-                                                                                         .setStoreByValue(false); // Store by reference to avoid copying large objects (e.g. catalog)
-        final Cache<K, V> cache = cacheManager.createCache(cacheName, configuration);
+        final Cache cache = cacheManager.createCache(cacheName, configuration);
         Preconditions.checkState(!cache.isClosed(), "Cache '%s' should not be closed", cacheName);
 
         // Re-create the metrics to support dynamically created caches (e.g. for Shiro)
@@ -72,7 +52,5 @@ abstract class CacheProviderBase {
             }
         });
         metricRegistry.register(PROP_METRIC_REG_JCACHE_STATISTICS, new JCacheGaugeSet());
-
-        return cache;
     }
 }

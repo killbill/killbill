@@ -1,7 +1,9 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
+ * Copyright 2014-2018 Groupon, Inc
+ * Copyright 2014-2018 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -16,7 +18,10 @@
 
 package org.killbill.billing.catalog.rules;
 
-import java.net.URI;
+import java.io.Externalizable;
+import java.io.IOException;
+import java.io.ObjectInput;
+import java.io.ObjectOutput;
 import java.util.Arrays;
 import java.util.HashSet;
 
@@ -52,7 +57,7 @@ import org.killbill.xmlloader.ValidationErrors;
 import com.google.common.collect.ImmutableList;
 
 @XmlAccessorType(XmlAccessType.NONE)
-public class DefaultPlanRules extends ValidatingConfig<StandaloneCatalog> implements PlanRules {
+public class DefaultPlanRules extends ValidatingConfig<StandaloneCatalog> implements PlanRules, Externalizable {
 
     @XmlElementWrapper(name = "changePolicy")
     @XmlElement(name = "changePolicyCase", required = false)
@@ -77,6 +82,10 @@ public class DefaultPlanRules extends ValidatingConfig<StandaloneCatalog> implem
     @XmlElementWrapper(name = "priceList")
     @XmlElement(name = "priceListCase", required = false)
     private DefaultCasePriceList[] priceListCase;
+
+    // Required for deserialization
+    public DefaultPlanRules() {
+    }
 
     @Override
     public Iterable<CaseChangePlanPolicy> getCaseChangePlanPolicy() {
@@ -135,7 +144,6 @@ public class DefaultPlanRules extends ValidatingConfig<StandaloneCatalog> implem
                                               new PlanSpecifier(to.getProductName(), to.getBillingPeriod(), toPriceList.getName()) :
                                               to;
 
-
         final BillingActionPolicy policy = getPlanChangePolicy(from, toWithPriceList, catalog);
         if (policy == BillingActionPolicy.ILLEGAL) {
             throw new IllegalPlanChange(from, toWithPriceList);
@@ -146,14 +154,14 @@ public class DefaultPlanRules extends ValidatingConfig<StandaloneCatalog> implem
         return new PlanChangeResult(toPriceList, policy, alignment);
     }
 
-    public PlanAlignmentChange getPlanChangeAlignment(final PlanPhaseSpecifier from,
-                                                      final PlanSpecifier to, final StaticCatalog catalog) throws CatalogApiException {
+    private PlanAlignmentChange getPlanChangeAlignment(final PlanPhaseSpecifier from,
+                                                       final PlanSpecifier to, final StaticCatalog catalog) throws CatalogApiException {
         final PlanAlignmentChange result = DefaultCaseChange.getResult(changeAlignmentCase, from, to, catalog);
         return (result != null) ? result : PlanAlignmentChange.START_OF_BUNDLE;
     }
 
-    public BillingActionPolicy getPlanChangePolicy(final PlanPhaseSpecifier from,
-                                                   final PlanSpecifier to, final StaticCatalog catalog) throws CatalogApiException {
+    private BillingActionPolicy getPlanChangePolicy(final PlanPhaseSpecifier from,
+                                                    final PlanSpecifier to, final StaticCatalog catalog) throws CatalogApiException {
         final BillingActionPolicy result = DefaultCaseChange.getResult(changeCase, from, to, catalog);
         return (result != null) ? result : BillingActionPolicy.END_OF_TERM;
     }
@@ -167,7 +175,6 @@ public class DefaultPlanRules extends ValidatingConfig<StandaloneCatalog> implem
         return result;
     }
 
-
     @Override
     public ValidationErrors validate(final StandaloneCatalog catalog, final ValidationErrors errors) {
         //
@@ -177,7 +184,7 @@ public class DefaultPlanRules extends ValidatingConfig<StandaloneCatalog> implem
         boolean foundDefaultCase = false;
         for (final DefaultCaseChangePlanPolicy cur : changeCase) {
             if (caseChangePlanPoliciesSet.contains(cur)) {
-                errors.add(new ValidationError(String.format("Duplicate rule for change plan %s", cur.toString()), catalog.getCatalogURI(), DefaultPlanRules.class, ""));
+                errors.add(new ValidationError(String.format("Duplicate rule for change plan %s", cur.toString()), DefaultPlanRules.class, ""));
             } else {
                 caseChangePlanPoliciesSet.add(cur);
             }
@@ -195,14 +202,14 @@ public class DefaultPlanRules extends ValidatingConfig<StandaloneCatalog> implem
             cur.validate(catalog, errors);
         }
         if (!foundDefaultCase) {
-            errors.add(new ValidationError("Missing default rule case for plan change", catalog.getCatalogURI(), DefaultPlanRules.class, ""));
+            errors.add(new ValidationError("Missing default rule case for plan change", DefaultPlanRules.class, ""));
         }
 
         final HashSet<DefaultCaseCancelPolicy> defaultCaseCancelPoliciesSet = new HashSet<DefaultCaseCancelPolicy>();
         foundDefaultCase = false;
         for (final DefaultCaseCancelPolicy cur : cancelCase) {
             if (defaultCaseCancelPoliciesSet.contains(cur)) {
-                errors.add(new ValidationError(String.format("Duplicate rule for plan cancellation %s", cur.toString()), catalog.getCatalogURI(), DefaultPlanRules.class, ""));
+                errors.add(new ValidationError(String.format("Duplicate rule for plan cancellation %s", cur.toString()), DefaultPlanRules.class, ""));
             } else {
                 defaultCaseCancelPoliciesSet.add(cur);
             }
@@ -216,14 +223,13 @@ public class DefaultPlanRules extends ValidatingConfig<StandaloneCatalog> implem
             cur.validate(catalog, errors);
         }
         if (!foundDefaultCase) {
-            errors.add(new ValidationError("Missing default rule case for plan cancellation", catalog.getCatalogURI(), DefaultPlanRules.class, ""));
+            errors.add(new ValidationError("Missing default rule case for plan cancellation", DefaultPlanRules.class, ""));
         }
-
 
         final HashSet<DefaultCaseChangePlanAlignment> caseChangePlanAlignmentsSet = new HashSet<DefaultCaseChangePlanAlignment>();
         for (final DefaultCaseChangePlanAlignment cur : changeAlignmentCase) {
             if (caseChangePlanAlignmentsSet.contains(cur)) {
-                errors.add(new ValidationError(String.format("Duplicate rule for plan change alignment %s", cur.toString()), catalog.getCatalogURI(), DefaultPlanRules.class, ""));
+                errors.add(new ValidationError(String.format("Duplicate rule for plan change alignment %s", cur.toString()), DefaultPlanRules.class, ""));
             } else {
                 caseChangePlanAlignmentsSet.add(cur);
             }
@@ -233,7 +239,7 @@ public class DefaultPlanRules extends ValidatingConfig<StandaloneCatalog> implem
         final HashSet<DefaultCaseCreateAlignment> caseCreateAlignmentsSet = new HashSet<DefaultCaseCreateAlignment>();
         for (final DefaultCaseCreateAlignment cur : createAlignmentCase) {
             if (caseCreateAlignmentsSet.contains(cur)) {
-                errors.add(new ValidationError(String.format("Duplicate rule for create plan alignment %s", cur.toString()), catalog.getCatalogURI(), DefaultPlanRules.class, ""));
+                errors.add(new ValidationError(String.format("Duplicate rule for create plan alignment %s", cur.toString()), DefaultPlanRules.class, ""));
             } else {
                 caseCreateAlignmentsSet.add(cur);
             }
@@ -243,7 +249,7 @@ public class DefaultPlanRules extends ValidatingConfig<StandaloneCatalog> implem
         final HashSet<DefaultCaseBillingAlignment> caseBillingAlignmentsSet = new HashSet<DefaultCaseBillingAlignment>();
         for (final DefaultCaseBillingAlignment cur : billingAlignmentCase) {
             if (caseBillingAlignmentsSet.contains(cur)) {
-                errors.add(new ValidationError(String.format("Duplicate rule for billing alignment %s", cur.toString()), catalog.getCatalogURI(), DefaultPlanRules.class, ""));
+                errors.add(new ValidationError(String.format("Duplicate rule for billing alignment %s", cur.toString()), DefaultPlanRules.class, ""));
             } else {
                 caseBillingAlignmentsSet.add(cur);
             }
@@ -253,7 +259,7 @@ public class DefaultPlanRules extends ValidatingConfig<StandaloneCatalog> implem
         final HashSet<DefaultCasePriceList> casePriceListsSet = new HashSet<DefaultCasePriceList>();
         for (final DefaultCasePriceList cur : priceListCase) {
             if (casePriceListsSet.contains(cur)) {
-                errors.add(new ValidationError(String.format("Duplicate rule for price list transition %s", cur.toString()), catalog.getCatalogURI(), DefaultPlanRules.class, ""));
+                errors.add(new ValidationError(String.format("Duplicate rule for price list transition %s", cur.toString()), DefaultPlanRules.class, ""));
             } else {
                 casePriceListsSet.add(cur);
             }
@@ -262,32 +268,30 @@ public class DefaultPlanRules extends ValidatingConfig<StandaloneCatalog> implem
         return errors;
     }
 
-
     @Override
-    public void initialize(final StandaloneCatalog catalog, final URI sourceURI) {
-        super.initialize(catalog, sourceURI);
+    public void initialize(final StandaloneCatalog catalog) {
+        super.initialize(catalog);
         CatalogSafetyInitializer.initializeNonRequiredNullFieldsWithDefaultValue(this);
 
         for (final DefaultCaseChangePlanPolicy cur : changeCase) {
-            cur.initialize(catalog, sourceURI);
+            cur.initialize(catalog);
         }
         for (final DefaultCaseChangePlanAlignment cur : changeAlignmentCase) {
-            cur.initialize(catalog, sourceURI);
+            cur.initialize(catalog);
         }
         for (final DefaultCaseCancelPolicy cur : cancelCase) {
-            cur.initialize(catalog, sourceURI);
+            cur.initialize(catalog);
         }
         for (final DefaultCaseCreateAlignment cur : createAlignmentCase) {
-            cur.initialize(catalog, sourceURI);
+            cur.initialize(catalog);
         }
         for (final DefaultCaseBillingAlignment cur : billingAlignmentCase) {
-            cur.initialize(catalog, sourceURI);
+            cur.initialize(catalog);
         }
         for (final DefaultCasePriceList cur : priceListCase) {
-            cur.initialize(catalog, sourceURI);
+            cur.initialize(catalog);
         }
     }
-
 
     /////////////////////////////////////////////////////////////////////////////////////
     // Setters for testing
@@ -367,5 +371,25 @@ public class DefaultPlanRules extends ValidatingConfig<StandaloneCatalog> implem
         result = 31 * result + (billingAlignmentCase != null ? Arrays.hashCode(billingAlignmentCase) : 0);
         result = 31 * result + (priceListCase != null ? Arrays.hashCode(priceListCase) : 0);
         return result;
+    }
+
+    @Override
+    public void writeExternal(final ObjectOutput out) throws IOException {
+        out.writeObject(changeCase);
+        out.writeObject(changeAlignmentCase);
+        out.writeObject(cancelCase);
+        out.writeObject(createAlignmentCase);
+        out.writeObject(billingAlignmentCase);
+        out.writeObject(priceListCase);
+    }
+
+    @Override
+    public void readExternal(final ObjectInput in) throws IOException, ClassNotFoundException {
+        this.changeCase = (DefaultCaseChangePlanPolicy[]) in.readObject();
+        this.changeAlignmentCase = (DefaultCaseChangePlanAlignment[]) in.readObject();
+        this.cancelCase = (DefaultCaseCancelPolicy[]) in.readObject();
+        this.createAlignmentCase = (DefaultCaseCreateAlignment[]) in.readObject();
+        this.billingAlignmentCase = (DefaultCaseBillingAlignment[]) in.readObject();
+        this.priceListCase = (DefaultCasePriceList[]) in.readObject();
     }
 }

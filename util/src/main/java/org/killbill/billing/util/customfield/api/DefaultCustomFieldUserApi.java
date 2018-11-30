@@ -22,8 +22,10 @@ import java.util.UUID;
 
 import org.killbill.billing.ObjectType;
 import org.killbill.billing.callcontext.InternalCallContext;
+import org.killbill.billing.util.api.AuditLevel;
 import org.killbill.billing.util.api.CustomFieldApiException;
 import org.killbill.billing.util.api.CustomFieldUserApi;
+import org.killbill.billing.util.audit.AuditLogWithHistory;
 import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.billing.util.callcontext.TenantContext;
@@ -147,6 +149,11 @@ public class DefaultCustomFieldUserApi implements CustomFieldUserApi {
     @Override
     public List<CustomField> getCustomFieldsForAccount(final UUID accountId, final TenantContext context) {
         return withCustomFieldsTransform(customFieldDao.getCustomFieldsForAccount(internalCallContextFactory.createInternalTenantContext(accountId, context)));
+    }
+
+    @Override
+    public List<AuditLogWithHistory> getCustomFieldAuditLogsWithHistoryForId(final UUID customFieldId, final AuditLevel auditLevel, final TenantContext tenantContext) {
+        return customFieldDao.getCustomFieldAuditLogsWithHistoryForId(customFieldId, auditLevel, internalCallContextFactory.createInternalTenantContext(customFieldId, ObjectType.CUSTOM_FIELD, tenantContext));
     }
 
     private List<CustomField> withCustomFieldsTransform(final Collection<CustomFieldModelDao> input) {

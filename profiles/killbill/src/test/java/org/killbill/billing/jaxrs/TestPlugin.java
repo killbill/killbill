@@ -27,6 +27,7 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.killbill.billing.client.RequestOptions;
 import org.killbill.billing.osgi.http.DefaultServletRouter;
 import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
@@ -35,6 +36,8 @@ import org.testng.annotations.Test;
 import com.ning.http.client.Response;
 
 public class TestPlugin extends TestJaxrsBase {
+
+    private static final String PLUGIN_PATH = "/plugins/";
 
     private static final String TEST_PLUGIN_NAME = "test-osgi";
 
@@ -57,6 +60,10 @@ public class TestPlugin extends TestJaxrsBase {
     @Override
     @BeforeMethod(groups = "slow")
     public void beforeMethod() throws Exception {
+        if (hasFailed()) {
+            return;
+        }
+
         super.beforeMethod();
         setupOSGIPlugin();
         resetAllMarkers();
@@ -69,22 +76,22 @@ public class TestPlugin extends TestJaxrsBase {
 
         // We don't test the output here as it is some Jetty specific HTML blurb
 
-        response = killBillClient.pluginGET(uri);
+        response = pluginGET(uri, requestOptions);
         testAndResetAllMarkers(response, 404, null, false, false, false, false, false, false);
 
-        response = killBillClient.pluginHEAD(uri);
+        response = pluginHEAD(uri, requestOptions);
         testAndResetAllMarkers(response, 404, null, false, false, false, false, false, false);
 
-        response = killBillClient.pluginPOST(uri, null);
+        response = pluginPOST(uri, null, requestOptions);
         testAndResetAllMarkers(response, 404, null, false, false, false, false, false, false);
 
-        response = killBillClient.pluginPUT(uri, null);
+        response = pluginPUT(uri, null, requestOptions);
         testAndResetAllMarkers(response, 404, null, false, false, false, false, false, false);
 
-        response = killBillClient.pluginDELETE(uri);
+        response = pluginDELETE(uri, requestOptions);
         testAndResetAllMarkers(response, 404, null, false, false, false, false, false, false);
 
-        response = killBillClient.pluginOPTIONS(uri);
+        response = pluginOPTIONS(uri, requestOptions);
         testAndResetAllMarkers(response, 404, null, false, false, false, false, false, false);
     }
 
@@ -93,22 +100,22 @@ public class TestPlugin extends TestJaxrsBase {
         final String uri = TEST_PLUGIN_NAME + "/somethingSomething";
         Response response;
 
-        response = killBillClient.pluginGET(uri);
+        response = pluginGET(uri, requestOptions);
         testAndResetAllMarkers(response, 200, new byte[]{}, false, false, false, false, false, false);
 
-        response = killBillClient.pluginHEAD(uri);
+        response = pluginHEAD(uri, requestOptions);
         testAndResetAllMarkers(response, 204, new byte[]{}, false, false, false, false, false, false);
 
-        response = killBillClient.pluginPOST(uri, null);
+        response = pluginPOST(uri, null, requestOptions);
         testAndResetAllMarkers(response, 200, new byte[]{}, false, false, false, false, false, false);
 
-        response = killBillClient.pluginPUT(uri, null);
+        response = pluginPUT(uri, null, requestOptions);
         testAndResetAllMarkers(response, 200, new byte[]{}, false, false, false, false, false, false);
 
-        response = killBillClient.pluginDELETE(uri);
+        response = pluginDELETE(uri, requestOptions);
         testAndResetAllMarkers(response, 200, new byte[]{}, false, false, false, false, false, false);
 
-        response = killBillClient.pluginOPTIONS(uri);
+        response = pluginOPTIONS(uri, requestOptions);
         testAndResetAllMarkers(response, 200, new byte[]{}, false, false, false, false, false, false);
     }
 
@@ -116,22 +123,22 @@ public class TestPlugin extends TestJaxrsBase {
     public void testPassRequestsToKnownPluginAndKnownPath() throws Exception {
         Response response;
 
-        response = killBillClient.pluginGET(TEST_PLUGIN_NAME + "/" + TEST_PLUGIN_VALID_GET_PATH);
+        response = pluginGET(TEST_PLUGIN_NAME + "/" + TEST_PLUGIN_VALID_GET_PATH, requestOptions);
         testAndResetAllMarkers(response, 230, TEST_PLUGIN_RESPONSE_BYTES, true, false, false, false, false, false);
 
-        response = killBillClient.pluginHEAD(TEST_PLUGIN_NAME + "/" + TEST_PLUGIN_VALID_HEAD_PATH);
+        response = pluginHEAD(TEST_PLUGIN_NAME + "/" + TEST_PLUGIN_VALID_HEAD_PATH, requestOptions);
         testAndResetAllMarkers(response, 204, new byte[]{}, false, true, false, false, false, false);
 
-        response = killBillClient.pluginPOST(TEST_PLUGIN_NAME + "/" + TEST_PLUGIN_VALID_POST_PATH, null);
+        response = pluginPOST(TEST_PLUGIN_NAME + "/" + TEST_PLUGIN_VALID_POST_PATH, null, requestOptions);
         testAndResetAllMarkers(response, 230, TEST_PLUGIN_RESPONSE_BYTES, false, false, true, false, false, false);
 
-        response = killBillClient.pluginPUT(TEST_PLUGIN_NAME + "/" + TEST_PLUGIN_VALID_PUT_PATH, null);
+        response = pluginPUT(TEST_PLUGIN_NAME + "/" + TEST_PLUGIN_VALID_PUT_PATH, null, requestOptions);
         testAndResetAllMarkers(response, 230, TEST_PLUGIN_RESPONSE_BYTES, false, false, false, true, false, false);
 
-        response = killBillClient.pluginDELETE(TEST_PLUGIN_NAME + "/" + TEST_PLUGIN_VALID_DELETE_PATH);
+        response = pluginDELETE(TEST_PLUGIN_NAME + "/" + TEST_PLUGIN_VALID_DELETE_PATH, requestOptions);
         testAndResetAllMarkers(response, 230, TEST_PLUGIN_RESPONSE_BYTES, false, false, false, false, true, false);
 
-        response = killBillClient.pluginOPTIONS(TEST_PLUGIN_NAME + "/" + TEST_PLUGIN_VALID_OPTIONS_PATH);
+        response = pluginOPTIONS(TEST_PLUGIN_NAME + "/" + TEST_PLUGIN_VALID_OPTIONS_PATH, requestOptions);
         testAndResetAllMarkers(response, 230, TEST_PLUGIN_RESPONSE_BYTES, false, false, false, false, false, true);
     }
 
@@ -164,6 +171,33 @@ public class TestPlugin extends TestJaxrsBase {
         requestPUTMarker.set(false);
         requestDELETEMarker.set(false);
         requestOPTIONSMarker.set(false);
+    }
+
+    //
+    // Plugin routing endpoints are not officially part of api (yet)
+    //
+    private Response pluginGET(final String uri, final RequestOptions inputOptions) throws Exception {
+        return killBillHttpClient.doGet(PLUGIN_PATH + uri, inputOptions);
+    }
+
+    private Response pluginHEAD(final String uri, final RequestOptions inputOptions) throws Exception {
+        return killBillHttpClient.doHead(PLUGIN_PATH + uri, inputOptions);
+    }
+
+    private Response pluginPOST(final String uri, @Nullable final String body, final RequestOptions inputOptions) throws Exception {
+        return killBillHttpClient.doPost(PLUGIN_PATH + uri, body, inputOptions);
+    }
+
+    private Response pluginDELETE(final String uri, final RequestOptions inputOptions) throws Exception {
+        return killBillHttpClient.doDelete(PLUGIN_PATH + uri, inputOptions);
+    }
+
+    private Response pluginPUT(final String uri, @Nullable final String body, final RequestOptions inputOptions) throws Exception {
+        return killBillHttpClient.doPut(PLUGIN_PATH + uri, body, inputOptions);
+    }
+
+    private Response pluginOPTIONS(final String uri, final RequestOptions inputOptions) throws Exception {
+        return killBillHttpClient.doOptions(PLUGIN_PATH + uri, inputOptions);
     }
 
     private void setupOSGIPlugin() {

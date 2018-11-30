@@ -1,6 +1,6 @@
 /*
- * Copyright 2016 Groupon, Inc
- * Copyright 2016 The Billing Project, LLC
+ * Copyright 2014-2018 Groupon, Inc
+ * Copyright 2014-2018 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -18,8 +18,6 @@
 package org.killbill.billing.catalog;
 
 import java.math.BigDecimal;
-import java.net.URI;
-import java.net.URISyntaxException;
 
 import org.joda.time.DateTime;
 import org.killbill.billing.ErrorCode;
@@ -53,17 +51,6 @@ public class CatalogUpdater {
 
     public static String DEFAULT_CATALOG_NAME = "DEFAULT";
 
-    private static URI DEFAULT_URI;
-
-    static {
-        try {
-            DEFAULT_URI = new URI(DEFAULT_CATALOG_NAME);
-        } catch (URISyntaxException e) {
-        }
-    }
-
-    ;
-
     private final DefaultMutableStaticCatalog catalog;
 
     public CatalogUpdater(final StandaloneCatalog standaloneCatalog) {
@@ -88,7 +75,7 @@ public class CatalogUpdater {
         } else {
             tmp.setSupportedCurrencies(new Currency[0]);
         }
-        tmp.initialize(tmp, DEFAULT_URI);
+        tmp.initialize(tmp);
 
         this.catalog = new DefaultMutableStaticCatalog(tmp);
     }
@@ -119,18 +106,18 @@ public class CatalogUpdater {
 
         validateNewPlanDescriptor(desc);
 
-        DefaultProduct product = plan != null ? (DefaultProduct) plan.getProduct() : (DefaultProduct)  getExistingProduct(desc.getProductName());
+        DefaultProduct product = plan != null ? (DefaultProduct) plan.getProduct() : (DefaultProduct) getExistingProduct(desc.getProductName());
         if (product == null) {
             product = new DefaultProduct();
             product.setName(desc.getProductName());
             product.setCatagory(desc.getProductCategory());
-            product.initialize(catalog, DEFAULT_URI);
+            product.initialize(catalog);
             catalog.addProduct(product);
         }
 
         if (plan == null) {
 
-            plan = new DefaultPlan();
+            plan = new DefaultPlan(catalog);
             plan.setName(desc.getPlanId());
             plan.setPriceListName(PriceListSet.DEFAULT_PRICELIST_NAME);
             plan.setProduct(product);
@@ -197,7 +184,7 @@ public class CatalogUpdater {
         }
 
         // Reinit catalog
-        catalog.initialize(catalog, DEFAULT_URI);
+        catalog.initialize(catalog);
     }
 
     private boolean isPriceForCurrencyExists(final InternationalPrice price, final Currency currency) {
@@ -282,10 +269,10 @@ public class CatalogUpdater {
     }
 
     private void validateNewPlanDescriptor(final SimplePlanDescriptor desc) throws CatalogApiException {
-        if (desc.getProductCategory() == null ||
-            desc.getBillingPeriod() == null ||
-            (desc.getAmount() == null || desc.getAmount().compareTo(BigDecimal.ZERO) < 0) ||
-            desc.getCurrency() == null) {
+        final boolean invalidPlan = desc.getPlanId() == null && (desc.getProductCategory() == null || desc.getBillingPeriod() == null);
+        final boolean invalidPrice = (desc.getAmount() == null || desc.getAmount().compareTo(BigDecimal.ZERO) < 0) ||
+                                     desc.getCurrency() == null;
+        if (invalidPlan || invalidPrice) {
             throw new CatalogApiException(ErrorCode.CAT_INVALID_SIMPLE_PLAN_DESCRIPTOR, desc);
         }
 

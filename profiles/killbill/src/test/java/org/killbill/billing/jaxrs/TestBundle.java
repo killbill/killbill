@@ -25,12 +25,12 @@ import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.catalog.api.ProductCategory;
-import org.killbill.billing.client.model.Account;
-import org.killbill.billing.client.model.BlockingState;
 import org.killbill.billing.client.model.BlockingStates;
-import org.killbill.billing.client.model.Bundle;
 import org.killbill.billing.client.model.Bundles;
-import org.killbill.billing.client.model.Subscription;
+import org.killbill.billing.client.model.gen.Account;
+import org.killbill.billing.client.model.gen.BlockingState;
+import org.killbill.billing.client.model.gen.Bundle;
+import org.killbill.billing.client.model.gen.Subscription;
 import org.killbill.billing.entitlement.api.BlockingStateType;
 import org.killbill.billing.entitlement.api.Entitlement.EntitlementState;
 import org.killbill.billing.util.api.AuditLevel;
@@ -50,9 +50,10 @@ public class TestBundle extends TestJaxrsBase {
 
     @Test(groups = "slow", description = "Can create bundles without an external key")
     public void testCreateBundleWithNoExternalKey() throws Exception {
-        final Account accountJson = createAccount();
+        final Account accountJson;
+        accountJson = createAccount();
 
-        final Subscription subscription = createEntitlement(accountJson.getAccountId(), null, "Shotgun", ProductCategory.BASE, BillingPeriod.MONTHLY, true);
+        final Subscription subscription = createSubscription(accountJson.getAccountId(), null, "Shotgun", ProductCategory.BASE, BillingPeriod.MONTHLY, true);
         Assert.assertNotNull(subscription.getExternalKey());
     }
 
@@ -60,20 +61,20 @@ public class TestBundle extends TestJaxrsBase {
     public void testBundleOk() throws Exception {
         final Account accountJson = createAccount();
 
-        createEntitlement(accountJson.getAccountId(), "123467", "Shotgun", ProductCategory.BASE, BillingPeriod.MONTHLY, true);
+        createSubscription(accountJson.getAccountId(), "123467", "Shotgun", ProductCategory.BASE, BillingPeriod.MONTHLY, true);
 
         // Retrieves by external key
-        final List<Bundle> objFromJson = killBillClient.getAccountBundles(accountJson.getAccountId(), "123467");
+        final List<Bundle> objFromJson = accountApi.getAccountBundles(accountJson.getAccountId(), "123467", null, requestOptions);
         Assert.assertEquals(objFromJson.size(), 1);
     }
 
     @Test(groups = "slow", description = "Can retrieve account bundles")
     public void testBundleFromAccount() throws Exception {
         final Account accountJson = createAccount();
-        createEntitlement(accountJson.getAccountId(), "156567", "Shotgun", ProductCategory.BASE, BillingPeriod.MONTHLY, true);
-        createEntitlement(accountJson.getAccountId(), "265658", "Shotgun", ProductCategory.BASE, BillingPeriod.MONTHLY, true);
+        createSubscription(accountJson.getAccountId(), "156567", "Shotgun", ProductCategory.BASE, BillingPeriod.MONTHLY, true);
+        createSubscription(accountJson.getAccountId(), "265658", "Shotgun", ProductCategory.BASE, BillingPeriod.MONTHLY, true);
 
-        final List<Bundle> objFromJson = killBillClient.getAccountBundles(accountJson.getAccountId());
+        final List<Bundle> objFromJson = accountApi.getAccountBundles(accountJson.getAccountId(), null, null, requestOptions);
         Assert.assertEquals(objFromJson.size(), 2);
     }
 
@@ -82,21 +83,22 @@ public class TestBundle extends TestJaxrsBase {
         final Account accountJson = createAccount();
 
         // ID
-        Assert.assertNull(killBillClient.getBundle(UUID.randomUUID(), requestOptions));
+        Assert.assertNull(bundleApi.getBundle(UUID.randomUUID(), requestOptions));
 
         // External Key
-        Assert.assertNull(killBillClient.getBundle(UUID.randomUUID().toString(), requestOptions));
-        Assert.assertTrue(killBillClient.getAllBundlesForExternalKey(UUID.randomUUID().toString(), requestOptions).isEmpty());
+        Assert.assertTrue(bundleApi.getBundleByKey(UUID.randomUUID().toString(), requestOptions).isEmpty());
+        
+        Assert.assertTrue(bundleApi.getBundleByKey(UUID.randomUUID().toString(), requestOptions).isEmpty());
 
         // Account Id
-        Assert.assertTrue(killBillClient.getAccountBundles(accountJson.getAccountId(), "98374982743892", requestOptions).isEmpty());
-        Assert.assertTrue(killBillClient.getAccountBundles(accountJson.getAccountId(), requestOptions).isEmpty());
+        Assert.assertTrue(accountApi.getAccountBundles(accountJson.getAccountId(), "98374982743892", null, requestOptions).isEmpty());
+        Assert.assertTrue(accountApi.getAccountBundles(accountJson.getAccountId(), null, null, requestOptions).isEmpty());
 
     }
 
     @Test(groups = "slow", description = "Can handle non existent account")
     public void testAccountNonExistent() throws Exception {
-        Assert.assertTrue(killBillClient.getAccountBundles(UUID.randomUUID()).isEmpty());
+        Assert.assertTrue(accountApi.getAccountBundles(UUID.randomUUID(), null, null, requestOptions).isEmpty());
     }
 
     @Test(groups = "slow", description = "Can transfer bundle")
@@ -110,10 +112,16 @@ public class TestBundle extends TestJaxrsBase {
         final BillingPeriod term = BillingPeriod.MONTHLY;
         final String bundleExternalKey = "93199";
 
-        final Subscription entitlementJsonNoEvents = createEntitlement(accountJson.getAccountId(), bundleExternalKey, productName,
+        final Subscription entitlementJsonNoEvents = createSubscription(accountJson.getAccountId(), bundleExternalKey, productName,
                                                                        ProductCategory.BASE, term, true);
 
-        final Bundle originalBundle = killBillClient.getBundle(bundleExternalKey, requestOptions);
+        Bundles existingBundles = bundleApi.getBundleByKey(bundleExternalKey, requestOptions);
+        assertEquals(existingBundles.size(), 1);
+        Bundle originalBundle = existingBundles.get(0);
+        existingBundles = bundleApi.getBundleByKey(bundleExternalKey, requestOptions);
+        assertEquals(existingBundles.size(), 1);
+        originalBundle = existingBundles.get(0);
+        assertEquals(originalBundle.getAccountId(), accountJson.getAccountId());
         assertEquals(originalBundle.getAccountId(), accountJson.getAccountId());
         assertEquals(originalBundle.getExternalKey(), bundleExternalKey);
 
@@ -122,15 +130,16 @@ public class TestBundle extends TestJaxrsBase {
         final Bundle bundle = new Bundle();
         bundle.setAccountId(newAccount.getAccountId());
         bundle.setBundleId(entitlementJsonNoEvents.getBundleId());
-        assertEquals(killBillClient.transferBundle(bundle, createdBy, reason, comment).getAccountId(), newAccount.getAccountId());
+        bundleApi.transferBundle(entitlementJsonNoEvents.getBundleId(), bundle, null, NULL_PLUGIN_PROPERTIES, requestOptions);
 
-        final Bundle newBundle = killBillClient.getBundle(bundleExternalKey, requestOptions);
+        existingBundles = bundleApi.getBundleByKey(bundleExternalKey, requestOptions);
+        assertEquals(existingBundles.size(), 1);
+        final Bundle newBundle = existingBundles.get(0);
         assertNotEquals(newBundle.getBundleId(), originalBundle.getBundleId());
         assertEquals(newBundle.getExternalKey(), originalBundle.getExternalKey());
         assertEquals(newBundle.getAccountId(), newAccount.getAccountId());
 
-
-        final Bundles bundles = killBillClient.getAllBundlesForExternalKey(bundleExternalKey, requestOptions);
+        final Bundles bundles = bundleApi.getBundleByKey(bundleExternalKey, true, AuditLevel.NONE, requestOptions);
         assertEquals(bundles.size(), 2);
         assertSubscriptionState(bundles, originalBundle.getBundleId(), EntitlementState.CANCELLED);
         assertSubscriptionState(bundles, newBundle.getBundleId(), EntitlementState.ACTIVE);
@@ -159,34 +168,36 @@ public class TestBundle extends TestJaxrsBase {
         final BillingPeriod term = BillingPeriod.MONTHLY;
         final String bundleExternalKey = "93199";
 
-        final Subscription entitlement = createEntitlement(accountJson.getAccountId(), bundleExternalKey, productName,
+        final Subscription entitlement = createSubscription(accountJson.getAccountId(), bundleExternalKey, productName,
                                                            ProductCategory.BASE, term, true);
 
-        final Bundle bundle = killBillClient.getBundle(bundleExternalKey);
+        Bundles existingBundles = bundleApi.getBundleByKey(bundleExternalKey, requestOptions);
+        assertEquals(existingBundles.size(), 1);
+        final Bundle bundle = existingBundles.get(0);
         assertEquals(bundle.getAccountId(), accountJson.getAccountId());
         assertEquals(bundle.getExternalKey(), bundleExternalKey);
 
         final BlockingState blockingState = new BlockingState(bundle.getBundleId(), "block", "service", false, true, true, null, BlockingStateType.SUBSCRIPTION_BUNDLE, null);
-        killBillClient.setBlockingState(bundle.getBundleId(), blockingState, clock.getToday(DateTimeZone.forID(accountJson.getTimeZone())), ImmutableMap.<String, String>of(), createdBy, reason, comment);
+        bundleApi.addBundleBlockingState(bundle.getBundleId(), blockingState, clock.getToday(DateTimeZone.forID(accountJson.getTimeZone())), ImmutableMap.<String, String>of(), requestOptions);
 
-        final Subscription subscription = killBillClient.getSubscription(entitlement.getSubscriptionId());
+        final Subscription subscription = subscriptionApi.getSubscription(entitlement.getSubscriptionId(), requestOptions);
         assertEquals(subscription.getState(), EntitlementState.BLOCKED);
 
         clock.addDays(1);
 
         final BlockingState unblockingState = new BlockingState(bundle.getBundleId(), "unblock", "service", false, false, false, null, BlockingStateType.SUBSCRIPTION_BUNDLE, null);
-        killBillClient.setBlockingState(bundle.getBundleId(), unblockingState, clock.getToday(DateTimeZone.forID(accountJson.getTimeZone())), ImmutableMap.<String, String>of(), createdBy, reason, comment);
+        bundleApi.addBundleBlockingState(bundle.getBundleId(), unblockingState, clock.getToday(DateTimeZone.forID(accountJson.getTimeZone())), ImmutableMap.<String, String>of(), requestOptions);
 
-        final Subscription subscription2 = killBillClient.getSubscription(entitlement.getSubscriptionId());
+        final Subscription subscription2 = subscriptionApi.getSubscription(entitlement.getSubscriptionId(), requestOptions);
         assertEquals(subscription2.getState(), EntitlementState.ACTIVE);
 
-        final BlockingStates blockingStates = killBillClient.getBlockingStates(accountJson.getAccountId(), null, ImmutableList.<String>of("service"), AuditLevel.FULL, requestOptions);
+        final BlockingStates blockingStates = accountApi.getBlockingStates(accountJson.getAccountId(), null, ImmutableList.<String>of("service"), AuditLevel.FULL, requestOptions);
         Assert.assertEquals(blockingStates.size(), 2);
 
-        final BlockingStates blockingStates2 = killBillClient.getBlockingStates(accountJson.getAccountId(), ImmutableList.<BlockingStateType>of(BlockingStateType.SUBSCRIPTION_BUNDLE), null, AuditLevel.FULL, requestOptions);
+        final BlockingStates blockingStates2 = accountApi.getBlockingStates(accountJson.getAccountId(), ImmutableList.<BlockingStateType>of(BlockingStateType.SUBSCRIPTION_BUNDLE), null, AuditLevel.FULL, requestOptions);
         Assert.assertEquals(blockingStates2.size(), 2);
 
-        final BlockingStates blockingStates3 = killBillClient.getBlockingStates(accountJson.getAccountId(), null, null, AuditLevel.FULL, requestOptions);
+        final BlockingStates blockingStates3 = accountApi.getBlockingStates(accountJson.getAccountId(), null, null, AuditLevel.FULL, requestOptions);
         Assert.assertEquals(blockingStates3.size(), 3);
     }
 
@@ -195,19 +206,19 @@ public class TestBundle extends TestJaxrsBase {
         final Account accountJson = createAccount();
 
         for (int i = 0; i < 5; i++) {
-            createEntitlement(accountJson.getAccountId(), UUID.randomUUID().toString(), "Shotgun", ProductCategory.BASE, BillingPeriod.MONTHLY, true);
+            createSubscription(accountJson.getAccountId(), UUID.randomUUID().toString(), "Shotgun", ProductCategory.BASE, BillingPeriod.MONTHLY, true);
         }
 
-        final Bundles allBundles = killBillClient.getBundles();
+        final Bundles allBundles = bundleApi.getBundles(requestOptions);
         Assert.assertEquals(allBundles.size(), 5);
 
         for (final Bundle bundle : allBundles) {
-            Assert.assertEquals(killBillClient.searchBundles(bundle.getBundleId().toString()).size(), 1);
-            Assert.assertEquals(killBillClient.searchBundles(bundle.getAccountId().toString()).size(), 5);
-            Assert.assertEquals(killBillClient.searchBundles(bundle.getExternalKey()).size(), 1);
+            Assert.assertEquals(bundleApi.searchBundles(bundle.getBundleId().toString(), requestOptions).size(), 1);
+            Assert.assertEquals(bundleApi.searchBundles(bundle.getAccountId().toString(), requestOptions).size(), 5);
+            Assert.assertEquals(bundleApi.searchBundles(bundle.getExternalKey(), requestOptions).size(), 1);
         }
 
-        Bundles page = killBillClient.getBundles(0L, 1L);
+        Bundles page = bundleApi.getBundles(0L, 1L, AuditLevel.NONE, requestOptions);
         for (int i = 0; i < 5; i++) {
             Assert.assertNotNull(page);
             Assert.assertEquals(page.size(), 1);
