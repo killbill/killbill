@@ -18,6 +18,7 @@
 
 package org.killbill.billing.junction.plumbing.billing;
 
+import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -28,6 +29,7 @@ import java.util.UUID;
 
 import javax.annotation.Nullable;
 
+import org.joda.time.DateTime;
 import org.killbill.billing.ObjectType;
 import org.killbill.billing.account.api.AccountApiException;
 import org.killbill.billing.account.api.AccountInternalApi;
@@ -139,8 +141,9 @@ public class DefaultInternalBillingApi implements BillingInternalApi {
 
     private void addBillingEventsForBundles(final List<SubscriptionBaseBundle> bundles, final ImmutableAccountData account, final DryRunArguments dryRunArguments, final InternalCallContext context,
                                             final DefaultBillingEventSet result, final Set<UUID> skipSubscriptionsSet, final Catalog catalog, final List<Tag> tagsForAccount) throws AccountApiException, CatalogApiException, SubscriptionBaseApiException {
-
         final boolean dryRunMode = dryRunArguments != null;
+
+        final int currentAccountBCD = accountApi.getBCD(account.getId(), context);
 
         // In dryRun mode, when we care about invoice generated for new BASE subscription, no such bundle exists yet; we still
         // want to tap into subscriptionBase logic, so we make up a bundleId
@@ -150,8 +153,7 @@ public class DefaultInternalBillingApi implements BillingInternalApi {
             final UUID fakeBundleId = UUIDs.randomUUID();
             final List<SubscriptionBase> subscriptions = subscriptionApi.getSubscriptionsForBundle(fakeBundleId, dryRunArguments, context);
 
-            addBillingEventsForSubscription(account, subscriptions, null, dryRunMode, context, result, skipSubscriptionsSet, catalog);
-
+            addBillingEventsForSubscription(account, subscriptions, null, currentAccountBCD, context, result, skipSubscriptionsSet, catalog);
         }
 
         final Map<UUID, List<SubscriptionBase>> subscriptionsForAccount = subscriptionApi.getSubscriptionsForAccount(catalog, context);
@@ -160,11 +162,11 @@ public class DefaultInternalBillingApi implements BillingInternalApi {
             final DryRunArguments dryRunArgumentsForBundle = (dryRunArguments != null &&
                                                               dryRunArguments.getBundleId() != null &&
                                                               dryRunArguments.getBundleId().equals(bundle.getId())) ?
-                                                              dryRunArguments : null;
+                                                             dryRunArguments : null;
             final List<SubscriptionBase> subscriptions;
             // In dryRun mode, optimization is intentionally left as is, since is not a common path.
             if (dryRunArgumentsForBundle == null || dryRunArgumentsForBundle.getAction() == null) {
-                subscriptions = getSubscriptionsForAccountByBundleId(subscriptionsForAccount,bundle.getId());
+                subscriptions = getSubscriptionsForAccountByBundleId(subscriptionsForAccount, bundle.getId());
             } else {
                 subscriptions = subscriptionApi.getSubscriptionsForBundle(bundle.getId(), dryRunArgumentsForBundle, context);
             }
@@ -178,7 +180,27 @@ public class DefaultInternalBillingApi implements BillingInternalApi {
                 }
             } else { // billing is not off
                 final SubscriptionBase baseSubscription = subscriptions != null && !subscriptions.isEmpty() ? subscriptions.get(0) : null;
-                addBillingEventsForSubscription(account, subscriptions, baseSubscription, dryRunMode, context, result, skipSubscriptionsSet, catalog);
+                addBillingEventsForSubscription(account, subscriptions, baseSubscription, currentAccountBCD, context, result, skipSubscriptionsSet, catalog);
+            }
+        }
+
+        // If dryRun is specified, we don't want to to update the account BCD value, so we initialize the flag updatedAccountBCD to true
+        if (currentAccountBCD == 0 && !dryRunMode) {
+            DateTime oldestNonZeroRecurringCharge = null;
+
+            for (final BillingEvent event : result) {
+                final BigDecimal recurringPrice = event.getRecurringPrice(event.getEffectiveDate());
+                final boolean nonZeroRecurringCharge = recurringPrice != null && BigDecimal.ZERO.compareTo(recurringPrice) < 0;
+                if (nonZeroRecurringCharge &&
+                    (oldestNonZeroRecurringCharge == null || event.getEffectiveDate().compareTo(oldestNonZeroRecurringCharge) < 0)) {
+                    oldestNonZeroRecurringCharge = event.getEffectiveDate();
+                }
+            }
+
+            final int accountBCDCandidate = oldestNonZeroRecurringCharge == null ? 0 : oldestNonZeroRecurringCharge.getDayOfMonth();
+            if (accountBCDCandidate != 0) {
+                log.info("Setting account BCD='{}', accountId='{}'", accountBCDCandidate, account.getId());
+                accountApi.updateBCD(account.getExternalKey(), accountBCDCandidate, context);
             }
         }
     }
@@ -186,18 +208,12 @@ public class DefaultInternalBillingApi implements BillingInternalApi {
     private void addBillingEventsForSubscription(final ImmutableAccountData account,
                                                  final List<SubscriptionBase> subscriptions,
                                                  final SubscriptionBase baseSubscription,
-                                                 final boolean dryRunMode,
+                                                 final int currentAccountBCD,
                                                  final InternalCallContext context,
                                                  final DefaultBillingEventSet result,
                                                  final Set<UUID> skipSubscriptionsSet,
-                                                 final Catalog catalog) throws AccountApiException, CatalogApiException, SubscriptionBaseApiException {
-
-        // If dryRun is specified, we don't want to to update the account BCD value, so we initialize the flag updatedAccountBCD to true
-        boolean updatedAccountBCD = dryRunMode;
-
+                                                 final Catalog catalog) throws CatalogApiException {
         final Map<UUID, Integer> bcdCache = new HashMap<UUID, Integer>();
-
-        int currentAccountBCD = accountApi.getBCD(account.getId(), context);
 
         for (final SubscriptionBase subscription : subscriptions) {
 
@@ -222,12 +238,6 @@ public class DefaultInternalBillingApi implements BillingInternalApi {
                                      overridenBCD :
                                      calculateBcdForTransition(catalog, bcdCache, baseSubscription, subscription, currentAccountBCD, transition, context);
 
-                if (currentAccountBCD == 0 && !updatedAccountBCD) {
-                    log.info("Setting account BCD='{}', accountId='{}'", bcdLocal, account.getId());
-                    accountApi.updateBCD(account.getExternalKey(), bcdLocal, context);
-                    updatedAccountBCD = true;
-                }
-
                 final BillingEvent event = new DefaultBillingEvent(transition, subscription, bcdLocal, account.getCurrency(), catalog);
                 result.add(event);
             }
@@ -235,7 +245,7 @@ public class DefaultInternalBillingApi implements BillingInternalApi {
     }
 
     private int calculateBcdForTransition(final Catalog catalog, final Map<UUID, Integer> bcdCache, final SubscriptionBase baseSubscription, final SubscriptionBase subscription, final int accountBillCycleDayLocal, final EffectiveSubscriptionInternalEvent transition, final InternalTenantContext internalTenantContext)
-            throws CatalogApiException, AccountApiException, SubscriptionBaseApiException {
+            throws CatalogApiException {
         final BillingAlignment alignment = catalog.billingAlignment(getPlanPhaseSpecifierFromTransition(catalog, transition), transition.getEffectiveTransitionTime(), subscription.getStartDate());
         return BillCycleDayCalculator.calculateBcdForAlignment(bcdCache, subscription, baseSubscription, alignment, internalTenantContext, accountBillCycleDayLocal);
     }
@@ -281,7 +291,7 @@ public class DefaultInternalBillingApi implements BillingInternalApi {
         });
     }
 
-    private List<Tag> getTagsForObjectType(final ObjectType objectType, final List<Tag> tags, final @Nullable UUID objectId) {
+    private List<Tag> getTagsForObjectType(final ObjectType objectType, final List<Tag> tags, @Nullable final UUID objectId) {
         return ImmutableList.<Tag>copyOf(Iterables.<Tag>filter(tags,
                                                                   new Predicate<Tag>() {
                                                                       @Override

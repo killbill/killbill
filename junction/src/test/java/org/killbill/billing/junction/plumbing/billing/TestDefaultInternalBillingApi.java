@@ -31,7 +31,6 @@ import org.killbill.billing.api.TestApiListener.NextEvent;
 import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.catalog.api.PlanPhaseSpecifier;
 import org.killbill.billing.catalog.api.PriceListSet;
-import org.killbill.billing.entitlement.EntitlementService;
 import org.killbill.billing.entitlement.api.BaseEntitlementWithAddOnsSpecifier;
 import org.killbill.billing.entitlement.api.BlockingStateType;
 import org.killbill.billing.entitlement.api.DefaultBaseEntitlementWithAddOnsSpecifier;
@@ -64,8 +63,8 @@ public class TestDefaultInternalBillingApi extends JunctionTestSuiteWithEmbedded
 
         // Create 2 entitlements, one base with one add-on. All entitlements are ACCOUNT aligned
         final String bundleKey1 = UUID.randomUUID().toString();
-        final EntitlementSpecifier entitlementSpecifierBase1 = new DefaultEntitlementSpecifier(new PlanPhaseSpecifier("Shotgun", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, null), null);
-        final EntitlementSpecifier entitlementSpecifierAO1 = new DefaultEntitlementSpecifier(new PlanPhaseSpecifier("Cabinet", BillingPeriod.TRIANNUAL, PriceListSet.DEFAULT_PRICELIST_NAME, null), null);
+        final EntitlementSpecifier entitlementSpecifierBase1 = new DefaultEntitlementSpecifier(new PlanPhaseSpecifier("Shotgun", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, null));
+        final EntitlementSpecifier entitlementSpecifierAO1 = new DefaultEntitlementSpecifier(new PlanPhaseSpecifier("Cabinet", BillingPeriod.TRIANNUAL, PriceListSet.DEFAULT_PRICELIST_NAME, null));
         final BaseEntitlementWithAddOnsSpecifier specifier1 = new DefaultBaseEntitlementWithAddOnsSpecifier(null, bundleKey1, ImmutableList.of(entitlementSpecifierBase1, entitlementSpecifierAO1), null, null, false);
         testListener.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.CREATE, NextEvent.BLOCK);
         entitlementApi.createBaseEntitlementsWithAddOns(account.getId(),
@@ -86,7 +85,7 @@ public class TestDefaultInternalBillingApi extends JunctionTestSuiteWithEmbedded
         final Account accountNoBCD = accountApi.getAccountById(account.getId(), callContext);
         Assert.assertEquals(accountNoBCD.getBillCycleDayLocal(), (Integer) 0);
 
-        final List<BillingEvent> events = ImmutableList.<BillingEvent>copyOf(billingInternalApi.getBillingEventsForAccountAndUpdateAccountBCD(account.getId(), null, internalCallContext));
+        List<BillingEvent> events = ImmutableList.<BillingEvent>copyOf(billingInternalApi.getBillingEventsForAccountAndUpdateAccountBCD(account.getId(), null, internalCallContext));
         Assert.assertEquals(events.size(), 3);
         for (final BillingEvent billingEvent : events) {
             if (billingEvent.getSubscription().getId().equals(entitlements.get(1).getId())) {
@@ -98,15 +97,21 @@ public class TestDefaultInternalBillingApi extends JunctionTestSuiteWithEmbedded
 
         // Verify BCD
         final Account accountWithBCD = accountApi.getAccountById(account.getId(), callContext);
-        Assert.assertEquals(accountWithBCD.getBillCycleDayLocal(), (Integer) 6);
+        Assert.assertEquals(accountWithBCD.getBillCycleDayLocal(), (Integer) 7);
 
         // Verify GET
         final List<Entitlement> entitlementsUpdated = entitlementApi.getAllEntitlementsForAccountId(account.getId(), callContext);
         Assert.assertEquals(entitlementsUpdated.size(), 2);
         Assert.assertEquals(entitlementsUpdated.get(0).getLastActiveProduct().getName(), "Shotgun");
-        Assert.assertEquals(entitlementsUpdated.get(0).getBillCycleDayLocal(), (Integer) 6);
+        Assert.assertEquals(entitlementsUpdated.get(0).getBillCycleDayLocal(), (Integer) 7);
         Assert.assertEquals(entitlementsUpdated.get(1).getLastActiveProduct().getName(), "Cabinet");
-        Assert.assertEquals(entitlementsUpdated.get(1).getBillCycleDayLocal(), (Integer) 6);
+        Assert.assertEquals(entitlementsUpdated.get(1).getBillCycleDayLocal(), (Integer) 7);
+
+        events = ImmutableList.<BillingEvent>copyOf(billingInternalApi.getBillingEventsForAccountAndUpdateAccountBCD(account.getId(), null, internalCallContext));
+        Assert.assertEquals(events.size(), 3);
+        for (final BillingEvent billingEvent : events) {
+            Assert.assertEquals(billingEvent.getBillCycleDayLocal(), 7);
+        }
     }
 
     // This test was originally for https://github.com/killbill/killbill/issues/123.
