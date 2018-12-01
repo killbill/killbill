@@ -20,9 +20,11 @@ package org.killbill.billing.beatrix.util;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 import org.joda.time.LocalDate;
+import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.entitlement.api.DefaultEntitlement;
 import org.killbill.billing.entitlement.api.EntitlementApi;
 import org.killbill.billing.entitlement.api.EntitlementApiException;
@@ -31,17 +33,23 @@ import org.killbill.billing.invoice.api.InvoiceApiException;
 import org.killbill.billing.invoice.api.InvoiceItem;
 import org.killbill.billing.invoice.api.InvoiceItemType;
 import org.killbill.billing.invoice.api.InvoiceUserApi;
+import org.killbill.billing.invoice.dao.InvoiceTrackingModelDao;
+import org.killbill.billing.invoice.dao.InvoiceTrackingSqlDao;
 import org.killbill.billing.subscription.api.SubscriptionBase;
 import org.killbill.billing.util.callcontext.CallContext;
+import org.skife.jdbi.v2.IDBI;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
 
+import com.google.common.base.Function;
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.inject.Inject;
 
+import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNull;
 import static org.testng.Assert.assertTrue;
 import static org.testng.Assert.fail;
@@ -53,12 +61,14 @@ public class InvoiceChecker {
     private final InvoiceUserApi invoiceUserApi;
     private final EntitlementApi entitlementApi;
     private final AuditChecker auditChecker;
+    private final IDBI dbi;
 
     @Inject
-    public InvoiceChecker(final InvoiceUserApi invoiceUserApi, final EntitlementApi entitlementApi, final AuditChecker auditChecker) {
+    public InvoiceChecker(final InvoiceUserApi invoiceUserApi, final EntitlementApi entitlementApi, final AuditChecker auditChecker, final IDBI dbi) {
         this.invoiceUserApi = invoiceUserApi;
         this.entitlementApi = entitlementApi;
         this.auditChecker = auditChecker;
+        this.dbi = dbi;
     }
 
     public Invoice checkInvoice(final UUID accountId, final int invoiceOrderingNumber, final CallContext context, final ExpectedInvoiceItemCheck... expected) throws InvoiceApiException {
@@ -169,6 +179,26 @@ public class InvoiceChecker {
             fail("Failed to retrieve entitlement for " + entitlementId);
         }
     }
+
+
+    public void checkTrackingIds(final Invoice invoice, final Set<String> expectedTrackingIds, final InternalCallContext internalCallContext) {
+        final InvoiceTrackingSqlDao dao = dbi.onDemand(InvoiceTrackingSqlDao.class);
+        final List<InvoiceTrackingModelDao> result = dao.getTrackingsForInvoice(invoice.getId().toString(), internalCallContext);
+
+        final Set<String> existingTrackingIds = ImmutableSet.copyOf(Iterables.transform(result, new Function<InvoiceTrackingModelDao, String>() {
+            @Override
+            public String apply(final InvoiceTrackingModelDao input) {
+                return input.getTrackingId();
+            }
+        }));
+
+        assertEquals(existingTrackingIds.size(), expectedTrackingIds.size());
+        for (final String cur : existingTrackingIds) {
+            assertTrue(expectedTrackingIds.contains(cur));
+        }
+    }
+
+
 
     public static class ExpectedInvoiceItemCheck {
 

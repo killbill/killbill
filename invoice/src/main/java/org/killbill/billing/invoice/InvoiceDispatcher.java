@@ -608,7 +608,7 @@ public class InvoiceDispatcher {
 
                 final Set<InvoiceTrackingModelDao> trackingIds = new HashSet<>();
                 for (InvoiceWithMetadata.TrackingIds cur : invoiceWithMetadata.getTrackingIds()) {
-                    trackingIds.add(new InvoiceTrackingModelDao(cur.getTrackingId(), cur.getInvoiceId(), cur.getSubscriptionId(), cur.getRecordDate()));
+                    trackingIds.add(new InvoiceTrackingModelDao(cur.getTrackingId(), cur.getInvoiceId(), cur.getSubscriptionId(), cur.getUnitType(), cur.getRecordDate()));
                 }
 
                 // Commit invoice on disk

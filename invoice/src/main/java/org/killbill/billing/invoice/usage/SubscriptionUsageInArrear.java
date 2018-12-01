@@ -80,7 +80,7 @@ public class SubscriptionUsageInArrear {
     private final List<BillingEvent> subscriptionBillingEvents;
     private final LocalDate targetDate;
     private final List<RawUsage> rawSubscriptionUsage;
-    private final List<TrackingIds> existingTrackingIds;
+    private final Set<TrackingIds> existingTrackingIds;
     private final LocalDate rawUsageStartDate;
     private final InternalTenantContext internalTenantContext;
     private final UsageDetailMode usageDetailMode;
@@ -89,7 +89,7 @@ public class SubscriptionUsageInArrear {
                                      final UUID invoiceId,
                                      final List<BillingEvent> subscriptionBillingEvents,
                                      final List<RawUsage> rawUsage,
-                                     final List<TrackingIds> existingTrackingIds,
+                                     final Set<TrackingIds> existingTrackingIds,
                                      final LocalDate targetDate,
                                      final LocalDate rawUsageStartDate,
                                      final UsageDetailMode usageDetailMode,
@@ -209,46 +209,36 @@ public class SubscriptionUsageInArrear {
 
     public class SubscriptionUsageInArrearItemsAndNextNotificationDate {
 
-        private List<InvoiceItem> invoiceItems;
-        private Map<String, LocalDate> perUsageNotificationDates;
-        private Set<TrackingIds> trackingIds;
+        private final List<InvoiceItem> invoiceItems;
+        private final Map<String, LocalDate> perUsageNotificationDates;
+        private final Set<TrackingIds> trackingIds;
 
         public SubscriptionUsageInArrearItemsAndNextNotificationDate() {
-            this.invoiceItems = null;
-            this.perUsageNotificationDates = null;
+            this.invoiceItems = new LinkedList<InvoiceItem>();
+            this.perUsageNotificationDates = new HashMap<String, LocalDate>();
+            this.trackingIds = new HashSet<>();
         }
 
         public void addUsageInArrearItemsAndNextNotificationDate(final String usageName, final UsageInArrearItemsAndNextNotificationDate input) {
             if (!input.getInvoiceItems().isEmpty()) {
-                if (invoiceItems == null) {
-                    invoiceItems = new LinkedList<InvoiceItem>();
-                }
                 invoiceItems.addAll(input.getInvoiceItems());
-
             }
 
             if (input.getNextNotificationDate() != null) {
-                if (perUsageNotificationDates == null) {
-                    perUsageNotificationDates = new HashMap<String, LocalDate>();
-                }
                 perUsageNotificationDates.put(usageName, input.getNextNotificationDate());
             }
         }
 
         public void addTrackingIds(final Set<TrackingIds> input) {
-            if (trackingIds == null) {
-                trackingIds = new HashSet<>();
-            }
             trackingIds.addAll(input);
-
         }
 
         public List<InvoiceItem> getInvoiceItems() {
-            return invoiceItems != null ? invoiceItems : ImmutableList.<InvoiceItem>of();
+            return invoiceItems;
         }
 
         public Map<String, LocalDate> getPerUsageNotificationDates() {
-            return perUsageNotificationDates != null ? perUsageNotificationDates : ImmutableMap.<String, LocalDate>of();
+            return perUsageNotificationDates;
         }
 
         public Set<TrackingIds> getTrackingIds() {

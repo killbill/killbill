@@ -40,14 +40,14 @@ public class TestInvoiceTrackingSqlDao extends InvoiceTestSuiteWithEmbeddedDB {
         final UUID subscriptionId = UUID.randomUUID();
 
         // Before desired range
-        final InvoiceTrackingModelDao input0 = new InvoiceTrackingModelDao(UUID.randomUUID(), clock.getUTCNow(), "trackingId0", invoiceId1, subscriptionId, startRange.minusDays(1));
+        final InvoiceTrackingModelDao input0 = new InvoiceTrackingModelDao(UUID.randomUUID(), clock.getUTCNow(), "trackingId0", invoiceId1, subscriptionId, "unit", startRange.minusDays(1));
 
-        final InvoiceTrackingModelDao input1 = new InvoiceTrackingModelDao(UUID.randomUUID(), clock.getUTCNow(), "trackingId1", invoiceId1, subscriptionId, startRange);
-        final InvoiceTrackingModelDao input2 = new InvoiceTrackingModelDao(UUID.randomUUID(), clock.getUTCNow(), "trackingId2", invoiceId1, subscriptionId, new LocalDate(2018, 8, 5));
-        final InvoiceTrackingModelDao input3 = new InvoiceTrackingModelDao(UUID.randomUUID(), clock.getUTCNow(), "trackingId3", invoiceId2, subscriptionId, new LocalDate(2018, 9, 1));
+        final InvoiceTrackingModelDao input1 = new InvoiceTrackingModelDao(UUID.randomUUID(), clock.getUTCNow(), "trackingId1", invoiceId1, subscriptionId, "unit", startRange);
+        final InvoiceTrackingModelDao input2 = new InvoiceTrackingModelDao(UUID.randomUUID(), clock.getUTCNow(), "trackingId2", invoiceId1, subscriptionId, "unit", new LocalDate(2018, 8, 5));
+        final InvoiceTrackingModelDao input3 = new InvoiceTrackingModelDao(UUID.randomUUID(), clock.getUTCNow(), "trackingId3", invoiceId2, subscriptionId, "unit", new LocalDate(2018, 9, 1));
 
         // After desired range
-        final InvoiceTrackingModelDao input4 = new InvoiceTrackingModelDao(UUID.randomUUID(), clock.getUTCNow(), "trackingId4", invoiceId1, subscriptionId, endRange);
+        final InvoiceTrackingModelDao input4 = new InvoiceTrackingModelDao(UUID.randomUUID(), clock.getUTCNow(), "trackingId4", invoiceId1, subscriptionId, "unit", endRange);
 
         final List<InvoiceTrackingModelDao> inputs = new ArrayList<>();
         inputs.add(input0);

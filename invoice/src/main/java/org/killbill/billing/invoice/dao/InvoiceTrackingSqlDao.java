@@ -43,5 +43,10 @@ public interface InvoiceTrackingSqlDao extends EntitySqlDao<InvoiceTrackingModel
                                                           @Bind("endDate") final Date endDate,
                                                           @SmartBindBean final InternalTenantContext context);
 
+
+    @SqlQuery
+    List<InvoiceTrackingModelDao> getTrackingsForInvoice(@Bind("invoiceId") final String invoiceId,
+                                                          @SmartBindBean final InternalTenantContext context);
+
 }
 

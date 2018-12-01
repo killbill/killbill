@@ -36,21 +36,23 @@ public class InvoiceTrackingModelDao extends EntityModelDaoBase implements Entit
     private String trackingId;
     private UUID invoiceId;
     private UUID subscriptionId;
+    private String unitType;
     private LocalDate recordDate;
 
     public InvoiceTrackingModelDao() { /* For the DAO mapper */ }
 
 
-    public InvoiceTrackingModelDao(final String trackingId,final UUID invoiceId, final UUID subscriptionId, final LocalDate recordDate) {
-        this(UUIDs.randomUUID(), null, trackingId, invoiceId, subscriptionId, recordDate);
+    public InvoiceTrackingModelDao(final String trackingId,final UUID invoiceId, final UUID subscriptionId, final String unitType, final LocalDate recordDate) {
+        this(UUIDs.randomUUID(), null, trackingId, invoiceId, subscriptionId, unitType, recordDate);
     }
 
     public InvoiceTrackingModelDao(final UUID id, @Nullable final DateTime createdDate, final String trackingId,
-                                   final UUID invoiceId, final UUID subscriptionId, final LocalDate recordDate) {
+                                   final UUID invoiceId, final UUID subscriptionId, final String unitType, final LocalDate recordDate) {
         super(id, createdDate, createdDate);
         this.trackingId = trackingId;
         this.invoiceId = invoiceId;
         this.subscriptionId = subscriptionId;
+        this.unitType = unitType;
         this.recordDate = recordDate;
     }
 
@@ -78,6 +80,14 @@ public class InvoiceTrackingModelDao extends EntityModelDaoBase implements Entit
         this.subscriptionId = subscriptionId;
     }
 
+    public String getUnitType() {
+        return unitType;
+    }
+
+    public void setUnitType(final String unitType) {
+        this.unitType = unitType;
+    }
+
     public LocalDate getRecordDate() {
         return recordDate;
     }
@@ -101,12 +111,13 @@ public class InvoiceTrackingModelDao extends EntityModelDaoBase implements Entit
         return Objects.equal(trackingId, that.trackingId) &&
                Objects.equal(invoiceId, that.invoiceId) &&
                Objects.equal(subscriptionId, that.subscriptionId) &&
+               Objects.equal(unitType, that.unitType) &&
                Objects.equal(recordDate, that.recordDate);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hashCode(super.hashCode(), trackingId, invoiceId, subscriptionId, recordDate);
+        return Objects.hashCode(super.hashCode(), trackingId, invoiceId, subscriptionId, unitType, recordDate);
     }
 
     @Override
@@ -115,6 +126,7 @@ public class InvoiceTrackingModelDao extends EntityModelDaoBase implements Entit
                "trackingId='" + trackingId + '\'' +
                ", invoiceId=" + invoiceId +
                ", subscriptionId=" + subscriptionId +
+               ", unitType='" + unitType + '\'' +
                ", recordDate=" + recordDate +
                '}';
     }

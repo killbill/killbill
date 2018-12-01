@@ -19,6 +19,7 @@ package org.killbill.billing.invoice.usage;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
@@ -51,12 +52,13 @@ import org.mockito.Mockito;
 import org.testng.annotations.BeforeClass;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 
 public abstract class TestUsageInArrearBase extends InvoiceTestSuiteNoDB {
 
 
     protected static final String DEFAULT_TRACKING_ID = "_tracking_id_missing";
-    protected static final List<TrackingIds> EMPTY_EXISTING_TRACKING_IDS = ImmutableList.of();
+    protected static final Set<TrackingIds> EMPTY_EXISTING_TRACKING_IDS = ImmutableSet.of();
 
     protected int BCD;
     protected UUID accountId;

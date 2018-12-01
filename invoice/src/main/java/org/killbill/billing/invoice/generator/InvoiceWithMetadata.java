@@ -91,12 +91,14 @@ public class InvoiceWithMetadata {
         private final String trackingId;
         private final UUID invoiceId;
         private final UUID subscriptionId;
+        private final String unitType;
         private final LocalDate recordDate;
 
-        public TrackingIds(final String trackingId, final UUID invoiceId, final UUID subscriptionId, final LocalDate recordDate) {
+        public TrackingIds(final String trackingId, final UUID invoiceId, final UUID subscriptionId, final String unitType, final LocalDate recordDate) {
             this.trackingId = trackingId;
             this.invoiceId = invoiceId;
             this.subscriptionId = subscriptionId;
+            this.unitType = unitType;
             this.recordDate = recordDate;
         }
 
@@ -116,6 +118,10 @@ public class InvoiceWithMetadata {
             return recordDate;
         }
 
+        public String getUnitType() {
+            return unitType;
+        }
+
         @Override
         public boolean equals(final Object o) {
             if (this == o) {
@@ -125,15 +131,22 @@ public class InvoiceWithMetadata {
                 return false;
             }
             final TrackingIds that = (TrackingIds) o;
+            // !!! Exclude invoiceId on purpose.
+            //
+            // The Set methods (Sets.difference) is used to exclude usage record already invoiced (on a specified invoiceId),
+            // by comparing 2 TrackingIds items with different invoiceId
+            //
             return Objects.equal(trackingId, that.trackingId) &&
-                   Objects.equal(invoiceId, that.invoiceId) &&
+                   //Objects.equal(invoiceId, that.invoiceId) &&
                    Objects.equal(subscriptionId, that.subscriptionId) &&
+                   Objects.equal(unitType, that.unitType) &&
                    Objects.equal(recordDate, that.recordDate);
         }
 
         @Override
         public int hashCode() {
-            return Objects.hashCode(trackingId, invoiceId, subscriptionId, recordDate);
+            // !!! Exclude invoiceId on purpose - see comment above
+            return Objects.hashCode(trackingId, subscriptionId, unitType, recordDate);
         }
     }
 

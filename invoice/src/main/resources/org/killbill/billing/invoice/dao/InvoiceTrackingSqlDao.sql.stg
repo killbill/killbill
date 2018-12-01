@@ -6,6 +6,7 @@ tableFields(prefix) ::= <<
   <prefix>tracking_id
 , <prefix>invoice_id
 , <prefix>subscription_id
+, <prefix>unit_type
 , <prefix>record_date
 , <prefix>created_by
 , <prefix>created_date
@@ -15,6 +16,7 @@ tableValues() ::= <<
   :trackingId
 , :invoiceId
 , :subscriptionId
+, :unitType
 , :recordDate
 , :userName
 , :createdDate
@@ -27,6 +29,18 @@ from <tableName()>
 where
 record_date >= :startDate
 and record_date \< :endDate
+and <accountRecordIdField("")> = :accountRecordId
+<AND_CHECK_TENANT("")>
+<defaultOrderBy("")>
+;
+>>
+
+getTrackingsForInvoice() ::= <<
+select
+  <allTableFields("")>
+from <tableName()>
+where
+invoice_id = :invoiceId
 and <accountRecordIdField("")> = :accountRecordId
 <AND_CHECK_TENANT("")>
 <defaultOrderBy("")>

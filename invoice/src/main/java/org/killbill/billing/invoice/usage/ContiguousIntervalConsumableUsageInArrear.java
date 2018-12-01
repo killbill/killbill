@@ -24,6 +24,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.TreeMap;
 import java.util.UUID;
 
@@ -65,7 +66,7 @@ public class ContiguousIntervalConsumableUsageInArrear extends ContiguousInterva
                                                      final UUID accountId,
                                                      final UUID invoiceId,
                                                      final List<RawUsage> rawSubscriptionUsage,
-                                                     final List<TrackingIds> existingTrackingId,
+                                                     final Set<TrackingIds> existingTrackingId,
                                                      final LocalDate targetDate,
                                                      final LocalDate rawUsageStartDate,
                                                      final UsageDetailMode usageDetailMode,
@@ -145,27 +146,25 @@ public class ContiguousIntervalConsumableUsageInArrear extends ContiguousInterva
             if (usageDetailMode == UsageDetailMode.DETAIL) {
 
                 final UsageConsumableInArrearTierUnitAggregate targetTierUnitDetail = fromJson(bi.getItemDetails(), new TypeReference<UsageConsumableInArrearTierUnitAggregate>() {});
-                if (!targetTierUnitDetail.getTierUnit().equals(unitType)) {
-                    continue;
+                if (targetTierUnitDetail.getTierUnit().equals(unitType)) {
+                    tierDetails.add(new UsageConsumableInArrearTierUnitAggregate(targetTierUnitDetail.getTier(), targetTierUnitDetail.getTierUnit(), bi.getRate(), targetTierUnitDetail.getQuantity(), bi.getQuantity(), bi.getAmount()));
                 }
-
-                tierDetails.add(new UsageConsumableInArrearTierUnitAggregate(targetTierUnitDetail.getTier(), targetTierUnitDetail.getTierUnit(), bi.getRate(), targetTierUnitDetail.getQuantity(), bi.getQuantity(), bi.getAmount()));
             } else {
                 final UsageConsumableInArrearAggregate usageDetail = fromJson(bi.getItemDetails(), new TypeReference<UsageConsumableInArrearAggregate>() {});
-                tierDetails.addAll(usageDetail.getTierDetails());
+                for (final UsageConsumableInArrearTierUnitAggregate unitAgg : usageDetail.getTierDetails()) {
+                    if (unitAgg.getTierUnit().equals(unitType)) {
+                        tierDetails.add(unitAgg);
+                    }
+                }
             }
         }
 
         for (final UsageConsumableInArrearTierUnitAggregate curDetail : tierDetails) {
-
-            if (curDetail.getTierUnit().equals(unitType)) {
-
-                if (!resultMap.containsKey(curDetail.getTier())) {
-                    resultMap.put(curDetail.getTier(), curDetail);
-                } else {
-                    final UsageConsumableInArrearTierUnitAggregate perTierDetail = resultMap.get(curDetail.getTier());
-                    perTierDetail.updateQuantityAndAmount(curDetail.getQuantity());
-                }
+            if (!resultMap.containsKey(curDetail.getTier())) {
+                resultMap.put(curDetail.getTier(), curDetail);
+            } else {
+                final UsageConsumableInArrearTierUnitAggregate perTierDetail = resultMap.get(curDetail.getTier());
+                perTierDetail.updateQuantityAndAmount(curDetail.getQuantity());
             }
         }
         return ImmutableList.copyOf(resultMap.values());

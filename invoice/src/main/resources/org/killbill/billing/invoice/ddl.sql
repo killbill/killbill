@@ -7,6 +7,7 @@ CREATE TABLE invoice_tracking_ids (
     tracking_id varchar(128) NOT NULL,
     invoice_id varchar(36) NOT NULL,
     subscription_id varchar(36),
+    unit_type varchar(255) NOT NULL,
     record_date date NOT NULL,
     created_by varchar(50) NOT NULL,
     created_date datetime NOT NULL,

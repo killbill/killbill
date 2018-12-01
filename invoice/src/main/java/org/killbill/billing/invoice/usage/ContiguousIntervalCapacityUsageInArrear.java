@@ -56,7 +56,7 @@ public class ContiguousIntervalCapacityUsageInArrear extends ContiguousIntervalU
                                                    final UUID accountId,
                                                    final UUID invoiceId,
                                                    final List<RawUsage> rawSubscriptionUsage,
-                                                   final List<TrackingIds> existingTrackingId,
+                                                   final Set<TrackingIds> existingTrackingId,
                                                    final LocalDate targetDate,
                                                    final LocalDate rawUsageStartDate,
                                                    final UsageDetailMode usageDetailMode,

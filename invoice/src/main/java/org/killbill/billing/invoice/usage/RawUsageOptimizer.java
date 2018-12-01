@@ -79,10 +79,10 @@ public class RawUsageOptimizer {
         final List<RawUsage> rawUsageData = usageApi.getRawUsageForAccount(targetStartDate, targetDate, internalCallContext);
 
         final List<InvoiceTrackingModelDao> trackingIds = invoiceDao.getTrackingsByDateRange(targetStartDate, targetDate, internalCallContext);
-        final List<TrackingIds> existingTrackingIds = ImmutableList.copyOf(Iterables.transform(trackingIds, new Function<InvoiceTrackingModelDao, TrackingIds>() {
+        final Set<TrackingIds> existingTrackingIds = ImmutableSet.copyOf(Iterables.transform(trackingIds, new Function<InvoiceTrackingModelDao, TrackingIds>() {
             @Override
             public TrackingIds apply(final InvoiceTrackingModelDao input) {
-                return new TrackingIds(input.getTrackingId(), input.getInvoiceId(), input.getSubscriptionId(), input.getRecordDate());
+                return new TrackingIds(input.getTrackingId(), input.getInvoiceId(), input.getSubscriptionId(), input.getUnitType(), input.getRecordDate());
             }
         }));
         return new RawUsageOptimizerResult(targetStartDate, rawUsageData, existingTrackingIds);
@@ -167,9 +167,9 @@ public class RawUsageOptimizer {
 
         private final LocalDate rawUsageStartDate;
         private final List<RawUsage> rawUsage;
-        private final List<TrackingIds> existingTrackingIds;
+        private final Set<TrackingIds> existingTrackingIds;
 
-        public RawUsageOptimizerResult(final LocalDate rawUsageStartDate, final List<RawUsage> rawUsage, final List<TrackingIds> existingTrackingIds) {
+        public RawUsageOptimizerResult(final LocalDate rawUsageStartDate, final List<RawUsage> rawUsage, final Set<TrackingIds> existingTrackingIds) {
             this.rawUsageStartDate = rawUsageStartDate;
             this.rawUsage = rawUsage;
             this.existingTrackingIds = existingTrackingIds;
@@ -183,7 +183,7 @@ public class RawUsageOptimizer {
             return rawUsage;
         }
 
-        public List<TrackingIds> getExistingTrackingIds() {
+        public Set<TrackingIds> getExistingTrackingIds() {
             return existingTrackingIds;
         }
     }
