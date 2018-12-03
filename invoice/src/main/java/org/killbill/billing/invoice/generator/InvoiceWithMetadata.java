@@ -40,9 +40,9 @@ public class InvoiceWithMetadata {
 
     private DefaultInvoice invoice;
 
-    private final Set<TrackingIds> trackingIds;
+    private final Set<TrackingRecordId> trackingIds;
 
-    public InvoiceWithMetadata(final DefaultInvoice originalInvoice, final Set<TrackingIds> trackingIds, final Map<UUID, SubscriptionFutureNotificationDates> perSubscriptionFutureNotificationDates) {
+    public InvoiceWithMetadata(final DefaultInvoice originalInvoice, final Set<TrackingRecordId> trackingIds, final Map<UUID, SubscriptionFutureNotificationDates> perSubscriptionFutureNotificationDates) {
         this.invoice = originalInvoice;
         this.perSubscriptionFutureNotificationDates = perSubscriptionFutureNotificationDates;
         this.trackingIds = trackingIds;
@@ -83,18 +83,18 @@ public class InvoiceWithMetadata {
         });
     }
 
-    public Set<TrackingIds> getTrackingIds() {
+    public Set<TrackingRecordId> getTrackingIds() {
         return trackingIds;
     }
 
-    public static class TrackingIds {
+    public static class TrackingRecordId {
         private final String trackingId;
         private final UUID invoiceId;
         private final UUID subscriptionId;
         private final String unitType;
         private final LocalDate recordDate;
 
-        public TrackingIds(final String trackingId, final UUID invoiceId, final UUID subscriptionId, final String unitType, final LocalDate recordDate) {
+        public TrackingRecordId(final String trackingId, final UUID invoiceId, final UUID subscriptionId, final String unitType, final LocalDate recordDate) {
             this.trackingId = trackingId;
             this.invoiceId = invoiceId;
             this.subscriptionId = subscriptionId;
@@ -127,10 +127,10 @@ public class InvoiceWithMetadata {
             if (this == o) {
                 return true;
             }
-            if (!(o instanceof TrackingIds)) {
+            if (!(o instanceof TrackingRecordId)) {
                 return false;
             }
-            final TrackingIds that = (TrackingIds) o;
+            final TrackingRecordId that = (TrackingRecordId) o;
             // !!! Exclude invoiceId on purpose.
             //
             // The Set methods (Sets.difference) is used to exclude usage record already invoiced (on a specified invoiceId),

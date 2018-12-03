@@ -74,6 +74,7 @@ import org.killbill.billing.invoice.generator.InvoiceGenerator;
 import org.killbill.billing.invoice.generator.InvoiceWithMetadata;
 import org.killbill.billing.invoice.generator.InvoiceWithMetadata.SubscriptionFutureNotificationDates;
 import org.killbill.billing.invoice.generator.InvoiceWithMetadata.SubscriptionFutureNotificationDates.UsageDef;
+import org.killbill.billing.invoice.generator.InvoiceWithMetadata.TrackingRecordId;
 import org.killbill.billing.invoice.model.DefaultInvoice;
 import org.killbill.billing.invoice.model.InvoiceItemFactory;
 import org.killbill.billing.invoice.model.ItemAdjInvoiceItem;
@@ -607,7 +608,7 @@ public class InvoiceDispatcher {
 
 
                 final Set<InvoiceTrackingModelDao> trackingIds = new HashSet<>();
-                for (InvoiceWithMetadata.TrackingIds cur : invoiceWithMetadata.getTrackingIds()) {
+                for (TrackingRecordId cur : invoiceWithMetadata.getTrackingIds()) {
                     trackingIds.add(new InvoiceTrackingModelDao(cur.getTrackingId(), cur.getInvoiceId(), cur.getSubscriptionId(), cur.getUnitType(), cur.getRecordDate()));
                 }
 

@@ -33,7 +33,7 @@ import org.killbill.billing.invoice.api.Invoice;
 import org.killbill.billing.invoice.api.InvoiceApiException;
 import org.killbill.billing.invoice.api.InvoiceItem;
 import org.killbill.billing.invoice.generator.InvoiceWithMetadata.SubscriptionFutureNotificationDates;
-import org.killbill.billing.invoice.generator.InvoiceWithMetadata.TrackingIds;
+import org.killbill.billing.invoice.generator.InvoiceWithMetadata.TrackingRecordId;
 import org.killbill.billing.junction.BillingEventSet;
 import org.slf4j.Logger;
 
@@ -48,9 +48,9 @@ public abstract class InvoiceItemGenerator {
 
     public static class InvoiceGeneratorResult {
         private final List<InvoiceItem> items;
-        private final Set<TrackingIds> trackingIds;
+        private final Set<TrackingRecordId> trackingIds;
 
-        public InvoiceGeneratorResult(final List<InvoiceItem> items, final Set<TrackingIds> trackingIds) {
+        public InvoiceGeneratorResult(final List<InvoiceItem> items, final Set<TrackingRecordId> trackingIds) {
             this.items = items;
             this.trackingIds = trackingIds;
         }
@@ -59,7 +59,7 @@ public abstract class InvoiceItemGenerator {
             return items;
         }
 
-        public Set<TrackingIds> getTrackingIds() {
+        public Set<TrackingRecordId> getTrackingIds() {
             return trackingIds;
         }
     }

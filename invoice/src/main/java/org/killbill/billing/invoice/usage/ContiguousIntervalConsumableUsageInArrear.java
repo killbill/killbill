@@ -37,7 +37,7 @@ import org.killbill.billing.catalog.api.TieredBlock;
 import org.killbill.billing.catalog.api.Usage;
 import org.killbill.billing.invoice.api.InvoiceApiException;
 import org.killbill.billing.invoice.api.InvoiceItem;
-import org.killbill.billing.invoice.generator.InvoiceWithMetadata.TrackingIds;
+import org.killbill.billing.invoice.generator.InvoiceWithMetadata.TrackingRecordId;
 import org.killbill.billing.invoice.model.UsageInvoiceItem;
 import org.killbill.billing.invoice.usage.details.UsageConsumableInArrearAggregate;
 import org.killbill.billing.invoice.usage.details.UsageConsumableInArrearTierUnitAggregate;
@@ -66,7 +66,7 @@ public class ContiguousIntervalConsumableUsageInArrear extends ContiguousInterva
                                                      final UUID accountId,
                                                      final UUID invoiceId,
                                                      final List<RawUsage> rawSubscriptionUsage,
-                                                     final Set<TrackingIds> existingTrackingId,
+                                                     final Set<TrackingRecordId> existingTrackingId,
                                                      final LocalDate targetDate,
                                                      final LocalDate rawUsageStartDate,
                                                      final UsageDetailMode usageDetailMode,

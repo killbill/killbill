@@ -37,7 +37,7 @@ import org.killbill.billing.catalog.api.UsageType;
 import org.killbill.billing.invoice.api.InvoiceApiException;
 import org.killbill.billing.invoice.api.InvoiceItem;
 import org.killbill.billing.invoice.generator.InvoiceItemGenerator.InvoiceItemGeneratorLogger;
-import org.killbill.billing.invoice.generator.InvoiceWithMetadata.TrackingIds;
+import org.killbill.billing.invoice.generator.InvoiceWithMetadata.TrackingRecordId;
 import org.killbill.billing.invoice.usage.ContiguousIntervalUsageInArrear.UsageInArrearItemsAndNextNotificationDate;
 import org.killbill.billing.junction.BillingEvent;
 import org.killbill.billing.usage.RawUsage;
@@ -47,8 +47,6 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
 import com.google.common.base.Predicate;
 import com.google.common.collect.Collections2;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Ordering;
@@ -80,7 +78,7 @@ public class SubscriptionUsageInArrear {
     private final List<BillingEvent> subscriptionBillingEvents;
     private final LocalDate targetDate;
     private final List<RawUsage> rawSubscriptionUsage;
-    private final Set<TrackingIds> existingTrackingIds;
+    private final Set<TrackingRecordId> existingTrackingIds;
     private final LocalDate rawUsageStartDate;
     private final InternalTenantContext internalTenantContext;
     private final UsageDetailMode usageDetailMode;
@@ -89,7 +87,7 @@ public class SubscriptionUsageInArrear {
                                      final UUID invoiceId,
                                      final List<BillingEvent> subscriptionBillingEvents,
                                      final List<RawUsage> rawUsage,
-                                     final Set<TrackingIds> existingTrackingIds,
+                                     final Set<TrackingRecordId> existingTrackingIds,
                                      final LocalDate targetDate,
                                      final LocalDate rawUsageStartDate,
                                      final UsageDetailMode usageDetailMode,
@@ -211,7 +209,7 @@ public class SubscriptionUsageInArrear {
 
         private final List<InvoiceItem> invoiceItems;
         private final Map<String, LocalDate> perUsageNotificationDates;
-        private final Set<TrackingIds> trackingIds;
+        private final Set<TrackingRecordId> trackingIds;
 
         public SubscriptionUsageInArrearItemsAndNextNotificationDate() {
             this.invoiceItems = new LinkedList<InvoiceItem>();
@@ -229,7 +227,7 @@ public class SubscriptionUsageInArrear {
             }
         }
 
-        public void addTrackingIds(final Set<TrackingIds> input) {
+        public void addTrackingIds(final Set<TrackingRecordId> input) {
             trackingIds.addAll(input);
         }
 
@@ -241,7 +239,7 @@ public class SubscriptionUsageInArrear {
             return perUsageNotificationDates;
         }
 
-        public Set<TrackingIds> getTrackingIds() {
+        public Set<TrackingRecordId> getTrackingIds() {
             return trackingIds;
         }
     }

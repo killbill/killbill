@@ -41,7 +41,7 @@ import org.killbill.billing.invoice.api.InvoiceApiException;
 import org.killbill.billing.invoice.api.InvoiceItem;
 import org.killbill.billing.invoice.api.InvoiceItemType;
 import org.killbill.billing.invoice.generator.InvoiceWithMetadata.SubscriptionFutureNotificationDates;
-import org.killbill.billing.invoice.generator.InvoiceWithMetadata.TrackingIds;
+import org.killbill.billing.invoice.generator.InvoiceWithMetadata.TrackingRecordId;
 import org.killbill.billing.invoice.usage.RawUsageOptimizer;
 import org.killbill.billing.invoice.usage.RawUsageOptimizer.RawUsageOptimizerResult;
 import org.killbill.billing.invoice.usage.SubscriptionUsageInArrear;
@@ -57,7 +57,6 @@ import com.google.common.base.Function;
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
@@ -92,7 +91,7 @@ public class UsageInvoiceItemGenerator extends InvoiceItemGenerator {
             final UsageDetailMode usageDetailMode = invoiceConfig.getItemResultBehaviorMode(internalCallContext);
             final LocalDate minBillingEventDate = getMinBillingEventDate(eventSet, internalCallContext);
 
-            final Set<TrackingIds> trackingIds = new HashSet<>();
+            final Set<TrackingRecordId> trackingIds = new HashSet<>();
             final List<InvoiceItem> items = Lists.newArrayList();
             final Iterator<BillingEvent> events = eventSet.iterator();
 

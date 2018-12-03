@@ -33,7 +33,7 @@ import org.killbill.billing.invoice.api.InvoiceItem;
 import org.killbill.billing.invoice.dao.InvoiceDao;
 import org.killbill.billing.invoice.dao.InvoiceTrackingModelDao;
 import org.killbill.billing.invoice.generator.InvoiceDateUtils;
-import org.killbill.billing.invoice.generator.InvoiceWithMetadata.TrackingIds;
+import org.killbill.billing.invoice.generator.InvoiceWithMetadata.TrackingRecordId;
 import org.killbill.billing.invoice.model.UsageInvoiceItem;
 import org.killbill.billing.usage.InternalUserApi;
 import org.killbill.billing.usage.RawUsage;
@@ -44,7 +44,6 @@ import org.slf4j.LoggerFactory;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Ordering;
@@ -79,10 +78,10 @@ public class RawUsageOptimizer {
         final List<RawUsage> rawUsageData = usageApi.getRawUsageForAccount(targetStartDate, targetDate, internalCallContext);
 
         final List<InvoiceTrackingModelDao> trackingIds = invoiceDao.getTrackingsByDateRange(targetStartDate, targetDate, internalCallContext);
-        final Set<TrackingIds> existingTrackingIds = ImmutableSet.copyOf(Iterables.transform(trackingIds, new Function<InvoiceTrackingModelDao, TrackingIds>() {
+        final Set<TrackingRecordId> existingTrackingIds = ImmutableSet.copyOf(Iterables.transform(trackingIds, new Function<InvoiceTrackingModelDao, TrackingRecordId>() {
             @Override
-            public TrackingIds apply(final InvoiceTrackingModelDao input) {
-                return new TrackingIds(input.getTrackingId(), input.getInvoiceId(), input.getSubscriptionId(), input.getUnitType(), input.getRecordDate());
+            public TrackingRecordId apply(final InvoiceTrackingModelDao input) {
+                return new TrackingRecordId(input.getTrackingId(), input.getInvoiceId(), input.getSubscriptionId(), input.getUnitType(), input.getRecordDate());
             }
         }));
         return new RawUsageOptimizerResult(targetStartDate, rawUsageData, existingTrackingIds);
@@ -167,9 +166,9 @@ public class RawUsageOptimizer {
 
         private final LocalDate rawUsageStartDate;
         private final List<RawUsage> rawUsage;
-        private final Set<TrackingIds> existingTrackingIds;
+        private final Set<TrackingRecordId> existingTrackingIds;
 
-        public RawUsageOptimizerResult(final LocalDate rawUsageStartDate, final List<RawUsage> rawUsage, final Set<TrackingIds> existingTrackingIds) {
+        public RawUsageOptimizerResult(final LocalDate rawUsageStartDate, final List<RawUsage> rawUsage, final Set<TrackingRecordId> existingTrackingIds) {
             this.rawUsageStartDate = rawUsageStartDate;
             this.rawUsage = rawUsage;
             this.existingTrackingIds = existingTrackingIds;
@@ -183,7 +182,7 @@ public class RawUsageOptimizer {
             return rawUsage;
         }
 
-        public Set<TrackingIds> getExistingTrackingIds() {
+        public Set<TrackingRecordId> getExistingTrackingIds() {
             return existingTrackingIds;
         }
     }
