@@ -1,7 +1,9 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
+ * Copyright 2014-2018 Groupon, Inc
+ * Copyright 2014-2018 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -18,13 +20,12 @@ package org.killbill.billing.subscription.api.user;
 
 import org.killbill.billing.BillingExceptionBase;
 import org.killbill.billing.ErrorCode;
-import org.killbill.billing.catalog.api.CatalogApiException;
 
 public class SubscriptionBaseApiException extends BillingExceptionBase {
 
     private static final long serialVersionUID = 19083233L;
 
-    public SubscriptionBaseApiException(final CatalogApiException e) {
+    public SubscriptionBaseApiException(final BillingExceptionBase e) {
         super(e, e.getCode(), e.getMessage());
     }
 

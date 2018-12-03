@@ -40,7 +40,6 @@ import org.killbill.billing.catalog.api.InternationalPrice;
 import org.killbill.billing.catalog.api.Plan;
 import org.killbill.billing.catalog.api.PlanPhase;
 import org.killbill.billing.catalog.api.PriceList;
-import org.killbill.billing.catalog.api.PriceListSet;
 import org.killbill.billing.entitlement.api.BlockingState;
 import org.killbill.billing.entitlement.api.BlockingStateType;
 import org.killbill.billing.entitlement.api.Entitlement.EntitlementState;
@@ -285,7 +284,7 @@ public class TestBillingApi extends JunctionTestSuiteNoDB {
         Mockito.when(account.getTimeZone()).thenReturn(DateTimeZone.UTC);
         Mockito.when(accountInternalApi.getAccountById(Mockito.<UUID>any(), Mockito.<InternalTenantContext>any())).thenReturn(account);
         Mockito.when(accountInternalApi.getImmutableAccountDataById(Mockito.<UUID>any(), Mockito.<InternalTenantContext>any())).thenReturn(account);
-        Mockito.when(accountInternalApi.getBCD(Mockito.<UUID>any(), Mockito.<InternalTenantContext>any())).thenReturn(billCycleDay);
+        Mockito.when(accountInternalApi.getBCD(Mockito.<InternalTenantContext>any())).thenReturn(billCycleDay);
         return account;
     }
 

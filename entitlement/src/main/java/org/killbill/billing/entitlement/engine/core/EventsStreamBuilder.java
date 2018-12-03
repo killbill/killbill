@@ -36,6 +36,7 @@ import org.killbill.billing.account.api.AccountApiException;
 import org.killbill.billing.account.api.AccountInternalApi;
 import org.killbill.billing.account.api.ImmutableAccountData;
 import org.killbill.billing.callcontext.InternalTenantContext;
+import org.killbill.billing.catalog.api.BillingAlignment;
 import org.killbill.billing.catalog.api.Catalog;
 import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.catalog.api.CatalogInternalApi;
@@ -58,6 +59,7 @@ import org.killbill.billing.subscription.api.SubscriptionBaseInternalApi;
 import org.killbill.billing.subscription.api.user.SubscriptionBaseApiException;
 import org.killbill.billing.subscription.api.user.SubscriptionBaseBundle;
 import org.killbill.billing.subscription.api.user.SubscriptionBaseTransition;
+import org.killbill.billing.util.bcd.BillCycleDayCalculator;
 import org.killbill.billing.util.cache.CacheControllerDispatcher;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.billing.util.callcontext.TenantContext;
@@ -149,7 +151,7 @@ public class EventsStreamBuilder {
         final int accountBCD;
         try {
             account = accountInternalApi.getImmutableAccountDataByRecordId(internalTenantContext.getAccountRecordId(), internalTenantContext);
-            accountBCD = accountInternalApi.getBCD(account.getId(), internalTenantContext);
+            accountBCD = accountInternalApi.getBCD(internalTenantContext);
         } catch (final AccountApiException e) {
             throw new EntitlementApiException(e);
         }
@@ -276,7 +278,7 @@ public class EventsStreamBuilder {
                                             final InternalTenantContext internalTenantContext) throws EntitlementApiException {
         final int accountBCD;
         try {
-            accountBCD = accountInternalApi.getBCD(bundle.getAccountId(), internalTenantContext);
+            accountBCD = accountInternalApi.getBCD(internalTenantContext);
         } catch (final AccountApiException e) {
             throw new EntitlementApiException(e);
         }
@@ -397,13 +399,15 @@ public class EventsStreamBuilder {
                                              final InternalTenantContext internalTenantContext) throws EntitlementApiException {
 
         try {
-            final int defaultAlignmentDay = subscriptionInternalApi.getDefaultBillCycleDayLocal(bcdCache,
-                                                                                                subscription,
-                                                                                                baseSubscription,
-                                                                                                createPlanPhaseSpecifier(subscription),
-                                                                                                accountBCD,
-                                                                                                catalog,
-                                                                                                internalTenantContext);
+            Integer defaultAlignmentDay = null;
+            try {
+                final BillingAlignment alignment = catalog.billingAlignment(createPlanPhaseSpecifier(subscription), clock.getUTCNow(), subscription.getStartDate());
+                if (alignment != BillingAlignment.ACCOUNT || accountBCD != 0) {
+                    defaultAlignmentDay = BillCycleDayCalculator.calculateBcdForAlignment(bcdCache, subscription, baseSubscription, alignment, internalTenantContext, accountBCD);
+                }
+            } catch (final CatalogApiException e) {
+                throw new SubscriptionBaseApiException(e);
+            }
             return new DefaultEventsStream(account,
                                            bundle,
                                            blockingStates,

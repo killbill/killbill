@@ -33,7 +33,6 @@ import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.catalog.api.Plan;
 import org.killbill.billing.catalog.api.Product;
 import org.killbill.billing.catalog.api.ProductCategory;
-import org.killbill.billing.entitlement.EntitlementService;
 import org.killbill.billing.entitlement.EventsStream;
 import org.killbill.billing.entitlement.api.BlockingState;
 import org.killbill.billing.entitlement.api.BlockingStateType;
@@ -72,7 +71,7 @@ public class DefaultEventsStream implements EventsStream {
     private final InternalTenantContext internalTenantContext;
     private final DateTime utcNow;
     private final LocalDate utcToday;
-    private final int defaultBillCycleDayLocal;
+    private final Integer defaultBillCycleDayLocal;
 
     private BlockingAggregator currentStateBlockingAggregator;
     private List<BlockingState> subscriptionEntitlementStates;
@@ -93,7 +92,7 @@ public class DefaultEventsStream implements EventsStream {
                                @Nullable final SubscriptionBase baseSubscription,
                                final SubscriptionBase subscription,
                                final Collection<SubscriptionBase> allSubscriptionsForBundle,
-                               final int defaultBillCycleDayLocal,
+                               @Nullable final Integer defaultBillCycleDayLocal,
                                final InternalTenantContext contextWithValidAccountRecordId, final DateTime utcNow) {
         sanityChecks(account, bundle, baseSubscription, subscription);
         this.account = account;
@@ -234,7 +233,7 @@ public class DefaultEventsStream implements EventsStream {
     }
 
     @Override
-    public int getDefaultBillCycleDayLocal() {
+    public Integer getDefaultBillCycleDayLocal() {
         return defaultBillCycleDayLocal;
     }
 

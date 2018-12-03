@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014-2016 Groupon, Inc
- * Copyright 2014-2016 The Billing Project, LLC
+ * Copyright 2014-2018 Groupon, Inc
+ * Copyright 2014-2018 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -29,7 +29,6 @@ import java.util.UUID;
 
 import javax.annotation.Nullable;
 
-import org.joda.time.DateTime;
 import org.killbill.billing.ObjectType;
 import org.killbill.billing.account.api.AccountApiException;
 import org.killbill.billing.account.api.AccountInternalApi;
@@ -143,7 +142,7 @@ public class DefaultInternalBillingApi implements BillingInternalApi {
                                             final DefaultBillingEventSet result, final Set<UUID> skipSubscriptionsSet, final Catalog catalog, final List<Tag> tagsForAccount) throws AccountApiException, CatalogApiException, SubscriptionBaseApiException {
         final boolean dryRunMode = dryRunArguments != null;
 
-        final int currentAccountBCD = accountApi.getBCD(account.getId(), context);
+        final int currentAccountBCD = accountApi.getBCD(context);
 
         // In dryRun mode, when we care about invoice generated for new BASE subscription, no such bundle exists yet; we still
         // want to tap into subscriptionBase logic, so we make up a bundleId
@@ -189,7 +188,18 @@ public class DefaultInternalBillingApi implements BillingInternalApi {
             BillingEvent oldestBillingEvent = null;
 
             for (final BillingEvent event : result) {
-                if (oldestBillingEvent == null || event.getEffectiveDate().compareTo(oldestBillingEvent.getEffectiveDate()) < 0) {
+                final BigDecimal recurringPrice = event.getRecurringPrice(event.getEffectiveDate());
+                final boolean hasRecurringPrice = recurringPrice != null; // Note: could be zero (BCD would still be set, by convention)
+                final boolean hasUsage = event.getUsages() != null && !event.getUsages().isEmpty();
+                if (!hasRecurringPrice &&
+                    !hasUsage) {
+                    // Nothing to bill, ignored for the purpose of BCD calculation
+                    continue;
+                }
+
+                if (oldestBillingEvent == null ||
+                    event.getEffectiveDate().compareTo(oldestBillingEvent.getEffectiveDate()) < 0 ||
+                    (event.getEffectiveDate().compareTo(oldestBillingEvent.getEffectiveDate()) == 0 && event.getTotalOrdering().compareTo(oldestBillingEvent.getTotalOrdering()) < 0)) {
                     oldestBillingEvent = event;
                 }
             }
@@ -203,6 +213,11 @@ public class DefaultInternalBillingApi implements BillingInternalApi {
             if (accountBCDCandidate != 0) {
                 log.info("Setting account BCD='{}', accountId='{}'", accountBCDCandidate, account.getId());
                 accountApi.updateBCD(account.getExternalKey(), accountBCDCandidate, context);
+
+                // Because we now have computed the real BCD, we need to re-compute the BillingEvents BCD for ACCOUNT alignments (see BillCycleDayCalculator#calculateBcdForAlignment).
+                // The code could maybe be optimized (no need to re-run the full function?), but since it's run once per account, it's probably not worth it.
+                result.clear();
+                addBillingEventsForBundles(bundles, account, dryRunArguments, context, result, skipSubscriptionsSet, catalog, tagsForAccount);
             }
         }
     }
@@ -248,7 +263,10 @@ public class DefaultInternalBillingApi implements BillingInternalApi {
 
     private int calculateBcdForTransition(final Catalog catalog, final Map<UUID, Integer> bcdCache, final SubscriptionBase baseSubscription, final SubscriptionBase subscription, final int accountBillCycleDayLocal, final EffectiveSubscriptionInternalEvent transition, final InternalTenantContext internalTenantContext)
             throws CatalogApiException {
-        final BillingAlignment alignment = catalog.billingAlignment(getPlanPhaseSpecifierFromTransition(catalog, transition), transition.getEffectiveTransitionTime(), subscription.getStartDate());
+        BillingAlignment alignment = catalog.billingAlignment(getPlanPhaseSpecifierFromTransition(catalog, transition), transition.getEffectiveTransitionTime(), subscription.getStartDate());
+        if (alignment == BillingAlignment.ACCOUNT && accountBillCycleDayLocal == 0) {
+            alignment = BillingAlignment.SUBSCRIPTION;
+        }
         return BillCycleDayCalculator.calculateBcdForAlignment(bcdCache, subscription, baseSubscription, alignment, internalTenantContext, accountBillCycleDayLocal);
     }
 

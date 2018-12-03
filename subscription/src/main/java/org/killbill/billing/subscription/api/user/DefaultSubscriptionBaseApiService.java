@@ -32,6 +32,8 @@ import org.joda.time.DateTime;
 import org.joda.time.ReadableInstant;
 import org.killbill.billing.ErrorCode;
 import org.killbill.billing.ObjectType;
+import org.killbill.billing.account.api.AccountApiException;
+import org.killbill.billing.account.api.AccountInternalApi;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.catalog.api.BillingActionPolicy;
@@ -87,16 +89,22 @@ public class DefaultSubscriptionBaseApiService implements SubscriptionBaseApiSer
 
     private final Clock clock;
     private final SubscriptionDao dao;
+    private final AccountInternalApi accountInternalApi;
     private final CatalogInternalApi catalogInternalApi;
     private final PlanAligner planAligner;
     private final AddonUtils addonUtils;
     private final InternalCallContextFactory internalCallContextFactory;
 
     @Inject
-    public DefaultSubscriptionBaseApiService(final Clock clock, final SubscriptionDao dao, final CatalogInternalApi catalogInternalApi,
-                                             final PlanAligner planAligner, final AddonUtils addonUtils,
+    public DefaultSubscriptionBaseApiService(final Clock clock,
+                                             final SubscriptionDao dao,
+                                             final AccountInternalApi accountInternalApi,
+                                             final CatalogInternalApi catalogInternalApi,
+                                             final PlanAligner planAligner,
+                                             final AddonUtils addonUtils,
                                              final InternalCallContextFactory internalCallContextFactory) {
         this.clock = clock;
+        this.accountInternalApi = accountInternalApi;
         this.catalogInternalApi = catalogInternalApi;
         this.planAligner = planAligner;
         this.dao = dao;
@@ -207,7 +215,7 @@ public class DefaultSubscriptionBaseApiService implements SubscriptionBaseApiSer
     }
 
     @Override
-    public boolean cancelWithPolicy(final DefaultSubscriptionBase subscription, final BillingActionPolicy policy, int accountBillCycleDayLocal, final CallContext context) throws SubscriptionBaseApiException {
+    public boolean cancelWithPolicy(final DefaultSubscriptionBase subscription, final BillingActionPolicy policy, final CallContext context) throws SubscriptionBaseApiException {
         final EntitlementState currentState = subscription.getState();
         if (currentState == EntitlementState.CANCELLED) {
             throw new SubscriptionBaseApiException(ErrorCode.SUB_CANCEL_BAD_STATE, subscription.getId(), currentState);
@@ -217,14 +225,14 @@ public class DefaultSubscriptionBaseApiService implements SubscriptionBaseApiSer
         final Catalog fullCatalog;
         try {
             fullCatalog = catalogInternalApi.getFullCatalog(true, true, internalCallContext);
-            return cancelWithPolicyNoValidationAndCatalog(ImmutableList.<DefaultSubscriptionBase>of(subscription), policy, accountBillCycleDayLocal, fullCatalog, internalCallContext);
-        } catch (CatalogApiException e) {
+            return cancelWithPolicyNoValidationAndCatalog(ImmutableList.<DefaultSubscriptionBase>of(subscription), policy, fullCatalog, internalCallContext);
+        } catch (final CatalogApiException e) {
             throw new SubscriptionBaseApiException(e);
         }
     }
 
     @Override
-    public boolean cancelWithPolicyNoValidationAndCatalog(final Iterable<DefaultSubscriptionBase> subscriptions, final BillingActionPolicy policy, final int accountBillCycleDayLocal, final Catalog catalog, final InternalCallContext context) throws SubscriptionBaseApiException {
+    public boolean cancelWithPolicyNoValidationAndCatalog(final Iterable<DefaultSubscriptionBase> subscriptions, final BillingActionPolicy policy, final Catalog catalog, final InternalCallContext context) throws SubscriptionBaseApiException {
         final Map<DefaultSubscriptionBase, DateTime> subscriptionsWithEffectiveDate = new HashMap<DefaultSubscriptionBase, DateTime>();
 
         try {
@@ -232,11 +240,14 @@ public class DefaultSubscriptionBaseApiService implements SubscriptionBaseApiSer
                 final BillingAlignment billingAlignment = (subscription.getState() == EntitlementState.PENDING ? null : catalog.billingAlignment(new PlanPhaseSpecifier(subscription.getLastActivePlan().getName(), subscription.getLastActivePhase().getPhaseType()),
                                                                                                                                                  clock.getUTCNow(),
                                                                                                                                                  subscription.getStartDate()));
+                final Integer accountBillCycleDayLocal = accountInternalApi.getBCD(context);
                 final DateTime effectiveDate = subscription.getPlanChangeEffectiveDate(policy, billingAlignment, accountBillCycleDayLocal, context);
                 subscriptionsWithEffectiveDate.put(subscription, effectiveDate);
             }
             return doCancelPlan(subscriptionsWithEffectiveDate, catalog, context);
         } catch (final CatalogApiException e) {
+            throw new SubscriptionBaseApiException(e);
+        } catch (final AccountApiException e) {
             throw new SubscriptionBaseApiException(e);
         }
     }

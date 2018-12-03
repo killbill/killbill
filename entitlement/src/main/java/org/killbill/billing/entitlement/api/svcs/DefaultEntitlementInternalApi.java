@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014-2017 Groupon, Inc
- * Copyright 2014-2017 The Billing Project, LLC
+ * Copyright 2014-2018 Groupon, Inc
+ * Copyright 2014-2018 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -33,13 +33,11 @@ import javax.inject.Inject;
 
 import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
-import org.killbill.billing.account.api.AccountApiException;
 import org.killbill.billing.account.api.AccountInternalApi;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.catalog.api.BillingActionPolicy;
 import org.killbill.billing.entitlement.DefaultEntitlementService;
 import org.killbill.billing.entitlement.EntitlementInternalApi;
-import org.killbill.billing.entitlement.EntitlementService;
 import org.killbill.billing.entitlement.api.BaseEntitlementWithAddOnsSpecifier;
 import org.killbill.billing.entitlement.api.BlockingState;
 import org.killbill.billing.entitlement.api.BlockingStateType;
@@ -76,7 +74,6 @@ import org.killbill.notificationq.api.NotificationQueueService;
 import org.killbill.notificationq.api.NotificationQueueService.NoSuchNotificationQueue;
 
 import com.google.common.base.Optional;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 
 public class DefaultEntitlementInternalApi extends DefaultEntitlementApiBase implements EntitlementInternalApi {
@@ -101,14 +98,6 @@ public class DefaultEntitlementInternalApi extends DefaultEntitlementApiBase imp
         if (!entitlements.iterator().hasNext()) {
             return;
         }
-
-        int bcd;
-        try {
-            bcd = accountApi.getBCD(entitlements.iterator().next().getAccountId(), internalCallContext);
-        } catch (final AccountApiException e) {
-            throw new EntitlementApiException(e);
-        }
-        Preconditions.checkState(bcd > 0, "Unexpected condition where account info could not be retrieved");
 
         final CallContext callContext = internalCallContextFactory.createCallContext(internalCallContext);
 
@@ -155,7 +144,6 @@ public class DefaultEntitlementInternalApi extends DefaultEntitlementApiBase imp
 
         final Callable<Void> preCallbacksCallback = new BulkSubscriptionBaseCancellation(subscriptions,
                                                                                          billingPolicy,
-                                                                                         bcd,
                                                                                          internalCallContext);
 
         pluginExecution.executeWithPlugin(preCallbacksCallback, callbacks, pluginContexts);
@@ -187,23 +175,20 @@ public class DefaultEntitlementInternalApi extends DefaultEntitlementApiBase imp
 
         private final Iterable<SubscriptionBase> subscriptions;
         private final BillingActionPolicy billingPolicy;
-        private final int accountBillCycleDayLocal;
         private final InternalCallContext callContext;
 
         public BulkSubscriptionBaseCancellation(final Iterable<SubscriptionBase> subscriptions,
                                                 final BillingActionPolicy billingPolicy,
-                                                final int accountBillCycleDayLocal,
                                                 final InternalCallContext callContext) {
             this.subscriptions = subscriptions;
             this.billingPolicy = billingPolicy;
-            this.accountBillCycleDayLocal = accountBillCycleDayLocal;
             this.callContext = callContext;
         }
 
         @Override
         public Void call() throws Exception {
             try {
-                subscriptionInternalApi.cancelBaseSubscriptions(subscriptions, billingPolicy, accountBillCycleDayLocal, callContext);
+                subscriptionInternalApi.cancelBaseSubscriptions(subscriptions, billingPolicy, callContext);
             } catch (final SubscriptionBaseApiException e) {
                 throw new EntitlementApiException(e);
             }

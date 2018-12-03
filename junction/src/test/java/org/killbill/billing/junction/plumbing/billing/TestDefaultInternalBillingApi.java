@@ -76,7 +76,7 @@ public class TestDefaultInternalBillingApi extends JunctionTestSuiteWithEmbedded
         final List<Entitlement> entitlements = entitlementApi.getAllEntitlementsForAccountId(account.getId(), callContext);
         Assert.assertEquals(entitlements.size(), 1);
         Assert.assertEquals(entitlements.get(0).getLastActiveProduct().getName(), "Cannon");
-        Assert.assertEquals(entitlements.get(0).getBillCycleDayLocal(), (Integer) 7);
+        Assert.assertNull(entitlements.get(0).getBillCycleDayLocal());
 
         // Account still has no BCD
         final Account accountNoBCD = accountApi.getAccountById(account.getId(), callContext);
@@ -125,7 +125,7 @@ public class TestDefaultInternalBillingApi extends JunctionTestSuiteWithEmbedded
         final List<Entitlement> entitlements = entitlementApi.getAllEntitlementsForAccountId(account.getId(), callContext);
         Assert.assertEquals(entitlements.size(), 1);
         Assert.assertEquals(entitlements.get(0).getLastActiveProduct().getName(), "Trebuchet");
-        Assert.assertEquals(entitlements.get(0).getBillCycleDayLocal(), (Integer) 7);
+        Assert.assertNull(entitlements.get(0).getBillCycleDayLocal());
 
         // Account still has no BCD
         final Account accountNoBCD = accountApi.getAccountById(account.getId(), callContext);
@@ -175,9 +175,10 @@ public class TestDefaultInternalBillingApi extends JunctionTestSuiteWithEmbedded
         final List<Entitlement> entitlements = entitlementApi.getAllEntitlementsForAccountId(account.getId(), callContext);
         Assert.assertEquals(entitlements.size(), 2);
         Assert.assertEquals(entitlements.get(0).getLastActiveProduct().getName(), "Shotgun");
-        Assert.assertEquals(entitlements.get(0).getBillCycleDayLocal(), (Integer) 6);
+        // See bug description at https://github.com/killbill/killbill/issues/865 and PR discussion at https://github.com/killbill/killbill/pull/1067/files/926ca68c32c8f8c93bd5eda94fba17f6e19e593d#r237981095
+        Assert.assertNull(entitlements.get(0).getBillCycleDayLocal());
         Assert.assertEquals(entitlements.get(1).getLastActiveProduct().getName(), "Cabinet");
-        Assert.assertEquals(entitlements.get(1).getBillCycleDayLocal(), (Integer) 7);
+        Assert.assertNull(entitlements.get(1).getBillCycleDayLocal());
 
         // Account still has no BCD
         final Account accountNoBCD = accountApi.getAccountById(account.getId(), callContext);
@@ -186,11 +187,7 @@ public class TestDefaultInternalBillingApi extends JunctionTestSuiteWithEmbedded
         List<BillingEvent> events = ImmutableList.<BillingEvent>copyOf(billingInternalApi.getBillingEventsForAccountAndUpdateAccountBCD(account.getId(), null, internalCallContext));
         Assert.assertEquals(events.size(), 3);
         for (final BillingEvent billingEvent : events) {
-            if (billingEvent.getSubscription().getId().equals(entitlements.get(1).getId())) {
-                Assert.assertEquals(billingEvent.getBillCycleDayLocal(), 7);
-            } else {
-                Assert.assertEquals(billingEvent.getBillCycleDayLocal(), 6);
-            }
+            Assert.assertEquals(billingEvent.getBillCycleDayLocal(), 7);
         }
 
         // Verify BCD
