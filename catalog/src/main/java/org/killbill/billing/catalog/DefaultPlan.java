@@ -247,7 +247,8 @@ public class DefaultPlan extends ValidatingConfig<StandaloneCatalog> implements 
                                            DefaultPlan.class, ""));
         }
 
-        if (recurringBillingMode == null) {
+        // Pure usage based plans would not have a recurringBillingMode
+        if (!BillingPeriod.NO_BILLING_PERIOD.equals(getRecurringBillingPeriod()) && recurringBillingMode == null) {
             errors.add(new ValidationError(String.format("Invalid recurring billingMode for plan '%s'", name), DefaultPlan.class, ""));
         }
 
