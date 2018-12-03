@@ -622,8 +622,7 @@ public class TestWithBCDUpdate extends TestIntegrationBase {
         final DateTime initialDate = new DateTime(2016, 5, 1, 0, 13, 42, 0, testTimeZone);
         clock.setTime(initialDate);
 
-        // Set account BCD to the first
-        final Account account = createAccountWithNonOsgiPaymentMethod(getAccountData(1));
+        final Account account = createAccountWithNonOsgiPaymentMethod(getAccountData(0));
         assertNotNull(account);
 
         final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("Blowdart", BillingPeriod.MONTHLY, "notrial", null);
@@ -632,8 +631,11 @@ public class TestWithBCDUpdate extends TestIntegrationBase {
         final List<PlanPhasePriceOverride> overrides = new ArrayList<PlanPhasePriceOverride>();
         overrides.add(new DefaultPlanPhasePriceOverride("blowdart-monthly-notrial-evergreen", account.getCurrency(), null, BigDecimal.ZERO, ImmutableList.<UsagePriceOverride>of()));
         busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE);
+        // BP creation : Will set Account BCD to the first (DateOfFirstRecurringNonZeroCharge is the subscription start date in this case)
         final UUID baseEntitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec, null, overrides), "bundleExternalKey", null, null, false, true, ImmutableList.<PluginProperty>of(), callContext);
         assertListenerStatus();
+        final Account accountBCD = accountUserApi.getAccountById(account.getId(), callContext);
+        assertEquals(accountBCD.getBillCycleDayLocal(), (Integer) 1);
         final Entitlement baseEntitlement = entitlementApi.getEntitlementForId(baseEntitlementId, callContext);
 
         invoiceChecker.checkInvoice(account.getId(), 1, callContext,

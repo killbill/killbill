@@ -86,6 +86,9 @@
         <product name="Trebuchet">
             <category>BASE</category>
         </product>
+        <product name="Cannon">
+            <category>BASE</category>
+        </product>
         <product name="Cleaning">
             <category>ADD_ON</category>
         </product>
@@ -1437,6 +1440,24 @@
                 </usages>
             </finalPhase>
         </plan>
+        <plan name="cannon-monthly-in-arrear">
+            <product>Cannon</product>
+            <recurringBillingMode>IN_ARREAR</recurringBillingMode>
+            <finalPhase type="EVERGREEN">
+                <duration>
+                    <unit>UNLIMITED</unit>
+                </duration>
+                <recurring>
+                    <billingPeriod>MONTHLY</billingPeriod>
+                    <recurringPrice>
+                        <price>
+                            <currency>USD</currency>
+                            <value>500.00</value>
+                        </price>
+                    </recurringPrice>
+                </recurring>
+            </finalPhase>
+        </plan>
     </plans>
     <priceLists>
         <defaultPriceList name="DEFAULT">
@@ -1452,6 +1473,7 @@
                 <plan>shotgun-annual</plan>
                 <plan>assault-rifle-annual</plan>
                 <plan>trebuchet-usage-in-arrear</plan>
+                <plan>cannon-monthly-in-arrear</plan>
                 <plan>laser-scope-monthly</plan>
                 <plan>telescopic-scope-monthly</plan>
                 <plan>cabinet-triannual</plan>

@@ -186,23 +186,20 @@ public class DefaultInternalBillingApi implements BillingInternalApi {
 
         // If dryRun is specified, we don't want to to update the account BCD value, so we initialize the flag updatedAccountBCD to true
         if (currentAccountBCD == 0 && !dryRunMode) {
-            DateTime oldestNonZeroRecurringCharge = null;
+            BillingEvent oldestBillingEvent = null;
 
             for (final BillingEvent event : result) {
-                final BigDecimal recurringPrice = event.getRecurringPrice(event.getEffectiveDate());
-                final boolean nonZeroRecurringCharge = recurringPrice != null && BigDecimal.ZERO.compareTo(recurringPrice) < 0;
-                if (nonZeroRecurringCharge &&
-                    (oldestNonZeroRecurringCharge == null || event.getEffectiveDate().compareTo(oldestNonZeroRecurringCharge) < 0)) {
-                    oldestNonZeroRecurringCharge = event.getEffectiveDate();
+                if (oldestBillingEvent == null || event.getEffectiveDate().compareTo(oldestBillingEvent.getEffectiveDate()) < 0) {
+                    oldestBillingEvent = event;
                 }
             }
 
-            if (oldestNonZeroRecurringCharge == null) {
+            if (oldestBillingEvent == null) {
                 return;
             }
 
             // BCD in the account timezone
-            final int accountBCDCandidate = context.toLocalDate(oldestNonZeroRecurringCharge).getDayOfMonth();
+            final int accountBCDCandidate = oldestBillingEvent.getBillCycleDayLocal();
             if (accountBCDCandidate != 0) {
                 log.info("Setting account BCD='{}', accountId='{}'", accountBCDCandidate, account.getId());
                 accountApi.updateBCD(account.getExternalKey(), accountBCDCandidate, context);

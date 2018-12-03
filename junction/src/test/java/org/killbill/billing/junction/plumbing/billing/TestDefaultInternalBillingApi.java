@@ -52,6 +52,104 @@ import com.google.common.collect.ImmutableList;
 
 public class TestDefaultInternalBillingApi extends JunctionTestSuiteWithEmbeddedDB {
 
+    @Test(groups = "slow")
+    public void testRecurringInArrear() throws Exception {
+        final LocalDate initialDate = new LocalDate(2013, 8, 7);
+        clock.setDay(initialDate);
+
+        // Account with no BCD
+        final Account account = createAccount(getAccountData(0));
+        Assert.assertEquals(account.getBillCycleDayLocal(), (Integer) 0);
+
+        // Create base entitlement
+        final String bundleKey = UUID.randomUUID().toString();
+        final EntitlementSpecifier entitlementSpecifierBase = new DefaultEntitlementSpecifier(new PlanPhaseSpecifier("Cannon", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, null));
+        final BaseEntitlementWithAddOnsSpecifier specifier = new DefaultBaseEntitlementWithAddOnsSpecifier(null, bundleKey, ImmutableList.of(entitlementSpecifierBase), null, null, false);
+        testListener.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK);
+        entitlementApi.createBaseEntitlementsWithAddOns(account.getId(),
+                                                        ImmutableList.of(specifier),
+                                                        false,
+                                                        ImmutableList.<PluginProperty>of(),
+                                                        callContext);
+        assertListenerStatus();
+
+        final List<Entitlement> entitlements = entitlementApi.getAllEntitlementsForAccountId(account.getId(), callContext);
+        Assert.assertEquals(entitlements.size(), 1);
+        Assert.assertEquals(entitlements.get(0).getLastActiveProduct().getName(), "Cannon");
+        Assert.assertEquals(entitlements.get(0).getBillCycleDayLocal(), (Integer) 7);
+
+        // Account still has no BCD
+        final Account accountNoBCD = accountApi.getAccountById(account.getId(), callContext);
+        Assert.assertEquals(accountNoBCD.getBillCycleDayLocal(), (Integer) 0);
+
+        List<BillingEvent> events = ImmutableList.<BillingEvent>copyOf(billingInternalApi.getBillingEventsForAccountAndUpdateAccountBCD(account.getId(), null, internalCallContext));
+        Assert.assertEquals(events.size(), 1);
+        Assert.assertEquals(events.get(0).getBillCycleDayLocal(), 7);
+
+        // Verify BCD
+        final Account accountWithBCD = accountApi.getAccountById(account.getId(), callContext);
+        Assert.assertEquals(accountWithBCD.getBillCycleDayLocal(), (Integer) 7);
+
+        // Verify GET
+        final List<Entitlement> entitlementsUpdated = entitlementApi.getAllEntitlementsForAccountId(account.getId(), callContext);
+        Assert.assertEquals(entitlementsUpdated.size(), 1);
+        Assert.assertEquals(entitlementsUpdated.get(0).getLastActiveProduct().getName(), "Cannon");
+        Assert.assertEquals(entitlementsUpdated.get(0).getBillCycleDayLocal(), (Integer) 7);
+
+        events = ImmutableList.<BillingEvent>copyOf(billingInternalApi.getBillingEventsForAccountAndUpdateAccountBCD(account.getId(), null, internalCallContext));
+        Assert.assertEquals(events.size(), 1);
+        Assert.assertEquals(events.get(0).getBillCycleDayLocal(), 7);
+    }
+
+    @Test(groups = "slow")
+    public void testUsageInArrear() throws Exception {
+        final LocalDate initialDate = new LocalDate(2013, 8, 7);
+        clock.setDay(initialDate);
+
+        // Account with no BCD
+        final Account account = createAccount(getAccountData(0));
+        Assert.assertEquals(account.getBillCycleDayLocal(), (Integer) 0);
+
+        // Create base entitlement
+        final String bundleKey = UUID.randomUUID().toString();
+        final EntitlementSpecifier entitlementSpecifierBase = new DefaultEntitlementSpecifier(new PlanPhaseSpecifier("Trebuchet", BillingPeriod.NO_BILLING_PERIOD, PriceListSet.DEFAULT_PRICELIST_NAME, null));
+        final BaseEntitlementWithAddOnsSpecifier specifier = new DefaultBaseEntitlementWithAddOnsSpecifier(null, bundleKey, ImmutableList.of(entitlementSpecifierBase), null, null, false);
+        testListener.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK);
+        entitlementApi.createBaseEntitlementsWithAddOns(account.getId(),
+                                                        ImmutableList.of(specifier),
+                                                        false,
+                                                        ImmutableList.<PluginProperty>of(),
+                                                        callContext);
+        assertListenerStatus();
+
+        final List<Entitlement> entitlements = entitlementApi.getAllEntitlementsForAccountId(account.getId(), callContext);
+        Assert.assertEquals(entitlements.size(), 1);
+        Assert.assertEquals(entitlements.get(0).getLastActiveProduct().getName(), "Trebuchet");
+        Assert.assertEquals(entitlements.get(0).getBillCycleDayLocal(), (Integer) 7);
+
+        // Account still has no BCD
+        final Account accountNoBCD = accountApi.getAccountById(account.getId(), callContext);
+        Assert.assertEquals(accountNoBCD.getBillCycleDayLocal(), (Integer) 0);
+
+        List<BillingEvent> events = ImmutableList.<BillingEvent>copyOf(billingInternalApi.getBillingEventsForAccountAndUpdateAccountBCD(account.getId(), null, internalCallContext));
+        Assert.assertEquals(events.size(), 1);
+        Assert.assertEquals(events.get(0).getBillCycleDayLocal(), 7);
+
+        // Verify BCD
+        final Account accountWithBCD = accountApi.getAccountById(account.getId(), callContext);
+        Assert.assertEquals(accountWithBCD.getBillCycleDayLocal(), (Integer) 7);
+
+        // Verify GET
+        final List<Entitlement> entitlementsUpdated = entitlementApi.getAllEntitlementsForAccountId(account.getId(), callContext);
+        Assert.assertEquals(entitlementsUpdated.size(), 1);
+        Assert.assertEquals(entitlementsUpdated.get(0).getLastActiveProduct().getName(), "Trebuchet");
+        Assert.assertEquals(entitlementsUpdated.get(0).getBillCycleDayLocal(), (Integer) 7);
+
+        events = ImmutableList.<BillingEvent>copyOf(billingInternalApi.getBillingEventsForAccountAndUpdateAccountBCD(account.getId(), null, internalCallContext));
+        Assert.assertEquals(events.size(), 1);
+        Assert.assertEquals(events.get(0).getBillCycleDayLocal(), 7);
+    }
+
     @Test(groups = "slow", description = "https://github.com/killbill/killbill/issues/865")
     public void testBCDUpdateMultipleSubscriptionsAccountAligned() throws Exception {
         final LocalDate initialDate = new LocalDate(2013, 8, 7);
