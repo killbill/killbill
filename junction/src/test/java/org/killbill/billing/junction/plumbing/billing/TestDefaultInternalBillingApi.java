@@ -209,6 +209,82 @@ public class TestDefaultInternalBillingApi extends JunctionTestSuiteWithEmbedded
         }
     }
 
+    @Test(groups = "slow")
+    public void testBCDUpdateMultipleSubscriptionsAccountAndSubscriptionAligned() throws Exception {
+        final LocalDate initialDate = new LocalDate(2013, 8, 7);
+        clock.setDay(initialDate);
+
+        // Account with no BCD
+        final Account account = createAccount(getAccountData(0));
+        Assert.assertEquals(account.getBillCycleDayLocal(), (Integer) 0);
+
+        // Create 2 BASE entitlements
+        final String bundleKey1 = UUID.randomUUID().toString();
+        final String bundleKey2 = UUID.randomUUID().toString();
+        final EntitlementSpecifier entitlementSpecifierBase1 = new DefaultEntitlementSpecifier(new PlanPhaseSpecifier("Pistol", BillingPeriod.ANNUAL, "gunclubDiscountNoTrial", null));
+        final EntitlementSpecifier entitlementSpecifierBase2 = new DefaultEntitlementSpecifier(new PlanPhaseSpecifier("Pistol", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, null));
+        final BaseEntitlementWithAddOnsSpecifier specifier1 = new DefaultBaseEntitlementWithAddOnsSpecifier(null, bundleKey1, ImmutableList.of(entitlementSpecifierBase1), null, null, false);
+        final BaseEntitlementWithAddOnsSpecifier specifier2 = new DefaultBaseEntitlementWithAddOnsSpecifier(null, bundleKey2, ImmutableList.of(entitlementSpecifierBase2), null, null, false);
+        testListener.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.CREATE, NextEvent.BLOCK);
+        entitlementApi.createBaseEntitlementsWithAddOns(account.getId(),
+                                                        ImmutableList.of(specifier1, specifier2),
+                                                        false,
+                                                        ImmutableList.<PluginProperty>of(),
+                                                        callContext);
+        assertListenerStatus();
+
+        final List<Entitlement> entitlements = entitlementApi.getAllEntitlementsForAccountId(account.getId(), callContext);
+        Assert.assertEquals(entitlements.size(), 2);
+        for (final Entitlement entitlement : entitlements) {
+            if ("pistol-annual-gunclub-discount-notrial".equals(entitlement.getLastActivePlan().getName())) {
+                // SUBSCRIPTION aligned
+                Assert.assertEquals(entitlement.getBillCycleDayLocal(), (Integer) 7);
+            } else {
+                // ACCOUNT aligned
+                Assert.assertNull(entitlement.getBillCycleDayLocal());
+            }
+        }
+
+        // Account still has no BCD
+        final Account accountNoBCD = accountApi.getAccountById(account.getId(), callContext);
+        Assert.assertEquals(accountNoBCD.getBillCycleDayLocal(), (Integer) 0);
+
+        List<BillingEvent> events = ImmutableList.<BillingEvent>copyOf(billingInternalApi.getBillingEventsForAccountAndUpdateAccountBCD(account.getId(), null, internalCallContext));
+        Assert.assertEquals(events.size(), 4);
+        for (final BillingEvent billingEvent : events) {
+            if ("pistol-annual-gunclub-discount-notrial".equals(billingEvent.getPlan().getName())) {
+                Assert.assertEquals(billingEvent.getBillCycleDayLocal(), 7);
+            } else {
+                Assert.assertEquals(billingEvent.getBillCycleDayLocal(), 6);
+            }
+        }
+
+        // Verify BCD
+        final Account accountWithBCD = accountApi.getAccountById(account.getId(), callContext);
+        Assert.assertEquals(accountWithBCD.getBillCycleDayLocal(), (Integer) 6);
+
+        // Verify GET
+        final List<Entitlement> entitlementsUpdated = entitlementApi.getAllEntitlementsForAccountId(account.getId(), callContext);
+        Assert.assertEquals(entitlementsUpdated.size(), 2);
+        for (final Entitlement entitlement : entitlementsUpdated) {
+            if ("pistol-annual-gunclub-discount-notrial".equals(entitlement.getLastActivePlan().getName())) {
+                Assert.assertEquals(entitlement.getBillCycleDayLocal(), (Integer) 7);
+            } else {
+                Assert.assertEquals(entitlement.getBillCycleDayLocal(), (Integer) 6);
+            }
+        }
+
+        events = ImmutableList.<BillingEvent>copyOf(billingInternalApi.getBillingEventsForAccountAndUpdateAccountBCD(account.getId(), null, internalCallContext));
+        Assert.assertEquals(events.size(), 4);
+        for (final BillingEvent billingEvent : events) {
+            if ("pistol-annual-gunclub-discount-notrial".equals(billingEvent.getPlan().getName())) {
+                Assert.assertEquals(billingEvent.getBillCycleDayLocal(), 7);
+            } else {
+                Assert.assertEquals(billingEvent.getBillCycleDayLocal(), 6);
+            }
+        }
+    }
+
     // This test was originally for https://github.com/killbill/killbill/issues/123.
     // The invocationCount > 0 was to trigger an issue where events would come out-of-order randomly.
     // While the bug shouldn't occur anymore, we're keeping it just in case (the test will also try to insert the events out-of-order manually).
