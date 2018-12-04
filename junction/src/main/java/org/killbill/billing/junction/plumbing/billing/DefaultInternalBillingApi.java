@@ -63,6 +63,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Function;
+import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.collect.Collections2;
 import com.google.common.collect.ImmutableList;
@@ -214,15 +215,15 @@ public class DefaultInternalBillingApi implements BillingInternalApi {
 
             // BCD in the account timezone
             final int accountBCDCandidate = oldestAccountAlignedBillingEvent.getBillCycleDayLocal();
-            if (accountBCDCandidate != 0) {
-                log.info("Setting account BCD='{}', accountId='{}'", accountBCDCandidate, account.getId());
-                accountApi.updateBCD(account.getExternalKey(), accountBCDCandidate, context);
+            Preconditions.checkState(accountBCDCandidate > 0, "Wrong Account BCD calculation for event: " + oldestAccountAlignedBillingEvent);
 
-                // Because we now have computed the real BCD, we need to re-compute the BillingEvents BCD for ACCOUNT alignments (see BillCycleDayCalculator#calculateBcdForAlignment).
-                // The code could maybe be optimized (no need to re-run the full function?), but since it's run once per account, it's probably not worth it.
-                result.clear();
-                addBillingEventsForBundles(bundles, account, dryRunArguments, context, result, skipSubscriptionsSet, catalog, tagsForAccount);
-            }
+            log.info("Setting account BCD='{}', accountId='{}'", accountBCDCandidate, account.getId());
+            accountApi.updateBCD(account.getExternalKey(), accountBCDCandidate, context);
+
+            // Because we now have computed the real BCD, we need to re-compute the BillingEvents BCD for ACCOUNT alignments (see BillCycleDayCalculator#calculateBcdForAlignment).
+            // The code could maybe be optimized (no need to re-run the full function?), but since it's run once per account, it's probably not worth it.
+            result.clear();
+            addBillingEventsForBundles(bundles, account, dryRunArguments, context, result, skipSubscriptionsSet, catalog, tagsForAccount);
         }
     }
 
