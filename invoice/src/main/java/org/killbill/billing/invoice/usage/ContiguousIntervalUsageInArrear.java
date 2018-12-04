@@ -135,23 +135,22 @@ public abstract class ContiguousIntervalUsageInArrear {
         }
         final LocalDate endDate = closedInterval ? internalTenantContext.toLocalDate(billingEvents.get(billingEvents.size() - 1).getEffectiveDate()) : targetDate;
 
-        final BillingIntervalDetail bid = new BillingIntervalDetail(startDate, endDate, targetDate, getBCD(), usage.getBillingPeriod(), usage.getBillingMode());
-
-        int numberOfPeriod = 0;
-        // First billingCycleDate prior startDate
-        LocalDate nextBillCycleDate = bid.getFutureBillingDateFor(numberOfPeriod);
         if (startDate.compareTo(rawUsageStartDate) >= 0) {
             transitionTimes.add(startDate);
         }
-        while (!nextBillCycleDate.isAfter(endDate)) {
-            if (nextBillCycleDate.isAfter(startDate)) {
-                if (nextBillCycleDate.compareTo(rawUsageStartDate) >= 0) {
-                    transitionTimes.add(nextBillCycleDate);
-                }
+
+        for (int i = 0; i < billingEvents.size(); i++) {
+            final BillingEvent billingEvent = billingEvents.get(i);
+            final LocalDate transitionStartDate = internalTenantContext.toLocalDate(billingEvent.getEffectiveDate());
+            if (i == billingEvents.size() - 1) {
+                addTransitionTimesForBillingEvent(transitionStartDate, endDate, billingEvent.getBillCycleDayLocal());
+            } else {
+                final BillingEvent nextBillingEvent = billingEvents.get(i + 1);
+                final LocalDate nextEndDate = internalTenantContext.toLocalDate(nextBillingEvent.getEffectiveDate());
+                addTransitionTimesForBillingEvent(transitionStartDate, nextEndDate, billingEvent.getBillCycleDayLocal());
             }
-            numberOfPeriod++;
-            nextBillCycleDate = bid.getFutureBillingDateFor(numberOfPeriod);
         }
+
         if (closedInterval &&
             transitionTimes.size() > 0 &&
             endDate.isAfter(transitionTimes.get(transitionTimes.size() - 1))) {
@@ -159,6 +158,23 @@ public abstract class ContiguousIntervalUsageInArrear {
         }
         isBuilt.set(true);
         return this;
+    }
+
+    private void addTransitionTimesForBillingEvent(final LocalDate startDate, final LocalDate endDate, final int bcd) {
+        final BillingIntervalDetail bid = new BillingIntervalDetail(startDate, endDate, targetDate, bcd, usage.getBillingPeriod(), usage.getBillingMode());
+
+        int numberOfPeriod = 0;
+        // First billingCycleDate prior startDate
+        LocalDate nextBillCycleDate = bid.getFutureBillingDateFor(numberOfPeriod);
+        while (!nextBillCycleDate.isAfter(endDate)) {
+            if (transitionTimes.isEmpty() || nextBillCycleDate.isAfter(transitionTimes.get(transitionTimes.size() - 1))) {
+                if (nextBillCycleDate.compareTo(rawUsageStartDate) >= 0) {
+                    transitionTimes.add(nextBillCycleDate);
+                }
+            }
+            numberOfPeriod++;
+            nextBillCycleDate = bid.getFutureBillingDateFor(numberOfPeriod);
+        }
     }
 
     /**
@@ -438,10 +454,6 @@ public abstract class ContiguousIntervalUsageInArrear {
 
     public Usage getUsage() {
         return usage;
-    }
-
-    public int getBCD() {
-        return billingEvents.get(0).getBillCycleDayLocal();
     }
 
     public UUID getBundleId() {

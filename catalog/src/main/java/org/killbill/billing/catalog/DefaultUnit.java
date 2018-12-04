@@ -106,12 +106,15 @@ public class DefaultUnit extends ValidatingConfig<StandaloneCatalog> implements 
     @Override
     public void writeExternal(final ObjectOutput out) throws IOException {
         out.writeUTF(name);
-        out.writeUTF(prettyName);
+        out.writeBoolean(prettyName != null);
+        if (prettyName != null) {
+            out.writeUTF(prettyName);
+        }
     }
 
     @Override
     public void readExternal(final ObjectInput in) throws IOException, ClassNotFoundException {
         this.name = in.readUTF();
-        this.prettyName = in.readUTF();
+        this.prettyName = in.readBoolean() ? in.readUTF() : null;
     }
 }

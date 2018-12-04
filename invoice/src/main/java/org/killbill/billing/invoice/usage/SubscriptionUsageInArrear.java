@@ -140,9 +140,6 @@ public class SubscriptionUsageInArrear {
         final Set<UsageKey> allSeenUsage = new HashSet<UsageKey>();
 
         for (final BillingEvent event : subscriptionBillingEvents) {
-
-
-
             // Extract all in arrear /consumable usage section for that billing event.
             final List<Usage> usages = findUsageInArrearUsages(event);
             allSeenUsage.addAll(Collections2.transform(usages, new Function<Usage, UsageKey>() {

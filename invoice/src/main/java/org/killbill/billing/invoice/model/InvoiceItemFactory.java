@@ -110,7 +110,7 @@ public class InvoiceItemFactory {
                 item = new UsageInvoiceItem(id, createdDate, invoiceId, accountId, bundleId, subscriptionId, productName, planName, phaseName, usageName, prettyProductName, prettyPlanName, prettyPlanPhaseName, prettyUsageName, startDate, endDate, description, amount, rate, currency, quantity, itemDetails);
                 break;
             case TAX:
-                item = new TaxInvoiceItem(id, createdDate, invoiceId, accountId, bundleId, subscriptionId, productName, planName, phaseName, usageName, prettyProductName, prettyPlanName, prettyPlanPhaseName, prettyUsageName, startDate, description, amount, currency, linkedItemId, itemDetails);
+                item = new TaxInvoiceItem(id, createdDate, invoiceId, accountId, bundleId, subscriptionId, productName, planName, phaseName, usageName, prettyProductName, prettyPlanName, prettyPlanPhaseName, prettyUsageName, startDate, endDate, description, amount, currency, linkedItemId, itemDetails);
                 break;
             case PARENT_SUMMARY:
                 item = new ParentInvoiceItem(id, createdDate, invoiceId, accountId, childAccountId, amount, currency, description);
