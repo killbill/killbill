@@ -34,6 +34,7 @@ import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 
 import static org.testng.Assert.assertEquals;
@@ -70,7 +71,7 @@ public class TestSubscriptionConsumableInArrear extends TestUsageInArrearBase {
 
         LocalDate targetDate = new LocalDate(2013, 6, 23);
 
-        final SubscriptionUsageInArrear foo = new SubscriptionUsageInArrear(accountId, invoiceId, billingEvents, ImmutableList.<RawUsage>of(), targetDate, new LocalDate(dt1, DateTimeZone.UTC), usageDetailMode, internalCallContext);
+        final SubscriptionUsageInArrear foo = new SubscriptionUsageInArrear(accountId, invoiceId, billingEvents, ImmutableList.<RawUsage>of(), ImmutableSet.of(), targetDate, new LocalDate(dt1, DateTimeZone.UTC), usageDetailMode, internalCallContext);
         final List<ContiguousIntervalUsageInArrear> result = foo.computeInArrearUsageInterval();
         assertEquals(result.size(), 3);
 

@@ -20,6 +20,7 @@ package org.killbill.billing.invoice.usage;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -40,6 +41,7 @@ import org.killbill.billing.invoice.api.InvoiceApiException;
 import org.killbill.billing.invoice.api.InvoiceItem;
 import org.killbill.billing.invoice.api.InvoiceItemType;
 import org.killbill.billing.invoice.generator.BillingIntervalDetail;
+import org.killbill.billing.invoice.generator.InvoiceWithMetadata.TrackingRecordId;
 import org.killbill.billing.invoice.model.UsageInvoiceItem;
 import org.killbill.billing.invoice.usage.details.UsageInArrearAggregate;
 import org.killbill.billing.junction.BillingEvent;
@@ -53,11 +55,14 @@ import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 
 import static org.killbill.billing.invoice.usage.UsageUtils.getCapacityInArrearUnitTypes;
 import static org.killbill.billing.invoice.usage.UsageUtils.getConsumableInArrearUnitTypes;
@@ -76,6 +81,7 @@ public abstract class ContiguousIntervalUsageInArrear {
     protected final Usage usage;
     protected final Set<String> unitTypes;
     protected final List<RawUsage> rawSubscriptionUsage;
+    protected final Set<TrackingRecordId> allExistingTrackingIds;
     protected final LocalDate targetDate;
     protected final UUID accountId;
     protected final UUID invoiceId;
@@ -89,6 +95,7 @@ public abstract class ContiguousIntervalUsageInArrear {
                                            final UUID accountId,
                                            final UUID invoiceId,
                                            final List<RawUsage> rawSubscriptionUsage,
+                                           final Set<TrackingRecordId> existingTrackingIds,
                                            final LocalDate targetDate,
                                            final LocalDate rawUsageStartDate,
                                            final UsageDetailMode usageDetailMode,
@@ -98,6 +105,7 @@ public abstract class ContiguousIntervalUsageInArrear {
         this.invoiceId = invoiceId;
         this.unitTypes = usage.getUsageType() == UsageType.CAPACITY ? getCapacityInArrearUnitTypes(usage) : getConsumableInArrearUnitTypes(usage);
         this.rawSubscriptionUsage = filterInputRawUsage(rawSubscriptionUsage);
+        this.allExistingTrackingIds = existingTrackingIds;
         this.targetDate = targetDate;
         this.rawUsageStartDate = rawUsageStartDate;
         this.internalTenantContext = internalTenantContext;
@@ -106,7 +114,6 @@ public abstract class ContiguousIntervalUsageInArrear {
         this.isBuilt = new AtomicBoolean(false);
         this.usageDetailMode = usageDetailMode;
     }
-
 
     /**
      * Builds the transitionTimes associated to that usage section. Those are determined based on billing events for when to start and when to stop,
@@ -182,11 +189,33 @@ public abstract class ContiguousIntervalUsageInArrear {
         Preconditions.checkState(isBuilt.get());
 
         if (transitionTimes.size() < 2) {
-            return new UsageInArrearItemsAndNextNotificationDate(ImmutableList.<InvoiceItem>of(), computeNextNotificationDate());
+            return new UsageInArrearItemsAndNextNotificationDate(ImmutableList.<InvoiceItem>of(), ImmutableSet.of(), computeNextNotificationDate());
         }
 
         final List<InvoiceItem> result = Lists.newLinkedList();
-        final List<RolledUpUsage> allUsage = getRolledUpUsage();
+
+        final RolledUpUnitsWithTracking allUsageWithTracking = getRolledUpUsage();
+        final List<RolledUpUsage> allUsage = allUsageWithTracking.getUsage();
+
+        final Set<TrackingRecordId> allTrackingIds = allUsageWithTracking.getTrackingIds();
+
+        final Set<TrackingRecordId> existingTrackingIds = extractTrackingIds(allExistingTrackingIds);
+
+
+        final Set<TrackingRecordId> newTrackingIds = Sets.filter(allTrackingIds, new Predicate<TrackingRecordId>() {
+            @Override
+            public boolean apply(final TrackingRecordId allRecord) {
+
+                return ! Iterables.any(existingTrackingIds, new Predicate<TrackingRecordId>() {
+                    @Override
+                    public boolean apply(final TrackingRecordId existingRecord) {
+                        return existingRecord.isSimilarRecord(allRecord);
+                    }
+                });
+            }
+        });
+
+
         // Each RolledUpUsage 'ru' is for a specific time period and across all units
         for (final RolledUpUsage ru : allUsage) {
 
@@ -207,9 +236,10 @@ public abstract class ContiguousIntervalUsageInArrear {
             final UsageInArrearAggregate toBeBilledUsageDetails = getToBeBilledUsageDetails(rolledUpUnits, billedItems, areAllBilledItemsWithDetails);
             final BigDecimal toBeBilledUsage = toBeBilledUsageDetails.getAmount();
             populateResults(ru.getStart(), ru.getEnd(), billedUsage, toBeBilledUsage, toBeBilledUsageDetails, areAllBilledItemsWithDetails, isPeriodPreviouslyBilled, result);
+
         }
         final LocalDate nextNotificationDate = computeNextNotificationDate();
-        return new UsageInArrearItemsAndNextNotificationDate(result, nextNotificationDate);
+        return new UsageInArrearItemsAndNextNotificationDate(result, newTrackingIds, nextNotificationDate);
     }
 
     protected abstract void populateResults(final LocalDate startDate, final LocalDate endDate, final BigDecimal billedUsage, final BigDecimal toBeBilledUsage, final UsageInArrearAggregate toBeBilledUsageDetails, final boolean areAllBilledItemsWithDetails, final boolean isPeriodPreviouslyBilled, final List<InvoiceItem> result) throws InvoiceApiException;
@@ -248,17 +278,16 @@ public abstract class ContiguousIntervalUsageInArrear {
         return result;
     }
 
-
     @VisibleForTesting
-    List<RolledUpUsage> getRolledUpUsage() {
+    RolledUpUnitsWithTracking getRolledUpUsage() {
 
         final List<RolledUpUsage> result = new ArrayList<RolledUpUsage>();
+        final Set<TrackingRecordId> trackingIds = new HashSet<>();
 
         final Iterator<RawUsage> rawUsageIterator = rawSubscriptionUsage.iterator();
         if (!rawUsageIterator.hasNext()) {
-            return getEmptyRolledUpUsage();
+            return new RolledUpUnitsWithTracking(getEmptyRolledUpUsage(), ImmutableSet.of());
         }
-
 
         //
         // Skip all items before our first transition date
@@ -275,7 +304,7 @@ public abstract class ContiguousIntervalUsageInArrear {
 
         // Optimize path where all raw usage items are outside or our transitionTimes range
         if (prevRawUsage == null || prevRawUsage.getDate().compareTo(transitionTimes.get(transitionTimes.size() - 1)) >= 0) {
-            return getEmptyRolledUpUsage();
+            return new RolledUpUnitsWithTracking(getEmptyRolledUpUsage(), ImmutableSet.of());
         }
 
         //
@@ -293,13 +322,13 @@ public abstract class ContiguousIntervalUsageInArrear {
                     perRangeUnitToAmount.put(unitType, 0L);
                 }
 
-
                 // Start consuming prevRawUsage element if it exists and falls into the range
                 if (prevRawUsage != null) {
                     if (prevRawUsage.getDate().compareTo(prevDate) >= 0 && prevRawUsage.getDate().compareTo(curDate) < 0) {
                         final Long currentAmount = perRangeUnitToAmount.get(prevRawUsage.getUnitType());
                         final Long updatedAmount = computeUpdatedAmount(currentAmount, prevRawUsage.getAmount());
                         perRangeUnitToAmount.put(prevRawUsage.getUnitType(), updatedAmount);
+                        trackingIds.add(new TrackingRecordId(prevRawUsage.getTrackingId(), invoiceId, prevRawUsage.getSubscriptionId(), prevRawUsage.getUnitType(), prevRawUsage.getDate()));
                         prevRawUsage = null;
                     }
                 }
@@ -321,6 +350,7 @@ public abstract class ContiguousIntervalUsageInArrear {
                         final Long currentAmount = perRangeUnitToAmount.get(curRawUsage.getUnitType());
                         final Long updatedAmount = computeUpdatedAmount(currentAmount, curRawUsage.getAmount());
                         perRangeUnitToAmount.put(curRawUsage.getUnitType(), updatedAmount);
+                        trackingIds.add(new TrackingRecordId(curRawUsage.getTrackingId(), invoiceId, curRawUsage.getSubscriptionId(), curRawUsage.getUnitType(), curRawUsage.getDate()));
                     }
                 }
 
@@ -335,7 +365,7 @@ public abstract class ContiguousIntervalUsageInArrear {
             }
             prevDate = curDate;
         }
-        return result;
+        return new RolledUpUnitsWithTracking(result, trackingIds);
     }
 
     private List<RolledUpUsage> getEmptyRolledUpUsage() {
@@ -379,7 +409,18 @@ public abstract class ContiguousIntervalUsageInArrear {
         });
         return ImmutableList.copyOf(filteredList);
     }
-    
+
+    private Set<TrackingRecordId> extractTrackingIds(final Set<TrackingRecordId> input) {
+
+        return ImmutableSet.copyOf(Iterables.filter(input, new Predicate<TrackingRecordId>() {
+            @Override
+            public boolean apply(final TrackingRecordId input) {
+                return input.getSubscriptionId().equals(getSubscriptionId());
+            }
+        }));
+
+    }
+
     /**
      * @param filteredUsageForInterval the list of invoiceItem to consider
      * @return the price amount that was already billed for that period and usage section (across unitTypes)
@@ -454,15 +495,16 @@ public abstract class ContiguousIntervalUsageInArrear {
         return billingEvents.get(0).getCurrency();
     }
 
-
     public class UsageInArrearItemsAndNextNotificationDate {
 
         private final List<InvoiceItem> invoiceItems;
         private final LocalDate nextNotificationDate;
+        private final Set<TrackingRecordId> trackingIds;
 
-        public UsageInArrearItemsAndNextNotificationDate(final List<InvoiceItem> invoiceItems, final LocalDate nextNotificationDate) {
+        public UsageInArrearItemsAndNextNotificationDate(final List<InvoiceItem> invoiceItems, final Set<TrackingRecordId> trackingIds, final LocalDate nextNotificationDate) {
             this.invoiceItems = invoiceItems;
             this.nextNotificationDate = nextNotificationDate;
+            this.trackingIds = trackingIds;
         }
 
         public List<InvoiceItem> getInvoiceItems() {
@@ -471,6 +513,29 @@ public abstract class ContiguousIntervalUsageInArrear {
 
         public LocalDate getNextNotificationDate() {
             return nextNotificationDate;
+        }
+
+        public Set<TrackingRecordId> getTrackingIds() {
+            return trackingIds;
+        }
+    }
+
+    public static class RolledUpUnitsWithTracking {
+
+        private final List<RolledUpUsage> usage;
+        private final Set<TrackingRecordId> trackingIds;
+
+        public RolledUpUnitsWithTracking(final List<RolledUpUsage> usage, final Set<TrackingRecordId> trackingIds) {
+            this.usage = usage;
+            this.trackingIds = trackingIds;
+        }
+
+        public List<RolledUpUsage> getUsage() {
+            return usage;
+        }
+
+        public Set<TrackingRecordId> getTrackingIds() {
+            return trackingIds;
         }
     }
 

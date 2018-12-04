@@ -47,6 +47,7 @@ import org.mockito.Mockito;
 import org.testng.Assert;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 
 public class InvoiceTestUtils {
 
@@ -108,7 +109,7 @@ public class InvoiceTestUtils {
 
         final InvoiceModelDao invoiceModelDao = new InvoiceModelDao(invoice);
         invoiceModelDao.addInvoiceItems(invoiceModelItems);
-        invoiceDao.createInvoices(ImmutableList.<InvoiceModelDao>of(invoiceModelDao), internalCallContext);
+        invoiceDao.createInvoices(ImmutableList.<InvoiceModelDao>of(invoiceModelDao), ImmutableSet.of(), internalCallContext);
 
         return invoice;
     }

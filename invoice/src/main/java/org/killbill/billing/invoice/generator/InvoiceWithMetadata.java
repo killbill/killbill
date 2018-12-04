@@ -17,10 +17,9 @@
 
 package org.killbill.billing.invoice.generator;
 
-import java.math.BigDecimal;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
 import javax.annotation.Nullable;
@@ -31,6 +30,7 @@ import org.killbill.billing.invoice.api.InvoiceItem;
 import org.killbill.billing.invoice.api.InvoiceItemType;
 import org.killbill.billing.invoice.model.DefaultInvoice;
 
+import com.google.common.base.Objects;
 import com.google.common.base.Predicate;
 import com.google.common.collect.Iterables;
 
@@ -40,9 +40,12 @@ public class InvoiceWithMetadata {
 
     private DefaultInvoice invoice;
 
-    public InvoiceWithMetadata(final DefaultInvoice originalInvoice, final Map<UUID, SubscriptionFutureNotificationDates> perSubscriptionFutureNotificationDates) {
+    private final Set<TrackingRecordId> trackingIds;
+
+    public InvoiceWithMetadata(final DefaultInvoice originalInvoice, final Set<TrackingRecordId> trackingIds, final Map<UUID, SubscriptionFutureNotificationDates> perSubscriptionFutureNotificationDates) {
         this.invoice = originalInvoice;
         this.perSubscriptionFutureNotificationDates = perSubscriptionFutureNotificationDates;
+        this.trackingIds = trackingIds;
         build();
     }
 
@@ -78,6 +81,87 @@ public class InvoiceWithMetadata {
                        input.getSubscriptionId().equals(subscriptionId);
             }
         });
+    }
+
+    public Set<TrackingRecordId> getTrackingIds() {
+        return trackingIds;
+    }
+
+    public static class TrackingRecordId {
+
+        private final String trackingId;
+        private final UUID invoiceId;
+        private final UUID subscriptionId;
+        private final String unitType;
+        private final LocalDate recordDate;
+
+        public TrackingRecordId(final String trackingId, final UUID invoiceId, final UUID subscriptionId, final String unitType, final LocalDate recordDate) {
+            this.trackingId = trackingId;
+            this.invoiceId = invoiceId;
+            this.subscriptionId = subscriptionId;
+            this.unitType = unitType;
+            this.recordDate = recordDate;
+        }
+
+        public String getTrackingId() {
+            return trackingId;
+        }
+
+        public UUID getInvoiceId() {
+            return invoiceId;
+        }
+
+        public UUID getSubscriptionId() {
+            return subscriptionId;
+        }
+
+        public LocalDate getRecordDate() {
+            return recordDate;
+        }
+
+        public String getUnitType() {
+            return unitType;
+        }
+
+
+        //
+        // Two records are similar if they were issued from the same usage record {subscriptionId, trackingId, unitType, recordDate}
+        // regardless on which 'invoice' they got attached to.
+        //
+        public boolean isSimilarRecord(final Object o) {
+            if (this == o) {
+                return true;
+            }
+            if (!(o instanceof TrackingRecordId)) {
+                return false;
+            }
+            final TrackingRecordId that = (TrackingRecordId) o;
+            return Objects.equal(trackingId, that.trackingId) &&
+                   Objects.equal(subscriptionId, that.subscriptionId) &&
+                   Objects.equal(unitType, that.unitType) &&
+                   Objects.equal(recordDate, that.recordDate);
+        }
+
+        @Override
+        public boolean equals(final Object o) {
+            if (this == o) {
+                return true;
+            }
+            if (!(o instanceof TrackingRecordId)) {
+                return false;
+            }
+            final TrackingRecordId that = (TrackingRecordId) o;
+            return Objects.equal(trackingId, that.trackingId) &&
+                   Objects.equal(invoiceId, that.invoiceId) &&
+                   Objects.equal(subscriptionId, that.subscriptionId) &&
+                   Objects.equal(unitType, that.unitType) &&
+                   Objects.equal(recordDate, that.recordDate);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hashCode(trackingId, invoiceId, subscriptionId, unitType, recordDate);
+        }
     }
 
     public static class SubscriptionFutureNotificationDates {

@@ -53,6 +53,7 @@ import org.killbill.billing.payment.api.TransactionStatus;
 import org.testng.annotations.Test;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
@@ -720,7 +721,7 @@ public class TestIntegrationInvoiceWithRepairLogic extends TestIntegrationBase {
         newItems.add(recurring3);
         newItems.add(repair3);
         shellInvoice.addInvoiceItems(newItems);
-        invoiceDao.createInvoice(shellInvoice, new FutureAccountNotifications(), internalCallContext);
+        invoiceDao.createInvoice(shellInvoice, ImmutableSet.of(), new FutureAccountNotifications(), internalCallContext);
 
 
         // Move ahead one month, verify nothing from previous data was generated
