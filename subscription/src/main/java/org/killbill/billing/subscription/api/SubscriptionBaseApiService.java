@@ -30,8 +30,6 @@ import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.catalog.api.PhaseType;
 import org.killbill.billing.catalog.api.Plan;
 import org.killbill.billing.catalog.api.PlanChangeResult;
-import org.killbill.billing.catalog.api.PlanPhasePriceOverride;
-import org.killbill.billing.catalog.api.PlanPhaseSpecifier;
 import org.killbill.billing.catalog.api.PlanSpecifier;
 import org.killbill.billing.entitlement.api.EntitlementSpecifier;
 import org.killbill.billing.subscription.api.user.DefaultSubscriptionBase;
@@ -52,10 +50,10 @@ public interface SubscriptionBaseApiService {
     public boolean cancelWithRequestedDate(DefaultSubscriptionBase subscription, DateTime requestedDate, CallContext context)
             throws SubscriptionBaseApiException;
 
-    public boolean cancelWithPolicy(DefaultSubscriptionBase subscription, BillingActionPolicy policy, int accountBillCycleDayLocal, CallContext context)
+    public boolean cancelWithPolicy(DefaultSubscriptionBase subscription, BillingActionPolicy policy, CallContext context)
             throws SubscriptionBaseApiException;
 
-    public boolean cancelWithPolicyNoValidationAndCatalog(Iterable<DefaultSubscriptionBase> subscriptions, BillingActionPolicy policy, int accountBillCycleDayLocal, Catalog catalog, InternalCallContext context)
+    public boolean cancelWithPolicyNoValidationAndCatalog(Iterable<DefaultSubscriptionBase> subscriptions, BillingActionPolicy policy, Catalog catalog, InternalCallContext context)
             throws SubscriptionBaseApiException;
 
     public boolean uncancel(DefaultSubscriptionBase subscription, CallContext context)

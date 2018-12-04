@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014-2016 Groupon, Inc
- * Copyright 2014-2016 The Billing Project, LLC
+ * Copyright 2014-2018 Groupon, Inc
+ * Copyright 2014-2018 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -18,6 +18,7 @@
 
 package org.killbill.billing.junction.plumbing.billing;
 
+import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -62,6 +63,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Function;
+import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.collect.Collections2;
 import com.google.common.collect.ImmutableList;
@@ -139,8 +141,9 @@ public class DefaultInternalBillingApi implements BillingInternalApi {
 
     private void addBillingEventsForBundles(final List<SubscriptionBaseBundle> bundles, final ImmutableAccountData account, final DryRunArguments dryRunArguments, final InternalCallContext context,
                                             final DefaultBillingEventSet result, final Set<UUID> skipSubscriptionsSet, final Catalog catalog, final List<Tag> tagsForAccount) throws AccountApiException, CatalogApiException, SubscriptionBaseApiException {
-
         final boolean dryRunMode = dryRunArguments != null;
+
+        final int currentAccountBCD = accountApi.getBCD(context);
 
         // In dryRun mode, when we care about invoice generated for new BASE subscription, no such bundle exists yet; we still
         // want to tap into subscriptionBase logic, so we make up a bundleId
@@ -150,8 +153,7 @@ public class DefaultInternalBillingApi implements BillingInternalApi {
             final UUID fakeBundleId = UUIDs.randomUUID();
             final List<SubscriptionBase> subscriptions = subscriptionApi.getSubscriptionsForBundle(fakeBundleId, dryRunArguments, context);
 
-            addBillingEventsForSubscription(account, subscriptions, null, dryRunMode, context, result, skipSubscriptionsSet, catalog);
-
+            addBillingEventsForSubscription(account, subscriptions, null, currentAccountBCD, context, result, skipSubscriptionsSet, catalog);
         }
 
         final Map<UUID, List<SubscriptionBase>> subscriptionsForAccount = subscriptionApi.getSubscriptionsForAccount(catalog, context);
@@ -160,11 +162,11 @@ public class DefaultInternalBillingApi implements BillingInternalApi {
             final DryRunArguments dryRunArgumentsForBundle = (dryRunArguments != null &&
                                                               dryRunArguments.getBundleId() != null &&
                                                               dryRunArguments.getBundleId().equals(bundle.getId())) ?
-                                                              dryRunArguments : null;
+                                                             dryRunArguments : null;
             final List<SubscriptionBase> subscriptions;
             // In dryRun mode, optimization is intentionally left as is, since is not a common path.
             if (dryRunArgumentsForBundle == null || dryRunArgumentsForBundle.getAction() == null) {
-                subscriptions = getSubscriptionsForAccountByBundleId(subscriptionsForAccount,bundle.getId());
+                subscriptions = getSubscriptionsForAccountByBundleId(subscriptionsForAccount, bundle.getId());
             } else {
                 subscriptions = subscriptionApi.getSubscriptionsForBundle(bundle.getId(), dryRunArgumentsForBundle, context);
             }
@@ -178,26 +180,62 @@ public class DefaultInternalBillingApi implements BillingInternalApi {
                 }
             } else { // billing is not off
                 final SubscriptionBase baseSubscription = subscriptions != null && !subscriptions.isEmpty() ? subscriptions.get(0) : null;
-                addBillingEventsForSubscription(account, subscriptions, baseSubscription, dryRunMode, context, result, skipSubscriptionsSet, catalog);
+                addBillingEventsForSubscription(account, subscriptions, baseSubscription, currentAccountBCD, context, result, skipSubscriptionsSet, catalog);
             }
+        }
+
+        // If dryRun is specified, we don't want to to update the account BCD value, so we initialize the flag updatedAccountBCD to true
+        if (currentAccountBCD == 0 && !dryRunMode) {
+            BillingEvent oldestAccountAlignedBillingEvent = null;
+
+            for (final BillingEvent event : result) {
+                if (event.getBillingAlignment() != BillingAlignment.ACCOUNT) {
+                    continue;
+                }
+
+                final BigDecimal recurringPrice = event.getRecurringPrice(event.getEffectiveDate());
+                final boolean hasRecurringPrice = recurringPrice != null; // Note: could be zero (BCD would still be set, by convention)
+                final boolean hasUsage = event.getUsages() != null && !event.getUsages().isEmpty();
+                if (!hasRecurringPrice &&
+                    !hasUsage) {
+                    // Nothing to bill, ignored for the purpose of BCD calculation
+                    continue;
+                }
+
+                if (oldestAccountAlignedBillingEvent == null ||
+                    event.getEffectiveDate().compareTo(oldestAccountAlignedBillingEvent.getEffectiveDate()) < 0 ||
+                    (event.getEffectiveDate().compareTo(oldestAccountAlignedBillingEvent.getEffectiveDate()) == 0 && event.getTotalOrdering().compareTo(oldestAccountAlignedBillingEvent.getTotalOrdering()) < 0)) {
+                    oldestAccountAlignedBillingEvent = event;
+                }
+            }
+
+            if (oldestAccountAlignedBillingEvent == null) {
+                return;
+            }
+
+            // BCD in the account timezone
+            final int accountBCDCandidate = oldestAccountAlignedBillingEvent.getBillCycleDayLocal();
+            Preconditions.checkState(accountBCDCandidate > 0, "Wrong Account BCD calculation for event: " + oldestAccountAlignedBillingEvent);
+
+            log.info("Setting account BCD='{}', accountId='{}'", accountBCDCandidate, account.getId());
+            accountApi.updateBCD(account.getExternalKey(), accountBCDCandidate, context);
+
+            // Because we now have computed the real BCD, we need to re-compute the BillingEvents BCD for ACCOUNT alignments (see BillCycleDayCalculator#calculateBcdForAlignment).
+            // The code could maybe be optimized (no need to re-run the full function?), but since it's run once per account, it's probably not worth it.
+            result.clear();
+            addBillingEventsForBundles(bundles, account, dryRunArguments, context, result, skipSubscriptionsSet, catalog, tagsForAccount);
         }
     }
 
     private void addBillingEventsForSubscription(final ImmutableAccountData account,
                                                  final List<SubscriptionBase> subscriptions,
                                                  final SubscriptionBase baseSubscription,
-                                                 final boolean dryRunMode,
+                                                 final int currentAccountBCD,
                                                  final InternalCallContext context,
                                                  final DefaultBillingEventSet result,
                                                  final Set<UUID> skipSubscriptionsSet,
-                                                 final Catalog catalog) throws AccountApiException, CatalogApiException, SubscriptionBaseApiException {
-
-        // If dryRun is specified, we don't want to to update the account BCD value, so we initialize the flag updatedAccountBCD to true
-        boolean updatedAccountBCD = dryRunMode;
-
+                                                 final Catalog catalog) throws CatalogApiException {
         final Map<UUID, Integer> bcdCache = new HashMap<UUID, Integer>();
-
-        int currentAccountBCD = accountApi.getBCD(account.getId(), context);
 
         for (final SubscriptionBase subscription : subscriptions) {
 
@@ -212,6 +250,8 @@ public class DefaultInternalBillingApi implements BillingInternalApi {
 
             Integer overridenBCD = null;
             for (final EffectiveSubscriptionInternalEvent transition : billingTransitions) {
+                final BillingAlignment alignment = catalog.billingAlignment(getPlanPhaseSpecifierFromTransition(catalog, transition), transition.getEffectiveTransitionTime(), subscription.getStartDate());
+
                 //
                 // A BCD_CHANGE transition defines a new billCycleDayLocal for the subscription and this overrides whatever computation
                 // occurs below (which is based on billing alignment policy). Also multiple of those BCD_CHANGE transitions could occur,
@@ -220,23 +260,19 @@ public class DefaultInternalBillingApi implements BillingInternalApi {
                 overridenBCD = transition.getNextBillCycleDayLocal() != null ? transition.getNextBillCycleDayLocal() : overridenBCD;
                 final int bcdLocal = overridenBCD != null ?
                                      overridenBCD :
-                                     calculateBcdForTransition(catalog, bcdCache, baseSubscription, subscription, currentAccountBCD, transition, context);
+                                     calculateBcdForTransition(alignment, bcdCache, baseSubscription, subscription, currentAccountBCD, context);
 
-                if (currentAccountBCD == 0 && !updatedAccountBCD) {
-                    log.info("Setting account BCD='{}', accountId='{}'", bcdLocal, account.getId());
-                    accountApi.updateBCD(account.getExternalKey(), bcdLocal, context);
-                    updatedAccountBCD = true;
-                }
-
-                final BillingEvent event = new DefaultBillingEvent(transition, subscription, bcdLocal, account.getCurrency(), catalog);
+                final BillingEvent event = new DefaultBillingEvent(transition, subscription, bcdLocal, alignment, account.getCurrency(), catalog);
                 result.add(event);
             }
         }
     }
 
-    private int calculateBcdForTransition(final Catalog catalog, final Map<UUID, Integer> bcdCache, final SubscriptionBase baseSubscription, final SubscriptionBase subscription, final int accountBillCycleDayLocal, final EffectiveSubscriptionInternalEvent transition, final InternalTenantContext internalTenantContext)
-            throws CatalogApiException, AccountApiException, SubscriptionBaseApiException {
-        final BillingAlignment alignment = catalog.billingAlignment(getPlanPhaseSpecifierFromTransition(catalog, transition), transition.getEffectiveTransitionTime(), subscription.getStartDate());
+    private int calculateBcdForTransition(final BillingAlignment realBillingAlignment, final Map<UUID, Integer> bcdCache, final SubscriptionBase baseSubscription, final SubscriptionBase subscription, final int accountBillCycleDayLocal, final InternalTenantContext internalTenantContext) {
+        BillingAlignment alignment = realBillingAlignment;
+        if (alignment == BillingAlignment.ACCOUNT && accountBillCycleDayLocal == 0) {
+            alignment = BillingAlignment.SUBSCRIPTION;
+        }
         return BillCycleDayCalculator.calculateBcdForAlignment(bcdCache, subscription, baseSubscription, alignment, internalTenantContext, accountBillCycleDayLocal);
     }
 
@@ -281,7 +317,7 @@ public class DefaultInternalBillingApi implements BillingInternalApi {
         });
     }
 
-    private List<Tag> getTagsForObjectType(final ObjectType objectType, final List<Tag> tags, final @Nullable UUID objectId) {
+    private List<Tag> getTagsForObjectType(final ObjectType objectType, final List<Tag> tags, @Nullable final UUID objectId) {
         return ImmutableList.<Tag>copyOf(Iterables.<Tag>filter(tags,
                                                                   new Predicate<Tag>() {
                                                                       @Override

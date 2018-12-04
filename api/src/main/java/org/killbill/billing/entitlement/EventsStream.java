@@ -66,7 +66,7 @@ public interface EventsStream {
 
     boolean isBlockEntitlement(final DateTime effectiveDate);
 
-    int getDefaultBillCycleDayLocal();
+    Integer getDefaultBillCycleDayLocal();
 
     Collection<BlockingState> getPendingEntitlementCancellationEvents();
 

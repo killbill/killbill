@@ -234,7 +234,7 @@ public class TestIntegrationDryRunInvoice extends TestIntegrationBase {
         final LocalDate initialDate = new LocalDate(2017, 4, 1);
         clock.setDay(initialDate);
 
-        // Create account with non BCD to force junction BCD logic to activate
+        // Create account with no BCD
         final Account account = createAccountWithNonOsgiPaymentMethod(getAccountData(null));
 
         final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("Shotgun", BillingPeriod.ANNUAL, PriceListSet.DEFAULT_PRICELIST_NAME, null);
@@ -291,9 +291,9 @@ public class TestIntegrationDryRunInvoice extends TestIntegrationBase {
         assertEquals(realInvoice.getInvoiceItems().get(0).getStartDate(), futureDate);
         assertEquals(realInvoice.getInvoiceItems().get(0).getPlanName(), "shotgun-annual");
 
-        // Check BCD is now set
+        // Check BCD is still not set (SUBSCRIPTION alignment)
         final Account refreshedAccount2 = accountUserApi.getAccountById(account.getId(), callContext);
-        assertEquals(refreshedAccount2.getBillCycleDayLocal(), new Integer(31));
+        assertEquals(refreshedAccount2.getBillCycleDayLocal(), new Integer(0));
 
         // Move clock past startDate to check nothing happens
         busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.NULL_INVOICE);

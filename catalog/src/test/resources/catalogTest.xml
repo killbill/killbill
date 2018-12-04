@@ -17,13 +17,13 @@
   ~ under the License.
   -->
 
-<!-- Use cases covered so far: Tiered Product (Pistol/Shotgun/Assault-Rifle) 
-	Multiple changeEvent plan policies Multiple PlanAlignment (see below, trial 
-	add-on alignments and rescue discount package) Product transition rules Add 
-	on (Scopes, Hoster) Multi-pack addon (Extra-Ammo) Addon Trial aligned to 
-	base plan (holster-monthly-regular) Addon Trial aligned to creation (holster-monthly-special) 
-	Rescue discount package (assault-rifle-annual-rescue) Plan phase with a reccurring 
-	and a one off (refurbish-maintenance) Phan with more than 2 phase (gunclub 
+<!-- Use cases covered so far: Tiered Product (Pistol/Shotgun/Assault-Rifle)
+	Multiple changeEvent plan policies Multiple PlanAlignment (see below, trial
+	add-on alignments and rescue discount package) Product transition rules Add
+	on (Scopes, Hoster) Multi-pack addon (Extra-Ammo) Addon Trial aligned to
+	base plan (holster-monthly-regular) Addon Trial aligned to creation (holster-monthly-special)
+	Rescue discount package (assault-rifle-annual-rescue) Plan phase with a reccurring
+	and a one off (refurbish-maintenance) Phan with more than 2 phase (gunclub
 	discount plans) Use Cases to do: Tiered Add On Riskfree period -->
 <catalog xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:noNamespaceSchemaLocation="CatalogSchema.xsd ">
@@ -69,6 +69,7 @@
                 <addonProduct>Laser-Scope</addonProduct>
                 <addonProduct>Holster</addonProduct>
                 <addonProduct>Bullets</addonProduct>
+                <addonProduct>Cabinet</addonProduct>
             </available>
         </product>
         <product name="Assault-Rifle">
@@ -83,6 +84,9 @@
             </available>
         </product>
         <product name="Trebuchet">
+            <category>BASE</category>
+        </product>
+        <product name="Cannon">
             <category>BASE</category>
         </product>
         <product name="Cleaning">
@@ -104,6 +108,9 @@
             <category>ADD_ON</category>
         </product>
         <product name="Bullets">
+            <category>ADD_ON</category>
+        </product>
+        <product name="Cabinet">
             <category>ADD_ON</category>
         </product>
     </products>
@@ -179,6 +186,11 @@
             </createAlignmentCase>
         </createAlignment>
         <billingAlignment>
+            <billingAlignmentCase>
+                <!-- For cabinet-triannual (add-on ACCOUNT aligned) -->
+                <billingPeriod>TRIANNUAL</billingPeriod>
+                <alignment>ACCOUNT</alignment>
+            </billingAlignmentCase>
             <billingAlignmentCase>
                 <productCategory>ADD_ON</productCategory>
                 <alignment>BUNDLE</alignment>
@@ -1358,6 +1370,33 @@
             <plansAllowedInBundle>-1</plansAllowedInBundle>
             <!-- arbitrary number of these (multipack) -->
         </plan>
+        <plan name="cabinet-triannual">
+            <product>Cabinet</product>
+            <initialPhases>
+            </initialPhases>
+            <finalPhase type="EVERGREEN">
+                <duration>
+                    <unit>UNLIMITED</unit>
+                </duration>
+                <recurring>
+                    <billingPeriod>TRIANNUAL</billingPeriod>
+                    <recurringPrice>
+                        <price>
+                            <currency>USD</currency>
+                            <value>999.95</value>
+                        </price>
+                        <price>
+                            <currency>EUR</currency>
+                            <value>499.95</value>
+                        </price>
+                        <price>
+                            <currency>GBP</currency>
+                            <value>999.95</value>
+                        </price>
+                    </recurringPrice>
+                </recurring>
+            </finalPhase>
+        </plan>
         <plan name="trebuchet-usage-in-arrear" prettyName="Trebuchet Monthly Plan">
             <product>Trebuchet</product>
             <finalPhase type="EVERGREEN">
@@ -1401,6 +1440,24 @@
                 </usages>
             </finalPhase>
         </plan>
+        <plan name="cannon-monthly-in-arrear">
+            <product>Cannon</product>
+            <recurringBillingMode>IN_ARREAR</recurringBillingMode>
+            <finalPhase type="EVERGREEN">
+                <duration>
+                    <unit>UNLIMITED</unit>
+                </duration>
+                <recurring>
+                    <billingPeriod>MONTHLY</billingPeriod>
+                    <recurringPrice>
+                        <price>
+                            <currency>USD</currency>
+                            <value>500.00</value>
+                        </price>
+                    </recurringPrice>
+                </recurring>
+            </finalPhase>
+        </plan>
     </plans>
     <priceLists>
         <defaultPriceList name="DEFAULT">
@@ -1416,8 +1473,10 @@
                 <plan>shotgun-annual</plan>
                 <plan>assault-rifle-annual</plan>
                 <plan>trebuchet-usage-in-arrear</plan>
+                <plan>cannon-monthly-in-arrear</plan>
                 <plan>laser-scope-monthly</plan>
                 <plan>telescopic-scope-monthly</plan>
+                <plan>cabinet-triannual</plan>
                 <plan>cleaning-monthly</plan>
                 <plan>extra-ammo-monthly</plan>
                 <plan>holster-monthly-regular</plan>
