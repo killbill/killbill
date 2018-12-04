@@ -88,6 +88,7 @@ public class InvoiceWithMetadata {
     }
 
     public static class TrackingRecordId {
+
         private final String trackingId;
         private final UUID invoiceId;
         private final UUID subscriptionId;
@@ -122,6 +123,25 @@ public class InvoiceWithMetadata {
             return unitType;
         }
 
+
+        //
+        // Two records are similar if they were issued from the same usage record {subscriptionId, trackingId, unitType, recordDate}
+        // regardless on which 'invoice' they got attached to.
+        //
+        public boolean isSimilarRecord(final Object o) {
+            if (this == o) {
+                return true;
+            }
+            if (!(o instanceof TrackingRecordId)) {
+                return false;
+            }
+            final TrackingRecordId that = (TrackingRecordId) o;
+            return Objects.equal(trackingId, that.trackingId) &&
+                   Objects.equal(subscriptionId, that.subscriptionId) &&
+                   Objects.equal(unitType, that.unitType) &&
+                   Objects.equal(recordDate, that.recordDate);
+        }
+
         @Override
         public boolean equals(final Object o) {
             if (this == o) {
@@ -131,13 +151,8 @@ public class InvoiceWithMetadata {
                 return false;
             }
             final TrackingRecordId that = (TrackingRecordId) o;
-            // !!! Exclude invoiceId on purpose.
-            //
-            // The Set methods (Sets.difference) is used to exclude usage record already invoiced (on a specified invoiceId),
-            // by comparing 2 TrackingIds items with different invoiceId
-            //
             return Objects.equal(trackingId, that.trackingId) &&
-                   //Objects.equal(invoiceId, that.invoiceId) &&
+                   Objects.equal(invoiceId, that.invoiceId) &&
                    Objects.equal(subscriptionId, that.subscriptionId) &&
                    Objects.equal(unitType, that.unitType) &&
                    Objects.equal(recordDate, that.recordDate);
@@ -145,8 +160,7 @@ public class InvoiceWithMetadata {
 
         @Override
         public int hashCode() {
-            // !!! Exclude invoiceId on purpose - see comment above
-            return Objects.hashCode(trackingId, subscriptionId, unitType, recordDate);
+            return Objects.hashCode(trackingId, invoiceId, subscriptionId, unitType, recordDate);
         }
     }
 

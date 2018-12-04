@@ -288,7 +288,7 @@ public class TestConsumableInArrear extends TestIntegrationBase {
 
         final List<UsageRecord> bp1StoneRecords2 = new ArrayList();
         bp1StoneRecords2.add(new UsageRecord(new LocalDate(2012, 4, 23), 10L));
-        // Outside of range for this period -> It's tracking ID spreads across 2 invoices
+        // Outside of range for this period -> Its tracking ID spreads across 2 invoices
         bp1StoneRecords2.add(new UsageRecord(new LocalDate(2012, 5, 1), 101L));
         final SubscriptionUsageRecord bp1UsageRecord2 = new SubscriptionUsageRecord(bp1.getId(), "bp1-tracking-2", ImmutableList.of(new UnitUsageRecord("stones", bp1StoneRecords2)));
         recordUsageData(bp1UsageRecord2, callContext);

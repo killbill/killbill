@@ -55,6 +55,7 @@ import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
@@ -200,7 +201,20 @@ public abstract class ContiguousIntervalUsageInArrear {
 
         final Set<TrackingRecordId> existingTrackingIds = extractTrackingIds(allExistingTrackingIds);
 
-        final Set<TrackingRecordId> newTrackingIds = Sets.difference(allTrackingIds, existingTrackingIds);
+
+        final Set<TrackingRecordId> newTrackingIds = Sets.filter(allTrackingIds, new Predicate<TrackingRecordId>() {
+            @Override
+            public boolean apply(final TrackingRecordId allRecord) {
+
+                return ! Iterables.any(existingTrackingIds, new Predicate<TrackingRecordId>() {
+                    @Override
+                    public boolean apply(final TrackingRecordId existingRecord) {
+                        return existingRecord.isSimilarRecord(allRecord);
+                    }
+                });
+            }
+        });
+
 
         // Each RolledUpUsage 'ru' is for a specific time period and across all units
         for (final RolledUpUsage ru : allUsage) {

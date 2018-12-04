@@ -206,7 +206,7 @@ public class InvoiceDispatcher {
 
             final ImmutableAccountData account = accountApi.getImmutableAccountDataById(accountId, context);
 
-            commitInvoiceAndSetFutureNotifications(account, null, ImmutableSet.of(), notificationsBuilder.build(), context);
+            commitInvoiceAndSetFutureNotifications(account, notificationsBuilder.build(), context);
 
         } catch (final SubscriptionBaseApiException e) {
             log.warn("Failed handling SubscriptionBase change.",
@@ -539,7 +539,7 @@ public class InvoiceDispatcher {
                 log.warn("Ignoring rescheduleDate='{}', delayed scheduling is unsupported in dry-run", rescheduleDate);
             } else {
                 final FutureAccountNotifications futureAccountNotifications = createNextFutureNotificationDate(rescheduleDate, billingEvents, internalCallContext);
-                commitInvoiceAndSetFutureNotifications(account, null, ImmutableSet.of(), futureAccountNotifications, internalCallContext);
+                commitInvoiceAndSetFutureNotifications(account, futureAccountNotifications, internalCallContext);
             }
             return null;
         }
@@ -562,7 +562,7 @@ public class InvoiceDispatcher {
                 final BusInternalEvent event = new DefaultNullInvoiceEvent(accountId, clock.getUTCToday(),
                                                                            internalCallContext.getAccountRecordId(), internalCallContext.getTenantRecordId(), internalCallContext.getUserToken());
 
-                commitInvoiceAndSetFutureNotifications(account, null, ImmutableSet.of(), futureAccountNotifications, internalCallContext);
+                commitInvoiceAndSetFutureNotifications(account, futureAccountNotifications, internalCallContext);
                 postEvent(event);
             }
             return null;
@@ -626,7 +626,7 @@ public class InvoiceDispatcher {
         } finally {
             // Make sure we always set future notifications in case of errors
             if (!isDryRun && !success) {
-                commitInvoiceAndSetFutureNotifications(account, null, ImmutableSet.of(), futureAccountNotifications, internalCallContext);
+                commitInvoiceAndSetFutureNotifications(account, futureAccountNotifications, internalCallContext);
             }
 
             if (isDryRun || success) {
@@ -796,6 +796,14 @@ public class InvoiceDispatcher {
         }
         log.info(tmp.toString());
     }
+
+
+    private void commitInvoiceAndSetFutureNotifications(final ImmutableAccountData account,
+                                                        final FutureAccountNotifications futureAccountNotifications,
+                                                        final InternalCallContext context) {
+        commitInvoiceAndSetFutureNotifications(account, null, ImmutableSet.of(), futureAccountNotifications, context);
+    }
+
 
     private void commitInvoiceAndSetFutureNotifications(final ImmutableAccountData account,
                                                         @Nullable final InvoiceModelDao invoiceModelDao,
