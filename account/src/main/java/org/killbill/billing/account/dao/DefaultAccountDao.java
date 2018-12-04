@@ -197,7 +197,7 @@ public class DefaultAccountDao extends EntityDaoBase<AccountModelDao, Account, A
     }
 
     @Override
-    public void update(final AccountModelDao specifiedAccount, final InternalCallContext context) throws AccountApiException {
+    public void update(final AccountModelDao specifiedAccount, final boolean treatNullValueAsReset, final InternalCallContext context) throws AccountApiException {
         transactionalSqlDao.execute(false, AccountApiException.class, new EntitySqlDaoTransactionWrapper<Void>() {
             @Override
             public Void inTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory) throws EventBusException, AccountApiException {
@@ -207,6 +207,13 @@ public class DefaultAccountDao extends EntityDaoBase<AccountModelDao, Account, A
                 final AccountModelDao currentAccount = transactional.getById(accountId.toString(), context);
                 if (currentAccount == null) {
                     throw new AccountApiException(ErrorCode.ACCOUNT_DOES_NOT_EXIST_FOR_ID, accountId);
+                }
+
+                specifiedAccount.validateAccountUpdateInput(currentAccount, treatNullValueAsReset);
+
+                if (!treatNullValueAsReset) {
+                    // Set unspecified (null) fields to their current values
+                    specifiedAccount.mergeWithDelegate(currentAccount);
                 }
 
                 transactional.update(specifiedAccount, context);

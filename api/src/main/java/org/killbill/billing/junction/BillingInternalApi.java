@@ -1,7 +1,9 @@
 /*
- * Copyright 2010-2012 Ning, Inc.
+ * Copyright 2010-2013 Ning, Inc.
+ * Copyright 2014-2018 Groupon, Inc
+ * Copyright 2014-2018 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -27,6 +29,8 @@ import org.killbill.billing.subscription.api.user.SubscriptionBaseApiException;
 public interface BillingInternalApi {
 
     /**
+     * Note: this method assumes the lock is taken (https://github.com/killbill/killbill/issues/282)
+     *
      * @return an ordered list of billing event for the given accounts
      */
     public BillingEventSet getBillingEventsForAccountAndUpdateAccountBCD(UUID accountId, DryRunArguments dryRunArguments, InternalCallContext context) throws CatalogApiException, AccountApiException, SubscriptionBaseApiException;

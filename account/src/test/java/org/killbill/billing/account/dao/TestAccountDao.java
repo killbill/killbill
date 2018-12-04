@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014-2017 Groupon, Inc
- * Copyright 2014-2017 The Billing Project, LLC
+ * Copyright 2014-2018 Groupon, Inc
+ * Copyright 2014-2018 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -84,6 +84,7 @@ public class TestAccountDao extends AccountTestSuiteWithEmbeddedDB {
     public void testBasic() throws AccountApiException {
         final AccountModelDao account = createTestAccount();
         accountDao.create(account, internalCallContext);
+        refreshCallContext(account.getId());
 
         // Retrieve by key
         AccountModelDao retrievedAccount = accountDao.getAccountByKey(account.getExternalKey(), internalCallContext);
@@ -143,6 +144,7 @@ public class TestAccountDao extends AccountTestSuiteWithEmbeddedDB {
     public void testLongPhoneNumber() throws AccountApiException {
         final AccountModelDao account = createTestAccount("123456789012345678901234");
         accountDao.create(account, internalCallContext);
+        refreshCallContext(account.getId());
 
         final AccountModelDao retrievedAccount = accountDao.getAccountByKey(account.getExternalKey(), internalCallContext);
         checkAccountsEqual(retrievedAccount, account);
@@ -198,6 +200,7 @@ public class TestAccountDao extends AccountTestSuiteWithEmbeddedDB {
     public void testGetIdFromKey() throws AccountApiException {
         final AccountModelDao account = createTestAccount();
         accountDao.create(account, internalCallContext);
+        refreshCallContext(account.getId());
 
         final UUID accountId = accountDao.getIdFromKey(account.getExternalKey(), internalCallContext);
         Assert.assertEquals(accountId, account.getId());
@@ -212,6 +215,8 @@ public class TestAccountDao extends AccountTestSuiteWithEmbeddedDB {
     public void testUpdate() throws Exception {
         final AccountModelDao account = createTestAccount();
         accountDao.create(account, internalCallContext);
+        refreshCallContext(account.getId());
+
         final AccountModelDao createdAccount = accountDao.getAccountByKey(account.getExternalKey(), internalCallContext);
         List<AuditLogWithHistory> auditLogsWithHistory = accountDao.getAuditLogsWithHistoryForId(account.getId(), AuditLevel.FULL, internalCallContext);
         Assert.assertEquals(auditLogsWithHistory.size(), 1);
@@ -226,11 +231,10 @@ public class TestAccountDao extends AccountTestSuiteWithEmbeddedDB {
         Assert.assertEquals(history1.getLocale(), createdAccount.getLocale());
 
         final AccountData accountData = new MockAccountBuilder(new DefaultAccount(account)).migrated(false)
-                                                                                           .timeZone(DateTimeZone.forID("Australia/Darwin"))
                                                                                            .locale("FR-CA")
                                                                                            .build();
         final AccountModelDao updatedAccount = new AccountModelDao(account.getId(), accountData);
-        accountDao.update(updatedAccount, internalCallContext);
+        accountDao.update(updatedAccount, true, internalCallContext);
 
         final AccountModelDao retrievedAccount = accountDao.getAccountByKey(account.getExternalKey(), internalCallContext);
         checkAccountsEqual(retrievedAccount, updatedAccount);
@@ -250,7 +254,7 @@ public class TestAccountDao extends AccountTestSuiteWithEmbeddedDB {
         final AccountData accountData2 = new MockAccountBuilder(new DefaultAccount(updatedAccount)).locale("en_US")
                                                                                                    .build();
         final AccountModelDao updatedAccount2 = new AccountModelDao(account.getId(), accountData2);
-        accountDao.update(updatedAccount2, internalCallContext);
+        accountDao.update(updatedAccount2, true, internalCallContext);
 
         final AccountModelDao retrievedAccount2 = accountDao.getAccountByKey(account.getExternalKey(), internalCallContext);
         checkAccountsEqual(retrievedAccount2, updatedAccount2);
@@ -273,6 +277,7 @@ public class TestAccountDao extends AccountTestSuiteWithEmbeddedDB {
     public void testUpdatePaymentMethod() throws Exception {
         final AccountModelDao account = createTestAccount();
         accountDao.create(account, internalCallContext);
+        refreshCallContext(account.getId());
 
         final UUID newPaymentMethodId = UUID.randomUUID();
         accountDao.updatePaymentMethod(account.getId(), newPaymentMethodId, internalCallContext);
@@ -291,12 +296,13 @@ public class TestAccountDao extends AccountTestSuiteWithEmbeddedDB {
     public void testShouldBeAbleToUpdateSomeFields() throws Exception {
         final AccountModelDao account = createTestAccount();
         accountDao.create(account, internalCallContext);
+        refreshCallContext(account.getId());
 
         final MutableAccountData otherAccount = new DefaultAccount(account).toMutableAccountData();
         otherAccount.setAddress1(UUID.randomUUID().toString());
         otherAccount.setEmail(UUID.randomUUID().toString());
         final AccountModelDao newAccount = new AccountModelDao(account.getId(), otherAccount);
-        accountDao.update(newAccount, internalCallContext);
+        accountDao.update(newAccount, true, internalCallContext);
 
         final AccountModelDao retrievedAccount = accountDao.getById(account.getId(), internalCallContext);
         checkAccountsEqual(retrievedAccount, newAccount);
@@ -306,6 +312,7 @@ public class TestAccountDao extends AccountTestSuiteWithEmbeddedDB {
     public void testShouldBeAbleToHandleBCDOfZero() throws Exception {
         final AccountModelDao account = createTestAccount(0);
         accountDao.create(account, internalCallContext);
+        refreshCallContext(account.getId());
 
         // Same BCD (zero)
         final AccountModelDao retrievedAccount = accountDao.getById(account.getId(), internalCallContext);

@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014-2016 Groupon, Inc
- * Copyright 2014-2016 The Billing Project, LLC
+ * Copyright 2014-2018 Groupon, Inc
+ * Copyright 2014-2018 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -81,7 +81,7 @@ public class MockAccountDao extends MockEntityDaoBase<AccountModelDao, Account, 
     }
 
     @Override
-    public void update(final AccountModelDao account, final InternalCallContext context) {
+    public void update(final AccountModelDao account, final boolean treatNullValueAsReset, final InternalCallContext context) {
         super.update(account, context);
 
         final AccountModelDao currentAccount = getById(account.getId(), context);

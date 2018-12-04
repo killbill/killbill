@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014-2017 Groupon, Inc
- * Copyright 2014-2017 The Billing Project, LLC
+ * Copyright 2014-2018 Groupon, Inc
+ * Copyright 2014-2018 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -304,6 +304,7 @@ public class DefaultAccount extends EntityBase implements Account {
      * @return merged account data
      */
     @Override
+    @Deprecated // TODO Get rid of this in 0.22
     public Account mergeWithDelegate(final Account currentAccount) {
         final DefaultMutableAccountData accountData = new DefaultMutableAccountData(this);
 
