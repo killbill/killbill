@@ -634,6 +634,8 @@ public class TestWithBCDUpdate extends TestIntegrationBase {
         // BP creation : Will set Account BCD to the first (DateOfFirstRecurringNonZeroCharge is the subscription start date in this case)
         final UUID baseEntitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec, null, overrides), "bundleExternalKey", null, null, false, true, ImmutableList.<PluginProperty>of(), callContext);
         assertListenerStatus();
+        final Account accountBCD = accountUserApi.getAccountById(account.getId(), callContext);
+        assertEquals(accountBCD.getBillCycleDayLocal(), (Integer) 1);
         final Entitlement baseEntitlement = entitlementApi.getEntitlementForId(baseEntitlementId, callContext);
 
         invoiceChecker.checkInvoice(account.getId(), 1, callContext,
@@ -844,9 +846,14 @@ public class TestWithBCDUpdate extends TestIntegrationBase {
         recordUsageData(aoSubscription.getId(), "tracking-1", "bullets", new LocalDate(2012, 5, 5), 100L, callContext);
         recordUsageData(aoSubscription.getId(), "tracking-1", "bullets", new LocalDate(2012, 6, 4), 100L, callContext);
 
+        // 2012-06-01
+        busHandler.pushExpectedEvents(NextEvent.NULL_INVOICE);
+        clock.addDays(27);
+        assertListenerStatus();
+
         // 2012-06-05
-        busHandler.pushExpectedEvents(NextEvent.NULL_INVOICE, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
-        clock.addMonths(1);
+        busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
+        clock.addDays(4);
         assertListenerStatus();
 
         invoiceChecker.checkInvoice(account.getId(), 4, callContext,

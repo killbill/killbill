@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014-2017 Groupon, Inc
- * Copyright 2014-2017 The Billing Project, LLC
+ * Copyright 2014-2018 Groupon, Inc
+ * Copyright 2014-2018 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -36,14 +36,10 @@ import org.killbill.billing.catalog.api.BillingActionPolicy;
 import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.catalog.api.Plan;
 import org.killbill.billing.catalog.api.PlanPhase;
-import org.killbill.billing.catalog.api.PlanPhasePriceOverride;
-import org.killbill.billing.catalog.api.PlanPhaseSpecifier;
-import org.killbill.billing.catalog.api.PlanSpecifier;
 import org.killbill.billing.catalog.api.PriceList;
 import org.killbill.billing.catalog.api.Product;
 import org.killbill.billing.catalog.api.ProductCategory;
 import org.killbill.billing.entitlement.DefaultEntitlementService;
-import org.killbill.billing.entitlement.EntitlementService;
 import org.killbill.billing.entitlement.EventsStream;
 import org.killbill.billing.entitlement.api.EntitlementPluginExecution.WithEntitlementPlugin;
 import org.killbill.billing.entitlement.block.BlockingChecker;
@@ -52,7 +48,6 @@ import org.killbill.billing.entitlement.engine.core.EntitlementNotificationKey;
 import org.killbill.billing.entitlement.engine.core.EntitlementNotificationKeyAction;
 import org.killbill.billing.entitlement.engine.core.EntitlementUtils;
 import org.killbill.billing.entitlement.engine.core.EventsStreamBuilder;
-import org.killbill.billing.entitlement.logging.EntitlementLoggingHelper;
 import org.killbill.billing.entitlement.plugin.api.EntitlementContext;
 import org.killbill.billing.entitlement.plugin.api.OperationType;
 import org.killbill.billing.entity.EntityBase;
@@ -498,7 +493,7 @@ public class DefaultEntitlement extends EntityBase implements Entitlement {
 
                 try {
                     // Cancel subscription base first, to correctly compute the add-ons entitlements we need to cancel (see below)
-                    getSubscriptionBase().cancelWithPolicy(billingPolicy, eventsStream.getDefaultBillCycleDayLocal(), callContext);
+                    getSubscriptionBase().cancelWithPolicy(billingPolicy, callContext);
                 } catch (final SubscriptionBaseApiException e) {
                     throw new EntitlementApiException(e);
                 }

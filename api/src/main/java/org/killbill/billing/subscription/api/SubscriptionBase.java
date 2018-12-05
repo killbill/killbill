@@ -46,7 +46,7 @@ public interface SubscriptionBase extends Entity, Blockable {
     public boolean cancelWithDate(final DateTime requestedDate, final CallContext context)
             throws SubscriptionBaseApiException;
 
-    public boolean cancelWithPolicy(final BillingActionPolicy policy, int accountBillCycleDayLocal, final CallContext context)
+    public boolean cancelWithPolicy(final BillingActionPolicy policy, final CallContext context)
             throws SubscriptionBaseApiException;
 
     public boolean uncancel(final CallContext context)

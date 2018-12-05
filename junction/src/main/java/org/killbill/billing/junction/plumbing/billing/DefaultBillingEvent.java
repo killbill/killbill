@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014-2017 Groupon, Inc
- * Copyright 2014-2017 The Billing Project, LLC
+ * Copyright 2014-2018 Groupon, Inc
+ * Copyright 2014-2018 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -24,6 +24,7 @@ import java.util.List;
 import javax.annotation.Nullable;
 
 import org.joda.time.DateTime;
+import org.killbill.billing.catalog.api.BillingAlignment;
 import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.catalog.api.Catalog;
 import org.killbill.billing.catalog.api.CatalogApiException;
@@ -42,6 +43,7 @@ import com.google.common.collect.Lists;
 public class DefaultBillingEvent implements BillingEvent {
 
     private final int billCycleDayLocal;
+    private final BillingAlignment billingAlignment;
     private final SubscriptionBase subscription;
     private final DateTime effectiveDate;
     private final PlanPhase planPhase;
@@ -64,6 +66,7 @@ public class DefaultBillingEvent implements BillingEvent {
     public DefaultBillingEvent(final SubscriptionInternalEvent transition,
                                final SubscriptionBase subscription,
                                final int billCycleDayLocal,
+                               final BillingAlignment billingAlignment,
                                final Currency currency,
                                final Catalog catalog) throws CatalogApiException {
         final boolean isActive = transition.getTransitionType() != SubscriptionBaseTransitionType.CANCEL;
@@ -93,6 +96,7 @@ public class DefaultBillingEvent implements BillingEvent {
         this.catalogEffectiveDate = plan == null ? null : new DateTime(plan.getCatalog().getEffectiveDate());
 
         this.billCycleDayLocal = billCycleDayLocal;
+        this.billingAlignment = billingAlignment;
         this.catalog = catalog;
         this.currency = currency;
         this.description = transition.getTransitionType().toString();
@@ -128,6 +132,7 @@ public class DefaultBillingEvent implements BillingEvent {
         this.isDisableEvent = isDisableEvent;
         this.nextPlanPhase = isDisableEvent ? null : planPhase;
         this.catalogEffectiveDate = plan != null ? new DateTime(plan.getCatalog().getEffectiveDate()) : null;
+        this.billingAlignment = null;
     }
 
     @Override
@@ -179,6 +184,11 @@ public class DefaultBillingEvent implements BillingEvent {
     @Override
     public int getBillCycleDayLocal() {
         return billCycleDayLocal;
+    }
+
+    @Override
+    public BillingAlignment getBillingAlignment() {
+        return billingAlignment;
     }
 
     @Override

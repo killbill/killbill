@@ -562,9 +562,9 @@ public class TestSubscription extends TestIntegrationBase {
         clock.addDays(30);
         assertListenerStatus();
 
+        // SUBSCRIPTION alignment: no account BCD
         account = accountUserApi.getAccountById(account.getId(), callContext);
-        Assert.assertEquals(account.getBillCycleDayLocal().intValue(), 31);
-
+        Assert.assertEquals(account.getBillCycleDayLocal().intValue(), 0);
 
         // Move clock a bit to make sure START_OF_TERM brings us back to last Phase date : 2015-9-5
         clock.addDays(5);

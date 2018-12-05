@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014-2017 Groupon, Inc
- * Copyright 2014-2017 The Billing Project, LLC
+ * Copyright 2014-2018 Groupon, Inc
+ * Copyright 2014-2018 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -49,6 +49,7 @@ import org.killbill.billing.util.cache.CacheLoaderArgument;
 import org.killbill.billing.util.dao.NonEntityDao;
 
 import com.google.common.base.Function;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.Collections2;
 import com.google.common.collect.ImmutableList;
 
@@ -104,9 +105,11 @@ public class DefaultAccountInternalApi extends DefaultAccountApiBase implements 
     }
 
     @Override
-    public int getBCD(final UUID accountId, final InternalTenantContext context) throws AccountApiException {
+    public int getBCD(final InternalTenantContext context) throws AccountApiException {
         final CacheLoaderArgument arg = createBCDCacheLoaderArgument(context);
-        final Integer result = bcdCacheController.get(accountId, arg);
+        Preconditions.checkNotNull(context.getAccountRecordId(), "Context missing accountRecordId");
+        final ImmutableAccountData account = immutableAccountInternalApi.getImmutableAccountDataByRecordId(context.getAccountRecordId(), context);
+        final Integer result = bcdCacheController.get(account.getId(), arg);
         return result != null ? result : DefaultMutableAccountData.DEFAULT_BILLING_CYCLE_DAY_LOCAL;
     }
 

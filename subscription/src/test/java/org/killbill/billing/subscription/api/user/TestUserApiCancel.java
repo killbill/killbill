@@ -383,7 +383,7 @@ public class TestUserApiCancel extends SubscriptionTestSuiteWithEmbeddedDB {
         // Move ahead a bit abd cancel START_OF_TERM
         clock.addDays(5);
         testListener.pushExpectedEvent(NextEvent.CANCEL);
-        subscription.cancelWithPolicy(BillingActionPolicy.START_OF_TERM, accountData.getBillCycleDayLocal(), callContext);
+        subscription.cancelWithPolicy(BillingActionPolicy.START_OF_TERM, callContext);
         assertListenerStatus();
 
         subscription = (DefaultSubscriptionBase) subscriptionInternalApi.getSubscriptionFromId(subscription.getId(), internalCallContext);
@@ -408,7 +408,7 @@ public class TestUserApiCancel extends SubscriptionTestSuiteWithEmbeddedDB {
 
         // Cancel / Uncancel a few times to make sure this works and we end up on a stable state
         for (int i = 0; i < 3; i++) {
-            subscription.cancelWithPolicy(BillingActionPolicy.IMMEDIATE, -1, callContext);
+            subscription.cancelWithPolicy(BillingActionPolicy.IMMEDIATE, callContext);
 
             subscription = (DefaultSubscriptionBase) subscriptionInternalApi.getSubscriptionFromId(subscription.getId(), internalCallContext);
             assertEquals(subscription.getState(), EntitlementState.PENDING);
@@ -512,7 +512,7 @@ public class TestUserApiCancel extends SubscriptionTestSuiteWithEmbeddedDB {
         assertEquals(subscription.getState(), Entitlement.EntitlementState.PENDING);
         assertEquals(subscription.getStartDate().compareTo(startDate.toDateTime(accountData.getReferenceTime())), 0);
 
-        subscription.cancelWithPolicy(BillingActionPolicy.IMMEDIATE, 1, callContext);
+        subscription.cancelWithPolicy(BillingActionPolicy.IMMEDIATE, callContext);
 
         testListener.pushExpectedEvents(NextEvent.CREATE, NextEvent.CANCEL);
         clock.addDays(5);

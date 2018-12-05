@@ -26,8 +26,6 @@ import org.killbill.billing.catalog.api.BillingActionPolicy;
 import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.catalog.api.Plan;
 import org.killbill.billing.catalog.api.PlanPhase;
-import org.killbill.billing.catalog.api.PlanPhasePriceOverride;
-import org.killbill.billing.catalog.api.PlanPhaseSpecifier;
 import org.killbill.billing.catalog.api.PriceList;
 import org.killbill.billing.catalog.api.Product;
 import org.killbill.billing.catalog.api.ProductCategory;
@@ -73,9 +71,9 @@ public class MockSubscription implements SubscriptionBase {
     }
 
     @Override
-    public boolean cancelWithPolicy(BillingActionPolicy policy, int accountBillCycleDayLocal, CallContext context)
+    public boolean cancelWithPolicy(final BillingActionPolicy policy, final CallContext context)
             throws SubscriptionBaseApiException {
-        return sub.cancelWithPolicy(policy, accountBillCycleDayLocal, context);
+        return sub.cancelWithPolicy(policy, context);
     }
 
     @Override
