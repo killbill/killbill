@@ -18,6 +18,8 @@
 package org.killbill.billing.beatrix.integration.usage;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
@@ -30,12 +32,19 @@ import org.killbill.billing.catalog.api.BillingActionPolicy;
 import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.catalog.api.ProductCategory;
 import org.killbill.billing.entitlement.api.DefaultEntitlement;
+import org.killbill.billing.invoice.api.Invoice;
 import org.killbill.billing.invoice.api.InvoiceItemType;
 import org.killbill.billing.payment.api.PluginProperty;
+import org.killbill.billing.usage.api.SubscriptionUsageRecord;
+import org.killbill.billing.usage.api.UnitUsageRecord;
+import org.killbill.billing.usage.api.UsageRecord;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
+
+import static org.testng.Assert.assertEquals;
 
 public class TestConsumableInArrear extends TestIntegrationBase {
 
@@ -62,44 +71,47 @@ public class TestConsumableInArrear extends TestIntegrationBase {
         //
         final DefaultEntitlement aoSubscription = addAOEntitlementAndCheckForCompletion(bpSubscription.getBundleId(), "Bullets", ProductCategory.ADD_ON, BillingPeriod.NO_BILLING_PERIOD, NextEvent.CREATE, NextEvent.BLOCK, NextEvent.NULL_INVOICE);
 
-        recordUsageData(aoSubscription.getId(), "bullets", new LocalDate(2012, 4, 1), 99L, callContext);
-        recordUsageData(aoSubscription.getId(), "bullets", new LocalDate(2012, 4, 15), 100L, callContext);
+        recordUsageData(aoSubscription.getId(), "tracking-1", "bullets", new LocalDate(2012, 4, 1), 99L, callContext);
+        recordUsageData(aoSubscription.getId(), "tracking-2", "bullets", new LocalDate(2012, 4, 15), 100L, callContext);
 
         busHandler.pushExpectedEvents(NextEvent.PHASE, NextEvent.NULL_INVOICE, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
         clock.addDays(30);
         assertListenerStatus();
 
-        invoiceChecker.checkInvoice(account.getId(), 2, callContext,
-                                    new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 1), new LocalDate(2013, 5, 1), InvoiceItemType.RECURRING, new BigDecimal("2399.95")),
-                                    new ExpectedInvoiceItemCheck(new LocalDate(2012, 4, 1), new LocalDate(2012, 5, 1), InvoiceItemType.USAGE, new BigDecimal("5.90")));
+        Invoice curInvoice = invoiceChecker.checkInvoice(account.getId(), 2, callContext,
+                                                         new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 1), new LocalDate(2013, 5, 1), InvoiceItemType.RECURRING, new BigDecimal("2399.95")),
+                                                         new ExpectedInvoiceItemCheck(new LocalDate(2012, 4, 1), new LocalDate(2012, 5, 1), InvoiceItemType.USAGE, new BigDecimal("5.90")));
+        invoiceChecker.checkTrackingIds(curInvoice, ImmutableSet.of("tracking-1", "tracking-2"), internalCallContext);
 
         // $0 invoice
         busHandler.pushExpectedEvents(NextEvent.INVOICE);
         clock.addMonths(1);
         assertListenerStatus();
 
-        invoiceChecker.checkInvoice(account.getId(), 3, callContext,
-                                    new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 1), new LocalDate(2012, 6, 1), InvoiceItemType.USAGE, BigDecimal.ZERO));
+        curInvoice = invoiceChecker.checkInvoice(account.getId(), 3, callContext,
+                                                 new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 1), new LocalDate(2012, 6, 1), InvoiceItemType.USAGE, BigDecimal.ZERO));
+        invoiceChecker.checkTrackingIds(curInvoice, ImmutableSet.of(), internalCallContext);
 
-        recordUsageData(aoSubscription.getId(), "bullets", new LocalDate(2012, 6, 1), 50L, callContext);
-        recordUsageData(aoSubscription.getId(), "bullets", new LocalDate(2012, 6, 16), 300L, callContext);
+        recordUsageData(aoSubscription.getId(), "tracking-3", "bullets", new LocalDate(2012, 6, 1), 50L, callContext);
+        recordUsageData(aoSubscription.getId(), "tracking-4", "bullets", new LocalDate(2012, 6, 16), 300L, callContext);
 
         busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
         clock.addMonths(1);
         assertListenerStatus();
 
-        invoiceChecker.checkInvoice(account.getId(), 4, callContext,
-                                    new ExpectedInvoiceItemCheck(new LocalDate(2012, 6, 1), new LocalDate(2012, 7, 1), InvoiceItemType.USAGE, new BigDecimal("11.80")));
+        curInvoice = invoiceChecker.checkInvoice(account.getId(), 4, callContext,
+                                                 new ExpectedInvoiceItemCheck(new LocalDate(2012, 6, 1), new LocalDate(2012, 7, 1), InvoiceItemType.USAGE, new BigDecimal("11.80")));
+        invoiceChecker.checkTrackingIds(curInvoice, ImmutableSet.of("tracking-3", "tracking-4"), internalCallContext);
 
         // Should be ignored because this is outside of optimization range (org.killbill.invoice.readMaxRawUsagePreviousPeriod = 2) => we will only look for items > 2012-7-1 - 2 months = 2012-5-1
-        recordUsageData(aoSubscription.getId(), "bullets", new LocalDate(2012, 4, 30), 100L, callContext);
+        recordUsageData(aoSubscription.getId(), "tracking-5", "bullets", new LocalDate(2012, 4, 30), 100L, callContext);
 
         // Should be invoiced from past period
-        recordUsageData(aoSubscription.getId(), "bullets", new LocalDate(2012, 5, 1), 199L, callContext);
+        recordUsageData(aoSubscription.getId(), "tracking-6", "bullets", new LocalDate(2012, 5, 1), 199L, callContext);
 
         // New usage for this past period
-        recordUsageData(aoSubscription.getId(), "bullets", new LocalDate(2012, 7, 1), 50L, callContext);
-        recordUsageData(aoSubscription.getId(), "bullets", new LocalDate(2012, 7, 16), 300L, callContext);
+        recordUsageData(aoSubscription.getId(), "tracking-7", "bullets", new LocalDate(2012, 7, 1), 50L, callContext);
+        recordUsageData(aoSubscription.getId(), "tracking-8", "bullets", new LocalDate(2012, 7, 16), 300L, callContext);
 
         // Remove old data, should be ignored by the system because readMaxRawUsagePreviousPeriod = 2, so:
         // * Last endDate invoiced is 2012-7-1 => Anything 2 period prior that will be ignored => Anything prior 2012-5-1 should be ignored
@@ -109,25 +121,26 @@ public class TestConsumableInArrear extends TestIntegrationBase {
         clock.addMonths(1);
         assertListenerStatus();
 
-        invoiceChecker.checkInvoice(account.getId(), 5, callContext,
-                                    new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 1), new LocalDate(2012, 6, 1), InvoiceItemType.USAGE, new BigDecimal("5.90")),
-                                    new ExpectedInvoiceItemCheck(new LocalDate(2012, 7, 1), new LocalDate(2012, 8, 1), InvoiceItemType.USAGE, new BigDecimal("11.80")));
-
+        curInvoice = invoiceChecker.checkInvoice(account.getId(), 5, callContext,
+                                                 new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 1), new LocalDate(2012, 6, 1), InvoiceItemType.USAGE, new BigDecimal("5.90")),
+                                                 new ExpectedInvoiceItemCheck(new LocalDate(2012, 7, 1), new LocalDate(2012, 8, 1), InvoiceItemType.USAGE, new BigDecimal("11.80")));
+        invoiceChecker.checkTrackingIds(curInvoice, ImmutableSet.of("tracking-6", "tracking-7", "tracking-8"), internalCallContext);
 
         // Add a few more month of usage data and check correctness of invoice: iterate 8 times until 2013-4-1 (prior ANNUAL renewal)
         LocalDate startDate = new LocalDate(2012, 8, 1);
         int currentInvoice = 6;
         for (int i = 0; i < 8; i++) {
 
-            recordUsageData(aoSubscription.getId(), "bullets", startDate.plusDays(15), 350L, callContext);
+            final String trackingId = "tracking-" + (9 + i);
+            recordUsageData(aoSubscription.getId(), trackingId, "bullets", startDate.plusDays(15), 350L, callContext);
 
             busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
             clock.addMonths(1);
             assertListenerStatus();
 
-            invoiceChecker.checkInvoice(account.getId(), currentInvoice, callContext,
-                                        new ExpectedInvoiceItemCheck(startDate, startDate.plusMonths(1), InvoiceItemType.USAGE, new BigDecimal("11.80")));
-
+            curInvoice = invoiceChecker.checkInvoice(account.getId(), currentInvoice, callContext,
+                                                     new ExpectedInvoiceItemCheck(startDate, startDate.plusMonths(1), InvoiceItemType.USAGE, new BigDecimal("11.80")));
+            invoiceChecker.checkTrackingIds(curInvoice, ImmutableSet.of(trackingId), internalCallContext);
 
             startDate = startDate.plusMonths(1);
             currentInvoice++;
@@ -157,29 +170,31 @@ public class TestConsumableInArrear extends TestIntegrationBase {
         //
         final DefaultEntitlement aoSubscription = addAOEntitlementAndCheckForCompletion(bpSubscription.getBundleId(), "Bullets", ProductCategory.ADD_ON, BillingPeriod.NO_BILLING_PERIOD, NextEvent.CREATE, NextEvent.BLOCK, NextEvent.NULL_INVOICE);
 
-        recordUsageData(aoSubscription.getId(), "bullets", new LocalDate(2012, 4, 1), 99L, callContext);
-        recordUsageData(aoSubscription.getId(), "bullets", new LocalDate(2012, 4, 15), 100L, callContext);
+        recordUsageData(aoSubscription.getId(), "t1", "bullets", new LocalDate(2012, 4, 1), 99L, callContext);
+        recordUsageData(aoSubscription.getId(), "t2", "bullets", new LocalDate(2012, 4, 15), 100L, callContext);
 
         busHandler.pushExpectedEvents(NextEvent.PHASE, NextEvent.NULL_INVOICE, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
         clock.addDays(30);
         assertListenerStatus();
-        invoiceChecker.checkInvoice(account.getId(), 2, callContext,
-                                    new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 1), new LocalDate(2013, 5, 1), InvoiceItemType.RECURRING, new BigDecimal("2399.95")),
-                                    new ExpectedInvoiceItemCheck(new LocalDate(2012, 4, 1), new LocalDate(2012, 5, 1), InvoiceItemType.USAGE, new BigDecimal("5.90")));
+        Invoice curInvoice = invoiceChecker.checkInvoice(account.getId(), 2, callContext,
+                                                         new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 1), new LocalDate(2013, 5, 1), InvoiceItemType.RECURRING, new BigDecimal("2399.95")),
+                                                         new ExpectedInvoiceItemCheck(new LocalDate(2012, 4, 1), new LocalDate(2012, 5, 1), InvoiceItemType.USAGE, new BigDecimal("5.90")));
+        invoiceChecker.checkTrackingIds(curInvoice, ImmutableSet.of("t1", "t2"), internalCallContext);
 
-        recordUsageData(aoSubscription.getId(), "bullets", new LocalDate(2012, 5, 3), 99L, callContext);
-        recordUsageData(aoSubscription.getId(), "bullets", new LocalDate(2012, 5, 5), 100L, callContext);
+        recordUsageData(aoSubscription.getId(), "t3", "bullets", new LocalDate(2012, 5, 3), 99L, callContext);
+        recordUsageData(aoSubscription.getId(), "t4", "bullets", new LocalDate(2012, 5, 5), 100L, callContext);
 
         // This one should be ignored
-        recordUsageData(aoSubscription.getId(), "bullets", new LocalDate(2012, 5, 29), 100L, callContext);
+        recordUsageData(aoSubscription.getId(), "t5", "bullets", new LocalDate(2012, 5, 29), 100L, callContext);
 
         clock.addDays(27);
         busHandler.pushExpectedEvents(NextEvent.BLOCK, NextEvent.CANCEL, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
         aoSubscription.cancelEntitlementWithDateOverrideBillingPolicy(new LocalDate(2012, 5, 28), BillingActionPolicy.IMMEDIATE, ImmutableList.<PluginProperty>of(), callContext);
         assertListenerStatus();
 
-        invoiceChecker.checkInvoice(account.getId(), 3, callContext,
-                                    new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 1), new LocalDate(2012, 5, 28), InvoiceItemType.USAGE, new BigDecimal("5.90")));
+        curInvoice = invoiceChecker.checkInvoice(account.getId(), 3, callContext,
+                                                 new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 1), new LocalDate(2012, 5, 28), InvoiceItemType.USAGE, new BigDecimal("5.90")));
+        invoiceChecker.checkTrackingIds(curInvoice, ImmutableSet.of("t3", "t4"), internalCallContext);
 
         busHandler.pushExpectedEvent(NextEvent.NULL_INVOICE);
         clock.addDays(4);
@@ -204,44 +219,113 @@ public class TestConsumableInArrear extends TestIntegrationBase {
         Assert.assertNull(bpSubscription.getSubscriptionBase().getChargedThroughDate());
 
         // Record usage for first month
-        recordUsageData(bpSubscription.getId(), "stones", new LocalDate(2012, 4, 5), 85L, callContext);
-        recordUsageData(bpSubscription.getId(), "stones", new LocalDate(2012, 4, 15), 150L, callContext);
+        recordUsageData(bpSubscription.getId(), "xxx-1", "stones", new LocalDate(2012, 4, 5), 85L, callContext);
+        recordUsageData(bpSubscription.getId(), "xxx-2", "stones", new LocalDate(2012, 4, 15), 150L, callContext);
 
         busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
         clock.addMonths(1);
         assertListenerStatus();
 
-        invoiceChecker.checkInvoice(account.getId(), 1, callContext,
-                                    new ExpectedInvoiceItemCheck(new LocalDate(2012, 4, 1), new LocalDate(2012, 5, 1), InvoiceItemType.USAGE, new BigDecimal("1000")));
+        Invoice curInvoice = invoiceChecker.checkInvoice(account.getId(), 1, callContext,
+                                                         new ExpectedInvoiceItemCheck(new LocalDate(2012, 4, 1), new LocalDate(2012, 5, 1), InvoiceItemType.USAGE, new BigDecimal("1000")));
+        invoiceChecker.checkTrackingIds(curInvoice, ImmutableSet.of("xxx-1", "xxx-2"), internalCallContext);
 
         final DateTime firstExpectedCTD = account.getReferenceTime().withMonthOfYear(5).withDayOfMonth(1);
-        Assert.assertEquals(subscriptionBaseInternalApiApi.getSubscriptionFromId(bpSubscription.getId(), internalCallContext).getChargedThroughDate().compareTo(firstExpectedCTD), 0);
+        assertEquals(subscriptionBaseInternalApiApi.getSubscriptionFromId(bpSubscription.getId(), internalCallContext).getChargedThroughDate().compareTo(firstExpectedCTD), 0);
 
         // $0 invoice
         busHandler.pushExpectedEvents(NextEvent.INVOICE);
         clock.addMonths(1);
         assertListenerStatus();
 
-
-        invoiceChecker.checkInvoice(account.getId(), 2, callContext,
-                                    new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 1), new LocalDate(2012, 6, 1), InvoiceItemType.USAGE, BigDecimal.ZERO));
+        curInvoice = invoiceChecker.checkInvoice(account.getId(), 2, callContext,
+                                                 new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 1), new LocalDate(2012, 6, 1), InvoiceItemType.USAGE, BigDecimal.ZERO));
+        invoiceChecker.checkTrackingIds(curInvoice, ImmutableSet.of(), internalCallContext);
 
         final DateTime secondExpectedCTD = account.getReferenceTime().withMonthOfYear(6).withDayOfMonth(1);
 
-        Assert.assertEquals(subscriptionBaseInternalApiApi.getSubscriptionFromId(bpSubscription.getId(), internalCallContext).getChargedThroughDate().compareTo(secondExpectedCTD), 0);
+        assertEquals(subscriptionBaseInternalApiApi.getSubscriptionFromId(bpSubscription.getId(), internalCallContext).getChargedThroughDate().compareTo(secondExpectedCTD), 0);
 
         // Record usage for third month (verify invoicing resumes)
-        recordUsageData(bpSubscription.getId(), "stones", new LocalDate(2012, 6, 5), 25L, callContext);
-        recordUsageData(bpSubscription.getId(), "stones", new LocalDate(2012, 6, 15), 50L, callContext);
+        recordUsageData(bpSubscription.getId(), "xxx-3", "stones", new LocalDate(2012, 6, 5), 25L, callContext);
+        recordUsageData(bpSubscription.getId(), "xxx-4", "stones", new LocalDate(2012, 6, 15), 50L, callContext);
 
         busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
         clock.addMonths(1);
         assertListenerStatus();
 
-        invoiceChecker.checkInvoice(account.getId(), 3, callContext,
-                                    new ExpectedInvoiceItemCheck(new LocalDate(2012, 6, 1), new LocalDate(2012, 7, 1), InvoiceItemType.USAGE, new BigDecimal("100")));
+        curInvoice = invoiceChecker.checkInvoice(account.getId(), 3, callContext,
+                                                 new ExpectedInvoiceItemCheck(new LocalDate(2012, 6, 1), new LocalDate(2012, 7, 1), InvoiceItemType.USAGE, new BigDecimal("100")));
+        invoiceChecker.checkTrackingIds(curInvoice, ImmutableSet.of("xxx-3", "xxx-4"), internalCallContext);
 
         final DateTime thirdExpectedCTD = account.getReferenceTime().withMonthOfYear(7).withDayOfMonth(1);
-        Assert.assertEquals(subscriptionBaseInternalApiApi.getSubscriptionFromId(bpSubscription.getId(), internalCallContext).getChargedThroughDate().compareTo(thirdExpectedCTD), 0);
+        assertEquals(subscriptionBaseInternalApiApi.getSubscriptionFromId(bpSubscription.getId(), internalCallContext).getChargedThroughDate().compareTo(thirdExpectedCTD), 0);
     }
+
+    @Test(groups = "slow")
+    public void testWithMultipleUsageSubscriptions() throws Exception {
+        // We take april as it has 30 days (easier to play with BCD)
+        // Set clock to the initial start date - we implicitly assume here that the account timezone is UTC
+        clock.setDay(new LocalDate(2012, 4, 1));
+
+        final AccountData accountData = getAccountData(1);
+        final Account account = createAccountWithNonOsgiPaymentMethod(accountData);
+        accountChecker.checkAccount(account.getId(), accountData, callContext);
+
+        // Create subscription
+        final DefaultEntitlement bp1 = createBaseEntitlementAndCheckForCompletion(account.getId(), "bundleKey1", "Trebuchet", ProductCategory.BASE, BillingPeriod.NO_BILLING_PERIOD, NextEvent.CREATE, NextEvent.BLOCK, NextEvent.NULL_INVOICE);
+        subscriptionChecker.checkSubscriptionCreated(bp1.getId(), internalCallContext);
+
+        final DefaultEntitlement bp2 = createBaseEntitlementAndCheckForCompletion(account.getId(), "bundleKey2", "Trebuchet", ProductCategory.BASE, BillingPeriod.NO_BILLING_PERIOD, NextEvent.CREATE, NextEvent.BLOCK, NextEvent.NULL_INVOICE);
+        subscriptionChecker.checkSubscriptionCreated(bp2.getId(), internalCallContext);
+
+        final List<UsageRecord> bp1StoneRecords1 = new ArrayList();
+        bp1StoneRecords1.add(new UsageRecord(new LocalDate(2012, 4, 5), 5L));
+        bp1StoneRecords1.add(new UsageRecord(new LocalDate(2012, 4, 15), 10L));
+        bp1StoneRecords1.add(new UsageRecord(new LocalDate(2012, 4, 16), 15L));
+        final SubscriptionUsageRecord bp1UsageRecord1 = new SubscriptionUsageRecord(bp1.getId(), "bp1-tracking-1", ImmutableList.of(new UnitUsageRecord("stones", bp1StoneRecords1)));
+        recordUsageData(bp1UsageRecord1, callContext);
+
+        final List<UsageRecord> bp1StoneRecords2 = new ArrayList();
+        bp1StoneRecords2.add(new UsageRecord(new LocalDate(2012, 4, 23), 10L));
+        // Outside of range for this period -> Its tracking ID spreads across 2 invoices
+        bp1StoneRecords2.add(new UsageRecord(new LocalDate(2012, 5, 1), 101L));
+        final SubscriptionUsageRecord bp1UsageRecord2 = new SubscriptionUsageRecord(bp1.getId(), "bp1-tracking-2", ImmutableList.of(new UnitUsageRecord("stones", bp1StoneRecords2)));
+        recordUsageData(bp1UsageRecord2, callContext);
+
+
+
+        final List<UsageRecord> bp2StoneRecords = new ArrayList();
+        bp2StoneRecords.add(new UsageRecord(new LocalDate(2012, 4, 5), 85L));
+        bp2StoneRecords.add(new UsageRecord(new LocalDate(2012, 4, 15), 150L));
+        bp2StoneRecords.add(new UsageRecord(new LocalDate(2012, 4, 16), 39L));
+        final SubscriptionUsageRecord bp2UsageRecord = new SubscriptionUsageRecord(bp2.getId(), "bp2-tracking-1", ImmutableList.of(new UnitUsageRecord("stones", bp2StoneRecords)));
+        recordUsageData(bp2UsageRecord, callContext);
+
+        busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
+        clock.addMonths(1);
+        assertListenerStatus();
+
+        Invoice curInvoice = invoiceChecker.checkInvoice(account.getId(), 1, callContext,
+                                                         new ExpectedInvoiceItemCheck(new LocalDate(2012, 4, 1), new LocalDate(2012, 5, 1), InvoiceItemType.USAGE, new BigDecimal("100")),
+                                                         new ExpectedInvoiceItemCheck(new LocalDate(2012, 4, 1), new LocalDate(2012, 5, 1), InvoiceItemType.USAGE, new BigDecimal("1000")));
+
+        invoiceChecker.checkTrackingIds(curInvoice, ImmutableSet.of("bp1-tracking-1", "bp1-tracking-2", "bp2-tracking-1"), internalCallContext);
+
+
+        busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
+        clock.addMonths(1);
+        assertListenerStatus();
+
+        curInvoice = invoiceChecker.checkInvoice(account.getId(), 2, callContext,
+                                                 new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 1), new LocalDate(2012, 6, 1), InvoiceItemType.USAGE, new BigDecimal("0")),
+                                                 new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 1), new LocalDate(2012, 6, 1), InvoiceItemType.USAGE, new BigDecimal("1000")));
+
+        invoiceChecker.checkTrackingIds(curInvoice, ImmutableSet.of("bp1-tracking-2"), internalCallContext);
+
+
+    }
+
+
+
 }

@@ -46,6 +46,7 @@ import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
+import com.google.common.collect.ImmutableSet;
 
 public class TestInvoiceWithMetadata extends InvoiceTestSuiteNoDB {
 
@@ -122,7 +123,7 @@ public class TestInvoiceWithMetadata extends InvoiceTestSuiteNoDB {
 
         perSubscriptionFutureNotificationDates.put(subscription.getId(), subscriptionFutureNotificationDates);
 
-        final InvoiceWithMetadata invoiceWithMetadata = new InvoiceWithMetadata(originalInvoice, perSubscriptionFutureNotificationDates);
+        final InvoiceWithMetadata invoiceWithMetadata = new InvoiceWithMetadata(originalInvoice, ImmutableSet.of(), perSubscriptionFutureNotificationDates);
 
         // We generate an invoice with one item, invoicing for $0
         final Invoice resultingInvoice = invoiceWithMetadata.getInvoice();

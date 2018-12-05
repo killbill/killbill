@@ -354,10 +354,10 @@ public class TestContiguousIntervalConsumableInArrear extends TestUsageInArrearB
 
         // 2 items for startDate - firstBCDDate
         final List<RawUsage> rawUsages = new ArrayList<RawUsage>();
-        rawUsages.add(new DefaultRawUsage(subscriptionId, new LocalDate(2014, 03, 20), "unit", 130L));
-        rawUsages.add(new DefaultRawUsage(subscriptionId, new LocalDate(2014, 03, 21), "unit", 271L));
+        rawUsages.add(new DefaultRawUsage(subscriptionId, new LocalDate(2014, 03, 20), "unit", 130L, "tracking-1"));
+        rawUsages.add(new DefaultRawUsage(subscriptionId, new LocalDate(2014, 03, 21), "unit", 271L, "tracking-1"));
         // 1 items for firstBCDDate - endDate
-        rawUsages.add(new DefaultRawUsage(subscriptionId, new LocalDate(2014, 04, 15), "unit", 199L));
+        rawUsages.add(new DefaultRawUsage(subscriptionId, new LocalDate(2014, 04, 15), "unit", 199L, "tracking-2"));
 
         final DefaultTieredBlock block = createDefaultTieredBlock("unit", 100, 10, BigDecimal.ONE);
         final DefaultTier tier = createDefaultTierWithBlocks(block);
@@ -378,6 +378,9 @@ public class TestContiguousIntervalConsumableInArrear extends TestUsageInArrearB
         invoiceItems.add(ii2);
 
         final UsageInArrearItemsAndNextNotificationDate usageResult = intervalConsumableInArrear.computeMissingItemsAndNextNotificationDate(invoiceItems);
+        checkTrackingIds(rawUsages, usageResult.getTrackingIds());
+
+
         final List<InvoiceItem> result = usageResult.getInvoiceItems();
         assertEquals(result.size(), 2);
 
@@ -445,27 +448,27 @@ public class TestContiguousIntervalConsumableInArrear extends TestUsageInArrearB
         final LocalDate targetDate = t3;
 
         // Prev t0
-        final RawUsage raw1 = new DefaultRawUsage(subscriptionId, new LocalDate(2015, 03, 01), "unit", 12L);
+        final RawUsage raw1 = new DefaultRawUsage(subscriptionId, new LocalDate(2015, 03, 01), "unit", 12L, "tracking-1");
 
         // t0 - t1
-        final RawUsage raw2 = new DefaultRawUsage(subscriptionId, new LocalDate(2015, 03, 15), "unit", 6L);
-        final RawUsage raw3 = new DefaultRawUsage(subscriptionId, new LocalDate(2015, 03, 25), "unit", 4L);
+        final RawUsage raw2 = new DefaultRawUsage(subscriptionId, new LocalDate(2015, 03, 15), "unit", 6L, "tracking-1");
+        final RawUsage raw3 = new DefaultRawUsage(subscriptionId, new LocalDate(2015, 03, 25), "unit", 4L, "tracking-1");
 
         // t1 - t2 nothing
 
         // t2 - t3
-        final RawUsage raw4 = new DefaultRawUsage(subscriptionId, new LocalDate(2015, 05, 15), "unit", 13L);
-        final RawUsage oraw1 = new DefaultRawUsage(subscriptionId, new LocalDate(2015, 05, 21), "unit2", 21L);
-        final RawUsage raw5 = new DefaultRawUsage(subscriptionId, new LocalDate(2015, 05, 31), "unit", 7L);
+        final RawUsage raw4 = new DefaultRawUsage(subscriptionId, new LocalDate(2015, 05, 15), "unit", 13L, "tracking-2");
+        final RawUsage oraw1 = new DefaultRawUsage(subscriptionId, new LocalDate(2015, 05, 21), "unit2", 21L, "tracking-2");
+        final RawUsage raw5 = new DefaultRawUsage(subscriptionId, new LocalDate(2015, 05, 31), "unit", 7L, "tracking-2");
 
         // after t3
-        final RawUsage raw6 = new DefaultRawUsage(subscriptionId, new LocalDate(2015, 06, 15), "unit", 100L);
+        final RawUsage raw6 = new DefaultRawUsage(subscriptionId, new LocalDate(2015, 06, 15), "unit", 100L, "tracking-3");
 
         final List<RawUsage> rawUsage = ImmutableList.of(raw1, raw2, raw3, raw4, oraw1, raw5, raw6);
 
         final ContiguousIntervalUsageInArrear intervalConsumableInArrear = createContiguousIntervalConsumableInArrear(usage, rawUsage, targetDate, true, eventT0, eventT1, eventT2, eventT3);
 
-        final List<RolledUpUsage> unsortedRolledUpUsage = intervalConsumableInArrear.getRolledUpUsage();
+        final List<RolledUpUsage> unsortedRolledUpUsage = intervalConsumableInArrear.getRolledUpUsage().getUsage();
         Assert.assertEquals(unsortedRolledUpUsage.size(), 3);
 
         final List<RolledUpUsage> rolledUpUsage = TEST_ROLLED_UP_FIRST_USAGE_ORDERING.sortedCopy(unsortedRolledUpUsage);
@@ -506,7 +509,7 @@ public class TestContiguousIntervalConsumableInArrear extends TestUsageInArrearB
         final LocalDate rawUsageStartDate = new LocalDate(2015, 10, 16);
 
         final List<RawUsage> rawUsages = new ArrayList<RawUsage>();
-        rawUsages.add(new DefaultRawUsage(subscriptionId, startDate, "unit", 130L));
+        rawUsages.add(new DefaultRawUsage(subscriptionId, startDate, "unit", 130L, "tracking-1"));
 
         final DefaultTieredBlock block = createDefaultTieredBlock("unit", 100, 10, BigDecimal.ONE);
         final DefaultTier tier = createDefaultTierWithBlocks(block);
@@ -516,8 +519,8 @@ public class TestContiguousIntervalConsumableInArrear extends TestUsageInArrearB
         final BillingEvent event2 = createMockBillingEvent(new LocalDate(2014, 10, 16).toDateTimeAtStartOfDay(DateTimeZone.UTC), BillingPeriod.MONTHLY, Collections.<Usage>emptyList());
 
         final ContiguousIntervalUsageInArrear intervalConsumableInArrear = usage.getUsageType() == UsageType.CAPACITY ?
-                                                                           new ContiguousIntervalCapacityUsageInArrear(usage, accountId, invoiceId, rawUsages, targetDate, rawUsageStartDate, usageDetailMode, internalCallContext) :
-                                                                           new ContiguousIntervalConsumableUsageInArrear(usage, accountId, invoiceId, rawUsages, targetDate, rawUsageStartDate, usageDetailMode, internalCallContext);
+                                                                           new ContiguousIntervalCapacityUsageInArrear(usage, accountId, invoiceId, rawUsages, EMPTY_EXISTING_TRACKING_IDS, targetDate, rawUsageStartDate, usageDetailMode, internalCallContext) :
+                                                                           new ContiguousIntervalConsumableUsageInArrear(usage, accountId, invoiceId, rawUsages, EMPTY_EXISTING_TRACKING_IDS, targetDate, rawUsageStartDate, usageDetailMode, internalCallContext);
 
         intervalConsumableInArrear.addBillingEvent(event1);
         intervalConsumableInArrear.addBillingEvent(event2);
@@ -555,8 +558,8 @@ public class TestContiguousIntervalConsumableInArrear extends TestUsageInArrearB
 
         // Case 1
         List<RawUsage> rawUsages = new ArrayList<RawUsage>();
-        rawUsages.add(new DefaultRawUsage(subscriptionId, new LocalDate(2014, 03, 20), "FOO", 5L));
-        rawUsages.add(new DefaultRawUsage(subscriptionId, new LocalDate(2014, 03, 21), "BAR", 99L));
+        rawUsages.add(new DefaultRawUsage(subscriptionId, new LocalDate(2014, 03, 20), "FOO", 5L, "tracking-1"));
+        rawUsages.add(new DefaultRawUsage(subscriptionId, new LocalDate(2014, 03, 21), "BAR", 99L, "tracking-1"));
 
         List<InvoiceItem> result = produceInvoiceItems(rawUsages, TierBlockPolicy.ALL_TIERS, UsageDetailMode.AGGREGATE, ImmutableList.<InvoiceItem>of());
         assertEquals(result.size(), 1);
@@ -580,8 +583,8 @@ public class TestContiguousIntervalConsumableInArrear extends TestUsageInArrearB
 
         // Case 2
         rawUsages = new ArrayList<RawUsage>();
-        rawUsages.add(new DefaultRawUsage(subscriptionId, new LocalDate(2014, 03, 20), "FOO", 5L));
-        rawUsages.add(new DefaultRawUsage(subscriptionId, new LocalDate(2014, 03, 21), "BAR", 101L));
+        rawUsages.add(new DefaultRawUsage(subscriptionId, new LocalDate(2014, 03, 20), "FOO", 5L, "tracking-2"));
+        rawUsages.add(new DefaultRawUsage(subscriptionId, new LocalDate(2014, 03, 21), "BAR", 101L, "tracking-2"));
 
         result = produceInvoiceItems(rawUsages, TierBlockPolicy.ALL_TIERS, UsageDetailMode.AGGREGATE, ImmutableList.<InvoiceItem>of());
         assertEquals(result.size(), 1);
@@ -611,8 +614,8 @@ public class TestContiguousIntervalConsumableInArrear extends TestUsageInArrearB
 
         // Case 3
         rawUsages = new ArrayList<RawUsage>();
-        rawUsages.add(new DefaultRawUsage(subscriptionId, new LocalDate(2014, 03, 20), "FOO", 75L));
-        rawUsages.add(new DefaultRawUsage(subscriptionId, new LocalDate(2014, 03, 21), "BAR", 101L));
+        rawUsages.add(new DefaultRawUsage(subscriptionId, new LocalDate(2014, 03, 20), "FOO", 75L, "tracking-3"));
+        rawUsages.add(new DefaultRawUsage(subscriptionId, new LocalDate(2014, 03, 21), "BAR", 101L, "tracking-4"));
 
         result = produceInvoiceItems(rawUsages, TierBlockPolicy.ALL_TIERS, UsageDetailMode.AGGREGATE, ImmutableList.<InvoiceItem>of());
         assertEquals(result.size(), 1);
@@ -657,8 +660,8 @@ public class TestContiguousIntervalConsumableInArrear extends TestUsageInArrearB
 
         // Case 1
         List<RawUsage> rawUsages = new ArrayList<RawUsage>();
-        rawUsages.add(new DefaultRawUsage(subscriptionId, new LocalDate(2014, 03, 20), "FOO", 5L));
-        rawUsages.add(new DefaultRawUsage(subscriptionId, new LocalDate(2014, 03, 21), "BAR", 99L));
+        rawUsages.add(new DefaultRawUsage(subscriptionId, new LocalDate(2014, 03, 20), "FOO", 5L, "tracking-1"));
+        rawUsages.add(new DefaultRawUsage(subscriptionId, new LocalDate(2014, 03, 21), "BAR", 99L, "tracking-1"));
 
         List<InvoiceItem> result = produceInvoiceItems(rawUsages, TierBlockPolicy.ALL_TIERS, UsageDetailMode.DETAIL, ImmutableList.<InvoiceItem>of());
         assertEquals(result.size(), 2);
@@ -673,8 +676,8 @@ public class TestContiguousIntervalConsumableInArrear extends TestUsageInArrearB
 
         // Case 2
         rawUsages = new ArrayList<RawUsage>();
-        rawUsages.add(new DefaultRawUsage(subscriptionId, new LocalDate(2014, 03, 20), "FOO", 5L));
-        rawUsages.add(new DefaultRawUsage(subscriptionId, new LocalDate(2014, 03, 21), "BAR", 101L));
+        rawUsages.add(new DefaultRawUsage(subscriptionId, new LocalDate(2014, 03, 20), "FOO", 5L, "tracking-1"));
+        rawUsages.add(new DefaultRawUsage(subscriptionId, new LocalDate(2014, 03, 21), "BAR", 101L, "tracking-1"));
 
         result = produceInvoiceItems(rawUsages, TierBlockPolicy.ALL_TIERS, UsageDetailMode.DETAIL, ImmutableList.<InvoiceItem>of());
         assertEquals(result.size(), 3);
@@ -693,8 +696,8 @@ public class TestContiguousIntervalConsumableInArrear extends TestUsageInArrearB
 
         // Case 3
         rawUsages = new ArrayList<RawUsage>();
-        rawUsages.add(new DefaultRawUsage(subscriptionId, new LocalDate(2014, 03, 20), "FOO", 75L));
-        rawUsages.add(new DefaultRawUsage(subscriptionId, new LocalDate(2014, 03, 21), "BAR", 101L));
+        rawUsages.add(new DefaultRawUsage(subscriptionId, new LocalDate(2014, 03, 20), "FOO", 75L, "tracking-2"));
+        rawUsages.add(new DefaultRawUsage(subscriptionId, new LocalDate(2014, 03, 21), "BAR", 101L, "tracking-2"));
 
         result = produceInvoiceItems(rawUsages, TierBlockPolicy.ALL_TIERS, UsageDetailMode.DETAIL, ImmutableList.<InvoiceItem>of());
         assertEquals(result.size(), 5);
@@ -725,8 +728,8 @@ public class TestContiguousIntervalConsumableInArrear extends TestUsageInArrearB
 
         // Case 1
         List<RawUsage> rawUsages = new ArrayList<RawUsage>();
-        rawUsages.add(new DefaultRawUsage(subscriptionId, new LocalDate(2014, 03, 20), "FOO", 5L));
-        rawUsages.add(new DefaultRawUsage(subscriptionId, new LocalDate(2014, 03, 21), "BAR", 99L));
+        rawUsages.add(new DefaultRawUsage(subscriptionId, new LocalDate(2014, 03, 20), "FOO", 5L, "tracking-1"));
+        rawUsages.add(new DefaultRawUsage(subscriptionId, new LocalDate(2014, 03, 21), "BAR", 99L, "tracking-1"));
 
         List<InvoiceItem> result = produceInvoiceItems(rawUsages, TierBlockPolicy.TOP_TIER, UsageDetailMode.AGGREGATE, ImmutableList.<InvoiceItem>of());
         assertEquals(result.size(), 1);
@@ -749,8 +752,8 @@ public class TestContiguousIntervalConsumableInArrear extends TestUsageInArrearB
 
         // Case 2
         rawUsages = new ArrayList<RawUsage>();
-        rawUsages.add(new DefaultRawUsage(subscriptionId, new LocalDate(2014, 03, 20), "FOO", 5L));
-        rawUsages.add(new DefaultRawUsage(subscriptionId, new LocalDate(2014, 03, 21), "BAR", 101L));
+        rawUsages.add(new DefaultRawUsage(subscriptionId, new LocalDate(2014, 03, 20), "FOO", 5L, "tracking-2"));
+        rawUsages.add(new DefaultRawUsage(subscriptionId, new LocalDate(2014, 03, 21), "BAR", 101L, "tracking-2"));
 
         result = produceInvoiceItems(rawUsages, TierBlockPolicy.TOP_TIER, UsageDetailMode.AGGREGATE, ImmutableList.<InvoiceItem>of());
         assertEquals(result.size(), 1);
@@ -774,8 +777,8 @@ public class TestContiguousIntervalConsumableInArrear extends TestUsageInArrearB
 
         // Case 3
         rawUsages = new ArrayList<RawUsage>();
-        rawUsages.add(new DefaultRawUsage(subscriptionId, new LocalDate(2014, 03, 20), "FOO", 76L));
-        rawUsages.add(new DefaultRawUsage(subscriptionId, new LocalDate(2014, 03, 21), "BAR", 101L));
+        rawUsages.add(new DefaultRawUsage(subscriptionId, new LocalDate(2014, 03, 20), "FOO", 76L, "tracking-3"));
+        rawUsages.add(new DefaultRawUsage(subscriptionId, new LocalDate(2014, 03, 21), "BAR", 101L, "tracking-3"));
 
         result = produceInvoiceItems(rawUsages, TierBlockPolicy.TOP_TIER, UsageDetailMode.AGGREGATE, ImmutableList.<InvoiceItem>of());
         assertEquals(result.size(), 1);
@@ -802,8 +805,8 @@ public class TestContiguousIntervalConsumableInArrear extends TestUsageInArrearB
 
         // Case 1
         List<RawUsage> rawUsages = new ArrayList<RawUsage>();
-        rawUsages.add(new DefaultRawUsage(subscriptionId, new LocalDate(2014, 03, 20), "FOO", 5L));
-        rawUsages.add(new DefaultRawUsage(subscriptionId, new LocalDate(2014, 03, 21), "BAR", 99L));
+        rawUsages.add(new DefaultRawUsage(subscriptionId, new LocalDate(2014, 03, 20), "FOO", 5L, "tracking-1"));
+        rawUsages.add(new DefaultRawUsage(subscriptionId, new LocalDate(2014, 03, 21), "BAR", 99L, "tracking-2"));
 
         List<InvoiceItem> result = produceInvoiceItems(rawUsages, TierBlockPolicy.TOP_TIER, UsageDetailMode.DETAIL, ImmutableList.<InvoiceItem>of());
         assertEquals(result.size(), 2);
@@ -818,8 +821,8 @@ public class TestContiguousIntervalConsumableInArrear extends TestUsageInArrearB
 
         // Case 2
         rawUsages = new ArrayList<RawUsage>();
-        rawUsages.add(new DefaultRawUsage(subscriptionId, new LocalDate(2014, 03, 20), "FOO", 5L));
-        rawUsages.add(new DefaultRawUsage(subscriptionId, new LocalDate(2014, 03, 21), "BAR", 101L));
+        rawUsages.add(new DefaultRawUsage(subscriptionId, new LocalDate(2014, 03, 20), "FOO", 5L, "tracking-3"));
+        rawUsages.add(new DefaultRawUsage(subscriptionId, new LocalDate(2014, 03, 21), "BAR", 101L, "tracking-4"));
 
         result = produceInvoiceItems(rawUsages, TierBlockPolicy.TOP_TIER, UsageDetailMode.DETAIL, ImmutableList.<InvoiceItem>of());
         assertEquals(result.size(), 2);
@@ -834,8 +837,8 @@ public class TestContiguousIntervalConsumableInArrear extends TestUsageInArrearB
 
         // Case 3
         rawUsages = new ArrayList<RawUsage>();
-        rawUsages.add(new DefaultRawUsage(subscriptionId, new LocalDate(2014, 03, 20), "FOO", 76L));
-        rawUsages.add(new DefaultRawUsage(subscriptionId, new LocalDate(2014, 03, 21), "BAR", 101L));
+        rawUsages.add(new DefaultRawUsage(subscriptionId, new LocalDate(2014, 03, 20), "FOO", 76L, "tracking-5"));
+        rawUsages.add(new DefaultRawUsage(subscriptionId, new LocalDate(2014, 03, 21), "BAR", 101L, "tracking-6"));
 
         result = produceInvoiceItems(rawUsages, TierBlockPolicy.TOP_TIER, UsageDetailMode.DETAIL, ImmutableList.<InvoiceItem>of());
         assertEquals(result.size(), 2);
@@ -871,8 +874,8 @@ public class TestContiguousIntervalConsumableInArrear extends TestUsageInArrearB
         // Create usage data points (will include already billed + add new usage data)
         //
         List<RawUsage> rawUsages = new ArrayList<RawUsage>();
-        rawUsages.add(new DefaultRawUsage(subscriptionId, new LocalDate(2014, 03, 20), "FOO", 50L /* already built */ + 20L)); // tier 3
-        rawUsages.add(new DefaultRawUsage(subscriptionId, new LocalDate(2014, 03, 21), "BAR", 80L /* already built */ + 120L)); // tier 2
+        rawUsages.add(new DefaultRawUsage(subscriptionId, new LocalDate(2014, 03, 20), "FOO", 50L /* already built */ + 20L, "tracking-1")); // tier 3
+        rawUsages.add(new DefaultRawUsage(subscriptionId, new LocalDate(2014, 03, 21), "BAR", 80L /* already built */ + 120L, "tracking-1")); // tier 2
 
         final List<InvoiceItem> existingItems = new ArrayList<InvoiceItem>();
         final InvoiceItem ii1 = new UsageInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, productName, planName, phaseName, usageName, new LocalDate(2014, 03, 20), new LocalDate(2014, 04, 15), new BigDecimal("570.00"), null, currency, null, existingUsageJson);
@@ -932,8 +935,8 @@ public class TestContiguousIntervalConsumableInArrear extends TestUsageInArrearB
         // Create usage data points (will include already billed + add new usage data)
         //
         List<RawUsage> rawUsages = new ArrayList<RawUsage>();
-        rawUsages.add(new DefaultRawUsage(subscriptionId, new LocalDate(2014, 03, 20), "FOO", 50L /* already built */ + 20L)); // tier 3
-        rawUsages.add(new DefaultRawUsage(subscriptionId, new LocalDate(2014, 03, 21), "BAR", 80L /* already built */ + 120L)); // tier 2
+        rawUsages.add(new DefaultRawUsage(subscriptionId, new LocalDate(2014, 03, 20), "FOO", 50L /* already built */ + 20L, "tracking-1")); // tier 3
+        rawUsages.add(new DefaultRawUsage(subscriptionId, new LocalDate(2014, 03, 21), "BAR", 80L /* already built */ + 120L, "tracking-1")); // tier 2
 
         // FOO : 10 (tier 1) + 40 (tier 2) = 50
         final UsageConsumableInArrearTierUnitAggregate existingFooUsageTier1 = new UsageConsumableInArrearTierUnitAggregate(1, "FOO", BigDecimal.ONE, 1, 10, new BigDecimal("10.00"));
@@ -1022,14 +1025,14 @@ public class TestContiguousIntervalConsumableInArrear extends TestUsageInArrearB
 
 
         // Prev t0
-        final RawUsage raw1 = new DefaultRawUsage(subscriptionId, new LocalDate(2015, 03, 01), "unit", 12L);
+        final RawUsage raw1 = new DefaultRawUsage(subscriptionId, new LocalDate(2015, 03, 01), "unit", 12L, "tracking-1");
 
         final List<RawUsage> rawUsage = ImmutableList.of(raw1);
 
         final ContiguousIntervalUsageInArrear intervalConsumableInArrear = createContiguousIntervalConsumableInArrear(usage, rawUsage, targetDate, true, eventT0, eventT1);
 
 
-        final List<RolledUpUsage> unsortedRolledUpUsage =  intervalConsumableInArrear.getRolledUpUsage();
+        final List<RolledUpUsage> unsortedRolledUpUsage =  intervalConsumableInArrear.getRolledUpUsage().getUsage();
         assertEquals(unsortedRolledUpUsage.size(), 2);
         assertEquals(unsortedRolledUpUsage.get(0).getRolledUpUnits().size(), 1);
         assertEquals(unsortedRolledUpUsage.get(0).getRolledUpUnits().get(0).getAmount().longValue(), 0L);
@@ -1065,6 +1068,9 @@ public class TestContiguousIntervalConsumableInArrear extends TestUsageInArrearB
         final ContiguousIntervalUsageInArrear intervalConsumableInArrear = createContiguousIntervalConsumableInArrear(usage, rawUsages, targetDate, true, usageDetailMode, event1, event2);
 
         final UsageInArrearItemsAndNextNotificationDate usageResult = intervalConsumableInArrear.computeMissingItemsAndNextNotificationDate(existingItems);
+
+        checkTrackingIds(rawUsages, usageResult.getTrackingIds());
+
         final List<InvoiceItem> rawResults = usageResult.getInvoiceItems();
         final List<InvoiceItem> result = ImmutableList.copyOf(Iterables.filter(rawResults, new Predicate<InvoiceItem>() {
             @Override

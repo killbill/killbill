@@ -36,16 +36,17 @@ import org.killbill.billing.invoice.api.Invoice;
 import org.killbill.billing.invoice.api.InvoiceApiException;
 import org.killbill.billing.invoice.api.InvoiceItem;
 import org.killbill.billing.invoice.api.InvoiceStatus;
+import org.killbill.billing.invoice.generator.InvoiceItemGenerator.InvoiceGeneratorResult;
 import org.killbill.billing.invoice.generator.InvoiceWithMetadata.SubscriptionFutureNotificationDates;
 import org.killbill.billing.invoice.model.DefaultInvoice;
 import org.killbill.billing.junction.BillingEventSet;
 import org.killbill.billing.util.config.definition.InvoiceConfig;
 import org.killbill.clock.Clock;
 
-import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.inject.Inject;
 
@@ -77,7 +78,7 @@ public class DefaultInvoiceGenerator implements InvoiceGenerator {
                                                final Currency targetCurrency,
                                                final InternalCallContext context) throws InvoiceApiException {
         if ((events == null) || (events.size() == 0) || events.isAccountAutoInvoiceOff()) {
-            return new InvoiceWithMetadata(null, ImmutableMap.<UUID, SubscriptionFutureNotificationDates>of());
+            return new InvoiceWithMetadata(null, ImmutableSet.of(), ImmutableMap.<UUID, SubscriptionFutureNotificationDates>of());
         }
 
         validateTargetDate(targetDate, context);
@@ -91,11 +92,11 @@ public class DefaultInvoiceGenerator implements InvoiceGenerator {
 
         final Map<UUID, SubscriptionFutureNotificationDates> perSubscriptionFutureNotificationDates = new HashMap<UUID, SubscriptionFutureNotificationDates>();
 
-        final List<InvoiceItem> fixedAndRecurringItems = recurringInvoiceItemGenerator.generateItems(account, invoice.getId(), events, existingInvoices, adjustedTargetDate, targetCurrency, perSubscriptionFutureNotificationDates, context);
-        invoice.addInvoiceItems(fixedAndRecurringItems);
+        final InvoiceGeneratorResult fixedAndRecurringItems = recurringInvoiceItemGenerator.generateItems(account, invoice.getId(), events, existingInvoices, adjustedTargetDate, targetCurrency, perSubscriptionFutureNotificationDates, context);
+        invoice.addInvoiceItems(fixedAndRecurringItems.getItems());
 
-        final List<InvoiceItem> usageItems = usageInvoiceItemGenerator.generateItems(account, invoice.getId(), events, existingInvoices, adjustedTargetDate, targetCurrency, perSubscriptionFutureNotificationDates, context);
-        invoice.addInvoiceItems(usageItems);
+        final InvoiceGeneratorResult usageItemsWithTrackingIds = usageInvoiceItemGenerator.generateItems(account, invoice.getId(), events, existingInvoices, adjustedTargetDate, targetCurrency, perSubscriptionFutureNotificationDates, context);
+        invoice.addInvoiceItems(usageItemsWithTrackingIds.getItems());
 
         if (targetInvoiceId != null) {
             final Invoice originalInvoice = Iterables.tryFind(existingInvoices, new Predicate<Invoice>() {
@@ -108,7 +109,9 @@ public class DefaultInvoiceGenerator implements InvoiceGenerator {
             invoice.addInvoiceItems(originalInvoice.getInvoiceItems());
         }
 
-        return new InvoiceWithMetadata(invoice.getInvoiceItems().isEmpty() ? null : invoice, perSubscriptionFutureNotificationDates);
+        return new InvoiceWithMetadata(invoice.getInvoiceItems().isEmpty() ? null : invoice,
+                                       usageItemsWithTrackingIds.getTrackingIds(),
+                                       perSubscriptionFutureNotificationDates);
     }
 
     private void validateTargetDate(final LocalDate targetDate, final InternalTenantContext context) throws InvoiceApiException {

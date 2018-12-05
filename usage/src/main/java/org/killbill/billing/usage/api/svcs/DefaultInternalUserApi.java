@@ -49,7 +49,7 @@ public class DefaultInternalUserApi implements InternalUserApi {
             @Nullable
             @Override
             public RawUsage apply(final RolledUpUsageModelDao input) {
-                return new DefaultRawUsage(input.getSubscriptionId(), input.getRecordDate(), input.getUnitType(), input.getAmount());
+                return new DefaultRawUsage(input.getSubscriptionId(), input.getRecordDate(), input.getUnitType(), input.getAmount(), input.getTrackingId());
             }
         }));
     }

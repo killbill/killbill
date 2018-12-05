@@ -37,18 +37,16 @@ import org.killbill.billing.catalog.api.UsageType;
 import org.killbill.billing.invoice.api.InvoiceApiException;
 import org.killbill.billing.invoice.api.InvoiceItem;
 import org.killbill.billing.invoice.generator.InvoiceItemGenerator.InvoiceItemGeneratorLogger;
+import org.killbill.billing.invoice.generator.InvoiceWithMetadata.TrackingRecordId;
 import org.killbill.billing.invoice.usage.ContiguousIntervalUsageInArrear.UsageInArrearItemsAndNextNotificationDate;
 import org.killbill.billing.junction.BillingEvent;
 import org.killbill.billing.usage.RawUsage;
-import org.killbill.billing.util.config.definition.InvoiceConfig;
 import org.killbill.billing.util.config.definition.InvoiceConfig.UsageDetailMode;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
 import com.google.common.base.Predicate;
 import com.google.common.collect.Collections2;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Ordering;
@@ -80,6 +78,7 @@ public class SubscriptionUsageInArrear {
     private final List<BillingEvent> subscriptionBillingEvents;
     private final LocalDate targetDate;
     private final List<RawUsage> rawSubscriptionUsage;
+    private final Set<TrackingRecordId> existingTrackingIds;
     private final LocalDate rawUsageStartDate;
     private final InternalTenantContext internalTenantContext;
     private final UsageDetailMode usageDetailMode;
@@ -88,6 +87,7 @@ public class SubscriptionUsageInArrear {
                                      final UUID invoiceId,
                                      final List<BillingEvent> subscriptionBillingEvents,
                                      final List<RawUsage> rawUsage,
+                                     final Set<TrackingRecordId> existingTrackingIds,
                                      final LocalDate targetDate,
                                      final LocalDate rawUsageStartDate,
                                      final UsageDetailMode usageDetailMode,
@@ -106,6 +106,7 @@ public class SubscriptionUsageInArrear {
                 return input.getSubscriptionId().equals(subscriptionBillingEvents.get(0).getSubscription().getId());
             }
         }));
+        this.existingTrackingIds = existingTrackingIds;
         this.usageDetailMode = usageDetailMode;
     }
 
@@ -125,6 +126,7 @@ public class SubscriptionUsageInArrear {
             invoiceItemGeneratorLogger.append(usageInterval, newItemsWithDetailsAndDate.getInvoiceItems());
 
             result.addUsageInArrearItemsAndNextNotificationDate(usageInterval.getUsage().getName(), newItemsWithDetailsAndDate);
+            result.addTrackingIds(newItemsWithDetailsAndDate.getTrackingIds());
         }
         return result;
     }
@@ -158,8 +160,8 @@ public class SubscriptionUsageInArrear {
                 ContiguousIntervalUsageInArrear existingInterval = inFlightInArrearUsageIntervals.get(usageKey);
                 if (existingInterval == null) {
                     existingInterval = usage.getUsageType() == UsageType.CAPACITY ?
-                                       new ContiguousIntervalCapacityUsageInArrear(usage, accountId, invoiceId, rawSubscriptionUsage, targetDate, rawUsageStartDate, usageDetailMode, internalTenantContext) :
-                                       new ContiguousIntervalConsumableUsageInArrear(usage, accountId, invoiceId, rawSubscriptionUsage, targetDate, rawUsageStartDate, usageDetailMode, internalTenantContext);
+                                       new ContiguousIntervalCapacityUsageInArrear(usage, accountId, invoiceId, rawSubscriptionUsage, existingTrackingIds, targetDate, rawUsageStartDate, usageDetailMode, internalTenantContext) :
+                                       new ContiguousIntervalConsumableUsageInArrear(usage, accountId, invoiceId, rawSubscriptionUsage, existingTrackingIds, targetDate, rawUsageStartDate, usageDetailMode, internalTenantContext);
 
                     inFlightInArrearUsageIntervals.put(usageKey, existingInterval);
                 }
@@ -202,37 +204,40 @@ public class SubscriptionUsageInArrear {
 
     public class SubscriptionUsageInArrearItemsAndNextNotificationDate {
 
-        private List<InvoiceItem> invoiceItems;
-        private Map<String, LocalDate> perUsageNotificationDates;
+        private final List<InvoiceItem> invoiceItems;
+        private final Map<String, LocalDate> perUsageNotificationDates;
+        private final Set<TrackingRecordId> trackingIds;
 
         public SubscriptionUsageInArrearItemsAndNextNotificationDate() {
-            this.invoiceItems = null;
-            this.perUsageNotificationDates = null;
+            this.invoiceItems = new LinkedList<InvoiceItem>();
+            this.perUsageNotificationDates = new HashMap<String, LocalDate>();
+            this.trackingIds = new HashSet<>();
         }
 
         public void addUsageInArrearItemsAndNextNotificationDate(final String usageName, final UsageInArrearItemsAndNextNotificationDate input) {
             if (!input.getInvoiceItems().isEmpty()) {
-                if (invoiceItems == null) {
-                    invoiceItems = new LinkedList<InvoiceItem>();
-                }
                 invoiceItems.addAll(input.getInvoiceItems());
-
             }
 
             if (input.getNextNotificationDate() != null) {
-                if (perUsageNotificationDates == null) {
-                    perUsageNotificationDates = new HashMap<String, LocalDate>();
-                }
                 perUsageNotificationDates.put(usageName, input.getNextNotificationDate());
             }
         }
 
+        public void addTrackingIds(final Set<TrackingRecordId> input) {
+            trackingIds.addAll(input);
+        }
+
         public List<InvoiceItem> getInvoiceItems() {
-            return invoiceItems != null ? invoiceItems : ImmutableList.<InvoiceItem>of();
+            return invoiceItems;
         }
 
         public Map<String, LocalDate> getPerUsageNotificationDates() {
-            return perUsageNotificationDates != null ? perUsageNotificationDates : ImmutableMap.<String, LocalDate>of();
+            return perUsageNotificationDates;
+        }
+
+        public Set<TrackingRecordId> getTrackingIds() {
+            return trackingIds;
         }
     }
 
