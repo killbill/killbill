@@ -139,12 +139,35 @@ public class DefaultInternalBillingApi implements BillingInternalApi {
         }
     }
 
-    private void addBillingEventsForBundles(final List<SubscriptionBaseBundle> bundles, final ImmutableAccountData account, final DryRunArguments dryRunArguments, final InternalCallContext context,
-                                            final DefaultBillingEventSet result, final Set<UUID> skipSubscriptionsSet, final Catalog catalog, final List<Tag> tagsForAccount) throws AccountApiException, CatalogApiException, SubscriptionBaseApiException {
-        final boolean dryRunMode = dryRunArguments != null;
-
+    private void addBillingEventsForBundles(final List<SubscriptionBaseBundle> bundles,
+                                            final ImmutableAccountData account,
+                                            final DryRunArguments dryRunArguments,
+                                            final InternalCallContext context,
+                                            final DefaultBillingEventSet result,
+                                            final Set<UUID> skipSubscriptionsSet,
+                                            final Catalog catalog,
+                                            final List<Tag> tagsForAccount) throws AccountApiException, CatalogApiException, SubscriptionBaseApiException {
         final int currentAccountBCD = accountApi.getBCD(context);
+        addBillingEventsForBundles(bundles,
+                                   account,
+                                   dryRunArguments,
+                                   context,
+                                   result,
+                                   skipSubscriptionsSet,
+                                   catalog,
+                                   tagsForAccount,
+                                   currentAccountBCD);
+    }
 
+    private void addBillingEventsForBundles(final List<SubscriptionBaseBundle> bundles,
+                                            final ImmutableAccountData account,
+                                            final DryRunArguments dryRunArguments,
+                                            final InternalCallContext context,
+                                            final DefaultBillingEventSet result,
+                                            final Set<UUID> skipSubscriptionsSet,
+                                            final Catalog catalog,
+                                            final List<Tag> tagsForAccount,
+                                            final int currentAccountBCD) throws AccountApiException, CatalogApiException, SubscriptionBaseApiException {
         // In dryRun mode, when we care about invoice generated for new BASE subscription, no such bundle exists yet; we still
         // want to tap into subscriptionBase logic, so we make up a bundleId
         if (dryRunArguments != null &&
@@ -185,46 +208,58 @@ public class DefaultInternalBillingApi implements BillingInternalApi {
         }
 
         // If dryRun is specified, we don't want to to update the account BCD value, so we initialize the flag updatedAccountBCD to true
-        if (currentAccountBCD == 0 && !dryRunMode) {
-            BillingEvent oldestAccountAlignedBillingEvent = null;
-
-            for (final BillingEvent event : result) {
-                if (event.getBillingAlignment() != BillingAlignment.ACCOUNT) {
-                    continue;
-                }
-
-                final BigDecimal recurringPrice = event.getRecurringPrice(event.getEffectiveDate());
-                final boolean hasRecurringPrice = recurringPrice != null; // Note: could be zero (BCD would still be set, by convention)
-                final boolean hasUsage = event.getUsages() != null && !event.getUsages().isEmpty();
-                if (!hasRecurringPrice &&
-                    !hasUsage) {
-                    // Nothing to bill, ignored for the purpose of BCD calculation
-                    continue;
-                }
-
-                if (oldestAccountAlignedBillingEvent == null ||
-                    event.getEffectiveDate().compareTo(oldestAccountAlignedBillingEvent.getEffectiveDate()) < 0 ||
-                    (event.getEffectiveDate().compareTo(oldestAccountAlignedBillingEvent.getEffectiveDate()) == 0 && event.getTotalOrdering().compareTo(oldestAccountAlignedBillingEvent.getTotalOrdering()) < 0)) {
-                    oldestAccountAlignedBillingEvent = event;
-                }
-            }
-
-            if (oldestAccountAlignedBillingEvent == null) {
+        if (currentAccountBCD == 0) {
+            final Integer accountBCDCandidate = computeAccountBCD(result);
+            if (accountBCDCandidate == null) {
                 return;
             }
-
-            // BCD in the account timezone
-            final int accountBCDCandidate = oldestAccountAlignedBillingEvent.getBillCycleDayLocal();
-            Preconditions.checkState(accountBCDCandidate > 0, "Wrong Account BCD calculation for event: " + oldestAccountAlignedBillingEvent);
-
-            log.info("Setting account BCD='{}', accountId='{}'", accountBCDCandidate, account.getId());
-            accountApi.updateBCD(account.getExternalKey(), accountBCDCandidate, context);
 
             // Because we now have computed the real BCD, we need to re-compute the BillingEvents BCD for ACCOUNT alignments (see BillCycleDayCalculator#calculateBcdForAlignment).
             // The code could maybe be optimized (no need to re-run the full function?), but since it's run once per account, it's probably not worth it.
             result.clear();
-            addBillingEventsForBundles(bundles, account, dryRunArguments, context, result, skipSubscriptionsSet, catalog, tagsForAccount);
+            addBillingEventsForBundles(bundles, account, dryRunArguments, context, result, skipSubscriptionsSet, catalog, tagsForAccount, accountBCDCandidate);
+
+            final boolean dryRunMode = dryRunArguments != null;
+            if (!dryRunMode) {
+                log.info("Setting account BCD='{}', accountId='{}'", accountBCDCandidate, account.getId());
+                accountApi.updateBCD(account.getExternalKey(), accountBCDCandidate, context);
+            }
         }
+    }
+
+    private Integer computeAccountBCD(final BillingEventSet result) throws CatalogApiException {
+        BillingEvent oldestAccountAlignedBillingEvent = null;
+
+        for (final BillingEvent event : result) {
+            if (event.getBillingAlignment() != BillingAlignment.ACCOUNT) {
+                continue;
+            }
+
+            final BigDecimal recurringPrice = event.getRecurringPrice(event.getEffectiveDate());
+            final boolean hasRecurringPrice = recurringPrice != null; // Note: could be zero (BCD would still be set, by convention)
+            final boolean hasUsage = event.getUsages() != null && !event.getUsages().isEmpty();
+            if (!hasRecurringPrice &&
+                !hasUsage) {
+                // Nothing to bill, ignored for the purpose of BCD calculation
+                continue;
+            }
+
+            if (oldestAccountAlignedBillingEvent == null ||
+                event.getEffectiveDate().compareTo(oldestAccountAlignedBillingEvent.getEffectiveDate()) < 0 ||
+                (event.getEffectiveDate().compareTo(oldestAccountAlignedBillingEvent.getEffectiveDate()) == 0 && event.getTotalOrdering().compareTo(oldestAccountAlignedBillingEvent.getTotalOrdering()) < 0)) {
+                oldestAccountAlignedBillingEvent = event;
+            }
+        }
+
+        if (oldestAccountAlignedBillingEvent == null) {
+            return null;
+        }
+
+        // BCD in the account timezone
+        final int accountBCDCandidate = oldestAccountAlignedBillingEvent.getBillCycleDayLocal();
+        Preconditions.checkState(accountBCDCandidate > 0, "Wrong Account BCD calculation for event: " + oldestAccountAlignedBillingEvent);
+
+        return accountBCDCandidate;
     }
 
     private void addBillingEventsForSubscription(final ImmutableAccountData account,
