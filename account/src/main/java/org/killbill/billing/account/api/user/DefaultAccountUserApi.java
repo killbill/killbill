@@ -171,7 +171,7 @@ public class DefaultAccountUserApi extends DefaultAccountApiBase implements Acco
             throw new AccountApiException(ErrorCode.ACCOUNT_DOES_NOT_EXIST_FOR_KEY, externalKey);
         }
 
-        updateAccount(currentAccount.getId(), accountData, true, context);
+        updateAccount(currentAccount.getId(), accountData, false, context);
     }
 
     private void updateAccount(final UUID accountId, final AccountData account, final boolean treatNullValueAsReset, final CallContext context) throws AccountApiException {
