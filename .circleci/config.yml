@@ -156,8 +156,6 @@ jobs:
             #    echo "killbill-integration-tests doesn't have a branch ${CIRCLE_BRANCH}, staying on master"
             #  fi
             #fi
-            # For now, always expect work-for-release-0.19.x
-            git checkout -b work-for-release-0.19.x origin/work-for-release-0.19.x
 
             source /usr/share/rvm/scripts/rvm
             rvm use ruby-2.4.2
