@@ -101,7 +101,7 @@ public class DefaultAccountInternalApi extends DefaultAccountApiBase implements 
         final AccountModelDao accountToUpdate = new AccountModelDao(currentAccount.getId(), mutableAccountData);
         bcdCacheController.remove(currentAccount.getId());
         bcdCacheController.putIfAbsent(currentAccount.getId(), new Integer(bcd));
-        accountDao.update(accountToUpdate, context);
+        accountDao.update(accountToUpdate, true, context);
     }
 
     @Override

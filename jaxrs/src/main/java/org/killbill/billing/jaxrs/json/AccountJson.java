@@ -297,7 +297,7 @@ public class AccountJson extends JsonBase {
 
             @Override
             public Account mergeWithDelegate(final Account delegate) {
-                return null;
+                throw new UnsupportedOperationException();
             }
         };
     }

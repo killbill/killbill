@@ -174,9 +174,7 @@ public class InvoiceDispatcher {
         this.parkedAccountsManager = parkedAccountsManager;
     }
 
-
     public void processSubscriptionStartRequestedDate(final RequestedSubscriptionInternalEvent transition, final InternalCallContext context) {
-
         final long dryRunNotificationTime = invoiceConfig.getDryRunNotificationSchedule(context).getMillis();
         final boolean isInvoiceNotificationEnabled = dryRunNotificationTime > 0;
         if (!isInvoiceNotificationEnabled) {
@@ -186,16 +184,28 @@ public class InvoiceDispatcher {
         final UUID accountId;
         try {
             accountId = subscriptionApi.getAccountIdFromSubscriptionId(transition.getSubscriptionId(), context);
-
-
         } catch (final SubscriptionBaseApiException e) {
             log.warn("Failed handling SubscriptionBase change.",
                      new InvoiceApiException(ErrorCode.INVOICE_NO_ACCOUNT_ID_FOR_SUBSCRIPTION_ID, transition.getSubscriptionId().toString()));
             return;
         }
 
+        GlobalLock lock = null;
         try {
+            lock = locker.lockWithNumberOfTries(LockerType.ACCNT_INV_PAY.toString(), accountId.toString(), invoiceConfig.getMaxGlobalLockRetries());
 
+            processSubscriptionStartRequestedDateWithLock(accountId, transition, context);
+        } catch (final LockFailedException e) {
+            log.warn("Failed to process RequestedSubscriptionInternalEvent for accountId='{}'", accountId.toString(), e);
+        } finally {
+            if (lock != null) {
+                lock.release();
+            }
+        }
+    }
+
+    private void processSubscriptionStartRequestedDateWithLock(final UUID accountId, final RequestedSubscriptionInternalEvent transition, final InternalCallContext context) {
+        try {
             final BillingEventSet billingEvents = billingApi.getBillingEventsForAccountAndUpdateAccountBCD(accountId, null, context);
             if (billingEvents.isEmpty()) {
                 return;
@@ -207,7 +217,6 @@ public class InvoiceDispatcher {
             final ImmutableAccountData account = accountApi.getImmutableAccountDataById(accountId, context);
 
             commitInvoiceAndSetFutureNotifications(account, notificationsBuilder.build(), context);
-
         } catch (final SubscriptionBaseApiException e) {
             log.warn("Failed handling SubscriptionBase change.",
                      new InvoiceApiException(ErrorCode.INVOICE_NO_ACCOUNT_ID_FOR_SUBSCRIPTION_ID, transition.getSubscriptionId().toString()));

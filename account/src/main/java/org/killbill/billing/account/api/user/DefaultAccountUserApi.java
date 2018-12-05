@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014-2017 Groupon, Inc
- * Copyright 2014-2017 The Billing Project, LLC
+ * Copyright 2014-2018 Groupon, Inc
+ * Copyright 2014-2018 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -156,30 +156,12 @@ public class DefaultAccountUserApi extends DefaultAccountApiBase implements Acco
 
     @Override
     public void updateAccount(final Account account, final CallContext context) throws AccountApiException {
-
-        // Convert to DefaultAccount to make sure we can safely call validateAccountUpdateInput
-        final DefaultAccount input = new DefaultAccount(account.getId(), account);
-
-        final Account currentAccount = getAccountById(input.getId(), context);
-        if (currentAccount == null) {
-            throw new AccountApiException(ErrorCode.ACCOUNT_DOES_NOT_EXIST_FOR_ID, input.getId());
-        }
-
-        input.validateAccountUpdateInput(currentAccount, true);
-
-        final AccountModelDao updatedAccountModelDao = new AccountModelDao(currentAccount.getId(),  input);
-
-        accountDao.update(updatedAccountModelDao, internalCallContextFactory.createInternalCallContext(updatedAccountModelDao.getId(), context));
+        updateAccount(account.getId(), account, true, context);
     }
 
     @Override
     public void updateAccount(final UUID accountId, final AccountData accountData, final CallContext context) throws AccountApiException {
-        final Account currentAccount = getAccountById(accountId, context);
-        if (currentAccount == null) {
-            throw new AccountApiException(ErrorCode.ACCOUNT_DOES_NOT_EXIST_FOR_ID, accountId);
-        }
-
-        updateAccount(currentAccount, accountData, context);
+        updateAccount(accountId, accountData, false, context);
     }
 
     @Override
@@ -189,18 +171,16 @@ public class DefaultAccountUserApi extends DefaultAccountApiBase implements Acco
             throw new AccountApiException(ErrorCode.ACCOUNT_DOES_NOT_EXIST_FOR_KEY, externalKey);
         }
 
-        updateAccount(currentAccount, accountData, context);
+        updateAccount(currentAccount.getId(), accountData, false, context);
     }
 
-    private void updateAccount(final Account currentAccount, final AccountData accountData, final CallContext context) throws AccountApiException {
-        final Account updatedAccount = new DefaultAccount(currentAccount.getId(), accountData);
-
-        // Set unspecified (null) fields to their current values
-        final Account mergedAccount = updatedAccount.mergeWithDelegate(currentAccount);
-
-        final AccountModelDao updatedAccountModelDao = new AccountModelDao(currentAccount.getId(), mergedAccount);
-
-        accountDao.update(updatedAccountModelDao, internalCallContextFactory.createInternalCallContext(updatedAccountModelDao.getId(), context));
+    private void updateAccount(final UUID accountId, final AccountData account, final boolean treatNullValueAsReset, final CallContext context) throws AccountApiException {
+        final AccountModelDao updatedAccountModelDao = new AccountModelDao(accountId,
+                                                                           null,
+                                                                           null,
+                                                                           account,
+                                                                           false);
+        accountDao.update(updatedAccountModelDao, treatNullValueAsReset, internalCallContextFactory.createInternalCallContext(accountId, context));
     }
 
     @Override
