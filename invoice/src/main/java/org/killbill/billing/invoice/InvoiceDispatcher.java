@@ -326,7 +326,7 @@ public class InvoiceDispatcher {
         LocalDate inputTargetDate = inputTargetDateMaybeNull;
         // A null inputTargetDate is only allowed in UPCOMING_INVOICE dryRun mode to have the system compute it
         if (inputTargetDate == null && !upcomingInvoiceDryRun) {
-            inputTargetDate = clock.getUTCToday();
+            inputTargetDate = context.toLocalDate(clock.getUTCNow());
         }
         Preconditions.checkArgument(inputTargetDate != null || upcomingInvoiceDryRun, "inputTargetDate is required in non dryRun mode");
 
