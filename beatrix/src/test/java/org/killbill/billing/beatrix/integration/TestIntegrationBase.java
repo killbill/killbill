@@ -426,15 +426,7 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
         return (DefaultSubscriptionBase) sub;
     }
 
-    protected Account createAccountWithOsgiPaymentMethod(final AccountData accountData) throws Exception {
-        return createAccountWithPaymentMethod(accountData, BeatrixIntegrationModule.OSGI_PLUGIN_NAME);
-    }
-
     protected Account createAccountWithNonOsgiPaymentMethod(final AccountData accountData) throws Exception {
-        return createAccountWithPaymentMethod(accountData, BeatrixIntegrationModule.NON_OSGI_PLUGIN_NAME);
-    }
-
-    private Account createAccountWithPaymentMethod(final AccountData accountData, final String paymentPluginName) throws Exception {
         final Account account = accountUserApi.createAccount(accountData, callContext);
         assertNotNull(account);
 
@@ -442,7 +434,7 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
 
         final PaymentMethodPlugin info = createPaymentMethodPlugin();
 
-        paymentApi.addPaymentMethod(account, UUID.randomUUID().toString(), paymentPluginName, true, info, PLUGIN_PROPERTIES, callContext);
+        paymentApi.addPaymentMethod(account, UUID.randomUUID().toString(), BeatrixIntegrationModule.NON_OSGI_PLUGIN_NAME, true, info, PLUGIN_PROPERTIES, callContext);
         return accountUserApi.getAccountById(account.getId(), callContext);
     }
 
@@ -451,6 +443,10 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
     }
 
     protected AccountData getAccountData(@Nullable final Integer billingDay) {
+        return getAccountData(billingDay, DateTimeZone.UTC);
+    }
+
+    protected AccountData getAccountData(@Nullable final Integer billingDay, final DateTimeZone tz) {
         final MockAccountBuilder builder = new MockAccountBuilder()
                 .name(UUID.randomUUID().toString().substring(1, 8))
                 .firstNameLength(6)
@@ -460,7 +456,7 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
                 .externalKey(UUID.randomUUID().toString().substring(1, 8))
                 .currency(Currency.USD)
                 .referenceTime(clock.getUTCNow())
-                .timeZone(DateTimeZone.UTC);
+                .timeZone(tz);
         if (billingDay != null) {
             builder.billingCycleDayLocal(billingDay);
         }
