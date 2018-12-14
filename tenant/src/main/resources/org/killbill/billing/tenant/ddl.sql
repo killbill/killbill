@@ -32,7 +32,7 @@ CREATE TABLE tenant_kvs (
    updated_by varchar(50) DEFAULT NULL,
    PRIMARY KEY(record_id)
 ) /*! CHARACTER SET utf8 COLLATE utf8_bin */;
-CREATE INDEX tenant_kvs_key ON tenant_kvs(tenant_key);
+CREATE INDEX tenant_kvs_trid_key ON tenant_kvs(tenant_record_id, tenant_key);
 
 
 DROP TABLE IF EXISTS tenant_broadcasts;
