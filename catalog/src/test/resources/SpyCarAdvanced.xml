@@ -280,6 +280,24 @@
                 </recurring>
             </finalPhase>
         </plan>
+        <plan name="standard-monthly-67890">
+            <!-- On purpose! -->
+            <product>Gas</product>
+            <finalPhase type="EVERGREEN">
+                <duration>
+                    <unit>UNLIMITED</unit>
+                </duration>
+                <recurring>
+                    <billingPeriod>MONTHLY</billingPeriod>
+                    <recurringPrice>
+                        <price>
+                            <currency>USD</currency>
+                            <value>16789.00</value>
+                        </price>
+                    </recurringPrice>
+                </recurring>
+            </finalPhase>
+        </plan>
         <plan name="sports-monthly">
             <product>Sports</product>
             <initialPhases>
@@ -1003,6 +1021,7 @@
         <childPriceList name="ambiguous">
             <plans>
                 <plan>standard-monthly-12345</plan>
+                <plan>standard-monthly-67890</plan>
             </plans>
         </childPriceList>
     </priceLists>

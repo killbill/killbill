@@ -1,6 +1,6 @@
 /*
- * Copyright 2014-2018 Groupon, Inc
- * Copyright 2014-2018 The Billing Project, LLC
+ * Copyright 2014-2019 Groupon, Inc
+ * Copyright 2014-2019 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -76,6 +76,16 @@ public class TestStandaloneCatalogWithPriceOverride extends CatalogTestSuiteWith
         // From the catalog
         Assert.assertNotNull(catalog.findCurrentPlan("standard-monthly-12345"));
         Assert.assertNotNull(standaloneCatalogWithPriceOverride.findCurrentPlan("standard-monthly-12345"));
+    }
+
+    @Test(groups = "slow")
+    public void testCreateAmbiguousPlanV2() throws Exception {
+        final StandaloneCatalog catalog = XMLLoader.getObjectFromString(Resources.getResource("SpyCarAdvanced.xml").toExternalForm(), StandaloneCatalog.class);
+        final StaticCatalog standaloneCatalogWithPriceOverride = new StandaloneCatalogWithPriceOverride(catalog,
+                                                                                                        priceOverride,
+                                                                                                        internalCallContext.getTenantRecordId(),
+                                                                                                        internalCallContextFactory);
+        Assert.assertEquals(standaloneCatalogWithPriceOverride.findCurrentPlan("standard-monthly-67890").getProduct().getName(), "Gas");
     }
 
     @Test(groups = "slow")
