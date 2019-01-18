@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014-2018 Groupon, Inc
- * Copyright 2014-2018 The Billing Project, LLC
+ * Copyright 2014-2019 Groupon, Inc
+ * Copyright 2014-2019 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -426,11 +426,17 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
         return (DefaultSubscriptionBase) sub;
     }
 
-    protected Account createAccountWithNonOsgiPaymentMethod(final AccountData accountData) throws Exception {
+    protected Account createAccount(final AccountData accountData) throws Exception {
         final Account account = accountUserApi.createAccount(accountData, callContext);
         assertNotNull(account);
 
         refreshCallContext(account.getId());
+
+        return accountUserApi.getAccountById(account.getId(), callContext);
+    }
+
+    protected Account createAccountWithNonOsgiPaymentMethod(final AccountData accountData) throws Exception {
+        final Account account = createAccount(accountData);
 
         final PaymentMethodPlugin info = createPaymentMethodPlugin();
 
