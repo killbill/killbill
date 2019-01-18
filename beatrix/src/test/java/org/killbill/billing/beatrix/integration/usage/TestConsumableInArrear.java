@@ -1,6 +1,6 @@
 /*
- * Copyright 2014-2016 Groupon, Inc
- * Copyright 2014-2016 The Billing Project, LLC
+ * Copyright 2014-2019 Groupon, Inc
+ * Copyright 2014-2019 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -30,8 +30,10 @@ import org.killbill.billing.beatrix.integration.TestIntegrationBase;
 import org.killbill.billing.beatrix.util.InvoiceChecker.ExpectedInvoiceItemCheck;
 import org.killbill.billing.catalog.api.BillingActionPolicy;
 import org.killbill.billing.catalog.api.BillingPeriod;
+import org.killbill.billing.catalog.api.PlanPhaseSpecifier;
 import org.killbill.billing.catalog.api.ProductCategory;
 import org.killbill.billing.entitlement.api.DefaultEntitlement;
+import org.killbill.billing.entitlement.api.DefaultEntitlementSpecifier;
 import org.killbill.billing.invoice.api.Invoice;
 import org.killbill.billing.invoice.api.InvoiceItemType;
 import org.killbill.billing.payment.api.PluginProperty;
@@ -145,6 +147,76 @@ public class TestConsumableInArrear extends TestIntegrationBase {
             startDate = startDate.plusMonths(1);
             currentInvoice++;
         }
+    }
+
+    @Test(groups = "slow")
+    public void testWithChange() throws Exception {
+        // We take april as it has 30 days (easier to play with BCD)
+        // Set clock to the initial start date - we implicitly assume here that the account timezone is UTC
+        clock.setDay(new LocalDate(2012, 4, 1));
+
+        final AccountData accountData = getAccountData(1);
+        final Account account = createAccountWithNonOsgiPaymentMethod(accountData);
+        accountChecker.checkAccount(account.getId(), accountData, callContext);
+
+        //
+        // CREATE SUBSCRIPTION AND EXPECT BOTH EVENTS: NextEvent.CREATE, NextEvent.BLOCK NextEvent.INVOICE
+        //
+        final DefaultEntitlement bpSubscription = createBaseEntitlementAndCheckForCompletion(account.getId(), "bundleKey", "Shotgun", ProductCategory.BASE, BillingPeriod.ANNUAL, NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE);
+        // Check bundle after BP got created otherwise we get an error from auditApi.
+        subscriptionChecker.checkSubscriptionCreated(bpSubscription.getId(), internalCallContext);
+        invoiceChecker.checkInvoice(account.getId(), 1, callContext, new ExpectedInvoiceItemCheck(new LocalDate(2012, 4, 1), null, InvoiceItemType.FIXED, new BigDecimal("0")));
+
+        //
+        // ADD ADD_ON ON THE SAME DAY
+        //
+        final DefaultEntitlement aoSubscription = addAOEntitlementAndCheckForCompletion(bpSubscription.getBundleId(),
+                                                                                        "Bullets",
+                                                                                        ProductCategory.ADD_ON,
+                                                                                        BillingPeriod.NO_BILLING_PERIOD,
+                                                                                        new LocalDate(2012, 4, 1),
+                                                                                        NextEvent.CREATE, NextEvent.BLOCK, NextEvent.NULL_INVOICE);
+
+        recordUsageData(aoSubscription.getId(), "t1", "bullets", new LocalDate(2012, 4, 1), 99L, callContext);
+        recordUsageData(aoSubscription.getId(), "t2", "bullets", new LocalDate(2012, 4, 15), 100L, callContext);
+
+        // Trigger future invoice
+        busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
+        invoiceUserApi.triggerInvoiceGeneration(account.getId(),
+                                                new LocalDate(2012, 5, 1),
+                                                callContext);
+        assertListenerStatus();
+        final Invoice firstInvoice = invoiceChecker.checkInvoice(account.getId(), 2, callContext,
+                                                                 new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 1), new LocalDate(2013, 5, 1), InvoiceItemType.RECURRING, new BigDecimal("2399.95")),
+                                                                 new ExpectedInvoiceItemCheck(new LocalDate(2012, 4, 1), new LocalDate(2012, 5, 1), InvoiceItemType.USAGE, new BigDecimal("5.90")));
+        invoiceChecker.checkTrackingIds(firstInvoice, ImmutableSet.of("t1", "t2"), internalCallContext);
+
+        // Change to the Slugs plan
+        busHandler.pushExpectedEvents(NextEvent.CHANGE, NextEvent.INVOICE);
+        aoSubscription.changePlanWithDate(new DefaultEntitlementSpecifier(new PlanPhaseSpecifier("slugs-usage-in-arrear")),
+                                          new LocalDate(2012, 4, 1),
+                                          ImmutableList.<PluginProperty>of(),
+                                          callContext);
+        assertListenerStatus();
+
+        // Verify invoice
+        invoiceChecker.checkInvoice(account.getId(), 3, callContext,
+                                    new ExpectedInvoiceItemCheck(new LocalDate(2012, 4, 1), new LocalDate(2012, 5, 1), InvoiceItemType.USAGE, BigDecimal.ZERO));
+
+        // Add usage data
+        recordUsageData(aoSubscription.getId(), "u1", "slugs", new LocalDate(2012, 4, 1), 99L, callContext);
+        recordUsageData(aoSubscription.getId(), "u2", "slugs", new LocalDate(2012, 4, 15), 100L, callContext);
+
+        // Trigger future invoice
+        busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
+        invoiceUserApi.triggerInvoiceGeneration(account.getId(),
+                                                new LocalDate(2012, 5, 1),
+                                                callContext);
+        assertListenerStatus();
+
+        final Invoice fourthInvoice = invoiceChecker.checkInvoice(account.getId(), 4, callContext,
+                                                                  new ExpectedInvoiceItemCheck(new LocalDate(2012, 4, 1), new LocalDate(2012, 5, 1), InvoiceItemType.USAGE, new BigDecimal("4")));
+        invoiceChecker.checkTrackingIds(fourthInvoice, ImmutableSet.of("u1", "u2"), internalCallContext);
     }
 
     @Test(groups = "slow")

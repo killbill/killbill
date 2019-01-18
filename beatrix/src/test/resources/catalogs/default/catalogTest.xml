@@ -41,6 +41,7 @@
 
     <units>
         <unit name="bullets"/>
+        <unit name="slugs"/>
         <unit name="stones"/>
     </units>
 
@@ -69,6 +70,7 @@
                 <addonProduct>Laser-Scope</addonProduct>
                 <addonProduct>Holster</addonProduct>
                 <addonProduct>Bullets</addonProduct>
+                <addonProduct>Slugs</addonProduct>
             </available>
         </product>
         <product name="Assault-Rifle">
@@ -104,6 +106,9 @@
             <category>ADD_ON</category>
         </product>
         <product name="Bullets">
+            <category>ADD_ON</category>
+        </product>
+        <product name="Slugs">
             <category>ADD_ON</category>
         </product>
     </products>
@@ -1358,6 +1363,69 @@
             <plansAllowedInBundle>-1</plansAllowedInBundle>
             <!-- arbitrary number of these (multipack) -->
         </plan>
+        <plan name="slugs-usage-in-arrear" prettyName="Slug Monthly Plan">
+            <product>Slugs</product>
+            <finalPhase type="EVERGREEN" prettyName="Slug Monthly Plan Evergreen">
+                <duration>
+                    <unit>UNLIMITED</unit>
+                </duration>
+                <usages>
+                    <usage name="slugs-usage-in-arrear-usage" prettyName="Slug Usage In Arrear" billingMode="IN_ARREAR" usageType="CONSUMABLE">
+                        <billingPeriod>MONTHLY</billingPeriod>
+                        <tiers>
+                            <tier>
+                                <blocks>
+                                    <tieredBlock>
+                                        <unit>slugs</unit>
+                                        <size>100</size>
+                                        <prices>
+                                            <price>
+                                                <currency>USD</currency>
+                                                <value>2</value>
+                                            </price>
+                                            <price>
+                                                <currency>EUR</currency>
+                                                <value>1</value>
+                                            </price>
+                                            <price>
+                                                <currency>GBP</currency>
+                                                <value>0.1</value>
+                                            </price>
+                                        </prices>
+                                        <max>10</max>
+                                    </tieredBlock>
+                                </blocks>
+                            </tier>
+                            <tier>
+                                <blocks>
+                                    <tieredBlock>
+                                        <unit>slugs</unit>
+                                        <size>1000</size>
+                                        <prices>
+                                            <price>
+                                                <currency>USD</currency>
+                                                <value>5</value>
+                                            </price>
+                                            <price>
+                                                <currency>EUR</currency>
+                                                <value>4</value>
+                                            </price>
+                                            <price>
+                                                <currency>GBP</currency>
+                                                <value>3</value>
+                                            </price>
+                                        </prices>
+                                        <max>100</max>
+                                    </tieredBlock>
+                                </blocks>
+                            </tier>
+                        </tiers>
+                    </usage>
+                </usages>
+            </finalPhase>
+            <plansAllowedInBundle>-1</plansAllowedInBundle>
+            <!-- arbitrary number of these (multipack) -->
+        </plan>
         <plan name="trebuchet-usage-in-arrear" prettyName="Trebuchet Monthly Plan">
             <product>Trebuchet</product>
             <finalPhase type="EVERGREEN">
@@ -1423,6 +1491,7 @@
                 <plan>holster-monthly-regular</plan>
                 <plan>refurbish-maintenance</plan>
                 <plan>bullets-usage-in-arrear</plan>
+                <plan>slugs-usage-in-arrear</plan>
                 <plan>holster-monthly-special</plan>
             </plans>
         </defaultPriceList>
