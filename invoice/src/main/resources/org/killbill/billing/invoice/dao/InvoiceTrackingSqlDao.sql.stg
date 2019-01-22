@@ -8,8 +8,11 @@ tableFields(prefix) ::= <<
 , <prefix>subscription_id
 , <prefix>unit_type
 , <prefix>record_date
+, <prefix> is_active
 , <prefix>created_by
 , <prefix>created_date
+, <prefix>updated_by
+, <prefix>updated_date
 >>
 
 tableValues() ::= <<
@@ -18,8 +21,23 @@ tableValues() ::= <<
 , :subscriptionId
 , :unitType
 , :recordDate
-, :userName
+, :isActive
+, :createdBy
 , :createdDate
+, :updatedBy
+, :updatedDate
+>>
+
+deactivateForInvoice() ::= <<
+update <tableName()>
+set
+is_active = false
+, updated_by = :createdBy
+, updated_date = :updatedDate
+where
+invoice_id = :invoiceId
+<AND_CHECK_TENANT("")>
+;
 >>
 
 getTrackingsByDateRange() ::= <<
@@ -30,6 +48,7 @@ where
 record_date >= :startDate
 and record_date \< :endDate
 and <accountRecordIdField("")> = :accountRecordId
+and is_active = true
 <AND_CHECK_TENANT("")>
 <defaultOrderBy("")>
 ;
@@ -42,6 +61,7 @@ from <tableName()>
 where
 invoice_id = :invoiceId
 and <accountRecordIdField("")> = :accountRecordId
+and is_active = true
 <AND_CHECK_TENANT("")>
 <defaultOrderBy("")>
 ;

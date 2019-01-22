@@ -38,6 +38,7 @@ public class InvoiceTrackingModelDao extends EntityModelDaoBase implements Entit
     private UUID subscriptionId;
     private String unitType;
     private LocalDate recordDate;
+    private boolean isActive;
 
     public InvoiceTrackingModelDao() { /* For the DAO mapper */ }
 
@@ -54,6 +55,7 @@ public class InvoiceTrackingModelDao extends EntityModelDaoBase implements Entit
         this.subscriptionId = subscriptionId;
         this.unitType = unitType;
         this.recordDate = recordDate;
+        this.isActive = true;
     }
 
     public String getTrackingId() {
@@ -88,6 +90,19 @@ public class InvoiceTrackingModelDao extends EntityModelDaoBase implements Entit
         this.unitType = unitType;
     }
 
+    // TODO required for jdbi binder
+    public boolean getIsActive() {
+        return isActive;
+    }
+
+    public boolean isActive() {
+        return isActive;
+    }
+
+    public void setIsActive(final boolean isActive) {
+        this.isActive = isActive;
+    }
+
     public LocalDate getRecordDate() {
         return recordDate;
     }
@@ -110,6 +125,7 @@ public class InvoiceTrackingModelDao extends EntityModelDaoBase implements Entit
         final InvoiceTrackingModelDao that = (InvoiceTrackingModelDao) o;
         return Objects.equal(trackingId, that.trackingId) &&
                Objects.equal(invoiceId, that.invoiceId) &&
+               Objects.equal(isActive, that.isActive) &&
                Objects.equal(subscriptionId, that.subscriptionId) &&
                Objects.equal(unitType, that.unitType) &&
                Objects.equal(recordDate, that.recordDate);
@@ -117,7 +133,7 @@ public class InvoiceTrackingModelDao extends EntityModelDaoBase implements Entit
 
     @Override
     public int hashCode() {
-        return Objects.hashCode(super.hashCode(), trackingId, invoiceId, subscriptionId, unitType, recordDate);
+        return Objects.hashCode(super.hashCode(), trackingId, invoiceId, subscriptionId, unitType, recordDate, isActive);
     }
 
     @Override
@@ -127,6 +143,7 @@ public class InvoiceTrackingModelDao extends EntityModelDaoBase implements Entit
                ", invoiceId=" + invoiceId +
                ", subscriptionId=" + subscriptionId +
                ", unitType='" + unitType + '\'' +
+               ", isActive='" + isActive + '\'' +
                ", recordDate=" + recordDate +
                '}';
     }

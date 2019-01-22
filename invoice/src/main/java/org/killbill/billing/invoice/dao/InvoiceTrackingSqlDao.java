@@ -22,21 +22,30 @@ import java.util.List;
 
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
+import org.killbill.billing.util.audit.ChangeType;
 import org.killbill.billing.util.callcontext.InternalTenantContextBinder;
 import org.killbill.billing.util.entity.Entity;
+import org.killbill.billing.util.entity.dao.Audited;
 import org.killbill.billing.util.entity.dao.EntitySqlDao;
 import org.killbill.commons.jdbi.binder.SmartBindBean;
 import org.killbill.commons.jdbi.template.KillBillSqlDaoStringTemplate;
 import org.skife.jdbi.v2.sqlobject.Bind;
 import org.skife.jdbi.v2.sqlobject.SqlBatch;
 import org.skife.jdbi.v2.sqlobject.SqlQuery;
+import org.skife.jdbi.v2.sqlobject.SqlUpdate;
 
 @KillBillSqlDaoStringTemplate
 public interface InvoiceTrackingSqlDao extends EntitySqlDao<InvoiceTrackingModelDao, Entity> {
 
+    @SqlUpdate
+    @Audited(ChangeType.UPDATE)
+    public void deactivateForInvoice(@Bind("invoiceId") String invoiceId,
+                              @SmartBindBean final InternalCallContext context);
+
+
     @SqlBatch
     void create(@SmartBindBean Iterable<InvoiceTrackingModelDao> trackings,
-                @InternalTenantContextBinder final InternalCallContext context);
+                @SmartBindBean final InternalCallContext context);
 
     @SqlQuery
     List<InvoiceTrackingModelDao> getTrackingsByDateRange(@Bind("startDate") final Date startDate,
