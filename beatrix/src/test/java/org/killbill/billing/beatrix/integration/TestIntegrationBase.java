@@ -426,11 +426,17 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
         return (DefaultSubscriptionBase) sub;
     }
 
-    protected Account createAccountWithNonOsgiPaymentMethod(final AccountData accountData) throws Exception {
+    protected Account createAccount(final AccountData accountData) throws Exception {
         final Account account = accountUserApi.createAccount(accountData, callContext);
         assertNotNull(account);
 
         refreshCallContext(account.getId());
+
+        return accountUserApi.getAccountById(account.getId(), callContext);
+    }
+
+    protected Account createAccountWithNonOsgiPaymentMethod(final AccountData accountData) throws Exception {
+        final Account account = createAccount(accountData);
 
         final PaymentMethodPlugin info = createPaymentMethodPlugin();
 
