@@ -723,6 +723,15 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
                                                                        final ProductCategory productCategory,
                                                                        final BillingPeriod billingPeriod,
                                                                        final NextEvent... events) {
+        return addAOEntitlementAndCheckForCompletion(bundleId, productName, productCategory, billingPeriod, null, events);
+    }
+
+    protected DefaultEntitlement addAOEntitlementAndCheckForCompletion(final UUID bundleId,
+                                                                       final String productName,
+                                                                       final ProductCategory productCategory,
+                                                                       final BillingPeriod billingPeriod,
+                                                                       final LocalDate effectiveDate,
+                                                                       final NextEvent... events) {
         if (productCategory != ProductCategory.ADD_ON) {
             throw new RuntimeException("Unexpected Call for creating a productCategory " + productCategory);
         }
@@ -732,7 +741,7 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
             public Entitlement apply(@Nullable final Void dontcare) {
                 try {
                     final PlanPhaseSpecifier spec = new PlanPhaseSpecifier(productName, billingPeriod, PriceListSet.DEFAULT_PRICELIST_NAME, null);
-                    final UUID entitlementId = entitlementApi.addEntitlement(bundleId, new DefaultEntitlementSpecifier(spec), null, null, false, ImmutableList.<PluginProperty>of(), callContext);
+                    final UUID entitlementId = entitlementApi.addEntitlement(bundleId, new DefaultEntitlementSpecifier(spec), effectiveDate, effectiveDate, false, ImmutableList.<PluginProperty>of(), callContext);
                     assertNotNull(entitlementId);
                     return entitlementApi.getEntitlementForId(entitlementId, callContext);
                 } catch (final EntitlementApiException e) {
