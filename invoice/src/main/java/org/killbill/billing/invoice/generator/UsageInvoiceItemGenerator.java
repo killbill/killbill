@@ -196,7 +196,7 @@ public class UsageInvoiceItemGenerator extends InvoiceItemGenerator {
                     public boolean apply(final InvoiceItem input) {
                         if (input.getInvoiceItemType() == InvoiceItemType.USAGE) {
                             final Usage usage = knownUsage.get(input.getUsageName());
-                            return usage.getBillingMode() == BillingMode.IN_ARREAR;
+                            return usage != null && usage.getBillingMode() == BillingMode.IN_ARREAR;
                         }
                         return false;
                     }

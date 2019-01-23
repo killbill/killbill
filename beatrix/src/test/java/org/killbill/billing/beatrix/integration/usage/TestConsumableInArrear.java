@@ -186,22 +186,27 @@ public class TestConsumableInArrear extends TestIntegrationBase {
                                                 new LocalDate(2012, 5, 1),
                                                 callContext);
         assertListenerStatus();
-        final Invoice firstInvoice = invoiceChecker.checkInvoice(account.getId(), 2, callContext,
-                                                                 new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 1), new LocalDate(2013, 5, 1), InvoiceItemType.RECURRING, new BigDecimal("2399.95")),
-                                                                 new ExpectedInvoiceItemCheck(new LocalDate(2012, 4, 1), new LocalDate(2012, 5, 1), InvoiceItemType.USAGE, new BigDecimal("5.90")));
-        invoiceChecker.checkTrackingIds(firstInvoice, ImmutableSet.of("t1", "t2"), internalCallContext);
+        final Invoice secondInvoice = invoiceChecker.checkInvoice(account.getId(), 2, callContext,
+                                                                  new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 1), new LocalDate(2013, 5, 1), InvoiceItemType.RECURRING, new BigDecimal("2399.95")),
+                                                                  new ExpectedInvoiceItemCheck(new LocalDate(2012, 4, 1), new LocalDate(2012, 5, 1), InvoiceItemType.USAGE, new BigDecimal("5.90")));
+        invoiceChecker.checkTrackingIds(secondInvoice, ImmutableSet.of("t1", "t2"), internalCallContext);
 
         // Change to the Slugs plan
-        busHandler.pushExpectedEvents(NextEvent.CHANGE, NextEvent.INVOICE);
+        busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.INVOICE);
         aoSubscription.changePlanWithDate(new DefaultEntitlementSpecifier(new PlanPhaseSpecifier("slugs-usage-in-arrear")),
                                           new LocalDate(2012, 4, 1),
                                           ImmutableList.<PluginProperty>of(),
                                           callContext);
         assertListenerStatus();
 
-        // Verify invoice
-        invoiceChecker.checkInvoice(account.getId(), 3, callContext,
-                                    new ExpectedInvoiceItemCheck(new LocalDate(2012, 4, 1), new LocalDate(2012, 5, 1), InvoiceItemType.USAGE, BigDecimal.ZERO));
+        // Verify invoices (second invoice is unchanged)
+        final Invoice updatedSecondInvoice = invoiceChecker.checkInvoice(account.getId(), 2, callContext,
+                                                                        new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 1), new LocalDate(2013, 5, 1), InvoiceItemType.RECURRING, new BigDecimal("2399.95")),
+                                                                        new ExpectedInvoiceItemCheck(new LocalDate(2012, 4, 1), new LocalDate(2012, 5, 1), InvoiceItemType.USAGE, new BigDecimal("5.90")));
+        invoiceChecker.checkTrackingIds(updatedSecondInvoice, ImmutableSet.of("t1", "t2"), internalCallContext);
+        final Invoice thirdInvoice = invoiceChecker.checkInvoice(account.getId(), 3, callContext,
+                                                                  new ExpectedInvoiceItemCheck(new LocalDate(2012, 4, 1), new LocalDate(2012, 5, 1), InvoiceItemType.USAGE, BigDecimal.ZERO));
+        invoiceChecker.checkTrackingIds(thirdInvoice, ImmutableSet.of(), internalCallContext);
 
         // Add usage data
         recordUsageData(aoSubscription.getId(), "u1", "slugs", new LocalDate(2012, 4, 1), 99L, callContext);
@@ -397,7 +402,4 @@ public class TestConsumableInArrear extends TestIntegrationBase {
 
 
     }
-
-
-
 }
