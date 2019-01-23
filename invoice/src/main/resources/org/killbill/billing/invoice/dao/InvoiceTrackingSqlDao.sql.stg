@@ -8,7 +8,7 @@ tableFields(prefix) ::= <<
 , <prefix>subscription_id
 , <prefix>unit_type
 , <prefix>record_date
-, <prefix> is_active
+, <prefix>is_active
 , <prefix>created_by
 , <prefix>created_date
 , <prefix>updated_by
