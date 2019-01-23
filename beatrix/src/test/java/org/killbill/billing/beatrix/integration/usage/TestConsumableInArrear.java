@@ -1,6 +1,6 @@
 /*
- * Copyright 2014-2016 Groupon, Inc
- * Copyright 2014-2016 The Billing Project, LLC
+ * Copyright 2014-2019 Groupon, Inc
+ * Copyright 2014-2019 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -45,6 +45,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 
 import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertNotEquals;
 
 public class TestConsumableInArrear extends TestIntegrationBase {
 
@@ -293,8 +294,6 @@ public class TestConsumableInArrear extends TestIntegrationBase {
         final SubscriptionUsageRecord bp1UsageRecord2 = new SubscriptionUsageRecord(bp1.getId(), "bp1-tracking-2", ImmutableList.of(new UnitUsageRecord("stones", bp1StoneRecords2)));
         recordUsageData(bp1UsageRecord2, callContext);
 
-
-
         final List<UsageRecord> bp2StoneRecords = new ArrayList();
         bp2StoneRecords.add(new UsageRecord(new LocalDate(2012, 4, 5), 85L));
         bp2StoneRecords.add(new UsageRecord(new LocalDate(2012, 4, 15), 150L));
@@ -312,7 +311,6 @@ public class TestConsumableInArrear extends TestIntegrationBase {
 
         invoiceChecker.checkTrackingIds(curInvoice, ImmutableSet.of("bp1-tracking-1", "bp1-tracking-2", "bp2-tracking-1"), internalCallContext);
 
-
         busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
         clock.addMonths(1);
         assertListenerStatus();
@@ -323,9 +321,55 @@ public class TestConsumableInArrear extends TestIntegrationBase {
 
         invoiceChecker.checkTrackingIds(curInvoice, ImmutableSet.of("bp1-tracking-2"), internalCallContext);
 
-
     }
 
+    @Test(groups = "slow")
+    public void testWithVoidedInvoice() throws Exception {
+        // We take april as it has 30 days (easier to play with BCD)
+        // Set clock to the initial start date - we implicitly assume here that the account timezone is UTC
+        clock.setDay(new LocalDate(2012, 4, 1));
 
+        final AccountData accountData = getAccountData(1);
+        final Account account = createAccount(accountData);
+        accountChecker.checkAccount(account.getId(), accountData, callContext);
 
+        // Create subscription
+        final DefaultEntitlement bpSubscription = createBaseEntitlementAndCheckForCompletion(account.getId(), "bundleKey", "Trebuchet", ProductCategory.BASE, BillingPeriod.NO_BILLING_PERIOD, NextEvent.CREATE, NextEvent.BLOCK, NextEvent.NULL_INVOICE);
+        // Check bundle after BP got created otherwise we get an error from auditApi.
+        subscriptionChecker.checkSubscriptionCreated(bpSubscription.getId(), internalCallContext);
+
+        Assert.assertNull(bpSubscription.getSubscriptionBase().getChargedThroughDate());
+
+        // Record usage for first month
+        recordUsageData(bpSubscription.getId(), "xxx-1", "stones", new LocalDate(2012, 4, 5), 85L, callContext);
+        recordUsageData(bpSubscription.getId(), "xxx-2", "stones", new LocalDate(2012, 4, 15), 150L, callContext);
+
+        busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT_ERROR);
+        invoiceUserApi.triggerInvoiceGeneration(account.getId(),
+                                                new LocalDate(2012, 5, 1),
+                                                callContext);
+        assertListenerStatus();
+
+        final Invoice firstInvoice = invoiceChecker.checkInvoice(account.getId(), 1, callContext,
+                                                                 new ExpectedInvoiceItemCheck(new LocalDate(2012, 4, 1), new LocalDate(2012, 5, 1), InvoiceItemType.USAGE, new BigDecimal("1000")));
+        invoiceChecker.checkTrackingIds(firstInvoice, ImmutableSet.of("xxx-1", "xxx-2"), internalCallContext);
+
+        // Void the first invoice
+        invoiceUserApi.voidInvoice(firstInvoice.getId(), callContext);
+        assertListenerStatus();
+        invoiceChecker.checkTrackingIds(firstInvoice, ImmutableSet.of(), internalCallContext);
+
+        // Regenerate the invoice
+        busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT_ERROR);
+        invoiceUserApi.triggerInvoiceGeneration(account.getId(),
+                                                new LocalDate(2012, 5, 1),
+                                                callContext);
+        assertListenerStatus();
+
+        // Re-run checks
+        final Invoice secondInvoice = invoiceChecker.checkInvoice(account.getId(), 1, callContext,
+                                                                  new ExpectedInvoiceItemCheck(new LocalDate(2012, 4, 1), new LocalDate(2012, 5, 1), InvoiceItemType.USAGE, new BigDecimal("1000")));
+        assertNotEquals(firstInvoice.getId(), secondInvoice.getId());
+        invoiceChecker.checkTrackingIds(secondInvoice, ImmutableSet.of("xxx-1", "xxx-2"), internalCallContext);
+    }
 }

@@ -1170,11 +1170,14 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
 
                 cbaDao.doCBAComplexityFromTransaction(invoicesTags, entitySqlDaoWrapperFactory, context);
 
+                // Invoice creation event sent on COMMITTED
                 if (InvoiceStatus.COMMITTED.equals(newStatus)) {
-                    // notify invoice creation event
                     notifyBusOfInvoiceCreation(entitySqlDaoWrapperFactory, invoice, context);
+                // Deactivate any usage trackingIds if necessary
+                } else if (InvoiceStatus.VOID.equals(newStatus)) {
+                    final InvoiceTrackingSqlDao trackingSqlDao = entitySqlDaoWrapperFactory.become(InvoiceTrackingSqlDao.class);
+                    trackingSqlDao.deactivateForInvoice(invoiceId.toString(), context);
                 }
-
                 return null;
             }
         });

@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014 Groupon, Inc
- * Copyright 2014 The Billing Project, LLC
+ * Copyright 2014-2019 Groupon, Inc
+ * Copyright 2014-2019 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -87,7 +87,10 @@ public class AuditChecker {
     public void checkAccountCreated(final Account account, final CallContext context) {
         final AccountAuditLogs result = auditUserApi.getAccountAuditLogs(account.getId(), AuditLevel.FULL, context);
         checkAuditLog(ChangeType.INSERT, context, result.getAuditLogsForAccount().get(0), account.getId(), AccountSqlDao.class, true, true);
-        checkAuditLog(ChangeType.UPDATE, context, result.getAuditLogsForAccount().get(1), account.getId(), AccountSqlDao.class, true, true);
+        // Payment method
+        if (account.getPaymentMethodId() != null) {
+            checkAuditLog(ChangeType.UPDATE, context, result.getAuditLogsForAccount().get(1), account.getId(), AccountSqlDao.class, true, true);
+        }
     }
 
     /**

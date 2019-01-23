@@ -33,7 +33,7 @@ import org.killbill.billing.util.audit.ChangeType;
  *         @Audited(type = ChangeType.UPDATE)
  *         @SqlUpdate public void updateChargedThroughDate(@Bind("id") String id,
  *                                                         @Bind("chargedThroughDate") Date chargedThroughDate,
- *                                                         @InternalTenantContextBinder final InternalCallContext callcontext);
+ *                                                         @SmartBindBean  final InternalCallContext callcontext);
  * </pre>
  */
 @Retention(RetentionPolicy.RUNTIME)
