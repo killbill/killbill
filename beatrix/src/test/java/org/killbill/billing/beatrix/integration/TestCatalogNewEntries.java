@@ -18,43 +18,30 @@
 package org.killbill.billing.beatrix.integration;
 
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 
 import org.joda.time.LocalDate;
-import org.killbill.billing.ErrorCode;
 import org.killbill.billing.account.api.Account;
 import org.killbill.billing.api.TestApiListener.NextEvent;
 import org.killbill.billing.catalog.api.BillingPeriod;
-import org.killbill.billing.catalog.api.PhaseType;
 import org.killbill.billing.catalog.api.PlanPhaseSpecifier;
-import org.killbill.billing.catalog.api.PriceListSet;
 import org.killbill.billing.catalog.api.ProductCategory;
 import org.killbill.billing.entitlement.api.DefaultEntitlement;
 import org.killbill.billing.entitlement.api.DefaultEntitlementSpecifier;
-import org.killbill.billing.entitlement.api.Entitlement;
-import org.killbill.billing.entitlement.api.Entitlement.EntitlementState;
 import org.killbill.billing.entitlement.api.EntitlementApiException;
-import org.killbill.billing.invoice.api.Invoice;
-import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.platform.api.KillbillConfigSource;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
-import com.google.common.collect.ImmutableList;
-
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
-import static org.testng.Assert.assertTrue;
-import static org.testng.Assert.fail;
 
 public class TestCatalogNewEntries extends TestIntegrationBase {
 
     @Override
     protected KillbillConfigSource getConfigSource(final Map<String, String> extraProperties) {
         final Map<String, String> allExtraProperties = new HashMap<String, String>(extraProperties);
-            allExtraProperties.put("org.killbill.catalog.uri", "catalogs/testCatalogRetireElements");
+        allExtraProperties.put("org.killbill.catalog.uri", "catalogs/testCatalogRetireElements");
         return super.getConfigSource(null, allExtraProperties);
     }
 
@@ -88,7 +75,6 @@ public class TestCatalogNewEntries extends TestIntegrationBase {
         } catch (EntitlementApiException ignore) {
         }
 
-
         // Move to 2015-12-1
         busHandler.pushExpectedEvents(NextEvent.PHASE, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
         clock.addMonths(1);
@@ -100,8 +86,6 @@ public class TestCatalogNewEntries extends TestIntegrationBase {
         assertListenerStatus();
 
     }
-
-
 
     @Test(groups = "slow")
     public void testNewPlanWithRetiredOldPlan() throws Exception {
@@ -133,7 +117,6 @@ public class TestCatalogNewEntries extends TestIntegrationBase {
         } catch (EntitlementApiException ignore) {
         }
 
-
         // Move to 2015-12-1
         busHandler.pushExpectedEvents(NextEvent.PHASE, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
         clock.addMonths(1);
@@ -147,7 +130,5 @@ public class TestCatalogNewEntries extends TestIntegrationBase {
         }
 
     }
-
-
 
 }
