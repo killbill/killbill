@@ -39,10 +39,8 @@ import org.killbill.billing.invoice.api.Invoice;
 import org.killbill.billing.invoice.api.InvoiceItemType;
 import org.killbill.billing.osgi.api.OSGIServiceDescriptor;
 import org.killbill.billing.osgi.api.OSGIServiceRegistration;
-import org.killbill.billing.usage.api.SubscriptionUsageRecord;
-import org.killbill.billing.usage.api.UnitUsageRecord;
+import org.killbill.billing.usage.api.RolledUpUsage;
 import org.killbill.billing.usage.api.UsageApiException;
-import org.killbill.billing.usage.api.UsageRecord;
 import org.killbill.billing.usage.api.svcs.DefaultRawUsage;
 import org.killbill.billing.usage.plugin.api.RawUsageRecord;
 import org.killbill.billing.usage.plugin.api.UsagePluginApi;
@@ -53,6 +51,8 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import com.google.common.collect.ImmutableSet;
+
+import static org.testng.Assert.assertEquals;
 
 public class TestWithUsagePlugin extends TestIntegrationBase {
 
@@ -118,6 +118,12 @@ public class TestWithUsagePlugin extends TestIntegrationBase {
         testUsagePluginApi.recordUsageData(aoSubscription.getId(), "tracking-1", "bullets", new LocalDate(2012, 4, 1), 99L, callContext);
         testUsagePluginApi.recordUsageData(aoSubscription.getId(), "tracking-2", "bullets", new LocalDate(2012, 4, 15), 100L, callContext);
 
+        // Wrong subscription - should be ignored...
+        testUsagePluginApi.recordUsageData(UUID.randomUUID(), "tracking-3", "bullets", new LocalDate(2012, 4, 5), 100L, callContext);
+
+        // Wrong unit - should be ignored...
+        testUsagePluginApi.recordUsageData(aoSubscription.getId(), "tracking-3", "bullets2", new LocalDate(2012, 4, 6), 200L, callContext);
+
         busHandler.pushExpectedEvents(NextEvent.PHASE, NextEvent.NULL_INVOICE, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
         clock.addDays(30);
         assertListenerStatus();
@@ -127,10 +133,53 @@ public class TestWithUsagePlugin extends TestIntegrationBase {
                                                          new ExpectedInvoiceItemCheck(new LocalDate(2012, 4, 1), new LocalDate(2012, 5, 1), InvoiceItemType.USAGE, new BigDecimal("5.90")));
         invoiceChecker.checkTrackingIds(curInvoice, ImmutableSet.of("tracking-1", "tracking-2"), internalCallContext);
 
+        final RolledUpUsage result1 = usageUserApi.getUsageForSubscription(aoSubscription.getId(), "bullets", new LocalDate(2012, 4, 1), new LocalDate(2012, 4, 15), callContext);
+        assertEquals(result1.getSubscriptionId(), aoSubscription.getId());
+        assertEquals(result1.getRolledUpUnits().size(), 1);
+        assertEquals(result1.getRolledUpUnits().get(0).getUnitType(), "bullets");
+        assertEquals(result1.getRolledUpUnits().get(0).getAmount().longValue(), 99L);
+
+        final List<LocalDate> transitionDates = new ArrayList<>();
+        transitionDates.add(new LocalDate(2012, 4, 1));
+        transitionDates.add(new LocalDate(2012, 4, 5));
+        transitionDates.add(new LocalDate(2012, 4, 6));
+        transitionDates.add(new LocalDate(2012, 4, 15));
+        transitionDates.add(new LocalDate(2012, 4, 17));
+
+        final List<RolledUpUsage> result2 = usageUserApi.getAllUsageForSubscription(aoSubscription.getId(), transitionDates, callContext);
+        assertEquals(result2.size(), 4);
+
+        assertEquals(result2.get(0).getSubscriptionId(), aoSubscription.getId());
+        assertEquals(result2.get(0).getStart(), new LocalDate(2012, 4, 1));
+        assertEquals(result2.get(0).getEnd(), new LocalDate(2012, 4, 5));
+        assertEquals(result2.get(0).getRolledUpUnits().size(), 1);
+        assertEquals(result2.get(0).getRolledUpUnits().get(0).getUnitType(), "bullets");
+        assertEquals(result2.get(0).getRolledUpUnits().get(0).getAmount().longValue(), 99L);
+
+        // Usage was for wrong subscriptionId
+        assertEquals(result2.get(1).getSubscriptionId(), aoSubscription.getId());
+        assertEquals(result2.get(1).getStart(), new LocalDate(2012, 4, 5));
+        assertEquals(result2.get(1).getEnd(), new LocalDate(2012, 4, 6));
+        assertEquals(result2.get(1).getRolledUpUnits().size(), 0);
+
+        // We see the wrong bullet2 unit
+        assertEquals(result2.get(2).getSubscriptionId(), aoSubscription.getId());
+        assertEquals(result2.get(2).getStart(), new LocalDate(2012, 4, 6));
+        assertEquals(result2.get(2).getEnd(), new LocalDate(2012, 4, 15));
+        assertEquals(result2.get(2).getRolledUpUnits().size(), 1);
+        assertEquals(result2.get(2).getRolledUpUnits().get(0).getUnitType(), "bullets2");
+        assertEquals(result2.get(2).getRolledUpUnits().get(0).getAmount().longValue(), 200L);
+
+        assertEquals(result2.get(3).getSubscriptionId(), aoSubscription.getId());
+        assertEquals(result2.get(3).getStart(), new LocalDate(2012, 4, 15));
+        assertEquals(result2.get(3).getEnd(), new LocalDate(2012, 4, 17));
+        assertEquals(result2.get(3).getRolledUpUnits().size(), 1);
+        assertEquals(result2.get(3).getRolledUpUnits().get(0).getUnitType(), "bullets");
+        assertEquals(result2.get(3).getRolledUpUnits().get(0).getAmount().longValue(), 100L);
+
     }
 
     public static class TestUsagePluginApi implements UsagePluginApi {
-
 
         private final SortedMap<LocalDate, List<RawUsageRecord>> usageData;
 
@@ -154,7 +203,6 @@ public class TestWithUsagePlugin extends TestIntegrationBase {
         }
 
         public void recordUsageData(final UUID subscriptionId, final String trackingId, final String unitType, final LocalDate startDate, final Long amount, final CallContext context) throws UsageApiException {
-
 
             List<RawUsageRecord> record = usageData.get(startDate);
             if (record == null) {

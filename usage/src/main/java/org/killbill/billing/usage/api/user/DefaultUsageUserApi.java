@@ -22,6 +22,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import javax.annotation.Nullable;
 import javax.inject.Inject;
 
 import org.joda.time.LocalDate;
@@ -59,7 +60,7 @@ public class DefaultUsageUserApi extends BaseUserApi implements UsageUserApi {
                                final OSGIServiceRegistration<UsagePluginApi> pluginRegistry) {
         super(pluginRegistry);
         this.rolledUpUsageDao = rolledUpUsageDao;
-        this.internalCallContextFactory =internalCallContextFactory;
+        this.internalCallContextFactory = internalCallContextFactory;
     }
 
     @Override
@@ -85,10 +86,9 @@ public class DefaultUsageUserApi extends BaseUserApi implements UsageUserApi {
 
         final List<RawUsageRecord> rawUsage = getUsageFromPlugin(startDate, endDate, tenantContext);
         if (rawUsage != null) {
-            final List<RolledUpUnit> rolledUpAmount = getRolledUpUnitsForRawPluginUsage(rawUsage);
+            final List<RolledUpUnit> rolledUpAmount = getRolledUpUnitsForRawPluginUsage(subscriptionId, unitType, rawUsage);
             return new DefaultRolledUpUsage(subscriptionId, startDate, endDate, rolledUpAmount);
         }
-
 
         final List<RolledUpUsageModelDao> usageForSubscription = rolledUpUsageDao.getUsageForSubscription(subscriptionId, startDate, endDate, unitType, internalCallContextFactory.createInternalTenantContext(subscriptionId, ObjectType.SUBSCRIPTION, tenantContext));
         final List<RolledUpUnit> rolledUpAmount = getRolledUpUnits(usageForSubscription);
@@ -106,7 +106,7 @@ public class DefaultUsageUserApi extends BaseUserApi implements UsageUserApi {
 
                 final List<RawUsageRecord> rawUsage = getUsageFromPlugin(prevDate, curDate, tenantContext);
                 if (rawUsage != null) {
-                    final List<RolledUpUnit> rolledUpAmount = getRolledUpUnitsForRawPluginUsage(rawUsage);
+                    final List<RolledUpUnit> rolledUpAmount = getRolledUpUnitsForRawPluginUsage(subscriptionId, null, rawUsage);
                     result.add(new DefaultRolledUpUsage(subscriptionId, prevDate, curDate, rolledUpAmount));
                 } else {
                     final List<RolledUpUsageModelDao> usageForSubscription = rolledUpUsageDao.getAllUsageForSubscription(subscriptionId, prevDate, curDate, internalCallContext);
@@ -119,22 +119,29 @@ public class DefaultUsageUserApi extends BaseUserApi implements UsageUserApi {
         return result;
     }
 
-
-    private List<RolledUpUnit> getRolledUpUnitsForRawPluginUsage(final List<RawUsageRecord> usageForSubscription) {
+    private List<RolledUpUnit> getRolledUpUnitsForRawPluginUsage(final UUID subscriptionId, @Nullable final String unitType, final List<RawUsageRecord> rawAccountUsage) {
         final Map<String, Long> tmp = new HashMap<String, Long>();
-        for (RawUsageRecord cur : usageForSubscription) {
+        for (RawUsageRecord cur : rawAccountUsage) {
+            // Filter out wrong subscriptionId
+            if (cur.getSubscriptionId().compareTo(subscriptionId) != 0) {
+                continue;
+            }
+
+            // Filter out wrong unitType if specified.
+            if (unitType != null && !unitType.equals(cur.getUnitType())) {
+                continue;
+            }
+
             Long currentAmount = tmp.get(cur.getUnitType());
             Long updatedAmount = (currentAmount != null) ? currentAmount + cur.getAmount() : cur.getAmount();
             tmp.put(cur.getUnitType(), updatedAmount);
         }
         final List<RolledUpUnit> result = new ArrayList<RolledUpUnit>(tmp.size());
-        for (final String unitType : tmp.keySet()) {
-            result.add(new DefaultRolledUpUnit(unitType, tmp.get(unitType)));
+        for (final String curType : tmp.keySet()) {
+            result.add(new DefaultRolledUpUnit(curType, tmp.get(curType)));
         }
         return result;
     }
-
-
 
     private List<RolledUpUnit> getRolledUpUnits(final List<RolledUpUsageModelDao> usageForSubscription) {
         final Map<String, Long> tmp = new HashMap<String, Long>();

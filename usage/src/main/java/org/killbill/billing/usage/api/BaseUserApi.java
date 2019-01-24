@@ -25,8 +25,12 @@ import org.killbill.billing.osgi.api.OSGIServiceRegistration;
 import org.killbill.billing.usage.plugin.api.RawUsageRecord;
 import org.killbill.billing.usage.plugin.api.UsagePluginApi;
 import org.killbill.billing.util.callcontext.TenantContext;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class BaseUserApi {
+
+    private static final Logger logger = LoggerFactory.getLogger(BaseUserApi.class);
 
     private final OSGIServiceRegistration<UsagePluginApi> pluginRegistry;
 
@@ -34,6 +38,11 @@ public class BaseUserApi {
         this.pluginRegistry = pluginRegistry;
     }
 
+    //
+    // * If no plugin were registered or if plugins do not serve usage data for this tenant/account this returns null
+    //   and the usage module will look for data inside its own table.
+    // * If not, a possibly empty (or not) list should be returned (and the usage module will *not* look for data inside its own table)
+    //
     protected List<RawUsageRecord> getUsageFromPlugin(final LocalDate startDate, final LocalDate endDate, final TenantContext tenantContext) {
 
         final Set<String> allServices = pluginRegistry.getAllServices();
@@ -48,6 +57,13 @@ public class BaseUserApi {
             final List<RawUsageRecord> result = plugin.geUsageForAccount(startDate, endDate, tenantContext);
             // First plugin registered, returns result -- could be empty List if no usage was recorded.
             if (result != null) {
+
+                for (final RawUsageRecord cur : result) {
+                    if (cur.getDate().compareTo(startDate) < 0 || cur.getDate().compareTo(endDate) >=0) {
+                        logger.warn("Usage plugin returned usage data with date %s, not in the specified range [%s -> %s[",
+                                    cur.getDate(), startDate, endDate);
+                    }
+                }
                 return result;
             }
         }
