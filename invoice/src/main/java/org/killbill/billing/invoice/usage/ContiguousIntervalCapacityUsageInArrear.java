@@ -37,8 +37,8 @@ import org.killbill.billing.invoice.model.UsageInvoiceItem;
 import org.killbill.billing.invoice.usage.details.UsageCapacityInArrearAggregate;
 import org.killbill.billing.invoice.usage.details.UsageInArrearAggregate;
 import org.killbill.billing.invoice.usage.details.UsageInArrearTierUnitDetail;
-import org.killbill.billing.usage.RawUsage;
 import org.killbill.billing.usage.api.RolledUpUnit;
+import org.killbill.billing.usage.plugin.api.RawUsageRecord;
 import org.killbill.billing.util.config.definition.InvoiceConfig.UsageDetailMode;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -55,7 +55,7 @@ public class ContiguousIntervalCapacityUsageInArrear extends ContiguousIntervalU
     public ContiguousIntervalCapacityUsageInArrear(final Usage usage,
                                                    final UUID accountId,
                                                    final UUID invoiceId,
-                                                   final List<RawUsage> rawSubscriptionUsage,
+                                                   final List<RawUsageRecord> rawSubscriptionUsage,
                                                    final Set<TrackingRecordId> existingTrackingId,
                                                    final LocalDate targetDate,
                                                    final LocalDate rawUsageStartDate,

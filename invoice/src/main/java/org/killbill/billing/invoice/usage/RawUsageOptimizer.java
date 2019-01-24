@@ -36,7 +36,7 @@ import org.killbill.billing.invoice.generator.InvoiceDateUtils;
 import org.killbill.billing.invoice.generator.InvoiceWithMetadata.TrackingRecordId;
 import org.killbill.billing.invoice.model.UsageInvoiceItem;
 import org.killbill.billing.usage.InternalUserApi;
-import org.killbill.billing.usage.RawUsage;
+import org.killbill.billing.usage.plugin.api.RawUsageRecord;
 import org.killbill.billing.util.config.definition.InvoiceConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -75,7 +75,7 @@ public class RawUsageOptimizer {
         final LocalDate targetStartDate = config.getMaxRawUsagePreviousPeriod(internalCallContext) >= 0 ? getOptimizedRawUsageStartDate(firstEventStartDate, targetDate, existingUsageItems, knownUsage, internalCallContext) : firstEventStartDate;
         log.debug("ConsumableInArrear accountRecordId='{}', rawUsageStartDate='{}', firstEventStartDate='{}'",
                   internalCallContext.getAccountRecordId(), targetStartDate, firstEventStartDate);
-        final List<RawUsage> rawUsageData = usageApi.getRawUsageForAccount(targetStartDate, targetDate, internalCallContext);
+        final List<RawUsageRecord> rawUsageData = usageApi.getRawUsageForAccount(targetStartDate, targetDate, internalCallContext);
 
         final List<InvoiceTrackingModelDao> trackingIds = invoiceDao.getTrackingsByDateRange(targetStartDate, targetDate, internalCallContext);
         final Set<TrackingRecordId> existingTrackingIds = ImmutableSet.copyOf(Iterables.transform(trackingIds, new Function<InvoiceTrackingModelDao, TrackingRecordId>() {
@@ -165,10 +165,10 @@ public class RawUsageOptimizer {
     public static class RawUsageOptimizerResult {
 
         private final LocalDate rawUsageStartDate;
-        private final List<RawUsage> rawUsage;
+        private final List<RawUsageRecord> rawUsage;
         private final Set<TrackingRecordId> existingTrackingIds;
 
-        public RawUsageOptimizerResult(final LocalDate rawUsageStartDate, final List<RawUsage> rawUsage, final Set<TrackingRecordId> existingTrackingIds) {
+        public RawUsageOptimizerResult(final LocalDate rawUsageStartDate, final List<RawUsageRecord> rawUsage, final Set<TrackingRecordId> existingTrackingIds) {
             this.rawUsageStartDate = rawUsageStartDate;
             this.rawUsage = rawUsage;
             this.existingTrackingIds = existingTrackingIds;
@@ -178,7 +178,7 @@ public class RawUsageOptimizer {
             return rawUsageStartDate;
         }
 
-        public List<RawUsage> getRawUsage() {
+        public List<RawUsageRecord> getRawUsage() {
             return rawUsage;
         }
 

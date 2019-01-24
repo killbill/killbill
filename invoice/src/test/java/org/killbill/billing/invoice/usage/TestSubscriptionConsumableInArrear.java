@@ -29,8 +29,7 @@ import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.catalog.api.TierBlockPolicy;
 import org.killbill.billing.catalog.api.Usage;
 import org.killbill.billing.junction.BillingEvent;
-import org.killbill.billing.usage.RawUsage;
-import org.testng.annotations.BeforeClass;
+import org.killbill.billing.usage.plugin.api.RawUsageRecord;
 import org.testng.annotations.Test;
 
 import com.google.common.collect.ImmutableList;
@@ -71,7 +70,7 @@ public class TestSubscriptionConsumableInArrear extends TestUsageInArrearBase {
 
         LocalDate targetDate = new LocalDate(2013, 6, 23);
 
-        final SubscriptionUsageInArrear foo = new SubscriptionUsageInArrear(accountId, invoiceId, billingEvents, ImmutableList.<RawUsage>of(), ImmutableSet.of(), targetDate, new LocalDate(dt1, DateTimeZone.UTC), usageDetailMode, internalCallContext);
+        final SubscriptionUsageInArrear foo = new SubscriptionUsageInArrear(accountId, invoiceId, billingEvents, ImmutableList.<RawUsageRecord>of(), ImmutableSet.of(), targetDate, new LocalDate(dt1, DateTimeZone.UTC), usageDetailMode, internalCallContext);
         final List<ContiguousIntervalUsageInArrear> result = foo.computeInArrearUsageInterval();
         assertEquals(result.size(), 3);
 

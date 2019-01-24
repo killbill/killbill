@@ -22,8 +22,9 @@ import java.util.UUID;
 
 import org.joda.time.LocalDate;
 import org.killbill.billing.callcontext.InternalTenantContext;
+import org.killbill.billing.usage.plugin.api.RawUsageRecord;
 
 public interface InternalUserApi {
 
-    public List<RawUsage> getRawUsageForAccount(final LocalDate stateDate, final LocalDate endDate, final InternalTenantContext tenantContext);
+    public List<RawUsageRecord> getRawUsageForAccount(final LocalDate stateDate, final LocalDate endDate, final InternalTenantContext tenantContext);
 }
