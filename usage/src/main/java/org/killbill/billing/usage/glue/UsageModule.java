@@ -50,7 +50,7 @@ public class UsageModule extends KillBillModule {
     }
 
 
-    protected void installCatalogPluginApi() {
+    protected void installUsagePluginApi() {
         bind(new TypeLiteral<OSGIServiceRegistration<UsagePluginApi>>() {}).toProvider(DefaultUsageProviderPluginRegistryProvider.class).asEagerSingleton();
     }
 
@@ -60,6 +60,6 @@ public class UsageModule extends KillBillModule {
         installRolledUpUsageDao();
         installUsageUserApi();
         installInternalUserApi();
-        installCatalogPluginApi();
+        installUsagePluginApi();
     }
 }

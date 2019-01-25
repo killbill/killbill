@@ -60,7 +60,7 @@ public class BaseUserApi {
 
                 for (final RawUsageRecord cur : result) {
                     if (cur.getDate().compareTo(startDate) < 0 || cur.getDate().compareTo(endDate) >=0) {
-                        logger.warn("Usage plugin returned usage data with date %s, not in the specified range [%s -> %s[",
+                        logger.warn("Usage plugin returned usage data with date {}, not in the specified range [{} -> {}[",
                                     cur.getDate(), startDate, endDate);
                     }
                 }
