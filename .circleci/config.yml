@@ -193,7 +193,7 @@ workflows:
         filters:
           branches:
             ignore:
-            - work-for-release-0.21.x
+              - work-for-release-0.21.x
       - test-h2:
           requires:
             - build
