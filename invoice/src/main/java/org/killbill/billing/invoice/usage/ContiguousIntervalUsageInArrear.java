@@ -45,9 +45,9 @@ import org.killbill.billing.invoice.generator.InvoiceWithMetadata.TrackingRecord
 import org.killbill.billing.invoice.model.UsageInvoiceItem;
 import org.killbill.billing.invoice.usage.details.UsageInArrearAggregate;
 import org.killbill.billing.junction.BillingEvent;
+import org.killbill.billing.usage.api.RawUsageRecord;
 import org.killbill.billing.usage.api.RolledUpUnit;
 import org.killbill.billing.usage.api.RolledUpUsage;
-import org.killbill.billing.usage.plugin.api.RawUsageRecord;
 import org.killbill.billing.util.config.definition.InvoiceConfig.UsageDetailMode;
 import org.killbill.billing.util.jackson.ObjectMapper;
 import org.slf4j.Logger;

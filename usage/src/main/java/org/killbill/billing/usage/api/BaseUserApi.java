@@ -22,7 +22,6 @@ import java.util.Set;
 
 import org.joda.time.LocalDate;
 import org.killbill.billing.osgi.api.OSGIServiceRegistration;
-import org.killbill.billing.usage.plugin.api.RawUsageRecord;
 import org.killbill.billing.usage.plugin.api.UsagePluginApi;
 import org.killbill.billing.util.callcontext.TenantContext;
 import org.slf4j.Logger;

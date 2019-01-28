@@ -43,9 +43,9 @@ import org.killbill.billing.invoice.usage.ContiguousIntervalUsageInArrear.UsageI
 import org.killbill.billing.invoice.usage.details.UsageConsumableInArrearAggregate;
 import org.killbill.billing.invoice.usage.details.UsageConsumableInArrearTierUnitAggregate;
 import org.killbill.billing.junction.BillingEvent;
+import org.killbill.billing.usage.api.RawUsageRecord;
 import org.killbill.billing.usage.api.RolledUpUsage;
 import org.killbill.billing.usage.api.svcs.DefaultRawUsage;
-import org.killbill.billing.usage.plugin.api.RawUsageRecord;
 import org.killbill.billing.util.config.definition.InvoiceConfig.UsageDetailMode;
 import org.testng.Assert;
 import org.testng.annotations.Test;

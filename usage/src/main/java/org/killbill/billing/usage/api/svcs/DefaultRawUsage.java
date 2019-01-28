@@ -20,7 +20,7 @@ package org.killbill.billing.usage.api.svcs;
 import java.util.UUID;
 
 import org.joda.time.LocalDate;
-import org.killbill.billing.usage.plugin.api.RawUsageRecord;
+import org.killbill.billing.usage.api.RawUsageRecord;
 
 public class DefaultRawUsage implements RawUsageRecord {
 

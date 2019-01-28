@@ -43,9 +43,9 @@ import org.killbill.billing.invoice.usage.ContiguousIntervalUsageInArrear.UsageI
 import org.killbill.billing.invoice.usage.details.UsageCapacityInArrearAggregate;
 import org.killbill.billing.invoice.usage.details.UsageInArrearTierUnitDetail;
 import org.killbill.billing.junction.BillingEvent;
+import org.killbill.billing.usage.api.RawUsageRecord;
 import org.killbill.billing.usage.api.RolledUpUnit;
 import org.killbill.billing.usage.api.svcs.DefaultRawUsage;
-import org.killbill.billing.usage.plugin.api.RawUsageRecord;
 import org.killbill.billing.util.config.definition.InvoiceConfig.UsageDetailMode;
 import org.testng.annotations.Test;
 
@@ -56,7 +56,6 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 
 import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.assertTrue;
 
 public class TestContiguousIntervalCapacityInArrear extends TestUsageInArrearBase {

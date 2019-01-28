@@ -40,7 +40,7 @@ import org.killbill.billing.invoice.generator.InvoiceItemGenerator.InvoiceItemGe
 import org.killbill.billing.invoice.generator.InvoiceWithMetadata.TrackingRecordId;
 import org.killbill.billing.invoice.usage.ContiguousIntervalUsageInArrear.UsageInArrearItemsAndNextNotificationDate;
 import org.killbill.billing.junction.BillingEvent;
-import org.killbill.billing.usage.plugin.api.RawUsageRecord;
+import org.killbill.billing.usage.api.RawUsageRecord;
 import org.killbill.billing.util.config.definition.InvoiceConfig.UsageDetailMode;
 
 import com.google.common.annotations.VisibleForTesting;

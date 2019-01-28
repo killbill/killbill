@@ -29,7 +29,7 @@ import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.catalog.api.TierBlockPolicy;
 import org.killbill.billing.catalog.api.Usage;
 import org.killbill.billing.junction.BillingEvent;
-import org.killbill.billing.usage.plugin.api.RawUsageRecord;
+import org.killbill.billing.usage.api.RawUsageRecord;
 import org.testng.annotations.Test;
 
 import com.google.common.collect.ImmutableList;

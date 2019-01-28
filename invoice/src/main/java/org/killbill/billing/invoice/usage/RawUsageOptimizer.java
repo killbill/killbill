@@ -36,7 +36,7 @@ import org.killbill.billing.invoice.generator.InvoiceDateUtils;
 import org.killbill.billing.invoice.generator.InvoiceWithMetadata.TrackingRecordId;
 import org.killbill.billing.invoice.model.UsageInvoiceItem;
 import org.killbill.billing.usage.InternalUserApi;
-import org.killbill.billing.usage.plugin.api.RawUsageRecord;
+import org.killbill.billing.usage.api.RawUsageRecord;
 import org.killbill.billing.util.config.definition.InvoiceConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

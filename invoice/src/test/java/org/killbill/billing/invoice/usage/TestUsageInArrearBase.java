@@ -48,7 +48,7 @@ import org.killbill.billing.invoice.InvoiceTestSuiteNoDB;
 import org.killbill.billing.invoice.generator.InvoiceWithMetadata.TrackingRecordId;
 import org.killbill.billing.junction.BillingEvent;
 import org.killbill.billing.subscription.api.SubscriptionBase;
-import org.killbill.billing.usage.plugin.api.RawUsageRecord;
+import org.killbill.billing.usage.api.RawUsageRecord;
 import org.killbill.billing.util.config.definition.InvoiceConfig.UsageDetailMode;
 import org.killbill.billing.util.jackson.ObjectMapper;
 import org.mockito.Mockito;

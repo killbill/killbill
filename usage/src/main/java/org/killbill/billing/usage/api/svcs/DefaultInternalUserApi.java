@@ -19,7 +19,6 @@ package org.killbill.billing.usage.api.svcs;
 
 import java.util.List;
 
-import javax.annotation.Nullable;
 import javax.inject.Inject;
 
 import org.joda.time.LocalDate;
@@ -27,9 +26,9 @@ import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.osgi.api.OSGIServiceRegistration;
 import org.killbill.billing.usage.InternalUserApi;
 import org.killbill.billing.usage.api.BaseUserApi;
+import org.killbill.billing.usage.api.RawUsageRecord;
 import org.killbill.billing.usage.dao.RolledUpUsageDao;
 import org.killbill.billing.usage.dao.RolledUpUsageModelDao;
-import org.killbill.billing.usage.plugin.api.RawUsageRecord;
 import org.killbill.billing.usage.plugin.api.UsagePluginApi;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.billing.util.callcontext.TenantContext;
@@ -64,7 +63,6 @@ public class DefaultInternalUserApi extends BaseUserApi implements InternalUserA
 
         final List<RolledUpUsageModelDao> usage = rolledUpUsageDao.getRawUsageForAccount(startDate, endDate, internalTenantContext);
         return ImmutableList.copyOf(Iterables.transform(usage, new Function<RolledUpUsageModelDao, RawUsageRecord>() {
-            @Nullable
             @Override
             public RawUsageRecord apply(final RolledUpUsageModelDao input) {
                 return new DefaultRawUsage(input.getSubscriptionId(), input.getRecordDate(), input.getUnitType(), input.getAmount(), input.getTrackingId());
