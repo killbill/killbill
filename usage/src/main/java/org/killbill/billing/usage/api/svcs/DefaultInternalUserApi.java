@@ -19,36 +19,52 @@ package org.killbill.billing.usage.api.svcs;
 
 import java.util.List;
 
-import javax.annotation.Nullable;
 import javax.inject.Inject;
 
 import org.joda.time.LocalDate;
 import org.killbill.billing.callcontext.InternalTenantContext;
+import org.killbill.billing.osgi.api.OSGIServiceRegistration;
 import org.killbill.billing.usage.InternalUserApi;
-import org.killbill.billing.usage.RawUsage;
+import org.killbill.billing.usage.api.BaseUserApi;
+import org.killbill.billing.usage.api.RawUsageRecord;
 import org.killbill.billing.usage.dao.RolledUpUsageDao;
 import org.killbill.billing.usage.dao.RolledUpUsageModelDao;
+import org.killbill.billing.usage.plugin.api.UsagePluginApi;
+import org.killbill.billing.util.callcontext.InternalCallContextFactory;
+import org.killbill.billing.util.callcontext.TenantContext;
 
 import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 
-public class DefaultInternalUserApi implements InternalUserApi {
+public class DefaultInternalUserApi extends BaseUserApi implements InternalUserApi {
 
     private final RolledUpUsageDao rolledUpUsageDao;
+    private final InternalCallContextFactory internalCallContextFactory;
 
     @Inject
-    public DefaultInternalUserApi(final RolledUpUsageDao rolledUpUsageDao) {
+    public DefaultInternalUserApi(final RolledUpUsageDao rolledUpUsageDao,
+                                  final InternalCallContextFactory internalCallContextFactory,
+                                  final OSGIServiceRegistration<UsagePluginApi> pluginRegistry) {
+        super(pluginRegistry);
         this.rolledUpUsageDao = rolledUpUsageDao;
+        this.internalCallContextFactory = internalCallContextFactory;
     }
 
     @Override
-    public List<RawUsage> getRawUsageForAccount(final LocalDate stateDate, final LocalDate endDate, final InternalTenantContext internalTenantContext) {
-        final List<RolledUpUsageModelDao> usage = rolledUpUsageDao.getRawUsageForAccount(stateDate, endDate, internalTenantContext);
-        return ImmutableList.copyOf(Iterables.transform(usage, new Function<RolledUpUsageModelDao, RawUsage>() {
-            @Nullable
+    public List<RawUsageRecord> getRawUsageForAccount(final LocalDate startDate, final LocalDate endDate, final InternalTenantContext internalTenantContext) {
+
+        final TenantContext tenantContext = internalCallContextFactory.createTenantContext(internalTenantContext);
+
+        final List<RawUsageRecord> resultFromPlugin = getUsageFromPlugin(startDate, endDate, tenantContext);
+        if (resultFromPlugin != null) {
+            return resultFromPlugin;
+        }
+
+        final List<RolledUpUsageModelDao> usage = rolledUpUsageDao.getRawUsageForAccount(startDate, endDate, internalTenantContext);
+        return ImmutableList.copyOf(Iterables.transform(usage, new Function<RolledUpUsageModelDao, RawUsageRecord>() {
             @Override
-            public RawUsage apply(final RolledUpUsageModelDao input) {
+            public RawUsageRecord apply(final RolledUpUsageModelDao input) {
                 return new DefaultRawUsage(input.getSubscriptionId(), input.getRecordDate(), input.getUnitType(), input.getAmount(), input.getTrackingId());
             }
         }));

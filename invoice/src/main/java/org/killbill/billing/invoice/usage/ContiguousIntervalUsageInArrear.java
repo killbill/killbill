@@ -45,7 +45,7 @@ import org.killbill.billing.invoice.generator.InvoiceWithMetadata.TrackingRecord
 import org.killbill.billing.invoice.model.UsageInvoiceItem;
 import org.killbill.billing.invoice.usage.details.UsageInArrearAggregate;
 import org.killbill.billing.junction.BillingEvent;
-import org.killbill.billing.usage.RawUsage;
+import org.killbill.billing.usage.api.RawUsageRecord;
 import org.killbill.billing.usage.api.RolledUpUnit;
 import org.killbill.billing.usage.api.RolledUpUsage;
 import org.killbill.billing.util.config.definition.InvoiceConfig.UsageDetailMode;
@@ -55,7 +55,6 @@ import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
@@ -80,7 +79,7 @@ public abstract class ContiguousIntervalUsageInArrear {
 
     protected final Usage usage;
     protected final Set<String> unitTypes;
-    protected final List<RawUsage> rawSubscriptionUsage;
+    protected final List<RawUsageRecord> rawSubscriptionUsage;
     protected final Set<TrackingRecordId> allExistingTrackingIds;
     protected final LocalDate targetDate;
     protected final UUID accountId;
@@ -94,7 +93,7 @@ public abstract class ContiguousIntervalUsageInArrear {
     public ContiguousIntervalUsageInArrear(final Usage usage,
                                            final UUID accountId,
                                            final UUID invoiceId,
-                                           final List<RawUsage> rawSubscriptionUsage,
+                                           final List<RawUsageRecord> rawSubscriptionUsage,
                                            final Set<TrackingRecordId> existingTrackingIds,
                                            final LocalDate targetDate,
                                            final LocalDate rawUsageStartDate,
@@ -284,7 +283,7 @@ public abstract class ContiguousIntervalUsageInArrear {
         final List<RolledUpUsage> result = new ArrayList<RolledUpUsage>();
         final Set<TrackingRecordId> trackingIds = new HashSet<>();
 
-        final Iterator<RawUsage> rawUsageIterator = rawSubscriptionUsage.iterator();
+        final Iterator<RawUsageRecord> rawUsageIterator = rawSubscriptionUsage.iterator();
         if (!rawUsageIterator.hasNext()) {
             return new RolledUpUnitsWithTracking(getEmptyRolledUpUsage(), ImmutableSet.of());
         }
@@ -293,9 +292,9 @@ public abstract class ContiguousIntervalUsageInArrear {
         // Skip all items before our first transition date
         //
         // prevRawUsage keeps track of first unconsumed raw usage element
-        RawUsage prevRawUsage = null;
+        RawUsageRecord prevRawUsage = null;
         while (rawUsageIterator.hasNext()) {
-            final RawUsage curRawUsage = rawUsageIterator.next();
+            final RawUsageRecord curRawUsage = rawUsageIterator.next();
             if (curRawUsage.getDate().compareTo(transitionTimes.get(0)) >= 0) {
                 prevRawUsage = curRawUsage;
                 break;
@@ -341,7 +340,7 @@ public abstract class ContiguousIntervalUsageInArrear {
                 //
                 if (prevRawUsage == null) {
                     while (rawUsageIterator.hasNext()) {
-                        final RawUsage curRawUsage = rawUsageIterator.next();
+                        final RawUsageRecord curRawUsage = rawUsageIterator.next();
                         if (curRawUsage.getDate().compareTo(curDate) >= 0) {
                             prevRawUsage = curRawUsage;
                             break;
@@ -400,10 +399,10 @@ public abstract class ContiguousIntervalUsageInArrear {
         }
     }
 
-    private List<RawUsage> filterInputRawUsage(final List<RawUsage> rawSubscriptionUsage) {
-        final Iterable<RawUsage> filteredList = Iterables.filter(rawSubscriptionUsage, new Predicate<RawUsage>() {
+    private List<RawUsageRecord> filterInputRawUsage(final List<RawUsageRecord> rawSubscriptionUsage) {
+        final Iterable<RawUsageRecord> filteredList = Iterables.filter(rawSubscriptionUsage, new Predicate<RawUsageRecord>() {
             @Override
-            public boolean apply(final RawUsage input) {
+            public boolean apply(final RawUsageRecord input) {
                 return unitTypes.contains(input.getUnitType());
             }
         });

@@ -40,7 +40,7 @@ import org.killbill.billing.invoice.generator.InvoiceItemGenerator.InvoiceItemGe
 import org.killbill.billing.invoice.generator.InvoiceWithMetadata.TrackingRecordId;
 import org.killbill.billing.invoice.usage.ContiguousIntervalUsageInArrear.UsageInArrearItemsAndNextNotificationDate;
 import org.killbill.billing.junction.BillingEvent;
-import org.killbill.billing.usage.RawUsage;
+import org.killbill.billing.usage.api.RawUsageRecord;
 import org.killbill.billing.util.config.definition.InvoiceConfig.UsageDetailMode;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -56,9 +56,9 @@ import com.google.common.collect.Ordering;
  */
 public class SubscriptionUsageInArrear {
 
-    private static final Comparator<RawUsage> RAW_USAGE_DATE_COMPARATOR = new Comparator<RawUsage>() {
+    private static final Comparator<RawUsageRecord> RAW_USAGE_DATE_COMPARATOR = new Comparator<RawUsageRecord>() {
         @Override
-        public int compare(final RawUsage o1, final RawUsage o2) {
+        public int compare(final RawUsageRecord o1, final RawUsageRecord o2) {
             int compared = o1.getDate().compareTo(o2.getDate());
             if (compared != 0) {
                 return compared;
@@ -77,7 +77,7 @@ public class SubscriptionUsageInArrear {
     private final UUID invoiceId;
     private final List<BillingEvent> subscriptionBillingEvents;
     private final LocalDate targetDate;
-    private final List<RawUsage> rawSubscriptionUsage;
+    private final List<RawUsageRecord> rawSubscriptionUsage;
     private final Set<TrackingRecordId> existingTrackingIds;
     private final LocalDate rawUsageStartDate;
     private final InternalTenantContext internalTenantContext;
@@ -86,7 +86,7 @@ public class SubscriptionUsageInArrear {
     public SubscriptionUsageInArrear(final UUID accountId,
                                      final UUID invoiceId,
                                      final List<BillingEvent> subscriptionBillingEvents,
-                                     final List<RawUsage> rawUsage,
+                                     final List<RawUsageRecord> rawUsage,
                                      final Set<TrackingRecordId> existingTrackingIds,
                                      final LocalDate targetDate,
                                      final LocalDate rawUsageStartDate,
@@ -100,9 +100,9 @@ public class SubscriptionUsageInArrear {
         this.rawUsageStartDate = rawUsageStartDate;
         this.internalTenantContext = internalTenantContext;
         // Extract raw usage for that subscription and sort it by date
-        this.rawSubscriptionUsage = Ordering.<RawUsage>from(RAW_USAGE_DATE_COMPARATOR).sortedCopy(Iterables.filter(rawUsage, new Predicate<RawUsage>() {
+        this.rawSubscriptionUsage = Ordering.<RawUsageRecord>from(RAW_USAGE_DATE_COMPARATOR).sortedCopy(Iterables.filter(rawUsage, new Predicate<RawUsageRecord>() {
             @Override
-            public boolean apply(final RawUsage input) {
+            public boolean apply(final RawUsageRecord input) {
                 return input.getSubscriptionId().equals(subscriptionBillingEvents.get(0).getSubscription().getId());
             }
         }));
