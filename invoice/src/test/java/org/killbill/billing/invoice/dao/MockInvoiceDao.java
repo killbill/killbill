@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014-2018 Groupon, Inc
- * Copyright 2014-2018 The Billing Project, LLC
+ * Copyright 2014-2019 Groupon, Inc
+ * Copyright 2014-2019 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -64,7 +64,9 @@ public class MockInvoiceDao extends MockEntityDaoBase<InvoiceModelDao, Invoice, 
     @Override
     public void createInvoice(final InvoiceModelDao invoice,
                               final Set<InvoiceTrackingModelDao> trackingIds,
-                              final FutureAccountNotifications callbackDateTimePerSubscriptions, final InternalCallContext context) {
+                              final FutureAccountNotifications callbackDateTimePerSubscriptions,
+                              final ExistingInvoiceMetadata existingInvoiceMetadata,
+                              final InternalCallContext context) {
         synchronized (monitor) {
             storeInvoice(invoice, context);
         }
@@ -83,7 +85,9 @@ public class MockInvoiceDao extends MockEntityDaoBase<InvoiceModelDao, Invoice, 
     }
 
     @Override
-    public List<InvoiceItemModelDao> createInvoices(final List<InvoiceModelDao> invoiceModelDaos, final Set<InvoiceTrackingModelDao> trackingIds, final InternalCallContext context) {
+    public List<InvoiceItemModelDao> createInvoices(final List<InvoiceModelDao> invoiceModelDaos,
+                                                    final Set<InvoiceTrackingModelDao> trackingIds,
+                                                    final InternalCallContext context) {
         synchronized (monitor) {
             final List<InvoiceItemModelDao> createdItems = new LinkedList<InvoiceItemModelDao>();
             for (final InvoiceModelDao invoice : invoiceModelDaos) {

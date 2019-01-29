@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014-2018 Groupon, Inc
- * Copyright 2014-2018 The Billing Project, LLC
+ * Copyright 2014-2019 Groupon, Inc
+ * Copyright 2014-2019 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -64,6 +64,7 @@ import org.killbill.billing.invoice.api.InvoiceStatus;
 import org.killbill.billing.invoice.api.user.DefaultInvoiceNotificationInternalEvent;
 import org.killbill.billing.invoice.api.user.DefaultNullInvoiceEvent;
 import org.killbill.billing.invoice.calculator.InvoiceCalculatorUtils;
+import org.killbill.billing.invoice.dao.ExistingInvoiceMetadata;
 import org.killbill.billing.invoice.dao.InvoiceDao;
 import org.killbill.billing.invoice.dao.InvoiceItemModelDao;
 import org.killbill.billing.invoice.dao.InvoiceModelDao;
@@ -622,7 +623,8 @@ public class InvoiceDispatcher {
                 }
 
                 // Commit invoice on disk
-                commitInvoiceAndSetFutureNotifications(account, invoiceModelDao, trackingIds, futureAccountNotifications, internalCallContext);
+                final ExistingInvoiceMetadata existingInvoiceMetadata = new ExistingInvoiceMetadata(existingInvoices);
+                commitInvoiceAndSetFutureNotifications(account, invoiceModelDao, trackingIds, futureAccountNotifications, existingInvoiceMetadata, internalCallContext);
                 success = true;
 
                 try {
@@ -810,7 +812,7 @@ public class InvoiceDispatcher {
     private void commitInvoiceAndSetFutureNotifications(final ImmutableAccountData account,
                                                         final FutureAccountNotifications futureAccountNotifications,
                                                         final InternalCallContext context) {
-        commitInvoiceAndSetFutureNotifications(account, null, ImmutableSet.of(), futureAccountNotifications, context);
+        commitInvoiceAndSetFutureNotifications(account, null, ImmutableSet.of(), futureAccountNotifications, null, context);
     }
 
 
@@ -818,10 +820,11 @@ public class InvoiceDispatcher {
                                                         @Nullable final InvoiceModelDao invoiceModelDao,
                                                         final Set<InvoiceTrackingModelDao> trackingIds,
                                                         final FutureAccountNotifications futureAccountNotifications,
+                                                        final ExistingInvoiceMetadata existingInvoiceMetadata,
                                                         final InternalCallContext context) {
         final boolean isThereAnyItemsLeft = invoiceModelDao != null && !invoiceModelDao.getInvoiceItems().isEmpty();
         if (isThereAnyItemsLeft) {
-            invoiceDao.createInvoice(invoiceModelDao, trackingIds, futureAccountNotifications, context);
+            invoiceDao.createInvoice(invoiceModelDao, trackingIds, futureAccountNotifications, existingInvoiceMetadata, context);
         } else {
             invoiceDao.setFutureAccountNotificationsForEmptyInvoice(account.getId(), futureAccountNotifications, context);
         }
