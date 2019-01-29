@@ -190,10 +190,6 @@ workflows:
   build-and-test:
     jobs:
       - build
-        filters:
-          branches:
-            ignore:
-              - work-for-release-0.21.x
       - test-h2:
           requires:
             - build
