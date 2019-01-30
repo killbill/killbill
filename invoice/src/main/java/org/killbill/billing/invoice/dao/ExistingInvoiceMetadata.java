@@ -22,6 +22,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
+import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.invoice.api.Invoice;
 import org.killbill.billing.invoice.api.InvoiceItem;
 
@@ -29,6 +30,9 @@ public class ExistingInvoiceMetadata {
 
     private final Map<UUID, InvoiceModelDao> invoicesCache = new HashMap<UUID, InvoiceModelDao>();
     private final Map<UUID, InvoiceItemModelDao> invoiceItemsCache = new HashMap<UUID, InvoiceItemModelDao>();
+
+    private InvoiceSqlDao invoiceSqlDao;
+    private InvoiceItemSqlDao invoiceItemSqlDao;
 
     public ExistingInvoiceMetadata(final Iterable<Invoice> existingInvoices) {
         for (final Invoice invoice : existingInvoices) {
@@ -48,11 +52,24 @@ public class ExistingInvoiceMetadata {
         }
     }
 
-    public InvoiceModelDao getExistingInvoice(final UUID invoiceId) {
-        return invoicesCache.get(invoiceId);
+    public ExistingInvoiceMetadata(final InvoiceSqlDao invoiceSqlDao, final InvoiceItemSqlDao invoiceItemSqlDao) {
+        this.invoiceSqlDao = invoiceSqlDao;
+        this.invoiceItemSqlDao = invoiceItemSqlDao;
     }
 
-    public InvoiceItemModelDao getExistingInvoiceItem(final UUID invoiceItemId) {
-        return invoiceItemsCache.get(invoiceItemId);
+    public InvoiceModelDao getExistingInvoice(final UUID invoiceId, final InternalTenantContext context) {
+        if (invoiceSqlDao != null) {
+            return invoiceSqlDao.getById(invoiceId.toString(), context);
+        } else {
+            return invoicesCache.get(invoiceId);
+        }
+    }
+
+    public InvoiceItemModelDao getExistingInvoiceItem(final UUID invoiceItemId, final InternalTenantContext context) {
+        if (invoiceItemSqlDao != null) {
+            return invoiceItemSqlDao.getById(invoiceItemId.toString(), context);
+        } else {
+            return invoiceItemsCache.get(invoiceItemId);
+        }
     }
 }

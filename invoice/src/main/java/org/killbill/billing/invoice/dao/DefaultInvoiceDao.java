@@ -351,24 +351,22 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
         return transactionalSqlDao.execute(false, new EntitySqlDaoTransactionWrapper<List<InvoiceItemModelDao>>() {
             @Override
             public List<InvoiceItemModelDao> inTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory) throws Exception {
+                final InvoiceSqlDao invoiceSqlDao = entitySqlDaoWrapperFactory.become(InvoiceSqlDao.class);
+                final InvoiceItemSqlDao transInvoiceItemSqlDao = entitySqlDaoWrapperFactory.become(InvoiceItemSqlDao.class);
+
                 final ExistingInvoiceMetadata existingInvoiceMetadata;
                 if (existingInvoiceMetadataOrNull == null) {
-                    final List<InvoiceModelDao> allInvoicesForAccount = invoiceDaoHelper.getAllInvoicesByAccountFromTransaction(true, invoicesTags, entitySqlDaoWrapperFactory, context);
-                    invoiceDaoHelper.populateChildren(allInvoicesForAccount, invoicesTags, entitySqlDaoWrapperFactory, context);
-                    existingInvoiceMetadata = new ExistingInvoiceMetadata(allInvoicesForAccount);
+                    existingInvoiceMetadata = new ExistingInvoiceMetadata(invoiceSqlDao, transInvoiceItemSqlDao);
                 } else {
                     existingInvoiceMetadata = existingInvoiceMetadataOrNull;
                 }
-
-                final InvoiceSqlDao invoiceSqlDao = entitySqlDaoWrapperFactory.become(InvoiceSqlDao.class);
-                final InvoiceItemSqlDao transInvoiceItemSqlDao = entitySqlDaoWrapperFactory.become(InvoiceItemSqlDao.class);
 
                 final List<InvoiceItemModelDao> createdInvoiceItems = new LinkedList<InvoiceItemModelDao>();
                 for (final InvoiceModelDao invoiceModelDao : invoices) {
                     invoiceByInvoiceId.put(invoiceModelDao.getId(), invoiceModelDao);
                     final boolean isNotShellInvoice = invoiceIdsReferencedFromItems.remove(invoiceModelDao.getId());
 
-                    final InvoiceModelDao invoiceOnDisk = existingInvoiceMetadata.getExistingInvoice(invoiceModelDao.getId());
+                    final InvoiceModelDao invoiceOnDisk = existingInvoiceMetadata.getExistingInvoice(invoiceModelDao.getId(), context);
                     if (isNotShellInvoice) {
                         // Create the invoice if this is not a shell invoice and it does not already exist
                         if (invoiceOnDisk == null) {
@@ -382,7 +380,7 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
 
                     // Create the invoice items if needed (note: they may not necessarily belong to that invoice)
                     for (final InvoiceItemModelDao invoiceItemModelDao : invoiceModelDao.getInvoiceItems()) {
-                        final InvoiceItemModelDao existingInvoiceItem = existingInvoiceMetadata.getExistingInvoiceItem(invoiceItemModelDao.getId());
+                        final InvoiceItemModelDao existingInvoiceItem = existingInvoiceMetadata.getExistingInvoiceItem(invoiceItemModelDao.getId(), context);
                         // Because of AUTO_INVOICING_REUSE_DRAFT we expect an invoice were items might already exist.
                         // Also for ALLOWED_INVOICE_ITEM_TYPES, we expect plugins to potentially modify the amount
                         if (existingInvoiceItem == null) {
