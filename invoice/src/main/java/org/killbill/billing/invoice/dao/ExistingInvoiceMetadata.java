@@ -17,7 +17,6 @@
 
 package org.killbill.billing.invoice.dao;
 
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -39,15 +38,6 @@ public class ExistingInvoiceMetadata {
             invoicesCache.put(invoice.getId(), new InvoiceModelDao(invoice));
             for (final InvoiceItem invoiceItem : invoice.getInvoiceItems()) {
                 invoiceItemsCache.put(invoiceItem.getId(), new InvoiceItemModelDao(invoiceItem));
-            }
-        }
-    }
-
-    public ExistingInvoiceMetadata(final Collection<InvoiceModelDao> existingInvoices) {
-        for (final InvoiceModelDao invoiceModelDao : existingInvoices) {
-            invoicesCache.put(invoiceModelDao.getId(), invoiceModelDao);
-            for (final InvoiceItemModelDao invoiceItemModelDao : invoiceModelDao.getInvoiceItems()) {
-                invoiceItemsCache.put(invoiceItemModelDao.getId(), invoiceItemModelDao);
             }
         }
     }
