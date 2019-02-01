@@ -48,7 +48,7 @@ import org.killbill.billing.invoice.InvoiceTestSuiteNoDB;
 import org.killbill.billing.invoice.generator.InvoiceWithMetadata.TrackingRecordId;
 import org.killbill.billing.junction.BillingEvent;
 import org.killbill.billing.subscription.api.SubscriptionBase;
-import org.killbill.billing.usage.RawUsage;
+import org.killbill.billing.usage.api.RawUsageRecord;
 import org.killbill.billing.util.config.definition.InvoiceConfig.UsageDetailMode;
 import org.killbill.billing.util.jackson.ObjectMapper;
 import org.mockito.Mockito;
@@ -99,11 +99,11 @@ public abstract class TestUsageInArrearBase extends InvoiceTestSuiteNoDB {
         objectMapper = new ObjectMapper();
     }
 
-    protected ContiguousIntervalCapacityUsageInArrear createContiguousIntervalCapacityInArrear(final DefaultUsage usage, final List<RawUsage> rawUsages, final LocalDate targetDate, final boolean closedInterval, final BillingEvent... events) {
+    protected ContiguousIntervalCapacityUsageInArrear createContiguousIntervalCapacityInArrear(final DefaultUsage usage, final List<RawUsageRecord> rawUsages, final LocalDate targetDate, final boolean closedInterval, final BillingEvent... events) {
         return createContiguousIntervalCapacityInArrear(usage, rawUsages, targetDate, closedInterval, usageDetailMode, events);
     }
 
-    protected ContiguousIntervalCapacityUsageInArrear createContiguousIntervalCapacityInArrear(final DefaultUsage usage, final List<RawUsage> rawUsages, final LocalDate targetDate, final boolean closedInterval, UsageDetailMode detailMode, final BillingEvent... events) {
+    protected ContiguousIntervalCapacityUsageInArrear createContiguousIntervalCapacityInArrear(final DefaultUsage usage, final List<RawUsageRecord> rawUsages, final LocalDate targetDate, final boolean closedInterval, UsageDetailMode detailMode, final BillingEvent... events) {
         final ContiguousIntervalCapacityUsageInArrear intervalCapacityInArrear = new ContiguousIntervalCapacityUsageInArrear(usage, accountId, invoiceId, rawUsages, EMPTY_EXISTING_TRACKING_IDS, targetDate, new LocalDate(events[0].getEffectiveDate()), detailMode, internalCallContext);
         for (final BillingEvent event : events) {
             intervalCapacityInArrear.addBillingEvent(event);
@@ -112,11 +112,11 @@ public abstract class TestUsageInArrearBase extends InvoiceTestSuiteNoDB {
         return intervalCapacityInArrear;
     }
 
-    protected ContiguousIntervalConsumableUsageInArrear createContiguousIntervalConsumableInArrear(final DefaultUsage usage, final List<RawUsage> rawUsages, final LocalDate targetDate, final boolean closedInterval, final BillingEvent... events) {
+    protected ContiguousIntervalConsumableUsageInArrear createContiguousIntervalConsumableInArrear(final DefaultUsage usage, final List<RawUsageRecord> rawUsages, final LocalDate targetDate, final boolean closedInterval, final BillingEvent... events) {
         return createContiguousIntervalConsumableInArrear(usage, rawUsages, targetDate, closedInterval, usageDetailMode, events);
     }
 
-    protected ContiguousIntervalConsumableUsageInArrear createContiguousIntervalConsumableInArrear(final DefaultUsage usage, final List<RawUsage> rawUsages, final LocalDate targetDate, final boolean closedInterval, UsageDetailMode detailMode, final BillingEvent... events) {
+    protected ContiguousIntervalConsumableUsageInArrear createContiguousIntervalConsumableInArrear(final DefaultUsage usage, final List<RawUsageRecord> rawUsages, final LocalDate targetDate, final boolean closedInterval, UsageDetailMode detailMode, final BillingEvent... events) {
         final ContiguousIntervalConsumableUsageInArrear intervalConsumableInArrear = new ContiguousIntervalConsumableUsageInArrear(usage, accountId, invoiceId, rawUsages, EMPTY_EXISTING_TRACKING_IDS, targetDate, new LocalDate(events[0].getEffectiveDate()), detailMode, internalCallContext);
         for (final BillingEvent event : events) {
             intervalConsumableInArrear.addBillingEvent(event);
@@ -216,13 +216,13 @@ public abstract class TestUsageInArrearBase extends InvoiceTestSuiteNoDB {
     // Each input `RawUsage` should end up creating one TrackingRecordId
     // Regardless of how test records trackingId -- grouped in one, or multiple calls-- and regardless of test matrix,  the logics below should remain true.
     //
-    protected void checkTrackingIds(final List<RawUsage> rawUsages, final Set<TrackingRecordId> trackingRecords) {
+    protected void checkTrackingIds(final List<RawUsageRecord> rawUsages, final Set<TrackingRecordId> trackingRecords) {
 
         // Verify we have same input and output
         assertEquals(rawUsages.size(), trackingRecords.size());
 
-        final Map<String, List<RawUsage>> trackingIdMapping = new HashMap<>();
-        for (final RawUsage u : rawUsages) {
+        final Map<String, List<RawUsageRecord>> trackingIdMapping = new HashMap<>();
+        for (final RawUsageRecord u : rawUsages) {
             if (!trackingIdMapping.containsKey(u.getTrackingId())) {
                 trackingIdMapping.put(u.getTrackingId(), new ArrayList<>());
             }
@@ -241,8 +241,8 @@ public abstract class TestUsageInArrearBase extends InvoiceTestSuiteNoDB {
 
         for (final String id : trackingIdMapping.keySet()) {
 
-            final List<RawUsage> rawUsageForId = trackingIdMapping.get(id);
-            for (RawUsage u : rawUsageForId) {
+            final List<RawUsageRecord> rawUsageForId = trackingIdMapping.get(id);
+            for (RawUsageRecord u : rawUsageForId) {
 
                 final TrackingRecordId found = Iterables.tryFind(trackingRecords, new Predicate<TrackingRecordId>() {
                     @Override

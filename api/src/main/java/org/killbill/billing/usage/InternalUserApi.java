@@ -18,12 +18,12 @@
 package org.killbill.billing.usage;
 
 import java.util.List;
-import java.util.UUID;
 
 import org.joda.time.LocalDate;
 import org.killbill.billing.callcontext.InternalTenantContext;
+import org.killbill.billing.usage.api.RawUsageRecord;
 
 public interface InternalUserApi {
 
-    public List<RawUsage> getRawUsageForAccount(final LocalDate stateDate, final LocalDate endDate, final InternalTenantContext tenantContext);
+    public List<RawUsageRecord> getRawUsageForAccount(final LocalDate stateDate, final LocalDate endDate, final InternalTenantContext tenantContext);
 }

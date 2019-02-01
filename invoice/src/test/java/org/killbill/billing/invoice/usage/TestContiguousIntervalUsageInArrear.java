@@ -29,7 +29,7 @@ import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.catalog.api.TierBlockPolicy;
 import org.killbill.billing.catalog.api.Usage;
 import org.killbill.billing.junction.BillingEvent;
-import org.killbill.billing.usage.RawUsage;
+import org.killbill.billing.usage.api.RawUsageRecord;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
@@ -62,7 +62,7 @@ public class TestContiguousIntervalUsageInArrear extends TestUsageInArrearBase {
                                                                   BillingPeriod.MONTHLY,
                                                                   Collections.<Usage>emptyList());
         final ContiguousIntervalConsumableUsageInArrear intervalConsumableInArrear = createContiguousIntervalConsumableInArrear(usage,
-                                                                                                                                ImmutableList.<RawUsage>of(),
+                                                                                                                                ImmutableList.<RawUsageRecord>of(),
                                                                                                                                 targetDate,
                                                                                                                                 false,
                                                                                                                                 billingEvent1,

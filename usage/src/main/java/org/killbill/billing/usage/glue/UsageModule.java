@@ -18,6 +18,7 @@
 
 package org.killbill.billing.usage.glue;
 
+import org.killbill.billing.osgi.api.OSGIServiceRegistration;
 import org.killbill.billing.platform.api.KillbillConfigSource;
 import org.killbill.billing.usage.InternalUserApi;
 import org.killbill.billing.usage.api.UsageUserApi;
@@ -25,7 +26,10 @@ import org.killbill.billing.usage.api.svcs.DefaultInternalUserApi;
 import org.killbill.billing.usage.api.user.DefaultUsageUserApi;
 import org.killbill.billing.usage.dao.DefaultRolledUpUsageDao;
 import org.killbill.billing.usage.dao.RolledUpUsageDao;
+import org.killbill.billing.usage.plugin.api.UsagePluginApi;
 import org.killbill.billing.util.glue.KillBillModule;
+
+import com.google.inject.TypeLiteral;
 
 public class UsageModule extends KillBillModule {
 
@@ -46,10 +50,16 @@ public class UsageModule extends KillBillModule {
     }
 
 
+    protected void installUsagePluginApi() {
+        bind(new TypeLiteral<OSGIServiceRegistration<UsagePluginApi>>() {}).toProvider(DefaultUsageProviderPluginRegistryProvider.class).asEagerSingleton();
+    }
+
+
     @Override
     protected void configure() {
         installRolledUpUsageDao();
         installUsageUserApi();
         installInternalUserApi();
+        installUsagePluginApi();
     }
 }
