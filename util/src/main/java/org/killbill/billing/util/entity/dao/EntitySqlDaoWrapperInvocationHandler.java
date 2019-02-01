@@ -319,8 +319,7 @@ public class EntitySqlDaoWrapperInvocationHandler<S extends EntitySqlDao<M, E>, 
 
         // Get the current state before deletion for the history tables
         final Map<String, M> deletedEntities = new HashMap<String, M>();
-        // Unfortunately, we cannot just look at DELETE as "markAsInactive" operations are often treated as UPDATE
-        if (changeType == ChangeType.UPDATE || changeType == ChangeType.DELETE) {
+        if (changeType == ChangeType.DELETE) {
             for (final String entityId : entityIds) {
                 deletedEntities.put(entityId, sqlDao.getById(entityId, context));
                 printSQLWarnings();
@@ -403,14 +402,7 @@ public class EntitySqlDaoWrapperInvocationHandler<S extends EntitySqlDao<M, E>, 
         final Object reHydratedEntity = prof.executeWithProfiling(ProfilingFeatureType.DAO_DETAILS, getProfilingId("history/audit", null), new WithProfilingCallback<Object, Throwable>() {
             @Override
             public M execute() throws Throwable {
-                final M reHydratedEntity;
-                if (changeType == ChangeType.DELETE) {
-                    reHydratedEntity = deletedEntity;
-                } else {
-                    // See note above regarding "markAsInactive" operations
-                    reHydratedEntity = MoreObjects.firstNonNull(sqlDao.getById(entityId, context), deletedEntity);
-                    printSQLWarnings();
-                }
+                final M reHydratedEntity = MoreObjects.firstNonNull(deletedEntity, sqlDao.getById(entityId, context));
                 Preconditions.checkNotNull(reHydratedEntity, "reHydratedEntity cannot be null");
                 final Long entityRecordId = reHydratedEntity.getRecordId();
                 final TableName tableName = reHydratedEntity.getTableName();
@@ -523,6 +515,7 @@ public class EntitySqlDaoWrapperInvocationHandler<S extends EntitySqlDao<M, E>, 
         } else {
             context = contextMaybeWithoutAccountRecordId;
         }
+
         sqlDao.insertAuditFromTransaction(audit, context);
         printSQLWarnings();
 

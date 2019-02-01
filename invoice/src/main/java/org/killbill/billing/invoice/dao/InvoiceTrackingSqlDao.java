@@ -37,7 +37,7 @@ import org.skife.jdbi.v2.sqlobject.SqlUpdate;
 public interface InvoiceTrackingSqlDao extends EntitySqlDao<InvoiceTrackingModelDao, Entity> {
 
     @SqlUpdate
-    @Audited(ChangeType.UPDATE)
+    @Audited(ChangeType.DELETE)
     public void deactivateForInvoice(@Bind("invoiceId") String invoiceId,
                                      @SmartBindBean final InternalCallContext context);
 
