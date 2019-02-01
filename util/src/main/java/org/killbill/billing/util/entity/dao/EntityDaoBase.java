@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014-2017 Groupon, Inc
- * Copyright 2014-2017 The Billing Project, LLC
+ * Copyright 2014-2019 Groupon, Inc
+ * Copyright 2014-2019 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -37,6 +37,7 @@ import org.killbill.billing.util.entity.dao.DefaultPaginationSqlDaoHelper.Orderi
 import org.killbill.billing.util.entity.dao.DefaultPaginationSqlDaoHelper.PaginationIteratorBuilder;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Iterables;
 
 public abstract class EntityDaoBase<M extends EntityModelDao<E>, E extends Entity, U extends BillingExceptionBase> implements EntityDao<M, E, U> {
 
@@ -115,6 +116,15 @@ public abstract class EntityDaoBase<M extends EntityModelDao<E>, E extends Entit
     protected <F extends EntityModelDao> F createAndRefresh(final EntitySqlDao transactional, final F entity, final InternalCallContext context) throws EntityPersistenceException {
         // We have overridden the jDBI return type in EntitySqlDaoWrapperInvocationHandler
         return (F) transactional.create(entity, context);
+    }
+
+    protected <F extends EntityModelDao> List<F> createAndRefresh(final EntitySqlDao transactional, final Iterable<F> entities, final InternalCallContext context) throws EntityPersistenceException {
+        if (Iterables.<F>isEmpty(entities)) {
+            return ImmutableList.<F>of();
+        }
+
+        // We have overridden the jDBI return type in EntitySqlDaoWrapperInvocationHandler
+        return (List<F>) transactional.create(entities, context);
     }
 
     protected boolean checkEntityAlreadyExists(final EntitySqlDao<M, E> transactional, final M entity, final InternalCallContext context) {

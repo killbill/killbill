@@ -364,7 +364,7 @@ values (
 >>
 
 
-insertAuditFromTransaction() ::= <<
+insertAuditsFromTransaction() ::= <<
 insert into <auditTableName()> (
 <auditTableFields("")>
 )

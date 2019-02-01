@@ -1,7 +1,9 @@
 /*
  * Copyright 2010-2012 Ning, Inc.
+ * Copyright 2014-2019 Groupon, Inc
+ * Copyright 2014-2019 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -139,33 +141,33 @@ public class TestStringTemplateInheritance extends UtilTestSuiteNoDB {
                                                                                     "\\)\r?\n" +
                                                                                     ";");
 
-        assertPattern(kombucha.getInstanceOf("insertAuditFromTransaction").render(), "insert into audit_log \\(\r?\n" +
-                                                                                     "id\r?\n" +
-                                                                                     ", table_name\r?\n" +
-                                                                                     ", target_record_id\r?\n" +
-                                                                                     ", change_type\r?\n" +
-                                                                                     ", created_by\r?\n" +
-                                                                                     ", reason_code\r?\n" +
-                                                                                     ", comments\r?\n" +
-                                                                                     ", user_token\r?\n" +
-                                                                                     ", created_date\r?\n" +
-                                                                                     ", account_record_id\r?\n" +
-                                                                                     ", tenant_record_id\r?\n" +
-                                                                                     "\\)\r?\n" +
-                                                                                     "values \\(\r?\n" +
-                                                                                     "  :id\r?\n" +
-                                                                                     ", :tableName\r?\n" +
-                                                                                     ", :targetRecordId\r?\n" +
-                                                                                     ", :changeType\r?\n" +
-                                                                                     ", :createdBy\r?\n" +
-                                                                                     ", :reasonCode\r?\n" +
-                                                                                     ", :comments\r?\n" +
-                                                                                     ", :userToken\r?\n" +
-                                                                                     ", :createdDate\r?\n" +
-                                                                                     ", :accountRecordId\r?\n" +
-                                                                                     ", :tenantRecordId\r?\n" +
-                                                                                     "\\)\r?\n" +
-                                                                                     ";");
+        assertPattern(kombucha.getInstanceOf("insertAuditsFromTransaction").render(), "insert into audit_log \\(\r?\n" +
+                                                                                      "id\r?\n" +
+                                                                                      ", table_name\r?\n" +
+                                                                                      ", target_record_id\r?\n" +
+                                                                                      ", change_type\r?\n" +
+                                                                                      ", created_by\r?\n" +
+                                                                                      ", reason_code\r?\n" +
+                                                                                      ", comments\r?\n" +
+                                                                                      ", user_token\r?\n" +
+                                                                                      ", created_date\r?\n" +
+                                                                                      ", account_record_id\r?\n" +
+                                                                                      ", tenant_record_id\r?\n" +
+                                                                                      "\\)\r?\n" +
+                                                                                      "values \\(\r?\n" +
+                                                                                      "  :id\r?\n" +
+                                                                                      ", :tableName\r?\n" +
+                                                                                      ", :targetRecordId\r?\n" +
+                                                                                      ", :changeType\r?\n" +
+                                                                                      ", :createdBy\r?\n" +
+                                                                                      ", :reasonCode\r?\n" +
+                                                                                      ", :comments\r?\n" +
+                                                                                      ", :userToken\r?\n" +
+                                                                                      ", :createdDate\r?\n" +
+                                                                                      ", :accountRecordId\r?\n" +
+                                                                                      ", :tenantRecordId\r?\n" +
+                                                                                      "\\)\r?\n" +
+                                                                                      ";");
     }
 
     private void assertPattern(final String actual, final String expected) {

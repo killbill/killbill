@@ -361,7 +361,7 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
                     existingInvoiceMetadata = existingInvoiceMetadataOrNull;
                 }
 
-                final List<InvoiceItemModelDao> createdInvoiceItems = new LinkedList<InvoiceItemModelDao>();
+                final List<InvoiceItemModelDao> invoiceItemsToCreate = new LinkedList<InvoiceItemModelDao>();
                 for (final InvoiceModelDao invoiceModelDao : invoices) {
                     invoiceByInvoiceId.put(invoiceModelDao.getId(), invoiceModelDao);
                     final boolean isNotShellInvoice = invoiceIdsReferencedFromItems.remove(invoiceModelDao.getId());
@@ -384,7 +384,7 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
                         // Because of AUTO_INVOICING_REUSE_DRAFT we expect an invoice were items might already exist.
                         // Also for ALLOWED_INVOICE_ITEM_TYPES, we expect plugins to potentially modify the amount
                         if (existingInvoiceItem == null) {
-                            createdInvoiceItems.add(createInvoiceItemFromTransaction(transInvoiceItemSqlDao, invoiceItemModelDao, context));
+                            invoiceItemsToCreate.add(invoiceItemModelDao);
                             allInvoiceIds.add(invoiceItemModelDao.getInvoiceId());
                         } else if (InvoicePluginDispatcher.ALLOWED_INVOICE_ITEM_TYPES.contains(invoiceItemModelDao.getType()) &&
                                    // The restriction on the amount is to deal with https://github.com/killbill/killbill/issues/993 - and esnure that duplicate
@@ -399,7 +399,6 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
                     final boolean wasInvoiceCreatedOrCommitted = createdInvoiceIds.contains(invoiceModelDao.getId()) ||
                                                                  committedReusedInvoiceId.contains(invoiceModelDao.getId());
                     if (InvoiceStatus.COMMITTED.equals(invoiceModelDao.getStatus())) {
-
                         if (wasInvoiceCreatedOrCommitted) {
                             notifyBusOfInvoiceCreation(entitySqlDaoWrapperFactory, invoiceModelDao, context);
                         } else {
@@ -413,6 +412,9 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
                     // We always add the future notifications when the callbackDateTimePerSubscriptions is not empty (incl. DRAFT invoices containing RECURRING items created using AUTO_INVOICING_DRAFT feature)
                     notifyOfFutureBillingEvents(entitySqlDaoWrapperFactory, invoiceModelDao.getAccountId(), callbackDateTimePerSubscriptions, context);
                 }
+
+                // Bulk insert the invoice items
+                final List<InvoiceItemModelDao> createdInvoiceItems = createInvoiceItemsFromTransaction(transInvoiceItemSqlDao, invoiceItemsToCreate, context);
 
                 for (final UUID adjustedInvoiceId : allInvoiceIds) {
                     final boolean newInvoice = createdInvoiceIds.contains(adjustedInvoiceId);
@@ -430,7 +432,6 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
                         notifyBusOfInvoiceAdjustment(entitySqlDaoWrapperFactory, adjustedInvoiceId, accountId, context.getUserToken(), context);
                     }
                 }
-
 
                 if (trackingIds != null && !trackingIds.isEmpty()) {
                     final InvoiceTrackingSqlDao trackingIdsSqlDao = entitySqlDaoWrapperFactory.become(InvoiceTrackingSqlDao.class);
@@ -1133,15 +1134,25 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
         }
     }
 
-    private InvoiceItemModelDao createInvoiceItemFromTransaction(final InvoiceItemSqlDao invoiceItemSqlDao, final InvoiceItemModelDao invoiceItemModelDao, final InternalCallContext context) throws EntityPersistenceException, InvoiceApiException {
-        // There is no efficient way to retrieve an invoice item given an ID today (and invoice plugins can put item adjustments
-        // on a different invoice than the original item), so it's easier to do the check in the DAO rather than in the API layer
-        // See also https://github.com/killbill/killbill/issues/7
-        if (InvoiceItemType.ITEM_ADJ.equals(invoiceItemModelDao.getType())) {
-            validateInvoiceItemToBeAdjusted(invoiceItemSqlDao, invoiceItemModelDao, context);
+    private InvoiceItemModelDao createInvoiceItemFromTransaction(final InvoiceItemSqlDao invoiceItemSqlDao,
+                                                                 final InvoiceItemModelDao invoiceItemModelDao,
+                                                                 final InternalCallContext context) throws EntityPersistenceException, InvoiceApiException {
+        return Iterables.<InvoiceItemModelDao>getFirst(createInvoiceItemsFromTransaction(invoiceItemSqlDao, ImmutableList.<InvoiceItemModelDao>of(invoiceItemModelDao), context), null);
+    }
+
+    private List<InvoiceItemModelDao> createInvoiceItemsFromTransaction(final InvoiceItemSqlDao invoiceItemSqlDao,
+                                                                        final Iterable<InvoiceItemModelDao> invoiceItemModelDaos,
+                                                                        final InternalCallContext context) throws EntityPersistenceException, InvoiceApiException {
+        for (final InvoiceItemModelDao invoiceItemModelDao : invoiceItemModelDaos) {
+            // There is no efficient way to retrieve an invoice item given an ID today (and invoice plugins can put item adjustments
+            // on a different invoice than the original item), so it's easier to do the check in the DAO rather than in the API layer
+            // See also https://github.com/killbill/killbill/issues/7
+            if (InvoiceItemType.ITEM_ADJ.equals(invoiceItemModelDao.getType())) {
+                validateInvoiceItemToBeAdjusted(invoiceItemSqlDao, invoiceItemModelDao, context);
+            }
         }
 
-        return createAndRefresh(invoiceItemSqlDao, invoiceItemModelDao, context);
+        return createAndRefresh(invoiceItemSqlDao, invoiceItemModelDaos, context);
     }
 
     private void validateInvoiceItemToBeAdjusted(final InvoiceItemSqlDao invoiceItemSqlDao, final InvoiceItemModelDao invoiceItemModelDao, final InternalCallContext context) throws InvoiceApiException {

@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2011 Ning, Inc.
- * Copyright 2014-2015 Groupon, Inc
- * Copyright 2014-2015 The Billing Project, LLC
+ * Copyright 2014-2019 Groupon, Inc
+ * Copyright 2014-2019 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -23,7 +23,6 @@ import java.util.List;
 
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
-import org.killbill.billing.entity.EntityPersistenceException;
 import org.killbill.billing.util.audit.ChangeType;
 import org.killbill.billing.util.cache.Cachable;
 import org.killbill.billing.util.cache.Cachable.CacheType;
@@ -31,12 +30,14 @@ import org.killbill.billing.util.cache.CachableKey;
 import org.killbill.billing.util.dao.AuditSqlDao;
 import org.killbill.billing.util.dao.HistorySqlDao;
 import org.killbill.billing.util.entity.Entity;
+import org.killbill.commons.jdbi.binder.SmartBindBean;
 import org.killbill.commons.jdbi.statement.SmartFetchSize;
 import org.killbill.commons.jdbi.template.KillBillSqlDaoStringTemplate;
 import org.skife.jdbi.v2.sqlobject.Bind;
-import org.killbill.commons.jdbi.binder.SmartBindBean;
+import org.skife.jdbi.v2.sqlobject.SqlBatch;
 import org.skife.jdbi.v2.sqlobject.SqlQuery;
 import org.skife.jdbi.v2.sqlobject.SqlUpdate;
+import org.skife.jdbi.v2.sqlobject.customizers.BatchChunkSize;
 import org.skife.jdbi.v2.sqlobject.customizers.Define;
 import org.skife.jdbi.v2.sqlobject.mixins.CloseMe;
 import org.skife.jdbi.v2.sqlobject.mixins.Transactional;
@@ -47,7 +48,13 @@ public interface EntitySqlDao<M extends EntityModelDao<E>, E extends Entity> ext
     @SqlUpdate
     @Audited(ChangeType.INSERT)
     public Object create(@SmartBindBean final M entity,
-                         @SmartBindBean final InternalCallContext context) throws EntityPersistenceException;
+                         @SmartBindBean final InternalCallContext context);
+
+    @SqlBatch
+    @BatchChunkSize(1000) // Arbitrary value, just a safety mechanism in case of very large datasets
+    @Audited(ChangeType.INSERT)
+    public Object create(@SmartBindBean final Iterable<M> entity,
+                         @SmartBindBean final InternalCallContext context);
 
     @SqlQuery
     public M getById(@Bind("id") final String id,
