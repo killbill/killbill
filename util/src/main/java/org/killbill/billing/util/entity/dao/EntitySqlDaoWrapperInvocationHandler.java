@@ -321,8 +321,7 @@ public class EntitySqlDaoWrapperInvocationHandler<S extends EntitySqlDao<M, E>, 
 
         // Get the current state before deletion for the history tables
         final Map<String, M> deletedEntities = new HashMap<String, M>();
-        // Unfortunately, we cannot just look at DELETE as "markAsInactive" operations are often treated as UPDATE
-        if (changeType == ChangeType.UPDATE || changeType == ChangeType.DELETE) {
+        if (changeType == ChangeType.DELETE) {
             for (final String entityId : entityIds) {
                 deletedEntities.put(entityId, sqlDao.getById(entityId, context));
                 printSQLWarnings();
@@ -412,9 +411,8 @@ public class EntitySqlDaoWrapperInvocationHandler<S extends EntitySqlDao<M, E>, 
                     if (changeType == ChangeType.DELETE) {
                         reHydratedEntity = deletedEntities.get(entityId);
                     } else {
-                        // See note above regarding "markAsInactive" operations
                         // TODO Could we avoid this query?
-                        reHydratedEntity = MoreObjects.firstNonNull(sqlDao.getById(entityId, context), deletedEntities.get(entityId));
+                        reHydratedEntity = sqlDao.getById(entityId, context);
                         printSQLWarnings();
                     }
                     Preconditions.checkNotNull(reHydratedEntity, "reHydratedEntity cannot be null");

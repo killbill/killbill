@@ -43,7 +43,7 @@ public interface RolesPermissionsSqlDao extends Transactional<RolesPermissionsSq
     public void create(@SmartBindBean final RolesPermissionsModelDao rolesPermissions);
 
     @SqlUpdate
-    @Audited(ChangeType.UPDATE)
+    @Audited(ChangeType.DELETE)
     public void unactiveEvent(@Bind("recordId") final Long recordId,
                               @Bind("createdDate")  final DateTime createdDate,
                               @Bind("createdBy")  final String createdBy);

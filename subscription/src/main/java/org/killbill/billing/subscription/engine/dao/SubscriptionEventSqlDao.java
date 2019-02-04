@@ -38,7 +38,7 @@ import org.skife.jdbi.v2.sqlobject.SqlUpdate;
 public interface SubscriptionEventSqlDao extends EntitySqlDao<SubscriptionEventModelDao, SubscriptionBaseEvent> {
 
     @SqlUpdate
-    @Audited(ChangeType.UPDATE)
+    @Audited(ChangeType.DELETE)
     public void unactiveEvent(@Bind("id") String id,
                               @SmartBindBean final InternalCallContext context);
 
