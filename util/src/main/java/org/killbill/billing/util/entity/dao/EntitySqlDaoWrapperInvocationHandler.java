@@ -527,23 +527,27 @@ public class EntitySqlDaoWrapperInvocationHandler<S extends EntitySqlDao<M, E>, 
                               final InternalCallContext contextMaybeWithoutAccountRecordId) {
         final TableName destinationTableName = MoreObjects.firstNonNull(tableName.getHistoryTableName(), tableName);
 
-        InternalCallContext context = null;
+        final InternalCallContext context;
+        if (TableName.ACCOUNT.equals(tableName) && ChangeType.INSERT.equals(changeType)) {
+            Preconditions.checkState(entityModelDaoAndHistoryRecordIds.size() == 1, "Bulk insert of accounts isn't supported");
+            final M entityModelDao = Iterables.<M>getFirst(entityModelDaoAndHistoryRecordIds.keySet(), null);
+            // AccountModelDao in practice
+            final TimeZoneAwareEntity accountModelDao = (TimeZoneAwareEntity) entityModelDao;
+            context = internalCallContextFactory.createInternalCallContext(accountModelDao, entityModelDao.getRecordId(), contextMaybeWithoutAccountRecordId);
+        } else if (contextMaybeWithoutAccountRecordId.getAccountRecordId() == null) {
+            Preconditions.checkState(tableName == TableName.TENANT || tableName == TableName.TENANT_BROADCASTS || tableName == TableName.TENANT_KVS || tableName == TableName.TAG_DEFINITIONS || tableName == TableName.SERVICE_BRODCASTS || tableName == TableName.NODE_INFOS,
+                                     "accountRecordId should be set for tableName=%s and changeType=%s", tableName, changeType);
+            context = contextMaybeWithoutAccountRecordId;
+
+        } else {
+            context = contextMaybeWithoutAccountRecordId;
+        }
+
         final Collection<EntityAudit> audits = new LinkedList<EntityAudit>();
         for (final M entityModelDao : entityModelDaoAndHistoryRecordIds.keySet()) {
             final Long targetRecordId = entityModelDaoAndHistoryRecordIds.get(entityModelDao);
-            final EntityAudit audit = new EntityAudit(destinationTableName, targetRecordId, changeType, contextMaybeWithoutAccountRecordId.getCreatedDate());
+            final EntityAudit audit = new EntityAudit(destinationTableName, targetRecordId, changeType, context.getCreatedDate());
             audits.add(audit);
-
-            if (context == null) {
-                // Populate the account record id when creating the account record
-                if (TableName.ACCOUNT.equals(tableName) && ChangeType.INSERT.equals(changeType)) {
-                    // AccountModelDao in practice
-                    final TimeZoneAwareEntity accountModelDao = (TimeZoneAwareEntity) entityModelDao;
-                    context = internalCallContextFactory.createInternalCallContext(accountModelDao, entityModelDao.getRecordId(), contextMaybeWithoutAccountRecordId);
-                } else {
-                    context = contextMaybeWithoutAccountRecordId;
-                }
-            }
         }
 
         sqlDao.insertAuditsFromTransaction(audits, context);
