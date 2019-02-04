@@ -53,8 +53,8 @@ public interface EntitySqlDao<M extends EntityModelDao<E>, E extends Entity> ext
     @SqlBatch
     @BatchChunkSize(1000) // Arbitrary value, just a safety mechanism in case of very large datasets
     @Audited(ChangeType.INSERT)
-    public Object create(@SmartBindBean final Iterable<M> entity,
-                         @SmartBindBean final InternalCallContext context);
+    public void create(@SmartBindBean final Iterable<M> entity,
+                       @SmartBindBean final InternalCallContext context);
 
     @SqlQuery
     public M getById(@Bind("id") final String id,

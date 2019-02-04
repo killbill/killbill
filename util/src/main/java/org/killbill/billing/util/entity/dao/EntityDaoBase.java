@@ -28,7 +28,6 @@ import java.util.UUID;
 import org.killbill.billing.BillingExceptionBase;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
-import org.killbill.billing.entity.EntityPersistenceException;
 import org.killbill.billing.util.audit.ChangeType;
 import org.killbill.billing.util.entity.DefaultPagination;
 import org.killbill.billing.util.entity.Entity;
@@ -113,18 +112,17 @@ public abstract class EntityDaoBase<M extends EntityModelDao<E>, E extends Entit
         };
     }
 
-    protected <F extends EntityModelDao> F createAndRefresh(final EntitySqlDao transactional, final F entity, final InternalCallContext context) throws EntityPersistenceException {
+    protected <F extends EntityModelDao> F createAndRefresh(final EntitySqlDao transactional, final F entity, final InternalCallContext context) {
         // We have overridden the jDBI return type in EntitySqlDaoWrapperInvocationHandler
         return (F) transactional.create(entity, context);
     }
 
-    protected <F extends EntityModelDao> List<F> createAndRefresh(final EntitySqlDao transactional, final Iterable<F> entities, final InternalCallContext context) throws EntityPersistenceException {
+    protected <F extends EntityModelDao> void bulkCreate(final EntitySqlDao transactional, final Iterable<F> entities, final InternalCallContext context) {
         if (Iterables.<F>isEmpty(entities)) {
-            return ImmutableList.<F>of();
+            return;
         }
 
-        // We have overridden the jDBI return type in EntitySqlDaoWrapperInvocationHandler
-        return (List<F>) transactional.create(entities, context);
+        transactional.create(entities, context);
     }
 
     protected boolean checkEntityAlreadyExists(final EntitySqlDao<M, E> transactional, final M entity, final InternalCallContext context) {

@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014-2017 Groupon, Inc
- * Copyright 2014-2017 The Billing Project, LLC
+ * Copyright 2014-2019 Groupon, Inc
+ * Copyright 2014-2019 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -19,6 +19,7 @@
 package org.killbill.billing.invoice.dao;
 
 import java.math.BigDecimal;
+import java.util.Collection;
 import java.util.List;
 
 import org.killbill.billing.callcontext.InternalCallContext;
@@ -32,6 +33,7 @@ import org.killbill.commons.jdbi.template.KillBillSqlDaoStringTemplate;
 import org.skife.jdbi.v2.sqlobject.Bind;
 import org.skife.jdbi.v2.sqlobject.SqlQuery;
 import org.skife.jdbi.v2.sqlobject.SqlUpdate;
+import org.skife.jdbi.v2.unstable.BindIn;
 
 @KillBillSqlDaoStringTemplate
 public interface InvoiceItemSqlDao extends EntitySqlDao<InvoiceItemModelDao, InvoiceItem> {
@@ -39,14 +41,14 @@ public interface InvoiceItemSqlDao extends EntitySqlDao<InvoiceItemModelDao, Inv
     @SqlQuery
     List<InvoiceItemModelDao> getInvoiceItemsByInvoice(@Bind("invoiceId") final String invoiceId,
                                                        @SmartBindBean final InternalTenantContext context);
+
     @SqlQuery
     List<InvoiceItemModelDao> getInvoiceItemsBySubscription(@Bind("subscriptionId") final String subscriptionId,
                                                             @SmartBindBean final InternalTenantContext context);
 
-
     @SqlQuery
     List<InvoiceItemModelDao> getAdjustedOrRepairedInvoiceItemsByLinkedId(@Bind("linkedItemId") final String linkedItemId,
-                                                            @SmartBindBean final InternalTenantContext context);
+                                                                          @SmartBindBean final InternalTenantContext context);
 
     @SqlUpdate
     @Audited(ChangeType.UPDATE)
@@ -62,4 +64,8 @@ public interface InvoiceItemSqlDao extends EntitySqlDao<InvoiceItemModelDao, Inv
 
     @SqlQuery
     BigDecimal getAccountCBA(@SmartBindBean final InternalTenantContext context);
+
+    @SqlQuery
+    List<InvoiceItemModelDao> getByIds(@BindIn("ids") final Collection<String> invoiceItemIds,
+                                       @SmartBindBean final InternalTenantContext context);
 }
