@@ -141,18 +141,6 @@ public abstract class EntityDaoBase<M extends EntityModelDao<E>, E extends Entit
     }
 
     @Override
-    public Long getRecordId(final UUID id, final InternalTenantContext context) {
-        return transactionalSqlDao.execute(true, new EntitySqlDaoTransactionWrapper<Long>() {
-
-            @Override
-            public Long inTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory) throws Exception {
-                final EntitySqlDao<M, E> transactional = entitySqlDaoWrapperFactory.become(realSqlDao);
-                return transactional.getRecordId(id.toString(), context);
-            }
-        });
-    }
-
-    @Override
     public M getByRecordId(final Long recordId, final InternalTenantContext context) {
         return transactionalSqlDao.execute(true, new EntitySqlDaoTransactionWrapper<M>() {
 

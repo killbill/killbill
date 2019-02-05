@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014-2018 Groupon, Inc
- * Copyright 2014-2018 The Billing Project, LLC
+ * Copyright 2014-2019 Groupon, Inc
+ * Copyright 2014-2019 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -35,7 +35,6 @@ import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.catalog.api.Catalog;
 import org.killbill.billing.catalog.api.ProductCategory;
-import org.killbill.billing.entitlement.EntitlementService;
 import org.killbill.billing.entitlement.EventsStream;
 import org.killbill.billing.entitlement.api.BlockingState;
 import org.killbill.billing.entitlement.api.BlockingStateType;
@@ -187,11 +186,6 @@ public class ProxyBlockingStateDao implements BlockingStateDao {
     @Override
     public void create(final BlockingStateModelDao entity, final InternalCallContext context) throws EntitlementApiException {
         delegate.create(entity, context);
-    }
-
-    @Override
-    public Long getRecordId(final UUID id, final InternalTenantContext context) {
-        return delegate.getRecordId(id, context);
     }
 
     @Override
