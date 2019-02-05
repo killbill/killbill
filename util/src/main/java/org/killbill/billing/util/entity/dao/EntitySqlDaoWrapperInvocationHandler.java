@@ -66,7 +66,6 @@ import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableList.Builder;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 
 /**
@@ -449,41 +448,6 @@ public class EntitySqlDaoWrapperInvocationHandler<S extends EntitySqlDao<M, E>, 
 
         sqlDao.insertAuditsFromTransaction(audits, context);
         printSQLWarnings();
-
-        // We need to invalidate the caches. There is a small window of doom here where caches will be stale.
-        for (final M entityModelDao : entityModelDaoAndHistoryRecordIds.keySet()) {
-            final Long entityRecordId = entityModelDao.getRecordId();
-
-            // TODO Knowledge on how the key is constructed is also in AuditSqlDao
-            if (tableName.getHistoryTableName() != null) {
-                final CacheController<String, List> cacheController = cacheControllerDispatcher.getCacheController(CacheType.AUDIT_LOG_VIA_HISTORY);
-                if (cacheController != null) {
-                    final String key = buildCacheKey(ImmutableMap.<Integer, Object>of(0, tableName.getHistoryTableName(), 1, tableName.getHistoryTableName(), 2, entityRecordId));
-                    cacheController.remove(key);
-                }
-            } else {
-                final CacheController<String, List> cacheController = cacheControllerDispatcher.getCacheController(CacheType.AUDIT_LOG);
-                if (cacheController != null) {
-                    final String key = buildCacheKey(ImmutableMap.<Integer, Object>of(0, tableName, 1, entityRecordId));
-                    cacheController.remove(key);
-                }
-            }
-        }
-    }
-
-    private String buildCacheKey(final Map<Integer, Object> keyPieces) {
-        final StringBuilder cacheKey = new StringBuilder();
-        for (int i = 0; i < keyPieces.size(); i++) {
-            // To normalize the arguments and avoid casing issues, we make all pieces of the key uppercase.
-            // Since the database engine may be case insensitive and we use arguments of the SQL method call
-            // to build the key, the key has to be case insensitive as well.
-            final String str = String.valueOf(keyPieces.get(i)).toUpperCase();
-            cacheKey.append(str);
-            if (i < keyPieces.size() - 1) {
-                cacheKey.append(CacheControllerDispatcher.CACHE_KEY_SEPARATOR);
-            }
-        }
-        return cacheKey.toString();
     }
 
     private String getProfilingId(@Nullable final String prefix, @Nullable final Method method) {
