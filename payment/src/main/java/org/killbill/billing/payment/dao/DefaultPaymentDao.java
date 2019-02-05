@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014-2018 Groupon, Inc
- * Copyright 2014-2018 The Billing Project, LLC
+ * Copyright 2014-2019 Groupon, Inc
+ * Copyright 2014-2019 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -53,7 +53,6 @@ import org.killbill.billing.util.audit.AuditLogWithHistory;
 import org.killbill.billing.util.audit.dao.AuditDao;
 import org.killbill.billing.util.cache.CacheControllerDispatcher;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
-import org.killbill.billing.util.callcontext.TenantContext;
 import org.killbill.billing.util.dao.NonEntityDao;
 import org.killbill.billing.util.dao.TableName;
 import org.killbill.billing.util.entity.Entity;
@@ -65,7 +64,6 @@ import org.killbill.billing.util.entity.dao.EntityDaoBase;
 import org.killbill.billing.util.entity.dao.EntitySqlDaoTransactionWrapper;
 import org.killbill.billing.util.entity.dao.EntitySqlDaoTransactionalJdbiWrapper;
 import org.killbill.billing.util.entity.dao.EntitySqlDaoWrapperFactory;
-import org.killbill.billing.util.tag.dao.TagSqlDao;
 import org.killbill.bus.api.PersistentBus;
 import org.killbill.bus.api.PersistentBus.EventBusException;
 import org.killbill.clock.Clock;
@@ -94,7 +92,7 @@ public class DefaultPaymentDao extends EntityDaoBase<PaymentModelDao, Payment, P
     @Inject
     public DefaultPaymentDao(final IDBI dbi, @Named(MAIN_RO_IDBI_NAMED) final IDBI roDbi, final Clock clock, final CacheControllerDispatcher cacheControllerDispatcher,
                              final NonEntityDao nonEntityDao, final InternalCallContextFactory internalCallContextFactory, final PersistentBus eventBus, final AuditDao auditDao) {
-        super(new EntitySqlDaoTransactionalJdbiWrapper(dbi, roDbi, clock, cacheControllerDispatcher, nonEntityDao, internalCallContextFactory), PaymentSqlDao.class);
+        super(nonEntityDao, cacheControllerDispatcher, new EntitySqlDaoTransactionalJdbiWrapper(dbi, roDbi, clock, cacheControllerDispatcher, nonEntityDao, internalCallContextFactory), PaymentSqlDao.class);
         this.paginationHelper = new DefaultPaginationSqlDaoHelper(transactionalSqlDao);
         this.eventBus = eventBus;
         this.clock = clock;

@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014-2018 Groupon, Inc
- * Copyright 2014-2018 The Billing Project, LLC
+ * Copyright 2014-2019 Groupon, Inc
+ * Copyright 2014-2019 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -51,7 +51,6 @@ import org.killbill.billing.util.entity.dao.EntitySqlDao;
 import org.killbill.billing.util.entity.dao.EntitySqlDaoTransactionWrapper;
 import org.killbill.billing.util.entity.dao.EntitySqlDaoTransactionalJdbiWrapper;
 import org.killbill.billing.util.entity.dao.EntitySqlDaoWrapperFactory;
-import org.killbill.billing.util.tag.dao.TagSqlDao;
 import org.killbill.bus.api.PersistentBus;
 import org.killbill.clock.Clock;
 import org.skife.jdbi.v2.IDBI;
@@ -76,7 +75,7 @@ public class DefaultCustomFieldDao extends EntityDaoBase<CustomFieldModelDao, Cu
     @Inject
     public DefaultCustomFieldDao(final IDBI dbi, @Named(MAIN_RO_IDBI_NAMED) final IDBI roDbi, final Clock clock, final CacheControllerDispatcher controllerDispatcher,
                                  final NonEntityDao nonEntityDao, final InternalCallContextFactory internalCallContextFactory, final PersistentBus bus, final AuditDao auditDao) {
-        super(new EntitySqlDaoTransactionalJdbiWrapper(dbi, roDbi, clock, controllerDispatcher, nonEntityDao, internalCallContextFactory), CustomFieldSqlDao.class);
+        super(nonEntityDao, controllerDispatcher, new EntitySqlDaoTransactionalJdbiWrapper(dbi, roDbi, clock, controllerDispatcher, nonEntityDao, internalCallContextFactory), CustomFieldSqlDao.class);
         this.bus = bus;
         this.auditDao = auditDao;
     }

@@ -25,16 +25,23 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.UUID;
 
+import javax.annotation.Nullable;
+
 import org.killbill.billing.BillingExceptionBase;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.util.audit.ChangeType;
+import org.killbill.billing.util.cache.Cachable.CacheType;
+import org.killbill.billing.util.cache.CacheController;
+import org.killbill.billing.util.cache.CacheControllerDispatcher;
+import org.killbill.billing.util.dao.NonEntityDao;
 import org.killbill.billing.util.entity.DefaultPagination;
 import org.killbill.billing.util.entity.Entity;
 import org.killbill.billing.util.entity.Pagination;
 import org.killbill.billing.util.entity.dao.DefaultPaginationSqlDaoHelper.Ordering;
 import org.killbill.billing.util.entity.dao.DefaultPaginationSqlDaoHelper.PaginationIteratorBuilder;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 
@@ -43,10 +50,17 @@ public abstract class EntityDaoBase<M extends EntityModelDao<E>, E extends Entit
     protected final EntitySqlDaoTransactionalJdbiWrapper transactionalSqlDao;
     protected final DefaultPaginationSqlDaoHelper paginationHelper;
 
+    private final NonEntityDao nonEntityDao;
+    private final CacheController<String, Long> recordIdCacheController;
     private final Class<? extends EntitySqlDao<M, E>> realSqlDao;
     private final Class<U> targetExceptionClass;
 
-    public EntityDaoBase(final EntitySqlDaoTransactionalJdbiWrapper transactionalSqlDao, final Class<? extends EntitySqlDao<M, E>> realSqlDao) {
+    public EntityDaoBase(final NonEntityDao nonEntityDao,
+                         @Nullable final CacheControllerDispatcher cacheControllerDispatcher,
+                         final EntitySqlDaoTransactionalJdbiWrapper transactionalSqlDao,
+                         final Class<? extends EntitySqlDao<M, E>> realSqlDao) {
+        this.nonEntityDao = nonEntityDao;
+        this.recordIdCacheController = cacheControllerDispatcher == null ? null : cacheControllerDispatcher.getCacheController(CacheType.RECORD_ID);
         this.transactionalSqlDao = transactionalSqlDao;
         this.realSqlDao = realSqlDao;
         this.paginationHelper = new DefaultPaginationSqlDaoHelper(transactionalSqlDao);
@@ -126,7 +140,16 @@ public abstract class EntityDaoBase<M extends EntityModelDao<E>, E extends Entit
     }
 
     protected boolean checkEntityAlreadyExists(final EntitySqlDao<M, E> transactional, final M entity, final InternalCallContext context) {
-        return transactional.getRecordId(entity.getId().toString(), context) != null;
+        if (entity.getTableName().getObjectType() == null) {
+            // Not a real entity (e.g. TENANT_BROADCASTS)
+            return false;
+        }
+        return getRecordId(entity) != null;
+    }
+
+    @VisibleForTesting
+    public Long getRecordId(final M entity) {
+        return nonEntityDao.retrieveRecordIdFromObject(entity.getId(), entity.getTableName().getObjectType(), recordIdCacheController);
     }
 
     protected void postBusEventFromTransaction(final M entity, final M savedEntity, final ChangeType changeType,
