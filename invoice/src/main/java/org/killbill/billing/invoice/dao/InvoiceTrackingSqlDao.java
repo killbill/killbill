@@ -1,6 +1,6 @@
 /*
- * Copyright 2014-2018 Groupon, Inc
- * Copyright 2014-2018 The Billing Project, LLC
+ * Copyright 2014-2019 Groupon, Inc
+ * Copyright 2014-2019 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -29,7 +29,6 @@ import org.killbill.billing.util.entity.dao.EntitySqlDao;
 import org.killbill.commons.jdbi.binder.SmartBindBean;
 import org.killbill.commons.jdbi.template.KillBillSqlDaoStringTemplate;
 import org.skife.jdbi.v2.sqlobject.Bind;
-import org.skife.jdbi.v2.sqlobject.SqlBatch;
 import org.skife.jdbi.v2.sqlobject.SqlQuery;
 import org.skife.jdbi.v2.sqlobject.SqlUpdate;
 
@@ -37,13 +36,9 @@ import org.skife.jdbi.v2.sqlobject.SqlUpdate;
 public interface InvoiceTrackingSqlDao extends EntitySqlDao<InvoiceTrackingModelDao, Entity> {
 
     @SqlUpdate
-    @Audited(ChangeType.UPDATE)
+    @Audited(ChangeType.DELETE)
     public void deactivateForInvoice(@Bind("invoiceId") String invoiceId,
                                      @SmartBindBean final InternalCallContext context);
-
-    @SqlBatch
-    void create(@SmartBindBean Iterable<InvoiceTrackingModelDao> trackings,
-                @SmartBindBean final InternalCallContext context);
 
     @SqlQuery
     List<InvoiceTrackingModelDao> getTrackingsByDateRange(@Bind("startDate") final Date startDate,

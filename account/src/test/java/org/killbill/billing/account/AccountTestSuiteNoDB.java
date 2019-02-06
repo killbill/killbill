@@ -85,6 +85,10 @@ public abstract class AccountTestSuiteNoDB extends GuicyKillbillTestSuiteNoDB {
 
     @AfterMethod(groups = "fast")
     public void afterMethod() throws Exception {
+        if (hasFailed()) {
+            return;
+        }
+
         bus.stop();
     }
 }

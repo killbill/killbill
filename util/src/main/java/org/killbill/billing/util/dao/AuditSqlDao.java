@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014-2017 Groupon, Inc
- * Copyright 2014-2017 The Billing Project, LLC
+ * Copyright 2014-2019 Groupon, Inc
+ * Copyright 2014-2019 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -21,20 +21,20 @@ package org.killbill.billing.util.dao;
 import java.util.Iterator;
 import java.util.List;
 
-import org.killbill.commons.jdbi.template.KillBillSqlDaoStringTemplate;
-import org.skife.jdbi.v2.sqlobject.Bind;
-import org.killbill.commons.jdbi.binder.SmartBindBean;
-import org.skife.jdbi.v2.sqlobject.SqlQuery;
-import org.skife.jdbi.v2.sqlobject.SqlUpdate;
-import org.skife.jdbi.v2.sqlobject.customizers.Define;
-
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
-import org.killbill.commons.jdbi.statement.SmartFetchSize;
 import org.killbill.billing.util.audit.dao.AuditLogModelDao;
 import org.killbill.billing.util.cache.Cachable;
 import org.killbill.billing.util.cache.Cachable.CacheType;
 import org.killbill.billing.util.cache.CachableKey;
+import org.killbill.commons.jdbi.binder.SmartBindBean;
+import org.killbill.commons.jdbi.statement.SmartFetchSize;
+import org.killbill.commons.jdbi.template.KillBillSqlDaoStringTemplate;
+import org.skife.jdbi.v2.sqlobject.Bind;
+import org.skife.jdbi.v2.sqlobject.SqlBatch;
+import org.skife.jdbi.v2.sqlobject.SqlQuery;
+import org.skife.jdbi.v2.sqlobject.customizers.BatchChunkSize;
+import org.skife.jdbi.v2.sqlobject.customizers.Define;
 
 /**
  * Note 1: cache invalidation has to happen for audit logs (which is tricky in the multi-nodes scenario).
@@ -49,9 +49,10 @@ import org.killbill.billing.util.cache.CachableKey;
 // Note: @RegisterMapper annotation won't work here as we build the SqlObject via EntitySqlDao (annotations won't be inherited for JDBI)
 public interface AuditSqlDao {
 
-    @SqlUpdate
-    public void insertAuditFromTransaction(@SmartBindBean final EntityAudit audit,
-                                           @SmartBindBean final InternalCallContext context);
+    @SqlBatch
+    @BatchChunkSize(1000) // Arbitrary value, just a safety mechanism in case of very large datasets
+    public void insertAuditsFromTransaction(@SmartBindBean final Iterable<EntityAudit> audits,
+                                            @SmartBindBean final InternalCallContext context);
 
     @SqlQuery
     @SmartFetchSize(shouldStream = true)
