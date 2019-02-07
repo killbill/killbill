@@ -219,13 +219,15 @@ public class EntitySqlDaoWrapperInvocationHandler<S extends EntitySqlDao<M, E>, 
         final boolean isBatchQuery = method.getAnnotation(SqlBatch.class) != null;
 
         // Get the current state before deletion for the history tables
-        final Map<Long, M> deletedEntities = new HashMap<Long, M>();
+        final Map<Long, M> deletedAndUpdatedEntities = new HashMap<Long, M>();
         if (changeType == ChangeType.DELETE) {
-            for (final String entityId : entityIds) {
-                // TODO Switch to getByIds
-                final M entityToBeDeleted = sqlDao.getById(entityId, contextMaybeWithoutAccountRecordId);
-                deletedEntities.put(entityToBeDeleted.getRecordId(), entityToBeDeleted);
+            // TODO FIXME: this shouldn't happen (auditing for InvoiceTrackingSqlDao is broken)
+            if (!entityIds.isEmpty()) {
+                final List<M> entitiesToBeDeleted = sqlDao.getByIds(entityIds, contextMaybeWithoutAccountRecordId);
                 printSQLWarnings();
+                for (final M entityToBeDeleted : entitiesToBeDeleted) {
+                    deletedAndUpdatedEntities.put(entityToBeDeleted.getRecordId(), entityToBeDeleted);
+                }
             }
         }
 
@@ -245,13 +247,13 @@ public class EntitySqlDaoWrapperInvocationHandler<S extends EntitySqlDao<M, E>, 
         // Retrieve record_id(s) for audit and history tables
         final List<Long> entityRecordIds = new LinkedList<Long>();
         if (changeType == ChangeType.DELETE) {
-            for (final Long entityRecordId : deletedEntities.keySet()) {
-                final M entity = deletedEntities.get(entityRecordId);
+            for (final Long entityRecordId : deletedAndUpdatedEntities.keySet()) {
+                final M entity = deletedAndUpdatedEntities.get(entityRecordId);
                 entityRecordIds.add(entityRecordId);
                 if (tableName == null) {
                     tableName = entity.getTableName();
                 } else {
-                    Preconditions.checkState(tableName == entity.getTableName(), "Entities with different TableName: %s", deletedEntities);
+                    Preconditions.checkState(tableName == entity.getTableName(), "Entities with different TableName: %s", deletedAndUpdatedEntities);
                 }
             }
         } else if (changeType == ChangeType.INSERT && !isBatchQuery) {
@@ -268,12 +270,11 @@ public class EntitySqlDaoWrapperInvocationHandler<S extends EntitySqlDao<M, E>, 
                 context = internalCallContextFactory.createInternalCallContext(accountModelDao, accountRecordId, contextMaybeWithoutAccountRecordId);
             }
         } else {
-            for (final String entityId : entityIds) {
-                // For batch inserts and updates, easiest is to go back to the database
-                // TODO Do we go to the cache here?
-                // TODO Switch to getByIds
-                final M entity = sqlDao.getById(entityId, contextMaybeWithoutAccountRecordId);
-                printSQLWarnings();
+            // For batch inserts and updates, easiest is to go back to the database
+            final List<M> retrievedEntities = sqlDao.getByIds(entityIds, contextMaybeWithoutAccountRecordId);
+            printSQLWarnings();
+            for (final M entity : retrievedEntities) {
+                deletedAndUpdatedEntities.put(entity.getRecordId(), entity);
                 entityRecordIds.add(entity.getRecordId());
                 if (tableName == null) {
                     tableName = entity.getTableName();
@@ -294,7 +295,7 @@ public class EntitySqlDaoWrapperInvocationHandler<S extends EntitySqlDao<M, E>, 
                                      "accountRecordId should be set for tableName=%s and changeType=%s", tableName, changeType);
         }
 
-        final List<M> reHydratedEntitiesOrNull = updateHistoryAndAudit(entityRecordIds, deletedEntities, tableName, changeType, context);
+        final Collection<M> reHydratedEntities = updateHistoryAndAudit(entityRecordIds, deletedAndUpdatedEntities, tableName, changeType, context);
         if (method.getReturnType().equals(Void.TYPE)) {
             // Return early
             return null;
@@ -306,12 +307,14 @@ public class EntitySqlDaoWrapperInvocationHandler<S extends EntitySqlDao<M, E>, 
             // (see EntityDaoBase#createAndRefresh for an example, but it works for updates as well).
             Preconditions.checkState(entityRecordIds.size() == 1, "Invalid number of entityRecordIds: %s", entityRecordIds);
 
-            if (reHydratedEntitiesOrNull != null) {
-                Preconditions.checkState(reHydratedEntitiesOrNull.size() == 1, "Invalid number of entities: %s", reHydratedEntitiesOrNull);
-                return Iterables.<M>getFirst(reHydratedEntitiesOrNull, null);
+            if (!reHydratedEntities.isEmpty()) {
+                Preconditions.checkState(reHydratedEntities.size() == 1, "Invalid number of entities: %s", reHydratedEntities);
+                return Iterables.<M>getFirst(reHydratedEntities, null);
             } else {
                 // Updated entity not retrieved yet, we have to go back to the database
-                return sqlDao.getByRecordId(entityRecordIds.get(0), context);
+                final M entity = sqlDao.getByRecordId(entityRecordIds.get(0), context);
+                printSQLWarnings();
+                return entity;
             }
         }
     }
@@ -367,25 +370,31 @@ public class EntitySqlDaoWrapperInvocationHandler<S extends EntitySqlDao<M, E>, 
 
     // Update history and audit tables.
     // PERF: if the latest entities had to be fetched from the database, return them. Otherwise, return null.
-    private List<M> updateHistoryAndAudit(final Collection<Long> entityRecordIds,
-                                          final Map<Long, M> deletedEntities,
-                                          final TableName tableName,
-                                          final ChangeType changeType,
-                                          final InternalCallContext context) throws Throwable {
+    private Collection<M> updateHistoryAndAudit(final Collection<Long> entityRecordIds,
+                                                final Map<Long, M> deletedAndUpdatedEntities,
+                                                final TableName tableName,
+                                                final ChangeType changeType,
+                                                final InternalCallContext context) throws Throwable {
         final Object reHydratedEntitiesOrNull = prof.executeWithProfiling(ProfilingFeatureType.DAO_DETAILS, getProfilingId("history/audit", null), new WithProfilingCallback<Object, Throwable>() {
             @Override
-            public List<M> execute() {
+            public Collection<M> execute() {
                 if (tableName.getHistoryTableName() == null) {
                     insertAudits(entityRecordIds, tableName, changeType, context);
-                    return null;
+                    return deletedAndUpdatedEntities.values();
                 } else {
                     // We'll keep the ordering
                     final Collection<Long> auditTargetRecordIds = new ArrayList<>(entityRecordIds.size());
-                    final List<M> reHydratedEntities = new ArrayList<>(entityRecordIds.size());
+                    final Collection<M> reHydratedEntities = new ArrayList<>(entityRecordIds.size());
                     for (final Long entityRecordId : entityRecordIds) {
                         // Make sure to re-hydrate the objects first (especially needed for create calls)
                         // TODO Could we do this in bulk too?
-                        final M reHydratedEntityModelDao = MoreObjects.firstNonNull(deletedEntities.get(entityRecordId), sqlDao.getByRecordId(entityRecordId, context));
+                        final M reHydratedEntityModelDao;
+                        if (deletedAndUpdatedEntities.keySet().contains(entityRecordId)) {
+                            reHydratedEntityModelDao = deletedAndUpdatedEntities.get(entityRecordId);
+                        } else {
+                            reHydratedEntityModelDao = sqlDao.getByRecordId(entityRecordId, context);
+                            printSQLWarnings();
+                        }
                         final Long auditTargetRecordId = insertHistory(reHydratedEntityModelDao, changeType, context);
                         auditTargetRecordIds.add(auditTargetRecordId);
                         reHydratedEntities.add(reHydratedEntityModelDao);
@@ -398,7 +407,7 @@ public class EntitySqlDaoWrapperInvocationHandler<S extends EntitySqlDao<M, E>, 
             }
         });
         //noinspection unchecked
-        return (List<M>) reHydratedEntitiesOrNull;
+        return (Collection<M>) reHydratedEntitiesOrNull;
     }
 
     private List<String> retrieveEntityIdsFromArguments(final Method method, final Object[] args) {

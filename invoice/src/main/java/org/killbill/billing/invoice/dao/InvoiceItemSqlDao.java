@@ -19,7 +19,6 @@
 package org.killbill.billing.invoice.dao;
 
 import java.math.BigDecimal;
-import java.util.Collection;
 import java.util.List;
 
 import org.killbill.billing.callcontext.InternalCallContext;
@@ -33,7 +32,6 @@ import org.killbill.commons.jdbi.template.KillBillSqlDaoStringTemplate;
 import org.skife.jdbi.v2.sqlobject.Bind;
 import org.skife.jdbi.v2.sqlobject.SqlQuery;
 import org.skife.jdbi.v2.sqlobject.SqlUpdate;
-import org.skife.jdbi.v2.unstable.BindIn;
 
 @KillBillSqlDaoStringTemplate
 public interface InvoiceItemSqlDao extends EntitySqlDao<InvoiceItemModelDao, InvoiceItem> {
@@ -64,8 +62,4 @@ public interface InvoiceItemSqlDao extends EntitySqlDao<InvoiceItemModelDao, Inv
 
     @SqlQuery
     BigDecimal getAccountCBA(@SmartBindBean final InternalTenantContext context);
-
-    @SqlQuery
-    List<InvoiceItemModelDao> getByIds(@BindIn("ids") final Collection<String> invoiceItemIds,
-                                       @SmartBindBean final InternalTenantContext context);
 }

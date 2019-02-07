@@ -18,6 +18,7 @@
 
 package org.killbill.billing.util.entity.dao;
 
+import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 
@@ -39,6 +40,7 @@ import org.skife.jdbi.v2.sqlobject.customizers.BatchChunkSize;
 import org.skife.jdbi.v2.sqlobject.customizers.Define;
 import org.skife.jdbi.v2.sqlobject.mixins.CloseMe;
 import org.skife.jdbi.v2.sqlobject.mixins.Transactional;
+import org.skife.jdbi.v2.unstable.BindIn;
 import org.skife.jdbi.v2.util.LongMapper;
 
 @KillBillSqlDaoStringTemplate
@@ -64,6 +66,10 @@ public interface EntitySqlDao<M extends EntityModelDao<E>, E extends Entity> ext
     @SqlQuery
     public M getByRecordId(@Bind("recordId") final Long recordId,
                            @SmartBindBean final InternalTenantContext context);
+
+    @SqlQuery
+    List<M> getByIds(@BindIn("ids") final Collection<String> ids,
+                     @SmartBindBean final InternalTenantContext context);
 
     @SqlQuery
     public List<M> getByAccountRecordId(@SmartBindBean final InternalTenantContext context);

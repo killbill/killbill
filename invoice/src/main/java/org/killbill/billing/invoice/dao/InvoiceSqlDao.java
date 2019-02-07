@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014-2017 Groupon, Inc
- * Copyright 2014-2017 The Billing Project, LLC
+ * Copyright 2014-2019 Groupon, Inc
+ * Copyright 2014-2019 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -18,7 +18,6 @@
 
 package org.killbill.billing.invoice.dao;
 
-import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
 
@@ -33,7 +32,6 @@ import org.killbill.commons.jdbi.template.KillBillSqlDaoStringTemplate;
 import org.skife.jdbi.v2.sqlobject.Bind;
 import org.skife.jdbi.v2.sqlobject.SqlQuery;
 import org.skife.jdbi.v2.sqlobject.SqlUpdate;
-import org.skife.jdbi.v2.unstable.BindIn;
 
 @KillBillSqlDaoStringTemplate
 public interface InvoiceSqlDao extends EntitySqlDao<InvoiceModelDao, Invoice> {
@@ -59,11 +57,5 @@ public interface InvoiceSqlDao extends EntitySqlDao<InvoiceModelDao, Invoice> {
     @SqlQuery
     InvoiceModelDao getParentDraftInvoice(@Bind("accountId") final String parentAccountId,
                                           @SmartBindBean final InternalTenantContext context);
-
-    @SqlQuery
-    List<InvoiceModelDao> getByIds(@BindIn("ids") final Collection<String> invoiceIds,
-                                   @SmartBindBean final InternalTenantContext context);
-
-
 }
 
