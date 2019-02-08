@@ -63,6 +63,14 @@ public class TestPluginProperties extends UtilTestSuiteNoDB {
     }
 
     @Test(groups = "fast")
+    public void testToMapHandlesNull() throws Exception {
+        final Map<String, Object> properties = PluginProperties.toMap(null, pluginProperties1, pluginProperties2, null);
+        Assert.assertEquals(properties.get("baz"), (Long) 12L);
+        Assert.assertEquals(properties.get("baz2"), "something else");
+        Assert.assertEquals(properties.get("foo"), "override");
+    }
+
+    @Test(groups = "fast")
     public void testBuildPluginProperties() throws Exception {
         Assert.assertEquals(pluginProperties1.size(), 2);
         Assert.assertEquals(pluginProperties1.get(0).getKey(), "foo");

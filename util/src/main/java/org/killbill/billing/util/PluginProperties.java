@@ -38,9 +38,11 @@ public abstract class PluginProperties {
     public static Map<String, Object> toMap(final Iterable<PluginProperty>... propertiesLists) {
         final Map<String, Object> mergedProperties = new HashMap<String, Object>();
         for (final Iterable<PluginProperty> propertiesList : propertiesLists) {
-            for (final PluginProperty pluginProperty : propertiesList) {
-                if (pluginProperty.getKey() != null) {
-                    mergedProperties.put(pluginProperty.getKey(), pluginProperty.getValue());
+            if(propertiesList != null) {
+                for (final PluginProperty pluginProperty : propertiesList) {
+                    if (pluginProperty != null && pluginProperty.getKey() != null) {
+                        mergedProperties.put(pluginProperty.getKey(), pluginProperty.getValue());
+                    }
                 }
             }
         }
