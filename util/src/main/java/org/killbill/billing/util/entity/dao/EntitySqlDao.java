@@ -24,9 +24,6 @@ import java.util.List;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.util.audit.ChangeType;
-import org.killbill.billing.util.cache.Cachable;
-import org.killbill.billing.util.cache.Cachable.CacheType;
-import org.killbill.billing.util.cache.CachableKey;
 import org.killbill.billing.util.dao.AuditSqlDao;
 import org.killbill.billing.util.dao.HistorySqlDao;
 import org.killbill.billing.util.entity.Entity;
@@ -71,8 +68,7 @@ public interface EntitySqlDao<M extends EntityModelDao<E>, E extends Entity> ext
     public List<M> getByAccountRecordIdIncludedDeleted(@SmartBindBean final InternalTenantContext context);
 
     @SqlQuery
-    @Cachable(CacheType.RECORD_ID)
-    public Long getRecordId(@CachableKey(1) @Bind("id") final String id,
+    public Long getRecordId(@Bind("id") final String id,
                             @SmartBindBean final InternalTenantContext context);
 
     @SqlQuery

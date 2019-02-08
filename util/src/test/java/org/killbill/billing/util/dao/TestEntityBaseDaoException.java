@@ -1,6 +1,6 @@
 /*
- * Copyright 2014-2018 Groupon, Inc
- * Copyright 2014-2018 The Billing Project, LLC
+ * Copyright 2014-2019 Groupon, Inc
+ * Copyright 2014-2019 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -34,8 +34,8 @@ public class TestEntityBaseDaoException extends UtilTestSuiteWithEmbeddedDB {
 
     public static class TestEntityBaseDao extends EntityDaoBase<KombuchaModelDao, Kombucha, SecurityApiException> {
 
-        public TestEntityBaseDao(final EntitySqlDaoTransactionalJdbiWrapper transactionalSqlDao, final Class<? extends EntitySqlDao<KombuchaModelDao, Kombucha>> realSqlDao) {
-            super(transactionalSqlDao, realSqlDao);
+        public TestEntityBaseDao(final NonEntityDao nonEntityDao, final EntitySqlDaoTransactionalJdbiWrapper transactionalSqlDao, final Class<? extends EntitySqlDao<KombuchaModelDao, Kombucha>> realSqlDao) {
+            super(nonEntityDao, null, transactionalSqlDao, realSqlDao);
         }
 
         @Override
@@ -52,7 +52,7 @@ public class TestEntityBaseDaoException extends UtilTestSuiteWithEmbeddedDB {
     @Test(groups = "slow")
     public void testWithCreateException() throws Exception {
         final EntitySqlDaoTransactionalJdbiWrapper entitySqlDaoTransactionalJdbiWrapper = new EntitySqlDaoTransactionalJdbiWrapper(dbi, roDbi, clock, null, nonEntityDao, null);
-        final TestEntityBaseDao test = new TestEntityBaseDao(entitySqlDaoTransactionalJdbiWrapper, KombuchaSqlDao.class);
+        final TestEntityBaseDao test = new TestEntityBaseDao(nonEntityDao, entitySqlDaoTransactionalJdbiWrapper, KombuchaSqlDao.class);
 
         final KombuchaModelDao entity = new KombuchaModelDao() {
             @Override

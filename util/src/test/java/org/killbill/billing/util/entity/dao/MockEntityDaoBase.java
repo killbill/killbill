@@ -1,7 +1,9 @@
 /*
- * Copyright 2010-2012 Ning, Inc.
+ * Copyright 2010-2013 Ning, Inc.
+ * Copyright 2014-2019 Groupon, Inc
+ * Copyright 2014-2019 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -44,8 +46,7 @@ public class MockEntityDaoBase<M extends EntityModelDao<E>, E extends Entity, U 
         entities.put(entity.getId(), ImmutableMap.<Long, M>of(autoIncrement.incrementAndGet(), entity));
     }
 
-    @Override
-    public Long getRecordId(final UUID id, final InternalTenantContext context) {
+    protected Long getRecordId(final UUID id, final InternalTenantContext context) {
         return entities.get(id).keySet().iterator().next();
     }
 

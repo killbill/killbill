@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014-2018 Groupon, Inc
- * Copyright 2014-2018 The Billing Project, LLC
+ * Copyright 2014-2019 Groupon, Inc
+ * Copyright 2014-2019 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -24,8 +24,6 @@ import org.killbill.billing.platform.api.KillbillConfigSource;
 import org.killbill.billing.util.cache.AccountBCDCacheLoader;
 import org.killbill.billing.util.cache.AccountIdFromBundleIdCacheLoader;
 import org.killbill.billing.util.cache.AccountRecordIdCacheLoader;
-import org.killbill.billing.util.cache.AuditLogCacheLoader;
-import org.killbill.billing.util.cache.AuditLogViaHistoryCacheLoader;
 import org.killbill.billing.util.cache.BaseCacheLoader;
 import org.killbill.billing.util.cache.BundleIdFromSubscriptionIdCacheLoader;
 import org.killbill.billing.util.cache.CacheControllerDispatcher;
@@ -84,8 +82,6 @@ public class CacheModule extends KillBillModule {
         resultSetMapperSetBinder.addBinding().to(AccountRecordIdCacheLoader.class).asEagerSingleton();
         resultSetMapperSetBinder.addBinding().to(TenantRecordIdCacheLoader.class).asEagerSingleton();
         resultSetMapperSetBinder.addBinding().to(ObjectIdCacheLoader.class).asEagerSingleton();
-        resultSetMapperSetBinder.addBinding().to(AuditLogCacheLoader.class).asEagerSingleton();
-        resultSetMapperSetBinder.addBinding().to(AuditLogViaHistoryCacheLoader.class).asEagerSingleton();
         resultSetMapperSetBinder.addBinding().to(TenantCatalogCacheLoader.class).asEagerSingleton();
         resultSetMapperSetBinder.addBinding().to(TenantConfigCacheLoader.class).asEagerSingleton();
         resultSetMapperSetBinder.addBinding().to(TenantOverdueConfigCacheLoader.class).asEagerSingleton();

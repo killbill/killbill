@@ -22,8 +22,6 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.lang.reflect.ParameterizedType;
-import java.lang.reflect.Type;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.SQLWarning;
@@ -39,16 +37,11 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import javax.annotation.Nullable;
 
-import org.killbill.billing.ObjectType;
 import org.killbill.billing.callcontext.InternalCallContext;
-import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.util.audit.ChangeType;
-import org.killbill.billing.util.cache.Cachable;
 import org.killbill.billing.util.cache.Cachable.CacheType;
-import org.killbill.billing.util.cache.CachableKey;
 import org.killbill.billing.util.cache.CacheController;
 import org.killbill.billing.util.cache.CacheControllerDispatcher;
-import org.killbill.billing.util.cache.CacheLoaderArgument;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.billing.util.dao.EntityAudit;
 import org.killbill.billing.util.dao.EntityHistoryModelDao;
@@ -71,10 +64,8 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableList.Builder;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 
 /**
@@ -121,7 +112,7 @@ public class EntitySqlDaoWrapperInvocationHandler<S extends EntitySqlDao<M, E>, 
             return prof.executeWithProfiling(ProfilingFeatureType.DAO, getProfilingId(null, method), new WithProfilingCallback<Object, Throwable>() {
                 @Override
                 public Object execute() throws Throwable {
-                    return invokeSafely(proxy, method, args);
+                    return invokeSafely(method, args);
                 }
             });
         } catch (final Throwable t) {
@@ -189,16 +180,12 @@ public class EntitySqlDaoWrapperInvocationHandler<S extends EntitySqlDao<M, E>, 
         errorDuringTransaction(t, method, null);
     }
 
-    private Object invokeSafely(final Object proxy, final Method method, final Object[] args) throws Throwable {
-
+    private Object invokeSafely(final Method method, final Object[] args) throws Throwable {
         final Audited auditedAnnotation = method.getAnnotation(Audited.class);
-        final Cachable cachableAnnotation = method.getAnnotation(Cachable.class);
 
         // This can't be AUDIT'ed and CACHABLE'd at the same time as we only cache 'get'
         if (auditedAnnotation != null) {
             return invokeWithAuditAndHistory(auditedAnnotation, method, args);
-        } else if (cachableAnnotation != null && cacheControllerDispatcher != null) {
-            return invokeWithCaching(cachableAnnotation, method, args);
         } else {
             return invokeRaw(method, args);
         }
@@ -220,97 +207,6 @@ public class EntitySqlDaoWrapperInvocationHandler<S extends EntitySqlDao<M, E>, 
                 return result;
             }
         });
-    }
-
-    private Object invokeWithCaching(final Cachable cachableAnnotation, final Method method, final Object[] args)
-            throws Throwable {
-        final ObjectType objectType = getObjectType();
-        final CacheType cacheType = cachableAnnotation.value();
-        final CacheController<Object, Object> cache = cacheControllerDispatcher.getCacheController(cacheType);
-        // TODO Change NonEntityDao to take in TableName instead to cache things like TenantBroadcastModelDao (no ObjectType)
-        if (cache != null && objectType != null) {
-            // Find all arguments marked with @CachableKey
-            final Map<Integer, Object> keyPieces = new LinkedHashMap<Integer, Object>();
-            final Annotation[][] annotations = getAnnotations(method);
-            for (int i = 0; i < annotations.length; i++) {
-                for (int j = 0; j < annotations[i].length; j++) {
-                    final Annotation annotation = annotations[i][j];
-                    if (CachableKey.class.equals(annotation.annotationType())) {
-                        // CachableKey position starts at 1
-                        keyPieces.put(((CachableKey) annotation).value() - 1, args[i]);
-                        break;
-                    }
-                }
-            }
-
-            // Build the Cache key
-            final String cacheKey = buildCacheKey(keyPieces);
-
-            final InternalTenantContext internalTenantContext = (InternalTenantContext) Iterables.find(ImmutableList.copyOf(args), new Predicate<Object>() {
-                @Override
-                public boolean apply(final Object input) {
-                    return input instanceof InternalTenantContext;
-                }
-            }, null);
-            final CacheLoaderArgument cacheLoaderArgument = new CacheLoaderArgument(objectType, args, internalTenantContext, handle);
-            return cache.get(cacheKey, cacheLoaderArgument);
-        } else {
-            return invokeRaw(method, args);
-        }
-    }
-
-    /**
-     * Extract object from sqlDaoClass by looking at first parameter type (EntityModelDao) and
-     * constructing an empty object so we can call the getObjectType method on it.
-     *
-     * @return the objectType associated to that handler
-     * @throws InstantiationException
-     * @throws IllegalAccessException
-     * @throws ClassNotFoundException
-     */
-    private ObjectType getObjectType() throws InstantiationException, IllegalAccessException, ClassNotFoundException {
-
-        int foundIndexForEntitySqlDao = -1;
-        // If the sqlDaoClass implements multiple interfaces, first figure out which one is the EntitySqlDao
-        for (int i = 0; i < sqlDaoClass.getGenericInterfaces().length; i++) {
-            final Type type = sqlDaoClass.getGenericInterfaces()[0];
-            if (!(type instanceof java.lang.reflect.ParameterizedType)) {
-                // AuditSqlDao for example won't extend EntitySqlDao
-                return null;
-            }
-
-            if (EntitySqlDao.class.getName().equals(((Class) ((java.lang.reflect.ParameterizedType) type).getRawType()).getName())) {
-                foundIndexForEntitySqlDao = i;
-                break;
-            }
-        }
-        // Find out from the parameters of the EntitySqlDao which one is the EntityModelDao, and extract his (sub)type to finally return the ObjectType
-        if (foundIndexForEntitySqlDao >= 0) {
-            final Type[] types = ((java.lang.reflect.ParameterizedType) sqlDaoClass.getGenericInterfaces()[foundIndexForEntitySqlDao]).getActualTypeArguments();
-            int foundIndexForEntityModelDao = -1;
-            for (int i = 0; i < types.length; i++) {
-                final Class clz = ((Class) types[i]);
-                final Type[] genericInterfaces = clz.getGenericInterfaces();
-                for (final Type genericInterface : genericInterfaces) {
-                    if (genericInterface instanceof ParameterizedType) {
-                        if (EntityModelDao.class.getName().equals(((Class) ((ParameterizedType) genericInterface).getRawType()).getName())) {
-                            foundIndexForEntityModelDao = i;
-                            break;
-                        }
-                    }
-                }
-            }
-
-            if (foundIndexForEntityModelDao >= 0) {
-                final String modelClassName = ((Class) types[foundIndexForEntityModelDao]).getName();
-
-                final Class<? extends EntityModelDao<?>> clz = (Class<? extends EntityModelDao<?>>) Class.forName(modelClassName);
-
-                final EntityModelDao<?> modelDao = (EntityModelDao<?>) clz.newInstance();
-                return modelDao.getTableName().getObjectType();
-            }
-        }
-        return null;
     }
 
     private Object invokeWithAuditAndHistory(final Audited auditedAnnotation, final Method method, final Object[] args) throws Throwable {
@@ -552,41 +448,6 @@ public class EntitySqlDaoWrapperInvocationHandler<S extends EntitySqlDao<M, E>, 
 
         sqlDao.insertAuditsFromTransaction(audits, context);
         printSQLWarnings();
-
-        // We need to invalidate the caches. There is a small window of doom here where caches will be stale.
-        for (final M entityModelDao : entityModelDaoAndHistoryRecordIds.keySet()) {
-            final Long entityRecordId = entityModelDao.getRecordId();
-
-            // TODO Knowledge on how the key is constructed is also in AuditSqlDao
-            if (tableName.getHistoryTableName() != null) {
-                final CacheController<String, List> cacheController = cacheControllerDispatcher.getCacheController(CacheType.AUDIT_LOG_VIA_HISTORY);
-                if (cacheController != null) {
-                    final String key = buildCacheKey(ImmutableMap.<Integer, Object>of(0, tableName.getHistoryTableName(), 1, tableName.getHistoryTableName(), 2, entityRecordId));
-                    cacheController.remove(key);
-                }
-            } else {
-                final CacheController<String, List> cacheController = cacheControllerDispatcher.getCacheController(CacheType.AUDIT_LOG);
-                if (cacheController != null) {
-                    final String key = buildCacheKey(ImmutableMap.<Integer, Object>of(0, tableName, 1, entityRecordId));
-                    cacheController.remove(key);
-                }
-            }
-        }
-    }
-
-    private String buildCacheKey(final Map<Integer, Object> keyPieces) {
-        final StringBuilder cacheKey = new StringBuilder();
-        for (int i = 0; i < keyPieces.size(); i++) {
-            // To normalize the arguments and avoid casing issues, we make all pieces of the key uppercase.
-            // Since the database engine may be case insensitive and we use arguments of the SQL method call
-            // to build the key, the key has to be case insensitive as well.
-            final String str = String.valueOf(keyPieces.get(i)).toUpperCase();
-            cacheKey.append(str);
-            if (i < keyPieces.size() - 1) {
-                cacheKey.append(CacheControllerDispatcher.CACHE_KEY_SEPARATOR);
-            }
-        }
-        return cacheKey.toString();
     }
 
     private String getProfilingId(@Nullable final String prefix, @Nullable final Method method) {
