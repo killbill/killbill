@@ -370,7 +370,7 @@ public class EntitySqlDaoWrapperInvocationHandler<S extends EntitySqlDao<M, E>, 
 
     // Update history and audit tables.
     // PERF: if the latest entities had to be fetched from the database, return them. Otherwise, return null.
-    private Collection<M> updateHistoryAndAudit(final Collection<Long> entityRecordIds,
+    private Collection<M> updateHistoryAndAudit(final List<Long> entityRecordIds,
                                                 final Map<Long, M> deletedAndUpdatedEntities,
                                                 final TableName tableName,
                                                 final ChangeType changeType,
@@ -382,22 +382,22 @@ public class EntitySqlDaoWrapperInvocationHandler<S extends EntitySqlDao<M, E>, 
                     insertAudits(entityRecordIds, tableName, changeType, context);
                     return deletedAndUpdatedEntities.values();
                 } else {
-                    // We'll keep the ordering
-                    final Collection<Long> auditTargetRecordIds = new ArrayList<>(entityRecordIds.size());
+                    // Make sure to re-hydrate the objects first (especially needed for create calls)
                     final Collection<M> reHydratedEntities = new ArrayList<>(entityRecordIds.size());
-                    for (final Long entityRecordId : entityRecordIds) {
-                        // Make sure to re-hydrate the objects first (especially needed for create calls)
+                    if (deletedAndUpdatedEntities.isEmpty()) {
+                        Preconditions.checkState(entityRecordIds.size() == 1 && changeType == ChangeType.INSERT, "Unexpected number of entityRecordIds=%s and changeType=%s", entityRecordIds, changeType);
+                        reHydratedEntities.add(sqlDao.getByRecordId(entityRecordIds.get(0), context));
+                        printSQLWarnings();
+                    } else {
+                        reHydratedEntities.addAll(deletedAndUpdatedEntities.values());
+                    }
+                    Preconditions.checkState(reHydratedEntities.size() == entityRecordIds.size(), "Wrong number of reHydratedEntities=%s (entityRecordIds=%s)", reHydratedEntities, entityRecordIds);
+
+                    final Collection<Long> auditTargetRecordIds = new ArrayList<>(entityRecordIds.size());
+                    for (final M reHydratedEntityModelDao : reHydratedEntities) {
                         // TODO Could we do this in bulk too?
-                        final M reHydratedEntityModelDao;
-                        if (deletedAndUpdatedEntities.keySet().contains(entityRecordId)) {
-                            reHydratedEntityModelDao = deletedAndUpdatedEntities.get(entityRecordId);
-                        } else {
-                            reHydratedEntityModelDao = sqlDao.getByRecordId(entityRecordId, context);
-                            printSQLWarnings();
-                        }
                         final Long auditTargetRecordId = insertHistory(reHydratedEntityModelDao, changeType, context);
                         auditTargetRecordIds.add(auditTargetRecordId);
-                        reHydratedEntities.add(reHydratedEntityModelDao);
                     }
                     // Note: audit entries point to the history record id
                     insertAudits(auditTargetRecordIds, tableName, changeType, context);
