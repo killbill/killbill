@@ -25,6 +25,7 @@ import java.util.UUID;
 
 import javax.annotation.Nullable;
 
+import com.google.common.collect.ImmutableList;
 import org.joda.time.DateTime;
 import org.killbill.billing.account.api.Account;
 import org.killbill.billing.payment.api.PaymentMethod;
@@ -155,7 +156,7 @@ public class PaymentMethodJson extends JsonBase {
                             }
                             return result;
                         }
-                        return null;
+                        return ImmutableList.of();
                     }
                 };
             }
