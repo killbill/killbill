@@ -393,12 +393,7 @@ public class EntitySqlDaoWrapperInvocationHandler<S extends EntitySqlDao<M, E>, 
                     }
                     Preconditions.checkState(reHydratedEntities.size() == entityRecordIds.size(), "Wrong number of reHydratedEntities=%s (entityRecordIds=%s)", reHydratedEntities, entityRecordIds);
 
-                    final Collection<Long> auditTargetRecordIds = new ArrayList<>(entityRecordIds.size());
-                    for (final M reHydratedEntityModelDao : reHydratedEntities) {
-                        // TODO Could we do this in bulk too?
-                        final Long auditTargetRecordId = insertHistory(reHydratedEntityModelDao, changeType, context);
-                        auditTargetRecordIds.add(auditTargetRecordId);
-                    }
+                    final Collection<Long> auditTargetRecordIds = insertHistories(reHydratedEntities, changeType, context);
                     // Note: audit entries point to the history record id
                     insertAudits(auditTargetRecordIds, tableName, changeType, context);
 
@@ -506,11 +501,16 @@ public class EntitySqlDaoWrapperInvocationHandler<S extends EntitySqlDao<M, E>, 
         throw new IllegalStateException("TimeZoneAwareEntity should have been found among " + args);
     }
 
-    private Long insertHistory(final M reHydratedEntityModelDao, final ChangeType changeType, final InternalCallContext context) {
-        final EntityHistoryModelDao<M, E> history = new EntityHistoryModelDao<M, E>(reHydratedEntityModelDao, reHydratedEntityModelDao.getRecordId(), changeType, null, context.getCreatedDate());
-        final Long recordId = sqlDao.addHistoryFromTransaction(history, context);
+    private List<Long> insertHistories(final Iterable<M> reHydratedEntityModelDaos, final ChangeType changeType, final InternalCallContext context) {
+        final Collection<EntityHistoryModelDao<M, E>> histories = new LinkedList<EntityHistoryModelDao<M, E>>();
+        for (final M reHydratedEntityModelDao : reHydratedEntityModelDaos) {
+            final EntityHistoryModelDao<M, E> history = new EntityHistoryModelDao<M, E>(reHydratedEntityModelDao, reHydratedEntityModelDao.getRecordId(), changeType, null, context.getCreatedDate());
+            histories.add(history);
+        }
+
+        final List<Long> recordIds = sqlDao.addHistoriesFromTransaction(histories, context);
         printSQLWarnings();
-        return recordId;
+        return recordIds;
     }
 
     // Bulk insert all audit logs for this operation

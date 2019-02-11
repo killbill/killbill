@@ -358,7 +358,7 @@ order by <recordIdField("t.")> ASC
 ;
 >>
 
-addHistoryFromTransaction() ::= <<
+addHistoriesFromTransaction() ::= <<
 insert into <historyTableName()> (
   <idField("")>
 , <historyTableFields("")>
