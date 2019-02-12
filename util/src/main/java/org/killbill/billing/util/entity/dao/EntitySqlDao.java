@@ -18,6 +18,7 @@
 
 package org.killbill.billing.util.entity.dao;
 
+import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 
@@ -31,6 +32,7 @@ import org.killbill.commons.jdbi.binder.SmartBindBean;
 import org.killbill.commons.jdbi.statement.SmartFetchSize;
 import org.killbill.commons.jdbi.template.KillBillSqlDaoStringTemplate;
 import org.skife.jdbi.v2.sqlobject.Bind;
+import org.skife.jdbi.v2.sqlobject.GetGeneratedKeys;
 import org.skife.jdbi.v2.sqlobject.SqlBatch;
 import org.skife.jdbi.v2.sqlobject.SqlQuery;
 import org.skife.jdbi.v2.sqlobject.SqlUpdate;
@@ -38,16 +40,20 @@ import org.skife.jdbi.v2.sqlobject.customizers.BatchChunkSize;
 import org.skife.jdbi.v2.sqlobject.customizers.Define;
 import org.skife.jdbi.v2.sqlobject.mixins.CloseMe;
 import org.skife.jdbi.v2.sqlobject.mixins.Transactional;
+import org.skife.jdbi.v2.unstable.BindIn;
+import org.skife.jdbi.v2.util.LongMapper;
 
 @KillBillSqlDaoStringTemplate
 public interface EntitySqlDao<M extends EntityModelDao<E>, E extends Entity> extends AuditSqlDao, HistorySqlDao<M, E>, Transactional<EntitySqlDao<M, E>>, CloseMe {
 
     @SqlUpdate
+    @GetGeneratedKeys(value = LongMapper.class)
     @Audited(ChangeType.INSERT)
     public Object create(@SmartBindBean final M entity,
                          @SmartBindBean final InternalCallContext context);
 
     @SqlBatch
+    // We don't @GetGeneratedKeys here, as it's unclear if the ordering through the batches is respected by all JDBC drivers
     @BatchChunkSize(1000) // Arbitrary value, just a safety mechanism in case of very large datasets
     @Audited(ChangeType.INSERT)
     public void create(@SmartBindBean final Iterable<M> entity,
@@ -60,6 +66,10 @@ public interface EntitySqlDao<M extends EntityModelDao<E>, E extends Entity> ext
     @SqlQuery
     public M getByRecordId(@Bind("recordId") final Long recordId,
                            @SmartBindBean final InternalTenantContext context);
+
+    @SqlQuery
+    List<M> getByIds(@BindIn("ids") final Collection<String> ids,
+                     @SmartBindBean final InternalTenantContext context);
 
     @SqlQuery
     public List<M> getByAccountRecordId(@SmartBindBean final InternalTenantContext context);
