@@ -28,14 +28,13 @@ tableValues() ::= <<
 , :updatedDate
 >>
 
-deactivateForInvoice() ::= <<
+deactivateByIds() ::= <<
 update <tableName()>
 set
-is_active = false
+  is_active = false
 , updated_by = :createdBy
 , updated_date = :updatedDate
-where
-invoice_id = :invoiceId
+where <idField("")> in (<ids>)
 <AND_CHECK_TENANT("")>
 ;
 >>

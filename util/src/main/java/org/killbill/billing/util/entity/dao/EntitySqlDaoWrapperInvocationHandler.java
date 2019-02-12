@@ -221,13 +221,10 @@ public class EntitySqlDaoWrapperInvocationHandler<S extends EntitySqlDao<M, E>, 
         // Get the current state before deletion for the history tables
         final Map<Long, M> deletedAndUpdatedEntities = new HashMap<Long, M>();
         if (changeType == ChangeType.DELETE) {
-            // TODO FIXME: this shouldn't happen (auditing for InvoiceTrackingSqlDao is broken)
-            if (!entityIds.isEmpty()) {
-                final List<M> entitiesToBeDeleted = sqlDao.getByIds(entityIds, contextMaybeWithoutAccountRecordId);
-                printSQLWarnings();
-                for (final M entityToBeDeleted : entitiesToBeDeleted) {
-                    deletedAndUpdatedEntities.put(entityToBeDeleted.getRecordId(), entityToBeDeleted);
-                }
+            final List<M> entitiesToBeDeleted = sqlDao.getByIds(entityIds, contextMaybeWithoutAccountRecordId);
+            printSQLWarnings();
+            for (final M entityToBeDeleted : entitiesToBeDeleted) {
+                deletedAndUpdatedEntities.put(entityToBeDeleted.getRecordId(), entityToBeDeleted);
             }
         }
 

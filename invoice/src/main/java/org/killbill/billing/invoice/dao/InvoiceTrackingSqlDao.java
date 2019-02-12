@@ -17,6 +17,7 @@
 
 package org.killbill.billing.invoice.dao;
 
+import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 
@@ -31,14 +32,15 @@ import org.killbill.commons.jdbi.template.KillBillSqlDaoStringTemplate;
 import org.skife.jdbi.v2.sqlobject.Bind;
 import org.skife.jdbi.v2.sqlobject.SqlQuery;
 import org.skife.jdbi.v2.sqlobject.SqlUpdate;
+import org.skife.jdbi.v2.unstable.BindIn;
 
 @KillBillSqlDaoStringTemplate
 public interface InvoiceTrackingSqlDao extends EntitySqlDao<InvoiceTrackingModelDao, Entity> {
 
     @SqlUpdate
     @Audited(ChangeType.DELETE)
-    public void deactivateForInvoice(@Bind("invoiceId") String invoiceId,
-                                     @SmartBindBean final InternalCallContext context);
+    public void deactivateByIds(@BindIn("ids") final Collection<String> ids,
+                                @SmartBindBean final InternalCallContext context);
 
     @SqlQuery
     List<InvoiceTrackingModelDao> getTrackingsByDateRange(@Bind("startDate") final Date startDate,
