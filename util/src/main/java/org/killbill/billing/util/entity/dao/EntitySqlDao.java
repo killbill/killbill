@@ -53,11 +53,12 @@ public interface EntitySqlDao<M extends EntityModelDao<E>, E extends Entity> ext
                          @SmartBindBean final InternalCallContext context);
 
     @SqlBatch
-    // We don't @GetGeneratedKeys here, as it's unclear if the ordering through the batches is respected by all JDBC drivers
     @BatchChunkSize(1000) // Arbitrary value, just a safety mechanism in case of very large datasets
+    @GetGeneratedKeys(value = LongMapper.class)
     @Audited(ChangeType.INSERT)
-    public void create(@SmartBindBean final Iterable<M> entity,
-                       @SmartBindBean final InternalCallContext context);
+    // Note that you cannot rely on the ordering here
+    public List<Long> create(@SmartBindBean final Iterable<M> entity,
+                             @SmartBindBean final InternalCallContext context);
 
     @SqlQuery
     public M getById(@Bind("id") final String id,

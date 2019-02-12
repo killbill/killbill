@@ -214,7 +214,7 @@ public class EntitySqlDaoWrapperInvocationHandler<S extends EntitySqlDao<M, E>, 
         final InternalCallContext contextMaybeWithoutAccountRecordId = retrieveContextFromArguments(args);
         final List<String> entityIds = retrieveEntityIdsFromArguments(method, args);
         // We cannot always infer the TableName from the signature
-        TableName tableName = retrieveTableNameFromArgumentsIfPossible(args);
+        TableName tableName = retrieveTableNameFromArgumentsIfPossible(Arrays.asList(args));
         final ChangeType changeType = auditedAnnotation.value();
         final boolean isBatchQuery = method.getAnnotation(SqlBatch.class) != null;
 
@@ -256,21 +256,24 @@ public class EntitySqlDaoWrapperInvocationHandler<S extends EntitySqlDao<M, E>, 
                     Preconditions.checkState(tableName == entity.getTableName(), "Entities with different TableName: %s", deletedAndUpdatedEntities);
                 }
             }
-        } else if (changeType == ChangeType.INSERT && !isBatchQuery) {
+        } else if (changeType == ChangeType.INSERT) {
             Preconditions.checkNotNull(tableName, "Insert query should have an EntityModelDao as argument: %s", args);
-            // For non-batch inserts, rely on GetGeneratedKeys
-            Preconditions.checkState(entityIds.size() == 1, "Batch insert not annotated with @SqlBatch?");
-            final long accountRecordId = Long.parseLong(obj.toString());
-            entityRecordIds.add(accountRecordId);
+
+            if (isBatchQuery) {
+                entityRecordIds.addAll((Collection<? extends Long>) obj);
+            } else {
+                entityRecordIds.add((Long) obj);
+            }
 
             // Snowflake
             if (TableName.ACCOUNT.equals(tableName)) {
+                Preconditions.checkState(entityIds.size() == 1, "Bulk insert of accounts isn't supported");
                 // AccountModelDao in practice
                 final TimeZoneAwareEntity accountModelDao = retrieveTimeZoneAwareEntityFromArguments(args);
-                context = internalCallContextFactory.createInternalCallContext(accountModelDao, accountRecordId, contextMaybeWithoutAccountRecordId);
+                context = internalCallContextFactory.createInternalCallContext(accountModelDao, entityRecordIds.get(0), contextMaybeWithoutAccountRecordId);
             }
         } else {
-            // For batch inserts and updates, easiest is to go back to the database
+            // For updates, easiest is to go back to the database
             final List<M> retrievedEntities = sqlDao.getByIds(entityIds, contextMaybeWithoutAccountRecordId);
             printSQLWarnings();
             for (final M entity : retrievedEntities) {
@@ -283,6 +286,7 @@ public class EntitySqlDaoWrapperInvocationHandler<S extends EntitySqlDao<M, E>, 
                 }
             }
         }
+        Preconditions.checkState(entityIds.size() == entityRecordIds.size(), "SqlDao method has %s as ids but found %s as recordIds", entityIds, entityRecordIds);
 
         // Context validations
         if (context != null) {
@@ -299,8 +303,8 @@ public class EntitySqlDaoWrapperInvocationHandler<S extends EntitySqlDao<M, E>, 
         if (method.getReturnType().equals(Void.TYPE)) {
             // Return early
             return null;
-        } else if (entityRecordIds.size() > 1) {
-            // Return the raw jdbc response
+        } else if (isBatchQuery) {
+            // Return the raw jdbc response (generated keys)
             return obj;
         } else {
             // PERF: override the return value with the reHydrated entity to avoid an extra 'get' in the transaction,
@@ -395,6 +399,7 @@ public class EntitySqlDaoWrapperInvocationHandler<S extends EntitySqlDao<M, E>, 
 
                     final Collection<Long> auditTargetRecordIds = insertHistories(reHydratedEntities, changeType, context);
                     // Note: audit entries point to the history record id
+                    Preconditions.checkState(auditTargetRecordIds.size() == entityRecordIds.size(), "Wrong number of auditTargetRecordIds=%s (entityRecordIds=%s)", auditTargetRecordIds, entityRecordIds);
                     insertAudits(auditTargetRecordIds, tableName, changeType, context);
 
                     return reHydratedEntities;
@@ -476,16 +481,20 @@ public class EntitySqlDaoWrapperInvocationHandler<S extends EntitySqlDao<M, E>, 
         throw new IllegalStateException("No InternalCallContext specified in args: " + Arrays.toString(args));
     }
 
-    private TableName retrieveTableNameFromArgumentsIfPossible(final Object[] args) {
+    private TableName retrieveTableNameFromArgumentsIfPossible(final Iterable args) {
         TableName tableName = null;
         for (final Object arg : args) {
+            TableName argTableName = null;
             if (arg instanceof EntityModelDao) {
-                final TableName argTableName = ((EntityModelDao) arg).getTableName();
-                if (tableName == null) {
-                    tableName = argTableName;
-                } else {
-                    Preconditions.checkState(tableName == argTableName, "SqlDao method with different TableName in args: %s", args);
-                }
+                argTableName = ((EntityModelDao) arg).getTableName();
+            } else if (arg instanceof Iterable) {
+                argTableName = retrieveTableNameFromArgumentsIfPossible((Iterable) arg);
+            }
+
+            if (tableName == null) {
+                tableName = argTableName;
+            } else if (argTableName != null) {
+                Preconditions.checkState(tableName == argTableName, "SqlDao method with different TableName in args: %s", args);
             }
         }
         return tableName;

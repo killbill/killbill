@@ -43,7 +43,6 @@ import org.killbill.billing.util.entity.dao.DefaultPaginationSqlDaoHelper.Pagina
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Iterables;
 
 public abstract class EntityDaoBase<M extends EntityModelDao<E>, E extends Entity, U extends BillingExceptionBase> implements EntityDao<M, E, U> {
 
@@ -131,12 +130,14 @@ public abstract class EntityDaoBase<M extends EntityModelDao<E>, E extends Entit
         return (F) transactional.create(entity, context);
     }
 
-    protected <F extends EntityModelDao> void bulkCreate(final EntitySqlDao transactional, final Iterable<F> entities, final InternalCallContext context) {
-        if (Iterables.<F>isEmpty(entities)) {
+    protected <F extends EntityModelDao> void bulkCreate(final EntitySqlDao transactional, final List<F> entities, final InternalCallContext context) {
+        if (entities.isEmpty()) {
             return;
+        } else if (entities.size() == 1) {
+            transactional.create(entities.get(0), context);
+        } else {
+            transactional.create(entities, context);
         }
-
-        transactional.create(entities, context);
     }
 
     protected boolean checkEntityAlreadyExists(final EntitySqlDao<M, E> transactional, final M entity, final InternalCallContext context) {
