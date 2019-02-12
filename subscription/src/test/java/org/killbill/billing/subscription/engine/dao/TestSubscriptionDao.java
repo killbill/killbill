@@ -1,6 +1,6 @@
 /*
- * Copyright 2014-2018 Groupon, Inc
- * Copyright 2014-2018 The Billing Project, LLC
+ * Copyright 2014-2019 Groupon, Inc
+ * Copyright 2014-2019 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -22,6 +22,7 @@ import java.util.UUID;
 
 import org.joda.time.DateTime;
 import org.killbill.billing.ErrorCode;
+import org.killbill.billing.ObjectType;
 import org.killbill.billing.account.api.Account;
 import org.killbill.billing.account.api.AccountData;
 import org.killbill.billing.api.TestApiListener.NextEvent;
@@ -40,7 +41,14 @@ import org.killbill.billing.subscription.events.SubscriptionBaseEvent;
 import org.killbill.billing.subscription.events.user.ApiEventBuilder;
 import org.killbill.billing.subscription.events.user.ApiEventCreate;
 import org.killbill.billing.util.UUIDs;
+import org.killbill.billing.util.api.AuditLevel;
+import org.killbill.billing.util.audit.AuditLog;
+import org.killbill.billing.util.audit.ChangeType;
+import org.killbill.billing.util.cache.CacheControllerDispatcher;
 import org.killbill.billing.util.entity.dao.DBRouterUntyped;
+import org.killbill.billing.util.entity.dao.EntitySqlDaoTransactionWrapper;
+import org.killbill.billing.util.entity.dao.EntitySqlDaoTransactionalJdbiWrapper;
+import org.killbill.billing.util.entity.dao.EntitySqlDaoWrapperFactory;
 import org.killbill.commons.profiling.Profiling.WithProfilingCallback;
 import org.mockito.Mockito;
 import org.skife.jdbi.v2.IDBI;
@@ -56,6 +64,7 @@ import static org.testng.Assert.assertEquals;
 
 public class TestSubscriptionDao extends SubscriptionTestSuiteWithEmbeddedDB {
 
+    private EntitySqlDaoTransactionalJdbiWrapper transactionalSqlDao;
     protected UUID accountId;
 
     @Override
@@ -72,6 +81,8 @@ public class TestSubscriptionDao extends SubscriptionTestSuiteWithEmbeddedDB {
         final AccountData accountData = subscriptionTestInitializer.initAccountData(clock);
         final Account account = createAccount(accountData);
         accountId = account.getId();
+
+        transactionalSqlDao = new EntitySqlDaoTransactionalJdbiWrapper(dbi, roDbi, clock, new CacheControllerDispatcher(), nonEntityDao, internalCallContextFactory);
     }
 
     @Override // to ignore events
@@ -154,26 +165,55 @@ public class TestSubscriptionDao extends SubscriptionTestSuiteWithEmbeddedDB {
         assertEquals(result.size(), 1);
         assertEquals(result.get(0).getExternalKey(), bundle.getExternalKey());
 
+        final List<AuditLog> auditLogsBeforeRenaming = auditUserApi.getAuditLogs(bundle.getId(), ObjectType.BUNDLE, AuditLevel.FULL, callContext);
+        assertEquals(auditLogsBeforeRenaming.size(), 1);
+        assertEquals(auditLogsBeforeRenaming.get(0).getChangeType(), ChangeType.INSERT);
+
         // Update key to 'internal KB value 'kbtsf-12345:'
         dao.updateBundleExternalKey(bundle.getId(), "kbtsf-12345:" + bundle.getExternalKey(), internalCallContext);
         final List<SubscriptionBaseBundle> result2 = dao.getSubscriptionBundlesForKey(externalKey, internalCallContext);
         assertEquals(result2.size(), 1);
+
+        final List<AuditLog> auditLogsAfterRenaming = auditUserApi.getAuditLogs(bundle.getId(), ObjectType.BUNDLE, AuditLevel.FULL, callContext);
+        assertEquals(auditLogsAfterRenaming.size(), 2);
+        assertEquals(auditLogsAfterRenaming.get(0).getChangeType(), ChangeType.INSERT);
+        assertEquals(auditLogsAfterRenaming.get(1).getChangeType(), ChangeType.UPDATE);
 
         // Create new bundle with original key, verify all results show original key, stripping down internal prefix
         final DefaultSubscriptionBaseBundle bundleDef2 = new DefaultSubscriptionBaseBundle(externalKey, accountId, startDate, startDate, createdDate, createdDate);
         final SubscriptionBaseBundle bundle2 = dao.createSubscriptionBundle(bundleDef2, catalog, true, internalCallContext);
         final List<SubscriptionBaseBundle> result3 = dao.getSubscriptionBundlesForKey(externalKey, internalCallContext);
         assertEquals(result3.size(), 2);
+        assertEquals(result3.get(0).getId(), bundle.getId());
         assertEquals(result3.get(0).getExternalKey(), bundle2.getExternalKey());
+        assertEquals(result3.get(1).getId(), bundle2.getId());
         assertEquals(result3.get(1).getExternalKey(), bundle2.getExternalKey());
+
+        final List<AuditLog> auditLogs2BeforeRenaming = auditUserApi.getAuditLogs(bundle2.getId(), ObjectType.BUNDLE, AuditLevel.FULL, callContext);
+        assertEquals(auditLogs2BeforeRenaming.size(), 1);
+        assertEquals(auditLogs2BeforeRenaming.get(0).getChangeType(), ChangeType.INSERT);
 
         // This time we call the lower SqlDao to rename the bundle automatically and verify we still get same # results,
         // with original key
-        dbi.onDemand(BundleSqlDao.class).renameBundleExternalKey(externalKey, "foo", internalCallContext);
+        transactionalSqlDao.execute(false,
+                                    new EntitySqlDaoTransactionWrapper<Void>() {
+                                        @Override
+                                        public Void inTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory) throws Exception {
+                                            entitySqlDaoWrapperFactory.become(BundleSqlDao.class).renameBundleExternalKey(ImmutableList.<String>of(bundle2.getId().toString()), "foo", internalCallContext);
+                                            return null;
+                                        }
+                                    });
         final List<SubscriptionBaseBundle> result4 = dao.getSubscriptionBundlesForKey(externalKey, internalCallContext);
         assertEquals(result4.size(), 2);
         assertEquals(result4.get(0).getExternalKey(), bundle2.getExternalKey());
+        assertEquals(result4.get(0).getId(), bundle.getId());
         assertEquals(result4.get(1).getExternalKey(), bundle2.getExternalKey());
+        assertEquals(result4.get(1).getId(), bundle2.getId());
+
+        final List<AuditLog> auditLogs2AfterRenaming = auditUserApi.getAuditLogs(bundle2.getId(), ObjectType.BUNDLE, AuditLevel.FULL, callContext);
+        assertEquals(auditLogs2AfterRenaming.size(), 2);
+        assertEquals(auditLogs2AfterRenaming.get(0).getChangeType(), ChangeType.INSERT);
+        assertEquals(auditLogs2AfterRenaming.get(1).getChangeType(), ChangeType.UPDATE);
 
         // Create bundle one more time
         final DefaultSubscriptionBaseBundle bundleDef3 = new DefaultSubscriptionBaseBundle(externalKey, accountId, startDate, startDate, createdDate, createdDate);
