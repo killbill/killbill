@@ -119,27 +119,27 @@ public class TestStringTemplateInheritance extends UtilTestSuiteNoDB {
                                                                "where t.tenant_record_id = :tenantRecordId\r?\n" +
                                                                "limit 1\r?\n" +
                                                                ";");
-        assertPattern(kombucha.getInstanceOf("addHistoryFromTransaction").render(), "insert into kombucha_history \\(\r?\n" +
-                                                                                    "  id\r?\n" +
-                                                                                    ", target_record_id\r?\n" +
-                                                                                    ", change_type\r?\n" +
-                                                                                    ", tea\r?\n" +
-                                                                                    ", mushroom\r?\n" +
-                                                                                    ", sugar\r?\n" +
-                                                                                    ", account_record_id\r?\n" +
-                                                                                    ", tenant_record_id\r?\n" +
-                                                                                    "\\)\r?\n" +
-                                                                                    "values \\(\r?\n" +
-                                                                                    "  :id\r?\n" +
-                                                                                    ", :targetRecordId\r?\n" +
-                                                                                    ", :changeType\r?\n" +
-                                                                                    ", :tea\r?\n" +
-                                                                                    ", :mushroom\r?\n" +
-                                                                                    ", :sugar\r?\n" +
-                                                                                    ", :accountRecordId\r?\n" +
-                                                                                    ", :tenantRecordId\r?\n" +
-                                                                                    "\\)\r?\n" +
-                                                                                    ";");
+        assertPattern(kombucha.getInstanceOf("addHistoriesFromTransaction").render(), "insert into kombucha_history \\(\r?\n" +
+                                                                                      "  id\r?\n" +
+                                                                                      ", target_record_id\r?\n" +
+                                                                                      ", change_type\r?\n" +
+                                                                                      ", tea\r?\n" +
+                                                                                      ", mushroom\r?\n" +
+                                                                                      ", sugar\r?\n" +
+                                                                                      ", account_record_id\r?\n" +
+                                                                                      ", tenant_record_id\r?\n" +
+                                                                                      "\\)\r?\n" +
+                                                                                      "values \\(\r?\n" +
+                                                                                      "  :id\r?\n" +
+                                                                                      ", :targetRecordId\r?\n" +
+                                                                                      ", :changeType\r?\n" +
+                                                                                      ", :tea\r?\n" +
+                                                                                      ", :mushroom\r?\n" +
+                                                                                      ", :sugar\r?\n" +
+                                                                                      ", :accountRecordId\r?\n" +
+                                                                                      ", :tenantRecordId\r?\n" +
+                                                                                      "\\)\r?\n" +
+                                                                                      ";");
 
         assertPattern(kombucha.getInstanceOf("insertAuditsFromTransaction").render(), "insert into audit_log \\(\r?\n" +
                                                                                       "id\r?\n" +

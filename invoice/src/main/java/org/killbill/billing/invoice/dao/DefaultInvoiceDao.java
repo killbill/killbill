@@ -363,7 +363,7 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
                     existingInvoiceMetadata = existingInvoiceMetadataOrNull;
                 }
 
-                final Collection<InvoiceItemModelDao> invoiceItemsToCreate = new LinkedList<InvoiceItemModelDao>();
+                final List<InvoiceItemModelDao> invoiceItemsToCreate = new LinkedList<InvoiceItemModelDao>();
                 for (final InvoiceModelDao invoiceModelDao : invoices) {
                     invoiceByInvoiceId.put(invoiceModelDao.getId(), invoiceModelDao);
                     final boolean isNotShellInvoice = invoiceIdsReferencedFromItems.remove(invoiceModelDao.getId());
@@ -1160,7 +1160,7 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
     }
 
     private void createInvoiceItemsFromTransaction(final InvoiceItemSqlDao invoiceItemSqlDao,
-                                                   final Iterable<InvoiceItemModelDao> invoiceItemModelDaos,
+                                                   final List<InvoiceItemModelDao> invoiceItemModelDaos,
                                                    final InternalCallContext context) throws EntityPersistenceException, InvoiceApiException {
         for (final InvoiceItemModelDao invoiceItemModelDao : invoiceItemModelDaos) {
             validateInvoiceItemToBeAdjustedIfNeeded(invoiceItemSqlDao, invoiceItemModelDao, context);
