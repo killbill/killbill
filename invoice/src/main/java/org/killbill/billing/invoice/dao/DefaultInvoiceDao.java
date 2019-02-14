@@ -773,7 +773,7 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
                     throw new InvoiceApiException(ErrorCode.PAYMENT_NO_SUCH_PAYMENT, paymentId);
                 }
 
-                transactional.updateAttempt(invoicePayment.getRecordId(),
+                transactional.updateAttempt(invoicePayment.getId().toString(),
                                             invoicePayment.getPaymentId().toString(),
                                             invoicePayment.getPaymentDate().toDate(),
                                             invoicePayment.getAmount(),
@@ -932,7 +932,7 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
                     if (existingAttempt == null) {
                         createAndRefresh(transactional, invoicePayment, context);
                     } else {
-                        transactional.updateAttempt(existingAttempt.getRecordId(),
+                        transactional.updateAttempt(existingAttempt.getId().toString(),
                                                     invoicePayment.getPaymentId().toString(),
                                                     invoicePayment.getPaymentDate().toDate(),
                                                     invoicePayment.getAmount(),

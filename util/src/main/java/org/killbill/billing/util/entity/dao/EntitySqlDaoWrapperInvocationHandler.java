@@ -59,6 +59,7 @@ import org.skife.jdbi.v2.exceptions.DBIException;
 import org.skife.jdbi.v2.exceptions.StatementException;
 import org.skife.jdbi.v2.sqlobject.Bind;
 import org.skife.jdbi.v2.sqlobject.SqlBatch;
+import org.skife.jdbi.v2.sqlobject.SqlQuery;
 import org.skife.jdbi.v2.unstable.BindIn;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -184,6 +185,9 @@ public class EntitySqlDaoWrapperInvocationHandler<S extends EntitySqlDao<M, E>, 
     private Object invokeSafely(final Method method, final Object[] args) throws Throwable {
         final Audited auditedAnnotation = method.getAnnotation(Audited.class);
 
+        final boolean isROQuery = method.getAnnotation(SqlQuery.class) != null;
+        Preconditions.checkState(auditedAnnotation != null || isROQuery, "Non-@SqlQuery method %s without @Audited annotation", method);
+
         // This can't be AUDIT'ed and CACHABLE'd at the same time as we only cache 'get'
         if (auditedAnnotation != null) {
             return invokeWithAuditAndHistory(auditedAnnotation, method, args);
@@ -213,6 +217,7 @@ public class EntitySqlDaoWrapperInvocationHandler<S extends EntitySqlDao<M, E>, 
     private Object invokeWithAuditAndHistory(final Audited auditedAnnotation, final Method method, final Object[] args) throws Throwable {
         final InternalCallContext contextMaybeWithoutAccountRecordId = retrieveContextFromArguments(args);
         final List<String> entityIds = retrieveEntityIdsFromArguments(method, args);
+        Preconditions.checkState(!entityIds.isEmpty(), "@Audited Sql method must have entities (@Bind(\"id\")) as arguments");
         // We cannot always infer the TableName from the signature
         TableName tableName = retrieveTableNameFromArgumentsIfPossible(Arrays.asList(args));
         final ChangeType changeType = auditedAnnotation.value();
