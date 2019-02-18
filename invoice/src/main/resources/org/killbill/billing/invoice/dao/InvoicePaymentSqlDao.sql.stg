@@ -131,7 +131,7 @@ updateAttempt() ::= <<
     payment_cookie_id = :paymentCookieId,
     linked_invoice_payment_id := :linkedInvoicePaymentId,
     success := :success
-    WHERE record_id = :recordId
+    WHERE id = :id
     <AND_CHECK_TENANT("")>
     ;
 >>

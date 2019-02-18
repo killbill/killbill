@@ -323,9 +323,7 @@ public class DefaultSubscriptionDao extends EntityDaoBase<SubscriptionBundleMode
                                 throw new SubscriptionBaseApiException(ErrorCode.SUB_CREATE_ACTIVE_BUNDLE_KEY_EXISTS, bundle.getExternalKey());
                             } else if (renameCancelledBundleIfExist) {
                                 log.info("Renaming bundles with externalKey='{}', prefix='cncl'", bundle.getExternalKey());
-                                // Note that if bundle belongs to a different account, context is not the context for this target account,
-                                // but the underlying sql operation does not use the account info
-                                bundleSqlDao.renameBundleExternalKey(bundle.getExternalKey(), "cncl", context);
+                                renameBundleExternalKey(bundleSqlDao, bundle.getExternalKey(), "cncl", context);
                             } /* else {
                                 Code will throw SQLIntegrityConstraintViolationException because of unique constraint on externalKey; might be worth having an ErrorCode just for that
                             } */
@@ -344,6 +342,22 @@ public class DefaultSubscriptionDao extends EntityDaoBase<SubscriptionBundleMode
                 return SubscriptionBundleModelDao.toSubscriptionBundle(result);
             }
         });
+    }
+
+    // Note that if bundle belongs to a different account, context is not the context for this target account,
+    // but the underlying sql operation does not use the account info
+    private void renameBundleExternalKey(final BundleSqlDao bundleSqlDao, final String externalKey, final String prefix, final InternalCallContext context) {
+        final List<SubscriptionBundleModelDao> bundleModelDaos = bundleSqlDao.getBundlesForKey(externalKey, context);
+        if (!bundleModelDaos.isEmpty()) {
+            final Collection<String> bundleIdsToRename = Collections2.<SubscriptionBundleModelDao, String>transform(bundleModelDaos,
+                                                                                                                    new Function<SubscriptionBundleModelDao, String>() {
+                                                                                                                        @Override
+                                                                                                                        public String apply(final SubscriptionBundleModelDao input) {
+                                                                                                                            return input.getId().toString();
+                                                                                                                        }
+                                                                                                                    });
+            bundleSqlDao.renameBundleExternalKey(bundleIdsToRename, prefix, context);
+        }
     }
 
     @Override
@@ -1012,7 +1026,7 @@ public class DefaultSubscriptionDao extends EntityDaoBase<SubscriptionBundleMode
 
                 // Rename externalKey from source bundle
                 final BundleSqlDao bundleSqlDao = entitySqlDaoWrapperFactory.become(BundleSqlDao.class);
-                bundleSqlDao.renameBundleExternalKey(bundleTransferData.getData().getExternalKey(), "tsf", fromContext);
+                renameBundleExternalKey(bundleSqlDao, bundleTransferData.getData().getExternalKey(), "tsf", fromContext);
 
                 final SubscriptionEventSqlDao transactional = entitySqlDaoWrapperFactory.become(SubscriptionEventSqlDao.class);
                 transferBundleDataFromTransaction(bundleTransferData, transactional, entitySqlDaoWrapperFactory, toContext);
