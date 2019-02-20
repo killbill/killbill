@@ -72,8 +72,7 @@ public class CallableWithRequestData<T> implements Callable<T> {
             UUIDs.setRandom(null);
             ThreadContext.unbindSecurityManager();
             ThreadContext.unbindSubject();
-            // Reset the MDC as before the call, in case the plugin fiddle'd with it
-            MDC.setContextMap(mdcContextMap);
+            MDC.clear();
         }
     }
 }
