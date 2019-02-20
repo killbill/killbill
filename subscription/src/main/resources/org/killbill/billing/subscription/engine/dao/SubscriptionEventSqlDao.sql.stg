@@ -1,6 +1,7 @@
 import "org/killbill/billing/util/entity/dao/EntitySqlDao.sql.stg"
 
 tableName() ::= "subscription_events"
+historyTableName() ::= "subscription_event_history"
 
 andCheckSoftDeletionWithComma(prefix) ::= "and <prefix>is_active"
 
