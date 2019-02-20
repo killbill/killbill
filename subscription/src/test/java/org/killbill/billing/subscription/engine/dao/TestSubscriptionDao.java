@@ -37,12 +37,18 @@ import org.killbill.billing.subscription.api.user.DefaultSubscriptionBaseWithAdd
 import org.killbill.billing.subscription.api.user.SubscriptionBaseApiException;
 import org.killbill.billing.subscription.api.user.SubscriptionBaseBundle;
 import org.killbill.billing.subscription.api.user.SubscriptionBuilder;
+import org.killbill.billing.subscription.engine.dao.model.SubscriptionBundleModelDao;
+import org.killbill.billing.subscription.engine.dao.model.SubscriptionEventModelDao;
+import org.killbill.billing.subscription.engine.dao.model.SubscriptionModelDao;
 import org.killbill.billing.subscription.events.SubscriptionBaseEvent;
+import org.killbill.billing.subscription.events.SubscriptionBaseEvent.EventType;
 import org.killbill.billing.subscription.events.user.ApiEventBuilder;
 import org.killbill.billing.subscription.events.user.ApiEventCreate;
+import org.killbill.billing.subscription.events.user.ApiEventType;
 import org.killbill.billing.util.UUIDs;
 import org.killbill.billing.util.api.AuditLevel;
 import org.killbill.billing.util.audit.AuditLog;
+import org.killbill.billing.util.audit.AuditLogWithHistory;
 import org.killbill.billing.util.audit.ChangeType;
 import org.killbill.billing.util.cache.CacheControllerDispatcher;
 import org.killbill.billing.util.entity.dao.DBRouterUntyped;
@@ -226,6 +232,86 @@ public class TestSubscriptionDao extends SubscriptionTestSuiteWithEmbeddedDB {
     }
 
     @Test(groups = "slow")
+    public void testWithAuditAndHistory() throws SubscriptionBaseApiException {
+        final String externalKey = "54341455sttfs1";
+        final DateTime startDate = clock.getUTCNow();
+
+        final DefaultSubscriptionBaseBundle bundleDef = new DefaultSubscriptionBaseBundle(externalKey, accountId, startDate, startDate, startDate, startDate);
+        final SubscriptionBaseBundle bundle = dao.createSubscriptionBundle(bundleDef, catalog, true, internalCallContext);
+
+        final List<AuditLogWithHistory> bundleHistory1 =  dao.getSubscriptionBundleAuditLogsWithHistoryForId(bundle.getId(), AuditLevel.FULL, internalCallContext);
+        assertEquals(bundleHistory1.size(), 1);
+        final AuditLogWithHistory bundleHistoryRow1 = bundleHistory1.get(0);
+        assertEquals(bundleHistoryRow1.getChangeType(), ChangeType.INSERT);
+        final SubscriptionBundleModelDao historyRow1 = (SubscriptionBundleModelDao) bundleHistoryRow1.getEntity();
+        assertEquals(historyRow1.getExternalKey(), bundle.getExternalKey());
+        assertEquals(historyRow1.getAccountId(), bundle.getAccountId());
+
+        dao.updateBundleExternalKey(bundle.getId(), "you changed me!", internalCallContext);
+        final List<AuditLogWithHistory> bundleHistory2 =  dao.getSubscriptionBundleAuditLogsWithHistoryForId(bundle.getId(), AuditLevel.FULL, internalCallContext);
+        assertEquals(bundleHistory2.size(), 2);
+        final AuditLogWithHistory bundleHistoryRow2 = bundleHistory2.get(1);
+        assertEquals(bundleHistoryRow2.getChangeType(), ChangeType.UPDATE);
+        final SubscriptionBundleModelDao historyRow2 = (SubscriptionBundleModelDao) bundleHistoryRow2.getEntity();
+        assertEquals(historyRow2.getExternalKey(), "you changed me!");
+        assertEquals(historyRow2.getAccountId(), bundle.getAccountId());
+
+        final SubscriptionBuilder builder = new SubscriptionBuilder()
+                .setId(UUIDs.randomUUID())
+                .setBundleId(bundle.getId())
+                .setBundleExternalKey(bundle.getExternalKey())
+                .setCategory(ProductCategory.BASE)
+                .setBundleStartDate(startDate)
+                .setAlignStartDate(startDate)
+                .setMigrated(false);
+
+        final ApiEventBuilder createBuilder = new ApiEventBuilder()
+                .setSubscriptionId(builder.getId())
+                .setEventPlan("shotgun-monthly")
+                .setEventPlanPhase("shotgun-monthly-trial")
+                .setEventPriceList(DefaultPriceListSet.DEFAULT_PRICELIST_NAME)
+                .setEffectiveDate(startDate)
+                .setFromDisk(true);
+        final SubscriptionBaseEvent creationEvent = new ApiEventCreate(createBuilder);
+
+        final DefaultSubscriptionBase subscription = new DefaultSubscriptionBase(builder);
+        testListener.pushExpectedEvents(NextEvent.CREATE);
+        final SubscriptionBaseWithAddOns subscriptionBaseWithAddOns = new DefaultSubscriptionBaseWithAddOns(bundle,
+                                                                                                            ImmutableList.<SubscriptionBase>of(subscription));
+
+        final List<SubscriptionBaseEvent> resultSubscriptions = dao.createSubscriptionsWithAddOns(ImmutableList.<SubscriptionBaseWithAddOns>of(subscriptionBaseWithAddOns),
+                                                                                                 ImmutableMap.<UUID, List<SubscriptionBaseEvent>>of(subscription.getId(), ImmutableList.<SubscriptionBaseEvent>of(creationEvent)),
+                                                                                                 catalog,
+                                                                                                 internalCallContext);
+        assertListenerStatus();
+        assertEquals(resultSubscriptions.size(), 1);
+        final SubscriptionBaseEvent subscriptionBaseEvent = resultSubscriptions.get(0);
+
+
+        final List<AuditLogWithHistory> subscriptionHistory =  dao.getSubscriptionAuditLogsWithHistoryForId(subscriptionBaseEvent.getSubscriptionId(), AuditLevel.FULL, internalCallContext);
+        assertEquals(subscriptionHistory.size(), 1);
+
+        final AuditLogWithHistory subscriptionHistoryRow1 = subscriptionHistory.get(0);
+        assertEquals(subscriptionHistoryRow1.getChangeType(), ChangeType.INSERT);
+        final SubscriptionModelDao subHistoryRow1 = (SubscriptionModelDao) subscriptionHistoryRow1.getEntity();
+        assertEquals(subHistoryRow1.getBundleId(), bundle.getId());
+        assertEquals(subHistoryRow1.getCategory(), ProductCategory.BASE);
+
+
+        final List<AuditLogWithHistory> subscriptionEventHistory =  dao.getSubscriptionEventAuditLogsWithHistoryForId(subscriptionBaseEvent.getId(), AuditLevel.FULL, internalCallContext);
+
+        final AuditLogWithHistory subscriptionEventHistoryRow1 = subscriptionEventHistory.get(0);
+        assertEquals(subscriptionEventHistoryRow1.getChangeType(), ChangeType.INSERT);
+        final SubscriptionEventModelDao subEventHistoryRow1 = (SubscriptionEventModelDao) subscriptionEventHistoryRow1.getEntity();
+        assertEquals(subEventHistoryRow1.getSubscriptionId(), subscriptionBaseEvent.getSubscriptionId());
+        assertEquals(subEventHistoryRow1.getEventType(), EventType.API_USER);
+        assertEquals(subEventHistoryRow1.getUserType(), ApiEventType.CREATE);
+        assertEquals(subEventHistoryRow1.getPlanName(), "shotgun-monthly");
+        assertEquals(subEventHistoryRow1.getIsActive(), true);
+    }
+
+
+    @Test(groups = "slow")
     public void testDirtyFlag() throws Throwable {
         final IDBI dbiSpy = Mockito.spy(dbi);
         final IDBI roDbiSpy = Mockito.spy(roDbi);
@@ -237,6 +323,7 @@ public class TestSubscriptionDao extends SubscriptionTestSuiteWithEmbeddedDB {
                                                                            bus,
                                                                            controlCacheDispatcher,
                                                                            nonEntityDao,
+                                                                           auditDao,
                                                                            internalCallContextFactory);
         Mockito.verify(dbiSpy, Mockito.times(0)).open();
         Mockito.verify(roDbiSpy, Mockito.times(0)).open();

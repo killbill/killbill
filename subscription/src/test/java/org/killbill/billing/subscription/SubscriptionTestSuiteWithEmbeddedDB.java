@@ -42,6 +42,7 @@ import org.killbill.billing.subscription.engine.addon.AddonUtils;
 import org.killbill.billing.subscription.engine.dao.SubscriptionDao;
 import org.killbill.billing.subscription.glue.TestDefaultSubscriptionModuleWithEmbeddedDB;
 import org.killbill.billing.util.api.AuditUserApi;
+import org.killbill.billing.util.audit.dao.AuditDao;
 import org.killbill.billing.util.config.definition.SubscriptionConfig;
 import org.killbill.billing.util.dao.NonEntityDao;
 import org.killbill.bus.api.PersistentBus;
@@ -94,6 +95,8 @@ public class SubscriptionTestSuiteWithEmbeddedDB extends GuicyKillbillTestSuiteW
     protected SubscriptionTestInitializer subscriptionTestInitializer;
     @Inject
     protected AuditUserApi auditUserApi;
+    @Inject
+    protected AuditDao auditDao;
 
     @Inject
     protected NonEntityDao nonEntityDao;
