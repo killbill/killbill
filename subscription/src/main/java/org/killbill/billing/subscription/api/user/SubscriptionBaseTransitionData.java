@@ -250,7 +250,7 @@ public class SubscriptionBaseTransitionData implements SubscriptionBaseTransitio
     public static SubscriptionBaseTransitionType toSubscriptionTransitionType(final EventType eventType, final ApiEventType apiEventType) {
         switch (eventType) {
             case API_USER:
-                return apiEventType.getSubscriptionTransitionType();
+                return toSubscriptionBaseTransitionType(apiEventType);
             case PHASE:
                 return SubscriptionBaseTransitionType.PHASE;
             case BCD_UPDATE:
@@ -259,6 +259,26 @@ public class SubscriptionBaseTransitionData implements SubscriptionBaseTransitio
                 throw new SubscriptionBaseError("Unexpected event type " + eventType);
         }
     }
+
+    private static SubscriptionBaseTransitionType toSubscriptionBaseTransitionType(final ApiEventType e) {
+        switch (e) {
+            case CREATE:
+                return SubscriptionBaseTransitionType.CREATE;
+            case CHANGE:
+                return SubscriptionBaseTransitionType.CHANGE;
+            case TRANSFER:
+                return SubscriptionBaseTransitionType.TRANSFER;
+            case CANCEL:
+                return SubscriptionBaseTransitionType.CANCEL;
+            case UNDO_CHANGE:
+                return SubscriptionBaseTransitionType.UNDO_CHANGE;
+            case UNCANCEL:
+                return SubscriptionBaseTransitionType.UNCANCEL;
+            default:
+                throw new IllegalStateException(String.format("Unknown apiEventType %s", e));
+        }
+    }
+
     @Override
     public DateTime getCreatedDate() {
         return createdDate;

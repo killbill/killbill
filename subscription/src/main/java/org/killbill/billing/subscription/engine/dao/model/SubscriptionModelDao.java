@@ -193,7 +193,7 @@ public class SubscriptionModelDao extends EntityModelDaoBase implements EntityMo
 
     @Override
     public TableName getHistoryTableName() {
-        return null;
+        return TableName.SUBSCRIPTION_HISTORY;
     }
 
 }

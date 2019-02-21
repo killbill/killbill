@@ -1,6 +1,7 @@
 import "org/killbill/billing/util/entity/dao/EntitySqlDao.sql.stg"
 
 tableName() ::= "subscriptions"
+historyTableName() ::= "subscription_history"
 
 tableFields(prefix) ::= <<
   <prefix>bundle_id

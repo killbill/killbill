@@ -1,7 +1,7 @@
 import "org/killbill/billing/util/entity/dao/EntitySqlDao.sql.stg"
 
 tableName() ::= "bundles"
-
+historyTableName() ::= "bundle_history"
 
 tableFields(prefix) ::= <<
   <prefix>external_key
