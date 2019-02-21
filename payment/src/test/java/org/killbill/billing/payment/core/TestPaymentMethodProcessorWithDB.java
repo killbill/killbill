@@ -99,7 +99,6 @@ public class TestPaymentMethodProcessorWithDB extends PaymentTestSuiteWithEmbedd
         Assert.assertEquals(history2.getAccountRecordId(), paymentMethodModelDao.getAccountRecordId());
         Assert.assertEquals(history2.getTenantRecordId(), paymentMethodModelDao.getTenantRecordId());
         Assert.assertEquals(history2.getExternalKey(), paymentMethodModelDao.getExternalKey());
-        // Note: upon deletion, the recorded state is the same as before the delete
-        Assert.assertTrue(history2.isActive());
+        Assert.assertFalse(history2.isActive());
     }
 }
