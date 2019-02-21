@@ -333,7 +333,10 @@ public class InternalCallContextFactory {
             MDC.put(MDC_KB_ACCOUNT_RECORD_ID, String.valueOf(accountRecordId));
         }
         MDC.put(MDC_KB_TENANT_RECORD_ID, String.valueOf(tenantRecordId));
-        MDC.put(MDC_KB_USER_TOKEN, userToken != null ? userToken.toString() : null);
+        // Make sure that if there is already a userToken in the MDC context, don't overwrite it
+        if (userToken != null) {
+            MDC.put(MDC_KB_USER_TOKEN, userToken.toString());
+        }
     }
 
     //
