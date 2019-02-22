@@ -32,6 +32,7 @@ import javax.annotation.Nullable;
 import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
 import org.killbill.billing.ErrorCode;
+import org.killbill.billing.ObjectType;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.catalog.api.BillingActionPolicy;
@@ -68,6 +69,8 @@ import org.killbill.billing.subscription.engine.dao.model.SubscriptionBundleMode
 import org.killbill.billing.subscription.events.SubscriptionBaseEvent;
 import org.killbill.billing.subscription.events.bcd.BCDEvent;
 import org.killbill.billing.subscription.events.bcd.BCDEventData;
+import org.killbill.billing.util.api.AuditLevel;
+import org.killbill.billing.util.audit.AuditLogWithHistory;
 import org.killbill.billing.util.cache.AccountIdFromBundleIdCacheLoader;
 import org.killbill.billing.util.cache.BundleIdFromSubscriptionIdCacheLoader;
 import org.killbill.billing.util.cache.Cachable.CacheType;
@@ -475,6 +478,21 @@ public class DefaultSubscriptionInternalApi extends DefaultSubscriptionBaseCreat
             throw new SubscriptionBaseApiException(ErrorCode.SUB_GET_INVALID_BUNDLE_ID, bundleId);
         }
         return accountId;
+    }
+
+    @Override
+    public List<AuditLogWithHistory> getSubscriptionBundleAuditLogsWithHistoryForId(final UUID bundleId, final AuditLevel auditLevel, final TenantContext tenantContext) {
+        return dao.getSubscriptionBundleAuditLogsWithHistoryForId(bundleId, auditLevel, internalCallContextFactory.createInternalTenantContext(bundleId, ObjectType.BUNDLE, tenantContext));
+    }
+
+    @Override
+    public List<AuditLogWithHistory> getSubscriptionAuditLogsWithHistoryForId(final UUID subscriptionId, final AuditLevel auditLevel, final TenantContext tenantContext) {
+        return dao.getSubscriptionAuditLogsWithHistoryForId(subscriptionId, auditLevel, internalCallContextFactory.createInternalTenantContext(subscriptionId, ObjectType.SUBSCRIPTION, tenantContext));
+    }
+
+    @Override
+    public List<AuditLogWithHistory> getSubscriptionEventAuditLogsWithHistoryForId(final UUID eventId, final AuditLevel auditLevel, final TenantContext tenantContext) {
+        return dao.getSubscriptionEventAuditLogsWithHistoryForId(eventId, auditLevel, internalCallContextFactory.createInternalTenantContext(eventId, ObjectType.SUBSCRIPTION_EVENT, tenantContext));
     }
 
     private CacheLoaderArgument createAccountIdFromBundleIdCacheLoaderArgument(final InternalTenantContext internalTenantContext) {

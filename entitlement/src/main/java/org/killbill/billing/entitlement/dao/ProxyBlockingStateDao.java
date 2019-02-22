@@ -45,6 +45,9 @@ import org.killbill.billing.platform.api.KillbillService.KILLBILL_SERVICES;
 import org.killbill.billing.subscription.api.SubscriptionBase;
 import org.killbill.billing.subscription.api.SubscriptionBaseInternalApi;
 import org.killbill.billing.subscription.api.user.SubscriptionBaseApiException;
+import org.killbill.billing.util.api.AuditLevel;
+import org.killbill.billing.util.audit.AuditLogWithHistory;
+import org.killbill.billing.util.audit.dao.AuditDao;
 import org.killbill.billing.util.cache.CacheControllerDispatcher;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.billing.util.customfield.ShouldntHappenException;
@@ -176,11 +179,11 @@ public class ProxyBlockingStateDao implements BlockingStateDao {
     @Inject
     public ProxyBlockingStateDao(final EventsStreamBuilder eventsStreamBuilder, final SubscriptionBaseInternalApi subscriptionBaseInternalApi,
                                  final IDBI dbi, @Named(MAIN_RO_IDBI_NAMED) final IDBI roDbi, final Clock clock, final NotificationQueueService notificationQueueService, final PersistentBus eventBus,
-                                 final CacheControllerDispatcher cacheControllerDispatcher, final NonEntityDao nonEntityDao, final InternalCallContextFactory internalCallContextFactory) {
+                                 final CacheControllerDispatcher cacheControllerDispatcher, final NonEntityDao nonEntityDao, final AuditDao auditDao, final InternalCallContextFactory internalCallContextFactory) {
         this.eventsStreamBuilder = eventsStreamBuilder;
         this.subscriptionInternalApi = subscriptionBaseInternalApi;
         this.clock = clock;
-        this.delegate = new DefaultBlockingStateDao(dbi, roDbi, clock, notificationQueueService, eventBus, cacheControllerDispatcher, nonEntityDao, internalCallContextFactory);
+        this.delegate = new DefaultBlockingStateDao(dbi, roDbi, clock, notificationQueueService, eventBus, cacheControllerDispatcher, nonEntityDao, auditDao, internalCallContextFactory);
     }
 
     @Override
@@ -242,6 +245,11 @@ public class ProxyBlockingStateDao implements BlockingStateDao {
     @Override
     public void unactiveBlockingState(final UUID blockableId, final InternalCallContext context) {
         delegate.unactiveBlockingState(blockableId, context);
+    }
+
+    @Override
+    public List<AuditLogWithHistory> getBlockingStateAuditLogsWithHistoryForId(final UUID blockableId, final AuditLevel auditLevel, final InternalTenantContext context) {
+        return delegate.getBlockingStateAuditLogsWithHistoryForId(blockableId, auditLevel, context);
     }
 
     // Add blocking states for add-ons, which would be impacted by a future cancellation or change of their base plan

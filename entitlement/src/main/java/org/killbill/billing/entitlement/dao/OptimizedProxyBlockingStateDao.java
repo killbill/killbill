@@ -35,6 +35,7 @@ import org.killbill.billing.entitlement.engine.core.EventsStreamBuilder;
 import org.killbill.billing.subscription.api.SubscriptionBase;
 import org.killbill.billing.subscription.api.SubscriptionBaseInternalApi;
 import org.killbill.billing.subscription.api.user.SubscriptionBaseBundle;
+import org.killbill.billing.util.audit.dao.AuditDao;
 import org.killbill.billing.util.cache.CacheControllerDispatcher;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.billing.util.dao.NonEntityDao;
@@ -49,8 +50,8 @@ public class OptimizedProxyBlockingStateDao extends ProxyBlockingStateDao {
 
     public OptimizedProxyBlockingStateDao(final EventsStreamBuilder eventsStreamBuilder, final SubscriptionBaseInternalApi subscriptionBaseInternalApi,
                                           final IDBI dbi, final IDBI roDbi, final Clock clock, final NotificationQueueService notificationQueueService, final PersistentBus eventBus,
-                                          final CacheControllerDispatcher cacheControllerDispatcher, final NonEntityDao nonEntityDao, final InternalCallContextFactory internalCallContextFactory) {
-        super(eventsStreamBuilder, subscriptionBaseInternalApi, dbi, roDbi, clock, notificationQueueService, eventBus, cacheControllerDispatcher, nonEntityDao, internalCallContextFactory);
+                                          final CacheControllerDispatcher cacheControllerDispatcher, final NonEntityDao nonEntityDao, final AuditDao auditDao, final InternalCallContextFactory internalCallContextFactory) {
+        super(eventsStreamBuilder, subscriptionBaseInternalApi, dbi, roDbi, clock, notificationQueueService, eventBus, cacheControllerDispatcher, nonEntityDao, auditDao, internalCallContextFactory);
     }
 
     /**

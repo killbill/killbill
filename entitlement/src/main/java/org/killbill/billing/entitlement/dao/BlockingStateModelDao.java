@@ -158,7 +158,7 @@ public class BlockingStateModelDao extends EntityModelDaoBase implements EntityM
 
     @Override
     public TableName getHistoryTableName() {
-        return null;
+        return TableName.BLOCKING_STATES;
     }
 
     @Override

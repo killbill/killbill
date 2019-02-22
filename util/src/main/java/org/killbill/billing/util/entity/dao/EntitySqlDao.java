@@ -73,6 +73,10 @@ public interface EntitySqlDao<M extends EntityModelDao<E>, E extends Entity> ext
                      @SmartBindBean final InternalTenantContext context);
 
     @SqlQuery
+    List<M> getByIdsIncludedDeleted(@BindIn("ids") final Collection<String> ids,
+                     @SmartBindBean final InternalTenantContext context);
+
+    @SqlQuery
     public List<M> getByAccountRecordId(@SmartBindBean final InternalTenantContext context);
 
     @SqlQuery

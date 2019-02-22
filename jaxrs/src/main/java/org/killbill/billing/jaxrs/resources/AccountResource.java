@@ -1132,6 +1132,20 @@ public class AccountResource extends JaxRsResourceBase {
     }
 
     @TimedResource
+    @GET
+    @Path("/{blockingId:" + UUID_PATTERN + "}/" + BLOCK + "/" + AUDIT_LOG_WITH_HISTORY)
+    @Produces(APPLICATION_JSON)
+    @ApiOperation(value = "Retrieve blocking state audit logs with history by id", response = AuditLogJson.class, responseContainer = "List")
+    @ApiResponses(value = {@ApiResponse(code = 404, message = "Blocking state  not found")})
+    public Response getBlockingStateAuditLogsWithHistory(@PathParam("blockingId") final UUID blockingId,
+                                                  @javax.ws.rs.core.Context final HttpServletRequest request) {
+        final TenantContext tenantContext = context.createTenantContextNoAccountId(request);
+        final List<AuditLogWithHistory> auditLogWithHistory = subscriptionApi.getBlockingStateAuditLogsWithHistoryForId(blockingId, AuditLevel.FULL, tenantContext);
+        return Response.status(Status.OK).entity(getAuditLogsWithHistory(auditLogWithHistory)).build();
+    }
+
+
+    @TimedResource
     @POST
     @Path("/{accountId:" + UUID_PATTERN + "}/" + BLOCK)
     @Consumes(APPLICATION_JSON)

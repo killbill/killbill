@@ -225,14 +225,6 @@ public class EntitySqlDaoWrapperInvocationHandler<S extends EntitySqlDao<M, E>, 
 
         // Get the current state before deletion for the history tables
         final Map<Long, M> deletedAndUpdatedEntities = new HashMap<Long, M>();
-        if (changeType == ChangeType.DELETE) {
-            final List<M> entitiesToBeDeleted = sqlDao.getByIds(entityIds, contextMaybeWithoutAccountRecordId);
-            printSQLWarnings();
-            for (final M entityToBeDeleted : entitiesToBeDeleted) {
-                deletedAndUpdatedEntities.put(entityToBeDeleted.getRecordId(), entityToBeDeleted);
-            }
-        }
-
         // Real jdbc call
         final Object obj = prof.executeWithProfiling(ProfilingFeatureType.DAO_DETAILS, getProfilingId("raw", method), new WithProfilingCallback<Object, Throwable>() {
             @Override
@@ -248,17 +240,7 @@ public class EntitySqlDaoWrapperInvocationHandler<S extends EntitySqlDao<M, E>, 
         InternalCallContext context = null;
         // Retrieve record_id(s) for audit and history tables
         final List<Long> entityRecordIds = new LinkedList<Long>();
-        if (changeType == ChangeType.DELETE) {
-            for (final Long entityRecordId : deletedAndUpdatedEntities.keySet()) {
-                final M entity = deletedAndUpdatedEntities.get(entityRecordId);
-                entityRecordIds.add(entityRecordId);
-                if (tableName == null) {
-                    tableName = entity.getTableName();
-                } else {
-                    Preconditions.checkState(tableName == entity.getTableName(), "Entities with different TableName: %s", deletedAndUpdatedEntities);
-                }
-            }
-        } else if (changeType == ChangeType.INSERT) {
+        if (changeType == ChangeType.INSERT) {
             Preconditions.checkNotNull(tableName, "Insert query should have an EntityModelDao as argument: %s", args);
 
             if (isBatchQuery) {
@@ -275,8 +257,8 @@ public class EntitySqlDaoWrapperInvocationHandler<S extends EntitySqlDao<M, E>, 
                 context = internalCallContextFactory.createInternalCallContext(accountModelDao, entityRecordIds.get(0), contextMaybeWithoutAccountRecordId);
             }
         } else {
-            // For updates, easiest is to go back to the database
-            final List<M> retrievedEntities = sqlDao.getByIds(entityIds, contextMaybeWithoutAccountRecordId);
+            // Rehydrate entry with latest state
+            final List<M> retrievedEntities = sqlDao.getByIdsIncludedDeleted(entityIds, contextMaybeWithoutAccountRecordId);
             printSQLWarnings();
             for (final M entity : retrievedEntities) {
                 deletedAndUpdatedEntities.put(entity.getRecordId(), entity);
