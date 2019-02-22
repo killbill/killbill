@@ -257,7 +257,7 @@ public class EntitySqlDaoWrapperInvocationHandler<S extends EntitySqlDao<M, E>, 
                 context = internalCallContextFactory.createInternalCallContext(accountModelDao, entityRecordIds.get(0), contextMaybeWithoutAccountRecordId);
             }
         } else {
-            // For updates, easiest is to go back to the database
+            // Rehydrate entry with latest state
             final List<M> retrievedEntities = sqlDao.getByIdsIncludedDeleted(entityIds, contextMaybeWithoutAccountRecordId);
             printSQLWarnings();
             for (final M entity : retrievedEntities) {
