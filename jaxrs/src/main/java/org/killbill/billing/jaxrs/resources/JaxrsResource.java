@@ -173,6 +173,8 @@ public interface JaxrsResource {
     String SUBSCRIPTIONS = "subscriptions";
     String SUBSCRIPTIONS_PATH = PREFIX + "/" + SUBSCRIPTIONS;
 
+    String EVENTS = "events";
+
     String ENTITLEMENTS = "entitlements";
     String ENTITLEMENTS_PATH = PREFIX + "/" + ENTITLEMENTS;
 
