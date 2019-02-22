@@ -183,7 +183,7 @@ public class SubscriptionResource extends JaxRsResourceBase {
 
     @TimedResource
     @GET
-    @Path("/{eventId:" + UUID_PATTERN + "}/" +  EVENTS + "/" + AUDIT_LOG_WITH_HISTORY)
+    @Path("/" + EVENTS + "/{eventId:" + UUID_PATTERN + "}/" + AUDIT_LOG_WITH_HISTORY)
     @Produces(APPLICATION_JSON)
     @ApiOperation(value = "Retrieve subscription event audit logs with history by id", response = AuditLogJson.class, responseContainer = "List")
     @ApiResponses(value = {@ApiResponse(code = 404, message = "Subscription event not found")})
