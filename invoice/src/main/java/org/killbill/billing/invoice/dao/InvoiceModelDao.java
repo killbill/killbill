@@ -183,6 +183,11 @@ public class InvoiceModelDao extends EntityModelDaoBase implements EntityModelDa
         return isWrittenOff;
     }
 
+    // Make BeanInspector happy when invoked from EntityHistoryBinder
+    public boolean getIsWrittenOff() {
+        return isWrittenOff;
+    }
+
     public void setIsWrittenOff(final boolean isWrittenOff) {
         this.isWrittenOff = isWrittenOff;
     }
@@ -303,7 +308,7 @@ public class InvoiceModelDao extends EntityModelDaoBase implements EntityModelDa
 
     @Override
     public TableName getHistoryTableName() {
-        return null;
+        return TableName.INVOICE_HISTORY;
     }
 
 }
