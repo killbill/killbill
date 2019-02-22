@@ -61,12 +61,16 @@ import org.killbill.billing.invoice.notification.NextBillingDatePoster;
 import org.killbill.billing.invoice.notification.ParentInvoiceCommitmentPoster;
 import org.killbill.billing.tag.TagInternalApi;
 import org.killbill.billing.util.UUIDs;
+import org.killbill.billing.util.api.AuditLevel;
+import org.killbill.billing.util.audit.AuditLogWithHistory;
+import org.killbill.billing.util.audit.dao.AuditDao;
 import org.killbill.billing.util.cache.Cachable.CacheType;
 import org.killbill.billing.util.cache.CacheController;
 import org.killbill.billing.util.cache.CacheControllerDispatcher;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.billing.util.config.definition.InvoiceConfig;
 import org.killbill.billing.util.dao.NonEntityDao;
+import org.killbill.billing.util.dao.TableName;
 import org.killbill.billing.util.entity.Pagination;
 import org.killbill.billing.util.entity.dao.DefaultPaginationSqlDaoHelper;
 import org.killbill.billing.util.entity.dao.DefaultPaginationSqlDaoHelper.PaginationIteratorBuilder;
@@ -125,6 +129,7 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
     private final NonEntityDao nonEntityDao;
     private final ParentInvoiceCommitmentPoster parentInvoiceCommitmentPoster;
     private final TagInternalApi tagInternalApi;
+    private final AuditDao auditDao;
 
     @Inject
     public DefaultInvoiceDao(final TagInternalApi tagInternalApi,
@@ -139,6 +144,7 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
                              final InvoiceDaoHelper invoiceDaoHelper,
                              final CBADao cbaDao,
                              final ParentInvoiceCommitmentPoster parentInvoiceCommitmentPoster,
+                             final AuditDao auditDao,
                              final InternalCallContextFactory internalCallContextFactory) {
         super(nonEntityDao, cacheControllerDispatcher, new EntitySqlDaoTransactionalJdbiWrapper(dbi, roDbi, clock, cacheControllerDispatcher, nonEntityDao, internalCallContextFactory), InvoiceSqlDao.class);
         this.tagInternalApi = tagInternalApi;
@@ -148,6 +154,7 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
         this.internalCallContextFactory = internalCallContextFactory;
         this.invoiceDaoHelper = invoiceDaoHelper;
         this.cbaDao = cbaDao;
+        this.auditDao = auditDao;
         this.clock = clock;
         this.objectIdCacheController = cacheControllerDispatcher.getCacheController(CacheType.OBJECT_ID);
         this.nonEntityDao = nonEntityDao;
@@ -1430,6 +1437,40 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
             public List<InvoiceTrackingModelDao> inTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory) throws Exception {
                 final InvoiceTrackingSqlDao transactional = entitySqlDaoWrapperFactory.become(InvoiceTrackingSqlDao.class);
                 return transactional.getTrackingsByDateRange(startDate.toDate(), endDate.toDate(), context);
+            }
+        });
+    }
+
+
+    @Override
+    public List<AuditLogWithHistory> getInvoiceAuditLogsWithHistoryForId(final UUID invoiceId, final AuditLevel auditLevel, final InternalTenantContext context) {
+        return transactionalSqlDao.execute(true, new EntitySqlDaoTransactionWrapper<List<AuditLogWithHistory>>() {
+            @Override
+            public List<AuditLogWithHistory> inTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory) {
+                final InvoiceSqlDao transactional = entitySqlDaoWrapperFactory.become(InvoiceSqlDao.class);
+                return auditDao.getAuditLogsWithHistoryForId(transactional, TableName.INVOICES, invoiceId, auditLevel, context);
+            }
+        });
+    }
+
+    @Override
+    public List<AuditLogWithHistory> getInvoiceItemAuditLogsWithHistoryForId(final UUID invoiceItemId, final AuditLevel auditLevel, final InternalTenantContext context) {
+        return transactionalSqlDao.execute(true, new EntitySqlDaoTransactionWrapper<List<AuditLogWithHistory>>() {
+            @Override
+            public List<AuditLogWithHistory> inTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory) {
+                final InvoiceItemSqlDao transactional = entitySqlDaoWrapperFactory.become(InvoiceItemSqlDao.class);
+                return auditDao.getAuditLogsWithHistoryForId(transactional, TableName.INVOICE_ITEMS, invoiceItemId, auditLevel, context);
+            }
+        });
+    }
+
+    @Override
+    public List<AuditLogWithHistory> getInvoicePaymentAuditLogsWithHistoryForId(final UUID invoicePaymentId, final AuditLevel auditLevel, final InternalTenantContext context) {
+        return transactionalSqlDao.execute(true, new EntitySqlDaoTransactionWrapper<List<AuditLogWithHistory>>() {
+            @Override
+            public List<AuditLogWithHistory> inTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory) {
+                final InvoicePaymentSqlDao transactional = entitySqlDaoWrapperFactory.become(InvoicePaymentSqlDao.class);
+                return auditDao.getAuditLogsWithHistoryForId(transactional, TableName.INVOICE_PAYMENTS, invoicePaymentId, auditLevel, context);
             }
         });
     }

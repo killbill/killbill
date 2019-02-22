@@ -66,7 +66,9 @@ import org.killbill.billing.invoice.template.HtmlInvoiceGenerator;
 import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.tag.TagInternalApi;
 import org.killbill.billing.util.UUIDs;
+import org.killbill.billing.util.api.AuditLevel;
 import org.killbill.billing.util.api.TagApiException;
+import org.killbill.billing.util.audit.AuditLogWithHistory;
 import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.billing.util.callcontext.TenantContext;
@@ -690,6 +692,21 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
         }
 
         dao.changeInvoiceStatus(invoiceId, InvoiceStatus.VOID, internalCallContext);
+    }
+
+    @Override
+    public List<AuditLogWithHistory> getInvoiceAuditLogsWithHistoryForId(final UUID invoiceId, final AuditLevel auditLevel, final TenantContext tenantContext) {
+        return dao.getInvoiceAuditLogsWithHistoryForId(invoiceId, auditLevel, internalCallContextFactory.createInternalTenantContext(invoiceId, ObjectType.INVOICE, tenantContext));
+    }
+
+    @Override
+    public List<AuditLogWithHistory> getInvoiceItemAuditLogsWithHistoryForId(final UUID invoiceItemId, final AuditLevel auditLevel, final TenantContext tenantContext) {
+        return dao.getInvoiceItemAuditLogsWithHistoryForId(invoiceItemId, auditLevel, internalCallContextFactory.createInternalTenantContext(invoiceItemId, ObjectType.INVOICE_ITEM, tenantContext));
+    }
+
+    @Override
+    public List<AuditLogWithHistory> getInvoicePaymentAuditLogsWithHistoryForId(final UUID invoicePaymentId, final AuditLevel auditLevel, final TenantContext tenantContext) {
+        return dao.getInvoicePaymentAuditLogsWithHistoryForId(invoicePaymentId, auditLevel, internalCallContextFactory.createInternalTenantContext(invoicePaymentId, ObjectType.INVOICE_PAYMENT, tenantContext));
     }
 
     private void canInvoiceBeVoided(final Invoice invoice) throws InvoiceApiException {
