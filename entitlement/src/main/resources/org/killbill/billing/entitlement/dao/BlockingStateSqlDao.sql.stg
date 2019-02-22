@@ -1,6 +1,7 @@
 import "org/killbill/billing/util/entity/dao/EntitySqlDao.sql.stg"
 
 tableName() ::= "blocking_states"
+historyTableName() ::= "blocking_state_history"
 
 andCheckSoftDeletionWithComma(prefix) ::= "and <prefix>is_active"
 
