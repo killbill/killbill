@@ -29,6 +29,8 @@ import org.killbill.billing.catalog.api.Catalog;
 import org.killbill.billing.entitlement.api.BlockingState;
 import org.killbill.billing.entitlement.api.BlockingStateType;
 import org.killbill.billing.entitlement.api.EntitlementApiException;
+import org.killbill.billing.util.api.AuditLevel;
+import org.killbill.billing.util.audit.AuditLogWithHistory;
 import org.killbill.billing.util.entity.dao.EntityDao;
 
 import com.google.common.base.Optional;
@@ -80,5 +82,14 @@ public interface BlockingStateDao extends EntityDao<BlockingStateModelDao, Block
      * @param context     call context
      */
     public void unactiveBlockingState(UUID blockableId, final InternalCallContext context);
+
+    /**
+     *
+     * @param blockableId id of the blockable object
+     * @param auditLevel  audit level
+     * @param context     call context
+     * @return the list of audit with history for this blockableId
+     */
+    List<AuditLogWithHistory> getBlockingStateAuditLogsWithHistoryForId(UUID blockableId, AuditLevel auditLevel, InternalTenantContext context);
 
 }

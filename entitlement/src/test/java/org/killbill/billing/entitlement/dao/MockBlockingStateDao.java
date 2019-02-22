@@ -33,6 +33,8 @@ import org.killbill.billing.catalog.api.Catalog;
 import org.killbill.billing.entitlement.api.BlockingState;
 import org.killbill.billing.entitlement.api.BlockingStateType;
 import org.killbill.billing.entitlement.api.EntitlementApiException;
+import org.killbill.billing.util.api.AuditLevel;
+import org.killbill.billing.util.audit.AuditLogWithHistory;
 import org.killbill.billing.util.entity.dao.MockEntityDaoBase;
 
 import com.google.common.base.MoreObjects;
@@ -103,6 +105,11 @@ public class MockBlockingStateDao extends MockEntityDaoBase<BlockingStateModelDa
     @Override
     public void unactiveBlockingState(final UUID blockableId, final InternalCallContext context) {
         throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public List<AuditLogWithHistory> getBlockingStateAuditLogsWithHistoryForId(final UUID blockableId, final AuditLevel auditLevel, final InternalTenantContext context) {
+        return null;
     }
 
     public synchronized void clear() {
