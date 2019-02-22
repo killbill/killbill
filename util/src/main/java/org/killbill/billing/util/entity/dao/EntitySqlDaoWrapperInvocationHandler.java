@@ -373,8 +373,7 @@ public class EntitySqlDaoWrapperInvocationHandler<S extends EntitySqlDao<M, E>, 
                     // Make sure to re-hydrate the objects first (especially needed for create calls)
                     final Collection<M> reHydratedEntities = new ArrayList<>(entityRecordIds.size());
                     if (deletedAndUpdatedEntities.isEmpty()) {
-                        Preconditions.checkState(entityRecordIds.size() == 1 && changeType == ChangeType.INSERT, "Unexpected number of entityRecordIds=%s and changeType=%s", entityRecordIds, changeType);
-                        reHydratedEntities.add(sqlDao.getByRecordId(entityRecordIds.get(0), context));
+                        reHydratedEntities.addAll((List<M>) sqlDao.getByRecordIds(entityRecordIds, context));
                         printSQLWarnings();
                     } else {
                         reHydratedEntities.addAll(deletedAndUpdatedEntities.values());
