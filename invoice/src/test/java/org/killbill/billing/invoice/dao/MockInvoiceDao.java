@@ -277,6 +277,11 @@ public class MockInvoiceDao extends MockEntityDaoBase<InvoiceModelDao, Invoice, 
     }
 
     @Override
+    public InvoicePaymentModelDao getInvoicePayment(final UUID invoicePaymentId, final InternalTenantContext internalTenantContext) {
+        return null;
+    }
+
+    @Override
     public void notifyOfPaymentCompletion(final InvoicePaymentModelDao invoicePayment, final InternalCallContext context) {
         synchronized (monitor) {
             payments.put(invoicePayment.getId(), invoicePayment);

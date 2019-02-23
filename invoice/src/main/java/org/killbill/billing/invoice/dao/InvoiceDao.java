@@ -79,6 +79,8 @@ public interface InvoiceDao extends EntityDao<InvoiceModelDao, Invoice, InvoiceA
 
     InvoicePaymentModelDao getInvoicePaymentByCookieId(String cookieId, InternalTenantContext internalTenantContext);
 
+    InvoicePaymentModelDao getInvoicePayment(UUID invoicePaymentId, InternalTenantContext internalTenantContext);
+
     BigDecimal getAccountBalance(UUID accountId, InternalTenantContext context);
 
     BigDecimal getAccountCBA(UUID accountId, InternalTenantContext context);
