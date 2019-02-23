@@ -99,7 +99,7 @@ public class TestAccountTimeline extends TestJaxrsBase {
         final InvoicePaymentTransaction chargeback = new InvoicePaymentTransaction();
         chargeback.setPaymentId(postedPayment.getPaymentId());
         chargeback.setAmount(chargebackAmount);
-        invoicePaymentApi.createChargeback(postedPayment.getPaymentId(), chargeback, requestOptions);
+        invoicePaymentApi.createChargeback(postedPayment.getPaymentId(), chargeback, NULL_PLUGIN_PROPERTIES, requestOptions);
 
         // Verify payments
         verifyPayments(accountJson.getAccountId(), startTime, endTime, refundAmount, chargebackAmount);
