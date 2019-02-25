@@ -1133,7 +1133,7 @@ public class AccountResource extends JaxRsResourceBase {
 
     @TimedResource
     @GET
-    @Path("/{blockingId:" + UUID_PATTERN + "}/" + BLOCK + "/" + AUDIT_LOG_WITH_HISTORY)
+    @Path("/" + BLOCK + "/{blockingId:" + UUID_PATTERN + "}/" + AUDIT_LOG_WITH_HISTORY)
     @Produces(APPLICATION_JSON)
     @ApiOperation(value = "Retrieve blocking state audit logs with history by id", response = AuditLogJson.class, responseContainer = "List")
     @ApiResponses(value = {@ApiResponse(code = 404, message = "Blocking state  not found")})

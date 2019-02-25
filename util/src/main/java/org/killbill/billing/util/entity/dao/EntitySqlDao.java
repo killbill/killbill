@@ -61,12 +61,16 @@ public interface EntitySqlDao<M extends EntityModelDao<E>, E extends Entity> ext
                              @SmartBindBean final InternalCallContext context);
 
     @SqlQuery
-    public M getById(@Bind("id") final String id,
-                     @SmartBindBean final InternalTenantContext context);
-
-    @SqlQuery
     public M getByRecordId(@Bind("recordId") final Long recordId,
                            @SmartBindBean final InternalTenantContext context);
+
+    @SqlQuery
+    public List<M> getByRecordIds(@BindIn("recordIds") final Collection<Long> recordId,
+                                  @SmartBindBean final InternalTenantContext context);
+
+    @SqlQuery
+    public M getById(@Bind("id") final String id,
+                     @SmartBindBean final InternalTenantContext context);
 
     @SqlQuery
     List<M> getByIds(@BindIn("ids") final Collection<String> ids,

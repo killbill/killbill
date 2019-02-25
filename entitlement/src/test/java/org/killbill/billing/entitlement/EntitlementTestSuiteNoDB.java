@@ -29,6 +29,7 @@ import org.killbill.billing.entitlement.glue.TestEntitlementModuleNoDB;
 import org.killbill.billing.junction.BlockingInternalApi;
 import org.killbill.billing.subscription.api.SubscriptionBaseInternalApi;
 import org.killbill.billing.tag.TagInternalApi;
+import org.killbill.billing.util.audit.dao.AuditDao;
 import org.killbill.billing.util.dao.NonEntityDao;
 import org.killbill.billing.util.tag.dao.TagDao;
 import org.killbill.bus.api.PersistentBus;
@@ -66,6 +67,8 @@ public abstract class EntitlementTestSuiteNoDB extends GuicyKillbillTestSuiteNoD
     protected BlockingChecker blockingChecker;
     @Inject
     protected NonEntityDao nonEntityDao;
+    @Inject
+    protected AuditDao auditDao;
 
     @BeforeClass(groups = "fast")
     protected void beforeClass() throws Exception {

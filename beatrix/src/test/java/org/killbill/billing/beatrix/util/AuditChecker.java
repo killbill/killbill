@@ -156,12 +156,12 @@ public class AuditChecker {
     public void checkInvoiceCreated(final Invoice invoice, final CallContext context) {
         final List<AuditLog> invoiceLogs = getAuditLogForInvoice(invoice, context);
         //Assert.assertEquals(invoiceLogs.size(), 1);
-        checkAuditLog(ChangeType.INSERT, context, invoiceLogs.get(0), invoice.getId(), InvoiceSqlDao.class, false, false);
+        checkAuditLog(ChangeType.INSERT, context, invoiceLogs.get(0), invoice.getId(), InvoiceSqlDao.class, true, false);
 
         for (InvoiceItem cur : invoice.getInvoiceItems()) {
             final List<AuditLog> auditLogs = getAuditLogForInvoiceItem(cur, context);
             Assert.assertTrue(auditLogs.size() >= 1);
-            checkAuditLog(ChangeType.INSERT, context, auditLogs.get(0), cur.getId(), InvoiceItemSqlDao.class, false, false);
+            checkAuditLog(ChangeType.INSERT, context, auditLogs.get(0), cur.getId(), InvoiceItemSqlDao.class, true, false);
         }
     }
 

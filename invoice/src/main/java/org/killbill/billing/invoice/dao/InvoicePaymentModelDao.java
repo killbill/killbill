@@ -228,6 +228,6 @@ public class InvoicePaymentModelDao extends EntityModelDaoBase implements Entity
 
     @Override
     public TableName getHistoryTableName() {
-        return null;
+        return TableName.INVOICE_PAYMENT_HISTORY;
     }
 }

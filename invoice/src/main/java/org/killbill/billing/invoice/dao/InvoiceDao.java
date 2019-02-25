@@ -35,6 +35,8 @@ import org.killbill.billing.invoice.InvoiceDispatcher.FutureAccountNotifications
 import org.killbill.billing.invoice.api.Invoice;
 import org.killbill.billing.invoice.api.InvoiceApiException;
 import org.killbill.billing.invoice.api.InvoiceStatus;
+import org.killbill.billing.util.api.AuditLevel;
+import org.killbill.billing.util.audit.AuditLogWithHistory;
 import org.killbill.billing.util.entity.Pagination;
 import org.killbill.billing.util.entity.dao.EntityDao;
 
@@ -76,6 +78,8 @@ public interface InvoiceDao extends EntityDao<InvoiceModelDao, Invoice, InvoiceA
     List<InvoicePaymentModelDao> getInvoicePaymentsByInvoice(final UUID invoiceId, InternalTenantContext context);
 
     InvoicePaymentModelDao getInvoicePaymentByCookieId(String cookieId, InternalTenantContext internalTenantContext);
+
+    InvoicePaymentModelDao getInvoicePayment(UUID invoicePaymentId, InternalTenantContext internalTenantContext);
 
     BigDecimal getAccountBalance(UUID accountId, InternalTenantContext context);
 
@@ -227,5 +231,11 @@ public interface InvoiceDao extends EntityDao<InvoiceModelDao, Invoice, InvoiceA
     List<InvoiceItemModelDao> getInvoiceItemsByParentInvoice(UUID parentInvoiceId, final InternalTenantContext context) throws InvoiceApiException;
 
     List<InvoiceTrackingModelDao> getTrackingsByDateRange(LocalDate startDate, LocalDate endDate, InternalCallContext context);
+
+    public List<AuditLogWithHistory> getInvoiceAuditLogsWithHistoryForId(final UUID invoiceId, final AuditLevel auditLevel, final InternalTenantContext context);
+
+    public List<AuditLogWithHistory> getInvoiceItemAuditLogsWithHistoryForId(final UUID invoiceItemId, final AuditLevel auditLevel, final InternalTenantContext context);
+
+    public List<AuditLogWithHistory> getInvoicePaymentAuditLogsWithHistoryForId(final UUID invoicePaymentId, final AuditLevel auditLevel, final InternalTenantContext context);
 
 }

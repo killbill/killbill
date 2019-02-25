@@ -80,6 +80,8 @@ public interface InvoiceInternalApi {
 
     public void commitInvoice(UUID invoiceId, InternalCallContext context) throws InvoiceApiException;
 
+    public InvoicePayment getInvoicePayment(UUID invoicePaymentId, TenantContext context);
+
     public List<InvoicePayment> getInvoicePayments(UUID paymentId, TenantContext context);
 
     public List<InvoicePayment> getInvoicePaymentsByAccount(UUID accountId, TenantContext context);

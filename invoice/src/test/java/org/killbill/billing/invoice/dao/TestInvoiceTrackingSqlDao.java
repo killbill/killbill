@@ -140,7 +140,11 @@ public class TestInvoiceTrackingSqlDao extends InvoiceTestSuiteWithEmbeddedDB {
                                             final List<InvoiceTrackingModelDao> result = dao.getTrackingsByDateRange(startRange.toDate(), endRange.toDate(), internalCallContext);
                                             Assert.assertEquals(result.size(), 4);
 
-                                            final List<AuditLogModelDao> auditLogsPostCreate = ImmutableList.<AuditLogModelDao>copyOf(dao.getAuditLogsForTableNameAndAccountRecordId(TableName.INVOICE_TRACKING_IDS.toString(), internalCallContext));
+                                            final List<AuditLogModelDao> auditLogsPostCreate = new ArrayList<>();
+                                            for (int i = 0; i < 4; i++) {
+                                                List<AuditLogModelDao> tmp = dao.getAuditLogsViaHistoryForTargetRecordId(TableName.INVOICE_TRACKING_ID_HISTORY.name(), TableName.INVOICE_TRACKING_ID_HISTORY.getTableName().toLowerCase(), result.get(i).getRecordId(), internalCallContext);
+                                                auditLogsPostCreate.addAll(tmp);
+                                            }
                                             Assert.assertEquals(auditLogsPostCreate.size(), 4);
                                             for (int i = 0; i < 4; i++) {
                                                 Assert.assertEquals(auditLogsPostCreate.get(i).getChangeType(), ChangeType.INSERT);
@@ -166,16 +170,20 @@ public class TestInvoiceTrackingSqlDao extends InvoiceTestSuiteWithEmbeddedDB {
                                             final List<InvoiceTrackingModelDao> result2 = dao.getTrackingsByDateRange(startRange.toDate(), endRange.toDate(), internalCallContext);
                                             Assert.assertEquals(result2.size(), 1);
 
-                                            final List<AuditLogModelDao> auditLogsPostDelete = ImmutableList.<AuditLogModelDao>copyOf(dao.getAuditLogsForTableNameAndAccountRecordId(TableName.INVOICE_TRACKING_IDS.toString(), internalCallContext));
-                                            Assert.assertEquals(auditLogsPostDelete.size(), 7);
+                                            final List<AuditLogModelDao> auditLogsPostDelete = new ArrayList<>();
                                             for (int i = 0; i < 4; i++) {
-                                                Assert.assertEquals(auditLogsPostDelete.get(i).getChangeType(), ChangeType.INSERT);
-                                                Assert.assertEquals(auditLogsPostDelete.get(i).getTargetRecordId(), result.get(i).getRecordId());
+                                                List<AuditLogModelDao> tmp = dao.getAuditLogsViaHistoryForTargetRecordId(TableName.INVOICE_TRACKING_ID_HISTORY.name(), TableName.INVOICE_TRACKING_ID_HISTORY.getTableName().toLowerCase(), result.get(i).getRecordId(), internalCallContext);
+                                                auditLogsPostDelete.addAll(tmp);
                                             }
-                                            for (int i = 4; i < 7; i++) {
-                                                Assert.assertEquals(auditLogsPostDelete.get(i).getChangeType(), ChangeType.DELETE);
-                                                Assert.assertEquals(auditLogsPostDelete.get(i).getTargetRecordId(), result.get(i - 4).getRecordId());
+
+                                            Assert.assertEquals(auditLogsPostDelete.size(), 7);
+                                            // First 3 records will show an INSERT & DELETE
+                                            for (int i = 0; i < 3; i++) {
+                                                Assert.assertEquals(auditLogsPostDelete.get(2*i).getChangeType(), ChangeType.INSERT);
+                                                Assert.assertEquals(auditLogsPostDelete.get(2*i + 1).getChangeType(), ChangeType.DELETE);
                                             }
+                                            // Last record will only show an INSERT
+                                            Assert.assertEquals(auditLogsPostDelete.get(6).getChangeType(), ChangeType.INSERT);
 
                                             return null;
                                         }

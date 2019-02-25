@@ -1,6 +1,7 @@
 import "org/killbill/billing/util/entity/dao/EntitySqlDao.sql.stg"
 
 tableName() ::= "invoices"
+historyTableName() ::= "invoice_history"
 
 tableFields(prefix) ::= <<
   <prefix>account_id
