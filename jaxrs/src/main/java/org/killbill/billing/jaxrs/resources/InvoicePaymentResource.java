@@ -156,7 +156,7 @@ public class InvoicePaymentResource extends JaxRsResourceBase {
     @Produces(APPLICATION_JSON)
     @ApiOperation(value = "Retrieve invoice payment audit logs with history by id", response = AuditLogJson.class, responseContainer = "List")
     @ApiResponses(value = {@ApiResponse(code = 404, message = "Invoice payment not found")})
-    public Response getInvoiceItemAuditLogsWithHistory(@PathParam("invoicePaymentId") final UUID invoicePaymentId,
+    public Response getInvoicePaymentAuditLogsWithHistory(@PathParam("invoicePaymentId") final UUID invoicePaymentId,
                                                        @javax.ws.rs.core.Context final HttpServletRequest request) {
         final TenantContext tenantContext = context.createTenantContextNoAccountId(request);
         final List<AuditLogWithHistory> auditLogWithHistory = invoiceApi.getInvoicePaymentAuditLogsWithHistoryForId(invoicePaymentId, AuditLevel.FULL, tenantContext);
