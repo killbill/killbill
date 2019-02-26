@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014-2018 Groupon, Inc
- * Copyright 2014-2018 The Billing Project, LLC
+ * Copyright 2014-2019 Groupon, Inc
+ * Copyright 2014-2019 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -306,7 +306,7 @@ public class DefaultEntitlementApi extends DefaultEntitlementApiBase implements 
 
         final WithEntitlementPlugin<UUID> transferWithPlugin = new WithEntitlementPlugin<UUID>() {
             @Override
-            public UUID doCall(final EntitlementApi entitlementApi, final EntitlementContext updatedPluginContext) throws EntitlementApiException {
+            public UUID doCall(final EntitlementApi entitlementApi, final DefaultEntitlementContext updatedPluginContext) throws EntitlementApiException {
                 final boolean cancelImm;
                 switch (billingPolicy) {
                     case IMMEDIATE:
@@ -332,11 +332,14 @@ public class DefaultEntitlementApi extends DefaultEntitlementApiBase implements 
                         throw new EntitlementApiException(new SubscriptionBaseApiException(ErrorCode.SUB_GET_INVALID_BUNDLE_KEY, externalKey));
                     }
 
-                    final BaseEntitlementWithAddOnsSpecifier baseEntitlementWithAddOnsSpecifier = getFirstBaseEntitlementWithAddOnsSpecifier(updatedPluginContext.getBaseEntitlementWithAddOnsSpecifiers());
+                    final DefaultBaseEntitlementWithAddOnsSpecifier baseEntitlementWithAddOnsSpecifier = getFirstBaseEntitlementWithAddOnsSpecifier(updatedPluginContext.getBaseEntitlementWithAddOnsSpecifiers());
 
                     final DateTime requestedDate = dateHelper.fromLocalDateAndReferenceTime(baseEntitlementWithAddOnsSpecifier.getBillingEffectiveDate(), updatedPluginContext.getCreatedDate(), contextWithSourceAccountRecordId);
                     final SubscriptionBaseBundle newBundle = subscriptionBaseTransferApi.transferBundle(sourceAccountId, destAccountId, externalKey, requestedDate, true, cancelImm, context);
 
+                    // Update the context for plugins
+                    baseEntitlementWithAddOnsSpecifier.setBundleId(newBundle.getId());
+                    baseEntitlementWithAddOnsSpecifier.setExternalKey(newBundle.getExternalKey());
 
                     final Map<BlockingState, UUID> blockingStates = new HashMap<BlockingState, UUID>();
 
@@ -358,7 +361,6 @@ public class DefaultEntitlementApi extends DefaultEntitlementApiBase implements 
                         blockingStates.put(newBlockingState, subscriptionBase.getBundleId());
                     }
                     entitlementUtils.setBlockingStateAndPostBlockingTransitionEvent(blockingStates, contextWithDestAccountRecordId);
-
 
                     return newBundle.getId();
                 } catch (final SubscriptionBaseTransferApiException e) {
@@ -389,7 +391,7 @@ public class DefaultEntitlementApi extends DefaultEntitlementApiBase implements 
 
         final WithEntitlementPlugin<List<UUID>> createBaseEntitlementsWithAddOns = new WithEntitlementPlugin<List<UUID>>() {
             @Override
-            public List<UUID> doCall(final EntitlementApi entitlementApi, final EntitlementContext updatedPluginContext) throws EntitlementApiException {
+            public List<UUID> doCall(final EntitlementApi entitlementApi, final DefaultEntitlementContext updatedPluginContext) throws EntitlementApiException {
                 final InternalCallContext contextWithValidAccountRecordId = internalCallContextFactory.createInternalCallContext(accountId, callContext);
 
                 final Catalog catalog;
@@ -446,13 +448,20 @@ public class DefaultEntitlementApi extends DefaultEntitlementApiBase implements 
                     throw new EntitlementApiException(e);
                 }
 
+                // Update the context for plugins (assume underlying ordering is respected)
+                for (int i = 0; i < subscriptionsWithAddOns.size(); i++) {
+                    final SubscriptionBaseWithAddOns subscriptionBaseWithAddOns = subscriptionsWithAddOns.get(i);
+                    updatedPluginContext.getBaseEntitlementWithAddOnsSpecifiers(i).setBundleId(subscriptionBaseWithAddOns.getBundle().getId());
+                    updatedPluginContext.getBaseEntitlementWithAddOnsSpecifiers(i).setExternalKey(subscriptionBaseWithAddOns.getBundle().getExternalKey());
+                }
+
                 return createEntitlementEvents(baseEntitlementWithAddOnsSpecifiersAfterPlugins, subscriptionsWithAddOns, updatedPluginContext, contextWithValidAccountRecordId);
             }
         };
         return pluginExecution.executeWithPlugin(createBaseEntitlementsWithAddOns, pluginContext);
     }
 
-    private BaseEntitlementWithAddOnsSpecifier getFirstBaseEntitlementWithAddOnsSpecifier(final Iterable<BaseEntitlementWithAddOnsSpecifier> baseEntitlementWithAddOnsSpecifiers) throws SubscriptionBaseApiException {
+    private DefaultBaseEntitlementWithAddOnsSpecifier getFirstBaseEntitlementWithAddOnsSpecifier(final Iterable<BaseEntitlementWithAddOnsSpecifier> baseEntitlementWithAddOnsSpecifiers) throws SubscriptionBaseApiException {
         if (baseEntitlementWithAddOnsSpecifiers == null) {
             throw new SubscriptionBaseApiException(ErrorCode.SUB_CREATE_INVALID_ENTITLEMENT_SPECIFIER);
         }
@@ -462,7 +471,7 @@ public class DefaultEntitlementApi extends DefaultEntitlementApiBase implements 
             throw new SubscriptionBaseApiException(ErrorCode.SUB_CREATE_INVALID_ENTITLEMENT_SPECIFIER);
         }
 
-        return iterator.next();
+        return (DefaultBaseEntitlementWithAddOnsSpecifier) iterator.next();
     }
 
     private UUID populateCaches(final BaseEntitlementWithAddOnsSpecifier baseEntitlementWithAddOnsSpecifier,

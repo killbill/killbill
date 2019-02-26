@@ -49,6 +49,7 @@ import org.killbill.billing.osgi.api.OSGIServiceDescriptor;
 import org.killbill.billing.osgi.api.OSGIServiceRegistration;
 import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
+import org.testng.Assert;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
@@ -185,6 +186,10 @@ public class TestWithEntilementPlugin extends TestIntegrationBase {
 
         @Override
         public OnSuccessEntitlementResult onSuccessCall(final EntitlementContext entitlementContext, final Iterable<PluginProperty> properties) throws EntitlementPluginApiException {
+            for (final BaseEntitlementWithAddOnsSpecifier specifier : entitlementContext.getBaseEntitlementWithAddOnsSpecifiers()) {
+                Assert.assertNotNull(specifier.getBundleId());
+                Assert.assertNotNull(specifier.getExternalKey());
+            }
             return null;
         }
 

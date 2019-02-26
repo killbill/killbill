@@ -1,5 +1,6 @@
 /*
- * Copyright 2016 The Billing Project, LLC
+ * Copyright 2014-2019 Groupon, Inc
+ * Copyright 2014-2019 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -22,12 +23,23 @@ import org.joda.time.LocalDate;
 
 public class DefaultBaseEntitlementWithAddOnsSpecifier implements BaseEntitlementWithAddOnsSpecifier {
 
-    private final UUID bundleId;
-    private final String externalKey;
     private final Iterable<EntitlementSpecifier> entitlementSpecifier;
     private final LocalDate entitlementEffectiveDate;
     private final LocalDate billingEffectiveDate;
     private final boolean isMigrated;
+
+    // Maybe populated after create or transfer
+    private UUID bundleId;
+    private String externalKey;
+
+    public DefaultBaseEntitlementWithAddOnsSpecifier(final BaseEntitlementWithAddOnsSpecifier input) {
+        this(input.getBundleId(),
+             input.getExternalKey(),
+             input.getEntitlementSpecifier(),
+             input.getEntitlementEffectiveDate(),
+             input.getBillingEffectiveDate(),
+             input.isMigrated());
+    }
 
     public DefaultBaseEntitlementWithAddOnsSpecifier(final UUID bundleId,
                                                      final String externalKey,
@@ -48,9 +60,17 @@ public class DefaultBaseEntitlementWithAddOnsSpecifier implements BaseEntitlemen
         return bundleId;
     }
 
+    public void setBundleId(final UUID bundleId) {
+        this.bundleId = bundleId;
+    }
+
     @Override
     public String getExternalKey() {
         return externalKey;
+    }
+
+    public void setExternalKey(final String externalKey) {
+        this.externalKey = externalKey;
     }
 
     @Override
@@ -71,5 +91,58 @@ public class DefaultBaseEntitlementWithAddOnsSpecifier implements BaseEntitlemen
     @Override
     public boolean isMigrated() {
         return isMigrated;
+    }
+
+    @Override
+    public String toString() {
+        final StringBuilder sb = new StringBuilder("DefaultBaseEntitlementWithAddOnsSpecifier{");
+        sb.append("entitlementSpecifier=").append(entitlementSpecifier);
+        sb.append(", entitlementEffectiveDate=").append(entitlementEffectiveDate);
+        sb.append(", billingEffectiveDate=").append(billingEffectiveDate);
+        sb.append(", isMigrated=").append(isMigrated);
+        sb.append(", bundleId=").append(bundleId);
+        sb.append(", externalKey='").append(externalKey).append('\'');
+        sb.append('}');
+        return sb.toString();
+    }
+
+    @Override
+    public boolean equals(final Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+
+        final DefaultBaseEntitlementWithAddOnsSpecifier that = (DefaultBaseEntitlementWithAddOnsSpecifier) o;
+
+        if (isMigrated != that.isMigrated) {
+            return false;
+        }
+        if (entitlementSpecifier != null ? !entitlementSpecifier.equals(that.entitlementSpecifier) : that.entitlementSpecifier != null) {
+            return false;
+        }
+        if (entitlementEffectiveDate != null ? entitlementEffectiveDate.compareTo(that.entitlementEffectiveDate) != 0 : that.entitlementEffectiveDate != null) {
+            return false;
+        }
+        if (billingEffectiveDate != null ? billingEffectiveDate.compareTo(that.billingEffectiveDate) != 0 : that.billingEffectiveDate != null) {
+            return false;
+        }
+        if (bundleId != null ? !bundleId.equals(that.bundleId) : that.bundleId != null) {
+            return false;
+        }
+        return externalKey != null ? externalKey.equals(that.externalKey) : that.externalKey == null;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = entitlementSpecifier != null ? entitlementSpecifier.hashCode() : 0;
+        result = 31 * result + (entitlementEffectiveDate != null ? entitlementEffectiveDate.hashCode() : 0);
+        result = 31 * result + (billingEffectiveDate != null ? billingEffectiveDate.hashCode() : 0);
+        result = 31 * result + (isMigrated ? 1 : 0);
+        result = 31 * result + (bundleId != null ? bundleId.hashCode() : 0);
+        result = 31 * result + (externalKey != null ? externalKey.hashCode() : 0);
+        return result;
     }
 }
