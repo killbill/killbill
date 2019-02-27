@@ -59,9 +59,9 @@ public class DefaultEntitlementContext implements EntitlementContext {
         this(prev.getOperationType(),
              prev.getAccountId(),
              prev.getDestinationAccountId(),
-             pluginResult != null ? merge(prev.getBaseEntitlementWithAddOnsSpecifiers(), pluginResult.getAdjustedBaseEntitlementWithAddOnsSpecifiers()) : prev.getBaseEntitlementWithAddOnsSpecifiers(),
+             pluginResult != null ? lastUnlessEmptyOrFirst(prev.getBaseEntitlementWithAddOnsSpecifiers(), pluginResult.getAdjustedBaseEntitlementWithAddOnsSpecifiers()) : prev.getBaseEntitlementWithAddOnsSpecifiers(),
              pluginResult != null && pluginResult.getAdjustedBillingActionPolicy() != null ? pluginResult.getAdjustedBillingActionPolicy() : prev.getBillingActionPolicy(),
-             pluginResult != null ? merge(prev.getPluginProperties(), pluginResult.getAdjustedPluginProperties()) : prev.getPluginProperties(),
+             pluginResult != null ? lastUnlessEmptyOrFirst(prev.getPluginProperties(), pluginResult.getAdjustedPluginProperties()) : prev.getPluginProperties(),
              prev);
     }
 
@@ -119,7 +119,7 @@ public class DefaultEntitlementContext implements EntitlementContext {
         this.tenantId = tenantId;
     }
 
-    private static <T> Iterable<T> merge(final Iterable<T> prevValues, final Iterable<T> newValues) {
+    private static <T> Iterable<T> lastUnlessEmptyOrFirst(final Iterable<T> prevValues, final Iterable<T> newValues) {
         // Be lenient if a plugin returns an empty list (default behavior for Ruby plugins): at this point,
         // we know the isAborted flag hasn't been set, so let's assume the user actually wants to use the previous list
         if (newValues != null && !Iterables.isEmpty(newValues)) {
