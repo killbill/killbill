@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014-2016 Groupon, Inc
- * Copyright 2014-2016 The Billing Project, LLC
+ * Copyright 2014-2019 Groupon, Inc
+ * Copyright 2014-2019 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -19,7 +19,6 @@
 package org.killbill.billing.invoice.generator;
 
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -34,7 +33,6 @@ import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.invoice.api.Invoice;
 import org.killbill.billing.invoice.api.InvoiceApiException;
-import org.killbill.billing.invoice.api.InvoiceItem;
 import org.killbill.billing.invoice.api.InvoiceStatus;
 import org.killbill.billing.invoice.generator.InvoiceItemGenerator.InvoiceGeneratorResult;
 import org.killbill.billing.invoice.generator.InvoiceWithMetadata.SubscriptionFutureNotificationDates;
@@ -42,6 +40,8 @@ import org.killbill.billing.invoice.model.DefaultInvoice;
 import org.killbill.billing.junction.BillingEventSet;
 import org.killbill.billing.util.config.definition.InvoiceConfig;
 import org.killbill.clock.Clock;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
@@ -51,6 +51,8 @@ import com.google.common.collect.Iterables;
 import com.google.inject.Inject;
 
 public class DefaultInvoiceGenerator implements InvoiceGenerator {
+
+    private static final Logger logger = LoggerFactory.getLogger(DefaultInvoiceGenerator.class);
 
     private final Clock clock;
     private final InvoiceConfig config;
@@ -134,6 +136,11 @@ public class DefaultInvoiceGenerator implements InvoiceGenerator {
                 maxDate = invoice.getTargetDate();
             }
         }
+
+        if (targetDate.compareTo(maxDate) != 0) {
+            logger.warn("Adjusting target date from {} to {}", targetDate, maxDate);
+        }
+
         return maxDate;
     }
 
