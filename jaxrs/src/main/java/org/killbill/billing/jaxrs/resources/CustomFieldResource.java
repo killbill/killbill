@@ -22,6 +22,7 @@ import java.net.URI;
 import java.util.List;
 import java.util.UUID;
 
+import javax.annotation.Nullable;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
@@ -55,6 +56,8 @@ import org.killbill.clock.Clock;
 import org.killbill.commons.metrics.TimedResource;
 
 import com.google.common.base.Function;
+import com.google.common.base.MoreObjects;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -109,6 +112,47 @@ public class CustomFieldResource extends JaxRsResourceBase {
                                                 nextPageUri);
     }
 
+
+    @TimedResource
+    @GET
+    @Path("/" + SEARCH )
+    @Produces(APPLICATION_JSON)
+    @ApiOperation(value = "Search custom fields by type, name and optional value", response = CustomFieldJson.class, responseContainer = "List")
+    @ApiResponses(value = {})
+    public Response searchCustomFieldsByTypeName(@QueryParam("objectType") final String objectType,
+                                                 @QueryParam("fieldName") final String fieldName,
+                                                 @Nullable @QueryParam("fieldValue") final String fieldValue,
+                                                 @QueryParam(QUERY_SEARCH_OFFSET) @DefaultValue("0") final Long offset,
+                                                 @QueryParam(QUERY_SEARCH_LIMIT) @DefaultValue("100") final Long limit,
+                                                 @QueryParam(QUERY_AUDIT) @DefaultValue("NONE") final AuditMode auditMode,
+                                                 @javax.ws.rs.core.Context final HttpServletRequest request) {
+
+        Preconditions.checkNotNull(objectType);
+        Preconditions.checkNotNull(fieldName);
+
+        final TenantContext tenantContext = context.createTenantContextNoAccountId(request);
+        final Pagination<CustomField> customFields = fieldValue != null ?
+                                                     customFieldUserApi.searchCustomFields(fieldName, fieldValue, ObjectType.valueOf(objectType), offset, limit, tenantContext) :
+                                                     customFieldUserApi.searchCustomFields(fieldName,  ObjectType.valueOf(objectType), offset, limit, tenantContext);
+
+        final URI nextPageUri = uriBuilder.nextPage(CustomFieldResource.class, "searchCustomFields", customFields.getNextOffset(), limit, ImmutableMap.<String, String>of("objectType", objectType,
+                                                                                                                                                                          "fieldName", fieldName,
+                                                                                                                                                                          "fieldValue", MoreObjects.firstNonNull(fieldValue, ""),
+                                                                                                                                                                          QUERY_AUDIT, auditMode.getLevel().toString()));
+        return buildStreamingPaginationResponse(customFields,
+                                                new Function<CustomField, CustomFieldJson>() {
+                                                    @Override
+                                                    public CustomFieldJson apply(final CustomField customField) {
+                                                        // TODO Really slow - we should instead try to figure out the account id
+                                                        final List<AuditLog> auditLogs = auditUserApi.getAuditLogs(customField.getId(), ObjectType.CUSTOM_FIELD, auditMode.getLevel(), tenantContext);
+                                                        return new CustomFieldJson(customField, auditLogs);
+                                                    }
+                                                },
+                                                nextPageUri);
+    }
+
+
+
     @TimedResource
     @GET
     @Path("/" + SEARCH + "/{searchKey:" + ANYTHING_PATTERN + "}")
@@ -135,6 +179,8 @@ public class CustomFieldResource extends JaxRsResourceBase {
                                                 },
                                                 nextPageUri);
     }
+
+
 
     @TimedResource
     @GET
