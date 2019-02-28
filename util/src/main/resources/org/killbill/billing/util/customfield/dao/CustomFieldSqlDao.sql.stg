@@ -68,32 +68,59 @@ searchQuery(prefix) ::= <<
   or <prefix>field_value like :likeSearchKey
 >>
 
-getSearchCountByObjectTypeAndFieldName(fieldValue) ::= <<
+getSearchCountByObjectTypeAndFieldName() ::= <<
 select
 count(1) as count
 from <tableName()>
 where
 object_type = :objectType
 and field_name = :fieldName
-<if(fieldValue)>and field_value = '<fieldValue>'<endif>
 <andCheckSoftDeletionWithComma("")>
 <AND_CHECK_TENANT("")>
 ;
 >>
 
-searchByObjectTypeAndFieldName(fieldValue, ordering) ::= <<
+searchByObjectTypeAndFieldName(ordering) ::= <<
 select
 <allTableFields()>
 from <tableName()>
 where
 object_type = :objectType
 and field_name = :fieldName
-<if(fieldValue)>and field_value = '<fieldValue>'<endif>
 <andCheckSoftDeletionWithComma("")>
 <AND_CHECK_TENANT("")>
 order by <recordIdField("")> <ordering>
 limit :rowCount offset :offset
 ;
 >>
+
+getSearchCountByObjectTypeAndFieldNameValue() ::= <<
+select
+count(1) as count
+from <tableName()>
+where
+object_type = :objectType
+and field_name = :fieldName
+and field_value = :fieldValue
+<andCheckSoftDeletionWithComma("")>
+<AND_CHECK_TENANT("")>
+;
+>>
+
+searchByObjectTypeAndFieldNameValue(ordering) ::= <<
+select
+<allTableFields()>
+from <tableName()>
+where
+object_type = :objectType
+and field_name = :fieldName
+and field_value = :fieldValue
+<andCheckSoftDeletionWithComma("")>
+<AND_CHECK_TENANT("")>
+order by <recordIdField("")> <ordering>
+limit :rowCount offset :offset
+;
+>>
+
 
 

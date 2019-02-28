@@ -58,7 +58,6 @@ public interface CustomFieldSqlDao extends EntitySqlDao<CustomFieldModelDao, Cus
     @SqlQuery
     @SmartFetchSize(shouldStream = true)
     public Iterator<CustomFieldModelDao> searchByObjectTypeAndFieldName(@Bind("fieldName") String fieldName,
-                                                                        @Define("fieldValue") final String fieldValue,
                                                                         @Bind("objectType") ObjectType objectType,
                                                                         @Bind("offset") final Long offset,
                                                                         @Bind("rowCount") final Long rowCount,
@@ -67,8 +66,25 @@ public interface CustomFieldSqlDao extends EntitySqlDao<CustomFieldModelDao, Cus
 
     @SqlQuery
     public Long getSearchCountByObjectTypeAndFieldName(@Bind("fieldName") String fieldName,
-                                                       @Define("fieldValue") final String fieldValue,
                                                        @Bind("objectType") ObjectType objectType,
                                                        @SmartBindBean final InternalTenantContext context);
+
+
+    @SqlQuery
+    @SmartFetchSize(shouldStream = true)
+    public Iterator<CustomFieldModelDao> searchByObjectTypeAndFieldNameValue(@Bind("fieldName") String fieldName,
+                                                                             @Bind("fieldValue") final String fieldValue,
+                                                                             @Bind("objectType") ObjectType objectType,
+                                                                             @Bind("offset") final Long offset,
+                                                                             @Bind("rowCount") final Long rowCount,
+                                                                             @Define("ordering") final String ordering,
+                                                                             @SmartBindBean final InternalTenantContext context);
+
+    @SqlQuery
+    public Long getSearchCountByObjectTypeAndFieldNameValue(@Bind("fieldName") String fieldName,
+                                                            @Bind("fieldValue") final String fieldValue,
+                                                            @Bind("objectType") ObjectType objectType,
+                                                            @SmartBindBean final InternalTenantContext context);
+
 
 }

@@ -81,6 +81,6 @@ public class MockCustomFieldDao extends MockEntityDaoBase<CustomFieldModelDao, C
 
     @Override
     public Pagination<CustomFieldModelDao> searchCustomFields(final String fieldName, final String fieldValue, final ObjectType objectType, final Long offset, final Long limit, final InternalTenantContext context) {
-        return null;
+        throw new UnsupportedOperationException();
     }
 }
