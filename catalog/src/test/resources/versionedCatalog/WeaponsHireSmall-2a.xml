@@ -192,8 +192,6 @@ Changes compared to WeaponsHireSmall-2.xml:
             </finalPhase>
         </plan>
         <plan name="shotgun-quarterly">
-            <effectiveDateForExistingSubscriptions>2011-02-14T00:00:00+00:00</effectiveDateForExistingSubscriptions>
-
             <product>Shotgun</product>
             <initialPhases>
                 <phase type="TRIAL">
