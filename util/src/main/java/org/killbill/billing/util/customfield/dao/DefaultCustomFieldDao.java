@@ -244,4 +244,44 @@ public class DefaultCustomFieldDao extends EntityDaoBase<CustomFieldModelDao, Cu
                                               limit,
                                               context);
     }
+
+    @Override
+    public Pagination<CustomFieldModelDao> searchCustomFields(final String fieldName, final ObjectType objectType, final Long offset, final Long limit, final InternalTenantContext context) {
+        return paginationHelper.getPagination(CustomFieldSqlDao.class,
+                                              new PaginationIteratorBuilder<CustomFieldModelDao, CustomField, CustomFieldSqlDao>() {
+                                                  @Override
+                                                  public Long getCount(final CustomFieldSqlDao customFieldSqlDao, final InternalTenantContext context) {
+                                                      return customFieldSqlDao.getSearchCountByObjectTypeAndFieldName(fieldName, objectType, context);
+                                                  }
+
+                                                  @Override
+                                                  public Iterator<CustomFieldModelDao> build(final CustomFieldSqlDao customFieldSqlDao, final Long offset, final Long limit, final Ordering ordering, final InternalTenantContext context) {
+                                                      return customFieldSqlDao.searchByObjectTypeAndFieldName(fieldName, objectType, offset, limit, ordering.toString(), context);
+                                                  }
+                                              },
+                                              offset,
+                                              limit,
+                                              context);
+    }
+
+    @Override
+    public Pagination<CustomFieldModelDao> searchCustomFields(final String fieldName, @Nullable final String fieldValue, final ObjectType objectType, final Long offset, final Long limit, final InternalTenantContext context) {
+        return paginationHelper.getPagination(CustomFieldSqlDao.class,
+                                              new PaginationIteratorBuilder<CustomFieldModelDao, CustomField, CustomFieldSqlDao>() {
+                                                  @Override
+                                                  public Long getCount(final CustomFieldSqlDao customFieldSqlDao, final InternalTenantContext context) {
+                                                      return customFieldSqlDao.getSearchCountByObjectTypeAndFieldNameValue(fieldName, fieldValue, objectType, context);
+                                                  }
+
+                                                  @Override
+                                                  public Iterator<CustomFieldModelDao> build(final CustomFieldSqlDao customFieldSqlDao, final Long offset, final Long limit, final Ordering ordering, final InternalTenantContext context) {
+                                                      return customFieldSqlDao.searchByObjectTypeAndFieldNameValue(fieldName, fieldValue, objectType, offset, limit, ordering.toString(), context);
+                                                  }
+                                              },
+                                              offset,
+                                              limit,
+                                              context);
+    }
+
+
 }

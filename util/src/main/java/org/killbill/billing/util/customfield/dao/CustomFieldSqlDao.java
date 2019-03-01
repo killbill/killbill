@@ -16,6 +16,7 @@
 
 package org.killbill.billing.util.customfield.dao;
 
+import java.util.Iterator;
 import java.util.List;
 import java.util.UUID;
 
@@ -27,10 +28,12 @@ import org.killbill.billing.util.customfield.CustomField;
 import org.killbill.billing.util.entity.dao.Audited;
 import org.killbill.billing.util.entity.dao.EntitySqlDao;
 import org.killbill.commons.jdbi.binder.SmartBindBean;
+import org.killbill.commons.jdbi.statement.SmartFetchSize;
 import org.killbill.commons.jdbi.template.KillBillSqlDaoStringTemplate;
 import org.skife.jdbi.v2.sqlobject.Bind;
 import org.skife.jdbi.v2.sqlobject.SqlQuery;
 import org.skife.jdbi.v2.sqlobject.SqlUpdate;
+import org.skife.jdbi.v2.sqlobject.customizers.Define;
 
 @KillBillSqlDaoStringTemplate
 public interface CustomFieldSqlDao extends EntitySqlDao<CustomFieldModelDao, CustomField> {
@@ -51,4 +54,37 @@ public interface CustomFieldSqlDao extends EntitySqlDao<CustomFieldModelDao, Cus
     List<CustomFieldModelDao> getCustomFieldsForObject(@Bind("objectId") UUID objectId,
                                                        @Bind("objectType") ObjectType objectType,
                                                        @SmartBindBean InternalTenantContext internalTenantContext);
+
+    @SqlQuery
+    @SmartFetchSize(shouldStream = true)
+    public Iterator<CustomFieldModelDao> searchByObjectTypeAndFieldName(@Bind("fieldName") String fieldName,
+                                                                        @Bind("objectType") ObjectType objectType,
+                                                                        @Bind("offset") final Long offset,
+                                                                        @Bind("rowCount") final Long rowCount,
+                                                                        @Define("ordering") final String ordering,
+                                                                        @SmartBindBean final InternalTenantContext context);
+
+    @SqlQuery
+    public Long getSearchCountByObjectTypeAndFieldName(@Bind("fieldName") String fieldName,
+                                                       @Bind("objectType") ObjectType objectType,
+                                                       @SmartBindBean final InternalTenantContext context);
+
+
+    @SqlQuery
+    @SmartFetchSize(shouldStream = true)
+    public Iterator<CustomFieldModelDao> searchByObjectTypeAndFieldNameValue(@Bind("fieldName") String fieldName,
+                                                                             @Bind("fieldValue") final String fieldValue,
+                                                                             @Bind("objectType") ObjectType objectType,
+                                                                             @Bind("offset") final Long offset,
+                                                                             @Bind("rowCount") final Long rowCount,
+                                                                             @Define("ordering") final String ordering,
+                                                                             @SmartBindBean final InternalTenantContext context);
+
+    @SqlQuery
+    public Long getSearchCountByObjectTypeAndFieldNameValue(@Bind("fieldName") String fieldName,
+                                                            @Bind("fieldValue") final String fieldValue,
+                                                            @Bind("objectType") ObjectType objectType,
+                                                            @SmartBindBean final InternalTenantContext context);
+
+
 }
