@@ -83,10 +83,9 @@ public class TestVersionedCatalog extends CatalogTestSuiteNoDB {
         Plan plan = vc.findPlan("shotgun-quarterly", dt2, subscriptionStartDate);
         Assert.assertEquals(plan.getAllPhases()[1].getRecurring().getRecurringPrice().getPrice(Currency.USD), new BigDecimal("249.95"));
 
-        // We should see new price because the requested date is >= dt2a and there is no effectiveDateForExistingSubscriptions
-        // TODO
-        //plan = vc.findPlan("shotgun-quarterly", dt2a, subscriptionStartDate);
-        //Assert.assertEquals(plan.getAllPhases()[1].getRecurring().getRecurringPrice().getPrice(Currency.USD), new BigDecimal("259.95"));
+        // We still see old price because the requested date is >= dt2a and there is no effectiveDateForExistingSubscriptions
+        plan = vc.findPlan("shotgun-quarterly", dt2a, subscriptionStartDate);
+        Assert.assertEquals(plan.getAllPhases()[1].getRecurring().getRecurringPrice().getPrice(Currency.USD), new BigDecimal("249.95"));
     }
 
 
@@ -122,7 +121,6 @@ public class TestVersionedCatalog extends CatalogTestSuiteNoDB {
         plan = vc.findPlan("pistol-monthly", dEffectiveDateForExistingSubscriptions, subscriptionStartDate);
         Assert.assertEquals(plan.getAllPhases()[1].getRecurring().getRecurringPrice().getPrice(Currency.USD), new BigDecimal("39.95"));
 
-        // TODO WRONG
         plan = vc.findPlan("pistol-monthly", dt3, subscriptionStartDate);
         Assert.assertEquals(plan.getAllPhases()[1].getRecurring().getRecurringPrice().getPrice(Currency.USD), new BigDecimal("39.95"));
     }
@@ -155,8 +153,6 @@ public class TestVersionedCatalog extends CatalogTestSuiteNoDB {
         plan = vc.createOrFindPlan(pistolMonthly, null, dEffectiveDateForExistingSubscriptions, dt1);
         Assert.assertEquals(plan.getAllPhases()[1].getRecurring().getRecurringPrice().getPrice(Currency.USD), new BigDecimal("39.95"));
 
-
-        // TODO WRONG
         plan = vc.createOrFindPlan(pistolMonthly, null, dt3, dt1);
         Assert.assertEquals(plan.getAllPhases()[1].getRecurring().getRecurringPrice().getPrice(Currency.USD), new BigDecimal("39.95"));
 
