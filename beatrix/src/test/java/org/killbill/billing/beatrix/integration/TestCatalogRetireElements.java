@@ -57,7 +57,49 @@ public class TestCatalogRetireElements extends TestIntegrationBase {
         return super.getConfigSource(null, allExtraProperties);
     }
 
-    @Test(groups = "slow")
+    @Test(groups = "slow", description = "See https://github.com/killbill/killbill/issues/1110")
+    public void testChangePlanTwiceWithNewPlan() throws Exception {
+        // Catalog v1 starts in 2011-01-01
+        // Catalog v2 starts in 2015-12-01
+        // -> Start on catalog V1
+        final LocalDate today = new LocalDate(2015, 11, 5);
+
+        // Set clock to the initial start date - we implicitly assume here that the account timezone is UTC
+        clock.setDay(today);
+
+        final Account account = createAccountWithNonOsgiPaymentMethod(getAccountData(null));
+
+        final String productName = "Shotgun";
+        final BillingPeriod term = BillingPeriod.MONTHLY;
+        final PlanPhaseSpecifier spec1 = new PlanPhaseSpecifier(productName, term, "DEFAULT", null);
+
+        busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE);
+        final UUID bpEntitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec1), "externalKey", null, null, false, true, ImmutableList.<PluginProperty>of(), callContext);
+        assertListenerStatus();
+        Entitlement bpEntitlement = entitlementApi.getEntitlementForId(bpEntitlementId, callContext);
+
+        // Move out a month. Date > caralog V2
+        busHandler.pushExpectedEvents(NextEvent.PHASE, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
+        clock.addMonths(1);
+        assertListenerStatus();
+
+        // Current date is > catalog V2
+        // Change to a plan that exists in V2 but not in V1
+        final PlanPhaseSpecifier spec2 = new PlanPhaseSpecifier("bazooka-monthly", null);
+        busHandler.pushExpectedEvents(NextEvent.CHANGE, NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT);
+        bpEntitlement = bpEntitlement.changePlanWithDate(new DefaultEntitlementSpecifier(spec2), clock.getUTCToday(), ImmutableList.<PluginProperty>of(), callContext);
+        assertListenerStatus();
+
+
+        // Change back to original plan -- because we use the latest catalog version the change plan succeeds
+        busHandler.pushExpectedEvents(NextEvent.CHANGE, NextEvent.INVOICE);
+        bpEntitlement.changePlanWithDate(new DefaultEntitlementSpecifier(spec1), clock.getUTCToday(), ImmutableList.<PluginProperty>of(), callContext);
+        assertListenerStatus();
+
+    }
+
+
+        @Test(groups = "slow")
     public void testRetirePlan() throws Exception {
         // Catalog v1 starts in 2011-01-01
         // Catalog v2 starts in 2015-12-01
