@@ -319,7 +319,7 @@ public class DefaultVersionedCatalog extends ValidatingConfig<DefaultVersionedCa
                                        final DateTime subscriptionStartDate)
             throws CatalogApiException {
         // Use the "to" specifier, to make sure the new plan always exists
-        final StaticCatalog staticCatalog = getStaticCatalog(to, requestedDate, subscriptionStartDate);
+        final StaticCatalog staticCatalog = versionForDate(requestedDate);
         return staticCatalog.planChange(from, to);
     }
 

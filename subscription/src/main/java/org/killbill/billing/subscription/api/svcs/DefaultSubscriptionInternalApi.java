@@ -368,7 +368,7 @@ public class DefaultSubscriptionInternalApi extends DefaultSubscriptionBaseCreat
         final DateTime effectiveDate = (requestedDateWithMs != null) ? DefaultClock.truncateMs(requestedDateWithMs) : null;
         final DateTime effectiveCatalogDate = effectiveDate != null ? effectiveDate : context.getCreatedDate();
         final PlanPhasePriceOverridesWithCallContext overridesWithContext = new DefaultPlanPhasePriceOverridesWithCallContext(spec.getOverrides(), callContext);
-        final Plan plan = catalog.createOrFindPlan(spec.getPlanPhaseSpecifier(), overridesWithContext, effectiveCatalogDate, subscription.getStartDate());
+        final Plan plan = catalog.createOrFindPlan(spec.getPlanPhaseSpecifier(), overridesWithContext, effectiveCatalogDate);
         if (ProductCategory.ADD_ON.toString().equalsIgnoreCase(plan.getProduct().getCategory().toString())) {
             if (plan.getPlansAllowedInBundle() != -1
                 && plan.getPlansAllowedInBundle() > 0
