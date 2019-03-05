@@ -315,8 +315,7 @@ public class DefaultVersionedCatalog extends ValidatingConfig<DefaultVersionedCa
     @Override
     public PlanChangeResult planChange(final PlanPhaseSpecifier from,
                                        final PlanSpecifier to,
-                                       final DateTime requestedDate,
-                                       final DateTime subscriptionStartDate)
+                                       final DateTime requestedDate)
             throws CatalogApiException {
         // Use the "to" specifier, to make sure the new plan always exists
         final StaticCatalog staticCatalog = versionForDate(requestedDate);

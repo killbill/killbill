@@ -146,7 +146,7 @@ public class MockCatalog extends StandaloneCatalog implements Catalog {
     }
 
     @Override
-    public PlanChangeResult planChange(final PlanPhaseSpecifier from, final PlanSpecifier to, final DateTime requestedDate, final DateTime subscriptionStartDate) {
+    public PlanChangeResult planChange(final PlanPhaseSpecifier from, final PlanSpecifier to, final DateTime requestedDate) {
         return planChange(from, to);
     }
 

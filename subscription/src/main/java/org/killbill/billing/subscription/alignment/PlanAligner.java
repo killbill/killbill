@@ -271,7 +271,7 @@ public class PlanAligner extends BaseAligner {
         final PlanSpecifier toPlanSpecifier = new PlanSpecifier(nextPlan.getName());
         final PhaseType initialPhase;
         final DateTime planStartDate;
-        final PlanAlignmentChange alignment = catalog.planChange(fromPlanPhaseSpecifier, toPlanSpecifier, catalogEffectiveDate, subscriptionStartDate).getAlignment();
+        final PlanAlignmentChange alignment = catalog.planChange(fromPlanPhaseSpecifier, toPlanSpecifier, catalogEffectiveDate).getAlignment();
         switch (alignment) {
             case START_OF_SUBSCRIPTION:
                 planStartDate = subscriptionStartDate;
