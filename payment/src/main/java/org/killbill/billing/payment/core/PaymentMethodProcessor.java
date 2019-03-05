@@ -178,7 +178,7 @@ public class PaymentMethodProcessor extends ProcessorBase {
     public UUID addPaymentMethodWithControl(final String paymentMethodExternalKey, final String paymentPluginServiceName, final Account account,
                                             final boolean setDefault, final PaymentMethodPlugin paymentMethodProps, final Iterable<PluginProperty> properties,
                                             final List<String> paymentControlPluginNames, final CallContext callContext, final InternalCallContext context) throws PaymentApiException {
-        final Iterable<PluginProperty> mergedProperties = PluginProperties.merge(paymentMethodProps.getProperties(), properties);
+        final Iterable<PluginProperty> mergedProperties = paymentMethodProps.getProperties() != null ? PluginProperties.merge(paymentMethodProps.getProperties(), properties) : properties;
         return executeWithPaymentMethodControl(paymentPluginServiceName, account, mergedProperties, paymentControlPluginNames, callContext, uuidPluginNotificationDispatcher, new WithPaymentMethodControlCallback<UUID>() {
             @Override
             public UUID doPaymentMethodApiOperation(final String adjustedPaymentPluginServiceName, final Iterable<PluginProperty> adjustedPluginProperties) throws PaymentApiException {

@@ -141,7 +141,7 @@ public class TestInArrearWithCatalogVersions extends TestIntegrationBase {
 
         final PlanPhaseSpecifier spec2 = new PlanPhaseSpecifier("electricity-monthly-special");
 
-        bp.changePlanWithDate(new DefaultEntitlementSpecifier(spec2), new LocalDate("2016-05-09"), null, callContext);
+        bp.changePlanWithDate(new DefaultEntitlementSpecifier(spec2), new LocalDate("2016-05-07"), null, callContext);
         assertListenerStatus();
 
         busHandler.pushExpectedEvents(NextEvent.CHANGE, NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT);
@@ -149,7 +149,7 @@ public class TestInArrearWithCatalogVersions extends TestIntegrationBase {
         assertListenerStatus();
 
         curInvoice = invoiceChecker.checkInvoice(account.getId(), 2, callContext,
-                                    new ExpectedInvoiceItemCheck(new LocalDate(2016, 5, 1), new LocalDate(2016, 5, 9), InvoiceItemType.USAGE, new BigDecimal("150.00")));
+                                    new ExpectedInvoiceItemCheck(new LocalDate(2016, 5, 1), new LocalDate(2016, 5, 7), InvoiceItemType.USAGE, new BigDecimal("150.00")));
         invoiceChecker.checkTrackingIds(curInvoice, ImmutableSet.of("t3"), internalCallContext);
 
 
@@ -160,7 +160,7 @@ public class TestInArrearWithCatalogVersions extends TestIntegrationBase {
         assertListenerStatus();
 
         curInvoice = invoiceChecker.checkInvoice(account.getId(), 3, callContext,
-                                    new ExpectedInvoiceItemCheck(new LocalDate(2016, 5, 9), new LocalDate(2016, 6, 1), InvoiceItemType.USAGE, new BigDecimal("100.00")));
+                                    new ExpectedInvoiceItemCheck(new LocalDate(2016, 5, 7), new LocalDate(2016, 6, 1), InvoiceItemType.USAGE, new BigDecimal("100.00")));
         invoiceChecker.checkTrackingIds(curInvoice, ImmutableSet.of("t4"), internalCallContext);
 
     }

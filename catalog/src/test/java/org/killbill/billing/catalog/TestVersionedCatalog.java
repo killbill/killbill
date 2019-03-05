@@ -41,15 +41,18 @@ import io.netty.buffer.ByteBuf;
 
 public class TestVersionedCatalog extends CatalogTestSuiteNoDB {
 
-    final DateTime dt0 = new DateTime("2010-01-01T00:00:00+00:00");
     // WeaponsHireSmall-1.xml
-    final DateTime dt1 = new DateTime("2011-01-01T00:01:00+00:00");
+    final DateTime dt1 = new DateTime("2010-01-01T00:00:00+00:00");
+
     // WeaponsHireSmall-2.xml
     final DateTime dt2 = new DateTime("2011-02-02T00:01:00+00:00");
+
     // WeaponsHireSmall-2a.xml
     final DateTime dt2a = new DateTime("2011-02-03T00:01:00+00:00");
+
     // effectiveDateForExistingSubscriptions from the catalogs 2 and 2a
-    final DateTime dt214 = new DateTime("2011-02-14T00:01:00+00:00");
+    final DateTime dEffectiveDateForExistingSubscriptions = new DateTime("2011-02-14T00:01:00+00:00");
+
     // WeaponsHireSmall-3.xml
     final DateTime dt3 = new DateTime("2011-03-03T00:01:00+00:00");
 
@@ -65,92 +68,104 @@ public class TestVersionedCatalog extends CatalogTestSuiteNoDB {
         vc = loader.loadDefaultCatalog("versionedCatalog");
     }
 
-    @Test(groups = "fast")
-    public void testFindPlanWithDates() throws Exception {
-        // We find it although the date provided is too early because we default to first catalog version (see also testErrorOnDateTooEarly below)
-        final Plan newSubPlan0 = vc.findPlan("pistol-monthly", dt0, dt0);
 
-        final Plan newSubPlan1 = vc.findPlan("pistol-monthly", dt1, dt1);
-        final Plan newSubPlan2 = vc.findPlan("pistol-monthly", dt2, dt2);
-        final Plan newSubPlan214 = vc.findPlan("pistol-monthly", dt214, dt214);
-        final Plan newSubPlan3 = vc.findPlan("pistol-monthly", dt3, dt3);
 
-        Assert.assertEquals(newSubPlan1.getAllPhases()[1].getRecurring().getRecurringPrice().getPrice(Currency.USD), new BigDecimal("29.95"));
-        Assert.assertEquals(newSubPlan2.getAllPhases()[1].getRecurring().getRecurringPrice().getPrice(Currency.USD), new BigDecimal("39.95"));
-        Assert.assertEquals(newSubPlan214.getAllPhases()[1].getRecurring().getRecurringPrice().getPrice(Currency.USD), new BigDecimal("39.95"));
-        Assert.assertEquals(newSubPlan3.getAllPhases()[1].getRecurring().getRecurringPrice().getPrice(Currency.USD), new BigDecimal("49.95"));
+    //
+    // We use shotgun-quarterly only available from dt2 (v2) and with a price change in V2a
+    //
+    @Test(groups = "fast", description = "See https://github.com/killbill/killbill/issues/1110")
+    public void testFindPlanAcrossVersions() throws Exception {
 
         // Existing subscription
+        final DateTime subscriptionStartDate = new DateTime("2011-02-02T00:01:00+00:00"); // dt2 (v2) < subscriptionStartDate < dt2a (v2a)
 
-        final Plan exSubPlan2 = vc.findPlan("pistol-monthly", dt2, dt1);
-        final Plan exSubPlan214 = vc.findPlan("pistol-monthly", dt214, dt1);
-        final Plan exSubPlan3 = vc.findPlan("pistol-monthly", dt3, dt1);
-        // Plan added in subsequent catalog (at dt2)
-        final Plan exSubPlan4 = vc.findPlan("shotgun-quarterly", dt2, dt1);
-        final Plan exSubPlan5 = vc.findPlan("shotgun-quarterly", dt2a, dt1);
-        final Plan exSubPlan6 = vc.findPlan("shotgun-quarterly", dt214, dt1);
-        final Plan exSubPlan7 = vc.findPlan("shotgun-quarterly", dt214, dt214);
 
-        Assert.assertEquals(exSubPlan2.getAllPhases()[1].getRecurring().getRecurringPrice().getPrice(Currency.USD), new BigDecimal("29.95"));
-        Assert.assertEquals(exSubPlan214.getAllPhases()[1].getRecurring().getRecurringPrice().getPrice(Currency.USD), new BigDecimal("39.95"));
-        Assert.assertEquals(exSubPlan3.getAllPhases()[1].getRecurring().getRecurringPrice().getPrice(Currency.USD), new BigDecimal("39.95"));
-        Assert.assertEquals(exSubPlan4.getAllPhases()[1].getRecurring().getRecurringPrice().getPrice(Currency.USD), new BigDecimal("249.95"));
-        // Old price
-        Assert.assertEquals(exSubPlan5.getAllPhases()[1].getRecurring().getRecurringPrice().getPrice(Currency.USD), new BigDecimal("249.95"));
-        // New price
-        Assert.assertEquals(exSubPlan6.getAllPhases()[1].getRecurring().getRecurringPrice().getPrice(Currency.USD), new BigDecimal("259.95"));
-        Assert.assertEquals(exSubPlan7.getAllPhases()[1].getRecurring().getRecurringPrice().getPrice(Currency.USD), new BigDecimal("259.95"));
+        Plan plan = vc.findPlan("shotgun-quarterly", dt2, subscriptionStartDate);
+        Assert.assertEquals(plan.getAllPhases()[1].getRecurring().getRecurringPrice().getPrice(Currency.USD), new BigDecimal("249.95"));
+
+        // We still see old price because the requested date is >= dt2a and there is no effectiveDateForExistingSubscriptions
+        plan = vc.findPlan("shotgun-quarterly", dt2a, subscriptionStartDate);
+        Assert.assertEquals(plan.getAllPhases()[1].getRecurring().getRecurringPrice().getPrice(Currency.USD), new BigDecimal("249.95"));
     }
+
+
+
+    //
+    // We use pistol-monthly available from dt1 (v1) and with a first price change in V2a, and then in v3
+    // Also  dt2a < effectiveDateForExistingSubscriptions < dt3
+    //
+    @Test(groups = "fast")
+    public void testFindPlanAcrossVersionsUsingEffectiveDateForExistingSubscriptions() throws Exception {
+
+        // Easy cases where subscriptionStartDate = requestedDate -> fetch date from the only valid version
+        Plan plan = vc.findPlan("pistol-monthly", dt1, dt1);
+        Assert.assertEquals(plan.getAllPhases()[1].getRecurring().getRecurringPrice().getPrice(Currency.USD), new BigDecimal("29.95"));
+
+        plan = vc.findPlan("pistol-monthly", dt2, dt2);
+        Assert.assertEquals(plan.getAllPhases()[1].getRecurring().getRecurringPrice().getPrice(Currency.USD), new BigDecimal("39.95"));
+
+        plan = vc.findPlan("pistol-monthly", dEffectiveDateForExistingSubscriptions, dEffectiveDateForExistingSubscriptions);
+        Assert.assertEquals(plan.getAllPhases()[1].getRecurring().getRecurringPrice().getPrice(Currency.USD), new BigDecimal("39.95"));
+
+        plan = vc.findPlan("pistol-monthly", dt3, dt3);
+        Assert.assertEquals(plan.getAllPhases()[1].getRecurring().getRecurringPrice().getPrice(Currency.USD), new BigDecimal("49.95"));
+
+        // Case with an existing subscription (prior first price change)
+        final DateTime subscriptionStartDate = new DateTime("2011-01-01T00:01:00+00:00"); // dt1 (v1) < subscriptionStartDate < dt2 (v2)
+
+        // Returns old price because of effectiveDateForExistingSubscriptions > requestedDate = dt2
+        plan = vc.findPlan("pistol-monthly", dt2, subscriptionStartDate);
+        Assert.assertEquals(plan.getAllPhases()[1].getRecurring().getRecurringPrice().getPrice(Currency.USD), new BigDecimal("29.95"));
+
+        // Returns nw  price because of effectiveDateForExistingSubscriptions = requestedDate = dt2
+        plan = vc.findPlan("pistol-monthly", dEffectiveDateForExistingSubscriptions, subscriptionStartDate);
+        Assert.assertEquals(plan.getAllPhases()[1].getRecurring().getRecurringPrice().getPrice(Currency.USD), new BigDecimal("39.95"));
+
+        plan = vc.findPlan("pistol-monthly", dt3, subscriptionStartDate);
+        Assert.assertEquals(plan.getAllPhases()[1].getRecurring().getRecurringPrice().getPrice(Currency.USD), new BigDecimal("39.95"));
+    }
+
+
 
     // Similar to testFindPlanWithDates, but use the API with PlanSpecifier
     @Test(groups = "fast")
     public void testFindPlanWithDatesAndPlanSpecifier() throws Exception {
+
         final PlanSpecifier pistolMonthly = new PlanSpecifier("Pistol", BillingPeriod.MONTHLY, "DEFAULT");
-        final PlanSpecifier shotgunQuarterly = new PlanSpecifier("Shotgun", BillingPeriod.QUARTERLY, "DEFAULT");
 
-        // We find it although the date provided is too early because we default to first catalog version (see also testErrorOnDateTooEarly below)
-        final Plan newSubPlan0 = vc.createOrFindPlan(pistolMonthly, null, dt0, dt0);
+        // Easy cases where subscriptionStartDate = requestedDate -> fetch date from the only valid version
+        Plan plan = vc.createOrFindPlan(pistolMonthly, null, dt1, dt1);
+        Assert.assertEquals(plan.getAllPhases()[1].getRecurring().getRecurringPrice().getPrice(Currency.USD), new BigDecimal("29.95"));
 
-        final Plan newSubPlan1 = vc.createOrFindPlan(pistolMonthly, null, dt1, dt1);
-        final Plan newSubPlan2 = vc.createOrFindPlan(pistolMonthly, null, dt2, dt2);
-        final Plan newSubPlan214 = vc.createOrFindPlan(pistolMonthly, null, dt214, dt214);
-        final Plan newSubPlan3 = vc.createOrFindPlan(pistolMonthly, null, dt3, dt3);
+        plan = vc.createOrFindPlan(pistolMonthly, null, dt2, dt2);
+        Assert.assertEquals(plan.getAllPhases()[1].getRecurring().getRecurringPrice().getPrice(Currency.USD), new BigDecimal("39.95"));
 
-        Assert.assertEquals(newSubPlan1.getAllPhases()[1].getRecurring().getRecurringPrice().getPrice(Currency.USD), new BigDecimal("29.95"));
-        Assert.assertEquals(newSubPlan2.getAllPhases()[1].getRecurring().getRecurringPrice().getPrice(Currency.USD), new BigDecimal("39.95"));
-        Assert.assertEquals(newSubPlan214.getAllPhases()[1].getRecurring().getRecurringPrice().getPrice(Currency.USD), new BigDecimal("39.95"));
-        Assert.assertEquals(newSubPlan3.getAllPhases()[1].getRecurring().getRecurringPrice().getPrice(Currency.USD), new BigDecimal("49.95"));
+        plan = vc.createOrFindPlan(pistolMonthly, null, dEffectiveDateForExistingSubscriptions, dEffectiveDateForExistingSubscriptions);
+        Assert.assertEquals(plan.getAllPhases()[1].getRecurring().getRecurringPrice().getPrice(Currency.USD), new BigDecimal("39.95"));
 
-        // Existing subscription
+        plan = vc.createOrFindPlan(pistolMonthly, null, dt3, dt3);
+        Assert.assertEquals(plan.getAllPhases()[1].getRecurring().getRecurringPrice().getPrice(Currency.USD), new BigDecimal("49.95"));
 
-        final Plan exSubPlan2 = vc.createOrFindPlan(pistolMonthly, null, dt2, dt1);
-        final Plan exSubPlan214 = vc.createOrFindPlan(pistolMonthly, null, dt214, dt1);
-        final Plan exSubPlan3 = vc.createOrFindPlan(pistolMonthly, null, dt3, dt1);
-        // Plan added in subsequent catalog (at dt2)
-        final Plan exSubPlan4 = vc.createOrFindPlan(shotgunQuarterly, null, dt2, dt1);
-        final Plan exSubPlan5 = vc.createOrFindPlan(shotgunQuarterly, null, dt2a, dt1);
-        final Plan exSubPlan6 = vc.createOrFindPlan(shotgunQuarterly, null, dt214, dt1);
-        final Plan exSubPlan7 = vc.createOrFindPlan(shotgunQuarterly, null, dt214, dt214);
+        // Cases for existing subscription
+        plan = vc.createOrFindPlan(pistolMonthly, null, dt2, dt1);
+        Assert.assertEquals(plan.getAllPhases()[1].getRecurring().getRecurringPrice().getPrice(Currency.USD), new BigDecimal("29.95"));
 
-        Assert.assertEquals(exSubPlan2.getAllPhases()[1].getRecurring().getRecurringPrice().getPrice(Currency.USD), new BigDecimal("29.95"));
-        Assert.assertEquals(exSubPlan214.getAllPhases()[1].getRecurring().getRecurringPrice().getPrice(Currency.USD), new BigDecimal("39.95"));
-        Assert.assertEquals(exSubPlan3.getAllPhases()[1].getRecurring().getRecurringPrice().getPrice(Currency.USD), new BigDecimal("39.95"));
-        Assert.assertEquals(exSubPlan4.getAllPhases()[1].getRecurring().getRecurringPrice().getPrice(Currency.USD), new BigDecimal("249.95"));
-        // Old price
-        Assert.assertEquals(exSubPlan5.getAllPhases()[1].getRecurring().getRecurringPrice().getPrice(Currency.USD), new BigDecimal("249.95"));
-        // New price
-        Assert.assertEquals(exSubPlan6.getAllPhases()[1].getRecurring().getRecurringPrice().getPrice(Currency.USD), new BigDecimal("259.95"));
-        Assert.assertEquals(exSubPlan7.getAllPhases()[1].getRecurring().getRecurringPrice().getPrice(Currency.USD), new BigDecimal("259.95"));
+        plan = vc.createOrFindPlan(pistolMonthly, null, dEffectiveDateForExistingSubscriptions, dt1);
+        Assert.assertEquals(plan.getAllPhases()[1].getRecurring().getRecurringPrice().getPrice(Currency.USD), new BigDecimal("39.95"));
+
+        plan = vc.createOrFindPlan(pistolMonthly, null, dt3, dt1);
+        Assert.assertEquals(plan.getAllPhases()[1].getRecurring().getRecurringPrice().getPrice(Currency.USD), new BigDecimal("39.95"));
+
     }
 
     @Test(groups = "fast")
     public void testErrorOnDateTooEarly() throws CatalogApiException {
         // We find it although the date provided is too early because we default to first catalog version
-        vc.findPlan("shotgun-monthly", dt0);
+        vc.findPlan("shotgun-monthly", dt1);
 
         try {
             // We **don't find it** because date is too early and not part of first catalog version
-            vc.findPlan("shotgun-quarterly", dt0);
+            vc.findPlan("shotgun-quarterly", dt1);
             Assert.fail("Date is too early an exception should have been thrown");
         } catch (final CatalogApiException e) {
             Assert.assertEquals(e.getCode(), ErrorCode.CAT_NO_SUCH_PLAN.getCode());
