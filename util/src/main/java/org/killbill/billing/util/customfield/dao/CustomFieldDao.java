@@ -33,6 +33,10 @@ public interface CustomFieldDao extends EntityDao<CustomFieldModelDao, CustomFie
 
     public Pagination<CustomFieldModelDao> searchCustomFields(String searchKey, Long offset, Long limit, InternalTenantContext context);
 
+    public Pagination<CustomFieldModelDao> searchCustomFields(final String fieldName, final ObjectType objectType, Long offset, Long limit, InternalTenantContext context);
+
+    public Pagination<CustomFieldModelDao> searchCustomFields(final String fieldName, final String fieldValue, final ObjectType objectType, Long offset, Long limit, InternalTenantContext context);
+
     public List<CustomFieldModelDao> getCustomFieldsForObject(final UUID objectId, final ObjectType objectType, final InternalTenantContext context);
 
     public List<CustomFieldModelDao> getCustomFieldsForAccountType(final ObjectType objectType, final InternalTenantContext context);

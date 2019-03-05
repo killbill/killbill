@@ -106,11 +106,29 @@ public class TestCustomField extends TestJaxrsBase {
             doSearchCustomField(customField.getValue(), customField);
         }
 
+        // Search by key
         final CustomFields customFields = customFieldApi.searchCustomFields(ObjectType.ACCOUNT.toString(), requestOptions);
         Assert.assertEquals(customFields.size(), 5);
         Assert.assertEquals(customFields.getPaginationCurrentOffset(), 0);
         Assert.assertEquals(customFields.getPaginationTotalNbRecords(), 5);
         Assert.assertEquals(customFields.getPaginationMaxNbRecords(), 5);
+
+
+        // Search by type, name
+        final CustomFields customFields2 = customFieldApi.searchCustomFieldsByTypeName(ObjectType.ACCOUNT.toString(), input.get(0).getName(), null, requestOptions);
+        Assert.assertEquals(customFields2.size(), 1);
+        Assert.assertEquals(customFields2.getPaginationCurrentOffset(), 0);
+        Assert.assertEquals(customFields2.getPaginationTotalNbRecords(), 1);
+        Assert.assertEquals(customFields2.getPaginationMaxNbRecords(), 5);
+
+
+        // Search by type, name, value
+        final CustomFields customFields3 = customFieldApi.searchCustomFieldsByTypeName(ObjectType.ACCOUNT.toString(), input.get(0).getName(),  input.get(0).getValue(), requestOptions);
+        Assert.assertEquals(customFields3.size(), 1);
+        Assert.assertEquals(customFields3.getPaginationCurrentOffset(), 0);
+        Assert.assertEquals(customFields3.getPaginationTotalNbRecords(), 1);
+        Assert.assertEquals(customFields3.getPaginationMaxNbRecords(), 5);
+
 
         final CustomFields allAccountCustomFields = accountApi.getAllCustomFields(account.getAccountId(), null, AuditLevel.FULL, requestOptions);
         Assert.assertEquals(allAccountCustomFields.size(), 5);

@@ -76,6 +76,32 @@ public class DefaultCustomFieldUserApi implements CustomFieldUserApi {
     }
 
     @Override
+    public Pagination<CustomField> searchCustomFields(final String fieldName, final String fieldValue, final ObjectType objectType, final Long offset, final Long limit, final TenantContext context) {
+        return getEntityPaginationNoException(limit,
+                                              new SourcePaginationBuilder<CustomFieldModelDao, CustomFieldApiException>() {
+                                                  @Override
+                                                  public Pagination<CustomFieldModelDao> build() {
+                                                      return customFieldDao.searchCustomFields(fieldName, fieldValue, objectType, offset, limit, internalCallContextFactory.createInternalTenantContextWithoutAccountRecordId(context));
+                                                  }
+                                              },
+                                              CUSTOM_FIELD_MODEL_DAO_CUSTOM_FIELD_FUNCTION);
+    }
+
+
+    @Override
+    public Pagination<CustomField> searchCustomFields(final String fieldName, final ObjectType objectType, final Long offset, final Long limit, final TenantContext context) {
+        return getEntityPaginationNoException(limit,
+                                              new SourcePaginationBuilder<CustomFieldModelDao, CustomFieldApiException>() {
+                                                  @Override
+                                                  public Pagination<CustomFieldModelDao> build() {
+                                                      return customFieldDao.searchCustomFields(fieldName, objectType, offset, limit, internalCallContextFactory.createInternalTenantContextWithoutAccountRecordId(context));
+                                                  }
+                                              },
+                                              CUSTOM_FIELD_MODEL_DAO_CUSTOM_FIELD_FUNCTION);
+    }
+
+
+    @Override
     public Pagination<CustomField> getCustomFields(final Long offset, final Long limit, final TenantContext context) {
         return getEntityPaginationNoException(limit,
                                               new SourcePaginationBuilder<CustomFieldModelDao, CustomFieldApiException>() {
