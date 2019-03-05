@@ -43,7 +43,6 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Ordering;
@@ -120,9 +119,11 @@ public class RawUsageOptimizer {
 
         final ListIterator<InvoiceItem> iterator = sortedUsageItems.listIterator(sortedUsageItems.size());
         while (iterator.hasPrevious()) {
-            final InvoiceItem previous = iterator.previous();
-            Preconditions.checkState(previous instanceof UsageInvoiceItem);
-            final UsageInvoiceItem item = (UsageInvoiceItem) previous;
+            final InvoiceItem item = iterator.previous();
+            if (!(item instanceof UsageInvoiceItem)) {
+                // Help to debug https://github.com/killbill/killbill/issues/1095
+                log.warn("RawUsageOptimizer : item id={}, expected to see an UsageInvoiceItem type, got {}", item.getId(), item);
+            }
             final Usage usage = knownUsage.get(item.getUsageName());
 
             if (perBillingPeriodMostRecentConsumableInArrearItemEndDate[usage.getBillingPeriod().ordinal()] == null) {
