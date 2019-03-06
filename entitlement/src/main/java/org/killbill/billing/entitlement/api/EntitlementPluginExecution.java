@@ -58,7 +58,7 @@ public class EntitlementPluginExecution {
             for (final EntitlementContext pluginContext : pluginContexts) {
                 final PriorEntitlementResult priorEntitlementResult = executePluginPriorCalls(pluginContext);
                 if (priorEntitlementResult != null && priorEntitlementResult.isAborted()) {
-                    throw new EntitlementApiException(ErrorCode.ENT_PLUGIN_API_ABORTED);
+                    throw new EntitlementApiException(ErrorCode.ENT_PLUGIN_API_ABORTED, "");
                 }
                 updatedPluginContexts.add(new DefaultEntitlementContext(pluginContext, priorEntitlementResult));
             }
@@ -90,7 +90,7 @@ public class EntitlementPluginExecution {
         try {
             final PriorEntitlementResult priorEntitlementResult = executePluginPriorCalls(pluginContext);
             if (priorEntitlementResult != null && priorEntitlementResult.isAborted()) {
-                throw new EntitlementApiException(ErrorCode.ENT_PLUGIN_API_ABORTED);
+                throw new EntitlementApiException(ErrorCode.ENT_PLUGIN_API_ABORTED, "");
             }
             final DefaultEntitlementContext updatedPluginContext = new DefaultEntitlementContext(pluginContext, priorEntitlementResult);
             try {
