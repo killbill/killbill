@@ -145,8 +145,6 @@ public interface JaxrsResource {
 
     String QUERY_AUDIT = "audit";
 
-    String QUERY_BCD = "bcd";
-
     String QUERY_PARALLEL = "parallel";
 
     String QUERY_AUTO_COMMIT = "autoCommit";

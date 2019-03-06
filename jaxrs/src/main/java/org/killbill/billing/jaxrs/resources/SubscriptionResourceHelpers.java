@@ -75,7 +75,7 @@ public class SubscriptionResourceHelpers {
 
             @Override
             public Integer getBillCycleDay() {
-                return null;
+                return subscriptionJson.getBillCycleDayLocal();
             }
 
             @Override
