@@ -39,6 +39,7 @@ import org.killbill.billing.client.model.Bundles;
 import org.killbill.billing.client.model.Subscriptions;
 import org.killbill.billing.client.model.Tags;
 import org.killbill.billing.client.model.gen.Account;
+import org.killbill.billing.client.model.gen.AccountTimeline;
 import org.killbill.billing.client.model.gen.BulkSubscriptionsBundle;
 import org.killbill.billing.client.model.gen.Bundle;
 import org.killbill.billing.client.model.gen.Invoice;
@@ -703,6 +704,34 @@ public class TestEntitlement extends TestJaxrsBase {
     }
 
     @Test(groups = "slow", description = "Verify we can move the BCD associated with the subscription")
+    public void testOverwriteEntitlementBCDOnCreate() throws Exception {
+        final DateTime initialDate = new DateTime(2012, 4, 25, 0, 3, 42, 0);
+        clock.setDeltaFromReality(initialDate.getMillis() - clock.getUTCNow().getMillis());
+
+        final Account accountJson = createAccountWithDefaultPaymentMethod();
+
+        callbackServlet.pushExpectedEvents(ExtBusEventType.ACCOUNT_CHANGE, ExtBusEventType.ENTITLEMENT_CREATION, ExtBusEventType.SUBSCRIPTION_CREATION, ExtBusEventType.SUBSCRIPTION_CREATION, ExtBusEventType.SUBSCRIPTION_BCD_CHANGE);
+        final Subscription input = new Subscription();
+        input.setAccountId(accountJson.getAccountId());
+        input.setPlanName("shotgun-monthly");
+        input.setBillCycleDayLocal(28);
+        final Subscription subscription = subscriptionApi.createSubscription(input, null, null, true, false, null, true, DEFAULT_WAIT_COMPLETION_TIMEOUT_SEC, NULL_PLUGIN_PROPERTIES, requestOptions);
+        Assert.assertEquals(subscription.getBillCycleDayLocal().intValue(), 28);
+        callbackServlet.assertListenerStatus();
+
+
+        final AccountTimeline timeline = accountApi.getAccountTimeline(accountJson.getAccountId(), false, AuditLevel.FULL, requestOptions);
+        Assert.assertEquals(timeline.getBundles().size(), 1);
+        Assert.assertEquals(timeline.getBundles().get(0).getSubscriptions().size(), 1);
+
+        final Subscription subscriptionT = timeline.getBundles().get(0).getSubscriptions().get(0);
+        Assert.assertEquals(subscriptionT.getBillCycleDayLocal().intValue(), 28);
+        // Note that we are START_ENTITLEMENT, START_BILLING, PHASE
+        // TODO : we should add the BCD_CHANGE event in the timeline (does not exist in SubscriptionEventType)
+        Assert.assertEquals(subscriptionT.getEvents().size(), 3);
+    }
+
+    @Test(groups = "slow", description = "Verify we can move the BCD associated with the subscription")
     public void testMoveEntitlementBCD() throws Exception {
         final DateTime initialDate = new DateTime(2012, 4, 25, 0, 3, 42, 0);
         clock.setDeltaFromReality(initialDate.getMillis() - clock.getUTCNow().getMillis());
@@ -822,5 +851,6 @@ public class TestEntitlement extends TestJaxrsBase {
         Assert.assertEquals(refreshedSubscription.getPrices().get(1).getRecurringPrice(), new BigDecimal("249.95"));
 
     }
+
 
 }
